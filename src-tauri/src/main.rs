@@ -19,13 +19,15 @@ async fn get_config_data(url: String) -> Result<String, String> {
 }
 
 fn main() -> std::io::Result<()> {
-  let config = sysopt::get_proxy_config()?;
-  println!("{:?}", config);
+  clash::run_clash_bin(&clash::get_config_dir().to_str().unwrap());
 
   let app = tauri::Builder::default()
     .system_tray(
-      SystemTray::new()
-        .with_menu(SystemTrayMenu::new().add_item(CustomMenuItem::new("tray_event_quit", "Quit"))),
+      SystemTray::new().with_menu(
+        SystemTrayMenu::new()
+          .add_item(CustomMenuItem::new("event_show", "Show"))
+          .add_item(CustomMenuItem::new("event_quit", "Quit")),
+      ),
     )
     .on_system_tray_event(move |app, event| match event {
       SystemTrayEvent::LeftClick { .. } => {
@@ -35,7 +37,12 @@ fn main() -> std::io::Result<()> {
       }
 
       SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-        "tray_event_quit" => {
+        "event_show" => {
+          let window = app.get_window("main").unwrap();
+          window.show().unwrap();
+          window.set_focus().unwrap();
+        }
+        "event_quit" => {
           app.exit(0);
         }
         _ => {}
