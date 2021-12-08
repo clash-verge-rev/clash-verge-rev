@@ -6,50 +6,63 @@
 extern crate tauri;
 
 mod clash;
+mod cmd;
+mod init;
 mod sysopt;
 
-use tauri::{CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu};
-
-#[tauri::command]
-async fn get_config_data(url: String) -> Result<String, String> {
-  match clash::fetch_url(&url).await {
-    Ok(_) => Ok(String::from("success")),
-    Err(_) => Err(String::from("error")),
-  }
-}
+use tauri::{
+  CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
+  SystemTraySubmenu,
+};
 
 fn main() -> std::io::Result<()> {
-  clash::run_clash_bin(&clash::get_config_dir().to_str().unwrap());
+  init::init_app();
+  // clash::run_clash_bin();
+
+  // 通过clash config初始化menu和tray
+  // 通过verge config干点别的
+
+  let sub_menu = SystemTraySubmenu::new(
+    "出站规则",
+    SystemTrayMenu::new()
+      .add_item(CustomMenuItem::new("rway_global", "全局连接"))
+      .add_item(CustomMenuItem::new("rway_rule", "规则连接").selected())
+      .add_item(CustomMenuItem::new("rway_direct", "直接连接")),
+  );
+  let menu = SystemTrayMenu::new()
+    .add_submenu(sub_menu)
+    .add_native_item(SystemTrayMenuItem::Separator)
+    .add_item(CustomMenuItem::new("syste_proxy", "设置为系统代理"))
+    .add_item(CustomMenuItem::new("self_startup", "开机启动").selected())
+    .add_item(CustomMenuItem::new("open_window", "显示应用"))
+    .add_native_item(SystemTrayMenuItem::Separator)
+    .add_item(CustomMenuItem::new("quit", "退出").accelerator("CmdOrControl+Q"));
 
   let app = tauri::Builder::default()
-    .system_tray(
-      SystemTray::new().with_menu(
-        SystemTrayMenu::new()
-          .add_item(CustomMenuItem::new("event_show", "Show"))
-          .add_item(CustomMenuItem::new("event_quit", "Quit")),
-      ),
-    )
+    .system_tray(SystemTray::new().with_menu(menu))
     .on_system_tray_event(move |app, event| match event {
+      SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
+        "open_window" => {
+          let window = app.get_window("main").unwrap();
+          window.show().unwrap();
+          window.set_focus().unwrap();
+        }
+        "quit" => {
+          app.exit(0);
+        }
+        _ => {}
+      },
       SystemTrayEvent::LeftClick { .. } => {
         let window = app.get_window("main").unwrap();
         window.show().unwrap();
         window.set_focus().unwrap();
       }
-
-      SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-        "event_show" => {
-          let window = app.get_window("main").unwrap();
-          window.show().unwrap();
-          window.set_focus().unwrap();
-        }
-        "event_quit" => {
-          app.exit(0);
-        }
-        _ => {}
-      },
       _ => {}
     })
-    .invoke_handler(tauri::generate_handler![get_config_data])
+    .invoke_handler(tauri::generate_handler![
+      cmd::get_config_data,
+      cmd::restart_sidebar,
+    ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");
 

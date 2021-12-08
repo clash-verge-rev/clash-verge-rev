@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::io;
 
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
