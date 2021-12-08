@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api";
-import { Button, Grid, TextField } from "@material-ui/core";
+import { Button, Grid, TextField } from "@mui/material";
 
 const ProfilesPage = () => {
   const [url, setUrl] = useState("");

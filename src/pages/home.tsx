@@ -1,18 +1,10 @@
-import { useState } from "react";
-import { TextField } from "@material-ui/core";
+import { Typography } from "@mui/material";
 
 const HomePage = () => {
-  const [port, setPort] = useState("7890");
-
   return (
-    <div>
-      <TextField
-        label="Port"
-        fullWidth
-        value={port}
-        onChange={(e) => setPort(e.target.value)}
-      />
-    </div>
+    <Typography variant="h1" textAlign="center" mt={10}>
+      Hello Clash!
+    </Typography>
   );
 };
 

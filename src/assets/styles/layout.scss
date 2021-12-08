@@ -1,0 +1,28 @@
+.layout {
+  width: 100%;
+  height: 100%;
+  display: flex;
+
+  &__sidebar {
+    position: relative;
+    height: 100vh;
+    flex: 1 1 25%;
+  }
+
+  &__traffic {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 18px;
+
+    > div {
+      margin: 0 auto;
+    }
+  }
+
+  &__content {
+    flex: 1 1 75%;
+    padding: 20px 30px;
+    box-sizing: border-box;
+  }
+}

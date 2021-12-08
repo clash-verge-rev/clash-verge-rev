@@ -2,39 +2,32 @@ import "./assets/styles/index.scss";
 
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
-import HomePage from "./pages/home";
-import ProfilesPage from "./pages/profiles";
-import { version } from "../package.json";
+import { BrowserRouter } from "react-router-dom";
+import { createTheme, ThemeProvider } from "@mui/material";
+import Layout from "./pages/_layout";
 
-function Layout() {
-  return (
-    <div className="layout">
-      <div className="layout__sidebar">
-        <h1>Clash Verge</h1>
-        <h3>{version}</h3>
+const theme = createTheme({
+  palette: {
+    mode: "light",
+    primary: {
+      main: "#5b5c9d",
+    },
+    text: {
+      primary: "#637381",
+      secondary: "#909399",
+    },
+  },
+});
 
-        <div className="layout__links">
-          <NavLink to="/">Home</NavLink>
-          <NavLink to="/profiles">Profiles</NavLink>
-        </div>
-      </div>
-
-      <div className="layout__content">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/profiles" element={<ProfilesPage />} />
-        </Routes>
-      </div>
-    </div>
-  );
-}
+// console.log(theme);
 
 ReactDOM.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Layout />
-    </BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Layout />
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );
