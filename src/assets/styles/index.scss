@@ -11,4 +11,13 @@ code {
     monospace;
 }
 
+*::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background-color: rgba(#909399, 0.5);
+}
+
 @import "./layout.scss";

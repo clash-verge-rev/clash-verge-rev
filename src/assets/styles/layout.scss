@@ -1,19 +1,21 @@
 .layout {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: flex;
 
   &__sidebar {
     position: relative;
-    height: 100vh;
+    height: 100%;
     flex: 1 0 25%;
     max-width: 250px;
+    overflow: hidden auto;
   }
 
   &__content {
     flex: 1 1 75%;
-    padding: 20px 30px;
+    height: 100%;
     box-sizing: border-box;
+    overflow: hidden auto;
   }
 
   &__traffic {
