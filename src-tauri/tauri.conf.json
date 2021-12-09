@@ -6,8 +6,8 @@
   "build": {
     "distDir": "../dist",
     "devPath": "http://localhost:3000/proxy",
-    "beforeDevCommand": "npm run web:dev",
-    "beforeBuildCommand": "npm run web:build"
+    "beforeDevCommand": "yarn run web:dev",
+    "beforeBuildCommand": "yarn run web:build"
   },
   "tauri": {
     "systemTray": {
@@ -63,7 +63,9 @@
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
-        "transparent": false
+        "transparent": false,
+        "minWidth": 600,
+        "minHeight": 520
       }
     ],
     "security": {
