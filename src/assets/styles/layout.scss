@@ -6,7 +6,14 @@
   &__sidebar {
     position: relative;
     height: 100vh;
-    flex: 1 1 25%;
+    flex: 1 0 25%;
+    max-width: 250px;
+  }
+
+  &__content {
+    flex: 1 1 75%;
+    padding: 20px 30px;
+    box-sizing: border-box;
   }
 
   &__traffic {
@@ -18,11 +25,5 @@
     > div {
       margin: 0 auto;
     }
-  }
-
-  &__content {
-    flex: 1 1 75%;
-    padding: 20px 30px;
-    box-sizing: border-box;
   }
 }

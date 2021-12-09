@@ -12,16 +12,41 @@ const ListItemLink = (props: LinkProps) => {
   return (
     <ListItem sx={{ py: 0.5, maxWidth: 250, mx: "auto" }}>
       <ListItemButton
-        sx={{
-          borderRadius: 2,
-          textAlign: "center",
-          bgcolor: match ? "rgba(91,92,157,0.15)" : "transparent",
-        }}
+        sx={[
+          {
+            color: "primary",
+            borderRadius: 2,
+            textAlign: "center",
+          },
+          (theme) => {
+            if (!match) return {};
+
+            if (theme.palette.mode === "light") {
+              return {
+                bgcolor: "rgba(91,92,157,0.15)",
+                "&:hover": { bgcolor: "rgba(91,92,157,0.15)" },
+              };
+            }
+
+            return {
+              bgcolor: "rgba(91,92,157,0.35)",
+              "&:hover": { bgcolor: "rgba(91,92,157,0.35)" },
+            };
+          },
+        ]}
         onClick={() => navigate(to)}
       >
         <ListItemText
           primary={children}
-          sx={{ color: match ? "primary.main" : "text.primary" }}
+          sx={{
+            color: (theme) => {
+              if (!match) return "text.secondary";
+
+              const light = theme.palette.mode === "light";
+              if (match && light) return "primary.main";
+              return "primary.light";
+            },
+          }}
         />
       </ListItemButton>
     </ListItem>
