@@ -1,14 +1,9 @@
 import { useMemo } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useRecoilValue } from "recoil";
-import {
-  createTheme,
-  List,
-  Paper,
-  ThemeProvider,
-  Typography,
-} from "@mui/material";
+import { createTheme, List, Paper, ThemeProvider } from "@mui/material";
 import { atomPaletteMode } from "../states/setting";
+import LogoSvg from "../assets/image/logo.svg";
 import LogPage from "../pages/log";
 import HomePage from "../pages/home";
 import ProxyPage from "../pages/proxy";
@@ -45,8 +40,19 @@ const Layout = () => {
   ];
 
   const theme = useMemo(() => {
-    const bgcolor = paletteMode === "light" ? "#f5f5f5" : "#000";
-    document.documentElement.style.background = bgcolor;
+    if (paletteMode === "light") {
+      document.documentElement.style.background = "#f5f5f5";
+      document.documentElement.style.setProperty(
+        "--selection-color",
+        "#f5f5f5"
+      );
+    } else {
+      document.documentElement.style.background = "#000";
+      document.documentElement.style.setProperty(
+        "--selection-color",
+        "#d5d5d5"
+      );
+    }
 
     return createTheme({
       palette: {
@@ -66,13 +72,9 @@ const Layout = () => {
     <ThemeProvider theme={theme}>
       <Paper square elevation={0} className="layout">
         <div className="layout__sidebar">
-          <Typography
-            variant="h3"
-            component="h1"
-            sx={{ my: 2, px: 2, textAlign: "center", userSelect: "none" }}
-          >
-            Clash Verge
-          </Typography>
+          <div className="layout__logo">
+            <img src={LogoSvg} width="100%" alt="" />
+          </div>
 
           <List sx={{ userSelect: "none" }}>
             {routers.map((router) => (

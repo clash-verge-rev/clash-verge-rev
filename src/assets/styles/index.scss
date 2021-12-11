@@ -6,17 +6,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+:root {
+  --primary-main: #5b5c9d;
+  --text-primary: #637381;
+  --selection-color: #f5f5f5;
+}
+
+::selection {
+  color: var(--selection-color);
+  background-color: var(--primary-main);
 }
 
 *::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  border-radius: 8px;
+  border-radius: 6px;
   background-color: rgba(#909399, 0.5);
 }
 

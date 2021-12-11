@@ -1,28 +1,42 @@
 .layout {
   width: 100%;
-  height: 100vh;
   display: flex;
+  overflow: hidden;
 
   &__sidebar {
     position: relative;
-    height: 100%;
     flex: 1 0 25%;
-    max-width: 250px;
+    height: 100vh;
+    max-width: 225px;
+    min-width: 125px;
     overflow: hidden auto;
   }
 
   &__content {
+    position: relative;
     flex: 1 1 75%;
-    height: 100%;
+    height: 100vh;
+    overflow: overlay;
     box-sizing: border-box;
-    overflow: hidden auto;
+  }
+
+  &__logo {
+    width: 100%;
+    height: auto;
+    max-width: 180px;
+    max-height: 180px;
+    margin: 0 auto;
+    padding: 8px 8px 0;
+    user-select: none;
+    text-align: center;
+    box-sizing: border-box;
   }
 
   &__traffic {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 18px;
+    bottom: 8px;
 
     > div {
       margin: 0 auto;

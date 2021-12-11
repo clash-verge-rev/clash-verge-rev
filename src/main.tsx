@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import "./assets/styles/index.scss";
 
 import React from "react";
