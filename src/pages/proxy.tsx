@@ -21,11 +21,13 @@ const ProxyPage = () => {
         Proxy Groups
       </Typography>
 
-      <List sx={{ borderRadius: 1, boxShadow: 2 }}>
-        {groups.map((group) => (
-          <ProxyGroup key={group.name} group={group} />
-        ))}
-      </List>
+      {groups.length > 0 && (
+        <List sx={{ borderRadius: 1, boxShadow: 2 }}>
+          {groups.map((group) => (
+            <ProxyGroup key={group.name} group={group} />
+          ))}
+        </List>
+      )}
     </Box>
   );
 };

@@ -34,6 +34,8 @@ export async function getProxyInfo() {
     each.all = each.all?.map((item) => results[item]).filter((e) => e);
   });
 
+  groups.sort((a, b) => b.name.localeCompare(a.name));
+
   return {
     global,
     groups,
