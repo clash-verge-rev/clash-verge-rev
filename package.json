@@ -18,6 +18,7 @@
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-router-dom": "^6.0.2",
+    "react-virtuoso": "^2.3.1",
     "recoil": "^0.5.2"
   },
   "devDependencies": {
