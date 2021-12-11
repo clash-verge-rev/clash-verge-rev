@@ -1,29 +1,32 @@
-import axios from "axios";
+import { CancelTokenSource } from "axios";
 import { useEffect, useState } from "react";
+import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import parseTraffic from "../utils/parse-traffic";
-import { Typography } from "@mui/material";
-import { Box } from "@mui/system";
+import services from "../services";
 
 const Traffic = () => {
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
 
   useEffect(() => {
-    const onTraffic = () => {
-      axios({
-        url: `http://127.0.0.1:9090/traffic`,
-        method: "GET",
-        onDownloadProgress: (progressEvent) => {
-          const data = progressEvent.currentTarget.response || "";
-          const lastData = data.slice(data.trim().lastIndexOf("\n") + 1);
-          try {
-            if (lastData) setTraffic(JSON.parse(lastData));
-          } catch {}
-        },
-      }).catch(() => setTimeout(onTraffic, 500));
-    };
+    let timer: any = null;
+    let source: CancelTokenSource | null = null;
+
+    async function onTraffic() {
+      timer = null;
+      try {
+        source = await services.getTraffic(setTraffic);
+      } catch {
+        timer = setTimeout(onTraffic, 500);
+      }
+    }
 
     onTraffic();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      source?.cancel();
+    };
   }, []);
 
   const [up, upUnit] = parseTraffic(traffic.up);
@@ -45,7 +48,7 @@ const Traffic = () => {
 
   return (
     <Box width="110px">
-      <Box mb={2} display="flex" alignItems="center" whiteSpace="nowrap">
+      <Box mb={1.5} display="flex" alignItems="center" whiteSpace="nowrap">
         <ArrowUpward
           fontSize="small"
           color={+up > 0 ? "primary" : "disabled"}
