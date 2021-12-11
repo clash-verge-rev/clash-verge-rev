@@ -6,9 +6,9 @@ import { atomPaletteMode } from "../states/setting";
 import LogoSvg from "../assets/image/logo.svg";
 import LogPage from "../pages/log";
 import HomePage from "../pages/home";
+import RulesPage from "../pages/rules";
 import ProxyPage from "../pages/proxy";
 import SettingPage from "../pages/setting";
-import ProfilesPage from "../pages/profiles";
 import ConnectionsPage from "../pages/connections";
 import ListItemLink from "../components/list-item-link";
 import Traffic from "../components/traffic";
@@ -23,7 +23,7 @@ const Layout = () => {
     },
     {
       label: "规则",
-      link: "/profiles",
+      link: "/rules",
     },
     {
       label: "连接",
@@ -93,7 +93,7 @@ const Layout = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/proxy" element={<ProxyPage />} />
-            <Route path="/profiles" element={<ProfilesPage />} />
+            <Route path="/rules" element={<RulesPage />} />
             <Route path="/log" element={<LogPage />} />
             <Route path="/connections" element={<ConnectionsPage />} />
             <Route path="/setting" element={<SettingPage />} />
