@@ -80,6 +80,7 @@ const ProxyGroup = ({ group }: Props) => {
       <ListItem button onClick={() => setOpen(!open)}>
         <ListItemText
           primary={group.name}
+          sx={{ my: 0.25 }}
           secondary={
             <>
               <SendRounded color="primary" sx={{ mr: 1, fontSize: 14 }} />
