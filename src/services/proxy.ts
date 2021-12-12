@@ -12,35 +12,39 @@ export interface ProxyItem {
   now?: string;
 }
 
-export type ProxyGroupItem = Omit<ProxyItem, "all" | "now"> & {
-  all?: ProxyItem[];
-  now?: string;
+export type ProxyGroupItem = Omit<ProxyItem, "all"> & {
+  all: ProxyItem[];
 };
 
 /// Get the Proxy infomation
 export async function getProxyInfo() {
   const response = (await axiosIns.get("/proxies")) as any;
-  const results = (response?.proxies ?? {}) as Record<string, ProxyItem>;
+  const proxies = (response?.proxies ?? {}) as Record<string, ProxyItem>;
 
-  const global = results["GLOBAL"] || results["global"];
-  const proxies = Object.values(results).filter((each) => each.all == null);
+  const global = proxies["GLOBAL"];
+  const order = global?.all;
 
-  const groups = Object.values(results).filter(
-    (each) => each.name.toLocaleUpperCase() !== "GLOBAL" && each.all != null
-  ) as ProxyGroupItem[];
+  let groups: ProxyGroupItem[] = [];
 
-  groups.forEach((each) => {
-    // @ts-ignore
-    each.all = each.all?.map((item) => results[item]).filter((e) => e);
-  });
+  if (order) {
+    groups = order
+      .filter((name) => proxies[name]?.all)
+      .map((name) => proxies[name])
+      .map((each) => ({
+        ...each,
+        all: each.all!.map((item) => proxies[item]),
+      }));
+  } else {
+    groups = Object.values(proxies)
+      .filter((each) => each.name !== "GLOBAL" && each.all)
+      .map((each) => ({
+        ...each,
+        all: each.all!.map((item) => proxies[item]),
+      }));
+    groups.sort((a, b) => b.name.localeCompare(a.name));
+  }
 
-  groups.sort((a, b) => b.name.localeCompare(a.name));
-
-  return {
-    global,
-    groups,
-    proxies,
-  };
+  return { global, groups, proxies };
 }
 
 /// Update the Proxy Choose
