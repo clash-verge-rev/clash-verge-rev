@@ -1,6 +1,4 @@
 extern crate log;
-extern crate reqwest;
-extern crate serde_yaml;
 
 use crate::init::app_home_dir;
 use tauri::api::process::{Command, CommandEvent};
@@ -28,16 +26,4 @@ pub fn run_clash_bin() {
       }
     }
   });
-}
-
-pub async fn fetch_url(profile_url: &str) -> Result<(), reqwest::Error> {
-  let resp = reqwest::get(profile_url).await?;
-  println!("{:#?}", resp);
-
-  let header = resp.headers().clone();
-  println!("{:?}", header);
-
-  let data = resp.text_with_charset("utf-8").await?;
-  println!("{:#?}", data);
-  Ok(())
 }

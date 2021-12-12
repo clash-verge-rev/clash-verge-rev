@@ -7,7 +7,9 @@ extern crate tauri;
 
 mod clash;
 mod cmd;
+mod config;
 mod init;
+mod profiles;
 mod sysopt;
 
 use tauri::{
@@ -54,8 +56,8 @@ fn main() -> std::io::Result<()> {
       _ => {}
     })
     .invoke_handler(tauri::generate_handler![
-      cmd::get_config_data,
-      cmd::restart_sidebar,
+      cmd::cmd_import_profile,
+      cmd::cmd_restart_sidebar,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");

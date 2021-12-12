@@ -13,6 +13,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::api::path::{home_dir, resource_dir};
 use tauri::PackageInfo;
 
+use crate::config::verge::VergeConfig;
+
 /// get the verge app home dir
 pub fn app_home_dir() -> PathBuf {
   home_dir()
@@ -120,8 +122,16 @@ pub fn read_clash_config() -> Mapping {
 }
 
 /// Get the user config of verge
-pub fn read_verge_config() -> Mapping {
+pub fn read_verge_config() -> VergeConfig {
   let yaml_path = app_home_dir().join("verge.yaml");
   let yaml_str = fs::read_to_string(yaml_path).unwrap();
-  serde_yaml::from_str::<Mapping>(&yaml_str).unwrap()
+  serde_yaml::from_str::<VergeConfig>(&yaml_str).unwrap()
+}
+
+/// Save the user config of verge
+pub fn save_verge_config(verge_config: &VergeConfig) {
+  let yaml_path = app_home_dir().join("verge.yaml");
+  let yaml_str = serde_yaml::to_string(&verge_config).unwrap();
+  let yaml_str = String::from("# Config File for Clash Verge\n\n") + &yaml_str;
+  fs::write(yaml_path, yaml_str.as_bytes()).unwrap();
 }
