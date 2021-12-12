@@ -25,7 +25,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "resources": [],
+      "resources": ["resources"],
       "externalBin": ["sidebar/clash"],
       "copyright": "",
       "category": "DeveloperTool",

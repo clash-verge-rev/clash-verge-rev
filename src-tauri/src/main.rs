@@ -16,12 +16,6 @@ use tauri::{
 };
 
 fn main() -> std::io::Result<()> {
-  init::init_app();
-  // clash::run_clash_bin();
-
-  // 通过clash config初始化menu和tray
-  // 通过verge config干点别的
-
   let sub_menu = SystemTraySubmenu::new(
     "出站规则",
     SystemTrayMenu::new()
@@ -65,6 +59,13 @@ fn main() -> std::io::Result<()> {
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");
+
+  // init app config
+  init::init_app(app.package_info());
+  // clash::run_clash_bin();
+
+  // 通过clash config初始化menu和tray
+  // 通过verge config干点别的
 
   app.run(|app_handle, e| match e {
     tauri::Event::CloseRequested { label, api, .. } => {
