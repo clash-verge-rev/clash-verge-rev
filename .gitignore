@@ -5,4 +5,3 @@ dist-ssr
 *.local
 package-lock.json
 yarn.lock
-src-tauri/sidebar
