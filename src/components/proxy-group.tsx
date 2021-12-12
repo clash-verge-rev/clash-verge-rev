@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 import {
+  alpha,
   Box,
   Collapse,
   Divider,
@@ -32,9 +33,26 @@ const Item = ({ proxy, selected, onClick }: ItemProps) => {
   return (
     <ListItem sx={{ py: 0, pl: 4 }}>
       <ListItemButton
+        dense
         selected={selected}
         onClick={() => onClick?.(proxy.name)}
-        sx={{ borderRadius: 1, py: 0.5 }}
+        sx={[
+          {
+            borderRadius: 1,
+          },
+          ({ palette: { mode, primary } }) => {
+            const bgcolor =
+              mode === "light"
+                ? alpha(primary.main, 0.15)
+                : alpha(primary.main, 0.35);
+            const color = mode === "light" ? primary.main : primary.light;
+
+            return {
+              "&.Mui-selected": { bgcolor },
+              "&.Mui-selected .MuiListItemText-secondary": { color },
+            };
+          },
+        ]}
       >
         <ListItemText title={proxy.name} secondary={proxy.name} />
         <ListItemIcon
@@ -77,10 +95,9 @@ const ProxyGroup = ({ group }: Props) => {
 
   return (
     <>
-      <ListItem button onClick={() => setOpen(!open)}>
+      <ListItem button onClick={() => setOpen(!open)} dense>
         <ListItemText
           primary={group.name}
-          sx={{ my: 0.25 }}
           secondary={
             <>
               <SendRounded color="primary" sx={{ mr: 1, fontSize: 14 }} />

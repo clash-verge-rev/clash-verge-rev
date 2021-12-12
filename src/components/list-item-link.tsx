@@ -1,4 +1,4 @@
-import { ListItem, ListItemButton, ListItemText } from "@mui/material";
+import { alpha, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
 import type { LinkProps } from "react-router-dom";
 
@@ -12,42 +12,30 @@ const ListItemLink = (props: LinkProps) => {
   return (
     <ListItem sx={{ py: 0.5, maxWidth: 250, mx: "auto" }}>
       <ListItemButton
+        selected={!!match}
         sx={[
           {
-            color: "primary",
             borderRadius: 2,
             textAlign: "center",
+            "& .MuiListItemText-primary": { color: "text.secondary" },
           },
-          (theme) => {
-            if (!match) return {};
-
-            if (theme.palette.mode === "light") {
-              return {
-                bgcolor: "rgba(91,92,157,0.15)",
-                "&:hover": { bgcolor: "rgba(91,92,157,0.15)" },
-              };
-            }
+          ({ palette: { mode, primary } }) => {
+            const bgcolor =
+              mode === "light"
+                ? alpha(primary.main, 0.15)
+                : alpha(primary.main, 0.35);
+            const color = mode === "light" ? primary.main : primary.light;
 
             return {
-              bgcolor: "rgba(91,92,157,0.35)",
-              "&:hover": { bgcolor: "rgba(91,92,157,0.35)" },
+              "&.Mui-selected": { bgcolor },
+              "&.Mui-selected:hover": { bgcolor },
+              "&.Mui-selected .MuiListItemText-primary": { color },
             };
           },
         ]}
         onClick={() => navigate(to)}
       >
-        <ListItemText
-          primary={children}
-          sx={{
-            color: (theme) => {
-              if (!match) return "text.secondary";
-
-              const light = theme.palette.mode === "light";
-              if (match && light) return "primary.main";
-              return "primary.light";
-            },
-          }}
-        />
+        <ListItemText primary={children} />
       </ListItemButton>
     </ListItem>
   );
