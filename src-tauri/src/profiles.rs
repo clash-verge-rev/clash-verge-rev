@@ -1,7 +1,7 @@
 extern crate reqwest;
 
-use crate::config::verge::{ProfileData, ProfileUserInfo};
-use crate::init::{app_home_dir, read_verge_config, save_verge_config};
+use crate::config::{read_profiles, save_profiles, ProfileExtra, ProfileItem};
+use crate::init::app_home_dir;
 use std::default::Default;
 use std::fs::File;
 use std::io::Write;
@@ -20,24 +20,24 @@ pub async fn import_profile(profile_url: &str) -> Result<(), reqwest::Error> {
     .unwrap();
   let value: Vec<&str> = value.clone().split(';').collect();
 
-  let mut user_info = ProfileUserInfo::default();
-
+  // parse the Subscription Userinfo
+  let mut extra = ProfileExtra::default();
   for each in value.iter() {
     let each = each.clone().trim();
     if let Some(val) = each.strip_prefix("upload=") {
-      user_info.upload = val.parse().unwrap_or(0u64);
+      extra.upload = val.parse().unwrap_or(0u64);
       continue;
     }
     if let Some(val) = each.strip_prefix("download=") {
-      user_info.download = val.parse().unwrap_or(0u64);
+      extra.download = val.parse().unwrap_or(0u64);
       continue;
     }
     if let Some(val) = each.strip_prefix("total=") {
-      user_info.total = val.parse().unwrap_or(0u64);
+      extra.total = val.parse().unwrap_or(0u64);
       continue;
     }
     if let Some(val) = each.strip_prefix("expire=") {
-      user_info.expire = val.parse().unwrap_or(0u64);
+      extra.expire = val.parse().unwrap_or(0u64);
       continue;
     }
   }
@@ -56,35 +56,35 @@ pub async fn import_profile(profile_url: &str) -> Result<(), reqwest::Error> {
     .write(file_data.as_bytes())
     .unwrap();
 
-  let mut verge = read_verge_config();
-
-  let mut profiles = if verge.profiles.is_some() {
-    verge.profiles.unwrap()
+  // update profiles.yaml
+  let mut profiles = read_profiles();
+  let mut items = if profiles.items.is_some() {
+    profiles.items.unwrap()
   } else {
     vec![]
   };
 
-  let profile = ProfileData {
+  let profile = ProfileItem {
     name: Some(file_name.clone()),
     file: Some(file_name.clone()),
     mode: Some(String::from("rule")),
     url: Some(String::from(profile_url)),
     selected: Some(vec![]),
-    user_info: Some(user_info),
+    extra: Some(extra),
   };
 
-  let target_index = profiles
+  let target_index = items
     .iter()
     .position(|x| x.name.is_some() && x.name.as_ref().unwrap().as_str() == file_name.as_str());
 
   if target_index.is_none() {
-    profiles.push(profile)
+    items.push(profile)
   } else {
-    profiles[target_index.unwrap()] = profile;
+    items[target_index.unwrap()] = profile;
   }
 
-  verge.profiles = Some(profiles);
-  save_verge_config(&verge);
+  profiles.items = Some(items);
+  save_profiles(&profiles);
 
   Ok(())
 }

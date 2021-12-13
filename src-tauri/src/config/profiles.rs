@@ -2,16 +2,16 @@ use serde::{Deserialize, Serialize};
 
 /// Define the verge.yaml's schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct VergeConfig {
+pub struct ProfilesConfig {
   /// current profile's name
   pub current: Option<u32>,
 
   /// profile list
-  pub profiles: Option<Vec<ProfileData>>,
+  pub items: Option<Vec<ProfileItem>>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct ProfileData {
+pub struct ProfileItem {
   /// profile name
   pub name: Option<String>,
   /// profile file
@@ -23,7 +23,7 @@ pub struct ProfileData {
   /// selected infomation
   pub selected: Option<Vec<ProfileSelected>>,
   /// user info
-  pub user_info: Option<ProfileUserInfo>,
+  pub extra: Option<ProfileExtra>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -33,7 +33,7 @@ pub struct ProfileSelected {
 }
 
 #[derive(Default, Debug, Clone, Copy, Deserialize, Serialize)]
-pub struct ProfileUserInfo {
+pub struct ProfileExtra {
   pub upload: u64,
   pub download: u64,
   pub total: u64,

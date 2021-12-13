@@ -5,15 +5,12 @@ use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use serde_yaml::Mapping;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::api::path::{home_dir, resource_dir};
 use tauri::PackageInfo;
-
-use crate::config::verge::VergeConfig;
 
 /// get the verge app home dir
 pub fn app_home_dir() -> PathBuf {
@@ -53,40 +50,42 @@ fn init_log(log_dir: &PathBuf) {
   log4rs::init_config(config).unwrap();
 }
 
-/// Initialize the clash config file
-fn init_clash_config(app_dir: &PathBuf, res_dir: &PathBuf) {
-  let yaml_path = app_dir.join("config.yaml");
-  let yaml_tmpl = res_dir.join("config_tmp.yaml");
-
-  if !yaml_path.exists() {
-    if yaml_tmpl.exists() {
-      fs::copy(yaml_tmpl, yaml_path).unwrap();
-    } else {
-      let content = "mixed-port: 7890\nallow-lan: false\n".as_bytes();
-      fs::File::create(yaml_path).unwrap().write(content).unwrap();
-    }
-  }
-
+/// Initialize all the files from resources
+fn init_config_file(app_dir: &PathBuf, res_dir: &PathBuf) {
+  // target path
+  let clash_path = app_dir.join("config.yaml");
+  let verge_path = app_dir.join("verge.yaml");
+  let profile_path = app_dir.join("profiles.yaml");
   let mmdb_path = app_dir.join("Country.mmdb");
+
+  // template path
+  let clash_tmpl = res_dir.join("config_tmp.yaml");
+  let verge_tmpl = res_dir.join("verge_tmp.yaml");
+  let profiles_tmpl = res_dir.join("profiles_tmp.yaml");
   let mmdb_tmpl = res_dir.join("Country.mmdb");
 
+  if !clash_path.exists() {
+    if clash_tmpl.exists() {
+      fs::copy(clash_tmpl, clash_path).unwrap();
+    } else {
+      // make sure that the config.yaml not null
+      let content = "mixed-port: 7890\nallow-lan: false\n".as_bytes();
+      fs::File::create(clash_path)
+        .unwrap()
+        .write(content)
+        .unwrap();
+    }
+  }
+
+  // only copy it
+  if !verge_path.exists() && verge_tmpl.exists() {
+    fs::copy(verge_tmpl, verge_path).unwrap();
+  }
+  if !profile_path.exists() && profiles_tmpl.exists() {
+    fs::copy(profiles_tmpl, profile_path).unwrap();
+  }
   if !mmdb_path.exists() && mmdb_tmpl.exists() {
     fs::copy(mmdb_tmpl, mmdb_path).unwrap();
-  }
-}
-
-/// Initialize the verge app config file
-fn init_verge_config(app_dir: &PathBuf, res_dir: &PathBuf) {
-  let yaml_path = app_dir.join("verge.yaml");
-  let yaml_tmpl = res_dir.join("verge_tmp.yaml");
-
-  if !yaml_path.exists() {
-    if yaml_tmpl.exists() {
-      fs::copy(yaml_tmpl, yaml_path).unwrap();
-    } else {
-      let content = "".as_bytes();
-      fs::File::create(yaml_path).unwrap().write(content).unwrap();
-    }
   }
 }
 
@@ -110,28 +109,5 @@ pub fn init_app(package_info: &PackageInfo) {
   }
 
   init_log(&log_dir);
-  init_clash_config(&app_dir, &res_dir);
-  init_verge_config(&app_dir, &res_dir);
-}
-
-/// Get the user config of clash core
-pub fn read_clash_config() -> Mapping {
-  let yaml_path = app_home_dir().join("config.yaml");
-  let yaml_str = fs::read_to_string(yaml_path).unwrap();
-  serde_yaml::from_str::<Mapping>(&yaml_str).unwrap()
-}
-
-/// Get the user config of verge
-pub fn read_verge_config() -> VergeConfig {
-  let yaml_path = app_home_dir().join("verge.yaml");
-  let yaml_str = fs::read_to_string(yaml_path).unwrap();
-  serde_yaml::from_str::<VergeConfig>(&yaml_str).unwrap()
-}
-
-/// Save the user config of verge
-pub fn save_verge_config(verge_config: &VergeConfig) {
-  let yaml_path = app_home_dir().join("verge.yaml");
-  let yaml_str = serde_yaml::to_string(&verge_config).unwrap();
-  let yaml_str = String::from("# Config File for Clash Verge\n\n") + &yaml_str;
-  fs::write(yaml_path, yaml_str.as_bytes()).unwrap();
+  init_config_file(&app_dir, &res_dir);
 }
