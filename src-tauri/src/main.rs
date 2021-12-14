@@ -8,8 +8,8 @@ extern crate tauri;
 mod clash;
 mod cmd;
 mod config;
+mod import;
 mod init;
-mod profiles;
 mod sysopt;
 
 use tauri::{
