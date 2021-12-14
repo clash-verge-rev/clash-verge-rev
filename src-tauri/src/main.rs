@@ -10,7 +10,7 @@ mod config;
 mod events;
 mod utils;
 
-use crate::events::state::ClashInfoState;
+use crate::{events::state::ClashInfoState, utils::clash::put_clash_profile};
 use std::sync::{Arc, Mutex};
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
@@ -68,6 +68,15 @@ fn main() -> std::io::Result<()> {
   utils::init::init_app(app.package_info());
   // run clash sidecar
   let info = utils::clash::run_clash_bin(&app.handle());
+  // update the profile
+  let info_copy = info.clone();
+  tauri::async_runtime::spawn(async move {
+    match put_clash_profile(&info_copy).await {
+      Ok(_) => {}
+      Err(err) => log::error!("failed to put config for `{}`", err),
+    };
+  });
+
   app.manage(ClashInfoState(Arc::new(Mutex::new(info))));
 
   app.run(|app_handle, e| match e {
