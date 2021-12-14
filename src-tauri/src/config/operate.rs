@@ -3,7 +3,7 @@ use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf};
 
 use super::{profiles::ProfilesConfig, ClashController};
-use crate::init::app_home_dir;
+use crate::utils::app_home_dir;
 
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned>(path: PathBuf) -> T {

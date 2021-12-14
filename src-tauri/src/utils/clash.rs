@@ -1,6 +1,6 @@
 extern crate log;
 
-use crate::init::app_home_dir;
+use crate::utils::app_home_dir;
 use tauri::api::process::{Command, CommandEvent};
 
 /// Run the clash bin

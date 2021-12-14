@@ -5,12 +5,9 @@
 
 extern crate tauri;
 
-mod clash;
 mod cmd;
 mod config;
-mod import;
-mod init;
-mod sysopt;
+mod utils;
 
 use tauri::{
   CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
@@ -63,7 +60,7 @@ fn main() -> std::io::Result<()> {
     .expect("error while running tauri application");
 
   // init app config
-  init::init_app(app.package_info());
+  utils::init::init_app(app.package_info());
   // clash::run_clash_bin();
 
   // 通过clash config初始化menu和tray

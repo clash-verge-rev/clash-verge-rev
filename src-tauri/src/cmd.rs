@@ -1,6 +1,6 @@
-use crate::clash;
-use crate::import;
 use tauri::api::process::kill_children;
+
+use crate::utils::{clash, import};
 
 #[tauri::command]
 pub fn cmd_restart_sidebar() {

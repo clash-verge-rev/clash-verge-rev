@@ -1,7 +1,7 @@
 extern crate reqwest;
 
 use crate::config::{read_profiles, save_profiles, ProfileExtra, ProfileItem};
-use crate::init::app_home_dir;
+use crate::utils::app_home_dir;
 use std::fs::File;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};

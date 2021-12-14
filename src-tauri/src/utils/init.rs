@@ -7,18 +7,11 @@ use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tauri::api::path::{home_dir, resource_dir};
 use tauri::PackageInfo;
 
-/// get the verge app home dir
-pub fn app_home_dir() -> PathBuf {
-  home_dir()
-    .unwrap()
-    .join(Path::new(".config"))
-    .join(Path::new("clash-verge"))
-}
+use crate::utils::{app_home_dir, app_resources_dir};
 
 /// initialize this instance's log file
 fn init_log(log_dir: &PathBuf) {
@@ -96,7 +89,7 @@ pub fn init_app(package_info: &PackageInfo) {
   let log_dir = app_dir.join("logs");
   let profiles_dir = app_dir.join("profiles");
 
-  let res_dir = resource_dir(package_info).unwrap().join("resources");
+  let res_dir = app_resources_dir(package_info);
 
   if !app_dir.exists() {
     fs::create_dir(&app_dir).unwrap();
