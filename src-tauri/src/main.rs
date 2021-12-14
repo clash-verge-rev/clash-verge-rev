@@ -10,7 +10,7 @@ mod config;
 mod events;
 mod utils;
 
-use crate::{events::state::ClashInfoState, utils::clash::put_clash_profile};
+use crate::{events::state, utils::clash::put_clash_profile};
 use std::sync::{Arc, Mutex};
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
@@ -57,9 +57,11 @@ fn main() -> std::io::Result<()> {
       _ => {}
     })
     .invoke_handler(tauri::generate_handler![
-      cmd::import_profile,
       cmd::restart_sidebar,
       cmd::get_clash_info,
+      cmd::import_profile,
+      cmd::get_profiles,
+      cmd::set_profiles
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");
@@ -77,7 +79,8 @@ fn main() -> std::io::Result<()> {
     };
   });
 
-  app.manage(ClashInfoState(Arc::new(Mutex::new(info))));
+  app.manage(state::ClashInfoState(Arc::new(Mutex::new(info))));
+  app.manage(state::ProfileLock::default());
 
   app.run(|app_handle, e| match e {
     tauri::Event::CloseRequested { label, api, .. } => {

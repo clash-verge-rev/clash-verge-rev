@@ -1,6 +1,9 @@
 use crate::{
-  config::{read_profiles, save_profiles, ProfileItem},
-  events::{emit::ClashInfoPayload, state::ClashInfoState},
+  config::{read_profiles, save_profiles, ProfileItem, ProfilesConfig},
+  events::{
+    emit::ClashInfoPayload,
+    state::{ClashInfoState, ProfileLock},
+  },
   utils::{app_home_dir, clash, fetch::fetch_profile},
 };
 use std::fs::File;
@@ -28,7 +31,7 @@ pub fn get_clash_info(clash_info: State<'_, ClashInfoState>) -> Option<ClashInfo
 /// Import the Profile from url and
 /// save to the `profiles.yaml` file
 #[tauri::command]
-pub async fn import_profile(url: String) -> Result<String, String> {
+pub async fn import_profile(url: String, lock: State<'_, ProfileLock>) -> Result<String, String> {
   let result = match fetch_profile(&url).await {
     Some(r) => r,
     None => {
@@ -42,6 +45,12 @@ pub async fn import_profile(url: String) -> Result<String, String> {
     .unwrap()
     .write(result.data.as_bytes())
     .unwrap();
+
+  // get lock
+  match lock.0.lock() {
+    Ok(_) => {}
+    Err(_) => return Err(format!("can not get file locked")),
+  };
 
   // update profiles.yaml
   let mut profiles = read_profiles();
@@ -64,4 +73,61 @@ pub async fn import_profile(url: String) -> Result<String, String> {
   save_profiles(&profiles);
 
   Ok(format!("success"))
+}
+
+#[tauri::command]
+pub fn get_profiles(lock: State<'_, ProfileLock>) -> Option<ProfilesConfig> {
+  match lock.0.lock() {
+    Ok(_) => Some(read_profiles()),
+    Err(_) => None,
+  }
+}
+
+#[tauri::command]
+pub fn set_profiles(
+  current: usize,
+  profile: ProfileItem,
+  lock: State<'_, ProfileLock>,
+) -> Result<(), String> {
+  match lock.0.lock() {
+    Ok(_) => {}
+    Err(_) => return Err(format!("can not get file locked")),
+  };
+
+  let mut profiles = read_profiles();
+  let mut items = match profiles.items {
+    Some(p) => p,
+    None => vec![],
+  };
+
+  if current >= items.len() {
+    return Err(format!("out of profiles bound"));
+  }
+
+  let mut origin = items[current].clone();
+
+  if profile.name.is_some() {
+    origin.name = profile.name;
+  }
+  if profile.file.is_some() {
+    origin.file = profile.file;
+  }
+  if profile.mode.is_some() {
+    origin.mode = profile.mode;
+  }
+  if profile.url.is_some() {
+    origin.url = profile.url;
+  }
+  if profile.selected.is_some() {
+    origin.selected = profile.selected;
+  }
+  if profile.extra.is_some() {
+    origin.extra = profile.extra;
+  }
+
+  items[current] = origin;
+  profiles.items = Some(items);
+  save_profiles(&profiles);
+
+  Ok(())
 }
