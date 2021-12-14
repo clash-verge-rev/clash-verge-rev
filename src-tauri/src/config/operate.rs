@@ -1,7 +1,8 @@
 use serde::{de::DeserializeOwned, Serialize};
+use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf};
 
-use super::profiles::ProfilesConfig;
+use super::{profiles::ProfilesConfig, ClashController};
 use crate::init::app_home_dir;
 
 /// read data from yaml as struct T
@@ -34,23 +35,37 @@ pub fn save_yaml<T: Serialize>(
   }
 }
 
-// /// Get Clash Core Config
-// pub fn read_clash() -> Mapping {
-//   read_yaml::<Mapping>(app_home_dir().join("config.yaml"))
-// }
+/// Get Clash Core Config
+pub fn read_clash() -> Mapping {
+  read_yaml::<Mapping>(app_home_dir().join("config.yaml"))
+}
 
-// /// Get Verge App Config
-// pub fn read_verge() -> ProfilesConfig {
-//   read_from_yaml::<ProfilesConfig>(app_home_dir().join("verge.yaml"))
-// }
+/// Get infomation of the clash's `external-controller` and `secret`
+pub fn read_clash_controller() -> ClashController {
+  let config = read_clash();
 
-// /// Save Verge App Config
-// pub fn save_verge(verge_config: &ProfilesConfig) {
-//   let yaml_path = app_home_dir().join("verge.yaml");
-//   let yaml_str = serde_yaml::to_string(&verge_config).unwrap();
-//   let yaml_str = String::from("# Config File for Clash Verge\n\n") + &yaml_str;
-//   fs::write(yaml_path, yaml_str.as_bytes()).unwrap();
-// }
+  let key_server = Value::String("external-controller".to_string());
+  let key_secret = Value::String("secret".to_string());
+
+  let server = match config.get(&key_server) {
+    Some(value) => match value {
+      Value::String(val_str) => Some(val_str.clone()),
+      _ => None,
+    },
+    _ => None,
+  };
+  let secret = match config.get(&key_secret) {
+    Some(value) => match value {
+      Value::String(val_str) => Some(val_str.clone()),
+      Value::Bool(val_bool) => Some(val_bool.to_string()),
+      Value::Number(val_num) => Some(val_num.to_string()),
+      _ => None,
+    },
+    _ => None,
+  };
+
+  ClashController { server, secret }
+}
 
 /// Get Profiles Config
 pub fn read_profiles() -> ProfilesConfig {
@@ -65,4 +80,9 @@ pub fn save_profiles(profiles: &ProfilesConfig) {
     Some("# Profiles Config for Clash Verge\n\n"),
   )
   .unwrap();
+}
+
+#[test]
+fn test_print_config() {
+  println!("{:?}", read_clash_controller());
 }
