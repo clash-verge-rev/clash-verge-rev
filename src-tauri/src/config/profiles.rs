@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// Define the verge.yaml's schema
+/// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct ProfilesConfig {
   /// current profile's name
