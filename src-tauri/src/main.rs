@@ -61,7 +61,8 @@ fn main() -> std::io::Result<()> {
       cmd::get_clash_info,
       cmd::import_profile,
       cmd::get_profiles,
-      cmd::set_profiles
+      cmd::set_profiles,
+      cmd::put_profiles,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");

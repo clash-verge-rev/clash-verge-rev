@@ -84,6 +84,7 @@ pub fn get_profiles(lock: State<'_, ProfileLock>) -> Option<ProfilesConfig> {
 }
 
 #[tauri::command]
+/// update the profile config
 pub fn set_profiles(
   current: usize,
   profile: ProfileItem,
@@ -130,4 +131,31 @@ pub fn set_profiles(
   save_profiles(&profiles);
 
   Ok(())
+}
+
+#[tauri::command]
+/// change to target profile
+pub fn put_profiles(current: usize, lock: State<'_, ProfileLock>) -> Result<(), String> {
+  match lock.0.lock() {
+    Ok(_) => {}
+    Err(_) => return Err(format!("can not get file locked")),
+  };
+
+  let mut profiles = read_profiles();
+
+  let items_len = match &profiles.items {
+    Some(p) => p.len(),
+    None => 0,
+  };
+
+  if current >= items_len {
+    Err(format!(
+      "failed to change profile to the index `{}`",
+      current
+    ))
+  } else {
+    profiles.current = Some(current as u32);
+    save_profiles(&profiles);
+    Ok(())
+  }
 }
