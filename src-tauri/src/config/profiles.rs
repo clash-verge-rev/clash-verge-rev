@@ -39,3 +39,12 @@ pub struct ProfileExtra {
   pub total: u64,
   pub expire: u64,
 }
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+/// the result from url
+pub struct ProfileResponse {
+  pub name: String,
+  pub file: String,
+  pub data: String,
+  pub extra: ProfileExtra,
+}

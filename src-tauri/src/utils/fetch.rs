@@ -1,9 +1,4 @@
-extern crate reqwest;
-
-use crate::config::{read_profiles, save_profiles, ProfileExtra, ProfileItem};
-use crate::utils::app_home_dir;
-use std::fs::File;
-use std::io::Write;
+use crate::config::{ProfileExtra, ProfileResponse};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// parse the string
@@ -21,12 +16,13 @@ fn parse_string<'a>(target: &'a str, key: &'a str) -> Option<&'a str> {
   }
 }
 
-/// Todo: log
-/// Import the Profile from url
-/// save to the `verge.yaml` file
-pub async fn import_profile(profile_url: &str) -> Result<(), reqwest::Error> {
-  let resp = reqwest::get(profile_url).await?;
-  let header = resp.headers().clone();
+/// fetch and parse the profile
+pub async fn fetch_profile(url: &str) -> Option<ProfileResponse> {
+  let resp = match reqwest::get(url).await {
+    Ok(res) => res,
+    Err(_) => return None,
+  };
+  let header = resp.headers();
 
   // parse the Subscription Userinfo
   let extra = {
@@ -56,60 +52,34 @@ pub async fn import_profile(profile_url: &str) -> Result<(), reqwest::Error> {
     }
   };
 
-  // parse the file name
-  let file_name = {
-    let file_name = header.get("Content-Disposition").unwrap().to_str().unwrap();
-    let file_name = parse_string(file_name, "filename=");
+  // parse the `name` and `file`
+  let (name, file) = {
+    let now = SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .unwrap()
+      .as_secs();
+    let file = format!("{}.yaml", now);
+    let name = header.get("Content-Disposition").unwrap().to_str().unwrap();
+    let name = parse_string(name, "filename=");
 
-    match file_name {
-      Some(f) => f.to_string(),
-      None => {
-        let cur_time = SystemTime::now()
-          .duration_since(UNIX_EPOCH)
-          .unwrap()
-          .as_secs();
-        format!("{}.yaml", cur_time)
-      }
+    match name {
+      Some(f) => (f.to_string(), file),
+      None => (file.clone(), file),
     }
   };
 
-  // save file
-  let file_data = resp.text_with_charset("utf-8").await?;
-  let file_path = app_home_dir().join("profiles").join(&file_name);
-  File::create(file_path)
-    .unwrap()
-    .write(file_data.as_bytes())
-    .unwrap();
-
-  // update profiles.yaml
-  let mut profiles = read_profiles();
-  let mut items = match profiles.items {
-    Some(p) => p,
-    None => vec![],
+  // get the data
+  let data = match resp.text_with_charset("utf-8").await {
+    Ok(d) => d,
+    Err(_) => return None,
   };
 
-  let profile = ProfileItem {
-    name: Some(file_name.clone()),
-    file: Some(file_name.clone()),
-    mode: Some(String::from("rule")),
-    url: Some(String::from(profile_url)),
-    selected: Some(vec![]),
-    extra: Some(extra),
-  };
-
-  let target_index = items
-    .iter()
-    .position(|x| x.name.is_some() && x.name.as_ref().unwrap().as_str() == file_name.as_str());
-
-  match target_index {
-    Some(idx) => items[idx] = profile,
-    None => items.push(profile),
-  };
-
-  profiles.items = Some(items);
-  save_profiles(&profiles);
-
-  Ok(())
+  Some(ProfileResponse {
+    file,
+    name,
+    data,
+    extra,
+  })
 }
 
 #[test]
