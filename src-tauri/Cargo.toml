@@ -7,7 +7,7 @@ license = "MIT"
 repository = ""
 default-run = "app"
 edition = "2021"
-build = "src/build.rs"
+build = "build.rs"
 
 [build-dependencies]
 tauri-build = { version = "1.0.0-beta.4" }
