@@ -7,10 +7,13 @@ extern crate tauri;
 
 mod cmd;
 mod config;
+mod events;
 mod utils;
 
+use crate::events::state::ClashInfoState;
+use std::sync::{Arc, Mutex};
 use tauri::{
-  CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
+  api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
   SystemTraySubmenu,
 };
 
@@ -41,6 +44,7 @@ fn main() -> std::io::Result<()> {
           window.set_focus().unwrap();
         }
         "quit" => {
+          api::process::kill_children();
           app.exit(0);
         }
         _ => {}
@@ -53,18 +57,18 @@ fn main() -> std::io::Result<()> {
       _ => {}
     })
     .invoke_handler(tauri::generate_handler![
-      cmd::cmd_import_profile,
-      cmd::cmd_restart_sidebar,
+      cmd::import_profile,
+      cmd::restart_sidebar,
+      cmd::get_clash_info,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");
 
   // init app config
   utils::init::init_app(app.package_info());
-  // clash::run_clash_bin();
-
-  // 通过clash config初始化menu和tray
-  // 通过verge config干点别的
+  // run clash sidecar
+  let info = utils::clash::run_clash_bin(&app.handle());
+  app.manage(ClashInfoState(Arc::new(Mutex::new(info))));
 
   app.run(|app_handle, e| match e {
     tauri::Event::CloseRequested { label, api, .. } => {
@@ -74,6 +78,9 @@ fn main() -> std::io::Result<()> {
     }
     tauri::Event::ExitRequested { api, .. } => {
       api.prevent_exit();
+    }
+    tauri::Event::Exit => {
+      api::process::kill_children();
     }
     _ => {}
   });
