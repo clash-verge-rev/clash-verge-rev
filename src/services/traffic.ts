@@ -1,5 +1,5 @@
 import axios from "axios";
-import axiosIns from "./base";
+import { getAxios } from "./base";
 
 export interface TrafficData {
   up: number;
@@ -10,7 +10,7 @@ export interface TrafficData {
 export async function getTraffic(callback: (data: TrafficData) => void) {
   const source = axios.CancelToken.source();
 
-  axiosIns.get("/traffic", {
+  (await getAxios()).get("/traffic", {
     cancelToken: source.token,
     onDownloadProgress: (progressEvent) => {
       const data = progressEvent.currentTarget.response || "";

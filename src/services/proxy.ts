@@ -1,4 +1,4 @@
-import axiosIns from "./base";
+import { getAxios } from "./base";
 
 export interface ProxyItem {
   name: string;
@@ -18,7 +18,8 @@ export type ProxyGroupItem = Omit<ProxyItem, "all"> & {
 
 /// Get the Proxy infomation
 export async function getProxyInfo() {
-  const response = (await axiosIns.get("/proxies")) as any;
+  const axiosIns = await getAxios();
+  const response = await axiosIns.get<any, any>("/proxies");
   const proxies = (response?.proxies ?? {}) as Record<string, ProxyItem>;
 
   const global = proxies["GLOBAL"];
@@ -49,5 +50,5 @@ export async function getProxyInfo() {
 
 /// Update the Proxy Choose
 export async function updateProxy(group: string, proxy: string) {
-  return axiosIns.put(`/proxies/${group}`, { name: proxy });
+  return (await getAxios()).put(`/proxies/${group}`, { name: proxy });
 }

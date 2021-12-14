@@ -1,9 +1,9 @@
 import axios from "axios";
-import axiosIns from "./base";
+import { getAxios } from "./base";
 
 /// Get Version
 export async function getVersion() {
-  return axiosIns.get("/version") as Promise<{
+  return (await getAxios()).get("/version") as Promise<{
     premium: boolean;
     version: string;
   }>;
@@ -20,12 +20,12 @@ export interface ConfigType {
 
 /// Get current base configs
 export async function getConfigs() {
-  return axiosIns.get("/configs") as Promise<ConfigType>;
+  return (await getAxios()).get("/configs") as Promise<ConfigType>;
 }
 
 /// Update current configs
 export async function updateConfigs(config: Partial<ConfigType>) {
-  return axiosIns.patch("/configs", config);
+  return (await getAxios()).patch("/configs", config);
 }
 
 interface RuleItem {
@@ -36,14 +36,14 @@ interface RuleItem {
 
 /// Get current rules
 export async function getRules() {
-  return axiosIns.get("/rules") as Promise<RuleItem[]>;
+  return (await getAxios()).get("/rules") as Promise<RuleItem[]>;
 }
 
 /// Get logs stream
 export async function getLogs(callback: (t: any) => void) {
   const source = axios.CancelToken.source();
 
-  axiosIns.get("/logs", {
+  (await getAxios()).get("/logs", {
     cancelToken: source.token,
     onDownloadProgress: (progressEvent) => {
       const data = progressEvent.currentTarget.response || "";
