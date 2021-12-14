@@ -1,5 +1,23 @@
+import { useEffect } from "react";
+import { Box, Typography } from "@mui/material";
+import services from "../services";
+
 const ConnectionsPage = () => {
-  return <h1>Connection</h1>;
+  useEffect(() => {
+    const sourcePromise = services.getLogs(console.log);
+
+    return () => {
+      sourcePromise.then((src) => src.cancel());
+    };
+  }, []);
+
+  return (
+    <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>
+      <Typography variant="h4" component="h1" sx={{ py: 2 }}>
+        Connections
+      </Typography>
+    </Box>
+  );
 };
 
 export default ConnectionsPage;
