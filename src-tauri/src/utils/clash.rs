@@ -98,11 +98,18 @@ pub async fn put_clash_profile(payload: &ClashInfoPayload) -> Result<(), String>
   }
   fs::copy(file_path, temp_path.clone()).unwrap();
 
-  let server = payload.controller.clone().unwrap().server.unwrap();
-  let server = format!("http://{}/configs", server);
+  let ctrl = payload.controller.clone().unwrap();
+  let server = format!("http://{}/configs", ctrl.server.unwrap());
 
   let mut headers = HeaderMap::new();
   headers.insert("Content-Type", "application/json".parse().unwrap());
+
+  if let Some(secret) = ctrl.secret {
+    headers.insert(
+      "Authorization",
+      format!("Bearer {}", secret).parse().unwrap(),
+    );
+  }
 
   let mut data = HashMap::new();
   data.insert("path", temp_path.as_os_str().to_str().unwrap());
