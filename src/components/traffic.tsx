@@ -54,7 +54,7 @@ const Traffic = () => {
           color={+up > 0 ? "primary" : "disabled"}
         />
         <Typography {...valStyle}>{up}</Typography>
-        <Typography {...unitStyle}>{upUnit}</Typography>
+        <Typography {...unitStyle}>{upUnit}/s</Typography>
       </Box>
 
       <Box display="flex" alignItems="center" whiteSpace="nowrap">
@@ -63,7 +63,7 @@ const Traffic = () => {
           color={+down > 0 ? "primary" : "disabled"}
         />
         <Typography {...valStyle}>{down}</Typography>
-        <Typography {...unitStyle}>{downUnit}</Typography>
+        <Typography {...unitStyle}>{downUnit}/s</Typography>
       </Box>
     </Box>
   );
