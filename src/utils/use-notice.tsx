@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { IconButton, Slide, Snackbar } from "@mui/material";
-import { Close } from "@mui/icons-material";
+import { Box, IconButton, Slide, Snackbar } from "@mui/material";
+import { Close, CheckCircleRounded, ErrorRounded } from "@mui/icons-material";
 
 interface NoticeInstance {
   info: (msg: string) => void;
@@ -16,6 +16,17 @@ const useNotice = () => {
     if (reason !== "clickaway") setMessage("");
   };
 
+  const msgElement =
+    level === "info" ? (
+      message
+    ) : (
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        {level === "error" && <ErrorRounded color="error" />}
+        {level === "success" && <CheckCircleRounded color="success" />}
+        <span style={{ marginLeft: 4 }}>{message}</span>
+      </Box>
+    );
+
   const element = useMemo(
     () => (
       <Snackbar
@@ -23,8 +34,10 @@ const useNotice = () => {
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         autoHideDuration={3000}
         onClose={handleClose}
-        message={message}
+        message={msgElement}
+        sx={{ maxWidth: 360 }}
         TransitionComponent={(p) => <Slide {...p} direction="left" />}
+        transitionDuration={200}
         action={
           <IconButton
             size="small"
