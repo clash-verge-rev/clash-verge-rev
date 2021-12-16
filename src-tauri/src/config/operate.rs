@@ -44,8 +44,30 @@ pub fn read_clash() -> Mapping {
 pub fn read_clash_controller() -> ClashController {
   let config = read_clash();
 
+  let key_port_1 = Value::String("port".to_string());
+  let key_port_2 = Value::String("mixed-port".to_string());
   let key_server = Value::String("external-controller".to_string());
   let key_secret = Value::String("secret".to_string());
+
+  let port = match config.get(&key_port_1) {
+    Some(value) => match value {
+      Value::String(val_str) => Some(val_str.clone()),
+      Value::Number(val_num) => Some(val_num.to_string()),
+      _ => None,
+    },
+    _ => None,
+  };
+  let port = match port {
+    Some(_) => port,
+    None => match config.get(&key_port_2) {
+      Some(value) => match value {
+        Value::String(val_str) => Some(val_str.clone()),
+        Value::Number(val_num) => Some(val_num.to_string()),
+        _ => None,
+      },
+      _ => None,
+    },
+  };
 
   let server = match config.get(&key_server) {
     Some(value) => match value {
@@ -64,7 +86,11 @@ pub fn read_clash_controller() -> ClashController {
     _ => None,
   };
 
-  ClashController { server, secret }
+  ClashController {
+    port,
+    server,
+    secret,
+  }
 }
 
 /// Get Profiles Config

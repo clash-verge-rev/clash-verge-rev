@@ -21,6 +21,9 @@ pub struct ClashConfig {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct ClashController {
+  /// clash core port
+  pub port: Option<String>,
+
   /// same as `external-controller`
   pub server: Option<String>,
   pub secret: Option<String>,

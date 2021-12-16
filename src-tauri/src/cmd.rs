@@ -8,6 +8,7 @@ use crate::{
     app_home_dir,
     clash::{self, put_clash_profile},
     fetch::fetch_profile,
+    sysopt::{set_proxy_config, SysProxyConfig},
   },
 };
 use std::fs::File;
@@ -170,4 +171,45 @@ pub async fn put_profiles(
   profiles.current = Some(current as u32);
   save_profiles(&profiles);
   put_clash_profile(&clash_info).await
+}
+
+#[tauri::command]
+/// set system proxy
+pub fn set_sys_proxy(enable: bool, clash_info: State<'_, ClashInfoState>) -> Result<(), String> {
+  let clash_info = match clash_info.0.lock() {
+    Ok(arc) => arc.clone(),
+    _ => return Err(format!("can not get clash info")),
+  };
+
+  let port = match clash_info.controller {
+    Some(ctrl) => ctrl.port,
+    None => None,
+  };
+
+  if port.is_none() {
+    return Err(format!("can not get clash core's port"));
+  }
+
+  let config = if enable {
+    let server = format!("127.0.0.1:{}", port.unwrap());
+    // todo
+    let bypass = String::from("localhost;127.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;192.168.*");
+
+    SysProxyConfig {
+      enable,
+      server,
+      bypass,
+    }
+  } else {
+    SysProxyConfig {
+      enable,
+      server: String::from(""),
+      bypass: String::from(""),
+    }
+  };
+
+  match set_proxy_config(&config) {
+    Ok(_) => Ok(()),
+    Err(_) => Err(format!("can not set proxy")),
+  }
 }

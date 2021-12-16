@@ -63,6 +63,7 @@ fn main() -> std::io::Result<()> {
       cmd::get_profiles,
       cmd::set_profiles,
       cmd::put_profiles,
+      cmd::set_sys_proxy,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");

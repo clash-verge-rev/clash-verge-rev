@@ -3,9 +3,9 @@ use std::io;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SysProxyConfig {
-  enable: bool,
-  server: String,
-  bypass: String,
+  pub enable: bool,
+  pub server: String,
+  pub bypass: String,
 }
 
 #[cfg(target_os = "windows")]
