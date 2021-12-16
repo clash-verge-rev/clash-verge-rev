@@ -4,7 +4,11 @@ use crate::{
     emit::ClashInfoPayload,
     state::{ClashInfoState, ProfileLock},
   },
-  utils::{app_home_dir, clash, fetch::fetch_profile},
+  utils::{
+    app_home_dir,
+    clash::{self, put_clash_profile},
+    fetch::fetch_profile,
+  },
 };
 use std::fs::File;
 use std::io::Write;
@@ -135,27 +139,35 @@ pub fn set_profiles(
 
 #[tauri::command]
 /// change to target profile
-pub fn put_profiles(current: usize, lock: State<'_, ProfileLock>) -> Result<(), String> {
+pub async fn put_profiles(
+  current: usize,
+  lock: State<'_, ProfileLock>,
+  clash_info: State<'_, ClashInfoState>,
+) -> Result<(), String> {
   match lock.0.lock() {
     Ok(_) => {}
     Err(_) => return Err(format!("can not get file locked")),
   };
 
-  let mut profiles = read_profiles();
+  let clash_info = match clash_info.0.lock() {
+    Ok(arc) => arc.clone(),
+    _ => return Err(format!("can not get clash info")),
+  };
 
+  let mut profiles = read_profiles();
   let items_len = match &profiles.items {
     Some(p) => p.len(),
     None => 0,
   };
 
   if current >= items_len {
-    Err(format!(
+    return Err(format!(
       "failed to change profile to the index `{}`",
       current
-    ))
-  } else {
-    profiles.current = Some(current as u32);
-    save_profiles(&profiles);
-    Ok(())
+    ));
   }
+
+  profiles.current = Some(current as u32);
+  save_profiles(&profiles);
+  put_clash_profile(&clash_info).await
 }
