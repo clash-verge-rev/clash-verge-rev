@@ -48,3 +48,7 @@ export async function setProfiles(current: number, profile: ProfileItem) {
 export async function putProfiles(current: number) {
   return invoke<void>("put_profiles", { current });
 }
+
+export async function setSysProxy(enable: boolean) {
+  return invoke<void>("set_sys_proxy", { enable });
+}

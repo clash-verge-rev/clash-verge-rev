@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRecoilState } from "recoil";
 import {
   Box,
@@ -14,6 +15,7 @@ import {
 } from "@mui/material";
 import { atomPaletteMode } from "../states/setting";
 import PaletteSwitch from "../components/palette-switch";
+import { setSysProxy } from "../services/command";
 
 const MiniListItem = styled(ListItem)(({ theme }) => ({
   paddingTop: 5,
@@ -22,6 +24,20 @@ const MiniListItem = styled(ListItem)(({ theme }) => ({
 
 const SettingPage = () => {
   const [mode, setMode] = useRecoilState(atomPaletteMode);
+  const [proxy, setProxy] = useState(false);
+
+  const onSysproxy = (enable: boolean) => {
+    const value = proxy;
+    setProxy(enable);
+    setSysProxy(enable)
+      .then(() => {
+        console.log("success");
+      })
+      .catch((err) => {
+        setProxy(value); // recover
+        console.log(err);
+      });
+  };
 
   return (
     <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>
@@ -48,7 +64,11 @@ const SettingPage = () => {
 
         <MiniListItem>
           <ListItemText primary="设置系统代理" />
-          <Switch edge="end" />
+          <Switch
+            edge="end"
+            checked={proxy}
+            onChange={(_e, c) => onSysproxy(c)}
+          />
         </MiniListItem>
 
         <MiniListItem>
