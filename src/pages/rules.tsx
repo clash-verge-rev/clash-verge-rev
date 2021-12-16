@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { Box, Button, TextField, Typography } from "@mui/material";
-import { importProfile } from "../services/command";
+import useSWR, { useSWRConfig } from "swr";
+import { Box, Button, Grid, TextField, Typography } from "@mui/material";
+import { getProfiles, importProfile, putProfiles } from "../services/command";
+import ProfileItemComp from "../components/profile-item";
 import useNotice from "../utils/use-notice";
 
 const RulesPage = () => {
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-
   const [notice, noticeElement] = useNotice();
+
+  const { mutate } = useSWRConfig();
+  const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
 
   const onClick = () => {
     if (!url) return;
@@ -19,14 +23,26 @@ const RulesPage = () => {
       .finally(() => setDisabled(false));
   };
 
+  const onProfileChange = (index: number) => {
+    putProfiles(index)
+      .then(() => {
+        mutate("getProfiles", { ...profiles, current: index }, true);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
   return (
     <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>
       <Typography variant="h4" component="h1" sx={{ py: 2, mb: 1 }}>
         Rules
       </Typography>
 
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", mb: 3 }}>
         <TextField
+          id="profile_url"
+          name="profile_url"
           label="Profile URL"
           size="small"
           fullWidth
@@ -34,10 +50,26 @@ const RulesPage = () => {
           onChange={(e) => setUrl(e.target.value)}
           sx={{ mr: 4 }}
         />
-        <Button disabled={disabled} variant="contained" onClick={onClick}>
+        <Button
+          disabled={!url || disabled}
+          variant="contained"
+          onClick={onClick}
+        >
           Import
         </Button>
       </Box>
+
+      <Grid container spacing={3}>
+        {profiles?.items?.map((item, idx) => (
+          <Grid item xs={12} sm={6} key={item.file}>
+            <ProfileItemComp
+              selected={profiles.current === idx}
+              itemData={item}
+              onClick={() => onProfileChange(idx)}
+            />
+          </Grid>
+        ))}
+      </Grid>
 
       {noticeElement}
     </Box>

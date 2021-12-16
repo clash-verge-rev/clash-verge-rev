@@ -38,9 +38,13 @@ export interface ProfilesConfig {
 }
 
 export async function getProfiles() {
-  return (await invoke<ProfilesConfig[] | null>("get_profiles")) ?? [];
+  return invoke<ProfilesConfig | null>("get_profiles");
 }
 
 export async function setProfiles(current: number, profile: ProfileItem) {
   return invoke<void>("set_profiles", { current, profile });
+}
+
+export async function putProfiles(current: number) {
+  return invoke<void>("put_profiles", { current });
 }

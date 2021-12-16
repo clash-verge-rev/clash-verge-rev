@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { SWRConfig } from "swr";
 import { Route, Routes } from "react-router-dom";
 import { useRecoilValue } from "recoil";
 import { createTheme, List, Paper, ThemeProvider } from "@mui/material";
@@ -55,6 +56,15 @@ const Layout = () => {
     }
 
     return createTheme({
+      breakpoints: {
+        values: {
+          xs: 0,
+          sm: 650,
+          md: 900,
+          lg: 1200,
+          xl: 1536,
+        },
+      },
       palette: {
         mode: paletteMode,
         primary: {
@@ -69,38 +79,40 @@ const Layout = () => {
   }, [paletteMode]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <Paper square elevation={0} className="layout">
-        <div className="layout__sidebar">
-          <div className="layout__logo">
-            <img src={LogoSvg} width="100%" alt="" />
+    <SWRConfig value={{}}>
+      <ThemeProvider theme={theme}>
+        <Paper square elevation={0} className="layout">
+          <div className="layout__sidebar">
+            <div className="layout__logo">
+              <img src={LogoSvg} width="100%" alt="" />
+            </div>
+
+            <List sx={{ userSelect: "none" }}>
+              {routers.map((router) => (
+                <ListItemLink key={router.label} to={router.link}>
+                  {router.label}
+                </ListItemLink>
+              ))}
+            </List>
+
+            <div className="layout__traffic">
+              <Traffic />
+            </div>
           </div>
 
-          <List sx={{ userSelect: "none" }}>
-            {routers.map((router) => (
-              <ListItemLink key={router.label} to={router.link}>
-                {router.label}
-              </ListItemLink>
-            ))}
-          </List>
-
-          <div className="layout__traffic">
-            <Traffic />
+          <div className="layout__content">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/proxy" element={<ProxyPage />} />
+              <Route path="/rules" element={<RulesPage />} />
+              <Route path="/log" element={<LogPage />} />
+              <Route path="/connections" element={<ConnectionsPage />} />
+              <Route path="/setting" element={<SettingPage />} />
+            </Routes>
           </div>
-        </div>
-
-        <div className="layout__content">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/proxy" element={<ProxyPage />} />
-            <Route path="/rules" element={<RulesPage />} />
-            <Route path="/log" element={<LogPage />} />
-            <Route path="/connections" element={<ConnectionsPage />} />
-            <Route path="/setting" element={<SettingPage />} />
-          </Routes>
-        </div>
-      </Paper>
-    </ThemeProvider>
+        </Paper>
+      </ThemeProvider>
+    </SWRConfig>
   );
 };
 

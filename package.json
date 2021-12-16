@@ -15,11 +15,13 @@
     "@mui/material": "^5.2.3",
     "@tauri-apps/api": "^1.0.0-beta.8",
     "axios": "^0.24.0",
+    "dayjs": "^1.10.7",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-router-dom": "^6.0.2",
     "react-virtuoso": "^2.3.1",
-    "recoil": "^0.5.2"
+    "recoil": "^0.5.2",
+    "swr": "^1.1.2-beta.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.0.0-beta.10",
