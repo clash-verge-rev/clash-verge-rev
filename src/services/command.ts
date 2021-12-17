@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/tauri";
 
 export async function restartSidecar() {
-  return invoke<void>("restart_sidebar");
+  return invoke<void>("restart_sidecar");
 }
 
 export interface ClashInfo {
@@ -15,7 +15,11 @@ export async function getClashInfo() {
 }
 
 export async function importProfile(url: string) {
-  return invoke<string>("import_profile", { url });
+  return invoke<void>("import_profile", { url });
+}
+
+export async function updateProfile(index: number) {
+  return invoke<void>("update_profile", { index });
 }
 
 export interface ProfileItem {

@@ -99,13 +99,12 @@ pub fn read_profiles() -> ProfilesConfig {
 }
 
 /// Save Verge App Config
-pub fn save_profiles(profiles: &ProfilesConfig) {
+pub fn save_profiles(profiles: &ProfilesConfig) -> Result<(), String> {
   save_yaml(
     app_home_dir().join("profiles.yaml"),
     profiles,
     Some("# Profiles Config for Clash Verge\n\n"),
   )
-  .unwrap();
 }
 
 #[test]

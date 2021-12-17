@@ -5,7 +5,7 @@
 
 extern crate tauri;
 
-mod cmd;
+mod cmds;
 mod config;
 mod events;
 mod utils;
@@ -57,13 +57,14 @@ fn main() -> std::io::Result<()> {
       _ => {}
     })
     .invoke_handler(tauri::generate_handler![
-      cmd::restart_sidebar,
-      cmd::get_clash_info,
-      cmd::import_profile,
-      cmd::get_profiles,
-      cmd::set_profiles,
-      cmd::put_profiles,
-      cmd::set_sys_proxy,
+      cmds::some::restart_sidecar,
+      cmds::some::get_clash_info,
+      cmds::some::set_sys_proxy,
+      cmds::profile::import_profile,
+      cmds::profile::update_profile,
+      cmds::profile::get_profiles,
+      cmds::profile::set_profiles,
+      cmds::profile::put_profiles,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");

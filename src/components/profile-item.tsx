@@ -28,10 +28,11 @@ interface Props {
   selected: boolean;
   itemData: ProfileItem;
   onClick: () => void;
+  onUpdate: () => void;
 }
 
 const ProfileItemComp: React.FC<Props> = (props) => {
-  const { selected, itemData, onClick } = props;
+  const { selected, itemData, onClick, onUpdate } = props;
 
   const { name = "Profile", extra } = itemData;
   const { upload = 0, download = 0, total = 0 } = extra ?? {};
@@ -87,6 +88,7 @@ const ProfileItemComp: React.FC<Props> = (props) => {
           color="inherit"
           onClick={(e) => {
             e.stopPropagation();
+            onUpdate();
           }}
         >
           <MenuRounded />

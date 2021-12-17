@@ -1,7 +1,12 @@
 import { useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { Box, Button, Grid, TextField, Typography } from "@mui/material";
-import { getProfiles, importProfile, putProfiles } from "../services/command";
+import {
+  getProfiles,
+  importProfile,
+  putProfiles,
+  updateProfile,
+} from "../services/command";
 import ProfileItemComp from "../components/profile-item";
 import useNotice from "../utils/use-notice";
 
@@ -27,6 +32,16 @@ const RulesPage = () => {
     putProfiles(index)
       .then(() => {
         mutate("getProfiles", { ...profiles, current: index }, true);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
+  const onUpdateProfile = (index: number) => {
+    updateProfile(index)
+      .then(() => {
+        mutate("getProfiles");
       })
       .catch((err) => {
         console.error(err);
@@ -66,6 +81,7 @@ const RulesPage = () => {
               selected={profiles.current === idx}
               itemData={item}
               onClick={() => onProfileChange(idx)}
+              onUpdate={() => onUpdateProfile(idx)}
             />
           </Grid>
         ))}
