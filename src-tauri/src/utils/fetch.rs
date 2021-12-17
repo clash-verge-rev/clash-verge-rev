@@ -1,15 +1,21 @@
 use crate::config::{ProfileExtra, ProfileResponse};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+  str::FromStr,
+  time::{SystemTime, UNIX_EPOCH},
+};
 
 /// parse the string
-fn parse_string<'a>(target: &'a str, key: &'a str) -> Option<&'a str> {
+fn parse_string<T: FromStr>(target: &str, key: &str) -> Option<T> {
   match target.find(key) {
     Some(idx) => {
       let idx = idx + key.len();
       let value = &target[idx..];
-      match value.split(';').nth(0) {
-        Some(value) => Some(value.trim()),
-        None => Some(value.trim()),
+      match match value.split(';').nth(0) {
+        Some(value) => value.trim().parse(),
+        None => value.trim().parse(),
+      } {
+        Ok(r) => Some(r),
+        Err(_) => None,
       }
     }
     None => None,
@@ -33,22 +39,10 @@ pub async fn fetch_profile(url: &str) -> Option<ProfileResponse> {
       .unwrap();
 
     ProfileExtra {
-      upload: parse_string(sub_info, "upload=")
-        .unwrap_or("0")
-        .parse()
-        .unwrap_or(0u64),
-      download: parse_string(sub_info, "download=")
-        .unwrap_or("0")
-        .parse()
-        .unwrap_or(0u64),
-      total: parse_string(sub_info, "total=")
-        .unwrap_or("0")
-        .parse()
-        .unwrap_or(0u64),
-      expire: parse_string(sub_info, "expire=")
-        .unwrap_or("0")
-        .parse()
-        .unwrap_or(0u64),
+      upload: parse_string(sub_info, "upload=").unwrap_or(0),
+      download: parse_string(sub_info, "download=").unwrap_or(0),
+      total: parse_string(sub_info, "total=").unwrap_or(0),
+      expire: parse_string(sub_info, "expire=").unwrap_or(0),
     }
   };
 
@@ -60,10 +54,10 @@ pub async fn fetch_profile(url: &str) -> Option<ProfileResponse> {
       .as_secs();
     let file = format!("{}.yaml", now);
     let name = header.get("Content-Disposition").unwrap().to_str().unwrap();
-    let name = parse_string(name, "filename=");
+    let name = parse_string::<String>(name, "filename=");
 
     match name {
-      Some(f) => (f.to_string(), file),
+      Some(f) => (f, file),
       None => (file.clone(), file),
     }
   };
@@ -87,14 +81,17 @@ fn test_parse_value() {
   let test_1 = "upload=111; download=2222; total=3333; expire=444";
   let test_2 = "attachment; filename=Clash.yaml";
 
-  assert_eq!(parse_string(test_1, "upload="), Some("111"));
-  assert_eq!(parse_string(test_1, "download="), Some("2222"));
-  assert_eq!(parse_string(test_1, "total="), Some("3333"));
-  assert_eq!(parse_string(test_1, "expire="), Some("444"));
-  assert_eq!(parse_string(test_2, "filename="), Some("Clash.yaml"));
+  assert_eq!(parse_string::<usize>(test_1, "upload=").unwrap(), 111);
+  assert_eq!(parse_string::<usize>(test_1, "download=").unwrap(), 2222);
+  assert_eq!(parse_string::<usize>(test_1, "total=").unwrap(), 3333);
+  assert_eq!(parse_string::<usize>(test_1, "expire=").unwrap(), 444);
+  assert_eq!(
+    parse_string::<String>(test_2, "filename=").unwrap(),
+    format!("Clash.yaml")
+  );
 
-  assert_eq!(parse_string(test_1, "aaa="), None);
-  assert_eq!(parse_string(test_1, "upload1="), None);
-  assert_eq!(parse_string(test_1, "expire1="), None);
-  assert_eq!(parse_string(test_2, "attachment="), None);
+  assert_eq!(parse_string::<usize>(test_1, "aaa="), None);
+  assert_eq!(parse_string::<usize>(test_1, "upload1="), None);
+  assert_eq!(parse_string::<usize>(test_1, "expire1="), None);
+  assert_eq!(parse_string::<usize>(test_2, "attachment="), None);
 }

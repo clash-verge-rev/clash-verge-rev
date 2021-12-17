@@ -1,9 +1,10 @@
+use crate::{
+  config::{ClashController, ProfilesConfig},
+  utils::app_home_dir,
+};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf};
-
-use super::{profiles::ProfilesConfig, ClashController};
-use crate::utils::app_home_dir;
 
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned>(path: PathBuf) -> T {
@@ -105,9 +106,4 @@ pub fn save_profiles(profiles: &ProfilesConfig) -> Result<(), String> {
     profiles,
     Some("# Profiles Config for Clash Verge\n\n"),
   )
-}
-
-#[test]
-fn test_print_config() {
-  println!("{:?}", read_clash_controller());
 }

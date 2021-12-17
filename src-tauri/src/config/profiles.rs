@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct ProfilesConfig {
   /// current profile's name
-  pub current: Option<u32>,
+  pub current: Option<usize>,
 
   /// profile list
   pub items: Option<Vec<ProfileItem>>,
@@ -34,10 +34,10 @@ pub struct ProfileSelected {
 
 #[derive(Default, Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct ProfileExtra {
-  pub upload: u64,
-  pub download: u64,
-  pub total: u64,
-  pub expire: u64,
+  pub upload: usize,
+  pub download: usize,
+  pub total: usize,
+  pub expire: usize,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]

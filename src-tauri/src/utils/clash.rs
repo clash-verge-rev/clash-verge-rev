@@ -1,9 +1,11 @@
 extern crate log;
 
 use crate::{
-  config::{read_clash_controller, read_profiles},
   events::emit::{clash_start, ClashInfoPayload},
-  utils::app_home_dir,
+  utils::{
+    app_home_dir,
+    config::{read_clash_controller, read_profiles},
+  },
 };
 use reqwest::header::HeaderMap;
 use std::{collections::HashMap, env::temp_dir, fs};
@@ -67,7 +69,7 @@ pub fn run_clash_bin(app_handle: &AppHandle) -> ClashInfoPayload {
 pub async fn put_clash_profile(payload: &ClashInfoPayload) -> Result<(), String> {
   let profile = {
     let profiles = read_profiles();
-    let current = profiles.current.unwrap_or(0u32) as usize;
+    let current = profiles.current.unwrap_or(0) as usize;
     match profiles.items {
       Some(items) => {
         if items.len() == 0 {

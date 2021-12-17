@@ -1,7 +1,12 @@
 use crate::{
-  config::{read_profiles, save_profiles, ProfileItem, ProfilesConfig},
+  config::{ProfileItem, ProfilesConfig},
   events::state::{ClashInfoState, ProfileLock},
-  utils::{app_home_dir, clash::put_clash_profile, fetch::fetch_profile},
+  utils::{
+    app_home_dir,
+    clash::put_clash_profile,
+    config::{read_profiles, save_profiles},
+    fetch::fetch_profile,
+  },
 };
 use std::fs::File;
 use std::io::Write;
@@ -164,7 +169,7 @@ pub async fn put_profiles(
     return Err(format!("the index out of bound"));
   }
 
-  profiles.current = Some(current as u32);
+  profiles.current = Some(current);
   match save_profiles(&profiles) {
     Ok(_) => put_clash_profile(&clash_info).await,
     Err(err) => Err(err),
