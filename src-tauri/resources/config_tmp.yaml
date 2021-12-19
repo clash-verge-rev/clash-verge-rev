@@ -1,6 +1,7 @@
 # Default Config For Clash Core
 
 mixed-port: 7890
+log-level: info
 allow-lan: false
 external-controller: 127.0.0.1:9090
 secret: ""
