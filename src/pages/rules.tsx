@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { Box, Button, Grid, TextField, Typography } from "@mui/material";
 import {
@@ -28,13 +28,19 @@ const RulesPage = () => {
       .finally(() => setDisabled(false));
   };
 
+  const lockRef = useRef(false);
   const onProfileChange = (index: number) => {
+    if (lockRef.current) return;
+    lockRef.current = true;
     putProfiles(index)
       .then(() => {
         mutate("getProfiles", { ...profiles, current: index }, true);
       })
       .catch((err) => {
         console.error(err);
+      })
+      .finally(() => {
+        lockRef.current = false;
       });
   };
 
