@@ -4,11 +4,12 @@ use crate::{
   events::emit::{clash_start, ClashInfoPayload},
   utils::{
     app_home_dir,
-    config::{read_clash_controller, read_profiles},
+    config::{read_clash_controller, read_profiles, read_yaml, save_yaml},
   },
 };
 use reqwest::header::HeaderMap;
-use std::{collections::HashMap, env::temp_dir, fs};
+use serde_yaml::{Mapping, Value};
+use std::{collections::HashMap, env::temp_dir};
 use tauri::{
   api::process::{Command, CommandEvent},
   AppHandle,
@@ -78,21 +79,52 @@ pub async fn put_clash_profile(payload: &ClashInfoPayload) -> Result<(), String>
     }
   };
 
-  // generate temp profile
-  let file_name = match profile.file {
-    Some(file_name) => file_name.clone(),
-    None => {
-      return Err("the profile item should have `file` field".to_string());
-    }
-  };
-
-  let file_path = app_home_dir().join("profiles").join(file_name);
+  // temp profile's path
   let temp_path = temp_dir().join("clash-verge-runtime.yaml");
 
-  if !file_path.exists() {
-    return Err(format!("the profile `{:?}` not exists", file_path));
+  // generate temp profile
+  {
+    let file_name = match profile.file {
+      Some(file_name) => file_name.clone(),
+      None => {
+        return Err(format!("profile item should have `file` field"));
+      }
+    };
+
+    let file_path = app_home_dir().join("profiles").join(file_name);
+    if !file_path.exists() {
+      return Err(format!("profile `{:?}` not exists", file_path));
+    }
+
+    // Only the following fields are allowed:
+    // proxies/proxy-providers/proxy-groups/rule-providers/rules
+    let config = read_yaml::<Mapping>(file_path.clone());
+    let mut new_config = Mapping::new();
+    vec![
+      "proxies",
+      "proxy-providers",
+      "proxy-groups",
+      "rule-providers",
+      "rules",
+    ]
+    .iter()
+    .map(|item| Value::String(item.to_string()))
+    .for_each(|key| {
+      if config.contains_key(&key) {
+        let value = config[&key].clone();
+        new_config.insert(key, value);
+      }
+    });
+
+    match save_yaml(
+      temp_path.clone(),
+      &new_config,
+      Some("# Clash Verge Temp File"),
+    ) {
+      Err(err) => return Err(err),
+      _ => {}
+    };
   }
-  fs::copy(file_path, temp_path.clone()).unwrap();
 
   let ctrl = payload.controller.clone().unwrap();
   let server = format!("http://{}/configs", ctrl.server.unwrap());
@@ -113,6 +145,6 @@ pub async fn put_clash_profile(payload: &ClashInfoPayload) -> Result<(), String>
   let client = reqwest::Client::new();
   match client.put(server).headers(headers).json(&data).send().await {
     Ok(_) => Ok(()),
-    Err(err) => Err(format!("request failed with status `{}`", err.to_string())),
+    Err(err) => Err(format!("request failed `{}`", err.to_string())),
   }
 }
