@@ -12,6 +12,9 @@ import {
 import { MenuRounded } from "@mui/icons-material";
 import { ProfileItem } from "../services/command";
 import parseTraffic from "../utils/parse-traffic";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 
 const Wrapper = styled(Box)(({ theme }) => ({
   width: "100%",
@@ -34,11 +37,12 @@ interface Props {
 const ProfileItemComp: React.FC<Props> = (props) => {
   const { selected, itemData, onClick, onUpdate } = props;
 
-  const { name = "Profile", extra } = itemData;
+  const { name = "Profile", extra, updated = 0 } = itemData;
   const { upload = 0, download = 0, total = 0 } = extra ?? {};
   const from = parseUrl(itemData.url);
   const expire = parseExpire(extra?.expire);
   const progress = Math.round(((download + upload) * 100) / (total + 0.1));
+  const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
 
   return (
     <Wrapper
@@ -95,9 +99,21 @@ const ProfileItemComp: React.FC<Props> = (props) => {
         </IconButton>
       </Box>
 
-      <Typography noWrap title={from}>
-        {from}
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Typography noWrap title={`From: ${from}`}>
+          {from}
+        </Typography>
+
+        <Typography
+          noWrap
+          flex="1 0 auto"
+          fontSize={14}
+          textAlign="right"
+          title="updated time"
+        >
+          {fromnow}
+        </Typography>
+      </Box>
 
       <Box
         sx={{
@@ -107,10 +123,10 @@ const ProfileItemComp: React.FC<Props> = (props) => {
           justifyContent: "space-between",
         }}
       >
-        <span>
+        <span title="used / total">
           {parseTraffic(upload + download)} / {parseTraffic(total)}
         </span>
-        <span>{expire}</span>
+        <span title="expire time">{expire}</span>
       </Box>
 
       <LinearProgress variant="determinate" value={progress} color="inherit" />

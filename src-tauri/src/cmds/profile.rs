@@ -10,6 +10,7 @@ use crate::{
 };
 use std::fs::File;
 use std::io::Write;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::State;
 
 /// Import the profile from url
@@ -38,6 +39,11 @@ pub async fn import_profile(url: String, lock: State<'_, ProfileLock>) -> Result
   let mut profiles = read_profiles();
   let mut items = profiles.items.unwrap_or(vec![]);
 
+  let now = SystemTime::now()
+    .duration_since(UNIX_EPOCH)
+    .unwrap()
+    .as_secs();
+
   items.push(ProfileItem {
     name: Some(result.name),
     file: Some(result.file),
@@ -45,6 +51,7 @@ pub async fn import_profile(url: String, lock: State<'_, ProfileLock>) -> Result
     url: Some(url),
     selected: Some(vec![]),
     extra: Some(result.extra),
+    updated: Some(now as usize),
   });
   profiles.items = Some(items);
   save_profiles(&profiles)
@@ -82,6 +89,11 @@ pub async fn update_profile(index: usize, lock: State<'_, ProfileLock>) -> Resul
     }
   };
 
+  let now = SystemTime::now()
+    .duration_since(UNIX_EPOCH)
+    .unwrap()
+    .as_secs() as usize;
+
   // update file
   let file_path = &items[index].file.as_ref().unwrap();
   let file_path = app_home_dir().join("profiles").join(file_path);
@@ -90,6 +102,7 @@ pub async fn update_profile(index: usize, lock: State<'_, ProfileLock>) -> Resul
 
   items[index].name = Some(result.name);
   items[index].extra = Some(result.extra);
+  items[index].updated = Some(now);
   profiles.items = Some(items);
   save_profiles(&profiles)
 }

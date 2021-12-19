@@ -24,6 +24,8 @@ pub struct ProfileItem {
   pub selected: Option<Vec<ProfileSelected>>,
   /// user info
   pub extra: Option<ProfileExtra>,
+  /// updated time
+  pub updated: Option<usize>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]

@@ -32,6 +32,7 @@ export interface ProfileItem {
   file?: string;
   mode?: string;
   url?: string;
+  updated?: number;
   selected?: { name?: string; now?: string }[];
   extra?: {
     upload: number;
