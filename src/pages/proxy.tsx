@@ -1,19 +1,11 @@
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { Box, List, Typography } from "@mui/material";
 import services from "../services";
 import ProxyGroup from "../components/proxy-group";
-import type { ProxyGroupItem } from "../services/proxy";
 
 const ProxyPage = () => {
-  const [groups, setGroups] = useState<ProxyGroupItem[]>([]);
-
-  useEffect(() => {
-    // Todo
-    // result cache
-    services.getProxyInfo().then((res) => {
-      setGroups(res.groups);
-    });
-  }, []);
+  const { data } = useSWR("getProxies", services.getProxies);
+  const { groups = [] } = data ?? {};
 
   return (
     <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>

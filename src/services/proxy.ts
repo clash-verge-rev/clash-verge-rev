@@ -17,7 +17,7 @@ export type ProxyGroupItem = Omit<ProxyItem, "all"> & {
 };
 
 /// Get the Proxy infomation
-export async function getProxyInfo() {
+export async function getProxies() {
   const axiosIns = await getAxios();
   const response = await axiosIns.get<any, any>("/proxies");
   const proxies = (response?.proxies ?? {}) as Record<string, ProxyItem>;

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { Box, Button, Grid, TextField, Typography } from "@mui/material";
+import services from "../services";
 import {
   getProfiles,
   importProfile,
@@ -35,6 +36,7 @@ const RulesPage = () => {
     putProfiles(index)
       .then(() => {
         mutate("getProfiles", { ...profiles, current: index }, true);
+        mutate("getProxies", services.getProxies());
       })
       .catch((err) => {
         console.error(err);
