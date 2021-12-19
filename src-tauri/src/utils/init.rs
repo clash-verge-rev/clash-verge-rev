@@ -1,32 +1,30 @@
 extern crate serde_yaml;
 
+use chrono::Local;
 use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use std::fs;
+use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
-use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::PackageInfo;
 
 use crate::utils::{app_home_dir, app_resources_dir};
 
 /// initialize this instance's log file
 fn init_log(log_dir: &PathBuf) {
-  let log_time = SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .unwrap()
-    .as_secs();
-  let log_file = format!("log-{:?}", log_time);
+  let local_time = Local::now().format("%Y-%m-%d_%H:%M:%S").to_string();
+  let log_file = format!("{}.log", local_time);
   let log_file = log_dir.join(log_file);
 
-  let stdout = ConsoleAppender::builder().build();
+  let time_format = "{d(%Y-%m-%d %H:%M:%S)} - {m}{n}";
+  let stdout = ConsoleAppender::builder()
+    .encoder(Box::new(PatternEncoder::new(time_format)))
+    .build();
   let tofile = FileAppender::builder()
-    .encoder(Box::new(PatternEncoder::new(
-      "{d(%Y-%m-%d %H:%M:%S)} - {m}{n}",
-    )))
+    .encoder(Box::new(PatternEncoder::new(time_format)))
     .build(log_file)
     .unwrap();
 
@@ -62,11 +60,13 @@ fn init_config_file(app_dir: &PathBuf, res_dir: &PathBuf) {
       fs::copy(clash_tmpl, clash_path).unwrap();
     } else {
       // make sure that the config.yaml not null
-      let content = "mixed-port: 7890\nallow-lan: false\n".as_bytes();
-      fs::File::create(clash_path)
-        .unwrap()
-        .write(content)
-        .unwrap();
+      let content = b"\
+        mixed-port: 7890\n\
+        log-level: info\n\
+        allow-lan: false\n\
+        external-controller: 127.0.0.1:9090\n\
+        secret: \"\"\n";
+      File::create(clash_path).unwrap().write(content).unwrap();
     }
   }
 

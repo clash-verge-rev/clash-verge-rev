@@ -42,6 +42,7 @@ checksum = "8b26702f315f53b6071259e15dd9d64528213b44d61de1ec926eca7715d62203"
 name = "app"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "dirs 4.0.0",
  "log",
  "log4rs",
