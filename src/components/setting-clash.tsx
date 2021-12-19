@@ -92,7 +92,12 @@ const SettingClash = ({ onError }: Props) => {
 
       <SettingItem>
         <ListItemText primary="混合代理端口" />
-        <TextField size="small" defaultValue={mixedPort!} sx={{ width: 120 }} />
+        <TextField
+          size="small"
+          value={mixedPort!}
+          sx={{ width: 120 }}
+          disabled
+        />
       </SettingItem>
     </List>
   );
