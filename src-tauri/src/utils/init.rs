@@ -15,7 +15,7 @@ use crate::utils::{app_home_dir, app_resources_dir};
 
 /// initialize this instance's log file
 fn init_log(log_dir: &PathBuf) {
-  let local_time = Local::now().format("%Y-%m-%d_%H:%M:%S").to_string();
+  let local_time = Local::now().format("%Y-%m-%d-%H%M%S").to_string();
   let log_file = format!("{}.log", local_time);
   let log_file = log_dir.join(log_file);
 
