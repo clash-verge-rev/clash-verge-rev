@@ -32,11 +32,10 @@ pub async fn fetch_profile(url: &str) -> Option<ProfileResponse> {
 
   // parse the Subscription Userinfo
   let extra = {
-    let sub_info = header
-      .get("Subscription-Userinfo")
-      .unwrap()
-      .to_str()
-      .unwrap();
+    let sub_info = match header.get("Subscription-Userinfo") {
+      Some(value) => value.to_str().unwrap_or(""),
+      None => "",
+    };
 
     ProfileExtra {
       upload: parse_string(sub_info, "upload=").unwrap_or(0),
