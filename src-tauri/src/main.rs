@@ -10,7 +10,10 @@ mod config;
 mod events;
 mod utils;
 
-use crate::{events::state, utils::clash::put_clash_profile};
+use crate::{
+  events::state,
+  utils::{clash::put_clash_profile, config::read_verge},
+};
 use std::sync::{Arc, Mutex};
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
@@ -58,8 +61,12 @@ fn main() -> std::io::Result<()> {
     })
     .invoke_handler(tauri::generate_handler![
       cmds::some::restart_sidecar,
-      cmds::some::get_clash_info,
       cmds::some::set_sys_proxy,
+      cmds::some::get_sys_proxy,
+      cmds::some::get_clash_info,
+      cmds::some::patch_clash_config,
+      cmds::some::get_verge_config,
+      cmds::some::patch_verge_config,
       cmds::profile::import_profile,
       cmds::profile::update_profile,
       cmds::profile::get_profiles,
@@ -82,6 +89,7 @@ fn main() -> std::io::Result<()> {
     };
   });
 
+  app.manage(state::VergeConfLock(Arc::new(Mutex::new(read_verge()))));
   app.manage(state::ClashInfoState(Arc::new(Mutex::new(info))));
   app.manage(state::ProfileLock::default());
 

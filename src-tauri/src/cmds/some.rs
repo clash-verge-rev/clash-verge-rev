@@ -1,10 +1,16 @@
 use crate::{
-  events::{emit::ClashInfoPayload, state::ClashInfoState},
+  config::VergeConfig,
+  events::{
+    emit::ClashInfoPayload,
+    state::{ClashInfoState, VergeConfLock},
+  },
   utils::{
     clash::run_clash_bin,
-    sysopt::{set_proxy_config, SysProxyConfig},
+    config::{read_clash, save_clash, save_verge},
+    sysopt::{get_proxy_config, set_proxy_config, SysProxyConfig},
   },
 };
+use serde_yaml::Mapping;
 use tauri::{api::process::kill_children, AppHandle, State};
 
 /// restart the sidecar
@@ -19,12 +25,29 @@ pub fn restart_sidecar(app_handle: AppHandle, clash_info: State<'_, ClashInfoSta
 }
 
 /// get the clash core info from the state
+/// the caller can also get the infomation by clash's api
 #[tauri::command]
 pub fn get_clash_info(clash_info: State<'_, ClashInfoState>) -> Result<ClashInfoPayload, String> {
   match clash_info.0.lock() {
     Ok(arc) => Ok(arc.clone()),
     Err(_) => Err(format!("can not get clash info")),
   }
+}
+
+/// update the clash core config
+/// after putting the change to the clash core
+/// then we should save the latest config
+#[tauri::command]
+pub fn patch_clash_config(payload: Mapping) -> Result<(), String> {
+  let mut config = read_clash();
+  for (key, value) in payload.iter() {
+    if config.contains_key(key) {
+      config[key] = value.clone();
+    } else {
+      config.insert(key.clone(), value.clone());
+    }
+  }
+  save_clash(&config)
 }
 
 /// set the system proxy
@@ -67,4 +90,51 @@ pub fn set_sys_proxy(enable: bool, clash_info: State<'_, ClashInfoState>) -> Res
     Ok(_) => Ok(()),
     Err(_) => Err(format!("can not set proxy")),
   }
+}
+
+/// get the system proxy
+/// Tips: only support windows now
+#[tauri::command]
+pub fn get_sys_proxy() -> Result<SysProxyConfig, String> {
+  match get_proxy_config() {
+    Ok(value) => Ok(value),
+    Err(err) => Err(err.to_string()),
+  }
+}
+
+/// get the verge config
+#[tauri::command]
+pub fn get_verge_config(verge_lock: State<'_, VergeConfLock>) -> Result<VergeConfig, String> {
+  match verge_lock.0.lock() {
+    Ok(arc) => Ok(arc.clone()),
+    Err(_) => Err(format!("can not get the lock")),
+  }
+}
+
+/// patch the verge config
+#[tauri::command]
+pub async fn patch_verge_config(
+  payload: VergeConfig,
+  verge_lock: State<'_, VergeConfLock>,
+) -> Result<(), String> {
+  let mut verge = match verge_lock.0.lock() {
+    Ok(v) => v,
+    Err(_) => return Err(format!("can not get the lock")),
+  };
+
+  if payload.theme_mode.is_some() {
+    verge.theme_mode = payload.theme_mode;
+  }
+
+  // todo
+  if payload.enable_self_startup.is_some() {
+    verge.enable_self_startup = payload.enable_self_startup;
+  }
+
+  // todo
+  if payload.enable_system_proxy.is_some() {
+    verge.enable_system_proxy = payload.enable_system_proxy;
+  }
+
+  save_verge(&verge)
 }

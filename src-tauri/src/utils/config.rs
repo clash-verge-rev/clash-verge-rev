@@ -1,5 +1,5 @@
 use crate::{
-  config::{ClashController, ProfilesConfig},
+  config::{ClashController, ProfilesConfig, VergeConfig},
   utils::app_home_dir,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -7,9 +7,9 @@ use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf};
 
 /// read data from yaml as struct T
-pub fn read_yaml<T: DeserializeOwned>(path: PathBuf) -> T {
-  let yaml_str = fs::read_to_string(path).unwrap();
-  serde_yaml::from_str::<T>(&yaml_str).unwrap()
+pub fn read_yaml<T: DeserializeOwned + Default>(path: PathBuf) -> T {
+  let yaml_str = fs::read_to_string(path).unwrap_or("".into());
+  serde_yaml::from_str::<T>(&yaml_str).unwrap_or(T::default())
 }
 
 /// - save the data to the file
@@ -36,9 +36,18 @@ pub fn save_yaml<T: Serialize>(
   }
 }
 
-/// Get Clash Core Config
+/// Get Clash Core Config `config.yaml`
 pub fn read_clash() -> Mapping {
   read_yaml::<Mapping>(app_home_dir().join("config.yaml"))
+}
+
+/// Save the clash core Config `config.yaml`
+pub fn save_clash(config: &Mapping) -> Result<(), String> {
+  save_yaml(
+    app_home_dir().join("config.yaml"),
+    config,
+    Some("# Default Config For Clash Core\n\n"),
+  )
 }
 
 /// Get infomation of the clash's `external-controller` and `secret`
@@ -105,5 +114,19 @@ pub fn save_profiles(profiles: &ProfilesConfig) -> Result<(), String> {
     app_home_dir().join("profiles.yaml"),
     profiles,
     Some("# Profiles Config for Clash Verge\n\n"),
+  )
+}
+
+/// Get the `verge.yaml`
+pub fn read_verge() -> VergeConfig {
+  read_yaml::<VergeConfig>(app_home_dir().join("verge.yaml"))
+}
+
+/// Save Verge App Config
+pub fn save_verge(verge: &VergeConfig) -> Result<(), String> {
+  save_yaml(
+    app_home_dir().join("verge.yaml"),
+    verge,
+    Some("# The Config for Clash Verge App\n\n"),
   )
 }
