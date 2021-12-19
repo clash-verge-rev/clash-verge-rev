@@ -12,14 +12,18 @@ export async function getVersion() {
 export interface ConfigType {
   port: number;
   mode: string;
+  ipv6: boolean;
   "socket-port": number;
   "allow-lan": boolean;
   "log-level": string;
   "mixed-port": number;
+  "redir-port": number;
+  "socks-port": number;
+  "tproxy-port": number;
 }
 
 /// Get current base configs
-export async function getConfigs() {
+export async function getClashConfig() {
   return (await getAxios()).get("/configs") as Promise<ConfigType>;
 }
 

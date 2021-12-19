@@ -1,9 +1,10 @@
-import { useMemo } from "react";
-import { SWRConfig } from "swr";
+import { useEffect, useMemo } from "react";
+import useSWR, { SWRConfig } from "swr";
 import { Route, Routes } from "react-router-dom";
-import { useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import { createTheme, List, Paper, ThemeProvider } from "@mui/material";
 import { atomPaletteMode } from "../states/setting";
+import { getVergeConfig } from "../services/command";
 import LogoSvg from "../assets/image/logo.svg";
 import LogPage from "../pages/log";
 import HomePage from "../pages/home";
@@ -14,34 +15,39 @@ import ConnectionsPage from "../pages/connections";
 import ListItemLink from "../components/list-item-link";
 import Traffic from "../components/traffic";
 
-const Layout = () => {
-  const paletteMode = useRecoilValue(atomPaletteMode);
+const routers = [
+  {
+    label: "代理",
+    link: "/proxy",
+  },
+  {
+    label: "规则",
+    link: "/rules",
+  },
+  {
+    label: "连接",
+    link: "/connections",
+  },
+  {
+    label: "日志",
+    link: "/log",
+  },
+  {
+    label: "设置",
+    link: "/setting",
+  },
+];
 
-  const routers = [
-    {
-      label: "代理",
-      link: "/proxy",
-    },
-    {
-      label: "规则",
-      link: "/rules",
-    },
-    {
-      label: "连接",
-      link: "/connections",
-    },
-    {
-      label: "日志",
-      link: "/log",
-    },
-    {
-      label: "设置",
-      link: "/setting",
-    },
-  ];
+const Layout = () => {
+  const [mode, setMode] = useRecoilState(atomPaletteMode);
+  const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
+
+  useEffect(() => {
+    setMode(vergeConfig?.theme_mode ?? "light");
+  }, [vergeConfig?.theme_mode]);
 
   const theme = useMemo(() => {
-    if (paletteMode === "light") {
+    if (mode === "light") {
       document.documentElement.style.background = "#f5f5f5";
       document.documentElement.style.setProperty(
         "--selection-color",
@@ -66,7 +72,7 @@ const Layout = () => {
         },
       },
       palette: {
-        mode: paletteMode,
+        mode,
         primary: {
           main: "#5b5c9d",
         },
@@ -76,7 +82,7 @@ const Layout = () => {
         },
       },
     });
-  }, [paletteMode]);
+  }, [mode]);
 
   return (
     <SWRConfig value={{}}>

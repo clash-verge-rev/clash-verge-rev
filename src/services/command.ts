@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri";
+import { ConfigType } from "./common";
 
 export async function restartSidecar() {
   return invoke<void>("restart_sidecar");
@@ -12,6 +13,10 @@ export interface ClashInfo {
 
 export async function getClashInfo() {
   return invoke<ClashInfo | null>("get_clash_info");
+}
+
+export async function patchClashConfig(payload: Partial<ConfigType>) {
+  return invoke<void>("patch_clash_config", { payload });
 }
 
 export async function importProfile(url: string) {
@@ -55,4 +60,18 @@ export async function putProfiles(current: number) {
 
 export async function setSysProxy(enable: boolean) {
   return invoke<void>("set_sys_proxy", { enable });
+}
+
+export interface VergeConfig {
+  theme_mode?: "light" | "dark";
+  enable_self_startup?: boolean;
+  enable_system_proxy?: boolean;
+}
+
+export async function getVergeConfig() {
+  return invoke<VergeConfig>("get_verge_config");
+}
+
+export async function patchVergeConfig(payload: VergeConfig) {
+  return invoke<void>("patch_verge_config", { payload });
 }
