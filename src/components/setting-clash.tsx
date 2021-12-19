@@ -81,10 +81,10 @@ const SettingClash = ({ onError }: Props) => {
           onGuard={(e) => onUpdateData({ "log-level": e })}
         >
           <Select size="small" sx={{ width: 120 }}>
+            <MenuItem value="debug">Debug</MenuItem>
             <MenuItem value="info">Info</MenuItem>
             <MenuItem value="warning">Warning</MenuItem>
             <MenuItem value="error">Error</MenuItem>
-            <MenuItem value="debug">Debug</MenuItem>
             <MenuItem value="silent">Silent</MenuItem>
           </Select>
         </GuardState>
