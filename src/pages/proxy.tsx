@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { Box, List, Typography } from "@mui/material";
+import { Box, List, Paper, Typography } from "@mui/material";
 import services from "../services";
 import ProxyGroup from "../components/proxy-group";
 
@@ -14,11 +14,13 @@ const ProxyPage = () => {
       </Typography>
 
       {groups.length > 0 && (
-        <List sx={{ borderRadius: 1, boxShadow: 2 }}>
-          {groups.map((group) => (
-            <ProxyGroup key={group.name} group={group} />
-          ))}
-        </List>
+        <Paper sx={{ borderRadius: 1, boxShadow: 2 }}>
+          <List>
+            {groups.map((group) => (
+              <ProxyGroup key={group.name} group={group} />
+            ))}
+          </List>
+        </Paper>
       )}
     </Box>
   );

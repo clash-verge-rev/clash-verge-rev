@@ -40,7 +40,7 @@ const SettingClash = ({ onError }: Props) => {
   };
 
   return (
-    <List sx={{ borderRadius: 1, boxShadow: 2, mt: 3 }}>
+    <List>
       <ListSubheader>Clash设置</ListSubheader>
 
       <SettingItem>

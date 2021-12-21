@@ -31,7 +31,7 @@ const SettingVerge = ({ onError }: Props) => {
   };
 
   return (
-    <List sx={{ borderRadius: 1, boxShadow: 2 }}>
+    <List>
       <ListSubheader>通用设置</ListSubheader>
 
       <SettingItem>

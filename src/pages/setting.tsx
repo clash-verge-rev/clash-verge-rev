@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import SettingVerge from "../components/setting-verge";
 import SettingClash from "../components/setting-clash";
 
@@ -9,9 +9,13 @@ const SettingPage = () => {
         Setting
       </Typography>
 
-      <SettingVerge />
+      <Paper sx={{ borderRadius: 1, boxShadow: 2 }}>
+        <SettingVerge />
+      </Paper>
 
-      <SettingClash />
+      <Paper sx={{ borderRadius: 1, boxShadow: 2, mt: 3 }}>
+        <SettingClash />
+      </Paper>
     </Box>
   );
 };
