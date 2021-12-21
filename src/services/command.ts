@@ -48,7 +48,7 @@ export interface ProfilesConfig {
 }
 
 export async function getProfiles() {
-  return invoke<ProfilesConfig | null>("get_profiles");
+  return (await invoke<ProfilesConfig>("get_profiles")) ?? {};
 }
 
 export async function setProfiles(current: number, profile: ProfileItem) {

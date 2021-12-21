@@ -10,6 +10,7 @@ import {
 } from "../services/command";
 import ProfileItemComp from "../components/profile-item";
 import useNotice from "../utils/use-notice";
+import noop from "../utils/noop";
 
 const RulesPage = () => {
   const [url, setUrl] = useState("");
@@ -19,14 +20,21 @@ const RulesPage = () => {
   const { mutate } = useSWRConfig();
   const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
 
-  const onClick = () => {
+  const onImport = async () => {
     if (!url) return;
     setUrl("");
     setDisabled(true);
-    importProfile(url)
-      .then(() => notice.success("Successfully import profile."))
-      .catch(() => notice.error("Failed to import profile."))
-      .finally(() => setDisabled(false));
+
+    try {
+      await importProfile(url);
+      mutate("getProfiles", getProfiles());
+      if (!profiles.items?.length) putProfiles(0).catch(noop);
+      notice.success("Successfully import profile.");
+    } catch {
+      notice.error("Failed to import profile.");
+    } finally {
+      setDisabled(false);
+    }
   };
 
   const lockRef = useRef(false);
@@ -76,7 +84,7 @@ const RulesPage = () => {
         <Button
           disabled={!url || disabled}
           variant="contained"
-          onClick={onClick}
+          onClick={onImport}
         >
           Import
         </Button>
