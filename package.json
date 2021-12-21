@@ -1,6 +1,7 @@
 {
   "name": "clash-verge",
   "version": "0.0.0",
+  "license": "GPL-3.0",
   "scripts": {
     "dev": "cargo tauri dev",
     "build": "cargo tauri build",
