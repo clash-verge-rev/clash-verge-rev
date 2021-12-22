@@ -12,7 +12,11 @@ mod utils;
 
 use crate::{
   events::state,
-  utils::{clash::put_clash_profile, config::read_verge},
+  utils::{
+    clash::put_clash_profile,
+    config::read_verge,
+    server::{check_singleton, embed_server},
+  },
 };
 use std::sync::{Arc, Mutex};
 use tauri::{
@@ -21,6 +25,11 @@ use tauri::{
 };
 
 fn main() -> std::io::Result<()> {
+  if check_singleton().is_err() {
+    println!("app exists");
+    return Ok(());
+  }
+
   let sub_menu = SystemTraySubmenu::new(
     "出站规则",
     SystemTrayMenu::new()
@@ -75,6 +84,9 @@ fn main() -> std::io::Result<()> {
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");
+
+  // a simple http server
+  embed_server(&app.handle());
 
   // init app config
   utils::init::init_app(app.package_info());
