@@ -7,7 +7,8 @@
     "build": "cargo tauri build",
     "web:dev": "vite",
     "web:build": "tsc && vite build",
-    "web:serve": "vite preview"
+    "web:serve": "vite preview",
+    "predev": "node scripts/pre-dev.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.7.0",
@@ -29,6 +30,9 @@
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@vitejs/plugin-react": "^1.1.1",
+    "adm-zip": "^0.5.9",
+    "fs-extra": "^10.0.0",
+    "node-fetch": "^3.1.0",
     "sass": "^1.44.0",
     "typescript": "^4.5.2",
     "vite": "^2.7.1"
