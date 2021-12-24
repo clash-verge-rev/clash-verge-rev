@@ -6,12 +6,12 @@ import { createTheme, List, Paper, ThemeProvider } from "@mui/material";
 import { atomPaletteMode } from "../states/setting";
 import { getVergeConfig } from "../services/command";
 import LogoSvg from "../assets/image/logo.svg";
-import LogPage from "../pages/log";
-import HomePage from "../pages/home";
-import RulesPage from "../pages/rules";
-import ProxyPage from "../pages/proxy";
-import SettingPage from "../pages/setting";
-import ConnectionsPage from "../pages/connections";
+import LogPage from "./log";
+import HomePage from "./home";
+import ProfilePage from "./profile";
+import ProxyPage from "./proxy";
+import SettingPage from "./setting";
+import ConnectionsPage from "./connections";
 import ListItemLink from "../components/list-item-link";
 import Traffic from "../components/traffic";
 
@@ -21,8 +21,8 @@ const routers = [
     link: "/proxy",
   },
   {
-    label: "规则",
-    link: "/rules",
+    label: "配置",
+    link: "/profile",
   },
   {
     label: "连接",
@@ -110,7 +110,7 @@ const Layout = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/proxy" element={<ProxyPage />} />
-              <Route path="/rules" element={<RulesPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/log" element={<LogPage />} />
               <Route path="/connections" element={<ConnectionsPage />} />
               <Route path="/setting" element={<SettingPage />} />

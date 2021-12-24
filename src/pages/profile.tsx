@@ -12,7 +12,7 @@ import ProfileItemComp from "../components/profile-item";
 import useNotice from "../utils/use-notice";
 import noop from "../utils/noop";
 
-const RulesPage = () => {
+const ProfilePage = () => {
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
   const [notice, noticeElement] = useNotice();
@@ -67,7 +67,7 @@ const RulesPage = () => {
   return (
     <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>
       <Typography variant="h4" component="h1" sx={{ py: 2, mb: 1 }}>
-        Rules
+        Profiles
       </Typography>
 
       <Box sx={{ display: "flex", mb: 3 }}>
@@ -108,4 +108,4 @@ const RulesPage = () => {
   );
 };
 
-export default RulesPage;
+export default ProfilePage;
