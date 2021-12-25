@@ -17,7 +17,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "top.gydi.clashverge",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -27,10 +27,10 @@
       ],
       "resources": ["resources"],
       "externalBin": ["sidecar/clash"],
-      "copyright": "",
+      "copyright": "© 2021 zzzgydi All Rights Reserved",
       "category": "DeveloperTool",
-      "shortDescription": "",
-      "longDescription": "",
+      "shortDescription": "A Clash GUI based on tauri.",
+      "longDescription": "A Clash GUI based on tauri.",
       "deb": {
         "depends": [],
         "useBootstrapper": false
