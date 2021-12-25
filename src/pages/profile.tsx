@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { Box, Button, Grid, TextField, Typography } from "@mui/material";
-import services from "../services";
 import {
   getProfiles,
   importProfile,
   putProfiles,
   updateProfile,
-} from "../services/command";
+} from "../services/cmds";
+import { getProxies } from "../services/api";
 import ProfileItemComp from "../components/profile-item";
 import useNotice from "../utils/use-notice";
 import noop from "../utils/noop";
@@ -44,7 +44,7 @@ const ProfilePage = () => {
     putProfiles(index)
       .then(() => {
         mutate("getProfiles", { ...profiles, current: index }, true);
-        mutate("getProxies", services.getProxies());
+        mutate("getProxies", getProxies());
       })
       .catch((err) => {
         console.error(err);

@@ -1,10 +1,10 @@
 import useSWR from "swr";
 import { Box, List, Paper, Typography } from "@mui/material";
-import services from "../services";
+import { getProxies } from "../services/api";
 import ProxyGroup from "../components/proxy-group";
 
 const ProxyPage = () => {
-  const { data } = useSWR("getProxies", services.getProxies);
+  const { data } = useSWR("getProxies", getProxies);
   const { groups = [] } = data ?? {};
 
   return (

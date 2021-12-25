@@ -4,8 +4,8 @@ import {
   getVergeConfig,
   patchVergeConfig,
   setSysProxy,
-  VergeConfig,
-} from "../services/command";
+} from "../services/cmds";
+import { CmdType } from "../services/types";
 import GuardState from "./guard-state";
 import SettingItem from "./setting-item";
 import PaletteSwitch from "./palette-switch";
@@ -26,7 +26,7 @@ const SettingVerge = ({ onError }: Props) => {
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
 
-  const onChangeData = (patch: Partial<VergeConfig>) => {
+  const onChangeData = (patch: Partial<CmdType.VergeConfig>) => {
     mutate("getVergeConfig", { ...vergeConfig, ...patch }, false);
   };
 

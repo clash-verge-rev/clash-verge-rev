@@ -1,32 +1,22 @@
-import { CancelTokenSource } from "axios";
 import { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
+import { getInfomation } from "../services/api";
+import { ApiType } from "../services/types";
 import parseTraffic from "../utils/parse-traffic";
-import services from "../services";
 
 const Traffic = () => {
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
 
   useEffect(() => {
-    let timer: any = null;
-    let source: CancelTokenSource | null = null;
+    const { server, secret } = getInfomation();
+    const ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
 
-    async function onTraffic() {
-      timer = null;
-      try {
-        source = await services.getTraffic(setTraffic);
-      } catch {
-        timer = setTimeout(onTraffic, 500);
-      }
-    }
+    ws.addEventListener("message", (event) => {
+      setTraffic(JSON.parse(event.data) as ApiType.TrafficItem);
+    });
 
-    onTraffic();
-
-    return () => {
-      if (timer) clearTimeout(timer);
-      source?.cancel();
-    };
+    return () => ws.close();
   }, []);
 
   const [up, upUnit] = parseTraffic(traffic.up);

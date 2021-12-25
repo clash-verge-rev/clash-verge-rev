@@ -4,7 +4,8 @@ import { Route, Routes } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import { createTheme, List, Paper, ThemeProvider } from "@mui/material";
 import { atomPaletteMode } from "../states/setting";
-import { getVergeConfig } from "../services/command";
+import { getClashInfo, getVergeConfig } from "../services/cmds";
+import { initAxios } from "../services/api";
 import LogoSvg from "../assets/image/logo.svg";
 import LogPage from "./log";
 import HomePage from "./home";
@@ -12,7 +13,7 @@ import ProfilePage from "./profile";
 import ProxyPage from "./proxy";
 import SettingPage from "./setting";
 import ConnectionsPage from "./connections";
-import ListItemLink from "../components/list-item-link";
+import LayoutItem from "../components/layout-item";
 import Traffic from "../components/traffic";
 
 const routers = [
@@ -41,6 +42,12 @@ const routers = [
 const Layout = () => {
   const [mode, setMode] = useRecoilState(atomPaletteMode);
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
+
+  useEffect(() => {
+    getClashInfo()
+      .then((result) => initAxios(result?.controller ?? {}))
+      .catch(() => console.error("can not initialize clash verge"));
+  }, []);
 
   useEffect(() => {
     setMode(vergeConfig?.theme_mode ?? "light");
@@ -95,9 +102,9 @@ const Layout = () => {
 
             <List sx={{ userSelect: "none" }}>
               {routers.map((router) => (
-                <ListItemLink key={router.label} to={router.link}>
+                <LayoutItem key={router.label} to={router.link}>
                   {router.label}
-                </ListItemLink>
+                </LayoutItem>
               ))}
             </List>
 

@@ -1,6 +1,7 @@
 import { styled, Box } from "@mui/material";
+import { ApiType } from "../services/types";
 
-const LogItem = styled(Box)(({ theme }) => ({
+const Item = styled(Box)(({ theme }) => ({
   padding: "8px 0",
   margin: "0 12px",
   lineHeight: 1.35,
@@ -8,8 +9,7 @@ const LogItem = styled(Box)(({ theme }) => ({
   "& .time": {},
   "& .type": {
     display: "inline-block",
-    width: 50,
-    margin: "0 4px",
+    padding: "0 6px",
     textAlign: "center",
     borderRadius: 2,
     textTransform: "uppercase",
@@ -17,5 +17,21 @@ const LogItem = styled(Box)(({ theme }) => ({
   },
   "& .data": {},
 }));
+
+interface Props {
+  value: ApiType.LogItem;
+}
+
+const LogItem = (props: Props) => {
+  const { value } = props;
+
+  return (
+    <Item>
+      <span className="time">{value.time}</span>
+      <span className="type">{value.type}</span>
+      <span className="data">{value.payload}</span>
+    </Item>
+  );
+};
 
 export default LogItem;

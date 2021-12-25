@@ -2,24 +2,26 @@ import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
+import { ApiType } from "../services/types";
+import { getInfomation } from "../services/api";
 import LogItem from "../components/log-item";
-import services from "../services";
 
-let logCache: any[] = [];
+let logCache: ApiType.LogItem[] = [];
 
 const LogPage = () => {
-  const [logData, setLogData] = useState<any[]>(logCache);
+  const [logData, setLogData] = useState(logCache);
 
   useEffect(() => {
-    const sourcePromise = services.getLogs((t) => {
+    const info = getInfomation();
+    const ws = new WebSocket(`ws://${info.server}/logs?token=${info.secret}`);
+
+    ws.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data) as ApiType.LogItem;
       const time = dayjs().format("MM-DD HH:mm:ss");
-      const item = { ...t, time };
-      setLogData((l) => (logCache = [...l, item]));
+      setLogData((l) => (logCache = [...l, { ...data, time }]));
     });
 
-    return () => {
-      sourcePromise.then((src) => src.cancel("cancel"));
-    };
+    return () => ws.close();
   }, []);
 
   return (
@@ -52,15 +54,7 @@ const LogPage = () => {
         <Virtuoso
           initialTopMostItemIndex={999}
           data={logData}
-          itemContent={(index, logItem) => {
-            return (
-              <LogItem>
-                <span className="time">{logItem.time}</span>
-                <span className="type">{logItem.type}</span>
-                <span className="data">{logItem.payload}</span>
-              </LogItem>
-            );
-          }}
+          itemContent={(index, item) => <LogItem value={item} />}
           followOutput={"smooth"}
         />
       </Paper>

@@ -10,7 +10,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { MenuRounded } from "@mui/icons-material";
-import { ProfileItem } from "../services/command";
+import { CmdType } from "../services/types";
 import parseTraffic from "../utils/parse-traffic";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -29,7 +29,7 @@ const Wrapper = styled(Box)(({ theme }) => ({
 
 interface Props {
   selected: boolean;
-  itemData: ProfileItem;
+  itemData: CmdType.ProfileItem;
   onClick: () => void;
   onUpdate: () => void;
 }

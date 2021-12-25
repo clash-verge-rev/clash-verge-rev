@@ -20,11 +20,11 @@ import {
   NetworkCheckRounded,
   CheckCircleOutlineRounded,
 } from "@mui/icons-material";
-import services from "../services";
-import type { ProxyItem, ProxyGroupItem } from "../services/proxy";
+import { updateProxy } from "../services/api";
+import { ApiType } from "../services/types";
 
 interface ItemProps {
-  proxy: ProxyItem;
+  proxy: ApiType.ProxyItem;
   selected: boolean;
   onClick?: (name: string) => void;
 }
@@ -66,7 +66,7 @@ const Item = ({ proxy, selected, onClick }: ItemProps) => {
 };
 
 interface Props {
-  group: ProxyGroupItem;
+  group: ApiType.ProxyGroupItem;
 }
 
 const ProxyGroup = ({ group }: Props) => {
@@ -85,7 +85,7 @@ const ProxyGroup = ({ group }: Props) => {
     const oldValue = now;
     try {
       setNow(name);
-      await services.updateProxy(group.name, name);
+      await updateProxy(group.name, name);
     } catch {
       setNow(oldValue);
       // Todo

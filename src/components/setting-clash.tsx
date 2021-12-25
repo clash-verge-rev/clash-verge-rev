@@ -8,8 +8,9 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import { ConfigType, getClashConfig, updateConfigs } from "../services/common";
-import { patchClashConfig } from "../services/command";
+import { getClashConfig, updateConfigs } from "../services/api";
+import { patchClashConfig } from "../services/cmds";
+import { ApiType } from "../services/types";
 import GuardState from "./guard-state";
 import SettingItem from "./setting-item";
 
@@ -30,11 +31,11 @@ const SettingClash = ({ onError }: Props) => {
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
 
-  const onChangeData = (patch: Partial<ConfigType>) => {
+  const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
     mutate("getClashConfig", { ...clashConfig, ...patch }, false);
   };
 
-  const onUpdateData = async (patch: Partial<ConfigType>) => {
+  const onUpdateData = async (patch: Partial<ApiType.ConfigData>) => {
     await updateConfigs(patch);
     await patchClashConfig(patch);
   };
