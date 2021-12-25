@@ -10,15 +10,19 @@ const ConnectionsPage = () => {
   const [conn, setConn] = useState<ApiType.Connections>(initConn);
 
   useEffect(() => {
-    const { server, secret } = getInfomation();
-    const ws = new WebSocket(`ws://${server}/connections?token=${secret}`);
+    let ws: WebSocket | null = null;
 
-    ws.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data) as ApiType.Connections;
-      setConn(data);
+    getInfomation().then((result) => {
+      const { server = "", secret = "" } = result;
+      ws = new WebSocket(`ws://${server}/connections?token=${secret}`);
+
+      ws.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data) as ApiType.Connections;
+        setConn(data);
+      });
     });
 
-    return () => ws.close();
+    return () => ws?.close();
   }, []);
 
   return (

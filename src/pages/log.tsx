@@ -12,16 +12,20 @@ const LogPage = () => {
   const [logData, setLogData] = useState(logCache);
 
   useEffect(() => {
-    const info = getInfomation();
-    const ws = new WebSocket(`ws://${info.server}/logs?token=${info.secret}`);
+    let ws: WebSocket | null = null;
 
-    ws.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data) as ApiType.LogItem;
-      const time = dayjs().format("MM-DD HH:mm:ss");
-      setLogData((l) => (logCache = [...l, { ...data, time }]));
+    getInfomation().then((result) => {
+      const { server = "", secret = "" } = result;
+      ws = new WebSocket(`ws://${server}/logs?token=${secret}`);
+
+      ws.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data) as ApiType.LogItem;
+        const time = dayjs().format("MM-DD HH:mm:ss");
+        setLogData((l) => (logCache = [...l, { ...data, time }]));
+      });
     });
 
-    return () => ws.close();
+    return () => ws?.close();
   }, []);
 
   return (

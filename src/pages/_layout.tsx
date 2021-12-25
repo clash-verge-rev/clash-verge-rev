@@ -4,8 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import { createTheme, List, Paper, ThemeProvider } from "@mui/material";
 import { atomPaletteMode } from "../states/setting";
-import { getClashInfo, getVergeConfig } from "../services/cmds";
-import { initAxios } from "../services/api";
+import { getVergeConfig } from "../services/cmds";
 import LogoSvg from "../assets/image/logo.svg";
 import LogPage from "./log";
 import HomePage from "./home";
@@ -42,12 +41,6 @@ const routers = [
 const Layout = () => {
   const [mode, setMode] = useRecoilState(atomPaletteMode);
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
-
-  useEffect(() => {
-    getClashInfo()
-      .then((result) => initAxios(result?.controller ?? {}))
-      .catch(() => console.error("can not initialize clash verge"));
-  }, []);
 
   useEffect(() => {
     setMode(vergeConfig?.theme_mode ?? "light");

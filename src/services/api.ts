@@ -1,32 +1,41 @@
 import axios, { AxiosInstance } from "axios";
+import { getClashInfo } from "./cmds";
 import { ApiType } from "./types";
 
 let axiosIns: AxiosInstance = null!;
-let server = "127.0.0.1:9090";
+let server = "";
 let secret = "";
 
-type Callback<T> = (data: T) => void;
-
 /// initialize some infomation
-export function initAxios(info: { server?: string; secret?: string }) {
-  if (info.server) server = info.server;
-  if (info.secret) secret = info.secret;
+export async function getAxios() {
+  if (axiosIns) return axiosIns;
+
+  try {
+    const info = await getClashInfo();
+
+    if (info?.controller?.server) server = info?.controller?.server;
+    if (info?.controller?.secret) secret = info?.controller?.secret;
+  } catch {}
 
   axiosIns = axios.create({
     baseURL: `http://${server}`,
     headers: secret ? { Authorization: `Bearer ${secret}` } : {},
   });
   axiosIns.interceptors.response.use((r) => r.data);
+  return axiosIns;
 }
 
 /// get infomation
-export function getInfomation() {
-  return { server, secret };
+export async function getInfomation() {
+  if (server) return { server, secret };
+  const info = await getClashInfo();
+  return info?.controller!;
 }
 
 /// Get Version
 export async function getVersion() {
-  return axiosIns.get("/version") as Promise<{
+  const instance = await getAxios();
+  return instance.get("/version") as Promise<{
     premium: boolean;
     version: string;
   }>;
@@ -34,27 +43,32 @@ export async function getVersion() {
 
 /// Get current base configs
 export async function getClashConfig() {
-  return axiosIns.get("/configs") as Promise<ApiType.ConfigData>;
+  const instance = await getAxios();
+  return instance.get("/configs") as Promise<ApiType.ConfigData>;
 }
 
 /// Update current configs
 export async function updateConfigs(config: Partial<ApiType.ConfigData>) {
-  return axiosIns.patch("/configs", config);
+  const instance = await getAxios();
+  return instance.patch("/configs", config);
 }
 
 /// Get current rules
 export async function getRules() {
-  return axiosIns.get("/rules") as Promise<ApiType.RuleItem[]>;
+  const instance = await getAxios();
+  return instance.get("/rules") as Promise<ApiType.RuleItem[]>;
 }
 
 /// Update the Proxy Choose
 export async function updateProxy(group: string, proxy: string) {
-  return axiosIns.put(`/proxies/${group}`, { name: proxy });
+  const instance = await getAxios();
+  return instance.put(`/proxies/${group}`, { name: proxy });
 }
 
 /// Get the Proxy infomation
 export async function getProxies() {
-  const response = await axiosIns.get<any, any>("/proxies");
+  const instance = await getAxios();
+  const response = await instance.get<any, any>("/proxies");
   const proxies = (response?.proxies ?? {}) as Record<
     string,
     ApiType.ProxyItem

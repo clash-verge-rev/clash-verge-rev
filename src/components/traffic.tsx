@@ -9,14 +9,18 @@ const Traffic = () => {
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
 
   useEffect(() => {
-    const { server, secret } = getInfomation();
-    const ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
+    let ws: WebSocket | null = null;
 
-    ws.addEventListener("message", (event) => {
-      setTraffic(JSON.parse(event.data) as ApiType.TrafficItem);
+    getInfomation().then((result) => {
+      const { server = "", secret = "" } = result;
+      ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
+
+      ws.addEventListener("message", (event) => {
+        setTraffic(JSON.parse(event.data) as ApiType.TrafficItem);
+      });
     });
 
-    return () => ws.close();
+    return () => ws?.close();
   }, []);
 
   const [up, upUnit] = parseTraffic(traffic.up);
