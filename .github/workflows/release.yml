@@ -2,8 +2,8 @@ name: Release Project
 
 on:
   push:
-    branches: [main]
-    tags: v**
+    tags:
+      - v*
 
 jobs:
   build-tauri:
