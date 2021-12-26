@@ -12,19 +12,14 @@ mod utils;
 
 use crate::{
   events::state,
-  utils::{
-    clash::put_clash_profile,
-    config::read_verge,
-    server::{check_singleton, embed_server},
-  },
+  utils::{resolve, server},
 };
-use std::sync::{Arc, Mutex};
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
 };
 
 fn main() -> std::io::Result<()> {
-  if check_singleton().is_err() {
+  if server::check_singleton().is_err() {
     println!("app exists");
     return Ok(());
   }
@@ -35,44 +30,28 @@ fn main() -> std::io::Result<()> {
     .add_item(CustomMenuItem::new("quit", "退出").accelerator("CmdOrControl+Q"));
 
   tauri::Builder::default()
-    .setup(|app| {
-      // a simple http server
-      embed_server(&app.handle());
-
-      // init app config
-      utils::init::init_app(app.package_info());
-      // run clash sidecar
-      let info = utils::clash::run_clash_bin(&app.handle());
-      // update the profile
-      let info_copy = info.clone();
-      tauri::async_runtime::spawn(async move {
-        match put_clash_profile(&info_copy).await {
-          Ok(_) => {}
-          Err(err) => log::error!("failed to put config for `{}`", err),
-        };
-      });
-
-      app.manage(state::VergeConfLock(Arc::new(Mutex::new(read_verge()))));
-      app.manage(state::ClashInfoState(Arc::new(Mutex::new(info))));
-      app.manage(state::ProfileLock::default());
-      Ok(())
-    })
+    .manage(state::VergeConfLock::default())
+    .manage(state::ClashInfoState::default())
+    .manage(state::SomthingState::default())
+    .manage(state::ProfileLock::default())
+    .setup(|app| Ok(resolve::resolve_setup(app)))
     .system_tray(SystemTray::new().with_menu(menu))
-    .on_system_tray_event(move |app, event| match event {
+    .on_system_tray_event(move |app_handle, event| match event {
       SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
         "open_window" => {
-          let window = app.get_window("main").unwrap();
+          let window = app_handle.get_window("main").unwrap();
           window.show().unwrap();
           window.set_focus().unwrap();
         }
         "quit" => {
           api::process::kill_children();
-          app.exit(0);
+          resolve::resolve_reset(app_handle);
+          app_handle.exit(0);
         }
         _ => {}
       },
       SystemTrayEvent::LeftClick { .. } => {
-        let window = app.get_window("main").unwrap();
+        let window = app_handle.get_window("main").unwrap();
         window.show().unwrap();
         window.set_focus().unwrap();
       }
@@ -104,6 +83,7 @@ fn main() -> std::io::Result<()> {
         api.prevent_exit();
       }
       tauri::Event::Exit => {
+        resolve::resolve_reset(app_handle);
         api::process::kill_children();
       }
       _ => {}

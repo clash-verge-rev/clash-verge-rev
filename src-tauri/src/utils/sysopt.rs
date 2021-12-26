@@ -1,12 +1,24 @@
 use serde::{Deserialize, Serialize};
 use std::io;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SysProxyConfig {
   pub enable: bool,
   pub server: String,
   pub bypass: String,
 }
+
+impl Default for SysProxyConfig {
+  fn default() -> Self {
+    SysProxyConfig {
+      enable: false,
+      server: String::from(""),
+      bypass: String::from(""),
+    }
+  }
+}
+
+pub static DEFAULT_BYPASS: &str = "localhost;127.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;192.168.*;<local>";
 
 #[cfg(target_os = "windows")]
 mod win {

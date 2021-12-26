@@ -7,7 +7,7 @@ use crate::{
   utils::{
     clash::run_clash_bin,
     config::{read_clash, save_clash, save_verge},
-    sysopt::{get_proxy_config, set_proxy_config, SysProxyConfig},
+    sysopt::{get_proxy_config, set_proxy_config, SysProxyConfig, DEFAULT_BYPASS},
   },
 };
 use serde_yaml::Mapping;
@@ -53,10 +53,19 @@ pub fn patch_clash_config(payload: Mapping) -> Result<(), String> {
 /// set the system proxy
 /// Tips: only support windows now
 #[tauri::command]
-pub fn set_sys_proxy(enable: bool, clash_info: State<'_, ClashInfoState>) -> Result<(), String> {
+pub fn set_sys_proxy(
+  enable: bool,
+  clash_info: State<'_, ClashInfoState>,
+  verge_lock: State<'_, VergeConfLock>,
+) -> Result<(), String> {
   let clash_info = match clash_info.0.lock() {
     Ok(arc) => arc.clone(),
     _ => return Err(format!("can not get clash info")),
+  };
+
+  let verge_info = match verge_lock.0.lock() {
+    Ok(arc) => arc.clone(),
+    _ => return Err(format!("can not get verge info")),
   };
 
   let port = match clash_info.controller {
@@ -70,9 +79,9 @@ pub fn set_sys_proxy(enable: bool, clash_info: State<'_, ClashInfoState>) -> Res
 
   let config = if enable {
     let server = format!("127.0.0.1:{}", port.unwrap());
-    // todo
-    let bypass = String::from("localhost;127.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;192.168.*;<local>");
-
+    let bypass = verge_info
+      .system_proxy_bypass
+      .unwrap_or(String::from(DEFAULT_BYPASS));
     SysProxyConfig {
       enable,
       server,
@@ -112,6 +121,7 @@ pub fn get_verge_config(verge_lock: State<'_, VergeConfLock>) -> Result<VergeCon
 }
 
 /// patch the verge config
+/// this command only save the config and not responsible for other things
 #[tauri::command]
 pub async fn patch_verge_config(
   payload: VergeConfig,
@@ -134,6 +144,10 @@ pub async fn patch_verge_config(
   // todo
   if payload.enable_system_proxy.is_some() {
     verge.enable_system_proxy = payload.enable_system_proxy;
+  }
+
+  if payload.system_proxy_bypass.is_some() {
+    verge.system_proxy_bypass = payload.system_proxy_bypass;
   }
 
   save_verge(&verge)

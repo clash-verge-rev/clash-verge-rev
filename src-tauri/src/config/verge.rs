@@ -11,4 +11,7 @@ pub struct VergeConfig {
 
   /// set system proxy
   pub enable_system_proxy: Option<bool>,
+
+  /// set system proxy bypass
+  pub system_proxy_bypass: Option<String>,
 }
