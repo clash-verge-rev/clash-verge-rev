@@ -1,3 +1,5 @@
 # Defaulf Config For Clash Verge
 
-nothing: ohh!
+theme_mode: light
+enable_self_startup: false
+enable_system_proxy: false
