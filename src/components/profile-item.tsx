@@ -1,18 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import dayjs from "dayjs";
 import {
   alpha,
   Box,
-  ButtonBase,
   styled,
   Typography,
   LinearProgress,
   IconButton,
+  keyframes,
 } from "@mui/material";
-import { MenuRounded } from "@mui/icons-material";
+import { useSWRConfig } from "swr";
+import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../services/types";
 import parseTraffic from "../utils/parse-traffic";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { updateProfile } from "../services/cmds";
 
 dayjs.extend(relativeTime);
 
@@ -27,15 +29,23 @@ const Wrapper = styled(Box)(({ theme }) => ({
   boxSizing: "border-box",
 }));
 
+const round = keyframes`
+from { transform: rotate(0deg); }
+to { transform: rotate(360deg); }
+`;
+
 interface Props {
+  index: number;
   selected: boolean;
   itemData: CmdType.ProfileItem;
   onClick: () => void;
-  onUpdate: () => void;
 }
 
 const ProfileItemComp: React.FC<Props> = (props) => {
-  const { selected, itemData, onClick, onUpdate } = props;
+  const { index, selected, itemData, onClick } = props;
+
+  const { mutate } = useSWRConfig();
+  const [loading, setLoading] = useState(false);
 
   const { name = "Profile", extra, updated = 0 } = itemData;
   const { upload = 0, download = 0, total = 0 } = extra ?? {};
@@ -43,6 +53,19 @@ const ProfileItemComp: React.FC<Props> = (props) => {
   const expire = parseExpire(extra?.expire);
   const progress = Math.round(((download + upload) * 100) / (total + 0.1));
   const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
+
+  const onUpdate = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await updateProfile(index);
+      mutate("getProfiles");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Wrapper
@@ -88,14 +111,19 @@ const ProfileItemComp: React.FC<Props> = (props) => {
         </Typography>
 
         <IconButton
-          sx={{ width: 30, height: 30 }}
+          sx={{
+            width: 30,
+            height: 30,
+            animation: loading ? `1s linear infinite ${round}` : "none",
+          }}
           color="inherit"
+          disabled={loading}
           onClick={(e) => {
             e.stopPropagation();
             onUpdate();
           }}
         >
-          <MenuRounded />
+          <RefreshRounded />
         </IconButton>
       </Box>
 

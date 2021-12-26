@@ -1,12 +1,7 @@
 import { useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { Box, Button, Grid, TextField, Typography } from "@mui/material";
-import {
-  getProfiles,
-  importProfile,
-  putProfiles,
-  updateProfile,
-} from "../services/cmds";
+import { getProfiles, importProfile, putProfiles } from "../services/cmds";
 import { getProxies } from "../services/api";
 import ProfileItemComp from "../components/profile-item";
 import useNotice from "../utils/use-notice";
@@ -54,16 +49,6 @@ const ProfilePage = () => {
       });
   };
 
-  const onUpdateProfile = (index: number) => {
-    updateProfile(index)
-      .then(() => {
-        mutate("getProfiles");
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  };
-
   return (
     <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>
       <Typography variant="h4" component="h1" sx={{ py: 2, mb: 1 }}>
@@ -94,10 +79,10 @@ const ProfilePage = () => {
         {profiles?.items?.map((item, idx) => (
           <Grid item xs={12} sm={6} key={item.file}>
             <ProfileItemComp
+              index={idx}
               selected={profiles.current === idx}
               itemData={item}
               onClick={() => onProfileChange(idx)}
-              onUpdate={() => onUpdateProfile(idx)}
             />
           </Grid>
         ))}
