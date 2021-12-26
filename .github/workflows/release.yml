@@ -48,7 +48,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: clash-verge-v__VERSION__
+          tagName: v__VERSION__
           releaseName: "Clash Verge v__VERSION__"
           releaseBody: "This is a release."
           releaseDraft: true
