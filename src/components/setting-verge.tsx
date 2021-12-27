@@ -1,5 +1,11 @@
 import useSWR, { useSWRConfig } from "swr";
-import { List, ListItemText, ListSubheader, Switch } from "@mui/material";
+import {
+  List,
+  ListItemText,
+  ListSubheader,
+  Switch,
+  Typography,
+} from "@mui/material";
 import {
   getVergeConfig,
   patchVergeConfig,
@@ -9,6 +15,7 @@ import { CmdType } from "../services/types";
 import GuardState from "./guard-state";
 import SettingItem from "./setting-item";
 import PaletteSwitch from "./palette-switch";
+import { version } from "../../package.json";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -81,6 +88,11 @@ const SettingVerge = ({ onError }: Props) => {
         >
           <Switch edge="end" />
         </GuardState>
+      </SettingItem>
+
+      <SettingItem>
+        <ListItemText primary="Version" />
+        <Typography sx={{ py: "6px" }}>v{version}</Typography>
       </SettingItem>
     </List>
   );
