@@ -1,8 +1,13 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { Box, Button, Grid, TextField, Typography } from "@mui/material";
-import { getProfiles, importProfile, putProfiles } from "../services/cmds";
-import { getProxies } from "../services/api";
+import {
+  getProfiles,
+  putProfiles,
+  setProfiles,
+  importProfile,
+} from "../services/cmds";
+import { getProxies, updateProxy } from "../services/api";
 import ProfileItemComp from "../components/profile-item";
 import useNotice from "../utils/use-notice";
 import noop from "../utils/noop";
@@ -14,6 +19,43 @@ const ProfilePage = () => {
 
   const { mutate } = useSWRConfig();
   const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
+
+  useEffect(() => {
+    if (profiles.current == null) return;
+
+    const profile = profiles.items![profiles.current];
+    if (!profile) return;
+
+    getProxies().then((proxiesData) => {
+      mutate("getProxies", proxiesData);
+      // init selected array
+      const { selected = [] } = profile;
+      const selectedMap = Object.fromEntries(
+        selected.map((each) => [each.name!, each.now!])
+      );
+      // todo: enhance error handle
+      let hasChange = false;
+      proxiesData.groups.forEach((group) => {
+        const { name, now } = group;
+
+        if (!now || selectedMap[name] === now) return;
+        if (selectedMap[name] == null) {
+          selectedMap[name] = now!;
+        } else {
+          hasChange = true;
+          updateProxy(name, selectedMap[name]);
+        }
+      });
+      // update profile selected list
+      profile.selected = Object.entries(selectedMap).map(([name, now]) => ({
+        name,
+        now,
+      }));
+      setProfiles(profiles.current!, profile).catch(console.error);
+      // update proxies cache
+      if (hasChange) mutate("getProxies", getProxies());
+    });
+  }, [profiles]);
 
   const onImport = async () => {
     if (!url) return;
@@ -39,7 +81,6 @@ const ProfilePage = () => {
     putProfiles(index)
       .then(() => {
         mutate("getProfiles", { ...profiles, current: index }, true);
-        mutate("getProxies", getProxies());
       })
       .catch((err) => {
         console.error(err);

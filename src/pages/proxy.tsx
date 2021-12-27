@@ -4,8 +4,8 @@ import { getProxies } from "../services/api";
 import ProxyGroup from "../components/proxy-group";
 
 const ProxyPage = () => {
-  const { data } = useSWR("getProxies", getProxies);
-  const { groups = [] } = data ?? {};
+  const { data: proxiesData } = useSWR("getProxies", getProxies);
+  const { groups = [] } = proxiesData ?? {};
 
   return (
     <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>
