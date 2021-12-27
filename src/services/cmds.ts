@@ -25,11 +25,8 @@ export async function getProfiles() {
   return (await invoke<CmdType.ProfilesConfig>("get_profiles")) ?? {};
 }
 
-export async function setProfiles(
-  current: number,
-  profile: CmdType.ProfileItem
-) {
-  return invoke<void>("set_profiles", { current, profile });
+export async function setProfiles(index: number, profile: CmdType.ProfileItem) {
+  return invoke<void>("set_profiles", { index, profile });
 }
 
 export async function putProfiles(current: number) {
