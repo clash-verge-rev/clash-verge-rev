@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "GPL-3.0",
   "scripts": {
     "dev": "cargo tauri dev",
@@ -8,8 +8,9 @@
     "web:dev": "vite",
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
+    "prepare": "husky install",
     "predev": "node scripts/pre-dev.mjs",
-    "prepare": "husky install"
+    "postversion": "node scripts/post-version.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.7.0",
