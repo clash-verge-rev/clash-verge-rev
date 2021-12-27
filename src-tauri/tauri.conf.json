@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "clash-verge",
-    "version": "0.0.2"
+    "version": "0.0.3"
   },
   "build": {
     "distDir": "../dist",
@@ -25,8 +25,12 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "resources": ["resources"],
-      "externalBin": ["sidecar/clash"],
+      "resources": [
+        "resources"
+      ],
+      "externalBin": [
+        "sidecar/clash"
+      ],
       "copyright": "© 2021 zzzgydi All Rights Reserved",
       "category": "DeveloperTool",
       "shortDescription": "A Clash GUI based on tauri.",
