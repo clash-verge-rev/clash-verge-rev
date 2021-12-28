@@ -22,6 +22,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (profiles.current == null) return;
+    if (!profiles.items) profiles.items = [];
 
     const profile = profiles.items![profiles.current];
     if (!profile) return;
