@@ -1,4 +1,5 @@
 import fs from "fs-extra";
+import zlib from "zlib";
 import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
@@ -16,15 +17,17 @@ const CLASH_LATEST_DATE = "2021.12.07";
 function resolveClash() {
   const { platform, arch } = process;
 
-  let name = "";
-
   // todo
-  if (platform === "win32" && arch === "x64") {
-    name = `clash-windows-386`;
-  }
+  const map = {
+    "win32-x64": "clash-windows-386",
+    "darwin-x64": "clash-darwin-amd64",
+    "darwin-arm64": "clash-darwin-arm64",
+  };
+
+  const name = map[`${platform}-${arch}`];
 
   if (!name) {
-    throw new Error("todo");
+    throw new Error(`unsupport platform "${platform}-${arch}"`);
   }
 
   const isWin = platform === "win32";
@@ -60,14 +63,28 @@ async function resolveSidecar() {
   if (!(await fs.pathExists(tempZip))) await downloadFile(binInfo.url, tempZip);
 
   // Todo: support gz
-  const zip = new AdmZip(tempZip);
-  zip.getEntries().forEach((entry) => {
-    console.log("[INFO]: entry name", entry.entryName);
-  });
-  zip.extractAllTo(tempDir, true);
-
-  // save as sidecar
-  await fs.rename(tempExe, sidecarPath);
+  if (binInfo.zip === "zip") {
+    const zip = new AdmZip(tempZip);
+    zip.getEntries().forEach((entry) => {
+      console.log("[INFO]: entry name", entry.entryName);
+    });
+    zip.extractAllTo(tempDir, true);
+    // save as sidecar
+    await fs.rename(tempExe, sidecarPath);
+    console.log(`[INFO]: unzip finished`);
+  } else {
+    // gz
+    const readStream = fs.createReadStream(tempZip);
+    const writeStream = fs.createWriteStream(sidecarPath);
+    readStream
+      .pipe(zlib.createGunzip())
+      .pipe(writeStream)
+      .on("finish", () => {
+        console.log(`[INFO]: gunzip finished`);
+        execSync(`chmod 755 ${sidecarPath}`);
+        console.log(`[INFO]: chmod binary finished`);
+      });
+  }
 
   // delete temp dir
   await fs.remove(tempDir);
@@ -97,6 +114,8 @@ async function downloadFile(url, path) {
   });
   const buffer = await response.arrayBuffer();
   await fs.writeFile(path, new Uint8Array(buffer));
+
+  console.log(`[INFO]: download finished "${url}"`);
 }
 
 /// main
