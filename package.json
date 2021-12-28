@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.0.0-beta.10",
+    "@types/fs-extra": "^9.0.13",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@vitejs/plugin-react": "^1.1.1",
