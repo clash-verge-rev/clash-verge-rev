@@ -16,7 +16,7 @@ use tauri::{
 };
 
 /// Run the clash bin
-pub fn run_clash_bin(app_handle: &AppHandle) -> ClashInfoPayload {
+pub fn run_clash_bin(app_handle: &AppHandle, cb: fn(info: ClashInfoPayload)) -> ClashInfoPayload {
   let app_dir = app_home_dir();
   let app_dir = app_dir.as_os_str().to_str().unwrap();
 
@@ -38,12 +38,13 @@ pub fn run_clash_bin(app_handle: &AppHandle) -> ClashInfoPayload {
     Ok((mut rx, _)) => {
       log::info!("Successfully execute clash sidecar");
       payload.controller = Some(read_clash_controller());
+      cb(payload.clone()); // callback when run sidecar successfully
 
       tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
           match event {
-            CommandEvent::Stdout(line) => log::info!("{}", line),
-            CommandEvent::Stderr(err) => log::error!("{}", err),
+            CommandEvent::Stdout(line) => log::info!("[stdout]: {}", line),
+            CommandEvent::Stderr(err) => log::error!("[stderr]: {}", err),
             _ => {}
           }
         }
@@ -86,9 +87,7 @@ pub async fn put_clash_profile(payload: &ClashInfoPayload) -> Result<(), String>
   {
     let file_name = match profile.file {
       Some(file_name) => file_name.clone(),
-      None => {
-        return Err(format!("profile item should have `file` field"));
-      }
+      None => return Err(format!("profile item should have `file` field")),
     };
 
     let file_path = app_home_dir().join("profiles").join(file_name);
