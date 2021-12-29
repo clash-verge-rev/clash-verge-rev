@@ -18,7 +18,9 @@ chrono = "0.4.19"
 serde_json = "1.0"
 serde_yaml = "0.8"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.0.0-beta.8", features = ["api-all", "system-tray"] }
+# tauri = { version = "1.0.0-beta.8", features = ["api-all", "system-tray"] }
+tauri = { git = "https://github.com/tauri-apps/tauri", branch = "next", features = ["api-all", "system-tray"] }
+
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 log = "0.4.14"
