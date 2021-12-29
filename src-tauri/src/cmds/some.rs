@@ -17,7 +17,7 @@ use tauri::{api::process::kill_children, AppHandle, State};
 #[tauri::command]
 pub fn restart_sidecar(app_handle: AppHandle, clash_info: State<'_, ClashInfoState>) {
   kill_children();
-  let payload = run_clash_bin(&app_handle);
+  let payload = run_clash_bin(&app_handle, |_| {});
 
   if let Ok(mut arc) = clash_info.0.lock() {
     *arc = payload;
