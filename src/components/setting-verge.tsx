@@ -39,7 +39,7 @@ const SettingVerge = ({ onError }: Props) => {
 
   return (
     <List>
-      <ListSubheader>通用设置</ListSubheader>
+      <ListSubheader sx={{ background: "transparent" }}>通用设置</ListSubheader>
 
       <SettingItem>
         <ListItemText primary="外观主题" />
