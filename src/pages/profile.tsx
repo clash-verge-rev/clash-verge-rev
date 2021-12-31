@@ -77,6 +77,7 @@ const ProfilePage = () => {
 
   const lockRef = useRef(false);
   const onProfileChange = (index: number) => {
+    if (index === profiles.current || lockRef.current) return;
     if (lockRef.current) return;
     lockRef.current = true;
     putProfiles(index)
