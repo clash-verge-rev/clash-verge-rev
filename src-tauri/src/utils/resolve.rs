@@ -11,14 +11,7 @@ pub fn resolve_setup(app: &App) {
   init::init_app(app.package_info());
 
   // run clash sidecar
-  let info = clash::run_clash_bin(&app.handle(), |info_| {
-    // update the profile
-    tauri::async_runtime::spawn(async move {
-      if let Err(err) = clash::put_clash_profile(&info_).await {
-        log::error!("failed to put config for `{}`", err);
-      };
-    });
-  });
+  let info = clash::run_clash_bin(&app.handle());
 
   // resolve the verge config - enable system proxy
   let mut original: Option<sysopt::SysProxyConfig> = None;

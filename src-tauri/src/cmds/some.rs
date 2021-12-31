@@ -2,7 +2,7 @@ use crate::{
   config::VergeConfig,
   events::{
     emit::ClashInfoPayload,
-    state::{ClashInfoState, VergeConfLock},
+    state::{ClashInfoState, ClashSidecarState, VergeConfLock},
   },
   utils::{
     clash::run_clash_bin,
@@ -11,13 +11,25 @@ use crate::{
   },
 };
 use serde_yaml::Mapping;
-use tauri::{api::process::kill_children, AppHandle, State};
+use tauri::{AppHandle, State};
 
 /// restart the sidecar
 #[tauri::command]
-pub fn restart_sidecar(app_handle: AppHandle, clash_info: State<'_, ClashInfoState>) {
-  kill_children();
-  let payload = run_clash_bin(&app_handle, |_| {});
+pub fn restart_sidecar(
+  app_handle: AppHandle,
+  clash_info: State<'_, ClashInfoState>,
+  clash_sidecar: State<'_, ClashSidecarState>,
+) {
+  {
+    let mut guard = clash_sidecar.0.lock().unwrap();
+    let sidecar = guard.take();
+    if sidecar.is_some() {
+      if let Err(err) = sidecar.unwrap().kill() {
+        log::error!("failed to restart clash for \"{}\"", err);
+      }
+    }
+  }
+  let payload = run_clash_bin(&app_handle);
 
   if let Ok(mut arc) = clash_info.0.lock() {
     *arc = payload;
