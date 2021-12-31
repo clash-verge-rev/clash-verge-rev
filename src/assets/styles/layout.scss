@@ -16,8 +16,9 @@
     position: relative;
     flex: 1 1 75%;
     height: 100vh;
-    overflow: overlay;
+    overflow: auto;
     box-sizing: border-box;
+    scrollbar-gutter: "stable";
   }
 
   &__logo {
