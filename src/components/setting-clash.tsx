@@ -42,7 +42,9 @@ const SettingClash = ({ onError }: Props) => {
 
   return (
     <List>
-      <ListSubheader>Clash设置</ListSubheader>
+      <ListSubheader sx={{ background: "transparent" }}>
+        Clash设置
+      </ListSubheader>
 
       <SettingItem>
         <ListItemText primary="局域网连接" />
