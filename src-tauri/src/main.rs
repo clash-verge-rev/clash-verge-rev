@@ -12,7 +12,7 @@ mod utils;
 
 use crate::{
   events::state,
-  utils::{resolve, server},
+  utils::{clash, resolve, server},
 };
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
@@ -26,10 +26,12 @@ fn main() -> std::io::Result<()> {
 
   let menu = SystemTrayMenu::new()
     .add_item(CustomMenuItem::new("open_window", "显示应用"))
+    .add_item(CustomMenuItem::new("restart_clash", "重启clash"))
     .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(CustomMenuItem::new("quit", "退出").accelerator("CmdOrControl+Q"));
 
   tauri::Builder::default()
+    .manage(state::ClashSidecarState::default())
     .manage(state::VergeConfLock::default())
     .manage(state::ClashInfoState::default())
     .manage(state::SomthingState::default())
@@ -42,6 +44,24 @@ fn main() -> std::io::Result<()> {
           let window = app_handle.get_window("main").unwrap();
           window.show().unwrap();
           window.set_focus().unwrap();
+        }
+        "restart_clash" => {
+          {
+            let state = app_handle.state::<state::ClashSidecarState>();
+            let mut guard = state.0.lock().unwrap();
+            let sidecar = guard.take();
+            if sidecar.is_some() {
+              if let Err(err) = sidecar.unwrap().kill() {
+                log::error!("failed to restart clash for \"{}\"", err);
+              }
+            }
+          }
+
+          let payload = clash::run_clash_bin(&app_handle);
+          let state = app_handle.state::<state::ClashInfoState>();
+          if let Ok(mut arc) = state.0.lock() {
+            *arc = payload;
+          };
         }
         "quit" => {
           api::process::kill_children();

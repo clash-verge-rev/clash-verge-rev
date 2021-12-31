@@ -1,9 +1,12 @@
 extern crate log;
 
 use crate::{
-  events::emit::{clash_start, ClashInfoPayload},
+  events::{
+    emit::{clash_start, ClashInfoPayload},
+    state,
+  },
   utils::{
-    app_home_dir,
+    app_home_dir, clash,
     config::{read_clash_controller, read_profiles, read_yaml, save_yaml},
   },
 };
@@ -12,11 +15,11 @@ use serde_yaml::{Mapping, Value};
 use std::{collections::HashMap, env::temp_dir};
 use tauri::{
   api::process::{Command, CommandEvent},
-  AppHandle,
+  AppHandle, Manager,
 };
 
 /// Run the clash bin
-pub fn run_clash_bin(app_handle: &AppHandle, cb: fn(info: ClashInfoPayload)) -> ClashInfoPayload {
+pub fn run_clash_bin(app_handle: &AppHandle) -> ClashInfoPayload {
   let app_dir = app_home_dir();
   let app_dir = app_dir.as_os_str().to_str().unwrap();
 
@@ -35,10 +38,21 @@ pub fn run_clash_bin(app_handle: &AppHandle, cb: fn(info: ClashInfoPayload)) -> 
   };
 
   match result {
-    Ok((mut rx, _)) => {
+    Ok((mut rx, cmd_child)) => {
       log::info!("Successfully execute clash sidecar");
       payload.controller = Some(read_clash_controller());
-      cb(payload.clone()); // callback when run sidecar successfully
+
+      // update the profile
+      let payload_ = payload.clone();
+      tauri::async_runtime::spawn(async move {
+        if let Err(err) = clash::put_clash_profile(&payload_).await {
+          log::error!("failed to put config for `{}`", err);
+        };
+      });
+
+      if let Ok(mut state) = app_handle.state::<state::ClashSidecarState>().0.lock() {
+        *state = Some(cmd_child);
+      };
 
       tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
