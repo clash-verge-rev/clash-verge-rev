@@ -1,7 +1,6 @@
 extern crate warp;
 
 use port_scanner::local_port_available;
-use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager};
 use warp::Filter;
 
@@ -23,13 +22,12 @@ pub fn check_singleton() -> Result<(), ()> {
 /// The embed server only be used to implement singleton process
 /// maybe it can be used as pac server later
 pub fn embed_server(app: &AppHandle) {
-  let window = Arc::new(Mutex::new(app.get_window("main").unwrap()));
+  let window = app.get_window("main").unwrap();
 
   tauri::async_runtime::spawn(async move {
     let commands = warp::path!("commands" / "visible").map(move || {
-      let win = window.lock().unwrap();
-      win.show().unwrap();
-      win.set_focus().unwrap();
+      window.show().unwrap();
+      window.set_focus().unwrap();
       return format!("ok");
     });
 
