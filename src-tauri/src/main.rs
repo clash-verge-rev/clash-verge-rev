@@ -35,7 +35,7 @@ fn main() -> std::io::Result<()> {
     .manage(state::VergeConfLock::default())
     .manage(state::ClashInfoState::default())
     .manage(state::SomthingState::default())
-    .manage(state::ProfileLock::default())
+    .manage(state::ProfilesState::default())
     .setup(|app| Ok(resolve::resolve_setup(app)))
     .system_tray(SystemTray::new().with_menu(menu))
     .on_system_tray_event(move |app_handle, event| match event {
@@ -87,9 +87,11 @@ fn main() -> std::io::Result<()> {
       cmds::some::patch_verge_config,
       cmds::profile::import_profile,
       cmds::profile::update_profile,
+      cmds::profile::delete_profile,
+      cmds::profile::select_profile,
+      cmds::profile::patch_profile,
+      cmds::profile::sync_profiles,
       cmds::profile::get_profiles,
-      cmds::profile::set_profiles,
-      cmds::profile::put_profiles,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application")

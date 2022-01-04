@@ -22,8 +22,7 @@ import {
 } from "@mui/icons-material";
 import { updateProxy } from "../services/api";
 import { ApiType } from "../services/types";
-import { getProfiles, setProfiles } from "../services/cmds";
-import noop from "../utils/noop";
+import { getProfiles, patchProfile } from "../services/cmds";
 
 interface ItemProps {
   proxy: ApiType.ProxyItem;
@@ -105,7 +104,7 @@ const ProxyGroup = ({ group }: Props) => {
         profile.selected[index] = { name: group.name, now: name };
       }
 
-      setProfiles(profiles.current!, profile).catch(console.error);
+      patchProfile(profiles.current!, profile).catch(console.error);
     } catch {
       setNow(oldValue);
       // Todo

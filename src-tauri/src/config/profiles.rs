@@ -1,4 +1,8 @@
+use crate::utils::{app_home_dir, config};
 use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::Write;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -49,4 +53,157 @@ pub struct ProfileResponse {
   pub file: String,
   pub data: String,
   pub extra: ProfileExtra,
+}
+
+static PROFILE_YAML: &str = "profiles.yaml";
+
+impl ProfilesConfig {
+  /// read the config from the file
+  pub fn read_file() -> Self {
+    config::read_yaml::<ProfilesConfig>(app_home_dir().join(PROFILE_YAML))
+  }
+
+  /// save the config to the file
+  pub fn save_file(&self) -> Result<(), String> {
+    config::save_yaml(
+      app_home_dir().join(PROFILE_YAML),
+      self,
+      Some("# Profiles Config for Clash Verge\n\n"),
+    )
+  }
+
+  /// sync the config between file and memory
+  pub fn sync_file(&mut self) -> Result<(), String> {
+    let data = config::read_yaml::<Self>(app_home_dir().join(PROFILE_YAML));
+    if data.current.is_none() {
+      Err("failed to read profiles.yaml".into())
+    } else {
+      self.current = data.current;
+      self.items = data.items;
+      Ok(())
+    }
+  }
+
+  /// import the new profile from the url
+  /// and update the config file
+  pub fn import_from_url(&mut self, url: String, result: ProfileResponse) -> Result<(), String> {
+    // save the profile file
+    let path = app_home_dir().join("profiles").join(&result.file);
+    let file_data = result.data.as_bytes();
+    File::create(path).unwrap().write(file_data).unwrap();
+
+    // update `profiles.yaml`
+    let data = ProfilesConfig::read_file();
+    let mut items = data.items.unwrap_or(vec![]);
+
+    let now = SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .unwrap()
+      .as_secs();
+
+    items.push(ProfileItem {
+      name: Some(result.name),
+      file: Some(result.file),
+      mode: Some(format!("rule")),
+      url: Some(url),
+      selected: Some(vec![]),
+      extra: Some(result.extra),
+      updated: Some(now as usize),
+    });
+
+    self.items = Some(items);
+    if data.current.is_none() {
+      self.current = Some(0);
+    }
+
+    self.save_file()
+  }
+
+  /// set the current and save to file
+  pub fn put_current(&mut self, index: usize) -> Result<(), String> {
+    let items = self.items.take().unwrap_or(vec![]);
+
+    if index >= items.len() {
+      return Err("the index out of bound".into());
+    }
+
+    self.items = Some(items);
+    self.current = Some(index);
+    self.save_file()
+  }
+
+  /// update the target profile
+  /// and save to config file
+  /// only support the url item
+  pub fn update_item(&mut self, index: usize, result: ProfileResponse) -> Result<(), String> {
+    let mut items = self.items.take().unwrap_or(vec![]);
+
+    let now = SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .unwrap()
+      .as_secs() as usize;
+
+    // update file
+    let file_path = &items[index].file.as_ref().unwrap();
+    let file_path = app_home_dir().join("profiles").join(file_path);
+    let file_data = result.data.as_bytes();
+    File::create(file_path).unwrap().write(file_data).unwrap();
+
+    items[index].name = Some(result.name);
+    items[index].extra = Some(result.extra);
+    items[index].updated = Some(now);
+
+    self.items = Some(items);
+    self.save_file()
+  }
+
+  /// patch item
+  pub fn patch_item(&mut self, index: usize, profile: ProfileItem) -> Result<(), String> {
+    let mut items = self.items.take().unwrap_or(vec![]);
+    if index >= items.len() {
+      return Err("index out of bound".into());
+    }
+
+    if profile.name.is_some() {
+      items[index].name = profile.name;
+    }
+    if profile.file.is_some() {
+      items[index].file = profile.file;
+    }
+    if profile.mode.is_some() {
+      items[index].mode = profile.mode;
+    }
+    if profile.url.is_some() {
+      items[index].url = profile.url;
+    }
+    if profile.selected.is_some() {
+      items[index].selected = profile.selected;
+    }
+    if profile.extra.is_some() {
+      items[index].extra = profile.extra;
+    }
+
+    self.items = Some(items);
+    self.save_file()
+  }
+
+  /// delete the item
+  pub fn delete_item(&mut self, index: usize) -> Result<(), String> {
+    let mut current = self.current.clone().unwrap_or(0);
+    let mut items = self.items.clone().unwrap_or(vec![]);
+
+    if index >= items.len() {
+      return Err("index out of bound".into());
+    }
+
+    items.remove(index);
+
+    if current == index {
+      current = 0;
+    } else if current > index {
+      current = current - 1;
+    }
+    self.current = Some(current);
+    self.save_file()
+  }
 }

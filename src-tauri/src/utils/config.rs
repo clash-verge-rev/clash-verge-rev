@@ -1,5 +1,5 @@
 use crate::{
-  config::{ClashController, ProfilesConfig, VergeConfig},
+  config::{ClashController, VergeConfig},
   utils::app_home_dir,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -101,20 +101,6 @@ pub fn read_clash_controller() -> ClashController {
     server,
     secret,
   }
-}
-
-/// Get Profiles Config
-pub fn read_profiles() -> ProfilesConfig {
-  read_yaml::<ProfilesConfig>(app_home_dir().join("profiles.yaml"))
-}
-
-/// Save Verge App Config
-pub fn save_profiles(profiles: &ProfilesConfig) -> Result<(), String> {
-  save_yaml(
-    app_home_dir().join("profiles.yaml"),
-    profiles,
-    Some("# Profiles Config for Clash Verge\n\n"),
-  )
 }
 
 /// Get the `verge.yaml`
