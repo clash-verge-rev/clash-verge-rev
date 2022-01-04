@@ -1,14 +1,12 @@
 extern crate log;
 
 use crate::{
+  config::ProfilesConfig,
   events::{
     emit::{clash_start, ClashInfoPayload},
     state,
   },
-  utils::{
-    app_home_dir, clash,
-    config::{read_clash_controller, read_profiles, read_yaml, save_yaml},
-  },
+  utils::{app_home_dir, clash, config},
 };
 use reqwest::header::HeaderMap;
 use serde_yaml::{Mapping, Value};
@@ -40,15 +38,7 @@ pub fn run_clash_bin(app_handle: &AppHandle) -> ClashInfoPayload {
   match result {
     Ok((mut rx, cmd_child)) => {
       log::info!("Successfully execute clash sidecar");
-      payload.controller = Some(read_clash_controller());
-
-      // update the profile
-      let payload_ = payload.clone();
-      tauri::async_runtime::spawn(async move {
-        if let Err(err) = clash::put_clash_profile(&payload_).await {
-          log::error!("failed to put config for `{}`", err);
-        };
-      });
+      payload.controller = Some(config::read_clash_controller());
 
       if let Ok(mut state) = app_handle.state::<state::ClashSidecarState>().0.lock() {
         *state = Some(cmd_child);
@@ -62,6 +52,21 @@ pub fn run_clash_bin(app_handle: &AppHandle) -> ClashInfoPayload {
             _ => {}
           }
         }
+      });
+
+      // update the profile
+      let payload_ = payload.clone();
+      tauri::async_runtime::spawn(async move {
+        let mut count = 5; // retry times
+        let mut err = String::from("");
+        while count > 0 {
+          match clash::put_clash_profile(&payload_).await {
+            Ok(_) => return,
+            Err(e) => err = e,
+          }
+          count -= 1;
+        }
+        log::error!("failed to put config for `{}`", err);
       });
     }
     Err(err) => {
@@ -78,7 +83,7 @@ pub fn run_clash_bin(app_handle: &AppHandle) -> ClashInfoPayload {
 /// Update the clash profile firstly
 pub async fn put_clash_profile(payload: &ClashInfoPayload) -> Result<(), String> {
   let profile = {
-    let profiles = read_profiles();
+    let profiles = ProfilesConfig::read_file();
     let current = profiles.current.unwrap_or(0) as usize;
     match profiles.items {
       Some(items) => {
@@ -111,7 +116,7 @@ pub async fn put_clash_profile(payload: &ClashInfoPayload) -> Result<(), String>
 
     // Only the following fields are allowed:
     // proxies/proxy-providers/proxy-groups/rule-providers/rules
-    let config = read_yaml::<Mapping>(file_path.clone());
+    let config = config::read_yaml::<Mapping>(file_path.clone());
     let mut new_config = Mapping::new();
     vec![
       "proxies",
@@ -129,7 +134,7 @@ pub async fn put_clash_profile(payload: &ClashInfoPayload) -> Result<(), String>
       }
     });
 
-    match save_yaml(
+    match config::save_yaml(
       temp_path.clone(),
       &new_config,
       Some("# Clash Verge Temp File"),
