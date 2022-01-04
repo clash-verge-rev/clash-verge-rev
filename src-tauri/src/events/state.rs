@@ -1,5 +1,8 @@
 use super::emit::ClashInfoPayload;
-use crate::{config::VergeConfig, utils::sysopt::SysProxyConfig};
+use crate::{
+  config::{ProfilesConfig, VergeConfig},
+  utils::sysopt::SysProxyConfig,
+};
 use std::sync::{Arc, Mutex};
 use tauri::api::process::CommandChild;
 
@@ -7,7 +10,7 @@ use tauri::api::process::CommandChild;
 pub struct ClashInfoState(pub Arc<Mutex<ClashInfoPayload>>);
 
 #[derive(Default)]
-pub struct ProfileLock(pub Mutex<bool>);
+pub struct ProfilesState(pub Arc<Mutex<ProfilesConfig>>);
 
 #[derive(Default)]
 pub struct VergeConfLock(pub Arc<Mutex<VergeConfig>>);

@@ -3,8 +3,8 @@ import useSWR, { useSWRConfig } from "swr";
 import { Box, Button, Grid, TextField, Typography } from "@mui/material";
 import {
   getProfiles,
-  putProfiles,
-  setProfiles,
+  selectProfile,
+  patchProfile,
   importProfile,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
@@ -52,7 +52,7 @@ const ProfilePage = () => {
         name,
         now,
       }));
-      setProfiles(profiles.current!, profile).catch(console.error);
+      patchProfile(profiles.current!, profile).catch(console.error);
       // update proxies cache
       if (hasChange) mutate("getProxies", getProxies());
     });
@@ -66,7 +66,7 @@ const ProfilePage = () => {
     try {
       await importProfile(url);
       mutate("getProfiles", getProfiles());
-      if (!profiles.items?.length) putProfiles(0).catch(noop);
+      if (!profiles.items?.length) selectProfile(0).catch(noop);
       notice.success("Successfully import profile.");
     } catch {
       notice.error("Failed to import profile.");
@@ -80,7 +80,7 @@ const ProfilePage = () => {
     if (index === profiles.current || lockRef.current) return;
     if (lockRef.current) return;
     lockRef.current = true;
-    putProfiles(index)
+    selectProfile(index)
       .then(() => {
         mutate("getProfiles", { ...profiles, current: index }, true);
       })

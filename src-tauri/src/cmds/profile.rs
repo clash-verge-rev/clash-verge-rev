@@ -1,60 +1,42 @@
 use crate::{
   config::{ProfileItem, ProfilesConfig},
-  events::state::{ClashInfoState, ProfileLock},
-  utils::{
-    app_home_dir,
-    clash::put_clash_profile,
-    config::{read_profiles, save_profiles},
-    fetch::fetch_profile,
-  },
+  events::state::{ClashInfoState, ProfilesState},
+  utils::{clash, fetch},
 };
-use std::fs::File;
-use std::io::Write;
-use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::State;
+
+/// get all profiles from `profiles.yaml`
+/// do not acquire the lock of ProfileLock
+#[tauri::command]
+pub fn get_profiles(profiles: State<'_, ProfilesState>) -> Result<ProfilesConfig, String> {
+  match profiles.0.lock() {
+    Ok(profiles) => Ok(profiles.clone()),
+    Err(_) => Err("can not get profiles lock".into()),
+  }
+}
+
+/// synchronize data irregularly
+#[tauri::command]
+pub fn sync_profiles(profiles: State<'_, ProfilesState>) -> Result<(), String> {
+  match profiles.0.lock() {
+    Ok(mut profiles) => profiles.sync_file(),
+    Err(_) => Err("can not get profiles lock".into()),
+  }
+}
 
 /// Import the profile from url
 /// and save to `profiles.yaml`
 #[tauri::command]
-pub async fn import_profile(url: String, lock: State<'_, ProfileLock>) -> Result<(), String> {
-  let result = match fetch_profile(&url).await {
+pub async fn import_profile(url: String, profiles: State<'_, ProfilesState>) -> Result<(), String> {
+  let result = match fetch::fetch_profile(&url).await {
     Some(r) => r,
-    None => {
-      log::error!("failed to fetch profile from `{}`", url);
-      return Err(format!("failed to fetch profile from `{}`", url));
-    }
+    None => return Err(format!("failed to fetch profile from `{}`", url)),
   };
 
-  // get lock
-  if lock.0.lock().is_err() {
-    return Err(format!("can not get file lock"));
+  match profiles.0.lock() {
+    Ok(mut profiles) => profiles.import_from_url(url, result),
+    Err(_) => Err("can not get profiles lock".into()),
   }
-
-  // save the profile file
-  let path = app_home_dir().join("profiles").join(&result.file);
-  let file_data = result.data.as_bytes();
-  File::create(path).unwrap().write(file_data).unwrap();
-
-  // update `profiles.yaml`
-  let mut profiles = read_profiles();
-  let mut items = profiles.items.unwrap_or(vec![]);
-
-  let now = SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .unwrap()
-    .as_secs();
-
-  items.push(ProfileItem {
-    name: Some(result.name),
-    file: Some(result.file),
-    mode: Some(format!("rule")),
-    url: Some(url),
-    selected: Some(vec![]),
-    extra: Some(result.extra),
-    updated: Some(now as usize),
-  });
-  profiles.items = Some(items);
-  save_profiles(&profiles)
 }
 
 /// Update the profile
@@ -62,129 +44,78 @@ pub async fn import_profile(url: String, lock: State<'_, ProfileLock>) -> Result
 /// http request firstly
 /// then acquire the lock of `profiles.yaml`
 #[tauri::command]
-pub async fn update_profile(index: usize, lock: State<'_, ProfileLock>) -> Result<(), String> {
-  // get lock
-  if lock.0.lock().is_err() {
-    return Err(format!("can not get file lock"));
-  }
-
-  // update `profiles.yaml`
-  let mut profiles = read_profiles();
-  let mut items = profiles.items.unwrap_or(vec![]);
-
-  if index >= items.len() {
-    return Err(format!("the index out of bound"));
-  }
-
-  let url = match &items[index].url {
-    Some(u) => u,
-    None => return Err(format!("invalid url")),
-  };
-
-  let result = match fetch_profile(&url).await {
-    Some(r) => r,
-    None => {
-      log::error!("failed to fetch profile from `{}`", url);
-      return Err(format!("failed to fetch profile from `{}`", url));
+pub async fn update_profile(
+  index: usize,
+  profiles: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  // maybe we can get the url from the web app directly
+  let url = {
+    match profiles.0.lock() {
+      Ok(mut profile) => {
+        let items = profile.items.take().unwrap_or(vec![]);
+        if index >= items.len() {
+          return Err("the index out of bound".into());
+        }
+        let url = match &items[index].url {
+          Some(u) => u.clone(),
+          None => return Err("failed to update profile for `invalid url`".into()),
+        };
+        profile.items = Some(items);
+        url
+      }
+      Err(_) => return Err("can not get profiles lock".into()),
     }
   };
 
-  let now = SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .unwrap()
-    .as_secs() as usize;
+  let result = match fetch::fetch_profile(&url).await {
+    Some(r) => r,
+    None => return Err(format!("failed to fetch profile from `{}`", url)),
+  };
 
-  // update file
-  let file_path = &items[index].file.as_ref().unwrap();
-  let file_path = app_home_dir().join("profiles").join(file_path);
-  let file_data = result.data.as_bytes();
-  File::create(file_path).unwrap().write(file_data).unwrap();
-
-  items[index].name = Some(result.name);
-  items[index].extra = Some(result.extra);
-  items[index].updated = Some(now);
-  profiles.items = Some(items);
-  save_profiles(&profiles)
-}
-
-/// get all profiles from `profiles.yaml`
-/// do not acquire the lock of ProfileLock
-#[tauri::command]
-pub fn get_profiles() -> Result<ProfilesConfig, String> {
-  Ok(read_profiles())
-}
-
-/// patch the profile config
-#[tauri::command]
-pub fn set_profiles(
-  index: usize,
-  profile: ProfileItem,
-  lock: State<'_, ProfileLock>,
-) -> Result<(), String> {
-  // get lock
-  if lock.0.lock().is_err() {
-    return Err(format!("can not get file lock"));
+  match profiles.0.lock() {
+    Ok(mut profiles) => profiles.update_item(index, result),
+    Err(_) => Err("can not get profiles lock".into()),
   }
-
-  let mut profiles = read_profiles();
-  let mut items = profiles.items.unwrap_or(vec![]);
-
-  if index >= items.len() {
-    return Err(format!("the index out of bound"));
-  }
-
-  if profile.name.is_some() {
-    items[index].name = profile.name;
-  }
-  if profile.file.is_some() {
-    items[index].file = profile.file;
-  }
-  if profile.mode.is_some() {
-    items[index].mode = profile.mode;
-  }
-  if profile.url.is_some() {
-    items[index].url = profile.url;
-  }
-  if profile.selected.is_some() {
-    items[index].selected = profile.selected;
-  }
-  if profile.extra.is_some() {
-    items[index].extra = profile.extra;
-  }
-
-  profiles.items = Some(items);
-  save_profiles(&profiles)
 }
 
 /// change the current profile
 #[tauri::command]
-pub async fn put_profiles(
-  current: usize,
-  lock: State<'_, ProfileLock>,
+pub async fn select_profile(
+  index: usize,
+  profiles: State<'_, ProfilesState>,
   clash_info: State<'_, ClashInfoState>,
 ) -> Result<(), String> {
-  if lock.0.lock().is_err() {
-    return Err(format!("can not get file lock"));
-  }
+  match profiles.0.lock() {
+    Ok(mut profiles) => profiles.put_current(index)?,
+    Err(_) => return Err("can not get profiles lock".into()),
+  };
 
-  let clash_info = match clash_info.0.lock() {
+  let arc = match clash_info.0.lock() {
     Ok(arc) => arc.clone(),
-    _ => return Err(format!("can not get clash info")),
+    _ => return Err("can not get clash info lock".into()),
   };
 
-  let mut profiles = read_profiles();
-  let items_len = match &profiles.items {
-    Some(list) => list.len(),
-    None => 0,
-  };
+  clash::put_clash_profile(&arc).await
+}
 
-  if current >= items_len {
-    return Err(format!("the index out of bound"));
+/// delete profile item
+#[tauri::command]
+pub fn delete_profile(index: usize, profiles: State<'_, ProfilesState>) -> Result<(), String> {
+  match profiles.0.lock() {
+    Ok(mut profiles) => profiles.delete_item(index),
+    Err(_) => Err("can not get profiles lock".into()),
   }
+}
 
-  profiles.current = Some(current);
-  match save_profiles(&profiles) {
-    Ok(_) => put_clash_profile(&clash_info).await,
-    Err(err) => Err(err),
+/// patch the profile config
+#[tauri::command]
+pub fn patch_profile(
+  index: usize,
+  profile: ProfileItem,
+  profiles: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  match profiles.0.lock() {
+    Ok(mut profiles) => profiles.patch_item(index, profile),
+    Err(_) => Err("can not get profiles lock".into()),
   }
 }
