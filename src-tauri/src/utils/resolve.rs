@@ -1,5 +1,5 @@
 use super::{clash, config, init, server, sysopt};
-use crate::events::state;
+use crate::{config::ProfilesConfig, events::state};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
@@ -39,7 +39,12 @@ pub fn resolve_setup(app: &App) {
       }
     }
   }
+
   // update state
+  let profiles_state = app.state::<state::ProfilesState>();
+  let mut profiles = profiles_state.0.lock().unwrap();
+  *profiles = ProfilesConfig::read_file();
+
   let verge_state = app.state::<state::VergeConfLock>();
   let mut verge_arc = verge_state.0.lock().unwrap();
   *verge_arc = verge;
