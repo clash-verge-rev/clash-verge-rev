@@ -9,7 +9,7 @@ const cwd = process.cwd();
 
 const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
-const CLASH_LATEST_DATE = "2021.12.07";
+const CLASH_LATEST_DATE = "2022.01.03";
 
 /**
  * get the correct clash release infomation
@@ -62,7 +62,6 @@ async function resolveSidecar() {
   if (!(await fs.pathExists(tempDir))) await fs.mkdir(tempDir);
   if (!(await fs.pathExists(tempZip))) await downloadFile(binInfo.url, tempZip);
 
-  // Todo: support gz
   if (binInfo.zip === "zip") {
     const zip = new AdmZip(tempZip);
     zip.getEntries().forEach((entry) => {
