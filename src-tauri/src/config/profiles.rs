@@ -1,8 +1,14 @@
-use crate::utils::{app_home_dir, config};
+use crate::utils::{config, dirs};
+use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
+use serde_yaml::{Mapping, Value};
+use std::collections::HashMap;
+use std::env::temp_dir;
 use std::fs::File;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+use super::ClashInfo;
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -56,17 +62,18 @@ pub struct ProfileResponse {
 }
 
 static PROFILE_YAML: &str = "profiles.yaml";
+static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
 
 impl ProfilesConfig {
   /// read the config from the file
   pub fn read_file() -> Self {
-    config::read_yaml::<ProfilesConfig>(app_home_dir().join(PROFILE_YAML))
+    config::read_yaml::<ProfilesConfig>(dirs::app_home_dir().join(PROFILE_YAML))
   }
 
   /// save the config to the file
   pub fn save_file(&self) -> Result<(), String> {
     config::save_yaml(
-      app_home_dir().join(PROFILE_YAML),
+      dirs::app_home_dir().join(PROFILE_YAML),
       self,
       Some("# Profiles Config for Clash Verge\n\n"),
     )
@@ -74,7 +81,7 @@ impl ProfilesConfig {
 
   /// sync the config between file and memory
   pub fn sync_file(&mut self) -> Result<(), String> {
-    let data = config::read_yaml::<Self>(app_home_dir().join(PROFILE_YAML));
+    let data = config::read_yaml::<Self>(dirs::app_home_dir().join(PROFILE_YAML));
     if data.current.is_none() {
       Err("failed to read profiles.yaml".into())
     } else {
@@ -88,7 +95,7 @@ impl ProfilesConfig {
   /// and update the config file
   pub fn import_from_url(&mut self, url: String, result: ProfileResponse) -> Result<(), String> {
     // save the profile file
-    let path = app_home_dir().join("profiles").join(&result.file);
+    let path = dirs::app_home_dir().join("profiles").join(&result.file);
     let file_data = result.data.as_bytes();
     File::create(path).unwrap().write(file_data).unwrap();
 
@@ -145,7 +152,7 @@ impl ProfilesConfig {
 
     // update file
     let file_path = &items[index].file.as_ref().unwrap();
-    let file_path = app_home_dir().join("profiles").join(file_path);
+    let file_path = dirs::app_home_dir().join("profiles").join(file_path);
     let file_data = result.data.as_bytes();
     File::create(file_path).unwrap().write(file_data).unwrap();
 
@@ -205,5 +212,100 @@ impl ProfilesConfig {
     }
     self.current = Some(current);
     self.save_file()
+  }
+
+  /// activate current profile
+  pub fn activate(&self, clash_config: ClashInfo) -> Result<(), String> {
+    let current = self.current.unwrap_or(0);
+    match self.items.clone() {
+      Some(items) => {
+        if current >= items.len() {
+          return Err("the index out of bound".into());
+        }
+
+        let profile = items[current].clone();
+        tauri::async_runtime::spawn(async move {
+          let mut count = 5; // retry times
+          let mut err = String::from("");
+          while count > 0 {
+            match activate_profile(&profile, &clash_config).await {
+              Ok(_) => return,
+              Err(e) => err = e,
+            }
+            count -= 1;
+          }
+          log::error!("failed to activate for `{}`", err);
+        });
+
+        Ok(())
+      }
+      None => Err("empty profiles".into()),
+    }
+  }
+}
+
+/// put the profile to clash
+pub async fn activate_profile(profile_item: &ProfileItem, info: &ClashInfo) -> Result<(), String> {
+  // temp profile's path
+  let temp_path = temp_dir().join(PROFILE_TEMP);
+
+  // generate temp profile
+  {
+    let file_name = match profile_item.file.clone() {
+      Some(file_name) => file_name,
+      None => return Err("profile item should have `file` field".into()),
+    };
+
+    let file_path = dirs::app_home_dir().join("profiles").join(file_name);
+    if !file_path.exists() {
+      return Err(format!("profile `{:?}` not exists", file_path));
+    }
+
+    // Only the following fields are allowed:
+    // proxies/proxy-providers/proxy-groups/rule-providers/rules
+    let config = config::read_yaml::<Mapping>(file_path.clone());
+    let mut new_config = Mapping::new();
+    vec![
+      "proxies",
+      "proxy-providers",
+      "proxy-groups",
+      "rule-providers",
+      "rules",
+    ]
+    .iter()
+    .map(|item| Value::String(item.to_string()))
+    .for_each(|key| {
+      if config.contains_key(&key) {
+        let value = config[&key].clone();
+        new_config.insert(key, value);
+      }
+    });
+
+    config::save_yaml(
+      temp_path.clone(),
+      &new_config,
+      Some("# Clash Verge Temp File"),
+    )?
+  };
+
+  let server = format!("http://{}/configs", info.server.clone().unwrap());
+
+  let mut headers = HeaderMap::new();
+  headers.insert("Content-Type", "application/json".parse().unwrap());
+
+  if let Some(secret) = info.secret.clone() {
+    headers.insert(
+      "Authorization",
+      format!("Bearer {}", secret).parse().unwrap(),
+    );
+  }
+
+  let mut data = HashMap::new();
+  data.insert("path", temp_path.as_os_str().to_str().unwrap());
+
+  let client = reqwest::Client::new();
+  match client.put(server).headers(headers).json(&data).send().await {
+    Ok(_) => Ok(()),
+    Err(err) => Err(format!("request failed `{}`", err.to_string())),
   }
 }

@@ -1,5 +1,5 @@
-use super::{clash, config, init, server, sysopt};
-use crate::{config::ProfilesConfig, events::state};
+use super::{init, server};
+use crate::{config::ProfilesConfig, states};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
@@ -10,68 +10,31 @@ pub fn resolve_setup(app: &App) {
   // init app config
   init::init_app(app.package_info());
 
-  // run clash sidecar
-  let info = clash::run_clash_bin(&app.handle());
+  // init states
+  let clash_state = app.state::<states::ClashState>();
+  let verge_state = app.state::<states::VergeState>();
+  let profiles_state = app.state::<states::ProfilesState>();
 
-  // resolve the verge config - enable system proxy
-  let mut original: Option<sysopt::SysProxyConfig> = None;
-  let verge = config::read_verge();
-  let enable = verge.enable_system_proxy.unwrap_or(false);
+  let mut clash = clash_state.0.lock().unwrap();
+  let mut verge = verge_state.0.lock().unwrap();
+  let mut profiles = profiles_state.0.lock().unwrap();
 
-  if enable && info.controller.is_some() {
-    if let Ok(original_conf) = sysopt::get_proxy_config() {
-      original = Some(original_conf)
-    };
-    let ctl = info.controller.clone().unwrap();
-    if ctl.port.is_some() {
-      let server = format!("127.0.0.1:{}", ctl.port.unwrap());
-      let bypass = verge
-        .system_proxy_bypass
-        .clone()
-        .unwrap_or(String::from(sysopt::DEFAULT_BYPASS));
-      let config = sysopt::SysProxyConfig {
-        enable,
-        server,
-        bypass,
-      };
-      if let Err(err) = sysopt::set_proxy_config(&config) {
-        log::error!("can not set system proxy for `{}`", err);
-      }
-    }
+  if let Err(err) = clash.run_sidecar() {
+    log::error!("{}", err);
   }
 
-  // update state
-  let profiles_state = app.state::<state::ProfilesState>();
-  let mut profiles = profiles_state.0.lock().unwrap();
   *profiles = ProfilesConfig::read_file();
+  if let Err(err) = profiles.activate(clash.info.clone()) {
+    log::error!("{}", err);
+  }
 
-  let verge_state = app.state::<state::VergeConfLock>();
-  let mut verge_arc = verge_state.0.lock().unwrap();
-  *verge_arc = verge;
-
-  let clash_state = app.state::<state::ClashInfoState>();
-  let mut clash_arc = clash_state.0.lock().unwrap();
-  *clash_arc = info;
-
-  let some_state = app.state::<state::SomthingState>();
-  let mut some_arc = some_state.0.lock().unwrap();
-  *some_arc = original;
+  verge.init_sysproxy(clash.info.port.clone());
 }
 
 /// reset system proxy
 pub fn resolve_reset(app_handle: &AppHandle) {
-  let state = app_handle.try_state::<state::SomthingState>();
-  if state.is_none() {
-    return;
-  }
-  match state.unwrap().0.lock() {
-    Ok(arc) => {
-      if arc.is_some() {
-        if let Err(err) = sysopt::set_proxy_config(arc.as_ref().unwrap()) {
-          log::error!("failed to reset proxy for `{}`", err);
-        }
-      }
-    }
-    _ => {}
-  };
+  let verge_state = app_handle.state::<states::VergeState>();
+  let mut verge_arc = verge_state.0.lock().unwrap();
+
+  verge_arc.reset_sysproxy();
 }

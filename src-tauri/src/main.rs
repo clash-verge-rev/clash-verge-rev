@@ -7,13 +7,10 @@ extern crate tauri;
 
 mod cmds;
 mod config;
-mod events;
+mod states;
 mod utils;
 
-use crate::{
-  events::state,
-  utils::{clash, resolve, server},
-};
+use crate::utils::{resolve, server};
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
 };
@@ -31,11 +28,9 @@ fn main() -> std::io::Result<()> {
     .add_item(CustomMenuItem::new("quit", "退出").accelerator("CmdOrControl+Q"));
 
   tauri::Builder::default()
-    .manage(state::ClashSidecarState::default())
-    .manage(state::VergeConfLock::default())
-    .manage(state::ClashInfoState::default())
-    .manage(state::SomthingState::default())
-    .manage(state::ProfilesState::default())
+    .manage(states::VergeState::default())
+    .manage(states::ClashState::default())
+    .manage(states::ProfilesState::default())
     .setup(|app| Ok(resolve::resolve_setup(app)))
     .system_tray(SystemTray::new().with_menu(menu))
     .on_system_tray_event(move |app_handle, event| match event {
@@ -46,22 +41,11 @@ fn main() -> std::io::Result<()> {
           window.set_focus().unwrap();
         }
         "restart_clash" => {
-          {
-            let state = app_handle.state::<state::ClashSidecarState>();
-            let mut guard = state.0.lock().unwrap();
-            let sidecar = guard.take();
-            if sidecar.is_some() {
-              if let Err(err) = sidecar.unwrap().kill() {
-                log::error!("failed to restart clash for \"{}\"", err);
-              }
-            }
+          let clash_state = app_handle.state::<states::ClashState>();
+          let mut clash_arc = clash_state.0.lock().unwrap();
+          if let Err(err) = clash_arc.restart_sidecar() {
+            log::error!("{}", err);
           }
-
-          let payload = clash::run_clash_bin(&app_handle);
-          let state = app_handle.state::<state::ClashInfoState>();
-          if let Ok(mut arc) = state.0.lock() {
-            *arc = payload;
-          };
         }
         "quit" => {
           api::process::kill_children();
@@ -78,20 +62,21 @@ fn main() -> std::io::Result<()> {
       _ => {}
     })
     .invoke_handler(tauri::generate_handler![
-      cmds::some::restart_sidecar,
-      cmds::some::set_sys_proxy,
-      cmds::some::get_sys_proxy,
-      cmds::some::get_clash_info,
-      cmds::some::patch_clash_config,
-      cmds::some::get_verge_config,
-      cmds::some::patch_verge_config,
-      cmds::profile::import_profile,
-      cmds::profile::update_profile,
-      cmds::profile::delete_profile,
-      cmds::profile::select_profile,
-      cmds::profile::patch_profile,
-      cmds::profile::sync_profiles,
-      cmds::profile::get_profiles,
+      cmds::restart_sidecar,
+      cmds::set_sys_proxy,
+      cmds::get_sys_proxy,
+      cmds::get_cur_proxy,
+      cmds::get_clash_info,
+      cmds::patch_clash_config,
+      cmds::get_verge_config,
+      cmds::patch_verge_config,
+      cmds::import_profile,
+      cmds::update_profile,
+      cmds::delete_profile,
+      cmds::select_profile,
+      cmds::patch_profile,
+      cmds::sync_profiles,
+      cmds::get_profiles,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application")
