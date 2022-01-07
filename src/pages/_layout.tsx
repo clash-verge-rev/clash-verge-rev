@@ -17,23 +17,23 @@ import Traffic from "../components/traffic";
 
 const routers = [
   {
-    label: "代理",
+    label: "Proxy",
     link: "/proxy",
   },
   {
-    label: "配置",
+    label: "Profile",
     link: "/profile",
   },
   {
-    label: "连接",
+    label: "Connections",
     link: "/connections",
   },
   {
-    label: "日志",
+    label: "Log",
     link: "/log",
   },
   {
-    label: "设置",
+    label: "Setting",
     link: "/setting",
   },
 ];

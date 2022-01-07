@@ -22,10 +22,10 @@ fn main() -> std::io::Result<()> {
   }
 
   let menu = SystemTrayMenu::new()
-    .add_item(CustomMenuItem::new("open_window", "显示应用"))
-    .add_item(CustomMenuItem::new("restart_clash", "重启clash"))
+    .add_item(CustomMenuItem::new("open_window", "Show"))
+    .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
     .add_native_item(SystemTrayMenuItem::Separator)
-    .add_item(CustomMenuItem::new("quit", "退出").accelerator("CmdOrControl+Q"));
+    .add_item(CustomMenuItem::new("quit", "Quit").accelerator("CmdOrControl+Q"));
 
   tauri::Builder::default()
     .manage(states::VergeState::default())
