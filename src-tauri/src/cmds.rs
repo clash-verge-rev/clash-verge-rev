@@ -1,5 +1,5 @@
 use crate::{
-  config::{ClashInfo, ProfileItem, ProfilesConfig, VergeConfig},
+  core::{ClashInfo, ProfileItem, ProfilesConfig, VergeConfig},
   states::{ClashState, ProfilesState, VergeState},
   utils::{
     config::{read_clash, save_clash},

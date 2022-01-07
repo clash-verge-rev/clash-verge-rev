@@ -1,4 +1,4 @@
-use crate::config::{ProfileExtra, ProfileResponse};
+use crate::core::{ProfileExtra, ProfileResponse};
 use std::{
   str::FromStr,
   time::{SystemTime, UNIX_EPOCH},
