@@ -1,5 +1,6 @@
 extern crate serde_yaml;
 
+use crate::utils::dirs;
 use chrono::Local;
 use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
@@ -10,8 +11,6 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
 use tauri::PackageInfo;
-
-use crate::utils::{app_home_dir, app_resources_dir};
 
 /// initialize this instance's log file
 fn init_log(log_dir: &PathBuf) {
@@ -85,11 +84,11 @@ fn init_config_file(app_dir: &PathBuf, res_dir: &PathBuf) {
 /// initialize app
 pub fn init_app(package_info: &PackageInfo) {
   // create app dir
-  let app_dir = app_home_dir();
+  let app_dir = dirs::app_home_dir();
   let log_dir = app_dir.join("logs");
   let profiles_dir = app_dir.join("profiles");
 
-  let res_dir = app_resources_dir(package_info);
+  let res_dir = dirs::app_resources_dir(package_info);
 
   if !app_dir.exists() {
     fs::create_dir(&app_dir).unwrap();

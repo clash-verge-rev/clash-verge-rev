@@ -13,8 +13,8 @@ export async function getAxios() {
   try {
     const info = await getClashInfo();
 
-    if (info?.controller?.server) server = info?.controller?.server;
-    if (info?.controller?.secret) secret = info?.controller?.secret;
+    if (info?.server) server = info?.server;
+    if (info?.secret) secret = info?.secret;
   } catch {}
 
   axiosIns = axios.create({
@@ -29,7 +29,7 @@ export async function getAxios() {
 export async function getInfomation() {
   if (server) return { server, secret };
   const info = await getClashInfo();
-  return info?.controller!;
+  return info!;
 }
 
 /// Get Version

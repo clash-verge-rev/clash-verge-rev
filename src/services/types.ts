@@ -80,8 +80,9 @@ export namespace ApiType {
 export namespace CmdType {
   export interface ClashInfo {
     status: string;
-    controller?: { server?: string; secret?: string };
-    message?: string;
+    port?: string;
+    server?: string;
+    secret?: string;
   }
 
   export interface ProfileItem {

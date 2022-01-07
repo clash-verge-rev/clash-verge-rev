@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { ApiType, CmdType } from "./types";
 
 export async function getProfiles() {
-  return (await invoke<CmdType.ProfilesConfig>("get_profiles")) ?? {};
+  return invoke<CmdType.ProfilesConfig>("get_profiles");
 }
 
 export async function syncProfiles() {
