@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "cargo tauri dev",
     "build": "cargo tauri build",
+    "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
