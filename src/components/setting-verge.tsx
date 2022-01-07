@@ -39,10 +39,12 @@ const SettingVerge = ({ onError }: Props) => {
 
   return (
     <List>
-      <ListSubheader sx={{ background: "transparent" }}>通用设置</ListSubheader>
+      <ListSubheader sx={{ background: "transparent" }}>
+        Common Setting
+      </ListSubheader>
 
       <SettingItem>
-        <ListItemText primary="外观主题" />
+        <ListItemText primary="Theme Mode" />
         <GuardState
           value={mode === "dark"}
           valueProps="checked"
@@ -58,7 +60,7 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="开机自启" />
+        <ListItemText primary="Self Start" />
         <GuardState
           value={startup}
           valueProps="checked"
@@ -74,7 +76,7 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="设置系统代理" />
+        <ListItemText primary="System Proxy" />
         <GuardState
           value={proxy}
           valueProps="checked"

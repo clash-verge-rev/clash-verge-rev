@@ -43,11 +43,11 @@ const SettingClash = ({ onError }: Props) => {
   return (
     <List>
       <ListSubheader sx={{ background: "transparent" }}>
-        Clash设置
+        Clash Setting
       </ListSubheader>
 
       <SettingItem>
-        <ListItemText primary="局域网连接" />
+        <ListItemText primary="Allow Lan" />
         <GuardState
           value={allowLan}
           valueProps="checked"
@@ -75,7 +75,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="日志等级" />
+        <ListItemText primary="Log Level" />
         <GuardState
           value={logLevel}
           onCatch={onError}
@@ -94,7 +94,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="混合代理端口" />
+        <ListItemText primary="Mixed Port" />
         <TextField
           size="small"
           value={mixedPort!}
