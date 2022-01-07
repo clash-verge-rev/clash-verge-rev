@@ -43,7 +43,7 @@ jobs:
             src-tauri/WixTools/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: install app dependencies and build it
-        run: yarn && yarn run predev
+        run: yarn && yarn run check
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
