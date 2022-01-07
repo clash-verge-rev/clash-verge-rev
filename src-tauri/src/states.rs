@@ -1,4 +1,4 @@
-use crate::config::{Clash, ProfilesConfig, Verge};
+use crate::core::{Clash, ProfilesConfig, Verge};
 use std::sync::{Arc, Mutex};
 
 #[derive(Default)]

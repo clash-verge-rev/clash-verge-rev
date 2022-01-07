@@ -6,7 +6,7 @@
 extern crate tauri;
 
 mod cmds;
-mod config;
+mod core;
 mod states;
 mod utils;
 

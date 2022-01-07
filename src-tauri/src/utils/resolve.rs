@@ -1,5 +1,5 @@
 use super::{init, server};
-use crate::{config::ProfilesConfig, states};
+use crate::{core::ProfilesConfig, states};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
