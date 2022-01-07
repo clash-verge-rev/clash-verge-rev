@@ -8,7 +8,7 @@
     "web:dev": "vite",
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
-    "predev": "node scripts/pre-dev.mjs",
+    "check": "node scripts/check.mjs",
     "publish": "node scripts/publish.mjs",
     "prepare": "husky install"
   },
