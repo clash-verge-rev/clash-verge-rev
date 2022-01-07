@@ -8,9 +8,9 @@
     "web:dev": "vite",
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
-    "prepare": "husky install",
     "predev": "node scripts/pre-dev.mjs",
-    "postversion": "node scripts/post-version.mjs"
+    "publish": "node scripts/publish.mjs",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@emotion/react": "^11.7.0",
