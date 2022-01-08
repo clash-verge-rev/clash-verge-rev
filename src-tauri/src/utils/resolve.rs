@@ -1,9 +1,14 @@
 use super::{init, server};
 use crate::{core::ProfilesConfig, states};
 use tauri::{App, AppHandle, Manager};
+use tauri_plugin_shadows::Shadows;
 
 /// handle something when start app
 pub fn resolve_setup(app: &App) {
+  // set shadow when window decorations
+  let window = app.get_window("main").unwrap();
+  window.set_shadow(true);
+
   // setup a simple http server for singleton
   server::embed_server(&app.handle());
 
@@ -34,7 +39,7 @@ pub fn resolve_setup(app: &App) {
 /// reset system proxy
 pub fn resolve_reset(app_handle: &AppHandle) {
   let verge_state = app_handle.state::<states::VergeState>();
-  let mut verge_arc = verge_state.0.lock().unwrap();
+  let mut verge = verge_state.0.lock().unwrap();
 
-  verge_arc.reset_sysproxy();
+  verge.reset_sysproxy();
 }

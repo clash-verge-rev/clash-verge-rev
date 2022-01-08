@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "clash verge"
 authors = ["zzzgydi"]
 license = "GPL-3.0"
-repository = ""
+repository = "https://github.com/zzzgydi/clash-verge.git"
 default-run = "app"
 edition = "2021"
 build = "build.rs"
@@ -19,7 +19,9 @@ serde_json = "1.0"
 serde_yaml = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 # tauri = { version = "1.0.0-beta.8", features = ["api-all", "system-tray"] }
-tauri = { git = "https://github.com/tauri-apps/tauri", rev = "5e0d59ec", features = ["api-all", "system-tray"] }
+# tauri = { git = "https://github.com/tauri-apps/tauri", rev = "5e0d59ec", features = ["api-all", "system-tray"] }
+tauri = { git = "https://github.com/tauri-apps/tauri", branch = "next",  features = ["api-all", "system-tray"] }
+tauri-plugin-shadows = { git = "https://github.com/tauri-apps/tauri-plugin-shadows", features = ["tauri-impl"] }
 
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }

@@ -2,12 +2,18 @@ import { useEffect, useMemo } from "react";
 import useSWR, { SWRConfig } from "swr";
 import { Route, Routes } from "react-router-dom";
 import { useRecoilState } from "recoil";
-import { createTheme, List, Paper, ThemeProvider } from "@mui/material";
+import {
+  createTheme,
+  IconButton,
+  List,
+  Paper,
+  ThemeProvider,
+} from "@mui/material";
+import { HorizontalRuleRounded, CloseRounded } from "@mui/icons-material";
 import { atomPaletteMode } from "../states/setting";
-import { getVergeConfig } from "../services/cmds";
+import { getVergeConfig, windowDrag, windowHide } from "../services/cmds";
 import LogoSvg from "../assets/image/logo.svg";
 import LogPage from "./log";
-import HomePage from "./home";
 import ProfilePage from "./profile";
 import ProxyPage from "./proxy";
 import SettingPage from "./setting";
@@ -18,23 +24,28 @@ import Traffic from "../components/traffic";
 const routers = [
   {
     label: "Proxy",
-    link: "/proxy",
+    link: "/",
+    ele: ProxyPage,
   },
   {
     label: "Profile",
     link: "/profile",
+    ele: ProfilePage,
   },
   {
     label: "Connections",
     link: "/connections",
+    ele: ConnectionsPage,
   },
   {
     label: "Log",
     link: "/log",
+    ele: LogPage,
   },
   {
     label: "Setting",
     link: "/setting",
+    ele: SettingPage,
   },
 ];
 
@@ -47,39 +58,21 @@ const Layout = () => {
   }, [vergeConfig?.theme_mode]);
 
   const theme = useMemo(() => {
-    if (mode === "light") {
-      document.documentElement.style.background = "#f5f5f5";
-      document.documentElement.style.setProperty(
-        "--selection-color",
-        "#f5f5f5"
-      );
-    } else {
-      document.documentElement.style.background = "#000";
-      document.documentElement.style.setProperty(
-        "--selection-color",
-        "#d5d5d5"
-      );
-    }
+    // const background = mode === "light" ? "#f5f5f5" : "#000";
+    const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
+
+    const rootEle = document.documentElement;
+    rootEle.style.background = "transparent";
+    rootEle.style.setProperty("--selection-color", selectColor);
 
     return createTheme({
       breakpoints: {
-        values: {
-          xs: 0,
-          sm: 650,
-          md: 900,
-          lg: 1200,
-          xl: 1536,
-        },
+        values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
       },
       palette: {
         mode,
-        primary: {
-          main: "#5b5c9d",
-        },
-        text: {
-          primary: "#637381",
-          secondary: "#909399",
-        },
+        primary: { main: "#5b5c9d" },
+        text: { primary: "#637381", secondary: "#909399" },
       },
     });
   }, [mode]);
@@ -88,12 +81,20 @@ const Layout = () => {
     <SWRConfig value={{}}>
       <ThemeProvider theme={theme}>
         <Paper square elevation={0} className="layout">
-          <div className="layout__sidebar">
-            <div className="layout__logo">
-              <img src={LogoSvg} width="100%" alt="" />
+          <div className="layout__left">
+            <div className="the-logo">
+              <img
+                src={LogoSvg}
+                width="100%"
+                alt=""
+                onPointerDown={(e) => {
+                  windowDrag();
+                  e.preventDefault();
+                }}
+              />
             </div>
 
-            <List sx={{ userSelect: "none" }}>
+            <List className="the-menu">
               {routers.map((router) => (
                 <LayoutItem key={router.label} to={router.link}>
                   {router.label}
@@ -101,20 +102,35 @@ const Layout = () => {
               ))}
             </List>
 
-            <div className="layout__traffic">
+            <div className="the-traffic">
               <Traffic />
             </div>
           </div>
 
-          <div className="layout__content">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/proxy" element={<ProxyPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/log" element={<LogPage />} />
-              <Route path="/connections" element={<ConnectionsPage />} />
-              <Route path="/setting" element={<SettingPage />} />
-            </Routes>
+          <div className="layout__right">
+            <div
+              className="the-bar"
+              onPointerDown={(e) =>
+                e.target === e.currentTarget && windowDrag()
+              }
+            >
+              {/* todo: onClick = windowMini */}
+              <IconButton size="small" sx={{ mx: 1 }} onClick={windowHide}>
+                <HorizontalRuleRounded fontSize="inherit" />
+              </IconButton>
+
+              <IconButton size="small" onClick={windowHide}>
+                <CloseRounded fontSize="inherit" />
+              </IconButton>
+            </div>
+
+            <div className="the-content">
+              <Routes>
+                {routers.map(({ link, ele: Ele }) => (
+                  <Route path={link} element={<Ele />} />
+                ))}
+              </Routes>
+            </div>
           </div>
         </Paper>
       </ThemeProvider>
