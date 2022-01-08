@@ -62,14 +62,21 @@ fn main() -> std::io::Result<()> {
       _ => {}
     })
     .invoke_handler(tauri::generate_handler![
+      // common
       cmds::restart_sidecar,
       cmds::set_sys_proxy,
       cmds::get_sys_proxy,
       cmds::get_cur_proxy,
+      cmds::win_drag,
+      cmds::win_hide,
+      cmds::win_mini,
+      // clash
       cmds::get_clash_info,
       cmds::patch_clash_config,
+      // verge
       cmds::get_verge_config,
       cmds::patch_verge_config,
+      // profile
       cmds::import_profile,
       cmds::update_profile,
       cmds::delete_profile,
@@ -86,10 +93,7 @@ fn main() -> std::io::Result<()> {
         api.prevent_close();
         app_handle.get_window(&label).unwrap().hide().unwrap();
       }
-      tauri::Event::ExitRequested { api, .. } => {
-        api.prevent_exit();
-      }
-      tauri::Event::Exit => {
+      tauri::Event::ExitRequested { .. } => {
         resolve::resolve_reset(app_handle);
         api::process::kill_children();
       }

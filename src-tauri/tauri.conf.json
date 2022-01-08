@@ -5,7 +5,7 @@
   },
   "build": {
     "distDir": "../dist",
-    "devPath": "http://localhost:3000/proxy",
+    "devPath": "http://localhost:3000/",
     "beforeDevCommand": "yarn run web:dev",
     "beforeBuildCommand": "yarn run web:build"
   },
@@ -62,7 +62,7 @@
         "height": 600,
         "resizable": true,
         "fullscreen": false,
-        "decorations": true,
+        "decorations": false,
         "transparent": false,
         "minWidth": 600,
         "minHeight": 520
