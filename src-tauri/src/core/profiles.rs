@@ -195,7 +195,7 @@ impl ProfilesConfig {
   }
 
   /// delete the item
-  pub fn delete_item(&mut self, index: usize) -> Result<(), String> {
+  pub fn delete_item(&mut self, index: usize) -> Result<bool, String> {
     let mut current = self.current.clone().unwrap_or(0);
     let mut items = self.items.clone().unwrap_or(vec![]);
 
@@ -205,13 +205,22 @@ impl ProfilesConfig {
 
     items.remove(index);
 
+    let mut should_change = false;
+
     if current == index {
       current = 0;
+      should_change = true;
     } else if current > index {
       current = current - 1;
     }
+
     self.current = Some(current);
-    self.save_file()
+    self.items = Some(items);
+
+    match self.save_file() {
+      Ok(_) => Ok(should_change),
+      Err(err) => Err(err),
+    }
   }
 
   /// activate current profile

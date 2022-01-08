@@ -107,13 +107,23 @@ pub fn select_profile(
   }
 }
 
-/// todo: need to check
 /// delete profile item
 #[tauri::command]
-pub fn delete_profile(index: usize, profiles: State<'_, ProfilesState>) -> Result<(), String> {
-  match profiles.0.lock() {
-    Ok(mut profiles) => profiles.delete_item(index),
-    Err(_) => Err("can not get profiles lock".into()),
+pub fn delete_profile(
+  index: usize,
+  clash_state: State<'_, ClashState>,
+  profiles_state: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  let mut profiles = profiles_state.0.lock().unwrap();
+  match profiles.delete_item(index) {
+    Ok(change) => match change {
+      true => {
+        let clash = clash_state.0.lock().unwrap();
+        profiles.activate(clash.info.clone())
+      }
+      false => Ok(()),
+    },
+    Err(err) => Err(err),
   }
 }
 
