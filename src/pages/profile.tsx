@@ -24,16 +24,20 @@ const ProfilePage = () => {
     if (profiles.current == null) return;
     if (!profiles.items) profiles.items = [];
 
-    const profile = profiles.items![profiles.current];
+    const current = profiles.current;
+    const profile = profiles.items![current];
     if (!profile) return;
 
-    getProxies().then((proxiesData) => {
+    setTimeout(async () => {
+      const proxiesData = await getProxies();
       mutate("getProxies", proxiesData);
+
       // init selected array
       const { selected = [] } = profile;
       const selectedMap = Object.fromEntries(
         selected.map((each) => [each.name!, each.now!])
       );
+
       // todo: enhance error handle
       let hasChange = false;
       proxiesData.groups.forEach((group) => {
@@ -52,10 +56,10 @@ const ProfilePage = () => {
         name,
         now,
       }));
-      patchProfile(profiles.current!, profile).catch(console.error);
+      patchProfile(current!, profile).catch(console.error);
       // update proxies cache
       if (hasChange) mutate("getProxies", getProxies());
-    });
+    }, 100);
   }, [profiles]);
 
   const onImport = async () => {

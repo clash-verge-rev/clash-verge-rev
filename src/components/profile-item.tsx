@@ -8,13 +8,15 @@ import {
   LinearProgress,
   IconButton,
   keyframes,
+  MenuItem,
+  Menu,
 } from "@mui/material";
 import { useSWRConfig } from "swr";
 import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../services/types";
+import { updateProfile, deleteProfile } from "../services/cmds";
 import parseTraffic from "../utils/parse-traffic";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { updateProfile } from "../services/cmds";
 
 dayjs.extend(relativeTime);
 
@@ -46,6 +48,8 @@ const ProfileItemComp: React.FC<Props> = (props) => {
 
   const { mutate } = useSWRConfig();
   const [loading, setLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<any>(null);
+  const [position, setPosition] = useState({ left: 0, top: 0 });
 
   const { name = "Profile", extra, updated = 0 } = itemData;
   const { upload = 0, download = 0, total = 0 } = extra ?? {};
@@ -55,6 +59,7 @@ const ProfileItemComp: React.FC<Props> = (props) => {
   const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
 
   const onUpdate = async () => {
+    setAnchorEl(null);
     if (loading) return;
     setLoading(true);
     try {
@@ -67,98 +72,135 @@ const ProfileItemComp: React.FC<Props> = (props) => {
     }
   };
 
+  const onDelete = async () => {
+    setAnchorEl(null);
+    try {
+      await deleteProfile(index);
+      mutate("getProfiles");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleContextMenu = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    const { clientX, clientY } = event;
+    setPosition({ top: clientY, left: clientX });
+    setAnchorEl(event.currentTarget);
+    event.preventDefault();
+  };
+
   return (
-    <Wrapper
-      sx={({ palette }) => {
-        const { mode, primary, text, grey } = palette;
-        const isDark = mode === "dark";
+    <>
+      <Wrapper
+        sx={({ palette }) => {
+          const { mode, primary, text, grey } = palette;
+          const key = `${mode}-${selected}`;
 
-        if (selected) {
-          const bgcolor = isDark
-            ? alpha(primary.main, 0.35)
-            : alpha(primary.main, 0.15);
+          const bgcolor = {
+            "light-true": alpha(primary.main, 0.15),
+            "light-false": palette.background.paper,
+            "dark-true": alpha(primary.main, 0.35),
+            "dark-false": alpha(grey[700], 0.35),
+          }[key]!;
 
-          return {
-            bgcolor,
-            color: isDark ? alpha(text.secondary, 0.6) : text.secondary,
-            "& h2": {
-              color: isDark ? primary.light : primary.main,
-            },
-          };
-        }
-        const bgcolor = isDark
-          ? alpha(grey[700], 0.35)
-          : palette.background.paper;
-        return {
-          bgcolor,
-          color: isDark ? alpha(text.secondary, 0.6) : text.secondary,
-          "& h2": {
-            color: isDark ? text.primary : text.primary,
-          },
-        };
-      }}
-      onClick={onClick}
-    >
-      <Box display="flex" justifyContent="space-between">
-        <Typography
-          width="calc(100% - 40px)"
-          variant="h6"
-          component="h2"
-          noWrap
-          title={name}
-        >
-          {name}
-        </Typography>
+          const color = {
+            "light-true": text.secondary,
+            "light-false": text.secondary,
+            "dark-true": alpha(text.secondary, 0.6),
+            "dark-false": alpha(text.secondary, 0.6),
+          }[key]!;
 
-        <IconButton
-          sx={{
-            width: 30,
-            height: 30,
-            animation: loading ? `1s linear infinite ${round}` : "none",
-          }}
-          color="inherit"
-          disabled={loading}
-          onClick={(e) => {
-            e.stopPropagation();
-            onUpdate();
-          }}
-        >
-          <RefreshRounded />
-        </IconButton>
-      </Box>
+          const h2color = {
+            "light-true": primary.main,
+            "light-false": text.primary,
+            "dark-true": primary.light,
+            "dark-false": text.primary,
+          }[key]!;
 
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Typography noWrap title={`From: ${from}`}>
-          {from}
-        </Typography>
-
-        <Typography
-          noWrap
-          flex="1 0 auto"
-          fontSize={14}
-          textAlign="right"
-          title="updated time"
-        >
-          {fromnow}
-        </Typography>
-      </Box>
-
-      <Box
-        sx={{
-          my: 0.5,
-          fontSize: 14,
-          display: "flex",
-          justifyContent: "space-between",
+          return { bgcolor, color, "& h2": { color: h2color } };
         }}
+        onClick={onClick}
+        onContextMenu={handleContextMenu}
       >
-        <span title="used / total">
-          {parseTraffic(upload + download)} / {parseTraffic(total)}
-        </span>
-        <span title="expire time">{expire}</span>
-      </Box>
+        <Box display="flex" justifyContent="space-between">
+          <Typography
+            width="calc(100% - 40px)"
+            variant="h6"
+            component="h2"
+            noWrap
+            title={name}
+          >
+            {name}
+          </Typography>
 
-      <LinearProgress variant="determinate" value={progress} color="inherit" />
-    </Wrapper>
+          <IconButton
+            sx={{
+              width: 30,
+              height: 30,
+              animation: loading ? `1s linear infinite ${round}` : "none",
+            }}
+            color="inherit"
+            disabled={loading}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdate();
+            }}
+          >
+            <RefreshRounded />
+          </IconButton>
+        </Box>
+
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography noWrap title={`From: ${from}`}>
+            {from}
+          </Typography>
+
+          <Typography
+            noWrap
+            flex="1 0 auto"
+            fontSize={14}
+            textAlign="right"
+            title="updated time"
+          >
+            {fromnow}
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            my: 0.5,
+            fontSize: 14,
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span title="used / total">
+            {parseTraffic(upload + download)} / {parseTraffic(total)}
+          </span>
+          <span title="expire time">{expire}</span>
+        </Box>
+
+        <LinearProgress
+          variant="determinate"
+          value={progress}
+          color="inherit"
+        />
+      </Wrapper>
+
+      <Menu
+        open={!!anchorEl}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorPosition={position}
+        anchorReference="anchorPosition"
+      >
+        <MenuItem onClick={onUpdate}>Update</MenuItem>
+        <MenuItem onClick={onDelete}>Delete</MenuItem>
+        {/* <MenuItem>Update(proxy)</MenuItem> */}
+      </Menu>
+    </>
   );
 };
 
