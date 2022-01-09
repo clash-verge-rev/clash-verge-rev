@@ -17,6 +17,7 @@
     overflow: hidden;
 
     .the-logo {
+      position: relative;
       flex: 0 1 180px;
       width: 100%;
       max-width: 180px;
@@ -25,6 +26,13 @@
       padding: 0 8px;
       text-align: center;
       box-sizing: border-box;
+
+      .the-newbtn {
+        position: absolute;
+        right: 20px;
+        bottom: 12px;
+        transform: scale(0.8);
+      }
     }
 
     .the-menu {

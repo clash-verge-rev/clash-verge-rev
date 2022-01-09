@@ -7,15 +7,15 @@ import {
   Typography,
 } from "@mui/material";
 import {
+  setSysProxy,
   getVergeConfig,
   patchVergeConfig,
-  setSysProxy,
 } from "../services/cmds";
 import { CmdType } from "../services/types";
+import { version } from "../../package.json";
 import GuardState from "./guard-state";
 import SettingItem from "./setting-item";
 import PaletteSwitch from "./palette-switch";
-import { version } from "../../package.json";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -32,7 +32,6 @@ const SettingVerge = ({ onError }: Props) => {
   } = vergeConfig ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
-
   const onChangeData = (patch: Partial<CmdType.VergeConfig>) => {
     mutate("getVergeConfig", { ...vergeConfig, ...patch }, false);
   };
