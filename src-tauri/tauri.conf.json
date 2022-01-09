@@ -50,7 +50,11 @@
       }
     },
     "updater": {
-      "active": false
+      "active": true,
+      "endpoints": [
+        "https://github.com/zzzgydi/clash-verge/releases/download/updater/update.json"
+      ],
+      "dialog": false
     },
     "allowlist": {
       "all": true
