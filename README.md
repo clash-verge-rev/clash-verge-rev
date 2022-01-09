@@ -26,7 +26,7 @@ yarn install
 Then download the clash binary... Or you can download it from [clash premium release](https://github.com/Dreamacro/clash/releases/tag/premium) and rename it according to [tauri config](https://tauri.studio/en/docs/api/config#tauri.bundle.externalBin).
 
 ```shell
-yarn run predev
+yarn run check
 ```
 
 Then run
@@ -42,8 +42,12 @@ yarn dev
 ## Screenshots
 
 <div align="center">
-  <img src="./docs/demo1.png" alt="demo1" width="42%" />
-  <img src="./docs/demo2.png" alt="demo2" width="42%" />
+  <img src="./docs/demo1.png" alt="demo1" width="33%" />
+  <img src="./docs/demo2.png" alt="demo2" width="33%" />
+  <img src="./docs/demo3.png" alt="demo3" width="33%" />
+  <img src="./docs/demo4.png" alt="demo4" width="33%" />
+  <img src="./docs/demo5.png" alt="demo5" width="33%" />
+  <img src="./docs/demo6.png" alt="demo6" width="33%" />
 </div>
 
 ## Disclaimer
