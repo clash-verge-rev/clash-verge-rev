@@ -42,12 +42,12 @@ yarn dev
 ## Screenshots
 
 <div align="center">
-  <img src="./docs/demo1.png" alt="demo1" width="33%" />
-  <img src="./docs/demo2.png" alt="demo2" width="33%" />
-  <img src="./docs/demo3.png" alt="demo3" width="33%" />
-  <img src="./docs/demo4.png" alt="demo4" width="33%" />
-  <img src="./docs/demo5.png" alt="demo5" width="33%" />
-  <img src="./docs/demo6.png" alt="demo6" width="33%" />
+  <img src="./docs/demo1.png" alt="demo1" width="32%" />
+  <img src="./docs/demo2.png" alt="demo2" width="32%" />
+  <img src="./docs/demo3.png" alt="demo3" width="32%" />
+  <img src="./docs/demo4.png" alt="demo4" width="32%" />
+  <img src="./docs/demo5.png" alt="demo5" width="32%" />
+  <img src="./docs/demo6.png" alt="demo6" width="32%" />
 </div>
 
 ## Disclaimer
