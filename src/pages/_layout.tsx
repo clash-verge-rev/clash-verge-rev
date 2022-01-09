@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR, { SWRConfig } from "swr";
 import { Route, Routes } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import {
+  Button,
   createTheme,
   IconButton,
   List,
@@ -10,6 +11,7 @@ import {
   ThemeProvider,
 } from "@mui/material";
 import { HorizontalRuleRounded, CloseRounded } from "@mui/icons-material";
+import { checkUpdate } from "@tauri-apps/api/updater";
 import { atomPaletteMode } from "../states/setting";
 import { getVergeConfig, windowDrag, windowHide } from "../services/cmds";
 import LogoSvg from "../assets/image/logo.svg";
@@ -20,6 +22,7 @@ import SettingPage from "./setting";
 import ConnectionsPage from "./connections";
 import LayoutItem from "../components/layout-item";
 import Traffic from "../components/traffic";
+import UpdateDialog from "../components/update-dialog";
 
 const routers = [
   {
@@ -52,6 +55,12 @@ const routers = [
 const Layout = () => {
   const [mode, setMode] = useRecoilState(atomPaletteMode);
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
+  const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
+    errorRetryCount: 2,
+    revalidateIfStale: false,
+    focusThrottleInterval: 36e5, // 1 hour
+  });
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     setMode(vergeConfig?.theme_mode ?? "light");
@@ -92,6 +101,18 @@ const Layout = () => {
                   e.preventDefault();
                 }}
               />
+
+              {updateInfo?.shouldUpdate && (
+                <Button
+                  color="error"
+                  variant="contained"
+                  size="small"
+                  className="the-newbtn"
+                  onClick={() => setDialogOpen(true)}
+                >
+                  New
+                </Button>
+              )}
             </div>
 
             <List className="the-menu">
@@ -126,13 +147,14 @@ const Layout = () => {
 
             <div className="the-content">
               <Routes>
-                {routers.map(({ link, ele: Ele }) => (
-                  <Route path={link} element={<Ele />} />
+                {routers.map(({ label, link, ele: Ele }) => (
+                  <Route key={label} path={link} element={<Ele />} />
                 ))}
               </Routes>
             </div>
           </div>
         </Paper>
+        <UpdateDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
       </ThemeProvider>
     </SWRConfig>
   );
