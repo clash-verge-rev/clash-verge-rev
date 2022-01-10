@@ -142,10 +142,27 @@ pub fn patch_profile(
 
 /// restart the sidecar
 #[tauri::command]
-pub fn restart_sidecar(clash_state: State<'_, ClashState>) {
-  let mut clash_arc = clash_state.0.lock().unwrap();
-  if let Err(err) = clash_arc.restart_sidecar() {
-    log::error!("{}", err);
+pub fn restart_sidecar(
+  clash_state: State<'_, ClashState>,
+  profiles_state: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  let mut clash = clash_state.0.lock().unwrap();
+
+  match clash.restart_sidecar() {
+    Ok(_) => {
+      let profiles = profiles_state.0.lock().unwrap();
+      match profiles.activate(clash.info.clone()) {
+        Ok(()) => Ok(()),
+        Err(err) => {
+          log::error!("{}", err);
+          Err(err)
+        }
+      }
+    }
+    Err(err) => {
+      log::error!("{}", err);
+      Err(err)
+    }
   }
 }
 
