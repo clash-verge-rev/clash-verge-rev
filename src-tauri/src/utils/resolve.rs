@@ -33,7 +33,11 @@ pub fn resolve_setup(app: &App) {
     log::error!("{}", err);
   }
 
+  verge.set_exe_path(app.package_info());
   verge.init_sysproxy(clash.info.port.clone());
+  if let Err(err) = verge.sync_startup() {
+    log::error!("{}", err);
+  }
 }
 
 /// reset system proxy

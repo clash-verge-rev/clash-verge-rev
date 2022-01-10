@@ -193,24 +193,7 @@ pub fn patch_clash_config(payload: Mapping) -> Result<(), String> {
   save_clash(&config)
 }
 
-/// set the system proxy
-/// Tips: only support windows now
-#[tauri::command]
-pub fn set_sys_proxy(enable: bool, verge_state: State<'_, VergeState>) -> Result<(), String> {
-  let mut verge = verge_state.0.lock().unwrap();
-
-  if let Some(mut sysproxy) = verge.cur_sysproxy.take() {
-    sysproxy.enable = enable;
-    if sysproxy.set_sys().is_err() {
-      log::error!("failed to set system proxy");
-    }
-    verge.cur_sysproxy = Some(sysproxy);
-  }
-  Ok(())
-}
-
 /// get the system proxy
-/// Tips: only support windows now
 #[tauri::command]
 pub fn get_sys_proxy() -> Result<SysProxyConfig, String> {
   match SysProxyConfig::get_sys() {
@@ -219,6 +202,8 @@ pub fn get_sys_proxy() -> Result<SysProxyConfig, String> {
   }
 }
 
+/// get the current proxy config
+/// which may not the same as system proxy
 #[tauri::command]
 pub fn get_cur_proxy(verge_state: State<'_, VergeState>) -> Result<Option<SysProxyConfig>, String> {
   match verge_state.0.lock() {
@@ -244,24 +229,7 @@ pub async fn patch_verge_config(
   verge_state: State<'_, VergeState>,
 ) -> Result<(), String> {
   let mut verge = verge_state.0.lock().unwrap();
-
-  if payload.theme_mode.is_some() {
-    verge.config.theme_mode = payload.theme_mode;
-  }
-
-  if payload.enable_self_startup.is_some() {
-    verge.config.enable_self_startup = payload.enable_self_startup;
-  }
-
-  if payload.enable_system_proxy.is_some() {
-    verge.config.enable_system_proxy = payload.enable_system_proxy;
-  }
-
-  if payload.system_proxy_bypass.is_some() {
-    verge.config.system_proxy_bypass = payload.system_proxy_bypass;
-  }
-
-  verge.config.save_file()
+  verge.patch_config(payload)
 }
 
 /// start dragging window
