@@ -3,3 +3,4 @@ node_modules
 dist
 dist-ssr
 *.local
+update.json
