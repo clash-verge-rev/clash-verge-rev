@@ -59,7 +59,7 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Self Start" />
+        <ListItemText primary="Self Startup" />
         <GuardState
           value={startup}
           valueProps="checked"
