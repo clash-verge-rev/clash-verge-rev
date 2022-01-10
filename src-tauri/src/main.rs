@@ -71,7 +71,6 @@ fn main() -> std::io::Result<()> {
     .invoke_handler(tauri::generate_handler![
       // common
       cmds::restart_sidecar,
-      cmds::set_sys_proxy,
       cmds::get_sys_proxy,
       cmds::get_cur_proxy,
       cmds::win_drag,

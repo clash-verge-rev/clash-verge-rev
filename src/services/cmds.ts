@@ -56,10 +56,6 @@ export async function patchClashConfig(payload: Partial<ApiType.ConfigData>) {
   return invoke<void>("patch_clash_config", { payload });
 }
 
-export async function setSysProxy(enable: boolean) {
-  return invoke<void>("set_sys_proxy", { enable });
-}
-
 export async function getVergeConfig() {
   return invoke<CmdType.VergeConfig>("get_verge_config");
 }

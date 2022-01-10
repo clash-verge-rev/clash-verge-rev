@@ -6,11 +6,7 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import {
-  setSysProxy,
-  getVergeConfig,
-  patchVergeConfig,
-} from "../services/cmds";
+import { getVergeConfig, patchVergeConfig } from "../services/cmds";
 import { CmdType } from "../services/types";
 import { version } from "../../package.json";
 import GuardState from "./guard-state";
@@ -50,9 +46,9 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ theme_mode: e ? "dark" : "light" })}
-          onGuard={async (c) => {
-            await patchVergeConfig({ theme_mode: c ? "dark" : "light" });
-          }}
+          onGuard={(c) =>
+            patchVergeConfig({ theme_mode: c ? "dark" : "light" })
+          }
         >
           <PaletteSwitch edge="end" />
         </GuardState>
@@ -66,9 +62,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_self_startup: e })}
-          onGuard={async (e) => {
-            await patchVergeConfig({ enable_self_startup: e });
-          }}
+          onGuard={(e) => patchVergeConfig({ enable_self_startup: e })}
         >
           <Switch edge="end" />
         </GuardState>
@@ -82,10 +76,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_system_proxy: e })}
-          onGuard={async (e) => {
-            await setSysProxy(e);
-            await patchVergeConfig({ enable_system_proxy: e });
-          }}
+          onGuard={(e) => patchVergeConfig({ enable_system_proxy: e })}
         >
           <Switch edge="end" />
         </GuardState>
