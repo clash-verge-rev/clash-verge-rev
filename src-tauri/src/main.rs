@@ -42,9 +42,16 @@ fn main() -> std::io::Result<()> {
         }
         "restart_clash" => {
           let clash_state = app_handle.state::<states::ClashState>();
-          let mut clash_arc = clash_state.0.lock().unwrap();
-          if let Err(err) = clash_arc.restart_sidecar() {
-            log::error!("{}", err);
+          let mut clash = clash_state.0.lock().unwrap();
+          match clash.restart_sidecar() {
+            Ok(_) => {
+              let profiles = app_handle.state::<states::ProfilesState>();
+              let profiles = profiles.0.lock().unwrap();
+              if let Err(err) = profiles.activate(clash.info.clone()) {
+                log::error!("{}", err);
+              }
+            }
+            Err(err) => log::error!("{}", err),
           }
         }
         "quit" => {
