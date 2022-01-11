@@ -22,6 +22,7 @@ serde = { version = "1.0", features = ["derive"] }
 # tauri = { git = "https://github.com/tauri-apps/tauri", rev = "5e0d59ec", features = ["api-all", "system-tray"] }
 tauri = { git = "https://github.com/tauri-apps/tauri", branch = "next",  features = ["api-all", "system-tray", "updater"] }
 tauri-plugin-shadows = { git = "https://github.com/tauri-apps/tauri-plugin-shadows", features = ["tauri-impl"] }
+tauri-plugin-vibrancy = { git = "https://github.com/tauri-apps/tauri-plugin-vibrancy", features = ["tauri-impl"] }
 
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }

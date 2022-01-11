@@ -54,6 +54,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-shadows",
+ "tauri-plugin-vibrancy",
  "tokio",
  "warp",
  "winreg 0.10.1",
@@ -3362,6 +3363,17 @@ dependencies = [
 name = "tauri-plugin-shadows"
 version = "0.0.0"
 source = "git+https://github.com/tauri-apps/tauri-plugin-shadows#e61ff61f7f7dfac5d881e310588c3f6ceac16dba"
+dependencies = [
+ "cocoa",
+ "objc",
+ "tauri",
+ "windows 0.29.0",
+]
+
+[[package]]
+name = "tauri-plugin-vibrancy"
+version = "0.0.0"
+source = "git+https://github.com/tauri-apps/tauri-plugin-vibrancy#b4fceab0d4a6d024f1b9916c126f10f513101128"
 dependencies = [
  "cocoa",
  "objc",

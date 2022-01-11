@@ -3,6 +3,7 @@ import useSWR, { SWRConfig } from "swr";
 import { Route, Routes } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import {
+  alpha,
   Button,
   createTheme,
   IconButton,
@@ -12,7 +13,7 @@ import {
 } from "@mui/material";
 import { HorizontalRuleRounded, CloseRounded } from "@mui/icons-material";
 import { checkUpdate } from "@tauri-apps/api/updater";
-import { atomPaletteMode } from "../states/setting";
+import { atomPaletteMode, atomThemeBlur } from "../states/setting";
 import { getVergeConfig, windowDrag, windowHide } from "../services/cmds";
 import LogoSvg from "../assets/image/logo.svg";
 import LogPage from "./log";
@@ -54,6 +55,7 @@ const routers = [
 
 const Layout = () => {
   const [mode, setMode] = useRecoilState(atomPaletteMode);
+  const [blur, setBlur] = useRecoilState(atomThemeBlur);
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
   const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
     errorRetryCount: 2,
@@ -63,8 +65,10 @@ const Layout = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    setMode(vergeConfig?.theme_mode ?? "light");
-  }, [vergeConfig?.theme_mode]);
+    if (!vergeConfig) return;
+    setBlur(!!vergeConfig.theme_blur);
+    setMode(vergeConfig.theme_mode ?? "light");
+  }, [vergeConfig]);
 
   const theme = useMemo(() => {
     // const background = mode === "light" ? "#f5f5f5" : "#000";
@@ -89,7 +93,16 @@ const Layout = () => {
   return (
     <SWRConfig value={{}}>
       <ThemeProvider theme={theme}>
-        <Paper square elevation={0} className="layout">
+        <Paper
+          square
+          elevation={0}
+          className="layout"
+          sx={[
+            (theme) => ({
+              bgcolor: alpha(theme.palette.background.paper, blur ? 0.85 : 1),
+            }),
+          ]}
+        >
           <div className="layout__left">
             <div className="the-logo">
               <img

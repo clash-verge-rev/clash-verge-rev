@@ -23,6 +23,7 @@ const SettingVerge = ({ onError }: Props) => {
 
   const {
     theme_mode: mode = "light",
+    theme_blur: blur = false,
     enable_self_startup: startup = false,
     enable_system_proxy: proxy = false,
   } = vergeConfig ?? {};
@@ -51,6 +52,20 @@ const SettingVerge = ({ onError }: Props) => {
           }
         >
           <PaletteSwitch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem>
+        <ListItemText primary="Theme Blur" />
+        <GuardState
+          value={blur}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ theme_blur: e })}
+          onGuard={(e) => patchVergeConfig({ theme_blur: e })}
+        >
+          <Switch edge="end" />
         </GuardState>
       </SettingItem>
 

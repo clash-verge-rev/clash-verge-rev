@@ -9,6 +9,10 @@ pub struct VergeConfig {
   /// `light` or `dark`
   pub theme_mode: Option<String>,
 
+  /// enable blur mode
+  /// maybe be able to set the alpha
+  pub theme_blur: Option<bool>,
+
   /// can the app auto startup
   pub enable_self_startup: Option<bool>,
 
@@ -156,6 +160,9 @@ impl Verge {
     // only change it
     if patch.theme_mode.is_some() {
       self.config.theme_mode = patch.theme_mode;
+    }
+    if patch.theme_blur.is_some() {
+      self.config.theme_blur = patch.theme_blur;
     }
 
     // should update system startup

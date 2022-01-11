@@ -9,6 +9,15 @@ pub fn resolve_setup(app: &App) {
   let window = app.get_window("main").unwrap();
   window.set_shadow(true);
 
+  use tauri_plugin_vibrancy::Vibrancy;
+  #[cfg(target_os = "windows")]
+  window.apply_blur();
+  #[cfg(target_os = "macos")]
+  {
+    use tauri_plugin_vibrancy::MacOSVibrancy;
+    window.apply_vibrancy(MacOSVibrancy::AppearanceBased);
+  }
+
   // setup a simple http server for singleton
   server::embed_server(&app.handle());
 
