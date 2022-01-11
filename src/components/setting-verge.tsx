@@ -1,5 +1,6 @@
 import useSWR, { useSWRConfig } from "swr";
 import {
+  Box,
   List,
   ListItemText,
   ListSubheader,
@@ -12,6 +13,7 @@ import { version } from "../../package.json";
 import GuardState from "./guard-state";
 import SettingItem from "./setting-item";
 import PaletteSwitch from "./palette-switch";
+import SysproxyTooltip from "./sysproxy-tooltip";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -84,7 +86,14 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="System Proxy" />
+        <ListItemText
+          primary={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              System Proxy
+              <SysproxyTooltip />
+            </Box>
+          }
+        />
         <GuardState
           value={proxy}
           valueProps="checked"

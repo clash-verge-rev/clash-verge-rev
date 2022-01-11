@@ -63,3 +63,7 @@ export async function getVergeConfig() {
 export async function patchVergeConfig(payload: CmdType.VergeConfig) {
   return invoke<void>("patch_verge_config", { payload });
 }
+
+export async function getSystemProxy() {
+  return invoke<any>("get_sys_proxy");
+}
