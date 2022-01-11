@@ -3,9 +3,9 @@ use std::path::PathBuf;
 
 static APP_KEY: &str = "ClashVerge";
 
-#[cfg(target_os = "windows")]
 /// get the startup value
 /// whether as same as the exe_path
+#[cfg(target_os = "windows")]
 pub fn get_startup(exe_path: &PathBuf) -> io::Result<bool> {
   use winreg::enums::*;
   use winreg::RegKey;
@@ -26,9 +26,9 @@ pub fn get_startup(exe_path: &PathBuf) -> io::Result<bool> {
   }
 }
 
-#[cfg(target_os = "windows")]
 /// set the startup on windows
 /// delete the reg key if disabled
+#[cfg(target_os = "windows")]
 pub fn set_startup(enable: bool, exe_path: &PathBuf) -> io::Result<()> {
   use winreg::enums::*;
   use winreg::RegKey;
@@ -47,6 +47,18 @@ pub fn set_startup(enable: bool, exe_path: &PathBuf) -> io::Result<()> {
     }
     false => cur_var.delete_value(APP_KEY),
   }
+}
+
+/// todo
+#[cfg(target_os = "macos")]
+pub fn get_startup(exe_path: &PathBuf) -> io::Result<bool> {
+  Ok(true)
+}
+
+/// todo
+#[cfg(target_os = "macos")]
+pub fn set_startup(enable: bool, exe_path: &PathBuf) -> io::Result<()> {
+  Ok(())
 }
 
 #[cfg(target_os = "windows")]
