@@ -65,6 +65,12 @@ const Layout = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") windowHide();
+    });
+  }, []);
+
+  useEffect(() => {
     if (!vergeConfig) return;
     setBlur(!!vergeConfig.theme_blur);
     setMode(vergeConfig.theme_mode ?? "light");
