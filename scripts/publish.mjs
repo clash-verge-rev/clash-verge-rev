@@ -11,10 +11,16 @@ async function resolvePublish() {
 
   let [a, b, c] = packageJson.version.split(".").map(Number);
 
-  if (flag === "major") a += 1;
-  else if (flag === "minor") b += 1;
-  else if (flag === "patch") c += 1;
-  else throw new Error(`invalid flag "${flag}"`);
+  if (flag === "major") {
+    a += 1;
+    b = 0;
+    c = 0;
+  } else if (flag === "minor") {
+    b += 1;
+    c = 0;
+  } else if (flag === "patch") {
+    c += 1;
+  } else throw new Error(`invalid flag "${flag}"`);
 
   const nextVersion = `${a}.${b}.${c}`;
   packageJson.version = nextVersion;
