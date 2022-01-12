@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 import {
-  alpha,
   Box,
   Collapse,
   Divider,
   IconButton,
   List,
   ListItem,
-  ListItemButton,
-  ListItemIcon,
   ListItemText,
 } from "@mui/material";
 import {
@@ -18,53 +15,11 @@ import {
   ExpandMoreRounded,
   MyLocationRounded,
   NetworkCheckRounded,
-  CheckCircleOutlineRounded,
 } from "@mui/icons-material";
 import { updateProxy } from "../services/api";
 import { ApiType } from "../services/types";
 import { getProfiles, patchProfile } from "../services/cmds";
-
-interface ItemProps {
-  proxy: ApiType.ProxyItem;
-  selected: boolean;
-  onClick?: (name: string) => void;
-}
-
-const Item = ({ proxy, selected, onClick }: ItemProps) => {
-  return (
-    <ListItem sx={{ py: 0, pl: 4 }}>
-      <ListItemButton
-        dense
-        selected={selected}
-        onClick={() => onClick?.(proxy.name)}
-        sx={[
-          {
-            borderRadius: 1,
-          },
-          ({ palette: { mode, primary } }) => {
-            const bgcolor =
-              mode === "light"
-                ? alpha(primary.main, 0.15)
-                : alpha(primary.main, 0.35);
-            const color = mode === "light" ? primary.main : primary.light;
-
-            return {
-              "&.Mui-selected": { bgcolor },
-              "&.Mui-selected .MuiListItemText-secondary": { color },
-            };
-          },
-        ]}
-      >
-        <ListItemText title={proxy.name} secondary={proxy.name} />
-        <ListItemIcon
-          sx={{ justifyContent: "flex-end", color: "primary.main" }}
-        >
-          {selected && <CheckCircleOutlineRounded sx={{ fontSize: 16 }} />}
-        </ListItemIcon>
-      </ListItemButton>
-    </ListItem>
-  );
-};
+import ProxyItem from "./proxy-item";
 
 interface Props {
   group: ApiType.ProxyGroupItem;
@@ -146,9 +101,10 @@ const ProxyGroup = ({ group }: Props) => {
             style={{ height: "400px", marginBottom: "4px" }}
             totalCount={proxies.length}
             itemContent={(index) => (
-              <Item
+              <ProxyItem
                 proxy={proxies[index]}
                 selected={proxies[index].name === now}
+                sx={{ py: 0, pl: 4 }}
                 onClick={onUpdate}
               />
             )}
@@ -160,10 +116,11 @@ const ProxyGroup = ({ group }: Props) => {
             sx={{ maxHeight: "400px", overflow: "auto", mb: "4px" }}
           >
             {proxies.map((proxy) => (
-              <Item
+              <ProxyItem
                 key={proxy.name}
                 proxy={proxy}
                 selected={proxy.name === now}
+                sx={{ py: 0, pl: 4 }}
                 onClick={onUpdate}
               />
             ))}
