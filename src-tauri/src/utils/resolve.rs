@@ -9,6 +9,7 @@ pub fn resolve_setup(app: &App) {
   let window = app.get_window("main").unwrap();
   window.set_shadow(true);
 
+  // enable system blur
   use tauri_plugin_vibrancy::Vibrancy;
   #[cfg(target_os = "windows")]
   window.apply_blur();
@@ -42,9 +43,9 @@ pub fn resolve_setup(app: &App) {
     log::error!("{}", err);
   }
 
-  verge.set_exe_path(app.package_info());
   verge.init_sysproxy(clash.info.port.clone());
-  if let Err(err) = verge.sync_startup() {
+  verge.init_launch(app.package_info());
+  if let Err(err) = verge.sync_launch() {
     log::error!("{}", err);
   }
 }
