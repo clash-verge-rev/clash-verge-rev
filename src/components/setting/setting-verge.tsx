@@ -1,19 +1,12 @@
 import useSWR, { useSWRConfig } from "swr";
-import {
-  Box,
-  List,
-  ListItemText,
-  ListSubheader,
-  Switch,
-  Typography,
-} from "@mui/material";
-import { getVergeConfig, patchVergeConfig } from "../services/cmds";
-import { CmdType } from "../services/types";
-import { version } from "../../package.json";
-import GuardState from "./guard-state";
-import SettingItem from "./setting-item";
-import PaletteSwitch from "./palette-switch";
-import SysproxyTooltip from "./sysproxy-tooltip";
+import { Box, ListItemText, Switch, Typography } from "@mui/material";
+import { getVergeConfig, patchVergeConfig } from "../../services/cmds";
+import { SettingList, SettingItem } from "./setting";
+import { CmdType } from "../../services/types";
+import { version } from "../../../package.json";
+import GuardState from "../guard-state";
+import PaletteSwitch from "../palette-switch";
+import SysproxyTooltip from "../sysproxy-tooltip";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -36,11 +29,7 @@ const SettingVerge = ({ onError }: Props) => {
   };
 
   return (
-    <List>
-      <ListSubheader sx={{ background: "transparent" }}>
-        Common Setting
-      </ListSubheader>
-
+    <SettingList title="Common Setting">
       <SettingItem>
         <ListItemText primary="Theme Mode" />
         <GuardState
@@ -110,7 +99,7 @@ const SettingVerge = ({ onError }: Props) => {
         <ListItemText primary="Version" />
         <Typography sx={{ py: "6px" }}>v{version}</Typography>
       </SettingItem>
-    </List>
+    </SettingList>
   );
 };
 

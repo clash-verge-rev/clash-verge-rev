@@ -1,7 +1,7 @@
 import { Paper } from "@mui/material";
 import BasePage from "../components/base-page";
-import SettingVerge from "../components/setting-verge";
-import SettingClash from "../components/setting-clash";
+import SettingVerge from "../components/setting/setting-verge";
+import SettingClash from "../components/setting/setting-clash";
 
 const SettingPage = () => {
   return (
