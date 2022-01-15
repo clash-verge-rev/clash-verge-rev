@@ -1,6 +1,6 @@
-use crate::utils::{config, dirs, startup, sysopt::SysProxyConfig};
+use crate::utils::{config, dirs, sysopt::SysProxyConfig};
+use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use tauri::api::path::resource_dir;
 
 /// ### `verge.yaml` schema
@@ -14,7 +14,7 @@ pub struct VergeConfig {
   pub theme_blur: Option<bool>,
 
   /// can the app auto startup
-  pub enable_self_startup: Option<bool>,
+  pub enable_auto_launch: Option<bool>,
 
   /// set system proxy
   pub enable_system_proxy: Option<bool>,
@@ -49,7 +49,7 @@ pub struct Verge {
 
   pub cur_sysproxy: Option<SysProxyConfig>,
 
-  pub exe_path: Option<PathBuf>,
+  pub auto_launch: Option<AutoLaunch>,
 }
 
 impl Default for Verge {
@@ -64,7 +64,7 @@ impl Verge {
       config: VergeConfig::new(),
       old_sysproxy: None,
       cur_sysproxy: None,
-      exe_path: None,
+      auto_launch: None,
     }
   }
 
@@ -101,53 +101,61 @@ impl Verge {
     }
   }
 
-  /// set the exe_path
-  pub fn set_exe_path(&mut self, package_info: &tauri::PackageInfo) {
-    let exe = if cfg!(target_os = "windows") {
-      "clash-verge.exe"
-    } else {
-      "clash-verge"
-    };
-    let path = resource_dir(package_info).unwrap().join(exe);
-    self.exe_path = Some(path);
+  /// init the auto launch
+  pub fn init_launch(&mut self, package_info: &tauri::PackageInfo) {
+    let app_name = "clash-verge";
+    let app_path = get_app_path(app_name);
+    let app_path = resource_dir(package_info).unwrap().join(app_path);
+    let app_path = app_path.as_os_str().to_str().unwrap();
+
+    let auto = AutoLaunchBuilder::new()
+      .set_app_name(app_name)
+      .set_app_path(app_path)
+      .build();
+
+    self.auto_launch = Some(auto);
   }
 
   /// sync the startup when run the app
-  pub fn sync_startup(&self) -> Result<(), String> {
-    let enable = self.config.enable_self_startup.clone().unwrap_or(false);
-
+  pub fn sync_launch(&self) -> Result<(), String> {
+    let enable = self.config.enable_auto_launch.clone().unwrap_or(false);
     if !enable {
       return Ok(());
     }
-    if self.exe_path.is_none() {
-      return Err("should init the exe_path first".into());
+
+    if self.auto_launch.is_none() {
+      return Err("should init the auto launch first".into());
     }
 
-    let exe_path = self.exe_path.clone().unwrap();
-    match startup::get_startup(&exe_path) {
-      Ok(sys_enable) => {
-        if sys_enable || (!sys_enable && startup::set_startup(true, &exe_path).is_ok()) {
-          Ok(())
-        } else {
-          Err("failed to sync startup".into())
-        }
+    let auto_launch = self.auto_launch.clone().unwrap();
+
+    let is_enabled = auto_launch.is_enabled().unwrap_or(false);
+    if !is_enabled {
+      if let Err(_) = auto_launch.enable() {
+        return Err("failed to enable auto-launch".into());
       }
-      Err(_) => Err("failed to get system startup info".into()),
     }
+
+    Ok(())
   }
 
   /// update the startup
-  fn update_startup(&mut self, enable: bool) -> Result<(), String> {
-    let conf_enable = self.config.enable_self_startup.clone().unwrap_or(false);
+  fn update_launch(&mut self, enable: bool) -> Result<(), String> {
+    let conf_enable = self.config.enable_auto_launch.clone().unwrap_or(false);
 
     if enable == conf_enable {
       return Ok(());
     }
-    if self.exe_path.is_none() {
-      return Err("should init the exe_path first".into());
-    }
-    let exe_path = self.exe_path.clone().unwrap();
-    match startup::set_startup(enable, &exe_path) {
+
+    let auto_launch = self.auto_launch.clone().unwrap();
+
+    let result = if enable {
+      auto_launch.enable()
+    } else {
+      auto_launch.disable()
+    };
+
+    match result {
       Ok(_) => Ok(()),
       Err(_) => Err("failed to set system startup info".into()),
     }
@@ -166,10 +174,10 @@ impl Verge {
     }
 
     // should update system startup
-    if patch.enable_self_startup.is_some() {
-      let enable = patch.enable_self_startup.unwrap();
-      self.update_startup(enable)?;
-      self.config.enable_self_startup = Some(enable);
+    if patch.enable_auto_launch.is_some() {
+      let enable = patch.enable_auto_launch.unwrap();
+      self.update_launch(enable)?;
+      self.config.enable_auto_launch = Some(enable);
     }
 
     // should update system proxy
@@ -187,11 +195,22 @@ impl Verge {
     }
 
     // todo
-    // should update system proxt too
+    // should update system proxy too
     if patch.system_proxy_bypass.is_some() {
       self.config.system_proxy_bypass = patch.system_proxy_bypass;
     }
 
     self.config.save_file()
   }
+}
+
+// Get the target app_path
+fn get_app_path(app_name: &str) -> String {
+  #[cfg(target_os = "linux")]
+  let ext = "";
+  #[cfg(target_os = "macos")]
+  let ext = ".app";
+  #[cfg(target_os = "windows")]
+  let ext = ".exe";
+  String::from(app_name) + ext
 }
