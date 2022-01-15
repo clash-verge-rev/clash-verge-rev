@@ -37,6 +37,7 @@ fn main() -> std::io::Result<()> {
       SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
         "open_window" => {
           let window = app_handle.get_window("main").unwrap();
+          window.unminimize().unwrap();
           window.show().unwrap();
           window.set_focus().unwrap();
         }
@@ -63,6 +64,7 @@ fn main() -> std::io::Result<()> {
       },
       SystemTrayEvent::LeftClick { .. } => {
         let window = app_handle.get_window("main").unwrap();
+        window.unminimize().unwrap();
         window.show().unwrap();
         window.set_focus().unwrap();
       }
@@ -73,9 +75,6 @@ fn main() -> std::io::Result<()> {
       cmds::restart_sidecar,
       cmds::get_sys_proxy,
       cmds::get_cur_proxy,
-      cmds::win_drag,
-      cmds::win_hide,
-      cmds::win_mini,
       // clash
       cmds::get_clash_info,
       cmds::patch_clash_config,

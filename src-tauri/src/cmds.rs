@@ -8,7 +8,7 @@ use crate::{
   },
 };
 use serde_yaml::Mapping;
-use tauri::{AppHandle, Manager, State};
+use tauri::State;
 
 /// get all profiles from `profiles.yaml`
 /// do not acquire the lock of ProfileLock
@@ -230,26 +230,4 @@ pub async fn patch_verge_config(
 ) -> Result<(), String> {
   let mut verge = verge_state.0.lock().unwrap();
   verge.patch_config(payload)
-}
-
-/// start dragging window
-#[tauri::command]
-pub fn win_drag(app_handle: AppHandle) {
-  let window = app_handle.get_window("main").unwrap();
-  window.start_dragging().unwrap();
-}
-
-/// hide the window
-#[tauri::command]
-pub fn win_hide(app_handle: AppHandle) {
-  let window = app_handle.get_window("main").unwrap();
-  window.hide().unwrap();
-}
-
-/// mini the window
-#[tauri::command]
-pub fn win_mini(app_handle: AppHandle) {
-  let window = app_handle.get_window("main").unwrap();
-  // todo: these methods still has bug on Windows
-  window.minimize().unwrap();
 }
