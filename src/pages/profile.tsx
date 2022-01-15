@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
-import { Box, Button, Grid, TextField, Typography } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+import { Box, Button, Grid, TextField } from "@mui/material";
 import {
   getProfiles,
   selectProfile,
@@ -8,9 +8,10 @@ import {
   importProfile,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
-import ProfileItemComp from "../components/profile-item";
-import useNotice from "../utils/use-notice";
 import noop from "../utils/noop";
+import useNotice from "../utils/use-notice";
+import BasePage from "../components/base-page";
+import ProfileItemComp from "../components/profile-item";
 
 const ProfilePage = () => {
   const [url, setUrl] = useState("");
@@ -97,11 +98,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>
-      <Typography variant="h4" component="h1" sx={{ py: 2, mb: 1 }}>
-        Profiles
-      </Typography>
-
+    <BasePage title="Profiles">
       <Box sx={{ display: "flex", mb: 3 }}>
         <TextField
           id="profile_url"
@@ -136,7 +133,7 @@ const ProfilePage = () => {
       </Grid>
 
       {noticeElement}
-    </Box>
+    </BasePage>
   );
 };
 

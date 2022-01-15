@@ -36,18 +36,6 @@ export async function restartSidecar() {
   return invoke<void>("restart_sidecar");
 }
 
-export async function windowDrag() {
-  return invoke<void>("win_drag");
-}
-
-export async function windowHide() {
-  return invoke<void>("win_hide");
-}
-
-export async function windowMini() {
-  return invoke<void>("win_mini");
-}
-
 export async function getClashInfo() {
   return invoke<CmdType.ClashInfo | null>("get_clash_info");
 }

@@ -27,6 +27,10 @@
       text-align: center;
       box-sizing: border-box;
 
+      img {
+        width: 100%;
+      }
+
       .the-newbtn {
         position: absolute;
         right: 20px;
@@ -54,27 +58,24 @@
     position: relative;
     flex: 1 1 75%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 2px 0;
-    box-sizing: border-box;
 
     .the-bar {
-      flex: 0 0 30px;
-      width: 100%;
-      height: 30px;
-      padding: 0 16px;
+      position: absolute;
+      top: 2px;
+      right: 8px;
+      height: 36px;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
       box-sizing: border-box;
+      z-index: 2;
     }
 
     .the-content {
-      flex: 1 1 100%;
-      overflow: auto;
-      box-sizing: border-box;
-      scrollbar-gutter: stable;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 30px;
+      bottom: 10px;
     }
   }
 }

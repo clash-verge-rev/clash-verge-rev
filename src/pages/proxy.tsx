@@ -1,9 +1,10 @@
 import useSWR, { useSWRConfig } from "swr";
 import { useEffect } from "react";
-import { Box, List, Paper, Typography } from "@mui/material";
+import { List, Paper } from "@mui/material";
 import { getProxies } from "../services/api";
-import ProxyGroup from "../components/proxy-group";
+import BasePage from "../components/base-page";
 import ProxyItem from "../components/proxy-item";
+import ProxyGroup from "../components/proxy-group";
 
 const ProxyPage = () => {
   const { mutate } = useSWRConfig();
@@ -19,12 +20,8 @@ const ProxyPage = () => {
   }, []);
 
   return (
-    <Box sx={{ width: 0.9, maxWidth: "850px", mx: "auto", mb: 2 }}>
-      <Typography variant="h4" component="h1" sx={{ py: 2 }}>
-        {groups.length ? "Proxy Groups" : "Proxies"}
-      </Typography>
-
-      <Paper sx={{ borderRadius: 1, boxShadow: 2 }}>
+    <BasePage title={groups.length ? "Proxy Groups" : "Proxies"}>
+      <Paper sx={{ borderRadius: 1, boxShadow: 2, mb: 1 }}>
         {groups.length > 0 && (
           <List>
             {groups.map((group) => (
@@ -46,7 +43,7 @@ const ProxyPage = () => {
           </List>
         )}
       </Paper>
-    </Box>
+    </BasePage>
   );
 };
 
