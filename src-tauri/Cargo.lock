@@ -42,6 +42,7 @@ checksum = "84450d0b4a8bd1ba4144ce8ce718fbc5d071358b1e5384bace6536b3d1f2d5b3"
 name = "app"
 version = "0.1.0"
 dependencies = [
+ "auto-launch",
  "chrono",
  "dirs 4.0.0",
  "log",
@@ -143,6 +144,16 @@ dependencies = [
  "serde_urlencoded",
  "url",
  "wildmatch",
+]
+
+[[package]]
+name = "auto-launch"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f0ab475f9b1049a9d4e9c83f45ff27ec3bce4a6cb8e58e7f29030f8992af8c5"
+dependencies = [
+ "dirs 4.0.0",
+ "winreg 0.10.1",
 ]
 
 [[package]]

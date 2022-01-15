@@ -29,6 +29,7 @@ tokio = { version = "1", features = ["full"] }
 log = "0.4.14"
 log4rs = "1.0.0"
 warp = "0.3"
+auto-launch = "0.2"
 port_scanner = "0.1.5"
 
 [target.'cfg(windows)'.dependencies]
