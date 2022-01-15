@@ -26,7 +26,7 @@ const SettingVerge = ({ onError }: Props) => {
   const {
     theme_mode: mode = "light",
     theme_blur: blur = false,
-    enable_self_startup: startup = false,
+    enable_auto_launch: startup = false,
     enable_system_proxy: proxy = false,
   } = vergeConfig ?? {};
 
@@ -72,14 +72,14 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Self Startup" />
+        <ListItemText primary="Auto Launch" />
         <GuardState
           value={startup}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_self_startup: e })}
-          onGuard={(e) => patchVergeConfig({ enable_self_startup: e })}
+          onChange={(e) => onChangeData({ enable_auto_launch: e })}
+          onGuard={(e) => patchVergeConfig({ enable_auto_launch: e })}
         >
           <Switch edge="end" />
         </GuardState>

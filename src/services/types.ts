@@ -111,7 +111,7 @@ export namespace CmdType {
   export interface VergeConfig {
     theme_mode?: "light" | "dark";
     theme_blur?: boolean;
-    enable_self_startup?: boolean;
+    enable_auto_launch?: boolean;
     enable_system_proxy?: boolean;
   }
 }
