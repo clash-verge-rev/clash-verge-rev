@@ -1,72 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
 import useSWR, { SWRConfig } from "swr";
+import { useEffect, useMemo } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useRecoilState } from "recoil";
-import {
-  alpha,
-  Button,
-  createTheme,
-  IconButton,
-  List,
-  Paper,
-  ThemeProvider,
-} from "@mui/material";
-import { HorizontalRuleRounded, CloseRounded } from "@mui/icons-material";
-import { checkUpdate } from "@tauri-apps/api/updater";
+import { alpha, createTheme, List, Paper, ThemeProvider } from "@mui/material";
+import { appWindow } from "@tauri-apps/api/window";
 import { atomPaletteMode, atomThemeBlur } from "../states/setting";
-import { getVergeConfig, windowDrag, windowHide } from "../services/cmds";
+import { getVergeConfig } from "../services/cmds";
+import { routers } from "./_routers";
 import LogoSvg from "../assets/image/logo.svg";
-import LogPage from "./log";
-import ProfilePage from "./profile";
-import ProxyPage from "./proxy";
-import SettingPage from "./setting";
-import ConnectionsPage from "./connections";
-import LayoutItem from "../components/layout-item";
 import Traffic from "../components/traffic";
-import UpdateDialog from "../components/update-dialog";
-
-const routers = [
-  {
-    label: "Proxy",
-    link: "/",
-    ele: ProxyPage,
-  },
-  {
-    label: "Profile",
-    link: "/profile",
-    ele: ProfilePage,
-  },
-  {
-    label: "Connections",
-    link: "/connections",
-    ele: ConnectionsPage,
-  },
-  {
-    label: "Log",
-    link: "/log",
-    ele: LogPage,
-  },
-  {
-    label: "Setting",
-    link: "/setting",
-    ele: SettingPage,
-  },
-];
+import LayoutItem from "../components/layout-item";
+import UpdateButton from "../components/update-button";
+import WindowControl from "../components/window-control";
 
 const Layout = () => {
   const [mode, setMode] = useRecoilState(atomPaletteMode);
   const [blur, setBlur] = useRecoilState(atomThemeBlur);
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
-  const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
-    errorRetryCount: 2,
-    revalidateIfStale: false,
-    focusThrottleInterval: 36e5, // 1 hour
-  });
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") windowHide();
+      if (e.key === "Escape") appWindow.hide();
     });
   }, []);
 
@@ -96,6 +50,12 @@ const Layout = () => {
     });
   }, [mode]);
 
+  const onDragging = (e: any) => {
+    if (e?.target?.dataset?.windrag) {
+      appWindow.startDragging();
+    }
+  };
+
   return (
     <SWRConfig value={{}}>
       <ThemeProvider theme={theme}>
@@ -103,38 +63,21 @@ const Layout = () => {
           square
           elevation={0}
           className="layout"
+          onPointerDown={onDragging}
           sx={[
             (theme) => ({
               bgcolor: alpha(theme.palette.background.paper, blur ? 0.85 : 1),
             }),
           ]}
         >
-          <div className="layout__left">
-            <div className="the-logo">
-              <img
-                src={LogoSvg}
-                width="100%"
-                alt=""
-                onPointerDown={(e) => {
-                  windowDrag();
-                  e.preventDefault();
-                }}
-              />
+          <div className="layout__left" data-windrag>
+            <div className="the-logo" data-windrag>
+              <img src={LogoSvg} alt="" data-windrag />
 
-              {updateInfo?.shouldUpdate && (
-                <Button
-                  color="error"
-                  variant="contained"
-                  size="small"
-                  className="the-newbtn"
-                  onClick={() => setDialogOpen(true)}
-                >
-                  New
-                </Button>
-              )}
+              <UpdateButton className="the-newbtn" />
             </div>
 
-            <List className="the-menu">
+            <List className="the-menu" data-windrag>
               {routers.map((router) => (
                 <LayoutItem key={router.label} to={router.link}>
                   {router.label}
@@ -142,29 +85,17 @@ const Layout = () => {
               ))}
             </List>
 
-            <div className="the-traffic">
+            <div className="the-traffic" data-windrag>
               <Traffic />
             </div>
           </div>
 
-          <div className="layout__right">
-            <div
-              className="the-bar"
-              onPointerDown={(e) =>
-                e.target === e.currentTarget && windowDrag()
-              }
-            >
-              {/* todo: onClick = windowMini */}
-              <IconButton size="small" sx={{ mx: 1 }} onClick={windowHide}>
-                <HorizontalRuleRounded fontSize="inherit" />
-              </IconButton>
-
-              <IconButton size="small" onClick={windowHide}>
-                <CloseRounded fontSize="inherit" />
-              </IconButton>
+          <div className="layout__right" data-windrag>
+            <div className="the-bar">
+              <WindowControl />
             </div>
 
-            <div className="the-content">
+            <div className="the-content" data-windrag>
               <Routes>
                 {routers.map(({ label, link, ele: Ele }) => (
                   <Route key={label} path={link} element={<Ele />} />
@@ -173,7 +104,6 @@ const Layout = () => {
             </div>
           </div>
         </Paper>
-        <UpdateDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
       </ThemeProvider>
     </SWRConfig>
   );

@@ -1,9 +1,10 @@
 import dayjs from "dayjs";
-import { useEffect, useRef, useState } from "react";
-import { Box, Button, Paper, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Button, Paper } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { ApiType } from "../services/types";
 import { getInfomation } from "../services/api";
+import BasePage from "../components/base-page";
 import LogItem from "../components/log-item";
 
 let logCache: ApiType.LogItem[] = [];
@@ -28,33 +29,27 @@ const LogPage = () => {
     return () => ws?.close();
   }, []);
 
+  const onClear = () => {
+    setLogData([]);
+    logCache = [];
+  };
+
   return (
-    <Box
-      sx={{
-        position: "relative",
-        width: 0.9,
-        maxWidth: "850px",
-        height: "100%",
-        mx: "auto",
-      }}
+    <BasePage
+      title="Logs"
+      contentStyle={{ height: "100%" }}
+      header={
+        <Button
+          size="small"
+          sx={{ mt: 1 }}
+          variant="contained"
+          onClick={onClear}
+        >
+          Clear
+        </Button>
+      }
     >
-      <Typography variant="h4" component="h1" sx={{ py: 2 }}>
-        Logs
-      </Typography>
-
-      <Button
-        size="small"
-        variant="contained"
-        sx={{ position: "absolute", top: 22, right: 0 }}
-        onClick={() => {
-          setLogData([]);
-          logCache = [];
-        }}
-      >
-        Clear
-      </Button>
-
-      <Paper sx={{ boxShadow: 2, height: "calc(100% - 100px)" }}>
+      <Paper sx={{ boxShadow: 2, height: "100%" }}>
         <Virtuoso
           initialTopMostItemIndex={999}
           data={logData}
@@ -62,7 +57,7 @@ const LogPage = () => {
           followOutput={"smooth"}
         />
       </Paper>
-    </Box>
+    </BasePage>
   );
 };
 

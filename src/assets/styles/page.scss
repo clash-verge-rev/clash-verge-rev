@@ -1,0 +1,33 @@
+.base-page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  > header {
+    flex: 0 0 58px;
+    width: 90%;
+    max-width: 850px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  > section {
+    position: relative;
+    flex: 1 1 100%;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 8px 0;
+    box-sizing: border-box;
+    scrollbar-gutter: stable;
+
+    .base-content {
+      width: 90%;
+      max-width: 850px;
+      margin: 0 auto;
+    }
+  }
+}
