@@ -1,19 +1,19 @@
-import LogPage from "./log";
-import ProxyPage from "./proxy";
-import ProfilePage from "./profile";
-import SettingPage from "./setting";
+import LogsPage from "./logs";
+import ProxiesPage from "./proxies";
+import ProfilesPage from "./profiles";
+import SettingsPage from "./settings";
 import ConnectionsPage from "./connections";
 
 export const routers = [
   {
-    label: "Proxy",
+    label: "Proxies",
     link: "/",
-    ele: ProxyPage,
+    ele: ProxiesPage,
   },
   {
-    label: "Profile",
+    label: "Profiles",
     link: "/profile",
-    ele: ProfilePage,
+    ele: ProfilesPage,
   },
   {
     label: "Connections",
@@ -21,13 +21,13 @@ export const routers = [
     ele: ConnectionsPage,
   },
   {
-    label: "Log",
-    link: "/log",
-    ele: LogPage,
+    label: "Logs",
+    link: "/logs",
+    ele: LogsPage,
   },
   {
-    label: "Setting",
-    link: "/setting",
-    ele: SettingPage,
+    label: "Settings",
+    link: "/settings",
+    ele: SettingsPage,
   },
 ];
