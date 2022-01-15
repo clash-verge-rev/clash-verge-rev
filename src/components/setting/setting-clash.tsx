@@ -1,18 +1,16 @@
 import useSWR, { useSWRConfig } from "swr";
 import {
-  List,
   ListItemText,
-  ListSubheader,
   TextField,
   Switch,
   Select,
   MenuItem,
 } from "@mui/material";
-import { getClashConfig, updateConfigs } from "../services/api";
-import { patchClashConfig } from "../services/cmds";
-import { ApiType } from "../services/types";
-import GuardState from "./guard-state";
-import SettingItem from "./setting-item";
+import { getClashConfig, updateConfigs } from "../../services/api";
+import { SettingList, SettingItem } from "./setting";
+import { patchClashConfig } from "../../services/cmds";
+import { ApiType } from "../../services/types";
+import GuardState from "../guard-state";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -30,22 +28,16 @@ const SettingClash = ({ onError }: Props) => {
   } = clashConfig ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
-
   const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
     mutate("getClashConfig", { ...clashConfig, ...patch }, false);
   };
-
   const onUpdateData = async (patch: Partial<ApiType.ConfigData>) => {
     await updateConfigs(patch);
     await patchClashConfig(patch);
   };
 
   return (
-    <List>
-      <ListSubheader sx={{ background: "transparent" }}>
-        Clash Setting
-      </ListSubheader>
-
+    <SettingList title="Clash Setting">
       <SettingItem>
         <ListItemText primary="Allow Lan" />
         <GuardState
@@ -102,7 +94,7 @@ const SettingClash = ({ onError }: Props) => {
           disabled
         />
       </SettingItem>
-    </List>
+    </SettingList>
   );
 };
 
