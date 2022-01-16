@@ -3,11 +3,13 @@ use crate::{
   states::{ClashState, ProfilesState, VergeState},
   utils::{
     config::{read_clash, save_clash},
+    dirs::app_home_dir,
     fetch::fetch_profile,
     sysopt::SysProxyConfig,
   },
 };
 use serde_yaml::Mapping;
+use std::process::Command;
 use tauri::State;
 
 /// get all profiles from `profiles.yaml`
@@ -139,6 +141,34 @@ pub fn patch_profile(
   match profiles.0.lock() {
     Ok(mut profiles) => profiles.patch_item(index, profile),
     Err(_) => Err("can not get profiles lock".into()),
+  }
+}
+
+/// run vscode command to edit the profile
+#[tauri::command]
+pub fn edit_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> Result<(), String> {
+  let mut profiles = profiles_state.0.lock().unwrap();
+  let items = profiles.items.take().unwrap_or(vec![]);
+
+  if index >= items.len() {
+    profiles.items = Some(items);
+    return Err("the index out of bound".into());
+  }
+
+  let file = items[index].file.clone().unwrap_or("".into());
+  profiles.items = Some(items);
+
+  let path = app_home_dir().join("profiles").join(file);
+  if !path.exists() {
+    return Err("failed to open the file".into());
+  }
+
+  match which::which("code") {
+    Ok(code) => match Command::new(code).arg(path).status() {
+      Ok(_) => Ok(()),
+      Err(_) => Err("failed to open file by VScode".into()),
+    },
+    Err(_) => Err("please install VScode for edit".into()),
   }
 }
 
