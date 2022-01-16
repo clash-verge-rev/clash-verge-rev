@@ -7,32 +7,6 @@ env:
   RUST_BACKTRACE: short
 
 jobs:
-  # only cargo test now
-  test:
-    strategy:
-      matrix:
-        os: [windows-latest, macos-11]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@ce325b60658c1b38465c06cc965b79baf32c1e72
-
-      - name: Cargo Test
-        run: |
-          cargo check
-          cargo test
-        working-directory: ./src-tauri
-
   release:
     strategy:
       matrix:
@@ -84,6 +58,8 @@ jobs:
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
+        # enable cache even though failed
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
