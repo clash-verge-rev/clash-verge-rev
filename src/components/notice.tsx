@@ -30,7 +30,11 @@ const NoticeInner = (props: InnerProps) => {
         {type === "error" && <ErrorRounded color="error" />}
         {type === "success" && <CheckCircleRounded color="success" />}
 
-        <Typography sx={{ ml: 1 }}>{message}</Typography>
+        <Typography
+          sx={{ ml: 1, wordWrap: "break-word", wordBreak: "break-all" }}
+        >
+          {message}
+        </Typography>
       </Box>
     );
 

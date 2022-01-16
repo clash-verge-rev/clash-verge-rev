@@ -11,7 +11,7 @@ import LogoSvg from "../assets/image/logo.svg";
 import Traffic from "../components/traffic";
 import LayoutItem from "../components/layout-item";
 import UpdateButton from "../components/update-button";
-import WindowControl from "../components/window-control";
+import LayoutControl from "../components/layout-control";
 
 const Layout = () => {
   const [mode, setMode] = useRecoilState(atomPaletteMode);
@@ -92,7 +92,7 @@ const Layout = () => {
 
           <div className="layout__right" data-windrag>
             <div className="the-bar">
-              <WindowControl />
+              <LayoutControl />
             </div>
 
             <div className="the-content" data-windrag>

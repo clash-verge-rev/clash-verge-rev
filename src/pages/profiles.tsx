@@ -11,7 +11,7 @@ import { getProxies, updateProxy } from "../services/api";
 import noop from "../utils/noop";
 import Notice from "../components/notice";
 import BasePage from "../components/base-page";
-import ProfileItemComp from "../components/profile-item";
+import ProfileItem from "../components/profile-item";
 
 const ProfilePage = () => {
   const [url, setUrl] = useState("");
@@ -121,7 +121,7 @@ const ProfilePage = () => {
       <Grid container spacing={3}>
         {profiles?.items?.map((item, idx) => (
           <Grid item xs={12} sm={6} key={item.file}>
-            <ProfileItemComp
+            <ProfileItem
               index={idx}
               selected={profiles.current === idx}
               itemData={item}

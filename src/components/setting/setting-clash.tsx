@@ -10,7 +10,7 @@ import { getClashConfig, updateConfigs } from "../../services/api";
 import { SettingList, SettingItem } from "./setting";
 import { patchClashConfig } from "../../services/cmds";
 import { ApiType } from "../../services/types";
-import GuardState from "../guard-state";
+import GuardState from "./guard-state";
 
 interface Props {
   onError?: (err: Error) => void;

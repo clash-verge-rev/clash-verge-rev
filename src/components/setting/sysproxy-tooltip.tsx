@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { InfoRounded } from "@mui/icons-material";
 import { ClickAwayListener, Tooltip } from "@mui/material";
-import { getSystemProxy } from "../services/cmds";
+import { getSystemProxy } from "../../services/cmds";
 
 const SysproxyTooltip = () => {
   const [open, setOpen] = useState(false);
@@ -9,7 +9,6 @@ const SysproxyTooltip = () => {
 
   const onShow = async () => {
     const data = await getSystemProxy();
-    console.log(data);
     setInfo(data ?? {});
     setOpen(true);
   };

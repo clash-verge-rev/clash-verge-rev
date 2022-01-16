@@ -4,9 +4,9 @@ import { getVergeConfig, patchVergeConfig } from "../../services/cmds";
 import { SettingList, SettingItem } from "./setting";
 import { CmdType } from "../../services/types";
 import { version } from "../../../package.json";
-import GuardState from "../guard-state";
-import PaletteSwitch from "../palette-switch";
-import SysproxyTooltip from "../sysproxy-tooltip";
+import GuardState from "./guard-state";
+import PaletteSwitch from "./palette-switch";
+import SysproxyTooltip from "./sysproxy-tooltip";
 
 interface Props {
   onError?: (err: Error) => void;

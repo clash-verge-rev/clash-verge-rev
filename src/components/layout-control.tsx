@@ -6,7 +6,7 @@ import {
   HorizontalRuleRounded,
 } from "@mui/icons-material";
 
-const WindowControl = () => {
+const LayoutControl = () => {
   return (
     <>
       <Button
@@ -36,4 +36,4 @@ const WindowControl = () => {
   );
 };
 
-export default WindowControl;
+export default LayoutControl;
