@@ -6,14 +6,13 @@ env:
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
 
-strategy:
-  matrix:
-    platform: [windows-latest, macos-11]
-
 jobs:
   # only cargo test now
   test:
-    runs-on: ${{ matrix.platform }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-11]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -35,7 +34,10 @@ jobs:
         working-directory: ./src-tauri
 
   release:
-    runs-on: ${{ matrix.platform }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-11]
+    runs-on: ${{ matrix.os }}
     if: |
       startsWith(github.repository, 'zzzgydi') &&
       startsWith(github.ref, 'refs/tags/v')
