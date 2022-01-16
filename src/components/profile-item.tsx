@@ -59,12 +59,12 @@ const ProfileItem: React.FC<Props> = (props) => {
   const progress = Math.round(((download + upload) * 100) / (total + 0.1));
   const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
 
-  const onUpdate = async () => {
+  const onUpdateWrapper = (withProxy: boolean) => async () => {
     setAnchorEl(null);
     if (loading) return;
     setLoading(true);
     try {
-      await updateProfile(index);
+      await updateProfile(index, withProxy);
       mutate("getProfiles");
     } catch (err: any) {
       Notice.error(err.toString());
@@ -151,7 +151,7 @@ const ProfileItem: React.FC<Props> = (props) => {
             disabled={loading}
             onClick={(e) => {
               e.stopPropagation();
-              onUpdate();
+              onUpdateWrapper(false)();
             }}
           >
             <RefreshRounded />
@@ -202,7 +202,8 @@ const ProfileItem: React.FC<Props> = (props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
       >
-        <MenuItem onClick={onUpdate}>Update</MenuItem>
+        <MenuItem onClick={onUpdateWrapper(false)}>Update</MenuItem>
+        <MenuItem onClick={onUpdateWrapper(true)}>Update(Proxy)</MenuItem>
         <MenuItem onClick={onDelete}>Delete</MenuItem>
       </Menu>
     </>

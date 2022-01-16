@@ -10,11 +10,11 @@ export async function syncProfiles() {
 }
 
 export async function importProfile(url: string) {
-  return invoke<void>("import_profile", { url });
+  return invoke<void>("import_profile", { url, withProxy: true });
 }
 
-export async function updateProfile(index: number) {
-  return invoke<void>("update_profile", { index });
+export async function updateProfile(index: number, withProxy: boolean) {
+  return invoke<void>("update_profile", { index, withProxy });
 }
 
 export async function deleteProfile(index: number) {

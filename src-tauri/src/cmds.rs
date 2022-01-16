@@ -29,11 +29,15 @@ pub fn sync_profiles(profiles: State<'_, ProfilesState>) -> Result<(), String> {
   }
 }
 
-/// Import the profile from url
+/// import the profile from url
 /// and save to `profiles.yaml`
 #[tauri::command]
-pub async fn import_profile(url: String, profiles: State<'_, ProfilesState>) -> Result<(), String> {
-  match fetch_profile(&url).await {
+pub async fn import_profile(
+  url: String,
+  with_proxy: bool,
+  profiles: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  match fetch_profile(&url, with_proxy).await {
     Some(result) => {
       let mut profiles = profiles.0.lock().unwrap();
       profiles.import_from_url(url, result)
@@ -43,12 +47,10 @@ pub async fn import_profile(url: String, profiles: State<'_, ProfilesState>) -> 
 }
 
 /// Update the profile
-/// and save to `profiles.yaml`
-/// http request firstly
-/// then acquire the lock of `profiles.yaml`
 #[tauri::command]
 pub async fn update_profile(
   index: usize,
+  with_proxy: bool,
   clash: State<'_, ClashState>,
   profiles: State<'_, ProfilesState>,
 ) -> Result<(), String> {
@@ -69,7 +71,7 @@ pub async fn update_profile(
     Err(_) => return Err("failed to get profiles lock".into()),
   };
 
-  match fetch_profile(&url).await {
+  match fetch_profile(&url, with_proxy).await {
     Some(result) => match profiles.0.lock() {
       Ok(mut profiles) => {
         profiles.update_item(index, result)?;
