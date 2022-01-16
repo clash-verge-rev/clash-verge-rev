@@ -14,7 +14,7 @@ import {
 import { useSWRConfig } from "swr";
 import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../services/types";
-import { updateProfile, deleteProfile } from "../services/cmds";
+import { updateProfile, deleteProfile, editProfile } from "../services/cmds";
 import Notice from "./notice";
 import parseTraffic from "../utils/parse-traffic";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -58,6 +58,15 @@ const ProfileItem: React.FC<Props> = (props) => {
   const expire = parseExpire(extra?.expire);
   const progress = Math.round(((download + upload) * 100) / (total + 0.1));
   const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
+
+  const onEdit = async () => {
+    setAnchorEl(null);
+    try {
+      await editProfile(index);
+    } catch (err: any) {
+      Notice.error(err.toString());
+    }
+  };
 
   const onUpdateWrapper = (withProxy: boolean) => async () => {
     setAnchorEl(null);
@@ -202,6 +211,7 @@ const ProfileItem: React.FC<Props> = (props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
       >
+        <MenuItem onClick={onEdit}>Edit</MenuItem>
         <MenuItem onClick={onUpdateWrapper(false)}>Update</MenuItem>
         <MenuItem onClick={onUpdateWrapper(true)}>Update(Proxy)</MenuItem>
         <MenuItem onClick={onDelete}>Delete</MenuItem>

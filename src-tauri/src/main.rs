@@ -3,8 +3,6 @@
   windows_subsystem = "windows"
 )]
 
-extern crate tauri;
-
 mod cmds;
 mod core;
 mod states;
@@ -82,13 +80,14 @@ fn main() -> std::io::Result<()> {
       cmds::get_verge_config,
       cmds::patch_verge_config,
       // profile
+      cmds::edit_profile,
+      cmds::patch_profile,
       cmds::import_profile,
       cmds::update_profile,
       cmds::delete_profile,
       cmds::select_profile,
-      cmds::patch_profile,
-      cmds::sync_profiles,
       cmds::get_profiles,
+      cmds::sync_profiles,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application")
