@@ -312,7 +312,10 @@ pub async fn activate_profile(profile_item: &ProfileItem, info: &ClashInfo) -> R
   let mut data = HashMap::new();
   data.insert("path", temp_path.as_os_str().to_str().unwrap());
 
-  let client = reqwest::Client::new();
+  let client = match reqwest::ClientBuilder::new().no_proxy().build() {
+    Ok(c) => c,
+    Err(_) => return Err("failed to create http::put".into()),
+  };
   match client.put(server).headers(headers).json(&data).send().await {
     Ok(_) => Ok(()),
     Err(err) => Err(format!("request failed `{}`", err.to_string())),
