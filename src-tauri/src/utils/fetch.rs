@@ -23,11 +23,20 @@ fn parse_string<T: FromStr>(target: &str, key: &str) -> Option<T> {
 }
 
 /// fetch and parse the profile
-pub async fn fetch_profile(url: &str) -> Option<ProfileResponse> {
-  let resp = match reqwest::get(url).await {
-    Ok(res) => res,
+pub async fn fetch_profile(url: &str, with_proxy: bool) -> Option<ProfileResponse> {
+  let builder = reqwest::ClientBuilder::new();
+  let client = match with_proxy {
+    true => builder.build(),
+    false => builder.no_proxy().build(),
+  };
+  let resp = match client {
+    Ok(client) => match client.get(url).send().await {
+      Ok(res) => res,
+      Err(_) => return None,
+    },
     Err(_) => return None,
   };
+
   let header = resp.headers();
 
   // parse the Subscription Userinfo
