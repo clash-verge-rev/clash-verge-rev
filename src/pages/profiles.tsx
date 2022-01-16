@@ -80,20 +80,18 @@ const ProfilePage = () => {
   };
 
   const lockRef = useRef(false);
-  const onProfileChange = (index: number) => {
-    if (index === profiles.current || lockRef.current) return;
+  const onSelect = async (index: number, force: boolean) => {
     if (lockRef.current) return;
+    if (!force && index === profiles.current) return;
     lockRef.current = true;
-    selectProfile(index)
-      .then(() => {
-        mutate("getProfiles", { ...profiles, current: index }, true);
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        lockRef.current = false;
-      });
+    try {
+      await selectProfile(index);
+      mutate("getProfiles", { ...profiles, current: index }, true);
+    } catch (err: any) {
+      err && Notice.error(err.toString());
+    } finally {
+      lockRef.current = false;
+    }
   };
 
   return (
@@ -125,7 +123,7 @@ const ProfilePage = () => {
               index={idx}
               selected={profiles.current === idx}
               itemData={item}
-              onClick={() => onProfileChange(idx)}
+              onSelect={(f) => onSelect(idx, f)}
             />
           </Grid>
         ))}

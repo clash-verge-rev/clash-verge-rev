@@ -41,11 +41,11 @@ interface Props {
   index: number;
   selected: boolean;
   itemData: CmdType.ProfileItem;
-  onClick: () => void;
+  onSelect: (force: boolean) => void;
 }
 
 const ProfileItem: React.FC<Props> = (props) => {
-  const { index, selected, itemData, onClick } = props;
+  const { index, selected, itemData, onSelect } = props;
 
   const { mutate } = useSWRConfig();
   const [loading, setLoading] = useState(false);
@@ -66,6 +66,11 @@ const ProfileItem: React.FC<Props> = (props) => {
     } catch (err: any) {
       Notice.error(err.toString());
     }
+  };
+
+  const onForceSelect = () => {
+    setAnchorEl(null);
+    onSelect(true);
   };
 
   const onUpdateWrapper = (withProxy: boolean) => async () => {
@@ -136,7 +141,7 @@ const ProfileItem: React.FC<Props> = (props) => {
 
           return { bgcolor, color, "& h2": { color: h2color } };
         }}
-        onClick={onClick}
+        onClick={() => onSelect(false)}
         onContextMenu={handleContextMenu}
       >
         <Box display="flex" justifyContent="space-between">
@@ -211,7 +216,8 @@ const ProfileItem: React.FC<Props> = (props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
       >
-        <MenuItem onClick={onEdit}>Edit</MenuItem>
+        <MenuItem onClick={onForceSelect}>Select</MenuItem>
+        <MenuItem onClick={onEdit}>Edit(VScode)</MenuItem>
         <MenuItem onClick={onUpdateWrapper(false)}>Update</MenuItem>
         <MenuItem onClick={onUpdateWrapper(true)}>Update(Proxy)</MenuItem>
         <MenuItem onClick={onDelete}>Delete</MenuItem>
