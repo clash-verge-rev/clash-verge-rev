@@ -9,14 +9,13 @@ import {
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
 import noop from "../utils/noop";
-import useNotice from "../utils/use-notice";
+import Notice from "../components/notice";
 import BasePage from "../components/base-page";
 import ProfileItemComp from "../components/profile-item";
 
 const ProfilePage = () => {
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-  const [notice, noticeElement] = useNotice();
 
   const { mutate } = useSWRConfig();
   const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
@@ -72,9 +71,9 @@ const ProfilePage = () => {
       await importProfile(url);
       mutate("getProfiles", getProfiles());
       if (!profiles.items?.length) selectProfile(0).catch(noop);
-      notice.success("Successfully import profile.");
+      Notice.success("Successfully import profile.");
     } catch {
-      notice.error("Failed to import profile.");
+      Notice.error("Failed to import profile.");
     } finally {
       setDisabled(false);
     }
@@ -108,7 +107,7 @@ const ProfilePage = () => {
           fullWidth
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          sx={{ mr: 4 }}
+          sx={{ mr: 2 }}
         />
         <Button
           disabled={!url || disabled}
@@ -131,8 +130,6 @@ const ProfilePage = () => {
           </Grid>
         ))}
       </Grid>
-
-      {noticeElement}
     </BasePage>
   );
 };
