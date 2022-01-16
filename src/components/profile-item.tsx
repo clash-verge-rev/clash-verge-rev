@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import dayjs from "dayjs";
 import {
   alpha,
@@ -15,6 +15,7 @@ import { useSWRConfig } from "swr";
 import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../services/types";
 import { updateProfile, deleteProfile } from "../services/cmds";
+import Notice from "./notice";
 import parseTraffic from "../utils/parse-traffic";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -32,8 +33,8 @@ const Wrapper = styled(Box)(({ theme }) => ({
 }));
 
 const round = keyframes`
-from { transform: rotate(0deg); }
-to { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 `;
 
 interface Props {
@@ -43,7 +44,7 @@ interface Props {
   onClick: () => void;
 }
 
-const ProfileItemComp: React.FC<Props> = (props) => {
+const ProfileItem: React.FC<Props> = (props) => {
   const { index, selected, itemData, onClick } = props;
 
   const { mutate } = useSWRConfig();
@@ -65,20 +66,25 @@ const ProfileItemComp: React.FC<Props> = (props) => {
     try {
       await updateProfile(index);
       mutate("getProfiles");
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      Notice.error(err.toString());
     } finally {
       setLoading(false);
     }
   };
 
+  const deleteRef = useRef(false);
   const onDelete = async () => {
     setAnchorEl(null);
+    if (deleteRef.current) return;
+    deleteRef.current = true;
     try {
       await deleteProfile(index);
       mutate("getProfiles");
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      Notice.error(err.toString());
+    } finally {
+      deleteRef.current = false;
     }
   };
 
@@ -198,7 +204,6 @@ const ProfileItemComp: React.FC<Props> = (props) => {
       >
         <MenuItem onClick={onUpdate}>Update</MenuItem>
         <MenuItem onClick={onDelete}>Delete</MenuItem>
-        {/* <MenuItem>Update(proxy)</MenuItem> */}
       </Menu>
     </>
   );
@@ -216,4 +221,4 @@ function parseExpire(expire?: number) {
   return dayjs(expire * 1000).format("YYYY-MM-DD");
 }
 
-export default ProfileItemComp;
+export default ProfileItem;
