@@ -98,7 +98,7 @@ const ProxyGroup = ({ group }: Props) => {
 
         {proxies.length >= 10 ? (
           <Virtuoso
-            style={{ height: "400px", marginBottom: "4px" }}
+            style={{ height: "320px", marginBottom: "4px" }}
             totalCount={proxies.length}
             itemContent={(index) => (
               <ProxyItem
@@ -113,7 +113,7 @@ const ProxyGroup = ({ group }: Props) => {
           <List
             component="div"
             disablePadding
-            sx={{ maxHeight: "400px", overflow: "auto", mb: "4px" }}
+            sx={{ maxHeight: "320px", overflow: "auto", mb: "4px" }}
           >
             {proxies.map((proxy) => (
               <ProxyItem
