@@ -6,9 +6,7 @@ export const SettingItem = styled(ListItem)(() => ({
   paddingBottom: 5,
 }));
 
-export const SettingList: React.FC<{
-  title: string;
-}> = (props) => (
+export const SettingList: React.FC<{ title: string }> = (props) => (
   <List>
     <ListSubheader sx={{ background: "transparent" }} disableSticky>
       {props.title}
