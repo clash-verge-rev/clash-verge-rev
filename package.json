@@ -11,6 +11,7 @@
     "web:serve": "vite preview",
     "check": "node scripts/check.mjs",
     "publish": "node scripts/publish.mjs",
+    "release": "node scripts/release.mjs",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "swr": "^1.1.2-beta.0"
   },
   "devDependencies": {
+    "@actions/github": "^5.0.0",
     "@tauri-apps/cli": "^1.0.0-beta.10",
     "@types/fs-extra": "^9.0.13",
     "@types/react": "^17.0.0",
