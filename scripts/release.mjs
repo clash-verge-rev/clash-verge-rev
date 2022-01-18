@@ -34,7 +34,7 @@ async function resolveRelease() {
 
   const github = getOctokit(process.env.GITHUB_TOKEN);
 
-  const release = await github.rest.repos.getReleaseByTag({
+  const { data: release } = await github.rest.repos.getReleaseByTag({
     owner: context.repo.owner,
     repo: context.repo.repo,
     tag: "updater",
