@@ -37,7 +37,7 @@ async function resolveRelease() {
   const release = await github.rest.repos.getReleaseByTag({
     owner: context.repo.owner,
     repo: context.repo.repo,
-    tag: "update",
+    tag: "updater",
   });
   const { data: assets } = await github.rest.repos.listReleaseAssets({
     owner: context.repo.owner,
