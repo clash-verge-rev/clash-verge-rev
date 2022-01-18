@@ -62,3 +62,31 @@ jobs:
           releaseBody: "Clash Verge now supports Windows and macos(intel)."
           releaseDraft: false
           prerelease: true
+
+  post-release:
+    runs-on: macos-11
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get yarn cache dir path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Yarn Cache
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Yarn install
+        run: yarn
+
+      - name: Release update.json
+        run: yarn run release
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
