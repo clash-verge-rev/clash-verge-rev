@@ -80,7 +80,7 @@ fn main() -> std::io::Result<()> {
       cmds::get_verge_config,
       cmds::patch_verge_config,
       // profile
-      cmds::edit_profile,
+      cmds::view_profile,
       cmds::patch_profile,
       cmds::import_profile,
       cmds::update_profile,

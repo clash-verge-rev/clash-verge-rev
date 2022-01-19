@@ -146,7 +146,7 @@ pub fn patch_profile(
 
 /// run vscode command to edit the profile
 #[tauri::command]
-pub fn edit_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> Result<(), String> {
+pub fn view_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> Result<(), String> {
   let mut profiles = profiles_state.0.lock().unwrap();
   let items = profiles.items.take().unwrap_or(vec![]);
 
