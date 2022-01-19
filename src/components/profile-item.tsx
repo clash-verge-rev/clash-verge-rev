@@ -14,7 +14,7 @@ import {
 import { useSWRConfig } from "swr";
 import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../services/types";
-import { updateProfile, deleteProfile, editProfile } from "../services/cmds";
+import { updateProfile, deleteProfile, viewProfile } from "../services/cmds";
 import Notice from "./notice";
 import parseTraffic from "../utils/parse-traffic";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -59,10 +59,10 @@ const ProfileItem: React.FC<Props> = (props) => {
   const progress = Math.round(((download + upload) * 100) / (total + 0.1));
   const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
 
-  const onEdit = async () => {
+  const onView = async () => {
     setAnchorEl(null);
     try {
-      await editProfile(index);
+      await viewProfile(index);
     } catch (err: any) {
       Notice.error(err.toString());
     }
@@ -217,7 +217,7 @@ const ProfileItem: React.FC<Props> = (props) => {
         anchorReference="anchorPosition"
       >
         <MenuItem onClick={onForceSelect}>Select</MenuItem>
-        <MenuItem onClick={onEdit}>Edit(VScode)</MenuItem>
+        <MenuItem onClick={onView}>View</MenuItem>
         <MenuItem onClick={onUpdateWrapper(false)}>Update</MenuItem>
         <MenuItem onClick={onUpdateWrapper(true)}>Update(Proxy)</MenuItem>
         <MenuItem onClick={onDelete}>Delete</MenuItem>

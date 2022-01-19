@@ -9,8 +9,8 @@ export async function syncProfiles() {
   return invoke<void>("sync_profiles");
 }
 
-export async function editProfile(index: number) {
-  return invoke<void>("edit_profile", { index });
+export async function viewProfile(index: number) {
+  return invoke<void>("view_profile", { index });
 }
 
 export async function importProfile(url: string) {
