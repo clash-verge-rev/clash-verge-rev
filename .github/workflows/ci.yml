@@ -63,8 +63,12 @@ jobs:
           releaseDraft: false
           prerelease: true
 
-  post-release:
+  release-update:
+    needs: release
     runs-on: macos-11
+    if: |
+      startsWith(github.repository, 'zzzgydi') &&
+      startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
