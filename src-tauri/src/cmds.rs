@@ -1,5 +1,5 @@
 use crate::{
-  core::{ClashInfo, ProfileItem, ProfilesConfig, VergeConfig},
+  core::{ClashInfo, ProfileItem, Profiles, VergeConfig},
   states::{ClashState, ProfilesState, VergeState},
   utils::{dirs::app_home_dir, fetch::fetch_profile, sysopt::SysProxyConfig},
 };
@@ -10,8 +10,8 @@ use tauri::State;
 /// get all profiles from `profiles.yaml`
 /// do not acquire the lock of ProfileLock
 #[tauri::command]
-pub fn get_profiles(profiles: State<'_, ProfilesState>) -> Result<ProfilesConfig, String> {
-  match profiles.0.lock() {
+pub fn get_profiles(profiles_state: State<'_, ProfilesState>) -> Result<Profiles, String> {
+  match profiles_state.0.lock() {
     Ok(profiles) => Ok(profiles.clone()),
     Err(_) => Err("failed to get profiles lock".into()),
   }
@@ -19,8 +19,8 @@ pub fn get_profiles(profiles: State<'_, ProfilesState>) -> Result<ProfilesConfig
 
 /// synchronize data irregularly
 #[tauri::command]
-pub fn sync_profiles(profiles: State<'_, ProfilesState>) -> Result<(), String> {
-  match profiles.0.lock() {
+pub fn sync_profiles(profiles_state: State<'_, ProfilesState>) -> Result<(), String> {
+  match profiles_state.0.lock() {
     Ok(mut profiles) => profiles.sync_file(),
     Err(_) => Err("failed to get profiles lock".into()),
   }
@@ -32,11 +32,11 @@ pub fn sync_profiles(profiles: State<'_, ProfilesState>) -> Result<(), String> {
 pub async fn import_profile(
   url: String,
   with_proxy: bool,
-  profiles: State<'_, ProfilesState>,
+  profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
   match fetch_profile(&url, with_proxy).await {
     Some(result) => {
-      let mut profiles = profiles.0.lock().unwrap();
+      let mut profiles = profiles_state.0.lock().unwrap();
       profiles.import_from_url(url, result)
     }
     None => Err(format!("failed to fetch profile from `{}`", url)),
@@ -48,11 +48,11 @@ pub async fn import_profile(
 pub async fn update_profile(
   index: usize,
   with_proxy: bool,
-  clash: State<'_, ClashState>,
-  profiles: State<'_, ProfilesState>,
+  clash_state: State<'_, ClashState>,
+  profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
   // maybe we can get the url from the web app directly
-  let url = match profiles.0.lock() {
+  let url = match profiles_state.0.lock() {
     Ok(mut profile) => {
       let items = profile.items.take().unwrap_or(vec![]);
       if index >= items.len() {
@@ -69,14 +69,14 @@ pub async fn update_profile(
   };
 
   match fetch_profile(&url, with_proxy).await {
-    Some(result) => match profiles.0.lock() {
+    Some(result) => match profiles_state.0.lock() {
       Ok(mut profiles) => {
         profiles.update_item(index, result)?;
 
         // reactivate the profile
         let current = profiles.current.clone().unwrap_or(0);
         if current == index {
-          let clash = clash.0.lock().unwrap();
+          let clash = clash_state.0.lock().unwrap();
           profiles.activate(&clash)
         } else {
           Ok(())
@@ -92,14 +92,14 @@ pub async fn update_profile(
 #[tauri::command]
 pub fn select_profile(
   index: usize,
-  clash: State<'_, ClashState>,
-  profiles: State<'_, ProfilesState>,
+  clash_state: State<'_, ClashState>,
+  profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let mut profiles = profiles.0.lock().unwrap();
+  let mut profiles = profiles_state.0.lock().unwrap();
 
   match profiles.put_current(index) {
     Ok(()) => {
-      let clash = clash.0.lock().unwrap();
+      let clash = clash_state.0.lock().unwrap();
       profiles.activate(&clash)
     }
     Err(err) => Err(err),
@@ -131,9 +131,9 @@ pub fn delete_profile(
 pub fn patch_profile(
   index: usize,
   profile: ProfileItem,
-  profiles: State<'_, ProfilesState>,
+  profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  match profiles.0.lock() {
+  match profiles_state.0.lock() {
     Ok(mut profiles) => profiles.patch_item(index, profile),
     Err(_) => Err("can not get profiles lock".into()),
   }

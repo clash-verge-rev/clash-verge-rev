@@ -1,5 +1,5 @@
 use super::{init, server};
-use crate::{core::ProfilesConfig, states};
+use crate::{core::Profiles, states};
 use tauri::{App, AppHandle, Manager};
 use tauri_plugin_shadows::Shadows;
 
@@ -38,7 +38,7 @@ pub fn resolve_setup(app: &App) {
     log::error!("{}", err);
   }
 
-  *profiles = ProfilesConfig::read_file();
+  *profiles = Profiles::read_file();
   if let Err(err) = profiles.activate(&clash) {
     log::error!("{}", err);
   }

@@ -1,4 +1,4 @@
-use super::{ProfilesConfig, Verge};
+use super::{Profiles, Verge};
 use crate::utils::{config, dirs};
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
@@ -139,7 +139,7 @@ impl Clash {
 
   /// restart clash sidecar
   /// should reactivate profile after restart
-  pub fn restart_sidecar(&mut self, profiles: &mut ProfilesConfig) -> Result<(), String> {
+  pub fn restart_sidecar(&mut self, profiles: &mut Profiles) -> Result<(), String> {
     self.update_config();
     self.drop_sidecar()?;
     self.run_sidecar()?;
@@ -171,7 +171,7 @@ impl Clash {
     &mut self,
     patch: Mapping,
     verge: &mut Verge,
-    profiles: &mut ProfilesConfig,
+    profiles: &mut Profiles,
   ) -> Result<(), String> {
     for (key, value) in patch.iter() {
       let value = value.clone();
