@@ -1,12 +1,7 @@
 use crate::{
   core::{ClashInfo, ProfileItem, ProfilesConfig, VergeConfig},
   states::{ClashState, ProfilesState, VergeState},
-  utils::{
-    config::{read_clash, save_clash},
-    dirs::app_home_dir,
-    fetch::fetch_profile,
-    sysopt::SysProxyConfig,
-  },
+  utils::{dirs::app_home_dir, fetch::fetch_profile, sysopt::SysProxyConfig},
 };
 use serde_yaml::Mapping;
 use std::process::Command;
@@ -82,7 +77,7 @@ pub async fn update_profile(
         let current = profiles.current.clone().unwrap_or(0);
         if current == index {
           let clash = clash.0.lock().unwrap();
-          profiles.activate(clash.info.clone())
+          profiles.activate(&clash)
         } else {
           Ok(())
         }
@@ -105,7 +100,7 @@ pub fn select_profile(
   match profiles.put_current(index) {
     Ok(()) => {
       let clash = clash.0.lock().unwrap();
-      profiles.activate(clash.info.clone())
+      profiles.activate(&clash)
     }
     Err(err) => Err(err),
   }
@@ -123,7 +118,7 @@ pub fn delete_profile(
     Ok(change) => match change {
       true => {
         let clash = clash_state.0.lock().unwrap();
-        profiles.activate(clash.info.clone())
+        profiles.activate(&clash)
       }
       false => Ok(()),
     },
@@ -179,18 +174,10 @@ pub fn restart_sidecar(
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
   let mut clash = clash_state.0.lock().unwrap();
+  let mut profiles = profiles_state.0.lock().unwrap();
 
-  match clash.restart_sidecar() {
-    Ok(_) => {
-      let profiles = profiles_state.0.lock().unwrap();
-      match profiles.activate(clash.info.clone()) {
-        Ok(()) => Ok(()),
-        Err(err) => {
-          log::error!("{}", err);
-          Err(err)
-        }
-      }
-    }
+  match clash.restart_sidecar(&mut profiles) {
+    Ok(_) => Ok(()),
     Err(err) => {
       log::error!("{}", err);
       Err(err)
@@ -203,26 +190,23 @@ pub fn restart_sidecar(
 #[tauri::command]
 pub fn get_clash_info(clash_state: State<'_, ClashState>) -> Result<ClashInfo, String> {
   match clash_state.0.lock() {
-    Ok(arc) => Ok(arc.info.clone()),
+    Ok(clash) => Ok(clash.info.clone()),
     Err(_) => Err("failed to get clash lock".into()),
   }
 }
 
-/// todo: need refactor
 /// update the clash core config
 /// after putting the change to the clash core
 /// then we should save the latest config
 #[tauri::command]
-pub fn patch_clash_config(payload: Mapping) -> Result<(), String> {
-  let mut config = read_clash();
-  for (key, value) in payload.iter() {
-    if config.contains_key(key) {
-      config[key] = value.clone();
-    } else {
-      config.insert(key.clone(), value.clone());
-    }
-  }
-  save_clash(&config)
+pub fn patch_clash_config(
+  payload: Mapping,
+  clash_state: State<'_, ClashState>,
+  profiles_state: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  let mut clash = clash_state.0.lock().unwrap();
+  let mut profiles = profiles_state.0.lock().unwrap();
+  clash.patch_config(payload, &mut profiles)
 }
 
 /// get the system proxy

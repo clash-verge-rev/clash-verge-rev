@@ -1,6 +1,4 @@
-use crate::utils::dirs;
 use serde::{de::DeserializeOwned, Serialize};
-use serde_yaml::Mapping;
 use std::{fs, path::PathBuf};
 
 /// read data from yaml as struct T
@@ -31,18 +29,4 @@ pub fn save_yaml<T: Serialize>(
     }
     Err(_) => Err("can not convert the data to yaml".into()),
   }
-}
-
-/// Get Clash Core Config `config.yaml`
-pub fn read_clash() -> Mapping {
-  read_yaml::<Mapping>(dirs::app_home_dir().join("config.yaml"))
-}
-
-/// Save the clash core Config `config.yaml`
-pub fn save_clash(config: &Mapping) -> Result<(), String> {
-  save_yaml(
-    dirs::app_home_dir().join("config.yaml"),
-    config,
-    Some("# Default Config For Clash Core\n\n"),
-  )
 }

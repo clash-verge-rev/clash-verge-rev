@@ -1,3 +1,4 @@
+use super::ProfilesConfig;
 use crate::utils::{config, dirs};
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
@@ -20,6 +21,9 @@ pub struct ClashInfo {
 
 #[derive(Debug)]
 pub struct Clash {
+  /// maintain the clash config
+  pub config: Mapping,
+
   /// some info
   pub info: ClashInfo,
 
@@ -32,17 +36,19 @@ static CLASH_CONFIG: &str = "config.yaml";
 // todo: be able to change config field
 impl Clash {
   pub fn new() -> Clash {
+    let config = Clash::get_config();
+    let info = Clash::get_info(&config);
+
     Clash {
-      info: Clash::get_info(),
+      config,
+      info,
       sidecar: None,
     }
   }
 
   /// parse the clash's config.yaml
   /// get some information
-  fn get_info() -> ClashInfo {
-    let clash_config = config::read_yaml::<Mapping>(dirs::app_home_dir().join(CLASH_CONFIG));
-
+  fn get_info(clash_config: &Mapping) -> ClashInfo {
     let key_port_1 = Value::String("port".to_string());
     let key_port_2 = Value::String("mixed-port".to_string());
     let key_server = Value::String("external-controller".to_string());
@@ -93,12 +99,6 @@ impl Clash {
     }
   }
 
-  /// update the clash info
-  pub fn update_info(&mut self) -> Result<(), String> {
-    self.info = Clash::get_info();
-    Ok(())
-  }
-
   /// run clash sidecar
   pub fn run_sidecar(&mut self) -> Result<(), String> {
     let app_dir = dirs::app_home_dir();
@@ -138,10 +138,56 @@ impl Clash {
   }
 
   /// restart clash sidecar
-  pub fn restart_sidecar(&mut self) -> Result<(), String> {
-    self.update_info()?;
+  /// should reactivate profile after restart
+  pub fn restart_sidecar(&mut self, profiles: &mut ProfilesConfig) -> Result<(), String> {
+    self.update_config();
     self.drop_sidecar()?;
-    self.run_sidecar()
+    self.run_sidecar()?;
+    profiles.activate(&self)
+  }
+
+  /// update the clash info
+  pub fn update_config(&mut self) {
+    self.config = Clash::get_config();
+    self.info = Clash::get_info(&self.config);
+  }
+
+  /// get clash config
+  fn get_config() -> Mapping {
+    config::read_yaml::<Mapping>(dirs::app_home_dir().join(CLASH_CONFIG))
+  }
+
+  /// save the clash config
+  fn save_config(&self) -> Result<(), String> {
+    config::save_yaml(
+      dirs::app_home_dir().join(CLASH_CONFIG),
+      &self.config,
+      Some("# Default Config For Clash Core\n\n"),
+    )
+  }
+
+  /// patch update the clash config
+  pub fn patch_config(
+    &mut self,
+    patch: Mapping,
+    profiles: &mut ProfilesConfig,
+  ) -> Result<(), String> {
+    for (key, value) in patch.iter() {
+      let value = value.clone();
+      let key_str = key.as_str().clone().unwrap_or("");
+
+      // restart the clash
+      if key_str == "mixed-port" {
+        self.restart_sidecar(profiles)?;
+      }
+
+      if self.config.contains_key(key) {
+        self.config[key] = value.clone();
+      } else {
+        self.config.insert(key.clone(), value.clone());
+      }
+    }
+    self.save_config()
   }
 }
 

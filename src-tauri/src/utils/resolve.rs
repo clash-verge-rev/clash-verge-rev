@@ -39,7 +39,7 @@ pub fn resolve_setup(app: &App) {
   }
 
   *profiles = ProfilesConfig::read_file();
-  if let Err(err) = profiles.activate(clash.info.clone()) {
+  if let Err(err) = profiles.activate(&clash) {
     log::error!("{}", err);
   }
 
