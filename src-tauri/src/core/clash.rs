@@ -32,6 +32,15 @@ static CLASH_CONFIG: &str = "config.yaml";
 // todo: be able to change config field
 impl Clash {
   pub fn new() -> Clash {
+    Clash {
+      info: Clash::get_info(),
+      sidecar: None,
+    }
+  }
+
+  /// parse the clash's config.yaml
+  /// get some information
+  fn get_info() -> ClashInfo {
     let clash_config = config::read_yaml::<Mapping>(dirs::app_home_dir().join(CLASH_CONFIG));
 
     let key_port_1 = Value::String("port".to_string());
@@ -76,15 +85,18 @@ impl Clash {
       _ => None,
     };
 
-    Clash {
-      info: ClashInfo {
-        status: "init".into(),
-        port,
-        server,
-        secret,
-      },
-      sidecar: None,
+    ClashInfo {
+      status: "init".into(),
+      port,
+      server,
+      secret,
     }
+  }
+
+  /// update the clash info
+  pub fn update_info(&mut self) -> Result<(), String> {
+    self.info = Clash::get_info();
+    Ok(())
   }
 
   /// run clash sidecar
@@ -127,6 +139,7 @@ impl Clash {
 
   /// restart clash sidecar
   pub fn restart_sidecar(&mut self) -> Result<(), String> {
+    self.update_info()?;
     self.drop_sidecar()?;
     self.run_sidecar()
   }
