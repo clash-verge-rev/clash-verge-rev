@@ -1,11 +1,13 @@
-import useSWR, { SWRConfig } from "swr";
+import useSWR, { SWRConfig, useSWRConfig } from "swr";
 import { useEffect, useMemo } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import { alpha, createTheme, List, Paper, ThemeProvider } from "@mui/material";
+import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { atomPaletteMode, atomThemeBlur } from "../states/setting";
 import { getVergeConfig } from "../services/cmds";
+import { getAxios } from "../services/api";
 import { routers } from "./_routers";
 import LogoSvg from "../assets/image/logo.svg";
 import Traffic from "../components/traffic";
@@ -14,6 +16,7 @@ import UpdateButton from "../components/update-button";
 import LayoutControl from "../components/layout-control";
 
 const Layout = () => {
+  const { mutate } = useSWRConfig();
   const [mode, setMode] = useRecoilState(atomPaletteMode);
   const [blur, setBlur] = useRecoilState(atomThemeBlur);
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
@@ -21,6 +24,15 @@ const Layout = () => {
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") appWindow.hide();
+    });
+
+    listen("restart_clash", async () => {
+      // the clash info may be updated
+      await getAxios(true);
+      // make sure that the clash is ok
+      setTimeout(() => mutate("getProxies"), 1000);
+      setTimeout(() => mutate("getProxies"), 2000);
+      mutate("getClashConfig");
     });
   }, []);
 

@@ -7,8 +7,9 @@ let server = "";
 let secret = "";
 
 /// initialize some infomation
-export async function getAxios() {
-  if (axiosIns) return axiosIns;
+/// enable force update axiosIns
+export async function getAxios(force: boolean = false) {
+  if (axiosIns && !force) return axiosIns;
 
   try {
     const info = await getClashInfo();
