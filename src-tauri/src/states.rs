@@ -1,8 +1,8 @@
-use crate::core::{Clash, ProfilesConfig, Verge};
+use crate::core::{Clash, Profiles, Verge};
 use std::sync::{Arc, Mutex};
 
 #[derive(Default)]
-pub struct ProfilesState(pub Arc<Mutex<ProfilesConfig>>);
+pub struct ProfilesState(pub Arc<Mutex<Profiles>>);
 
 #[derive(Default)]
 pub struct ClashState(pub Arc<Mutex<Clash>>);

@@ -11,7 +11,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct ProfilesConfig {
+pub struct Profiles {
   /// current profile's name
   pub current: Option<usize>,
 
@@ -63,10 +63,10 @@ pub struct ProfileResponse {
 static PROFILE_YAML: &str = "profiles.yaml";
 static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
 
-impl ProfilesConfig {
+impl Profiles {
   /// read the config from the file
   pub fn read_file() -> Self {
-    config::read_yaml::<ProfilesConfig>(dirs::app_home_dir().join(PROFILE_YAML))
+    config::read_yaml::<Profiles>(dirs::app_home_dir().join(PROFILE_YAML))
   }
 
   /// save the config to the file
@@ -99,7 +99,7 @@ impl ProfilesConfig {
     File::create(path).unwrap().write(file_data).unwrap();
 
     // update `profiles.yaml`
-    let data = ProfilesConfig::read_file();
+    let data = Profiles::read_file();
     let mut items = data.items.unwrap_or(vec![]);
 
     let now = SystemTime::now()
