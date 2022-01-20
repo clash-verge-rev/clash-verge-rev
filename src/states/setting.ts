@@ -9,3 +9,8 @@ export const atomThemeBlur = atom<boolean>({
   key: "atomThemeBlur",
   default: false,
 });
+
+export const atomClashPort = atom<number>({
+  key: "atomClashPort",
+  default: 0,
+});

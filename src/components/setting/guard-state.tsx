@@ -7,7 +7,7 @@ interface Props<Value> {
   onChangeProps?: string;
   onChange?: (value: Value) => void;
   onFormat?: (...args: any[]) => Value;
-  onGuard?: (value: Value) => Promise<void>;
+  onGuard?: (value: Value, oldValue: Value) => Promise<void>;
   onCatch?: (error: Error) => void;
   children: ReactNode;
 }
@@ -41,7 +41,7 @@ function GuardState<T>(props: Props<T>) {
         const newValue = (onFormat as any)(...args);
         // 先在ui上响应操作
         onChange(newValue);
-        await onGuard(newValue);
+        await onGuard(newValue, oldValue!);
       } catch (err: any) {
         // 状态回退
         onChange(oldValue!);
