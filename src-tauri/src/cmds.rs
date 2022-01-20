@@ -202,11 +202,13 @@ pub fn get_clash_info(clash_state: State<'_, ClashState>) -> Result<ClashInfo, S
 pub fn patch_clash_config(
   payload: Mapping,
   clash_state: State<'_, ClashState>,
+  verge_state: State<'_, VergeState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
   let mut clash = clash_state.0.lock().unwrap();
+  let mut verge = verge_state.0.lock().unwrap();
   let mut profiles = profiles_state.0.lock().unwrap();
-  clash.patch_config(payload, &mut profiles)
+  clash.patch_config(payload, &mut verge, &mut profiles)
 }
 
 /// get the system proxy

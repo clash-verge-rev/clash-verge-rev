@@ -1,4 +1,4 @@
-use super::ProfilesConfig;
+use super::{ProfilesConfig, Verge};
 use crate::utils::{config, dirs};
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
@@ -170,6 +170,7 @@ impl Clash {
   pub fn patch_config(
     &mut self,
     patch: Mapping,
+    verge: &mut Verge,
     profiles: &mut ProfilesConfig,
   ) -> Result<(), String> {
     for (key, value) in patch.iter() {
@@ -179,12 +180,25 @@ impl Clash {
       // restart the clash
       if key_str == "mixed-port" {
         self.restart_sidecar(profiles)?;
+
+        let port = if value.is_number() {
+          match value.as_i64().clone() {
+            Some(num) => Some(format!("{num}")),
+            None => None,
+          }
+        } else {
+          match value.as_str().clone() {
+            Some(num) => Some(num.into()),
+            None => None,
+          }
+        };
+        verge.init_sysproxy(port);
       }
 
       if self.config.contains_key(key) {
-        self.config[key] = value.clone();
+        self.config[key] = value;
       } else {
-        self.config.insert(key.clone(), value.clone());
+        self.config.insert(key.clone(), value);
       }
     }
     self.save_config()
