@@ -161,6 +161,24 @@ impl Verge {
     }
   }
 
+  // fn guard_thread(&mut self) -> Result<(), String> {
+  //   let sysproxy = self.cur_sysproxy.clone();
+
+  //   use std::{thread, time};
+  //   tauri::async_runtime::spawn(async move {
+  //     if let Some(sysproxy) = sysproxy {
+  //       sysproxy.set_sys();
+  //     }
+
+  //     let ten_millis = time::Duration::from_millis(10);
+  //     let now = time::Instant::now();
+
+  //     thread::sleep(ten_millis);
+  //   });
+
+  //   Ok(())
+  // }
+
   /// patch verge config
   /// There should be only one update at a time here
   /// so call the save_file at the end is savely
