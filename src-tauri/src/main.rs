@@ -49,6 +49,8 @@ fn main() -> std::io::Result<()> {
               if let Err(err) = profiles.activate(clash.info.clone()) {
                 log::error!("{}", err);
               }
+              let window = app_handle.get_window("main").unwrap();
+              window.emit("restart_clash", "yes").unwrap();
             }
             Err(err) => log::error!("{}", err),
           }
