@@ -1,3 +1,4 @@
+use super::{Clash, ClashInfo};
 use crate::utils::{config, dirs};
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
@@ -7,8 +8,6 @@ use std::env::temp_dir;
 use std::fs::File;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-use super::ClashInfo;
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -224,7 +223,7 @@ impl ProfilesConfig {
   }
 
   /// activate current profile
-  pub fn activate(&self, clash_config: ClashInfo) -> Result<(), String> {
+  pub fn activate(&self, clash: &Clash) -> Result<(), String> {
     let current = self.current.unwrap_or(0);
     match self.items.clone() {
       Some(items) => {
@@ -233,11 +232,13 @@ impl ProfilesConfig {
         }
 
         let profile = items[current].clone();
+        let clash_config = clash.config.clone();
+        let clash_info = clash.info.clone();
         tauri::async_runtime::spawn(async move {
           let mut count = 5; // retry times
           let mut err = String::from("");
           while count > 0 {
-            match activate_profile(&profile, &clash_config).await {
+            match activate_profile(&profile, &clash_config, &clash_info).await {
               Ok(_) => return,
               Err(e) => err = e,
             }
@@ -254,7 +255,11 @@ impl ProfilesConfig {
 }
 
 /// put the profile to clash
-pub async fn activate_profile(profile_item: &ProfileItem, info: &ClashInfo) -> Result<(), String> {
+pub async fn activate_profile(
+  profile_item: &ProfileItem,
+  clash_config: &Mapping,
+  clash_info: &ClashInfo,
+) -> Result<(), String> {
   // temp profile's path
   let temp_path = temp_dir().join(PROFILE_TEMP);
 
@@ -267,25 +272,46 @@ pub async fn activate_profile(profile_item: &ProfileItem, info: &ClashInfo) -> R
 
     let file_path = dirs::app_home_dir().join("profiles").join(file_name);
     if !file_path.exists() {
-      return Err(format!("profile `{:?}` not exists", file_path));
+      return Err(format!(
+        "profile `{}` not exists",
+        file_path.as_os_str().to_str().unwrap()
+      ));
     }
+
+    // begin to generate the new profile config
+    let def_config = config::read_yaml::<Mapping>(file_path.clone());
+    let mut new_config = Mapping::new();
 
     // Only the following fields are allowed:
     // proxies/proxy-providers/proxy-groups/rule-providers/rules
-    let config = config::read_yaml::<Mapping>(file_path.clone());
-    let mut new_config = Mapping::new();
-    vec![
+    let valid_keys = vec![
       "proxies",
       "proxy-providers",
       "proxy-groups",
       "rule-providers",
       "rules",
-    ]
-    .iter()
-    .map(|item| Value::String(item.to_string()))
-    .for_each(|key| {
-      if config.contains_key(&key) {
-        let value = config[&key].clone();
+    ];
+    valid_keys.iter().for_each(|key| {
+      let key = Value::String(key.to_string());
+      if def_config.contains_key(&key) {
+        let value = def_config[&key].clone();
+        new_config.insert(key, value);
+      }
+    });
+
+    // add some of the clash `config.yaml` config to it
+    let valid_keys = vec![
+      "mixed-port",
+      "log-level",
+      "allow-lan",
+      "external-controller",
+      "secret",
+      "ipv6",
+    ];
+    valid_keys.iter().for_each(|key| {
+      let key = Value::String(key.to_string());
+      if clash_config.contains_key(&key) {
+        let value = clash_config[&key].clone();
         new_config.insert(key, value);
       }
     });
@@ -297,12 +323,12 @@ pub async fn activate_profile(profile_item: &ProfileItem, info: &ClashInfo) -> R
     )?
   };
 
-  let server = format!("http://{}/configs", info.server.clone().unwrap());
+  let server = format!("http://{}/configs", clash_info.server.clone().unwrap());
 
   let mut headers = HeaderMap::new();
   headers.insert("Content-Type", "application/json".parse().unwrap());
 
-  if let Some(secret) = info.secret.clone() {
+  if let Some(secret) = clash_info.secret.clone() {
     headers.insert(
       "Authorization",
       format!("Bearer {}", secret).parse().unwrap(),

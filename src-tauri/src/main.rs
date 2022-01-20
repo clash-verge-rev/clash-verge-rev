@@ -41,14 +41,11 @@ fn main() -> std::io::Result<()> {
         }
         "restart_clash" => {
           let clash_state = app_handle.state::<states::ClashState>();
+          let profiles_state = app_handle.state::<states::ProfilesState>();
           let mut clash = clash_state.0.lock().unwrap();
-          match clash.restart_sidecar() {
+          let mut profiles = profiles_state.0.lock().unwrap();
+          match clash.restart_sidecar(&mut profiles) {
             Ok(_) => {
-              let profiles = app_handle.state::<states::ProfilesState>();
-              let profiles = profiles.0.lock().unwrap();
-              if let Err(err) = profiles.activate(clash.info.clone()) {
-                log::error!("{}", err);
-              }
               let window = app_handle.get_window("main").unwrap();
               window.emit("restart_clash", "yes").unwrap();
             }
