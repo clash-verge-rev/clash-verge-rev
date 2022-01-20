@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { useDebounceFn } from "ahooks";
+import { useSetRecoilState } from "recoil";
 import useSWR, { useSWRConfig } from "swr";
 import {
   ListItemText,
@@ -9,11 +12,13 @@ import {
 import { getClashConfig, updateConfigs } from "../../services/api";
 import { SettingList, SettingItem } from "./setting";
 import { patchClashConfig } from "../../services/cmds";
+import { atomClashPort } from "../../states/setting";
 import { ApiType } from "../../services/types";
 import GuardState from "./guard-state";
+import Notice from "../notice";
 
 interface Props {
-  onError?: (err: Error) => void;
+  onError: (err: Error) => void;
 }
 
 const SettingClash = ({ onError }: Props) => {
@@ -24,8 +29,13 @@ const SettingClash = ({ onError }: Props) => {
     ipv6 = false,
     "allow-lan": allowLan = false,
     "log-level": logLevel = "silent",
-    "mixed-port": mixedPort = 7890,
+    "mixed-port": thePort = 0,
   } = clashConfig ?? {};
+
+  const setPort = useSetRecoilState(atomClashPort);
+  const [mixedPort, setMixedPort] = useState(thePort);
+
+  useEffect(() => setMixedPort(thePort), [thePort]);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
@@ -35,6 +45,28 @@ const SettingClash = ({ onError }: Props) => {
     await updateConfigs(patch);
     await patchClashConfig(patch);
   };
+
+  // restart clash when port is changed
+  const { run: onUpdatePort } = useDebounceFn(
+    async (port: number) => {
+      (async () => {
+        if (port < 1000) {
+          throw new Error("The port should not < 1000");
+        }
+        if (port > 65536) {
+          throw new Error("The port should not > 65536");
+        }
+        await patchClashConfig({ "mixed-port": port });
+        onChangeData({ "mixed-port": port });
+        setPort(port);
+        Notice.success("Change Clash port successfully!");
+      })().catch((err: any) => {
+        setMixedPort(thePort); // back to old port value
+        Notice.error(err.message ?? err.toString());
+      });
+    },
+    { wait: 1000 }
+  );
 
   return (
     <SettingList title="Clash Setting">
@@ -87,12 +119,14 @@ const SettingClash = ({ onError }: Props) => {
 
       <SettingItem>
         <ListItemText primary="Mixed Port" />
-        <TextField
-          size="small"
+        <GuardState
           value={mixedPort!}
-          sx={{ width: 120 }}
-          disabled
-        />
+          onFormat={(e: any) => +e.target.value?.replace(/\D+/, "")}
+          onChange={setMixedPort}
+          onGuard={onUpdatePort}
+        >
+          <TextField autoComplete="off" size="small" sx={{ width: 120 }} />
+        </GuardState>
       </SettingItem>
     </SettingList>
   );

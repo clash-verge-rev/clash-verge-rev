@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
+import { useRecoilValue } from "recoil";
 import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import { getInfomation } from "../services/api";
 import { ApiType } from "../services/types";
+import { atomClashPort } from "../states/setting";
 import parseTraffic from "../utils/parse-traffic";
 
 const Traffic = () => {
+  const portValue = useRecoilValue(atomClashPort);
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
 
   useEffect(() => {
@@ -21,7 +24,7 @@ const Traffic = () => {
     });
 
     return () => ws?.close();
-  }, []);
+  }, [portValue]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
