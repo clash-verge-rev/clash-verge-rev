@@ -306,6 +306,7 @@ pub async fn activate_profile(
       "allow-lan",
       "external-controller",
       "secret",
+      "mode",
       "ipv6",
     ];
     valid_keys.iter().for_each(|key| {
