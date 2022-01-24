@@ -107,7 +107,7 @@ const Layout = () => {
               <LayoutControl />
             </div>
 
-            <div className="the-content" data-windrag>
+            <div className="the-content">
               <Routes>
                 {routers.map(({ label, link, ele: Ele }) => (
                   <Route key={label} path={link} element={<Ele />} />
