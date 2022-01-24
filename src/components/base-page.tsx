@@ -20,7 +20,7 @@ const BasePage: React.FC<Props> = (props) => {
         {header}
       </header>
 
-      <section data-windrag>
+      <section>
         <div className="base-content" style={contentStyle} data-windrag>
           {children}
         </div>
