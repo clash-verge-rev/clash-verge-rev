@@ -1,5 +1,6 @@
 import useSWR, { useSWRConfig } from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Virtuoso } from "react-virtuoso";
 import { Button, ButtonGroup, List, Paper } from "@mui/material";
 import { getClashConfig, updateConfigs, updateProxy } from "../services/api";
 import { patchClashConfig } from "../services/cmds";
@@ -74,8 +75,15 @@ const ProxyPage = () => {
     setCurProxy(name);
   };
 
+  // difference style
+  const pageStyle = asGroup ? {} : { height: "100%" };
+  const paperStyle: any = asGroup
+    ? { mb: 0.5 }
+    : { py: 1, height: "100%", boxSizing: "border-box" };
+
   return (
     <BasePage
+      contentStyle={pageStyle}
       title={asGroup ? "Proxy Groups" : "Proxies"}
       header={
         <ButtonGroup size="small">
@@ -92,7 +100,7 @@ const ProxyPage = () => {
         </ButtonGroup>
       }
     >
-      <Paper sx={{ borderRadius: 1, boxShadow: 2, mb: 1 }}>
+      <Paper sx={{ borderRadius: 1, boxShadow: 2, ...paperStyle }}>
         {asGroup ? (
           <List>
             {groups.map((group) => (
@@ -100,18 +108,19 @@ const ProxyPage = () => {
             ))}
           </List>
         ) : (
-          // todo: virtual list
-          <List>
-            {filterProxies.map((proxy) => (
+          // virtual list
+          <Virtuoso
+            style={{ height: "100%" }}
+            totalCount={filterProxies.length}
+            itemContent={(index) => (
               <ProxyItem
-                key={proxy.name}
-                proxy={proxy}
-                selected={proxy.name === curProxy}
+                proxy={filterProxies[index]}
+                selected={filterProxies[index].name === curProxy}
                 onClick={onChangeProxy}
                 sx={{ py: 0, px: 2 }}
               />
-            ))}
-          </List>
+            )}
+          />
         )}
       </Paper>
     </BasePage>
