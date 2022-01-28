@@ -9,7 +9,7 @@ const cwd = process.cwd();
 
 const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
-const CLASH_LATEST_DATE = "2022.01.03";
+const CLASH_LATEST_DATE = "2022.01.27";
 
 /**
  * get the correct clash release infomation
