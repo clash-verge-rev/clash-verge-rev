@@ -39,30 +39,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94a45b455c14666b85fc40a019e8ab9eb75e3a124e05494f5397122bc9eb06e0"
 
 [[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "auto-launch",
- "chrono",
- "dirs 4.0.0",
- "log",
- "log4rs",
- "port_scanner",
- "reqwest",
- "serde",
- "serde_json",
- "serde_yaml",
- "tauri",
- "tauri-build",
- "tauri-plugin-shadows",
- "tauri-plugin-vibrancy",
- "tokio",
- "warp",
- "which",
- "winreg 0.10.1",
-]
-
-[[package]]
 name = "arc-swap"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -388,6 +364,30 @@ dependencies = [
  "num-traits",
  "time",
  "winapi",
+]
+
+[[package]]
+name = "clash-verge"
+version = "0.1.0"
+dependencies = [
+ "auto-launch",
+ "chrono",
+ "dirs 4.0.0",
+ "log",
+ "log4rs",
+ "port_scanner",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-shadows",
+ "tauri-plugin-vibrancy",
+ "tokio",
+ "warp",
+ "which",
+ "winreg 0.10.1",
 ]
 
 [[package]]
