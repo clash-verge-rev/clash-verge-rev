@@ -16,6 +16,7 @@ pub fn resolve_setup(app: &App) {
   #[cfg(target_os = "macos")]
   {
     use tauri_plugin_vibrancy::MacOSVibrancy;
+    #[allow(deprecated)]
     window.apply_vibrancy(MacOSVibrancy::AppearanceBased);
   }
 
