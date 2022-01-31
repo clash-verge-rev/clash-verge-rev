@@ -157,7 +157,10 @@ impl Verge {
 
     match result {
       Ok(_) => Ok(()),
-      Err(_) => Err("failed to set system startup info".into()),
+      Err(err) => {
+        log::error!("{err}");
+        Err("failed to set system startup info".into())
+      }
     }
   }
 
@@ -227,7 +230,7 @@ fn get_app_path(app_name: &str) -> String {
   #[cfg(target_os = "linux")]
   let ext = "";
   #[cfg(target_os = "macos")]
-  let ext = ".app";
+  let ext = "";
   #[cfg(target_os = "windows")]
   let ext = ".exe";
   String::from(app_name) + ext
