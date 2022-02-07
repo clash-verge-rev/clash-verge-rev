@@ -6,6 +6,7 @@ import {
   selectProfile,
   patchProfile,
   importProfile,
+  newProfile,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
 import noop from "../utils/noop";
@@ -94,6 +95,21 @@ const ProfilePage = () => {
     }
   };
 
+  const lockNewRef = useRef(false);
+  const onNew = async () => {
+    if (lockNewRef.current) return;
+    lockNewRef.current = true;
+
+    try {
+      await newProfile("New Profile", "no desc");
+      mutate("getProfiles");
+    } catch (err: any) {
+      err && Notice.error(err.toString());
+    } finally {
+      lockNewRef.current = false;
+    }
+  };
+
   return (
     <BasePage title="Profiles">
       <Box sx={{ display: "flex", mb: 3 }}>
@@ -105,14 +121,18 @@ const ProfilePage = () => {
           fullWidth
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          sx={{ mr: 2 }}
+          sx={{ mr: 1 }}
         />
         <Button
           disabled={!url || disabled}
           variant="contained"
           onClick={onImport}
+          sx={{ mr: 1 }}
         >
           Import
+        </Button>
+        <Button variant="contained" onClick={onNew}>
+          New
         </Button>
       </Box>
 
