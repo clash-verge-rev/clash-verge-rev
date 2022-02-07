@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::env::temp_dir;
 use std::fs::File;
 use std::io::Write;
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Define the `profiles.yaml` schema
@@ -23,6 +24,8 @@ pub struct Profiles {
 pub struct ProfileItem {
   /// profile name
   pub name: Option<String>,
+  /// profile description
+  pub desc: Option<String>,
   /// profile file
   pub file: Option<String>,
   /// current mode
@@ -109,6 +112,7 @@ impl Profiles {
 
     items.push(ProfileItem {
       name: Some(result.name),
+      desc: Some("imported url".into()),
       file: Some(result.file),
       mode: Some(format!("rule")),
       url: Some(url),
@@ -136,6 +140,49 @@ impl Profiles {
     self.items = Some(items);
     self.current = Some(index);
     self.save_file()
+  }
+
+  /// append new item
+  /// return the new item's index
+  pub fn append_item(&mut self, name: String, desc: String) -> Result<(usize, PathBuf), String> {
+    let mut items = self.items.take().unwrap_or(vec![]);
+
+    // create a new profile file
+    let now = SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .unwrap()
+      .as_secs();
+    let file = format!("{}.yaml", now);
+    let path = dirs::app_home_dir().join("profiles").join(&file);
+
+    let file_data = b"# Profile Template for clash verge\n
+# proxies defination (optional, the same as clash)
+proxies:\n
+# proxy-groups (optional, the same as clash)
+proxy-groups:\n
+# rules (optional, the same as clash)
+rules:\n\n
+";
+
+    match File::create(&path).unwrap().write(file_data) {
+      Ok(_) => {
+        items.push(ProfileItem {
+          name: Some(name),
+          desc: Some(desc),
+          file: Some(file),
+          mode: None,
+          url: None,
+          selected: Some(vec![]),
+          extra: None,
+          updated: Some(now as usize),
+        });
+
+        let index = items.len();
+        self.items = Some(items);
+        Ok((index, path))
+      }
+      Err(_) => Err("failed to create file".into()),
+    }
   }
 
   /// update the target profile
