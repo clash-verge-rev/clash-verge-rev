@@ -155,16 +155,28 @@ pub fn view_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> R
 
   let path = app_home_dir().join("profiles").join(file);
   if !path.exists() {
-    return Err("failed to open the file".into());
+    return Err("the file not found".into());
   }
 
-  match which::which("code") {
-    Ok(code) => match Command::new(code).arg(path).status() {
+  // use vscode first
+  if let Ok(code) = which::which("code") {
+    return match Command::new(code).arg(path).status() {
       Ok(_) => Ok(()),
       Err(_) => Err("failed to open file by VScode".into()),
-    },
-    Err(_) => Err("please install VScode for edit".into()),
+    };
   }
+
+  // use `open` command
+  if let Ok(open) = which::which("open") {
+    return match Command::new(open).arg(path).status() {
+      Ok(_) => Ok(()),
+      Err(_) => Err("failed to open file by `open`".into()),
+    };
+  }
+
+  // recommand to use vscode
+  // todo: support other editors
+  return Err("please install VScode".into());
 }
 
 /// restart the sidecar
