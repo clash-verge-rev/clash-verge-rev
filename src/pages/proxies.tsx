@@ -33,7 +33,7 @@ const ProxyPage = () => {
   }, [proxiesData]);
 
   const modeList = ["rule", "global", "direct"];
-  const asGroup = curMode === "rule" || !groups.length;
+  const asGroup = curMode === "rule" && groups.length;
 
   // make sure that fetch the proxies successfully
   useEffect(() => {
