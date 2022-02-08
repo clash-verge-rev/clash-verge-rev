@@ -87,6 +87,7 @@ export namespace CmdType {
 
   export interface ProfileItem {
     name?: string;
+    desc?: string;
     file?: string;
     mode?: string;
     url?: string;
