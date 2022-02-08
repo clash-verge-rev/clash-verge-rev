@@ -59,6 +59,9 @@ const ProfileItem: React.FC<Props> = (props) => {
   const progress = Math.round(((download + upload) * 100) / (total + 0.1));
   const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
 
+  // url or file mode
+  const isUrlMode = itemData.url && extra;
+
   const onView = async () => {
     setAnchorEl(null);
     try {
@@ -111,6 +114,13 @@ const ProfileItem: React.FC<Props> = (props) => {
     event.preventDefault();
   };
 
+  const boxStyle = {
+    height: 26,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  };
+
   return (
     <>
       <Wrapper
@@ -155,52 +165,63 @@ const ProfileItem: React.FC<Props> = (props) => {
             {name}
           </Typography>
 
-          <IconButton
-            sx={{
-              width: 30,
-              height: 30,
-              animation: loading ? `1s linear infinite ${round}` : "none",
-            }}
-            color="inherit"
-            disabled={loading}
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpdateWrapper(false)();
-            }}
-          >
-            <RefreshRounded />
-          </IconButton>
+          {isUrlMode && (
+            <IconButton
+              sx={{
+                width: 26,
+                height: 26,
+                animation: loading ? `1s linear infinite ${round}` : "none",
+              }}
+              color="inherit"
+              disabled={loading}
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateWrapper(false)();
+              }}
+            >
+              <RefreshRounded />
+            </IconButton>
+          )}
         </Box>
 
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography noWrap title={`From: ${from}`}>
-            {from}
-          </Typography>
+        {isUrlMode ? (
+          <>
+            <Box sx={boxStyle}>
+              <Typography noWrap title={`From: ${from}`}>
+                {from}
+              </Typography>
 
-          <Typography
-            noWrap
-            flex="1 0 auto"
-            fontSize={14}
-            textAlign="right"
-            title="updated time"
-          >
-            {fromnow}
-          </Typography>
-        </Box>
+              <Typography
+                noWrap
+                flex="1 0 auto"
+                fontSize={14}
+                textAlign="right"
+                title="updated time"
+              >
+                {fromnow}
+              </Typography>
+            </Box>
 
-        <Box
-          sx={{
-            my: 0.5,
-            fontSize: 14,
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
-          <span title="used / total">
-            {parseTraffic(upload + download)} / {parseTraffic(total)}
-          </span>
-          <span title="expire time">{expire}</span>
-        </Box>
+            <Box sx={{ ...boxStyle, fontSize: 14 }}>
+              <span title="used / total">
+                {parseTraffic(upload + download)} / {parseTraffic(total)}
+              </span>
+              <span title="expire time">{expire}</span>
+            </Box>
+          </>
+        ) : (
+          <>
+            <Box sx={boxStyle}>
+              <Typography noWrap title={itemData.desc}>
+                {itemData.desc}
+              </Typography>
+            </Box>
+
+            <Box sx={{ ...boxStyle, fontSize: 14, justifyContent: "flex-end" }}>
+              <span title="updated time">{parseExpire(updated)}</span>
+            </Box>
+          </>
+        )}
 
         <LinearProgress
           variant="determinate"
