@@ -238,9 +238,15 @@ const ProfileItem: React.FC<Props> = (props) => {
         anchorReference="anchorPosition"
       >
         <MenuItem onClick={onForceSelect}>Select</MenuItem>
-        <MenuItem onClick={onView}>View</MenuItem>
-        <MenuItem onClick={onUpdateWrapper(false)}>Update</MenuItem>
-        <MenuItem onClick={onUpdateWrapper(true)}>Update(Proxy)</MenuItem>
+        {isUrlMode ? (
+          <>
+            <MenuItem onClick={onView}>View</MenuItem>
+            <MenuItem onClick={onUpdateWrapper(false)}>Update</MenuItem>
+            <MenuItem onClick={onUpdateWrapper(true)}>Update(Proxy)</MenuItem>
+          </>
+        ) : (
+          <MenuItem onClick={onView}>Edit</MenuItem>
+        )}
         <MenuItem onClick={onDelete}>Delete</MenuItem>
       </Menu>
     </>
