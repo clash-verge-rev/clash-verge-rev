@@ -121,6 +121,19 @@ const ProfileItem: React.FC<Props> = (props) => {
     justifyContent: "space-between",
   };
 
+  const urlModeMenu = [
+    { label: "Select", handler: onForceSelect },
+    { label: "View", handler: onView },
+    { label: "Update", handler: onUpdateWrapper(false) },
+    { label: "Update(Proxy)", handler: onUpdateWrapper(true) },
+    { label: "Delete", handler: onDelete },
+  ];
+  const fileModeMenu = [
+    { label: "Select", handler: onForceSelect },
+    { label: "Edit", handler: onView },
+    { label: "Delete", handler: onDelete },
+  ];
+
   return (
     <>
       <Wrapper
@@ -237,17 +250,11 @@ const ProfileItem: React.FC<Props> = (props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
       >
-        <MenuItem onClick={onForceSelect}>Select</MenuItem>
-        {isUrlMode ? (
-          <>
-            <MenuItem onClick={onView}>View</MenuItem>
-            <MenuItem onClick={onUpdateWrapper(false)}>Update</MenuItem>
-            <MenuItem onClick={onUpdateWrapper(true)}>Update(Proxy)</MenuItem>
-          </>
-        ) : (
-          <MenuItem onClick={onView}>Edit</MenuItem>
-        )}
-        <MenuItem onClick={onDelete}>Delete</MenuItem>
+        {(isUrlMode ? urlModeMenu : fileModeMenu).map((item) => (
+          <MenuItem key={item.label} onClick={item.handler}>
+            {item.label}
+          </MenuItem>
+        ))}
       </Menu>
     </>
   );
