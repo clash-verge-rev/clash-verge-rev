@@ -8,12 +8,13 @@ import {
   Switch,
   Select,
   MenuItem,
+  Typography,
 } from "@mui/material";
-import { getClashConfig, updateConfigs } from "../../services/api";
-import { SettingList, SettingItem } from "./setting";
-import { patchClashConfig } from "../../services/cmds";
-import { atomClashPort } from "../../states/setting";
 import { ApiType } from "../../services/types";
+import { atomClashPort } from "../../states/setting";
+import { patchClashConfig } from "../../services/cmds";
+import { SettingList, SettingItem } from "./setting";
+import { getClashConfig, getVersion, updateConfigs } from "../../services/api";
 import GuardState from "./guard-state";
 import Notice from "../notice";
 
@@ -67,6 +68,15 @@ const SettingClash = ({ onError }: Props) => {
     },
     { wait: 1000 }
   );
+
+  // get clash core version
+  const [clashVer, setClashVer] = useState("");
+  useEffect(() => {
+    getVersion().then((res) => {
+      const { premium, version } = res;
+      setClashVer(premium ? `${version} Premium` : version);
+    });
+  }, []);
 
   return (
     <SettingList title="Clash Setting">
@@ -127,6 +137,11 @@ const SettingClash = ({ onError }: Props) => {
         >
           <TextField autoComplete="off" size="small" sx={{ width: 120 }} />
         </GuardState>
+      </SettingItem>
+
+      <SettingItem>
+        <ListItemText primary="Clash core" />
+        <Typography sx={{ py: 1 }}>{clashVer}</Typography>
       </SettingItem>
     </SettingList>
   );
