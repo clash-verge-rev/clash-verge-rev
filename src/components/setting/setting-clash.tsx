@@ -50,7 +50,7 @@ const SettingClash = ({ onError }: Props) => {
   // restart clash when port is changed
   const { run: onUpdatePort } = useDebounceFn(
     async (port: number) => {
-      (async () => {
+      try {
         if (port < 1000) {
           throw new Error("The port should not < 1000");
         }
@@ -61,10 +61,10 @@ const SettingClash = ({ onError }: Props) => {
         onChangeData({ "mixed-port": port });
         setPort(port);
         Notice.success("Change Clash port successfully!");
-      })().catch((err: any) => {
+      } catch (err: any) {
         setMixedPort(thePort); // back to old port value
         Notice.error(err.message ?? err.toString());
-      });
+      }
     },
     { wait: 1000 }
   );
@@ -72,8 +72,7 @@ const SettingClash = ({ onError }: Props) => {
   // get clash core version
   const [clashVer, setClashVer] = useState("");
   useEffect(() => {
-    getVersion().then((res) => {
-      const { premium, version } = res;
+    getVersion().then(({ premium, version }) => {
       setClashVer(premium ? `${version} Premium` : version);
     });
   }, []);
