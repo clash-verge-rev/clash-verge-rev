@@ -10,9 +10,10 @@ import {
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
 import noop from "../utils/noop";
-import Notice from "../components/notice";
-import BasePage from "../components/base-page";
-import ProfileItem from "../components/profile-item";
+import Notice from "../components/base/base-notice";
+import BasePage from "../components/base/base-page";
+import ProfileItem from "../components/profile/profile-item";
+import ProfileNew from "../components/profile/profile-new";
 
 const ProfilePage = () => {
   const [url, setUrl] = useState("");
@@ -96,13 +97,15 @@ const ProfilePage = () => {
   };
 
   const lockNewRef = useRef(false);
-  const onNew = async () => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const onNew = async (name: string, desc: string) => {
     if (lockNewRef.current) return;
     lockNewRef.current = true;
 
     try {
-      await newProfile("New Profile", "no desc");
+      await newProfile(name, desc);
       mutate("getProfiles");
+      setDialogOpen(false);
     } catch (err: any) {
       err && Notice.error(err.toString());
     } finally {
@@ -131,7 +134,7 @@ const ProfilePage = () => {
         >
           Import
         </Button>
-        <Button variant="contained" onClick={onNew}>
+        <Button variant="contained" onClick={() => setDialogOpen(true)}>
           New
         </Button>
       </Box>
@@ -148,6 +151,12 @@ const ProfilePage = () => {
           </Grid>
         ))}
       </Grid>
+
+      <ProfileNew
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onSubmit={onNew}
+      />
     </BasePage>
   );
 };
