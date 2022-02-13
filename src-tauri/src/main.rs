@@ -53,9 +53,9 @@ fn main() -> std::io::Result<()> {
           }
         }
         "quit" => {
-          api::process::kill_children();
           resolve::resolve_reset(app_handle);
-          app_handle.exit(0);
+          api::process::kill_children();
+          std::process::exit(0);
         }
         _ => {}
       },
@@ -94,12 +94,12 @@ fn main() -> std::io::Result<()> {
     .build(tauri::generate_context!())
     .expect("error while running tauri application")
     .run(|app_handle, e| match e {
-      tauri::Event::CloseRequested { label, api, .. } => {
+      tauri::RunEvent::CloseRequested { label, api, .. } => {
         let app_handle = app_handle.clone();
         api.prevent_close();
         app_handle.get_window(&label).unwrap().hide().unwrap();
       }
-      tauri::Event::ExitRequested { .. } => {
+      tauri::RunEvent::ExitRequested { .. } => {
         resolve::resolve_reset(app_handle);
         api::process::kill_children();
       }
