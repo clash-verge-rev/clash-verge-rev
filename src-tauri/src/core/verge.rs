@@ -105,7 +105,9 @@ impl Verge {
   pub fn init_launch(&mut self, package_info: &tauri::PackageInfo) {
     let app_name = "clash-verge";
     let app_path = get_app_path(app_name);
-    let app_path = resource_dir(package_info).unwrap().join(app_path);
+    let app_path = resource_dir(package_info, &tauri::Env::default())
+      .unwrap()
+      .join(app_path);
     let app_path = app_path.as_os_str().to_str().unwrap();
 
     let auto = AutoLaunchBuilder::new()

@@ -54,7 +54,8 @@
       "endpoints": [
         "https://github.com/zzzgydi/clash-verge/releases/download/updater/update.json"
       ],
-      "dialog": false
+      "dialog": false,
+      "pubkey": ""
     },
     "allowlist": {
       "all": true

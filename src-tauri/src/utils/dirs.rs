@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use tauri::{
   api::path::{home_dir, resource_dir},
-  PackageInfo,
+  Env, PackageInfo,
 };
 
 /// get the verge app home dir
@@ -14,5 +14,7 @@ pub fn app_home_dir() -> PathBuf {
 
 /// get the resources dir
 pub fn app_resources_dir(package_info: &PackageInfo) -> PathBuf {
-  resource_dir(package_info).unwrap().join("resources")
+  resource_dir(package_info, &Env::default())
+    .unwrap()
+    .join("resources")
 }
