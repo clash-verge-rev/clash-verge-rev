@@ -281,10 +281,14 @@ pub fn get_cur_proxy(verge_state: State<'_, VergeState>) -> Result<Option<SysPro
 /// get the verge config
 #[tauri::command]
 pub fn get_verge_config(verge_state: State<'_, VergeState>) -> Result<VergeConfig, String> {
-  match verge_state.0.lock() {
-    Ok(arc) => Ok(arc.config.clone()),
-    Err(_) => Err("failed to get verge lock".into()),
+  let verge = verge_state.0.lock().unwrap();
+  let mut config = verge.config.clone();
+
+  if config.system_proxy_bypass.is_none() && verge.cur_sysproxy.is_some() {
+    config.system_proxy_bypass = Some(verge.cur_sysproxy.clone().unwrap().bypass)
   }
+
+  Ok(config)
 }
 
 /// patch the verge config
