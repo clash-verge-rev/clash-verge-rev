@@ -1,5 +1,5 @@
 import { styled, Box } from "@mui/material";
-import { ApiType } from "../services/types";
+import { ApiType } from "../../services/types";
 
 const Item = styled(Box)(({ theme }) => ({
   padding: "8px 0",

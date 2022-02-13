@@ -5,9 +5,9 @@ import { Button, ButtonGroup, List, Paper } from "@mui/material";
 import { getClashConfig, updateConfigs, updateProxy } from "../services/api";
 import { patchClashConfig } from "../services/cmds";
 import { getProxies } from "../services/api";
-import BasePage from "../components/base-page";
-import ProxyItem from "../components/proxy-item";
-import ProxyGroup from "../components/proxy-group";
+import BasePage from "../components/base/base-page";
+import ProxyItem from "../components/proxy/proxy-item";
+import ProxyGroup from "../components/proxy/proxy-group";
 
 const ProxyPage = () => {
   const { mutate } = useSWRConfig();

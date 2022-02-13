@@ -15,8 +15,8 @@ import { atomClashPort } from "../../states/setting";
 import { patchClashConfig } from "../../services/cmds";
 import { SettingList, SettingItem } from "./setting";
 import { getClashConfig, getVersion, updateConfigs } from "../../services/api";
+import Notice from "../base/base-notice";
 import GuardState from "./guard-state";
-import Notice from "../notice";
 
 interface Props {
   onError: (err: Error) => void;

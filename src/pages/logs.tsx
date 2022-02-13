@@ -4,8 +4,8 @@ import { Button, Paper } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { ApiType } from "../services/types";
 import { getInfomation } from "../services/api";
-import BasePage from "../components/base-page";
-import LogItem from "../components/log-item";
+import BasePage from "../components/base/base-page";
+import LogItem from "../components/log/log-item";
 
 let logCache: ApiType.LogItem[] = [];
 
