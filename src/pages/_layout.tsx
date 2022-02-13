@@ -10,10 +10,10 @@ import { getVergeConfig } from "../services/cmds";
 import { getAxios } from "../services/api";
 import { routers } from "./_routers";
 import LogoSvg from "../assets/image/logo.svg";
-import Traffic from "../components/traffic";
-import LayoutItem from "../components/layout-item";
-import UpdateButton from "../components/update-button";
-import LayoutControl from "../components/layout-control";
+import LayoutItem from "../components/layout/layout-item";
+import LayoutControl from "../components/layout/layout-control";
+import LayoutTraffic from "../components/layout/layout-traffic";
+import UpdateButton from "../components/layout/update-button";
 
 const Layout = () => {
   const { mutate } = useSWRConfig();
@@ -98,7 +98,7 @@ const Layout = () => {
             </List>
 
             <div className="the-traffic" data-windrag>
-              <Traffic />
+              <LayoutTraffic />
             </div>
           </div>
 

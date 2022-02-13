@@ -13,10 +13,10 @@ import {
 } from "@mui/material";
 import { useSWRConfig } from "swr";
 import { RefreshRounded } from "@mui/icons-material";
-import { CmdType } from "../services/types";
-import { updateProfile, deleteProfile, viewProfile } from "../services/cmds";
-import Notice from "./notice";
-import parseTraffic from "../utils/parse-traffic";
+import { CmdType } from "../../services/types";
+import { updateProfile, deleteProfile, viewProfile } from "../../services/cmds";
+import Notice from "../base/base-notice";
+import parseTraffic from "../../utils/parse-traffic";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 dayjs.extend(relativeTime);

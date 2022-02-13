@@ -3,8 +3,8 @@ import { Paper } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { ApiType } from "../services/types";
 import { getInfomation } from "../services/api";
-import BasePage from "../components/base-page";
-import ConnectionItem from "../components/connection-item";
+import BasePage from "../components/base/base-page";
+import ConnectionItem from "../components/connection/connection-item";
 
 const ConnectionsPage = () => {
   const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };

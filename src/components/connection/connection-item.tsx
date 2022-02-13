@@ -1,4 +1,4 @@
-import { ApiType } from "../services/types";
+import { ApiType } from "../../services/types";
 
 interface Props {
   value: ApiType.ConnectionsItem;

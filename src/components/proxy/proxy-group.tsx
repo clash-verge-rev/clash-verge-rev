@@ -16,9 +16,9 @@ import {
   MyLocationRounded,
   NetworkCheckRounded,
 } from "@mui/icons-material";
-import { updateProxy } from "../services/api";
-import { ApiType } from "../services/types";
-import { getProfiles, patchProfile } from "../services/cmds";
+import { updateProxy } from "../../services/api";
+import { ApiType } from "../../services/types";
+import { getProfiles, patchProfile } from "../../services/cmds";
 import ProxyItem from "./proxy-item";
 
 interface Props {

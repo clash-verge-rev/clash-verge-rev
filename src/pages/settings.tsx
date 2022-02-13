@@ -1,9 +1,9 @@
 import { Paper } from "@mui/material";
-import BasePage from "../components/base-page";
+import Notice from "../components/base/base-notice";
+import BasePage from "../components/base/base-page";
 import SettingVerge from "../components/setting/setting-verge";
 import SettingClash from "../components/setting/setting-clash";
 import SettingSystem from "../components/setting/setting-system";
-import Notice from "../components/notice";
 
 const SettingPage = () => {
   const onError = (error: any) => {
