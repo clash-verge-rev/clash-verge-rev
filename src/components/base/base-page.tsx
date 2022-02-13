@@ -12,8 +12,8 @@ const BasePage: React.FC<Props> = (props) => {
 
   return (
     <div className="base-page" data-windrag>
-      <header data-windrag>
-        <Typography variant="h4" component="h1">
+      <header data-windrag style={{ userSelect: "none" }}>
+        <Typography variant="h4" component="h1" data-windrag>
           {title}
         </Typography>
 
