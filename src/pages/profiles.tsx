@@ -104,8 +104,8 @@ const ProfilePage = () => {
 
     try {
       await newProfile(name, desc);
-      mutate("getProfiles");
       setDialogOpen(false);
+      mutate("getProfiles");
     } catch (err: any) {
       err && Notice.error(err.toString());
     } finally {

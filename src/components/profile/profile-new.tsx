@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Dialog,
@@ -27,6 +27,13 @@ const ProfileNew = (props: Props) => {
     }
     onSubmit(name, desc);
   };
+
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setDesc("");
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onClose={onClose}>
