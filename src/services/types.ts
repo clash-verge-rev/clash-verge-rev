@@ -114,5 +114,6 @@ export namespace CmdType {
     theme_blur?: boolean;
     enable_auto_launch?: boolean;
     enable_system_proxy?: boolean;
+    system_proxy_bypass?: string;
   }
 }

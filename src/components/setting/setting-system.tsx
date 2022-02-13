@@ -1,5 +1,5 @@
 import useSWR, { useSWRConfig } from "swr";
-import { Box, ListItemText, Switch } from "@mui/material";
+import { Box, ListItemText, Switch, TextField } from "@mui/material";
 import { getVergeConfig, patchVergeConfig } from "../../services/cmds";
 import { SettingList, SettingItem } from "./setting";
 import { CmdType } from "../../services/types";
@@ -17,6 +17,7 @@ const SettingSystem = ({ onError }: Props) => {
   const {
     enable_auto_launch: startup = false,
     enable_system_proxy: proxy = false,
+    system_proxy_bypass: bypass = "",
   } = vergeConfig ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
@@ -55,11 +56,29 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_system_proxy: e })}
-          onGuard={(e) => patchVergeConfig({ enable_system_proxy: e })}
+          onGuard={async (e) => {
+            await patchVergeConfig({ enable_system_proxy: e });
+            mutate("getVergeConfig"); // update bypass value
+          }}
         >
           <Switch edge="end" />
         </GuardState>
       </SettingItem>
+
+      {proxy && (
+        <SettingItem>
+          <ListItemText primary="Proxy Bypass" />
+          <GuardState
+            value={bypass ?? ""}
+            onCatch={onError}
+            onFormat={(e: any) => e.target.value}
+            onChange={(e) => onChangeData({ system_proxy_bypass: e })}
+            onGuard={(e) => patchVergeConfig({ system_proxy_bypass: e })}
+          >
+            <TextField autoComplete="off" size="small" sx={{ width: 120 }} />
+          </GuardState>
+        </SettingItem>
+      )}
     </SettingList>
   );
 };
