@@ -8,7 +8,7 @@ import {
   SxProps,
   Theme,
 } from "@mui/material";
-import { ApiType } from "../services/types";
+import { ApiType } from "../../services/types";
 
 interface Props {
   proxy: ApiType.ProxyItem;
