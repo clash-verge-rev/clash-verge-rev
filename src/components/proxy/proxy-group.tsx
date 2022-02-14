@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Virtuoso } from "react-virtuoso";
+import { useRef, useState } from "react";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import {
   Box,
   Collapse,
@@ -16,8 +16,8 @@ import {
   MyLocationRounded,
   NetworkCheckRounded,
 } from "@mui/icons-material";
-import { updateProxy } from "../../services/api";
 import { ApiType } from "../../services/types";
+import { updateProxy } from "../../services/api";
 import { getProfiles, patchProfile } from "../../services/cmds";
 import ProxyItem from "./proxy-item";
 
@@ -26,6 +26,7 @@ interface Props {
 }
 
 const ProxyGroup = ({ group }: Props) => {
+  const listRef = useRef<any>();
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(group.now);
 
@@ -67,6 +68,18 @@ const ProxyGroup = ({ group }: Props) => {
     }
   };
 
+  const onLocation = () => {
+    const index = proxies.findIndex((p) => p.name === now);
+
+    if (index >= 0) {
+      listRef.current?.scrollToIndex?.({
+        index,
+        align: "center",
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <>
       <ListItem button onClick={() => setOpen(!open)} dense>
@@ -88,7 +101,7 @@ const ProxyGroup = ({ group }: Props) => {
 
       <Collapse in={open} timeout="auto" unmountOnExit>
         <Box sx={{ pl: 4, pr: 3, my: 0.5 }}>
-          <IconButton size="small" title="location">
+          <IconButton size="small" title="location" onClick={onLocation}>
             <MyLocationRounded />
           </IconButton>
           <IconButton size="small" title="check">
@@ -98,6 +111,7 @@ const ProxyGroup = ({ group }: Props) => {
 
         {proxies.length >= 10 ? (
           <Virtuoso
+            ref={listRef}
             style={{ height: "320px", marginBottom: "4px" }}
             totalCount={proxies.length}
             itemContent={(index) => (
