@@ -53,30 +53,8 @@ pub async fn new_profile(
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
   let mut profiles = profiles_state.0.lock().unwrap();
-
-  let (_, path) = profiles.append_item(name, desc)?;
-
-  if !path.exists() {
-    return Err("the file not found".into());
-  }
-
-  // use vscode first
-  if let Ok(code) = which::which("code") {
-    return match Command::new(code).arg(path).status() {
-      Ok(_) => Ok(()),
-      Err(_) => Err("failed to open file by VScode".into()),
-    };
-  }
-
-  // use `open` command
-  if let Ok(open) = which::which("open") {
-    return match Command::new(open).arg(path).status() {
-      Ok(_) => Ok(()),
-      Err(_) => Err("failed to open file by `open`".into()),
-    };
-  }
-
-  return Err("failed to open the file, please edit the file manually".into());
+  profiles.append_item(name, desc)?;
+  Ok(())
 }
 
 /// Update the profile
