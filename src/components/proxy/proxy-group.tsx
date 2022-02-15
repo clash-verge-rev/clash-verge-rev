@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { useSWRConfig } from "swr";
+import { Virtuoso } from "react-virtuoso";
 import {
   Box,
   Collapse,
@@ -19,6 +20,7 @@ import {
 import { ApiType } from "../../services/types";
 import { updateProxy } from "../../services/api";
 import { getProfiles, patchProfile } from "../../services/cmds";
+import delayManager from "../../services/delay";
 import ProxyItem from "./proxy-item";
 
 interface Props {
@@ -26,13 +28,15 @@ interface Props {
 }
 
 const ProxyGroup = ({ group }: Props) => {
+  const { mutate } = useSWRConfig();
+
   const listRef = useRef<any>();
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(group.now);
 
   const proxies = group.all ?? [];
 
-  const onUpdate = async (name: string) => {
+  const onSelect = async (name: string) => {
     // can not call update
     if (group.type !== "Selector") {
       // Todo
@@ -80,6 +84,21 @@ const ProxyGroup = ({ group }: Props) => {
     }
   };
 
+  const onCheckAll = async () => {
+    let names = proxies.map((p) => p.name);
+
+    while (names.length) {
+      const list = names.slice(0, 10);
+      names = names.slice(10);
+
+      await Promise.all(
+        list.map((n) => delayManager.checkDelay(n, group.name))
+      );
+
+      mutate("getProxies");
+    }
+  };
+
   return (
     <>
       <ListItem button onClick={() => setOpen(!open)} dense>
@@ -104,7 +123,7 @@ const ProxyGroup = ({ group }: Props) => {
           <IconButton size="small" title="location" onClick={onLocation}>
             <MyLocationRounded />
           </IconButton>
-          <IconButton size="small" title="check">
+          <IconButton size="small" title="check" onClick={onCheckAll}>
             <NetworkCheckRounded />
           </IconButton>
         </Box>
@@ -116,10 +135,11 @@ const ProxyGroup = ({ group }: Props) => {
             totalCount={proxies.length}
             itemContent={(index) => (
               <ProxyItem
+                groupName={group.name}
                 proxy={proxies[index]}
                 selected={proxies[index].name === now}
                 sx={{ py: 0, pl: 4 }}
-                onClick={onUpdate}
+                onClick={onSelect}
               />
             )}
           />
@@ -132,10 +152,11 @@ const ProxyGroup = ({ group }: Props) => {
             {proxies.map((proxy) => (
               <ProxyItem
                 key={proxy.name}
+                groupName={group.name}
                 proxy={proxy}
                 selected={proxy.name === now}
                 sx={{ py: 0, pl: 4 }}
-                onClick={onUpdate}
+                onClick={onSelect}
               />
             ))}
           </List>

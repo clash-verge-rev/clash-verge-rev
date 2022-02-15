@@ -60,10 +60,24 @@ export async function getRules() {
   return instance.get("/rules") as Promise<ApiType.RuleItem[]>;
 }
 
+/// Get Proxy delay
+export async function getProxyDelay(
+  name: string,
+  url?: string
+): Promise<{ delay: number }> {
+  const params = {
+    timeout: 3000,
+    url: url || "http://www.gstatic.com/generate_204",
+  };
+
+  const instance = await getAxios();
+  return instance.get(`/proxies/${encodeURIComponent(name)}/delay`, { params });
+}
+
 /// Update the Proxy Choose
 export async function updateProxy(group: string, proxy: string) {
   const instance = await getAxios();
-  return instance.put(`/proxies/${group}`, { name: proxy });
+  return instance.put(`/proxies/${encodeURIComponent(group)}`, { name: proxy });
 }
 
 /// Get the Proxy infomation

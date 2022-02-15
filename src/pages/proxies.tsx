@@ -114,6 +114,7 @@ const ProxyPage = () => {
             totalCount={filterProxies.length}
             itemContent={(index) => (
               <ProxyItem
+                groupName="GLOBAL"
                 proxy={filterProxies[index]}
                 selected={filterProxies[index].name === curProxy}
                 onClick={onChangeProxy}
