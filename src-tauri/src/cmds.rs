@@ -174,7 +174,7 @@ pub fn view_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> R
 
   // use vscode first
   if let Ok(code) = which::which("code") {
-    return match Command::new(code).arg(path).status() {
+    return match Command::new(code).arg(path).spawn() {
       Ok(_) => Ok(()),
       Err(_) => Err("failed to open file by VScode".into()),
     };
@@ -182,7 +182,7 @@ pub fn view_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> R
 
   // use `open` command
   if let Ok(open) = which::which("open") {
-    return match Command::new(open).arg(path).status() {
+    return match Command::new(open).arg(path).spawn() {
       Ok(_) => Ok(()),
       Err(_) => Err("failed to open file by `open`".into()),
     };
