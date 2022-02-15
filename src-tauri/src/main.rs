@@ -74,6 +74,8 @@ fn main() -> std::io::Result<()> {
       cmds::restart_sidecar,
       cmds::get_sys_proxy,
       cmds::get_cur_proxy,
+      cmds::open_app_dir,
+      cmds::open_logs_dir,
       // clash
       cmds::get_clash_info,
       cmds::patch_clash_config,

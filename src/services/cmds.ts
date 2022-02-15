@@ -63,3 +63,11 @@ export async function patchVergeConfig(payload: CmdType.VergeConfig) {
 export async function getSystemProxy() {
   return invoke<any>("get_sys_proxy");
 }
+
+export async function openAppDir() {
+  return invoke<void>("open_app_dir");
+}
+
+export async function openLogsDir() {
+  return invoke<void>("open_logs_dir");
+}
