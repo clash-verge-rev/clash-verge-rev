@@ -58,7 +58,12 @@
       "pubkey": ""
     },
     "allowlist": {
-      "all": true
+      "shell": {
+        "all": true
+      },
+      "window": {
+        "all": true
+      }
     },
     "windows": [
       {
