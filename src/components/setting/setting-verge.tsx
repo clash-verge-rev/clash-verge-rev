@@ -1,11 +1,17 @@
 import useSWR, { useSWRConfig } from "swr";
-import { ListItemText, Switch, Typography } from "@mui/material";
-import { getVergeConfig, patchVergeConfig } from "../../services/cmds";
+import { IconButton, ListItemText, Switch, Typography } from "@mui/material";
+import {
+  getVergeConfig,
+  openAppDir,
+  openLogsDir,
+  patchVergeConfig,
+} from "../../services/cmds";
 import { SettingList, SettingItem } from "./setting";
 import { CmdType } from "../../services/types";
 import { version } from "../../../package.json";
 import GuardState from "./guard-state";
 import PaletteSwitch from "./palette-switch";
+import { ArrowForward } from "@mui/icons-material";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -53,6 +59,27 @@ const SettingVerge = ({ onError }: Props) => {
         >
           <Switch edge="end" />
         </GuardState>
+      </SettingItem>
+
+      <SettingItem>
+        <ListItemText primary="Open App Dir" />
+        <IconButton
+          color="inherit"
+          size="small"
+          onClick={() => {
+            console.log("click");
+            openAppDir().then(console.log).catch(console.log);
+          }}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
+
+      <SettingItem>
+        <ListItemText primary="Open Logs Dir" />
+        <IconButton color="inherit" size="small" onClick={openLogsDir}>
+          <ArrowForward />
+        </IconButton>
       </SettingItem>
 
       <SettingItem>

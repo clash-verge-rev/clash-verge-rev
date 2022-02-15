@@ -180,17 +180,10 @@ pub fn view_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> R
     };
   }
 
-  // use `open` command
-  if let Ok(open) = which::which("open") {
-    return match Command::new(open).arg(path).spawn() {
-      Ok(_) => Ok(()),
-      Err(_) => Err("failed to open file by `open`".into()),
-    };
+  match open_command().arg(path).spawn() {
+    Ok(_) => Ok(()),
+    Err(_) => Err("failed to open file by `open`".into()),
   }
-
-  // recommand to use vscode
-  // todo: support other editors
-  return Err("please install VScode".into());
 }
 
 /// restart the sidecar
@@ -278,4 +271,36 @@ pub async fn patch_verge_config(
 ) -> Result<(), String> {
   let mut verge = verge_state.0.lock().unwrap();
   verge.patch_config(payload)
+}
+
+/// open app config dir
+#[tauri::command]
+pub fn open_app_dir() -> Result<(), String> {
+  let app_dir = app_home_dir();
+
+  match open_command().arg(app_dir).spawn() {
+    Ok(_) => Ok(()),
+    Err(_) => Err("failed to open logs dir".into()),
+  }
+}
+
+/// open logs dir
+#[tauri::command]
+pub fn open_logs_dir() -> Result<(), String> {
+  let log_dir = app_home_dir().join("logs");
+
+  match open_command().arg(log_dir).spawn() {
+    Ok(_) => Ok(()),
+    Err(_) => Err("failed to open logs dir".into()),
+  }
+}
+
+/// get open/explorer command
+fn open_command() -> Command {
+  let open = if cfg!(target_os = "windows") {
+    "explorer"
+  } else {
+    "open"
+  };
+  Command::new(open)
 }
