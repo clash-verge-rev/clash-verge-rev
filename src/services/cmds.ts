@@ -64,6 +64,10 @@ export async function getSystemProxy() {
   return invoke<any>("get_sys_proxy");
 }
 
+export async function killSidecars() {
+  return invoke<any>("kill_sidecars");
+}
+
 export async function openAppDir() {
   return invoke<void>("open_app_dir");
 }
