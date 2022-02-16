@@ -29,27 +29,33 @@ interface Props {
 
 const ProxyGroup = ({ group }: Props) => {
   const { mutate } = useSWRConfig();
-
-  const listRef = useRef<any>();
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(group.now);
 
+  const virtuosoRef = useRef<any>();
   const proxies = group.all ?? [];
 
+  const selectLockRef = useRef(false);
   const onSelect = async (name: string) => {
-    // can not call update
-    if (group.type !== "Selector") {
-      // Todo
-      // error Tips
-      return;
-    }
+    // Todo: support another proxy group type
+    if (group.type !== "Selector") return;
+
+    if (selectLockRef.current) return;
+    selectLockRef.current = true;
+
     const oldValue = now;
     try {
       setNow(name);
       await updateProxy(group.name, name);
+    } catch {
+      setNow(oldValue);
+      return; // do not update profile
+    } finally {
+      selectLockRef.current = false;
+    }
 
-      const profiles = await getProfiles().catch(console.error);
-      if (!profiles) return;
+    try {
+      const profiles = await getProfiles();
       const profile = profiles.items![profiles.current!]!;
       if (!profile) return;
       if (!profile.selected) profile.selected = [];
@@ -63,12 +69,9 @@ const ProxyGroup = ({ group }: Props) => {
       } else {
         profile.selected[index] = { name: group.name, now: name };
       }
-
-      patchProfile(profiles.current!, profile).catch(console.error);
-    } catch {
-      setNow(oldValue);
-      // Todo
-      // error tips
+      await patchProfile(profiles.current!, profile);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -76,7 +79,7 @@ const ProxyGroup = ({ group }: Props) => {
     const index = proxies.findIndex((p) => p.name === now);
 
     if (index >= 0) {
-      listRef.current?.scrollToIndex?.({
+      virtuosoRef.current?.scrollToIndex?.({
         index,
         align: "center",
         behavior: "smooth",
@@ -84,12 +87,18 @@ const ProxyGroup = ({ group }: Props) => {
     }
   };
 
+  const checkLockRef = useRef(false);
   const onCheckAll = async () => {
-    let names = proxies.map((p) => p.name);
+    if (checkLockRef.current) return;
+    checkLockRef.current = true;
 
+    // rerender quickly
+    if (proxies.length) setTimeout(() => mutate("getProxies"), 500);
+
+    let names = proxies.map((p) => p.name);
     while (names.length) {
-      const list = names.slice(0, 10);
-      names = names.slice(10);
+      const list = names.slice(0, 8);
+      names = names.slice(8);
 
       await Promise.all(
         list.map((n) => delayManager.checkDelay(n, group.name))
@@ -97,6 +106,8 @@ const ProxyGroup = ({ group }: Props) => {
 
       mutate("getProxies");
     }
+
+    checkLockRef.current = false;
   };
 
   return (
@@ -130,7 +141,7 @@ const ProxyGroup = ({ group }: Props) => {
 
         {proxies.length >= 10 ? (
           <Virtuoso
-            ref={listRef}
+            ref={virtuosoRef}
             style={{ height: "320px", marginBottom: "4px" }}
             totalCount={proxies.length}
             itemContent={(index) => (
