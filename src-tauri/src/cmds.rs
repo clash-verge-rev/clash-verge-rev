@@ -5,7 +5,7 @@ use crate::{
 };
 use serde_yaml::Mapping;
 use std::process::Command;
-use tauri::State;
+use tauri::{api, State};
 
 /// get all profiles from `profiles.yaml`
 /// do not acquire the lock of ProfileLock
@@ -271,6 +271,12 @@ pub async fn patch_verge_config(
 ) -> Result<(), String> {
   let mut verge = verge_state.0.lock().unwrap();
   verge.patch_config(payload)
+}
+
+/// kill all sidecars when update app
+#[tauri::command]
+pub fn kill_sidecars() {
+  api::process::kill_children();
 }
 
 /// open app config dir

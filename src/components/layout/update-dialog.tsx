@@ -10,6 +10,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
+import { killSidecars } from "../../services/cmds";
 
 interface Props {
   open: boolean;
@@ -31,6 +32,7 @@ const UpdateDialog = (props: Props) => {
     try {
       setUploading(true);
       uploadingState = true;
+      await killSidecars();
       await installUpdate();
       await relaunch();
     } catch (error) {
