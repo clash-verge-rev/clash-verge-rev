@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::collections::HashMap;
 use std::env::temp_dir;
-use std::fs::File;
+use std::fs::{remove_file, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -249,7 +249,18 @@ rules:\n\n
       return Err("index out of bound".into());
     }
 
-    items.remove(index);
+    let mut rm_item = items.remove(index);
+
+    // delete the file
+    if let Some(file) = rm_item.file.take() {
+      let file_path = dirs::app_home_dir().join("profiles").join(file);
+
+      if file_path.exists() {
+        if let Err(err) = remove_file(file_path) {
+          log::error!("{err}");
+        }
+      }
+    }
 
     let mut should_change = false;
 
