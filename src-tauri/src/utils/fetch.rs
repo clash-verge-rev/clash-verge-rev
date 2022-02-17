@@ -54,20 +54,20 @@ pub async fn fetch_profile(url: &str, with_proxy: bool) -> Option<ProfileRespons
     }
   };
 
-  // parse the `name` and `file`
-  let (name, file) = {
+  let file = {
     let now = SystemTime::now()
       .duration_since(UNIX_EPOCH)
       .unwrap()
       .as_secs();
-    let file = format!("{}.yaml", now);
-    let name = header.get("Content-Disposition").unwrap().to_str().unwrap();
-    let name = parse_string::<String>(name, "filename=");
+    format!("{}.yaml", now)
+  };
 
-    match name {
-      Some(f) => (f, file),
-      None => (file.clone(), file),
+  let name = match header.get("Content-Disposition") {
+    Some(name) => {
+      let name = name.to_str().unwrap();
+      parse_string::<String>(name, "filename=").unwrap_or(file.clone())
     }
+    None => file.clone(),
   };
 
   // get the data
