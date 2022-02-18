@@ -50,7 +50,7 @@ async function resolveSidecar() {
   const sidecarFile = `clash-${host}${ext}`;
   const sidecarPath = path.join(sidecarDir, sidecarFile);
 
-  if (!(await fs.pathExists(sidecarDir))) await fs.mkdir(sidecarDir);
+  await fs.mkdirp(sidecarDir);
   if (await fs.pathExists(sidecarPath)) return;
 
   // download sidecar
@@ -59,7 +59,7 @@ async function resolveSidecar() {
   const tempZip = path.join(tempDir, binInfo.zipfile);
   const tempExe = path.join(tempDir, binInfo.exefile);
 
-  if (!(await fs.pathExists(tempDir))) await fs.mkdir(tempDir);
+  await fs.mkdirp(tempDir);
   if (!(await fs.pathExists(tempZip))) await downloadFile(binInfo.url, tempZip);
 
   if (binInfo.zip === "zip") {
@@ -96,8 +96,10 @@ async function resolveMmdb() {
   const url =
     "https://github.com/Dreamacro/maxmind-geoip/releases/latest/download/Country.mmdb";
 
-  const resPath = path.join(cwd, "src-tauri", "resources", "Country.mmdb");
+  const resDir = path.join(cwd, "src-tauri", "resources");
+  const resPath = path.join(resDir, "Country.mmdb");
   if (await fs.pathExists(resPath)) return;
+  await fs.mkdirp(resDir);
   await downloadFile(url, resPath);
 }
 
@@ -118,5 +120,5 @@ async function downloadFile(url, path) {
 }
 
 /// main
-resolveSidecar();
-resolveMmdb();
+resolveSidecar().catch(console.error);
+resolveMmdb().catch(console.error);
