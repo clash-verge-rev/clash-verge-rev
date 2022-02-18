@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@actions/github": "^5.0.0",
-    "@tauri-apps/cli": "^1.0.0-rc.4",
+    "@tauri-apps/cli": "^1.0.0-rc.5",
     "@types/fs-extra": "^9.0.13",
     "@types/js-cookie": "^3.0.1",
     "@types/react": "^17.0.0",
