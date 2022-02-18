@@ -1,5 +1,5 @@
 use super::{Clash, ClashInfo};
-use crate::utils::{config, dirs};
+use crate::utils::{config, dirs, tmpl};
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
@@ -155,16 +155,7 @@ impl Profiles {
     let file = format!("{}.yaml", now);
     let path = dirs::app_home_dir().join("profiles").join(&file);
 
-    let file_data = b"# Profile Template for clash verge\n
-# proxies defination (optional, the same as clash)
-proxies:\n
-# proxy-groups (optional, the same as clash)
-proxy-groups:\n
-# rules (optional, the same as clash)
-rules:\n\n
-";
-
-    match File::create(&path).unwrap().write(file_data) {
+    match File::create(&path).unwrap().write(tmpl::ITEM_CONFIG) {
       Ok(_) => {
         items.push(ProfileItem {
           name: Some(name),
