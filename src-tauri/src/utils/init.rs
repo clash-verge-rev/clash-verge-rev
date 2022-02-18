@@ -1,6 +1,6 @@
 extern crate serde_yaml;
 
-use crate::utils::dirs;
+use crate::utils::{dirs, tmpl};
 use chrono::Local;
 use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
@@ -41,44 +41,22 @@ fn init_log(log_dir: &PathBuf) {
 }
 
 /// Initialize all the files from resources
-fn init_config_file(app_dir: &PathBuf, res_dir: &PathBuf) {
+fn init_config(app_dir: &PathBuf) -> std::io::Result<()> {
   // target path
   let clash_path = app_dir.join("config.yaml");
   let verge_path = app_dir.join("verge.yaml");
   let profile_path = app_dir.join("profiles.yaml");
-  let mmdb_path = app_dir.join("Country.mmdb");
-
-  // template path
-  let clash_tmpl = res_dir.join("config_tmp.yaml");
-  let verge_tmpl = res_dir.join("verge_tmp.yaml");
-  let profiles_tmpl = res_dir.join("profiles_tmp.yaml");
-  let mmdb_tmpl = res_dir.join("Country.mmdb");
 
   if !clash_path.exists() {
-    if clash_tmpl.exists() {
-      fs::copy(clash_tmpl, clash_path).unwrap();
-    } else {
-      // make sure that the config.yaml not null
-      let content = b"\
-        mixed-port: 7890\n\
-        log-level: info\n\
-        allow-lan: false\n\
-        external-controller: 127.0.0.1:9090\n\
-        secret: \"\"\n";
-      File::create(clash_path).unwrap().write(content).unwrap();
-    }
+    File::create(clash_path)?.write(tmpl::CLASH_CONFIG)?;
   }
-
-  // only copy it
-  if !verge_path.exists() && verge_tmpl.exists() {
-    fs::copy(verge_tmpl, verge_path).unwrap();
+  if !verge_path.exists() {
+    File::create(verge_path)?.write(tmpl::VERGE_CONFIG)?;
   }
-  if !profile_path.exists() && profiles_tmpl.exists() {
-    fs::copy(profiles_tmpl, profile_path).unwrap();
+  if !profile_path.exists() {
+    File::create(profile_path)?.write(tmpl::PROFILES_CONFIG)?;
   }
-  if !mmdb_path.exists() && mmdb_tmpl.exists() {
-    fs::copy(mmdb_tmpl, mmdb_path).unwrap();
-  }
+  Ok(())
 }
 
 /// initialize app
@@ -101,5 +79,14 @@ pub fn init_app(package_info: &PackageInfo) {
   }
 
   init_log(&log_dir);
-  init_config_file(&app_dir, &res_dir);
+  if let Err(err) = init_config(&app_dir) {
+    log::error!("{err}");
+  }
+
+  // copy the resource file
+  let mmdb_path = app_dir.join("Country.mmdb");
+  let mmdb_tmpl = res_dir.join("Country.mmdb");
+  if !mmdb_path.exists() && mmdb_tmpl.exists() {
+    fs::copy(mmdb_tmpl, mmdb_path).unwrap();
+  }
 }
