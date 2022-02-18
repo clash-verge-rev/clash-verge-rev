@@ -60,7 +60,7 @@ pub struct ProfileResponse {
   pub name: String,
   pub file: String,
   pub data: String,
-  pub extra: ProfileExtra,
+  pub extra: Option<ProfileExtra>,
 }
 
 static PROFILE_YAML: &str = "profiles.yaml";
@@ -117,7 +117,7 @@ impl Profiles {
       mode: Some(format!("rule")),
       url: Some(url),
       selected: Some(vec![]),
-      extra: Some(result.extra),
+      extra: result.extra,
       updated: Some(now as usize),
     });
 
@@ -194,7 +194,7 @@ impl Profiles {
     File::create(file_path).unwrap().write(file_data).unwrap();
 
     items[index].name = Some(result.name);
-    items[index].extra = Some(result.extra);
+    items[index].extra = result.extra;
     items[index].updated = Some(now);
 
     self.items = Some(items);

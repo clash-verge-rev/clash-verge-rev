@@ -34,13 +34,9 @@ pub async fn import_profile(
   with_proxy: bool,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  match fetch_profile(&url, with_proxy).await {
-    Some(result) => {
-      let mut profiles = profiles_state.0.lock().unwrap();
-      profiles.import_from_url(url, result)
-    }
-    None => Err(format!("failed to fetch profile from `{}`", url)),
-  }
+  let result = fetch_profile(&url, with_proxy).await?;
+  let mut profiles = profiles_state.0.lock().unwrap();
+  profiles.import_from_url(url, result)
 }
 
 /// new a profile
@@ -82,23 +78,22 @@ pub async fn update_profile(
     Err(_) => return Err("failed to get profiles lock".into()),
   };
 
-  match fetch_profile(&url, with_proxy).await {
-    Some(result) => match profiles_state.0.lock() {
-      Ok(mut profiles) => {
-        profiles.update_item(index, result)?;
+  let result = fetch_profile(&url, with_proxy).await?;
 
-        // reactivate the profile
-        let current = profiles.current.clone().unwrap_or(0);
-        if current == index {
-          let clash = clash_state.0.lock().unwrap();
-          profiles.activate(&clash)
-        } else {
-          Ok(())
-        }
+  match profiles_state.0.lock() {
+    Ok(mut profiles) => {
+      profiles.update_item(index, result)?;
+
+      // reactivate the profile
+      let current = profiles.current.clone().unwrap_or(0);
+      if current == index {
+        let clash = clash_state.0.lock().unwrap();
+        profiles.activate(&clash)
+      } else {
+        Ok(())
       }
-      Err(_) => Err("failed to get profiles lock".into()),
-    },
-    None => Err(format!("failed to fetch profile from `{}`", url)),
+    }
+    Err(_) => Err("failed to get profiles lock".into()),
   }
 }
 
