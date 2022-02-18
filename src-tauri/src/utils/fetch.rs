@@ -22,36 +22,35 @@ fn parse_string<T: FromStr>(target: &str, key: &str) -> Option<T> {
   }
 }
 
-/// fetch and parse the profile
-pub async fn fetch_profile(url: &str, with_proxy: bool) -> Option<ProfileResponse> {
+/// fetch and parse the profile url
+/// maybe it contains some Subscription infomations, maybe not
+pub async fn fetch_profile(url: &str, with_proxy: bool) -> Result<ProfileResponse, String> {
   let builder = reqwest::ClientBuilder::new();
   let client = match with_proxy {
     true => builder.build(),
     false => builder.no_proxy().build(),
   };
-  let resp = match client {
-    Ok(client) => match client.get(url).send().await {
-      Ok(res) => res,
-      Err(_) => return None,
-    },
-    Err(_) => return None,
+
+  let resp = match client.unwrap().get(url).send().await {
+    Ok(res) => res,
+    Err(_) => return Err("failed to create https client".into()),
   };
 
   let header = resp.headers();
 
   // parse the Subscription Userinfo
-  let extra = {
-    let sub_info = match header.get("Subscription-Userinfo") {
-      Some(value) => value.to_str().unwrap_or(""),
-      None => "",
-    };
+  let extra = match header.get("Subscription-Userinfo") {
+    Some(value) => {
+      let sub_info = value.to_str().unwrap_or("");
 
-    ProfileExtra {
-      upload: parse_string(sub_info, "upload=").unwrap_or(0),
-      download: parse_string(sub_info, "download=").unwrap_or(0),
-      total: parse_string(sub_info, "total=").unwrap_or(0),
-      expire: parse_string(sub_info, "expire=").unwrap_or(0),
+      Some(ProfileExtra {
+        upload: parse_string(sub_info, "upload=").unwrap_or(0),
+        download: parse_string(sub_info, "download=").unwrap_or(0),
+        total: parse_string(sub_info, "total=").unwrap_or(0),
+        expire: parse_string(sub_info, "expire=").unwrap_or(0),
+      })
     }
+    None => None,
   };
 
   let file = {
@@ -71,17 +70,15 @@ pub async fn fetch_profile(url: &str, with_proxy: bool) -> Option<ProfileRespons
   };
 
   // get the data
-  let data = match resp.text_with_charset("utf-8").await {
-    Ok(d) => d,
-    Err(_) => return None,
-  };
-
-  Some(ProfileResponse {
-    file,
-    name,
-    data,
-    extra,
-  })
+  match resp.text_with_charset("utf-8").await {
+    Ok(data) => Ok(ProfileResponse {
+      file,
+      name,
+      data,
+      extra,
+    }),
+    Err(_) => Err("failed to parse the response data".into()),
+  }
 }
 
 #[test]
