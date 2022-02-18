@@ -59,8 +59,11 @@ const ProfileItem: React.FC<Props> = (props) => {
   const progress = Math.round(((download + upload) * 100) / (total + 0.1));
   const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
 
-  // url or file mode
-  const isUrlMode = itemData.url && extra;
+  // local file mode
+  // remote file mode
+  // subscription url mode
+  const hasUrl = !!itemData.url;
+  const hasExtra = !!extra; // only subscription url has extra info
 
   const onView = async () => {
     setAnchorEl(null);
@@ -178,7 +181,8 @@ const ProfileItem: React.FC<Props> = (props) => {
             {name}
           </Typography>
 
-          {isUrlMode && (
+          {/* only if has url can it be updated */}
+          {hasUrl && (
             <IconButton
               sx={{
                 width: 26,
@@ -197,43 +201,43 @@ const ProfileItem: React.FC<Props> = (props) => {
           )}
         </Box>
 
-        {isUrlMode ? (
-          <>
-            <Box sx={boxStyle}>
-              <Typography noWrap title={`From: ${from}`}>
-                {from}
-              </Typography>
+        {/* the second line show url's info or description */}
+        {hasUrl ? (
+          <Box sx={boxStyle}>
+            <Typography noWrap title={`From: ${from}`}>
+              {from}
+            </Typography>
 
-              <Typography
-                noWrap
-                flex="1 0 auto"
-                fontSize={14}
-                textAlign="right"
-                title="updated time"
-              >
-                {fromnow}
-              </Typography>
-            </Box>
-
-            <Box sx={{ ...boxStyle, fontSize: 14 }}>
-              <span title="used / total">
-                {parseTraffic(upload + download)} / {parseTraffic(total)}
-              </span>
-              <span title="expire time">{expire}</span>
-            </Box>
-          </>
+            <Typography
+              noWrap
+              flex="1 0 auto"
+              fontSize={14}
+              textAlign="right"
+              title="updated time"
+            >
+              {fromnow}
+            </Typography>
+          </Box>
         ) : (
-          <>
-            <Box sx={boxStyle}>
-              <Typography noWrap title={itemData.desc}>
-                {itemData.desc}
-              </Typography>
-            </Box>
+          <Box sx={boxStyle}>
+            <Typography noWrap title={itemData.desc}>
+              {itemData.desc}
+            </Typography>
+          </Box>
+        )}
 
-            <Box sx={{ ...boxStyle, fontSize: 14, justifyContent: "flex-end" }}>
-              <span title="updated time">{parseExpire(updated)}</span>
-            </Box>
-          </>
+        {/* the third line show extra info or last updated time */}
+        {hasExtra ? (
+          <Box sx={{ ...boxStyle, fontSize: 14 }}>
+            <span title="used / total">
+              {parseTraffic(upload + download)} / {parseTraffic(total)}
+            </span>
+            <span title="expire time">{expire}</span>
+          </Box>
+        ) : (
+          <Box sx={{ ...boxStyle, fontSize: 14, justifyContent: "flex-end" }}>
+            <span title="updated time">{parseExpire(updated)}</span>
+          </Box>
         )}
 
         <LinearProgress
@@ -250,8 +254,12 @@ const ProfileItem: React.FC<Props> = (props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
       >
-        {(isUrlMode ? urlModeMenu : fileModeMenu).map((item) => (
-          <MenuItem key={item.label} onClick={item.handler}>
+        {(hasUrl ? urlModeMenu : fileModeMenu).map((item) => (
+          <MenuItem
+            key={item.label}
+            onClick={item.handler}
+            sx={{ minWidth: 133 }}
+          >
             {item.label}
           </MenuItem>
         ))}
