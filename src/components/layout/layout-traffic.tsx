@@ -6,10 +6,12 @@ import { getInfomation } from "../../services/api";
 import { ApiType } from "../../services/types";
 import { atomClashPort } from "../../states/setting";
 import parseTraffic from "../../utils/parse-traffic";
+import useTrafficGraph from "./use-traffic-graph";
 
 const LayoutTraffic = () => {
   const portValue = useRecoilValue(atomClashPort);
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
+  const { canvasRef, appendData, toggleStyle } = useTrafficGraph();
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -19,7 +21,9 @@ const LayoutTraffic = () => {
       ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
 
       ws.addEventListener("message", (event) => {
-        setTraffic(JSON.parse(event.data) as ApiType.TrafficItem);
+        const data = JSON.parse(event.data) as ApiType.TrafficItem;
+        appendData(data);
+        setTraffic(data);
       });
     });
 
@@ -44,7 +48,12 @@ const LayoutTraffic = () => {
   };
 
   return (
-    <Box width="110px">
+    <Box data-windrag width="110px" position="relative" onClick={toggleStyle}>
+      <canvas
+        ref={canvasRef}
+        style={{ width: "100%", height: 60, marginBottom: 6 }}
+      />
+
       <Box mb={1.5} display="flex" alignItems="center" whiteSpace="nowrap">
         <ArrowUpward
           fontSize="small"
