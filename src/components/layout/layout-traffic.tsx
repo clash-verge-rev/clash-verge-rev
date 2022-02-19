@@ -1,9 +1,11 @@
+import useSWR from "swr";
 import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
-import { getInfomation } from "../../services/api";
 import { ApiType } from "../../services/types";
+import { getInfomation } from "../../services/api";
+import { getVergeConfig } from "../../services/cmds";
 import { atomClashPort } from "../../states/setting";
 import parseTraffic from "../../utils/parse-traffic";
 import useTrafficGraph from "./use-traffic-graph";
@@ -12,6 +14,10 @@ const LayoutTraffic = () => {
   const portValue = useRecoilValue(atomClashPort);
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
   const { canvasRef, appendData, toggleStyle } = useTrafficGraph();
+
+  // whether hide traffic graph
+  const { data } = useSWR("getVergeConfig", getVergeConfig);
+  const trafficGraph = data?.traffic_graph ?? true;
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -49,10 +55,12 @@ const LayoutTraffic = () => {
 
   return (
     <Box data-windrag width="110px" position="relative" onClick={toggleStyle}>
-      <canvas
-        ref={canvasRef}
-        style={{ width: "100%", height: 60, marginBottom: 6 }}
-      />
+      {trafficGraph && (
+        <canvas
+          ref={canvasRef}
+          style={{ width: "100%", height: 60, marginBottom: 6 }}
+        />
+      )}
 
       <Box mb={1.5} display="flex" alignItems="center" whiteSpace="nowrap">
         <ArrowUpward

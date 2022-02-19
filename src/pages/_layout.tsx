@@ -1,14 +1,12 @@
 import useSWR, { SWRConfig, useSWRConfig } from "swr";
 import { useEffect, useMemo } from "react";
 import { Route, Routes } from "react-router-dom";
-import { useRecoilState } from "recoil";
 import { alpha, createTheme, List, Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
-import { atomPaletteMode, atomThemeBlur } from "../states/setting";
-import { getVergeConfig } from "../services/cmds";
-import { getAxios } from "../services/api";
 import { routers } from "./_routers";
+import { getAxios } from "../services/api";
+import { getVergeConfig } from "../services/cmds";
 import LogoSvg from "../assets/image/logo.svg";
 import LayoutItem from "../components/layout/layout-item";
 import LayoutControl from "../components/layout/layout-control";
@@ -17,9 +15,10 @@ import UpdateButton from "../components/layout/update-button";
 
 const Layout = () => {
   const { mutate } = useSWRConfig();
-  const [mode, setMode] = useRecoilState(atomPaletteMode);
-  const [blur, setBlur] = useRecoilState(atomThemeBlur);
-  const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
+  const { data } = useSWR("getVergeConfig", getVergeConfig);
+
+  const blur = !!data?.theme_blur;
+  const mode = data?.theme_mode ?? "light";
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
@@ -35,12 +34,6 @@ const Layout = () => {
       mutate("getClashConfig");
     });
   }, []);
-
-  useEffect(() => {
-    if (!vergeConfig) return;
-    setBlur(!!vergeConfig.theme_blur);
-    setMode(vergeConfig.theme_mode ?? "light");
-  }, [vergeConfig]);
 
   const theme = useMemo(() => {
     // const background = mode === "light" ? "#f5f5f5" : "#000";

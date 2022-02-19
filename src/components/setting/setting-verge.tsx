@@ -6,12 +6,12 @@ import {
   openLogsDir,
   patchVergeConfig,
 } from "../../services/cmds";
+import { ArrowForward } from "@mui/icons-material";
 import { SettingList, SettingItem } from "./setting";
 import { CmdType } from "../../services/types";
 import { version } from "../../../package.json";
-import GuardState from "./guard-state";
 import PaletteSwitch from "./palette-switch";
-import { ArrowForward } from "@mui/icons-material";
+import GuardState from "./guard-state";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -21,7 +21,7 @@ const SettingVerge = ({ onError }: Props) => {
   const { mutate } = useSWRConfig();
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
 
-  const { theme_mode: mode = "light", theme_blur: blur = false } =
+  const { theme_mode = "light", theme_blur = false, traffic_graph } =
     vergeConfig ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
@@ -34,7 +34,7 @@ const SettingVerge = ({ onError }: Props) => {
       <SettingItem>
         <ListItemText primary="Theme Mode" />
         <GuardState
-          value={mode === "dark"}
+          value={theme_mode === "dark"}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -50,7 +50,7 @@ const SettingVerge = ({ onError }: Props) => {
       <SettingItem>
         <ListItemText primary="Theme Blur" />
         <GuardState
-          value={blur}
+          value={theme_blur}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -62,15 +62,22 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Open App Dir" />
-        <IconButton
-          color="inherit"
-          size="small"
-          onClick={() => {
-            console.log("click");
-            openAppDir().then(console.log).catch(console.log);
-          }}
+        <ListItemText primary="Traffic Graph" />
+        <GuardState
+          value={traffic_graph ?? true}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ traffic_graph: e })}
+          onGuard={(e) => patchVergeConfig({ traffic_graph: e })}
         >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem>
+        <ListItemText primary="Open App Dir" />
+        <IconButton color="inherit" size="small" onClick={openAppDir}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
