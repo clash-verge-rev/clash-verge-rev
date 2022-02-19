@@ -22,6 +22,8 @@ items: ~
 pub const VERGE_CONFIG: &[u8] = b"# Defaulf Config For Clash Verge
 
 theme_mode: light
+theme_blur: false
+traffic_graph: true
 enable_self_startup: false
 enable_system_proxy: false
 system_proxy_bypass: localhost;127.*;10.*;192.168.*;<local>

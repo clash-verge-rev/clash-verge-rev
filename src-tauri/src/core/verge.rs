@@ -13,6 +13,9 @@ pub struct VergeConfig {
   /// maybe be able to set the alpha
   pub theme_blur: Option<bool>,
 
+  /// enable traffic graph default is true
+  pub traffic_graph: Option<bool>,
+
   /// can the app auto startup
   pub enable_auto_launch: Option<bool>,
 
@@ -194,6 +197,9 @@ impl Verge {
     }
     if patch.theme_blur.is_some() {
       self.config.theme_blur = patch.theme_blur;
+    }
+    if patch.traffic_graph.is_some() {
+      self.config.traffic_graph = patch.traffic_graph;
     }
 
     // should update system startup

@@ -26,6 +26,9 @@ export default function useTrafficGraph() {
 
   const drawGraph = () => {
     const canvas = canvasRef.current!;
+
+    if (!canvas) return;
+
     const context = canvas.getContext("2d")!;
     const width = canvas.width;
     const height = canvas.height;
