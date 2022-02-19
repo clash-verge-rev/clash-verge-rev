@@ -206,9 +206,12 @@ impl Verge {
     // should update system proxy
     if patch.enable_system_proxy.is_some() {
       let enable = patch.enable_system_proxy.unwrap();
+
       if let Some(mut sysproxy) = self.cur_sysproxy.take() {
         sysproxy.enable = enable;
         if sysproxy.set_sys().is_err() {
+          self.cur_sysproxy = Some(sysproxy);
+
           log::error!("failed to set system proxy");
           return Err("failed to set system proxy".into());
         }
@@ -217,10 +220,26 @@ impl Verge {
       self.config.enable_system_proxy = Some(enable);
     }
 
-    // todo
     // should update system proxy too
     if patch.system_proxy_bypass.is_some() {
-      self.config.system_proxy_bypass = patch.system_proxy_bypass;
+      let bypass = patch.system_proxy_bypass.unwrap();
+
+      if let Some(mut sysproxy) = self.cur_sysproxy.take() {
+        if sysproxy.enable {
+          sysproxy.bypass = bypass.clone();
+
+          if sysproxy.set_sys().is_err() {
+            self.cur_sysproxy = Some(sysproxy);
+
+            log::error!("failed to set system proxy");
+            return Err("failed to set system proxy".into());
+          }
+        }
+
+        self.cur_sysproxy = Some(sysproxy);
+      }
+
+      self.config.system_proxy_bypass = Some(bypass);
     }
 
     self.config.save_file()
