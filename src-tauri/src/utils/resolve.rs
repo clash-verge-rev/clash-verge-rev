@@ -1,24 +1,10 @@
 use super::{init, server};
 use crate::{core::Profiles, states};
 use tauri::{App, AppHandle, Manager};
-use tauri_plugin_shadows::Shadows;
 
 /// handle something when start app
 pub fn resolve_setup(app: &App) {
-  // set shadow when window decorations
-  let window = app.get_window("main").unwrap();
-  window.set_shadow(true);
-
-  // enable system blur
-  use tauri_plugin_vibrancy::Vibrancy;
-  #[cfg(target_os = "windows")]
-  window.apply_blur();
-  #[cfg(target_os = "macos")]
-  {
-    use tauri_plugin_vibrancy::MacOSVibrancy;
-    #[allow(deprecated)]
-    window.apply_vibrancy(MacOSVibrancy::AppearanceBased);
-  }
+  resolve_window(app);
 
   // setup a simple http server for singleton
   server::embed_server(&app.handle());
@@ -57,4 +43,35 @@ pub fn resolve_reset(app_handle: &AppHandle) {
   let mut verge = verge_state.0.lock().unwrap();
 
   verge.reset_sysproxy();
+}
+
+/// customize the window theme
+fn resolve_window(app: &App) {
+  let window = app.get_window("main").unwrap();
+
+  #[cfg(target_os = "windows")]
+  {
+    use tauri_plugin_shadows::Shadows;
+    use tauri_plugin_vibrancy::Vibrancy;
+
+    window.set_decorations(false).unwrap();
+    window.set_shadow(true);
+    window.apply_blur();
+  }
+
+  #[cfg(target_os = "macos")]
+  {
+    use tauri::LogicalSize;
+    use tauri::Size::Logical;
+    window.set_decorations(true).unwrap();
+    window
+      .set_size(Logical(LogicalSize {
+        width: 800.0,
+        height: 610.0,
+      }))
+      .unwrap();
+    // use tauri_plugin_vibrancy::MacOSVibrancy;
+    // #[allow(deprecated)]
+    // window.apply_vibrancy(MacOSVibrancy::AppearanceBased);
+  }
 }

@@ -39,8 +39,8 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ theme_mode: e ? "dark" : "light" })}
-          onGuard={(c) =>
-            patchVergeConfig({ theme_mode: c ? "dark" : "light" })
+          onGuard={(e) =>
+            patchVergeConfig({ theme_mode: e ? "dark" : "light" })
           }
         >
           <PaletteSwitch edge="end" />

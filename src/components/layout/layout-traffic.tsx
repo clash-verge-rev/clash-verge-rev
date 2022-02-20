@@ -54,7 +54,7 @@ const LayoutTraffic = () => {
   };
 
   return (
-    <Box data-windrag width="110px" position="relative" onClick={toggleStyle}>
+    <Box width="110px" position="relative" onClick={toggleStyle}>
       {trafficGraph && (
         <canvas
           ref={canvasRef}

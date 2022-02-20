@@ -13,6 +13,8 @@ import LayoutControl from "../components/layout/layout-control";
 import LayoutTraffic from "../components/layout/layout-traffic";
 import UpdateButton from "../components/layout/update-button";
 
+const isMacos = navigator.userAgent.includes("Mac OS X");
+
 const Layout = () => {
   const { mutate } = useSWRConfig();
   const { data } = useSWR("getVergeConfig", getVergeConfig);
@@ -67,7 +69,7 @@ const Layout = () => {
         <Paper
           square
           elevation={0}
-          className="layout"
+          className={`${isMacos ? "macos " : ""}layout`}
           onPointerDown={onDragging}
           sx={[
             (theme) => ({
@@ -96,9 +98,11 @@ const Layout = () => {
           </div>
 
           <div className="layout__right" data-windrag>
-            <div className="the-bar">
-              <LayoutControl />
-            </div>
+            {!isMacos && (
+              <div className="the-bar">
+                <LayoutControl />
+              </div>
+            )}
 
             <div className="the-content">
               <Routes>
