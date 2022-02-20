@@ -15,9 +15,10 @@ const SettingSystem = ({ onError }: Props) => {
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
 
   const {
-    enable_auto_launch: startup = false,
-    enable_system_proxy: proxy = false,
-    system_proxy_bypass: bypass = "",
+    enable_auto_launch = false,
+    enable_system_proxy = false,
+    system_proxy_bypass = "",
+    enable_proxy_guard = false,
   } = vergeConfig ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
@@ -30,7 +31,7 @@ const SettingSystem = ({ onError }: Props) => {
       <SettingItem>
         <ListItemText primary="Auto Launch" />
         <GuardState
-          value={startup}
+          value={enable_auto_launch}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -51,7 +52,7 @@ const SettingSystem = ({ onError }: Props) => {
           }
         />
         <GuardState
-          value={proxy}
+          value={enable_system_proxy}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -65,11 +66,27 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      {proxy && (
+      {enable_system_proxy && (
+        <SettingItem>
+          <ListItemText primary="Proxy Guard" />
+          <GuardState
+            value={enable_proxy_guard}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_proxy_guard: e })}
+            onGuard={(e) => patchVergeConfig({ enable_proxy_guard: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </SettingItem>
+      )}
+
+      {enable_system_proxy && (
         <SettingItem>
           <ListItemText primary="Proxy Bypass" />
           <GuardState
-            value={bypass ?? ""}
+            value={system_proxy_bypass ?? ""}
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
             onChange={(e) => onChangeData({ system_proxy_bypass: e })}
