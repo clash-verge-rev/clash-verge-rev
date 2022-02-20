@@ -26,6 +26,8 @@ theme_blur: false
 traffic_graph: true
 enable_self_startup: false
 enable_system_proxy: false
+enable_proxy_guard: false
+proxy_guard_duration: 10
 system_proxy_bypass: localhost;127.*;10.*;192.168.*;<local>
 ";
 
