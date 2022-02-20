@@ -20,8 +20,8 @@
       position: relative;
       flex: 0 1 180px;
       width: 100%;
-      max-width: 180px;
-      max-height: 180px;
+      max-width: 168px;
+      max-height: 168px;
       margin: 0 auto;
       padding: 0 8px;
       text-align: center;
@@ -77,5 +77,11 @@
       right: 2px;
       bottom: 10px;
     }
+  }
+}
+
+.macos.layout {
+  .layout__right .the-content {
+    top: 0;
   }
 }
