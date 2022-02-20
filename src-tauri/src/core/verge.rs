@@ -31,6 +31,9 @@ pub struct VergeConfig {
 
   /// set system proxy bypass
   pub system_proxy_bypass: Option<String>,
+
+  /// proxy guard duration
+  pub proxy_guard_duration: Option<u64>,
 }
 
 static VERGE_CONFIG: &str = "verge.yaml";
@@ -105,7 +108,7 @@ impl Verge {
     }
 
     // launchs the system proxy guard
-    Verge::guard_proxy(10, self.guard_state.clone());
+    Verge::guard_proxy(self.guard_state.clone());
   }
 
   /// reset the sysproxy
@@ -248,10 +251,13 @@ impl Verge {
     if patch.enable_proxy_guard.is_some() {
       self.config.enable_proxy_guard = patch.enable_proxy_guard;
     }
+    if patch.proxy_guard_duration.is_some() {
+      self.config.proxy_guard_duration = patch.proxy_guard_duration;
+    }
 
     // relaunch the guard
     if patch.enable_system_proxy.is_some() || patch.enable_proxy_guard.is_some() {
-      Verge::guard_proxy(10, self.guard_state.clone());
+      Verge::guard_proxy(self.guard_state.clone());
     }
 
     self.config.save_file()
@@ -261,7 +267,7 @@ impl Verge {
 impl Verge {
   /// launch a system proxy guard
   /// read config from file directly
-  pub fn guard_proxy(wait_secs: u64, guard_state: Arc<Mutex<bool>>) {
+  pub fn guard_proxy(guard_state: Arc<Mutex<bool>>) {
     use tokio::time::{sleep, Duration};
 
     tauri::async_runtime::spawn(async move {
@@ -273,6 +279,9 @@ impl Verge {
       *state = true;
       std::mem::drop(state);
 
+      // default duration is 10s
+      let mut wait_secs = 10u64;
+
       loop {
         sleep(Duration::from_secs(wait_secs)).await;
 
@@ -282,6 +291,10 @@ impl Verge {
 
         let enable_proxy = verge.config.enable_system_proxy.unwrap_or(false);
         let enable_guard = verge.config.enable_proxy_guard.unwrap_or(false);
+        let guard_duration = verge.config.proxy_guard_duration.unwrap_or(10);
+
+        // update duration
+        wait_secs = guard_duration;
 
         // stop loop
         if !enable_guard || !enable_proxy {
