@@ -260,7 +260,7 @@ pub fn get_verge_config(verge_state: State<'_, VergeState>) -> Result<VergeConfi
 /// patch the verge config
 /// this command only save the config and not responsible for other things
 #[tauri::command]
-pub async fn patch_verge_config(
+pub fn patch_verge_config(
   payload: VergeConfig,
   verge_state: State<'_, VergeState>,
 ) -> Result<(), String> {

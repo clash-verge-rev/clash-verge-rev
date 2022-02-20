@@ -1,7 +1,11 @@
-use crate::utils::{config, dirs, sysopt::SysProxyConfig};
+use crate::{
+  core::Clash,
+  utils::{config, dirs, sysopt::SysProxyConfig},
+};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use serde::{Deserialize, Serialize};
-use tauri::api::path::resource_dir;
+use std::sync::Arc;
+use tauri::{api::path::resource_dir, async_runtime::Mutex};
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -21,6 +25,9 @@ pub struct VergeConfig {
 
   /// set system proxy
   pub enable_system_proxy: Option<bool>,
+
+  /// enable proxy guard
+  pub enable_proxy_guard: Option<bool>,
 
   /// set system proxy bypass
   pub system_proxy_bypass: Option<String>,
@@ -53,6 +60,9 @@ pub struct Verge {
   pub cur_sysproxy: Option<SysProxyConfig>,
 
   pub auto_launch: Option<AutoLaunch>,
+
+  /// record whether the guard async is running or not
+  guard_state: Arc<Mutex<bool>>,
 }
 
 impl Default for Verge {
@@ -68,6 +78,7 @@ impl Verge {
       old_sysproxy: None,
       cur_sysproxy: None,
       auto_launch: None,
+      guard_state: Arc::new(Mutex::new(false)),
     }
   }
 
@@ -92,6 +103,9 @@ impl Verge {
 
       self.cur_sysproxy = Some(sysproxy);
     }
+
+    // launchs the system proxy guard
+    Verge::guard_proxy(10, self.guard_state.clone());
   }
 
   /// reset the sysproxy
@@ -154,10 +168,9 @@ impl Verge {
 
     let auto_launch = self.auto_launch.clone().unwrap();
 
-    let result = if enable {
-      auto_launch.enable()
-    } else {
-      auto_launch.disable()
+    let result = match enable {
+      true => auto_launch.enable(),
+      false => auto_launch.disable(),
     };
 
     match result {
@@ -168,24 +181,6 @@ impl Verge {
       }
     }
   }
-
-  // fn guard_thread(&mut self) -> Result<(), String> {
-  //   let sysproxy = self.cur_sysproxy.clone();
-
-  //   use std::{thread, time};
-  //   tauri::async_runtime::spawn(async move {
-  //     if let Some(sysproxy) = sysproxy {
-  //       sysproxy.set_sys();
-  //     }
-
-  //     let ten_millis = time::Duration::from_millis(10);
-  //     let now = time::Instant::now();
-
-  //     thread::sleep(ten_millis);
-  //   });
-
-  //   Ok(())
-  // }
 
   /// patch verge config
   /// There should be only one update at a time here
@@ -248,7 +243,72 @@ impl Verge {
       self.config.system_proxy_bypass = Some(bypass);
     }
 
+    // proxy guard
+    // only change it
+    if patch.enable_proxy_guard.is_some() {
+      self.config.enable_proxy_guard = patch.enable_proxy_guard;
+    }
+
+    // relaunch the guard
+    if patch.enable_system_proxy.is_some() || patch.enable_proxy_guard.is_some() {
+      Verge::guard_proxy(10, self.guard_state.clone());
+    }
+
     self.config.save_file()
+  }
+}
+
+impl Verge {
+  /// launch a system proxy guard
+  /// read config from file directly
+  pub fn guard_proxy(wait_secs: u64, guard_state: Arc<Mutex<bool>>) {
+    use tokio::time::{sleep, Duration};
+
+    tauri::async_runtime::spawn(async move {
+      // if it is running, exit
+      let mut state = guard_state.lock().await;
+      if *state {
+        return;
+      }
+      *state = true;
+      std::mem::drop(state);
+
+      loop {
+        sleep(Duration::from_secs(wait_secs)).await;
+
+        log::debug!("[Guard]: heartbeat detection");
+
+        let verge = Verge::new();
+
+        let enable_proxy = verge.config.enable_system_proxy.unwrap_or(false);
+        let enable_guard = verge.config.enable_proxy_guard.unwrap_or(false);
+
+        // stop loop
+        if !enable_guard || !enable_proxy {
+          break;
+        }
+
+        log::info!("[Guard]: try to guard proxy");
+
+        let clash = Clash::new();
+
+        match &clash.info.port {
+          Some(port) => {
+            let bypass = verge.config.system_proxy_bypass.clone();
+            let sysproxy = SysProxyConfig::new(true, port.clone(), bypass);
+
+            if let Err(err) = sysproxy.set_sys() {
+              log::error!("[Guard]: {err}");
+              log::error!("[Guard]: fail to set system proxy");
+            }
+          }
+          None => log::error!("[Guard]: fail to parse clash port"),
+        }
+      }
+
+      let mut state = guard_state.lock().await;
+      *state = false;
+    });
   }
 }
 

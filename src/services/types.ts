@@ -115,6 +115,7 @@ export namespace CmdType {
     traffic_graph?: boolean;
     enable_auto_launch?: boolean;
     enable_system_proxy?: boolean;
+    enable_proxy_guard?: boolean;
     system_proxy_bypass?: string;
   }
 }
