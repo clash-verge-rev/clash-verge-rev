@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
+import { listen } from "@tauri-apps/api/event";
 import { ApiType } from "../../services/types";
 import { getInfomation } from "../../services/api";
 import { getVergeConfig } from "../../services/cmds";
@@ -14,10 +15,20 @@ const LayoutTraffic = () => {
   const portValue = useRecoilValue(atomClashPort);
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
   const { canvasRef, appendData, toggleStyle } = useTrafficGraph();
+  const [refresh, setRefresh] = useState({});
 
   // whether hide traffic graph
   const { data } = useSWR("getVergeConfig", getVergeConfig);
   const trafficGraph = data?.traffic_graph ?? true;
+
+  useEffect(() => {
+    let unlisten: () => void = null!;
+
+    // should reconnect the traffic ws
+    listen("restart_clash", () => setRefresh({})).then((fn) => (unlisten = fn));
+
+    return () => unlisten?.();
+  }, []);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -34,7 +45,7 @@ const LayoutTraffic = () => {
     });
 
     return () => ws?.close();
-  }, [portValue]);
+  }, [portValue, refresh]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
