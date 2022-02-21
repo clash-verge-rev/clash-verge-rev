@@ -1,4 +1,4 @@
-name: CI
+name: Release CI
 
 on: [push]
 
@@ -53,7 +53,7 @@ jobs:
           yarn run check
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@b9ce5d7dc68082d21d30a60103b0ab8c5ddae3a1
         # enable cache even though failed
         continue-on-error: true
         env:
@@ -95,6 +95,5 @@ jobs:
 
       - name: Release update.json
         run: yarn run release
-        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
