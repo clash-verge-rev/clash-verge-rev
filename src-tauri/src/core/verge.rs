@@ -5,7 +5,7 @@ use crate::{
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tauri::{api::path::resource_dir, async_runtime::Mutex};
+use tauri::{async_runtime::Mutex, utils::platform::current_exe};
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -122,13 +122,11 @@ impl Verge {
   }
 
   /// init the auto launch
-  pub fn init_launch(&mut self, package_info: &tauri::PackageInfo) {
-    let app_name = "clash-verge";
-    let app_path = get_app_path(app_name);
-    let app_path = resource_dir(package_info, &tauri::Env::default())
-      .unwrap()
-      .join(app_path);
-    let app_path = app_path.as_os_str().to_str().unwrap();
+  pub fn init_launch(&mut self) {
+    let app_exe = current_exe().unwrap();
+    let app_exe = dunce::canonicalize(app_exe).unwrap();
+    let app_name = app_exe.file_stem().unwrap().to_str().unwrap();
+    let app_path = app_exe.as_os_str().to_str().unwrap();
 
     let auto = AutoLaunchBuilder::new()
       .set_app_name(app_name)
@@ -323,15 +321,4 @@ impl Verge {
       *state = false;
     });
   }
-}
-
-// Get the target app_path
-fn get_app_path(app_name: &str) -> String {
-  #[cfg(target_os = "linux")]
-  let ext = "";
-  #[cfg(target_os = "macos")]
-  let ext = "";
-  #[cfg(target_os = "windows")]
-  let ext = ".exe";
-  String::from(app_name) + ext
 }

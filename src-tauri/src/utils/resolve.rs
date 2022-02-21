@@ -31,7 +31,7 @@ pub fn resolve_setup(app: &App) {
   }
 
   verge.init_sysproxy(clash.info.port.clone());
-  verge.init_launch(app.package_info());
+  verge.init_launch();
   if let Err(err) = verge.sync_launch() {
     log::error!("{}", err);
   }
