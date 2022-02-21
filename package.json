@@ -3,8 +3,8 @@
   "version": "0.0.16",
   "license": "GPL-3.0",
   "scripts": {
-    "dev": "cargo tauri dev",
-    "build": "cargo tauri build",
+    "dev": "tauri dev",
+    "build": "tauri build",
     "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsc && vite build",
