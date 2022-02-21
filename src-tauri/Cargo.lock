@@ -448,6 +448,7 @@ dependencies = [
  "auto-launch",
  "chrono",
  "dirs",
+ "dunce",
  "log",
  "log4rs",
  "port_scanner",
@@ -867,6 +868,12 @@ checksum = "bde03329ae10e79ede66c9ce4dc930aa8599043b0743008548680f25b91502d6"
 dependencies = [
  "dtoa",
 ]
+
+[[package]]
+name = "dunce"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "453440c271cf5577fd2a40e4942540cb7d0d2f85e27c8d07dd0023c925a67541"
 
 [[package]]
 name = "easy-parallel"
