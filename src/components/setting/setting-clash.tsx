@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { ApiType } from "../../services/types";
-import { atomClashPort } from "../../states/setting";
+import { atomClashPort } from "../../services/states";
 import { patchClashConfig } from "../../services/cmds";
 import { SettingList, SettingItem } from "./setting";
 import { getClashConfig, getVersion, updateConfigs } from "../../services/api";
