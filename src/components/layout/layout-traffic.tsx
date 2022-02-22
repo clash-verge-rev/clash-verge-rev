@@ -7,9 +7,10 @@ import { listen } from "@tauri-apps/api/event";
 import { ApiType } from "../../services/types";
 import { getInfomation } from "../../services/api";
 import { getVergeConfig } from "../../services/cmds";
-import { atomClashPort } from "../../states/setting";
-import parseTraffic from "../../utils/parse-traffic";
+import { atomClashPort } from "../../services/states";
+import useLogSetup from "./use-log-setup";
 import useTrafficGraph from "./use-traffic-graph";
+import parseTraffic from "../../utils/parse-traffic";
 
 const LayoutTraffic = () => {
   const portValue = useRecoilValue(atomClashPort);
@@ -20,6 +21,9 @@ const LayoutTraffic = () => {
   // whether hide traffic graph
   const { data } = useSWR("getVergeConfig", getVergeConfig);
   const trafficGraph = data?.traffic_graph ?? true;
+
+  // setup log ws during layout
+  useLogSetup();
 
   useEffect(() => {
     let unlisten: () => void = null!;

@@ -1,38 +1,12 @@
-import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useRecoilState } from "recoil";
 import { Button, Paper } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
-import { ApiType } from "../services/types";
-import { getInfomation } from "../services/api";
+import { atomLogData } from "../services/states";
 import BasePage from "../components/base/base-page";
 import LogItem from "../components/log/log-item";
 
-let logCache: ApiType.LogItem[] = [];
-
 const LogPage = () => {
-  const [logData, setLogData] = useState(logCache);
-
-  useEffect(() => {
-    let ws: WebSocket | null = null;
-
-    getInfomation().then((result) => {
-      const { server = "", secret = "" } = result;
-      ws = new WebSocket(`ws://${server}/logs?token=${secret}`);
-
-      ws.addEventListener("message", (event) => {
-        const data = JSON.parse(event.data) as ApiType.LogItem;
-        const time = dayjs().format("MM-DD HH:mm:ss");
-        setLogData((l) => (logCache = [...l, { ...data, time }]));
-      });
-    });
-
-    return () => ws?.close();
-  }, []);
-
-  const onClear = () => {
-    setLogData([]);
-    logCache = [];
-  };
+  const [logData, setLogData] = useRecoilState(atomLogData);
 
   return (
     <BasePage
@@ -43,7 +17,7 @@ const LogPage = () => {
           size="small"
           sx={{ mt: 1 }}
           variant="contained"
-          onClick={onClear}
+          onClick={() => setLogData([])}
         >
           Clear
         </Button>
