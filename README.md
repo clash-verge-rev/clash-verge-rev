@@ -11,19 +11,17 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 ## Features
 
-Now it's no different from the others, even fewer. (WIP)
+Now it's no different from the others, maybe fewer. (WIP)
 
 ## Development
 
-You should install Rust and Nodejs. Then install tauri cli and packages.
+You should install Rust and Nodejs, see [here](https://tauri.studio/docs/getting-started/prerequisites) for more details. Then install Nodejs packages.
 
 ```shell
-cargo install tauri-cli --git https://github.com/tauri-apps/tauri
-
 yarn install
 ```
 
-Then download the clash binary... Or you can download it from [clash premium release](https://github.com/Dreamacro/clash/releases/tag/premium) and rename it according to [tauri config](https://tauri.studio/en/docs/api/config#tauri.bundle.externalBin).
+Then download the clash binary... Or you can download it from [clash premium release](https://github.com/Dreamacro/clash/releases/tag/premium) and rename it according to [tauri config](https://tauri.studio/docs/api/config/#tauri.bundle.externalBin).
 
 ```shell
 yarn run check
@@ -56,7 +54,7 @@ This is a learning project for Rust practice.
 
 ## Contributions
 
-PR welcome!
+Issue and PR welcome!
 
 ## Acknowledgement
 
