@@ -329,7 +329,9 @@ pub async fn activate_profile(
 
     // begin to generate the new profile config
     let def_config = config::read_yaml::<Mapping>(file_path.clone());
-    let mut new_config = Mapping::new();
+
+    // use the clash config except 5 keys below
+    let mut new_config = clash_config.clone();
 
     // Only the following fields are allowed:
     // proxies/proxy-providers/proxy-groups/rule-providers/rules
@@ -344,24 +346,6 @@ pub async fn activate_profile(
       let key = Value::String(key.to_string());
       if def_config.contains_key(&key) {
         let value = def_config[&key].clone();
-        new_config.insert(key, value);
-      }
-    });
-
-    // add some of the clash `config.yaml` config to it
-    let valid_keys = vec![
-      "mixed-port",
-      "log-level",
-      "allow-lan",
-      "external-controller",
-      "secret",
-      "mode",
-      "ipv6",
-    ];
-    valid_keys.iter().for_each(|key| {
-      let key = Value::String(key.to_string());
-      if clash_config.contains_key(&key) {
-        let value = clash_config[&key].clone();
         new_config.insert(key, value);
       }
     });
