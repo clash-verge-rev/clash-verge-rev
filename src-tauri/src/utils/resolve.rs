@@ -22,18 +22,27 @@ pub fn resolve_setup(app: &App) {
   let mut profiles = profiles_state.0.lock().unwrap();
 
   if let Err(err) = clash.run_sidecar() {
-    log::error!("{}", err);
+    log::error!("{err}");
   }
 
   *profiles = Profiles::read_file();
   if let Err(err) = profiles.activate(&clash) {
-    log::error!("{}", err);
+    log::error!("{err}");
   }
 
   verge.init_sysproxy(clash.info.port.clone());
+  // enable tun mode
+  if verge.config.enable_tun_mode.clone().unwrap_or(false)
+    && verge.cur_sysproxy.is_some()
+    && verge.cur_sysproxy.as_ref().unwrap().enable
+  {
+    log::info!("enable tun mode");
+    clash.tun_mode(true).unwrap();
+  }
+
   verge.init_launch();
   if let Err(err) = verge.sync_launch() {
-    log::error!("{}", err);
+    log::error!("{err}");
   }
 }
 

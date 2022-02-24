@@ -20,6 +20,9 @@ pub struct VergeConfig {
   /// enable traffic graph default is true
   pub traffic_graph: Option<bool>,
 
+  /// clash tun mode
+  pub enable_tun_mode: Option<bool>,
+
   /// can the app auto startup
   pub enable_auto_launch: Option<bool>,
 
@@ -256,6 +259,11 @@ impl Verge {
     // relaunch the guard
     if patch.enable_system_proxy.is_some() || patch.enable_proxy_guard.is_some() {
       Verge::guard_proxy(self.guard_state.clone());
+    }
+
+    // handle the tun mode
+    if patch.enable_tun_mode.is_some() {
+      self.config.enable_tun_mode = patch.enable_tun_mode;
     }
 
     self.config.save_file()
