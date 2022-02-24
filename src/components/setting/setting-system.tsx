@@ -15,6 +15,7 @@ const SettingSystem = ({ onError }: Props) => {
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
 
   const {
+    enable_tun_mode = false,
     enable_auto_launch = false,
     enable_system_proxy = false,
     system_proxy_bypass = "",
@@ -28,6 +29,20 @@ const SettingSystem = ({ onError }: Props) => {
 
   return (
     <SettingList title="System Setting">
+      <SettingItem>
+        <ListItemText primary="Tun Mode" />
+        <GuardState
+          value={enable_tun_mode}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ enable_tun_mode: e })}
+          onGuard={(e) => patchVergeConfig({ enable_tun_mode: e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
       <SettingItem>
         <ListItemText primary="Auto Launch" />
         <GuardState

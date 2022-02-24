@@ -259,10 +259,26 @@ pub fn get_verge_config(verge_state: State<'_, VergeState>) -> Result<VergeConfi
 #[tauri::command]
 pub fn patch_verge_config(
   payload: VergeConfig,
+  clash_state: State<'_, ClashState>,
   verge_state: State<'_, VergeState>,
+  profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
+  let tun_mode = payload.enable_tun_mode.clone();
+
   let mut verge = verge_state.0.lock().unwrap();
-  verge.patch_config(payload)
+  verge.patch_config(payload)?;
+
+  // change tun mode
+  if tun_mode.is_some() {
+    let mut clash = clash_state.0.lock().unwrap();
+    let profiles = profiles_state.0.lock().unwrap();
+
+    clash.tun_mode(tun_mode.unwrap())?;
+    clash.update_config();
+    profiles.activate(&clash)?;
+  }
+
+  Ok(())
 }
 
 /// kill all sidecars when update app

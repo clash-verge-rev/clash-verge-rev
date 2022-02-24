@@ -203,6 +203,48 @@ impl Clash {
     }
     self.save_config()
   }
+
+  /// enable tun mode
+  /// only revise the config and restart the
+  pub fn tun_mode(&mut self, enable: bool) -> Result<(), String> {
+    let tun_key = Value::String("tun".into());
+    let tun_val = self.config.get(&tun_key);
+
+    let mut new_val = Mapping::new();
+
+    if tun_val.is_some() && tun_val.as_ref().unwrap().is_mapping() {
+      new_val = tun_val.as_ref().unwrap().as_mapping().unwrap().clone();
+    }
+
+    macro_rules! revise {
+      ($map: expr, $key: expr, $val: expr) => {
+        let ret_key = Value::String($key.into());
+        if $map.contains_key(&ret_key) {
+          $map[&ret_key] = $val;
+        } else {
+          $map.insert(ret_key, $val);
+        }
+      };
+    }
+
+    macro_rules! append {
+      ($map: expr, $key: expr, $val: expr) => {
+        let ret_key = Value::String($key.into());
+        if !$map.contains_key(&ret_key) {
+          $map.insert(ret_key, $val);
+        }
+      };
+    }
+
+    revise!(new_val, "enable", Value::from(enable));
+    append!(new_val, "stack", Value::from("gvisor"));
+    append!(new_val, "auto-route", Value::from(true));
+    append!(new_val, "auto-detect-interface", Value::from(true));
+
+    revise!(self.config, "tun", Value::from(new_val));
+
+    self.save_config()
+  }
 }
 
 impl Default for Clash {
