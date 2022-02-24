@@ -25,6 +25,7 @@ interface Props {
 const SettingClash = ({ onError }: Props) => {
   const { mutate } = useSWRConfig();
   const { data: clashConfig } = useSWR("getClashConfig", getClashConfig);
+  const { data: versionData } = useSWR("getVersion", getVersion);
 
   const {
     ipv6 = false,
@@ -70,12 +71,9 @@ const SettingClash = ({ onError }: Props) => {
   );
 
   // get clash core version
-  const [clashVer, setClashVer] = useState("");
-  useEffect(() => {
-    getVersion().then(({ premium, version }) => {
-      setClashVer(premium ? `${version} Premium` : version);
-    });
-  }, []);
+  const clashVer = versionData?.premium
+    ? `${versionData.version} Premium`
+    : versionData?.version || "-";
 
   return (
     <SettingList title="Clash Setting">
