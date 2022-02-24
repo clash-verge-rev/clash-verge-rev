@@ -91,6 +91,7 @@ const SettingSystem = ({ onError }: Props) => {
             onFormat={(e: any) => e.target.value}
             onChange={(e) => onChangeData({ system_proxy_bypass: e })}
             onGuard={(e) => patchVergeConfig({ system_proxy_bypass: e })}
+            waitTime={1000}
           >
             <TextField autoComplete="off" size="small" sx={{ width: 120 }} />
           </GuardState>

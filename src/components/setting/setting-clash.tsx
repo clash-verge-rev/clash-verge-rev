@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
-import { useDebounceFn } from "ahooks";
-import { useSetRecoilState } from "recoil";
 import useSWR, { useSWRConfig } from "swr";
+import { useSetRecoilState } from "recoil";
 import {
   ListItemText,
   TextField,
@@ -31,13 +29,10 @@ const SettingClash = ({ onError }: Props) => {
     ipv6 = false,
     "allow-lan": allowLan = false,
     "log-level": logLevel = "silent",
-    "mixed-port": thePort = 0,
+    "mixed-port": mixedPort = 0,
   } = clashConfig ?? {};
 
-  const setPort = useSetRecoilState(atomClashPort);
-  const [mixedPort, setMixedPort] = useState(thePort);
-
-  useEffect(() => setMixedPort(thePort), [thePort]);
+  const setGlobalClashPort = useSetRecoilState(atomClashPort);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
@@ -48,27 +43,20 @@ const SettingClash = ({ onError }: Props) => {
     await patchClashConfig(patch);
   };
 
-  // restart clash when port is changed
-  const { run: onUpdatePort } = useDebounceFn(
-    async (port: number) => {
-      try {
-        if (port < 1000) {
-          throw new Error("The port should not < 1000");
-        }
-        if (port > 65536) {
-          throw new Error("The port should not > 65536");
-        }
-        await patchClashConfig({ "mixed-port": port });
-        onChangeData({ "mixed-port": port });
-        setPort(port);
-        Notice.success("Change Clash port successfully!");
-      } catch (err: any) {
-        setMixedPort(thePort); // back to old port value
-        Notice.error(err.message ?? err.toString());
-      }
-    },
-    { wait: 1000 }
-  );
+  const onUpdatePort = async (port: number) => {
+    if (port < 1000) {
+      throw new Error("The port should not < 1000");
+    }
+    if (port > 65536) {
+      throw new Error("The port should not > 65536");
+    }
+    await patchClashConfig({ "mixed-port": port });
+    setGlobalClashPort(port);
+    Notice.success("Change Clash port successfully!");
+
+    // update the config
+    mutate("getClashConfig");
+  };
 
   // get clash core version
   const clashVer = versionData?.premium
@@ -128,9 +116,11 @@ const SettingClash = ({ onError }: Props) => {
         <ListItemText primary="Mixed Port" />
         <GuardState
           value={mixedPort!}
+          onCatch={onError}
           onFormat={(e: any) => +e.target.value?.replace(/\D+/, "")}
-          onChange={setMixedPort}
+          onChange={(e) => onChangeData({ "mixed-port": e })}
           onGuard={onUpdatePort}
+          waitTime={800}
         >
           <TextField autoComplete="off" size="small" sx={{ width: 120 }} />
         </GuardState>
