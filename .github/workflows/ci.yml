@@ -63,7 +63,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "Clash Verge v__VERSION__"
-          releaseBody: "Clash Verge now supports Windows and macos(intel)."
+          releaseBody: "Clash Verge now supports Windows and macos."
           releaseDraft: false
           prerelease: true
 
