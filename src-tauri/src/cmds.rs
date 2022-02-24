@@ -4,7 +4,7 @@ use crate::{
   utils::{dirs::app_home_dir, fetch::fetch_profile, sysopt::SysProxyConfig},
 };
 use serde_yaml::Mapping;
-use std::process::Command;
+use std::{path::PathBuf, process::Command};
 use tauri::{api, State};
 
 /// get all profiles from `profiles.yaml`
@@ -175,10 +175,7 @@ pub fn view_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> R
     };
   }
 
-  match open_command().arg(path).spawn() {
-    Ok(_) => Ok(()),
-    Err(_) => Err("failed to open file by `open`".into()),
-  }
+  open_path_cmd(path, "failed to open file by `open`")
 }
 
 /// restart the sidecar
@@ -278,30 +275,35 @@ pub fn kill_sidecars() {
 #[tauri::command]
 pub fn open_app_dir() -> Result<(), String> {
   let app_dir = app_home_dir();
-
-  match open_command().arg(app_dir).spawn() {
-    Ok(_) => Ok(()),
-    Err(_) => Err("failed to open logs dir".into()),
-  }
+  open_path_cmd(app_dir, "failed to open app dir")
 }
 
 /// open logs dir
 #[tauri::command]
 pub fn open_logs_dir() -> Result<(), String> {
   let log_dir = app_home_dir().join("logs");
-
-  match open_command().arg(log_dir).spawn() {
-    Ok(_) => Ok(()),
-    Err(_) => Err("failed to open logs dir".into()),
-  }
+  open_path_cmd(log_dir, "failed to open logs dir")
 }
 
 /// get open/explorer command
-fn open_command() -> Command {
-  let open = if cfg!(target_os = "windows") {
-    "explorer"
-  } else {
-    "open"
-  };
-  Command::new(open)
+fn open_path_cmd(dir: PathBuf, err_str: &str) -> Result<(), String> {
+  #[cfg(target_os = "windows")]
+  {
+    use std::os::windows::process::CommandExt;
+
+    match Command::new("explorer")
+      .creation_flags(0x08000000)
+      .arg(dir)
+      .spawn()
+    {
+      Ok(_) => Ok(()),
+      Err(_) => Err(err_str.into()),
+    }
+  }
+
+  #[cfg(not(target_os = "windows"))]
+  match Command::new("open").arg(dir).spawn() {
+    Ok(_) => Ok(()),
+    Err(_) => Err(err_str.into()),
+  }
 }
