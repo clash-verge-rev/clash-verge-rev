@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSWRConfig } from "swr";
 import { Virtuoso } from "react-virtuoso";
 import {
@@ -75,14 +75,14 @@ const ProxyGroup = ({ group }: Props) => {
     }
   };
 
-  const onLocation = () => {
+  const onLocation = (smooth = true) => {
     const index = proxies.findIndex((p) => p.name === now);
 
     if (index >= 0) {
       virtuosoRef.current?.scrollToIndex?.({
         index,
         align: "center",
-        behavior: "smooth",
+        behavior: smooth ? "smooth" : "auto",
       });
     }
   };
@@ -110,6 +110,13 @@ const ProxyGroup = ({ group }: Props) => {
     checkLockRef.current = false;
   };
 
+  // auto scroll to current index
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => onLocation(false), 5);
+    }
+  }, [open]);
+
   return (
     <>
       <ListItem button onClick={() => setOpen(!open)} dense>
@@ -131,7 +138,11 @@ const ProxyGroup = ({ group }: Props) => {
 
       <Collapse in={open} timeout="auto" unmountOnExit>
         <Box sx={{ pl: 4, pr: 3, my: 0.5 }}>
-          <IconButton size="small" title="location" onClick={onLocation}>
+          <IconButton
+            size="small"
+            title="location"
+            onClick={() => onLocation(true)}
+          >
             <MyLocationRounded />
           </IconButton>
           <IconButton size="small" title="check" onClick={onCheckAll}>
