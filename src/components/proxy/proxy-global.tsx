@@ -28,7 +28,7 @@ const ProxyGlobal = (props: Props) => {
 
   const { mutate } = useSWRConfig();
   const [now, setNow] = useState(curProxy || "DIRECT");
-  const [showType, setShowType] = useState(false);
+  const [showType, setShowType] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
   const [filterText, setFilterText] = useState("");
 
@@ -137,6 +137,7 @@ const ProxyGlobal = (props: Props) => {
             groupName={groupName}
             proxy={filterProxies[index]}
             selected={filterProxies[index].name === now}
+            showType={showType}
             onClick={onChangeProxy}
             sx={{ py: 0, px: 2 }}
           />
