@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircleOutlineRounded } from "@mui/icons-material";
 import {
   alpha,
@@ -18,6 +18,7 @@ interface Props {
   groupName: string;
   proxy: ApiType.ProxyItem;
   selected: boolean;
+  showType?: boolean;
   sx?: SxProps<Theme>;
   onClick?: (name: string) => void;
 }
@@ -27,8 +28,20 @@ const Widget = styled(Box)(() => ({
   fontSize: 14,
 }));
 
+const TypeBox = styled(Box)(({ theme }) => ({
+  display: "inline-block",
+  border: "1px solid #ccc",
+  borderColor: alpha(theme.palette.text.secondary, 0.36),
+  color: alpha(theme.palette.text.secondary, 0.42),
+  borderRadius: 4,
+  fontSize: 10,
+  marginLeft: 4,
+  padding: "0 2px",
+  lineHeight: 1.25,
+}));
+
 const ProxyItem = (props: Props) => {
-  const { groupName, proxy, selected, sx, onClick } = props;
+  const { groupName, proxy, selected, showType = true, sx, onClick } = props;
   const [delay, setDelay] = useState(-1);
 
   useEffect(() => {
@@ -37,14 +50,19 @@ const ProxyItem = (props: Props) => {
     }
   }, [proxy]);
 
+  const delayRef = useRef(false);
   const onDelay = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
 
+    if (delayRef.current) return;
+    delayRef.current = true;
+
     delayManager
       .checkDelay(proxy.name, groupName)
       .then((result) => setDelay(result))
-      .catch(() => setDelay(1e6));
+      .catch(() => setDelay(1e6))
+      .finally(() => (delayRef.current = false));
   };
 
   return (
@@ -78,7 +96,17 @@ const ProxyItem = (props: Props) => {
           },
         ]}
       >
-        <ListItemText title={proxy.name} secondary={proxy.name} />
+        <ListItemText
+          title={proxy.name}
+          secondary={
+            <>
+              {proxy.name}
+
+              {showType && <TypeBox>{proxy.type}</TypeBox>}
+              {showType && proxy.udp && <TypeBox>UDP</TypeBox>}
+            </>
+          }
+        />
 
         <ListItemIcon
           sx={{ justifyContent: "flex-end", color: "primary.main" }}
