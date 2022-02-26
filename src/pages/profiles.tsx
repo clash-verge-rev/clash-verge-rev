@@ -1,5 +1,6 @@
 import useSWR, { useSWRConfig } from "swr";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useLockFn } from "ahooks";
 import { Box, Button, Grid, TextField } from "@mui/material";
 import {
   getProfiles,
@@ -81,37 +82,27 @@ const ProfilePage = () => {
     }
   };
 
-  const lockRef = useRef(false);
-  const onSelect = async (index: number, force: boolean) => {
-    if (lockRef.current) return;
+  const onSelect = useLockFn(async (index: number, force: boolean) => {
     if (!force && index === profiles.current) return;
-    lockRef.current = true;
+
     try {
       await selectProfile(index);
       mutate("getProfiles", { ...profiles, current: index }, true);
     } catch (err: any) {
       err && Notice.error(err.toString());
-    } finally {
-      lockRef.current = false;
     }
-  };
+  });
 
-  const lockNewRef = useRef(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const onNew = async (name: string, desc: string) => {
-    if (lockNewRef.current) return;
-    lockNewRef.current = true;
-
+  const onNew = useLockFn(async (name: string, desc: string) => {
     try {
       await newProfile(name, desc);
       setDialogOpen(false);
       mutate("getProfiles");
     } catch (err: any) {
       err && Notice.error(err.toString());
-    } finally {
-      lockNewRef.current = false;
     }
-  };
+  });
 
   return (
     <BasePage title="Profiles">

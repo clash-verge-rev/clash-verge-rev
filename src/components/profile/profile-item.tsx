@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import dayjs from "dayjs";
 import {
   alpha,
@@ -11,6 +11,7 @@ import {
   MenuItem,
   Menu,
 } from "@mui/material";
+import { useLockFn } from "ahooks";
 import { useSWRConfig } from "swr";
 import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../../services/types";
@@ -93,20 +94,16 @@ const ProfileItem: React.FC<Props> = (props) => {
     }
   };
 
-  const deleteRef = useRef(false);
-  const onDelete = async () => {
+  const onDelete = useLockFn(async () => {
     setAnchorEl(null);
-    if (deleteRef.current) return;
-    deleteRef.current = true;
+
     try {
       await deleteProfile(index);
       mutate("getProfiles");
     } catch (err: any) {
       Notice.error(err.toString());
-    } finally {
-      deleteRef.current = false;
     }
-  };
+  });
 
   const handleContextMenu = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>
