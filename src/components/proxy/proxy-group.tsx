@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSWRConfig } from "swr";
+import { useLockFn } from "ahooks";
 import { Virtuoso } from "react-virtuoso";
 import {
   Box,
@@ -35,13 +36,9 @@ const ProxyGroup = ({ group }: Props) => {
   const virtuosoRef = useRef<any>();
   const proxies = group.all ?? [];
 
-  const selectLockRef = useRef(false);
-  const onSelect = async (name: string) => {
+  const onSelect = useLockFn(async (name: string) => {
     // Todo: support another proxy group type
     if (group.type !== "Selector") return;
-
-    if (selectLockRef.current) return;
-    selectLockRef.current = true;
 
     const oldValue = now;
     try {
@@ -50,8 +47,6 @@ const ProxyGroup = ({ group }: Props) => {
     } catch {
       setNow(oldValue);
       return; // do not update profile
-    } finally {
-      selectLockRef.current = false;
     }
 
     try {
@@ -73,7 +68,7 @@ const ProxyGroup = ({ group }: Props) => {
     } catch (err) {
       console.error(err);
     }
-  };
+  });
 
   const onLocation = (smooth = true) => {
     const index = proxies.findIndex((p) => p.name === now);
@@ -87,11 +82,7 @@ const ProxyGroup = ({ group }: Props) => {
     }
   };
 
-  const checkLockRef = useRef(false);
-  const onCheckAll = async () => {
-    if (checkLockRef.current) return;
-    checkLockRef.current = true;
-
+  const onCheckAll = useLockFn(async () => {
     // rerender quickly
     if (proxies.length) setTimeout(() => mutate("getProxies"), 500);
 
@@ -106,9 +97,7 @@ const ProxyGroup = ({ group }: Props) => {
 
       mutate("getProxies");
     }
-
-    checkLockRef.current = false;
-  };
+  });
 
   // auto scroll to current index
   useEffect(() => {

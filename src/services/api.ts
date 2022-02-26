@@ -84,33 +84,41 @@ export async function updateProxy(group: string, proxy: string) {
 export async function getProxies() {
   const instance = await getAxios();
   const response = await instance.get<any, any>("/proxies");
-  const proxies = (response?.proxies ?? {}) as Record<
+  const records = (response?.proxies ?? {}) as Record<
     string,
     ApiType.ProxyItem
   >;
 
-  const global = proxies["GLOBAL"];
+  const global = records["GLOBAL"];
+  const direct = records["DIRECT"];
+  const reject = records["REJECT"];
   const order = global?.all;
 
   let groups: ApiType.ProxyGroupItem[] = [];
 
   if (order) {
     groups = order
-      .filter((name) => proxies[name]?.all)
-      .map((name) => proxies[name])
+      .filter((name) => records[name]?.all)
+      .map((name) => records[name])
       .map((each) => ({
         ...each,
-        all: each.all!.map((item) => proxies[item]),
+        all: each.all!.map((item) => records[item]),
       }));
   } else {
-    groups = Object.values(proxies)
+    groups = Object.values(records)
       .filter((each) => each.name !== "GLOBAL" && each.all)
       .map((each) => ({
         ...each,
-        all: each.all!.map((item) => proxies[item]),
+        all: each.all!.map((item) => records[item]),
       }));
     groups.sort((a, b) => b.name.localeCompare(a.name));
   }
 
-  return { global, groups, proxies };
+  const proxies = [direct, reject].concat(
+    Object.values(records).filter(
+      (p) => !p.all?.length && p.name !== "DIRECT" && p.name !== "REJECT"
+    )
+  );
+
+  return { global, direct, groups, records, proxies };
 }
