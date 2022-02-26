@@ -10,8 +10,7 @@ mod utils;
 
 use crate::utils::{resolve, server};
 use tauri::{
-  api, CustomMenuItem, Manager, Menu, MenuItem, Submenu, SystemTray, SystemTrayEvent,
-  SystemTrayMenu, SystemTrayMenuItem,
+  api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
 };
 
 fn main() -> std::io::Result<()> {
@@ -20,29 +19,18 @@ fn main() -> std::io::Result<()> {
     return Ok(());
   }
 
-  let submenu_file = Submenu::new(
-    "File",
-    Menu::new()
-      .add_native_item(MenuItem::Undo)
-      .add_native_item(MenuItem::Redo)
-      .add_native_item(MenuItem::Copy)
-      .add_native_item(MenuItem::Paste)
-      .add_native_item(MenuItem::Cut)
-      .add_native_item(MenuItem::SelectAll),
-  );
-
   let tray_menu = SystemTrayMenu::new()
     .add_item(CustomMenuItem::new("open_window", "Show"))
     .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
     .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(CustomMenuItem::new("quit", "Quit").accelerator("CmdOrControl+Q"));
 
-  tauri::Builder::default()
+  #[allow(unused_mut)]
+  let mut builder = tauri::Builder::default()
     .manage(states::VergeState::default())
     .manage(states::ClashState::default())
     .manage(states::ProfilesState::default())
     .setup(|app| Ok(resolve::resolve_setup(app)))
-    .menu(Menu::new().add_submenu(submenu_file))
     .system_tray(SystemTray::new().with_menu(tray_menu))
     .on_system_tray_event(move |app_handle, event| match event {
       SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
@@ -106,7 +94,26 @@ fn main() -> std::io::Result<()> {
       cmds::select_profile,
       cmds::get_profiles,
       cmds::sync_profiles,
-    ])
+    ]);
+
+  #[cfg(target_os = "macos")]
+  {
+    use tauri::{Menu, MenuItem, Submenu};
+
+    let submenu_file = Submenu::new(
+      "File",
+      Menu::new()
+        .add_native_item(MenuItem::Undo)
+        .add_native_item(MenuItem::Redo)
+        .add_native_item(MenuItem::Copy)
+        .add_native_item(MenuItem::Paste)
+        .add_native_item(MenuItem::Cut)
+        .add_native_item(MenuItem::SelectAll),
+    );
+    builder = builder.menu(Menu::new().add_submenu(submenu_file));
+  }
+
+  builder
     .build(tauri::generate_context!())
     .expect("error while running tauri application")
     .run(|app_handle, e| match e {
