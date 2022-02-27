@@ -1,5 +1,3 @@
-extern crate serde_yaml;
-
 use crate::utils::{dirs, tmpl};
 use chrono::Local;
 use log::LevelFilter;
@@ -7,7 +5,7 @@ use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use std::fs::{self, File};
+use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use tauri::PackageInfo;
@@ -48,13 +46,13 @@ fn init_config(app_dir: &PathBuf) -> std::io::Result<()> {
   let profile_path = app_dir.join("profiles.yaml");
 
   if !clash_path.exists() {
-    File::create(clash_path)?.write(tmpl::CLASH_CONFIG)?;
+    fs::File::create(clash_path)?.write(tmpl::CLASH_CONFIG)?;
   }
   if !verge_path.exists() {
-    File::create(verge_path)?.write(tmpl::VERGE_CONFIG)?;
+    fs::File::create(verge_path)?.write(tmpl::VERGE_CONFIG)?;
   }
   if !profile_path.exists() {
-    File::create(profile_path)?.write(tmpl::PROFILES_CONFIG)?;
+    fs::File::create(profile_path)?.write(tmpl::PROFILES_CONFIG)?;
   }
   Ok(())
 }
@@ -63,8 +61,8 @@ fn init_config(app_dir: &PathBuf) -> std::io::Result<()> {
 pub fn init_app(package_info: &PackageInfo) {
   // create app dir
   let app_dir = dirs::app_home_dir();
-  let log_dir = app_dir.join("logs");
-  let profiles_dir = app_dir.join("profiles");
+  let log_dir = dirs::app_logs_dir();
+  let profiles_dir = dirs::app_profiles_dir();
 
   let res_dir = dirs::app_resources_dir(package_info);
 

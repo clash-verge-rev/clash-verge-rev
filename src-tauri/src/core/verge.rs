@@ -2,6 +2,7 @@ use crate::{
   core::Clash,
   utils::{config, dirs, sysopt::SysProxyConfig},
 };
+use anyhow::{bail, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -39,17 +40,15 @@ pub struct VergeConfig {
   pub proxy_guard_duration: Option<u64>,
 }
 
-static VERGE_CONFIG: &str = "verge.yaml";
-
 impl VergeConfig {
   pub fn new() -> Self {
-    config::read_yaml::<VergeConfig>(dirs::app_home_dir().join(VERGE_CONFIG))
+    config::read_yaml::<VergeConfig>(dirs::verge_path())
   }
 
   /// Save Verge App Config
-  pub fn save_file(&self) -> Result<(), String> {
+  pub fn save_file(&self) -> Result<()> {
     config::save_yaml(
-      dirs::app_home_dir().join(VERGE_CONFIG),
+      dirs::verge_path(),
       self,
       Some("# The Config for Clash Verge App\n\n"),
     )
@@ -140,30 +139,28 @@ impl Verge {
   }
 
   /// sync the startup when run the app
-  pub fn sync_launch(&self) -> Result<(), String> {
+  pub fn sync_launch(&self) -> Result<()> {
     let enable = self.config.enable_auto_launch.clone().unwrap_or(false);
     if !enable {
       return Ok(());
     }
 
     if self.auto_launch.is_none() {
-      return Err("should init the auto launch first".into());
+      bail!("should init the auto launch first");
     }
 
     let auto_launch = self.auto_launch.clone().unwrap();
 
     let is_enabled = auto_launch.is_enabled().unwrap_or(false);
     if !is_enabled {
-      if let Err(_) = auto_launch.enable() {
-        return Err("failed to enable auto-launch".into());
-      }
+      auto_launch.enable()?;
     }
 
     Ok(())
   }
 
   /// update the startup
-  fn update_launch(&mut self, enable: bool) -> Result<(), String> {
+  fn update_launch(&mut self, enable: bool) -> Result<()> {
     let conf_enable = self.config.enable_auto_launch.clone().unwrap_or(false);
 
     if enable == conf_enable {
@@ -172,24 +169,18 @@ impl Verge {
 
     let auto_launch = self.auto_launch.clone().unwrap();
 
-    let result = match enable {
-      true => auto_launch.enable(),
-      false => auto_launch.disable(),
+    match enable {
+      true => auto_launch.enable()?,
+      false => auto_launch.disable()?,
     };
 
-    match result {
-      Ok(_) => Ok(()),
-      Err(err) => {
-        log::error!("{err}");
-        Err("failed to set system startup info".into())
-      }
-    }
+    Ok(())
   }
 
   /// patch verge config
   /// There should be only one update at a time here
   /// so call the save_file at the end is savely
-  pub fn patch_config(&mut self, patch: VergeConfig) -> Result<(), String> {
+  pub fn patch_config(&mut self, patch: VergeConfig) -> Result<()> {
     // only change it
     if patch.theme_mode.is_some() {
       self.config.theme_mode = patch.theme_mode;
@@ -218,7 +209,7 @@ impl Verge {
           self.cur_sysproxy = Some(sysproxy);
 
           log::error!("failed to set system proxy");
-          return Err("failed to set system proxy".into());
+          bail!("failed to set system proxy");
         }
         self.cur_sysproxy = Some(sysproxy);
       }
@@ -237,7 +228,7 @@ impl Verge {
             self.cur_sysproxy = Some(sysproxy);
 
             log::error!("failed to set system proxy");
-            return Err("failed to set system proxy".into());
+            bail!("failed to set system proxy");
           }
         }
 

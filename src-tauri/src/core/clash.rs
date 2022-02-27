@@ -1,5 +1,6 @@
 use super::{Profiles, Verge};
 use crate::utils::{config, dirs};
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
@@ -31,12 +32,9 @@ pub struct Clash {
   pub sidecar: Option<CommandChild>,
 }
 
-static CLASH_CONFIG: &str = "config.yaml";
-
-// todo: be able to change config field
 impl Clash {
   pub fn new() -> Clash {
-    let config = Clash::get_config();
+    let config = Clash::read_config();
     let info = Clash::get_info(&config);
 
     Clash {
@@ -44,6 +42,20 @@ impl Clash {
       info,
       sidecar: None,
     }
+  }
+
+  /// get clash config
+  fn read_config() -> Mapping {
+    config::read_yaml::<Mapping>(dirs::clash_path())
+  }
+
+  /// save the clash config
+  fn save_config(&self) -> Result<()> {
+    config::save_yaml(
+      dirs::clash_path(),
+      &self.config,
+      Some("# Default Config For Clash Core\n\n"),
+    )
   }
 
   /// parse the clash's config.yaml
@@ -100,7 +112,7 @@ impl Clash {
   }
 
   /// run clash sidecar
-  pub fn run_sidecar(&mut self) -> Result<(), String> {
+  pub fn run_sidecar(&mut self) -> Result<()> {
     let app_dir = dirs::app_home_dir();
     let app_dir = app_dir.as_os_str().to_str().unwrap();
 
@@ -121,25 +133,23 @@ impl Clash {
           });
           Ok(())
         }
-        Err(err) => Err(err.to_string()),
+        Err(err) => bail!(err.to_string()),
       },
-      Err(err) => Err(err.to_string()),
+      Err(err) => bail!(err.to_string()),
     }
   }
 
   /// drop clash sidecar
-  pub fn drop_sidecar(&mut self) -> Result<(), String> {
+  pub fn drop_sidecar(&mut self) -> Result<()> {
     if let Some(sidecar) = self.sidecar.take() {
-      if let Err(err) = sidecar.kill() {
-        return Err(format!("failed to drop clash for \"{}\"", err));
-      }
+      sidecar.kill()?;
     }
     Ok(())
   }
 
   /// restart clash sidecar
   /// should reactivate profile after restart
-  pub fn restart_sidecar(&mut self, profiles: &mut Profiles) -> Result<(), String> {
+  pub fn restart_sidecar(&mut self, profiles: &mut Profiles) -> Result<()> {
     self.update_config();
     self.drop_sidecar()?;
     self.run_sidecar()?;
@@ -148,22 +158,8 @@ impl Clash {
 
   /// update the clash info
   pub fn update_config(&mut self) {
-    self.config = Clash::get_config();
+    self.config = Clash::read_config();
     self.info = Clash::get_info(&self.config);
-  }
-
-  /// get clash config
-  fn get_config() -> Mapping {
-    config::read_yaml::<Mapping>(dirs::app_home_dir().join(CLASH_CONFIG))
-  }
-
-  /// save the clash config
-  fn save_config(&self) -> Result<(), String> {
-    config::save_yaml(
-      dirs::app_home_dir().join(CLASH_CONFIG),
-      &self.config,
-      Some("# Default Config For Clash Core\n\n"),
-    )
   }
 
   /// patch update the clash config
@@ -172,7 +168,7 @@ impl Clash {
     patch: Mapping,
     verge: &mut Verge,
     profiles: &mut Profiles,
-  ) -> Result<(), String> {
+  ) -> Result<()> {
     for (key, value) in patch.iter() {
       let value = value.clone();
       let key_str = key.as_str().clone().unwrap_or("");
@@ -206,7 +202,7 @@ impl Clash {
 
   /// enable tun mode
   /// only revise the config and restart the
-  pub fn tun_mode(&mut self, enable: bool) -> Result<(), String> {
+  pub fn tun_mode(&mut self, enable: bool) -> Result<()> {
     let tun_key = Value::String("tun".into());
     let tun_val = self.config.get(&tun_key);
 
@@ -256,7 +252,7 @@ impl Default for Clash {
 impl Drop for Clash {
   fn drop(&mut self) {
     if let Err(err) = self.drop_sidecar() {
-      log::error!("{}", err);
+      log::error!("{err}");
     }
   }
 }

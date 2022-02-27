@@ -1,10 +1,10 @@
 use super::{Clash, ClashInfo};
 use crate::utils::{config, dirs, tmpl};
+use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::collections::HashMap;
-use std::env::temp_dir;
 use std::fs::{remove_file, File};
 use std::io::Write;
 use std::path::PathBuf;
@@ -24,18 +24,30 @@ pub struct Profiles {
 pub struct ProfileItem {
   /// profile name
   pub name: Option<String>,
+
   /// profile description
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub desc: Option<String>,
+
   /// profile file
   pub file: Option<String>,
+
   /// current mode
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub mode: Option<String>,
+
   /// source url
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub url: Option<String>,
+
   /// selected infomation
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub selected: Option<Vec<ProfileSelected>>,
+
   /// user info
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub extra: Option<ProfileExtra>,
+
   /// updated time
   pub updated: Option<usize>,
 }
@@ -63,29 +75,26 @@ pub struct ProfileResponse {
   pub extra: Option<ProfileExtra>,
 }
 
-static PROFILE_YAML: &str = "profiles.yaml";
-static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
-
 impl Profiles {
   /// read the config from the file
   pub fn read_file() -> Self {
-    config::read_yaml::<Profiles>(dirs::app_home_dir().join(PROFILE_YAML))
+    config::read_yaml::<Profiles>(dirs::profiles_path())
   }
 
   /// save the config to the file
-  pub fn save_file(&self) -> Result<(), String> {
+  pub fn save_file(&self) -> Result<()> {
     config::save_yaml(
-      dirs::app_home_dir().join(PROFILE_YAML),
+      dirs::profiles_path(),
       self,
       Some("# Profiles Config for Clash Verge\n\n"),
     )
   }
 
   /// sync the config between file and memory
-  pub fn sync_file(&mut self) -> Result<(), String> {
-    let data = config::read_yaml::<Self>(dirs::app_home_dir().join(PROFILE_YAML));
+  pub fn sync_file(&mut self) -> Result<()> {
+    let data = config::read_yaml::<Self>(dirs::profiles_path());
     if data.current.is_none() {
-      Err("failed to read profiles.yaml".into())
+      bail!("failed to read profiles.yaml")
     } else {
       self.current = data.current;
       self.items = data.items;
@@ -95,9 +104,9 @@ impl Profiles {
 
   /// import the new profile from the url
   /// and update the config file
-  pub fn import_from_url(&mut self, url: String, result: ProfileResponse) -> Result<(), String> {
+  pub fn import_from_url(&mut self, url: String, result: ProfileResponse) -> Result<()> {
     // save the profile file
-    let path = dirs::app_home_dir().join("profiles").join(&result.file);
+    let path = dirs::app_profiles_dir().join(&result.file);
     let file_data = result.data.as_bytes();
     File::create(path).unwrap().write(file_data).unwrap();
 
@@ -130,11 +139,11 @@ impl Profiles {
   }
 
   /// set the current and save to file
-  pub fn put_current(&mut self, index: usize) -> Result<(), String> {
+  pub fn put_current(&mut self, index: usize) -> Result<()> {
     let items = self.items.take().unwrap_or(vec![]);
 
     if index >= items.len() {
-      return Err("the index out of bound".into());
+      bail!("the index out of bound");
     }
 
     self.items = Some(items);
@@ -144,7 +153,7 @@ impl Profiles {
 
   /// append new item
   /// return the new item's index
-  pub fn append_item(&mut self, name: String, desc: String) -> Result<(usize, PathBuf), String> {
+  pub fn append_item(&mut self, name: String, desc: String) -> Result<(usize, PathBuf)> {
     let mut items = self.items.take().unwrap_or(vec![]);
 
     // create a new profile file
@@ -153,7 +162,7 @@ impl Profiles {
       .unwrap()
       .as_secs();
     let file = format!("{}.yaml", now);
-    let path = dirs::app_home_dir().join("profiles").join(&file);
+    let path = dirs::app_profiles_dir().join(&file);
 
     match File::create(&path).unwrap().write(tmpl::ITEM_CONFIG) {
       Ok(_) => {
@@ -172,14 +181,14 @@ impl Profiles {
         self.items = Some(items);
         Ok((index, path))
       }
-      Err(_) => Err("failed to create file".into()),
+      Err(_) => bail!("failed to create file"),
     }
   }
 
   /// update the target profile
   /// and save to config file
   /// only support the url item
-  pub fn update_item(&mut self, index: usize, result: ProfileResponse) -> Result<(), String> {
+  pub fn update_item(&mut self, index: usize, result: ProfileResponse) -> Result<()> {
     let mut items = self.items.take().unwrap_or(vec![]);
 
     let now = SystemTime::now()
@@ -189,7 +198,7 @@ impl Profiles {
 
     // update file
     let file_path = &items[index].file.as_ref().unwrap();
-    let file_path = dirs::app_home_dir().join("profiles").join(file_path);
+    let file_path = dirs::app_profiles_dir().join(file_path);
     let file_data = result.data.as_bytes();
     File::create(file_path).unwrap().write(file_data).unwrap();
 
@@ -202,10 +211,10 @@ impl Profiles {
   }
 
   /// patch item
-  pub fn patch_item(&mut self, index: usize, profile: ProfileItem) -> Result<(), String> {
+  pub fn patch_item(&mut self, index: usize, profile: ProfileItem) -> Result<()> {
     let mut items = self.items.take().unwrap_or(vec![]);
     if index >= items.len() {
-      return Err("index out of bound".into());
+      bail!("index out of range");
     }
 
     if profile.name.is_some() {
@@ -232,19 +241,19 @@ impl Profiles {
   }
 
   /// delete the item
-  pub fn delete_item(&mut self, index: usize) -> Result<bool, String> {
+  pub fn delete_item(&mut self, index: usize) -> Result<bool> {
     let mut current = self.current.clone().unwrap_or(0);
     let mut items = self.items.clone().unwrap_or(vec![]);
 
     if index >= items.len() {
-      return Err("index out of bound".into());
+      bail!("index out of range");
     }
 
     let mut rm_item = items.remove(index);
 
     // delete the file
     if let Some(file) = rm_item.file.take() {
-      let file_path = dirs::app_home_dir().join("profiles").join(file);
+      let file_path = dirs::app_profiles_dir().join(file);
 
       if file_path.exists() {
         if let Err(err) = remove_file(file_path) {
@@ -272,33 +281,34 @@ impl Profiles {
   }
 
   /// activate current profile
-  pub fn activate(&self, clash: &Clash) -> Result<(), String> {
+  pub fn activate(&self, clash: &Clash) -> Result<()> {
     let current = self.current.unwrap_or(0);
     match self.items.clone() {
       Some(items) => {
         if current >= items.len() {
-          return Err("the index out of bound".into());
+          bail!("the index out of bound");
         }
 
         let profile = items[current].clone();
         let clash_config = clash.config.clone();
         let clash_info = clash.info.clone();
+
         tauri::async_runtime::spawn(async move {
           let mut count = 5; // retry times
-          let mut err = String::from("");
+          let mut err = None;
           while count > 0 {
             match activate_profile(&profile, &clash_config, &clash_info).await {
               Ok(_) => return,
-              Err(e) => err = e,
+              Err(e) => err = Some(e),
             }
             count -= 1;
           }
-          log::error!("failed to activate for `{}`", err);
+          log::error!("failed to activate for `{}`", err.unwrap());
         });
 
         Ok(())
       }
-      None => Err("empty profiles".into()),
+      None => bail!("empty profiles"),
     }
   }
 }
@@ -308,23 +318,23 @@ pub async fn activate_profile(
   profile_item: &ProfileItem,
   clash_config: &Mapping,
   clash_info: &ClashInfo,
-) -> Result<(), String> {
+) -> Result<()> {
   // temp profile's path
-  let temp_path = temp_dir().join(PROFILE_TEMP);
+  let temp_path = dirs::profiles_temp_path();
 
   // generate temp profile
   {
     let file_name = match profile_item.file.clone() {
       Some(file_name) => file_name,
-      None => return Err("profile item should have `file` field".into()),
+      None => bail!("profile item should have `file` field"),
     };
 
-    let file_path = dirs::app_home_dir().join("profiles").join(file_name);
+    let file_path = dirs::app_profiles_dir().join(file_name);
     if !file_path.exists() {
-      return Err(format!(
+      bail!(
         "profile `{}` not exists",
         file_path.as_os_str().to_str().unwrap()
-      ));
+      );
     }
 
     // begin to generate the new profile config
@@ -372,12 +382,13 @@ pub async fn activate_profile(
   let mut data = HashMap::new();
   data.insert("path", temp_path.as_os_str().to_str().unwrap());
 
-  let client = match reqwest::ClientBuilder::new().no_proxy().build() {
-    Ok(c) => c,
-    Err(_) => return Err("failed to create http::put".into()),
-  };
-  match client.put(server).headers(headers).json(&data).send().await {
-    Ok(_) => Ok(()),
-    Err(err) => Err(format!("request failed `{}`", err.to_string())),
-  }
+  let client = reqwest::ClientBuilder::new().no_proxy().build()?;
+
+  client
+    .put(server)
+    .headers(headers)
+    .json(&data)
+    .send()
+    .await?;
+  Ok(())
 }
