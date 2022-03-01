@@ -128,8 +128,8 @@ impl Clash {
           tauri::async_runtime::spawn(async move {
             while let Some(event) = rx.recv().await {
               match event {
-                CommandEvent::Stdout(line) => log::info!("[stdout]: {}", line),
-                CommandEvent::Stderr(err) => log::error!("[stderr]: {}", err),
+                CommandEvent::Stdout(line) => log::info!("[clash]: {}", line),
+                CommandEvent::Stderr(err) => log::error!("[clash]: {}", err),
                 _ => {}
               }
             }
