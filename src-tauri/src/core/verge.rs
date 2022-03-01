@@ -1,5 +1,6 @@
 use crate::{
   core::Clash,
+  log_if_err,
   utils::{config, dirs, sysopt::SysProxyConfig},
 };
 use anyhow::{bail, Result};
@@ -58,13 +59,18 @@ impl VergeConfig {
 /// Verge App abilities
 #[derive(Debug)]
 pub struct Verge {
+  /// manage the verge config
   pub config: VergeConfig,
 
-  pub old_sysproxy: Option<SysProxyConfig>,
-
+  /// current system proxy setting
   pub cur_sysproxy: Option<SysProxyConfig>,
 
-  pub auto_launch: Option<AutoLaunch>,
+  /// record the original system proxy
+  /// recover it when exit
+  old_sysproxy: Option<SysProxyConfig>,
+
+  /// helps to auto launch the app
+  auto_launch: Option<AutoLaunch>,
 
   /// record whether the guard async is running or not
   guard_state: Arc<Mutex<bool>>,
@@ -282,7 +288,7 @@ impl Verge {
       loop {
         sleep(Duration::from_secs(wait_secs)).await;
 
-        log::debug!("[Guard]: heartbeat detection");
+        log::debug!("guard heartbeat detection");
 
         let verge = Verge::new();
 
@@ -298,7 +304,7 @@ impl Verge {
           break;
         }
 
-        log::info!("[Guard]: try to guard proxy");
+        log::info!("try to guard proxy");
 
         let clash = Clash::new();
 
@@ -307,12 +313,9 @@ impl Verge {
             let bypass = verge.config.system_proxy_bypass.clone();
             let sysproxy = SysProxyConfig::new(true, port.clone(), bypass);
 
-            if let Err(err) = sysproxy.set_sys() {
-              log::error!("[Guard]: {err}");
-              log::error!("[Guard]: fail to set system proxy");
-            }
+            log_if_err!(sysproxy.set_sys());
           }
-          None => log::error!("[Guard]: fail to parse clash port"),
+          None => log::error!("fail to parse clash port"),
         }
       }
 
