@@ -1,3 +1,4 @@
+use nanoid::nanoid;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -8,10 +9,17 @@ pub fn get_now() -> usize {
     .as_secs() as _
 }
 
+const ALPHABET: [char; 62] = [
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+  'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
+  'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+  'V', 'W', 'X', 'Y', 'Z',
+];
+
 /// generate the uid
 pub fn get_uid(prefix: &str) -> String {
-  let now = get_now();
-  format!("{prefix}{now}")
+  let id = nanoid!(11, &ALPHABET);
+  format!("{prefix}{id}")
 }
 
 /// parse the string
