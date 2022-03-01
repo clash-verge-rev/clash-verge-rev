@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import {
   alpha,
@@ -16,9 +16,10 @@ import { useSWRConfig } from "swr";
 import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../../services/types";
 import { updateProfile, deleteProfile, viewProfile } from "../../services/cmds";
-import Notice from "../base/base-notice";
-import parseTraffic from "../../utils/parse-traffic";
 import relativeTime from "dayjs/plugin/relativeTime";
+import parseTraffic from "../../utils/parse-traffic";
+import ProfileEdit from "./profile-edit";
+import Notice from "../base/base-notice";
 
 dayjs.extend(relativeTime);
 
@@ -38,8 +39,10 @@ const round = keyframes`
   to { transform: rotate(360deg); }
 `;
 
+// save the state of each item loading
+const loadingCache: Record<string, boolean> = {};
+
 interface Props {
-  // index: number;
   selected: boolean;
   itemData: CmdType.ProfileItem;
   onSelect: (force: boolean) => void;
@@ -49,7 +52,7 @@ const ProfileItem: React.FC<Props> = (props) => {
   const { selected, itemData, onSelect } = props;
 
   const { mutate } = useSWRConfig();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(loadingCache[itemData.uid] ?? false);
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
 
@@ -65,6 +68,16 @@ const ProfileItem: React.FC<Props> = (props) => {
   // subscription url mode
   const hasUrl = !!itemData.url;
   const hasExtra = !!extra; // only subscription url has extra info
+
+  useEffect(() => {
+    loadingCache[itemData.uid] = loading;
+  }, [itemData, loading]);
+
+  const [editOpen, setEditOpen] = useState(false);
+  const onEdit = () => {
+    setAnchorEl(null);
+    setEditOpen(true);
+  };
 
   const onView = async () => {
     setAnchorEl(null);
@@ -86,11 +99,11 @@ const ProfileItem: React.FC<Props> = (props) => {
     setLoading(true);
     try {
       await updateProfile(itemData.uid, withProxy);
+      setLoading(false);
       mutate("getProfiles");
     } catch (err: any) {
-      Notice.error(err.toString());
-    } finally {
       setLoading(false);
+      Notice.error(err?.message || err.toString());
     }
   };
 
@@ -101,7 +114,7 @@ const ProfileItem: React.FC<Props> = (props) => {
       await deleteProfile(itemData.uid);
       mutate("getProfiles");
     } catch (err: any) {
-      Notice.error(err.toString());
+      Notice.error(err?.message || err.toString());
     }
   });
 
@@ -123,6 +136,7 @@ const ProfileItem: React.FC<Props> = (props) => {
 
   const urlModeMenu = [
     { label: "Select", handler: onForceSelect },
+    { label: "Edit", handler: onEdit },
     { label: "View", handler: onView },
     { label: "Update", handler: onUpdateWrapper(false) },
     { label: "Update(Proxy)", handler: onUpdateWrapper(true) },
@@ -130,7 +144,8 @@ const ProfileItem: React.FC<Props> = (props) => {
   ];
   const fileModeMenu = [
     { label: "Select", handler: onForceSelect },
-    { label: "Edit", handler: onView },
+    { label: "Edit", handler: onEdit },
+    { label: "View", handler: onView },
     { label: "Delete", handler: onDelete },
   ];
 
@@ -261,6 +276,12 @@ const ProfileItem: React.FC<Props> = (props) => {
           </MenuItem>
         ))}
       </Menu>
+
+      <ProfileEdit
+        open={editOpen}
+        itemData={itemData}
+        onClose={() => setEditOpen(false)}
+      />
     </>
   );
 };

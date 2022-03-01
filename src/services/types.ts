@@ -91,7 +91,6 @@ export namespace CmdType {
     name?: string;
     desc?: string;
     file?: string;
-    mode?: string;
     url?: string;
     updated?: number;
     selected?: {
