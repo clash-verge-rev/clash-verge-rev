@@ -1,37 +1,18 @@
 use crate::{
-  core::{ClashInfo, ProfileItem, Profiles, VergeConfig},
+  core::{ClashInfo, PrfItem, Profiles, VergeConfig},
+  ret_err,
   states::{ClashState, ProfilesState, VergeState},
-  utils::{dirs, fetch::fetch_profile, sysopt::SysProxyConfig},
+  utils::{dirs, sysopt::SysProxyConfig},
+  wrap_err,
 };
 use anyhow::Result;
 use serde_yaml::Mapping;
 use std::{path::PathBuf, process::Command};
 use tauri::{api, State};
 
-/// wrap the anyhow error
-/// transform the error to String
-macro_rules! wrap_err {
-  ($stat: expr) => {
-    match $stat {
-      Ok(a) => Ok(a),
-      Err(err) => {
-        log::error!("{}", err.to_string());
-        Err(format!("{}", err.to_string()))
-      }
-    }
-  };
-}
-
-/// return the string literal error
-macro_rules! ret_err {
-  ($str: literal) => {
-    return Err($str.into())
-  };
-}
-
 /// get all profiles from `profiles.yaml`
 #[tauri::command]
-pub fn get_profiles(profiles_state: State<'_, ProfilesState>) -> Result<Profiles, String> {
+pub fn get_profiles<'a>(profiles_state: State<'_, ProfilesState>) -> Result<Profiles, String> {
   let profiles = profiles_state.0.lock().unwrap();
   Ok(profiles.clone())
 }
@@ -51,9 +32,10 @@ pub async fn import_profile(
   with_proxy: bool,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let result = fetch_profile(&url, with_proxy).await?;
+  let item = wrap_err!(PrfItem::from_url(&url, with_proxy).await)?;
+
   let mut profiles = profiles_state.0.lock().unwrap();
-  wrap_err!(profiles.import_from_url(url, result))
+  wrap_err!(profiles.append_item(item))
 }
 
 /// new a profile
@@ -65,59 +47,50 @@ pub async fn new_profile(
   desc: String,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
+  let item = wrap_err!(PrfItem::from_local(name, desc))?;
   let mut profiles = profiles_state.0.lock().unwrap();
-  wrap_err!(profiles.append_item(name, desc))?;
-  Ok(())
+
+  wrap_err!(profiles.append_item(item))
 }
 
 /// Update the profile
 #[tauri::command]
 pub async fn update_profile(
-  index: usize,
+  index: String,
   with_proxy: bool,
   clash_state: State<'_, ClashState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  // maybe we can get the url from the web app directly
-  let url = match profiles_state.0.lock() {
-    Ok(mut profile) => {
-      let items = profile.items.take().unwrap_or(vec![]);
-      if index >= items.len() {
-        ret_err!("the index out of bound");
-      }
-      let url = match &items[index].url {
-        Some(u) => u.clone(),
-        None => ret_err!("failed to update profile for `invalid url`"),
-      };
-      profile.items = Some(items);
-      url
+  let url = {
+    // must release the lock here
+    let profiles = profiles_state.0.lock().unwrap();
+    let item = wrap_err!(profiles.get_item(&index))?;
+
+    if item.url.is_none() {
+      ret_err!("failed to get the item url");
     }
-    Err(_) => ret_err!("failed to get profiles lock"),
+
+    item.url.clone().unwrap()
   };
 
-  let result = fetch_profile(&url, with_proxy).await?;
+  let item = wrap_err!(PrfItem::from_url(&url, with_proxy).await)?;
 
-  match profiles_state.0.lock() {
-    Ok(mut profiles) => {
-      wrap_err!(profiles.update_item(index, result))?;
+  let mut profiles = profiles_state.0.lock().unwrap();
+  wrap_err!(profiles.update_item(index.clone(), item))?;
 
-      // reactivate the profile
-      let current = profiles.current.clone().unwrap_or(0);
-      if current == index {
-        let clash = clash_state.0.lock().unwrap();
-        wrap_err!(profiles.activate(&clash))
-      } else {
-        Ok(())
-      }
-    }
-    Err(_) => ret_err!("failed to get profiles lock"),
+  // reactivate the profile
+  if Some(index) == profiles.get_current() {
+    let clash = clash_state.0.lock().unwrap();
+    wrap_err!(clash.activate(&profiles))?;
   }
+
+  Ok(())
 }
 
 /// change the current profile
 #[tauri::command]
 pub fn select_profile(
-  index: usize,
+  index: String,
   clash_state: State<'_, ClashState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
@@ -125,13 +98,13 @@ pub fn select_profile(
   wrap_err!(profiles.put_current(index))?;
 
   let clash = clash_state.0.lock().unwrap();
-  wrap_err!(profiles.activate(&clash))
+  wrap_err!(clash.activate(&profiles))
 }
 
 /// delete profile item
 #[tauri::command]
 pub fn delete_profile(
-  index: usize,
+  index: String,
   clash_state: State<'_, ClashState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
@@ -139,7 +112,7 @@ pub fn delete_profile(
 
   if wrap_err!(profiles.delete_item(index))? {
     let clash = clash_state.0.lock().unwrap();
-    wrap_err!(profiles.activate(&clash))?;
+    wrap_err!(clash.activate(&profiles))?;
   }
 
   Ok(())
@@ -148,8 +121,8 @@ pub fn delete_profile(
 /// patch the profile config
 #[tauri::command]
 pub fn patch_profile(
-  index: usize,
-  profile: ProfileItem,
+  index: String,
+  profile: PrfItem,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
   let mut profiles = profiles_state.0.lock().unwrap();
@@ -158,19 +131,16 @@ pub fn patch_profile(
 
 /// run vscode command to edit the profile
 #[tauri::command]
-pub fn view_profile(index: usize, profiles_state: State<'_, ProfilesState>) -> Result<(), String> {
-  let mut profiles = profiles_state.0.lock().unwrap();
-  let items = profiles.items.take().unwrap_or(vec![]);
+pub fn view_profile(index: String, profiles_state: State<'_, ProfilesState>) -> Result<(), String> {
+  let profiles = profiles_state.0.lock().unwrap();
+  let item = wrap_err!(profiles.get_item(&index))?;
 
-  if index >= items.len() {
-    profiles.items = Some(items);
-    ret_err!("the index out of bound");
+  let file = item.file.clone();
+  if file.is_none() {
+    ret_err!("the file is null");
   }
 
-  let file = items[index].file.clone().unwrap_or("".into());
-  profiles.items = Some(items);
-
-  let path = dirs::app_profiles_dir().join(file);
+  let path = dirs::app_profiles_dir().join(file.unwrap());
   if !path.exists() {
     ret_err!("the file not found");
   }
@@ -285,7 +255,7 @@ pub fn patch_verge_config(
 
     wrap_err!(clash.tun_mode(tun_mode.unwrap()))?;
     clash.update_config();
-    wrap_err!(profiles.activate(&clash))?;
+    wrap_err!(clash.activate(&profiles))?;
   }
 
   Ok(())

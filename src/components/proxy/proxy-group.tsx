@@ -1,5 +1,5 @@
+import useSWR, { useSWRConfig } from "swr";
 import { useEffect, useRef, useState } from "react";
-import { useSWRConfig } from "swr";
 import { useLockFn } from "ahooks";
 import { Virtuoso } from "react-virtuoso";
 import {
@@ -46,6 +46,8 @@ const ProxyGroup = ({ group }: Props) => {
   const virtuosoRef = useRef<any>();
   const filterProxies = useFilterProxy(proxies, group.name, filterText);
 
+  const { data: profiles } = useSWR("getProfiles", getProfiles);
+
   const onChangeProxy = useLockFn(async (name: string) => {
     // Todo: support another proxy group type
     if (group.type !== "Selector") return;
@@ -60,8 +62,7 @@ const ProxyGroup = ({ group }: Props) => {
     }
 
     try {
-      const profiles = await getProfiles();
-      const profile = profiles.items![profiles.current!]!;
+      const profile = profiles?.items?.find((p) => p.uid === profiles.current);
       if (!profile) return;
       if (!profile.selected) profile.selected = [];
 
@@ -74,7 +75,7 @@ const ProxyGroup = ({ group }: Props) => {
       } else {
         profile.selected[index] = { name: group.name, now: name };
       }
-      await patchProfile(profiles.current!, profile);
+      await patchProfile(profiles!.current!, profile);
     } catch (err) {
       console.error(err);
     }

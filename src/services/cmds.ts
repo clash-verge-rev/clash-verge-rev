@@ -13,7 +13,7 @@ export async function newProfile(name: string, desc: string) {
   return invoke<void>("new_profile", { name, desc });
 }
 
-export async function viewProfile(index: number) {
+export async function viewProfile(index: string) {
   return invoke<void>("view_profile", { index });
 }
 
@@ -21,22 +21,22 @@ export async function importProfile(url: string) {
   return invoke<void>("import_profile", { url, withProxy: true });
 }
 
-export async function updateProfile(index: number, withProxy: boolean) {
+export async function updateProfile(index: string, withProxy: boolean) {
   return invoke<void>("update_profile", { index, withProxy });
 }
 
-export async function deleteProfile(index: number) {
+export async function deleteProfile(index: string) {
   return invoke<void>("delete_profile", { index });
 }
 
 export async function patchProfile(
-  index: number,
+  index: string,
   profile: CmdType.ProfileItem
 ) {
   return invoke<void>("patch_profile", { index, profile });
 }
 
-export async function selectProfile(index: number) {
+export async function selectProfile(index: string) {
   return invoke<void>("select_profile", { index });
 }
 
