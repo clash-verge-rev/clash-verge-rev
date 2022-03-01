@@ -170,7 +170,21 @@ macro_rules! patch {
 impl Profiles {
   /// read the config from the file
   pub fn read_file() -> Self {
-    config::read_yaml::<Self>(dirs::profiles_path())
+    let mut profiles = config::read_yaml::<Self>(dirs::profiles_path());
+
+    if profiles.items.is_none() {
+      profiles.items = Some(vec![]);
+    }
+
+    profiles.items.as_mut().map(|items| {
+      for mut item in items.iter_mut() {
+        if item.uid.is_none() {
+          item.uid = Some(help::get_uid("d"));
+        }
+      }
+    });
+
+    profiles
   }
 
   /// save the config to the file
