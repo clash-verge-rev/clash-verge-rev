@@ -321,8 +321,8 @@ impl Profiles {
 
       for mut each in items.iter_mut() {
         if each.uid == some_uid {
-          patch!(each, item, extra);
-          patch!(each, item, updated);
+          each.extra = item.extra;
+          each.updated = item.updated;
 
           // save the file data
           // move the field value after save
