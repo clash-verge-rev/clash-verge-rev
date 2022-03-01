@@ -1,27 +1,18 @@
-use super::{Clash, ClashInfo};
-use crate::utils::{config, dirs, tmpl};
-use anyhow::{bail, Result};
-use reqwest::header::HeaderMap;
+use crate::utils::{config, dirs, help, tmpl};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
-use std::collections::HashMap;
-use std::fs::{remove_file, File};
-use std::io::Write;
-use std::path::PathBuf;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{fs, io::Write};
 
-/// Define the `profiles.yaml` schema
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct Profiles {
-  /// current profile's name
-  pub current: Option<usize>,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct PrfItem {
+  pub uid: Option<String>,
 
-  /// profile list
-  pub items: Option<Vec<ProfileItem>>,
-}
+  /// profile item type
+  /// enum value: remote | local | script | merge
+  #[serde(rename = "type")]
+  pub itype: Option<String>,
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct ProfileItem {
   /// profile name
   pub name: Option<String>,
 
@@ -32,53 +23,154 @@ pub struct ProfileItem {
   /// profile file
   pub file: Option<String>,
 
-  /// current mode
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub mode: Option<String>,
-
   /// source url
   #[serde(skip_serializing_if = "Option::is_none")]
   pub url: Option<String>,
 
   /// selected infomation
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub selected: Option<Vec<ProfileSelected>>,
+  pub selected: Option<Vec<PrfSelected>>,
 
   /// user info
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub extra: Option<ProfileExtra>,
+  pub extra: Option<PrfExtra>,
 
   /// updated time
   pub updated: Option<usize>,
+
+  /// the file data
+  #[serde(skip)]
+  pub file_data: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct ProfileSelected {
+pub struct PrfSelected {
   pub name: Option<String>,
   pub now: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Copy, Deserialize, Serialize)]
-pub struct ProfileExtra {
+pub struct PrfExtra {
   pub upload: usize,
   pub download: usize,
   pub total: usize,
   pub expire: usize,
 }
 
+impl Default for PrfItem {
+  fn default() -> Self {
+    PrfItem {
+      uid: None,
+      itype: None,
+      name: None,
+      desc: None,
+      file: None,
+      url: None,
+      selected: None,
+      extra: None,
+      updated: None,
+      file_data: None,
+    }
+  }
+}
+
+impl PrfItem {
+  /// ## Local type
+  /// create a new item from name/desc
+  pub fn from_local(name: String, desc: String) -> Result<PrfItem> {
+    let uid = help::get_uid("l");
+    let file = format!("{uid}.yaml");
+
+    Ok(PrfItem {
+      uid: Some(uid),
+      itype: Some("local".into()),
+      name: Some(name),
+      desc: Some(desc),
+      file: Some(file),
+      url: None,
+      selected: None,
+      extra: None,
+      updated: Some(help::get_now()),
+      file_data: Some(tmpl::ITEM_CONFIG.into()),
+    })
+  }
+
+  /// ## Remote type
+  /// create a new item from url
+  pub async fn from_url(url: &str, with_proxy: bool) -> Result<PrfItem> {
+    let mut builder = reqwest::ClientBuilder::new();
+
+    if !with_proxy {
+      builder = builder.no_proxy();
+    }
+
+    let resp = builder.build()?.get(url).send().await?;
+    let header = resp.headers();
+
+    // parse the Subscription Userinfo
+    let extra = match header.get("Subscription-Userinfo") {
+      Some(value) => {
+        let sub_info = value.to_str().unwrap_or("");
+
+        Some(PrfExtra {
+          upload: help::parse_str(sub_info, "upload=").unwrap_or(0),
+          download: help::parse_str(sub_info, "download=").unwrap_or(0),
+          total: help::parse_str(sub_info, "total=").unwrap_or(0),
+          expire: help::parse_str(sub_info, "expire=").unwrap_or(0),
+        })
+      }
+      None => None,
+    };
+
+    let uid = help::get_uid("r");
+    let file = format!("{uid}.yaml");
+    let name = uid.clone();
+    let data = resp.text_with_charset("utf-8").await?;
+
+    Ok(PrfItem {
+      uid: Some(uid),
+      itype: Some("remote".into()),
+      name: Some(name),
+      desc: None,
+      file: Some(file),
+      url: Some(url.into()),
+      selected: None,
+      extra,
+      updated: Some(help::get_now()),
+      file_data: Some(data),
+    })
+  }
+}
+
+///
+/// ## Profiles Config
+///
+/// Define the `profiles.yaml` schema
+///
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-/// the result from url
-pub struct ProfileResponse {
-  pub name: String,
-  pub file: String,
-  pub data: String,
-  pub extra: Option<ProfileExtra>,
+pub struct Profiles {
+  /// same as PrfConfig.current
+  current: Option<String>,
+
+  /// same as PrfConfig.chain
+  chain: Option<Vec<String>>,
+
+  /// profile list
+  items: Option<Vec<PrfItem>>,
+}
+
+macro_rules! patch {
+  ($lv: expr, $rv: expr, $key: tt) => {
+    if ($rv.$key).is_some() {
+      $lv.$key = $rv.$key;
+    }
+  };
 }
 
 impl Profiles {
   /// read the config from the file
   pub fn read_file() -> Self {
-    config::read_yaml::<Profiles>(dirs::profiles_path())
+    config::read_yaml::<Self>(dirs::profiles_path())
   }
 
   /// save the config to the file
@@ -92,303 +184,242 @@ impl Profiles {
 
   /// sync the config between file and memory
   pub fn sync_file(&mut self) -> Result<()> {
-    let data = config::read_yaml::<Self>(dirs::profiles_path());
-    if data.current.is_none() {
-      bail!("failed to read profiles.yaml")
-    } else {
-      self.current = data.current;
-      self.items = data.items;
-      Ok(())
+    let data = Self::read_file();
+    if data.current.is_none() && data.items.is_none() {
+      bail!("failed to read profiles.yaml");
     }
+
+    self.current = data.current;
+    self.chain = data.chain;
+    self.items = data.items;
+    Ok(())
   }
 
-  /// import the new profile from the url
-  /// and update the config file
-  pub fn import_from_url(&mut self, url: String, result: ProfileResponse) -> Result<()> {
-    // save the profile file
-    let path = dirs::app_profiles_dir().join(&result.file);
-    let file_data = result.data.as_bytes();
-    File::create(path).unwrap().write(file_data).unwrap();
-
-    // update `profiles.yaml`
-    let data = Profiles::read_file();
-    let mut items = data.items.unwrap_or(vec![]);
-
-    let now = SystemTime::now()
-      .duration_since(UNIX_EPOCH)
-      .unwrap()
-      .as_secs();
-
-    items.push(ProfileItem {
-      name: Some(result.name),
-      desc: Some("imported url".into()),
-      file: Some(result.file),
-      mode: Some(format!("rule")),
-      url: Some(url),
-      selected: Some(vec![]),
-      extra: result.extra,
-      updated: Some(now as usize),
-    });
-
-    self.items = Some(items);
-    if data.current.is_none() {
-      self.current = Some(0);
-    }
-
-    self.save_file()
+  /// get the current uid
+  pub fn get_current(&self) -> Option<String> {
+    self.current.clone()
   }
 
-  /// set the current and save to file
-  pub fn put_current(&mut self, index: usize) -> Result<()> {
-    let items = self.items.take().unwrap_or(vec![]);
-
-    if index >= items.len() {
-      bail!("the index out of bound");
+  /// only change the main to the target id
+  pub fn put_current(&mut self, uid: String) -> Result<()> {
+    if self.items.is_none() {
+      self.items = Some(vec![]);
     }
 
-    self.items = Some(items);
-    self.current = Some(index);
-    self.save_file()
+    let items = self.items.as_ref().unwrap();
+    let some_uid = Some(uid.clone());
+
+    for each in items.iter() {
+      if each.uid == some_uid {
+        self.current = some_uid;
+        return self.save_file();
+      }
+    }
+
+    bail!("invalid uid \"{uid}\"");
+  }
+
+  /// find the item by the uid
+  pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
+    if self.items.is_some() {
+      let items = self.items.as_ref().unwrap();
+      let some_uid = Some(uid.clone());
+
+      for each in items.iter() {
+        if each.uid == some_uid {
+          return Ok(each);
+        }
+      }
+    }
+
+    bail!("failed to get the item by \"{}\"", uid);
   }
 
   /// append new item
-  /// return the new item's index
-  pub fn append_item(&mut self, name: String, desc: String) -> Result<(usize, PathBuf)> {
+  /// if the file_data is some
+  /// then should save the data to file
+  pub fn append_item(&mut self, mut item: PrfItem) -> Result<()> {
+    if item.uid.is_none() {
+      bail!("the uid should not be null");
+    }
+
+    // save the file data
+    // move the field value after save
+    if let Some(file_data) = item.file_data.take() {
+      if item.file.is_none() {
+        bail!("the file should not be null");
+      }
+
+      let file = item.file.clone().unwrap();
+      let path = dirs::app_profiles_dir().join(&file);
+
+      fs::File::create(path)
+        .context(format!("failed to create file \"{}\"", file))?
+        .write(file_data.as_bytes())
+        .context(format!("failed to write to file \"{}\"", file))?;
+    }
+
+    if self.items.is_none() {
+      self.items = Some(vec![]);
+    }
+
+    self.items.as_mut().map(|items| items.push(item));
+    self.save_file()
+  }
+
+  /// update the item's value
+  pub fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
     let mut items = self.items.take().unwrap_or(vec![]);
 
-    // create a new profile file
-    let now = SystemTime::now()
-      .duration_since(UNIX_EPOCH)
-      .unwrap()
-      .as_secs();
-    let file = format!("{}.yaml", now);
-    let path = dirs::app_profiles_dir().join(&file);
+    for mut each in items.iter_mut() {
+      if each.uid == Some(uid.clone()) {
+        patch!(each, item, itype);
+        patch!(each, item, name);
+        patch!(each, item, desc);
+        patch!(each, item, file);
+        patch!(each, item, url);
+        patch!(each, item, selected);
+        patch!(each, item, extra);
 
-    match File::create(&path).unwrap().write(tmpl::ITEM_CONFIG) {
-      Ok(_) => {
-        items.push(ProfileItem {
-          name: Some(name),
-          desc: Some(desc),
-          file: Some(file),
-          mode: None,
-          url: None,
-          selected: Some(vec![]),
-          extra: None,
-          updated: Some(now as usize),
-        });
+        each.updated = Some(help::get_now());
 
-        let index = items.len();
         self.items = Some(items);
-        Ok((index, path))
-      }
-      Err(_) => bail!("failed to create file"),
-    }
-  }
-
-  /// update the target profile
-  /// and save to config file
-  /// only support the url item
-  pub fn update_item(&mut self, index: usize, result: ProfileResponse) -> Result<()> {
-    let mut items = self.items.take().unwrap_or(vec![]);
-
-    let now = SystemTime::now()
-      .duration_since(UNIX_EPOCH)
-      .unwrap()
-      .as_secs() as usize;
-
-    // update file
-    let file_path = &items[index].file.as_ref().unwrap();
-    let file_path = dirs::app_profiles_dir().join(file_path);
-    let file_data = result.data.as_bytes();
-    File::create(file_path).unwrap().write(file_data).unwrap();
-
-    items[index].name = Some(result.name);
-    items[index].extra = result.extra;
-    items[index].updated = Some(now);
-
-    self.items = Some(items);
-    self.save_file()
-  }
-
-  /// patch item
-  pub fn patch_item(&mut self, index: usize, profile: ProfileItem) -> Result<()> {
-    let mut items = self.items.take().unwrap_or(vec![]);
-    if index >= items.len() {
-      bail!("index out of range");
-    }
-
-    if profile.name.is_some() {
-      items[index].name = profile.name;
-    }
-    if profile.file.is_some() {
-      items[index].file = profile.file;
-    }
-    if profile.mode.is_some() {
-      items[index].mode = profile.mode;
-    }
-    if profile.url.is_some() {
-      items[index].url = profile.url;
-    }
-    if profile.selected.is_some() {
-      items[index].selected = profile.selected;
-    }
-    if profile.extra.is_some() {
-      items[index].extra = profile.extra;
-    }
-
-    self.items = Some(items);
-    self.save_file()
-  }
-
-  /// delete the item
-  pub fn delete_item(&mut self, index: usize) -> Result<bool> {
-    let mut current = self.current.clone().unwrap_or(0);
-    let mut items = self.items.clone().unwrap_or(vec![]);
-
-    if index >= items.len() {
-      bail!("index out of range");
-    }
-
-    let mut rm_item = items.remove(index);
-
-    // delete the file
-    if let Some(file) = rm_item.file.take() {
-      let file_path = dirs::app_profiles_dir().join(file);
-
-      if file_path.exists() {
-        if let Err(err) = remove_file(file_path) {
-          log::error!("{err}");
-        }
+        return self.save_file();
       }
     }
 
-    let mut should_change = false;
-
-    if current == index {
-      current = 0;
-      should_change = true;
-    } else if current > index {
-      current = current - 1;
-    }
-
-    self.current = Some(current);
     self.items = Some(items);
-
-    match self.save_file() {
-      Ok(_) => Ok(should_change),
-      Err(err) => Err(err),
-    }
+    bail!("failed to found the uid \"{uid}\"")
   }
 
-  /// activate current profile
-  pub fn activate(&self, clash: &Clash) -> Result<()> {
-    let current = self.current.unwrap_or(0);
-    match self.items.clone() {
-      Some(items) => {
-        if current >= items.len() {
-          bail!("the index out of bound");
-        }
+  /// be used to update the remote item
+  /// only patch `updated` `extra` `file_data`
+  pub fn update_item(&mut self, uid: String, mut item: PrfItem) -> Result<()> {
+    if self.items.is_none() {
+      self.items = Some(vec![]);
+    }
 
-        let profile = items[current].clone();
-        let clash_config = clash.config.clone();
-        let clash_info = clash.info.clone();
+    // find the item
+    let _ = self.get_item(&uid)?;
 
-        tauri::async_runtime::spawn(async move {
-          let mut count = 5; // retry times
-          let mut err = None;
-          while count > 0 {
-            match activate_profile(&profile, &clash_config, &clash_info).await {
-              Ok(_) => return,
-              Err(e) => err = Some(e),
-            }
-            count -= 1;
+    self.items.as_mut().map(|items| {
+      let some_uid = Some(uid.clone());
+
+      for mut each in items.iter_mut() {
+        if each.uid == some_uid {
+          patch!(each, item, extra);
+          patch!(each, item, updated);
+
+          // save the file data
+          // move the field value after save
+          if let Some(file_data) = item.file_data.take() {
+            let file = each.file.take();
+            let file = file.unwrap_or(item.file.take().unwrap_or(format!("{}.yaml", &uid)));
+
+            // the file must exists
+            each.file = Some(file.clone());
+
+            let path = dirs::app_profiles_dir().join(&file);
+
+            fs::File::create(path)
+              .unwrap()
+              .write(file_data.as_bytes())
+              .unwrap();
           }
-          log::error!("failed to activate for `{}`", err.unwrap());
-        });
 
-        Ok(())
-      }
-      None => bail!("empty profiles"),
-    }
-  }
-}
-
-/// put the profile to clash
-pub async fn activate_profile(
-  profile_item: &ProfileItem,
-  clash_config: &Mapping,
-  clash_info: &ClashInfo,
-) -> Result<()> {
-  // temp profile's path
-  let temp_path = dirs::profiles_temp_path();
-
-  // generate temp profile
-  {
-    let file_name = match profile_item.file.clone() {
-      Some(file_name) => file_name,
-      None => bail!("profile item should have `file` field"),
-    };
-
-    let file_path = dirs::app_profiles_dir().join(file_name);
-    if !file_path.exists() {
-      bail!(
-        "profile `{}` not exists",
-        file_path.as_os_str().to_str().unwrap()
-      );
-    }
-
-    // begin to generate the new profile config
-    let def_config = config::read_yaml::<Mapping>(file_path.clone());
-
-    // use the clash config except 5 keys below
-    let mut new_config = clash_config.clone();
-
-    // Only the following fields are allowed:
-    // proxies/proxy-providers/proxy-groups/rule-providers/rules
-    let valid_keys = vec![
-      "proxies",
-      "proxy-providers",
-      "proxy-groups",
-      "rule-providers",
-      "rules",
-    ];
-    valid_keys.iter().for_each(|key| {
-      let key = Value::String(key.to_string());
-      if def_config.contains_key(&key) {
-        let value = def_config[&key].clone();
-        new_config.insert(key, value);
+          break;
+        }
       }
     });
 
-    config::save_yaml(
-      temp_path.clone(),
-      &new_config,
-      Some("# Clash Verge Temp File"),
-    )?
-  };
-
-  let server = format!("http://{}/configs", clash_info.server.clone().unwrap());
-
-  let mut headers = HeaderMap::new();
-  headers.insert("Content-Type", "application/json".parse().unwrap());
-
-  if let Some(secret) = clash_info.secret.clone() {
-    headers.insert(
-      "Authorization",
-      format!("Bearer {}", secret).parse().unwrap(),
-    );
+    self.save_file()
   }
 
-  let mut data = HashMap::new();
-  data.insert("path", temp_path.as_os_str().to_str().unwrap());
+  /// delete item
+  /// if delete the current then return true
+  pub fn delete_item(&mut self, uid: String) -> Result<bool> {
+    let current = self.current.as_ref().unwrap_or(&uid);
+    let current = current.clone();
 
-  let client = reqwest::ClientBuilder::new().no_proxy().build()?;
+    let mut items = self.items.take().unwrap_or(vec![]);
+    let mut index = None;
 
-  client
-    .put(server)
-    .headers(headers)
-    .json(&data)
-    .send()
-    .await?;
-  Ok(())
+    // get the index
+    for i in 0..items.len() {
+      if items[i].uid == Some(uid.clone()) {
+        index = Some(i);
+        break;
+      }
+    }
+
+    if let Some(index) = index {
+      items.remove(index).file.map(|file| {
+        let path = dirs::app_profiles_dir().join(file);
+        if path.exists() {
+          let _ = fs::remove_file(path);
+        }
+      });
+    }
+
+    // delete the original uid
+    if current == uid {
+      self.current = match items.len() > 0 {
+        true => items[0].uid.clone(),
+        false => None,
+      };
+    }
+
+    self.items = Some(items);
+    self.save_file()?;
+    Ok(current == uid)
+  }
+
+  /// only generate config mapping
+  pub fn gen_activate(&self) -> Result<Mapping> {
+    let config = Mapping::new();
+
+    if self.current.is_none() || self.items.is_none() {
+      return Ok(config);
+    }
+
+    let current = self.current.clone().unwrap();
+
+    for item in self.items.as_ref().unwrap().iter() {
+      if item.uid == Some(current.clone()) {
+        let file_path = match item.file.clone() {
+          Some(file) => dirs::app_profiles_dir().join(file),
+          None => bail!("failed to get the file field"),
+        };
+
+        if !file_path.exists() {
+          bail!("failed to read the file \"{}\"", file_path.display());
+        }
+
+        let mut new_config = Mapping::new();
+        let def_config = config::read_yaml::<Mapping>(file_path.clone());
+
+        // Only the following fields are allowed:
+        // proxies/proxy-providers/proxy-groups/rule-providers/rules
+        let valid_keys = vec![
+          "proxies",
+          "proxy-providers",
+          "proxy-groups",
+          "rule-providers",
+          "rules",
+        ];
+
+        valid_keys.iter().for_each(|key| {
+          let key = Value::String(key.to_string());
+          if def_config.contains_key(&key) {
+            let value = def_config[&key].clone();
+            new_config.insert(key, value);
+          }
+        });
+
+        return Ok(new_config);
+      }
+    }
+
+    bail!("failed to found the uid \"{current}\"");
+  }
 }

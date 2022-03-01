@@ -86,6 +86,8 @@ export namespace CmdType {
   }
 
   export interface ProfileItem {
+    uid: string;
+    type?: string;
     name?: string;
     desc?: string;
     file?: string;
@@ -105,7 +107,8 @@ export namespace CmdType {
   }
 
   export interface ProfilesConfig {
-    current?: number;
+    current?: string;
+    chain?: string[];
     items?: ProfileItem[];
   }
 

@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use super::{Profiles, Verge};
 use crate::utils::{config, dirs};
 use anyhow::{bail, Result};
+use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
@@ -153,7 +156,7 @@ impl Clash {
     self.update_config();
     self.drop_sidecar()?;
     self.run_sidecar()?;
-    profiles.activate(&self)
+    self.activate(profiles)
   }
 
   /// update the clash info
@@ -191,11 +194,7 @@ impl Clash {
         verge.init_sysproxy(port);
       }
 
-      if self.config.contains_key(key) {
-        self.config[key] = value;
-      } else {
-        self.config.insert(key.clone(), value);
-      }
+      self.config.insert(key.clone(), value);
     }
     self.save_config()
   }
@@ -240,6 +239,54 @@ impl Clash {
     revise!(self.config, "tun", Value::from(new_val));
 
     self.save_config()
+  }
+
+  /// activate the profile
+  pub fn activate(&self, profiles: &Profiles) -> Result<()> {
+    let temp_path = dirs::profiles_temp_path();
+    let info = self.info.clone();
+    let mut config = self.config.clone();
+    let gen_config = profiles.gen_activate()?;
+
+    for (key, value) in gen_config.into_iter() {
+      config.insert(key, value);
+    }
+
+    config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
+
+    tauri::async_runtime::spawn(async move {
+      let server = info.server.clone().unwrap();
+      let server = format!("http://{server}/configs");
+
+      let mut headers = HeaderMap::new();
+      headers.insert("Content-Type", "application/json".parse().unwrap());
+
+      if let Some(secret) = info.secret.as_ref() {
+        let secret = format!("Bearer {}", secret.clone()).parse().unwrap();
+        headers.insert("Authorization", secret);
+      }
+
+      let mut data = HashMap::new();
+      data.insert("path", temp_path.as_os_str().to_str().unwrap());
+
+      for _ in 0..5 {
+        match reqwest::ClientBuilder::new().no_proxy().build() {
+          Ok(client) => match client
+            .put(&server)
+            .headers(headers.clone())
+            .json(&data)
+            .send()
+            .await
+          {
+            Ok(_) => break,
+            Err(err) => log::error!("failed to activate for `{err}`"),
+          },
+          Err(err) => log::error!("failed to activate for `{err}`"),
+        }
+      }
+    });
+
+    Ok(())
   }
 }
 

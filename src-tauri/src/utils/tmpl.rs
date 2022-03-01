@@ -14,7 +14,7 @@ secret: ""
 /// template for `profiles.yaml`
 pub const PROFILES_CONFIG: &[u8] = b"# Profiles Config for Clash Verge
 
-current: 0
+current: ~
 items: ~
 ";
 
@@ -32,7 +32,7 @@ system_proxy_bypass: localhost;127.*;10.*;192.168.*;<local>
 ";
 
 /// template for new a profile item
-pub const ITEM_CONFIG: &[u8] = b"# Profile Template for clash verge\n\n
+pub const ITEM_CONFIG: &str = "# Profile Template for clash verge\n\n
 # proxies defination (optional, the same as clash)
 proxies:\n
 # proxy-groups (optional, the same as clash)

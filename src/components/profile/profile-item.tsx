@@ -39,14 +39,14 @@ const round = keyframes`
 `;
 
 interface Props {
-  index: number;
+  // index: number;
   selected: boolean;
   itemData: CmdType.ProfileItem;
   onSelect: (force: boolean) => void;
 }
 
 const ProfileItem: React.FC<Props> = (props) => {
-  const { index, selected, itemData, onSelect } = props;
+  const { selected, itemData, onSelect } = props;
 
   const { mutate } = useSWRConfig();
   const [loading, setLoading] = useState(false);
@@ -69,7 +69,7 @@ const ProfileItem: React.FC<Props> = (props) => {
   const onView = async () => {
     setAnchorEl(null);
     try {
-      await viewProfile(index);
+      await viewProfile(itemData.uid);
     } catch (err: any) {
       Notice.error(err.toString());
     }
@@ -85,7 +85,7 @@ const ProfileItem: React.FC<Props> = (props) => {
     if (loading) return;
     setLoading(true);
     try {
-      await updateProfile(index, withProxy);
+      await updateProfile(itemData.uid, withProxy);
       mutate("getProfiles");
     } catch (err: any) {
       Notice.error(err.toString());
@@ -98,7 +98,7 @@ const ProfileItem: React.FC<Props> = (props) => {
     setAnchorEl(null);
 
     try {
-      await deleteProfile(index);
+      await deleteProfile(itemData.uid);
       mutate("getProfiles");
     } catch (err: any) {
       Notice.error(err.toString());

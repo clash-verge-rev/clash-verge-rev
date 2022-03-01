@@ -1,5 +1,5 @@
 use super::{init, server};
-use crate::{core::Profiles, states};
+use crate::{core::Profiles, log_if_err, states};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
@@ -21,14 +21,10 @@ pub fn resolve_setup(app: &App) {
   let mut verge = verge_state.0.lock().unwrap();
   let mut profiles = profiles_state.0.lock().unwrap();
 
-  if let Err(err) = clash.run_sidecar() {
-    log::error!("{err}");
-  }
+  log_if_err!(clash.run_sidecar());
 
   *profiles = Profiles::read_file();
-  if let Err(err) = profiles.activate(&clash) {
-    log::error!("{err}");
-  }
+  log_if_err!(clash.activate(&profiles));
 
   verge.init_sysproxy(clash.info.port.clone());
   // enable tun mode
@@ -41,9 +37,7 @@ pub fn resolve_setup(app: &App) {
   }
 
   verge.init_launch();
-  if let Err(err) = verge.sync_launch() {
-    log::error!("{err}");
-  }
+  log_if_err!(verge.sync_launch());
 }
 
 /// reset system proxy

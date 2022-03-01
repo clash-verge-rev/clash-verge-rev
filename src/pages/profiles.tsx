@@ -10,7 +10,6 @@ import {
   newProfile,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
-import noop from "../utils/noop";
 import Notice from "../components/base/base-notice";
 import BasePage from "../components/base/base-page";
 import ProfileItem from "../components/profile/profile-item";
@@ -28,7 +27,7 @@ const ProfilePage = () => {
     if (!profiles.items) profiles.items = [];
 
     const current = profiles.current;
-    const profile = profiles.items![current];
+    const profile = profiles.items.find((p) => p.uid === current);
     if (!profile) return;
 
     setTimeout(async () => {
@@ -72,9 +71,17 @@ const ProfilePage = () => {
 
     try {
       await importProfile(url);
-      mutate("getProfiles", getProfiles());
-      if (!profiles.items?.length) selectProfile(0).catch(noop);
       Notice.success("Successfully import profile.");
+
+      getProfiles().then((newProfiles) => {
+        mutate("getProfiles", newProfiles);
+
+        if (!newProfiles.current && newProfiles.items?.length) {
+          const current = newProfiles.items[0].uid;
+          selectProfile(current);
+          mutate("getProfiles", { ...newProfiles, current }, true);
+        }
+      });
     } catch {
       Notice.error("Failed to import profile.");
     } finally {
@@ -82,12 +89,12 @@ const ProfilePage = () => {
     }
   };
 
-  const onSelect = useLockFn(async (index: number, force: boolean) => {
-    if (!force && index === profiles.current) return;
+  const onSelect = useLockFn(async (current: string, force: boolean) => {
+    if (!force && current === profiles.current) return;
 
     try {
-      await selectProfile(index);
-      mutate("getProfiles", { ...profiles, current: index }, true);
+      await selectProfile(current);
+      mutate("getProfiles", { ...profiles, current: current }, true);
     } catch (err: any) {
       err && Notice.error(err.toString());
     }
@@ -131,13 +138,12 @@ const ProfilePage = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {profiles?.items?.map((item, idx) => (
+        {profiles?.items?.map((item) => (
           <Grid item xs={12} sm={6} key={item.file}>
             <ProfileItem
-              index={idx}
-              selected={profiles.current === idx}
+              selected={profiles.current === item.uid}
               itemData={item}
-              onSelect={(f) => onSelect(idx, f)}
+              onSelect={(f) => onSelect(item.uid, f)}
             />
           </Grid>
         ))}
