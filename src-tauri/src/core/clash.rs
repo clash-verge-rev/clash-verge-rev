@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-
 use super::{Profiles, Verge};
-use crate::utils::{config, dirs};
+use crate::utils::{config, dirs, help};
 use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
+use std::{collections::HashMap, time::Duration};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
+use tokio::time::sleep;
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct ClashInfo {
@@ -241,17 +241,8 @@ impl Clash {
     self.save_config()
   }
 
-  /// activate the profile
-  pub fn activate(&self, profiles: &Profiles) -> Result<()> {
+  fn _activate(info: ClashInfo, config: Mapping) -> Result<()> {
     let temp_path = dirs::profiles_temp_path();
-    let info = self.info.clone();
-    let mut config = self.config.clone();
-    let gen_config = profiles.gen_activate()?;
-
-    for (key, value) in gen_config.into_iter() {
-      config.insert(key, value);
-    }
-
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
     tauri::async_runtime::spawn(async move {
@@ -284,6 +275,49 @@ impl Clash {
           Err(err) => log::error!("failed to activate for `{err}`"),
         }
       }
+    });
+
+    Ok(())
+  }
+
+  /// activate the profile
+  pub fn activate(&self, profiles: &Profiles) -> Result<()> {
+    let info = self.info.clone();
+    let mut config = self.config.clone();
+    let gen_map = profiles.gen_activate()?;
+
+    for (key, value) in gen_map.into_iter() {
+      config.insert(key, value);
+    }
+
+    Self::_activate(info, config)
+  }
+
+  /// enhanced profiles mode
+  pub fn activate_enhanced(&self, profiles: &Profiles, win: tauri::Window) -> Result<()> {
+    let event_name = help::get_uid("e");
+    let event_name = format!("script-cb-{event_name}");
+
+    let info = self.info.clone();
+    let mut config = self.config.clone();
+
+    win.once(&event_name, move |event| {
+      if let Some(result) = event.payload() {
+        let gen_map: Mapping = serde_json::from_str(result).unwrap();
+
+        for (key, value) in gen_map.into_iter() {
+          config.insert(key, value);
+        }
+        Self::_activate(info, config).unwrap();
+      }
+    });
+
+    // generate the payload
+    let payload = profiles.gen_enhanced();
+
+    tauri::async_runtime::spawn(async move {
+      sleep(Duration::from_secs(5)).await;
+      win.emit("script-handler", payload).unwrap();
     });
 
     Ok(())
