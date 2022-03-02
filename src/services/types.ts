@@ -121,4 +121,15 @@ export namespace CmdType {
     enable_proxy_guard?: boolean;
     system_proxy_bypass?: string;
   }
+
+  export interface ChainItem {
+    item: ProfileItem;
+    merge?: object;
+    script?: string;
+  }
+
+  export interface EnhancedPayload {
+    chain: ChainItem[];
+    current: object;
+  }
 }
