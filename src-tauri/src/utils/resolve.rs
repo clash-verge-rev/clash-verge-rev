@@ -26,6 +26,10 @@ pub fn resolve_setup(app: &App) {
   *profiles = Profiles::read_file();
   log_if_err!(clash.activate(&profiles));
 
+  app
+    .get_window("main")
+    .map(|win| log_if_err!(clash.activate_enhanced(&profiles, win)));
+
   verge.init_sysproxy(clash.info.port.clone());
   // enable tun mode
   if verge.config.enable_tun_mode.clone().unwrap_or(false)

@@ -436,4 +436,72 @@ impl Profiles {
 
     bail!("failed to found the uid \"{current}\"");
   }
+
+  /// gen the enhanced profiles
+  pub fn gen_enhanced(&self) -> PrfEnhanced {
+    let current = self.gen_activate().unwrap();
+
+    let chain = match self.chain.as_ref() {
+      Some(chain) => chain
+        .iter()
+        .map(|uid| self.get_item(uid))
+        .filter(|item| item.is_ok())
+        .map(|item| item.unwrap())
+        .map(|item| PrfData::from_item(item))
+        .filter(|o| o.is_some())
+        .map(|o| o.unwrap())
+        .collect::<Vec<PrfData>>(),
+      None => vec![],
+    };
+
+    PrfEnhanced { current, chain }
+  }
+}
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct PrfEnhanced {
+  current: Mapping,
+
+  chain: Vec<PrfData>,
+}
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct PrfData {
+  item: PrfItem,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
+  merge: Option<Mapping>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
+  script: Option<String>,
+}
+
+impl PrfData {
+  pub fn from_item(item: &PrfItem) -> Option<PrfData> {
+    match item.itype.as_ref() {
+      Some(itype) => {
+        let file = item.file.clone()?;
+        let path = dirs::app_profiles_dir().join(file);
+
+        if !path.exists() {
+          return None;
+        }
+
+        match itype.as_str() {
+          "script" => Some(PrfData {
+            item: item.clone(),
+            script: Some(fs::read_to_string(path).unwrap_or("".into())),
+            merge: None,
+          }),
+          "merge" => Some(PrfData {
+            item: item.clone(),
+            merge: Some(config::read_yaml::<Mapping>(path)),
+            script: None,
+          }),
+          _ => None,
+        }
+      }
+      None => None,
+    }
+  }
 }
