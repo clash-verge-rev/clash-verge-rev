@@ -301,6 +301,9 @@ impl Clash {
     let info = self.info.clone();
     let mut config = self.config.clone();
 
+    // generate the payload
+    let payload = profiles.gen_enhanced()?;
+
     win.once(&event_name, move |event| {
       if let Some(result) = event.payload() {
         let gen_map: Mapping = serde_json::from_str(result).unwrap();
@@ -311,9 +314,6 @@ impl Clash {
         Self::_activate(info, config).unwrap();
       }
     });
-
-    // generate the payload
-    let payload = profiles.gen_enhanced();
 
     tauri::async_runtime::spawn(async move {
       sleep(Duration::from_secs(5)).await;

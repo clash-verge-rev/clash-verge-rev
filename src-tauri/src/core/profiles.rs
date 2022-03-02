@@ -438,8 +438,8 @@ impl Profiles {
   }
 
   /// gen the enhanced profiles
-  pub fn gen_enhanced(&self) -> PrfEnhanced {
-    let current = self.gen_activate().unwrap();
+  pub fn gen_enhanced(&self) -> Result<PrfEnhanced> {
+    let current = self.gen_activate()?;
 
     let chain = match self.chain.as_ref() {
       Some(chain) => chain
@@ -454,7 +454,7 @@ impl Profiles {
       None => vec![],
     };
 
-    PrfEnhanced { current, chain }
+    Ok(PrfEnhanced { current, chain })
   }
 }
 
