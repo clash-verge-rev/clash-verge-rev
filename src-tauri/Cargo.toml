@@ -22,8 +22,8 @@ serde_json = "1.0"
 serde_yaml = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.0.0-rc.3", features = ["shell-all", "system-tray", "updater", "window-all"] }
-tauri-plugin-shadows = { git = "https://github.com/tauri-apps/tauri-plugin-shadows", features = ["tauri-impl"] }
-tauri-plugin-vibrancy = { git = "https://github.com/tauri-apps/tauri-plugin-vibrancy", features = ["tauri-impl"] }
+window-shadows = { git = "https://github.com/tauri-apps/window-shadows" }
+window-vibrancy = { git = "https://github.com/tauri-apps/window-vibrancy" }
 
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }

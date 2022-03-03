@@ -58,12 +58,12 @@ fn resolve_window(app: &App) {
 
   #[cfg(target_os = "windows")]
   {
-    use tauri_plugin_shadows::Shadows;
-    use tauri_plugin_vibrancy::Vibrancy;
+    use window_shadows::set_shadow;
+    use window_vibrancy::apply_blur;
 
     window.set_decorations(false).unwrap();
-    window.set_shadow(true);
-    window.apply_blur();
+    set_shadow(&window, true).unwrap();
+    apply_blur(&window).unwrap();
   }
 
   #[cfg(target_os = "macos")]
