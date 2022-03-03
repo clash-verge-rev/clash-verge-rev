@@ -1,7 +1,5 @@
 import useSWR from "swr";
 import { useState } from "react";
-import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
-import { relaunch } from "@tauri-apps/api/process";
 import {
   Button,
   Dialog,
@@ -10,7 +8,10 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import { killSidecars } from "../../services/cmds";
+import { relaunch } from "@tauri-apps/api/process";
+import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
+import { killSidecars, restartSidecar } from "../../services/cmds";
+import Notice from "../base/base-notice";
 
 interface Props {
   open: boolean;
@@ -29,18 +30,19 @@ const UpdateDialog = (props: Props) => {
   const [uploading, setUploading] = useState(uploadingState);
 
   const onUpdate = async () => {
+    setUploading(true);
+    uploadingState = true;
+
     try {
-      setUploading(true);
-      uploadingState = true;
       await killSidecars();
       await installUpdate();
       await relaunch();
-    } catch (error) {
-      console.log(error);
-      window.alert("Failed to upload, please try again.");
+    } catch (err: any) {
+      await restartSidecar();
+      Notice.error(err?.message || err.toString());
     } finally {
-      setUploading(true);
-      uploadingState = true;
+      setUploading(false);
+      uploadingState = false;
     }
   };
 
