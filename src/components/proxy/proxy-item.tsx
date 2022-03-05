@@ -102,8 +102,8 @@ const ProxyItem = (props: Props) => {
             <>
               {proxy.name}
 
-              {showType && <TypeBox>{proxy.type}</TypeBox>}
-              {showType && proxy.udp && <TypeBox>UDP</TypeBox>}
+              {showType && <TypeBox component="span">{proxy.type}</TypeBox>}
+              {showType && proxy.udp && <TypeBox component="span">UDP</TypeBox>}
             </>
           }
         />
