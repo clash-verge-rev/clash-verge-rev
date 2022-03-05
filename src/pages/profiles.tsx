@@ -1,19 +1,18 @@
 import useSWR, { useSWRConfig } from "swr";
 import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, Grid, TextField } from "@mui/material";
+import { Box, Button, Grid, TextField, Typography } from "@mui/material";
 import {
   getProfiles,
   selectProfile,
   patchProfile,
   importProfile,
-  newProfile,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
 import Notice from "../components/base/base-notice";
 import BasePage from "../components/base/base-page";
-import ProfileItem from "../components/profile/profile-item";
 import ProfileNew from "../components/profile/profile-new";
+import ProfileItem from "../components/profile/profile-item";
 
 const ProfilePage = () => {
   const [url, setUrl] = useState("");
@@ -21,6 +20,7 @@ const ProfilePage = () => {
 
   const { mutate } = useSWRConfig();
   const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (profiles.current == null) return;
@@ -96,18 +96,7 @@ const ProfilePage = () => {
       await selectProfile(current);
       mutate("getProfiles", { ...profiles, current: current }, true);
     } catch (err: any) {
-      err && Notice.error(err.toString());
-    }
-  });
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const onNew = useLockFn(async (name: string, desc: string) => {
-    try {
-      await newProfile(name, desc);
-      setDialogOpen(false);
-      mutate("getProfiles");
-    } catch (err: any) {
-      err && Notice.error(err.toString());
+      err && Notice.error(err.message || err.toString());
     }
   });
 
@@ -149,11 +138,13 @@ const ProfilePage = () => {
         ))}
       </Grid>
 
-      <ProfileNew
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onSubmit={onNew}
-      />
+      <ProfileNew open={dialogOpen} onClose={() => setDialogOpen(false)} />
+
+      <header data-windrag style={{ marginTop: 20, userSelect: "none" }}>
+        <Typography variant="h5" component="h2" data-windrag>
+          Enhanced
+        </Typography>
+      </header>
     </BasePage>
   );
 };

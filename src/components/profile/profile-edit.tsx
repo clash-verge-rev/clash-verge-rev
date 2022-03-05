@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
 import { mutate } from "swr";
+import { useEffect } from "react";
+import { useLockFn, useSetState } from "ahooks";
 import {
   Button,
   Dialog,
@@ -22,66 +22,80 @@ interface Props {
 // edit the profile item
 const ProfileEdit = (props: Props) => {
   const { open, itemData, onClose } = props;
-
-  // todo: more type
-  const [name, setName] = useState(itemData.name);
-  const [desc, setDesc] = useState(itemData.desc);
-  const [url, setUrl] = useState(itemData.url);
+  const [form, setForm] = useSetState({ ...itemData });
 
   useEffect(() => {
     if (itemData) {
-      setName(itemData.name);
-      setDesc(itemData.desc);
-      setUrl(itemData.url);
+      setForm({ ...itemData });
     }
   }, [itemData]);
 
   const onUpdate = useLockFn(async () => {
     try {
       const { uid } = itemData;
+      const { name, desc, url } = form;
       await patchProfile(uid, { uid, name, desc, url });
       mutate("getProfiles");
       onClose();
     } catch (err: any) {
-      Notice.error(err?.message || err?.toString());
+      Notice.error(err?.message || err.toString());
     }
   });
 
+  const textFieldProps = {
+    fullWidth: true,
+    size: "small",
+    margin: "normal",
+    variant: "outlined",
+  } as const;
+
+  const type =
+    form.type ?? form.url
+      ? "remote"
+      : form.file?.endsWith("js")
+      ? "script"
+      : "local";
+
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Edit Profile</DialogTitle>
-      <DialogContent sx={{ width: 360, pb: 0.5 }}>
+      <DialogTitle sx={{ pb: 0.5 }}>Edit Profile</DialogTitle>
+
+      <DialogContent sx={{ width: 336, pb: 1 }}>
         <TextField
+          {...textFieldProps}
+          disabled
+          label="Type"
+          value={type}
+          sx={{ input: { textTransform: "capitalize" } }}
+        />
+
+        <TextField
+          {...textFieldProps}
           autoFocus
-          fullWidth
           label="Name"
-          margin="dense"
-          variant="outlined"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={form.name}
+          onChange={(e) => setForm({ name: e.target.value })}
         />
 
         <TextField
-          fullWidth
+          {...textFieldProps}
           label="Descriptions"
-          margin="normal"
-          variant="outlined"
-          value={desc}
-          onChange={(e) => setDesc(e.target.value)}
+          value={form.desc}
+          onChange={(e) => setForm({ desc: e.target.value })}
         />
 
-        <TextField
-          fullWidth
-          label="Remote URL"
-          margin="normal"
-          variant="outlined"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
+        {type === "remote" && (
+          <TextField
+            {...textFieldProps}
+            label="Subscription Url"
+            value={form.url}
+            onChange={(e) => setForm({ url: e.target.value })}
+          />
+        )}
       </DialogContent>
+
       <DialogActions sx={{ px: 2, pb: 2 }}>
         <Button onClick={onClose}>Cancel</Button>
-
         <Button onClick={onUpdate} variant="contained">
           Update
         </Button>
