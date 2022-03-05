@@ -9,8 +9,8 @@ export async function syncProfiles() {
   return invoke<void>("sync_profiles");
 }
 
-export async function newProfile(name: string, desc: string) {
-  return invoke<void>("new_profile", { name, desc });
+export async function createProfile(item: Partial<CmdType.ProfileItem>) {
+  return invoke<void>("create_profile", { item });
 }
 
 export async function viewProfile(index: string) {

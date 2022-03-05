@@ -75,6 +75,42 @@ impl Default for PrfItem {
 }
 
 impl PrfItem {
+  /// From partial item
+  /// must contain `itype`
+  pub async fn from(item: PrfItem) -> Result<PrfItem> {
+    if item.itype.is_none() {
+      bail!("type should not be null");
+    }
+
+    match item.itype.unwrap().as_str() {
+      "remote" => {
+        if item.url.is_none() {
+          bail!("url should not be null");
+        }
+        let url = item.url.as_ref().unwrap().as_str();
+        let name = item.name;
+        let desc = item.desc;
+        PrfItem::from_url(url, name, desc, false).await
+      }
+      "local" => {
+        let name = item.name.unwrap_or("Local File".into());
+        let desc = item.desc.unwrap_or("".into());
+        PrfItem::from_local(name, desc)
+      }
+      "merge" => {
+        let name = item.name.unwrap_or("Merge".into());
+        let desc = item.desc.unwrap_or("".into());
+        PrfItem::from_merge(name, desc)
+      }
+      "script" => {
+        let name = item.name.unwrap_or("Script".into());
+        let desc = item.desc.unwrap_or("".into());
+        PrfItem::from_script(name, desc)
+      }
+      typ @ _ => bail!("invalid type \"{typ}\""),
+    }
+  }
+
   /// ## Local type
   /// create a new item from name/desc
   pub fn from_local(name: String, desc: String) -> Result<PrfItem> {
@@ -91,13 +127,18 @@ impl PrfItem {
       selected: None,
       extra: None,
       updated: Some(help::get_now()),
-      file_data: Some(tmpl::ITEM_CONFIG.into()),
+      file_data: Some(tmpl::ITEM_LOCAL.into()),
     })
   }
 
   /// ## Remote type
   /// create a new item from url
-  pub async fn from_url(url: &str, with_proxy: bool) -> Result<PrfItem> {
+  pub async fn from_url(
+    url: &str,
+    name: Option<String>,
+    desc: Option<String>,
+    with_proxy: bool,
+  ) -> Result<PrfItem> {
     let mut builder = reqwest::ClientBuilder::new();
 
     if !with_proxy {
@@ -124,20 +165,60 @@ impl PrfItem {
 
     let uid = help::get_uid("r");
     let file = format!("{uid}.yaml");
-    let name = uid.clone();
+    let name = name.unwrap_or(uid.clone());
     let data = resp.text_with_charset("utf-8").await?;
 
     Ok(PrfItem {
       uid: Some(uid),
       itype: Some("remote".into()),
       name: Some(name),
-      desc: None,
+      desc,
       file: Some(file),
       url: Some(url.into()),
       selected: None,
       extra,
       updated: Some(help::get_now()),
       file_data: Some(data),
+    })
+  }
+
+  /// ## Merge type (enhance)
+  /// create the enhanced item by using `merge` rule
+  pub fn from_merge(name: String, desc: String) -> Result<PrfItem> {
+    let uid = help::get_uid("m");
+    let file = format!("{uid}.yaml");
+
+    Ok(PrfItem {
+      uid: Some(uid),
+      itype: Some("merge".into()),
+      name: Some(name),
+      desc: Some(desc),
+      file: Some(file),
+      url: None,
+      selected: None,
+      extra: None,
+      updated: Some(help::get_now()),
+      file_data: Some(tmpl::ITEM_MERGE.into()),
+    })
+  }
+
+  /// ## Script type (enhance)
+  /// create the enhanced item by using javascript(browserjs)
+  pub fn from_script(name: String, desc: String) -> Result<PrfItem> {
+    let uid = help::get_uid("s");
+    let file = format!("{uid}.js"); // js ext
+
+    Ok(PrfItem {
+      uid: Some(uid),
+      itype: Some("script".into()),
+      name: Some(name),
+      desc: Some(desc),
+      file: Some(file),
+      url: None,
+      selected: None,
+      extra: None,
+      updated: Some(help::get_now()),
+      file_data: Some(tmpl::ITEM_SCRIPT.into()),
     })
   }
 }

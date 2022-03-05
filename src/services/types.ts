@@ -78,6 +78,8 @@ export namespace ApiType {
  * Some interface for command
  */
 export namespace CmdType {
+  export type ProfileType = "local" | "remote" | "merge" | "script";
+
   export interface ClashInfo {
     status: string;
     port?: string;
@@ -87,7 +89,7 @@ export namespace CmdType {
 
   export interface ProfileItem {
     uid: string;
-    type?: string;
+    type?: ProfileType | string;
     name?: string;
     desc?: string;
     file?: string;

@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
+import { useLockFn } from "ahooks";
+import { useSWRConfig } from "swr";
+import { useEffect, useState, MouseEvent } from "react";
 import {
   alpha,
   Box,
@@ -11,8 +13,6 @@ import {
   MenuItem,
   Menu,
 } from "@mui/material";
-import { useLockFn } from "ahooks";
-import { useSWRConfig } from "swr";
 import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../../services/types";
 import { updateProfile, deleteProfile, viewProfile } from "../../services/cmds";
@@ -48,7 +48,7 @@ interface Props {
   onSelect: (force: boolean) => void;
 }
 
-const ProfileItem: React.FC<Props> = (props) => {
+const ProfileItem = (props: Props) => {
   const { selected, itemData, onSelect } = props;
 
   const { mutate } = useSWRConfig();
@@ -118,9 +118,7 @@ const ProfileItem: React.FC<Props> = (props) => {
     }
   });
 
-  const handleContextMenu = (
-    event: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement, MouseEvent>) => {
     const { clientX, clientY } = event;
     setPosition({ top: clientY, left: clientX });
     setAnchorEl(event.currentTarget);
@@ -180,7 +178,7 @@ const ProfileItem: React.FC<Props> = (props) => {
           return { bgcolor, color, "& h2": { color: h2color } };
         }}
         onClick={() => onSelect(false)}
-        onContextMenu={handleContextMenu}
+        onContextMenu={handleContextMenu as any}
       >
         <Box display="flex" justifyContent="space-between">
           <Typography

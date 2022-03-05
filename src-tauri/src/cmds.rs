@@ -32,7 +32,7 @@ pub async fn import_profile(
   with_proxy: bool,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let item = wrap_err!(PrfItem::from_url(&url, with_proxy).await)?;
+  let item = wrap_err!(PrfItem::from_url(&url, None, None, with_proxy).await)?;
 
   let mut profiles = profiles_state.0.lock().unwrap();
   wrap_err!(profiles.append_item(item))
@@ -42,12 +42,11 @@ pub async fn import_profile(
 /// append a temp profile item file to the `profiles` dir
 /// view the temp profile file by using vscode or other editor
 #[tauri::command]
-pub async fn new_profile(
-  name: String,
-  desc: String,
+pub async fn create_profile(
+  item: PrfItem, // partial
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let item = wrap_err!(PrfItem::from_local(name, desc))?;
+  let item = wrap_err!(PrfItem::from(item).await)?;
   let mut profiles = profiles_state.0.lock().unwrap();
 
   wrap_err!(profiles.append_item(item))
@@ -73,7 +72,7 @@ pub async fn update_profile(
     item.url.clone().unwrap()
   };
 
-  let item = wrap_err!(PrfItem::from_url(&url, with_proxy).await)?;
+  let item = wrap_err!(PrfItem::from_url(&url, None, None, with_proxy).await)?;
 
   let mut profiles = profiles_state.0.lock().unwrap();
   wrap_err!(profiles.update_item(index.clone(), item))?;

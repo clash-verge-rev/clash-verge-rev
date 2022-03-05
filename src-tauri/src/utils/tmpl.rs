@@ -32,11 +32,38 @@ system_proxy_bypass: localhost;127.*;10.*;192.168.*;<local>
 ";
 
 /// template for new a profile item
-pub const ITEM_CONFIG: &str = "# Profile Template for clash verge\n\n
-# proxies defination (optional, the same as clash)
-proxies:\n
-# proxy-groups (optional, the same as clash)
-proxy-groups:\n
-# rules (optional, the same as clash)
-rules:\n\n
+pub const ITEM_LOCAL: &str = "# Profile Template for clash verge
+
+proxies:
+
+proxy-groups:
+
+rules:
+";
+
+/// enhanced profile
+pub const ITEM_MERGE: &str = "# Merge Template for clash verge
+# The `Merge` format used to enhance profile
+
+prepend-rules:
+
+prepend-proxies:
+
+prepend-proxy-groups:
+
+append-rules:
+
+append-proxies:
+
+append-proxy-groups:
+";
+
+/// enhanced profile
+pub const ITEM_SCRIPT: &str = "// Should define the `main` function
+// The argument to this function is the clash config 
+// or the result of the previous handler
+// so you should return the config after processing
+function main(params) {
+  return params;
+}
 ";
