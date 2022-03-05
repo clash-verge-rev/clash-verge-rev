@@ -50,11 +50,8 @@ const ProfileEdit = (props: Props) => {
   } as const;
 
   const type =
-    form.type ?? form.url
-      ? "remote"
-      : form.file?.endsWith("js")
-      ? "script"
-      : "local";
+    form.type ||
+    (form.url ? "remote" : form.file?.endsWith("js") ? "script" : "local");
 
   return (
     <Dialog open={open} onClose={onClose}>

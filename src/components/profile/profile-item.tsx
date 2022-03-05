@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { useLockFn } from "ahooks";
 import { useSWRConfig } from "swr";
-import { useEffect, useState, MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import {
   alpha,
   Box,
@@ -84,7 +84,7 @@ const ProfileItem = (props: Props) => {
     try {
       await viewProfile(itemData.uid);
     } catch (err: any) {
-      Notice.error(err.toString());
+      Notice.error(err?.message || err.toString());
     }
   };
 
@@ -109,7 +109,6 @@ const ProfileItem = (props: Props) => {
 
   const onDelete = useLockFn(async () => {
     setAnchorEl(null);
-
     try {
       await deleteProfile(itemData.uid);
       mutate("getProfiles");
@@ -117,13 +116,6 @@ const ProfileItem = (props: Props) => {
       Notice.error(err?.message || err.toString());
     }
   });
-
-  const handleContextMenu = (event: MouseEvent<HTMLDivElement, MouseEvent>) => {
-    const { clientX, clientY } = event;
-    setPosition({ top: clientY, left: clientX });
-    setAnchorEl(event.currentTarget);
-    event.preventDefault();
-  };
 
   const boxStyle = {
     height: 26,
@@ -178,7 +170,12 @@ const ProfileItem = (props: Props) => {
           return { bgcolor, color, "& h2": { color: h2color } };
         }}
         onClick={() => onSelect(false)}
-        onContextMenu={handleContextMenu as any}
+        onContextMenu={(event) => {
+          const { clientX, clientY } = event;
+          setPosition({ top: clientY, left: clientX });
+          setAnchorEl(event.currentTarget);
+          event.preventDefault();
+        }}
       >
         <Box display="flex" justifyContent="space-between">
           <Typography
@@ -263,6 +260,10 @@ const ProfileItem = (props: Props) => {
         onClose={() => setAnchorEl(null)}
         anchorPosition={position}
         anchorReference="anchorPosition"
+        onContextMenu={(e) => {
+          setAnchorEl(null);
+          e.preventDefault();
+        }}
       >
         {(hasUrl ? urlModeMenu : fileModeMenu).map((item) => (
           <MenuItem
@@ -275,11 +276,13 @@ const ProfileItem = (props: Props) => {
         ))}
       </Menu>
 
-      <ProfileEdit
-        open={editOpen}
-        itemData={itemData}
-        onClose={() => setEditOpen(false)}
-      />
+      {editOpen && (
+        <ProfileEdit
+          open={editOpen}
+          itemData={itemData}
+          onClose={() => setEditOpen(false)}
+        />
+      )}
     </>
   );
 };
