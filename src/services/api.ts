@@ -96,20 +96,26 @@ export async function getProxies() {
 
   let groups: ApiType.ProxyGroupItem[] = [];
 
+  // compatible with proxy-providers
+  const generateItem = (name: string) => {
+    if (records[name]) return records[name];
+    return { name, type: "unknown", udp: false, history: [] };
+  };
+
   if (order) {
     groups = order
       .filter((name) => records[name]?.all)
       .map((name) => records[name])
       .map((each) => ({
         ...each,
-        all: each.all!.map((item) => records[item]),
+        all: each.all!.map((item) => generateItem(item)),
       }));
   } else {
     groups = Object.values(records)
       .filter((each) => each.name !== "GLOBAL" && each.all)
       .map((each) => ({
         ...each,
-        all: each.all!.map((item) => records[item]),
+        all: each.all!.map((item) => generateItem(item)),
       }));
     groups.sort((a, b) => b.name.localeCompare(a.name));
   }
@@ -121,4 +127,11 @@ export async function getProxies() {
   );
 
   return { global, direct, groups, records, proxies };
+}
+
+// todo: get proxy providers
+export async function getProviders() {
+  const instance = await getAxios();
+  const response = await instance.get<any, any>("/providers/proxies");
+  return response.providers as any;
 }
