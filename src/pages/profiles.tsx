@@ -1,7 +1,7 @@
 import useSWR, { useSWRConfig } from "swr";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, Grid, TextField, Typography } from "@mui/material";
+import { Box, Button, Grid, TextField } from "@mui/material";
 import {
   getProfiles,
   selectProfile,
@@ -13,21 +13,34 @@ import Notice from "../components/base/base-notice";
 import BasePage from "../components/base/base-page";
 import ProfileNew from "../components/profile/profile-new";
 import ProfileItem from "../components/profile/profile-item";
+import ProfileMore from "../components/profile/profile-more";
 
 const ProfilePage = () => {
+  const { mutate } = useSWRConfig();
+
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-
-  const { mutate } = useSWRConfig();
-  const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
+
+  const { regularItems, enhanceItems } = useMemo(() => {
+    const { items = [] } = profiles;
+    const regularItems = items.filter((i) =>
+      ["local", "remote"].includes(i.type!)
+    );
+    const enhanceItems = items.filter((i) =>
+      ["merge", "script"].includes(i.type!)
+    );
+
+    return { regularItems, enhanceItems };
+  }, [profiles]);
 
   useEffect(() => {
     if (profiles.current == null) return;
-    if (!profiles.items) profiles.items = [];
 
     const current = profiles.current;
-    const profile = profiles.items.find((p) => p.uid === current);
+    const profile = regularItems.find((p) => p.uid === current);
     if (!profile) return;
 
     setTimeout(async () => {
@@ -62,7 +75,7 @@ const ProfilePage = () => {
       // update proxies cache
       if (hasChange) mutate("getProxies", getProxies());
     }, 100);
-  }, [profiles]);
+  }, [profiles, regularItems]);
 
   const onImport = async () => {
     if (!url) return;
@@ -89,22 +102,27 @@ const ProfilePage = () => {
     }
   };
 
-  const onSelect = useLockFn(async (current: string, force: boolean) => {
-    if (!force && current === profiles.current) return;
+  const onSelect = useLockFn(async (uid: string, force: boolean) => {
+    if (!force && uid === profiles.current) return;
 
     try {
-      await selectProfile(current);
-      mutate("getProfiles", { ...profiles, current: current }, true);
+      await selectProfile(uid);
+      mutate("getProfiles", { ...profiles, current: uid }, true);
     } catch (err: any) {
-      err && Notice.error(err.message || err.toString());
+      Notice.error(err?.message || err.toString());
     }
   });
 
+  const onEnhanceEnable = useLockFn(async (uid: string) => {});
+  const onEnhanceDisable = useLockFn(async (uid: string) => {});
+  const onMoveTop = useLockFn(async (uid: string) => {});
+  const onMoveEnd = useLockFn(async (uid: string) => {});
+
   return (
     <BasePage title="Profiles">
-      <Box sx={{ display: "flex", mb: 3 }}>
+      <Box sx={{ display: "flex", mb: 2.5 }}>
         <TextField
-          id="profile_url"
+          id="clas_verge_profile_url"
           name="profile_url"
           label="Profile URL"
           size="small"
@@ -126,8 +144,8 @@ const ProfilePage = () => {
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        {profiles?.items?.map((item) => (
+      <Grid container spacing={2}>
+        {regularItems.map((item) => (
           <Grid item xs={12} sm={6} key={item.file}>
             <ProfileItem
               selected={profiles.current === item.uid}
@@ -138,13 +156,22 @@ const ProfilePage = () => {
         ))}
       </Grid>
 
-      <ProfileNew open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <Grid container spacing={2} sx={{ mt: 3 }}>
+        {enhanceItems.map((item) => (
+          <Grid item xs={12} sm={6} key={item.file}>
+            <ProfileMore
+              selected={!!profiles.chain?.includes(item.uid)}
+              itemData={item}
+              onEnable={() => onEnhanceEnable(item.uid)}
+              onDisable={() => onEnhanceDisable(item.uid)}
+              onMoveTop={() => onMoveTop(item.uid)}
+              onMoveEnd={() => onMoveEnd(item.uid)}
+            />
+          </Grid>
+        ))}
+      </Grid>
 
-      <header data-windrag style={{ marginTop: 20, userSelect: "none" }}>
-        <Typography variant="h5" component="h2" data-windrag>
-          Enhanced
-        </Typography>
-      </header>
+      <ProfileNew open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </BasePage>
   );
 };
