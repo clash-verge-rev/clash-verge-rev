@@ -1,6 +1,4 @@
 import dayjs from "dayjs";
-import { useLockFn } from "ahooks";
-import { useSWRConfig } from "swr";
 import { useState } from "react";
 import {
   alpha,
@@ -12,7 +10,7 @@ import {
   Menu,
 } from "@mui/material";
 import { CmdType } from "../../services/types";
-import { deleteProfile, viewProfile } from "../../services/cmds";
+import { viewProfile } from "../../services/cmds";
 import relativeTime from "dayjs/plugin/relativeTime";
 import ProfileEdit from "./profile-edit";
 import Notice from "../base/base-notice";
@@ -37,6 +35,7 @@ interface Props {
   onDisable: () => void;
   onMoveTop: () => void;
   onMoveEnd: () => void;
+  onDelete: () => void;
 }
 
 // profile enhanced item
@@ -48,10 +47,10 @@ const ProfileMore = (props: Props) => {
     onDisable,
     onMoveTop,
     onMoveEnd,
+    onDelete,
   } = props;
 
   const { type } = itemData;
-  const { mutate } = useSWRConfig();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [editOpen, setEditOpen] = useState(false);
@@ -70,30 +69,25 @@ const ProfileMore = (props: Props) => {
     }
   };
 
-  const onDelete = useLockFn(async () => {
+  const closeWrapper = (fn: () => void) => () => {
     setAnchorEl(null);
-    try {
-      await deleteProfile(itemData.uid);
-      mutate("getProfiles");
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString());
-    }
-  });
+    return fn();
+  };
 
   const enableMenu = [
-    { label: "Disable", handler: onDisable },
+    { label: "Disable", handler: closeWrapper(onDisable) },
     { label: "Edit", handler: onEdit },
     { label: "View File", handler: onView },
-    { label: "To Top", handler: onMoveTop },
-    { label: "To End", handler: onMoveEnd },
-    { label: "Delete", handler: onDelete },
+    { label: "To Top", handler: closeWrapper(onMoveTop) },
+    { label: "To End", handler: closeWrapper(onMoveEnd) },
+    { label: "Delete", handler: closeWrapper(onDelete) },
   ];
 
   const disableMenu = [
-    { label: "Enable", handler: onEnable },
+    { label: "Enable", handler: closeWrapper(onEnable) },
     { label: "Edit", handler: onEdit },
     { label: "View File", handler: onView },
-    { label: "Delete", handler: onDelete },
+    { label: "Delete", handler: closeWrapper(onDelete) },
   ];
 
   const boxStyle = {

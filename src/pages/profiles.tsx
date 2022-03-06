@@ -1,12 +1,14 @@
 import useSWR, { useSWRConfig } from "swr";
-import { useEffect, useMemo, useState } from "react";
 import { useLockFn } from "ahooks";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Grid, TextField } from "@mui/material";
 import {
   getProfiles,
-  selectProfile,
   patchProfile,
+  deleteProfile,
+  selectProfile,
   importProfile,
+  changeProfileChain,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
 import Notice from "../components/base/base-notice";
@@ -25,13 +27,20 @@ const ProfilePage = () => {
   const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
 
   const { regularItems, enhanceItems } = useMemo(() => {
-    const { items = [] } = profiles;
-    const regularItems = items.filter((i) =>
-      ["local", "remote"].includes(i.type!)
-    );
-    const enhanceItems = items.filter((i) =>
-      ["merge", "script"].includes(i.type!)
-    );
+    const items = profiles.items || [];
+    const chain = profiles.chain || [];
+
+    const type1 = ["local", "remote"];
+    const type2 = ["merge", "script"];
+
+    const regularItems = items.filter((i) => type1.includes(i.type!));
+    const restItems = items.filter((i) => type2.includes(i.type!));
+
+    const restMap = Object.fromEntries(restItems.map((i) => [i.uid, i]));
+
+    const enhanceItems = chain
+      .map((i) => restMap[i]!)
+      .concat(restItems.filter((i) => !chain.includes(i.uid)));
 
     return { regularItems, enhanceItems };
   }, [profiles]);
@@ -113,10 +122,51 @@ const ProfilePage = () => {
     }
   });
 
-  const onEnhanceEnable = useLockFn(async (uid: string) => {});
-  const onEnhanceDisable = useLockFn(async (uid: string) => {});
-  const onMoveTop = useLockFn(async (uid: string) => {});
-  const onMoveEnd = useLockFn(async (uid: string) => {});
+  /** enhanced profile mode */
+
+  const chain = profiles.chain || [];
+
+  const onEnhanceEnable = useLockFn(async (uid: string) => {
+    if (chain.includes(uid)) return;
+
+    const newChain = [...chain, uid];
+    await changeProfileChain(newChain);
+    mutate("getProfiles", { ...profiles, chain: newChain }, true);
+  });
+
+  const onEnhanceDisable = useLockFn(async (uid: string) => {
+    if (!chain.includes(uid)) return;
+
+    const newChain = chain.filter((i) => i !== uid);
+    await changeProfileChain(newChain);
+    mutate("getProfiles", { ...profiles, chain: newChain }, true);
+  });
+
+  const onEnhanceDelete = useLockFn(async (uid: string) => {
+    try {
+      await onEnhanceDisable(uid);
+      await deleteProfile(uid);
+      mutate("getProfiles");
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
+  });
+
+  const onMoveTop = useLockFn(async (uid: string) => {
+    if (!chain.includes(uid)) return;
+
+    const newChain = [uid].concat(chain.filter((i) => i !== uid));
+    await changeProfileChain(newChain);
+    mutate("getProfiles", { ...profiles, chain: newChain }, true);
+  });
+
+  const onMoveEnd = useLockFn(async (uid: string) => {
+    if (!chain.includes(uid)) return;
+
+    const newChain = chain.filter((i) => i !== uid).concat([uid]);
+    await changeProfileChain(newChain);
+    mutate("getProfiles", { ...profiles, chain: newChain }, true);
+  });
 
   return (
     <BasePage title="Profiles">
@@ -164,6 +214,7 @@ const ProfilePage = () => {
               itemData={item}
               onEnable={() => onEnhanceEnable(item.uid)}
               onDisable={() => onEnhanceDisable(item.uid)}
+              onDelete={() => onEnhanceDelete(item.uid)}
               onMoveTop={() => onMoveTop(item.uid)}
               onMoveEnd={() => onMoveEnd(item.uid)}
             />
