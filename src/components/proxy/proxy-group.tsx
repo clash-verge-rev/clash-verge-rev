@@ -75,7 +75,7 @@ const ProxyGroup = ({ group }: Props) => {
       } else {
         profile.selected[index] = { name: group.name, now: name };
       }
-      await patchProfile(profiles!.current!, profile);
+      await patchProfile(profiles!.current!, { selected: profile.selected });
     } catch (err) {
       console.error(err);
     }

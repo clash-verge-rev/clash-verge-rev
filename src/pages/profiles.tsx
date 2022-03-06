@@ -81,7 +81,10 @@ const ProfilePage = () => {
         name,
         now,
       }));
-      patchProfile(current!, profile).catch(console.error);
+
+      patchProfile(current!, { selected: profile.selected }).catch(
+        console.error
+      );
       // update proxies cache
       if (hasChange) mutate("getProxies", getProxies());
     }, 100);

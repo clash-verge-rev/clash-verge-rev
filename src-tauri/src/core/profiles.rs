@@ -380,8 +380,7 @@ impl Profiles {
         patch!(each, item, url);
         patch!(each, item, selected);
         patch!(each, item, extra);
-
-        each.updated = Some(help::get_now());
+        patch!(each, item, updated);
 
         self.items = Some(items);
         return self.save_file();
