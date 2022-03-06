@@ -40,7 +40,13 @@ const ProfileNew = (props: Props) => {
     }
 
     try {
-      await createProfile({ ...form });
+      const name = form.name || `${form.type} file`;
+
+      if (form.type === "remote" && !form.url) {
+        throw new Error("Remote URL should not be null");
+      }
+
+      await createProfile({ ...form, name });
       setForm({ name: "", desc: "", type: "remote", url: "" });
       mutate("getProfiles");
       onClose();

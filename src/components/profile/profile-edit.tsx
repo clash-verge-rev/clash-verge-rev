@@ -34,6 +34,11 @@ const ProfileEdit = (props: Props) => {
     try {
       const { uid } = itemData;
       const { name, desc, url } = form;
+
+      if (itemData.type === "remote" && !url) {
+        throw new Error("Remote URL should not be null");
+      }
+
       await patchProfile(uid, { uid, name, desc, url });
       mutate("getProfiles");
       onClose();
