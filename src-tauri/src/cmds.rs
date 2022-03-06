@@ -8,7 +8,7 @@ use crate::{
 use anyhow::Result;
 use serde_yaml::Mapping;
 use std::{path::PathBuf, process::Command};
-use tauri::{api, State};
+use tauri::{api, Manager, State};
 
 /// get all profiles from `profiles.yaml`
 #[tauri::command]
@@ -98,6 +98,43 @@ pub fn select_profile(
 
   let clash = clash_state.0.lock().unwrap();
   wrap_err!(clash.activate(&profiles))
+}
+
+/// change the profile chain
+#[tauri::command]
+pub fn change_profile_chain(
+  chain: Option<Vec<String>>,
+  app_handle: tauri::AppHandle,
+  clash_state: State<'_, ClashState>,
+  profiles_state: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  let clash = clash_state.0.lock().unwrap();
+  let mut profiles = profiles_state.0.lock().unwrap();
+
+  profiles.put_chain(chain);
+
+  app_handle
+    .get_window("main")
+    .map(|win| wrap_err!(clash.activate_enhanced(&profiles, win, false)));
+
+  Ok(())
+}
+
+/// manually exec enhanced profile
+#[tauri::command]
+pub fn enhance_profiles(
+  app_handle: tauri::AppHandle,
+  clash_state: State<'_, ClashState>,
+  profiles_state: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  let clash = clash_state.0.lock().unwrap();
+  let profiles = profiles_state.0.lock().unwrap();
+
+  app_handle
+    .get_window("main")
+    .map(|win| wrap_err!(clash.activate_enhanced(&profiles, win, false)));
+
+  Ok(())
 }
 
 /// delete profile item

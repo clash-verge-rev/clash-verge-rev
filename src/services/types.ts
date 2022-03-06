@@ -124,14 +124,32 @@ export namespace CmdType {
     system_proxy_bypass?: string;
   }
 
+  export type ProfileMerge = Record<string, any>;
+
+  // partial of the clash config
+  export type ProfileData = Partial<{
+    rules: any[];
+    proxies: any[];
+    "proxy-groups": any[];
+    "proxy-providers": any[];
+    "rule-providers": any[];
+  }>;
+
   export interface ChainItem {
     item: ProfileItem;
-    merge?: object;
+    merge?: ProfileMerge;
     script?: string;
   }
 
   export interface EnhancedPayload {
     chain: ChainItem[];
-    current: object;
+    current: ProfileData;
+    callback: string;
+  }
+
+  export interface EnhancedResult {
+    data: ProfileData;
+    status: string;
+    error?: string;
   }
 }

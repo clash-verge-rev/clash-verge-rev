@@ -1,4 +1,4 @@
-use super::{Profiles, Verge};
+use super::{PrfEnhancedResult, Profiles, Verge};
 use crate::utils::{config, dirs, help};
 use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
@@ -260,6 +260,7 @@ impl Clash {
       let mut data = HashMap::new();
       data.insert("path", temp_path.as_os_str().to_str().unwrap());
 
+      // retry 5 times
       for _ in 0..5 {
         match reqwest::ClientBuilder::new().no_proxy().build() {
           Ok(client) => match client
@@ -269,11 +270,18 @@ impl Clash {
             .send()
             .await
           {
-            Ok(_) => break,
+            Ok(resp) => {
+              if resp.status() != 204 {
+                log::error!("failed to activate clash for status \"{}\"", resp.status());
+              }
+              // do not retry
+              break;
+            }
             Err(err) => log::error!("failed to activate for `{err}`"),
           },
           Err(err) => log::error!("failed to activate for `{err}`"),
         }
+        sleep(Duration::from_millis(500)).await;
       }
     });
 
@@ -294,29 +302,43 @@ impl Clash {
   }
 
   /// enhanced profiles mode
-  pub fn activate_enhanced(&self, profiles: &Profiles, win: tauri::Window) -> Result<()> {
+  pub fn activate_enhanced(
+    &self,
+    profiles: &Profiles,
+    win: tauri::Window,
+    delay: bool,
+  ) -> Result<()> {
     let event_name = help::get_uid("e");
-    let event_name = format!("script-cb-{event_name}");
+    let event_name = format!("enhanced-cb-{event_name}");
 
     let info = self.info.clone();
     let mut config = self.config.clone();
 
     // generate the payload
-    let payload = profiles.gen_enhanced()?;
+    let payload = profiles.gen_enhanced(event_name.clone())?;
 
     win.once(&event_name, move |event| {
       if let Some(result) = event.payload() {
-        let gen_map: Mapping = serde_json::from_str(result).unwrap();
+        let result: PrfEnhancedResult = serde_json::from_str(result).unwrap();
 
-        for (key, value) in gen_map.into_iter() {
-          config.insert(key, value);
+        if let Some(data) = result.data {
+          for (key, value) in data.into_iter() {
+            config.insert(key, value);
+          }
+          Self::_activate(info, config).unwrap();
         }
-        Self::_activate(info, config).unwrap();
+
+        log::info!("profile enhanced status {}", result.status);
+
+        result.error.map(|error| log::error!("{error}"));
       }
     });
 
     tauri::async_runtime::spawn(async move {
-      sleep(Duration::from_secs(5)).await;
+      // wait the window setup during resolve app
+      if delay {
+        sleep(Duration::from_secs(2)).await;
+      }
       win.emit("script-handler", payload).unwrap();
     });
 

@@ -26,9 +26,10 @@ pub fn resolve_setup(app: &App) {
   *profiles = Profiles::read_file();
   log_if_err!(clash.activate(&profiles));
 
-  app
-    .get_window("main")
-    .map(|win| log_if_err!(clash.activate_enhanced(&profiles, win)));
+  match app.get_window("main") {
+    Some(win) => log_if_err!(clash.activate_enhanced(&profiles, win, true)),
+    None => log::error!("failed to get window for enhanced profiles"),
+  };
 
   verge.init_sysproxy(clash.info.port.clone());
   // enable tun mode

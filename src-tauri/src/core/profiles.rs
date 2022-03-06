@@ -314,6 +314,11 @@ impl Profiles {
     bail!("invalid uid \"{uid}\"");
   }
 
+  /// just change the `chain`
+  pub fn put_chain(&mut self, chain: Option<Vec<String>>) {
+    self.chain = chain;
+  }
+
   /// find the item by the uid
   pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
     if self.items.is_some() {
@@ -519,7 +524,7 @@ impl Profiles {
   }
 
   /// gen the enhanced profiles
-  pub fn gen_enhanced(&self) -> Result<PrfEnhanced> {
+  pub fn gen_enhanced(&self, callback: String) -> Result<PrfEnhanced> {
     let current = self.gen_activate()?;
 
     let chain = match self.chain.as_ref() {
@@ -535,7 +540,11 @@ impl Profiles {
       None => vec![],
     };
 
-    Ok(PrfEnhanced { current, chain })
+    Ok(PrfEnhanced {
+      current,
+      chain,
+      callback,
+    })
   }
 }
 
@@ -544,6 +553,17 @@ pub struct PrfEnhanced {
   current: Mapping,
 
   chain: Vec<PrfData>,
+
+  callback: String,
+}
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct PrfEnhancedResult {
+  pub data: Option<Mapping>,
+
+  pub status: String,
+
+  pub error: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]

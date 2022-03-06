@@ -94,6 +94,8 @@ fn main() -> std::io::Result<()> {
       cmds::select_profile,
       cmds::get_profiles,
       cmds::sync_profiles,
+      cmds::enhance_profiles,
+      cmds::change_profile_chain
     ]);
 
   #[cfg(target_os = "macos")]

@@ -9,6 +9,10 @@ export async function syncProfiles() {
   return invoke<void>("sync_profiles");
 }
 
+export async function enhanceProfiles() {
+  return invoke<void>("enhance_profiles");
+}
+
 export async function createProfile(item: Partial<CmdType.ProfileItem>) {
   return invoke<void>("create_profile", { item });
 }
@@ -40,8 +44,8 @@ export async function selectProfile(index: string) {
   return invoke<void>("select_profile", { index });
 }
 
-export async function restartSidecar() {
-  return invoke<void>("restart_sidecar");
+export async function changeProfileChain(chain?: string[]) {
+  return invoke<void>("change_profile_chain", { chain });
 }
 
 export async function getClashInfo() {
@@ -62,6 +66,10 @@ export async function patchVergeConfig(payload: CmdType.VergeConfig) {
 
 export async function getSystemProxy() {
   return invoke<any>("get_sys_proxy");
+}
+
+export async function restartSidecar() {
+  return invoke<void>("restart_sidecar");
 }
 
 export async function killSidecars() {
