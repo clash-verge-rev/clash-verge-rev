@@ -67,13 +67,13 @@ pub fn init_app(package_info: &PackageInfo) {
   let res_dir = dirs::app_resources_dir(package_info);
 
   if !app_dir.exists() {
-    fs::create_dir(&app_dir).unwrap();
+    fs::create_dir_all(&app_dir).unwrap();
   }
   if !log_dir.exists() {
-    fs::create_dir(&log_dir).unwrap();
+    fs::create_dir_all(&log_dir).unwrap();
   }
   if !profiles_dir.exists() {
-    fs::create_dir(&profiles_dir).unwrap();
+    fs::create_dir_all(&profiles_dir).unwrap();
   }
 
   init_log(&log_dir);
