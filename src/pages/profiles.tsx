@@ -8,6 +8,7 @@ import {
   deleteProfile,
   selectProfile,
   importProfile,
+  enhanceProfiles,
   changeProfileChain,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
@@ -126,6 +127,8 @@ const ProfilePage = () => {
 
   const chain = profiles.chain || [];
 
+  const onEnhance = useLockFn(enhanceProfiles);
+
   const onEnhanceEnable = useLockFn(async (uid: string) => {
     if (chain.includes(uid)) return;
 
@@ -217,6 +220,7 @@ const ProfilePage = () => {
               onDelete={() => onEnhanceDelete(item.uid)}
               onMoveTop={() => onMoveTop(item.uid)}
               onMoveEnd={() => onMoveEnd(item.uid)}
+              onEnhance={onEnhance}
             />
           </Grid>
         ))}
