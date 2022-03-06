@@ -36,6 +36,7 @@ interface Props {
   onMoveTop: () => void;
   onMoveEnd: () => void;
   onDelete: () => void;
+  onEnhance: () => void;
 }
 
 // profile enhanced item
@@ -48,6 +49,7 @@ const ProfileMore = (props: Props) => {
     onMoveTop,
     onMoveEnd,
     onDelete,
+    onEnhance,
   } = props;
 
   const { type } = itemData;
@@ -76,8 +78,9 @@ const ProfileMore = (props: Props) => {
 
   const enableMenu = [
     { label: "Disable", handler: closeWrapper(onDisable) },
+    { label: "Refresh", handler: closeWrapper(onEnhance) },
     { label: "Edit", handler: onEdit },
-    { label: "View File", handler: onView },
+    { label: "View", handler: onView },
     { label: "To Top", handler: closeWrapper(onMoveTop) },
     { label: "To End", handler: closeWrapper(onMoveEnd) },
     { label: "Delete", handler: closeWrapper(onDelete) },
@@ -86,7 +89,7 @@ const ProfileMore = (props: Props) => {
   const disableMenu = [
     { label: "Enable", handler: closeWrapper(onEnable) },
     { label: "Edit", handler: onEdit },
-    { label: "View File", handler: onView },
+    { label: "View", handler: onView },
     { label: "Delete", handler: closeWrapper(onDelete) },
   ];
 

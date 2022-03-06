@@ -93,6 +93,4 @@ export default function setup() {
 
     emit(payload.callback, JSON.stringify(result)).catch(console.error);
   });
-
-  // enhanceProfiles();
 }
