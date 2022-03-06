@@ -1,10 +1,9 @@
 use crate::{
   core::{ClashInfo, PrfItem, Profiles, VergeConfig},
-  ret_err,
   states::{ClashState, ProfilesState, VergeState},
   utils::{dirs, sysopt::SysProxyConfig},
-  wrap_err,
 };
+use crate::{ret_err, wrap_err};
 use anyhow::Result;
 use serde_yaml::Mapping;
 use std::{path::PathBuf, process::Command};
@@ -80,7 +79,7 @@ pub async fn update_profile(
   // reactivate the profile
   if Some(index) == profiles.get_current() {
     let clash = clash_state.0.lock().unwrap();
-    wrap_err!(clash.activate(&profiles))?;
+    wrap_err!(clash.activate(&profiles, false))?;
   }
 
   Ok(())
@@ -97,7 +96,7 @@ pub fn select_profile(
   wrap_err!(profiles.put_current(index))?;
 
   let clash = clash_state.0.lock().unwrap();
-  wrap_err!(clash.activate(&profiles))
+  wrap_err!(clash.activate(&profiles, false))
 }
 
 /// change the profile chain
@@ -108,16 +107,13 @@ pub fn change_profile_chain(
   clash_state: State<'_, ClashState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let clash = clash_state.0.lock().unwrap();
+  let mut clash = clash_state.0.lock().unwrap();
   let mut profiles = profiles_state.0.lock().unwrap();
 
   profiles.put_chain(chain);
+  clash.set_window(app_handle.get_window("main"));
 
-  app_handle
-    .get_window("main")
-    .map(|win| wrap_err!(clash.activate_enhanced(&profiles, win, false)));
-
-  Ok(())
+  wrap_err!(clash.activate_enhanced(&profiles, false))
 }
 
 /// manually exec enhanced profile
@@ -127,14 +123,12 @@ pub fn enhance_profiles(
   clash_state: State<'_, ClashState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let clash = clash_state.0.lock().unwrap();
+  let mut clash = clash_state.0.lock().unwrap();
   let profiles = profiles_state.0.lock().unwrap();
 
-  app_handle
-    .get_window("main")
-    .map(|win| wrap_err!(clash.activate_enhanced(&profiles, win, false)));
+  clash.set_window(app_handle.get_window("main"));
 
-  Ok(())
+  wrap_err!(clash.activate_enhanced(&profiles, false))
 }
 
 /// delete profile item
@@ -148,7 +142,7 @@ pub fn delete_profile(
 
   if wrap_err!(profiles.delete_item(index))? {
     let clash = clash_state.0.lock().unwrap();
-    wrap_err!(clash.activate(&profiles))?;
+    wrap_err!(clash.activate(&profiles, false))?;
   }
 
   Ok(())
@@ -291,7 +285,7 @@ pub fn patch_verge_config(
 
     wrap_err!(clash.tun_mode(tun_mode.unwrap()))?;
     clash.update_config();
-    wrap_err!(clash.activate(&profiles))?;
+    wrap_err!(clash.activate(&profiles, false))?;
   }
 
   Ok(())

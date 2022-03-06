@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::{collections::HashMap, time::Duration};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
+use tauri::Window;
 use tokio::time::sleep;
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -23,7 +24,6 @@ pub struct ClashInfo {
   pub secret: Option<String>,
 }
 
-#[derive(Debug)]
 pub struct Clash {
   /// maintain the clash config
   pub config: Mapping,
@@ -33,6 +33,9 @@ pub struct Clash {
 
   /// clash sidecar
   pub sidecar: Option<CommandChild>,
+
+  /// save the main window
+  pub window: Option<Window>,
 }
 
 impl Clash {
@@ -44,6 +47,7 @@ impl Clash {
       config,
       info,
       sidecar: None,
+      window: None,
     }
   }
 
@@ -114,6 +118,11 @@ impl Clash {
     }
   }
 
+  /// save the main window
+  pub fn set_window(&mut self, win: Option<Window>) {
+    self.window = win;
+  }
+
   /// run clash sidecar
   pub fn run_sidecar(&mut self) -> Result<()> {
     let app_dir = dirs::app_home_dir();
@@ -156,7 +165,7 @@ impl Clash {
     self.update_config();
     self.drop_sidecar()?;
     self.run_sidecar()?;
-    self.activate(profiles)
+    self.activate(profiles, false)
   }
 
   /// update the clash info
@@ -241,12 +250,15 @@ impl Clash {
     self.save_config()
   }
 
+  /// activate the profile
+  /// generate a new profile to the temp_dir
+  /// then put the path to the clash core
   fn _activate(info: ClashInfo, config: Mapping) -> Result<()> {
     let temp_path = dirs::profiles_temp_path();
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
     tauri::async_runtime::spawn(async move {
-      let server = info.server.clone().unwrap();
+      let server = info.server.unwrap();
       let server = format!("http://{server}/configs");
 
       let mut headers = HeaderMap::new();
@@ -263,22 +275,20 @@ impl Clash {
       // retry 5 times
       for _ in 0..5 {
         match reqwest::ClientBuilder::new().no_proxy().build() {
-          Ok(client) => match client
-            .put(&server)
-            .headers(headers.clone())
-            .json(&data)
-            .send()
-            .await
-          {
-            Ok(resp) => {
-              if resp.status() != 204 {
-                log::error!("failed to activate clash for status \"{}\"", resp.status());
+          Ok(client) => {
+            let builder = client.put(&server).headers(headers.clone()).json(&data);
+
+            match builder.send().await {
+              Ok(resp) => {
+                if resp.status() != 204 {
+                  log::error!("failed to activate clash for status \"{}\"", resp.status());
+                }
+                // do not retry
+                break;
               }
-              // do not retry
-              break;
+              Err(err) => log::error!("failed to activate for `{err}`"),
             }
-            Err(err) => log::error!("failed to activate for `{err}`"),
-          },
+          }
           Err(err) => log::error!("failed to activate for `{err}`"),
         }
         sleep(Duration::from_millis(500)).await;
@@ -288,26 +298,14 @@ impl Clash {
     Ok(())
   }
 
-  /// activate the profile
-  pub fn activate(&self, profiles: &Profiles) -> Result<()> {
-    let info = self.info.clone();
-    let mut config = self.config.clone();
-    let gen_map = profiles.gen_activate()?;
-
-    for (key, value) in gen_map.into_iter() {
-      config.insert(key, value);
+  /// enhanced profiles mode
+  /// only change the enhanced profiles
+  pub fn activate_enhanced(&self, profiles: &Profiles, delay: bool) -> Result<()> {
+    if self.window.is_none() {
+      bail!("failed to get the main window");
     }
 
-    Self::_activate(info, config)
-  }
-
-  /// enhanced profiles mode
-  pub fn activate_enhanced(
-    &self,
-    profiles: &Profiles,
-    win: tauri::Window,
-    delay: bool,
-  ) -> Result<()> {
+    let win = self.window.clone().unwrap();
     let event_name = help::get_uid("e");
     let event_name = format!("enhanced-cb-{event_name}");
 
@@ -343,6 +341,21 @@ impl Clash {
     });
 
     Ok(())
+  }
+
+  /// activate the profile
+  /// auto activate enhanced profile
+  pub fn activate(&self, profiles: &Profiles, delay: bool) -> Result<()> {
+    let gen_map = profiles.gen_activate()?;
+    let info = self.info.clone();
+    let mut config = self.config.clone();
+
+    for (key, value) in gen_map.into_iter() {
+      config.insert(key, value);
+    }
+
+    Self::_activate(info, config)?;
+    self.activate_enhanced(profiles, delay)
   }
 }
 
