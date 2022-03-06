@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   alpha,
   Box,
@@ -14,6 +14,7 @@ import { viewProfile } from "../../services/cmds";
 import relativeTime from "dayjs/plugin/relativeTime";
 import ProfileEdit from "./profile-edit";
 import Notice from "../base/base-notice";
+import enhance from "../../services/enhance";
 
 dayjs.extend(relativeTime);
 
@@ -52,10 +53,17 @@ const ProfileMore = (props: Props) => {
     onEnhance,
   } = props;
 
-  const { type } = itemData;
+  const { uid, type } = itemData;
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [editOpen, setEditOpen] = useState(false);
+  const [status, setStatus] = useState(enhance.status(uid));
+
+  // unlisten when unmount
+  useEffect(() => enhance.listen(uid, setStatus), [uid]);
+
+  // error during enhanced mode
+  const hasError = status?.status === "error";
 
   const onEdit = () => {
     setAnchorEl(null);
@@ -80,16 +88,16 @@ const ProfileMore = (props: Props) => {
     { label: "Disable", handler: closeWrapper(onDisable) },
     { label: "Refresh", handler: closeWrapper(onEnhance) },
     { label: "Edit", handler: onEdit },
-    { label: "View", handler: onView },
-    { label: "To Top", handler: closeWrapper(onMoveTop) },
-    { label: "To End", handler: closeWrapper(onMoveEnd) },
+    { label: "File", handler: onView },
+    { label: "To Top", show: !hasError, handler: closeWrapper(onMoveTop) },
+    { label: "To End", show: !hasError, handler: closeWrapper(onMoveEnd) },
     { label: "Delete", handler: closeWrapper(onDelete) },
   ];
 
   const disableMenu = [
     { label: "Enable", handler: closeWrapper(onEnable) },
     { label: "Edit", handler: onEdit },
-    { label: "View", handler: onView },
+    { label: "File", handler: onView },
     { label: "Delete", handler: closeWrapper(onDelete) },
   ];
 
@@ -105,15 +113,20 @@ const ProfileMore = (props: Props) => {
     <>
       <Wrapper
         sx={({ palette }) => {
-          const { mode, primary, text, grey } = palette;
+          // todo
+          // 区分 selected 和 error 和 mode 下各种颜色的排列组合
+          const { mode, primary, text, grey, error } = palette;
           const key = `${mode}-${selected}`;
+          const bgkey = hasError ? `${mode}-err` : key;
 
           const bgcolor = {
             "light-true": alpha(primary.main, 0.15),
             "light-false": palette.background.paper,
             "dark-true": alpha(primary.main, 0.35),
             "dark-false": alpha(grey[700], 0.35),
-          }[key]!;
+            "light-err": alpha(error.main, 0.12),
+            "dark-err": alpha(error.main, 0.3),
+          }[bgkey]!;
 
           const color = {
             "light-true": text.secondary,
@@ -160,13 +173,24 @@ const ProfileMore = (props: Props) => {
         </Box>
 
         <Box sx={boxStyle}>
-          <Typography
-            noWrap
-            title={itemData.desc}
-            sx={{ width: "calc(100% - 75px)" }}
-          >
-            {itemData.desc}
-          </Typography>
+          {hasError ? (
+            <Typography
+              noWrap
+              color="error"
+              sx={{ width: "calc(100% - 75px)" }}
+              title={status.message}
+            >
+              {status.message}
+            </Typography>
+          ) : (
+            <Typography
+              noWrap
+              title={itemData.desc}
+              sx={{ width: "calc(100% - 75px)" }}
+            >
+              {itemData.desc}
+            </Typography>
+          )}
 
           <Typography
             component="span"
@@ -189,15 +213,17 @@ const ProfileMore = (props: Props) => {
           e.preventDefault();
         }}
       >
-        {(selected ? enableMenu : disableMenu).map((item) => (
-          <MenuItem
-            key={item.label}
-            onClick={item.handler}
-            sx={{ minWidth: 133 }}
-          >
-            {item.label}
-          </MenuItem>
-        ))}
+        {(selected ? enableMenu : disableMenu)
+          .filter((item: any) => item.show !== false)
+          .map((item) => (
+            <MenuItem
+              key={item.label}
+              onClick={item.handler}
+              sx={{ minWidth: 133 }}
+            >
+              {item.label}
+            </MenuItem>
+          ))}
       </Menu>
 
       {editOpen && (

@@ -127,7 +127,7 @@ const ProfileItem = (props: Props) => {
   const urlModeMenu = [
     { label: "Select", handler: onForceSelect },
     { label: "Edit", handler: onEdit },
-    { label: "View", handler: onView },
+    { label: "File", handler: onView },
     { label: "Update", handler: onUpdateWrapper(false) },
     { label: "Update(Proxy)", handler: onUpdateWrapper(true) },
     { label: "Delete", handler: onDelete },
@@ -135,7 +135,7 @@ const ProfileItem = (props: Props) => {
   const fileModeMenu = [
     { label: "Select", handler: onForceSelect },
     { label: "Edit", handler: onEdit },
-    { label: "View", handler: onView },
+    { label: "File", handler: onView },
     { label: "Delete", handler: onDelete },
   ];
 
