@@ -63,7 +63,7 @@ const ProfileMore = (props: Props) => {
   useEffect(() => enhance.listen(uid, setStatus), [uid]);
 
   // error during enhanced mode
-  const hasError = status?.status === "error";
+  const hasError = selected && status?.status === "error";
 
   const onEdit = () => {
     setAnchorEl(null);
