@@ -35,7 +35,7 @@ export async function deleteProfile(index: string) {
 
 export async function patchProfile(
   index: string,
-  profile: CmdType.ProfileItem
+  profile: Partial<CmdType.ProfileItem>
 ) {
   return invoke<void>("patch_profile", { index, profile });
 }
