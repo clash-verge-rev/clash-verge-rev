@@ -1,6 +1,9 @@
 import { emit, listen } from "@tauri-apps/api/event";
 import { CmdType } from "./types";
 
+/**
+ * process the merge mode
+ */
 function toMerge(
   merge: CmdType.ProfileMerge,
   data: CmdType.ProfileData
@@ -42,6 +45,9 @@ function toMerge(
   return newData;
 }
 
+/**
+ * process the script mode
+ */
 function toScript(
   script: string,
   data: CmdType.ProfileData
@@ -53,44 +59,89 @@ function toScript(
   const paramsName = `__verge${Math.floor(Math.random() * 1000)}`;
   const code = `'use strict';${script};return main(${paramsName});`;
   const func = new Function(paramsName, code);
-  return func(data); // support async main function
+  return func(data);
 }
 
-export default function setup() {
-  listen("script-handler", async (event) => {
-    const payload = event.payload as CmdType.EnhancedPayload;
-    console.log(payload);
+export type EStatus = { status: "ok" | "error"; message?: string };
+export type EListener = (status: EStatus) => void;
+export type EUnlistener = () => void;
 
-    let pdata = payload.current || {};
+/**
+ * The service helps to
+ * implement enhanced profiles
+ */
+class Enhance {
+  private isSetup = false;
+  private listenMap: Map<string, EListener>;
+  private resultMap: Map<string, EStatus>;
 
-    for (const each of payload.chain) {
-      try {
-        // process script
-        if (each.item.type === "script") {
-          pdata = await toScript(each.script!, pdata);
+  constructor() {
+    this.listenMap = new Map();
+    this.resultMap = new Map();
+  }
+
+  // setup some listener
+  // for the enhanced running status
+  listen(uid: string, cb: EListener): EUnlistener {
+    this.listenMap.set(uid, cb);
+    return () => this.listenMap.delete(uid);
+  }
+
+  // get the running status
+  status(uid: string): EStatus | undefined {
+    return this.resultMap.get(uid);
+  }
+
+  // setup the handler
+  setup() {
+    if (this.isSetup) return;
+    this.isSetup = true;
+
+    listen("script-handler", async (event) => {
+      const payload = event.payload as CmdType.EnhancedPayload;
+      let pdata = payload.current || {};
+
+      for (const each of payload.chain) {
+        const { uid, type = "" } = each.item;
+
+        try {
+          // process script
+          if (type === "script") {
+            // support async main function
+            pdata = await toScript(each.script!, { ...pdata });
+          }
+
+          // process merge
+          else if (type === "merge") {
+            pdata = toMerge(each.merge!, { ...pdata });
+          }
+
+          // invalid type
+          else {
+            throw new Error(`invalid enhanced profile type "${type}"`);
+          }
+
+          this.exec(uid, { status: "ok" });
+        } catch (err: any) {
+          this.exec(uid, {
+            status: "error",
+            message: err.message || err.toString(),
+          });
+
+          console.error(err);
         }
-
-        // process merge
-        else if (each.item.type === "merge") {
-          pdata = toMerge(each.merge!, pdata);
-        }
-
-        // invalid type
-        else {
-          throw new Error(`invalid enhanced profile type "${each.item.type}"`);
-        }
-
-        console.log("step", pdata);
-      } catch (err) {
-        console.error(err);
       }
-    }
 
-    const result: CmdType.EnhancedResult = {
-      data: pdata,
-      status: "success",
-    };
+      const result = { data: pdata, status: "ok" };
+      emit(payload.callback, JSON.stringify(result)).catch(console.error);
+    });
+  }
 
-    emit(payload.callback, JSON.stringify(result)).catch(console.error);
-  });
+  // exec the listener
+  private exec(uid: string, status: EStatus) {
+    this.resultMap.set(uid, status);
+    this.listenMap.get(uid)?.(status);
+  }
 }
+
+export default new Enhance();

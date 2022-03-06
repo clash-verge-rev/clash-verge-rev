@@ -6,9 +6,9 @@ import ReactDOM from "react-dom";
 import { RecoilRoot } from "recoil";
 import { BrowserRouter } from "react-router-dom";
 import Layout from "./pages/_layout";
-import setup from "./services/enhance";
+import enhance from "./services/enhance";
 
-setup();
+enhance.setup();
 
 ReactDOM.render(
   <React.StrictMode>
