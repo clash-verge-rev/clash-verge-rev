@@ -320,9 +320,28 @@ impl Clash {
         let result: PrfEnhancedResult = serde_json::from_str(result).unwrap();
 
         if let Some(data) = result.data {
+          // all of these can not be revised by script
+          // http/https/socks port should be under control
+          let not_allow: Vec<Value> = vec![
+            "port",
+            "socks-port",
+            "mixed-port",
+            "allow-lan",
+            "mode",
+            "external-controller",
+            "secret",
+            "log-level",
+          ]
+          .iter()
+          .map(|&i| Value::from(i))
+          .collect();
+
           for (key, value) in data.into_iter() {
-            config.insert(key, value);
+            if not_allow.iter().find(|&i| i == &key).is_none() {
+              config.insert(key, value);
+            }
           }
+
           Self::_activate(info, config).unwrap();
         }
 
