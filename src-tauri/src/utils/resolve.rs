@@ -61,7 +61,7 @@ fn resolve_window(app: &App) {
 
     window.set_decorations(false).unwrap();
     set_shadow(&window, true).unwrap();
-    apply_blur(&window).unwrap();
+    apply_blur(&window, None).unwrap();
   }
 
   #[cfg(target_os = "macos")]
