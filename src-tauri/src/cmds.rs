@@ -181,21 +181,23 @@ pub fn view_profile(index: String, profiles_state: State<'_, ProfilesState>) -> 
     {
       use std::os::windows::process::CommandExt;
 
-      return match Command::new(code)
+      if let Err(err) = Command::new(code)
         .creation_flags(0x08000000)
         .arg(path)
         .spawn()
       {
-        Ok(_) => Ok(()),
-        Err(_) => Err("failed to open file by VScode".into()),
-      };
+        log::error!("{err}");
+        return Err("failed to open file by VScode".into());
+      }
     }
 
     #[cfg(not(target_os = "windows"))]
-    return match Command::new(code).arg(path).spawn() {
-      Ok(_) => Ok(()),
-      Err(_) => Err("failed to open file by VScode".into()),
-    };
+    if let Err(err) = Command::new(code).arg(path).spawn() {
+      log::error!("{err}");
+      return Err("failed to open file by VScode".into());
+    }
+
+    return Ok(());
   }
 
   open_path_cmd(path, "failed to open file by `open`")
@@ -317,19 +319,21 @@ fn open_path_cmd(dir: PathBuf, err_str: &str) -> Result<(), String> {
   {
     use std::os::windows::process::CommandExt;
 
-    match Command::new("explorer")
+    if let Err(err) = Command::new("explorer")
       .creation_flags(0x08000000)
       .arg(dir)
       .spawn()
     {
-      Ok(_) => Ok(()),
-      Err(_) => Err(err_str.into()),
+      log::error!("{err}");
+      return Err(err_str.into());
     }
   }
 
   #[cfg(not(target_os = "windows"))]
-  match Command::new("open").arg(dir).spawn() {
-    Ok(_) => Ok(()),
-    Err(_) => Err(err_str.into()),
+  if let Err(err) = Command::new("open").arg(dir).spawn() {
+    log::error!("{err}");
+    return Err(err_str.into());
   }
+
+  return Ok(());
 }
