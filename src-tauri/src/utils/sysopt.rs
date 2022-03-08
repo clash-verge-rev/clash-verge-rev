@@ -36,8 +36,10 @@ impl SysProxyConfig {
       bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
     }
   }
+}
 
-  #[cfg(target_os = "windows")]
+#[cfg(target_os = "windows")]
+impl SysProxyConfig {
   /// Get the windows system proxy config
   pub fn get_sys() -> io::Result<Self> {
     use winreg::enums::*;
@@ -56,7 +58,26 @@ impl SysProxyConfig {
     })
   }
 
-  #[cfg(target_os = "macos")]
+  /// Set the windows system proxy config
+  pub fn set_sys(&self) -> io::Result<()> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let cur_var = hkcu.open_subkey_with_flags(
+      "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+      KEY_SET_VALUE,
+    )?;
+
+    let enable: u32 = if self.enable { 1u32 } else { 0u32 };
+
+    cur_var.set_value("ProxyEnable", &enable)?;
+    cur_var.set_value("ProxyServer", &self.server)?;
+    cur_var.set_value("ProxyOverride", &self.bypass)
+  }
+}
+
+#[cfg(target_os = "macos")]
+impl SysProxyConfig {
   /// Get the macos system proxy config
   pub fn get_sys() -> io::Result<Self> {
     use std::process::Command;
@@ -84,41 +105,39 @@ impl SysProxyConfig {
     let bypass_output = Command::new("networksetup")
       .args(["-getproxybypassdomains", MACOS_SERVICE])
       .output()?;
-    let bypass = std::str::from_utf8(&bypass_output.stdout).unwrap_or(DEFAULT_BYPASS);
+
+    // change the format to xxx,xxx
+    let bypass = std::str::from_utf8(&bypass_output.stdout)
+      .unwrap_or(DEFAULT_BYPASS)
+      .to_string()
+      .split('\n')
+      .collect::<Vec<_>>()
+      .join(",");
 
     Ok(SysProxyConfig {
       enable,
       server,
-      bypass: bypass.into(),
+      bypass,
     })
   }
 
-  #[cfg(target_os = "windows")]
-  /// Set the windows system proxy config
-  pub fn set_sys(&self) -> io::Result<()> {
-    use winreg::enums::*;
-    use winreg::RegKey;
-    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    let cur_var = hkcu.open_subkey_with_flags(
-      "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
-      KEY_SET_VALUE,
-    )?;
-
-    let enable: u32 = if self.enable { 1u32 } else { 0u32 };
-
-    cur_var.set_value("ProxyEnable", &enable)?;
-    cur_var.set_value("ProxyServer", &self.server)?;
-    cur_var.set_value("ProxyOverride", &self.bypass)
-  }
-
-  #[cfg(target_os = "macos")]
   /// Set the macos system proxy config
   pub fn set_sys(&self) -> io::Result<()> {
+    use std::process::Command;
+
     let enable = self.enable;
     let server = self.server.as_str();
+    let bypass = self.bypass.clone();
     macproxy::set_proxy("-setwebproxy", MACOS_SERVICE, enable, server)?;
     macproxy::set_proxy("-setsecurewebproxy", MACOS_SERVICE, enable, server)?;
-    macproxy::set_proxy("-setsocksfirewallproxy", MACOS_SERVICE, enable, server)
+    macproxy::set_proxy("-setsocksfirewallproxy", MACOS_SERVICE, enable, server)?;
+
+    let domains = bypass.split(",").collect::<Vec<_>>();
+    Command::new("networksetup")
+      .args([["-setproxybypassdomains", MACOS_SERVICE].to_vec(), domains].concat())
+      .status()?;
+
+    Ok(())
   }
 }
 
@@ -171,7 +190,7 @@ mod macproxy {
   }
 
   /// parse the networksetup output
-  pub(super) fn parse<'a>(target: &'a str, key: &'a str) -> &'a str {
+  fn parse<'a>(target: &'a str, key: &'a str) -> &'a str {
     match target.find(key) {
       Some(idx) => {
         let idx = idx + key.len();
