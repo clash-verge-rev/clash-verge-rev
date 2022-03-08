@@ -19,7 +19,7 @@
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.4.4",
     "@mui/material": "^5.4.4",
-    "@tauri-apps/api": "^1.0.0-rc.1",
+    "@tauri-apps/api": "^1.0.0-rc.2",
     "ahooks": "^3.1.13",
     "axios": "^0.26.0",
     "dayjs": "^1.10.8",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@actions/github": "^5.0.0",
-    "@tauri-apps/cli": "^1.0.0-rc.5",
+    "@tauri-apps/cli": "^1.0.0-rc.7",
     "@types/fs-extra": "^9.0.13",
     "@types/js-cookie": "^3.0.1",
     "@types/react": "^17.0.0",
