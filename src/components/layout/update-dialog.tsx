@@ -34,8 +34,8 @@ const UpdateDialog = (props: Props) => {
     uploadingState = true;
 
     try {
-      await killSidecars();
       await installUpdate();
+      await killSidecars();
       await relaunch();
     } catch (err: any) {
       await restartSidecar();
