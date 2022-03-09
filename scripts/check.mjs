@@ -6,6 +6,7 @@ import fetch from "node-fetch";
 import { execSync } from "child_process";
 
 const cwd = process.cwd();
+const FORCE = process.argv.includes("--force");
 
 const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
@@ -19,9 +20,10 @@ function resolveClash() {
 
   // todo
   const map = {
-    "win32-x64": "clash-windows-386",
+    "win32-x64": "clash-windows-amd64",
     "darwin-x64": "clash-darwin-amd64",
     "darwin-arm64": "clash-darwin-arm64",
+    "linux-x64": "clash-linux-amd64",
   };
 
   const name = map[`${platform}-${arch}`];
@@ -51,7 +53,7 @@ async function resolveSidecar() {
   const sidecarPath = path.join(sidecarDir, sidecarFile);
 
   await fs.mkdirp(sidecarDir);
-  if (await fs.pathExists(sidecarPath)) return;
+  if (!FORCE && (await fs.pathExists(sidecarPath))) return;
 
   // download sidecar
   const binInfo = resolveClash();
@@ -98,7 +100,7 @@ async function resolveMmdb() {
 
   const resDir = path.join(cwd, "src-tauri", "resources");
   const resPath = path.join(resDir, "Country.mmdb");
-  if (await fs.pathExists(resPath)) return;
+  if (!FORCE && (await fs.pathExists(resPath))) return;
   await fs.mkdirp(resDir);
   await downloadFile(url, resPath);
 }
