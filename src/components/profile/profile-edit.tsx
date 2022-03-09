@@ -1,5 +1,5 @@
 import { mutate } from "swr";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLockFn, useSetState } from "ahooks";
 import {
   Button,
@@ -7,8 +7,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   TextField,
 } from "@mui/material";
+import { Settings } from "@mui/icons-material";
 import { CmdType } from "../../services/types";
 import { patchProfile } from "../../services/cmds";
 import Notice from "../base/base-notice";
@@ -20,13 +22,18 @@ interface Props {
 }
 
 // edit the profile item
+// remote / local file / merge / script
 const ProfileEdit = (props: Props) => {
   const { open, itemData, onClose } = props;
   const [form, setForm] = useSetState({ ...itemData });
+  const [option, setOption] = useSetState(itemData.option ?? {});
+  const [showOpt, setShowOpt] = useState(!!itemData.option);
 
   useEffect(() => {
     if (itemData) {
       setForm({ ...itemData });
+      setOption(itemData.option ?? {});
+      setShowOpt(!!itemData.option?.user_agent);
     }
   }, [itemData]);
 
@@ -34,12 +41,14 @@ const ProfileEdit = (props: Props) => {
     try {
       const { uid } = itemData;
       const { name, desc, url } = form;
+      const option_ = showOpt ? option : undefined;
 
       if (itemData.type === "remote" && !url) {
         throw new Error("Remote URL should not be null");
       }
 
-      await patchProfile(uid, { uid, name, desc, url });
+      await patchProfile(uid, { uid, name, desc, url, option: option_ });
+      setShowOpt(false);
       mutate("getProfiles");
       onClose();
     } catch (err: any) {
@@ -94,9 +103,28 @@ const ProfileEdit = (props: Props) => {
             onChange={(e) => setForm({ url: e.target.value })}
           />
         )}
+
+        {showOpt && (
+          <TextField
+            {...textFieldProps}
+            label="User Agent"
+            value={option.user_agent}
+            onChange={(e) => setOption({ user_agent: e.target.value })}
+          />
+        )}
       </DialogContent>
 
-      <DialogActions sx={{ px: 2, pb: 2 }}>
+      <DialogActions sx={{ px: 2, pb: 2, position: "relative" }}>
+        {form.type === "remote" && (
+          <IconButton
+            size="small"
+            sx={{ position: "absolute", left: 18 }}
+            onClick={() => setShowOpt((o) => !o)}
+          >
+            <Settings />
+          </IconButton>
+        )}
+
         <Button onClick={onClose}>Cancel</Button>
         <Button onClick={onUpdate} variant="contained">
           Update

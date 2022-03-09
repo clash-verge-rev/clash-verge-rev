@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSWRConfig } from "swr";
 import { useLockFn, useSetState } from "ahooks";
 import {
@@ -7,11 +8,13 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
   TextField,
 } from "@mui/material";
+import { Settings } from "@mui/icons-material";
 import { createProfile } from "../../services/cmds";
 import Notice from "../base/base-notice";
 
@@ -27,11 +30,16 @@ const ProfileNew = (props: Props) => {
 
   const { mutate } = useSWRConfig();
   const [form, setForm] = useSetState({
+    type: "remote",
     name: "",
     desc: "",
-    type: "remote",
     url: "",
   });
+
+  const [showOpt, setShowOpt] = useState(false);
+  const [option, setOption] = useSetState({
+    user_agent: "",
+  }); // able to add more option
 
   const onCreate = useLockFn(async () => {
     if (!form.type) {
@@ -43,11 +51,15 @@ const ProfileNew = (props: Props) => {
       const name = form.name || `${form.type} file`;
 
       if (form.type === "remote" && !form.url) {
-        throw new Error("Remote URL should not be null");
+        throw new Error("The URL should not be null");
       }
 
-      await createProfile({ ...form, name });
-      setForm({ name: "", desc: "", type: "remote", url: "" });
+      const option_ = showOpt ? option : undefined;
+      await createProfile({ ...form, name, option: option_ });
+      setForm({ type: "remote", name: "", desc: "", url: "" });
+      setOption({ user_agent: "" });
+      setShowOpt(false);
+
       mutate("getProfiles");
       onClose();
     } catch (err: any) {
@@ -67,17 +79,10 @@ const ProfileNew = (props: Props) => {
       <DialogTitle sx={{ pb: 0.5 }}>Create Profile</DialogTitle>
 
       <DialogContent sx={{ width: 336, pb: 1 }}>
-        <TextField
-          {...textFieldProps}
-          autoFocus
-          label="Name"
-          value={form.name}
-          onChange={(e) => setForm({ name: e.target.value })}
-        />
-
         <FormControl size="small" fullWidth sx={{ mt: 2, mb: 1 }}>
           <InputLabel>Type</InputLabel>
           <Select
+            autoFocus
             label="Type"
             value={form.type}
             onChange={(e) => setForm({ type: e.target.value })}
@@ -88,6 +93,13 @@ const ProfileNew = (props: Props) => {
             <MenuItem value="merge">Merge</MenuItem>
           </Select>
         </FormControl>
+
+        <TextField
+          {...textFieldProps}
+          label="Name"
+          value={form.name}
+          onChange={(e) => setForm({ name: e.target.value })}
+        />
 
         <TextField
           {...textFieldProps}
@@ -104,9 +116,28 @@ const ProfileNew = (props: Props) => {
             onChange={(e) => setForm({ url: e.target.value })}
           />
         )}
+
+        {showOpt && (
+          <TextField
+            {...textFieldProps}
+            label="User Agent"
+            value={option.user_agent}
+            onChange={(e) => setOption({ user_agent: e.target.value })}
+          />
+        )}
       </DialogContent>
 
-      <DialogActions sx={{ px: 2, pb: 2 }}>
+      <DialogActions sx={{ px: 2, pb: 2, position: "relative" }}>
+        {form.type === "remote" && (
+          <IconButton
+            size="small"
+            sx={{ position: "absolute", left: 18 }}
+            onClick={() => setShowOpt((o) => !o)}
+          >
+            <Settings />
+          </IconButton>
+        )}
+
         <Button onClick={onClose}>Cancel</Button>
         <Button onClick={onCreate} variant="contained">
           Create

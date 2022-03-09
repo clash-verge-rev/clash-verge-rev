@@ -98,7 +98,7 @@ const ProfileItem = (props: Props) => {
     if (loading) return;
     setLoading(true);
     try {
-      await updateProfile(itemData.uid, withProxy);
+      await updateProfile(itemData.uid, { with_proxy: withProxy });
       setLoading(false);
       mutate("getProfiles");
     } catch (err: any) {
