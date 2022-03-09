@@ -1,5 +1,5 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::io;
 
 #[cfg(target_os = "windows")]
 static DEFAULT_BYPASS: &str = "localhost;127.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;192.168.*;<local>";
@@ -41,7 +41,7 @@ impl SysProxyConfig {
 #[cfg(target_os = "windows")]
 impl SysProxyConfig {
   /// Get the windows system proxy config
-  pub fn get_sys() -> io::Result<Self> {
+  pub fn get_sys() -> Result<Self> {
     use winreg::enums::*;
     use winreg::RegKey;
 
@@ -59,7 +59,7 @@ impl SysProxyConfig {
   }
 
   /// Set the windows system proxy config
-  pub fn set_sys(&self) -> io::Result<()> {
+  pub fn set_sys(&self) -> Result<()> {
     use winreg::enums::*;
     use winreg::RegKey;
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
@@ -72,14 +72,16 @@ impl SysProxyConfig {
 
     cur_var.set_value("ProxyEnable", &enable)?;
     cur_var.set_value("ProxyServer", &self.server)?;
-    cur_var.set_value("ProxyOverride", &self.bypass)
+    cur_var.set_value("ProxyOverride", &self.bypass)?;
+
+    Ok(())
   }
 }
 
 #[cfg(target_os = "macos")]
 impl SysProxyConfig {
   /// Get the macos system proxy config
-  pub fn get_sys() -> io::Result<Self> {
+  pub fn get_sys() -> Result<Self> {
     use std::process::Command;
 
     let http = macproxy::get_proxy(&["-getwebproxy", MACOS_SERVICE])?;
@@ -122,7 +124,7 @@ impl SysProxyConfig {
   }
 
   /// Set the macos system proxy config
-  pub fn set_sys(&self) -> io::Result<()> {
+  pub fn set_sys(&self) -> Result<()> {
     use std::process::Command;
 
     let enable = self.enable;
@@ -144,22 +146,20 @@ impl SysProxyConfig {
 #[cfg(target_os = "macos")]
 mod macproxy {
   use super::*;
+  use anyhow::bail;
   use std::process::Command;
 
   /// use networksetup
   /// get the target proxy config
-  pub(super) fn get_proxy(args: &[&str; 2]) -> io::Result<(String, String)> {
+  pub(super) fn get_proxy(args: &[&str; 2]) -> Result<(String, String)> {
     let output = Command::new("networksetup").args(args).output()?;
-    match std::str::from_utf8(&output.stdout) {
-      Ok(stdout) => {
-        let enable = parse(stdout, "Enabled:");
-        let server = parse(stdout, "Server:");
-        let port = parse(stdout, "Port:");
-        let server = format!("{}:{}", server, port);
-        Ok((enable.into(), server))
-      }
-      Err(_) => Err(io::Error::from_raw_os_error(1)),
-    }
+
+    let stdout = std::str::from_utf8(&output.stdout)?;
+    let enable = parse(stdout, "Enabled:");
+    let server = parse(stdout, "Server:");
+    let port = parse(stdout, "Port:");
+    let server = format!("{server}:{port}");
+    Ok((enable.into(), server))
   }
 
   /// use networksetup
@@ -169,17 +169,17 @@ mod macproxy {
     device: &str,
     enable: bool,
     server: &str,
-  ) -> io::Result<()> {
+  ) -> Result<()> {
     let mut split = server.split(":");
-    let domain = split.next();
+    let host = split.next();
     let port = split.next();
 
     // can not parse the field
-    if domain.is_none() || port.is_none() {
-      return Err(io::Error::from_raw_os_error(1));
+    if host.is_none() || port.is_none() {
+      bail!("failed to parse the server into host:port");
     }
 
-    let args = vec![target, device, domain.unwrap(), port.unwrap()];
+    let args = vec![target, device, host.unwrap(), port.unwrap()];
     Command::new("networksetup").args(&args).status()?;
 
     let target_state = String::from(target) + "state";
@@ -228,5 +228,139 @@ mod macproxy {
   fn test_set() {
     let sysproxy = SysProxyConfig::new(true, "7890".into(), None);
     dbg!(sysproxy.set_sys().unwrap());
+  }
+}
+
+///
+/// Linux Desktop System Proxy Supports
+/// by using `gsettings`
+#[cfg(target_os = "linux")]
+impl SysProxyConfig {
+  /// Get the system proxy config [http/https/socks]
+  pub fn get_sys() -> Result<Self> {
+    use std::process::Command;
+
+    let schema = "org.gnome.system.proxy";
+
+    // get enable
+    let mode = Command::new("gsettings")
+      .args(["get", schema, "mode"])
+      .output()?;
+    let mode = std::str::from_utf8(&mode.stdout)?;
+    let enable = mode == "manual";
+
+    // get bypass
+    // Todo: parse the ignore-hosts
+    // ['aaa', 'bbb'] -> aaa,bbb
+    let ignore = Command::new("gsettings")
+      .args(["get", schema, "ignore-hosts"])
+      .output()?;
+    let ignore = std::str::from_utf8(&ignore.stdout)?;
+    let bypass = ignore.to_string();
+
+    let http = Self::get_proxy("http")?;
+    let https = Self::get_proxy("https")?;
+    let socks = Self::get_proxy("socks")?;
+
+    let mut server = "".into();
+
+    if socks.len() > 0 {
+      server = socks;
+    }
+    if https.len() > 0 {
+      server = https;
+    }
+    if http.len() > 0 {
+      server = http;
+    }
+
+    Ok(SysProxyConfig {
+      enable,
+      server,
+      bypass,
+    })
+  }
+
+  /// Get the system proxy config [http/https/socks]
+  pub fn set_sys(&self) -> Result<()> {
+    use anyhow::bail;
+    use std::process::Command;
+
+    let enable = self.enable;
+    let server = self.server.as_str();
+    let bypass = self.bypass.clone();
+    let schema = "org.gnome.system.proxy";
+
+    if enable {
+      let mut split = server.split(":");
+      let host = split.next();
+      let port = split.next();
+
+      if port.is_none() {
+        bail!("failed to parse the port");
+      }
+
+      let host = format!("'{}'", host.unwrap_or("127.0.0.1"));
+      let host = host.as_str();
+      let port = port.unwrap();
+
+      let http = format!("{schema}.http");
+      Command::new("gsettings")
+        .args(["set", http.as_str(), "host", host])
+        .status()?;
+      Command::new("gsettings")
+        .args(["set", http.as_str(), "port", port])
+        .status()?;
+
+      let https = format!("{schema}.https");
+      Command::new("gsettings")
+        .args(["set", https.as_str(), "host", host])
+        .status()?;
+      Command::new("gsettings")
+        .args(["set", https.as_str(), "port", port])
+        .status()?;
+
+      let socks = format!("{schema}.socks");
+      Command::new("gsettings")
+        .args(["set", socks.as_str(), "host", host])
+        .status()?;
+      Command::new("gsettings")
+        .args(["set", socks.as_str(), "port", port])
+        .status()?;
+
+      // set bypass
+      // Todo: parse the ignore-hosts
+      // aaa,bbb,cccc -> ['aaa', 'bbb', 'ccc']
+      Command::new("gsettings")
+        .args(["set", schema, "ignore-hosts", bypass.as_str()]) //  todo
+        .status()?;
+    }
+
+    let mode = if enable { "'manual'" } else { "'none'" };
+    Command::new("gsettings")
+      .args(["set", schema, "mode", mode])
+      .status()?;
+
+    Ok(())
+  }
+
+  /// help function
+  fn get_proxy(typ: &str) -> Result<String> {
+    use std::process::Command;
+
+    let schema = format!("org.gnome.system.proxy.{typ}");
+    let schema = schema.as_str();
+
+    let host = Command::new("gsettings")
+      .args(["get", schema, "host"])
+      .output()?;
+    let host = std::str::from_utf8(&host.stdout)?;
+
+    let port = Command::new("gsettings")
+      .args(["get", schema, "port"])
+      .output()?;
+    let port = std::str::from_utf8(&port.stdout)?;
+
+    Ok(format!("{host}:{port}"))
   }
 }
