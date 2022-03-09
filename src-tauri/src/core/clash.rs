@@ -258,8 +258,16 @@ impl Clash {
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
     tauri::async_runtime::spawn(async move {
+      // `external-controller` could be
+      // "127.0.0.1:9090" or ":9090"
+      // Todo: maybe it could support single port
       let server = info.server.unwrap();
-      let server = format!("http://{server}/configs");
+      let server = match server.starts_with(":") {
+        true => format!("http://127.0.0.1{server}/configs"),
+        false => format!("http://{server}/configs"),
+      };
+
+      dbg!(&server);
 
       let mut headers = HeaderMap::new();
       headers.insert("Content-Type", "application/json".parse().unwrap());

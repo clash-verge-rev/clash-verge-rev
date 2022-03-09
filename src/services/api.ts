@@ -14,7 +14,13 @@ export async function getAxios(force: boolean = false) {
   try {
     const info = await getClashInfo();
 
-    if (info?.server) server = info?.server;
+    if (info?.server) {
+      server = info.server;
+
+      // compatible width `external-controller`
+      if (server.startsWith(":")) server = `127.0.0.1${server}`;
+      else if (/^\d+$/.test(server)) server = `127.0.0.1:${server}`;
+    }
     if (info?.secret) secret = info?.secret;
   } catch {}
 
