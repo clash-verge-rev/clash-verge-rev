@@ -1,5 +1,5 @@
 use crate::{
-  core::{ClashInfo, PrfItem, Profiles, VergeConfig},
+  core::{ClashInfo, PrfItem, PrfOption, Profiles, VergeConfig},
   states::{ClashState, ProfilesState, VergeState},
   utils::{dirs, sysopt::SysProxyConfig},
 };
@@ -28,10 +28,10 @@ pub fn sync_profiles(profiles_state: State<'_, ProfilesState>) -> Result<(), Str
 #[tauri::command]
 pub async fn import_profile(
   url: String,
-  with_proxy: bool,
+  option: Option<PrfOption>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let item = wrap_err!(PrfItem::from_url(&url, None, None, with_proxy).await)?;
+  let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
 
   let mut profiles = profiles_state.0.lock().unwrap();
   wrap_err!(profiles.append_item(item))
@@ -55,7 +55,7 @@ pub async fn create_profile(
 #[tauri::command]
 pub async fn update_profile(
   index: String,
-  with_proxy: bool,
+  option: Option<PrfOption>,
   clash_state: State<'_, ClashState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
@@ -71,7 +71,7 @@ pub async fn update_profile(
     item.url.clone().unwrap()
   };
 
-  let item = wrap_err!(PrfItem::from_url(&url, None, None, with_proxy).await)?;
+  let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
 
   let mut profiles = profiles_state.0.lock().unwrap();
   wrap_err!(profiles.update_item(index.clone(), item))?;

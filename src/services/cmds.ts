@@ -22,11 +22,17 @@ export async function viewProfile(index: string) {
 }
 
 export async function importProfile(url: string) {
-  return invoke<void>("import_profile", { url, withProxy: true });
+  return invoke<void>("import_profile", {
+    url,
+    option: { with_proxy: true },
+  });
 }
 
-export async function updateProfile(index: string, withProxy: boolean) {
-  return invoke<void>("update_profile", { index, withProxy });
+export async function updateProfile(
+  index: string,
+  option?: CmdType.ProfileOption
+) {
+  return invoke<void>("update_profile", { index, option });
 }
 
 export async function deleteProfile(index: string) {

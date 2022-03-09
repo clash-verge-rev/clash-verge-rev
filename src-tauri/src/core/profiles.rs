@@ -31,12 +31,16 @@ pub struct PrfItem {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub selected: Option<Vec<PrfSelected>>,
 
-  /// user info
+  /// subscription user info
   #[serde(skip_serializing_if = "Option::is_none")]
   pub extra: Option<PrfExtra>,
 
   /// updated time
   pub updated: Option<usize>,
+
+  /// some options of the item
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub option: Option<PrfOption>,
 
   /// the file data
   #[serde(skip)]
@@ -57,6 +61,18 @@ pub struct PrfExtra {
   pub expire: usize,
 }
 
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+pub struct PrfOption {
+  /// for `remote` profile's http request
+  /// see issue #13
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub user_agent: Option<String>,
+
+  /// for `remote` profile
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub with_proxy: Option<bool>,
+}
+
 impl Default for PrfItem {
   fn default() -> Self {
     PrfItem {
@@ -69,6 +85,7 @@ impl Default for PrfItem {
       selected: None,
       extra: None,
       updated: None,
+      option: None,
       file_data: None,
     }
   }
@@ -90,7 +107,7 @@ impl PrfItem {
         let url = item.url.as_ref().unwrap().as_str();
         let name = item.name;
         let desc = item.desc;
-        PrfItem::from_url(url, name, desc, false).await
+        PrfItem::from_url(url, name, desc, item.option).await
       }
       "local" => {
         let name = item.name.unwrap_or("Local File".into());
@@ -126,6 +143,7 @@ impl PrfItem {
       url: None,
       selected: None,
       extra: None,
+      option: None,
       updated: Some(help::get_now()),
       file_data: Some(tmpl::ITEM_LOCAL.into()),
     })
@@ -137,12 +155,24 @@ impl PrfItem {
     url: &str,
     name: Option<String>,
     desc: Option<String>,
-    with_proxy: bool,
+    option: Option<PrfOption>,
   ) -> Result<PrfItem> {
+    let with_proxy = match option.as_ref() {
+      Some(opt) => opt.with_proxy.unwrap_or(false),
+      None => false,
+    };
+    let user_agent = match option.as_ref() {
+      Some(opt) => opt.user_agent.clone(),
+      None => None,
+    };
+
     let mut builder = reqwest::ClientBuilder::new();
 
     if !with_proxy {
       builder = builder.no_proxy();
+    }
+    if let Some(user_agent) = user_agent {
+      builder = builder.user_agent(user_agent);
     }
 
     let resp = builder.build()?.get(url).send().await?;
@@ -177,6 +207,7 @@ impl PrfItem {
       url: Some(url.into()),
       selected: None,
       extra,
+      option,
       updated: Some(help::get_now()),
       file_data: Some(data),
     })
@@ -197,6 +228,7 @@ impl PrfItem {
       url: None,
       selected: None,
       extra: None,
+      option: None,
       updated: Some(help::get_now()),
       file_data: Some(tmpl::ITEM_MERGE.into()),
     })
@@ -217,6 +249,7 @@ impl PrfItem {
       url: None,
       selected: None,
       extra: None,
+      option: None,
       updated: Some(help::get_now()),
       file_data: Some(tmpl::ITEM_SCRIPT.into()),
     })
@@ -381,6 +414,9 @@ impl Profiles {
         patch!(each, item, selected);
         patch!(each, item, extra);
         patch!(each, item, updated);
+
+        // can be removed
+        each.option = item.option;
 
         self.items = Some(items);
         return self.save_file();

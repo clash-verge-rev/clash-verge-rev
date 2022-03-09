@@ -105,6 +105,12 @@ export namespace CmdType {
       total: number;
       expire: number;
     };
+    option?: ProfileOption;
+  }
+
+  export interface ProfileOption {
+    user_agent?: string;
+    with_proxy?: boolean;
   }
 
   export interface ProfilesConfig {
