@@ -267,8 +267,6 @@ impl Clash {
         false => format!("http://{server}/configs"),
       };
 
-      dbg!(&server);
-
       let mut headers = HeaderMap::new();
       headers.insert("Content-Type", "application/json".parse().unwrap());
 
