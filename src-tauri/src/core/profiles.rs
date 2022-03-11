@@ -73,6 +73,31 @@ pub struct PrfOption {
   pub with_proxy: Option<bool>,
 }
 
+impl PrfOption {
+  pub fn merge(one: Option<Self>, other: Option<Self>) -> Option<Self> {
+    if one.is_some() && other.is_some() {
+      let mut one = one.unwrap();
+      let other = other.unwrap();
+
+      if let Some(val) = other.user_agent {
+        one.user_agent = Some(val);
+      }
+
+      if let Some(val) = other.with_proxy {
+        one.with_proxy = Some(val);
+      }
+
+      return Some(one);
+    }
+
+    if one.is_none() {
+      return other;
+    }
+
+    return one;
+  }
+}
+
 impl Default for PrfItem {
   fn default() -> Self {
     PrfItem {
@@ -414,9 +439,7 @@ impl Profiles {
         patch!(each, item, selected);
         patch!(each, item, extra);
         patch!(each, item, updated);
-
-        // can be removed
-        each.option = item.option;
+        patch!(each, item, option);
 
         self.items = Some(items);
         return self.save_file();

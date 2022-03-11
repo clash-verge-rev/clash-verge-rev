@@ -59,19 +59,27 @@ pub async fn update_profile(
   clash_state: State<'_, ClashState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let url = {
+  let (url, opt) = {
     // must release the lock here
     let profiles = profiles_state.0.lock().unwrap();
     let item = wrap_err!(profiles.get_item(&index))?;
+
+    // check the profile type
+    if let Some(typ) = item.itype.as_ref() {
+      if *typ != "remote" {
+        ret_err!(format!("could not update the `{typ}` profile"));
+      }
+    }
 
     if item.url.is_none() {
       ret_err!("failed to get the item url");
     }
 
-    item.url.clone().unwrap()
+    (item.url.clone().unwrap(), item.option.clone())
   };
 
-  let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
+  let fetch_opt = PrfOption::merge(opt, option);
+  let item = wrap_err!(PrfItem::from_url(&url, None, None, fetch_opt).await)?;
 
   let mut profiles = profiles_state.0.lock().unwrap();
   wrap_err!(profiles.update_item(index.clone(), item))?;

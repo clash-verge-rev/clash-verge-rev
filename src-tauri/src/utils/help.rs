@@ -68,7 +68,7 @@ macro_rules! wrap_err {
 /// return the string literal error
 #[macro_export]
 macro_rules! ret_err {
-  ($str: literal) => {
+  ($str: expr) => {
     return Err($str.into())
   };
 }
