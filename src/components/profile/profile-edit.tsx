@@ -41,7 +41,7 @@ const ProfileEdit = (props: Props) => {
     try {
       const { uid } = itemData;
       const { name, desc, url } = form;
-      const option_ = showOpt ? option : undefined;
+      const option_ = itemData.type === "remote" ? option : undefined;
 
       if (itemData.type === "remote" && !url) {
         throw new Error("Remote URL should not be null");

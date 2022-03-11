@@ -54,7 +54,7 @@ const ProfileNew = (props: Props) => {
         throw new Error("The URL should not be null");
       }
 
-      const option_ = showOpt ? option : undefined;
+      const option_ = form.type === "remote" ? option : undefined;
       await createProfile({ ...form, name, option: option_ });
       setForm({ type: "remote", name: "", desc: "", url: "" });
       setOption({ user_agent: "" });
