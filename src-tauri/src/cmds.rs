@@ -6,7 +6,7 @@ use crate::{
 use crate::{ret_err, wrap_err};
 use anyhow::Result;
 use serde_yaml::Mapping;
-use std::{path::PathBuf, process::Command};
+use std::{path::PathBuf, process::Command, process::Stdio};
 use tauri::{api, Manager, State};
 
 /// get all profiles from `profiles.yaml`
@@ -323,24 +323,53 @@ pub fn open_logs_dir() -> Result<(), String> {
 
 /// get open/explorer command
 fn open_path_cmd(dir: PathBuf, err_str: &str) -> Result<(), String> {
+  let result;
   #[cfg(target_os = "windows")]
   {
     use std::os::windows::process::CommandExt;
 
-    if let Err(err) = Command::new("explorer")
-      .creation_flags(0x08000000)
-      .arg(dir)
-      .spawn()
-    {
-      log::error!("{err}");
-      return Err(err_str.into());
-    }
+    result = Command::new("explorer")
+        .creation_flags(0x08000000)
+        .arg(&dir)
+        .spawn();
   }
 
-  #[cfg(not(target_os = "windows"))]
-  if let Err(err) = Command::new("open").arg(dir).spawn() {
-    log::error!("{err}");
-    return Err(err_str.into());
+  #[cfg(target_os = "macos")]
+  {
+    result = Command::new("open").arg(&dir).spawn();
+  }
+
+  #[cfg(target_os = "linux")]
+  {
+    result = Command::new("xdg-open").arg(&dir).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn();
+  }
+
+  match result {
+    Ok(child) => {
+      match child.wait_with_output() {
+        Ok(out) => {
+          if let Some(code) = out.status.code() {
+            if code != 0 {
+              log::error!("open dir {:?} failed, child exit code: {:?}, stderr: {:?} stdout: {:?}",
+                &dir, code, String::from_utf8_lossy(&out.stderr), String::from_utf8_lossy(&out.stdout));
+              return Err(err_str.into());
+            }
+          }
+        },
+        Err(err) => {
+          log::error!("open dir {:?} failed, child exec err: {}", &dir, err);
+          return Err(err_str.into());
+        }
+      }
+    },
+    Err(err) => {
+      log::error!("open dir {:?} spawn process failed, err: {}", &dir, err);
+      return Err(err_str.into());
+    },
+    _ => {
+      log::error!("open dir {:?} failed due to OS not supported", &dir);
+      return Err(err_str.into());
+    },
   }
 
   return Ok(());
