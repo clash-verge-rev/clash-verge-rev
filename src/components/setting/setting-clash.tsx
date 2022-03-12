@@ -1,5 +1,6 @@
 import useSWR, { useSWRConfig } from "swr";
 import { useSetRecoilState } from "recoil";
+import { useTranslation } from "react-i18next";
 import {
   ListItemText,
   TextField,
@@ -21,15 +22,16 @@ interface Props {
 }
 
 const SettingClash = ({ onError }: Props) => {
+  const { t } = useTranslation();
   const { mutate } = useSWRConfig();
   const { data: clashConfig } = useSWR("getClashConfig", getClashConfig);
   const { data: versionData } = useSWR("getVersion", getVersion);
 
   const {
-    ipv6 = false,
-    "allow-lan": allowLan = false,
-    "log-level": logLevel = "silent",
-    "mixed-port": mixedPort = 0,
+    ipv6,
+    "allow-lan": allowLan,
+    "log-level": logLevel,
+    "mixed-port": mixedPort,
   } = clashConfig ?? {};
 
   const setGlobalClashPort = useSetRecoilState(atomClashPort);
@@ -64,11 +66,11 @@ const SettingClash = ({ onError }: Props) => {
     : versionData?.version || "-";
 
   return (
-    <SettingList title="Clash Setting">
+    <SettingList title={t("Clash Setting")}>
       <SettingItem>
-        <ListItemText primary="Allow Lan" />
+        <ListItemText primary={t("Allow Lan")} />
         <GuardState
-          value={allowLan}
+          value={allowLan ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -80,9 +82,9 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="IPv6" />
+        <ListItemText primary={t("IPv6")} />
         <GuardState
-          value={ipv6}
+          value={ipv6 ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -94,9 +96,9 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Log Level" />
+        <ListItemText primary={t("Log Level")} />
         <GuardState
-          value={logLevel}
+          value={logLevel ?? "info"}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ "log-level": e })}
@@ -113,9 +115,9 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Mixed Port" />
+        <ListItemText primary={t("Mixed Port")} />
         <GuardState
-          value={mixedPort!}
+          value={mixedPort ?? 0}
           onCatch={onError}
           onFormat={(e: any) => +e.target.value?.replace(/\D+/, "")}
           onChange={(e) => onChangeData({ "mixed-port": e })}
@@ -127,7 +129,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Clash core" />
+        <ListItemText primary={t("Clash core")} />
         <Typography sx={{ py: 1 }}>{clashVer}</Typography>
       </SettingItem>
     </SettingList>

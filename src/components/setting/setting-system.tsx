@@ -1,4 +1,5 @@
 import useSWR, { useSWRConfig } from "swr";
+import { useTranslation } from "react-i18next";
 import { Box, ListItemText, Switch, TextField } from "@mui/material";
 import { getVergeConfig, patchVergeConfig } from "../../services/cmds";
 import { SettingList, SettingItem } from "./setting";
@@ -11,15 +12,16 @@ interface Props {
 }
 
 const SettingSystem = ({ onError }: Props) => {
+  const { t } = useTranslation();
   const { mutate } = useSWRConfig();
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
 
   const {
-    enable_tun_mode = false,
-    enable_auto_launch = false,
-    enable_system_proxy = false,
-    system_proxy_bypass = "",
-    enable_proxy_guard = false,
+    enable_tun_mode,
+    enable_auto_launch,
+    enable_system_proxy,
+    system_proxy_bypass,
+    enable_proxy_guard,
   } = vergeConfig ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
@@ -28,11 +30,11 @@ const SettingSystem = ({ onError }: Props) => {
   };
 
   return (
-    <SettingList title="System Setting">
+    <SettingList title={t("System Setting")}>
       <SettingItem>
-        <ListItemText primary="Tun Mode" />
+        <ListItemText primary={t("Tun Mode")} />
         <GuardState
-          value={enable_tun_mode}
+          value={enable_tun_mode ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -44,9 +46,9 @@ const SettingSystem = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Auto Launch" />
+        <ListItemText primary={t("Auto Launch")} />
         <GuardState
-          value={enable_auto_launch}
+          value={enable_auto_launch ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -61,13 +63,13 @@ const SettingSystem = ({ onError }: Props) => {
         <ListItemText
           primary={
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              System Proxy
+              {t("System Proxy")}
               <SysproxyTooltip />
             </Box>
           }
         />
         <GuardState
-          value={enable_system_proxy}
+          value={enable_system_proxy ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -83,9 +85,9 @@ const SettingSystem = ({ onError }: Props) => {
 
       {enable_system_proxy && (
         <SettingItem>
-          <ListItemText primary="Proxy Guard" />
+          <ListItemText primary={t("Proxy Guard")} />
           <GuardState
-            value={enable_proxy_guard}
+            value={enable_proxy_guard ?? false}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
@@ -99,7 +101,7 @@ const SettingSystem = ({ onError }: Props) => {
 
       {enable_system_proxy && (
         <SettingItem>
-          <ListItemText primary="Proxy Bypass" />
+          <ListItemText primary={t("Proxy Bypass")} />
           <GuardState
             value={system_proxy_bypass ?? ""}
             onCatch={onError}

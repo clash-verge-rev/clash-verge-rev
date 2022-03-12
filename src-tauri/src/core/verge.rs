@@ -1,6 +1,6 @@
+use crate::log_if_err;
 use crate::{
   core::Clash,
-  log_if_err,
   utils::{config, dirs, sysopt::SysProxyConfig},
 };
 use anyhow::{bail, Result};
@@ -12,6 +12,9 @@ use tauri::{async_runtime::Mutex, utils::platform::current_exe};
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct VergeConfig {
+  // i18n
+  pub language: Option<String>,
+
   /// `light` or `dark`
   pub theme_mode: Option<String>,
 
@@ -188,6 +191,9 @@ impl Verge {
   /// so call the save_file at the end is savely
   pub fn patch_config(&mut self, patch: VergeConfig) -> Result<()> {
     // only change it
+    if patch.language.is_some() {
+      self.config.language = patch.language;
+    }
     if patch.theme_mode.is_some() {
       self.config.theme_mode = patch.theme_mode;
     }

@@ -21,6 +21,7 @@ items: ~
 /// template for `verge.yaml`
 pub const VERGE_CONFIG: &[u8] = b"# Defaulf Config For Clash Verge
 
+language: en
 theme_mode: light
 theme_blur: false
 traffic_graph: true

@@ -6,27 +6,27 @@ import ConnectionsPage from "./connections";
 
 export const routers = [
   {
-    label: "Proxies",
+    label: "Label-Proxies",
     link: "/",
     ele: ProxiesPage,
   },
   {
-    label: "Profiles",
+    label: "Label-Profiles",
     link: "/profile",
     ele: ProfilesPage,
   },
   {
-    label: "Connections",
+    label: "Label-Connections",
     link: "/connections",
     ele: ConnectionsPage,
   },
   {
-    label: "Logs",
+    label: "Label-Logs",
     link: "/logs",
     ele: LogsPage,
   },
   {
-    label: "Settings",
+    label: "Label-Settings",
     link: "/settings",
     ele: SettingsPage,
   },
