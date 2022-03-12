@@ -328,7 +328,7 @@ impl Clash {
         if let Some(data) = result.data {
           // all of these can not be revised by script
           // http/https/socks port should be under control
-          let not_allow: Vec<Value> = vec![
+          let not_allow = vec![
             "port",
             "socks-port",
             "mixed-port",
@@ -337,23 +337,29 @@ impl Clash {
             "external-controller",
             "secret",
             "log-level",
-          ]
-          .iter()
-          .map(|&i| Value::from(i))
-          .collect();
+          ];
 
           for (key, value) in data.into_iter() {
-            if not_allow.iter().find(|&i| i == &key).is_none() {
-              config.insert(key, value);
-            }
+            key.as_str().map(|key_str| {
+              // change to lowercase
+              let mut key_str = String::from(key_str);
+              key_str.make_ascii_lowercase();
+
+              // filter
+              if !not_allow.contains(&&*key_str) {
+                config.insert(Value::String(key_str), value);
+              }
+            });
           }
+
+          log::info!("profile enhanced status {}", result.status);
 
           Self::_activate(info, config).unwrap();
         }
 
-        log::info!("profile enhanced status {}", result.status);
-
-        result.error.map(|error| log::error!("{error}"));
+        if let Some(error) = result.error {
+          log::error!("{error}");
+        }
       }
     });
 

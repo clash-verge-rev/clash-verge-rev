@@ -566,13 +566,17 @@ impl Profiles {
           "rules",
         ];
 
-        valid_keys.iter().for_each(|key| {
-          let key = Value::String(key.to_string());
-          if def_config.contains_key(&key) {
-            let value = def_config[&key].clone();
-            new_config.insert(key, value);
-          }
-        });
+        for (key, value) in def_config.into_iter() {
+          key.as_str().map(|key_str| {
+            // change to lowercase
+            let mut key_str = String::from(key_str);
+            key_str.make_ascii_lowercase();
+
+            if valid_keys.contains(&&*key_str) {
+              new_config.insert(Value::String(key_str), value);
+            }
+          });
+        }
 
         return Ok(new_config);
       }
