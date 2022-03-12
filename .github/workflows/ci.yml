@@ -68,7 +68,7 @@ jobs:
           prerelease: true
 
       - name: Green zip bundle
-        runs: |
+        run: |
           yarn run green
 
   release-update:
