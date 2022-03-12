@@ -67,6 +67,10 @@ jobs:
           releaseDraft: false
           prerelease: true
 
+      - name: Green zip bundle
+        runs: |
+          yarn run green
+
   release-update:
     needs: release
     runs-on: macos-11

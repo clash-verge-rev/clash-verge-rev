@@ -10,6 +10,7 @@
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
     "check": "node scripts/check.mjs",
+    "green": "node scripts/green.mjs",
     "publish": "node scripts/publish.mjs",
     "release": "node scripts/release.mjs",
     "prepare": "husky install"
