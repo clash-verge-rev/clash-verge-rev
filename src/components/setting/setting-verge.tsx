@@ -1,5 +1,13 @@
 import useSWR, { useSWRConfig } from "swr";
-import { IconButton, ListItemText, Switch, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import {
+  IconButton,
+  ListItemText,
+  MenuItem,
+  Select,
+  Switch,
+  Typography,
+} from "@mui/material";
 import {
   getVergeConfig,
   openAppDir,
@@ -18,11 +26,11 @@ interface Props {
 }
 
 const SettingVerge = ({ onError }: Props) => {
+  const { t } = useTranslation();
   const { mutate } = useSWRConfig();
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
 
-  const { theme_mode = "light", theme_blur = false, traffic_graph } =
-    vergeConfig ?? {};
+  const { theme_mode, theme_blur, traffic_graph, language } = vergeConfig ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<CmdType.VergeConfig>) => {
@@ -30,9 +38,9 @@ const SettingVerge = ({ onError }: Props) => {
   };
 
   return (
-    <SettingList title="Verge Setting">
+    <SettingList title={t("Verge Setting")}>
       <SettingItem>
-        <ListItemText primary="Theme Mode" />
+        <ListItemText primary={t("Theme Mode")} />
         <GuardState
           value={theme_mode === "dark"}
           valueProps="checked"
@@ -48,9 +56,9 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Theme Blur" />
+        <ListItemText primary={t("Theme Blur")} />
         <GuardState
-          value={theme_blur}
+          value={theme_blur ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
@@ -62,7 +70,7 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Traffic Graph" />
+        <ListItemText primary={t("Traffic Graph")} />
         <GuardState
           value={traffic_graph ?? true}
           valueProps="checked"
@@ -76,21 +84,37 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Open App Dir" />
+        <ListItemText primary={t("Language")} />
+        <GuardState
+          value={language ?? "en"}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ language: e })}
+          onGuard={(e) => patchVergeConfig({ language: e })}
+        >
+          <Select size="small" sx={{ width: 100 }}>
+            <MenuItem value="zh">中文</MenuItem>
+            <MenuItem value="en">English</MenuItem>
+          </Select>
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem>
+        <ListItemText primary={t("Open App Dir")} />
         <IconButton color="inherit" size="small" onClick={openAppDir}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Open Logs Dir" />
+        <ListItemText primary={t("Open Logs Dir")} />
         <IconButton color="inherit" size="small" onClick={openLogsDir}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary="Version" />
+        <ListItemText primary={t("Version")} />
         <Typography sx={{ py: "6px" }}>v{version}</Typography>
       </SettingItem>
     </SettingList>

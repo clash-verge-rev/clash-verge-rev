@@ -120,6 +120,7 @@ export namespace CmdType {
   }
 
   export interface VergeConfig {
+    language?: string;
     theme_mode?: "light" | "dark";
     theme_blur?: boolean;
     traffic_graph?: boolean;

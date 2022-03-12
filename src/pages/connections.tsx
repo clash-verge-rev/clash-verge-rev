@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Paper } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
+import { useTranslation } from "react-i18next";
 import { ApiType } from "../services/types";
 import { getInfomation } from "../services/api";
 import BasePage from "../components/base/base-page";
@@ -8,6 +9,8 @@ import ConnectionItem from "../components/connection/connection-item";
 
 const ConnectionsPage = () => {
   const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
+
+  const { t } = useTranslation();
   const [conn, setConn] = useState<ApiType.Connections>(initConn);
 
   useEffect(() => {
@@ -27,7 +30,7 @@ const ConnectionsPage = () => {
   }, []);
 
   return (
-    <BasePage title="Connections" contentStyle={{ height: "100%" }}>
+    <BasePage title={t("Connections")} contentStyle={{ height: "100%" }}>
       <Paper sx={{ boxShadow: 2, height: "100%" }}>
         <Virtuoso
           data={conn.connections}

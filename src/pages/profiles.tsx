@@ -2,6 +2,7 @@ import useSWR, { useSWRConfig } from "swr";
 import { useLockFn } from "ahooks";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Grid, TextField } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import {
   getProfiles,
   patchProfile,
@@ -19,6 +20,7 @@ import ProfileItem from "../components/profile/profile-item";
 import ProfileMore from "../components/profile/profile-more";
 
 const ProfilePage = () => {
+  const { t } = useTranslation();
   const { mutate } = useSWRConfig();
 
   const [url, setUrl] = useState("");
@@ -175,12 +177,12 @@ const ProfilePage = () => {
   });
 
   return (
-    <BasePage title="Profiles">
+    <BasePage title={t("Profiles")}>
       <Box sx={{ display: "flex", mb: 2.5 }}>
         <TextField
           id="clas_verge_profile_url"
           name="profile_url"
-          label="Profile URL"
+          label={t("Profile URL")}
           size="small"
           fullWidth
           value={url}
@@ -193,10 +195,10 @@ const ProfilePage = () => {
           onClick={onImport}
           sx={{ mr: 1 }}
         >
-          Import
+          {t("Import")}
         </Button>
         <Button variant="contained" onClick={() => setDialogOpen(true)}>
-          New
+          {t("New")}
         </Button>
       </Box>
 

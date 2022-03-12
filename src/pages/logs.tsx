@@ -1,16 +1,18 @@
 import { useRecoilState } from "recoil";
 import { Button, Paper } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
+import { useTranslation } from "react-i18next";
 import { atomLogData } from "../services/states";
 import BasePage from "../components/base/base-page";
 import LogItem from "../components/log/log-item";
 
 const LogPage = () => {
+  const { t } = useTranslation();
   const [logData, setLogData] = useRecoilState(atomLogData);
 
   return (
     <BasePage
-      title="Logs"
+      title={t("Logs")}
       contentStyle={{ height: "100%" }}
       header={
         <Button
@@ -19,7 +21,7 @@ const LogPage = () => {
           variant="contained"
           onClick={() => setLogData([])}
         >
-          Clear
+          {t("Clear")}
         </Button>
       }
     >
