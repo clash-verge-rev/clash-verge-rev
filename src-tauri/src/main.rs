@@ -45,13 +45,8 @@ fn main() -> std::io::Result<()> {
           let profiles_state = app_handle.state::<states::ProfilesState>();
           let mut clash = clash_state.0.lock().unwrap();
           let mut profiles = profiles_state.0.lock().unwrap();
-          match clash.restart_sidecar(&mut profiles) {
-            Ok(_) => {
-              let window = app_handle.get_window("main").unwrap();
-              window.emit("restart_clash", "yes").unwrap();
-            }
-            Err(err) => log::error!("{}", err),
-          }
+
+          crate::log_if_err!(clash.restart_sidecar(&mut profiles));
         }
         "quit" => {
           resolve::resolve_reset(app_handle);
