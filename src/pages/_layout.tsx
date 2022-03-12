@@ -30,12 +30,10 @@ const Layout = () => {
       if (e.key === "Escape") appWindow.hide();
     });
 
-    listen("restart_clash", async () => {
+    listen("verge://refresh-clash-config", async () => {
       // the clash info may be updated
       await getAxios(true);
-      // make sure that the clash is ok
-      setTimeout(() => mutate("getProxies"), 1000);
-      setTimeout(() => mutate("getProxies"), 2000);
+      mutate("getProxies");
       mutate("getClashConfig");
     });
   }, []);

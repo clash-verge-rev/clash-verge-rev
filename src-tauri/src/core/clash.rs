@@ -264,7 +264,7 @@ impl Clash {
   /// activate the profile
   /// generate a new profile to the temp_dir
   /// then put the path to the clash core
-  fn _activate(info: ClashInfo, config: Mapping) -> Result<()> {
+  fn _activate(info: ClashInfo, config: Mapping, window: Option<Window>) -> Result<()> {
     let temp_path = dirs::profiles_temp_path();
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
@@ -294,6 +294,12 @@ impl Clash {
                 if resp.status() != 204 {
                   log::error!("failed to activate clash for status \"{}\"", resp.status());
                 }
+
+                // emit the window to update something
+                if let Some(window) = window {
+                  window.emit("verge://refresh-clash-config", "yes").unwrap();
+                }
+
                 // do not retry
                 break;
               }
@@ -325,6 +331,7 @@ impl Clash {
 
     // generate the payload
     let payload = profiles.gen_enhanced(event_name.clone())?;
+    let window = self.window.clone();
 
     win.once(&event_name, move |event| {
       if let Some(result) = event.payload() {
@@ -359,7 +366,7 @@ impl Clash {
 
           log::info!("profile enhanced status {}", result.status);
 
-          Self::_activate(info, config).unwrap();
+          Self::_activate(info, config, window).unwrap();
         }
 
         if let Some(error) = result.error {
@@ -390,7 +397,7 @@ impl Clash {
       config.insert(key, value);
     }
 
-    Self::_activate(info, config)?;
+    Self::_activate(info, config, self.window.clone())?;
     self.activate_enhanced(profiles, delay)
   }
 }

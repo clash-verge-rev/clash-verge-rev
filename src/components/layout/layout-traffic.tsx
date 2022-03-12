@@ -12,6 +12,7 @@ import useLogSetup from "./use-log-setup";
 import useTrafficGraph from "./use-traffic-graph";
 import parseTraffic from "../../utils/parse-traffic";
 
+// setup the traffic
 const LayoutTraffic = () => {
   const portValue = useRecoilValue(atomClashPort);
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
@@ -26,12 +27,14 @@ const LayoutTraffic = () => {
   useLogSetup();
 
   useEffect(() => {
-    let unlisten: () => void = null!;
-
     // should reconnect the traffic ws
-    listen("restart_clash", () => setRefresh({})).then((fn) => (unlisten = fn));
+    const unlisten = listen("verge://refresh-clash-config", () =>
+      setRefresh({})
+    );
 
-    return () => unlisten?.();
+    return () => {
+      unlisten.then((fn) => fn());
+    };
   }, []);
 
   useEffect(() => {

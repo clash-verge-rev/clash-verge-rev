@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { listen } from "@tauri-apps/api/event";
 import { ApiType } from "../../services/types";
@@ -10,11 +10,11 @@ const MAX_LOG_NUM = 1000;
 
 // setup the log websocket
 export default function useLogSetup() {
+  const [refresh, setRefresh] = useState({});
   const setLogData = useSetRecoilState(atomLogData);
 
   useEffect(() => {
     let ws: WebSocket = null!;
-    let unlisten: () => void = null!;
 
     const handler = (event: MessageEvent<any>) => {
       const data = JSON.parse(event.data) as ApiType.LogItem;
@@ -25,25 +25,19 @@ export default function useLogSetup() {
       });
     };
 
-    (async () => {
-      const { server = "", secret = "" } = await getInfomation();
-
+    getInfomation().then((info) => {
+      const { server = "", secret = "" } = info;
       ws = new WebSocket(`ws://${server}/logs?token=${secret}`);
       ws.addEventListener("message", handler);
+    });
 
-      // reconnect the websocket
-      unlisten = await listen("restart_clash", async () => {
-        const { server = "", secret = "" } = await getInfomation();
-
-        ws?.close();
-        ws = new WebSocket(`ws://${server}/logs?token=${secret}`);
-        ws.addEventListener("message", handler);
-      });
-    })();
+    const unlisten = listen("verge://refresh-clash-config", () =>
+      setRefresh({})
+    );
 
     return () => {
       ws?.close();
-      unlisten?.();
+      unlisten?.then((fn) => fn());
     };
-  }, []);
+  }, [refresh]);
 }
