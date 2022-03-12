@@ -84,13 +84,13 @@ export async function killSidecars() {
 }
 
 export async function openAppDir() {
-  return invoke<void>("open_app_dir")
-  .then((message) => console.log(message))
-  .catch((err) => Notice.error(err?.message || err.toString(), 1500));
+  return invoke<void>("open_app_dir").catch((err) =>
+    Notice.error(err?.message || err.toString(), 1500)
+  );
 }
 
 export async function openLogsDir() {
-  return invoke<void>("open_logs_dir")
-  .then((message) => console.log(message))
-  .catch((err) => Notice.error(err?.message || err.toString(), 1500));
+  return invoke<void>("open_logs_dir").catch((err) =>
+    Notice.error(err?.message || err.toString(), 1500)
+  );
 }
