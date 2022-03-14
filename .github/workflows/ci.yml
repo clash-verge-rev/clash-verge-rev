@@ -70,6 +70,8 @@ jobs:
       - name: Green zip bundle
         run: |
           yarn run green
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-update:
     needs: release
