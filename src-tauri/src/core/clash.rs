@@ -222,41 +222,78 @@ impl Clash {
   /// enable tun mode
   /// only revise the config and restart the
   pub fn tun_mode(&mut self, enable: bool) -> Result<()> {
-    let tun_key = Value::String("tun".into());
-    let tun_val = self.config.get(&tun_key);
-
-    let mut new_val = Mapping::new();
-
-    if tun_val.is_some() && tun_val.as_ref().unwrap().is_mapping() {
-      new_val = tun_val.as_ref().unwrap().as_mapping().unwrap().clone();
+    // Windows 需要wintun.dll文件
+    #[cfg(target_os = "windows")]
+    if enable {
+      let wintun_dll = dirs::app_home_dir().join("wintun.dll");
+      if !wintun_dll.exists() {
+        bail!("failed to enable TUN for missing `wintun.dll`");
+      }
     }
 
     macro_rules! revise {
       ($map: expr, $key: expr, $val: expr) => {
         let ret_key = Value::String($key.into());
-        if $map.contains_key(&ret_key) {
-          $map[&ret_key] = $val;
-        } else {
-          $map.insert(ret_key, $val);
-        }
+        $map.insert(ret_key, Value::from($val));
       };
     }
 
+    // if key not exists then append value
     macro_rules! append {
       ($map: expr, $key: expr, $val: expr) => {
         let ret_key = Value::String($key.into());
         if !$map.contains_key(&ret_key) {
-          $map.insert(ret_key, $val);
+          $map.insert(ret_key, Value::from($val));
         }
       };
     }
 
-    revise!(new_val, "enable", Value::from(enable));
-    append!(new_val, "stack", Value::from("gvisor"));
-    append!(new_val, "auto-route", Value::from(true));
-    append!(new_val, "auto-detect-interface", Value::from(true));
+    // tun config
+    let tun_val = self.config.get(&Value::from("tun"));
+    let mut new_tun = Mapping::new();
 
-    revise!(self.config, "tun", Value::from(new_val));
+    if tun_val.is_some() && tun_val.as_ref().unwrap().is_mapping() {
+      new_tun = tun_val.as_ref().unwrap().as_mapping().unwrap().clone();
+    }
+
+    revise!(new_tun, "enable", enable);
+    append!(new_tun, "stack", "gvisor");
+    append!(new_tun, "dns-hijack", vec!["198.18.0.2:53"]);
+    append!(new_tun, "auto-route", true);
+    append!(new_tun, "auto-detect-interface", true);
+
+    revise!(self.config, "tun", new_tun);
+
+    // dns config
+    let dns_val = self.config.get(&Value::from("dns"));
+    let mut new_dns = Mapping::new();
+
+    if dns_val.is_some() && dns_val.as_ref().unwrap().is_mapping() {
+      new_dns = dns_val.as_ref().unwrap().as_mapping().unwrap().clone();
+    }
+
+    // 借鉴cfw的默认配置
+    revise!(new_dns, "enable", enable);
+    append!(new_dns, "enhanced-mode", "fake-ip");
+    append!(
+      new_dns,
+      "nameserver",
+      vec!["114.114.114.114", "223.5.5.5", "8.8.8.8"]
+    );
+    append!(new_dns, "fallback", vec![] as Vec<&str>);
+
+    #[cfg(target_os = "windows")]
+    append!(
+      new_dns,
+      "fake-ip-filter",
+      vec![
+        "dns.msftncsi.com",
+        "www.msftncsi.com",
+        "www.msftconnecttest.com"
+      ]
+    );
+
+    revise!(self.config, "dns", new_dns);
 
     self.save_config()
   }

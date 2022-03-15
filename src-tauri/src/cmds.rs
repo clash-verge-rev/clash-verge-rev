@@ -285,9 +285,6 @@ pub fn patch_verge_config(
 ) -> Result<(), String> {
   let tun_mode = payload.enable_tun_mode.clone();
 
-  let mut verge = verge_state.0.lock().unwrap();
-  wrap_err!(verge.patch_config(payload))?;
-
   // change tun mode
   if tun_mode.is_some() {
     let mut clash = clash_state.0.lock().unwrap();
@@ -297,6 +294,9 @@ pub fn patch_verge_config(
     clash.update_config();
     wrap_err!(clash.activate(&profiles, false))?;
   }
+
+  let mut verge = verge_state.0.lock().unwrap();
+  wrap_err!(verge.patch_config(payload))?;
 
   Ok(())
 }
