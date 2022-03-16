@@ -133,37 +133,31 @@ impl Verge {
   }
 
   /// init the auto launch
-  pub fn init_launch(&mut self) {
+  pub fn init_launch(&mut self) -> Result<()> {
     let app_exe = current_exe().unwrap();
     let app_exe = dunce::canonicalize(app_exe).unwrap();
     let app_name = app_exe.file_stem().unwrap().to_str().unwrap();
     let app_path = app_exe.as_os_str().to_str().unwrap();
+
+    // fix issue #26
+    #[cfg(target_os = "windows")]
+    let app_path = format!("\"{app_path}\"");
+    #[cfg(target_os = "windows")]
+    let app_path = app_path.as_str();
 
     let auto = AutoLaunchBuilder::new()
       .set_app_name(app_name)
       .set_app_path(app_path)
       .build();
 
+    if let Some(enable) = self.config.enable_auto_launch.as_ref() {
+      // fix issue #26
+      if *enable {
+        auto.enable()?;
+      }
+    }
+
     self.auto_launch = Some(auto);
-  }
-
-  /// sync the startup when run the app
-  pub fn sync_launch(&self) -> Result<()> {
-    let enable = self.config.enable_auto_launch.clone().unwrap_or(false);
-    if !enable {
-      return Ok(());
-    }
-
-    if self.auto_launch.is_none() {
-      bail!("should init the auto launch first");
-    }
-
-    let auto_launch = self.auto_launch.clone().unwrap();
-
-    let is_enabled = auto_launch.is_enabled().unwrap_or(false);
-    if !is_enabled {
-      auto_launch.enable()?;
-    }
 
     Ok(())
   }

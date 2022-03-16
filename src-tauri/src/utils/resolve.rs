@@ -38,8 +38,7 @@ pub fn resolve_setup(app: &App) {
     clash.tun_mode(true).unwrap();
   }
 
-  verge.init_launch();
-  log_if_err!(verge.sync_launch());
+  log_if_err!(verge.init_launch());
 }
 
 /// reset system proxy
