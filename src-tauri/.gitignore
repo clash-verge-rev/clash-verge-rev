@@ -2,5 +2,5 @@
 # will have compiled files and executables
 /target/
 WixTools
-resources/Country.mmdb
+resources
 sidecar

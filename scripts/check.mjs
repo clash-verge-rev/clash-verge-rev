@@ -92,6 +92,47 @@ async function resolveSidecar() {
 }
 
 /**
+ * only Windows
+ * get the wintun.dll (not required)
+ */
+async function resolveWintun() {
+  const { platform } = process;
+
+  if (platform !== "win32") return;
+
+  const url = "https://www.wintun.net/builds/wintun-0.14.1.zip";
+
+  const tempDir = path.join(cwd, "pre-dev-temp");
+  const tempZip = path.join(tempDir, "wintun.zip");
+
+  const wintunPath = path.join(tempDir, "wintun/bin/amd64/wintun.dll");
+  const targetPath = path.join(cwd, "src-tauri/resources", "wintun.dll");
+
+  if (!FORCE && (await fs.pathExists(targetPath))) return;
+
+  await fs.mkdirp(tempDir);
+
+  if (!(await fs.pathExists(tempZip))) {
+    await downloadFile(url, tempZip);
+  }
+
+  // unzip
+  const zip = new AdmZip(tempZip);
+  zip.extractAllTo(tempDir, true);
+
+  if (!(await fs.pathExists(wintunPath))) {
+    throw new Error(`path not found "${wintunPath}"`);
+  }
+
+  // move wintun.dll to resources
+  await fs.rename(wintunPath, targetPath);
+  // delete temp dir
+  await fs.remove(tempDir);
+
+  console.log(`[INFO]: resolve wintun.dll finished`);
+}
+
+/**
  * get the Country.mmdb (not required)
  */
 async function resolveMmdb() {
@@ -123,4 +164,5 @@ async function downloadFile(url, path) {
 
 /// main
 resolveSidecar().catch(console.error);
+resolveWintun().catch(console.error);
 resolveMmdb().catch(console.error);
