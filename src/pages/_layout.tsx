@@ -1,4 +1,6 @@
+import dayjs from "dayjs";
 import i18next from "i18next";
+import relativeTime from "dayjs/plugin/relativeTime";
 import useSWR, { SWRConfig, useSWRConfig } from "swr";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +16,9 @@ import LayoutItem from "../components/layout/layout-item";
 import LayoutControl from "../components/layout/layout-control";
 import LayoutTraffic from "../components/layout/layout-traffic";
 import UpdateButton from "../components/layout/update-button";
+import "dayjs/locale/zh-cn";
 
+dayjs.extend(relativeTime);
 const isMacos = navigator.userAgent.includes("Mac OS X");
 
 const Layout = () => {
@@ -40,6 +44,7 @@ const Layout = () => {
 
   useEffect(() => {
     if (data?.language) {
+      dayjs.locale(data.language === "zh" ? "zh-cn" : data.language);
       i18next.changeLanguage(data.language);
     }
   }, [data?.language]);
