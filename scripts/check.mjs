@@ -102,7 +102,7 @@ async function resolveWintun() {
 
   const url = "https://www.wintun.net/builds/wintun-0.14.1.zip";
 
-  const tempDir = path.join(cwd, "pre-dev-temp");
+  const tempDir = path.join(cwd, "pre-dev-temp-1");
   const tempZip = path.join(tempDir, "wintun.zip");
 
   const wintunPath = path.join(tempDir, "wintun/bin/amd64/wintun.dll");
