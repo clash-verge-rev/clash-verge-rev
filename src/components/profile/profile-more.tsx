@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   alpha,
   Box,
@@ -11,12 +12,9 @@ import {
 } from "@mui/material";
 import { CmdType } from "../../services/types";
 import { viewProfile } from "../../services/cmds";
-import relativeTime from "dayjs/plugin/relativeTime";
 import ProfileEdit from "./profile-edit";
 import Notice from "../base/base-notice";
 import enhance from "../../services/enhance";
-
-dayjs.extend(relativeTime);
 
 const Wrapper = styled(Box)(({ theme }) => ({
   width: "100%",
@@ -54,6 +52,8 @@ const ProfileMore = (props: Props) => {
   } = props;
 
   const { uid, type } = itemData;
+  const { t } = useTranslation();
+
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [editOpen, setEditOpen] = useState(false);
@@ -221,7 +221,7 @@ const ProfileMore = (props: Props) => {
               onClick={item.handler}
               sx={{ minWidth: 133 }}
             >
-              {item.label}
+              {t(item.label)}
             </MenuItem>
           ))}
       </Menu>
