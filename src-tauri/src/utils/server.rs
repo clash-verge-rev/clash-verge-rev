@@ -4,7 +4,10 @@ use port_scanner::local_port_available;
 use tauri::{AppHandle, Manager};
 use warp::Filter;
 
+#[cfg(not(feature = "verge-dev"))]
 const SERVER_PORT: u16 = 33333;
+#[cfg(feature = "verge-dev")]
+const SERVER_PORT: u16 = 11233;
 
 /// check whether there is already exists
 pub fn check_singleton() -> Result<(), ()> {

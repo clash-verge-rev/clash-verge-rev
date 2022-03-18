@@ -40,3 +40,4 @@ winreg = { version = "0.10", features = ["transactions"] }
 [features]
 default = [ "custom-protocol" ]
 custom-protocol = [ "tauri/custom-protocol" ]
+verge-dev = []

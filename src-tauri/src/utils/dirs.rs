@@ -5,12 +5,22 @@ use tauri::{
   Env, PackageInfo,
 };
 
+#[cfg(not(feature = "verge-dev"))]
+static APP_DIR: &str = "clash-verge";
+#[cfg(feature = "verge-dev")]
+static APP_DIR: &str = "clash-verge-dev";
+
+static CLASH_CONFIG: &str = "config.yaml";
+static VERGE_CONFIG: &str = "verge.yaml";
+static PROFILE_YAML: &str = "profiles.yaml";
+static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
+
 /// get the verge app home dir
 pub fn app_home_dir() -> PathBuf {
   home_dir()
     .unwrap()
     .join(Path::new(".config"))
-    .join(Path::new("clash-verge"))
+    .join(Path::new(APP_DIR))
 }
 
 /// get the resources dir
@@ -29,11 +39,6 @@ pub fn app_profiles_dir() -> PathBuf {
 pub fn app_logs_dir() -> PathBuf {
   app_home_dir().join("logs")
 }
-
-static CLASH_CONFIG: &str = "config.yaml";
-static VERGE_CONFIG: &str = "verge.yaml";
-static PROFILE_YAML: &str = "profiles.yaml";
-static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
 
 pub fn clash_path() -> PathBuf {
   app_home_dir().join(CLASH_CONFIG)
