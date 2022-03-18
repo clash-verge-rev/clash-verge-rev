@@ -141,3 +141,15 @@ export async function getProviders() {
   const response = await instance.get<any, any>("/providers/proxies");
   return response.providers as any;
 }
+
+// Close specific connection
+export async function deleteConnection(id: string) {
+  const instance = await getAxios();
+  await instance.delete<any, any>(`/connections/${encodeURIComponent(id)}`);
+}
+
+// Close all connections
+export async function closeAllConnections() {
+  const instance = await getAxios();
+  await instance.delete<any, any>(`/connections`);
+}
