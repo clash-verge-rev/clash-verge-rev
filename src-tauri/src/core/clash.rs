@@ -192,31 +192,32 @@ impl Clash {
     verge: &mut Verge,
     profiles: &mut Profiles,
   ) -> Result<()> {
-    for (key, value) in patch.iter() {
+    let mix_port_key = Value::from("mixed-port");
+    let mut port = None;
+
+    for (key, value) in patch.into_iter() {
       let value = value.clone();
-      let key_str = key.as_str().clone().unwrap_or("");
 
-      // restart the clash
-      if key_str == "mixed-port" {
-        self.restart_sidecar(profiles)?;
-
-        let port = if value.is_number() {
-          match value.as_i64().clone() {
-            Some(num) => Some(format!("{num}")),
-            None => None,
-          }
+      // check whether the mix_port is changed
+      if key == mix_port_key {
+        if value.is_number() {
+          port = value.as_i64().as_ref().map(|n| n.to_string());
         } else {
-          match value.as_str().clone() {
-            Some(num) => Some(num.into()),
-            None => None,
-          }
-        };
-        verge.init_sysproxy(port);
+          port = value.as_str().as_ref().map(|s| s.to_string());
+        }
       }
 
       self.config.insert(key.clone(), value);
     }
-    self.save_config()
+
+    self.save_config()?;
+
+    if let Some(port) = port {
+      self.restart_sidecar(profiles)?;
+      verge.init_sysproxy(Some(port));
+    }
+
+    Ok(())
   }
 
   /// enable tun mode
