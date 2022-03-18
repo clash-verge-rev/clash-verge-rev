@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { useLockFn } from "ahooks";
 import { useSWRConfig } from "swr";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   alpha,
   Box,
@@ -16,12 +17,9 @@ import {
 import { RefreshRounded } from "@mui/icons-material";
 import { CmdType } from "../../services/types";
 import { updateProfile, deleteProfile, viewProfile } from "../../services/cmds";
-import relativeTime from "dayjs/plugin/relativeTime";
 import parseTraffic from "../../utils/parse-traffic";
 import ProfileEdit from "./profile-edit";
 import Notice from "../base/base-notice";
-
-dayjs.extend(relativeTime);
 
 const Wrapper = styled(Box)(({ theme }) => ({
   width: "100%",
@@ -51,6 +49,7 @@ interface Props {
 const ProfileItem = (props: Props) => {
   const { selected, itemData, onSelect } = props;
 
+  const { t } = useTranslation();
   const { mutate } = useSWRConfig();
   const [loading, setLoading] = useState(loadingCache[itemData.uid] ?? false);
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -271,7 +270,7 @@ const ProfileItem = (props: Props) => {
             onClick={item.handler}
             sx={{ minWidth: 133 }}
           >
-            {item.label}
+            {t(item.label)}
           </MenuItem>
         ))}
       </Menu>
