@@ -87,4 +87,14 @@ pub fn init_app(package_info: &PackageInfo) {
   if !mmdb_path.exists() && mmdb_tmpl.exists() {
     fs::copy(mmdb_tmpl, mmdb_path).unwrap();
   }
+
+  // copy the wintun.dll
+  #[cfg(target_os = "windows")]
+  {
+    let wintun_path = app_dir.join("wintun.dll");
+    let wintun_tmpl = res_dir.join("wintun.dll");
+    if !wintun_path.exists() && wintun_tmpl.exists() {
+      fs::copy(wintun_tmpl, wintun_path).unwrap();
+    }
+  }
 }
