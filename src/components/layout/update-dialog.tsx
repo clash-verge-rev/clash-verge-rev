@@ -1,12 +1,14 @@
 import useSWR from "swr";
-import { useState } from "react";
+import snarkdown from "snarkdown";
+import { useState, useMemo } from "react";
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
+  styled,
 } from "@mui/material";
 import { relaunch } from "@tauri-apps/api/process";
 import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
@@ -17,6 +19,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
 }
+
+const UpdateLog = styled(Box)(() => ({
+  "h1,h2,h3,ul,ol,p": { margin: "0.5em 0", color: "inherit" },
+}));
 
 let uploadingState = false;
 
@@ -46,19 +52,29 @@ const UpdateDialog = (props: Props) => {
     }
   };
 
+  // markdown parser
+  const parseContent = useMemo(() => {
+    if (!updateInfo?.manifest?.body) {
+      return "New Version is available";
+    }
+    return snarkdown(updateInfo?.manifest?.body);
+  }, [updateInfo]);
+
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>New Version v{updateInfo?.manifest?.version}</DialogTitle>
+
       <DialogContent sx={{ minWidth: 360, maxWidth: 400, maxHeight: "50vh" }}>
-        <DialogContentText>{updateInfo?.manifest?.body}</DialogContentText>
+        <UpdateLog dangerouslySetInnerHTML={{ __html: parseContent }} />
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
-          variant="contained"
           autoFocus
-          onClick={onUpdate}
+          variant="contained"
           disabled={uploading}
+          onClick={onUpdate}
         >
           Update
         </Button>

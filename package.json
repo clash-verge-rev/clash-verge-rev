@@ -31,6 +31,7 @@
     "react-router-dom": "^6.2.2",
     "react-virtuoso": "^2.7.0",
     "recoil": "^0.6.1",
+    "snarkdown": "^2.0.0",
     "swr": "^1.2.1"
   },
   "devDependencies": {

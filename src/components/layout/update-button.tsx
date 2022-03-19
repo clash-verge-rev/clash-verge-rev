@@ -32,7 +32,9 @@ const UpdateButton = (props: Props) => {
         New
       </Button>
 
-      <UpdateDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      {dialogOpen && (
+        <UpdateDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      )}
     </>
   );
 };
