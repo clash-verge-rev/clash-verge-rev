@@ -84,6 +84,10 @@ const Layout = () => {
           elevation={0}
           className={`${isWinOs ? "windows " : ""}layout`}
           onPointerDown={onDragging}
+          onContextMenu={(e) => {
+            // only prevent it on Windows
+            if (isWinOs) e.preventDefault();
+          }}
           sx={[
             (theme) => ({
               bgcolor: alpha(theme.palette.background.paper, blur ? 0.85 : 1),
