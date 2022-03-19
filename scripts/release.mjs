@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
 import { getOctokit, context } from "@actions/github";
+import { resolveUpdateLog } from "./updatelog.mjs";
 
 const UPDATE_TAG_NAME = "updater";
 const UPDATE_JSON_FILE = "update.json";
@@ -34,7 +35,7 @@ async function resolveRelease() {
 
   const updateData = {
     name: tag.name,
-    notes: latestRelease.body, // use the release body directly
+    notes: await resolveUpdateLog(tag.name), // use updatelog.md
     pub_date: new Date().toISOString(),
     platforms: {
       win64: { signature: "", url: "" },
