@@ -10,7 +10,7 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [windows-latest, macos-11]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     if: |
       startsWith(github.repository, 'zzzgydi') &&
@@ -33,6 +33,12 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14
+
+      - name: Install Dependencies (ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
 
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
@@ -68,6 +74,7 @@ jobs:
           prerelease: true
 
       - name: Green zip bundle
+        if: matrix.os == 'windows-latest'
         run: |
           yarn run green
         env:
@@ -75,7 +82,7 @@ jobs:
 
   release-update:
     needs: release
-    runs-on: macos-11
+    runs-on: macos-latest
     if: |
       startsWith(github.repository, 'zzzgydi') &&
       startsWith(github.ref, 'refs/tags/v')
@@ -97,7 +104,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Yarn install
-        run: yarn
+        run: yarn install
 
       - name: Release update.json
         run: yarn run release
