@@ -280,11 +280,13 @@ pub fn get_verge_config(verge_state: State<'_, VergeState>) -> Result<VergeConfi
 #[tauri::command]
 pub fn patch_verge_config(
   payload: VergeConfig,
+  app_handle: tauri::AppHandle,
   clash_state: State<'_, ClashState>,
   verge_state: State<'_, VergeState>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
   let tun_mode = payload.enable_tun_mode.clone();
+  let system_proxy = payload.enable_system_proxy.clone();
 
   // change tun mode
   if tun_mode.is_some() {
@@ -298,6 +300,15 @@ pub fn patch_verge_config(
 
   let mut verge = verge_state.0.lock().unwrap();
   wrap_err!(verge.patch_config(payload))?;
+
+  // change system tray
+  if system_proxy.is_some() {
+    app_handle
+      .tray_handle()
+      .get_item("system_proxy")
+      .set_selected(system_proxy.unwrap())
+      .unwrap();
+  }
 
   Ok(())
 }

@@ -41,6 +41,9 @@ const Layout = () => {
       mutate("getProxies");
       mutate("getClashConfig");
     });
+
+    // update the verge config
+    listen("verge://refresh-verge-config", () => mutate("getVergeConfig"));
   }, []);
 
   useEffect(() => {
