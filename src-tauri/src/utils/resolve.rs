@@ -39,6 +39,13 @@ pub fn resolve_setup(app: &App) {
   }
 
   log_if_err!(verge.init_launch());
+
+  verge.config.enable_system_proxy.map(|enable| {
+    log_if_err!(app
+      .tray_handle()
+      .get_item("system_proxy")
+      .set_selected(enable));
+  });
 }
 
 /// reset system proxy

@@ -8,7 +8,10 @@ mod core;
 mod states;
 mod utils;
 
-use crate::utils::{resolve, server};
+use crate::{
+  core::VergeConfig,
+  utils::{resolve, server},
+};
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
 };
@@ -21,6 +24,7 @@ fn main() -> std::io::Result<()> {
 
   let tray_menu = SystemTrayMenu::new()
     .add_item(CustomMenuItem::new("open_window", "Show"))
+    .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
     .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
     .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(CustomMenuItem::new("quit", "Quit").accelerator("CmdOrControl+Q"));
@@ -40,6 +44,31 @@ fn main() -> std::io::Result<()> {
           window.show().unwrap();
           window.set_focus().unwrap();
         }
+        "system_proxy" => {
+          let verge_state = app_handle.state::<states::VergeState>();
+          let mut verge = verge_state.0.lock().unwrap();
+
+          let old_value = verge.config.enable_system_proxy.clone().unwrap_or(false);
+          let new_value = !old_value;
+
+          match verge.patch_config(VergeConfig {
+            enable_system_proxy: Some(new_value),
+            ..VergeConfig::default()
+          }) {
+            Ok(_) => {
+              app_handle
+                .tray_handle()
+                .get_item(id.as_str())
+                .set_selected(new_value)
+                .unwrap();
+
+              // update verge config
+              let window = app_handle.get_window("main").unwrap();
+              window.emit("verge://refresh-verge-config", "yes").unwrap();
+            }
+            Err(err) => log::error!("{err}"),
+          }
+        }
         "restart_clash" => {
           let clash_state = app_handle.state::<states::ClashState>();
           let profiles_state = app_handle.state::<states::ProfilesState>();
@@ -55,13 +84,12 @@ fn main() -> std::io::Result<()> {
         }
         _ => {}
       },
+      #[cfg(target_os = "windows")]
       SystemTrayEvent::LeftClick { .. } => {
-        if cfg![target_os = "windows"] {
-          let window = app_handle.get_window("main").unwrap();
-          window.unminimize().unwrap();
-          window.show().unwrap();
-          window.set_focus().unwrap();
-        }
+        let window = app_handle.get_window("main").unwrap();
+        window.unminimize().unwrap();
+        window.show().unwrap();
+        window.set_focus().unwrap();
       }
       _ => {}
     })
