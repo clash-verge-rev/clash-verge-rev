@@ -3,6 +3,7 @@ import { getOctokit, context } from "@actions/github";
 
 const UPDATE_TAG_NAME = "updater";
 const UPDATE_JSON_FILE = "update.json";
+const UPDATE_JSON_PROXY = "update-proxy.json";
 
 /// generate update.json
 /// upload to update tag's release asset
@@ -83,7 +84,7 @@ async function resolveRelease() {
   console.log(updateData);
 
   // maybe should test the signature as well
-  const { darwin, win64 } = updateData.platforms;
+  const { darwin, win64, linux } = updateData.platforms;
   if (!darwin.url) {
     console.log(`[Error]: failed to parse release for darwin`);
     delete updateData.platforms.darwin;
@@ -92,6 +93,24 @@ async function resolveRelease() {
     console.log(`[Error]: failed to parse release for win64`);
     delete updateData.platforms.win64;
   }
+  if (!linux.url) {
+    console.log(`[Error]: failed to parse release for linux`);
+    delete updateData.platforms.linux;
+  }
+
+  // 生成一个代理github的更新文件
+  // 使用 https://hub.fastgit.xyz/ 做github资源的加速
+  const updateDataNew = JSON.parse(JSON.stringify(updateData));
+
+  Object.keys(updateDataNew.platforms).forEach((key) => {
+    if (updateDataNew.platforms[key]) {
+      updateDataNew.platforms[key].url = updateDataNew.platforms[
+        key
+      ].url.replace("https://github.com/", "https://hub.fastgit.xyz/");
+    } else {
+      console.log(`[Error]: updateDataNew.platforms.${key} is null`);
+    }
+  });
 
   // update the update.json
   const { data: updateRelease } = await github.rest.repos.getReleaseByTag({
@@ -99,21 +118,35 @@ async function resolveRelease() {
     tag: UPDATE_TAG_NAME,
   });
 
+  // delete the old assets
   for (let asset of updateRelease.assets) {
     if (asset.name === UPDATE_JSON_FILE) {
       await github.rest.repos.deleteReleaseAsset({
         ...options,
         asset_id: asset.id,
       });
-      break;
+    }
+
+    if (asset.name === UPDATE_JSON_PROXY) {
+      await github.rest.repos
+        .deleteReleaseAsset({ ...options, asset_id: asset.id })
+        .catch(console.error); // do not break the pipeline
     }
   }
 
+  // upload assets
   await github.rest.repos.uploadReleaseAsset({
     ...options,
     release_id: updateRelease.id,
     name: UPDATE_JSON_FILE,
     data: JSON.stringify(updateData, null, 2),
+  });
+
+  await github.rest.repos.uploadReleaseAsset({
+    ...options,
+    release_id: updateRelease.id,
+    name: UPDATE_JSON_PROXY,
+    data: JSON.stringify(updateDataNew, null, 2),
   });
 }
 
