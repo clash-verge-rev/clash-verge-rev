@@ -37,6 +37,7 @@ async function resolveRelease() {
     pub_date: new Date().toISOString(),
     platforms: {
       win64: { signature: "", url: "" },
+      linux: { signature: "", url: "" },
       darwin: { signature: "", url: "" },
     },
   };
@@ -48,19 +49,31 @@ async function resolveRelease() {
     if (/\.msi\.zip$/.test(name)) {
       updateData.platforms.win64.url = browser_download_url;
     }
-    // darwin url
-    if (/\.app\.tar\.gz$/.test(name)) {
-      updateData.platforms.darwin.url = browser_download_url;
-    }
     // win64 signature
     if (/\.msi\.zip\.sig$/.test(name)) {
       updateData.platforms.win64.signature = await getSignature(
         browser_download_url
       );
     }
+
+    // darwin url
+    if (/\.app\.tar\.gz$/.test(name)) {
+      updateData.platforms.darwin.url = browser_download_url;
+    }
     // darwin signature
     if (/\.app\.tar\.gz\.sig$/.test(name)) {
       updateData.platforms.darwin.signature = await getSignature(
+        browser_download_url
+      );
+    }
+
+    // linux url
+    if (/\.AppImage\.tar\.gz$/.test(name)) {
+      updateData.platforms.linux.url = browser_download_url;
+    }
+    // linux signature
+    if (/\.AppImage\.tar\.gz\.sig$/.test(name)) {
+      updateData.platforms.linux.signature = await getSignature(
         browser_download_url
       );
     }
