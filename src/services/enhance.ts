@@ -101,6 +101,8 @@ class Enhance {
       const payload = event.payload as CmdType.EnhancedPayload;
       let pdata = payload.current || {};
 
+      let hasScript = false;
+
       for (const each of payload.chain) {
         const { uid, type = "" } = each.item;
 
@@ -109,6 +111,7 @@ class Enhance {
           if (type === "script") {
             // support async main function
             pdata = await toScript(each.script!, { ...pdata });
+            hasScript = true;
           }
 
           // process merge
@@ -130,6 +133,29 @@ class Enhance {
 
           console.error(err);
         }
+      }
+
+      // If script is never used
+      // filter other fields
+      if (!hasScript) {
+        const validKeys = [
+          "proxies",
+          "proxy-providers",
+          "proxy-groups",
+          "rule-providers",
+          "rules",
+        ];
+
+        // to lowercase
+        const newData: any = {};
+        Object.keys(pdata).forEach((key) => {
+          const newKey = key.toLowerCase();
+          if (validKeys.includes(newKey)) {
+            newData[newKey] = (pdata as any)[key];
+          }
+        });
+
+        pdata = newData;
       }
 
       const result = { data: pdata, status: "ok" };
