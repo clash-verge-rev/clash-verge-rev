@@ -1,9 +1,11 @@
 import fs from "fs-extra";
 import { createRequire } from "module";
 import { execSync } from "child_process";
+import { resolveUpdateLog } from "./updatelog.mjs";
 
 const require = createRequire(import.meta.url);
 
+// publish
 async function resolvePublish() {
   const flag = process.argv[2] ?? "patch";
   const packageJson = require("../package.json");
@@ -25,6 +27,10 @@ async function resolvePublish() {
   const nextVersion = `${a}.${b}.${c}`;
   packageJson.version = nextVersion;
   tauriJson.package.version = nextVersion;
+
+  // 发布更新前先写更新日志
+  const nextTag = `v${nextVersion}`;
+  await resolveUpdateLog(nextTag);
 
   await fs.writeFile(
     "./package.json",
