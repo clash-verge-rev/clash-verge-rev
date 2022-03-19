@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSWRConfig } from "swr";
 import { useLockFn, useSetState } from "ahooks";
 import {
@@ -17,6 +17,7 @@ import {
 import { Settings } from "@mui/icons-material";
 import { createProfile } from "../../services/cmds";
 import Notice from "../base/base-notice";
+import FileInput from "./file-input";
 
 interface Props {
   open: boolean;
@@ -37,9 +38,10 @@ const ProfileNew = (props: Props) => {
   });
 
   const [showOpt, setShowOpt] = useState(false);
-  const [option, setOption] = useSetState({
-    user_agent: "",
-  }); // able to add more option
+  // can add more option
+  const [option, setOption] = useSetState({ user_agent: "" });
+  // file input
+  const fileDataRef = useRef<string | null>(null);
 
   const onCreate = useLockFn(async () => {
     if (!form.type) {
@@ -55,10 +57,15 @@ const ProfileNew = (props: Props) => {
       }
 
       const option_ = form.type === "remote" ? option : undefined;
-      await createProfile({ ...form, name, option: option_ });
+      const item = { ...form, name, option: option_ };
+      const fileData = form.type === "local" ? fileDataRef.current : null;
+
+      await createProfile(item, fileData);
+
       setForm({ type: "remote", name: "", desc: "", url: "" });
       setOption({ user_agent: "" });
       setShowOpt(false);
+      fileDataRef.current = null;
 
       mutate("getProfiles");
       onClose();
@@ -97,6 +104,7 @@ const ProfileNew = (props: Props) => {
         <TextField
           {...textFieldProps}
           label="Name"
+          autoComplete="off"
           value={form.name}
           onChange={(e) => setForm({ name: e.target.value })}
         />
@@ -104,6 +112,7 @@ const ProfileNew = (props: Props) => {
         <TextField
           {...textFieldProps}
           label="Descriptions"
+          autoComplete="off"
           value={form.desc}
           onChange={(e) => setForm({ desc: e.target.value })}
         />
@@ -112,15 +121,21 @@ const ProfileNew = (props: Props) => {
           <TextField
             {...textFieldProps}
             label="Subscription Url"
+            autoComplete="off"
             value={form.url}
             onChange={(e) => setForm({ url: e.target.value })}
           />
+        )}
+
+        {form.type === "local" && (
+          <FileInput onChange={(val) => (fileDataRef.current = val)} />
         )}
 
         {showOpt && (
           <TextField
             {...textFieldProps}
             label="User Agent"
+            autoComplete="off"
             value={option.user_agent}
             onChange={(e) => setOption({ user_agent: e.target.value })}
           />

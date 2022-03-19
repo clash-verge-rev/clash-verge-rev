@@ -14,8 +14,11 @@ export async function enhanceProfiles() {
   return invoke<void>("enhance_profiles");
 }
 
-export async function createProfile(item: Partial<CmdType.ProfileItem>) {
-  return invoke<void>("create_profile", { item });
+export async function createProfile(
+  item: Partial<CmdType.ProfileItem>,
+  fileData?: string | null
+) {
+  return invoke<void>("create_profile", { item, fileData });
 }
 
 export async function viewProfile(index: string) {
