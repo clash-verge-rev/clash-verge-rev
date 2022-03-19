@@ -43,9 +43,10 @@ pub async fn import_profile(
 #[tauri::command]
 pub async fn create_profile(
   item: PrfItem, // partial
+  file_data: Option<String>,
   profiles_state: State<'_, ProfilesState>,
 ) -> Result<(), String> {
-  let item = wrap_err!(PrfItem::from(item).await)?;
+  let item = wrap_err!(PrfItem::from(item, file_data).await)?;
   let mut profiles = profiles_state.0.lock().unwrap();
 
   wrap_err!(profiles.append_item(item))
