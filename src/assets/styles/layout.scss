@@ -72,7 +72,7 @@
 
     .the-content {
       position: absolute;
-      top: 30px;
+      top: 0;
       left: 0;
       right: 2px;
       bottom: 10px;
@@ -80,8 +80,8 @@
   }
 }
 
-.macos.layout {
+.windows.layout {
   .layout__right .the-content {
-    top: 0;
+    top: 30px;
   }
 }

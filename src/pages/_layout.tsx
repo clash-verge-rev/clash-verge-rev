@@ -19,7 +19,8 @@ import UpdateButton from "../components/layout/update-button";
 import "dayjs/locale/zh-cn";
 
 dayjs.extend(relativeTime);
-const isMacos = navigator.userAgent.includes("Mac OS X");
+
+const isWinOs = /win64|win32/i.test(navigator.userAgent);
 
 const Layout = () => {
   const { t } = useTranslation();
@@ -81,7 +82,7 @@ const Layout = () => {
         <Paper
           square
           elevation={0}
-          className={`${isMacos ? "macos " : ""}layout`}
+          className={`${isWinOs ? "windows " : ""}layout`}
           onPointerDown={onDragging}
           sx={[
             (theme) => ({
@@ -110,7 +111,7 @@ const Layout = () => {
           </div>
 
           <div className="layout__right" data-windrag>
-            {!isMacos && (
+            {isWinOs && (
               <div className="the-bar">
                 <LayoutControl />
               </div>
