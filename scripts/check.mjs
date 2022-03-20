@@ -8,15 +8,15 @@ import { execSync } from "child_process";
 const cwd = process.cwd();
 const FORCE = process.argv.includes("--force");
 
-const CLASH_URL_PREFIX =
-  "https://github.com/Dreamacro/clash/releases/download/premium/";
-const CLASH_LATEST_DATE = "2022.01.27";
-
 /**
  * get the correct clash release infomation
  */
 function resolveClash() {
   const { platform, arch } = process;
+
+  const CLASH_URL_PREFIX =
+    "https://github.com/Dreamacro/clash/releases/download/premium/";
+  const CLASH_LATEST_DATE = "2022.03.19";
 
   // todo
   const map = {
@@ -84,7 +84,8 @@ async function resolveSidecar() {
         console.log(`[INFO]: gunzip finished`);
         execSync(`chmod 755 ${sidecarPath}`);
         console.log(`[INFO]: chmod binary finished`);
-      });
+      })
+      .on("error", (error) => console.error(error));
   }
 
   // delete temp dir
