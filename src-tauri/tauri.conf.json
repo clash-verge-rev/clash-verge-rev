@@ -64,6 +64,9 @@
       },
       "window": {
         "all": true
+      },
+      "process": {
+        "all": true
       }
     },
     "windows": [
