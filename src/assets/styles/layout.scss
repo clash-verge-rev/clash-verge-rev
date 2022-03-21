@@ -80,8 +80,12 @@
   }
 }
 
-.windows.layout {
-  .layout__right .the-content {
-    top: 30px;
+.linux,
+.windows,
+.unknown {
+  &.layout {
+    .layout__right .the-content {
+      top: 30px;
+    }
   }
 }

@@ -16,11 +16,12 @@ import LayoutItem from "../components/layout/layout-item";
 import LayoutControl from "../components/layout/layout-control";
 import LayoutTraffic from "../components/layout/layout-traffic";
 import UpdateButton from "../components/layout/update-button";
+import getSystem from "../utils/get-system";
 import "dayjs/locale/zh-cn";
 
 dayjs.extend(relativeTime);
 
-const isWinOs = /win64|win32/i.test(navigator.userAgent);
+const OS = getSystem();
 
 const Layout = () => {
   const { t } = useTranslation();
@@ -85,11 +86,11 @@ const Layout = () => {
         <Paper
           square
           elevation={0}
-          className={`${isWinOs ? "windows " : ""}layout`}
+          className={`${OS} layout`}
           onPointerDown={onDragging}
           onContextMenu={(e) => {
             // only prevent it on Windows
-            if (isWinOs) e.preventDefault();
+            if (OS === "windows") e.preventDefault();
           }}
           sx={[
             (theme) => ({
@@ -118,7 +119,7 @@ const Layout = () => {
           </div>
 
           <div className="layout__right" data-windrag>
-            {isWinOs && (
+            {OS === "windows" && (
               <div className="the-bar">
                 <LayoutControl />
               </div>
