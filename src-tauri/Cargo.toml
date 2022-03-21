@@ -21,7 +21,7 @@ chrono = "0.4.19"
 serde_json = "1.0"
 serde_yaml = "0.8"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.0.0-rc.4", features = ["shell-all", "system-tray", "updater", "window-all"] }
+tauri = { version = "1.0.0-rc.4", features = ["process-all", "shell-all", "system-tray", "updater", "window-all"] }
 window-shadows = { git = "https://github.com/tauri-apps/window-shadows" }
 window-vibrancy = { git = "https://github.com/tauri-apps/window-vibrancy" }
 
