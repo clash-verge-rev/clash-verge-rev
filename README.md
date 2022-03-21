@@ -17,7 +17,7 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 ## Install
 
-Download from [release](https://github.com/zzzgydi/clash-verge/releases). Supports Windows x64 and macOS 11+
+Download from [release](https://github.com/zzzgydi/clash-verge/releases). Supports Windows x64, Linux x86_64 and macOS 11+
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
