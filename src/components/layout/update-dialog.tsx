@@ -1,6 +1,7 @@
 import useSWR from "swr";
 import snarkdown from "snarkdown";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useRecoilState } from "recoil";
 import {
   Box,
   Button,
@@ -13,6 +14,7 @@ import {
 import { relaunch } from "@tauri-apps/api/process";
 import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
 import { killSidecars, restartSidecar } from "../../services/cmds";
+import { atomUpdateState } from "../../services/states";
 import Notice from "../base/base-notice";
 
 interface Props {
@@ -24,8 +26,6 @@ const UpdateLog = styled(Box)(() => ({
   "h1,h2,h3,ul,ol,p": { margin: "0.5em 0", color: "inherit" },
 }));
 
-let uploadingState = false;
-
 const UpdateDialog = (props: Props) => {
   const { open, onClose } = props;
   const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
@@ -33,22 +33,22 @@ const UpdateDialog = (props: Props) => {
     revalidateIfStale: false,
     focusThrottleInterval: 36e5, // 1 hour
   });
-  const [uploading, setUploading] = useState(uploadingState);
+
+  const [updateState, setUpdateState] = useRecoilState(atomUpdateState);
 
   const onUpdate = async () => {
-    setUploading(true);
-    uploadingState = true;
+    if (updateState) return;
+    setUpdateState(true);
 
     try {
-      await installUpdate();
       await killSidecars();
+      await installUpdate();
       await relaunch();
     } catch (err: any) {
       await restartSidecar();
       Notice.error(err?.message || err.toString());
     } finally {
-      setUploading(false);
-      uploadingState = false;
+      setUpdateState(false);
     }
   };
 
@@ -73,7 +73,7 @@ const UpdateDialog = (props: Props) => {
         <Button
           autoFocus
           variant="contained"
-          disabled={uploading}
+          disabled={updateState}
           onClick={onUpdate}
         >
           Update
