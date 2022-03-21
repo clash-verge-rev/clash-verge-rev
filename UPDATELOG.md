@@ -1,3 +1,20 @@
+## v0.0.25
+
+### Features
+
+- update clash core version
+
+### Bug Fixes
+
+- app updater error
+- display window controllers on Linux
+
+### Notes
+
+If you can't update the app properly, please consider downloading the latest version from github release.
+
+---
+
 ## v0.0.24
 
 ### Features
