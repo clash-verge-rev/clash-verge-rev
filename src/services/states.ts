@@ -16,3 +16,9 @@ export const atomLoadingCache = atom<Record<string, boolean>>({
   key: "atomLoadingCache",
   default: {},
 });
+
+// save update state
+export const atomUpdateState = atom<boolean>({
+  key: "atomUpdateState",
+  default: false,
+});
