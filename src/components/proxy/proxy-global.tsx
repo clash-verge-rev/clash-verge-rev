@@ -1,5 +1,5 @@
+import useSWR, { useSWRConfig } from "swr";
 import { useEffect, useRef, useState } from "react";
-import { useSWRConfig } from "swr";
 import { useLockFn } from "ahooks";
 import { Virtuoso } from "react-virtuoso";
 import { Box, IconButton, TextField } from "@mui/material";
@@ -13,6 +13,7 @@ import {
 } from "@mui/icons-material";
 import { ApiType } from "../../services/types";
 import { updateProxy } from "../../services/api";
+import { getProfiles, patchProfile } from "../../services/cmds";
 import delayManager from "../../services/delay";
 import useFilterProxy from "./use-filter-proxy";
 import ProxyItem from "./proxy-item";
@@ -23,6 +24,7 @@ interface Props {
   proxies: ApiType.ProxyItem[];
 }
 
+// this component will be used for DIRECT/GLOBAL
 const ProxyGlobal = (props: Props) => {
   const { groupName, curProxy, proxies } = props;
 
@@ -35,10 +37,27 @@ const ProxyGlobal = (props: Props) => {
   const virtuosoRef = useRef<any>();
   const filterProxies = useFilterProxy(proxies, groupName, filterText);
 
+  const { data: profiles } = useSWR("getProfiles", getProfiles);
+
   const onChangeProxy = useLockFn(async (name: string) => {
-    await updateProxy("GLOBAL", name);
-    mutate("getProxies");
+    await updateProxy(groupName, name);
     setNow(name);
+
+    if (groupName === "DIRECT") return;
+
+    // update global selected
+    const profile = profiles?.items?.find((p) => p.uid === profiles.current);
+    if (!profile) return;
+    if (!profile.selected) profile.selected = [];
+
+    const index = profile.selected.findIndex((item) => item.name === groupName);
+    if (index < 0) {
+      profile.selected.unshift({ name: groupName, now: name });
+    } else {
+      profile.selected[index] = { name: groupName, now: name };
+    }
+
+    await patchProfile(profiles!.current!, { selected: profile.selected });
   });
 
   const onLocation = (smooth = true) => {
