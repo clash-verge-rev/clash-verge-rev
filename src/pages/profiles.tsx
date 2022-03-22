@@ -29,6 +29,7 @@ const ProfilePage = () => {
 
   const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
 
+  // distinguish type
   const { regularItems, enhanceItems } = useMemo(() => {
     const items = profiles.items || [];
     const chain = profiles.chain || [];
@@ -48,6 +49,7 @@ const ProfilePage = () => {
     return { regularItems, enhanceItems };
   }, [profiles]);
 
+  // sync selected proxy
   useEffect(() => {
     if (profiles.current == null) return;
 
@@ -65,9 +67,10 @@ const ProfilePage = () => {
         selected.map((each) => [each.name!, each.now!])
       );
 
-      // todo: enhance error handle
       let hasChange = false;
-      proxiesData.groups.forEach((group) => {
+
+      const { global, groups } = proxiesData;
+      [global, ...groups].forEach((group) => {
         const { name, now } = group;
 
         if (!now || selectedMap[name] === now) return;
@@ -78,15 +81,14 @@ const ProfilePage = () => {
           updateProxy(name, selectedMap[name]);
         }
       });
+
       // update profile selected list
       profile.selected = Object.entries(selectedMap).map(([name, now]) => ({
         name,
         now,
       }));
 
-      patchProfile(current!, { selected: profile.selected }).catch(
-        console.error
-      );
+      patchProfile(current!, { selected: profile.selected });
       // update proxies cache
       if (hasChange) mutate("getProxies", getProxies());
     }, 100);
