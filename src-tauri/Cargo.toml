@@ -15,6 +15,7 @@ tauri-build = { version = "1.0.0-rc.4", features = [] }
 [dependencies]
 anyhow = "1.0"
 dirs = "4.0.0"
+open = "2.1.1"
 dunce = "1.0.2"
 nanoid = "0.4.0"
 chrono = "0.4.19"
