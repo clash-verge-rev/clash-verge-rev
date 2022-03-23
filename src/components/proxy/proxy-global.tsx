@@ -91,8 +91,24 @@ const ProxyGlobal = (props: Props) => {
 
   useEffect(() => {
     if (groupName === "DIRECT") setNow("DIRECT");
-    if (groupName === "GLOBAL") setNow(curProxy || "DIRECT");
-  }, [groupName, curProxy]);
+    else if (groupName === "GLOBAL") {
+      if (profiles) {
+        const current = profiles.current;
+        const profile = profiles.items?.find((p) => p.uid === current);
+
+        profile?.selected?.forEach((item) => {
+          if (item.name === "GLOBAL") {
+            if (item.now && item.now !== curProxy) {
+              updateProxy("GLOBAL", item.now).then(() => setNow(item!.now!));
+              mutate("getProxies");
+            }
+          }
+        });
+      }
+
+      setNow(curProxy || "DIRECT");
+    }
+  }, [groupName, curProxy, profiles]);
 
   return (
     <>
