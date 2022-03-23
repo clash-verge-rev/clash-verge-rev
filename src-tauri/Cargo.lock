@@ -441,6 +441,7 @@ dependencies = [
  "log",
  "log4rs",
  "nanoid",
+ "open",
  "port_scanner",
  "reqwest",
  "serde",
