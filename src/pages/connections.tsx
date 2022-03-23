@@ -12,7 +12,7 @@ const ConnectionsPage = () => {
   const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
   const { t } = useTranslation();
-  const [conn, setConn] = useState<ApiType.Connections>(initConn);
+  const [connData, setConnData] = useState<ApiType.Connections>(initConn);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -23,7 +23,35 @@ const ConnectionsPage = () => {
 
       ws.addEventListener("message", (event) => {
         const data = JSON.parse(event.data) as ApiType.Connections;
-        setConn(data);
+        setConnData((old) => {
+          const oldConn = old.connections;
+          const oldList = oldConn.map((each) => each.id);
+          const maxLen = data.connections.length;
+
+          const connections: typeof oldConn = [];
+
+          // 与前一次连接的顺序尽量保持一致
+          data.connections
+            .filter((each) => {
+              const index = oldList.indexOf(each.id);
+
+              if (index >= 0 && index < maxLen) {
+                connections[index] = each;
+                return false;
+              }
+              return true;
+            })
+            .forEach((each) => {
+              for (let i = 0; i < maxLen; ++i) {
+                if (!connections[i]) {
+                  connections[i] = each;
+                  return;
+                }
+              }
+            });
+
+          return { ...data, connections };
+        });
       });
     });
 
@@ -50,7 +78,7 @@ const ConnectionsPage = () => {
       <Paper sx={{ boxShadow: 2, height: "100%" }}>
         <Virtuoso
           initialTopMostItemIndex={999}
-          data={conn.connections}
+          data={connData.connections}
           itemContent={(index, item) => <ConnectionItem value={item} />}
         />
       </Paper>
