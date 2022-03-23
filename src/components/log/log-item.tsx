@@ -6,6 +6,8 @@ const Item = styled(Box)(({ theme }) => ({
   margin: "0 12px",
   lineHeight: 1.35,
   borderBottom: `1px solid ${theme.palette.divider}`,
+  fontSize: "0.875rem",
+  userSelect: "text",
   "& .time": {},
   "& .type": {
     display: "inline-block",

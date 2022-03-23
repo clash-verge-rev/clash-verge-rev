@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
 import { useLockFn } from "ahooks";
-import { styled, Box, ListItem, IconButton, ListItemText } from "@mui/material";
+import { styled, ListItem, IconButton, ListItemText } from "@mui/material";
 import { CloseRounded } from "@mui/icons-material";
 import { ApiType } from "../../services/types";
 import { deleteConnection } from "../../services/api";
 
-const Tag = styled(Box)(({ theme }) => ({
+const Tag = styled("span")(({ theme }) => ({
   display: "inline-block",
   fontSize: "12px",
   padding: "0 4px",
@@ -37,16 +37,19 @@ const ConnectionItem = (props: Props) => {
       <ListItemText
         primary={value.metadata.host || value.metadata.destinationIP}
         secondary={
-          <Box>
+          <>
             <Tag sx={{ textTransform: "uppercase", color: "success" }}>
               {value.metadata.network}
             </Tag>
+
             <Tag>{value.metadata.type}</Tag>
+
             {value.chains.length > 0 && (
               <Tag>{value.chains[value.chains.length - 1]}</Tag>
             )}
+
             <Tag>{dayjs(value.start).fromNow()}</Tag>
-          </Box>
+          </>
         }
       />
     </ListItem>
