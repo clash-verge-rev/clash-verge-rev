@@ -19,6 +19,7 @@ const SettingSystem = ({ onError }: Props) => {
   const {
     enable_tun_mode,
     enable_auto_launch,
+    enable_silent_start,
     enable_system_proxy,
     system_proxy_bypass,
     enable_proxy_guard,
@@ -54,6 +55,20 @@ const SettingSystem = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_auto_launch: e })}
           onGuard={(e) => patchVergeConfig({ enable_auto_launch: e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem>
+        <ListItemText primary={t("Silent Start")} />
+        <GuardState
+          value={enable_silent_start ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ enable_silent_start: e })}
+          onGuard={(e) => patchVergeConfig({ enable_silent_start: e })}
         >
           <Switch edge="end" />
         </GuardState>
