@@ -279,6 +279,28 @@ impl PrfItem {
       file_data: Some(tmpl::ITEM_SCRIPT.into()),
     })
   }
+
+  /// get the file data
+  pub fn read_file(&self) -> Result<String> {
+    if self.file.is_none() {
+      bail!("could not find the file");
+    }
+
+    let file = self.file.clone().unwrap();
+    let path = dirs::app_profiles_dir().join(file);
+    fs::read_to_string(path).context("failed to read the file")
+  }
+
+  /// save the file data
+  pub fn save_file(&self, data: String) -> Result<()> {
+    if self.file.is_none() {
+      bail!("could not find the file");
+    }
+
+    let file = self.file.clone().unwrap();
+    let path = dirs::app_profiles_dir().join(file);
+    fs::write(path, data.as_bytes()).context("failed to save the file")
+  }
 }
 
 ///

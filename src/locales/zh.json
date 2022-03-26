@@ -19,8 +19,9 @@
   "New": "新建",
   "Close All": "关闭全部",
   "Select": "使用",
-  "Edit": "编辑信息",
-  "File": "打开文件",
+  "Edit Info": "编辑信息",
+  "Edit File": "编辑文件",
+  "Open File": "打开文件",
   "Update": "更新",
   "Update(Proxy)": "更新(代理)",
   "Delete": "删除",
@@ -41,6 +42,7 @@
   "Clash core": "Clash 内核",
   "Tun Mode": "Tun 模式",
   "Auto Launch": "开机自启",
+  "Silent Start": "静默启动",
   "System Proxy": "系统代理",
   "Proxy Guard": "系统代理守卫",
   "Proxy Bypass": "Proxy Bypass",
@@ -50,5 +52,8 @@
   "Language": "语言设置",
   "Open App Dir": "应用目录",
   "Open Logs Dir": "日志目录",
-  "Version": "版本"
+  "Version": "版本",
+
+  "Save": "保存",
+  "Cancel": "取消"
 }
