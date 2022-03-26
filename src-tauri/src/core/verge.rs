@@ -31,6 +31,9 @@ pub struct VergeConfig {
   /// can the app auto startup
   pub enable_auto_launch: Option<bool>,
 
+  /// not show the window on launch
+  pub enable_silent_start: Option<bool>,
+
   /// set system proxy
   pub enable_system_proxy: Option<bool>,
 
@@ -196,6 +199,9 @@ impl Verge {
     }
     if patch.traffic_graph.is_some() {
       self.config.traffic_graph = patch.traffic_graph;
+    }
+    if patch.enable_silent_start.is_some() {
+      self.config.enable_silent_start = patch.enable_silent_start;
     }
 
     // should update system startup
