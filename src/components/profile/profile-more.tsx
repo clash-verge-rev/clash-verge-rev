@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLockFn } from "ahooks";
 import {
   alpha,
   Box,
@@ -12,9 +13,10 @@ import {
 } from "@mui/material";
 import { CmdType } from "../../services/types";
 import { viewProfile } from "../../services/cmds";
-import ProfileEdit from "./profile-edit";
-import Notice from "../base/base-notice";
 import enhance from "../../services/enhance";
+import ProfileEdit from "./profile-edit";
+import FileEditor from "./file-editor";
+import Notice from "../base/base-notice";
 
 const Wrapper = styled(Box)(({ theme }) => ({
   width: "100%",
@@ -57,6 +59,7 @@ const ProfileMore = (props: Props) => {
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [editOpen, setEditOpen] = useState(false);
+  const [fileOpen, setFileOpen] = useState(false);
   const [status, setStatus] = useState(enhance.status(uid));
 
   // unlisten when unmount
@@ -65,40 +68,47 @@ const ProfileMore = (props: Props) => {
   // error during enhanced mode
   const hasError = selected && status?.status === "error";
 
-  const onEdit = () => {
+  const onEditInfo = () => {
     setAnchorEl(null);
     setEditOpen(true);
   };
 
-  const onView = async () => {
+  const onEditFile = () => {
+    setAnchorEl(null);
+    setFileOpen(true);
+  };
+
+  const onOpenFile = useLockFn(async () => {
     setAnchorEl(null);
     try {
       await viewProfile(itemData.uid);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
-  };
+  });
 
-  const closeWrapper = (fn: () => void) => () => {
+  const fnWrapper = (fn: () => void) => () => {
     setAnchorEl(null);
     return fn();
   };
 
   const enableMenu = [
-    { label: "Disable", handler: closeWrapper(onDisable) },
-    { label: "Refresh", handler: closeWrapper(onEnhance) },
-    { label: "Edit", handler: onEdit },
-    { label: "File", handler: onView },
-    { label: "To Top", show: !hasError, handler: closeWrapper(onMoveTop) },
-    { label: "To End", show: !hasError, handler: closeWrapper(onMoveEnd) },
-    { label: "Delete", handler: closeWrapper(onDelete) },
+    { label: "Disable", handler: fnWrapper(onDisable) },
+    { label: "Refresh", handler: fnWrapper(onEnhance) },
+    { label: "Edit Info", handler: onEditInfo },
+    { label: "Edit File", handler: onEditFile },
+    { label: "Open File", handler: onOpenFile },
+    { label: "To Top", show: !hasError, handler: fnWrapper(onMoveTop) },
+    { label: "To End", show: !hasError, handler: fnWrapper(onMoveEnd) },
+    { label: "Delete", handler: fnWrapper(onDelete) },
   ];
 
   const disableMenu = [
-    { label: "Enable", handler: closeWrapper(onEnable) },
-    { label: "Edit", handler: onEdit },
-    { label: "File", handler: onView },
-    { label: "Delete", handler: closeWrapper(onDelete) },
+    { label: "Enable", handler: fnWrapper(onEnable) },
+    { label: "Edit Info", handler: onEditInfo },
+    { label: "Edit File", handler: onEditFile },
+    { label: "Open File", handler: onOpenFile },
+    { label: "Delete", handler: fnWrapper(onDelete) },
   ];
 
   const boxStyle = {
@@ -208,6 +218,7 @@ const ProfileMore = (props: Props) => {
         onClose={() => setAnchorEl(null)}
         anchorPosition={position}
         anchorReference="anchorPosition"
+        transitionDuration={225}
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
@@ -231,6 +242,15 @@ const ProfileMore = (props: Props) => {
           open={editOpen}
           itemData={itemData}
           onClose={() => setEditOpen(false)}
+        />
+      )}
+
+      {fileOpen && (
+        <FileEditor
+          uid={uid}
+          open={fileOpen}
+          mode={type === "merge" ? "yaml" : "javascript"}
+          onClose={() => setFileOpen(false)}
         />
       )}
     </>

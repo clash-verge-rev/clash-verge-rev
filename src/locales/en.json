@@ -19,8 +19,9 @@
   "New": "New",
   "Close All": "Close All",
   "Select": "Select",
-  "Edit": "Edit",
-  "File": "File",
+  "Edit Info": "Edit Info",
+  "Edit File": "Edit File",
+  "Open File": "Open File",
   "Update": "Update",
   "Update(Proxy)": "Update(Proxy)",
   "Delete": "Delete",
@@ -41,6 +42,7 @@
   "Clash core": "Clash core",
   "Tun Mode": "Tun Mode",
   "Auto Launch": "Auto Launch",
+  "Silent Start": "Silent Start",
   "System Proxy": "System Proxy",
   "Proxy Guard": "Proxy Guard",
   "Proxy Bypass": "Proxy Bypass",
@@ -50,5 +52,8 @@
   "Language": "Language",
   "Open App Dir": "Open App Dir",
   "Open Logs Dir": "Open Logs Dir",
-  "Version": "Version"
+  "Version": "Version",
+
+  "Save": "Save",
+  "Cancel": "Cancel"
 }

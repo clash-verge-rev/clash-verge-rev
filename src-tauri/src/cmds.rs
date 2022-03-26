@@ -212,6 +212,35 @@ pub fn view_profile(index: String, profiles_state: State<'_, ProfilesState>) -> 
   wrap_err!(open::that(path))
 }
 
+/// read the profile item file data
+#[tauri::command]
+pub fn read_profile_file(
+  index: String,
+  profiles_state: State<'_, ProfilesState>,
+) -> Result<String, String> {
+  let profiles = profiles_state.0.lock().unwrap();
+  let item = wrap_err!(profiles.get_item(&index))?;
+  let data = wrap_err!(item.read_file())?;
+
+  Ok(data)
+}
+
+/// save the profile item file data
+#[tauri::command]
+pub fn save_profile_file(
+  index: String,
+  file_data: Option<String>,
+  profiles_state: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  if file_data.is_none() {
+    return Ok(());
+  }
+
+  let profiles = profiles_state.0.lock().unwrap();
+  let item = wrap_err!(profiles.get_item(&index))?;
+  wrap_err!(item.save_file(file_data.unwrap()))
+}
+
 /// restart the sidecar
 #[tauri::command]
 pub fn restart_sidecar(
