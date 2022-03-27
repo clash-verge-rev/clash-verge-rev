@@ -88,7 +88,7 @@ pub async fn update_profile(
   // reactivate the profile
   if Some(index) == profiles.get_current() {
     let clash = clash_state.0.lock().unwrap();
-    wrap_err!(clash.activate(&profiles, false))?;
+    wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
   }
 
   Ok(())
@@ -105,7 +105,7 @@ pub fn select_profile(
   wrap_err!(profiles.put_current(index))?;
 
   let clash = clash_state.0.lock().unwrap();
-  wrap_err!(clash.activate(&profiles, false))
+  wrap_err!(clash.activate_enhanced(&profiles, false, false))
 }
 
 /// change the profile chain
@@ -122,7 +122,7 @@ pub fn change_profile_chain(
   profiles.put_chain(chain);
   clash.set_window(app_handle.get_window("main"));
 
-  wrap_err!(clash.activate_enhanced(&profiles, false))
+  wrap_err!(clash.activate_enhanced(&profiles, false, false))
 }
 
 /// manually exec enhanced profile
@@ -137,7 +137,7 @@ pub fn enhance_profiles(
 
   clash.set_window(app_handle.get_window("main"));
 
-  wrap_err!(clash.activate_enhanced(&profiles, false))
+  wrap_err!(clash.activate_enhanced(&profiles, false, false))
 }
 
 /// delete profile item
@@ -151,7 +151,7 @@ pub fn delete_profile(
 
   if wrap_err!(profiles.delete_item(index))? {
     let clash = clash_state.0.lock().unwrap();
-    wrap_err!(clash.activate(&profiles, false))?;
+    wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
   }
 
   Ok(())
@@ -324,7 +324,7 @@ pub fn patch_verge_config(
 
     wrap_err!(clash.tun_mode(tun_mode.unwrap()))?;
     clash.update_config();
-    wrap_err!(clash.activate(&profiles, false))?;
+    wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
   }
 
   let mut verge = verge_state.0.lock().unwrap();

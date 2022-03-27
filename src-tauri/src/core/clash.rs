@@ -1,4 +1,5 @@
 use super::{PrfEnhancedResult, Profiles, Verge};
+use crate::log_if_err;
 use crate::utils::{config, dirs, help};
 use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
@@ -176,7 +177,8 @@ impl Clash {
     self.update_config();
     self.drop_sidecar()?;
     self.run_sidecar()?;
-    self.activate(profiles, false)
+    self.activate(profiles)?;
+    self.activate_enhanced(profiles, false, true)
   }
 
   /// update the clash info
@@ -221,7 +223,7 @@ impl Clash {
   }
 
   /// enable tun mode
-  /// only revise the config and restart the
+  /// only revise the config
   pub fn tun_mode(&mut self, enable: bool) -> Result<()> {
     // Windows 需要wintun.dll文件
     #[cfg(target_os = "windows")]
@@ -354,62 +356,57 @@ impl Clash {
   }
 
   /// enhanced profiles mode
-  /// only change the enhanced profiles
-  pub fn activate_enhanced(&self, profiles: &Profiles, delay: bool) -> Result<()> {
+  /// - (sync) refresh config if enhance chain is null
+  /// - (async) enhanced config
+  pub fn activate_enhanced(&self, profiles: &Profiles, delay: bool, skip: bool) -> Result<()> {
     if self.window.is_none() {
       bail!("failed to get the main window");
     }
 
-    let win = self.window.clone().unwrap();
     let event_name = help::get_uid("e");
     let event_name = format!("enhanced-cb-{event_name}");
 
-    let info = self.info.clone();
-    let mut config = self.config.clone();
-
     // generate the payload
     let payload = profiles.gen_enhanced(event_name.clone())?;
-    let window = self.window.clone();
 
-    win.once(&event_name, move |event| {
+    let info = self.info.clone();
+
+    // do not run enhanced
+    if payload.chain.len() == 0 {
+      if skip {
+        return Ok(());
+      }
+
+      let mut config = self.config.clone();
+      let filter_data = Clash::strict_filter(payload.current);
+
+      for (key, value) in filter_data.into_iter() {
+        config.insert(key, value);
+      }
+
+      return Clash::_activate(info, config, self.window.clone());
+    }
+
+    let window = self.window.clone().unwrap();
+    let window_move = self.window.clone();
+
+    window.once(&event_name, move |event| {
       if let Some(result) = event.payload() {
         let result: PrfEnhancedResult = serde_json::from_str(result).unwrap();
 
         if let Some(data) = result.data {
-          // all of these can not be revised by script
-          // http/https/socks port should be under control
-          let not_allow = vec![
-            "port",
-            "socks-port",
-            "mixed-port",
-            "allow-lan",
-            "mode",
-            "external-controller",
-            "secret",
-            "log-level",
-          ];
+          let mut config = Clash::read_config();
+          let filter_data = Clash::loose_filter(data); // loose filter
 
-          for (key, value) in data.into_iter() {
-            key.as_str().map(|key_str| {
-              // change to lowercase
-              let mut key_str = String::from(key_str);
-              key_str.make_ascii_lowercase();
-
-              // filter
-              if !not_allow.contains(&&*key_str) {
-                config.insert(Value::String(key_str), value);
-              }
-            });
+          for (key, value) in filter_data.into_iter() {
+            config.insert(key, value);
           }
 
+          log_if_err!(Clash::_activate(info, config, window_move));
           log::info!("profile enhanced status {}", result.status);
-
-          Self::_activate(info, config, window).unwrap();
         }
 
-        if let Some(error) = result.error {
-          log::error!("{error}");
-        }
+        result.error.map(|err| log::error!("{err}"));
       }
     });
 
@@ -418,7 +415,7 @@ impl Clash {
       if delay {
         sleep(Duration::from_secs(2)).await;
       }
-      win.emit("script-handler", payload).unwrap();
+      window.emit("script-handler", payload).unwrap();
     });
 
     Ok(())
@@ -426,17 +423,83 @@ impl Clash {
 
   /// activate the profile
   /// auto activate enhanced profile
-  pub fn activate(&self, profiles: &Profiles, delay: bool) -> Result<()> {
-    let gen_map = profiles.gen_activate()?;
+  pub fn activate(&self, profiles: &Profiles) -> Result<()> {
+    let data = profiles.gen_activate()?;
+    let data = Clash::strict_filter(data);
+
     let info = self.info.clone();
     let mut config = self.config.clone();
 
-    for (key, value) in gen_map.into_iter() {
+    for (key, value) in data.into_iter() {
       config.insert(key, value);
     }
 
-    Self::_activate(info, config, self.window.clone())?;
-    self.activate_enhanced(profiles, delay)
+    Clash::_activate(info, config, self.window.clone())
+  }
+
+  /// only 5 default fields available (clash config fields)
+  /// convert to lowercase
+  fn strict_filter(config: Mapping) -> Mapping {
+    // Only the following fields are allowed:
+    // proxies/proxy-providers/proxy-groups/rule-providers/rules
+    let valid_keys = vec![
+      "proxies",
+      "proxy-providers",
+      "proxy-groups",
+      "rules",
+      "rule-providers",
+    ];
+
+    let mut new_config = Mapping::new();
+
+    for (key, value) in config.into_iter() {
+      key.as_str().map(|key_str| {
+        // change to lowercase
+        let mut key_str = String::from(key_str);
+        key_str.make_ascii_lowercase();
+
+        // filter
+        if valid_keys.contains(&&*key_str) {
+          new_config.insert(Value::String(key_str), value);
+        }
+      });
+    }
+
+    new_config
+  }
+
+  /// more clash config fields available
+  /// convert to lowercase
+  fn loose_filter(config: Mapping) -> Mapping {
+    // all of these can not be revised by script or merge
+    // http/https/socks port should be under control
+    let not_allow = vec![
+      "port",
+      "socks-port",
+      "mixed-port",
+      "allow-lan",
+      "mode",
+      "external-controller",
+      "secret",
+      "log-level",
+    ];
+
+    let mut new_config = Mapping::new();
+
+    for (key, value) in config.into_iter() {
+      key.as_str().map(|key_str| {
+        // change to lowercase
+        let mut key_str = String::from(key_str);
+        key_str.make_ascii_lowercase();
+
+        // filter
+        if !not_allow.contains(&&*key_str) {
+          new_config.insert(Value::String(key_str), value);
+        }
+      });
+    }
+
+    new_config
   }
 }
 

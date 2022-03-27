@@ -1,7 +1,7 @@
 use crate::utils::{config, dirs, help, tmpl};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_yaml::{Mapping, Value};
+use serde_yaml::Mapping;
 use std::{fs, io::Write};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -575,32 +575,7 @@ impl Profiles {
           bail!("failed to read the file \"{}\"", file_path.display());
         }
 
-        let mut new_config = Mapping::new();
-        let def_config = config::read_yaml::<Mapping>(file_path.clone());
-
-        // Only the following fields are allowed:
-        // proxies/proxy-providers/proxy-groups/rule-providers/rules
-        let valid_keys = vec![
-          "proxies",
-          "proxy-providers",
-          "proxy-groups",
-          "rule-providers",
-          "rules",
-        ];
-
-        for (key, value) in def_config.into_iter() {
-          key.as_str().map(|key_str| {
-            // change to lowercase
-            let mut key_str = String::from(key_str);
-            key_str.make_ascii_lowercase();
-
-            if valid_keys.contains(&&*key_str) {
-              new_config.insert(Value::String(key_str), value);
-            }
-          });
-        }
-
-        return Ok(new_config);
+        return Ok(config::read_yaml::<Mapping>(file_path.clone()));
       }
     }
 
@@ -634,11 +609,11 @@ impl Profiles {
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PrfEnhanced {
-  current: Mapping,
+  pub current: Mapping,
 
-  chain: Vec<PrfData>,
+  pub chain: Vec<PrfData>,
 
-  callback: String,
+  pub callback: String,
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
