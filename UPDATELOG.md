@@ -1,3 +1,19 @@
+## v0.0.26
+
+### Features
+
+- silent start
+- profile editor
+- profile enhance mode supports more fields
+- optimize profile enhance mode strategy
+
+### Bug Fixes
+
+- fix csp restriction on macOS
+- window controllers on Linux
+
+---
+
 ## v0.0.25
 
 ### Features
