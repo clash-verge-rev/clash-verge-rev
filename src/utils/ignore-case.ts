@@ -1,4 +1,4 @@
-// Shallow copy and change all keys to lowercase
+// Deep copy and change all keys to lowercase
 type TData = Record<string, any>;
 
 export default function ignoreCase(data: TData): TData {
@@ -6,8 +6,8 @@ export default function ignoreCase(data: TData): TData {
 
   const newData = {} as TData;
 
-  Object.keys(data).forEach((key) => {
-    newData[key.toLowerCase()] = data[key];
+  Object.entries(data).forEach(([key, value]) => {
+    newData[key.toLowerCase()] = JSON.parse(JSON.stringify(value));
   });
 
   return newData;
