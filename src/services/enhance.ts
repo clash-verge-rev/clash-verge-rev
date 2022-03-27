@@ -1,48 +1,80 @@
 import { emit, listen } from "@tauri-apps/api/event";
 import { CmdType } from "./types";
+import ignoreCase from "../utils/ignore-case";
+
+const DEFAULT_FIELDS = [
+  "rules",
+  "proxies",
+  "proxy-groups",
+  "proxy-providers",
+  "rule-providers",
+] as const;
+
+const USE_FLAG_FIELDS = [
+  "tun",
+  "dns",
+  "hosts",
+  "script",
+  "profile",
+  "payload",
+  "interface-name",
+  "routing-mark",
+] as const;
 
 /**
  * process the merge mode
  */
-function toMerge(
-  merge: CmdType.ProfileMerge,
-  data: CmdType.ProfileData
-): CmdType.ProfileData {
-  if (!merge) return data;
+function toMerge(merge: CmdType.ProfileMerge, data: CmdType.ProfileData) {
+  if (!merge) return { data, use: [] };
 
-  const newData = { ...data };
+  const {
+    use,
+    "prepend-rules": preRules,
+    "append-rules": postRules,
+    "prepend-proxies": preProxies,
+    "append-proxies": postProxies,
+    "prepend-proxy-groups": preProxyGroups,
+    "append-proxy-groups": postProxyGroups,
+    ...mergeConfig
+  } = merge;
+
+  [...DEFAULT_FIELDS, ...USE_FLAG_FIELDS].forEach((key) => {
+    // the value should not be null
+    if (mergeConfig[key] != null) {
+      data[key] = mergeConfig[key];
+    }
+  });
+
+  // init
+  if (!data.rules) data.rules = [];
+  if (!data.proxies) data.proxies = [];
+  if (!data["proxy-groups"]) data["proxy-groups"] = [];
 
   // rules
-  if (Array.isArray(merge["prepend-rules"])) {
-    if (!newData.rules) newData.rules = [];
-    newData.rules.unshift(...merge["prepend-rules"]);
+  if (Array.isArray(preRules)) {
+    data.rules.unshift(...preRules);
   }
-  if (Array.isArray(merge["append-rules"])) {
-    if (!newData.rules) newData.rules = [];
-    newData.rules.push(...merge["append-rules"]);
+  if (Array.isArray(postRules)) {
+    data.rules.push(...postRules);
   }
 
   // proxies
-  if (Array.isArray(merge["prepend-proxies"])) {
-    if (!newData.proxies) newData.proxies = [];
-    newData.proxies.unshift(...merge["prepend-proxies"]);
+  if (Array.isArray(preProxies)) {
+    data.proxies.unshift(...preProxies);
   }
-  if (Array.isArray(merge["append-proxies"])) {
-    if (!newData.proxies) newData.proxies = [];
-    newData.proxies.push(...merge["append-proxies"]);
+  if (Array.isArray(postProxies)) {
+    data.proxies.push(...postProxies);
   }
 
   // proxy-groups
-  if (Array.isArray(merge["prepend-proxy-groups"])) {
-    if (!newData["proxy-groups"]) newData["proxy-groups"] = [];
-    newData["proxy-groups"].unshift(...merge["prepend-proxy-groups"]);
+  if (Array.isArray(preProxyGroups)) {
+    data["proxy-groups"].unshift(...preProxyGroups);
   }
-  if (Array.isArray(merge["append-proxy-groups"])) {
-    if (!newData["proxy-groups"]) newData["proxy-groups"] = [];
-    newData["proxy-groups"].push(...merge["append-proxy-groups"]);
+  if (Array.isArray(postProxyGroups)) {
+    data["proxy-groups"].push(...postProxyGroups);
   }
 
-  return newData;
+  return { data, use: Array.isArray(use) ? use : [] };
 }
 
 /**
@@ -99,68 +131,73 @@ class Enhance {
 
     listen("script-handler", async (event) => {
       const payload = event.payload as CmdType.EnhancedPayload;
-      let pdata = payload.current || {};
 
-      let hasScript = false;
+      const result = await this.runner(payload).catch((err: any) => ({
+        data: null,
+        status: "error",
+        error: err.message,
+      }));
 
-      for (const each of payload.chain) {
-        const { uid, type = "" } = each.item;
-
-        try {
-          // process script
-          if (type === "script") {
-            // support async main function
-            pdata = await toScript(each.script!, { ...pdata });
-            hasScript = true;
-          }
-
-          // process merge
-          else if (type === "merge") {
-            pdata = toMerge(each.merge!, { ...pdata });
-          }
-
-          // invalid type
-          else {
-            throw new Error(`invalid enhanced profile type "${type}"`);
-          }
-
-          this.exec(uid, { status: "ok" });
-        } catch (err: any) {
-          this.exec(uid, {
-            status: "error",
-            message: err.message || err.toString(),
-          });
-
-          console.error(err);
-        }
-      }
-
-      // If script is never used
-      // filter other fields
-      if (!hasScript) {
-        const validKeys = [
-          "proxies",
-          "proxy-providers",
-          "proxy-groups",
-          "rule-providers",
-          "rules",
-        ];
-
-        // to lowercase
-        const newData: any = {};
-        Object.keys(pdata).forEach((key) => {
-          const newKey = key.toLowerCase();
-          if (validKeys.includes(newKey)) {
-            newData[newKey] = (pdata as any)[key];
-          }
-        });
-
-        pdata = newData;
-      }
-
-      const result = { data: pdata, status: "ok" };
       emit(payload.callback, JSON.stringify(result)).catch(console.error);
     });
+  }
+
+  // enhanced mode runner
+  private async runner(payload: CmdType.EnhancedPayload) {
+    const chain = payload.chain || [];
+
+    if (!Array.isArray(chain)) throw new Error("unhandle error");
+
+    let pdata = payload.current || {};
+    let useList = [] as string[];
+
+    for (const each of chain) {
+      const { uid, type = "" } = each.item;
+
+      try {
+        // process script
+        if (type === "script") {
+          // support async main function
+          pdata = await toScript(each.script!, ignoreCase(pdata));
+        }
+
+        // process merge
+        else if (type === "merge") {
+          const temp = toMerge(each.merge!, ignoreCase(pdata));
+          pdata = temp.data;
+          useList = useList.concat(temp.use || []);
+        }
+
+        // invalid type
+        else {
+          throw new Error(`invalid enhanced profile type "${type}"`);
+        }
+
+        this.exec(uid, { status: "ok" });
+      } catch (err: any) {
+        console.error(err);
+
+        this.exec(uid, {
+          status: "error",
+          message: err.message || err.toString(),
+        });
+      }
+    }
+
+    pdata = ignoreCase(pdata);
+
+    // filter the data
+    const filterData: typeof pdata = {};
+    Object.keys(pdata).forEach((key: any) => {
+      if (
+        DEFAULT_FIELDS.includes(key) ||
+        (USE_FLAG_FIELDS.includes(key) && useList.includes(key))
+      ) {
+        filterData[key] = pdata[key];
+      }
+    });
+
+    return { data: filterData, status: "ok" };
   }
 
   // exec the listener
