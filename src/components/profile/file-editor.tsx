@@ -71,6 +71,7 @@ const FileEditor = (props: Props) => {
     try {
       await saveProfileFile(uid, value);
       onChange?.();
+      onClose();
     } catch (err: any) {
       Notice.error(err.message || err.toString());
     }
