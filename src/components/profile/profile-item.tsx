@@ -20,6 +20,7 @@ import { CmdType } from "../../services/types";
 import { atomLoadingCache } from "../../services/states";
 import { updateProfile, deleteProfile, viewProfile } from "../../services/cmds";
 import parseTraffic from "../../utils/parse-traffic";
+import getSystem from "../../utils/get-system";
 import ProfileEdit from "./profile-edit";
 import FileEditor from "./file-editor";
 import Notice from "../base/base-notice";
@@ -39,6 +40,8 @@ const round = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 `;
+
+const OS = getSystem();
 
 interface Props {
   selected: boolean;
@@ -267,6 +270,9 @@ const ProfileItem = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
+        TransitionProps={
+          OS === "macos" ? { style: { transitionDuration: "225ms" } } : {}
+        }
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
