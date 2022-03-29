@@ -129,13 +129,13 @@ const ProxyGlobal = (props: Props) => {
           <MyLocationRounded />
         </IconButton>
 
-        <IconButton size="small" title="check" onClick={onCheckAll}>
+        <IconButton size="small" title="delay check" onClick={onCheckAll}>
           <NetworkCheckRounded />
         </IconButton>
 
         <IconButton
           size="small"
-          title="check"
+          title="proxy detail"
           onClick={() => setShowType(!showType)}
         >
           {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}
@@ -143,7 +143,7 @@ const ProxyGlobal = (props: Props) => {
 
         <IconButton
           size="small"
-          title="check"
+          title="filter"
           onClick={() => setShowFilter(!showFilter)}
         >
           {showFilter ? <FilterAltRounded /> : <FilterAltOffRounded />}
