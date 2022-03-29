@@ -144,11 +144,14 @@ fn main() -> std::io::Result<()> {
     .build(tauri::generate_context!())
     .expect("error while running tauri application")
     .run(|app_handle, e| match e {
-      tauri::RunEvent::CloseRequested { label, api, .. } => {
-        let app_handle = app_handle.clone();
-        api.prevent_close();
-        app_handle.get_window(&label).unwrap().hide().unwrap();
-      }
+      tauri::RunEvent::WindowEvent { label, event, .. } => match event {
+        tauri::WindowEvent::CloseRequested { api, .. } => {
+          let app_handle = app_handle.clone();
+          api.prevent_close();
+          app_handle.get_window(&label).unwrap().hide().unwrap();
+        }
+        _ => {}
+      },
       tauri::RunEvent::ExitRequested { .. } => {
         resolve::resolve_reset(app_handle);
         api::process::kill_children();
