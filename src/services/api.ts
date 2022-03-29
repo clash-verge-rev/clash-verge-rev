@@ -142,6 +142,14 @@ export async function getProviders() {
   return response.providers as any;
 }
 
+// todo: proxy providers health check
+export async function getProviderHealthCheck(name: string) {
+  const instance = await getAxios();
+  return instance.get(
+    `/providers/proxies/${encodeURIComponent(name)}/healthcheck`
+  );
+}
+
 // Close specific connection
 export async function deleteConnection(id: string) {
   const instance = await getAxios();
