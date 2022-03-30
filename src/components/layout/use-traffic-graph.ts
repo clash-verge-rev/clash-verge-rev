@@ -1,19 +1,17 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useTheme } from "@mui/material";
 
 const minPoint = 10;
 const maxPoint = 36;
 
-const refLineAlpha = 0.5;
+const refLineAlpha = 1;
 const refLineWidth = 2;
-const refLineColor = "#ccc";
 
 const upLineAlpha = 0.6;
 const upLineWidth = 4;
-const upLineColor = "#9c27b0";
 
 const downLineAlpha = 1;
 const downLineWidth = 4;
-const downLineColor = "#5b5c9d";
 
 /**
  * draw the traffic graph
@@ -24,10 +22,22 @@ export default function useTrafficGraph() {
   const styleRef = useRef(true);
   const canvasRef = useRef<HTMLCanvasElement>(null!);
 
+  const { palette } = useTheme();
+  const paletteRef = useRef(palette);
+
+  useEffect(() => {
+    paletteRef.current = palette;
+  }, [palette]);
+
   const drawGraph = () => {
     const canvas = canvasRef.current!;
 
     if (!canvas) return;
+
+    const { primary, secondary, divider } = paletteRef.current;
+    const refLineColor = divider || "rgba(0, 0, 0, 0.12)";
+    const upLineColor = secondary.main || "#9c27b0";
+    const downLineColor = primary.main || "#5b5c9d";
 
     const context = canvas.getContext("2d")!;
     const width = canvas.width;

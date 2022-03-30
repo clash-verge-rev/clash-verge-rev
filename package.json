@@ -52,7 +52,8 @@
     "sass": "^1.49.7",
     "typescript": "^4.5.5",
     "vite": "^2.8.6",
-    "vite-plugin-monaco-editor": "^1.0.10"
+    "vite-plugin-monaco-editor": "^1.0.10",
+    "vite-plugin-svgr": "^1.1.0"
   },
   "prettier": {
     "tabWidth": 2,
