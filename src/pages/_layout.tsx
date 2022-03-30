@@ -2,20 +2,21 @@ import dayjs from "dayjs";
 import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import useSWR, { SWRConfig, useSWRConfig } from "swr";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Route, Routes } from "react-router-dom";
-import { alpha, createTheme, List, Paper, ThemeProvider } from "@mui/material";
+import { alpha, List, Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "../services/api";
 import { getVergeConfig } from "../services/cmds";
-import LogoSvg from "../assets/image/logo.svg";
+import { ReactComponent as LogoSvg } from "../assets/image/logo.svg";
 import LayoutItem from "../components/layout/layout-item";
 import LayoutControl from "../components/layout/layout-control";
 import LayoutTraffic from "../components/layout/layout-traffic";
 import UpdateButton from "../components/layout/update-button";
+import useCustomTheme from "../components/layout/use-custom-theme";
 import getSystem from "../utils/get-system";
 import "dayjs/locale/zh-cn";
 
@@ -26,10 +27,11 @@ const OS = getSystem();
 const Layout = () => {
   const { t } = useTranslation();
   const { mutate } = useSWRConfig();
-  const { data } = useSWR("getVergeConfig", getVergeConfig);
 
-  const blur = !!data?.theme_blur;
-  const mode = data?.theme_mode ?? "light";
+  const { theme } = useCustomTheme();
+
+  const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
+  const { theme_blur, language } = vergeConfig || {};
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
@@ -48,37 +50,11 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
-    if (data?.language) {
-      dayjs.locale(data.language === "zh" ? "zh-cn" : data.language);
-      i18next.changeLanguage(data.language);
+    if (language) {
+      dayjs.locale(language === "zh" ? "zh-cn" : language);
+      i18next.changeLanguage(language);
     }
-  }, [data?.language]);
-
-  const theme = useMemo(() => {
-    // const background = mode === "light" ? "#f5f5f5" : "#000";
-    const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
-
-    const rootEle = document.documentElement;
-    rootEle.style.background = "transparent";
-    rootEle.style.setProperty("--selection-color", selectColor);
-
-    return createTheme({
-      breakpoints: {
-        values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
-      },
-      palette: {
-        mode,
-        primary: { main: "#5b5c9d" },
-        text: { primary: "#637381", secondary: "#909399" },
-      },
-    });
-  }, [mode]);
-
-  const onDragging = (e: any) => {
-    if (e?.target?.dataset?.windrag) {
-      appWindow.startDragging();
-    }
-  };
+  }, [language]);
 
   return (
     <SWRConfig value={{}}>
@@ -87,20 +63,22 @@ const Layout = () => {
           square
           elevation={0}
           className={`${OS} layout`}
-          onPointerDown={onDragging}
+          onPointerDown={(e: any) => {
+            if (e.target?.dataset?.windrag) appWindow.startDragging();
+          }}
           onContextMenu={(e) => {
             // only prevent it on Windows
             if (OS === "windows") e.preventDefault();
           }}
           sx={[
-            (theme) => ({
-              bgcolor: alpha(theme.palette.background.paper, blur ? 0.85 : 1),
+            ({ palette }) => ({
+              bgcolor: alpha(palette.background.paper, theme_blur ? 0.85 : 1),
             }),
           ]}
         >
           <div className="layout__left" data-windrag>
             <div className="the-logo" data-windrag>
-              <img src={LogoSvg} alt="" data-windrag />
+              <LogoSvg />
 
               <UpdateButton className="the-newbtn" />
             </div>
