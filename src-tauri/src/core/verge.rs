@@ -54,6 +54,9 @@ pub struct VergeConfig {
 pub struct VergeTheme {
   pub primary_color: Option<String>,
   pub secondary_color: Option<String>,
+  pub primary_text: Option<String>,
+  pub secondary_text: Option<String>,
+
   pub info_color: Option<String>,
   pub error_color: Option<String>,
   pub warning_color: Option<String>,
