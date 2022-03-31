@@ -130,6 +130,18 @@ export namespace CmdType {
     enable_system_proxy?: boolean;
     enable_proxy_guard?: boolean;
     system_proxy_bypass?: string;
+    theme_setting?: {
+      primary_color?: string;
+      secondary_color?: string;
+      primary_text?: string;
+      secondary_text?: string;
+      info_color?: string;
+      error_color?: string;
+      warning_color?: string;
+      success_color?: string;
+      font_face?: string;
+      font_family?: string;
+    };
   }
 
   type ClashConfigValue = any;
