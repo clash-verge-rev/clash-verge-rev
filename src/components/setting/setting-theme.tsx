@@ -65,6 +65,7 @@ const SettingTheme = (props: Props) => {
     try {
       await patchVergeConfig({ theme_setting: theme });
       mutate();
+      onClose();
     } catch (err: any) {
       onError?.(err);
     }
@@ -186,12 +187,12 @@ const SettingTheme = (props: Props) => {
           </Item>
 
           <Item>
-            <ListItemText primary="Font Face" />
+            <ListItemText primary="CSS Injection" />
 
             <TextField
               {...textProps}
-              value={theme.font_face ?? ""}
-              onChange={handleChange("font_face")}
+              value={theme.css_injection ?? ""}
+              onChange={handleChange("css_injection")}
             />
           </Item>
         </List>
