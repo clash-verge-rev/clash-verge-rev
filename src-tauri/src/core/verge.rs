@@ -45,6 +45,22 @@ pub struct VergeConfig {
 
   /// proxy guard duration
   pub proxy_guard_duration: Option<u64>,
+
+  /// theme setting
+  pub theme_setting: Option<VergeTheme>,
+}
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+pub struct VergeTheme {
+  pub primary_color: Option<String>,
+  pub secondary_color: Option<String>,
+  pub info_color: Option<String>,
+  pub error_color: Option<String>,
+  pub warning_color: Option<String>,
+  pub success_color: Option<String>,
+
+  pub font_family: Option<String>,
+  pub font_face: Option<String>,
 }
 
 impl VergeConfig {
@@ -202,6 +218,9 @@ impl Verge {
     }
     if patch.enable_silent_start.is_some() {
       self.config.enable_silent_start = patch.enable_silent_start;
+    }
+    if patch.theme_setting.is_some() {
+      self.config.theme_setting = patch.theme_setting;
     }
 
     // should update system startup
