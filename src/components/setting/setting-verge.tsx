@@ -1,4 +1,5 @@
 import useSWR, { useSWRConfig } from "swr";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   IconButton,
@@ -20,6 +21,7 @@ import { CmdType } from "../../services/types";
 import { version } from "../../../package.json";
 import PaletteSwitch from "./palette-switch";
 import GuardState from "./guard-state";
+import SettingTheme from "./setting-theme";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -31,6 +33,8 @@ const SettingVerge = ({ onError }: Props) => {
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
 
   const { theme_mode, theme_blur, traffic_graph, language } = vergeConfig ?? {};
+
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<CmdType.VergeConfig>) => {
@@ -100,6 +104,17 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
+        <ListItemText primary={t("Theme Setting")} />
+        <IconButton
+          color="inherit"
+          size="small"
+          onClick={() => setThemeOpen(true)}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
+
+      <SettingItem>
         <ListItemText primary={t("Open App Dir")} />
         <IconButton color="inherit" size="small" onClick={openAppDir}>
           <ArrowForward />
@@ -117,6 +132,8 @@ const SettingVerge = ({ onError }: Props) => {
         <ListItemText primary={t("Version")} />
         <Typography sx={{ py: "6px" }}>v{version}</Typography>
       </SettingItem>
+
+      <SettingTheme open={themeOpen} onClose={() => setThemeOpen(false)} />
     </SettingList>
   );
 };
