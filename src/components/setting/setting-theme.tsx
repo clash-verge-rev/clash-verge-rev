@@ -88,7 +88,7 @@ const SettingTheme = (props: Props) => {
             />
             <TextField
               {...textProps}
-              value={theme.primary_color}
+              value={theme.primary_color ?? ""}
               placeholder={defaultTheme.primary_color}
               onChange={handleChange("primary_color")}
             />
@@ -105,7 +105,7 @@ const SettingTheme = (props: Props) => {
             />
             <TextField
               {...textProps}
-              value={theme.secondary_color}
+              value={theme.secondary_color ?? ""}
               placeholder={defaultTheme.secondary_color}
               onChange={handleChange("secondary_color")}
             />
@@ -121,7 +121,7 @@ const SettingTheme = (props: Props) => {
             />
             <TextField
               {...textProps}
-              value={theme.info_color}
+              value={theme.info_color ?? ""}
               placeholder={defaultTheme.info_color}
               onChange={handleChange("info_color")}
             />
@@ -137,7 +137,7 @@ const SettingTheme = (props: Props) => {
             />
             <TextField
               {...textProps}
-              value={theme.error_color}
+              value={theme.error_color ?? ""}
               placeholder={defaultTheme.error_color}
               onChange={handleChange("error_color")}
             />
@@ -153,7 +153,7 @@ const SettingTheme = (props: Props) => {
             />
             <TextField
               {...textProps}
-              value={theme.warning_color}
+              value={theme.warning_color ?? ""}
               placeholder={defaultTheme.warning_color}
               onChange={handleChange("warning_color")}
             />
@@ -169,7 +169,7 @@ const SettingTheme = (props: Props) => {
             />
             <TextField
               {...textProps}
-              value={theme.success_color}
+              value={theme.success_color ?? ""}
               placeholder={defaultTheme.success_color}
               onChange={handleChange("success_color")}
             />
@@ -180,7 +180,7 @@ const SettingTheme = (props: Props) => {
 
             <TextField
               {...textProps}
-              value={theme.font_family}
+              value={theme.font_family ?? ""}
               onChange={handleChange("font_family")}
             />
           </Item>
@@ -190,7 +190,7 @@ const SettingTheme = (props: Props) => {
 
             <TextField
               {...textProps}
-              value={theme.font_face}
+              value={theme.font_face ?? ""}
               onChange={handleChange("font_face")}
             />
           </Item>
