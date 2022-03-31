@@ -40,12 +40,25 @@ export default function useCustomTheme() {
         },
       },
       typography: {
+        // todo
         fontFamily: setting.font_family
-          ? `"${setting.font_family}", ${dt.font_family}`
+          ? `${setting.font_family}, ${dt.font_family}`
           : dt.font_family,
       },
     });
 
+    // inject css
+    let style = document.querySelector("style#verge-theme");
+    if (!style) {
+      style = document.createElement("style");
+      style.id = "verge-theme";
+      document.head.appendChild(style!);
+    }
+    if (style) {
+      style.innerHTML = setting.css_injection || "";
+    }
+
+    // update svg icon
     const { palette } = theme;
 
     setTimeout(() => {

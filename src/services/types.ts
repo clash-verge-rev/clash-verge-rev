@@ -139,8 +139,8 @@ export namespace CmdType {
       error_color?: string;
       warning_color?: string;
       success_color?: string;
-      font_face?: string;
       font_family?: string;
+      css_injection?: string;
     };
   }
 

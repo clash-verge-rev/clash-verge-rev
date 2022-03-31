@@ -63,7 +63,7 @@ pub struct VergeTheme {
   pub success_color: Option<String>,
 
   pub font_family: Option<String>,
-  pub font_face: Option<String>,
+  pub css_injection: Option<String>,
 }
 
 impl VergeConfig {
