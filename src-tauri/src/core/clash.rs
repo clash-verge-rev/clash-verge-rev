@@ -1,4 +1,4 @@
-use super::{PrfEnhancedResult, Profiles, Verge};
+use super::{PrfEnhancedResult, Profiles, Verge, VergeConfig};
 use crate::log_if_err;
 use crate::utils::{config, dirs, help};
 use anyhow::{bail, Result};
@@ -222,18 +222,8 @@ impl Clash {
     Ok(())
   }
 
-  /// enable tun mode
-  /// only revise the config
-  pub fn tun_mode(&mut self, enable: bool) -> Result<()> {
-    // Windows 需要wintun.dll文件
-    #[cfg(target_os = "windows")]
-    if enable {
-      let wintun_dll = dirs::app_home_dir().join("wintun.dll");
-      if !wintun_dll.exists() {
-        bail!("failed to enable TUN for missing `wintun.dll`");
-      }
-    }
-
+  /// revise the `tun` and `dns` config
+  fn _tun_mode(mut config: Mapping, enable: bool) -> Mapping {
     macro_rules! revise {
       ($map: expr, $key: expr, $val: expr) => {
         let ret_key = Value::String($key.into());
@@ -252,7 +242,7 @@ impl Clash {
     }
 
     // tun config
-    let tun_val = self.config.get(&Value::from("tun"));
+    let tun_val = config.get(&Value::from("tun"));
     let mut new_tun = Mapping::new();
 
     if tun_val.is_some() && tun_val.as_ref().unwrap().is_mapping() {
@@ -260,15 +250,18 @@ impl Clash {
     }
 
     revise!(new_tun, "enable", enable);
-    append!(new_tun, "stack", "gvisor");
-    append!(new_tun, "dns-hijack", vec!["198.18.0.2:53"]);
-    append!(new_tun, "auto-route", true);
-    append!(new_tun, "auto-detect-interface", true);
 
-    revise!(self.config, "tun", new_tun);
+    if enable {
+      append!(new_tun, "stack", "gvisor");
+      append!(new_tun, "dns-hijack", vec!["198.18.0.2:53"]);
+      append!(new_tun, "auto-route", true);
+      append!(new_tun, "auto-detect-interface", true);
+    }
+
+    revise!(config, "tun", new_tun);
 
     // dns config
-    let dns_val = self.config.get(&Value::from("dns"));
+    let dns_val = config.get(&Value::from("dns"));
     let mut new_dns = Mapping::new();
 
     if dns_val.is_some() && dns_val.as_ref().unwrap().is_mapping() {
@@ -277,34 +270,41 @@ impl Clash {
 
     // 借鉴cfw的默认配置
     revise!(new_dns, "enable", enable);
-    append!(new_dns, "enhanced-mode", "fake-ip");
-    append!(
-      new_dns,
-      "nameserver",
-      vec!["114.114.114.114", "223.5.5.5", "8.8.8.8"]
-    );
-    append!(new_dns, "fallback", vec![] as Vec<&str>);
 
-    #[cfg(target_os = "windows")]
-    append!(
-      new_dns,
-      "fake-ip-filter",
-      vec![
-        "dns.msftncsi.com",
-        "www.msftncsi.com",
-        "www.msftconnecttest.com"
-      ]
-    );
+    if enable {
+      append!(new_dns, "enhanced-mode", "fake-ip");
+      append!(
+        new_dns,
+        "nameserver",
+        vec!["114.114.114.114", "223.5.5.5", "8.8.8.8"]
+      );
+      append!(new_dns, "fallback", vec![] as Vec<&str>);
 
-    revise!(self.config, "dns", new_dns);
+      #[cfg(target_os = "windows")]
+      append!(
+        new_dns,
+        "fake-ip-filter",
+        vec![
+          "dns.msftncsi.com",
+          "www.msftncsi.com",
+          "www.msftconnecttest.com"
+        ]
+      );
+    }
 
-    self.save_config()
+    revise!(config, "dns", new_dns);
+    config
   }
 
   /// activate the profile
   /// generate a new profile to the temp_dir
   /// then put the path to the clash core
   fn _activate(info: ClashInfo, config: Mapping, window: Option<Window>) -> Result<()> {
+    let verge_config = VergeConfig::new();
+    let tun_enable = verge_config.enable_tun_mode.unwrap_or(false);
+
+    let config = Clash::_tun_mode(config, tun_enable);
+
     let temp_path = dirs::profiles_temp_path();
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
