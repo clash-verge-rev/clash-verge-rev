@@ -17,7 +17,7 @@ const ProxyPage = () => {
   const { data: clashConfig } = useSWR("getClashConfig", getClashConfig);
 
   const modeList = ["rule", "global", "direct"];
-  const curMode = clashConfig?.mode.toLowerCase() ?? "direct";
+  const curMode = clashConfig?.mode.toLowerCase();
   const { groups = [], proxies = [] } = proxiesData ?? {};
 
   // make sure that fetch the proxies successfully
