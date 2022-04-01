@@ -53,5 +53,9 @@ pub fn profiles_path() -> PathBuf {
 }
 
 pub fn profiles_temp_path() -> PathBuf {
-  temp_dir().join(PROFILE_TEMP)
+  #[cfg(not(feature = "debug-yml"))]
+  return temp_dir().join(PROFILE_TEMP);
+
+  #[cfg(feature = "debug-yml")]
+  return app_home_dir().join(PROFILE_TEMP);
 }

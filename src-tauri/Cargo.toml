@@ -42,6 +42,7 @@ winreg = { version = "0.10", features = ["transactions"] }
 default = [ "custom-protocol" ]
 custom-protocol = [ "tauri/custom-protocol" ]
 verge-dev = []
+debug-yml = []
 
 [profile.release]
 panic = "abort"
