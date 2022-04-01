@@ -317,16 +317,6 @@ pub fn patch_verge_config(
   let tun_mode = payload.enable_tun_mode.clone();
   let system_proxy = payload.enable_system_proxy.clone();
 
-  // change tun mode
-  if tun_mode.is_some() {
-    let mut clash = clash_state.0.lock().unwrap();
-    let profiles = profiles_state.0.lock().unwrap();
-
-    wrap_err!(clash.tun_mode(tun_mode.unwrap()))?;
-    clash.update_config();
-    wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
-  }
-
   let mut verge = verge_state.0.lock().unwrap();
   wrap_err!(verge.patch_config(payload))?;
 
@@ -337,6 +327,23 @@ pub fn patch_verge_config(
       .get_item("system_proxy")
       .set_selected(system_proxy.unwrap())
       .unwrap();
+  }
+
+  // change tun mode
+  if tun_mode.is_some() {
+    #[cfg(target_os = "windows")]
+    if *tun_mode.as_ref().unwrap() {
+      let wintun_dll = dirs::app_home_dir().join("wintun.dll");
+      if !wintun_dll.exists() {
+        log::error!("failed to enable TUN for missing `wintun.dll`");
+        return Err("failed to enable TUN for missing `wintun.dll`".into());
+      }
+    }
+
+    let clash = clash_state.0.lock().unwrap();
+    let profiles = profiles_state.0.lock().unwrap();
+
+    wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
   }
 
   Ok(())
