@@ -6,18 +6,15 @@ import { useTranslation } from "react-i18next";
 import {
   getProfiles,
   patchProfile,
-  deleteProfile,
   selectProfile,
   importProfile,
-  enhanceProfiles,
-  changeProfileChain,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
 import Notice from "../components/base/base-notice";
 import BasePage from "../components/base/base-page";
 import ProfileNew from "../components/profile/profile-new";
 import ProfileItem from "../components/profile/profile-item";
-import ProfileMore from "../components/profile/profile-more";
+import EnhancedMode from "../components/profile/enhanced";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -130,54 +127,6 @@ const ProfilePage = () => {
     }
   });
 
-  /** enhanced profile mode */
-
-  const chain = profiles.chain || [];
-
-  const onEnhance = useLockFn(enhanceProfiles);
-
-  const onEnhanceEnable = useLockFn(async (uid: string) => {
-    if (chain.includes(uid)) return;
-
-    const newChain = [...chain, uid];
-    await changeProfileChain(newChain);
-    mutate("getProfiles", { ...profiles, chain: newChain }, true);
-  });
-
-  const onEnhanceDisable = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-
-    const newChain = chain.filter((i) => i !== uid);
-    await changeProfileChain(newChain);
-    mutate("getProfiles", { ...profiles, chain: newChain }, true);
-  });
-
-  const onEnhanceDelete = useLockFn(async (uid: string) => {
-    try {
-      await onEnhanceDisable(uid);
-      await deleteProfile(uid);
-      mutate("getProfiles");
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString());
-    }
-  });
-
-  const onMoveTop = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-
-    const newChain = [uid].concat(chain.filter((i) => i !== uid));
-    await changeProfileChain(newChain);
-    mutate("getProfiles", { ...profiles, chain: newChain }, true);
-  });
-
-  const onMoveEnd = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-
-    const newChain = chain.filter((i) => i !== uid).concat([uid]);
-    await changeProfileChain(newChain);
-    mutate("getProfiles", { ...profiles, chain: newChain }, true);
-  });
-
   return (
     <BasePage title={t("Profiles")}>
       <Box sx={{ display: "flex", mb: 2.5 }}>
@@ -216,22 +165,9 @@ const ProfilePage = () => {
         ))}
       </Grid>
 
-      <Grid container spacing={2} sx={{ mt: 3 }}>
-        {enhanceItems.map((item) => (
-          <Grid item xs={12} sm={6} key={item.file}>
-            <ProfileMore
-              selected={!!profiles.chain?.includes(item.uid)}
-              itemData={item}
-              onEnable={() => onEnhanceEnable(item.uid)}
-              onDisable={() => onEnhanceDisable(item.uid)}
-              onDelete={() => onEnhanceDelete(item.uid)}
-              onMoveTop={() => onMoveTop(item.uid)}
-              onMoveEnd={() => onMoveEnd(item.uid)}
-              onEnhance={onEnhance}
-            />
-          </Grid>
-        ))}
-      </Grid>
+      {enhanceItems.length && (
+        <EnhancedMode items={enhanceItems} chain={profiles.chain || []} />
+      )}
 
       <ProfileNew open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </BasePage>
