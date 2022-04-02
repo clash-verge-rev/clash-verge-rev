@@ -71,6 +71,22 @@ const SettingTheme = (props: Props) => {
     }
   });
 
+  const renderItem = (label: string, key: keyof typeof defaultTheme) => {
+    return (
+      <Item>
+        <ListItemText primary={label} />
+        <Round sx={{ background: theme[key] || defaultTheme[key] }} />
+        <TextField
+          {...textProps}
+          value={theme[key] ?? ""}
+          placeholder={defaultTheme[key]}
+          onChange={handleChange(key)}
+          onKeyDown={(e) => e.key === "Enter" && onSave()}
+        />
+      </Item>
+    );
+  };
+
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>{t("Theme Setting")}</DialogTitle>
@@ -79,120 +95,39 @@ const SettingTheme = (props: Props) => {
         sx={{ width: 400, maxHeight: 300, overflow: "auto", pb: 0 }}
       >
         <List sx={{ pt: 0 }}>
-          <Item>
-            <ListItemText primary="Primary Color" />
+          {renderItem("Primary Color", "primary_color")}
 
-            <Round
-              sx={{
-                background: theme.primary_color || defaultTheme.primary_color,
-              }}
-            />
-            <TextField
-              {...textProps}
-              value={theme.primary_color ?? ""}
-              placeholder={defaultTheme.primary_color}
-              onChange={handleChange("primary_color")}
-            />
-          </Item>
+          {renderItem("Secondary Color", "secondary_color")}
 
-          <Item>
-            <ListItemText primary="Secondary Color" />
+          {renderItem("Primary Text", "primary_text")}
 
-            <Round
-              sx={{
-                background:
-                  theme.secondary_color || defaultTheme.secondary_color,
-              }}
-            />
-            <TextField
-              {...textProps}
-              value={theme.secondary_color ?? ""}
-              placeholder={defaultTheme.secondary_color}
-              onChange={handleChange("secondary_color")}
-            />
-          </Item>
+          {renderItem("Secondary Text", "secondary_text")}
 
-          <Item>
-            <ListItemText primary="Info Color" />
+          {renderItem("Info Color", "info_color")}
 
-            <Round
-              sx={{
-                background: theme.info_color || defaultTheme.info_color,
-              }}
-            />
-            <TextField
-              {...textProps}
-              value={theme.info_color ?? ""}
-              placeholder={defaultTheme.info_color}
-              onChange={handleChange("info_color")}
-            />
-          </Item>
+          {renderItem("Error Color", "error_color")}
 
-          <Item>
-            <ListItemText primary="Error Color" />
+          {renderItem("Warning Color", "warning_color")}
 
-            <Round
-              sx={{
-                background: theme.error_color || defaultTheme.error_color,
-              }}
-            />
-            <TextField
-              {...textProps}
-              value={theme.error_color ?? ""}
-              placeholder={defaultTheme.error_color}
-              onChange={handleChange("error_color")}
-            />
-          </Item>
-
-          <Item>
-            <ListItemText primary="Warning Color" />
-
-            <Round
-              sx={{
-                background: theme.warning_color || defaultTheme.warning_color,
-              }}
-            />
-            <TextField
-              {...textProps}
-              value={theme.warning_color ?? ""}
-              placeholder={defaultTheme.warning_color}
-              onChange={handleChange("warning_color")}
-            />
-          </Item>
-
-          <Item>
-            <ListItemText primary="Success Color" />
-
-            <Round
-              sx={{
-                background: theme.success_color || defaultTheme.success_color,
-              }}
-            />
-            <TextField
-              {...textProps}
-              value={theme.success_color ?? ""}
-              placeholder={defaultTheme.success_color}
-              onChange={handleChange("success_color")}
-            />
-          </Item>
+          {renderItem("Success Color", "success_color")}
 
           <Item>
             <ListItemText primary="Font Family" />
-
             <TextField
               {...textProps}
               value={theme.font_family ?? ""}
               onChange={handleChange("font_family")}
+              onKeyDown={(e) => e.key === "Enter" && onSave()}
             />
           </Item>
 
           <Item>
             <ListItemText primary="CSS Injection" />
-
             <TextField
               {...textProps}
               value={theme.css_injection ?? ""}
               onChange={handleChange("css_injection")}
+              onKeyDown={(e) => e.key === "Enter" && onSave()}
             />
           </Item>
         </List>
