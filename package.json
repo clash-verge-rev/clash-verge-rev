@@ -12,7 +12,7 @@
     "check": "node scripts/check.mjs",
     "green": "node scripts/green.mjs",
     "publish": "node scripts/publish.mjs",
-    "release": "node scripts/release.mjs",
+    "updater": "node scripts/updater.mjs",
     "prepare": "husky install"
   },
   "dependencies": {
