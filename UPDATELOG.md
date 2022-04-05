@@ -1,3 +1,17 @@
+## v0.0.27
+
+### Features
+
+- supports custom theme color
+- tun mode setting control the final config
+
+### Bug Fixes
+
+- fix transition flickers (macOS)
+- reduce proxy page render
+
+---
+
 ## v0.0.26
 
 ### Features
