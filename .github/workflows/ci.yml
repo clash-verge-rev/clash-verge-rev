@@ -106,7 +106,7 @@ jobs:
       - name: Yarn install
         run: yarn install
 
-      - name: Release update.json
-        run: yarn run release
+      - name: Release updater file
+        run: yarn run updater
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

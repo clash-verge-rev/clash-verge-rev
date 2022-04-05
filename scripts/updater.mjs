@@ -8,7 +8,7 @@ const UPDATE_JSON_PROXY = "update-proxy.json";
 
 /// generate update.json
 /// upload to update tag's release asset
-async function resolveRelease() {
+async function resolveUpdater() {
   if (process.env.GITHUB_TOKEN === undefined) {
     throw new Error("GITHUB_TOKEN is required");
   }
@@ -38,9 +38,14 @@ async function resolveRelease() {
     notes: await resolveUpdateLog(tag.name), // use updatelog.md
     pub_date: new Date().toISOString(),
     platforms: {
-      win64: { signature: "", url: "" },
-      linux: { signature: "", url: "" },
-      darwin: { signature: "", url: "" },
+      win64: { signature: "", url: "" }, // compatible with older formats
+      linux: { signature: "", url: "" }, // compatible with older formats
+      darwin: { signature: "", url: "" }, // compatible with older formats
+      "darwin-aarch64": { signature: "", url: "" },
+      "darwin-intel": { signature: "", url: "" },
+      "linux-x86_64": { signature: "", url: "" },
+      "windows-x86_64": { signature: "", url: "" },
+      "windows-i686": { signature: "", url: "" }, // no supported
     },
   };
 
@@ -48,36 +53,49 @@ async function resolveRelease() {
     const { name, browser_download_url } = asset;
 
     // win64 url
-    if (/\.msi\.zip$/.test(name)) {
+    if (name.endsWith(".msi.zip")) {
       updateData.platforms.win64.url = browser_download_url;
+      updateData.platforms["windows-x86_64"].url = browser_download_url;
     }
     // win64 signature
-    if (/\.msi\.zip\.sig$/.test(name)) {
-      updateData.platforms.win64.signature = await getSignature(
-        browser_download_url
-      );
+    if (name.endsWith(".msi.zip.sig")) {
+      const sig = await getSignature(browser_download_url);
+      updateData.platforms.win64.signature = sig;
+      updateData.platforms["windows-x86_64"].signature = sig;
     }
 
-    // darwin url
-    if (/\.app\.tar\.gz$/.test(name)) {
+    // darwin url (intel)
+    if (name.endsWith(".app.tar.gz") && !name.includes("aarch")) {
       updateData.platforms.darwin.url = browser_download_url;
+      updateData.platforms["darwin-intel"].url = browser_download_url;
     }
-    // darwin signature
-    if (/\.app\.tar\.gz\.sig$/.test(name)) {
-      updateData.platforms.darwin.signature = await getSignature(
-        browser_download_url
-      );
+    // darwin signature (intel)
+    if (name.endsWith(".app.tar.gz.sig") && !name.includes("aarch")) {
+      const sig = await getSignature(browser_download_url);
+      updateData.platforms.darwin.signature = sig;
+      updateData.platforms["darwin-intel"].signature = sig;
+    }
+
+    // darwin url (aarch)
+    if (name.endsWith("aarch.app.tar.gz")) {
+      updateData.platforms["darwin-aarch64"].url = browser_download_url;
+    }
+    // darwin signature (aarch)
+    if (name.endsWith("aarch.app.tar.gz.sig")) {
+      const sig = await getSignature(browser_download_url);
+      updateData.platforms["darwin-aarch64"].signature = sig;
     }
 
     // linux url
-    if (/\.AppImage\.tar\.gz$/.test(name)) {
+    if (name.endsWith(".AppImage.tar.gz")) {
       updateData.platforms.linux.url = browser_download_url;
+      updateData.platforms["linux-x86_64"].url = browser_download_url;
     }
     // linux signature
-    if (/\.AppImage\.tar\.gz\.sig$/.test(name)) {
-      updateData.platforms.linux.signature = await getSignature(
-        browser_download_url
-      );
+    if (name.endsWith(".AppImage.tar.gz.sig")) {
+      const sig = await getSignature(browser_download_url);
+      updateData.platforms.linux.signature = sig;
+      updateData.platforms["linux-x86_64"].signature = sig;
     }
   });
 
@@ -85,29 +103,24 @@ async function resolveRelease() {
   console.log(updateData);
 
   // maybe should test the signature as well
-  const { darwin, win64, linux } = updateData.platforms;
-  if (!darwin.url) {
-    console.log(`[Error]: failed to parse release for darwin`);
-    delete updateData.platforms.darwin;
-  }
-  if (!win64.url) {
-    console.log(`[Error]: failed to parse release for win64`);
-    delete updateData.platforms.win64;
-  }
-  if (!linux.url) {
-    console.log(`[Error]: failed to parse release for linux`);
-    delete updateData.platforms.linux;
-  }
+  // delete the null field
+  Object.entries(updateData.platforms).forEach(([key, value]) => {
+    if (!value.url) {
+      console.log(`[Error]: failed to parse release for "${key}"`);
+      delete updateData.platforms[key];
+    }
+  });
 
   // 生成一个代理github的更新文件
   // 使用 https://hub.fastgit.xyz/ 做github资源的加速
   const updateDataNew = JSON.parse(JSON.stringify(updateData));
 
-  Object.keys(updateDataNew.platforms).forEach((key) => {
-    if (updateDataNew.platforms[key]) {
-      updateDataNew.platforms[key].url = updateDataNew.platforms[
-        key
-      ].url.replace("https://github.com/", "https://hub.fastgit.xyz/");
+  Object.entries(updateDataNew.platforms).forEach(([key, value]) => {
+    if (value.url) {
+      updateDataNew.platforms[key].url = value.url.replace(
+        "https://github.com/",
+        "https://hub.fastgit.xyz/"
+      );
     } else {
       console.log(`[Error]: updateDataNew.platforms.${key} is null`);
     }
@@ -135,7 +148,7 @@ async function resolveRelease() {
     }
   }
 
-  // upload assets
+  // upload new assets
   await github.rest.repos.uploadReleaseAsset({
     ...options,
     release_id: updateRelease.id,
@@ -161,4 +174,4 @@ async function getSignature(url) {
   return response.text();
 }
 
-resolveRelease().catch(console.error);
+resolveUpdater().catch(console.error);
