@@ -35,12 +35,12 @@ const OS = getSystem();
 interface Props {
   selected: boolean;
   itemData: CmdType.ProfileItem;
+  enableNum: number;
   onEnable: () => void;
   onDisable: () => void;
   onMoveTop: () => void;
   onMoveEnd: () => void;
   onDelete: () => void;
-  onEnhance: () => void;
 }
 
 // profile enhanced item
@@ -48,12 +48,12 @@ const ProfileMore = (props: Props) => {
   const {
     selected,
     itemData,
+    enableNum,
     onEnable,
     onDisable,
     onMoveTop,
     onMoveEnd,
     onDelete,
-    onEnhance,
   } = props;
 
   const { uid, type } = itemData;
@@ -95,14 +95,15 @@ const ProfileMore = (props: Props) => {
     return fn();
   };
 
+  const showMove = enableNum > 1 && !hasError;
+
   const enableMenu = [
     { label: "Disable", handler: fnWrapper(onDisable) },
-    { label: "Refresh", handler: fnWrapper(onEnhance) },
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
-    { label: "To Top", show: !hasError, handler: fnWrapper(onMoveTop) },
-    { label: "To End", show: !hasError, handler: fnWrapper(onMoveEnd) },
+    { label: "To Top", show: showMove, handler: fnWrapper(onMoveTop) },
+    { label: "To End", show: showMove, handler: fnWrapper(onMoveEnd) },
     { label: "Delete", handler: fnWrapper(onDelete) },
   ];
 
