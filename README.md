@@ -13,6 +13,7 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 - Full `clash` config supported, Partial `clash premium` config supported.
 - Profiles management and enhancement (by yaml and Javascript). [Doc](https://github.com/zzzgydi/clash-verge/issues/12)
+- Simple UI and supports custom theme color.
 - System proxy setting and guard.
 
 ## Install
@@ -62,6 +63,17 @@ yarn build
   <img src="./docs/demo4.png" alt="demo4" width="32%" />
   <img src="./docs/demo5.png" alt="demo5" width="32%" />
   <img src="./docs/demo6.png" alt="demo6" width="32%" />
+</div>
+
+### Custom Theme
+
+<div align="center">
+  <img src="./docs/color1.png" alt="demo1" width="16%" />
+  <img src="./docs/color2.png" alt="demo2" width="16%" />
+  <img src="./docs/color3.png" alt="demo3" width="16%" />
+  <img src="./docs/color4.png" alt="demo4" width="16%" />
+  <img src="./docs/color5.png" alt="demo5" width="16%" />
+  <img src="./docs/color6.png" alt="demo6" width="16%" />
 </div>
 
 ## Disclaimer
