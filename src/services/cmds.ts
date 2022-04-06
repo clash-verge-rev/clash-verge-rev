@@ -66,6 +66,10 @@ export async function changeProfileChain(chain?: string[]) {
   return invoke<void>("change_profile_chain", { chain });
 }
 
+export async function changeProfileValid(valid?: string[]) {
+  return invoke<void>("change_profile_valid", { valid });
+}
+
 export async function getClashInfo() {
   return invoke<CmdType.ClashInfo | null>("get_clash_info");
 }

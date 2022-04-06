@@ -116,6 +116,7 @@ export namespace CmdType {
   export interface ProfilesConfig {
     current?: string;
     chain?: string[];
+    valid?: string[];
     items?: ProfileItem[];
   }
 
@@ -191,6 +192,7 @@ export namespace CmdType {
 
   export interface EnhancedPayload {
     chain: ChainItem[];
+    valid: string[];
     current: ProfileData;
     callback: string;
   }

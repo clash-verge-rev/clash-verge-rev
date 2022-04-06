@@ -125,6 +125,23 @@ pub fn change_profile_chain(
   wrap_err!(clash.activate_enhanced(&profiles, false, false))
 }
 
+/// change the profile valid fields
+#[tauri::command]
+pub fn change_profile_valid(
+  valid: Option<Vec<String>>,
+  app_handle: tauri::AppHandle,
+  clash_state: State<'_, ClashState>,
+  profiles_state: State<'_, ProfilesState>,
+) -> Result<(), String> {
+  let mut clash = clash_state.0.lock().unwrap();
+  let mut profiles = profiles_state.0.lock().unwrap();
+
+  profiles.put_valid(valid);
+  clash.set_window(app_handle.get_window("main"));
+
+  wrap_err!(clash.activate_enhanced(&profiles, false, false))
+}
+
 /// manually exec enhanced profile
 #[tauri::command]
 pub fn enhance_profiles(
