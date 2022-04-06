@@ -145,11 +145,12 @@ class Enhance {
   // enhanced mode runner
   private async runner(payload: CmdType.EnhancedPayload) {
     const chain = payload.chain || [];
+    const valid = payload.valid || [];
 
     if (!Array.isArray(chain)) throw new Error("unhandle error");
 
     let pdata = payload.current || {};
-    let useList = [] as string[];
+    let useList = valid;
 
     for (const each of chain) {
       const { uid, type = "" } = each.item;

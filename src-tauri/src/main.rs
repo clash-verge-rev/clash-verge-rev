@@ -119,6 +119,7 @@ fn main() -> std::io::Result<()> {
       cmds::sync_profiles,
       cmds::enhance_profiles,
       cmds::change_profile_chain,
+      cmds::change_profile_valid,
       cmds::read_profile_file,
       cmds::save_profile_file
     ]);

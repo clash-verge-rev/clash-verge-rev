@@ -316,6 +316,9 @@ pub struct Profiles {
   /// same as PrfConfig.chain
   chain: Option<Vec<String>>,
 
+  /// record valid fields for clash
+  valid: Option<Vec<String>>,
+
   /// profile list
   items: Option<Vec<PrfItem>>,
 }
@@ -397,6 +400,11 @@ impl Profiles {
   /// just change the `chain`
   pub fn put_chain(&mut self, chain: Option<Vec<String>>) {
     self.chain = chain;
+  }
+
+  /// just change the `field`
+  pub fn put_valid(&mut self, valid: Option<Vec<String>>) {
+    self.valid = valid;
   }
 
   /// find the item by the uid
@@ -599,9 +607,12 @@ impl Profiles {
       None => vec![],
     };
 
+    let valid = self.valid.clone().unwrap_or(vec![]);
+
     Ok(PrfEnhanced {
       current,
       chain,
+      valid,
       callback,
     })
   }
@@ -612,6 +623,8 @@ pub struct PrfEnhanced {
   pub current: Mapping,
 
   pub chain: Vec<PrfData>,
+
+  pub valid: Vec<String>,
 
   pub callback: String,
 }
