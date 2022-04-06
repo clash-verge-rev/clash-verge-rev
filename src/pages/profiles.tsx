@@ -165,7 +165,7 @@ const ProfilePage = () => {
         ))}
       </Grid>
 
-      {enhanceItems.length && (
+      {enhanceItems.length > 0 && (
         <EnhancedMode items={enhanceItems} chain={profiles.chain || []} />
       )}
 
