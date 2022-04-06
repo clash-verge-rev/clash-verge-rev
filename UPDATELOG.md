@@ -1,3 +1,16 @@
+## v0.0.28
+
+### Features
+
+- enable to use clash config fields (UI)
+
+### Bug Fixes
+
+- remove the character
+- fix some icon color
+
+---
+
 ## v0.0.27
 
 ### Features
