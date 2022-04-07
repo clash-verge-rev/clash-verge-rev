@@ -5,6 +5,9 @@ import delayManager from "../../services/delay";
 const regex1 = /delay([=<>])(\d+|timeout|error)/i;
 const regex2 = /type=(.*)/i;
 
+// default | alpha | delay
+export type ProxySortType = 0 | 1 | 2;
+
 /**
  * filter the proxy
  * according to the regular conditions
@@ -15,6 +18,7 @@ export default function useFilterProxy(
   filterText: string
 ) {
   return useMemo(() => {
+    if (!proxies) return [];
     if (!filterText) return proxies;
 
     const res1 = regex1.exec(filterText);

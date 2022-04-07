@@ -42,9 +42,8 @@ const ProxyGroup = ({ group }: Props) => {
   const [showFilter, setShowFilter] = useState(false);
   const [filterText, setFilterText] = useState("");
 
-  const proxies = group.all ?? [];
   const virtuosoRef = useRef<any>();
-  const filterProxies = useFilterProxy(proxies, group.name, filterText);
+  const filterProxies = useFilterProxy(group.all, group.name, filterText);
 
   const { data: profiles } = useSWR("getProfiles", getProfiles);
 

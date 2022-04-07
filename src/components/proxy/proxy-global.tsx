@@ -1,22 +1,14 @@
 import useSWR, { useSWRConfig } from "swr";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Virtuoso } from "react-virtuoso";
-import { Box, IconButton, TextField } from "@mui/material";
-import {
-  MyLocationRounded,
-  NetworkCheckRounded,
-  FilterAltRounded,
-  FilterAltOffRounded,
-  VisibilityRounded,
-  VisibilityOffRounded,
-} from "@mui/icons-material";
 import { ApiType } from "../../services/types";
 import { updateProxy } from "../../services/api";
 import { getProfiles, patchProfile } from "../../services/cmds";
+import useFilterProxy, { ProxySortType } from "./use-filter-proxy";
 import delayManager from "../../services/delay";
-import useFilterProxy from "./use-filter-proxy";
 import ProxyItem from "./proxy-item";
+import ProxyHead from "./proxy-head";
 
 interface Props {
   groupName: string;
@@ -30,12 +22,37 @@ const ProxyGlobal = (props: Props) => {
 
   const { mutate } = useSWRConfig();
   const [now, setNow] = useState(curProxy || "DIRECT");
+
   const [showType, setShowType] = useState(true);
-  const [showFilter, setShowFilter] = useState(false);
+  const [sortType, setSortType] = useState<ProxySortType>(0);
+
+  const [urlText, setUrlText] = useState("");
   const [filterText, setFilterText] = useState("");
 
   const virtuosoRef = useRef<any>();
   const filterProxies = useFilterProxy(proxies, groupName, filterText);
+
+  const sortedProxies = useMemo(() => {
+    if (sortType === 0) return filterProxies;
+
+    const list = filterProxies.slice();
+
+    if (sortType === 1) {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      list.sort((a, b) => {
+        const ad = delayManager.getDelay(a.name, groupName);
+        const bd = delayManager.getDelay(b.name, groupName);
+
+        if (ad === -1) return 1;
+        if (bd === -1) return -1;
+
+        return ad - bd;
+      });
+    }
+
+    return list;
+  }, [filterProxies, sortType, groupName]);
 
   const { data: profiles } = useSWR("getProfiles", getProfiles);
 
@@ -61,7 +78,7 @@ const ProxyGlobal = (props: Props) => {
   });
 
   const onLocation = (smooth = true) => {
-    const index = filterProxies.findIndex((p) => p.name === now);
+    const index = sortedProxies.findIndex((p) => p.name === now);
 
     if (index >= 0) {
       virtuosoRef.current?.scrollToIndex?.({
@@ -73,7 +90,7 @@ const ProxyGlobal = (props: Props) => {
   };
 
   const onCheckAll = useLockFn(async () => {
-    const names = filterProxies.map((p) => p.name);
+    const names = sortedProxies.map((p) => p.name);
 
     await delayManager.checkListDelay(
       { names, groupName, skipNum: 8, maxTimeout: 600 },
@@ -84,10 +101,6 @@ const ProxyGlobal = (props: Props) => {
   });
 
   useEffect(() => onLocation(false), [groupName]);
-
-  useEffect(() => {
-    if (!showFilter) setFilterText("");
-  }, [showFilter]);
 
   useEffect(() => {
     if (groupName === "DIRECT") setNow("DIRECT");
@@ -112,74 +125,29 @@ const ProxyGlobal = (props: Props) => {
 
   return (
     <>
-      <Box
-        sx={{
-          px: 3,
-          my: 0.5,
-          display: "flex",
-          alignItems: "center",
-          button: { mr: 0.5 },
-        }}
-      >
-        <IconButton
-          size="small"
-          title="location"
-          color="inherit"
-          onClick={() => onLocation(true)}
-        >
-          <MyLocationRounded />
-        </IconButton>
-
-        <IconButton
-          size="small"
-          title="delay check"
-          color="inherit"
-          onClick={onCheckAll}
-        >
-          <NetworkCheckRounded />
-        </IconButton>
-
-        <IconButton
-          size="small"
-          title="proxy detail"
-          color="inherit"
-          onClick={() => setShowType(!showType)}
-        >
-          {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}
-        </IconButton>
-
-        <IconButton
-          size="small"
-          title="filter"
-          color="inherit"
-          onClick={() => setShowFilter(!showFilter)}
-        >
-          {showFilter ? <FilterAltRounded /> : <FilterAltOffRounded />}
-        </IconButton>
-
-        {showFilter && (
-          <TextField
-            autoFocus
-            hiddenLabel
-            value={filterText}
-            size="small"
-            variant="outlined"
-            placeholder="Filter conditions"
-            onChange={(e) => setFilterText(e.target.value)}
-            sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
-          />
-        )}
-      </Box>
+      <ProxyHead
+        sx={{ px: 3, my: 0.5, button: { mr: 0.5 } }}
+        showType={showType}
+        sortType={sortType}
+        urlText={urlText}
+        filterText={filterText}
+        onLocation={onLocation}
+        onCheckDelay={onCheckAll}
+        onShowType={setShowType}
+        onSortType={setSortType}
+        onUrlText={setUrlText}
+        onFilterText={setFilterText}
+      />
 
       <Virtuoso
         ref={virtuosoRef}
         style={{ height: "calc(100% - 40px)" }}
-        totalCount={filterProxies.length}
+        totalCount={sortedProxies.length}
         itemContent={(index) => (
           <ProxyItem
             groupName={groupName}
-            proxy={filterProxies[index]}
-            selected={filterProxies[index].name === now}
+            proxy={sortedProxies[index]}
+            selected={sortedProxies[index].name === now}
             showType={showType}
             onClick={onChangeProxy}
             sx={{ py: 0, px: 2 }}
