@@ -6,28 +6,22 @@ import {
   Box,
   Collapse,
   Divider,
-  IconButton,
   List,
   ListItem,
   ListItemText,
-  TextField,
 } from "@mui/material";
 import {
   SendRounded,
   ExpandLessRounded,
   ExpandMoreRounded,
-  MyLocationRounded,
-  NetworkCheckRounded,
-  FilterAltRounded,
-  FilterAltOffRounded,
-  VisibilityRounded,
-  VisibilityOffRounded,
 } from "@mui/icons-material";
 import { ApiType } from "../../services/types";
 import { updateProxy } from "../../services/api";
 import { getProfiles, patchProfile } from "../../services/cmds";
-import delayManager from "../../services/delay";
+import useSortProxy, { ProxySortType } from "./use-sort-proxy";
 import useFilterProxy from "./use-filter-proxy";
+import delayManager from "../../services/delay";
+import ProxyHead from "./proxy-head";
 import ProxyItem from "./proxy-item";
 
 interface Props {
@@ -38,12 +32,14 @@ const ProxyGroup = ({ group }: Props) => {
   const { mutate } = useSWRConfig();
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(group.now);
+
   const [showType, setShowType] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
+  const [sortType, setSortType] = useState<ProxySortType>(0);
   const [filterText, setFilterText] = useState("");
 
   const virtuosoRef = useRef<any>();
   const filterProxies = useFilterProxy(group.all, group.name, filterText);
+  const sortedProxies = useSortProxy(filterProxies, group.name, sortType);
 
   const { data: profiles } = useSWR("getProfiles", getProfiles);
 
@@ -81,7 +77,7 @@ const ProxyGroup = ({ group }: Props) => {
   });
 
   const onLocation = (smooth = true) => {
-    const index = filterProxies.findIndex((p) => p.name === now);
+    const index = sortedProxies.findIndex((p) => p.name === now);
 
     if (index >= 0) {
       virtuosoRef.current?.scrollToIndex?.({
@@ -93,7 +89,7 @@ const ProxyGroup = ({ group }: Props) => {
   };
 
   const onCheckAll = useLockFn(async () => {
-    const names = filterProxies.map((p) => p.name);
+    const names = sortedProxies.map((p) => p.name);
     const groupName = group.name;
 
     await delayManager.checkListDelay(
@@ -103,10 +99,6 @@ const ProxyGroup = ({ group }: Props) => {
 
     mutate("getProxies");
   });
-
-  useEffect(() => {
-    if (!showFilter) setFilterText("");
-  }, [showFilter]);
 
   // auto scroll to current index
   useEffect(() => {
@@ -135,66 +127,20 @@ const ProxyGroup = ({ group }: Props) => {
       </ListItem>
 
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <Box
-          sx={{
-            pl: 4,
-            pr: 3,
-            my: 0.5,
-            display: "flex",
-            alignItems: "center",
-            button: { mr: 0.5 },
-          }}
-        >
-          <IconButton
-            size="small"
-            title="location"
-            color="inherit"
-            onClick={() => onLocation(true)}
-          >
-            <MyLocationRounded />
-          </IconButton>
+        <ProxyHead
+          sx={{ pl: 4, pr: 3, my: 0.5, button: { mr: 0.5 } }}
+          showType={showType}
+          sortType={sortType}
+          groupName={group.name}
+          filterText={filterText}
+          onLocation={onLocation}
+          onCheckDelay={onCheckAll}
+          onShowType={setShowType}
+          onSortType={setSortType}
+          onFilterText={setFilterText}
+        />
 
-          <IconButton
-            size="small"
-            title="delay check"
-            color="inherit"
-            onClick={onCheckAll}
-          >
-            <NetworkCheckRounded />
-          </IconButton>
-
-          <IconButton
-            size="small"
-            title="proxy detail"
-            color="inherit"
-            onClick={() => setShowType(!showType)}
-          >
-            {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}
-          </IconButton>
-
-          <IconButton
-            size="small"
-            title="filter"
-            color="inherit"
-            onClick={() => setShowFilter(!showFilter)}
-          >
-            {showFilter ? <FilterAltRounded /> : <FilterAltOffRounded />}
-          </IconButton>
-
-          {showFilter && (
-            <TextField
-              hiddenLabel
-              value={filterText}
-              size="small"
-              variant="outlined"
-              placeholder="Filter conditions"
-              onChange={(e) => setFilterText(e.target.value)}
-              sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
-            />
-          )}
-        </Box>
-
-        {!filterProxies.length && (
+        {!sortedProxies.length && (
           <Box
             sx={{
               py: 3,
@@ -207,16 +153,16 @@ const ProxyGroup = ({ group }: Props) => {
           </Box>
         )}
 
-        {filterProxies.length >= 10 ? (
+        {sortedProxies.length >= 10 ? (
           <Virtuoso
             ref={virtuosoRef}
             style={{ height: "320px", marginBottom: "4px" }}
-            totalCount={filterProxies.length}
+            totalCount={sortedProxies.length}
             itemContent={(index) => (
               <ProxyItem
                 groupName={group.name}
-                proxy={filterProxies[index]}
-                selected={filterProxies[index].name === now}
+                proxy={sortedProxies[index]}
+                selected={sortedProxies[index].name === now}
                 showType={showType}
                 sx={{ py: 0, pl: 4 }}
                 onClick={onChangeProxy}
@@ -229,7 +175,7 @@ const ProxyGroup = ({ group }: Props) => {
             disablePadding
             sx={{ maxHeight: "320px", overflow: "auto", mb: "4px" }}
           >
-            {filterProxies.map((proxy) => (
+            {sortedProxies.map((proxy) => (
               <ProxyItem
                 key={proxy.name}
                 groupName={group.name}

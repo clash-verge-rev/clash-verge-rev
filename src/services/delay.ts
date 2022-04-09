@@ -4,6 +4,15 @@ const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
 class DelayManager {
   private cache = new Map<string, [number, number]>();
+  private urlMap = new Map<string, string>();
+
+  setUrl(group: string, url: string) {
+    this.urlMap.set(group, url);
+  }
+
+  getUrl(group: string) {
+    return this.urlMap.get(group);
+  }
 
   setDelay(name: string, group: string, delay: number) {
     this.cache.set(hashKey(name, group), [Date.now(), delay]);
@@ -23,7 +32,8 @@ class DelayManager {
     let delay = -1;
 
     try {
-      const result = await getProxyDelay(name);
+      const url = this.getUrl(group);
+      const result = await getProxyDelay(name, url);
       delay = result.delay;
     } catch {
       delay = 1e6; // error

@@ -5,9 +5,6 @@ import delayManager from "../../services/delay";
 const regex1 = /delay([=<>])(\d+|timeout|error)/i;
 const regex2 = /type=(.*)/i;
 
-// default | alpha | delay
-export type ProxySortType = 0 | 1 | 2;
-
 /**
  * filter the proxy
  * according to the regular conditions
