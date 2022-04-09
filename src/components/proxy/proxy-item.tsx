@@ -25,8 +25,9 @@ interface Props {
 }
 
 const Widget = styled(Box)(() => ({
-  padding: "4px 6px",
+  padding: "3px 6px",
   fontSize: 14,
+  borderRadius: "4px",
 }));
 
 const TypeBox = styled(Box)(({ theme }) => ({
@@ -51,10 +52,7 @@ const ProxyItem = (props: Props) => {
     }
   }, [proxy]);
 
-  const onDelay = useLockFn(async (e: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const onDelay = useLockFn(async () => {
     return delayManager
       .checkDelay(proxy.name, groupName)
       .then((result) => setDelay(result))
@@ -107,13 +105,27 @@ const ProxyItem = (props: Props) => {
         <ListItemIcon
           sx={{ justifyContent: "flex-end", color: "primary.main" }}
         >
-          <Widget className="the-check" onClick={onDelay}>
+          <Widget
+            className="the-check"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelay();
+            }}
+            sx={(theme) => ({
+              ":hover": { bgcolor: alpha(theme.palette.primary.main, 0.15) },
+            })}
+          >
             Check
           </Widget>
 
           <Widget
             className="the-delay"
-            onClick={onDelay}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelay();
+            }}
             color={
               delay > 500
                 ? "error.main"
@@ -121,6 +133,9 @@ const ProxyItem = (props: Props) => {
                 ? "success.main"
                 : "text.secondary"
             }
+            sx={(theme) => ({
+              ":hover": { bgcolor: alpha(theme.palette.primary.main, 0.15) },
+            })}
           >
             {delay > 1e5 ? "Error" : delay > 3000 ? "Timeout" : `${delay}ms`}
           </Widget>
