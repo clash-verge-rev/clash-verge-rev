@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useLockFn } from "ahooks";
 import { CheckCircleOutlineRounded } from "@mui/icons-material";
 import {
   alpha,
@@ -50,20 +51,15 @@ const ProxyItem = (props: Props) => {
     }
   }, [proxy]);
 
-  const delayRef = useRef(false);
-  const onDelay = (e: any) => {
+  const onDelay = useLockFn(async (e: any) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (delayRef.current) return;
-    delayRef.current = true;
-
-    delayManager
+    return delayManager
       .checkDelay(proxy.name, groupName)
       .then((result) => setDelay(result))
-      .catch(() => setDelay(1e6))
-      .finally(() => (delayRef.current = false));
-  };
+      .catch(() => setDelay(1e6));
+  });
 
   return (
     <ListItem sx={sx}>

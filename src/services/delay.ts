@@ -48,32 +48,36 @@ class DelayManager {
       names: readonly string[];
       groupName: string;
       skipNum: number;
-      maxTimeout: number;
     },
     callback: Function
   ) {
-    let names = [...options.names];
-    const { groupName, skipNum, maxTimeout } = options;
+    const { groupName, skipNum } = options;
 
-    while (names.length) {
-      const list = names.slice(0, skipNum);
-      names = names.slice(skipNum);
+    const names = [...options.names];
+    const total = names.length;
 
-      let called = false;
-      setTimeout(() => {
-        if (!called) {
-          called = true;
-          callback();
-        }
-      }, maxTimeout);
+    let count = 0;
+    let current = 0;
 
-      await Promise.all(list.map((n) => this.checkDelay(n, groupName)));
+    return new Promise((resolve) => {
+      const help = async (): Promise<void> => {
+        if (current >= skipNum) return;
 
-      if (!called) {
-        called = true;
-        callback();
-      }
-    }
+        const task = names.shift();
+        if (!task) return;
+
+        current += 1;
+        await this.checkDelay(task, groupName);
+        current -= 1;
+
+        if (count++ % skipNum === 0 || count === total) callback();
+        if (count === total) resolve(null);
+
+        return help();
+      };
+
+      for (let i = 0; i < skipNum; ++i) help();
+    });
   }
 }
 
