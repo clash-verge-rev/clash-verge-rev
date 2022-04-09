@@ -1,14 +1,15 @@
 import useSWR, { useSWRConfig } from "swr";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Virtuoso } from "react-virtuoso";
 import { ApiType } from "../../services/types";
 import { updateProxy } from "../../services/api";
 import { getProfiles, patchProfile } from "../../services/cmds";
-import useFilterProxy, { ProxySortType } from "./use-filter-proxy";
+import useSortProxy, { ProxySortType } from "./use-sort-proxy";
+import useFilterProxy from "./use-filter-proxy";
 import delayManager from "../../services/delay";
-import ProxyItem from "./proxy-item";
 import ProxyHead from "./proxy-head";
+import ProxyItem from "./proxy-item";
 
 interface Props {
   groupName: string;
@@ -25,34 +26,11 @@ const ProxyGlobal = (props: Props) => {
 
   const [showType, setShowType] = useState(true);
   const [sortType, setSortType] = useState<ProxySortType>(0);
-
-  const [urlText, setUrlText] = useState("");
   const [filterText, setFilterText] = useState("");
 
   const virtuosoRef = useRef<any>();
   const filterProxies = useFilterProxy(proxies, groupName, filterText);
-
-  const sortedProxies = useMemo(() => {
-    if (sortType === 0) return filterProxies;
-
-    const list = filterProxies.slice();
-
-    if (sortType === 1) {
-      list.sort((a, b) => a.name.localeCompare(b.name));
-    } else {
-      list.sort((a, b) => {
-        const ad = delayManager.getDelay(a.name, groupName);
-        const bd = delayManager.getDelay(b.name, groupName);
-
-        if (ad === -1) return 1;
-        if (bd === -1) return -1;
-
-        return ad - bd;
-      });
-    }
-
-    return list;
-  }, [filterProxies, sortType, groupName]);
+  const sortedProxies = useSortProxy(filterProxies, groupName, sortType);
 
   const { data: profiles } = useSWR("getProfiles", getProfiles);
 
@@ -129,13 +107,12 @@ const ProxyGlobal = (props: Props) => {
         sx={{ px: 3, my: 0.5, button: { mr: 0.5 } }}
         showType={showType}
         sortType={sortType}
-        urlText={urlText}
+        groupName={groupName}
         filterText={filterText}
         onLocation={onLocation}
         onCheckDelay={onCheckAll}
         onShowType={setShowType}
         onSortType={setSortType}
-        onUrlText={setUrlText}
         onFilterText={setFilterText}
       />
 

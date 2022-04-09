@@ -13,26 +13,28 @@ import {
   SortByAlphaRounded,
   SortRounded,
 } from "@mui/icons-material";
-import type { ProxySortType } from "./use-filter-proxy";
+import delayManager from "../../services/delay";
+import type { ProxySortType } from "./use-sort-proxy";
 
 interface Props {
   sx?: SxProps;
+  groupName: string;
   showType: boolean;
   sortType: ProxySortType;
-  urlText: string;
   filterText: string;
   onLocation: () => void;
   onCheckDelay: () => void;
   onShowType: (val: boolean) => void;
   onSortType: (val: ProxySortType) => void;
-  onUrlText: (val: string) => void;
   onFilterText: (val: string) => void;
 }
 
 const ProxyHead = (props: Props) => {
-  const { sx = {}, showType, sortType, urlText, filterText } = props;
+  const { sx = {}, groupName, showType, sortType, filterText } = props;
 
   const [textState, setTextState] = useState<"url" | "filter" | null>(null);
+
+  const [testUrl, setTestUrl] = useState(delayManager.getUrl(groupName) || "");
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", ...sx }}>
@@ -49,7 +51,13 @@ const ProxyHead = (props: Props) => {
         size="small"
         color="inherit"
         title="delay check"
-        onClick={props.onCheckDelay}
+        onClick={() => {
+          // Remind the user that it is custom test url
+          if (testUrl?.trim() && textState !== "filter") {
+            setTextState("url");
+          }
+          props.onCheckDelay();
+        }}
       >
         <NetworkCheckRounded />
       </IconButton>
@@ -57,12 +65,12 @@ const ProxyHead = (props: Props) => {
       <IconButton
         size="small"
         color="inherit"
-        title={["sort by default", "sort by name", "sort by delay"][sortType]}
+        title={["sort by default", "sort by delay", "sort by name"][sortType]}
         onClick={() => props.onSortType(((sortType + 1) % 3) as ProxySortType)}
       >
         {sortType === 0 && <SortRounded />}
-        {sortType === 1 && <SortByAlphaRounded />}
-        {sortType === 2 && <AccessTimeRounded />}
+        {sortType === 1 && <AccessTimeRounded />}
+        {sortType === 2 && <SortByAlphaRounded />}
       </IconButton>
 
       <IconButton
@@ -119,11 +127,16 @@ const ProxyHead = (props: Props) => {
         <TextField
           autoFocus
           hiddenLabel
-          value={urlText}
+          autoSave="off"
+          autoComplete="off"
+          value={testUrl}
           size="small"
           variant="outlined"
           placeholder="Test url"
-          onChange={(e) => props.onUrlText(e.target.value)}
+          onChange={(e) => {
+            setTestUrl(e.target.value);
+            delayManager.setUrl(groupName, e.target.value);
+          }}
           sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
         />
       )}
