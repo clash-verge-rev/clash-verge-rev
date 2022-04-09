@@ -70,12 +70,9 @@ const ProxyGlobal = (props: Props) => {
   const onCheckAll = useLockFn(async () => {
     const names = sortedProxies.map((p) => p.name);
 
-    await delayManager.checkListDelay(
-      { names, groupName, skipNum: 8, maxTimeout: 600 },
-      () => mutate("getProxies")
+    await delayManager.checkListDelay({ names, groupName, skipNum: 8 }, () =>
+      mutate("getProxies")
     );
-
-    mutate("getProxies");
   });
 
   useEffect(() => onLocation(false), [groupName]);
