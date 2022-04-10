@@ -95,8 +95,6 @@ const ProxyGroup = ({ group }: Props) => {
     await delayManager.checkListDelay({ names, groupName, skipNum: 8 }, () =>
       mutate("getProxies")
     );
-
-    console.log("finish");
   });
 
   // auto scroll to current index
