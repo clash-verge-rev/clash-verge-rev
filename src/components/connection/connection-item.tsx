@@ -4,6 +4,7 @@ import { styled, ListItem, IconButton, ListItemText } from "@mui/material";
 import { CloseRounded } from "@mui/icons-material";
 import { ApiType } from "../../services/types";
 import { deleteConnection } from "../../services/api";
+import parseTraffic from "../../utils/parse-traffic";
 
 const Tag = styled("span")(({ theme }) => ({
   display: "inline-block",
@@ -23,32 +24,39 @@ interface Props {
 const ConnectionItem = (props: Props) => {
   const { value } = props;
 
-  const onDelete = useLockFn(async () => deleteConnection(value.id));
+  const { id, metadata, chains, start, curUpload, curDownload } = value;
+
+  const onDelete = useLockFn(async () => deleteConnection(id));
+  const showTraffic = curUpload! > 1024 || curDownload! > 1024;
 
   return (
     <ListItem
       dense
       secondaryAction={
-        <IconButton edge="end" onClick={onDelete}>
+        <IconButton edge="end" color="inherit" onClick={onDelete}>
           <CloseRounded />
         </IconButton>
       }
     >
       <ListItemText
-        primary={value.metadata.host || value.metadata.destinationIP}
+        primary={metadata.host || metadata.destinationIP}
         secondary={
           <>
             <Tag sx={{ textTransform: "uppercase", color: "success" }}>
-              {value.metadata.network}
+              {metadata.network}
             </Tag>
 
-            <Tag>{value.metadata.type}</Tag>
+            <Tag>{metadata.type}</Tag>
 
-            {value.chains.length > 0 && (
-              <Tag>{value.chains[value.chains.length - 1]}</Tag>
+            {chains.length > 0 && <Tag>{chains[value.chains.length - 1]}</Tag>}
+
+            <Tag>{dayjs(start).fromNow()}</Tag>
+
+            {showTraffic && (
+              <Tag>
+                {parseTraffic(curUpload!)} / {parseTraffic(curDownload!)}
+              </Tag>
             )}
-
-            <Tag>{dayjs(value.start).fromNow()}</Tag>
           </>
         }
       />
