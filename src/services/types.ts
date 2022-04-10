@@ -65,6 +65,8 @@ export namespace ApiType {
     chains: string[];
     rule: string;
     rulePayload: string;
+    curUpload?: number; // calculate
+    curDownload?: number; // calculate
   }
 
   export interface Connections {

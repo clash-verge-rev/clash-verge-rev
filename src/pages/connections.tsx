@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Button, Paper } from "@mui/material";
+import { Box, Button, Paper, TextField } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import { ApiType } from "../services/types";
@@ -8,11 +8,19 @@ import { closeAllConnections, getInfomation } from "../services/api";
 import BasePage from "../components/base/base-page";
 import ConnectionItem from "../components/connection/connection-item";
 
-const ConnectionsPage = () => {
-  const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
+const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
+const ConnectionsPage = () => {
   const { t } = useTranslation();
+
+  const [filterText, setFilterText] = useState("");
   const [connData, setConnData] = useState<ApiType.Connections>(initConn);
+
+  const filterConn = useMemo(() => {
+    return connData.connections.filter((conn) =>
+      (conn.metadata.host || conn.metadata.destinationIP)?.includes(filterText)
+    );
+  }, [connData, filterText]);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -23,32 +31,35 @@ const ConnectionsPage = () => {
 
       ws.addEventListener("message", (event) => {
         const data = JSON.parse(event.data) as ApiType.Connections;
+
+        // 与前一次connections的展示顺序尽量保持一致
         setConnData((old) => {
           const oldConn = old.connections;
-          const oldList = oldConn.map((each) => each.id);
           const maxLen = data.connections.length;
 
           const connections: typeof oldConn = [];
 
-          // 与前一次连接的顺序尽量保持一致
-          data.connections
-            .filter((each) => {
-              const index = oldList.indexOf(each.id);
+          const rest = data.connections.filter((each) => {
+            const index = oldConn.findIndex((o) => o.id === each.id);
 
-              if (index >= 0 && index < maxLen) {
-                connections[index] = each;
-                return false;
-              }
-              return true;
-            })
-            .forEach((each) => {
-              for (let i = 0; i < maxLen; ++i) {
-                if (!connections[i]) {
-                  connections[i] = each;
-                  return;
-                }
-              }
-            });
+            if (index >= 0 && index < maxLen) {
+              const old = oldConn[index];
+              each.curUpload = each.upload - old.upload;
+              each.curDownload = each.download - old.download;
+
+              connections[index] = each;
+              return false;
+            }
+            return true;
+          });
+
+          for (let i = 0; i < maxLen; ++i) {
+            if (!connections[i] && rest.length > 0) {
+              connections[i] = rest.shift()!;
+              connections[i].curUpload = 0;
+              connections[i].curDownload = 0;
+            }
+          }
 
           return { ...data, connections };
         });
@@ -76,11 +87,48 @@ const ConnectionsPage = () => {
       }
     >
       <Paper sx={{ boxShadow: 2, height: "100%" }}>
-        <Virtuoso
-          initialTopMostItemIndex={999}
-          data={connData.connections}
-          itemContent={(index, item) => <ConnectionItem value={item} />}
-        />
+        <Box
+          sx={{
+            pt: 1,
+            mb: 0.5,
+            mx: "12px",
+            height: "36px",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          {/* <Select
+            size="small"
+            autoComplete="off"
+            value={logState}
+            onChange={(e) => setLogState(e.target.value)}
+            sx={{ width: 120, mr: 1, '[role="button"]': { py: 0.65 } }}
+          >
+            <MenuItem value="all">ALL</MenuItem>
+            <MenuItem value="info">INFO</MenuItem>
+            <MenuItem value="warn">WARN</MenuItem>
+          </Select> */}
+
+          <TextField
+            hiddenLabel
+            fullWidth
+            size="small"
+            autoComplete="off"
+            variant="outlined"
+            placeholder="Filter conditions"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            sx={{ input: { py: 0.65, px: 1.25 } }}
+          />
+        </Box>
+
+        <Box height="calc(100% - 50px)">
+          <Virtuoso
+            initialTopMostItemIndex={999}
+            data={filterConn}
+            itemContent={(index, item) => <ConnectionItem value={item} />}
+          />
+        </Box>
       </Paper>
     </BasePage>
   );
