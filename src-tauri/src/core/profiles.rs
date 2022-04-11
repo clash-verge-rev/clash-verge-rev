@@ -196,9 +196,8 @@ impl PrfItem {
     if !with_proxy {
       builder = builder.no_proxy();
     }
-    if let Some(user_agent) = user_agent {
-      builder = builder.user_agent(user_agent);
-    }
+
+    builder = builder.user_agent(user_agent.unwrap_or("clash-verge/v0.1.0".into()));
 
     let resp = builder.build()?.get(url).send().await?;
     let header = resp.headers();
