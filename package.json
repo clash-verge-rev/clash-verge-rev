@@ -10,9 +10,9 @@
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
     "check": "node scripts/check.mjs",
-    "green": "node scripts/green.mjs",
-    "publish": "node scripts/publish.mjs",
     "updater": "node scripts/updater.mjs",
+    "publish": "node scripts/publish.mjs",
+    "portable": "node scripts/portable.mjs",
     "prepare": "husky install"
   },
   "dependencies": {
