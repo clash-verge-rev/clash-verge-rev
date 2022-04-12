@@ -6,7 +6,7 @@ import { getOctokit, context } from "@actions/github";
 
 /// Script for ci
 /// 打包绿色版/便携版 (only Windows)
-async function resolveGreen() {
+async function resolvePortable() {
   if (process.platform !== "win32") return;
 
   const releaseDir = "./src-tauri/target/release";
@@ -25,10 +25,10 @@ async function resolveGreen() {
   const packageJson = require("../package.json");
   const { version } = packageJson;
 
-  const zipFile = `Clash.Verge_${version}_x64_green.zip`;
+  const zipFile = `Clash.Verge_${version}_x64_portable.zip`;
   zip.writeZip(zipFile);
 
-  console.log("[INFO]: create green zip successfully");
+  console.log("[INFO]: create portable zip successfully");
 
   // push release assets
   if (process.env.GITHUB_TOKEN === undefined) {
@@ -53,4 +53,4 @@ async function resolveGreen() {
   });
 }
 
-resolveGreen().catch(console.error);
+resolvePortable().catch(console.error);

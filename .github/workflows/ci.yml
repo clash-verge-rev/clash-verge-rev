@@ -76,7 +76,7 @@ jobs:
       - name: Green zip bundle
         if: matrix.os == 'windows-latest'
         run: |
-          yarn run green
+          yarn run portable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
