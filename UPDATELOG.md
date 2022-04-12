@@ -1,3 +1,15 @@
+## v0.0.29
+
+### Features
+
+- sort proxy node
+- custom proxy test url
+- logs page filter
+- connections page filter
+- default user agent for subscription
+- system tray add tun mode toggle
+- enable to change the config dir (Windows only)
+
 ## v0.0.28
 
 ### Features
