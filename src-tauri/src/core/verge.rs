@@ -149,7 +149,7 @@ impl Verge {
     if let Some(sysproxy) = self.old_sysproxy.take() {
       match sysproxy.set_sys() {
         Ok(_) => self.cur_sysproxy = None,
-        Err(_) => log::error!("failed to reset proxy for"),
+        Err(_) => log::error!("failed to reset proxy"),
       }
     }
   }
@@ -242,7 +242,6 @@ impl Verge {
         if sysproxy.set_sys().is_err() {
           self.cur_sysproxy = Some(sysproxy);
 
-          log::error!("failed to set system proxy");
           bail!("failed to set system proxy");
         }
         self.cur_sysproxy = Some(sysproxy);
@@ -261,7 +260,6 @@ impl Verge {
           if sysproxy.set_sys().is_err() {
             self.cur_sysproxy = Some(sysproxy);
 
-            log::error!("failed to set system proxy");
             bail!("failed to set system proxy");
           }
         }
