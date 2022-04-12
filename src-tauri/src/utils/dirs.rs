@@ -1,5 +1,6 @@
 use std::env::temp_dir;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+use tauri::utils::platform::current_exe;
 use tauri::{
   api::path::{home_dir, resource_dir},
   Env, PackageInfo,
@@ -15,12 +16,40 @@ static VERGE_CONFIG: &str = "verge.yaml";
 static PROFILE_YAML: &str = "profiles.yaml";
 static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
 
+/// portable flag
+#[allow(unused)]
+static mut PORTABLE_FLAG: bool = false;
+
+/// initialize portable flag
+pub unsafe fn init_portable_flag() {
+  #[cfg(target_os = "windows")]
+  {
+    let exe = current_exe().unwrap();
+    let dir = exe.parent().unwrap();
+    let dir = PathBuf::from(dir).join(".config/PORTABLE");
+
+    if dir.exists() {
+      PORTABLE_FLAG = true;
+    }
+  }
+}
+
 /// get the verge app home dir
 pub fn app_home_dir() -> PathBuf {
-  home_dir()
-    .unwrap()
-    .join(Path::new(".config"))
-    .join(Path::new(APP_DIR))
+  #[cfg(target_os = "windows")]
+  unsafe {
+    if !PORTABLE_FLAG {
+      home_dir().unwrap().join(".config").join(APP_DIR)
+    } else {
+      let app_exe = current_exe().unwrap();
+      let app_exe = dunce::canonicalize(app_exe).unwrap();
+      let app_dir = app_exe.parent().unwrap();
+      PathBuf::from(app_dir).join(".config").join(APP_DIR)
+    }
+  }
+
+  #[cfg(not(target_os = "windows"))]
+  home_dir().unwrap().join(".config").join(APP_DIR)
 }
 
 /// get the resources dir

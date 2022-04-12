@@ -10,7 +10,7 @@ mod utils;
 
 use crate::{
   core::VergeConfig,
-  utils::{resolve, server},
+  utils::{dirs, resolve, server},
 };
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
@@ -20,6 +20,11 @@ fn main() -> std::io::Result<()> {
   if server::check_singleton().is_err() {
     println!("app exists");
     return Ok(());
+  }
+
+  #[cfg(target_os = "windows")]
+  unsafe {
+    dirs::init_portable_flag();
   }
 
   let tray_menu = SystemTrayMenu::new()
