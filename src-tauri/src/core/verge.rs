@@ -8,6 +8,7 @@ use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::{async_runtime::Mutex, utils::platform::current_exe};
+use tauri::{AppHandle, Manager};
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -290,6 +291,35 @@ impl Verge {
     }
 
     self.config.save_file()
+  }
+
+  /// update the system tray state
+  pub fn update_systray(&self, app_handle: &AppHandle) -> Result<()> {
+    // system proxy
+    let system_proxy = self.config.enable_system_proxy.as_ref();
+    system_proxy.map(|system_proxy| {
+      app_handle
+        .tray_handle()
+        .get_item("system_proxy")
+        .set_selected(*system_proxy)
+        .unwrap();
+    });
+
+    // tun mode
+    let tun_mode = self.config.enable_tun_mode.as_ref();
+    tun_mode.map(|tun_mode| {
+      app_handle
+        .tray_handle()
+        .get_item("tun_mode")
+        .set_selected(*tun_mode)
+        .unwrap();
+    });
+
+    // update verge config
+    let window = app_handle.get_window("main").unwrap();
+    window.emit("verge://refresh-verge-config", "yes").unwrap();
+
+    Ok(())
   }
 }
 
