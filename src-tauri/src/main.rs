@@ -30,6 +30,7 @@ fn main() -> std::io::Result<()> {
   let tray_menu = SystemTrayMenu::new()
     .add_item(CustomMenuItem::new("open_window", "Show"))
     .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
+    .add_item(CustomMenuItem::new("tun_mode", "Tun Mode"))
     .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
     .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(CustomMenuItem::new("quit", "Quit").accelerator("CmdOrControl+Q"));
@@ -60,17 +61,22 @@ fn main() -> std::io::Result<()> {
             enable_system_proxy: Some(new_value),
             ..VergeConfig::default()
           }) {
-            Ok(_) => {
-              app_handle
-                .tray_handle()
-                .get_item(id.as_str())
-                .set_selected(new_value)
-                .unwrap();
+            Ok(_) => verge.update_systray(app_handle).unwrap(),
+            Err(err) => log::error!("{err}"),
+          }
+        }
+        "tun_mode" => {
+          let verge_state = app_handle.state::<states::VergeState>();
+          let mut verge = verge_state.0.lock().unwrap();
 
-              // update verge config
-              let window = app_handle.get_window("main").unwrap();
-              window.emit("verge://refresh-verge-config", "yes").unwrap();
-            }
+          let old_value = verge.config.enable_tun_mode.clone().unwrap_or(false);
+          let new_value = !old_value;
+
+          match verge.patch_config(VergeConfig {
+            enable_tun_mode: Some(new_value),
+            ..VergeConfig::default()
+          }) {
+            Ok(_) => verge.update_systray(app_handle).unwrap(),
             Err(err) => log::error!("{err}"),
           }
         }

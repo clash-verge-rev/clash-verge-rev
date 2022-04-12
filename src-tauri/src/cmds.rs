@@ -337,15 +337,6 @@ pub fn patch_verge_config(
   let mut verge = verge_state.0.lock().unwrap();
   wrap_err!(verge.patch_config(payload))?;
 
-  // change system tray
-  if system_proxy.is_some() {
-    app_handle
-      .tray_handle()
-      .get_item("system_proxy")
-      .set_selected(system_proxy.unwrap())
-      .unwrap();
-  }
-
   // change tun mode
   if tun_mode.is_some() {
     #[cfg(target_os = "windows")]
@@ -361,6 +352,11 @@ pub fn patch_verge_config(
     let profiles = profiles_state.0.lock().unwrap();
 
     wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
+  }
+
+  // change system tray
+  if system_proxy.is_some() || tun_mode.is_some() {
+    verge.update_systray(&app_handle).unwrap();
   }
 
   Ok(())
