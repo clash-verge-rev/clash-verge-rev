@@ -170,6 +170,10 @@ fn main() -> std::io::Result<()> {
         resolve::resolve_reset(app_handle);
         api::process::kill_children();
       }
+      tauri::RunEvent::Exit => {
+        resolve::resolve_reset(app_handle);
+        api::process::kill_children();
+      }
       _ => {}
     });
 
