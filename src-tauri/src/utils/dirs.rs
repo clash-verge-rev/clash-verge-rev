@@ -1,6 +1,5 @@
 use std::env::temp_dir;
 use std::path::PathBuf;
-use tauri::utils::platform::current_exe;
 use tauri::{
   api::path::{home_dir, resource_dir},
   Env, PackageInfo,
@@ -21,9 +20,12 @@ static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
 static mut PORTABLE_FLAG: bool = false;
 
 /// initialize portable flag
+#[allow(unused)]
 pub unsafe fn init_portable_flag() {
   #[cfg(target_os = "windows")]
   {
+    use tauri::utils::platform::current_exe;
+
     let exe = current_exe().unwrap();
     let dir = exe.parent().unwrap();
     let dir = PathBuf::from(dir).join(".config/PORTABLE");
@@ -38,6 +40,8 @@ pub unsafe fn init_portable_flag() {
 pub fn app_home_dir() -> PathBuf {
   #[cfg(target_os = "windows")]
   unsafe {
+    use tauri::utils::platform::current_exe;
+
     if !PORTABLE_FLAG {
       home_dir().unwrap().join(".config").join(APP_DIR)
     } else {
