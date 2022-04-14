@@ -69,10 +69,10 @@ impl Clash {
   /// parse the clash's config.yaml
   /// get some information
   fn get_info(clash_config: &Mapping) -> ClashInfo {
-    let key_port_1 = Value::String("port".to_string());
-    let key_port_2 = Value::String("mixed-port".to_string());
-    let key_server = Value::String("external-controller".to_string());
-    let key_secret = Value::String("secret".to_string());
+    let key_port_1 = Value::from("port");
+    let key_port_2 = Value::from("mixed-port");
+    let key_server = Value::from("external-controller");
+    let key_secret = Value::from("secret");
 
     let port = match clash_config.get(&key_port_1) {
       Some(value) => match value {
@@ -136,31 +136,31 @@ impl Clash {
   }
 
   /// run clash sidecar
-  pub fn run_sidecar(&mut self) -> Result<()> {
+  pub fn run_sidecar(&mut self, profiles: &Profiles, delay: bool) -> Result<()> {
     let app_dir = dirs::app_home_dir();
     let app_dir = app_dir.as_os_str().to_str().unwrap();
 
-    match Command::new_sidecar("clash") {
-      Ok(cmd) => match cmd.args(["-d", app_dir]).spawn() {
-        Ok((mut rx, cmd_child)) => {
-          self.sidecar = Some(cmd_child);
+    let cmd = Command::new_sidecar("clash")?;
+    let (mut rx, cmd_child) = cmd.args(["-d", app_dir]).spawn()?;
 
-          // clash log
-          tauri::async_runtime::spawn(async move {
-            while let Some(event) = rx.recv().await {
-              match event {
-                CommandEvent::Stdout(line) => log::info!("[clash]: {}", line),
-                CommandEvent::Stderr(err) => log::error!("[clash]: {}", err),
-                _ => {}
-              }
-            }
-          });
-          Ok(())
+    self.sidecar = Some(cmd_child);
+
+    // clash log
+    tauri::async_runtime::spawn(async move {
+      while let Some(event) = rx.recv().await {
+        match event {
+          CommandEvent::Stdout(line) => log::info!("[clash]: {}", line),
+          CommandEvent::Stderr(err) => log::error!("[clash]: {}", err),
+          _ => {}
         }
-        Err(err) => bail!(err.to_string()),
-      },
-      Err(err) => bail!(err.to_string()),
-    }
+      }
+    });
+
+    // activate profile
+    log_if_err!(self.activate(&profiles));
+    log_if_err!(self.activate_enhanced(&profiles, delay, true));
+
+    Ok(())
   }
 
   /// drop clash sidecar
@@ -176,9 +176,7 @@ impl Clash {
   pub fn restart_sidecar(&mut self, profiles: &mut Profiles) -> Result<()> {
     self.update_config();
     self.drop_sidecar()?;
-    self.run_sidecar()?;
-    self.activate(profiles)?;
-    self.activate_enhanced(profiles, false, true)
+    self.run_sidecar(profiles, false)
   }
 
   /// update the clash info
@@ -309,6 +307,10 @@ impl Clash {
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
     tauri::async_runtime::spawn(async move {
+      if info.server.is_none() {
+        return;
+      }
+
       let server = info.server.unwrap();
       let server = format!("http://{server}/configs");
 
