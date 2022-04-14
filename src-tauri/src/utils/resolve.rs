@@ -1,5 +1,5 @@
-use super::{init, server};
-use crate::{core::Profiles, log_if_err, states};
+use crate::log_if_err;
+use crate::{core::Profiles, states, utils::init, utils::server};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
@@ -19,16 +19,12 @@ pub fn resolve_setup(app: &App) {
   let mut verge = verge_state.0.lock().unwrap();
   let mut profiles = profiles_state.0.lock().unwrap();
 
-  log_if_err!(clash.run_sidecar());
-
   *profiles = Profiles::read_file();
 
   clash.set_window(app.get_window("main"));
-  log_if_err!(clash.activate(&profiles));
-  log_if_err!(clash.activate_enhanced(&profiles, true, true));
+  log_if_err!(clash.run_sidecar(&profiles, true));
 
   verge.init_sysproxy(clash.info.port.clone());
-
   log_if_err!(verge.init_launch());
 
   verge.config.enable_system_proxy.map(|enable| {
