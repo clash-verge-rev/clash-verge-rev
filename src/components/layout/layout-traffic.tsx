@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
@@ -8,16 +8,17 @@ import { ApiType } from "../../services/types";
 import { getInfomation } from "../../services/api";
 import { getVergeConfig } from "../../services/cmds";
 import { atomClashPort } from "../../services/states";
+import TrafficGraph from "./traffic-graph";
 import useLogSetup from "./use-log-setup";
-import useTrafficGraph from "./use-traffic-graph";
 import parseTraffic from "../../utils/parse-traffic";
 
 // setup the traffic
 const LayoutTraffic = () => {
   const portValue = useRecoilValue(atomClashPort);
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
-  const { canvasRef, appendData, toggleStyle } = useTrafficGraph();
   const [refresh, setRefresh] = useState({});
+
+  const trafficRef = useRef<any>();
 
   // whether hide traffic graph
   const { data } = useSWR("getVergeConfig", getVergeConfig);
@@ -46,7 +47,7 @@ const LayoutTraffic = () => {
 
       ws.addEventListener("message", (event) => {
         const data = JSON.parse(event.data) as ApiType.TrafficItem;
-        appendData(data);
+        trafficRef.current?.appendData(data);
         setTraffic(data);
       });
     });
@@ -72,12 +73,15 @@ const LayoutTraffic = () => {
   };
 
   return (
-    <Box width="110px" position="relative" onClick={toggleStyle}>
+    <Box
+      width="110px"
+      position="relative"
+      onClick={trafficRef.current?.toggleStyle}
+    >
       {trafficGraph && (
-        <canvas
-          ref={canvasRef}
-          style={{ width: "100%", height: 60, marginBottom: 6 }}
-        />
+        <div style={{ width: "100%", height: 60, marginBottom: 6 }}>
+          <TrafficGraph instance={trafficRef} />
+        </div>
       )}
 
       <Box mb={1.5} display="flex" alignItems="center" whiteSpace="nowrap">
