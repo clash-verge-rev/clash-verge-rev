@@ -3,6 +3,7 @@ import zlib from "zlib";
 import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
+import proxyAgent from "https-proxy-agent";
 import { execSync } from "child_process";
 
 const cwd = process.cwd();
@@ -153,7 +154,20 @@ async function resolveMmdb() {
 async function downloadFile(url, path) {
   console.log(`[INFO]: downloading from "${url}"`);
 
+  const options = {};
+
+  const httpProxy =
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy;
+
+  if (httpProxy) {
+    options.agent = proxyAgent(httpProxy);
+  }
+
   const response = await fetch(url, {
+    ...options,
     method: "GET",
     headers: { "Content-Type": "application/octet-stream" },
   });
