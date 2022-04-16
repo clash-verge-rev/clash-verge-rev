@@ -13,7 +13,7 @@ const downLineAlpha = 1;
 const downLineWidth = 4;
 
 const duration = 16 / 1000;
-const defaultList = Array(maxPoint + 1).fill({ up: 0, down: 0 });
+const defaultList = Array(maxPoint + 2).fill({ up: 0, down: 0 });
 
 type TrafficData = { up: number; down: number };
 
@@ -47,7 +47,7 @@ const TrafficGraph = (props: Props) => {
       cache = null;
 
       const list = listRef.current;
-      if (list.length > maxPoint + 1) list.shift();
+      if (list.length > maxPoint + 2) list.shift();
       list.push(data);
       countRef.current = 0;
 
@@ -108,50 +108,40 @@ const TrafficGraph = (props: Props) => {
     };
 
     const drawBezier = (list: number[]) => {
-      const count = countRef.current;
-      const offset = Math.min(1, count * duration);
-      const offsetX = dx * offset;
+      const o = dx * Math.min(1, countRef.current * duration);
+      const points = list.map((y, i) => [
+        (dx * (i - 1) - o + 3) | 0,
+        countY(y),
+      ]);
 
-      let lx = 0;
-      let ly = height;
-      let llx = 0;
-      let lly = height;
+      let x = points[0][0];
+      let y = points[0][1];
 
-      list.forEach((val, index) => {
-        const x = (dx * index - offsetX) | 0;
-        const y = countY(val);
-        const s = 0.25;
+      context.moveTo(x, y);
 
-        if (index === 0) context.moveTo(x, y);
-        else {
-          let nx = (dx * (index + 1)) | 0;
-          let ny = index < maxPoint - 1 ? countY(list[index + 1]) | 0 : 0;
-          const ax = (lx + (x - llx) * s) | 0;
-          const ay = (ly + (y - lly) * s) | 0;
-          const bx = (x - (nx - lx) * s) | 0;
-          const by = (y - (ny - ly) * s) | 0;
-          context.bezierCurveTo(ax, ay, bx, by, x, y);
-        }
+      for (let i = 1; i < points.length; i++) {
+        const p1 = points[i];
+        const p2 = points[i + 1] || p1;
 
-        llx = lx;
-        lly = ly;
-        lx = x;
-        ly = y;
-      });
+        const x1 = (p1[0] + p2[0]) / 2;
+        const y1 = (p1[1] + p2[1]) / 2;
+
+        context.quadraticCurveTo(p1[0], p1[1], x1, y1);
+        x = x1;
+        y = y1;
+      }
     };
 
     const drawLine = (list: number[]) => {
-      const count = countRef.current;
-      const offset = Math.min(1, count * duration);
-      const offsetX = dx * offset;
+      const o = dx * Math.min(1, countRef.current * duration);
+      const points = list.map((y, i) => [(dx * (i - 1) - o) | 0, countY(y)]);
 
-      list.forEach((val, index) => {
-        const x = (dx * index - offsetX) | 0;
-        const y = countY(val);
+      context.moveTo(points[0][0], points[0][1]);
 
-        if (index === 0) context.moveTo(x, y);
-        else context.lineTo(x, y);
-      });
+      for (let i = 1; i < points.length; i++) {
+        const p = points[i];
+        context.lineTo(p[0], p[1]);
+      }
     };
 
     const drawGraph = () => {
@@ -177,7 +167,7 @@ const TrafficGraph = (props: Props) => {
       context.globalAlpha = upLineAlpha;
       context.lineWidth = upLineWidth;
       context.strokeStyle = upLineColor;
-      lineStyle ? drawLine(listUp) : drawBezier(listUp);
+      lineStyle ? drawBezier(listUp) : drawLine(listUp);
       context.stroke();
       context.closePath();
 
@@ -185,7 +175,7 @@ const TrafficGraph = (props: Props) => {
       context.globalAlpha = downLineAlpha;
       context.lineWidth = downLineWidth;
       context.strokeStyle = downLineColor;
-      lineStyle ? drawLine(listDown) : drawBezier(listDown);
+      lineStyle ? drawBezier(listDown) : drawLine(listDown);
       context.stroke();
       context.closePath();
 
