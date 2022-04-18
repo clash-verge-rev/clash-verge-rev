@@ -5,7 +5,6 @@
 
 mod cmds;
 mod core;
-mod states;
 mod utils;
 
 use crate::{
@@ -39,9 +38,7 @@ fn main() -> std::io::Result<()> {
 
   #[allow(unused_mut)]
   let mut builder = tauri::Builder::default()
-    .manage(states::VergeState::default())
-    .manage(states::ClashState::default())
-    .manage(states::ProfilesState::default())
+    .manage(core::Core::new())
     .setup(|app| Ok(resolve::resolve_setup(app)))
     .system_tray(SystemTray::new().with_menu(tray_menu))
     .on_system_tray_event(move |app_handle, event| match event {
@@ -53,8 +50,8 @@ fn main() -> std::io::Result<()> {
           window.set_focus().unwrap();
         }
         "system_proxy" => {
-          let verge_state = app_handle.state::<states::VergeState>();
-          let mut verge = verge_state.0.lock().unwrap();
+          let core = app_handle.state::<core::Core>();
+          let mut verge = core.verge.lock().unwrap();
 
           let old_value = verge.config.enable_system_proxy.clone().unwrap_or(false);
           let new_value = !old_value;
@@ -68,8 +65,8 @@ fn main() -> std::io::Result<()> {
           }
         }
         "tun_mode" => {
-          let verge_state = app_handle.state::<states::VergeState>();
-          let mut verge = verge_state.0.lock().unwrap();
+          let core = app_handle.state::<core::Core>();
+          let mut verge = core.verge.lock().unwrap();
 
           let old_value = verge.config.enable_tun_mode.clone().unwrap_or(false);
           let new_value = !old_value;
@@ -83,12 +80,8 @@ fn main() -> std::io::Result<()> {
           }
         }
         "restart_clash" => {
-          let clash_state = app_handle.state::<states::ClashState>();
-          let profiles_state = app_handle.state::<states::ProfilesState>();
-          let mut clash = clash_state.0.lock().unwrap();
-          let mut profiles = profiles_state.0.lock().unwrap();
-
-          crate::log_if_err!(clash.restart_sidecar(&mut profiles));
+          let core = app_handle.state::<core::Core>();
+          crate::log_if_err!(core.restart_clash());
         }
         "quit" => {
           resolve::resolve_reset(app_handle);

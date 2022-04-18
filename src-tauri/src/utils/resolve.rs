@@ -1,5 +1,5 @@
 use crate::log_if_err;
-use crate::{core::Profiles, states, utils::init, utils::server};
+use crate::{core::Core, utils::init, utils::server};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
@@ -11,36 +11,21 @@ pub fn resolve_setup(app: &App) {
   init::init_app(app.package_info());
 
   // init states
-  let clash_state = app.state::<states::ClashState>();
-  let verge_state = app.state::<states::VergeState>();
-  let profiles_state = app.state::<states::ProfilesState>();
+  let core = app.state::<Core>();
 
-  let mut clash = clash_state.0.lock().unwrap();
-  let mut verge = verge_state.0.lock().unwrap();
-  let mut profiles = profiles_state.0.lock().unwrap();
+  core.set_win(app.get_window("main"));
+  core.init();
 
-  *profiles = Profiles::read_file();
+  // clash.set_window(app.get_window("main"));
+  // log_if_err!(clash.run_sidecar(&profiles, true));
 
-  clash.set_window(app.get_window("main"));
-  log_if_err!(clash.run_sidecar(&profiles, true));
-
-  verge.init_sysproxy(clash.info.port.clone());
-  log_if_err!(verge.init_launch());
-
-  verge.config.enable_system_proxy.map(|enable| {
-    log_if_err!(app
-      .tray_handle()
-      .get_item("system_proxy")
-      .set_selected(enable));
-  });
-
-  resolve_window(app, verge.config.enable_silent_start.clone());
+  resolve_window(app, None);
 }
 
 /// reset system proxy
 pub fn resolve_reset(app_handle: &AppHandle) {
-  let verge_state = app_handle.state::<states::VergeState>();
-  let mut verge = verge_state.0.lock().unwrap();
+  let core = app_handle.state::<Core>();
+  let mut verge = core.verge.lock().unwrap();
 
   verge.reset_sysproxy();
 }
