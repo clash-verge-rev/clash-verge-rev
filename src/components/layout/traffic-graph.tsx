@@ -12,7 +12,6 @@ const upLineWidth = 4;
 const downLineAlpha = 1;
 const downLineWidth = 4;
 
-const duration = 16 / 1000;
 const defaultList = Array(maxPoint + 2).fill({ up: 0, down: 0 });
 
 type TrafficData = { up: number; down: number };
@@ -107,10 +106,9 @@ const TrafficGraph = (props: Props) => {
       return 1;
     };
 
-    const drawBezier = (list: number[]) => {
-      const o = dx * Math.min(1, countRef.current * duration);
+    const drawBezier = (list: number[], offset: number) => {
       const points = list.map((y, i) => [
-        (dx * (i - 1) - o + 3) | 0,
+        (dx * (i - 1) - offset + 3) | 0,
         countY(y),
       ]);
 
@@ -132,9 +130,11 @@ const TrafficGraph = (props: Props) => {
       }
     };
 
-    const drawLine = (list: number[]) => {
-      const o = dx * Math.min(1, countRef.current * duration);
-      const points = list.map((y, i) => [(dx * (i - 1) - o) | 0, countY(y)]);
+    const drawLine = (list: number[], offset: number) => {
+      const points = list.map((y, i) => [
+        (dx * (i - 1) - offset) | 0,
+        countY(y),
+      ]);
 
       context.moveTo(points[0][0], points[0][1]);
 
@@ -144,7 +144,17 @@ const TrafficGraph = (props: Props) => {
       }
     };
 
-    const drawGraph = () => {
+    const drawGraph = (lastTime: number) => {
+      const listUp = listRef.current.map((v) => v.up);
+      const listDown = listRef.current.map((v) => v.down);
+      const lineStyle = styleRef.current;
+
+      const now = Date.now();
+      const diff = now - lastTime;
+      const temp = Math.min((diff / 1000) * dx + countRef.current, dx);
+      const offset = countRef.current === 0 ? 0 : temp;
+      countRef.current = temp;
+
       context.clearRect(0, 0, width, height);
 
       // Reference lines
@@ -159,15 +169,11 @@ const TrafficGraph = (props: Props) => {
       context.stroke();
       context.closePath();
 
-      const listUp = listRef.current.map((v) => v.up);
-      const listDown = listRef.current.map((v) => v.down);
-      const lineStyle = styleRef.current;
-
       context.beginPath();
       context.globalAlpha = upLineAlpha;
       context.lineWidth = upLineWidth;
       context.strokeStyle = upLineColor;
-      lineStyle ? drawBezier(listUp) : drawLine(listUp);
+      lineStyle ? drawBezier(listUp, offset) : drawLine(listUp, offset);
       context.stroke();
       context.closePath();
 
@@ -175,16 +181,14 @@ const TrafficGraph = (props: Props) => {
       context.globalAlpha = downLineAlpha;
       context.lineWidth = downLineWidth;
       context.strokeStyle = downLineColor;
-      lineStyle ? drawBezier(listDown) : drawLine(listDown);
+      lineStyle ? drawBezier(listDown, offset) : drawLine(listDown, offset);
       context.stroke();
       context.closePath();
 
-      countRef.current += 1;
-
-      raf = requestAnimationFrame(drawGraph);
+      raf = requestAnimationFrame(() => drawGraph(now));
     };
 
-    drawGraph();
+    drawGraph(Date.now());
 
     return () => {
       cancelAnimationFrame(raf);
