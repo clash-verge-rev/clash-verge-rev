@@ -47,6 +47,7 @@ impl Profiles {
       profiles.items = Some(vec![]);
     }
 
+    // compatiable with the old old old version
     profiles.items.as_mut().map(|items| {
       for mut item in items.iter_mut() {
         if item.uid.is_none() {
@@ -67,19 +68,6 @@ impl Profiles {
     )
   }
 
-  /// sync the config between file and memory
-  pub fn sync_file(&mut self) -> Result<()> {
-    let data = Self::read_file();
-    if data.current.is_none() && data.items.is_none() {
-      bail!("failed to read profiles.yaml");
-    }
-
-    self.current = data.current;
-    self.chain = data.chain;
-    self.items = data.items;
-    Ok(())
-  }
-
   /// get the current uid
   pub fn get_current(&self) -> Option<String> {
     self.current.clone()
@@ -94,11 +82,9 @@ impl Profiles {
     let items = self.items.as_ref().unwrap();
     let some_uid = Some(uid.clone());
 
-    for each in items.iter() {
-      if each.uid == some_uid {
-        self.current = some_uid;
-        return self.save_file();
-      }
+    if items.iter().find(|&each| each.uid == some_uid).is_some() {
+      self.current = some_uid;
+      return self.save_file();
     }
 
     bail!("invalid uid \"{uid}\"");
@@ -162,7 +148,7 @@ impl Profiles {
     self.save_file()
   }
 
-  /// update the item's value
+  /// update the item value
   pub fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
     let mut items = self.items.take().unwrap_or(vec![]);
 
@@ -197,7 +183,7 @@ impl Profiles {
     // find the item
     let _ = self.get_item(&uid)?;
 
-    self.items.as_mut().map(|items| {
+    if let Some(items) = self.items.as_mut() {
       let some_uid = Some(uid.clone());
 
       for mut each in items.iter_mut() {
@@ -217,15 +203,15 @@ impl Profiles {
             let path = dirs::app_profiles_dir().join(&file);
 
             fs::File::create(path)
-              .unwrap()
+              .context(format!("failed to create file \"{}\"", file))?
               .write(file_data.as_bytes())
-              .unwrap();
+              .context(format!("failed to write to file \"{}\"", file))?;
           }
 
           break;
         }
       }
-    });
+    }
 
     self.save_file()
   }

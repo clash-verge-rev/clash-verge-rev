@@ -57,6 +57,8 @@ impl Service {
     self.start()
   }
 
+  /// update clash config
+  /// using PUT methods
   pub fn set_config(&self, info: ClashInfo, config: Mapping, notice: Notice) -> Result<()> {
     if self.sidecar.is_none() {
       bail!("did not start sidecar");

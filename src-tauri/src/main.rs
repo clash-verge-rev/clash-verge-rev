@@ -51,33 +51,33 @@ fn main() -> std::io::Result<()> {
         }
         "system_proxy" => {
           let core = app_handle.state::<core::Core>();
-          let mut verge = core.verge.lock();
 
-          let old_value = verge.config.enable_system_proxy.clone().unwrap_or(false);
-          let new_value = !old_value;
+          let new_value = {
+            let verge = core.verge.lock();
+            !verge.config.enable_system_proxy.clone().unwrap_or(false)
+          };
 
-          match verge.patch_config(VergeConfig {
+          let patch = VergeConfig {
             enable_system_proxy: Some(new_value),
             ..VergeConfig::default()
-          }) {
-            Ok(_) => verge.update_systray(app_handle).unwrap(),
-            Err(err) => log::error!("{err}"),
-          }
+          };
+
+          crate::log_if_err!(core.patch_verge(patch, app_handle));
         }
         "tun_mode" => {
           let core = app_handle.state::<core::Core>();
-          let mut verge = core.verge.lock();
 
-          let old_value = verge.config.enable_tun_mode.clone().unwrap_or(false);
-          let new_value = !old_value;
+          let new_value = {
+            let verge = core.verge.lock();
+            !verge.config.enable_tun_mode.clone().unwrap_or(false)
+          };
 
-          match verge.patch_config(VergeConfig {
+          let patch = VergeConfig {
             enable_tun_mode: Some(new_value),
             ..VergeConfig::default()
-          }) {
-            Ok(_) => verge.update_systray(app_handle).unwrap(),
-            Err(err) => log::error!("{err}"),
-          }
+          };
+
+          crate::log_if_err!(core.patch_verge(patch, app_handle));
         }
         "restart_clash" => {
           let core = app_handle.state::<core::Core>();
@@ -104,7 +104,7 @@ fn main() -> std::io::Result<()> {
       cmds::restart_sidecar,
       cmds::get_sys_proxy,
       cmds::get_cur_proxy,
-      cmds::kill_sidecars,
+      cmds::kill_sidecar,
       cmds::open_app_dir,
       cmds::open_logs_dir,
       // clash
@@ -122,7 +122,6 @@ fn main() -> std::io::Result<()> {
       cmds::delete_profile,
       cmds::select_profile,
       cmds::get_profiles,
-      cmds::sync_profiles,
       cmds::enhance_profiles,
       cmds::change_profile_chain,
       cmds::change_profile_valid,

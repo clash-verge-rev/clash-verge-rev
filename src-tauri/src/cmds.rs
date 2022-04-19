@@ -1,12 +1,11 @@
 use crate::{
   core::{ClashInfo, Core, PrfItem, PrfOption, Profiles, VergeConfig},
-  utils::{dirs, sysopt::SysProxyConfig},
+  utils::{dirs, help, sysopt::SysProxyConfig},
 };
 use crate::{log_if_err, ret_err, wrap_err};
 use anyhow::Result;
 use serde_yaml::Mapping;
-use std::process::Command;
-use tauri::{api, Manager, State};
+use tauri::{api, State};
 
 type CmdResult<T = ()> = Result<T, String>;
 
@@ -17,11 +16,10 @@ pub fn get_profiles(core: State<'_, Core>) -> CmdResult<Profiles> {
   Ok(profiles.clone())
 }
 
-/// synchronize data irregularly
+/// manually exec enhanced profile
 #[tauri::command]
-pub fn sync_profiles(core: State<'_, Core>) -> CmdResult {
-  let mut profiles = core.profiles.lock();
-  wrap_err!(profiles.sync_file())
+pub fn enhance_profiles(core: State<'_, Core>) -> CmdResult {
+  wrap_err!(core.activate_enhanced(false))
 }
 
 /// import the profile from url
@@ -102,23 +100,18 @@ pub fn select_profile(index: String, core: State<'_, Core>) -> CmdResult {
 
   drop(profiles);
 
-  log_if_err!(core.activate_enhanced(false));
-
-  Ok(())
+  wrap_err!(core.activate_enhanced(false))
 }
 
 /// change the profile chain
 #[tauri::command]
 pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -> CmdResult {
-  dbg!("change profile chain");
   let mut profiles = core.profiles.lock();
   profiles.put_chain(chain);
-  dbg!("change profile chain finish");
+
   drop(profiles);
 
-  log_if_err!(core.activate_enhanced(false));
-
-  Ok(())
+  wrap_err!(core.activate_enhanced(false))
 }
 
 /// change the profile valid fields
@@ -126,18 +119,10 @@ pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -
 pub fn change_profile_valid(valid: Option<Vec<String>>, core: State<Core>) -> CmdResult {
   let mut profiles = core.profiles.lock();
   profiles.put_valid(valid);
+
   drop(profiles);
 
-  log_if_err!(core.activate_enhanced(false));
-
-  Ok(())
-}
-
-/// manually exec enhanced profile
-#[tauri::command]
-pub fn enhance_profiles(core: State<'_, Core>) -> CmdResult {
-  log_if_err!(core.activate_enhanced(false));
-  Ok(())
+  wrap_err!(core.activate_enhanced(false))
 }
 
 /// delete profile item
@@ -147,7 +132,7 @@ pub fn delete_profile(index: String, core: State<'_, Core>) -> CmdResult {
 
   if wrap_err!(profiles.delete_item(index))? {
     drop(profiles);
-    // std::mem::drop(profiles);
+
     log_if_err!(core.activate_enhanced(false));
   }
 
@@ -178,32 +163,7 @@ pub fn view_profile(index: String, core: State<'_, Core>) -> CmdResult {
     ret_err!("the file not found");
   }
 
-  // use vscode first
-  if let Ok(code) = which::which("code") {
-    #[cfg(target_os = "windows")]
-    {
-      use std::os::windows::process::CommandExt;
-
-      if let Err(err) = Command::new(code)
-        .creation_flags(0x08000000)
-        .arg(path)
-        .spawn()
-      {
-        log::error!("failed to open file by VScode for {err}");
-        return Err("failed to open file by VScode".into());
-      }
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    if let Err(err) = Command::new(code).arg(path).spawn() {
-      log::error!("failed to open file by VScode for {err}");
-      return Err("failed to open file by VScode".into());
-    }
-
-    return Ok(());
-  }
-
-  wrap_err!(open::that(path))
+  wrap_err!(help::open_file(path))
 }
 
 /// read the profile item file data
@@ -233,12 +193,6 @@ pub fn save_profile_file(
   wrap_err!(item.save_file(file_data.unwrap()))
 }
 
-/// restart the sidecar
-#[tauri::command]
-pub fn restart_sidecar(core: State<'_, Core>) -> CmdResult {
-  wrap_err!(core.restart_clash())
-}
-
 /// get the clash core info from the state
 /// the caller can also get the infomation by clash's api
 #[tauri::command]
@@ -255,29 +209,11 @@ pub fn patch_clash_config(payload: Mapping, core: State<'_, Core>) -> CmdResult 
   wrap_err!(core.patch_clash(payload))
 }
 
-/// get the system proxy
-#[tauri::command]
-pub fn get_sys_proxy() -> Result<SysProxyConfig, String> {
-  wrap_err!(SysProxyConfig::get_sys())
-}
-
-/// get the current proxy config
-/// which may not the same as system proxy
-#[tauri::command]
-pub fn get_cur_proxy(core: State<'_, Core>) -> CmdResult<Option<SysProxyConfig>> {
-  let verge = core.verge.lock();
-  Ok(verge.cur_sysproxy.clone())
-}
-
 /// get the verge config
 #[tauri::command]
 pub fn get_verge_config(core: State<'_, Core>) -> CmdResult<VergeConfig> {
   let verge = core.verge.lock();
-  let mut config = verge.config.clone();
-
-  if config.system_proxy_bypass.is_none() && verge.cur_sysproxy.is_some() {
-    config.system_proxy_bypass = Some(verge.cur_sysproxy.clone().unwrap().bypass)
-  }
+  let config = verge.config.clone();
 
   Ok(config)
 }
@@ -290,39 +226,33 @@ pub fn patch_verge_config(
   app_handle: tauri::AppHandle,
   core: State<'_, Core>,
 ) -> Result<(), String> {
-  let tun_mode = payload.enable_tun_mode.clone();
-  let system_proxy = payload.enable_system_proxy.clone();
+  wrap_err!(core.patch_verge(payload, &app_handle))
+}
 
-  let mut verge = core.verge.lock();
-  wrap_err!(verge.patch_config(payload))?;
-
-  // change system tray
-  if system_proxy.is_some() || tun_mode.is_some() {
-    verge.update_systray(&app_handle).unwrap();
-  }
-
-  // change tun mode
-  if tun_mode.is_some() {
-    #[cfg(target_os = "windows")]
-    if *tun_mode.as_ref().unwrap() {
-      let wintun_dll = dirs::app_home_dir().join("wintun.dll");
-      if !wintun_dll.exists() {
-        log::error!("failed to enable TUN for missing `wintun.dll`");
-        return Err("failed to enable TUN for missing `wintun.dll`".into());
-      }
-    }
-
-    std::mem::drop(verge);
-    log_if_err!(core.activate_enhanced(false));
-  }
-
-  Ok(())
+/// restart the sidecar
+#[tauri::command]
+pub fn restart_sidecar(core: State<'_, Core>) -> CmdResult {
+  wrap_err!(core.restart_clash())
 }
 
 /// kill all sidecars when update app
 #[tauri::command]
-pub fn kill_sidecars() {
+pub fn kill_sidecar() {
   api::process::kill_children();
+}
+
+/// get the system proxy
+#[tauri::command]
+pub fn get_sys_proxy() -> Result<SysProxyConfig, String> {
+  wrap_err!(SysProxyConfig::get_sys())
+}
+
+/// get the current proxy config
+/// which may not the same as system proxy
+#[tauri::command]
+pub fn get_cur_proxy(core: State<'_, Core>) -> CmdResult<Option<SysProxyConfig>> {
+  let sysopt = core.sysopt.lock();
+  wrap_err!(sysopt.get_sysproxy())
 }
 
 /// open app config dir
