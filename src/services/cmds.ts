@@ -6,10 +6,6 @@ export async function getProfiles() {
   return invoke<CmdType.ProfilesConfig>("get_profiles");
 }
 
-export async function syncProfiles() {
-  return invoke<void>("sync_profiles");
-}
-
 export async function enhanceProfiles() {
   return invoke<void>("enhance_profiles");
 }
@@ -94,8 +90,8 @@ export async function restartSidecar() {
   return invoke<void>("restart_sidecar");
 }
 
-export async function killSidecars() {
-  return invoke<any>("kill_sidecars");
+export async function killSidecar() {
+  return invoke<any>("kill_sidecar");
 }
 
 export async function openAppDir() {

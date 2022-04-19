@@ -1,14 +1,15 @@
 use self::notice::Notice;
 use self::service::Service;
+use self::sysopt::Sysopt;
 use crate::core::enhance::PrfEnhancedResult;
 use crate::log_if_err;
-use crate::utils::help;
+use crate::utils::{dirs, help};
 use anyhow::{bail, Result};
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
 use std::sync::Arc;
 use std::time::Duration;
-use tauri::Window;
+use tauri::{AppHandle, Manager, Window};
 use tokio::time::sleep;
 
 mod clash;
@@ -17,6 +18,7 @@ mod notice;
 mod prfitem;
 mod profiles;
 mod service;
+mod sysopt;
 mod timer;
 mod verge;
 
@@ -35,6 +37,8 @@ pub struct Core {
 
   pub service: Arc<Mutex<Service>>,
 
+  pub sysopt: Arc<Mutex<Sysopt>>,
+
   pub window: Arc<Mutex<Option<Window>>>,
 }
 
@@ -50,10 +54,12 @@ impl Core {
       verge: Arc::new(Mutex::new(verge)),
       profiles: Arc::new(Mutex::new(profiles)),
       service: Arc::new(Mutex::new(service)),
+      sysopt: Arc::new(Mutex::new(Sysopt::new())),
       window: Arc::new(Mutex::new(None)),
     }
   }
 
+  /// initialize the core state
   pub fn init(&self, app_handle: tauri::AppHandle) {
     let mut service = self.service.lock();
     log_if_err!(service.start());
@@ -62,25 +68,29 @@ impl Core {
     log_if_err!(self.activate());
 
     let clash = self.clash.lock();
-    let mut verge = self.verge.lock();
+    let verge = self.verge.lock();
 
-    let hide = verge.config.enable_silent_start.clone().unwrap_or(false);
+    let silent_start = verge.config.enable_silent_start.clone();
+    let auto_launch = verge.config.enable_auto_launch.clone();
 
     // silent start
-    if hide {
+    if silent_start.unwrap_or(false) {
       let window = self.window.lock();
       window.as_ref().map(|win| {
         win.hide().unwrap();
       });
     }
 
-    verge.init_sysproxy(clash.info.port.clone());
+    let mut sysopt = self.sysopt.lock();
 
-    log_if_err!(verge.init_launch());
-    log_if_err!(verge.update_systray(&app_handle));
+    sysopt.init_sysproxy(clash.info.port.clone(), &verge);
 
     drop(clash);
     drop(verge);
+
+    log_if_err!(sysopt.init_launch(auto_launch));
+
+    log_if_err!(self.update_systray(&app_handle));
 
     // wait the window setup during resolve app
     let core = self.clone();
@@ -106,6 +116,7 @@ impl Core {
     self.activate_enhanced(true)
   }
 
+  /// Patch Clash
   /// handle the clash config changed
   pub fn patch_clash(&self, patch: Mapping) -> Result<()> {
     let (changed, port) = {
@@ -123,9 +134,81 @@ impl Core {
       self.activate()?;
       self.activate_enhanced(true)?;
 
-      let mut verge = self.verge.lock();
-      verge.init_sysproxy(port);
+      let mut sysopt = self.sysopt.lock();
+      let verge = self.verge.lock();
+      sysopt.init_sysproxy(port, &verge);
     }
+
+    Ok(())
+  }
+
+  /// Patch Verge
+  pub fn patch_verge(&self, patch: VergeConfig, app_handle: &AppHandle) -> Result<()> {
+    let tun_mode = patch.enable_tun_mode.clone();
+    let auto_launch = patch.enable_auto_launch.clone();
+    let system_proxy = patch.enable_system_proxy.clone();
+    let proxy_bypass = patch.system_proxy_bypass.clone();
+    let proxy_guard = patch.enable_proxy_guard.clone();
+
+    if auto_launch.is_some() {
+      let mut sysopt = self.sysopt.lock();
+      sysopt.update_launch(auto_launch)?;
+    }
+
+    if system_proxy.is_some() || proxy_bypass.is_some() {
+      let mut sysopt = self.sysopt.lock();
+      sysopt.update_sysproxy(system_proxy.clone(), proxy_bypass)?;
+      sysopt.guard_proxy();
+    }
+
+    if proxy_guard.unwrap_or(false) {
+      let sysopt = self.sysopt.lock();
+      sysopt.guard_proxy();
+    }
+
+    #[cfg(target_os = "windows")]
+    if tun_mode.is_some() && *tun_mode.as_ref().unwrap_or(&false) {
+      let wintun_dll = dirs::app_home_dir().join("wintun.dll");
+      if !wintun_dll.exists() {
+        bail!("failed to enable TUN for missing `wintun.dll`");
+      }
+    }
+
+    // save the patch
+    let mut verge = self.verge.lock();
+    verge.patch_config(patch)?;
+    drop(verge);
+
+    if system_proxy.is_some() || tun_mode.is_some() {
+      self.update_systray(app_handle)?;
+    }
+
+    if tun_mode.is_some() {
+      self.activate_enhanced(false)?;
+    }
+
+    Ok(())
+  }
+
+  /// update the system tray state
+  pub fn update_systray(&self, app_handle: &AppHandle) -> Result<()> {
+    let verge = self.verge.lock();
+    let tray = app_handle.tray_handle();
+
+    let system_proxy = verge.config.enable_system_proxy.as_ref();
+    let tun_mode = verge.config.enable_tun_mode.as_ref();
+
+    tray
+      .get_item("system_proxy")
+      .set_selected(*system_proxy.unwrap_or(&false))?;
+    tray
+      .get_item("tun_mode")
+      .set_selected(*tun_mode.unwrap_or(&false))?;
+
+    // update verge config
+    let window = app_handle.get_window("main");
+    let notice = Notice::from(window);
+    notice.refresh_verge();
 
     Ok(())
   }
@@ -165,6 +248,7 @@ impl Core {
     service.set_config(info, config, notice)
   }
 
+  /// Enhanced
   /// enhanced profiles mode
   pub fn activate_enhanced(&self, skip: bool) -> Result<()> {
     let window = self.window.lock();
@@ -234,10 +318,6 @@ impl Core {
 
       result.error.map(|err| log::error!("{err}"));
     });
-
-    // if delay {
-    //   sleep(Duration::from_secs(2)).await;
-    // }
 
     window.emit("script-handler", payload).unwrap();
 

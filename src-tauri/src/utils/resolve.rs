@@ -21,9 +21,9 @@ pub fn resolve_setup(app: &App) {
 /// reset system proxy
 pub fn resolve_reset(app_handle: &AppHandle) {
   let core = app_handle.state::<Core>();
-  let mut verge = core.verge.lock();
+  let mut sysopt = core.sysopt.lock();
 
-  verge.reset_sysproxy();
+  sysopt.reset_sysproxy();
 }
 
 /// customize the window theme

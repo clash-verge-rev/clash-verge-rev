@@ -60,7 +60,7 @@ pub struct PrfExtra {
   pub expire: usize,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct PrfOption {
   /// for `remote` profile's http request
   /// see issue #13
