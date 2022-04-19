@@ -489,6 +489,7 @@ dependencies = [
  "log4rs",
  "nanoid",
  "open",
+ "parking_lot 0.12.0",
  "port_scanner",
  "reqwest",
  "serde",

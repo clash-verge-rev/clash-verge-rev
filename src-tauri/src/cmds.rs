@@ -13,14 +13,14 @@ type CmdResult<T = ()> = Result<T, String>;
 /// get all profiles from `profiles.yaml`
 #[tauri::command]
 pub fn get_profiles(core: State<'_, Core>) -> CmdResult<Profiles> {
-  let profiles = core.profiles.lock().unwrap();
+  let profiles = core.profiles.lock();
   Ok(profiles.clone())
 }
 
 /// synchronize data irregularly
 #[tauri::command]
 pub fn sync_profiles(core: State<'_, Core>) -> CmdResult {
-  let mut profiles = core.profiles.lock().unwrap();
+  let mut profiles = core.profiles.lock();
   wrap_err!(profiles.sync_file())
 }
 
@@ -34,7 +34,7 @@ pub async fn import_profile(
 ) -> CmdResult {
   let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
 
-  let mut profiles = core.profiles.lock().unwrap();
+  let mut profiles = core.profiles.lock();
   wrap_err!(profiles.append_item(item))
 }
 
@@ -49,7 +49,7 @@ pub async fn create_profile(
 ) -> CmdResult {
   let item = wrap_err!(PrfItem::from(item, file_data).await)?;
 
-  let mut profiles = core.profiles.lock().unwrap();
+  let mut profiles = core.profiles.lock();
   wrap_err!(profiles.append_item(item))
 }
 
@@ -62,7 +62,7 @@ pub async fn update_profile(
 ) -> CmdResult {
   let (url, opt) = {
     // must release the lock here
-    let profiles = core.profiles.lock().unwrap();
+    let profiles = core.profiles.lock();
     let item = wrap_err!(profiles.get_item(&index))?;
 
     // check the profile type
@@ -82,12 +82,13 @@ pub async fn update_profile(
   let fetch_opt = PrfOption::merge(opt, option);
   let item = wrap_err!(PrfItem::from_url(&url, None, None, fetch_opt).await)?;
 
-  let mut profiles = core.profiles.lock().unwrap();
+  let mut profiles = core.profiles.lock();
   wrap_err!(profiles.update_item(index.clone(), item))?;
 
   // reactivate the profile
   if Some(index) == profiles.get_current() {
-    log_if_err!(core.activate_enhanced(false, false));
+    drop(profiles);
+    log_if_err!(core.activate_enhanced(false));
   }
 
   Ok(())
@@ -96,12 +97,12 @@ pub async fn update_profile(
 /// change the current profile
 #[tauri::command]
 pub fn select_profile(index: String, core: State<'_, Core>) -> CmdResult {
-  {
-    let mut profiles = core.profiles.lock().unwrap();
-    wrap_err!(profiles.put_current(index))?;
-  }
+  let mut profiles = core.profiles.lock();
+  wrap_err!(profiles.put_current(index))?;
 
-  log_if_err!(core.activate_enhanced(false, false));
+  drop(profiles);
+
+  log_if_err!(core.activate_enhanced(false));
 
   Ok(())
 }
@@ -109,12 +110,13 @@ pub fn select_profile(index: String, core: State<'_, Core>) -> CmdResult {
 /// change the profile chain
 #[tauri::command]
 pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -> CmdResult {
-  {
-    let mut profiles = core.profiles.lock().unwrap();
-    profiles.put_chain(chain);
-  }
+  dbg!("change profile chain");
+  let mut profiles = core.profiles.lock();
+  profiles.put_chain(chain);
+  dbg!("change profile chain finish");
+  drop(profiles);
 
-  log_if_err!(core.activate_enhanced(false, false));
+  log_if_err!(core.activate_enhanced(false));
 
   Ok(())
 }
@@ -122,10 +124,11 @@ pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -
 /// change the profile valid fields
 #[tauri::command]
 pub fn change_profile_valid(valid: Option<Vec<String>>, core: State<Core>) -> CmdResult {
-  let mut profiles = core.profiles.lock().unwrap();
+  let mut profiles = core.profiles.lock();
   profiles.put_valid(valid);
+  drop(profiles);
 
-  log_if_err!(core.activate_enhanced(false, false));
+  log_if_err!(core.activate_enhanced(false));
 
   Ok(())
 }
@@ -133,17 +136,19 @@ pub fn change_profile_valid(valid: Option<Vec<String>>, core: State<Core>) -> Cm
 /// manually exec enhanced profile
 #[tauri::command]
 pub fn enhance_profiles(core: State<'_, Core>) -> CmdResult {
-  log_if_err!(core.activate_enhanced(false, false));
+  log_if_err!(core.activate_enhanced(false));
   Ok(())
 }
 
 /// delete profile item
 #[tauri::command]
 pub fn delete_profile(index: String, core: State<'_, Core>) -> CmdResult {
-  let mut profiles = core.profiles.lock().unwrap();
+  let mut profiles = core.profiles.lock();
 
   if wrap_err!(profiles.delete_item(index))? {
-    log_if_err!(core.activate_enhanced(false, false));
+    drop(profiles);
+    // std::mem::drop(profiles);
+    log_if_err!(core.activate_enhanced(false));
   }
 
   Ok(())
@@ -152,7 +157,7 @@ pub fn delete_profile(index: String, core: State<'_, Core>) -> CmdResult {
 /// patch the profile config
 #[tauri::command]
 pub fn patch_profile(index: String, profile: PrfItem, core: State<'_, Core>) -> CmdResult {
-  let mut profiles = core.profiles.lock().unwrap();
+  let mut profiles = core.profiles.lock();
 
   wrap_err!(profiles.patch_item(index, profile))
 }
@@ -160,7 +165,7 @@ pub fn patch_profile(index: String, profile: PrfItem, core: State<'_, Core>) -> 
 /// run vscode command to edit the profile
 #[tauri::command]
 pub fn view_profile(index: String, core: State<'_, Core>) -> CmdResult {
-  let mut profiles = core.profiles.lock().unwrap();
+  let profiles = core.profiles.lock();
   let item = wrap_err!(profiles.get_item(&index))?;
 
   let file = item.file.clone();
@@ -204,7 +209,7 @@ pub fn view_profile(index: String, core: State<'_, Core>) -> CmdResult {
 /// read the profile item file data
 #[tauri::command]
 pub fn read_profile_file(index: String, core: State<'_, Core>) -> CmdResult<String> {
-  let mut profiles = core.profiles.lock().unwrap();
+  let profiles = core.profiles.lock();
 
   let item = wrap_err!(profiles.get_item(&index))?;
   let data = wrap_err!(item.read_file())?;
@@ -223,7 +228,7 @@ pub fn save_profile_file(
     return Ok(());
   }
 
-  let mut profiles = core.profiles.lock().unwrap();
+  let profiles = core.profiles.lock();
   let item = wrap_err!(profiles.get_item(&index))?;
   wrap_err!(item.save_file(file_data.unwrap()))
 }
@@ -231,22 +236,14 @@ pub fn save_profile_file(
 /// restart the sidecar
 #[tauri::command]
 pub fn restart_sidecar(core: State<'_, Core>) -> CmdResult {
-  let mut service = core.service.lock().unwrap();
-
-  wrap_err!(service.restart())?;
-
-  // 更新配置
-
-  log_if_err!(core.activate_enhanced(false, false));
-
-  Ok(())
+  wrap_err!(core.restart_clash())
 }
 
 /// get the clash core info from the state
 /// the caller can also get the infomation by clash's api
 #[tauri::command]
 pub fn get_clash_info(core: State<'_, Core>) -> CmdResult<ClashInfo> {
-  let clash = core.clash.lock().unwrap();
+  let clash = core.clash.lock();
   Ok(clash.info.clone())
 }
 
@@ -268,14 +265,14 @@ pub fn get_sys_proxy() -> Result<SysProxyConfig, String> {
 /// which may not the same as system proxy
 #[tauri::command]
 pub fn get_cur_proxy(core: State<'_, Core>) -> CmdResult<Option<SysProxyConfig>> {
-  let verge = core.verge.lock().unwrap();
+  let verge = core.verge.lock();
   Ok(verge.cur_sysproxy.clone())
 }
 
 /// get the verge config
 #[tauri::command]
 pub fn get_verge_config(core: State<'_, Core>) -> CmdResult<VergeConfig> {
-  let verge = core.verge.lock().unwrap();
+  let verge = core.verge.lock();
   let mut config = verge.config.clone();
 
   if config.system_proxy_bypass.is_none() && verge.cur_sysproxy.is_some() {
@@ -296,8 +293,13 @@ pub fn patch_verge_config(
   let tun_mode = payload.enable_tun_mode.clone();
   let system_proxy = payload.enable_system_proxy.clone();
 
-  let mut verge = core.verge.lock().unwrap();
+  let mut verge = core.verge.lock();
   wrap_err!(verge.patch_config(payload))?;
+
+  // change system tray
+  if system_proxy.is_some() || tun_mode.is_some() {
+    verge.update_systray(&app_handle).unwrap();
+  }
 
   // change tun mode
   if tun_mode.is_some() {
@@ -310,14 +312,8 @@ pub fn patch_verge_config(
       }
     }
 
-    let profiles = core.profiles.lock().unwrap();
-
-    log_if_err!(core.activate_enhanced(false, false));
-  }
-
-  // change system tray
-  if system_proxy.is_some() || tun_mode.is_some() {
-    verge.update_systray(&app_handle).unwrap();
+    std::mem::drop(verge);
+    log_if_err!(core.activate_enhanced(false));
   }
 
   Ok(())

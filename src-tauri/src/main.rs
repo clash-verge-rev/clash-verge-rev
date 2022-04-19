@@ -51,7 +51,7 @@ fn main() -> std::io::Result<()> {
         }
         "system_proxy" => {
           let core = app_handle.state::<core::Core>();
-          let mut verge = core.verge.lock().unwrap();
+          let mut verge = core.verge.lock();
 
           let old_value = verge.config.enable_system_proxy.clone().unwrap_or(false);
           let new_value = !old_value;
@@ -66,7 +66,7 @@ fn main() -> std::io::Result<()> {
         }
         "tun_mode" => {
           let core = app_handle.state::<core::Core>();
-          let mut verge = core.verge.lock().unwrap();
+          let mut verge = core.verge.lock();
 
           let old_value = verge.config.enable_tun_mode.clone().unwrap_or(false);
           let new_value = !old_value;
