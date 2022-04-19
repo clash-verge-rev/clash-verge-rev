@@ -1,4 +1,3 @@
-use crate::log_if_err;
 use crate::{core::Core, utils::init, utils::server};
 use tauri::{App, AppHandle, Manager};
 
@@ -14,32 +13,22 @@ pub fn resolve_setup(app: &App) {
   let core = app.state::<Core>();
 
   core.set_win(app.get_window("main"));
-  core.init();
+  core.init(app.app_handle());
 
-  // clash.set_window(app.get_window("main"));
-  // log_if_err!(clash.run_sidecar(&profiles, true));
-
-  resolve_window(app, None);
+  resolve_window(app);
 }
 
 /// reset system proxy
 pub fn resolve_reset(app_handle: &AppHandle) {
   let core = app_handle.state::<Core>();
-  let mut verge = core.verge.lock().unwrap();
+  let mut verge = core.verge.lock();
 
   verge.reset_sysproxy();
 }
 
 /// customize the window theme
-fn resolve_window(app: &App, hide: Option<bool>) {
+fn resolve_window(app: &App) {
   let window = app.get_window("main").unwrap();
-
-  // silent start
-  hide.map(|hide| {
-    if hide {
-      window.hide().unwrap();
-    }
-  });
 
   #[cfg(target_os = "windows")]
   {

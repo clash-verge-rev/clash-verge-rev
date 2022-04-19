@@ -2,10 +2,11 @@ use self::notice::Notice;
 use self::service::Service;
 use crate::core::enhance::PrfEnhancedResult;
 use crate::log_if_err;
-use crate::utils::{config, dirs, help};
+use crate::utils::help;
 use anyhow::{bail, Result};
+use parking_lot::Mutex;
 use serde_yaml::Mapping;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 use tauri::Window;
 use tokio::time::sleep;
@@ -53,58 +54,76 @@ impl Core {
     }
   }
 
-  pub fn init(&self) {
-    log_if_err!(self.restart_clash());
+  pub fn init(&self, app_handle: tauri::AppHandle) {
+    let mut service = self.service.lock();
+    log_if_err!(service.start());
+    drop(service);
 
-    let clash = self.clash.lock().unwrap();
-    let mut verge = self.verge.lock().unwrap();
+    log_if_err!(self.activate());
+
+    let clash = self.clash.lock();
+    let mut verge = self.verge.lock();
+
+    let hide = verge.config.enable_silent_start.clone().unwrap_or(false);
+
+    // silent start
+    if hide {
+      let window = self.window.lock();
+      window.as_ref().map(|win| {
+        win.hide().unwrap();
+      });
+    }
+
     verge.init_sysproxy(clash.info.port.clone());
 
     log_if_err!(verge.init_launch());
+    log_if_err!(verge.update_systray(&app_handle));
 
-    // system tray
-    // verge.config.enable_system_proxy.map(|enable| {
-    //   log_if_err!(app
-    //     .tray_handle()
-    //     .get_item("system_proxy")
-    //     .set_selected(enable));
-    // });
+    drop(clash);
+    drop(verge);
+
+    // wait the window setup during resolve app
+    let core = self.clone();
+    tauri::async_runtime::spawn(async move {
+      sleep(Duration::from_secs(2)).await;
+      log_if_err!(core.activate_enhanced(true));
+    });
   }
 
   /// save the window instance
   pub fn set_win(&self, win: Option<Window>) {
-    let mut window = self.window.lock().unwrap();
+    let mut window = self.window.lock();
     *window = win;
   }
 
   /// restart the clash sidecar
   pub fn restart_clash(&self) -> Result<()> {
-    {
-      let mut service = self.service.lock().unwrap();
-      service.restart()?;
-    }
+    let mut service = self.service.lock();
+    service.restart()?;
+    drop(service);
 
     self.activate()?;
-    self.activate_enhanced(false, true)
+    self.activate_enhanced(true)
   }
 
   /// handle the clash config changed
   pub fn patch_clash(&self, patch: Mapping) -> Result<()> {
     let (changed, port) = {
-      let mut clash = self.clash.lock().unwrap();
+      let mut clash = self.clash.lock();
       (clash.patch_config(patch)?, clash.info.port.clone())
     };
 
     // todo: port check
 
     if changed {
-      let mut service = self.service.lock().unwrap();
+      let mut service = self.service.lock();
       service.restart()?;
+      drop(service);
 
       self.activate()?;
-      self.activate_enhanced(false, true)?;
+      self.activate_enhanced(true)?;
 
-      let mut verge = self.verge.lock().unwrap();
+      let mut verge = self.verge.lock();
       verge.init_sysproxy(port);
     }
 
@@ -115,13 +134,13 @@ impl Core {
   /// auto activate enhanced profile
   pub fn activate(&self) -> Result<()> {
     let data = {
-      let profiles = self.profiles.lock().unwrap();
+      let profiles = self.profiles.lock();
       let data = profiles.gen_activate()?;
       Clash::strict_filter(data)
     };
 
     let (mut config, info) = {
-      let clash = self.clash.lock().unwrap();
+      let clash = self.clash.lock();
       let config = clash.config.clone();
       let info = clash.info.clone();
       (config, info)
@@ -132,23 +151,23 @@ impl Core {
     }
 
     let config = {
-      let verge = self.verge.lock().unwrap();
+      let verge = self.verge.lock();
       let tun_mode = verge.config.enable_tun_mode.unwrap_or(false);
       Clash::_tun_mode(config, tun_mode)
     };
 
     let notice = {
-      let window = self.window.lock().unwrap();
+      let window = self.window.lock();
       Notice::from(window.clone())
     };
 
-    let service = self.service.lock().unwrap();
+    let service = self.service.lock();
     service.set_config(info, config, notice)
   }
 
   /// enhanced profiles mode
-  pub fn activate_enhanced(&self, delay: bool, skip: bool) -> Result<()> {
-    let window = self.window.lock().unwrap();
+  pub fn activate_enhanced(&self, skip: bool) -> Result<()> {
+    let window = self.window.lock();
     if window.is_none() {
       bail!("failed to get the main window");
     }
@@ -158,7 +177,7 @@ impl Core {
 
     // generate the payload
     let payload = {
-      let profiles = self.profiles.lock().unwrap();
+      let profiles = self.profiles.lock();
       profiles.gen_enhanced(event_name.clone())?
     };
 
@@ -168,16 +187,17 @@ impl Core {
         return Ok(());
       }
 
+      drop(window);
       return self.activate();
     }
 
     let tun_mode = {
-      let verge = self.verge.lock().unwrap();
+      let verge = self.verge.lock();
       verge.config.enable_tun_mode.unwrap_or(false)
     };
 
     let info = {
-      let clash = self.clash.lock().unwrap();
+      let clash = self.clash.lock();
       clash.info.clone()
     };
 
@@ -206,7 +226,7 @@ impl Core {
 
         let config = Clash::_tun_mode(config, tun_mode);
 
-        let service = service.lock().unwrap();
+        let service = service.lock();
         log_if_err!(service.set_config(info, config, notice));
 
         log::info!("profile enhanced status {}", result.status);
@@ -215,7 +235,6 @@ impl Core {
       result.error.map(|err| log::error!("{err}"));
     });
 
-    // wait the window setup during resolve app
     // if delay {
     //   sleep(Duration::from_secs(2)).await;
     // }
