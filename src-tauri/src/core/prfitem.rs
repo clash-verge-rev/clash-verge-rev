@@ -102,17 +102,6 @@ impl PrfOption {
 
     return one;
   }
-
-  pub fn diff_update_interval(one: Option<&Self>, other: Option<&Self>) -> bool {
-    if one.is_some() && other.is_some() {
-      let one = one.unwrap();
-      let other = other.unwrap();
-
-      return one.update_interval == other.update_interval;
-    }
-
-    return false;
-  }
 }
 
 impl Default for PrfItem {
