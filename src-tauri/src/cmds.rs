@@ -1,26 +1,25 @@
 use crate::{
-  core::{ClashInfo, PrfItem, PrfOption, Profiles, VergeConfig},
-  states::{ClashState, ProfilesState, VergeState},
-  utils::{dirs, sysopt::SysProxyConfig},
+  core::{ClashInfo, Core, PrfItem, PrfOption, Profiles, Verge},
+  utils::{dirs, help, sysopt::SysProxyConfig},
 };
-use crate::{ret_err, wrap_err};
+use crate::{log_if_err, ret_err, wrap_err};
 use anyhow::Result;
 use serde_yaml::Mapping;
-use std::process::Command;
-use tauri::{api, Manager, State};
+use tauri::{api, State};
+
+type CmdResult<T = ()> = Result<T, String>;
 
 /// get all profiles from `profiles.yaml`
 #[tauri::command]
-pub fn get_profiles<'a>(profiles_state: State<'_, ProfilesState>) -> Result<Profiles, String> {
-  let profiles = profiles_state.0.lock().unwrap();
+pub fn get_profiles(core: State<'_, Core>) -> CmdResult<Profiles> {
+  let profiles = core.profiles.lock();
   Ok(profiles.clone())
 }
 
-/// synchronize data irregularly
+/// manually exec enhanced profile
 #[tauri::command]
-pub fn sync_profiles(profiles_state: State<'_, ProfilesState>) -> Result<(), String> {
-  let mut profiles = profiles_state.0.lock().unwrap();
-  wrap_err!(profiles.sync_file())
+pub fn enhance_profiles(core: State<'_, Core>) -> CmdResult {
+  wrap_err!(core.activate_enhanced(false))
 }
 
 /// import the profile from url
@@ -29,11 +28,11 @@ pub fn sync_profiles(profiles_state: State<'_, ProfilesState>) -> Result<(), Str
 pub async fn import_profile(
   url: String,
   option: Option<PrfOption>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
+  core: State<'_, Core>,
+) -> CmdResult {
   let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
 
-  let mut profiles = profiles_state.0.lock().unwrap();
+  let mut profiles = core.profiles.lock();
   wrap_err!(profiles.append_item(item))
 }
 
@@ -44,11 +43,11 @@ pub async fn import_profile(
 pub async fn create_profile(
   item: PrfItem, // partial
   file_data: Option<String>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
+  core: State<'_, Core>,
+) -> CmdResult {
   let item = wrap_err!(PrfItem::from(item, file_data).await)?;
-  let mut profiles = profiles_state.0.lock().unwrap();
 
+  let mut profiles = core.profiles.lock();
   wrap_err!(profiles.append_item(item))
 }
 
@@ -57,118 +56,53 @@ pub async fn create_profile(
 pub async fn update_profile(
   index: String,
   option: Option<PrfOption>,
-  clash_state: State<'_, ClashState>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let (url, opt) = {
-    // must release the lock here
-    let profiles = profiles_state.0.lock().unwrap();
-    let item = wrap_err!(profiles.get_item(&index))?;
-
-    // check the profile type
-    if let Some(typ) = item.itype.as_ref() {
-      if *typ != "remote" {
-        ret_err!(format!("could not update the `{typ}` profile"));
-      }
-    }
-
-    if item.url.is_none() {
-      ret_err!("failed to get the item url");
-    }
-
-    (item.url.clone().unwrap(), item.option.clone())
-  };
-
-  let fetch_opt = PrfOption::merge(opt, option);
-  let item = wrap_err!(PrfItem::from_url(&url, None, None, fetch_opt).await)?;
-
-  let mut profiles = profiles_state.0.lock().unwrap();
-  wrap_err!(profiles.update_item(index.clone(), item))?;
-
-  // reactivate the profile
-  if Some(index) == profiles.get_current() {
-    let clash = clash_state.0.lock().unwrap();
-    wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
-  }
-
-  Ok(())
+  core: State<'_, Core>,
+) -> CmdResult {
+  wrap_err!(Core::update_profile_item(core.inner().clone(), index, option).await)
 }
 
 /// change the current profile
 #[tauri::command]
-pub fn select_profile(
-  index: String,
-  clash_state: State<'_, ClashState>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let mut profiles = profiles_state.0.lock().unwrap();
+pub fn select_profile(index: String, core: State<'_, Core>) -> CmdResult {
+  let mut profiles = core.profiles.lock();
   wrap_err!(profiles.put_current(index))?;
 
-  let clash = clash_state.0.lock().unwrap();
-  wrap_err!(clash.activate_enhanced(&profiles, false, false))
+  drop(profiles);
+
+  wrap_err!(core.activate_enhanced(false))
 }
 
 /// change the profile chain
 #[tauri::command]
-pub fn change_profile_chain(
-  chain: Option<Vec<String>>,
-  app_handle: tauri::AppHandle,
-  clash_state: State<'_, ClashState>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let mut clash = clash_state.0.lock().unwrap();
-  let mut profiles = profiles_state.0.lock().unwrap();
-
+pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -> CmdResult {
+  let mut profiles = core.profiles.lock();
   profiles.put_chain(chain);
-  clash.set_window(app_handle.get_window("main"));
 
-  wrap_err!(clash.activate_enhanced(&profiles, false, false))
+  drop(profiles);
+
+  wrap_err!(core.activate_enhanced(false))
 }
 
 /// change the profile valid fields
 #[tauri::command]
-pub fn change_profile_valid(
-  valid: Option<Vec<String>>,
-  app_handle: tauri::AppHandle,
-  clash_state: State<'_, ClashState>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let mut clash = clash_state.0.lock().unwrap();
-  let mut profiles = profiles_state.0.lock().unwrap();
-
+pub fn change_profile_valid(valid: Option<Vec<String>>, core: State<Core>) -> CmdResult {
+  let mut profiles = core.profiles.lock();
   profiles.put_valid(valid);
-  clash.set_window(app_handle.get_window("main"));
 
-  wrap_err!(clash.activate_enhanced(&profiles, false, false))
-}
+  drop(profiles);
 
-/// manually exec enhanced profile
-#[tauri::command]
-pub fn enhance_profiles(
-  app_handle: tauri::AppHandle,
-  clash_state: State<'_, ClashState>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let mut clash = clash_state.0.lock().unwrap();
-  let profiles = profiles_state.0.lock().unwrap();
-
-  clash.set_window(app_handle.get_window("main"));
-
-  wrap_err!(clash.activate_enhanced(&profiles, false, false))
+  wrap_err!(core.activate_enhanced(false))
 }
 
 /// delete profile item
 #[tauri::command]
-pub fn delete_profile(
-  index: String,
-  clash_state: State<'_, ClashState>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let mut profiles = profiles_state.0.lock().unwrap();
+pub fn delete_profile(index: String, core: State<'_, Core>) -> CmdResult {
+  let mut profiles = core.profiles.lock();
 
   if wrap_err!(profiles.delete_item(index))? {
-    let clash = clash_state.0.lock().unwrap();
-    wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
+    drop(profiles);
+
+    log_if_err!(core.activate_enhanced(false));
   }
 
   Ok(())
@@ -176,19 +110,16 @@ pub fn delete_profile(
 
 /// patch the profile config
 #[tauri::command]
-pub fn patch_profile(
-  index: String,
-  profile: PrfItem,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let mut profiles = profiles_state.0.lock().unwrap();
+pub fn patch_profile(index: String, profile: PrfItem, core: State<'_, Core>) -> CmdResult {
+  let mut profiles = core.profiles.lock();
+
   wrap_err!(profiles.patch_item(index, profile))
 }
 
 /// run vscode command to edit the profile
 #[tauri::command]
-pub fn view_profile(index: String, profiles_state: State<'_, ProfilesState>) -> Result<(), String> {
-  let profiles = profiles_state.0.lock().unwrap();
+pub fn view_profile(index: String, core: State<'_, Core>) -> CmdResult {
+  let profiles = core.profiles.lock();
   let item = wrap_err!(profiles.get_item(&index))?;
 
   let file = item.file.clone();
@@ -201,41 +132,14 @@ pub fn view_profile(index: String, profiles_state: State<'_, ProfilesState>) -> 
     ret_err!("the file not found");
   }
 
-  // use vscode first
-  if let Ok(code) = which::which("code") {
-    #[cfg(target_os = "windows")]
-    {
-      use std::os::windows::process::CommandExt;
-
-      if let Err(err) = Command::new(code)
-        .creation_flags(0x08000000)
-        .arg(path)
-        .spawn()
-      {
-        log::error!("failed to open file by VScode for {err}");
-        return Err("failed to open file by VScode".into());
-      }
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    if let Err(err) = Command::new(code).arg(path).spawn() {
-      log::error!("failed to open file by VScode for {err}");
-      return Err("failed to open file by VScode".into());
-    }
-
-    return Ok(());
-  }
-
-  wrap_err!(open::that(path))
+  wrap_err!(help::open_file(path))
 }
 
 /// read the profile item file data
 #[tauri::command]
-pub fn read_profile_file(
-  index: String,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<String, String> {
-  let profiles = profiles_state.0.lock().unwrap();
+pub fn read_profile_file(index: String, core: State<'_, Core>) -> CmdResult<String> {
+  let profiles = core.profiles.lock();
+
   let item = wrap_err!(profiles.get_item(&index))?;
   let data = wrap_err!(item.read_file())?;
 
@@ -247,34 +151,22 @@ pub fn read_profile_file(
 pub fn save_profile_file(
   index: String,
   file_data: Option<String>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
+  core: State<'_, Core>,
+) -> CmdResult {
   if file_data.is_none() {
     return Ok(());
   }
 
-  let profiles = profiles_state.0.lock().unwrap();
+  let profiles = core.profiles.lock();
   let item = wrap_err!(profiles.get_item(&index))?;
   wrap_err!(item.save_file(file_data.unwrap()))
-}
-
-/// restart the sidecar
-#[tauri::command]
-pub fn restart_sidecar(
-  clash_state: State<'_, ClashState>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let mut clash = clash_state.0.lock().unwrap();
-  let mut profiles = profiles_state.0.lock().unwrap();
-
-  wrap_err!(clash.restart_sidecar(&mut profiles))
 }
 
 /// get the clash core info from the state
 /// the caller can also get the infomation by clash's api
 #[tauri::command]
-pub fn get_clash_info(clash_state: State<'_, ClashState>) -> Result<ClashInfo, String> {
-  let clash = clash_state.0.lock().unwrap();
+pub fn get_clash_info(core: State<'_, Core>) -> CmdResult<ClashInfo> {
+  let clash = core.clash.lock();
   Ok(clash.info.clone())
 }
 
@@ -282,16 +174,38 @@ pub fn get_clash_info(clash_state: State<'_, ClashState>) -> Result<ClashInfo, S
 /// after putting the change to the clash core
 /// then we should save the latest config
 #[tauri::command]
-pub fn patch_clash_config(
-  payload: Mapping,
-  clash_state: State<'_, ClashState>,
-  verge_state: State<'_, VergeState>,
-  profiles_state: State<'_, ProfilesState>,
+pub fn patch_clash_config(payload: Mapping, core: State<'_, Core>) -> CmdResult {
+  wrap_err!(core.patch_clash(payload))
+}
+
+/// get the verge config
+#[tauri::command]
+pub fn get_verge_config(core: State<'_, Core>) -> CmdResult<Verge> {
+  let verge = core.verge.lock();
+  Ok(verge.clone())
+}
+
+/// patch the verge config
+/// this command only save the config and not responsible for other things
+#[tauri::command]
+pub fn patch_verge_config(
+  payload: Verge,
+  app_handle: tauri::AppHandle,
+  core: State<'_, Core>,
 ) -> Result<(), String> {
-  let mut clash = clash_state.0.lock().unwrap();
-  let mut verge = verge_state.0.lock().unwrap();
-  let mut profiles = profiles_state.0.lock().unwrap();
-  wrap_err!(clash.patch_config(payload, &mut verge, &mut profiles))
+  wrap_err!(core.patch_verge(payload, &app_handle))
+}
+
+/// restart the sidecar
+#[tauri::command]
+pub fn restart_sidecar(core: State<'_, Core>) -> CmdResult {
+  wrap_err!(core.restart_clash())
+}
+
+/// kill all sidecars when update app
+#[tauri::command]
+pub fn kill_sidecar() {
+  api::process::kill_children();
 }
 
 /// get the system proxy
@@ -303,69 +217,9 @@ pub fn get_sys_proxy() -> Result<SysProxyConfig, String> {
 /// get the current proxy config
 /// which may not the same as system proxy
 #[tauri::command]
-pub fn get_cur_proxy(verge_state: State<'_, VergeState>) -> Result<Option<SysProxyConfig>, String> {
-  let verge = verge_state.0.lock().unwrap();
-  Ok(verge.cur_sysproxy.clone())
-}
-
-/// get the verge config
-#[tauri::command]
-pub fn get_verge_config(verge_state: State<'_, VergeState>) -> Result<VergeConfig, String> {
-  let verge = verge_state.0.lock().unwrap();
-  let mut config = verge.config.clone();
-
-  if config.system_proxy_bypass.is_none() && verge.cur_sysproxy.is_some() {
-    config.system_proxy_bypass = Some(verge.cur_sysproxy.clone().unwrap().bypass)
-  }
-
-  Ok(config)
-}
-
-/// patch the verge config
-/// this command only save the config and not responsible for other things
-#[tauri::command]
-pub fn patch_verge_config(
-  payload: VergeConfig,
-  app_handle: tauri::AppHandle,
-  clash_state: State<'_, ClashState>,
-  verge_state: State<'_, VergeState>,
-  profiles_state: State<'_, ProfilesState>,
-) -> Result<(), String> {
-  let tun_mode = payload.enable_tun_mode.clone();
-  let system_proxy = payload.enable_system_proxy.clone();
-
-  let mut verge = verge_state.0.lock().unwrap();
-  wrap_err!(verge.patch_config(payload))?;
-
-  // change tun mode
-  if tun_mode.is_some() {
-    #[cfg(target_os = "windows")]
-    if *tun_mode.as_ref().unwrap() {
-      let wintun_dll = dirs::app_home_dir().join("wintun.dll");
-      if !wintun_dll.exists() {
-        log::error!("failed to enable TUN for missing `wintun.dll`");
-        return Err("failed to enable TUN for missing `wintun.dll`".into());
-      }
-    }
-
-    let clash = clash_state.0.lock().unwrap();
-    let profiles = profiles_state.0.lock().unwrap();
-
-    wrap_err!(clash.activate_enhanced(&profiles, false, false))?;
-  }
-
-  // change system tray
-  if system_proxy.is_some() || tun_mode.is_some() {
-    verge.update_systray(&app_handle).unwrap();
-  }
-
-  Ok(())
-}
-
-/// kill all sidecars when update app
-#[tauri::command]
-pub fn kill_sidecars() {
-  api::process::kill_children();
+pub fn get_cur_proxy(core: State<'_, Core>) -> CmdResult<Option<SysProxyConfig>> {
+  let sysopt = core.sysopt.lock();
+  wrap_err!(sysopt.get_sysproxy())
 }
 
 /// open app config dir

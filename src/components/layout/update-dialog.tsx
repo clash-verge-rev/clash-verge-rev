@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { relaunch } from "@tauri-apps/api/process";
 import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
-import { killSidecars, restartSidecar } from "../../services/cmds";
+import { killSidecar, restartSidecar } from "../../services/cmds";
 import { atomUpdateState } from "../../services/states";
 import Notice from "../base/base-notice";
 
@@ -41,7 +41,7 @@ const UpdateDialog = (props: Props) => {
     setUpdateState(true);
 
     try {
-      await killSidecars();
+      await killSidecar();
       await installUpdate();
       await relaunch();
     } catch (err: any) {
