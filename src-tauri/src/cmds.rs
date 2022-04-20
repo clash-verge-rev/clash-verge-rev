@@ -58,38 +58,7 @@ pub async fn update_profile(
   option: Option<PrfOption>,
   core: State<'_, Core>,
 ) -> CmdResult {
-  let (url, opt) = {
-    // must release the lock here
-    let profiles = core.profiles.lock();
-    let item = wrap_err!(profiles.get_item(&index))?;
-
-    // check the profile type
-    if let Some(typ) = item.itype.as_ref() {
-      if *typ != "remote" {
-        ret_err!(format!("could not update the `{typ}` profile"));
-      }
-    }
-
-    if item.url.is_none() {
-      ret_err!("failed to get the item url");
-    }
-
-    (item.url.clone().unwrap(), item.option.clone())
-  };
-
-  let fetch_opt = PrfOption::merge(opt, option);
-  let item = wrap_err!(PrfItem::from_url(&url, None, None, fetch_opt).await)?;
-
-  let mut profiles = core.profiles.lock();
-  wrap_err!(profiles.update_item(index.clone(), item))?;
-
-  // reactivate the profile
-  if Some(index) == profiles.get_current() {
-    drop(profiles);
-    log_if_err!(core.activate_enhanced(false));
-  }
-
-  Ok(())
+  wrap_err!(Core::update_profile_item(core.inner().clone(), index, option).await)
 }
 
 /// change the current profile
@@ -213,9 +182,7 @@ pub fn patch_clash_config(payload: Mapping, core: State<'_, Core>) -> CmdResult 
 #[tauri::command]
 pub fn get_verge_config(core: State<'_, Core>) -> CmdResult<Verge> {
   let verge = core.verge.lock();
-  let config = verge.clone();
-
-  Ok(config)
+  Ok(verge.clone())
 }
 
 /// patch the verge config

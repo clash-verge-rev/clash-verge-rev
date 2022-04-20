@@ -1,6 +1,7 @@
 use self::notice::Notice;
 use self::service::Service;
 use self::sysopt::Sysopt;
+use self::timer::Timer;
 use crate::core::enhance::PrfEnhancedResult;
 use crate::log_if_err;
 use crate::utils::{dirs, help};
@@ -39,6 +40,8 @@ pub struct Core {
 
   pub sysopt: Arc<Mutex<Sysopt>>,
 
+  pub timer: Arc<Mutex<Timer>>,
+
   pub window: Arc<Mutex<Option<Window>>>,
 }
 
@@ -55,6 +58,7 @@ impl Core {
       profiles: Arc::new(Mutex::new(profiles)),
       service: Arc::new(Mutex::new(service)),
       sysopt: Arc::new(Mutex::new(Sysopt::new())),
+      timer: Arc::new(Mutex::new(Timer::new())),
       window: Arc::new(Mutex::new(None)),
     }
   }
@@ -98,6 +102,11 @@ impl Core {
       sleep(Duration::from_secs(2)).await;
       log_if_err!(core.activate_enhanced(true));
     });
+
+    // timer initialize
+    let mut timer = self.timer.lock();
+    timer.set_core(self.clone());
+    log_if_err!(timer.refresh());
   }
 
   /// save the window instance
@@ -320,6 +329,54 @@ impl Core {
     });
 
     window.emit("script-handler", payload).unwrap();
+
+    Ok(())
+  }
+}
+
+impl Core {
+  /// Static function
+  /// update profile item
+  pub async fn update_profile_item(
+    core: Core,
+    uid: String,
+    option: Option<PrfOption>,
+  ) -> Result<()> {
+    let (url, opt) = {
+      let profiles = core.profiles.lock();
+      let item = profiles.get_item(&uid)?;
+
+      if let Some(typ) = item.itype.as_ref() {
+        // maybe only valid for `local` profile
+        if *typ != "remote" {
+          // reactivate the config
+          if Some(uid) == profiles.get_current() {
+            drop(profiles);
+            return core.activate_enhanced(false);
+          }
+
+          return Ok(());
+        }
+      }
+
+      if item.url.is_none() {
+        bail!("failed to get the profile item url");
+      }
+
+      (item.url.clone().unwrap(), item.option.clone())
+    };
+
+    let merged_opt = PrfOption::merge(opt, option);
+    let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
+
+    let mut profiles = core.profiles.lock();
+    profiles.update_item(uid.clone(), item)?;
+
+    // reactivate the profile
+    if Some(uid) == profiles.get_current() {
+      drop(profiles);
+      core.activate_enhanced(false)?;
+    }
 
     Ok(())
   }

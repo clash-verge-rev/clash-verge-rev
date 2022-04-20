@@ -100,6 +100,11 @@ impl Profiles {
     self.valid = valid;
   }
 
+  /// get items ref
+  pub fn get_items(&self) -> Option<&Vec<PrfItem>> {
+    self.items.as_ref()
+  }
+
   /// find the item by the uid
   pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
     if self.items.is_some() {
