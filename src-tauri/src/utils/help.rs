@@ -1,4 +1,7 @@
+use anyhow::{bail, Result};
 use nanoid::nanoid;
+use std::path::PathBuf;
+use std::process::Command;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -38,6 +41,38 @@ pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
       }
     }
     None => None,
+  }
+}
+
+/// open file
+/// use vscode by default
+pub fn open_file(path: PathBuf) -> Result<()> {
+  // use vscode first
+  if let Ok(code) = which::which("code") {
+    #[cfg(target_os = "windows")]
+    {
+      use std::os::windows::process::CommandExt;
+
+      if let Err(err) = Command::new(code)
+        .creation_flags(0x08000000)
+        .arg(path)
+        .spawn()
+      {
+        bail!(format!("failed to open file by VScode for `{err}`"));
+      }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    if let Err(err) = Command::new(code).arg(path).spawn() {
+      bail!(format!("failed to open file by VScode for `{err}`"));
+    }
+
+    return Ok(());
+  }
+
+  match open::that(path) {
+    Ok(_) => Ok(()),
+    Err(err) => bail!(format!("failed to open file for `{err}`")),
   }
 }
 
