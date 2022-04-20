@@ -1,11 +1,10 @@
-use crate::log_if_err;
 use crate::utils::{config, dirs};
-use anyhow::{bail, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct VergeConfig {
+pub struct Verge {
   // i18n
   pub language: Option<String>,
 
@@ -60,9 +59,9 @@ pub struct VergeTheme {
   pub css_injection: Option<String>,
 }
 
-impl VergeConfig {
+impl Verge {
   pub fn new() -> Self {
-    config::read_yaml::<VergeConfig>(dirs::verge_path())
+    config::read_yaml::<Verge>(dirs::verge_path())
   }
 
   /// Save Verge App Config
@@ -73,75 +72,54 @@ impl VergeConfig {
       Some("# The Config for Clash Verge App\n\n"),
     )
   }
-}
-
-/// Verge App abilities
-#[derive(Debug)]
-pub struct Verge {
-  /// manage the verge config
-  pub config: VergeConfig,
-}
-
-impl Default for Verge {
-  fn default() -> Self {
-    Verge::new()
-  }
-}
-
-impl Verge {
-  pub fn new() -> Self {
-    Verge {
-      config: VergeConfig::new(),
-    }
-  }
 
   /// patch verge config
   /// only save to file
-  pub fn patch_config(&mut self, patch: VergeConfig) -> Result<()> {
+  pub fn patch_config(&mut self, patch: Verge) -> Result<()> {
     // only change it
     if patch.language.is_some() {
-      self.config.language = patch.language;
+      self.language = patch.language;
     }
     if patch.theme_mode.is_some() {
-      self.config.theme_mode = patch.theme_mode;
+      self.theme_mode = patch.theme_mode;
     }
     if patch.theme_blur.is_some() {
-      self.config.theme_blur = patch.theme_blur;
+      self.theme_blur = patch.theme_blur;
     }
     if patch.theme_setting.is_some() {
-      self.config.theme_setting = patch.theme_setting;
+      self.theme_setting = patch.theme_setting;
     }
     if patch.traffic_graph.is_some() {
-      self.config.traffic_graph = patch.traffic_graph;
+      self.traffic_graph = patch.traffic_graph;
     }
 
     // system setting
     if patch.enable_silent_start.is_some() {
-      self.config.enable_silent_start = patch.enable_silent_start;
+      self.enable_silent_start = patch.enable_silent_start;
     }
     if patch.enable_auto_launch.is_some() {
-      self.config.enable_auto_launch = patch.enable_auto_launch;
+      self.enable_auto_launch = patch.enable_auto_launch;
     }
 
     // proxy
     if patch.enable_system_proxy.is_some() {
-      self.config.enable_system_proxy = patch.enable_system_proxy;
+      self.enable_system_proxy = patch.enable_system_proxy;
     }
     if patch.system_proxy_bypass.is_some() {
-      self.config.system_proxy_bypass = patch.system_proxy_bypass;
+      self.system_proxy_bypass = patch.system_proxy_bypass;
     }
     if patch.enable_proxy_guard.is_some() {
-      self.config.enable_proxy_guard = patch.enable_proxy_guard;
+      self.enable_proxy_guard = patch.enable_proxy_guard;
     }
     if patch.proxy_guard_duration.is_some() {
-      self.config.proxy_guard_duration = patch.proxy_guard_duration;
+      self.proxy_guard_duration = patch.proxy_guard_duration;
     }
 
     // tun mode
     if patch.enable_tun_mode.is_some() {
-      self.config.enable_tun_mode = patch.enable_tun_mode;
+      self.enable_tun_mode = patch.enable_tun_mode;
     }
 
-    self.config.save_file()
+    self.save_file()
   }
 }

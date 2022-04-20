@@ -70,8 +70,8 @@ impl Core {
     let clash = self.clash.lock();
     let verge = self.verge.lock();
 
-    let silent_start = verge.config.enable_silent_start.clone();
-    let auto_launch = verge.config.enable_auto_launch.clone();
+    let silent_start = verge.enable_silent_start.clone();
+    let auto_launch = verge.enable_auto_launch.clone();
 
     // silent start
     if silent_start.unwrap_or(false) {
@@ -143,7 +143,7 @@ impl Core {
   }
 
   /// Patch Verge
-  pub fn patch_verge(&self, patch: VergeConfig, app_handle: &AppHandle) -> Result<()> {
+  pub fn patch_verge(&self, patch: Verge, app_handle: &AppHandle) -> Result<()> {
     let tun_mode = patch.enable_tun_mode.clone();
     let auto_launch = patch.enable_auto_launch.clone();
     let system_proxy = patch.enable_system_proxy.clone();
@@ -195,8 +195,8 @@ impl Core {
     let verge = self.verge.lock();
     let tray = app_handle.tray_handle();
 
-    let system_proxy = verge.config.enable_system_proxy.as_ref();
-    let tun_mode = verge.config.enable_tun_mode.as_ref();
+    let system_proxy = verge.enable_system_proxy.as_ref();
+    let tun_mode = verge.enable_tun_mode.as_ref();
 
     tray
       .get_item("system_proxy")
@@ -235,7 +235,7 @@ impl Core {
 
     let config = {
       let verge = self.verge.lock();
-      let tun_mode = verge.config.enable_tun_mode.unwrap_or(false);
+      let tun_mode = verge.enable_tun_mode.unwrap_or(false);
       Clash::_tun_mode(config, tun_mode)
     };
 
@@ -277,7 +277,7 @@ impl Core {
 
     let tun_mode = {
       let verge = self.verge.lock();
-      verge.config.enable_tun_mode.unwrap_or(false)
+      verge.enable_tun_mode.unwrap_or(false)
     };
 
     let info = {

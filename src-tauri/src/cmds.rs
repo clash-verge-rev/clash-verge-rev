@@ -1,5 +1,5 @@
 use crate::{
-  core::{ClashInfo, Core, PrfItem, PrfOption, Profiles, VergeConfig},
+  core::{ClashInfo, Core, PrfItem, PrfOption, Profiles, Verge},
   utils::{dirs, help, sysopt::SysProxyConfig},
 };
 use crate::{log_if_err, ret_err, wrap_err};
@@ -211,9 +211,9 @@ pub fn patch_clash_config(payload: Mapping, core: State<'_, Core>) -> CmdResult 
 
 /// get the verge config
 #[tauri::command]
-pub fn get_verge_config(core: State<'_, Core>) -> CmdResult<VergeConfig> {
+pub fn get_verge_config(core: State<'_, Core>) -> CmdResult<Verge> {
   let verge = core.verge.lock();
-  let config = verge.config.clone();
+  let config = verge.clone();
 
   Ok(config)
 }
@@ -222,7 +222,7 @@ pub fn get_verge_config(core: State<'_, Core>) -> CmdResult<VergeConfig> {
 /// this command only save the config and not responsible for other things
 #[tauri::command]
 pub fn patch_verge_config(
-  payload: VergeConfig,
+  payload: Verge,
   app_handle: tauri::AppHandle,
   core: State<'_, Core>,
 ) -> Result<(), String> {
