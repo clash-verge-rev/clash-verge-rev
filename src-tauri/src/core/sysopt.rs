@@ -34,14 +34,14 @@ impl Sysopt {
   /// init the sysproxy
   pub fn init_sysproxy(&mut self, port: Option<String>, verge: &Verge) {
     if let Some(port) = port {
-      let enable = verge.config.enable_system_proxy.clone().unwrap_or(false);
+      let enable = verge.enable_system_proxy.clone().unwrap_or(false);
 
       self.old_sysproxy = match SysProxyConfig::get_sys() {
         Ok(proxy) => Some(proxy),
         Err(_) => None,
       };
 
-      let bypass = verge.config.system_proxy_bypass.clone();
+      let bypass = verge.system_proxy_bypass.clone();
       let sysproxy = SysProxyConfig::new(enable, port, bypass);
 
       if enable {
@@ -173,9 +173,9 @@ impl Sysopt {
 
         let verge = Verge::new();
 
-        let enable_proxy = verge.config.enable_system_proxy.unwrap_or(false);
-        let enable_guard = verge.config.enable_proxy_guard.unwrap_or(false);
-        let guard_duration = verge.config.proxy_guard_duration.unwrap_or(10);
+        let enable_proxy = verge.enable_system_proxy.unwrap_or(false);
+        let enable_guard = verge.enable_proxy_guard.unwrap_or(false);
+        let guard_duration = verge.proxy_guard_duration.unwrap_or(10);
 
         // update duration
         wait_secs = guard_duration;
@@ -191,7 +191,7 @@ impl Sysopt {
 
         match &clash.info.port {
           Some(port) => {
-            let bypass = verge.config.system_proxy_bypass.clone();
+            let bypass = verge.system_proxy_bypass.clone();
             let sysproxy = SysProxyConfig::new(true, port.clone(), bypass);
 
             log_if_err!(sysproxy.set_sys());

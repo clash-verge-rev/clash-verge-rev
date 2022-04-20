@@ -8,7 +8,7 @@ mod core;
 mod utils;
 
 use crate::{
-  core::VergeConfig,
+  core::Verge,
   utils::{resolve, server},
 };
 use tauri::{
@@ -54,12 +54,12 @@ fn main() -> std::io::Result<()> {
 
           let new_value = {
             let verge = core.verge.lock();
-            !verge.config.enable_system_proxy.clone().unwrap_or(false)
+            !verge.enable_system_proxy.clone().unwrap_or(false)
           };
 
-          let patch = VergeConfig {
+          let patch = Verge {
             enable_system_proxy: Some(new_value),
-            ..VergeConfig::default()
+            ..Verge::default()
           };
 
           crate::log_if_err!(core.patch_verge(patch, app_handle));
@@ -69,12 +69,12 @@ fn main() -> std::io::Result<()> {
 
           let new_value = {
             let verge = core.verge.lock();
-            !verge.config.enable_tun_mode.clone().unwrap_or(false)
+            !verge.enable_tun_mode.clone().unwrap_or(false)
           };
 
-          let patch = VergeConfig {
+          let patch = Verge {
             enable_tun_mode: Some(new_value),
-            ..VergeConfig::default()
+            ..Verge::default()
           };
 
           crate::log_if_err!(core.patch_verge(patch, app_handle));
