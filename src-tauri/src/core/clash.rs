@@ -47,20 +47,15 @@ impl ClashInfo {
       },
     };
 
+    // `external-controller` could be
+    // "127.0.0.1:9090" or ":9090"
+    // "9090" or 9090 (clash do not support this)
     let server = match config.get(&key_server) {
       Some(value) => match value {
-        Value::String(val_str) => {
-          // `external-controller` could be
-          // "127.0.0.1:9090" or ":9090"
-          // Todo: maybe it could support single port
-          let server = val_str.clone();
-          let server = match server.starts_with(":") {
-            true => format!("127.0.0.1{server}"),
-            false => server,
-          };
-
-          Some(server)
-        }
+        Value::String(val_str) => match val_str.starts_with(":") {
+          true => Some(format!("127.0.0.1{val_str}")),
+          false => Some(val_str.clone()),
+        },
         _ => None,
       },
       _ => None,
@@ -113,13 +108,6 @@ impl Clash {
       &self.config,
       Some("# Default Config For Clash Core\n\n"),
     )
-  }
-
-  /// todo: delete
-  /// update the clash info
-  pub fn update_config(&mut self) {
-    self.config = Clash::read_config();
-    self.info = ClashInfo::from(&self.config);
   }
 
   /// patch update the clash config
