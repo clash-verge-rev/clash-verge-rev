@@ -57,6 +57,61 @@ impl Service {
     self.start()
   }
 
+  #[cfg(windows)]
+  pub fn install(&mut self) -> Result<()> {
+    use std::{env::current_exe, ffi::OsString};
+    use windows_service::{
+      service::{ServiceAccess, ServiceErrorControl, ServiceInfo, ServiceStartType, ServiceType},
+      service_manager::{ServiceManager, ServiceManagerAccess},
+    };
+
+    let manager_access = ServiceManagerAccess::CONNECT | ServiceManagerAccess::CREATE_SERVICE;
+    let service_manager = ServiceManager::local_computer(None::<&str>, manager_access)?;
+
+    let service_binary_path = current_exe().unwrap().with_file_name("clash.exe");
+
+    let service_info = ServiceInfo {
+      name: OsString::from("clash_verge_core"),
+      display_name: OsString::from("Clash Verge Core"),
+      service_type: ServiceType::OWN_PROCESS,
+      start_type: ServiceStartType::OnDemand,
+      error_control: ServiceErrorControl::Normal,
+      executable_path: service_binary_path,
+      launch_arguments: vec![],
+      dependencies: vec![],
+      account_name: None, // run as System
+      account_password: None,
+    };
+
+    let service = service_manager.create_service(&service_info, ServiceAccess::CHANGE_CONFIG)?;
+    service.set_description("Clash Core Service installed by Clash Verge")?;
+
+    Ok(())
+  }
+
+  #[cfg(windows)]
+  pub fn check_status(&mut self) -> Result<String> {
+    use windows_service::{
+      service::{ServiceAccess, ServiceState},
+      service_manager::{ServiceManager, ServiceManagerAccess},
+    };
+
+    let manager_access = ServiceManagerAccess::CONNECT;
+    let service_manager = ServiceManager::local_computer(None::<&str>, manager_access)?;
+
+    let service_access = ServiceAccess::QUERY_STATUS; // | ServiceAccess::STOP | ServiceAccess::DELETE;
+    let service = service_manager.open_service("clash_verge_core", service_access)?;
+
+    let service_status = service.query_status()?;
+
+    Ok(format!("{:?}", service_status.current_state))
+  }
+
+  #[cfg(windows)]
+  pub fn start_service(&mut self) -> Result<()> {
+    Ok(())
+  }
+
   /// update clash config
   /// using PUT methods
   pub fn set_config(&self, info: ClashInfo, config: Mapping, notice: Notice) -> Result<()> {

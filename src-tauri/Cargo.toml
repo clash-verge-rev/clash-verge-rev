@@ -39,6 +39,7 @@ port_scanner = "0.1.5"
 
 [target.'cfg(windows)'.dependencies]
 winreg = { version = "0.10", features = ["transactions"] }
+windows-service = "0.4.0"
 
 [features]
 default = ["custom-protocol"]
