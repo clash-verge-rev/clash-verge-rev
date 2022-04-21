@@ -1,7 +1,7 @@
 /**
  * Some interface for clash api
  */
-export namespace ApiType {
+ export namespace ApiType {
   export interface ConfigData {
     port: number;
     mode: string;
@@ -113,6 +113,7 @@ export namespace CmdType {
   export interface ProfileOption {
     user_agent?: string;
     with_proxy?: boolean;
+    update_interval?: number;
   }
 
   export interface ProfilesConfig {

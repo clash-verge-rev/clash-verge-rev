@@ -112,8 +112,12 @@ pub fn delete_profile(index: String, core: State<'_, Core>) -> CmdResult {
 #[tauri::command]
 pub fn patch_profile(index: String, profile: PrfItem, core: State<'_, Core>) -> CmdResult {
   let mut profiles = core.profiles.lock();
+  wrap_err!(profiles.patch_item(index, profile))?;
+  drop(profiles);
 
-  wrap_err!(profiles.patch_item(index, profile))
+  // update cron task
+  let mut timer = core.timer.lock();
+  wrap_err!(timer.refresh())
 }
 
 /// run vscode command to edit the profile
