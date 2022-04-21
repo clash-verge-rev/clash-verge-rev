@@ -169,8 +169,6 @@ impl Sysopt {
       loop {
         sleep(Duration::from_secs(wait_secs)).await;
 
-        log::debug!("guard heartbeat detection");
-
         let verge = Verge::new();
 
         let enable_proxy = verge.enable_system_proxy.unwrap_or(false);
@@ -185,7 +183,7 @@ impl Sysopt {
           break;
         }
 
-        log::info!("try to guard proxy");
+        log::debug!("try to guard the system proxy");
 
         let clash = Clash::new();
 
