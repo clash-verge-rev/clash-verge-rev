@@ -86,6 +86,7 @@ const ProfileEdit = (props: Props) => {
           label="Name"
           value={form.name}
           onChange={(e) => setForm({ name: e.target.value })}
+          onKeyDown={(e) => e.key === "Enter" && onUpdate()}
         />
 
         <TextField
@@ -93,6 +94,7 @@ const ProfileEdit = (props: Props) => {
           label="Descriptions"
           value={form.desc}
           onChange={(e) => setForm({ desc: e.target.value })}
+          onKeyDown={(e) => e.key === "Enter" && onUpdate()}
         />
 
         {type === "remote" && (
@@ -101,16 +103,31 @@ const ProfileEdit = (props: Props) => {
             label="Subscription Url"
             value={form.url}
             onChange={(e) => setForm({ url: e.target.value })}
+            onKeyDown={(e) => e.key === "Enter" && onUpdate()}
           />
         )}
 
         {showOpt && (
-          <TextField
-            {...textFieldProps}
-            label="User Agent"
-            value={option.user_agent}
-            onChange={(e) => setOption({ user_agent: e.target.value })}
-          />
+          <>
+            <TextField
+              {...textFieldProps}
+              label="User Agent"
+              value={option.user_agent}
+              onChange={(e) => setOption({ user_agent: e.target.value })}
+              onKeyDown={(e) => e.key === "Enter" && onUpdate()}
+            />
+
+            <TextField
+              {...textFieldProps}
+              label="Update Interval (mins)"
+              value={option.update_interval}
+              onChange={(e) => {
+                const str = e.target.value?.replace(/\D/, "");
+                setOption({ update_interval: str != null ? +str : str });
+              }}
+              onKeyDown={(e) => e.key === "Enter" && onUpdate()}
+            />
+          </>
         )}
       </DialogContent>
 

@@ -7,12 +7,16 @@ use std::collections::HashMap;
 type TaskID = u64;
 
 pub struct Timer {
+  /// cron manager
   delay_timer: DelayTimer,
 
+  /// save the current state
   timer_map: HashMap<String, (TaskID, u64)>,
 
+  /// increment id
   timer_count: TaskID,
 
+  /// save the instance of the app
   core: Option<Core>,
 }
 
@@ -41,12 +45,15 @@ impl Timer {
     for (uid, diff) in diff_map.into_iter() {
       match diff {
         DiffFlag::Del(tid) => {
+          let _ = self.timer_map.remove(&uid);
           log_if_err!(self.delay_timer.remove_task(tid));
         }
         DiffFlag::Add(tid, val) => {
+          let _ = self.timer_map.insert(uid.clone(), (tid, val));
           log_if_err!(self.add_task(uid, tid, val));
         }
         DiffFlag::Mod(tid, val) => {
+          let _ = self.timer_map.insert(uid.clone(), (tid, val));
           log_if_err!(self.delay_timer.remove_task(tid));
           log_if_err!(self.add_task(uid, tid, val));
         }
@@ -116,6 +123,7 @@ impl Timer {
 
     let task = TaskBuilder::default()
       .set_task_id(tid)
+      .set_maximum_parallel_runnable_num(1)
       .set_frequency_repeated_by_minutes(minutes)
       // .set_frequency_repeated_by_seconds(minutes) // for test
       .spawn_async_routine(move || Self::async_task(core.clone(), uid.clone()))
@@ -136,6 +144,7 @@ impl Timer {
   }
 }
 
+#[derive(Debug)]
 enum DiffFlag {
   Del(TaskID),
   Add(TaskID, u64),
