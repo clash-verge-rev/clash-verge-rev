@@ -179,18 +179,17 @@ impl Clash {
 
     revise!(config, "tun", new_tun);
 
-    // dns config
-    let dns_val = config.get(&Value::from("dns"));
-    let mut new_dns = Mapping::new();
-
-    if dns_val.is_some() && dns_val.as_ref().unwrap().is_mapping() {
-      new_dns = dns_val.as_ref().unwrap().as_mapping().unwrap().clone();
-    }
-
-    // 借鉴cfw的默认配置
-    revise!(new_dns, "enable", enable);
-
     if enable {
+      // dns config
+      let dns_val = config.get(&Value::from("dns"));
+      let mut new_dns = Mapping::new();
+
+      if dns_val.is_some() && dns_val.as_ref().unwrap().is_mapping() {
+        new_dns = dns_val.as_ref().unwrap().as_mapping().unwrap().clone();
+      }
+      revise!(new_dns, "enable", enable);
+
+      // 借鉴cfw的默认配置
       append!(new_dns, "enhanced-mode", "fake-ip");
       append!(
         new_dns,
@@ -209,9 +208,10 @@ impl Clash {
           "www.msftconnecttest.com"
         ]
       );
+
+      revise!(config, "dns", new_dns);
     }
 
-    revise!(config, "dns", new_dns);
     config
   }
 
