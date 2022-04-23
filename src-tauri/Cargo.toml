@@ -38,8 +38,9 @@ auto-launch = "0.2"
 port_scanner = "0.1.5"
 
 [target.'cfg(windows)'.dependencies]
+runas = "0.2.1"
+deelevate = "0.2.0"
 winreg = { version = "0.10", features = ["transactions"] }
-windows-service = "0.4.0"
 
 [features]
 default = ["custom-protocol"]
