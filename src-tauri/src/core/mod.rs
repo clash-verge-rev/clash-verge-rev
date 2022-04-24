@@ -1,5 +1,4 @@
 use self::notice::Notice;
-use self::service::Service;
 use self::sysopt::Sysopt;
 use self::timer::Timer;
 use crate::core::enhance::PrfEnhancedResult;
@@ -26,6 +25,7 @@ mod verge;
 pub use self::clash::*;
 pub use self::prfitem::*;
 pub use self::profiles::*;
+pub use self::service::*;
 pub use self::verge::*;
 
 #[derive(Clone)]
@@ -65,9 +65,22 @@ impl Core {
 
   /// initialize the core state
   pub fn init(&self, app_handle: tauri::AppHandle) {
-    let mut service = self.service.lock();
-    log_if_err!(service.start());
-    drop(service);
+    #[cfg(windows)]
+    {
+      let verge = self.verge.lock();
+      let enable = verge.enable_service_mode.clone();
+
+      let mut service = self.service.lock();
+      service.set_mode(enable.unwrap_or(false));
+
+      log_if_err!(service.start());
+    }
+
+    #[cfg(not(windows))]
+    {
+      let mut service = self.service.lock();
+      log_if_err!(service.start());
+    }
 
     log_if_err!(self.activate());
 
@@ -158,6 +171,23 @@ impl Core {
     let system_proxy = patch.enable_system_proxy.clone();
     let proxy_bypass = patch.system_proxy_bypass.clone();
     let proxy_guard = patch.enable_proxy_guard.clone();
+
+    #[cfg(windows)]
+    {
+      let service_mode = patch.enable_service_mode.clone();
+
+      if service_mode.is_some() {
+        let service_mode = service_mode.unwrap();
+
+        let mut service = self.service.lock();
+        service.stop()?;
+        service.set_mode(service_mode);
+        service.start()?;
+        drop(service);
+
+        self.activate_enhanced(false)?;
+      }
+    }
 
     if auto_launch.is_some() {
       let mut sysopt = self.sysopt.lock();

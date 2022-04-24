@@ -21,6 +21,10 @@ pub struct Verge {
   /// clash tun mode
   pub enable_tun_mode: Option<bool>,
 
+  /// windows service mode
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub enable_service_mode: Option<bool>,
+
   /// can the app auto startup
   pub enable_auto_launch: Option<bool>,
 
@@ -118,6 +122,9 @@ impl Verge {
     // tun mode
     if patch.enable_tun_mode.is_some() {
       self.enable_tun_mode = patch.enable_tun_mode;
+    }
+    if patch.enable_service_mode.is_some() {
+      self.enable_service_mode = patch.enable_service_mode;
     }
 
     self.save_file()

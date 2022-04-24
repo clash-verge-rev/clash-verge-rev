@@ -239,3 +239,54 @@ pub fn open_logs_dir() -> Result<(), String> {
   let log_dir = dirs::app_logs_dir();
   wrap_err!(open::that(log_dir))
 }
+
+/// service mode
+#[cfg(windows)]
+pub mod service {
+  use super::*;
+  use crate::core::win_service::JsonResponse;
+
+  #[tauri::command]
+  pub async fn start_service() -> Result<(), String> {
+    wrap_err!(crate::core::Service::start_service().await)
+  }
+
+  #[tauri::command]
+  pub async fn check_service() -> Result<JsonResponse, String> {
+    wrap_err!(crate::core::Service::check_service().await)
+  }
+
+  #[tauri::command]
+  pub async fn install_service() -> Result<(), String> {
+    wrap_err!(crate::core::Service::install_service().await)
+  }
+
+  #[tauri::command]
+  pub async fn uninstall_service() -> Result<(), String> {
+    wrap_err!(crate::core::Service::uninstall_service().await)
+  }
+}
+
+#[cfg(not(windows))]
+pub mod service {
+  use super::*;
+
+  #[tauri::command]
+  pub async fn start_service() -> Result<(), String> {
+    Ok(())
+  }
+
+  #[tauri::command]
+  pub async fn check_service() -> Result<(), String> {
+    Ok(())
+  }
+
+  #[tauri::command]
+  pub async fn install_service() -> Result<(), String> {
+    Ok(())
+  }
+  #[tauri::command]
+  pub async fn uninstall_service() -> Result<(), String> {
+    Ok(())
+  }
+}

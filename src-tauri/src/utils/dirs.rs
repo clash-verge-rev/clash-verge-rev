@@ -113,3 +113,18 @@ pub fn service_path() -> PathBuf {
     res_dir.join(SERVICE_PATH)
   }
 }
+
+#[cfg(windows)]
+pub fn service_log_file() -> PathBuf {
+  use chrono::Local;
+
+  let log_dir = app_logs_dir().join("service");
+
+  let local_time = Local::now().format("%Y-%m-%d-%H%M%S").to_string();
+  let log_file = format!("{}.log", local_time);
+  let log_file = log_dir.join(log_file);
+
+  std::fs::create_dir_all(&log_dir).unwrap();
+
+  log_file
+}
