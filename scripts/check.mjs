@@ -7,6 +7,8 @@ import proxyAgent from "https-proxy-agent";
 import { execSync } from "child_process";
 
 const cwd = process.cwd();
+const TEMP_DIR = path.join(cwd, "node_modules/.verge");
+
 const FORCE = process.argv.includes("--force");
 
 /**
@@ -58,7 +60,7 @@ async function resolveSidecar() {
 
   // download sidecar
   const binInfo = resolveClash();
-  const tempDir = path.join(cwd, "pre-dev-temp");
+  const tempDir = path.join(TEMP_DIR, "clash");
   const tempZip = path.join(tempDir, binInfo.zipfile);
   const tempExe = path.join(tempDir, binInfo.exefile);
 
@@ -104,7 +106,7 @@ async function resolveWintun() {
 
   const url = "https://www.wintun.net/builds/wintun-0.14.1.zip";
 
-  const tempDir = path.join(cwd, "pre-dev-temp-1");
+  const tempDir = path.join(TEMP_DIR, "wintun");
   const tempZip = path.join(tempDir, "wintun.zip");
 
   const wintunPath = path.join(tempDir, "wintun/bin/amd64/wintun.dll");
@@ -126,12 +128,35 @@ async function resolveWintun() {
     throw new Error(`path not found "${wintunPath}"`);
   }
 
-  // move wintun.dll to resources
   await fs.rename(wintunPath, targetPath);
-  // delete temp dir
   await fs.remove(tempDir);
 
   console.log(`[INFO]: resolve wintun.dll finished`);
+}
+
+/**
+ * only Windows
+ * get the clash-verge-service.exe
+ */
+async function resolveService() {
+  const { platform } = process;
+
+  if (platform !== "win32") return;
+
+  const url =
+    "https://github.com/zzzgydi/clash-verge-service/releases/download/latest/clash-verge-service.exe";
+
+  const binName = "clash-verge-service.exe";
+
+  const resDir = path.join(cwd, "src-tauri/resources");
+  const targetPath = path.join(resDir, binName);
+
+  if (!FORCE && (await fs.pathExists(targetPath))) return;
+
+  await fs.mkdirp(resDir);
+  await downloadFile(url, targetPath);
+
+  console.log(`[INFO]: resolve ${binName} finished`);
 }
 
 /**
@@ -143,7 +168,9 @@ async function resolveMmdb() {
 
   const resDir = path.join(cwd, "src-tauri", "resources");
   const resPath = path.join(resDir, "Country.mmdb");
+
   if (!FORCE && (await fs.pathExists(resPath))) return;
+
   await fs.mkdirp(resDir);
   await downloadFile(url, resPath);
 }
@@ -181,3 +208,4 @@ async function downloadFile(url, path) {
 resolveSidecar().catch(console.error);
 resolveWintun().catch(console.error);
 resolveMmdb().catch(console.error);
+resolveService().catch(console.error);
