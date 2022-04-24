@@ -105,3 +105,21 @@ export async function openLogsDir() {
     Notice.error(err?.message || err.toString(), 1500)
   );
 }
+
+/// service mode
+
+export async function startService() {
+  return invoke<void>("start_service");
+}
+
+export async function checkService() {
+  return invoke<any>("check_service");
+}
+
+export async function installService() {
+  return invoke<void>("install_service");
+}
+
+export async function uninstallService() {
+  return invoke<void>("uninstall_service");
+}

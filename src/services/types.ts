@@ -130,6 +130,7 @@ export namespace CmdType {
     traffic_graph?: boolean;
     enable_tun_mode?: boolean;
     enable_auto_launch?: boolean;
+    enable_service_mode?: boolean;
     enable_silent_start?: boolean;
     enable_system_proxy?: boolean;
     enable_proxy_guard?: boolean;
