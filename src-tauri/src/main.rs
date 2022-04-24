@@ -126,7 +126,12 @@ fn main() -> std::io::Result<()> {
       cmds::change_profile_chain,
       cmds::change_profile_valid,
       cmds::read_profile_file,
-      cmds::save_profile_file
+      cmds::save_profile_file,
+      // service mode
+      cmds::service::start_service,
+      cmds::service::check_service,
+      cmds::service::install_service,
+      cmds::service::uninstall_service,
     ]);
 
   #[cfg(target_os = "macos")]
