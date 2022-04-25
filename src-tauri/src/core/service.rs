@@ -294,15 +294,32 @@ pub mod win_service {
       }
     }
 
+    /// stop service
+    pub async fn stop_service() -> Result<()> {
+      let url = format!("{SERVICE_URL}/stop_service");
+      let res = reqwest::Client::new()
+        .post(url)
+        .send()
+        .await?
+        .json::<JsonResponse>()
+        .await
+        .context("failed to connect to the Clash Verge Service")?;
+
+      if res.code != 0 {
+        bail!(res.msg);
+      }
+
+      Ok(())
+    }
+
     /// check the windows service status
     pub async fn check_service() -> Result<JsonResponse> {
       let url = format!("{SERVICE_URL}/get_clash");
       let response = reqwest::get(url)
-        .await
-        .context("failed to connect to the Clash Verge Service")?
+        .await?
         .json::<JsonResponse>()
         .await
-        .context("failed to parse the Clash Verge Service response")?;
+        .context("failed to connect to the Clash Verge Service")?;
 
       Ok(response)
     }
@@ -335,11 +352,10 @@ pub mod win_service {
         .post(url)
         .json(&map)
         .send()
-        .await
-        .context("failed to connect to the Clash Verge Service")?
+        .await?
         .json::<JsonResponse>()
         .await
-        .context("failed to parse the Clash Verge Service response")?;
+        .context("failed to connect to the Clash Verge Service")?;
 
       if res.code != 0 {
         bail!(res.msg);
@@ -354,11 +370,10 @@ pub mod win_service {
       let res = reqwest::Client::new()
         .post(url)
         .send()
-        .await
-        .context("failed to connect to the Clash Verge Service")?
+        .await?
         .json::<JsonResponse>()
         .await
-        .context("failed to parse the Clash Verge Service response")?;
+        .context("failed to connect to the Clash Verge Service")?;
 
       if res.code != 0 {
         bail!(res.msg);

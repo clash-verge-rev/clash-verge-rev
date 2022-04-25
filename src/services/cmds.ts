@@ -112,8 +112,19 @@ export async function startService() {
   return invoke<void>("start_service");
 }
 
+export async function stopService() {
+  return invoke<void>("stop_service");
+}
+
 export async function checkService() {
-  return invoke<any>("check_service");
+  try {
+    const result = await invoke<any>("check_service");
+    if (result?.code === 0) return "active";
+    if (result?.code === 400) return "installed";
+    return "unknown";
+  } catch (err: any) {
+    return "uninstall";
+  }
 }
 
 export async function installService() {
