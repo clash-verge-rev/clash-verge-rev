@@ -122,7 +122,7 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={(e: any) => +e.target.value?.replace(/\D+/, "")}
           onChange={(e) => onChangeData({ "mixed-port": e })}
           onGuard={onUpdatePort}
-          waitTime={800}
+          waitTime={1000}
         >
           <TextField autoComplete="off" size="small" sx={{ width: 120 }} />
         </GuardState>
