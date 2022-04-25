@@ -1,3 +1,19 @@
+## v1.0.0
+
+### Features
+
+- update clash core
+- optimize traffic graph animation
+- supports interval update profiles
+- supports service mode (Windows)
+
+### Bug Fixes
+
+- reset system proxy when exit from dock (macOS)
+- adjust clash dns config process strategy
+
+---
+
 ## v0.0.29
 
 ### Features
@@ -9,6 +25,8 @@
 - default user agent for subscription
 - system tray add tun mode toggle
 - enable to change the config dir (Windows only)
+
+---
 
 ## v0.0.28
 
