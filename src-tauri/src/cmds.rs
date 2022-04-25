@@ -252,17 +252,24 @@ pub mod service {
   }
 
   #[tauri::command]
+  pub async fn stop_service() -> Result<(), String> {
+    wrap_err!(crate::core::Service::stop_service().await)
+  }
+
+  #[tauri::command]
   pub async fn check_service() -> Result<JsonResponse, String> {
     wrap_err!(crate::core::Service::check_service().await)
   }
 
   #[tauri::command]
   pub async fn install_service() -> Result<(), String> {
-    wrap_err!(crate::core::Service::install_service().await)
+    wrap_err!(crate::core::Service::install_service().await)?;
+    wrap_err!(crate::core::Service::start_service().await)
   }
 
   #[tauri::command]
   pub async fn uninstall_service() -> Result<(), String> {
+    log_if_err!(crate::core::Service::stop_service().await);
     wrap_err!(crate::core::Service::uninstall_service().await)
   }
 }
@@ -273,6 +280,11 @@ pub mod service {
 
   #[tauri::command]
   pub async fn start_service() -> Result<(), String> {
+    Ok(())
+  }
+
+  #[tauri::command]
+  pub async fn stop_service() -> Result<(), String> {
     Ok(())
   }
 
