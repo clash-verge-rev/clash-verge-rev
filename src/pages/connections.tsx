@@ -124,7 +124,6 @@ const ConnectionsPage = () => {
 
         <Box height="calc(100% - 50px)">
           <Virtuoso
-            initialTopMostItemIndex={999}
             data={filterConn}
             itemContent={(index, item) => <ConnectionItem value={item} />}
           />
