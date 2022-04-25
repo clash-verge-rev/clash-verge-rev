@@ -263,8 +263,10 @@ pub mod service {
 
   #[tauri::command]
   pub async fn install_service() -> Result<(), String> {
-    wrap_err!(crate::core::Service::install_service().await)?;
-    wrap_err!(crate::core::Service::start_service().await)
+    log_if_err!(crate::core::Service::install_service().await);
+    let ret = wrap_err!(crate::core::Service::start_service().await);
+    log::info!("clash verge service started successfully");
+    ret
   }
 
   #[tauri::command]

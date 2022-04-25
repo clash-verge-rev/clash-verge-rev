@@ -22,8 +22,11 @@ pub fn resolve_setup(app: &App) {
 pub fn resolve_reset(app_handle: &AppHandle) {
   let core = app_handle.state::<Core>();
   let mut sysopt = core.sysopt.lock();
-
   sysopt.reset_sysproxy();
+  drop(sysopt);
+
+  let mut service = core.service.lock();
+  crate::log_if_err!(service.stop());
 }
 
 /// customize the window theme
