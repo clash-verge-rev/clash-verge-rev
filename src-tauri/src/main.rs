@@ -85,8 +85,7 @@ fn main() -> std::io::Result<()> {
         }
         "quit" => {
           resolve::resolve_reset(app_handle);
-          api::process::kill_children();
-          std::process::exit(0);
+          app_handle.exit(0);
         }
         _ => {}
       },

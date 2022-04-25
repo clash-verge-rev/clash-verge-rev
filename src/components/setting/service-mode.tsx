@@ -41,8 +41,8 @@ const ServiceMode = (props: Props) => {
     try {
       await installService();
       mutate("checkService");
-      Notice.success("Service installed successfully");
       onClose();
+      Notice.success("Service installed successfully");
     } catch (err: any) {
       mutate("checkService");
       onError(err);
@@ -56,9 +56,9 @@ const ServiceMode = (props: Props) => {
       }
 
       await uninstallService();
-      Notice.success("Service uninstalled successfully");
       mutate("checkService");
       onClose();
+      Notice.success("Service uninstalled successfully");
     } catch (err: any) {
       mutate("checkService");
       onError(err);
