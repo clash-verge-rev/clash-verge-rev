@@ -143,20 +143,26 @@ async function resolveService() {
 
   if (platform !== "win32") return;
 
-  const url =
-    "https://github.com/zzzgydi/clash-verge-service/releases/download/latest/clash-verge-service.exe";
-
-  const binName = "clash-verge-service.exe";
-
   const resDir = path.join(cwd, "src-tauri/resources");
-  const targetPath = path.join(resDir, binName);
 
-  if (!FORCE && (await fs.pathExists(targetPath))) return;
+  const repo =
+    "https://github.com/zzzgydi/clash-verge-service/releases/download/latest";
+
+  async function help(bin) {
+    const targetPath = path.join(resDir, bin);
+
+    if (!FORCE && (await fs.pathExists(targetPath))) return;
+
+    const url = `${repo}/${bin}`;
+    await downloadFile(url, targetPath);
+  }
 
   await fs.mkdirp(resDir);
-  await downloadFile(url, targetPath);
+  await help("clash-verge-service.exe");
+  await help("install-service.exe");
+  await help("uninstall-service.exe");
 
-  console.log(`[INFO]: resolve ${binName} finished`);
+  console.log(`[INFO]: resolve Service finished`);
 }
 
 /**
