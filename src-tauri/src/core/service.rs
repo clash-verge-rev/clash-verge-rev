@@ -191,8 +191,9 @@ pub mod win_service {
   use super::*;
   use anyhow::Context;
   use deelevate::{PrivilegeLevel, Token};
-  use runas::Command as RunasCommond;
-  use std::{env::current_exe, process::Command as StdCommond};
+  use runas::Command as RunasCommand;
+  use std::os::windows::process::CommandExt;
+  use std::{env::current_exe, process::Command as StdCommand};
 
   const SERVICE_NAME: &str = "clash_verge_service";
 
@@ -217,61 +218,63 @@ pub mod win_service {
     /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
     pub async fn install_service() -> Result<()> {
       let binary_path = dirs::service_path();
-      let arg = format!("binpath={}", binary_path.as_os_str().to_string_lossy());
+      let install_path = binary_path.with_file_name("install-service.exe");
+
+      if !install_path.exists() {
+        bail!("installer exe not found");
+      }
 
       let token = Token::with_current_process()?;
       let level = token.privilege_level()?;
 
-      let args = [
-        "create",
-        SERVICE_NAME,
-        arg.as_str(),
-        "type=own",
-        "start=AUTO",
-        "displayname=Clash Verge Service",
-      ];
-
       let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommond::new("sc").args(&args).status()?,
-        _ => StdCommond::new("sc").args(&args).status()?,
+        PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).status()?,
+        _ => StdCommand::new(install_path)
+          .creation_flags(0x08000000)
+          .status()?,
       };
 
-      if status.success() {
-        return Ok(());
+      if !status.success() {
+        bail!(
+          "failed to install service with status {}",
+          status.code().unwrap()
+        );
       }
 
-      if status.code() == Some(1073i32) {
-        bail!("clash verge service is installed");
-      }
-
-      bail!(
-        "failed to install service with status {}",
-        status.code().unwrap()
-      )
+      Ok(())
     }
 
     /// Uninstall the Clash Verge Service
     /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
     pub async fn uninstall_service() -> Result<()> {
+      let binary_path = dirs::service_path();
+      let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
+
+      if !uninstall_path.exists() {
+        bail!("uninstaller exe not found");
+      }
+
       let token = Token::with_current_process()?;
       let level = token.privilege_level()?;
 
-      let args = ["delete", SERVICE_NAME];
-
       let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommond::new("sc").args(&args).status()?,
-        _ => StdCommond::new("sc").args(&args).status()?,
+        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).status()?,
+        _ => StdCommand::new(uninstall_path)
+          .creation_flags(0x08000000)
+          .status()?,
       };
 
-      match status.success() {
-        true => Ok(()),
-        false => bail!(
+      if !status.success() {
+        bail!(
           "failed to uninstall service with status {}",
           status.code().unwrap()
-        ),
+        );
       }
+
+      Ok(())
     }
 
+    /// [deprecated]
     /// start service
     /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
     pub async fn start_service() -> Result<()> {
@@ -281,8 +284,8 @@ pub mod win_service {
       let args = ["start", SERVICE_NAME];
 
       let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommond::new("sc").args(&args).status()?,
-        _ => StdCommond::new("sc").args(&args).status()?,
+        PrivilegeLevel::NotPrivileged => RunasCommand::new("sc").args(&args).status()?,
+        _ => StdCommand::new("sc").args(&args).status()?,
       };
 
       match status.success() {
