@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { listen } from "@tauri-apps/api/event";
 import { ApiType } from "../../services/types";
-import { getInfomation } from "../../services/api";
+import { getInformation } from "../../services/api";
 import { atomLogData } from "../../services/states";
 
 const MAX_LOG_NUM = 1000;
@@ -25,7 +25,7 @@ export default function useLogSetup() {
       });
     };
 
-    getInfomation().then((info) => {
+    getInformation().then((info) => {
       const { server = "", secret = "" } = info;
       ws = new WebSocket(`ws://${server}/logs?token=${secret}`);
       ws.addEventListener("message", handler);
