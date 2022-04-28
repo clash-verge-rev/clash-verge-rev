@@ -4,7 +4,7 @@ import { Box, Button, Paper, TextField } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import { ApiType } from "../services/types";
-import { closeAllConnections, getInfomation } from "../services/api";
+import { closeAllConnections, getInformation } from "../services/api";
 import BasePage from "../components/base/base-page";
 import ConnectionItem from "../components/connection/connection-item";
 
@@ -25,7 +25,7 @@ const ConnectionsPage = () => {
   useEffect(() => {
     let ws: WebSocket | null = null;
 
-    getInfomation().then((result) => {
+    getInformation().then((result) => {
       const { server = "", secret = "" } = result;
       ws = new WebSocket(`ws://${server}/connections?token=${secret}`);
 
