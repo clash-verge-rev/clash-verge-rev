@@ -32,8 +32,8 @@ export async function getAxios(force: boolean = false) {
   return axiosIns;
 }
 
-/// get infomation
-export async function getInfomation() {
+/// get information
+export async function getInformation() {
   if (server) return { server, secret };
   const info = await getClashInfo();
   return info!;
