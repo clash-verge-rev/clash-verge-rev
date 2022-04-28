@@ -32,13 +32,11 @@
       "shortDescription": "A Clash GUI based on tauri.",
       "longDescription": "A Clash GUI based on tauri.",
       "deb": {
-        "depends": [],
-        "useBootstrapper": false
+        "depends": []
       },
       "macOS": {
         "frameworks": [],
         "minimumSystemVersion": "",
-        "useBootstrapper": false,
         "exceptionDomain": "",
         "signingIdentity": null,
         "entitlements": null

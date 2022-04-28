@@ -5,7 +5,7 @@ import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import { listen } from "@tauri-apps/api/event";
 import { ApiType } from "../../services/types";
-import { getInfomation } from "../../services/api";
+import { getInformation } from "../../services/api";
 import { getVergeConfig } from "../../services/cmds";
 import { atomClashPort } from "../../services/states";
 import TrafficGraph from "./traffic-graph";
@@ -41,7 +41,7 @@ const LayoutTraffic = () => {
   useEffect(() => {
     let ws: WebSocket | null = null;
 
-    getInfomation().then((result) => {
+    getInformation().then((result) => {
       const { server = "", secret = "" } = result;
       ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
 
