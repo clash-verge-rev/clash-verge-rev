@@ -203,7 +203,7 @@ impl PrfItem {
       builder = builder.no_proxy();
     }
 
-    builder = builder.user_agent(user_agent.unwrap_or("clash-verge/v0.1.0".into()));
+    builder = builder.user_agent(user_agent.unwrap_or("clash-verge/v1.0.0".into()));
 
     let resp = builder.build()?.get(url).send().await?;
     let header = resp.headers();
