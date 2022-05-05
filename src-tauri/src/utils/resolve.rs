@@ -51,7 +51,7 @@ fn resolve_window(app: &App) {
     window
       .set_size(Logical(LogicalSize {
         width: 800.0,
-        height: 610.0,
+        height: 620.0,
       }))
       .unwrap();
     // use tauri_plugin_vibrancy::MacOSVibrancy;
