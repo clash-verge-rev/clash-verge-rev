@@ -13,9 +13,10 @@ import {
   ListItemText,
   styled,
   TextField,
+  useTheme,
 } from "@mui/material";
 import { getVergeConfig, patchVergeConfig } from "../../services/cmds";
-import { defaultTheme } from "../../pages/_theme";
+import { defaultTheme, defaultDarkTheme } from "../../pages/_theme";
 
 interface Props {
   open: boolean;
@@ -71,15 +72,22 @@ const SettingTheme = (props: Props) => {
     }
   });
 
-  const renderItem = (label: string, key: keyof typeof defaultTheme) => {
+  // default theme
+  const { palette } = useTheme();
+
+  const dt = palette.mode === "light" ? defaultTheme : defaultDarkTheme;
+
+  type ThemeKey = keyof typeof theme & keyof typeof defaultTheme;
+
+  const renderItem = (label: string, key: ThemeKey) => {
     return (
       <Item>
         <ListItemText primary={label} />
-        <Round sx={{ background: theme[key] || defaultTheme[key] }} />
+        <Round sx={{ background: theme[key] || dt[key] }} />
         <TextField
           {...textProps}
           value={theme[key] ?? ""}
-          placeholder={defaultTheme[key]}
+          placeholder={dt[key]}
           onChange={handleChange(key)}
           onKeyDown={(e) => e.key === "Enter" && onSave()}
         />

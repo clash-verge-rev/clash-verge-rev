@@ -11,6 +11,7 @@ body {
   --primary-main: #5b5c9d;
   --text-primary: #637381;
   --selection-color: #f5f5f5;
+  --scroller-color: #90939980;
 }
 
 ::selection {
@@ -25,7 +26,7 @@ body {
 }
 *::-webkit-scrollbar-thumb {
   border-radius: 6px;
-  background-color: rgba(#909399, 0.5);
+  background-color: var(--scroller-color);
 }
 
 @import "./layout.scss";

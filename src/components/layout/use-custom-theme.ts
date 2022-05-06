@@ -2,7 +2,7 @@ import useSWR from "swr";
 import { useMemo } from "react";
 import { createTheme } from "@mui/material";
 import { getVergeConfig } from "../../services/cmds";
-import { defaultTheme as dt } from "../../pages/_theme";
+import { defaultTheme, defaultDarkTheme } from "../../pages/_theme";
 
 /**
  * custome theme
@@ -13,14 +13,9 @@ export default function useCustomTheme() {
 
   const theme = useMemo(() => {
     const mode = theme_mode ?? "light";
-    // const background = mode === "light" ? "#f5f5f5" : "#000";
-    const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
-
-    const rootEle = document.documentElement;
-    rootEle.style.background = "transparent";
-    rootEle.style.setProperty("--selection-color", selectColor);
 
     const setting = theme_setting || {};
+    const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
 
     const theme = createTheme({
       breakpoints: {
@@ -46,6 +41,16 @@ export default function useCustomTheme() {
           : dt.font_family,
       },
     });
+
+    // css
+    const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
+    const scrollColor = mode === "light" ? "#90939980" : "#54545480";
+
+    const rootEle = document.documentElement;
+    rootEle.style.background = "transparent";
+    rootEle.style.setProperty("--selection-color", selectColor);
+    rootEle.style.setProperty("--scroller-color", scrollColor);
+    rootEle.style.setProperty("--primary-main", theme.palette.primary.main);
 
     // inject css
     let style = document.querySelector("style#verge-theme");
