@@ -1,6 +1,7 @@
 import { mutate } from "swr";
 import { useEffect, useState } from "react";
 import { useLockFn, useSetState } from "ahooks";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Dialog,
@@ -25,6 +26,8 @@ interface Props {
 // remote / local file / merge / script
 const ProfileEdit = (props: Props) => {
   const { open, itemData, onClose } = props;
+
+  const { t } = useTranslation();
   const [form, setForm] = useSetState({ ...itemData });
   const [option, setOption] = useSetState(itemData.option ?? {});
   const [showOpt, setShowOpt] = useState(!!itemData.option);
@@ -33,7 +36,10 @@ const ProfileEdit = (props: Props) => {
     if (itemData) {
       setForm({ ...itemData });
       setOption(itemData.option ?? {});
-      setShowOpt(!!itemData.option?.user_agent);
+      setShowOpt(
+        itemData.type === "remote" &&
+          (!!itemData.option?.user_agent || !!itemData.option?.update_interval)
+      );
     }
   }, [itemData]);
 
@@ -41,7 +47,10 @@ const ProfileEdit = (props: Props) => {
     try {
       const { uid } = itemData;
       const { name, desc, url } = form;
-      const option_ = itemData.type === "remote" ? option : undefined;
+      const option_ =
+        itemData.type === "remote" || itemData.type === "local"
+          ? option
+          : undefined;
 
       if (itemData.type === "remote" && !url) {
         throw new Error("Remote URL should not be null");
@@ -65,11 +74,11 @@ const ProfileEdit = (props: Props) => {
 
   const type =
     form.type ||
-    (form.url ? "remote" : form.file?.endsWith("js") ? "script" : "local");
+    (form.url ? "remote" : form.file?.endsWith(".js") ? "script" : "local");
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle sx={{ pb: 0.5 }}>Edit Profile</DialogTitle>
+      <DialogTitle sx={{ pb: 0.5 }}>{t("Edit Info")}</DialogTitle>
 
       <DialogContent sx={{ width: 336, pb: 1 }}>
         <TextField
@@ -100,7 +109,7 @@ const ProfileEdit = (props: Props) => {
         {type === "remote" && (
           <TextField
             {...textFieldProps}
-            label="Subscription Url"
+            label="Subscription URL"
             value={form.url}
             onChange={(e) => setForm({ url: e.target.value })}
             onKeyDown={(e) => e.key === "Enter" && onUpdate()}
@@ -108,26 +117,27 @@ const ProfileEdit = (props: Props) => {
         )}
 
         {showOpt && (
-          <>
-            <TextField
-              {...textFieldProps}
-              label="User Agent"
-              value={option.user_agent}
-              onChange={(e) => setOption({ user_agent: e.target.value })}
-              onKeyDown={(e) => e.key === "Enter" && onUpdate()}
-            />
+          <TextField
+            {...textFieldProps}
+            label="User Agent"
+            value={option.user_agent}
+            placeholder="clash-verge/v1.0.0"
+            onChange={(e) => setOption({ user_agent: e.target.value })}
+            onKeyDown={(e) => e.key === "Enter" && onUpdate()}
+          />
+        )}
 
-            <TextField
-              {...textFieldProps}
-              label="Update Interval (mins)"
-              value={option.update_interval}
-              onChange={(e) => {
-                const str = e.target.value?.replace(/\D/, "");
-                setOption({ update_interval: str != null ? +str : str });
-              }}
-              onKeyDown={(e) => e.key === "Enter" && onUpdate()}
-            />
-          </>
+        {((type === "remote" && showOpt) || type === "local") && (
+          <TextField
+            {...textFieldProps}
+            label="Update Interval (mins)"
+            value={option.update_interval}
+            onChange={(e) => {
+              const str = e.target.value?.replace(/\D/, "");
+              setOption({ update_interval: str != null ? +str : str });
+            }}
+            onKeyDown={(e) => e.key === "Enter" && onUpdate()}
+          />
         )}
       </DialogContent>
 
