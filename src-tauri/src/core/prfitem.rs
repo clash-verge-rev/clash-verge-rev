@@ -16,12 +16,12 @@ pub struct PrfItem {
   /// profile name
   pub name: Option<String>,
 
+  /// profile file
+  pub file: Option<String>,
+
   /// profile description
   #[serde(skip_serializing_if = "Option::is_none")]
   pub desc: Option<String>,
-
-  /// profile file
-  pub file: Option<String>,
 
   /// source url
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -156,7 +156,7 @@ impl PrfItem {
         let desc = item.desc.unwrap_or("".into());
         PrfItem::from_script(name, desc)
       }
-      typ @ _ => bail!("invalid type \"{typ}\""),
+      typ @ _ => bail!("invalid profile item type \"{typ}\""),
     }
   }
 
@@ -224,9 +224,30 @@ impl PrfItem {
       None => None,
     };
 
+    // parse the Content-Disposition
+    let filename = match header.get("Content-Disposition") {
+      Some(value) => {
+        let filename = value.to_str().unwrap_or("");
+        help::parse_str::<String>(filename, "filename=")
+      }
+      None => None,
+    };
+
+    // parse the profile-update-interval
+    let option = match header.get("profile-update-interval") {
+      Some(value) => match value.to_str().unwrap_or("").parse::<u64>() {
+        Ok(val) => Some(PrfOption {
+          update_interval: Some(val * 60), // hour -> min
+          ..PrfOption::default()
+        }),
+        Err(_) => None,
+      },
+      None => None,
+    };
+
     let uid = help::get_uid("r");
     let file = format!("{uid}.yaml");
-    let name = name.unwrap_or(uid.clone());
+    let name = name.unwrap_or(filename.unwrap_or("Remote File".into()));
     let data = resp.text_with_charset("utf-8").await?;
 
     // check the data whether the valid yaml format
