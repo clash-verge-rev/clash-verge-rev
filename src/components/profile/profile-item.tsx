@@ -165,8 +165,8 @@ const ProfileItem = (props: Props) => {
           const color = {
             "light-true": text.secondary,
             "light-false": text.secondary,
-            "dark-true": alpha(text.secondary, 0.6),
-            "dark-false": alpha(text.secondary, 0.6),
+            "dark-true": alpha(text.secondary, 0.75),
+            "dark-false": alpha(text.secondary, 0.75),
           }[key]!;
 
           const h2color = {

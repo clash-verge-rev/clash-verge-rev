@@ -10,7 +10,7 @@
     height: 100%;
     max-width: 225px;
     min-width: 125px;
-    padding: 8px 0;
+    padding: 16px 0 8px;
     flex-direction: column;
     box-sizing: border-box;
     user-select: none;
@@ -23,14 +23,14 @@
       max-width: 168px;
       max-height: 168px;
       margin: 0 auto;
-      padding: 0 8px;
+      padding: 0 16px;
       text-align: center;
       box-sizing: border-box;
 
       img,
       svg {
-        width: 100%;
-        height: 100%;
+        width: 96%;
+        height: 96%;
         pointer-events: none;
       }
 
@@ -43,7 +43,7 @@
     }
 
     .the-menu {
-      flex: 1 1 75%;
+      flex: 1 1 80%;
       overflow-y: auto;
       margin-bottom: 8px;
     }

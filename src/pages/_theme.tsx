@@ -10,3 +10,10 @@ export const defaultTheme = {
   success_color: "#2e7d32",
   font_family: `"Roboto", "Helvetica", "Arial", sans-serif`,
 };
+
+// dark mode
+export const defaultDarkTheme = {
+  ...defaultTheme,
+  primary_text: "#757575",
+  secondary_text: "#637381",
+};

@@ -72,7 +72,7 @@ const Layout = () => {
           }}
           sx={[
             ({ palette }) => ({
-              bgcolor: alpha(palette.background.paper, theme_blur ? 0.85 : 1),
+              bgcolor: alpha(palette.background.paper, theme_blur ? 0.8 : 1),
             }),
           ]}
         >
@@ -83,7 +83,7 @@ const Layout = () => {
               <UpdateButton className="the-newbtn" />
             </div>
 
-            <List className="the-menu" data-windrag>
+            <List className="the-menu">
               {routers.map((router) => (
                 <LayoutItem key={router.label} to={router.link}>
                   {t(router.label)}
