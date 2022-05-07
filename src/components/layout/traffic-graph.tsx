@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@mui/material";
+import { listen } from "@tauri-apps/api/event";
+import { appWindow } from "@tauri-apps/api/window";
 
 const maxPoint = 30;
 
@@ -70,7 +72,28 @@ const TrafficGraph = (props: Props) => {
     };
   }, []);
 
+  // reduce the GPU usage when hidden
+  const [enablePaint, setEnablePaint] = useState(true);
   useEffect(() => {
+    appWindow.isVisible().then(setEnablePaint);
+
+    const unlistenBlur = listen("tauri://blur", async () => {
+      setEnablePaint(await appWindow.isVisible());
+    });
+
+    const unlistenFocus = listen("tauri://focus", async () => {
+      setEnablePaint(await appWindow.isVisible());
+    });
+
+    return () => {
+      unlistenBlur.then((fn) => fn());
+      unlistenFocus.then((fn) => fn());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enablePaint) return;
+
     let raf = 0;
     const canvas = canvasRef.current!;
 
@@ -193,7 +216,7 @@ const TrafficGraph = (props: Props) => {
     return () => {
       cancelAnimationFrame(raf);
     };
-  }, [palette]);
+  }, [enablePaint, palette]);
 
   return <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />;
 };
