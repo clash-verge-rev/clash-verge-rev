@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useSWRConfig } from "swr";
 import { useRecoilState } from "recoil";
@@ -59,11 +59,6 @@ const ProfileItem = (props: Props) => {
   const [loadingCache, setLoadingCache] = useRecoilState(atomLoadingCache);
 
   const { uid, name = "Profile", extra, updated = 0 } = itemData;
-  const { upload = 0, download = 0, total = 0 } = extra ?? {};
-  const from = parseUrl(itemData.url);
-  const expire = parseExpire(extra?.expire);
-  const progress = Math.round(((download + upload) * 100) / (total + 0.1));
-  const fromnow = updated > 0 ? dayjs(updated * 1000).fromNow() : "";
 
   // local file mode
   // remote file mode
@@ -71,7 +66,41 @@ const ProfileItem = (props: Props) => {
   const hasUrl = !!itemData.url;
   const hasExtra = !!extra; // only subscription url has extra info
 
+  const { upload = 0, download = 0, total = 0 } = extra ?? {};
+  const from = parseUrl(itemData.url);
+  const expire = parseExpire(extra?.expire);
+  const progress = Math.round(((download + upload) * 100) / (total + 0.1));
+
   const loading = loadingCache[itemData.uid] ?? false;
+
+  // interval update from now field
+  const [, setRefresh] = useState({});
+  useEffect(() => {
+    if (!hasUrl) return;
+
+    let timer: any = null;
+
+    const handler = () => {
+      const now = Date.now();
+      const lastUpdate = updated * 1000;
+
+      // 大于一天的不管
+      if (now - lastUpdate >= 24 * 36e5) return;
+
+      const wait = now - lastUpdate >= 36e5 ? 30e5 : 5e4;
+
+      timer = setTimeout(() => {
+        setRefresh({});
+        handler();
+      }, wait);
+    };
+
+    handler();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [hasUrl, updated]);
 
   const [editOpen, setEditOpen] = useState(false);
   const [fileOpen, setFileOpen] = useState(false);
@@ -231,7 +260,7 @@ const ProfileItem = (props: Props) => {
               textAlign="right"
               title="updated time"
             >
-              {fromnow}
+              {updated > 0 ? dayjs(updated * 1000).fromNow() : ""}
             </Typography>
           </Box>
         ) : (
