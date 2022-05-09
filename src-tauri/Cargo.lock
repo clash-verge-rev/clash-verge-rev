@@ -528,6 +528,7 @@ dependencies = [
  "which 4.2.5",
  "window-shadows",
  "window-vibrancy",
+ "windows-sys",
  "winreg",
 ]
 
