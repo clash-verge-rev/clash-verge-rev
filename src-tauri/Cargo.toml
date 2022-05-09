@@ -40,6 +40,7 @@ port_scanner = "0.1.5"
 [target.'cfg(windows)'.dependencies]
 runas = "0.2.1"
 deelevate = "0.2.0"
+windows-sys = "0.36"
 winreg = { version = "0.10", features = ["transactions"] }
 
 [features]
