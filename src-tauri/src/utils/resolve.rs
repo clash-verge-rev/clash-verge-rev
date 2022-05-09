@@ -38,24 +38,20 @@ fn resolve_window(app: &App) {
     use window_shadows::set_shadow;
     use window_vibrancy::apply_blur;
 
-    window.set_decorations(false).unwrap();
-    set_shadow(&window, true).unwrap();
-    apply_blur(&window, None).unwrap();
+    let _ = window.set_decorations(false);
+    let _ = set_shadow(&window, true);
+    let _ = apply_blur(&window, None);
   }
 
   #[cfg(target_os = "macos")]
   {
     use tauri::LogicalSize;
     use tauri::Size::Logical;
-    window.set_decorations(true).unwrap();
-    window
-      .set_size(Logical(LogicalSize {
-        width: 800.0,
-        height: 620.0,
-      }))
-      .unwrap();
-    // use tauri_plugin_vibrancy::MacOSVibrancy;
-    // #[allow(deprecated)]
-    // window.apply_vibrancy(MacOSVibrancy::AppearanceBased);
+
+    let _ = window.set_decorations(true);
+    let _ = window.set_size(Logical(LogicalSize {
+      width: 800.0,
+      height: 620.0,
+    }));
   }
 }
