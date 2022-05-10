@@ -1,3 +1,19 @@
+## v1.0.1
+
+### Features
+
+- adjust default theme settings
+- reduce gpu usage of traffic graph when hidden
+- supports more remote profile response header setting
+- check remote profile data format when imported
+
+### Bug Fixes
+
+- service mode install and start issue (Windows)
+- fix launch panic (Some Windows)
+
+---
+
 ## v1.0.0
 
 ### Features
