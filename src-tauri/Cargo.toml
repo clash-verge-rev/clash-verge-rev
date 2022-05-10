@@ -44,7 +44,7 @@ windows-sys = "0.36"
 winreg = { version = "0.10", features = ["transactions"] }
 
 [features]
-default = ["custom-protocol"]
+default = ["custom-protocol", "tauri/ayatana-tray"]
 custom-protocol = ["tauri/custom-protocol"]
 verge-dev = []
 debug-yml = []
