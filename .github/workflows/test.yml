@@ -32,6 +32,9 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
+
       - name: Install Node
         uses: actions/setup-node@v1
         with:
@@ -41,7 +44,7 @@ jobs:
         if: github.event.inputs.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libappindicator3-dev librsvg2-dev libappindicator
+          sudo apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libappindicator3-dev librsvg2-dev libayatana-appindicator-dev
 
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
