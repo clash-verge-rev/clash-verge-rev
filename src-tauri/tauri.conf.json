@@ -11,7 +11,7 @@
   },
   "tauri": {
     "systemTray": {
-      "iconPath": "icons/icon.png",
+      "iconPath": "icons/tray-icon",
       "iconAsTemplate": true
     },
     "bundle": {
