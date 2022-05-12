@@ -65,6 +65,13 @@ const ServiceMode = (props: Props) => {
     }
   });
 
+  // fix unhandle error of the service mode
+  const onDisable = useLockFn(async () => {
+    await patchVergeConfig({ enable_service_mode: false });
+    mutate("checkService");
+    onClose();
+  });
+
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>{t("Service Mode")}</DialogTitle>
@@ -84,6 +91,12 @@ const ServiceMode = (props: Props) => {
           spacing={1}
           sx={{ mt: 4, justifyContent: "flex-end" }}
         >
+          {state === "uninstall" && enable && (
+            <Button variant="contained" onClick={onDisable}>
+              Disable Service Mode
+            </Button>
+          )}
+
           {state === "uninstall" && (
             <Button variant="contained" onClick={onInstall}>
               Install
