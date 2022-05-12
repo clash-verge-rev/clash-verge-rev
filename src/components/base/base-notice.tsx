@@ -86,7 +86,9 @@ const Notice: NoticeInstance = (props) => {
 };
 
 (["info", "error", "success"] as const).forEach((type) => {
-  Notice[type] = (message, duration) => Notice({ type, message, duration });
+  Notice[type] = (message, duration) => {
+    setTimeout(() => Notice({ type, message, duration }), 0);
+  };
 });
 
 export default Notice;
