@@ -300,7 +300,9 @@ pub mod win_service {
     /// stop service
     pub async fn stop_service() -> Result<()> {
       let url = format!("{SERVICE_URL}/stop_service");
-      let res = reqwest::Client::new()
+      let res = reqwest::ClientBuilder::new()
+        .no_proxy()
+        .build()?
         .post(url)
         .send()
         .await?
@@ -318,7 +320,11 @@ pub mod win_service {
     /// check the windows service status
     pub async fn check_service() -> Result<JsonResponse> {
       let url = format!("{SERVICE_URL}/get_clash");
-      let response = reqwest::get(url)
+      let response = reqwest::ClientBuilder::new()
+        .no_proxy()
+        .build()?
+        .get(url)
+        .send()
         .await?
         .json::<JsonResponse>()
         .await
@@ -351,7 +357,9 @@ pub mod win_service {
       map.insert("log_file", log_path);
 
       let url = format!("{SERVICE_URL}/start_clash");
-      let res = reqwest::Client::new()
+      let res = reqwest::ClientBuilder::new()
+        .no_proxy()
+        .build()?
         .post(url)
         .json(&map)
         .send()
@@ -370,7 +378,9 @@ pub mod win_service {
     /// stop the clash by service
     pub(super) async fn stop_clash_by_service() -> Result<()> {
       let url = format!("{SERVICE_URL}/stop_clash");
-      let res = reqwest::Client::new()
+      let res = reqwest::ClientBuilder::new()
+        .no_proxy()
+        .build()?
         .post(url)
         .send()
         .await?
