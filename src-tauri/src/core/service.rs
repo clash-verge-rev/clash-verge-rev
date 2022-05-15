@@ -9,6 +9,8 @@ use std::{collections::HashMap, time::Duration};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time::sleep;
 
+static mut CLASH_CORE: &str = "clash";
+
 #[derive(Debug)]
 pub struct Service {
   sidecar: Option<CommandChild>,
@@ -22,6 +24,12 @@ impl Service {
     Service {
       sidecar: None,
       service_mode: false,
+    }
+  }
+
+  pub fn set_core(&mut self, clash_core: Option<String>) {
+    unsafe {
+      CLASH_CORE = Box::leak(clash_core.unwrap_or("clash".into()).into_boxed_str());
     }
   }
 
@@ -92,7 +100,8 @@ impl Service {
     let app_dir = dirs::app_home_dir();
     let app_dir = app_dir.as_os_str().to_str().unwrap();
 
-    let cmd = Command::new_sidecar("clash")?;
+    let clash_core = unsafe { CLASH_CORE };
+    let cmd = Command::new_sidecar(clash_core)?;
     let (mut rx, cmd_child) = cmd.args(["-d", app_dir]).spawn()?;
 
     self.sidecar = Some(cmd_child);
@@ -342,7 +351,9 @@ pub mod win_service {
         sleep(Duration::from_secs(1)).await;
       }
 
-      let bin_path = current_exe().unwrap().with_file_name("clash.exe");
+      let clash_core = unsafe { CLASH_CORE };
+      let clash_bin = format!("{clash_core}.exe");
+      let bin_path = current_exe().unwrap().with_file_name(clash_bin);
       let bin_path = bin_path.as_os_str().to_str().unwrap();
 
       let config_dir = dirs::app_home_dir();

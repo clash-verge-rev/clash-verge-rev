@@ -46,7 +46,9 @@ winreg = { version = "0.10", features = ["transactions"] }
 [features]
 default = ["custom-protocol", "tauri/ayatana-tray"]
 custom-protocol = ["tauri/custom-protocol"]
+meta-dev = ["clash-meta", "verge-dev"]
 verge-dev = []
+clash-meta = []
 debug-yml = []
 
 [profile.release]

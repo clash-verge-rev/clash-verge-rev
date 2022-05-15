@@ -45,6 +45,10 @@ pub struct Verge {
 
   /// theme setting
   pub theme_setting: Option<VergeTheme>,
+
+  /// clash core path
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub clash_core: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -95,6 +99,9 @@ impl Verge {
     }
     if patch.traffic_graph.is_some() {
       self.traffic_graph = patch.traffic_graph;
+    }
+    if patch.clash_core.is_some() {
+      self.clash_core = patch.clash_core;
     }
 
     // system setting
