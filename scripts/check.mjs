@@ -10,6 +10,7 @@ const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 
 const FORCE = process.argv.includes("--force");
+const META = process.argv.includes("--meta"); // use Clash.Meta
 
 /**
  * get the correct clash release infomation
@@ -45,54 +46,138 @@ function resolveClash() {
 }
 
 /**
+ * get the correct Clash.Meta release infomation
+ */
+async function resolveClashMeta() {
+  const { platform, arch } = process;
+
+  const urlPrefix = `https://github.com/MetaCubeX/Clash.Meta/releases/download/`;
+  const latestVersion = "v1.11.0";
+
+  const map = {
+    "win32-x64": "Clash.Meta-windows-amd64v3",
+    "darwin-x64": "Clash.Meta-darwin-amd64v3",
+    "darwin-arm64": "Clash.Meta-darwin-arm64",
+    "linux-x64": "Clash.Meta-linux-amd64v3",
+  };
+
+  const name = map[`${platform}-${arch}`];
+
+  if (!name) {
+    throw new Error(`unsupport platform "${platform}-${arch}"`);
+  }
+
+  const isWin = platform === "win32";
+  const ext = isWin ? "zip" : "gz";
+  const url = `${urlPrefix}${latestVersion}/${name}-${latestVersion}.${ext}`;
+  const exefile = `${name}${isWin ? ".exe" : ""}`;
+  const zipfile = `${name}-${latestVersion}.${ext}`;
+
+  return { url, zip: ext, exefile, zipfile };
+}
+
+/**
  * get the sidecar bin
+ * clash and Clash Meta
  */
 async function resolveSidecar() {
   const sidecarDir = path.join(cwd, "src-tauri", "sidecar");
 
   const host = execSync("rustc -vV | grep host").toString().slice(6).trim();
   const ext = process.platform === "win32" ? ".exe" : "";
-  const sidecarFile = `clash-${host}${ext}`;
-  const sidecarPath = path.join(sidecarDir, sidecarFile);
 
-  await fs.mkdirp(sidecarDir);
-  if (!FORCE && (await fs.pathExists(sidecarPath))) return;
+  await clash();
+  if (META) await clashMeta();
 
-  // download sidecar
-  const binInfo = resolveClash();
-  const tempDir = path.join(TEMP_DIR, "clash");
-  const tempZip = path.join(tempDir, binInfo.zipfile);
-  const tempExe = path.join(tempDir, binInfo.exefile);
+  async function clash() {
+    const sidecarFile = `clash-${host}${ext}`;
+    const sidecarPath = path.join(sidecarDir, sidecarFile);
 
-  await fs.mkdirp(tempDir);
-  if (!(await fs.pathExists(tempZip))) await downloadFile(binInfo.url, tempZip);
+    await fs.mkdirp(sidecarDir);
+    if (!FORCE && (await fs.pathExists(sidecarPath))) return;
 
-  if (binInfo.zip === "zip") {
-    const zip = new AdmZip(tempZip);
-    zip.getEntries().forEach((entry) => {
-      console.log("[INFO]: entry name", entry.entryName);
-    });
-    zip.extractAllTo(tempDir, true);
-    // save as sidecar
-    await fs.rename(tempExe, sidecarPath);
-    console.log(`[INFO]: unzip finished`);
-  } else {
-    // gz
-    const readStream = fs.createReadStream(tempZip);
-    const writeStream = fs.createWriteStream(sidecarPath);
-    readStream
-      .pipe(zlib.createGunzip())
-      .pipe(writeStream)
-      .on("finish", () => {
-        console.log(`[INFO]: gunzip finished`);
-        execSync(`chmod 755 ${sidecarPath}`);
-        console.log(`[INFO]: chmod binary finished`);
-      })
-      .on("error", (error) => console.error(error));
+    // download sidecar
+    const binInfo = resolveClash();
+    const tempDir = path.join(TEMP_DIR, "clash");
+    const tempZip = path.join(tempDir, binInfo.zipfile);
+    const tempExe = path.join(tempDir, binInfo.exefile);
+
+    await fs.mkdirp(tempDir);
+    if (!(await fs.pathExists(tempZip)))
+      await downloadFile(binInfo.url, tempZip);
+
+    if (binInfo.zip === "zip") {
+      const zip = new AdmZip(tempZip);
+      zip.getEntries().forEach((entry) => {
+        console.log("[INFO]: entry name", entry.entryName);
+      });
+      zip.extractAllTo(tempDir, true);
+      // save as sidecar
+      await fs.rename(tempExe, sidecarPath);
+      console.log(`[INFO]: unzip finished`);
+    } else {
+      // gz
+      const readStream = fs.createReadStream(tempZip);
+      const writeStream = fs.createWriteStream(sidecarPath);
+      readStream
+        .pipe(zlib.createGunzip())
+        .pipe(writeStream)
+        .on("finish", () => {
+          console.log(`[INFO]: gunzip finished`);
+          execSync(`chmod 755 ${sidecarPath}`);
+          console.log(`[INFO]: chmod binary finished`);
+        })
+        .on("error", (error) => console.error(error));
+    }
+
+    // delete temp dir
+    await fs.remove(tempDir);
   }
 
-  // delete temp dir
-  await fs.remove(tempDir);
+  async function clashMeta() {
+    const sidecarFile = `clash-meta-${host}${ext}`;
+    const sidecarPath = path.join(sidecarDir, sidecarFile);
+
+    await fs.mkdirp(sidecarDir);
+    if (!FORCE && (await fs.pathExists(sidecarPath))) return;
+
+    // download sidecar
+    const binInfo = await resolveClashMeta();
+    const tempDir = path.join(TEMP_DIR, "clash-meta");
+    const tempZip = path.join(tempDir, binInfo.zipfile);
+    const tempExe = path.join(tempDir, binInfo.exefile);
+
+    await fs.mkdirp(tempDir);
+    if (!(await fs.pathExists(tempZip)))
+      await downloadFile(binInfo.url, tempZip);
+
+    if (binInfo.zip === "zip") {
+      const zip = new AdmZip(tempZip);
+      zip.getEntries().forEach((entry) => {
+        console.log("[INFO]: entry name", entry.entryName);
+      });
+      zip.extractAllTo(tempDir, true);
+      // save as sidecar
+      await fs.rename(tempExe, sidecarPath);
+      console.log(`[INFO]: unzip finished`);
+    } else {
+      // gz
+      const readStream = fs.createReadStream(tempZip);
+      const writeStream = fs.createWriteStream(sidecarPath);
+      readStream
+        .pipe(zlib.createGunzip())
+        .pipe(writeStream)
+        .on("finish", () => {
+          console.log(`[INFO]: gunzip finished`);
+          execSync(`chmod 755 ${sidecarPath}`);
+          console.log(`[INFO]: chmod binary finished`);
+        })
+        .on("error", (error) => console.error(error));
+    }
+
+    // delete temp dir
+    await fs.remove(tempDir);
+  }
 }
 
 /**
