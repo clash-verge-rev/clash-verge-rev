@@ -3,8 +3,6 @@ name: Alpha CI
 on:
   push:
     branches: [alpha]
-  pull_request:
-    branches: [alpha]
 
 env:
   CARGO_INCREMENTAL: 0
