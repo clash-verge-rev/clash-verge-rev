@@ -13,6 +13,7 @@
   "rule": "规则",
   "global": "全局",
   "direct": "直连",
+  "script": "脚本",
   "Profiles": "配置",
   "Profile URL": "配置文件链接",
   "Import": "导入",
