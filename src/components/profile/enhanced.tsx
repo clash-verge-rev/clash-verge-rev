@@ -49,7 +49,7 @@ const EnhancedMode = (props: Props) => {
   const onEnhance = useLockFn(async () => {
     try {
       await enhanceProfiles();
-      Notice.success("Refresh clash config", 2000);
+      Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
     }

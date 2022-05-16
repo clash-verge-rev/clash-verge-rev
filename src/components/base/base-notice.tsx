@@ -11,7 +11,7 @@ interface InnerProps {
 }
 
 const NoticeInner = (props: InnerProps) => {
-  const { type, message, duration = 2000, onClose } = props;
+  const { type, message, duration = 1500, onClose } = props;
   const [visible, setVisible] = useState(true);
 
   const onBtnClose = () => {
@@ -79,7 +79,7 @@ const Notice: NoticeInstance = (props) => {
 
   const onUnmount = () => {
     const result = ReactDOM.unmountComponentAtNode(container);
-    if (result && parent) parent.removeChild(container);
+    if (result && parent) setTimeout(() => parent.removeChild(container), 300);
   };
 
   ReactDOM.render(<NoticeInner {...props} onClose={onUnmount} />, container);

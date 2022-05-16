@@ -122,6 +122,7 @@ const ProfilePage = () => {
     try {
       await selectProfile(uid);
       mutate("getProfiles", { ...profiles, current: uid }, true);
+      if (force) Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
