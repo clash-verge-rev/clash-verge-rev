@@ -196,8 +196,14 @@ pub fn patch_verge_config(
   payload: Verge,
   app_handle: tauri::AppHandle,
   core: State<'_, Core>,
-) -> Result<(), String> {
+) -> CmdResult {
   wrap_err!(core.patch_verge(payload, &app_handle))
+}
+
+/// change clash core
+#[tauri::command]
+pub fn change_clash_core(core: State<'_, Core>, clash_core: Option<String>) -> CmdResult {
+  wrap_err!(core.change_core(clash_core))
 }
 
 /// restart the sidecar

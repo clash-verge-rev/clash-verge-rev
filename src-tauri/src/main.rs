@@ -100,15 +100,16 @@ fn main() -> std::io::Result<()> {
     })
     .invoke_handler(tauri::generate_handler![
       // common
-      cmds::restart_sidecar,
       cmds::get_sys_proxy,
       cmds::get_cur_proxy,
-      cmds::kill_sidecar,
       cmds::open_app_dir,
       cmds::open_logs_dir,
+      cmds::kill_sidecar,
+      cmds::restart_sidecar,
       // clash
       cmds::get_clash_info,
       cmds::patch_clash_config,
+      cmds::change_clash_core,
       // verge
       cmds::get_verge_config,
       cmds::patch_verge_config,

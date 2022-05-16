@@ -1,7 +1,7 @@
 /**
  * Some interface for clash api
  */
- export namespace ApiType {
+export namespace ApiType {
   export interface ConfigData {
     port: number;
     mode: string;
@@ -125,6 +125,7 @@ export namespace CmdType {
 
   export interface VergeConfig {
     language?: string;
+    clash_core?: string;
     theme_mode?: "light" | "dark";
     theme_blur?: boolean;
     traffic_graph?: boolean;

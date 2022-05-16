@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tauri dev",
     "dev:diff": "tauri dev -f verge-dev -c src-tauri/tauri.diff.json",
-    "dev:meta": "tauri dev -f meta-dev -c src-tauri/tauri.meta.json",
+    "dev:core": "cross-env VITE_MULTI_CORE=1 yarn dev:diff",
     "build": "tauri build",
     "tauri": "tauri",
     "web:dev": "vite",
@@ -47,6 +47,7 @@
     "@types/react-dom": "^17.0.0",
     "@vitejs/plugin-react": "^1.3.2",
     "adm-zip": "^0.5.9",
+    "cross-env": "^7.0.3",
     "fs-extra": "^10.0.0",
     "https-proxy-agent": "^5.0.1",
     "husky": "^7.0.0",

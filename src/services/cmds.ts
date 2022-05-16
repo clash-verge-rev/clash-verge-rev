@@ -86,6 +86,10 @@ export async function getSystemProxy() {
   return invoke<any>("get_sys_proxy");
 }
 
+export async function changeClashCore(clashCore: string) {
+  return invoke<any>("change_clash_core", { clashCore });
+}
+
 export async function restartSidecar() {
   return invoke<void>("restart_sidecar");
 }
