@@ -96,3 +96,10 @@ jobs:
           releaseBody: "Alpha Version"
           releaseDraft: false
           prerelease: true
+
+      - name: Portable Bundle For Meta
+        if: matrix.os == 'windows-latest'
+        run: |
+          yarn run portable --meta
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

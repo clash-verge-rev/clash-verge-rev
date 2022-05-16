@@ -1,7 +1,87 @@
 {
+  "package": {
+    "productName": "Clash Verge Meta",
+    "version": "1.0.1"
+  },
+  "build": {
+    "distDir": "../dist",
+    "devPath": "http://localhost:3000/",
+    "beforeDevCommand": "yarn run web:dev",
+    "beforeBuildCommand": "yarn run web:build"
+  },
   "tauri": {
+    "systemTray": {
+      "iconPath": "icons/tray-icon.png",
+      "iconAsTemplate": true
+    },
     "bundle": {
-      "externalBin": ["sidecar/clash", "sidecar/clash-meta"]
+      "active": true,
+      "targets": "all",
+      "identifier": "top.gydi.clashverge",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "resources": ["resources"],
+      "externalBin": ["sidecar/clash", "sidecar/clash-meta"],
+      "copyright": "© 2022 zzzgydi All Rights Reserved",
+      "category": "DeveloperTool",
+      "shortDescription": "A Clash GUI based on tauri.",
+      "longDescription": "A Clash GUI based on tauri.",
+      "deb": {
+        "depends": []
+      },
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": "",
+        "exceptionDomain": "",
+        "signingIdentity": null,
+        "entitlements": null
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/zzzgydi/clash-verge/releases/download/updater/update.json",
+        "https://hub.fastgit.xyz/zzzgydi/clash-verge/releases/download/updater/update-proxy.json"
+      ],
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDExNUFBNTBBN0FDNEFBRTUKUldUbHFzUjZDcVZhRVRJM25NS3NkSFlFVElxUkNZMzZ6bHUwRVJjb2F3alJXVzRaeDdSaTA2YWYK"
+    },
+    "allowlist": {
+      "shell": {
+        "all": true
+      },
+      "window": {
+        "all": true
+      },
+      "process": {
+        "all": true
+      }
+    },
+    "windows": [
+      {
+        "title": "Clash Verge",
+        "width": 800,
+        "height": 636,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true,
+        "minWidth": 600,
+        "minHeight": 520
+      }
+    ],
+    "security": {
+      "csp": "script-src 'unsafe-eval' 'self'; default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'; img-src data: 'self';"
     }
   }
 }
