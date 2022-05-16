@@ -129,7 +129,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary={t("Clash core")} />
+        <ListItemText primary={t("Clash Core")} />
         <Typography sx={{ py: 1 }}>{clashVer}</Typography>
       </SettingItem>
     </SettingList>
