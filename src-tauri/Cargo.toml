@@ -10,38 +10,37 @@ edition = "2021"
 build = "build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-rc.7", features = [] }
+tauri-build = { version = "1.0.0-rc.8", features = [] }
 
 [dependencies]
+warp = "0.3"
+which = "4.2.2"
 anyhow = "1.0"
 dirs = "4.0.0"
 open = "2.1.1"
+log = "0.4.14"
 dunce = "1.0.2"
+log4rs = "1.0.0"
 nanoid = "0.4.0"
 chrono = "0.4.19"
 serde_json = "1.0"
 serde_yaml = "0.8"
-delay_timer = "0.11.1"
-parking_lot = "0.12.0"
-serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.0.0-rc.8", features = ["process-all", "shell-all", "system-tray", "updater", "window-all"] }
-window-shadows = { git = "https://github.com/tauri-apps/window-shadows" }
-window-vibrancy = { git = "https://github.com/tauri-apps/window-vibrancy" }
-
-reqwest = { version = "0.11", features = ["json"] }
-tokio = { version = "1", features = ["full"] }
-log = "0.4.14"
-log4rs = "1.0.0"
-warp = "0.3"
-which = "4.2.2"
 auto-launch = "0.2"
 port_scanner = "0.1.5"
+delay_timer = "0.11.1"
+parking_lot = "0.12.0"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json"] }
+tauri = { version = "1.0.0-rc.10", features = ["process-all", "shell-all", "system-tray", "updater", "window-all"] }
+window-shadows = { version = "0.1" }
+window-vibrancy = { version = "0.1" }
 
 [target.'cfg(windows)'.dependencies]
 runas = "0.2.1"
 deelevate = "0.2.0"
-windows-sys = "0.36"
 winreg = { version = "0.10", features = ["transactions"] }
+windows-sys = { version = "0.36", features = ["Win32_System_LibraryLoader", "Win32_System_SystemInformation"] }
 
 [features]
 default = ["custom-protocol", "tauri/ayatana-tray"]

@@ -1,0 +1,9 @@
+{
+    "tauri": {
+      "bundle": {
+        "identifier": "top.gydi.clashverge.dev",
+        "externalBin": ["sidecar/clash", "sidecar/clash-meta"]
+      }
+    }
+  }
+  
