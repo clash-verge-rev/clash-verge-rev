@@ -1,4 +1,4 @@
-name: Release CI
+name: Alpha CI
 
 on:
   push:
@@ -58,7 +58,7 @@ jobs:
       - name: Yarn install and check
         run: |
           yarn install --network-timeout 1000000
-          yarn run check
+          yarn run check --meta
 
       # - name: Tauri build
       #   uses: tauri-apps/tauri-action@v0
@@ -93,7 +93,7 @@ jobs:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tagName: alpha
-          tauriScript: "yarn build:meta"
+          configPath: tauri.meta.json
           releaseName: "Clash Verge Alpha"
           releaseBody: "Alpha Version"
           releaseDraft: false
