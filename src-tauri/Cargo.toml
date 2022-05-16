@@ -45,9 +45,7 @@ windows-sys = { version = "0.36", features = ["Win32_System_LibraryLoader", "Win
 [features]
 default = ["custom-protocol", "tauri/ayatana-tray"]
 custom-protocol = ["tauri/custom-protocol"]
-meta-dev = ["clash-meta", "verge-dev"]
 verge-dev = []
-clash-meta = []
 debug-yml = []
 
 [profile.release]

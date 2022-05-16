@@ -65,22 +65,21 @@ impl Core {
 
   /// initialize the core state
   pub fn init(&self, app_handle: tauri::AppHandle) {
+    let verge = self.verge.lock();
+    let clash_core = verge.clash_core.clone();
+
+    let mut service = self.service.lock();
+    service.set_core(clash_core);
+
     #[cfg(windows)]
     {
-      let verge = self.verge.lock();
       let enable = verge.enable_service_mode.clone();
-
-      let mut service = self.service.lock();
       service.set_mode(enable.unwrap_or(false));
-
-      log_if_err!(service.start());
     }
 
-    #[cfg(not(windows))]
-    {
-      let mut service = self.service.lock();
-      log_if_err!(service.start());
-    }
+    log_if_err!(service.start());
+    drop(verge);
+    drop(service);
 
     log_if_err!(self.activate());
 
@@ -132,6 +131,31 @@ impl Core {
   pub fn restart_clash(&self) -> Result<()> {
     let mut service = self.service.lock();
     service.restart()?;
+    drop(service);
+
+    self.activate()?;
+    self.activate_enhanced(true)
+  }
+
+  /// change the clash core
+  pub fn change_core(&self, clash_core: Option<String>) -> Result<()> {
+    let clash_core = clash_core.unwrap_or("clash".into());
+
+    if &clash_core != "clash" && &clash_core != "clash-meta" {
+      bail!("invalid clash core name \"{clash_core}\"");
+    }
+
+    let mut verge = self.verge.lock();
+    verge.patch_config(Verge {
+      clash_core: Some(clash_core.clone()),
+      ..Verge::default()
+    })?;
+    drop(verge);
+
+    let mut service = self.service.lock();
+    service.stop()?;
+    service.set_core(Some(clash_core));
+    service.start()?;
     drop(service);
 
     self.activate()?;
