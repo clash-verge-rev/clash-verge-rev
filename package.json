@@ -7,6 +7,7 @@
     "dev:diff": "tauri dev -f verge-dev -c src-tauri/tauri.diff.json",
     "dev:core": "cross-env VITE_MULTI_CORE=1 yarn dev:diff",
     "build": "tauri build",
+    "build:meta": "cross-env VITE_MULTI_CORE=1 tauri build -c src-tauri/tauri.meta.json",
     "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsc && vite build",

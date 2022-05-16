@@ -1,0 +1,7 @@
+{
+  "tauri": {
+    "bundle": {
+      "externalBin": ["sidecar/clash", "sidecar/clash-meta"]
+    }
+  }
+}
