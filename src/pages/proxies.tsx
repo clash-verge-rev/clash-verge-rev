@@ -16,7 +16,7 @@ const ProxyPage = () => {
   const { data: proxiesData } = useSWR("getProxies", getProxies);
   const { data: clashConfig } = useSWR("getClashConfig", getClashConfig);
 
-  const modeList = ["rule", "global", "direct"];
+  const modeList = ["rule", "global", "direct", "script"];
   const curMode = clashConfig?.mode.toLowerCase();
   const { groups = [], proxies = [] } = proxiesData ?? {};
 
@@ -38,7 +38,8 @@ const ProxyPage = () => {
   });
 
   // difference style
-  const showGroup = curMode === "rule" && !!groups.length;
+  const showGroup =
+    (curMode === "rule" || curMode === "script") && !!groups.length;
   const pageStyle = showGroup ? {} : { height: "100%" };
   const paperStyle: any = showGroup
     ? { mb: 0.5 }
@@ -64,7 +65,7 @@ const ProxyPage = () => {
       }
     >
       <Paper sx={{ borderRadius: 1, boxShadow: 2, ...paperStyle }}>
-        {curMode === "rule" && !!groups.length && (
+        {(curMode === "rule" || curMode === "script") && !!groups.length && (
           <List>
             {groups.map((group) => (
               <ProxyGroup key={group.name} group={group} />

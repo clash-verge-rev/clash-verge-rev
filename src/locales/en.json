@@ -13,6 +13,7 @@
   "rule": "rule",
   "global": "global",
   "direct": "direct",
+  "script": "script",
   "Profiles": "Profiles",
   "Profile URL": "Profile URL",
   "Import": "Import",
