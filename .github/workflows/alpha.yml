@@ -91,7 +91,7 @@ jobs:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tagName: alpha
-          configPath: tauri.meta.json
+          configPath: src-tauri/tauri.meta.json
           releaseName: "Clash Verge Alpha"
           releaseBody: "Alpha Version"
           releaseDraft: false
