@@ -1,0 +1,13 @@
+{
+    "tauri": {
+      "bundle": {
+        "externalBin": ["sidecar/clash", "sidecar/clash-meta"],
+        "windows": {
+          "wix": {
+            "language": ["zh-CN", "en-US"]
+          }
+        }
+      }
+    }
+  }
+  

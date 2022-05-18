@@ -83,7 +83,7 @@ jobs:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Tauri build Meta
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@743a37fd53cbdd122910b818b9bef7b7aa019134
         # enable cache even though failed
         continue-on-error: true
         env:
@@ -93,10 +93,10 @@ jobs:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tagName: alpha
-          configPath: src-tauri/tauri.meta.json
+          args: "-c src-tauri/tauri.alpha.json"
           releaseName: "Clash Verge Alpha"
           releaseBody: "Alpha Version"
-          releaseDraft: false
+          releaseDraft: true
           prerelease: true
 
       - name: Portable Bundle For Meta
