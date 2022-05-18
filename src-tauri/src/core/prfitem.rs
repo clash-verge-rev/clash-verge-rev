@@ -252,7 +252,7 @@ impl PrfItem {
 
     // check the data whether the valid yaml format
     if !serde_yaml::from_str::<Mapping>(&data).is_ok() {
-      bail!("the remote profile data is not valid yaml");
+      bail!("the remote profile data is invalid yaml");
     }
 
     Ok(PrfItem {
