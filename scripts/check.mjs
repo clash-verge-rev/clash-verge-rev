@@ -20,7 +20,7 @@ function resolveClash() {
 
   const CLASH_URL_PREFIX =
     "https://github.com/Dreamacro/clash/releases/download/premium/";
-  const CLASH_LATEST_DATE = "2022.04.17";
+  const CLASH_LATEST_DATE = "2022.05.17";
 
   // todo
   const map = {
@@ -52,7 +52,7 @@ async function resolveClashMeta() {
   const { platform, arch } = process;
 
   const urlPrefix = `https://github.com/MetaCubeX/Clash.Meta/releases/download/`;
-  const latestVersion = "v1.11.0";
+  const latestVersion = "v1.11.1";
 
   const map = {
     "win32-x64": "Clash.Meta-windows-amd64v3",
