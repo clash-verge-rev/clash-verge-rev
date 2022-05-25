@@ -37,6 +37,10 @@ pub struct Verge {
   /// enable proxy guard
   pub enable_proxy_guard: Option<bool>,
 
+  /// launch flag
+  #[serde(skip_serializing)]
+  pub launch_flag: Option<bool>,
+
   /// set system proxy bypass
   pub system_proxy_bypass: Option<String>,
 

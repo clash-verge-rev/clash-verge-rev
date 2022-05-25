@@ -30,7 +30,7 @@ const LayoutControl = () => {
       <Button
         size="small"
         sx={{ minWidth, svg: { transform: "scale(1.05)" } }}
-        onClick={() => appWindow.hide()}
+        onClick={() => appWindow.close()}
       >
         <CloseRounded fontSize="small" />
       </Button>
