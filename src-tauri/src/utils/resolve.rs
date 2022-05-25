@@ -1,4 +1,4 @@
-use crate::{core::Core, log_if_err, utils::init, utils::server};
+use crate::{core::Core, utils::init, utils::server};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
@@ -79,6 +79,7 @@ pub fn create_window(app_handle: &AppHandle) {
   .title("Clash Verge")
   .center()
   .fullscreen(false)
+  .transparent(true)
   .min_inner_size(600.0, 520.0);
 
   #[cfg(target_os = "windows")]
@@ -88,20 +89,26 @@ pub fn create_window(app_handle: &AppHandle) {
     use window_vibrancy::apply_blur;
 
     match builder.decorations(false).inner_size(800.0, 636.0).build() {
-      Ok(window) => {
-        let _ = set_shadow(&window, true);
+      Ok(_) => {
+        let app_handle = app_handle.clone();
 
-        if !winhelp::is_win11() {
-          let _ = apply_blur(&window, None);
-        }
+        tauri::async_runtime::spawn(async move {
+          if let Some(window) = app_handle.get_window("main") {
+            let _ = set_shadow(&window, true);
+
+            if !winhelp::is_win11() {
+              let _ = apply_blur(&window, None);
+            }
+          }
+        });
       }
       Err(err) => log::error!("{err}"),
     }
   }
 
   #[cfg(target_os = "macos")]
-  log_if_err!(builder.decorations(true).inner_size(800.0, 620.0).build());
+  crate::log_if_err!(builder.decorations(true).inner_size(800.0, 620.0).build());
 
   #[cfg(target_os = "linux")]
-  log_if_err!(builder.decorations(false).inner_size(800.0, 636.0).build());
+  crate::log_if_err!(builder.decorations(false).inner_size(800.0, 636.0).build());
 }
