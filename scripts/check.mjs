@@ -20,7 +20,7 @@ function resolveClash() {
 
   const CLASH_URL_PREFIX =
     "https://github.com/Dreamacro/clash/releases/download/premium/";
-  const CLASH_LATEST_DATE = "2022.05.17";
+  const CLASH_LATEST_DATE = "2022.05.18";
 
   // todo
   const map = {
@@ -255,7 +255,7 @@ async function resolveService() {
  */
 async function resolveMmdb() {
   const url =
-    "https://github.com/Dreamacro/maxmind-geoip/releases/latest/download/Country.mmdb";
+    "https://github.com/Dreamacro/maxmind-geoip/releases/download/20220512/Country.mmdb";
 
   const resDir = path.join(cwd, "src-tauri", "resources");
   const resPath = path.join(resDir, "Country.mmdb");
