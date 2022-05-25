@@ -48,9 +48,10 @@ pub struct Core {
 impl Core {
   pub fn new() -> Core {
     let clash = Clash::new();
-    let verge = Verge::new();
+    let mut verge = Verge::new();
     let profiles = Profiles::new();
     let service = Service::new();
+    verge.launch_flag = Some(true);
 
     Core {
       clash: Arc::new(Mutex::new(clash)),
@@ -382,7 +383,14 @@ impl Core {
       result.error.map(|err| log::error!("{err}"));
     });
 
-    window.emit("script-handler", payload).unwrap();
+    let mut verge = self.verge.lock();
+    let silent_start = verge.enable_silent_start.clone();
+    if silent_start.unwrap_or(false) && verge.launch_flag.unwrap_or(false) {
+      window.emit("script-handler-close", payload).unwrap();
+      verge.launch_flag = Some(false);
+    } else {
+      window.emit("script-handler", payload).unwrap();
+    }
 
     Ok(())
   }

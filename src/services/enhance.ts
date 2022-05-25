@@ -1,4 +1,5 @@
-import { emit, listen } from "@tauri-apps/api/event";
+import { emit, listen, Event } from "@tauri-apps/api/event";
+import { appWindow } from "@tauri-apps/api/window";
 import { CmdType } from "./types";
 import ignoreCase from "../utils/ignore-case";
 
@@ -124,21 +125,29 @@ class Enhance {
     return this.resultMap.get(uid);
   }
 
+  async enhanceHandler(event: Event<unknown>) {
+    const payload = event.payload as CmdType.EnhancedPayload;
+
+    const result = await this.runner(payload).catch((err: any) => ({
+      data: null,
+      status: "error",
+      error: err.message,
+    }));
+
+    emit(payload.callback, JSON.stringify(result)).catch(console.error);
+  }
   // setup the handler
   setup() {
     if (this.isSetup) return;
     this.isSetup = true;
 
     listen("script-handler", async (event) => {
-      const payload = event.payload as CmdType.EnhancedPayload;
+      await this.enhanceHandler(event);
+    });
 
-      const result = await this.runner(payload).catch((err: any) => ({
-        data: null,
-        status: "error",
-        error: err.message,
-      }));
-
-      emit(payload.callback, JSON.stringify(result)).catch(console.error);
+    listen("script-handler-close", async (event) => {
+      await this.enhanceHandler(event);
+      appWindow.close();
     });
   }
 

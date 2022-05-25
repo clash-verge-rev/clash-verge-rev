@@ -35,7 +35,7 @@ const Layout = () => {
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") appWindow.hide();
+      if (e.key === "Escape") appWindow.close();
     });
 
     listen("verge://refresh-clash-config", async () => {
