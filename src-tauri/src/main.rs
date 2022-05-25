@@ -44,23 +44,7 @@ fn main() -> std::io::Result<()> {
     .on_system_tray_event(move |app_handle, event| match event {
       SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
         "open_window" => {
-          tauri::window::WindowBuilder::new(
-            app_handle,
-            "main".to_string(),
-            tauri::WindowUrl::App("index.html".into()),
-          )
-          .title("Clash Verge")
-          .center()
-          .decorations(false)
-          .fullscreen(false)
-          .inner_size(800.0, 636.0)
-          .min_inner_size(600.0, 520.0)
-          .build()
-          .err()
-          .and_then(|e| {
-            log::error!("{e}");
-            Some(0)
-          });
+          resolve::create_window(app_handle);
         }
         "system_proxy" => {
           let core = app_handle.state::<core::Core>();
@@ -104,23 +88,7 @@ fn main() -> std::io::Result<()> {
       },
       #[cfg(target_os = "windows")]
       SystemTrayEvent::LeftClick { .. } => {
-        tauri::window::WindowBuilder::new(
-          app_handle,
-          "main".to_string(),
-          tauri::WindowUrl::App("index.html".into()),
-        )
-        .title("Clash Verge")
-        .center()
-        .decorations(false)
-        .fullscreen(false)
-        .inner_size(800.0, 636.0)
-        .min_inner_size(600.0, 520.0)
-        .build()
-        .err()
-        .and_then(|e| {
-          log::error!("{e}");
-          Some(0)
-        });
+        resolve::create_window(app_handle);
       }
       _ => {}
     })
