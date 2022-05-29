@@ -10,7 +10,7 @@ edition = "2021"
 build = "build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-rc.10", features = [] }
+tauri-build = { version = "1.0.0-rc.12", features = [] }
 
 [dependencies]
 warp = "0.3"
@@ -32,7 +32,7 @@ parking_lot = "0.12.0"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.11", features = ["json"] }
-tauri = { version = "1.0.0-rc.12", features = ["process-all", "shell-all", "system-tray", "updater", "window-all"] }
+tauri = { version = "1.0.0-rc.14", features = ["process-all", "shell-all", "system-tray", "updater", "window-all"] }
 window-shadows = { version = "0.1" }
 window-vibrancy = { version = "0.1" }
 
