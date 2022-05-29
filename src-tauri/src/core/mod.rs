@@ -28,6 +28,10 @@ pub use self::profiles::*;
 pub use self::service::*;
 pub use self::verge::*;
 
+/// close the window for slient start
+/// after enhance mode
+static mut WINDOW_CLOSABLE: bool = true;
+
 #[derive(Clone)]
 pub struct Core {
   pub clash: Arc<Mutex<Clash>>,
@@ -48,10 +52,9 @@ pub struct Core {
 impl Core {
   pub fn new() -> Core {
     let clash = Clash::new();
-    let mut verge = Verge::new();
+    let verge = Verge::new();
     let profiles = Profiles::new();
     let service = Service::new();
-    verge.launch_flag = Some(true);
 
     Core {
       clash: Arc::new(Mutex::new(clash)),
@@ -383,11 +386,17 @@ impl Core {
       result.error.map(|err| log::error!("{err}"));
     });
 
-    let mut verge = self.verge.lock();
+    let verge = self.verge.lock();
     let silent_start = verge.enable_silent_start.clone();
-    if silent_start.unwrap_or(false) && verge.launch_flag.unwrap_or(false) {
+
+    let closable = unsafe { WINDOW_CLOSABLE };
+
+    if silent_start.unwrap_or(false) && closable {
+      unsafe {
+        WINDOW_CLOSABLE = false;
+      }
+
       window.emit("script-handler-close", payload).unwrap();
-      verge.launch_flag = Some(false);
     } else {
       window.emit("script-handler", payload).unwrap();
     }

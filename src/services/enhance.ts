@@ -136,6 +136,7 @@ class Enhance {
 
     emit(payload.callback, JSON.stringify(result)).catch(console.error);
   }
+
   // setup the handler
   setup() {
     if (this.isSetup) return;
