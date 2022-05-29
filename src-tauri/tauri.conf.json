@@ -26,7 +26,7 @@
         "icons/icon.ico"
       ],
       "resources": ["resources"],
-      "externalBin": ["sidecar/clash"],
+      "externalBin": ["sidecar/clash", "sidecar/clash-meta"],
       "copyright": "© 2022 zzzgydi All Rights Reserved",
       "category": "DeveloperTool",
       "shortDescription": "A Clash GUI based on tauri.",
@@ -44,7 +44,10 @@
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+        "timestampUrl": "",
+        "wix": {
+          "language": ["zh-CN", "en-US"]
+        }
       }
     },
     "updater": {
