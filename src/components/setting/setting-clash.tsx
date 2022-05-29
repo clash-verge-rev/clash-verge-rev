@@ -23,7 +23,8 @@ interface Props {
   onError: (err: Error) => void;
 }
 
-const MULTI_CORE = !!import.meta.env.VITE_MULTI_CORE;
+// const MULTI_CORE = !!import.meta.env.VITE_MULTI_CORE;
+const MULTI_CORE = true;
 
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
