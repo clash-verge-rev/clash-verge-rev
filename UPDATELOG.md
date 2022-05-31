@@ -1,3 +1,17 @@
+## v1.0.2
+
+### Features
+
+- supports for switching clash core
+- supports release UI processes
+- supports script mode setting
+
+### Bug Fixes
+
+- fix service mode bug (Windows)
+
+---
+
 ## v1.0.1
 
 ### Features
