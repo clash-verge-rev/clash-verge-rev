@@ -73,7 +73,7 @@ jobs:
           releaseDraft: false
           prerelease: true
 
-      - name: Green zip bundle
+      - name: Portable Bundle
         if: matrix.os == 'windows-latest'
         run: |
           yarn run portable

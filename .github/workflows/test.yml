@@ -62,7 +62,7 @@ jobs:
       - name: Yarn install and check
         run: |
           yarn install --network-timeout 1000000
-          yarn run check --meta
+          yarn run check
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@0e558392ccadcb49bcc89e7df15a400e8f0c954d
