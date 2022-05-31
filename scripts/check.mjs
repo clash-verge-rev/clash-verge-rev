@@ -10,7 +10,7 @@ const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 
 const FORCE = process.argv.includes("--force");
-const META = process.argv.includes("--meta"); // use Clash.Meta
+const NO_META = process.argv.includes("--no-meta") || false;
 
 /**
  * get the correct clash release infomation
@@ -87,7 +87,7 @@ async function resolveSidecar() {
   const ext = process.platform === "win32" ? ".exe" : "";
 
   await clash();
-  if (META) await clashMeta();
+  if (!NO_META) await clashMeta();
 
   async function clash() {
     const sidecarFile = `clash-${host}${ext}`;
