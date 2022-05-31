@@ -79,7 +79,6 @@ pub fn create_window(app_handle: &AppHandle) {
   .title("Clash Verge")
   .center()
   .fullscreen(false)
-  .transparent(true)
   .min_inner_size(600.0, 520.0);
 
   #[cfg(target_os = "windows")]
@@ -88,7 +87,12 @@ pub fn create_window(app_handle: &AppHandle) {
     use window_shadows::set_shadow;
     use window_vibrancy::apply_blur;
 
-    match builder.decorations(false).inner_size(800.0, 636.0).build() {
+    match builder
+      .decorations(false)
+      .transparent(true)
+      .inner_size(800.0, 636.0)
+      .build()
+    {
       Ok(_) => {
         let app_handle = app_handle.clone();
 
@@ -110,5 +114,9 @@ pub fn create_window(app_handle: &AppHandle) {
   crate::log_if_err!(builder.decorations(true).inner_size(800.0, 620.0).build());
 
   #[cfg(target_os = "linux")]
-  crate::log_if_err!(builder.decorations(false).inner_size(800.0, 636.0).build());
+  crate::log_if_err!(builder
+    .decorations(false)
+    .transparent(true)
+    .inner_size(800.0, 636.0)
+    .build());
 }
