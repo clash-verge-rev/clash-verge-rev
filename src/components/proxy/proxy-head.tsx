@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, IconButton, TextField, SxProps } from "@mui/material";
 import {
   AccessTimeRounded,
@@ -14,27 +14,33 @@ import {
   SortRounded,
 } from "@mui/icons-material";
 import delayManager from "../../services/delay";
+import type { HeadState } from "./use-head-state";
 import type { ProxySortType } from "./use-sort-proxy";
 
 interface Props {
   sx?: SxProps;
   groupName: string;
-  showType: boolean;
-  sortType: ProxySortType;
-  filterText: string;
+  headState: HeadState;
   onLocation: () => void;
   onCheckDelay: () => void;
-  onShowType: (val: boolean) => void;
-  onSortType: (val: ProxySortType) => void;
-  onFilterText: (val: string) => void;
+  onHeadState: (val: Partial<HeadState>) => void;
 }
 
 const ProxyHead = (props: Props) => {
-  const { sx = {}, groupName, showType, sortType, filterText } = props;
+  const { sx = {}, groupName, headState, onHeadState } = props;
 
-  const [textState, setTextState] = useState<"url" | "filter" | null>(null);
+  const { showType, sortType, filterText, textState, testUrl } = headState;
 
-  const [testUrl, setTestUrl] = useState(delayManager.getUrl(groupName) || "");
+  const [autoFocus, setAutoFocus] = useState(false);
+
+  useEffect(() => {
+    // fix the focus conflict
+    setTimeout(() => setAutoFocus(true), 100);
+  }, []);
+
+  useEffect(() => {
+    delayManager.setUrl(groupName, testUrl);
+  }, [groupName, headState.testUrl]);
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", ...sx }}>
@@ -54,7 +60,7 @@ const ProxyHead = (props: Props) => {
         onClick={() => {
           // Remind the user that it is custom test url
           if (testUrl?.trim() && textState !== "filter") {
-            setTextState("url");
+            onHeadState({ textState: "url" });
           }
           props.onCheckDelay();
         }}
@@ -66,7 +72,9 @@ const ProxyHead = (props: Props) => {
         size="small"
         color="inherit"
         title={["sort by default", "sort by delay", "sort by name"][sortType]}
-        onClick={() => props.onSortType(((sortType + 1) % 3) as ProxySortType)}
+        onClick={() =>
+          onHeadState({ sortType: ((sortType + 1) % 3) as ProxySortType })
+        }
       >
         {sortType === 0 && <SortRounded />}
         {sortType === 1 && <AccessTimeRounded />}
@@ -77,7 +85,9 @@ const ProxyHead = (props: Props) => {
         size="small"
         color="inherit"
         title="edit test url"
-        onClick={() => setTextState((ts) => (ts === "url" ? null : "url"))}
+        onClick={() =>
+          onHeadState({ textState: textState === "url" ? null : "url" })
+        }
       >
         {textState === "url" ? (
           <WifiTetheringRounded />
@@ -90,7 +100,7 @@ const ProxyHead = (props: Props) => {
         size="small"
         color="inherit"
         title="proxy detail"
-        onClick={() => props.onShowType(!showType)}
+        onClick={() => onHeadState({ showType: !showType })}
       >
         {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}
       </IconButton>
@@ -100,7 +110,7 @@ const ProxyHead = (props: Props) => {
         color="inherit"
         title="filter"
         onClick={() =>
-          setTextState((ts) => (ts === "filter" ? null : "filter"))
+          onHeadState({ textState: textState === "filter" ? null : "filter" })
         }
       >
         {textState === "filter" ? (
@@ -112,20 +122,20 @@ const ProxyHead = (props: Props) => {
 
       {textState === "filter" && (
         <TextField
-          autoFocus
+          autoFocus={autoFocus}
           hiddenLabel
           value={filterText}
           size="small"
           variant="outlined"
           placeholder="Filter conditions"
-          onChange={(e) => props.onFilterText(e.target.value)}
+          onChange={(e) => onHeadState({ filterText: e.target.value })}
           sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
         />
       )}
 
       {textState === "url" && (
         <TextField
-          autoFocus
+          autoFocus={autoFocus}
           hiddenLabel
           autoSave="off"
           autoComplete="off"
@@ -133,10 +143,7 @@ const ProxyHead = (props: Props) => {
           size="small"
           variant="outlined"
           placeholder="Test url"
-          onChange={(e) => {
-            setTestUrl(e.target.value);
-            delayManager.setUrl(groupName, e.target.value);
-          }}
+          onChange={(e) => onHeadState({ testUrl: e.target.value })}
           sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
         />
       )}

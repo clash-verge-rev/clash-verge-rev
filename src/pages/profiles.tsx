@@ -1,6 +1,7 @@
 import useSWR, { useSWRConfig } from "swr";
 import { useLockFn } from "ahooks";
 import { useEffect, useMemo, useState } from "react";
+import { useSetRecoilState } from "recoil";
 import { Box, Button, Grid, TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,6 +11,7 @@ import {
   importProfile,
 } from "../services/cmds";
 import { getProxies, updateProxy } from "../services/api";
+import { atomCurrentProfile } from "../services/states";
 import Notice from "../components/base/base-notice";
 import BasePage from "../components/base/base-page";
 import ProfileNew from "../components/profile/profile-new";
@@ -23,6 +25,8 @@ const ProfilePage = () => {
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const setCurrentProfile = useSetRecoilState(atomCurrentProfile);
 
   const { data: profiles = {} } = useSWR("getProfiles", getProfiles);
 
@@ -52,6 +56,9 @@ const ProfilePage = () => {
 
     const current = profiles.current;
     const profile = regularItems.find((p) => p.uid === current);
+
+    setCurrentProfile(current);
+
     if (!profile) return;
 
     setTimeout(async () => {
@@ -121,6 +128,7 @@ const ProfilePage = () => {
 
     try {
       await selectProfile(uid);
+      setCurrentProfile(uid);
       mutate("getProfiles", { ...profiles, current: uid }, true);
       if (force) Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
