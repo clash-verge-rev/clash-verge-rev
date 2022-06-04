@@ -5,7 +5,8 @@ import { Virtuoso } from "react-virtuoso";
 import { ApiType } from "../../services/types";
 import { updateProxy } from "../../services/api";
 import { getProfiles, patchProfile } from "../../services/cmds";
-import useSortProxy, { ProxySortType } from "./use-sort-proxy";
+import useSortProxy from "./use-sort-proxy";
+import useHeadState from "./use-head-state";
 import useFilterProxy from "./use-filter-proxy";
 import delayManager from "../../services/delay";
 import ProxyHead from "./proxy-head";
@@ -24,13 +25,19 @@ const ProxyGlobal = (props: Props) => {
   const { mutate } = useSWRConfig();
   const [now, setNow] = useState(curProxy || "DIRECT");
 
-  const [showType, setShowType] = useState(true);
-  const [sortType, setSortType] = useState<ProxySortType>(0);
-  const [filterText, setFilterText] = useState("");
+  const [headState, setHeadState] = useHeadState(groupName);
 
   const virtuosoRef = useRef<any>();
-  const filterProxies = useFilterProxy(proxies, groupName, filterText);
-  const sortedProxies = useSortProxy(filterProxies, groupName, sortType);
+  const filterProxies = useFilterProxy(
+    proxies,
+    groupName,
+    headState.filterText
+  );
+  const sortedProxies = useSortProxy(
+    filterProxies,
+    groupName,
+    headState.sortType
+  );
 
   const { data: profiles } = useSWR("getProfiles", getProfiles);
 
@@ -102,15 +109,11 @@ const ProxyGlobal = (props: Props) => {
     <>
       <ProxyHead
         sx={{ px: 3, my: 0.5, button: { mr: 0.5 } }}
-        showType={showType}
-        sortType={sortType}
         groupName={groupName}
-        filterText={filterText}
+        headState={headState}
         onLocation={onLocation}
         onCheckDelay={onCheckAll}
-        onShowType={setShowType}
-        onSortType={setSortType}
-        onFilterText={setFilterText}
+        onHeadState={setHeadState}
       />
 
       <Virtuoso
@@ -122,7 +125,7 @@ const ProxyGlobal = (props: Props) => {
             groupName={groupName}
             proxy={sortedProxies[index]}
             selected={sortedProxies[index].name === now}
-            showType={showType}
+            showType={headState.showType}
             onClick={onChangeProxy}
             sx={{ py: 0, px: 2 }}
           />

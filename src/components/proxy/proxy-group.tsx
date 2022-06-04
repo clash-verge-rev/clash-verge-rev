@@ -18,7 +18,8 @@ import {
 import { ApiType } from "../../services/types";
 import { updateProxy } from "../../services/api";
 import { getProfiles, patchProfile } from "../../services/cmds";
-import useSortProxy, { ProxySortType } from "./use-sort-proxy";
+import useSortProxy from "./use-sort-proxy";
+import useHeadState from "./use-head-state";
 import useFilterProxy from "./use-filter-proxy";
 import delayManager from "../../services/delay";
 import ProxyHead from "./proxy-head";
@@ -30,16 +31,21 @@ interface Props {
 
 const ProxyGroup = ({ group }: Props) => {
   const { mutate } = useSWRConfig();
-  const [open, setOpen] = useState(false);
   const [now, setNow] = useState(group.now);
 
-  const [showType, setShowType] = useState(false);
-  const [sortType, setSortType] = useState<ProxySortType>(0);
-  const [filterText, setFilterText] = useState("");
+  const [headState, setHeadState] = useHeadState(group.name);
 
   const virtuosoRef = useRef<any>();
-  const filterProxies = useFilterProxy(group.all, group.name, filterText);
-  const sortedProxies = useSortProxy(filterProxies, group.name, sortType);
+  const filterProxies = useFilterProxy(
+    group.all,
+    group.name,
+    headState.filterText
+  );
+  const sortedProxies = useSortProxy(
+    filterProxies,
+    group.name,
+    headState.sortType
+  );
 
   const { data: profiles } = useSWR("getProfiles", getProfiles);
 
@@ -99,14 +105,18 @@ const ProxyGroup = ({ group }: Props) => {
 
   // auto scroll to current index
   useEffect(() => {
-    if (open) {
+    if (headState.open) {
       setTimeout(() => onLocation(false), 5);
     }
-  }, [open]);
+  }, [headState.open]);
 
   return (
     <>
-      <ListItem button onClick={() => setOpen(!open)} dense>
+      <ListItem
+        button
+        dense
+        onClick={() => setHeadState({ open: !headState.open })}
+      >
         <ListItemText
           primary={group.name}
           secondary={
@@ -120,21 +130,17 @@ const ProxyGroup = ({ group }: Props) => {
           }}
         />
 
-        {open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
+        {headState.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
       </ListItem>
 
-      <Collapse in={open} timeout="auto" unmountOnExit>
+      <Collapse in={headState.open} timeout="auto" unmountOnExit>
         <ProxyHead
           sx={{ pl: 4, pr: 3, my: 0.5, button: { mr: 0.5 } }}
-          showType={showType}
-          sortType={sortType}
           groupName={group.name}
-          filterText={filterText}
+          headState={headState}
           onLocation={onLocation}
           onCheckDelay={onCheckAll}
-          onShowType={setShowType}
-          onSortType={setSortType}
-          onFilterText={setFilterText}
+          onHeadState={setHeadState}
         />
 
         {!sortedProxies.length && (
@@ -160,7 +166,7 @@ const ProxyGroup = ({ group }: Props) => {
                 groupName={group.name}
                 proxy={sortedProxies[index]}
                 selected={sortedProxies[index].name === now}
-                showType={showType}
+                showType={headState.showType}
                 sx={{ py: 0, pl: 4 }}
                 onClick={onChangeProxy}
               />
@@ -178,7 +184,7 @@ const ProxyGroup = ({ group }: Props) => {
                 groupName={group.name}
                 proxy={proxy}
                 selected={proxy.name === now}
-                showType={showType}
+                showType={headState.showType}
                 sx={{ py: 0, pl: 4 }}
                 onClick={onChangeProxy}
               />

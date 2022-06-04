@@ -3,6 +3,7 @@ import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import useSWR, { SWRConfig, useSWRConfig } from "swr";
 import { useEffect } from "react";
+import { useSetRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
 import { Route, Routes } from "react-router-dom";
 import { alpha, List, Paper, ThemeProvider } from "@mui/material";
@@ -10,7 +11,8 @@ import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "../services/api";
-import { getVergeConfig } from "../services/cmds";
+import { atomCurrentProfile } from "../services/states";
+import { getVergeConfig, getProfiles } from "../services/cmds";
 import { ReactComponent as LogoSvg } from "../assets/image/logo.svg";
 import LayoutItem from "../components/layout/layout-item";
 import LayoutControl from "../components/layout/layout-control";
@@ -33,6 +35,8 @@ const Layout = () => {
   const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
   const { theme_blur, language } = vergeConfig || {};
 
+  const setCurrentProfile = useSetRecoilState(atomCurrentProfile);
+
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") appWindow.close();
@@ -47,6 +51,9 @@ const Layout = () => {
 
     // update the verge config
     listen("verge://refresh-verge-config", () => mutate("getVergeConfig"));
+
+    // set current profile uid
+    getProfiles().then((data) => setCurrentProfile(data.current ?? ""));
   }, []);
 
   useEffect(() => {
