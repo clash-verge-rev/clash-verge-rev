@@ -83,7 +83,10 @@ async function resolveClashMeta() {
 async function resolveSidecar() {
   const sidecarDir = path.join(cwd, "src-tauri", "sidecar");
 
-  const host = execSync("rustc -vV | grep host").toString().slice(6).trim();
+  const host = execSync("rustc -vV")
+    .toString()
+    .match(/(?<=host: ).+(?=\s*)/g)[0];
+
   const ext = process.platform === "win32" ? ".exe" : "";
 
   await clash();
