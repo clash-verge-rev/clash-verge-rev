@@ -4,8 +4,20 @@ use std::{fs, path::PathBuf};
 
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned + Default>(path: PathBuf) -> T {
-  let yaml_str = fs::read_to_string(path).unwrap_or("".into());
-  serde_yaml::from_str::<T>(&yaml_str).unwrap_or(T::default())
+  if !path.exists() {
+    log::error!("file not found \"{}\"", path.display());
+    return T::default();
+  }
+
+  let yaml_str = fs::read_to_string(&path).unwrap_or("".into());
+
+  match serde_yaml::from_str::<T>(&yaml_str) {
+    Ok(val) => val,
+    Err(_) => {
+      log::error!("failed to read yaml file \"{}\"", path.display());
+      T::default()
+    }
+  }
 }
 
 /// save the data to the file
