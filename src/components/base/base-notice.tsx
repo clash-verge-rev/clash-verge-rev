@@ -26,12 +26,13 @@ const NoticeInner = (props: InnerProps) => {
     type === "info" ? (
       message
     ) : (
-      <Box sx={{ display: "flex", alignItems: "center" }}>
+      <Box sx={{ width: 328, display: "flex", alignItems: "center" }}>
         {type === "error" && <ErrorRounded color="error" />}
         {type === "success" && <CheckCircleRounded color="success" />}
 
         <Typography
-          sx={{ ml: 1, wordWrap: "break-word", wordBreak: "break-all" }}
+          component="span"
+          sx={{ ml: 1, wordWrap: "break-word", width: "calc(100% - 35px)" }}
         >
           {message}
         </Typography>
@@ -79,7 +80,7 @@ const Notice: NoticeInstance = (props) => {
 
   const onUnmount = () => {
     const result = ReactDOM.unmountComponentAtNode(container);
-    if (result && parent) setTimeout(() => parent.removeChild(container), 300);
+    if (result && parent) setTimeout(() => parent.removeChild(container), 500);
   };
 
   ReactDOM.render(<NoticeInner {...props} onClose={onUnmount} />, container);
