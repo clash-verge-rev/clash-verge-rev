@@ -137,7 +137,10 @@ const ProfileItem = (props: Props) => {
       await updateProfile(itemData.uid, { with_proxy: withProxy });
       mutate("getProfiles");
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      const errmsg = err?.message || err.toString();
+      Notice.error(
+        errmsg.replace(/error sending request for url (\S+?): /, "")
+      );
     } finally {
       setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }));
     }
