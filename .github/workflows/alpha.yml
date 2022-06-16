@@ -76,9 +76,9 @@ jobs:
           releaseDraft: true
           prerelease: true
 
-      - name: Portable Bundle
-        if: matrix.os == 'windows-latest'
-        run: |
-          yarn run portable
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Portable Bundle
+      #   if: matrix.os == 'windows-latest'
+      #   run: |
+      #     yarn run portable
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
