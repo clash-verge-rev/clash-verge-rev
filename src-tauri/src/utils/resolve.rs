@@ -98,6 +98,7 @@ pub fn create_window(app_handle: &AppHandle) {
 
         tauri::async_runtime::spawn(async move {
           if let Some(window) = app_handle.get_window("main") {
+            let _ = window.show();
             let _ = set_shadow(&window, true);
 
             if !winhelp::is_win11() {
