@@ -1,3 +1,13 @@
+## v1.0.3
+
+### Features
+
+- save some states such as URL test, filter, etc
+- update clash core and clash-meta core
+- new icon for macOS
+
+---
+
 ## v1.0.2
 
 ### Features
