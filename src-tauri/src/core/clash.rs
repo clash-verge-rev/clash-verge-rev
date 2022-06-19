@@ -49,15 +49,16 @@ impl ClashInfo {
 
     // `external-controller` could be
     // "127.0.0.1:9090" or ":9090"
-    // "9090" or 9090 (clash do not support this)
     let server = match config.get(&key_server) {
-      Some(value) => match value {
-        Value::String(val_str) => match val_str.starts_with(":") {
-          true => Some(format!("127.0.0.1{val_str}")),
-          false => Some(val_str.clone()),
-        },
-        _ => None,
-      },
+      Some(value) => {
+        let val_str = value.as_str().unwrap_or("");
+
+        if val_str.starts_with(":") {
+          Some(format!("127.0.0.1{val_str}"))
+        } else {
+          Some(val_str.into())
+        }
+      }
       _ => None,
     };
 

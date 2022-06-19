@@ -139,7 +139,11 @@ impl Service {
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
     if info.server.is_none() {
-      bail!("failed to parse the server");
+      if info.port.is_none() {
+        bail!("failed to parse config.yaml file");
+      } else {
+        bail!("failed to parse the server");
+      }
     }
 
     let server = info.server.unwrap();
