@@ -6,7 +6,11 @@ import monaco from "vite-plugin-monaco-editor";
 // https://vitejs.dev/config/
 export default defineConfig({
   root: "src",
-  plugins: [svgr(), react(), monaco()],
+  plugins: [
+    svgr(),
+    react(),
+    monaco({ languageWorkers: ["editorWorkerService", "typescript"] }),
+  ],
   build: {
     outDir: "../dist",
     emptyOutDir: true,
