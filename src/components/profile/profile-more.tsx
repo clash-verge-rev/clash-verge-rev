@@ -13,7 +13,6 @@ import {
 } from "@mui/material";
 import { CmdType } from "../../services/types";
 import { viewProfile } from "../../services/cmds";
-import getSystem from "../../utils/get-system";
 import enhance from "../../services/enhance";
 import ProfileEdit from "./profile-edit";
 import FileEditor from "./file-editor";
@@ -29,8 +28,6 @@ const Wrapper = styled(Box)(({ theme }) => ({
   padding: "8px 16px",
   boxSizing: "border-box",
 }));
-
-const OS = getSystem();
 
 interface Props {
   selected: boolean;
@@ -223,9 +220,6 @@ const ProfileMore = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        TransitionProps={
-          OS === "macos" ? { style: { transitionDuration: "225ms" } } : {}
-        }
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();

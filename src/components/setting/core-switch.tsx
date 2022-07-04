@@ -4,10 +4,8 @@ import { useLockFn } from "ahooks";
 import { Menu, MenuItem } from "@mui/material";
 import { Settings } from "@mui/icons-material";
 import { changeClashCore, getVergeConfig } from "../../services/cmds";
-import getSystem from "../../utils/get-system";
+import { getVersion } from "../../services/api";
 import Notice from "../base/base-notice";
-
-const OS = getSystem();
 
 const VALID_CORE = [
   { name: "Clash", core: "clash" },
@@ -31,7 +29,7 @@ const CoreSwitch = () => {
       await changeClashCore(core);
       mutate("getVergeConfig");
       mutate("getClashConfig");
-      mutate("getVersion");
+      mutate("getVersion", getVersion());
       setAnchorEl(null);
       Notice.success(`Successfully switch to ${core}`, 1000);
     } catch (err: any) {
@@ -58,9 +56,6 @@ const CoreSwitch = () => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        TransitionProps={
-          OS === "macos" ? { style: { transitionDuration: "225ms" } } : {}
-        }
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
