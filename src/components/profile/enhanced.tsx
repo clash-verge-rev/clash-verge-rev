@@ -26,7 +26,6 @@ import {
   changeProfileValid,
 } from "../../services/cmds";
 import { CmdType } from "../../services/types";
-import getSystem from "../../utils/get-system";
 import ProfileMore from "./profile-more";
 import Notice from "../base/base-notice";
 
@@ -34,8 +33,6 @@ interface Props {
   items: CmdType.ProfileItem[];
   chain: string[];
 }
-
-const OS = getSystem();
 
 const EnhancedMode = (props: Props) => {
   const { items, chain } = props;
@@ -147,9 +144,6 @@ const EnhancedMode = (props: Props) => {
           anchorEl={anchorEl}
           onClose={() => setAnchorEl(null)}
           transitionDuration={225}
-          TransitionProps={
-            OS === "macos" ? { style: { transitionDuration: "225ms" } } : {}
-          }
           MenuListProps={{
             dense: true,
             "aria-labelledby": "profile-use-button",
