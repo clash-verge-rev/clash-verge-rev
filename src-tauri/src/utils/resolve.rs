@@ -9,11 +9,15 @@ pub fn resolve_setup(app: &App) {
   // init app config
   init::init_app(app.package_info());
 
-  // init states
-  let core = app.state::<Core>();
+  // init core
+  // should be initialized after init_app fix #122
+  let core = Core::new();
 
   core.set_win(app.get_window("main"));
   core.init(app.app_handle());
+
+  // fix #122
+  app.manage(core);
 
   resolve_window(app);
 }
