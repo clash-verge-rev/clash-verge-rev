@@ -10,6 +10,7 @@
     "web:dev": "vite",
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
+    "aarch": "node scripts/aarch.mjs",
     "check": "node scripts/check.mjs",
     "updater": "node scripts/updater.mjs",
     "publish": "node scripts/publish.mjs",
