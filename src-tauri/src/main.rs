@@ -38,7 +38,6 @@ fn main() -> std::io::Result<()> {
 
   #[allow(unused_mut)]
   let mut builder = tauri::Builder::default()
-    .manage(core::Core::new())
     .setup(|app| Ok(resolve::resolve_setup(app)))
     .system_tray(SystemTray::new().with_menu(tray_menu))
     .on_system_tray_event(move |app_handle, event| match event {
