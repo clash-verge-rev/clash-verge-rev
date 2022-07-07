@@ -20,7 +20,7 @@ function resolveClash() {
 
   const CLASH_URL_PREFIX =
     "https://github.com/Dreamacro/clash/releases/download/premium/";
-  const CLASH_LATEST_DATE = "2022.06.19";
+  const CLASH_LATEST_DATE = "2022.07.07";
 
   // todo
   const map = {
