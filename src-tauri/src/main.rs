@@ -51,21 +51,10 @@ fn main() -> std::io::Result<()> {
         "open_window" => {
           resolve::create_window(app_handle);
         }
-        "rule_mode" => {
+        mode @ ("rule_mode" | "global_mode" | "direct_mode" | "script_mode") => {
+          let mode = &mode[0..mode.len() - 5];
           let core = app_handle.state::<core::Core>();
-          crate::log_if_err!(core.update_mode(app_handle, "rule"));
-        }
-        "global_mode" => {
-          let core = app_handle.state::<core::Core>();
-          crate::log_if_err!(core.update_mode(app_handle, "global"));
-        }
-        "direct_mode" => {
-          let core = app_handle.state::<core::Core>();
-          crate::log_if_err!(core.update_mode(app_handle, "direct"));
-        }
-        "script_mode" => {
-          let core = app_handle.state::<core::Core>();
-          crate::log_if_err!(core.update_mode(app_handle, "script"));
+          crate::log_if_err!(core.update_mode(app_handle, mode));
         }
         "system_proxy" => {
           let core = app_handle.state::<core::Core>();

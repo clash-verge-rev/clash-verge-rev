@@ -1,10 +1,8 @@
-use super::Clash;
 use super::{notice::Notice, ClashInfo};
 use crate::log_if_err;
 use crate::utils::{config, dirs};
 use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
-use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, time::Duration};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
@@ -139,24 +137,7 @@ impl Service {
     let temp_path = dirs::profiles_temp_path();
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
-    if info.server.is_none() {
-      if info.port.is_none() {
-        bail!("failed to parse config.yaml file");
-      } else {
-        bail!("failed to parse the server");
-      }
-    }
-
-    let server = info.server.unwrap();
-    let server = format!("http://{server}/configs");
-
-    let mut headers = HeaderMap::new();
-    headers.insert("Content-Type", "application/json".parse().unwrap());
-
-    if let Some(secret) = info.secret.as_ref() {
-      let secret = format!("Bearer {}", secret.clone()).parse().unwrap();
-      headers.insert("Authorization", secret);
-    }
+    let (server, headers) = Self::clash_client_info(info)?;
 
     tauri::async_runtime::spawn(async move {
       let mut data = HashMap::new();
@@ -197,6 +178,24 @@ impl Service {
       bail!("did not start sidecar");
     }
 
+    let (server, headers) = Self::clash_client_info(info)?;
+
+    tauri::async_runtime::spawn(async move {
+      if let Ok(client) = reqwest::ClientBuilder::new().no_proxy().build() {
+        let builder = client.patch(&server).headers(headers.clone()).json(&config);
+
+        match builder.send().await {
+          Ok(_) => notice.refresh_clash(),
+          Err(err) => log::error!("{err}"),
+        }
+      }
+    });
+
+    Ok(())
+  }
+
+  /// get clash client url and headers from clash info
+  fn clash_client_info(info: ClashInfo) -> Result<(String, HeaderMap)> {
     if info.server.is_none() {
       if info.port.is_none() {
         bail!("failed to parse config.yaml file");
@@ -216,34 +215,7 @@ impl Service {
       headers.insert("Authorization", secret);
     }
 
-    tauri::async_runtime::spawn(async move {
-      // retry 5 times
-      for _ in 0..5 {
-        match reqwest::ClientBuilder::new().no_proxy().build() {
-          Ok(client) => {
-            let builder = client.patch(&server).headers(headers.clone()).json(&config);
-
-            match builder.send().await {
-              Ok(resp) => {
-                if resp.status() != 204 {
-                  log::error!("failed to activate clash with status \"{}\"", resp.status());
-                }
-
-                notice.refresh_clash();
-
-                // do not retry
-                break;
-              }
-              Err(err) => log::error!("failed to activate for `{err}`"),
-            }
-          }
-          Err(err) => log::error!("failed to activate for `{err}`"),
-        }
-        sleep(Duration::from_millis(500)).await;
-      }
-    });
-
-    Ok(())
+    Ok((server, headers))
   }
 }
 

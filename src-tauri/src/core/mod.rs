@@ -3,7 +3,7 @@ use self::sysopt::Sysopt;
 use self::timer::Timer;
 use crate::core::enhance::PrfEnhancedResult;
 use crate::log_if_err;
-use crate::utils::{dirs, help};
+use crate::utils::help;
 use anyhow::{bail, Result};
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
@@ -112,6 +112,7 @@ impl Core {
     log_if_err!(sysopt.init_launch(auto_launch));
 
     log_if_err!(self.update_systray(&app_handle));
+    log_if_err!(self.update_systray_clash(&app_handle));
 
     // wait the window setup during resolve app
     let core = self.clone();
@@ -191,7 +192,7 @@ impl Core {
     }
 
     if changed_mode {
-      self.update_systray(app_handle)?;
+      self.update_systray_clash(app_handle)?;
     }
 
     Ok(())
@@ -240,7 +241,7 @@ impl Core {
 
     #[cfg(target_os = "windows")]
     if tun_mode.is_some() && *tun_mode.as_ref().unwrap_or(&false) {
-      let wintun_dll = dirs::app_home_dir().join("wintun.dll");
+      let wintun_dll = crate::utils::dirs::app_home_dir().join("wintun.dll");
       if !wintun_dll.exists() {
         bail!("failed to enable TUN for missing `wintun.dll`");
       }
@@ -262,30 +263,38 @@ impl Core {
     Ok(())
   }
 
-  /// update the system tray state
-  pub fn update_systray(&self, app_handle: &AppHandle) -> Result<()> {
+  // update system tray state (clash config)
+  pub fn update_systray_clash(&self, app_handle: &AppHandle) -> Result<()> {
     let clash = self.clash.lock();
-    let info = clash.info.clone();
-    let mode = info.mode.as_ref();
+    let mode = clash
+      .config
+      .get(&Value::from("mode"))
+      .map(|val| val.as_str().unwrap_or("rule"))
+      .unwrap_or("rule");
 
+    let tray = app_handle.tray_handle();
+
+    tray.get_item("rule_mode").set_selected(mode == "rule")?;
+    tray
+      .get_item("global_mode")
+      .set_selected(mode == "global")?;
+    tray
+      .get_item("direct_mode")
+      .set_selected(mode == "direct")?;
+    tray
+      .get_item("script_mode")
+      .set_selected(mode == "script")?;
+
+    Ok(())
+  }
+
+  /// update the system tray state (verge config)
+  pub fn update_systray(&self, app_handle: &AppHandle) -> Result<()> {
     let verge = self.verge.lock();
     let tray = app_handle.tray_handle();
 
     let system_proxy = verge.enable_system_proxy.as_ref();
     let tun_mode = verge.enable_tun_mode.as_ref();
-
-    tray
-      .get_item("rule_mode")
-      .set_selected((*mode.unwrap()).eq("rule"))?;
-    tray
-      .get_item("global_mode")
-      .set_selected((*mode.unwrap()).eq("global"))?;
-    tray
-      .get_item("direct_mode")
-      .set_selected((*mode.unwrap()).eq("direct"))?;
-    tray
-      .get_item("script_mode")
-      .set_selected((*mode.unwrap()).eq("script"))?;
 
     tray
       .get_item("system_proxy")
@@ -298,6 +307,33 @@ impl Core {
     let window = app_handle.get_window("main");
     let notice = Notice::from(window);
     notice.refresh_verge();
+
+    Ok(())
+  }
+
+  // update rule/global/direct/script mode
+  pub fn update_mode(&self, app_handle: &AppHandle, mode: &str) -> Result<()> {
+    // save config to file
+    let mut clash = self.clash.lock();
+    clash.config.insert(Value::from("mode"), Value::from(mode));
+    clash.save_config()?;
+
+    let info = clash.info.clone();
+    drop(clash);
+
+    let notice = {
+      let window = self.window.lock();
+      Notice::from(window.clone())
+    };
+
+    let mut mapping = Mapping::new();
+    mapping.insert(Value::from("mode"), Value::from(mode));
+
+    let service = self.service.lock();
+    service.patch_config(info, mapping, notice)?;
+
+    // update tray
+    self.update_systray_clash(app_handle)?;
 
     Ok(())
   }
@@ -422,31 +458,6 @@ impl Core {
     } else {
       window.emit("script-handler", payload).unwrap();
     }
-
-    Ok(())
-  }
-
-  // update rule/global/direct/script mode
-  pub fn update_mode(&self, app_handle: &AppHandle, mode: &str) -> Result<()> {
-    let mut mapping = Mapping::new();
-    mapping.insert(Value::from("mode"), Value::from(mode));
-
-    self.patch_clash(mapping, app_handle);
-
-    let (config, info) = {
-      let clash = self.clash.lock();
-      let config = clash.config.clone();
-      let info = clash.info.clone();
-      (config, info)
-    };
-
-    let notice = {
-      let window = self.window.lock();
-      Notice::from(window.clone())
-    };
-
-    let service = self.service.lock();
-    service.patch_config(info, config, notice);
 
     Ok(())
   }
