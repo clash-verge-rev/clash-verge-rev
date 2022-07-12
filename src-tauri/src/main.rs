@@ -31,10 +31,12 @@ fn main() -> std::io::Result<()> {
 
   let tray_menu = SystemTrayMenu::new()
     .add_item(CustomMenuItem::new("open_window", "Show"))
+    .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(CustomMenuItem::new("rule_mode", "Rule Mode"))
     .add_item(CustomMenuItem::new("global_mode", "Global Mode"))
     .add_item(CustomMenuItem::new("direct_mode", "Direct Mode"))
     .add_item(CustomMenuItem::new("script_mode", "Script Mode"))
+    .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
     .add_item(CustomMenuItem::new("tun_mode", "Tun Mode"))
     .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
