@@ -1,3 +1,4 @@
+use super::Clash;
 use super::{notice::Notice, ClashInfo};
 use crate::log_if_err;
 use crate::utils::{config, dirs};
@@ -166,6 +167,61 @@ impl Service {
         match reqwest::ClientBuilder::new().no_proxy().build() {
           Ok(client) => {
             let builder = client.put(&server).headers(headers.clone()).json(&data);
+
+            match builder.send().await {
+              Ok(resp) => {
+                if resp.status() != 204 {
+                  log::error!("failed to activate clash with status \"{}\"", resp.status());
+                }
+
+                notice.refresh_clash();
+
+                // do not retry
+                break;
+              }
+              Err(err) => log::error!("failed to activate for `{err}`"),
+            }
+          }
+          Err(err) => log::error!("failed to activate for `{err}`"),
+        }
+        sleep(Duration::from_millis(500)).await;
+      }
+    });
+
+    Ok(())
+  }
+
+  /// patch clash config
+  pub fn patch_config(&self, info: ClashInfo, config: Mapping, notice: Notice) -> Result<()> {
+    if !self.service_mode && self.sidecar.is_none() {
+      bail!("did not start sidecar");
+    }
+
+    if info.server.is_none() {
+      if info.port.is_none() {
+        bail!("failed to parse config.yaml file");
+      } else {
+        bail!("failed to parse the server");
+      }
+    }
+
+    let server = info.server.unwrap();
+    let server = format!("http://{server}/configs");
+
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Type", "application/json".parse().unwrap());
+
+    if let Some(secret) = info.secret.as_ref() {
+      let secret = format!("Bearer {}", secret.clone()).parse().unwrap();
+      headers.insert("Authorization", secret);
+    }
+
+    tauri::async_runtime::spawn(async move {
+      // retry 5 times
+      for _ in 0..5 {
+        match reqwest::ClientBuilder::new().no_proxy().build() {
+          Ok(client) => {
+            let builder = client.patch(&server).headers(headers.clone()).json(&config);
 
             match builder.send().await {
               Ok(resp) => {

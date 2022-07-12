@@ -7,6 +7,7 @@ use crate::utils::{dirs, help};
 use anyhow::{bail, Result};
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
+use serde_yaml::Value;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::{AppHandle, Manager, Window};
@@ -168,15 +169,15 @@ impl Core {
 
   /// Patch Clash
   /// handle the clash config changed
-  pub fn patch_clash(&self, patch: Mapping) -> Result<()> {
-    let (changed, port) = {
+  pub fn patch_clash(&self, patch: Mapping, app_handle: &AppHandle) -> Result<()> {
+    let ((changed_port, changed_mode), port) = {
       let mut clash = self.clash.lock();
       (clash.patch_config(patch)?, clash.info.port.clone())
     };
 
     // todo: port check
 
-    if changed {
+    if changed_port {
       let mut service = self.service.lock();
       service.restart()?;
       drop(service);
@@ -187,6 +188,10 @@ impl Core {
       let mut sysopt = self.sysopt.lock();
       let verge = self.verge.lock();
       sysopt.init_sysproxy(port, &verge);
+    }
+
+    if changed_mode {
+      self.update_systray(app_handle)?;
     }
 
     Ok(())
@@ -259,11 +264,28 @@ impl Core {
 
   /// update the system tray state
   pub fn update_systray(&self, app_handle: &AppHandle) -> Result<()> {
+    let clash = self.clash.lock();
+    let info = clash.info.clone();
+    let mode = info.mode.as_ref();
+
     let verge = self.verge.lock();
     let tray = app_handle.tray_handle();
 
     let system_proxy = verge.enable_system_proxy.as_ref();
     let tun_mode = verge.enable_tun_mode.as_ref();
+
+    tray
+      .get_item("rule_mode")
+      .set_selected((*mode.unwrap()).eq("rule"))?;
+    tray
+      .get_item("global_mode")
+      .set_selected((*mode.unwrap()).eq("global"))?;
+    tray
+      .get_item("direct_mode")
+      .set_selected((*mode.unwrap()).eq("direct"))?;
+    tray
+      .get_item("script_mode")
+      .set_selected((*mode.unwrap()).eq("script"))?;
 
     tray
       .get_item("system_proxy")
@@ -400,6 +422,31 @@ impl Core {
     } else {
       window.emit("script-handler", payload).unwrap();
     }
+
+    Ok(())
+  }
+
+  // update rule/global/direct/script mode
+  pub fn update_mode(&self, app_handle: &AppHandle, mode: &str) -> Result<()> {
+    let mut mapping = Mapping::new();
+    mapping.insert(Value::from("mode"), Value::from(mode));
+
+    self.patch_clash(mapping, app_handle);
+
+    let (config, info) = {
+      let clash = self.clash.lock();
+      let config = clash.config.clone();
+      let info = clash.info.clone();
+      (config, info)
+    };
+
+    let notice = {
+      let window = self.window.lock();
+      Notice::from(window.clone())
+    };
+
+    let service = self.service.lock();
+    service.patch_config(info, config, notice);
 
     Ok(())
   }

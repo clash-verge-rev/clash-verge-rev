@@ -11,6 +11,7 @@ use crate::{
   core::Verge,
   utils::{resolve, server},
 };
+use serde_yaml::{Mapping, Value};
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
 };
@@ -30,6 +31,10 @@ fn main() -> std::io::Result<()> {
 
   let tray_menu = SystemTrayMenu::new()
     .add_item(CustomMenuItem::new("open_window", "Show"))
+    .add_item(CustomMenuItem::new("rule_mode", "Rule Mode"))
+    .add_item(CustomMenuItem::new("global_mode", "Global Mode"))
+    .add_item(CustomMenuItem::new("direct_mode", "Direct Mode"))
+    .add_item(CustomMenuItem::new("script_mode", "Script Mode"))
     .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
     .add_item(CustomMenuItem::new("tun_mode", "Tun Mode"))
     .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
@@ -44,6 +49,22 @@ fn main() -> std::io::Result<()> {
       SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
         "open_window" => {
           resolve::create_window(app_handle);
+        }
+        "rule_mode" => {
+          let core = app_handle.state::<core::Core>();
+          crate::log_if_err!(core.update_mode(app_handle, "rule"));
+        }
+        "global_mode" => {
+          let core = app_handle.state::<core::Core>();
+          crate::log_if_err!(core.update_mode(app_handle, "global"));
+        }
+        "direct_mode" => {
+          let core = app_handle.state::<core::Core>();
+          crate::log_if_err!(core.update_mode(app_handle, "direct"));
+        }
+        "script_mode" => {
+          let core = app_handle.state::<core::Core>();
+          crate::log_if_err!(core.update_mode(app_handle, "script"));
         }
         "system_proxy" => {
           let core = app_handle.state::<core::Core>();
