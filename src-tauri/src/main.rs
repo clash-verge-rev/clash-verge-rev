@@ -11,7 +11,6 @@ use crate::{
   core::Verge,
   utils::{resolve, server},
 };
-use serde_yaml::{Mapping, Value};
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
 };
