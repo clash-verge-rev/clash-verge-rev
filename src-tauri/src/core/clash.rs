@@ -16,6 +16,9 @@ pub struct ClashInfo {
 
   /// clash secret
   pub secret: Option<String>,
+
+  /// mode
+  pub mode: Option<String>,
 }
 
 impl ClashInfo {
@@ -26,6 +29,7 @@ impl ClashInfo {
     let key_port_2 = Value::from("mixed-port");
     let key_server = Value::from("external-controller");
     let key_secret = Value::from("secret");
+    let key_mode = Value::from("mode");
 
     let port = match config.get(&key_port_1) {
       Some(value) => match value {
@@ -72,11 +76,20 @@ impl ClashInfo {
       _ => None,
     };
 
+    let mode = match config.get(&key_mode) {
+      Some(value) => match value {
+        Value::String(val_str) => Some(val_str.clone()),
+        _ => None,
+      },
+      _ => None,
+    };
+
     ClashInfo {
       status: "init".into(),
       port,
       server,
       secret,
+      mode,
     }
   }
 }
@@ -113,20 +126,26 @@ impl Clash {
 
   /// patch update the clash config
   /// if the port is changed then return true
-  pub fn patch_config(&mut self, patch: Mapping) -> Result<bool> {
+  pub fn patch_config(&mut self, patch: Mapping) -> Result<(bool, bool)> {
     let port_key = Value::from("mixed-port");
     let server_key = Value::from("external-controller");
     let secret_key = Value::from("secret");
+    let mode_key = Value::from("mode");
 
     let mut change_port = false;
     let mut change_info = false;
+    let mut change_mode = false;
 
     for (key, value) in patch.into_iter() {
       if key == port_key {
         change_port = true;
       }
 
-      if key == port_key || key == server_key || key == secret_key {
+      if key == mode_key {
+        change_mode = true;
+      }
+
+      if key == port_key || key == server_key || key == secret_key || key == mode_key {
         change_info = true;
       }
 
@@ -139,7 +158,7 @@ impl Clash {
 
     self.save_config()?;
 
-    Ok(change_port)
+    Ok((change_port, change_mode))
   }
 
   /// revise the `tun` and `dns` config

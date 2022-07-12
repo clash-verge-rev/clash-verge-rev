@@ -178,8 +178,12 @@ pub fn get_clash_info(core: State<'_, Core>) -> CmdResult<ClashInfo> {
 /// after putting the change to the clash core
 /// then we should save the latest config
 #[tauri::command]
-pub fn patch_clash_config(payload: Mapping, core: State<'_, Core>) -> CmdResult {
-  wrap_err!(core.patch_clash(payload))
+pub fn patch_clash_config(
+  payload: Mapping,
+  app_handle: tauri::AppHandle,
+  core: State<'_, Core>,
+) -> CmdResult {
+  wrap_err!(core.patch_clash(payload, &app_handle))
 }
 
 /// get the verge config
