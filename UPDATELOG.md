@@ -1,3 +1,17 @@
+## v1.0.4
+
+### Features
+
+- update clash core and clash meta version
+- support switch clash mode on system tray
+- theme mode support follows system
+
+### Bug Fixes
+
+- config load error on first use
+
+---
+
 ## v1.0.3
 
 ### Features
