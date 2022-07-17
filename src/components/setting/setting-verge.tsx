@@ -19,7 +19,7 @@ import { ArrowForward } from "@mui/icons-material";
 import { SettingList, SettingItem } from "./setting";
 import { CmdType } from "../../services/types";
 import { version } from "../../../package.json";
-import PaletteSwitch from "./palette-switch";
+import ThemeModeSwitch from "./theme-mode-switch";
 import GuardState from "./guard-state";
 import SettingTheme from "./setting-theme";
 
@@ -44,18 +44,30 @@ const SettingVerge = ({ onError }: Props) => {
   return (
     <SettingList title={t("Verge Setting")}>
       <SettingItem>
+        <ListItemText primary={t("Language")} />
+        <GuardState
+          value={language ?? "en"}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ language: e })}
+          onGuard={(e) => patchVergeConfig({ language: e })}
+        >
+          <Select size="small" sx={{ width: 100 }}>
+            <MenuItem value="zh">中文</MenuItem>
+            <MenuItem value="en">English</MenuItem>
+          </Select>
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem>
         <ListItemText primary={t("Theme Mode")} />
         <GuardState
-          value={theme_mode === "dark"}
-          valueProps="checked"
+          value={theme_mode}
           onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ theme_mode: e ? "dark" : "light" })}
-          onGuard={(e) =>
-            patchVergeConfig({ theme_mode: e ? "dark" : "light" })
-          }
+          onChange={(e) => onChangeData({ theme_mode: e })}
+          onGuard={(e) => patchVergeConfig({ theme_mode: e })}
         >
-          <PaletteSwitch edge="end" />
+          <ThemeModeSwitch />
         </GuardState>
       </SettingItem>
 
@@ -88,22 +100,6 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary={t("Language")} />
-        <GuardState
-          value={language ?? "en"}
-          onCatch={onError}
-          onFormat={(e: any) => e.target.value}
-          onChange={(e) => onChangeData({ language: e })}
-          onGuard={(e) => patchVergeConfig({ language: e })}
-        >
-          <Select size="small" sx={{ width: 100 }}>
-            <MenuItem value="zh">中文</MenuItem>
-            <MenuItem value="en">English</MenuItem>
-          </Select>
-        </GuardState>
-      </SettingItem>
-
-      <SettingItem>
         <ListItemText primary={t("Theme Setting")} />
         <IconButton
           color="inherit"
@@ -129,7 +125,7 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem>
-        <ListItemText primary={t("Version")} />
+        <ListItemText primary={t("Verge Version")} />
         <Typography sx={{ py: "6px" }}>v{version}</Typography>
       </SettingItem>
 

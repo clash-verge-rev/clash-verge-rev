@@ -1,7 +1,10 @@
 import useSWR from "swr";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useRecoilState } from "recoil";
 import { createTheme } from "@mui/material";
+import { appWindow } from "@tauri-apps/api/window";
 import { getVergeConfig } from "../../services/cmds";
+import { atomThemeMode } from "../../services/states";
 import { defaultTheme, defaultDarkTheme } from "../../pages/_theme";
 
 /**
@@ -10,10 +13,23 @@ import { defaultTheme, defaultDarkTheme } from "../../pages/_theme";
 export default function useCustomTheme() {
   const { data } = useSWR("getVergeConfig", getVergeConfig);
   const { theme_mode, theme_setting } = data ?? {};
+  const [mode, setMode] = useRecoilState(atomThemeMode);
+
+  useEffect(() => {
+    if (theme_mode !== "system") {
+      setMode(theme_mode ?? "light");
+      return;
+    }
+
+    appWindow.theme().then((m) => m && setMode(m));
+    const unlisten = appWindow.onThemeChanged((e) => setMode(e.payload));
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [theme_mode]);
 
   const theme = useMemo(() => {
-    const mode = theme_mode ?? "light";
-
     const setting = theme_setting || {};
     const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
 
@@ -78,7 +94,7 @@ export default function useCustomTheme() {
     }, 0);
 
     return theme;
-  }, [theme_mode, theme_setting]);
+  }, [mode, theme_setting]);
 
   return { theme };
 }

@@ -1,6 +1,6 @@
-import useSWR from "swr";
 import { useEffect, useRef } from "react";
 import { useLockFn } from "ahooks";
+import { useRecoilValue } from "recoil";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -9,11 +9,8 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import {
-  getVergeConfig,
-  readProfileFile,
-  saveProfileFile,
-} from "../../services/cmds";
+import { atomThemeMode } from "../../services/states";
+import { readProfileFile, saveProfileFile } from "../../services/cmds";
 import Notice from "../base/base-notice";
 
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
@@ -35,8 +32,7 @@ const FileEditor = (props: Props) => {
   const { t } = useTranslation();
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
-  const { theme_mode } = vergeConfig ?? {};
+  const themeMode = useRecoilValue(atomThemeMode);
 
   useEffect(() => {
     if (!open) return;
@@ -50,7 +46,7 @@ const FileEditor = (props: Props) => {
       instanceRef.current = editor.create(editorRef.current, {
         value: data,
         language: mode,
-        theme: theme_mode === "light" ? "vs" : "vs-dark",
+        theme: themeMode === "light" ? "vs" : "vs-dark",
         minimap: { enabled: false },
       });
     });
