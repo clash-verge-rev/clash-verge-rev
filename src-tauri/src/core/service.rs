@@ -233,6 +233,7 @@ pub mod win_service {
   use anyhow::Context;
   use deelevate::{PrivilegeLevel, Token};
   use runas::Command as RunasCommand;
+  use serde::{Deserialize, Serialize};
   use std::os::windows::process::CommandExt;
   use std::{env::current_exe, process::Command as StdCommand};
 
