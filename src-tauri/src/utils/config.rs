@@ -5,7 +5,7 @@ use std::{fs, path::PathBuf};
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned + Default>(path: PathBuf) -> T {
   if !path.exists() {
-    log::error!("file not found \"{}\"", path.display());
+    log::error!(target: "app", "file not found \"{}\"", path.display());
     return T::default();
   }
 
@@ -14,7 +14,7 @@ pub fn read_yaml<T: DeserializeOwned + Default>(path: PathBuf) -> T {
   match serde_yaml::from_str::<T>(&yaml_str) {
     Ok(val) => val,
     Err(_) => {
-      log::error!("failed to read yaml file \"{}\"", path.display());
+      log::error!(target: "app", "failed to read yaml file \"{}\"", path.display());
       T::default()
     }
   }
