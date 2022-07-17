@@ -1,5 +1,6 @@
 import { styled, Switch } from "@mui/material";
 
+// todo: deprecated
 // From: https://mui.com/components/switches/
 const PaletteSwitch = styled(Switch)(({ theme }) => ({
   width: 62,
