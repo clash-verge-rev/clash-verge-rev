@@ -418,7 +418,7 @@ impl Core {
       let result = event.payload();
 
       if result.is_none() {
-        log::warn!("event payload result is none");
+        log::warn!(target: "app", "event payload result is none");
         return;
       }
 
@@ -438,10 +438,10 @@ impl Core {
         let service = service.lock();
         log_if_err!(service.set_config(info, config, notice));
 
-        log::info!("profile enhanced status {}", result.status);
+        log::info!(target: "app", "profile enhanced status {}", result.status);
       }
 
-      result.error.map(|err| log::error!("{err}"));
+      result.error.map(|err| log::error!(target: "app", "{err}"));
     });
 
     let verge = self.verge.lock();

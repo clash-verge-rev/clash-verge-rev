@@ -53,12 +53,10 @@ impl Service {
         Ok(status) => {
           // 未启动clash
           if status.code != 0 {
-            if let Err(err) = Self::start_clash_by_service().await {
-              log::error!("{err}");
-            }
+            log_if_err!(Self::start_clash_by_service().await);
           }
         }
-        Err(err) => log::error!("{err}"),
+        Err(err) => log::error!(target: "app", "{err}"),
       }
     });
 
@@ -77,9 +75,7 @@ impl Service {
     }
 
     tauri::async_runtime::spawn(async move {
-      if let Err(err) = Self::stop_clash_by_service().await {
-        log::error!("{err}");
-      }
+      log_if_err!(Self::stop_clash_by_service().await);
     });
 
     Ok(())
@@ -109,8 +105,11 @@ impl Service {
     tauri::async_runtime::spawn(async move {
       while let Some(event) = rx.recv().await {
         match event {
-          CommandEvent::Stdout(line) => log::info!("[clash]: {}", line),
-          CommandEvent::Stderr(err) => log::error!("[clash]: {}", err),
+          CommandEvent::Stdout(line) => {
+            let stdout = if line.len() > 33 { &line[33..] } else { &line };
+            log::info!(target: "app" ,"[clash]: {}", stdout);
+          }
+          CommandEvent::Stderr(err) => log::error!(target: "app" ,"[clash error]: {}", err),
           _ => {}
         }
       }
@@ -152,7 +151,7 @@ impl Service {
             match builder.send().await {
               Ok(resp) => {
                 if resp.status() != 204 {
-                  log::error!("failed to activate clash with status \"{}\"", resp.status());
+                  log::error!(target: "app", "failed to activate clash with status \"{}\"", resp.status());
                 }
 
                 notice.refresh_clash();
@@ -160,10 +159,10 @@ impl Service {
                 // do not retry
                 break;
               }
-              Err(err) => log::error!("failed to activate for `{err}`"),
+              Err(err) => log::error!(target: "app", "failed to activate for `{err}`"),
             }
           }
-          Err(err) => log::error!("failed to activate for `{err}`"),
+          Err(err) => log::error!(target: "app", "failed to activate for `{err}`"),
         }
         sleep(Duration::from_millis(500)).await;
       }
@@ -186,7 +185,7 @@ impl Service {
 
         match builder.send().await {
           Ok(_) => notice.refresh_clash(),
-          Err(err) => log::error!("{err}"),
+          Err(err) => log::error!(target: "app", "{err}"),
         }
       }
     });

@@ -3,7 +3,7 @@ use chrono::Local;
 use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Config, Root};
+use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::fs;
 use std::io::Write;
@@ -28,11 +28,13 @@ fn init_log(log_dir: &PathBuf) {
   let config = Config::builder()
     .appender(Appender::builder().build("stdout", Box::new(stdout)))
     .appender(Appender::builder().build("file", Box::new(tofile)))
-    .build(
-      Root::builder()
-        .appenders(["stdout", "file"])
-        .build(LevelFilter::Info),
+    .logger(
+      Logger::builder()
+        .appenders(["file", "stdout"])
+        .additive(false)
+        .build("app", LevelFilter::Info),
     )
+    .build(Root::builder().appender("stdout").build(LevelFilter::Info))
     .unwrap();
 
   log4rs::init_config(config).unwrap();
@@ -78,7 +80,7 @@ pub fn init_app(package_info: &PackageInfo) {
 
   init_log(&log_dir);
   if let Err(err) = init_config(&app_dir) {
-    log::error!("{err}");
+    log::error!(target: "app", "{err}");
   }
 
   // copy the resource file

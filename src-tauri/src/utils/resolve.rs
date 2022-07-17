@@ -111,7 +111,7 @@ pub fn create_window(app_handle: &AppHandle) {
           }
         });
       }
-      Err(err) => log::error!("{err}"),
+      Err(err) => log::error!(target: "app", "{err}"),
     }
   }
 
