@@ -114,6 +114,7 @@ fn main() -> std::io::Result<()> {
       cmds::get_clash_info,
       cmds::patch_clash_config,
       cmds::change_clash_core,
+      cmds::get_running_config,
       // verge
       cmds::get_verge_config,
       cmds::patch_verge_config,

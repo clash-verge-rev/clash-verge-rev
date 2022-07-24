@@ -347,12 +347,10 @@ impl Core {
       Clash::strict_filter(data)
     };
 
-    let (mut config, info) = {
-      let clash = self.clash.lock();
-      let config = clash.config.clone();
-      let info = clash.info.clone();
-      (config, info)
-    };
+    let mut clash = self.clash.lock();
+
+    let mut config = clash.config.clone();
+    let info = clash.info.clone();
 
     for (key, value) in data.into_iter() {
       config.insert(key, value);
@@ -368,6 +366,9 @@ impl Core {
       let window = self.window.lock();
       Notice::from(window.clone())
     };
+
+    clash.set_running_config(&config);
+    drop(clash);
 
     let service = self.service.lock();
     service.set_config(info, config, notice)

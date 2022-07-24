@@ -174,6 +174,13 @@ pub fn get_clash_info(core: State<'_, Core>) -> CmdResult<ClashInfo> {
   Ok(clash.info.clone())
 }
 
+/// get the running clash config string
+#[tauri::command]
+pub fn get_running_config(core: State<'_, Core>) -> CmdResult<Option<String>> {
+  let clash = core.clash.lock();
+  Ok(clash.running_config.clone())
+}
+
 /// update the clash core config
 /// after putting the change to the clash core
 /// then we should save the latest config

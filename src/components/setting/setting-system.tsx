@@ -18,6 +18,7 @@ import { SettingList, SettingItem } from "./setting";
 import { CmdType } from "../../services/types";
 import GuardState from "./guard-state";
 import ServiceMode from "./service-mode";
+import ConfigViewer from "./config-viewer";
 import SysproxyTooltip from "./sysproxy-tooltip";
 import getSystem from "../../utils/get-system";
 
@@ -58,7 +59,14 @@ const SettingSystem = ({ onError }: Props) => {
   return (
     <SettingList title={t("System Setting")}>
       <SettingItem>
-        <ListItemText primary={t("Tun Mode")} />
+        <ListItemText
+          primary={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <span style={{ marginRight: 4 }}>{t("Tun Mode")}</span>
+              <ConfigViewer />
+            </Box>
+          }
+        />
         <GuardState
           value={enable_tun_mode ?? false}
           valueProps="checked"
