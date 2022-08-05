@@ -43,7 +43,11 @@ const SysproxyTooltip = () => {
         title={showTitle}
         arrow
       >
-        <InfoRounded fontSize="small" onClick={onShow} />
+        <InfoRounded
+          fontSize="small"
+          style={{ cursor: "pointer", opacity: 0.75 }}
+          onClick={onShow}
+        />
       </Tooltip>
     </ClickAwayListener>
   );

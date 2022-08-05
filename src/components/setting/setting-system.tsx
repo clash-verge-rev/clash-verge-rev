@@ -90,6 +90,7 @@ const SettingSystem = ({ onError }: Props) => {
                   serviceStatus === "installed") && (
                   <PrivacyTipRounded
                     fontSize="small"
+                    style={{ cursor: "pointer", opacity: 0.75 }}
                     onClick={() => setServiceOpen(true)}
                   />
                 )}

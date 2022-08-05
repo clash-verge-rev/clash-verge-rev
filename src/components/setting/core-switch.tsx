@@ -41,7 +41,7 @@ const CoreSwitch = () => {
     <>
       <Settings
         fontSize="small"
-        style={{ cursor: "pointer" }}
+        style={{ cursor: "pointer", opacity: 0.75 }}
         onClick={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });

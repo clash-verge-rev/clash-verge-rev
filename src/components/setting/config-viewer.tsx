@@ -68,7 +68,11 @@ const ConfigViewer = () => {
         </DialogActions>
       </Dialog>
 
-      <InfoRounded fontSize="small" onClick={() => setOpen(true)} />
+      <InfoRounded
+        fontSize="small"
+        style={{ cursor: "pointer", opacity: 0.75 }}
+        onClick={() => setOpen(true)}
+      />
     </>
   );
 };
