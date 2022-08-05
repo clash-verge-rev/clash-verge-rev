@@ -2,16 +2,16 @@ import useSWR, { useSWRConfig } from "swr";
 import { useSetRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
 import {
-  ListItemText,
   TextField,
   Switch,
   Select,
   MenuItem,
   Typography,
-  Box,
+  IconButton,
 } from "@mui/material";
 import { atomClashPort } from "@/services/states";
-import { patchClashConfig } from "@/services/cmds";
+import { ArrowForward } from "@mui/icons-material";
+import { openWebUrl, patchClashConfig } from "@/services/cmds";
 import { SettingList, SettingItem } from "./setting";
 import { getClashConfig, getVersion, updateConfigs } from "@/services/api";
 import Notice from "../base/base-notice";
@@ -68,8 +68,7 @@ const SettingClash = ({ onError }: Props) => {
 
   return (
     <SettingList title={t("Clash Setting")}>
-      <SettingItem>
-        <ListItemText primary={t("Allow Lan")} />
+      <SettingItem label={t("Allow Lan")}>
         <GuardState
           value={allowLan ?? false}
           valueProps="checked"
@@ -82,8 +81,7 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("IPv6")} />
+      <SettingItem label={t("IPv6")}>
         <GuardState
           value={ipv6 ?? false}
           valueProps="checked"
@@ -96,8 +94,7 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Log Level")} />
+      <SettingItem label={t("Log Level")}>
         <GuardState
           value={logLevel ?? "info"}
           onCatch={onError}
@@ -105,7 +102,7 @@ const SettingClash = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ "log-level": e })}
           onGuard={(e) => onUpdateData({ "log-level": e })}
         >
-          <Select size="small" sx={{ width: 120 }}>
+          <Select size="small" sx={{ width: 120, "> div": { py: "7.5px" } }}>
             <MenuItem value="debug">Debug</MenuItem>
             <MenuItem value="info">Info</MenuItem>
             <MenuItem value="warning">Warning</MenuItem>
@@ -115,8 +112,7 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Mixed Port")} />
+      <SettingItem label={t("Mixed Port")}>
         <GuardState
           value={mixedPort ?? 0}
           onCatch={onError}
@@ -125,21 +121,23 @@ const SettingClash = ({ onError }: Props) => {
           onGuard={onUpdatePort}
           waitTime={1000}
         >
-          <TextField autoComplete="off" size="small" sx={{ width: 120 }} />
+          <TextField
+            autoComplete="off"
+            size="small"
+            sx={{ width: 120, input: { py: "7.5px" } }}
+          />
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText
-          primary={
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <span style={{ marginRight: 4 }}>{t("Clash Core")}</span>
-              <CoreSwitch />
-            </Box>
-          }
-        />
-        <Typography sx={{ py: 1 }}>{clashVer}</Typography>
+      <SettingItem label={t("Clash Core")} extra={<CoreSwitch />}>
+        <Typography sx={{ py: "7px" }}>{clashVer}</Typography>
       </SettingItem>
+
+      {/* <SettingItem label={t("Web UI")}>
+        <IconButton color="inherit" size="small" sx={{ my: "2px" }}>
+          <ArrowForward />
+        </IconButton>
+      </SettingItem> */}
     </SettingList>
   );
 };

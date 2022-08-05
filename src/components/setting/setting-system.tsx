@@ -1,13 +1,7 @@
 import useSWR, { useSWRConfig } from "swr";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Box,
-  IconButton,
-  ListItemText,
-  Switch,
-  TextField,
-} from "@mui/material";
+import { IconButton, Switch, TextField } from "@mui/material";
 import { ArrowForward, PrivacyTipRounded } from "@mui/icons-material";
 import {
   checkService,
@@ -57,15 +51,7 @@ const SettingSystem = ({ onError }: Props) => {
 
   return (
     <SettingList title={t("System Setting")}>
-      <SettingItem>
-        <ListItemText
-          primary={
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <span style={{ marginRight: 4 }}>{t("Tun Mode")}</span>
-              <ConfigViewer />
-            </Box>
-          }
-        />
+      <SettingItem label={t("Tun Mode")} extra={<ConfigViewer />}>
         <GuardState
           value={enable_tun_mode ?? false}
           valueProps="checked"
@@ -79,24 +65,18 @@ const SettingSystem = ({ onError }: Props) => {
       </SettingItem>
 
       {isWIN && (
-        <SettingItem>
-          <ListItemText
-            primary={
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <span style={{ marginRight: 4 }}>{t("Service Mode")}</span>
-
-                {(serviceStatus === "active" ||
-                  serviceStatus === "installed") && (
-                  <PrivacyTipRounded
-                    fontSize="small"
-                    style={{ cursor: "pointer", opacity: 0.75 }}
-                    onClick={() => setServiceOpen(true)}
-                  />
-                )}
-              </Box>
-            }
-          />
-
+        <SettingItem
+          label={t("Service Mode")}
+          extra={
+            (serviceStatus === "active" || serviceStatus === "installed") && (
+              <PrivacyTipRounded
+                fontSize="small"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+                onClick={() => setServiceOpen(true)}
+              />
+            )
+          }
+        >
           {serviceStatus === "active" || serviceStatus === "installed" ? (
             <GuardState
               value={enable_service_mode ?? false}
@@ -117,20 +97,19 @@ const SettingSystem = ({ onError }: Props) => {
               <ArrowForward />
             </IconButton>
           )}
-
-          {serviceOpen && (
-            <ServiceMode
-              open={serviceOpen}
-              enable={!!enable_service_mode}
-              onError={onError}
-              onClose={() => setServiceOpen(false)}
-            />
-          )}
         </SettingItem>
       )}
 
-      <SettingItem>
-        <ListItemText primary={t("Auto Launch")} />
+      {isWIN && (
+        <ServiceMode
+          open={serviceOpen}
+          enable={!!enable_service_mode}
+          onError={onError}
+          onClose={() => setServiceOpen(false)}
+        />
+      )}
+
+      <SettingItem label={t("Auto Launch")}>
         <GuardState
           value={enable_auto_launch ?? false}
           valueProps="checked"
@@ -143,8 +122,7 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Silent Start")} />
+      <SettingItem label={t("Silent Start")}>
         <GuardState
           value={enable_silent_start ?? false}
           valueProps="checked"
@@ -157,15 +135,7 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText
-          primary={
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <span style={{ marginRight: 4 }}>{t("System Proxy")}</span>
-              <SysproxyTooltip />
-            </Box>
-          }
-        />
+      <SettingItem label={t("System Proxy")} extra={<SysproxyTooltip />}>
         <GuardState
           value={enable_system_proxy ?? false}
           valueProps="checked"
@@ -182,8 +152,7 @@ const SettingSystem = ({ onError }: Props) => {
       </SettingItem>
 
       {enable_system_proxy && (
-        <SettingItem>
-          <ListItemText primary={t("Proxy Guard")} />
+        <SettingItem label={t("Proxy Guard")}>
           <GuardState
             value={enable_proxy_guard ?? false}
             valueProps="checked"
@@ -198,8 +167,7 @@ const SettingSystem = ({ onError }: Props) => {
       )}
 
       {enable_system_proxy && (
-        <SettingItem>
-          <ListItemText primary={t("Proxy Bypass")} />
+        <SettingItem label={t("Proxy Bypass")}>
           <GuardState
             value={system_proxy_bypass ?? ""}
             onCatch={onError}
@@ -208,7 +176,11 @@ const SettingSystem = ({ onError }: Props) => {
             onGuard={(e) => patchVergeConfig({ system_proxy_bypass: e })}
             waitTime={1000}
           >
-            <TextField autoComplete="off" size="small" sx={{ width: 120 }} />
+            <TextField
+              autoComplete="off"
+              size="small"
+              sx={{ width: 120, input: { py: "7.5px" } }}
+            />
           </GuardState>
         </SettingItem>
       )}
