@@ -10,8 +10,8 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { InfoRounded } from "@mui/icons-material";
-import { atomThemeMode } from "../../services/states";
-import { getRunningConfig } from "../../services/cmds";
+import { atomThemeMode } from "../../../services/states";
+import { getRunningConfig } from "../../../services/cmds";
 
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js";

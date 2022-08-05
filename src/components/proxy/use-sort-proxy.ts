@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { ApiType } from "../../services/types";
-import delayManager from "../../services/delay";
+import delayManager from "@/services/delay";
 
 // default | delay | alpha
 export type ProxySortType = 0 | 1 | 2;

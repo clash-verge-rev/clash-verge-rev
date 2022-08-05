@@ -1,5 +1,5 @@
 import { cloneElement, isValidElement, ReactNode, useRef } from "react";
-import noop from "../../utils/noop";
+import noop from "@/utils/noop";
 
 interface Props<Value> {
   value?: Value;

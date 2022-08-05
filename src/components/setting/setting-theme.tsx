@@ -15,8 +15,8 @@ import {
   TextField,
   useTheme,
 } from "@mui/material";
-import { getVergeConfig, patchVergeConfig } from "../../services/cmds";
-import { defaultTheme, defaultDarkTheme } from "../../pages/_theme";
+import { getVergeConfig, patchVergeConfig } from "@/services/cmds";
+import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 
 interface Props {
   open: boolean;

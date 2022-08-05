@@ -4,13 +4,12 @@ import { useRecoilValue } from "recoil";
 import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import { listen } from "@tauri-apps/api/event";
-import { ApiType } from "../../services/types";
-import { getInformation } from "../../services/api";
-import { getVergeConfig } from "../../services/cmds";
-import { atomClashPort } from "../../services/states";
+import { getInformation } from "@/services/api";
+import { getVergeConfig } from "@/services/cmds";
+import { atomClashPort } from "@/services/states";
 import TrafficGraph from "./traffic-graph";
 import useLogSetup from "./use-log-setup";
-import parseTraffic from "../../utils/parse-traffic";
+import parseTraffic from "@/utils/parse-traffic";
 
 // setup the traffic
 const LayoutTraffic = () => {

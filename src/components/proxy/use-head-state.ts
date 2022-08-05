@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
-import { atomCurrentProfile } from "../../services/states";
+import { atomCurrentProfile } from "@/services/states";
 import { ProxySortType } from "./use-sort-proxy";
 
 export interface HeadState {

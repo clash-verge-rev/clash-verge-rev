@@ -1,7 +1,6 @@
 import { emit, listen, Event } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
-import { CmdType } from "./types";
-import ignoreCase from "../utils/ignore-case";
+import ignoreCase from "@/utils/ignore-case";
 
 const DEFAULT_FIELDS = [
   "rules",

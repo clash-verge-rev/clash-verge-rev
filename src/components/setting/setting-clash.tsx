@@ -10,21 +10,17 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { ApiType } from "../../services/types";
-import { atomClashPort } from "../../services/states";
-import { patchClashConfig } from "../../services/cmds";
+import { atomClashPort } from "@/services/states";
+import { patchClashConfig } from "@/services/cmds";
 import { SettingList, SettingItem } from "./setting";
-import { getClashConfig, getVersion, updateConfigs } from "../../services/api";
+import { getClashConfig, getVersion, updateConfigs } from "@/services/api";
 import Notice from "../base/base-notice";
-import GuardState from "./guard-state";
-import CoreSwitch from "./core-switch";
+import GuardState from "./mods/guard-state";
+import CoreSwitch from "./mods/core-switch";
 
 interface Props {
   onError: (err: Error) => void;
 }
-
-// const MULTI_CORE = !!import.meta.env.VITE_MULTI_CORE;
-const MULTI_CORE = true;
 
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
@@ -136,14 +132,10 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem>
         <ListItemText
           primary={
-            MULTI_CORE ? (
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <span style={{ marginRight: 4 }}>{t("Clash Core")}</span>
-                <CoreSwitch />
-              </Box>
-            ) : (
-              t("Clash Core")
-            )
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <span style={{ marginRight: 4 }}>{t("Clash Core")}</span>
+              <CoreSwitch />
+            </Box>
           }
         />
         <Typography sx={{ py: 1 }}>{clashVer}</Typography>

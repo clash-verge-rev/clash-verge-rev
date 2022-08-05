@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from "axios";
 import { getClashInfo } from "./cmds";
-import { ApiType } from "./types";
 
 let axiosIns: AxiosInstance = null!;
 let server = "";

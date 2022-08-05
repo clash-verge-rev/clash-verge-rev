@@ -15,13 +15,12 @@ import {
   ExpandLessRounded,
   ExpandMoreRounded,
 } from "@mui/icons-material";
-import { ApiType } from "../../services/types";
-import { updateProxy } from "../../services/api";
-import { getProfiles, patchProfile } from "../../services/cmds";
+import { updateProxy } from "@/services/api";
+import { getProfiles, patchProfile } from "@/services/cmds";
+import delayManager from "@/services/delay";
 import useSortProxy from "./use-sort-proxy";
 import useHeadState from "./use-head-state";
 import useFilterProxy from "./use-filter-proxy";
-import delayManager from "../../services/delay";
 import ProxyHead from "./proxy-head";
 import ProxyItem from "./proxy-item";
 

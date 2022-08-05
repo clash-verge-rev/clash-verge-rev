@@ -1,6 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri";
-import { ApiType, CmdType } from "./types";
-import Notice from "../components/base/base-notice";
+import Notice from "@/components/base/base-notice";
 
 export async function getProfiles() {
   return invoke<CmdType.ProfilesConfig>("get_profiles");

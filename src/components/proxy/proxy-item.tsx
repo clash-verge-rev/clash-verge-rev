@@ -12,8 +12,7 @@ import {
   SxProps,
   Theme,
 } from "@mui/material";
-import { ApiType } from "../../services/types";
-import delayManager from "../../services/delay";
+import delayManager from "@/services/delay";
 
 interface Props {
   groupName: string;

@@ -12,8 +12,7 @@ import {
   TextField,
 } from "@mui/material";
 import { Settings } from "@mui/icons-material";
-import { CmdType } from "../../services/types";
-import { patchProfile } from "../../services/cmds";
+import { patchProfile } from "@/services/cmds";
 import Notice from "../base/base-notice";
 
 interface Props {

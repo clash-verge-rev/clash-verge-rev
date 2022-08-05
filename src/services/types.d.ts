@@ -1,8 +1,9 @@
+// declare global {
 /**
  * Some interface for clash api
  */
-export namespace ApiType {
-  export interface ConfigData {
+declare namespace ApiType {
+  interface ConfigData {
     port: number;
     mode: string;
     ipv6: boolean;
@@ -15,13 +16,13 @@ export namespace ApiType {
     "tproxy-port": number;
   }
 
-  export interface RuleItem {
+  interface RuleItem {
     type: string;
     payload: string;
     proxy: string;
   }
 
-  export interface ProxyItem {
+  interface ProxyItem {
     name: string;
     type: string;
     udp: boolean;
@@ -33,22 +34,22 @@ export namespace ApiType {
     now?: string;
   }
 
-  export type ProxyGroupItem = Omit<ProxyItem, "all"> & {
+  type ProxyGroupItem = Omit<ProxyItem, "all"> & {
     all: ProxyItem[];
   };
 
-  export interface TrafficItem {
+  interface TrafficItem {
     up: number;
     down: number;
   }
 
-  export interface LogItem {
+  interface LogItem {
     type: string;
     time?: string;
     payload: string;
   }
 
-  export interface ConnectionsItem {
+  interface ConnectionsItem {
     id: string;
     metadata: {
       network: string;
@@ -69,7 +70,7 @@ export namespace ApiType {
     curDownload?: number; // calculate
   }
 
-  export interface Connections {
+  interface Connections {
     downloadTotal: number;
     uploadTotal: number;
     connections: ConnectionsItem[];
@@ -79,17 +80,17 @@ export namespace ApiType {
 /**
  * Some interface for command
  */
-export namespace CmdType {
-  export type ProfileType = "local" | "remote" | "merge" | "script";
+declare namespace CmdType {
+  type ProfileType = "local" | "remote" | "merge" | "script";
 
-  export interface ClashInfo {
+  interface ClashInfo {
     status: string;
     port?: string;
     server?: string;
     secret?: string;
   }
 
-  export interface ProfileItem {
+  interface ProfileItem {
     uid: string;
     type?: ProfileType | string;
     name?: string;
@@ -110,20 +111,20 @@ export namespace CmdType {
     option?: ProfileOption;
   }
 
-  export interface ProfileOption {
+  interface ProfileOption {
     user_agent?: string;
     with_proxy?: boolean;
     update_interval?: number;
   }
 
-  export interface ProfilesConfig {
+  interface ProfilesConfig {
     current?: string;
     chain?: string[];
     valid?: string[];
     items?: ProfileItem[];
   }
 
-  export interface VergeConfig {
+  interface VergeConfig {
     language?: string;
     clash_core?: string;
     theme_mode?: "light" | "dark" | "system";
@@ -152,7 +153,7 @@ export namespace CmdType {
 
   type ClashConfigValue = any;
 
-  export interface ProfileMerge {
+  interface ProfileMerge {
     // clash config fields (default supports)
     rules?: ClashConfigValue;
     proxies?: ClashConfigValue;
@@ -179,7 +180,7 @@ export namespace CmdType {
   }
 
   // partial of the clash config
-  export type ProfileData = Partial<{
+  type ProfileData = Partial<{
     rules: any[];
     proxies: any[];
     "proxy-groups": any[];
@@ -189,22 +190,23 @@ export namespace CmdType {
     [k: string]: any;
   }>;
 
-  export interface ChainItem {
+  interface ChainItem {
     item: ProfileItem;
     merge?: ProfileMerge;
     script?: string;
   }
 
-  export interface EnhancedPayload {
+  interface EnhancedPayload {
     chain: ChainItem[];
     valid: string[];
     current: ProfileData;
     callback: string;
   }
 
-  export interface EnhancedResult {
+  interface EnhancedResult {
     data: ProfileData;
     status: string;
     error?: string;
   }
 }
+// }

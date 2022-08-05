@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { ApiType } from "../../services/types";
-import delayManager from "../../services/delay";
+import delayManager from "@/services/delay";
 
 const regex1 = /delay([=<>])(\d+|timeout|error)/i;
 const regex2 = /type=(.*)/i;

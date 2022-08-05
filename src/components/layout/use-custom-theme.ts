@@ -3,9 +3,9 @@ import { useEffect, useMemo } from "react";
 import { useRecoilState } from "recoil";
 import { createTheme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
-import { getVergeConfig } from "../../services/cmds";
-import { atomThemeMode } from "../../services/states";
-import { defaultTheme, defaultDarkTheme } from "../../pages/_theme";
+import { getVergeConfig } from "@/services/cmds";
+import { atomThemeMode } from "@/services/states";
+import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 
 /**
  * custome theme

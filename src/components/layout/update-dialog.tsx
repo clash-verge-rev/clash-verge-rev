@@ -13,8 +13,8 @@ import {
 } from "@mui/material";
 import { relaunch } from "@tauri-apps/api/process";
 import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
-import { killSidecar, restartSidecar } from "../../services/cmds";
-import { atomUpdateState } from "../../services/states";
+import { killSidecar, restartSidecar } from "@/services/cmds";
+import { atomUpdateState } from "@/services/states";
 import Notice from "../base/base-notice";
 
 interface Props {

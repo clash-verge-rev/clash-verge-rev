@@ -3,9 +3,9 @@ import { useState } from "react";
 import { useLockFn } from "ahooks";
 import { Menu, MenuItem } from "@mui/material";
 import { Settings } from "@mui/icons-material";
-import { changeClashCore, getVergeConfig } from "../../services/cmds";
-import { getVersion } from "../../services/api";
-import Notice from "../base/base-notice";
+import { changeClashCore, getVergeConfig } from "@/services/cmds";
+import { getVersion } from "@/services/api";
+import Notice from "@/components/base/base-notice";
 
 const VALID_CORE = [
   { name: "Clash", core: "clash" },

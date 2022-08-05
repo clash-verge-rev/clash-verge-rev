@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import path from "path";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react";
 import monaco from "vite-plugin-monaco-editor";
@@ -14,5 +15,11 @@ export default defineConfig({
   build: {
     outDir: "../dist",
     emptyOutDir: true,
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve("./src"),
+      "@root": path.resolve("."),
+    },
   },
 });

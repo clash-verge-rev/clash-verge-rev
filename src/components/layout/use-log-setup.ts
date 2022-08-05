@@ -2,9 +2,8 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { listen } from "@tauri-apps/api/event";
-import { ApiType } from "../../services/types";
-import { getInformation } from "../../services/api";
-import { atomLogData } from "../../services/states";
+import { getInformation } from "@/services/api";
+import { atomLogData } from "@/services/states";
 
 const MAX_LOG_NUM = 1000;
 
