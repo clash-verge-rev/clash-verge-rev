@@ -13,7 +13,7 @@ import {
   SortByAlphaRounded,
   SortRounded,
 } from "@mui/icons-material";
-import delayManager from "../../services/delay";
+import delayManager from "@/services/delay";
 import type { HeadState } from "./use-head-state";
 import type { ProxySortType } from "./use-sort-proxy";
 

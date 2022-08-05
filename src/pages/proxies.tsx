@@ -3,12 +3,12 @@ import { useEffect } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup, List, Paper } from "@mui/material";
-import { getClashConfig, updateConfigs } from "../services/api";
-import { patchClashConfig } from "../services/cmds";
-import { getProxies } from "../services/api";
-import BasePage from "../components/base/base-page";
-import ProxyGroup from "../components/proxy/proxy-group";
-import ProxyGlobal from "../components/proxy/proxy-global";
+import { getClashConfig, updateConfigs } from "@/services/api";
+import { patchClashConfig } from "@/services/cmds";
+import { getProxies } from "@/services/api";
+import BasePage from "@/components/base/base-page";
+import ProxyGroup from "@/components/proxy/proxy-group";
+import ProxyGlobal from "@/components/proxy/proxy-global";
 
 const ProxyPage = () => {
   const { t } = useTranslation();

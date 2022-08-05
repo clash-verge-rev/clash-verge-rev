@@ -24,8 +24,7 @@ import {
   enhanceProfiles,
   changeProfileChain,
   changeProfileValid,
-} from "../../services/cmds";
-import { CmdType } from "../../services/types";
+} from "@/services/cmds";
 import ProfileMore from "./profile-more";
 import Notice from "../base/base-notice";
 

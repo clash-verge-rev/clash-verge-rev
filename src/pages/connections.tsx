@@ -3,10 +3,9 @@ import { useLockFn } from "ahooks";
 import { Box, Button, Paper, TextField } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
-import { ApiType } from "../services/types";
-import { closeAllConnections, getInformation } from "../services/api";
-import BasePage from "../components/base/base-page";
-import ConnectionItem from "../components/connection/connection-item";
+import { closeAllConnections, getInformation } from "@/services/api";
+import BasePage from "@/components/base/base-page";
+import ConnectionItem from "@/components/connection/connection-item";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 

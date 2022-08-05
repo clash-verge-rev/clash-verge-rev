@@ -3,9 +3,9 @@ import { useRecoilState } from "recoil";
 import { Box, Button, MenuItem, Paper, Select, TextField } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
-import { atomLogData } from "../services/states";
-import BasePage from "../components/base/base-page";
-import LogItem from "../components/log/log-item";
+import { atomLogData } from "@/services/states";
+import BasePage from "@/components/base/base-page";
+import LogItem from "@/components/log/log-item";
 
 const LogPage = () => {
   const { t } = useTranslation();

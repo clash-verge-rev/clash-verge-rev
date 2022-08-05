@@ -13,14 +13,13 @@ import {
   checkService,
   getVergeConfig,
   patchVergeConfig,
-} from "../../services/cmds";
+} from "@/services/cmds";
 import { SettingList, SettingItem } from "./setting";
-import { CmdType } from "../../services/types";
-import GuardState from "./guard-state";
-import ServiceMode from "./service-mode";
-import ConfigViewer from "./config-viewer";
-import SysproxyTooltip from "./sysproxy-tooltip";
-import getSystem from "../../utils/get-system";
+import getSystem from "@/utils/get-system";
+import GuardState from "./mods/guard-state";
+import ServiceMode from "./mods/service-mode";
+import ConfigViewer from "./mods/config-viewer";
+import SysproxyTooltip from "./mods/sysproxy-tooltip";
 
 interface Props {
   onError?: (err: Error) => void;

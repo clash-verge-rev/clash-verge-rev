@@ -2,9 +2,8 @@ import dayjs from "dayjs";
 import { useLockFn } from "ahooks";
 import { styled, ListItem, IconButton, ListItemText } from "@mui/material";
 import { CloseRounded } from "@mui/icons-material";
-import { ApiType } from "../../services/types";
-import { deleteConnection } from "../../services/api";
-import parseTraffic from "../../utils/parse-traffic";
+import { deleteConnection } from "@/services/api";
+import parseTraffic from "@/utils/parse-traffic";
 
 const Tag = styled("span")(({ theme }) => ({
   display: "inline-block",

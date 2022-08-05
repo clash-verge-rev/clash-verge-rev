@@ -9,8 +9,8 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import { atomThemeMode } from "../../services/states";
-import { readProfileFile, saveProfileFile } from "../../services/cmds";
+import { atomThemeMode } from "@/services/states";
+import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import Notice from "../base/base-notice";
 
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";

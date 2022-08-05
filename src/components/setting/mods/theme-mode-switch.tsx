@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup } from "@mui/material";
-import { CmdType } from "../../services/types";
 
 type ThemeValue = CmdType.VergeConfig["theme_mode"];
 

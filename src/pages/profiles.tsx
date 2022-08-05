@@ -9,14 +9,14 @@ import {
   patchProfile,
   selectProfile,
   importProfile,
-} from "../services/cmds";
-import { getProxies, updateProxy } from "../services/api";
-import { atomCurrentProfile } from "../services/states";
-import Notice from "../components/base/base-notice";
-import BasePage from "../components/base/base-page";
-import ProfileNew from "../components/profile/profile-new";
-import ProfileItem from "../components/profile/profile-item";
-import EnhancedMode from "../components/profile/enhanced";
+} from "@/services/cmds";
+import { getProxies, updateProxy } from "@/services/api";
+import { atomCurrentProfile } from "@/services/states";
+import Notice from "@/components/base/base-notice";
+import BasePage from "@/components/base/base-page";
+import ProfileNew from "@/components/profile/profile-new";
+import ProfileItem from "@/components/profile/profile-item";
+import EnhancedMode from "@/components/profile/enhanced";
 
 const ProfilePage = () => {
   const { t } = useTranslation();

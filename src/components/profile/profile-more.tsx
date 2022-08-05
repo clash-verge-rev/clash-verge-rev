@@ -11,9 +11,8 @@ import {
   MenuItem,
   Menu,
 } from "@mui/material";
-import { CmdType } from "../../services/types";
-import { viewProfile } from "../../services/cmds";
-import enhance from "../../services/enhance";
+import { viewProfile } from "@/services/cmds";
+import enhance from "@/services/enhance";
 import ProfileEdit from "./profile-edit";
 import FileEditor from "./file-editor";
 import Notice from "../base/base-notice";

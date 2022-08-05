@@ -14,13 +14,12 @@ import {
   openAppDir,
   openLogsDir,
   patchVergeConfig,
-} from "../../services/cmds";
+} from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
 import { SettingList, SettingItem } from "./setting";
-import { CmdType } from "../../services/types";
-import { version } from "../../../package.json";
-import ThemeModeSwitch from "./theme-mode-switch";
-import GuardState from "./guard-state";
+import { version } from "@root/package.json";
+import ThemeModeSwitch from "./mods/theme-mode-switch";
+import GuardState from "./mods/guard-state";
 import SettingTheme from "./setting-theme";
 
 interface Props {

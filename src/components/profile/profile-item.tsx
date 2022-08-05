@@ -16,10 +16,9 @@ import {
   Menu,
 } from "@mui/material";
 import { RefreshRounded } from "@mui/icons-material";
-import { CmdType } from "../../services/types";
-import { atomLoadingCache } from "../../services/states";
-import { updateProfile, deleteProfile, viewProfile } from "../../services/cmds";
-import parseTraffic from "../../utils/parse-traffic";
+import { atomLoadingCache } from "@/services/states";
+import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
+import parseTraffic from "@/utils/parse-traffic";
 import ProfileEdit from "./profile-edit";
 import FileEditor from "./file-editor";
 import Notice from "../base/base-notice";

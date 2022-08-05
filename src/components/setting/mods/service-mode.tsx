@@ -14,9 +14,9 @@ import {
   installService,
   uninstallService,
   patchVergeConfig,
-} from "../../services/cmds";
-import Notice from "../base/base-notice";
-import noop from "../../utils/noop";
+} from "@/services/cmds";
+import Notice from "@/components/base/base-notice";
+import noop from "@/utils/noop";
 
 interface Props {
   open: boolean;

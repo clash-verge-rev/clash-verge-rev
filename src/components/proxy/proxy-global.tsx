@@ -2,13 +2,12 @@ import useSWR, { useSWRConfig } from "swr";
 import { useEffect, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Virtuoso } from "react-virtuoso";
-import { ApiType } from "../../services/types";
-import { updateProxy } from "../../services/api";
-import { getProfiles, patchProfile } from "../../services/cmds";
+import { updateProxy } from "@/services/api";
+import { getProfiles, patchProfile } from "@/services/cmds";
+import delayManager from "@/services/delay";
 import useSortProxy from "./use-sort-proxy";
 import useHeadState from "./use-head-state";
 import useFilterProxy from "./use-filter-proxy";
-import delayManager from "../../services/delay";
 import ProxyHead from "./proxy-head";
 import ProxyItem from "./proxy-item";
 
