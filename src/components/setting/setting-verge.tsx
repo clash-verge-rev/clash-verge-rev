@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   IconButton,
-  ListItemText,
   MenuItem,
   Select,
   Switch,
@@ -42,8 +41,7 @@ const SettingVerge = ({ onError }: Props) => {
 
   return (
     <SettingList title={t("Verge Setting")}>
-      <SettingItem>
-        <ListItemText primary={t("Language")} />
+      <SettingItem label={t("Language")}>
         <GuardState
           value={language ?? "en"}
           onCatch={onError}
@@ -51,15 +49,14 @@ const SettingVerge = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ language: e })}
           onGuard={(e) => patchVergeConfig({ language: e })}
         >
-          <Select size="small" sx={{ width: 100 }}>
+          <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="zh">中文</MenuItem>
             <MenuItem value="en">English</MenuItem>
           </Select>
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Theme Mode")} />
+      <SettingItem label={t("Theme Mode")}>
         <GuardState
           value={theme_mode}
           onCatch={onError}
@@ -70,8 +67,7 @@ const SettingVerge = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Theme Blur")} />
+      <SettingItem label={t("Theme Blur")}>
         <GuardState
           value={theme_blur ?? false}
           valueProps="checked"
@@ -84,8 +80,7 @@ const SettingVerge = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Traffic Graph")} />
+      <SettingItem label={t("Traffic Graph")}>
         <GuardState
           value={traffic_graph ?? true}
           valueProps="checked"
@@ -98,34 +93,41 @@ const SettingVerge = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Theme Setting")} />
+      <SettingItem label={t("Theme Setting")}>
         <IconButton
           color="inherit"
           size="small"
+          sx={{ my: "2px" }}
           onClick={() => setThemeOpen(true)}
         >
           <ArrowForward />
         </IconButton>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Open App Dir")} />
-        <IconButton color="inherit" size="small" onClick={openAppDir}>
+      <SettingItem label={t("Open App Dir")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={openAppDir}
+        >
           <ArrowForward />
         </IconButton>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Open Logs Dir")} />
-        <IconButton color="inherit" size="small" onClick={openLogsDir}>
+      <SettingItem label={t("Open Logs Dir")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={openLogsDir}
+        >
           <ArrowForward />
         </IconButton>
       </SettingItem>
 
-      <SettingItem>
-        <ListItemText primary={t("Verge Version")} />
-        <Typography sx={{ py: "6px" }}>v{version}</Typography>
+      <SettingItem label={t("Verge Version")}>
+        <Typography sx={{ py: "7px" }}>v{version}</Typography>
       </SettingItem>
 
       <SettingTheme open={themeOpen} onClose={() => setThemeOpen(false)} />
