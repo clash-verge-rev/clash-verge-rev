@@ -11,12 +11,14 @@ import {
 } from "@mui/material";
 import { atomClashPort } from "@/services/states";
 import { ArrowForward } from "@mui/icons-material";
-import { openWebUrl, patchClashConfig } from "@/services/cmds";
+import { patchClashConfig } from "@/services/cmds";
 import { SettingList, SettingItem } from "./setting";
 import { getClashConfig, getVersion, updateConfigs } from "@/services/api";
+import useModalHandler from "@/hooks/use-modal-handler";
 import Notice from "../base/base-notice";
 import GuardState from "./mods/guard-state";
 import CoreSwitch from "./mods/core-switch";
+import WebUIViewer from "./mods/web-ui-viewer";
 
 interface Props {
   onError: (err: Error) => void;
@@ -36,6 +38,8 @@ const SettingClash = ({ onError }: Props) => {
   } = clashConfig ?? {};
 
   const setGlobalClashPort = useSetRecoilState(atomClashPort);
+
+  const webUIHandler = useModalHandler();
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
@@ -68,6 +72,8 @@ const SettingClash = ({ onError }: Props) => {
 
   return (
     <SettingList title={t("Clash Setting")}>
+      <WebUIViewer handler={webUIHandler} onError={onError} />
+
       <SettingItem label={t("Allow Lan")}>
         <GuardState
           value={allowLan ?? false}
@@ -92,6 +98,17 @@ const SettingClash = ({ onError }: Props) => {
         >
           <Switch edge="end" />
         </GuardState>
+      </SettingItem>
+
+      <SettingItem label={t("Web UI")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => webUIHandler.current.open()}
+        >
+          <ArrowForward />
+        </IconButton>
       </SettingItem>
 
       <SettingItem label={t("Log Level")}>
@@ -132,12 +149,6 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem label={t("Clash Core")} extra={<CoreSwitch />}>
         <Typography sx={{ py: "7px" }}>{clashVer}</Typography>
       </SettingItem>
-
-      {/* <SettingItem label={t("Web UI")}>
-        <IconButton color="inherit" size="small" sx={{ my: "2px" }}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem> */}
     </SettingList>
   );
 };

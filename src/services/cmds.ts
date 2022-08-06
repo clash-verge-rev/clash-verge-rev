@@ -113,6 +113,10 @@ export async function openLogsDir() {
   );
 }
 
+export async function openWebUrl(url: string) {
+  return invoke<void>("open_web_url", { url });
+}
+
 /// service mode
 
 export async function startService() {

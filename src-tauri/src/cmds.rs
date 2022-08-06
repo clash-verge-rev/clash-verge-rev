@@ -257,6 +257,12 @@ pub fn open_logs_dir() -> Result<(), String> {
   wrap_err!(open::that(log_dir))
 }
 
+/// open url
+#[tauri::command]
+pub fn open_web_url(url: String) -> Result<(), String> {
+  wrap_err!(open::that(url))
+}
+
 /// service mode
 #[cfg(windows)]
 pub mod service {
