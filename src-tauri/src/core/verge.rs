@@ -46,6 +46,9 @@ pub struct Verge {
   /// theme setting
   pub theme_setting: Option<VergeTheme>,
 
+  /// web ui list
+  pub web_ui_list: Option<Vec<String>>,
+
   /// clash core path
   #[serde(skip_serializing_if = "Option::is_none")]
   pub clash_core: Option<String>,
@@ -84,55 +87,31 @@ impl Verge {
   /// patch verge config
   /// only save to file
   pub fn patch_config(&mut self, patch: Verge) -> Result<()> {
-    // only change it
-    if patch.language.is_some() {
-      self.language = patch.language;
-    }
-    if patch.theme_mode.is_some() {
-      self.theme_mode = patch.theme_mode;
-    }
-    if patch.theme_blur.is_some() {
-      self.theme_blur = patch.theme_blur;
-    }
-    if patch.theme_setting.is_some() {
-      self.theme_setting = patch.theme_setting;
-    }
-    if patch.traffic_graph.is_some() {
-      self.traffic_graph = patch.traffic_graph;
-    }
-    if patch.clash_core.is_some() {
-      self.clash_core = patch.clash_core;
+    macro_rules! patch {
+      ($key: tt) => {
+        if patch.$key.is_some() {
+          self.$key = patch.$key;
+        }
+      };
     }
 
-    // system setting
-    if patch.enable_silent_start.is_some() {
-      self.enable_silent_start = patch.enable_silent_start;
-    }
-    if patch.enable_auto_launch.is_some() {
-      self.enable_auto_launch = patch.enable_auto_launch;
-    }
+    patch!(language);
+    patch!(theme_mode);
+    patch!(theme_blur);
+    patch!(traffic_graph);
 
-    // proxy
-    if patch.enable_system_proxy.is_some() {
-      self.enable_system_proxy = patch.enable_system_proxy;
-    }
-    if patch.system_proxy_bypass.is_some() {
-      self.system_proxy_bypass = patch.system_proxy_bypass;
-    }
-    if patch.enable_proxy_guard.is_some() {
-      self.enable_proxy_guard = patch.enable_proxy_guard;
-    }
-    if patch.proxy_guard_duration.is_some() {
-      self.proxy_guard_duration = patch.proxy_guard_duration;
-    }
+    patch!(enable_tun_mode);
+    patch!(enable_service_mode);
+    patch!(enable_auto_launch);
+    patch!(enable_silent_start);
+    patch!(enable_system_proxy);
+    patch!(enable_proxy_guard);
+    patch!(system_proxy_bypass);
+    patch!(proxy_guard_duration);
 
-    // tun mode
-    if patch.enable_tun_mode.is_some() {
-      self.enable_tun_mode = patch.enable_tun_mode;
-    }
-    if patch.enable_service_mode.is_some() {
-      self.enable_service_mode = patch.enable_service_mode;
-    }
+    patch!(theme_setting);
+    patch!(web_ui_list);
+    patch!(clash_core);
 
     self.save_file()
   }

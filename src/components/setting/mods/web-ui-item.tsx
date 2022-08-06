@@ -1,0 +1,106 @@
+import { useState } from "react";
+import { IconButton, Stack, TextField, Typography } from "@mui/material";
+import {
+  CheckRounded,
+  CloseRounded,
+  DeleteRounded,
+  EditRounded,
+  OpenInNewRounded,
+} from "@mui/icons-material";
+
+interface Props {
+  value?: string;
+  onlyEdit?: boolean;
+  onChange: (value?: string) => void;
+  onOpenUrl?: (value?: string) => void;
+  onDelete?: () => void;
+  onCancel?: () => void;
+}
+
+const WebUIItem = (props: Props) => {
+  const {
+    value,
+    onlyEdit = false,
+    onChange,
+    onDelete,
+    onOpenUrl,
+    onCancel,
+  } = props;
+
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+
+  if (editing || onlyEdit) {
+    return (
+      <Stack spacing={1} direction="row" mt={1} mb={2} alignItems="center">
+        <TextField
+          fullWidth
+          size="small"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          placeholder={`Support %host %port %secret`}
+          autoComplete="off"
+        />
+        <IconButton
+          size="small"
+          title="Save"
+          onClick={() => {
+            onChange(editValue);
+            setEditing(false);
+          }}
+        >
+          <CheckRounded fontSize="inherit" />
+        </IconButton>
+        <IconButton
+          size="small"
+          title="Cancel"
+          onClick={() => {
+            onCancel?.();
+            setEditing(false);
+          }}
+        >
+          <CloseRounded fontSize="inherit" />
+        </IconButton>
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack spacing={1} direction="row" alignItems="center" mt={1} mb={2}>
+      <Typography
+        component="div"
+        width="100%"
+        title={value}
+        sx={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {value || "NULL"}
+      </Typography>
+      <IconButton
+        size="small"
+        title="Open URL"
+        onClick={() => onOpenUrl?.(value)}
+      >
+        <OpenInNewRounded fontSize="inherit" />
+      </IconButton>
+      <IconButton
+        size="small"
+        title="Edit"
+        onClick={() => {
+          setEditing(true);
+          setEditValue(value);
+        }}
+      >
+        <EditRounded fontSize="inherit" />
+      </IconButton>
+      <IconButton size="small" title="Delete" onClick={onDelete}>
+        <DeleteRounded fontSize="inherit" />
+      </IconButton>
+    </Stack>
+  );
+};
+
+export default WebUIItem;
