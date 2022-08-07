@@ -178,6 +178,18 @@ declare namespace CmdType {
     "append-proxies"?: any[];
     "prepend-proxy-groups"?: any[];
     "append-proxy-groups"?: any[];
+    // fix
+    ebpf?: any;
+    experimental?: any;
+    iptables?: any;
+    sniffer?: any;
+    authentication?: any;
+    "bind-address"?: any;
+    "external-ui"?: any;
+    "auto-redir"?: any;
+    "tproxy-port"?: any;
+    "geodata-mode"?: any;
+    "tcp-concurrent"?: any;
   }
 
   // partial of the clash config

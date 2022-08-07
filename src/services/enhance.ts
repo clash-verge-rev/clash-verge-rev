@@ -2,7 +2,20 @@ import { emit, listen, Event } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import ignoreCase from "@/utils/ignore-case";
 
-const DEFAULT_FIELDS = [
+export const HANDLE_FIELDS = [
+  "port",
+  "socks-port",
+  "redir-port",
+  "tproxy-port",
+  "mixed-port",
+  "allow-lan",
+  "mode",
+  "log-level",
+  "ipv6",
+  "external-controller",
+];
+
+export const DEFAULT_FIELDS = [
   "rules",
   "proxies",
   "proxy-groups",
@@ -10,15 +23,26 @@ const DEFAULT_FIELDS = [
   "rule-providers",
 ] as const;
 
-const USE_FLAG_FIELDS = [
+export const USE_FLAG_FIELDS = [
   "tun",
   "dns",
+  "ebpf",
   "hosts",
   "script",
   "profile",
   "payload",
+  "auto-redir",
+  "experimental",
   "interface-name",
   "routing-mark",
+  "tproxy-port",
+  "iptables",
+  "external-ui",
+  "bind-address",
+  "authentication",
+  "sniffer", // meta
+  "geodata-mode", // meta
+  "tcp-concurrent", // meta
 ] as const;
 
 /**
