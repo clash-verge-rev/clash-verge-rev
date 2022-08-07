@@ -19,6 +19,7 @@ import Notice from "../base/base-notice";
 import GuardState from "./mods/guard-state";
 import CoreSwitch from "./mods/core-switch";
 import WebUIViewer from "./mods/web-ui-viewer";
+import ClashFieldViewer from "./mods/clash-field-viewer";
 
 interface Props {
   onError: (err: Error) => void;
@@ -40,6 +41,7 @@ const SettingClash = ({ onError }: Props) => {
   const setGlobalClashPort = useSetRecoilState(atomClashPort);
 
   const webUIHandler = useModalHandler();
+  const fieldHandler = useModalHandler();
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
@@ -73,6 +75,7 @@ const SettingClash = ({ onError }: Props) => {
   return (
     <SettingList title={t("Clash Setting")}>
       <WebUIViewer handler={webUIHandler} onError={onError} />
+      <ClashFieldViewer handler={fieldHandler} onError={onError} />
 
       <SettingItem label={t("Allow Lan")}>
         <GuardState
@@ -98,17 +101,6 @@ const SettingClash = ({ onError }: Props) => {
         >
           <Switch edge="end" />
         </GuardState>
-      </SettingItem>
-
-      <SettingItem label={t("Web UI")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => webUIHandler.current.open()}
-        >
-          <ArrowForward />
-        </IconButton>
       </SettingItem>
 
       <SettingItem label={t("Log Level")}>
@@ -144,6 +136,28 @@ const SettingClash = ({ onError }: Props) => {
             sx={{ width: 120, input: { py: "7.5px" } }}
           />
         </GuardState>
+      </SettingItem>
+
+      <SettingItem label={t("Web UI")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => webUIHandler.current.open()}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
+
+      <SettingItem label={t("Clash Field")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => fieldHandler.current.open()}
+        >
+          <ArrowForward />
+        </IconButton>
       </SettingItem>
 
       <SettingItem label={t("Clash Core")} extra={<CoreSwitch />}>

@@ -12,6 +12,7 @@ export const HANDLE_FIELDS = [
   "mode",
   "log-level",
   "ipv6",
+  "secret",
   "external-controller",
 ];
 
@@ -131,6 +132,12 @@ class Enhance {
   private listenMap: Map<string, EListener>;
   private resultMap: Map<string, EStatus>;
 
+  // record current config fields
+  private fieldsState = {
+    config: [] as string[],
+    use: [] as string[],
+  };
+
   constructor() {
     this.listenMap = new Map();
     this.resultMap = new Map();
@@ -146,6 +153,11 @@ class Enhance {
   // get the running status
   status(uid: string): EStatus | undefined {
     return this.resultMap.get(uid);
+  }
+
+  // get the running field state
+  getFieldsState() {
+    return this.fieldsState;
   }
 
   async enhanceHandler(event: Event<unknown>) {
@@ -219,6 +231,10 @@ class Enhance {
     }
 
     pdata = ignoreCase(pdata);
+
+    // save the fields state
+    this.fieldsState.config = Object.keys(pdata);
+    this.fieldsState.use = [...useList];
 
     // filter the data
     const filterData: typeof pdata = {};
