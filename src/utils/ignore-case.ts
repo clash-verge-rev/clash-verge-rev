@@ -2,7 +2,7 @@
 type TData = Record<string, any>;
 
 export default function ignoreCase(data: TData): TData {
-  if (!data) return data;
+  if (!data) return {};
 
   const newData = {} as TData;
 
