@@ -91,13 +91,15 @@ impl Profiles {
   }
 
   /// just change the `chain`
-  pub fn put_chain(&mut self, chain: Option<Vec<String>>) {
+  pub fn put_chain(&mut self, chain: Option<Vec<String>>) -> Result<()> {
     self.chain = chain;
+    self.save_file()
   }
 
   /// just change the `field`
-  pub fn put_valid(&mut self, valid: Option<Vec<String>>) {
+  pub fn put_valid(&mut self, valid: Option<Vec<String>>) -> Result<()> {
     self.valid = valid;
+    self.save_file()
   }
 
   /// get items ref

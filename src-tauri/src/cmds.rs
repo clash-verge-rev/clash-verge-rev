@@ -76,7 +76,7 @@ pub fn select_profile(index: String, core: State<'_, Core>) -> CmdResult {
 #[tauri::command]
 pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -> CmdResult {
   let mut profiles = core.profiles.lock();
-  profiles.put_chain(chain);
+  wrap_err!(profiles.put_chain(chain))?;
 
   drop(profiles);
 
@@ -87,7 +87,7 @@ pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -
 #[tauri::command]
 pub fn change_profile_valid(valid: Option<Vec<String>>, core: State<Core>) -> CmdResult {
   let mut profiles = core.profiles.lock();
-  profiles.put_valid(valid);
+  wrap_err!(profiles.put_valid(valid))?;
 
   drop(profiles);
 
