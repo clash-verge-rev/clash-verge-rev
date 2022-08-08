@@ -16,8 +16,12 @@ export default function useCustomTheme() {
   const [mode, setMode] = useRecoilState(atomThemeMode);
 
   useEffect(() => {
-    if (theme_mode !== "system") {
-      setMode(theme_mode ?? "light");
+    const themeMode = ["light", "dark", "system"].includes(theme_mode!)
+      ? theme_mode!
+      : "light";
+
+    if (themeMode !== "system") {
+      setMode(themeMode);
       return;
     }
 
