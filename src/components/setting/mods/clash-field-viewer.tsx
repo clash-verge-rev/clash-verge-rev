@@ -76,12 +76,13 @@ const ClashFieldViewer = ({ handler }: Props) => {
     setOpen(false);
 
     const oldSet = new Set([...(data?.valid || []), ...enhanceUse]);
-    const curSet = new Set(selected.concat([...oldSet]));
+    const curSet = new Set(selected);
+    const joinSet = new Set(selected.concat([...oldSet]));
 
-    if (curSet.size === oldSet.size) return;
+    if (curSet.size === oldSet.size && curSet.size === joinSet.size) return;
 
     try {
-      await changeProfileValid([...new Set(selected)]);
+      await changeProfileValid([...curSet]);
       mutate();
       Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
