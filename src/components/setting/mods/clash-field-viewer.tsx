@@ -13,6 +13,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { BuildCircleRounded, InfoRounded } from "@mui/icons-material";
 import { changeProfileValid, getProfiles } from "@/services/cmds";
 import { ModalHandler } from "@/hooks/use-modal-handler";
 import enhance, {
@@ -20,11 +21,10 @@ import enhance, {
   HANDLE_FIELDS,
   USE_FLAG_FIELDS,
 } from "@/services/enhance";
-import { BuildCircleRounded, InfoRounded } from "@mui/icons-material";
+import Notice from "@/components/base/base-notice";
 
 interface Props {
   handler: ModalHandler;
-  onError: (err: Error) => void;
 }
 
 const fieldSorter = (a: string, b: string) => {
@@ -39,7 +39,7 @@ const fieldSorter = (a: string, b: string) => {
 const useFields = [...USE_FLAG_FIELDS].sort(fieldSorter);
 const handleFields = [...HANDLE_FIELDS, ...DEFAULT_FIELDS].sort(fieldSorter);
 
-const ClashFieldViewer = ({ handler, onError }: Props) => {
+const ClashFieldViewer = ({ handler }: Props) => {
   const { t } = useTranslation();
 
   const { data, mutate } = useSWR("getProfiles", getProfiles);
@@ -55,8 +55,6 @@ const ClashFieldViewer = ({ handler, onError }: Props) => {
       close: () => setOpen(false),
     };
   }
-
-  console.log("render");
 
   useEffect(() => {
     if (open) mutate();
@@ -85,8 +83,9 @@ const ClashFieldViewer = ({ handler, onError }: Props) => {
     try {
       await changeProfileValid([...new Set(selected)]);
       mutate();
+      Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
-      onError(err);
+      Notice.error(err?.message || err.toString());
     }
   };
 
@@ -125,7 +124,11 @@ const ClashFieldViewer = ({ handler, onError }: Props) => {
           );
         })}
 
-        <Divider sx={{ my: 0.5 }} />
+        <Divider sx={{ my: 1 }}>
+          <Typography color="text.secondary" fontSize={14}>
+            Clash Verge Control Fields
+          </Typography>
+        </Divider>
 
         {handleFields.map((item) => (
           <Stack key={item} mb={0.5} direction="row" alignItems="center">
