@@ -44,6 +44,7 @@ const WebUIItem = (props: Props) => {
         <IconButton
           size="small"
           title="Save"
+          color="inherit"
           onClick={() => {
             onChange(editValue);
             setEditing(false);
@@ -54,6 +55,7 @@ const WebUIItem = (props: Props) => {
         <IconButton
           size="small"
           title="Cancel"
+          color="inherit"
           onClick={() => {
             onCancel?.();
             setEditing(false);
@@ -82,6 +84,7 @@ const WebUIItem = (props: Props) => {
       <IconButton
         size="small"
         title="Open URL"
+        color="inherit"
         onClick={() => onOpenUrl?.(value)}
       >
         <OpenInNewRounded fontSize="inherit" />
@@ -89,6 +92,7 @@ const WebUIItem = (props: Props) => {
       <IconButton
         size="small"
         title="Edit"
+        color="inherit"
         onClick={() => {
           setEditing(true);
           setEditValue(value);
@@ -96,7 +100,12 @@ const WebUIItem = (props: Props) => {
       >
         <EditRounded fontSize="inherit" />
       </IconButton>
-      <IconButton size="small" title="Delete" onClick={onDelete}>
+      <IconButton
+        size="small"
+        title="Delete"
+        color="inherit"
+        onClick={onDelete}
+      >
         <DeleteRounded fontSize="inherit" />
       </IconButton>
     </Stack>
