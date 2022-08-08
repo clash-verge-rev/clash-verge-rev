@@ -1,4 +1,4 @@
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 import { useSetRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
 import {
@@ -27,8 +27,11 @@ interface Props {
 
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
-  const { mutate } = useSWRConfig();
-  const { data: clashConfig } = useSWR("getClashConfig", getClashConfig);
+
+  const { data: clashConfig, mutate: mutateClash } = useSWR(
+    "getClashConfig",
+    getClashConfig
+  );
   const { data: versionData } = useSWR("getVersion", getVersion);
 
   const {
@@ -45,7 +48,7 @@ const SettingClash = ({ onError }: Props) => {
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
-    mutate("getClashConfig", { ...clashConfig, ...patch }, false);
+    mutateClash((old) => ({ ...(old! || {}), ...patch }), false);
   };
   const onUpdateData = async (patch: Partial<ApiType.ConfigData>) => {
     await updateConfigs(patch);
@@ -64,7 +67,7 @@ const SettingClash = ({ onError }: Props) => {
     Notice.success("Change Clash port successfully!", 1000);
 
     // update the config
-    mutate("getClashConfig");
+    mutateClash();
   };
 
   // get clash core version
@@ -75,7 +78,7 @@ const SettingClash = ({ onError }: Props) => {
   return (
     <SettingList title={t("Clash Setting")}>
       <WebUIViewer handler={webUIHandler} onError={onError} />
-      <ClashFieldViewer handler={fieldHandler} onError={onError} />
+      <ClashFieldViewer handler={fieldHandler} />
 
       <SettingItem label={t("Allow Lan")}>
         <GuardState
