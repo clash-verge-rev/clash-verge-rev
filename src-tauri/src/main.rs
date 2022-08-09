@@ -158,8 +158,15 @@ fn main() -> std::io::Result<()> {
     builder = builder.menu(Menu::new().add_submenu(submenu_file));
   }
 
+  let mut context = tauri::generate_context!();
+  let verge = Verge::new();
+  for win in context.config_mut().tauri.windows.iter_mut() {
+    if verge.enable_silent_start.unwrap_or(false) {
+      win.visible = false;
+    }
+  }
   builder
-    .build(tauri::generate_context!())
+    .build(context)
     .expect("error while running tauri application")
     .run(|app_handle, e| match e {
       tauri::RunEvent::ExitRequested { api, .. } => {
