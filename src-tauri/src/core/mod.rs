@@ -91,16 +91,16 @@ impl Core {
     let clash = self.clash.lock();
     let verge = self.verge.lock();
 
-    let silent_start = verge.enable_silent_start.clone();
+    // let silent_start = verge.enable_silent_start.clone();
     let auto_launch = verge.enable_auto_launch.clone();
 
     // silent start
-    if silent_start.unwrap_or(false) {
-      let window = self.window.lock();
-      window.as_ref().map(|win| {
-        win.hide().unwrap();
-      });
-    }
+    // if silent_start.unwrap_or(false) {
+    //   let window = self.window.lock();
+    //   window.as_ref().map(|win| {
+    //     win.hide().unwrap();
+    //   });
+    // }
 
     let mut sysopt = self.sysopt.lock();
 
