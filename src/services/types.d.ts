@@ -1,8 +1,7 @@
-// declare global {
 /**
  * Some interface for clash api
  */
-declare namespace ApiType {
+ declare namespace ApiType {
   interface ConfigData {
     port: number;
     mode: string;
@@ -187,6 +186,8 @@ declare namespace CmdType {
     "bind-address"?: any;
     "external-ui"?: any;
     "auto-redir"?: any;
+    "socks-port"?: any;
+    "redir-port"?: any;
     "tproxy-port"?: any;
     "geodata-mode"?: any;
     "tcp-concurrent"?: any;
@@ -222,4 +223,3 @@ declare namespace CmdType {
     error?: string;
   }
 }
-// }

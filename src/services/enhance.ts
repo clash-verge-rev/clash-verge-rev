@@ -4,9 +4,6 @@ import ignoreCase from "@/utils/ignore-case";
 
 export const HANDLE_FIELDS = [
   "port",
-  "socks-port",
-  "redir-port",
-  "tproxy-port",
   "mixed-port",
   "allow-lan",
   "mode",
@@ -36,6 +33,8 @@ export const USE_FLAG_FIELDS = [
   "experimental",
   "interface-name",
   "routing-mark",
+  "socks-port",
+  "redir-port",
   "tproxy-port",
   "iptables",
   "external-ui",
