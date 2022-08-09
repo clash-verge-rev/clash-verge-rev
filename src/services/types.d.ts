@@ -1,7 +1,7 @@
 /**
  * Some interface for clash api
  */
- declare namespace ApiType {
+declare namespace ApiType {
   interface ConfigData {
     port: number;
     mode: string;
