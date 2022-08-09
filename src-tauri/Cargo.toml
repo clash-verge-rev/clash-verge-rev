@@ -33,6 +33,7 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.11", features = ["json"] }
 tauri = { version = "1.0.0", features = ["process-all", "shell-all", "system-tray", "updater", "window-all"] }
+quick-js = { version =  "0.4.1" }
 window-shadows = { version = "0.1" }
 window-vibrancy = { version = "0.1" }
 
