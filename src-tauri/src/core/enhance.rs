@@ -144,46 +144,50 @@ pub fn use_script(
   config: Mapping,
   valid: Vec<String>,
 ) -> Result<(Mapping, Vec<(String, String)>)> {
-  use quick_js::{Context, JsValue};
+  use rquickjs::{Context, Func, Runtime};
   use std::sync::{Arc, Mutex};
 
-  let context = Context::new().unwrap();
+  let runtime = Runtime::new().unwrap();
+  let context = Context::full(&runtime).unwrap();
   let outputs = Arc::new(Mutex::new(vec![]));
 
   let copy_outputs = outputs.clone();
-  context.add_callback("__verge__log__", move |level: String, data: String| {
-    let mut out = copy_outputs.lock().unwrap();
-    out.push((level, data));
-    JsValue::Undefined
-  })?;
+  let result = context.with(|ctx| -> Result<Mapping> {
+    ctx.globals().set(
+      "__verge_log__",
+      Func::from(move |level: String, data: String| {
+        let mut out = copy_outputs.lock().unwrap();
+        out.push((level, data));
+      }),
+    )?;
 
-  context.eval(
-    r#"var console = Object.freeze({
-      log(data){__verge__log__("log",JSON.stringify(data))}, 
-      info(data){__verge__log__("info",JSON.stringify(data))}, 
-      error(data){__verge__log__("error",JSON.stringify(data))},
-    });"#,
-  )?;
+    ctx.eval(
+      r#"var console = Object.freeze({
+        log(data){__verge_log__("log",JSON.stringify(data))}, 
+        info(data){__verge_log__("info",JSON.stringify(data))}, 
+        error(data){__verge_log__("error",JSON.stringify(data))},
+        debug(data){__verge_log__("debug",JSON.stringify(data))},
+      });"#,
+    )?;
 
-  let config_str = serde_json::to_string(&config)?;
+    let config_str = serde_json::to_string(&config)?;
 
-  let code = format!("\n{script}\n;\nJSON.stringify(main({config_str}))");
-  let result = context.eval(code.as_str())?;
+    let code = format!("\n{script}\n;\nJSON.stringify(main({config_str})||'')");
+    let result: String = ctx.eval(code.as_str())?;
+    if result == "\"\"" {
+      anyhow::bail!("main function should return object");
+    }
+    Ok(serde_json::from_str::<Mapping>(result.as_str())?)
+  });
 
   let mut out = outputs.lock().unwrap();
-  match result.into_string() {
-    Some(result) => match serde_json::from_str::<Mapping>(result.as_str()) {
-      Ok(config) => {
-        let config = use_valid_filter(config, valid);
-        Ok((config, out.to_vec()))
-      }
-      Err(_) => {
-        out.push(("error".into(), "failed to parse json string".into()));
-        Ok((config, out.to_vec()))
-      }
-    },
-    None => {
-      out.push(("error".into(), "main function should return object".into()));
+  match result {
+    Ok(config) => {
+      let config = use_valid_filter(config, valid);
+      Ok((config, out.to_vec()))
+    }
+    Err(err) => {
+      out.push(("error".into(), err.to_string()));
       Ok((config, out.to_vec()))
     }
   }
@@ -235,9 +239,11 @@ fn test_merge() -> Result<()> {
 fn test_script() {
   let script = r#"
     function main(config) {
-      config.rules = [...config.rules, "add"];
-      config.proxies = ["111"];
+      if (Array.isArray(config.rules)) {
+        config.rules = [...config.rules, "add"];
+      }
       console.log(config);
+      config.proxies = ["111"];
       return config;
     }
   "#;
