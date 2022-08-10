@@ -1,10 +1,12 @@
 mod field;
 mod merge;
 mod script;
+mod tun;
 
 pub(self) use self::field::*;
 use self::merge::*;
 use self::script::*;
+use self::tun::*;
 use crate::core::PrfData;
 use serde_yaml::Mapping;
 use std::collections::HashMap;
@@ -16,10 +18,9 @@ pub fn runtime_config(
   profile_config: Mapping,
   profile_enhanced: Vec<PrfData>,
   valid: Vec<String>,
-  //   tun_enable: bool,
+  tun_mode: bool,
 ) -> (Mapping, HashMap<String, ResultLog>) {
   let mut config = profile_config;
-
   let mut result_map = HashMap::new();
 
   profile_enhanced.into_iter().for_each(|data| {
@@ -51,6 +52,7 @@ pub fn runtime_config(
   }
 
   config = use_filter(config, use_clash_fields());
+  config = use_tun(config, tun_mode);
   config = use_sort(config);
 
   (config, result_map)
