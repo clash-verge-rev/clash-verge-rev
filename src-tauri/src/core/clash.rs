@@ -237,70 +237,70 @@ impl Clash {
     config
   }
 
-  /// only 5 default fields available (clash config fields)
-  /// convert to lowercase
-  pub fn strict_filter(config: Mapping) -> Mapping {
-    // Only the following fields are allowed:
-    // proxies/proxy-providers/proxy-groups/rule-providers/rules
-    let valid_keys = vec![
-      "proxies",
-      "proxy-providers",
-      "proxy-groups",
-      "rules",
-      "rule-providers",
-    ];
+  // /// only 5 default fields available (clash config fields)
+  // /// convert to lowercase
+  // pub fn strict_filter(config: Mapping) -> Mapping {
+  //   // Only the following fields are allowed:
+  //   // proxies/proxy-providers/proxy-groups/rule-providers/rules
+  //   let valid_keys = vec![
+  //     "proxies",
+  //     "proxy-providers",
+  //     "proxy-groups",
+  //     "rules",
+  //     "rule-providers",
+  //   ];
 
-    let mut new_config = Mapping::new();
+  //   let mut new_config = Mapping::new();
 
-    for (key, value) in config.into_iter() {
-      key.as_str().map(|key_str| {
-        // change to lowercase
-        let mut key_str = String::from(key_str);
-        key_str.make_ascii_lowercase();
+  //   for (key, value) in config.into_iter() {
+  //     key.as_str().map(|key_str| {
+  //       // change to lowercase
+  //       let mut key_str = String::from(key_str);
+  //       key_str.make_ascii_lowercase();
 
-        // filter
-        if valid_keys.contains(&&*key_str) {
-          new_config.insert(Value::String(key_str), value);
-        }
-      });
-    }
+  //       // filter
+  //       if valid_keys.contains(&&*key_str) {
+  //         new_config.insert(Value::String(key_str), value);
+  //       }
+  //     });
+  //   }
 
-    new_config
-  }
+  //   new_config
+  // }
 
-  /// more clash config fields available
-  /// convert to lowercase
-  pub fn loose_filter(config: Mapping) -> Mapping {
-    // all of these can not be revised by script or merge
-    // http/https/socks port should be under control
-    let not_allow = vec![
-      "port",
-      "socks-port",
-      "mixed-port",
-      "allow-lan",
-      "mode",
-      "external-controller",
-      "secret",
-      "log-level",
-    ];
+  // /// more clash config fields available
+  // /// convert to lowercase
+  // pub fn loose_filter(config: Mapping) -> Mapping {
+  //   // all of these can not be revised by script or merge
+  //   // http/https/socks port should be under control
+  //   let not_allow = vec![
+  //     "port",
+  //     "socks-port",
+  //     "mixed-port",
+  //     "allow-lan",
+  //     "mode",
+  //     "external-controller",
+  //     "secret",
+  //     "log-level",
+  //   ];
 
-    let mut new_config = Mapping::new();
+  //   let mut new_config = Mapping::new();
 
-    for (key, value) in config.into_iter() {
-      key.as_str().map(|key_str| {
-        // change to lowercase
-        let mut key_str = String::from(key_str);
-        key_str.make_ascii_lowercase();
+  //   for (key, value) in config.into_iter() {
+  //     key.as_str().map(|key_str| {
+  //       // change to lowercase
+  //       let mut key_str = String::from(key_str);
+  //       key_str.make_ascii_lowercase();
 
-        // filter
-        if !not_allow.contains(&&*key_str) {
-          new_config.insert(Value::String(key_str), value);
-        }
-      });
-    }
+  //       // filter
+  //       if !not_allow.contains(&&*key_str) {
+  //         new_config.insert(Value::String(key_str), value);
+  //       }
+  //     });
+  //   }
 
-    new_config
-  }
+  //   new_config
+  // }
 }
 
 impl Default for Clash {

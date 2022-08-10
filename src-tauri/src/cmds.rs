@@ -19,7 +19,8 @@ pub fn get_profiles(core: State<'_, Core>) -> CmdResult<Profiles> {
 /// manually exec enhanced profile
 #[tauri::command]
 pub fn enhance_profiles(core: State<'_, Core>) -> CmdResult {
-  wrap_err!(core.activate_enhanced(false))
+  // wrap_err!(core.activate_enhanced(false))
+  wrap_err!(core.activate())
 }
 
 /// import the profile from url
@@ -69,7 +70,8 @@ pub fn select_profile(index: String, core: State<'_, Core>) -> CmdResult {
 
   drop(profiles);
 
-  wrap_err!(core.activate_enhanced(false))
+  // wrap_err!(core.activate_enhanced(false))
+  wrap_err!(core.activate())
 }
 
 /// change the profile chain
@@ -80,7 +82,8 @@ pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -
 
   drop(profiles);
 
-  wrap_err!(core.activate_enhanced(false))
+  // wrap_err!(core.activate_enhanced(false))
+  wrap_err!(core.activate())
 }
 
 /// change the profile valid fields
@@ -91,7 +94,8 @@ pub fn change_profile_valid(valid: Option<Vec<String>>, core: State<Core>) -> Cm
 
   drop(profiles);
 
-  wrap_err!(core.activate_enhanced(false))
+  // wrap_err!(core.activate_enhanced(false))
+  wrap_err!(core.activate())
 }
 
 /// delete profile item
@@ -102,7 +106,8 @@ pub fn delete_profile(index: String, core: State<'_, Core>) -> CmdResult {
   if wrap_err!(profiles.delete_item(index))? {
     drop(profiles);
 
-    log_if_err!(core.activate_enhanced(false));
+    // log_if_err!(core.activate_enhanced(false));
+    log_if_err!(core.activate());
   }
 
   Ok(())
