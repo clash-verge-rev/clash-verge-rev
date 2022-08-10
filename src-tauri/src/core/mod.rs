@@ -1,6 +1,7 @@
 use self::notice::Notice;
 use self::sysopt::Sysopt;
 use self::timer::Timer;
+use crate::config::runtime_config;
 use crate::core::enhance::PrfEnhancedResult;
 use crate::log_if_err;
 use crate::utils::help;
@@ -24,6 +25,7 @@ mod timer;
 mod verge;
 
 pub use self::clash::*;
+pub use self::enhance::*;
 pub use self::prfitem::*;
 pub use self::profiles::*;
 pub use self::service::*;
@@ -114,12 +116,12 @@ impl Core {
     log_if_err!(self.update_systray(&app_handle));
     log_if_err!(self.update_systray_clash(&app_handle));
 
-    // wait the window setup during resolve app
-    let core = self.clone();
-    tauri::async_runtime::spawn(async move {
-      sleep(Duration::from_secs(2)).await;
-      log_if_err!(core.activate_enhanced(true));
-    });
+    // // wait the window setup during resolve app
+    // let core = self.clone();
+    // tauri::async_runtime::spawn(async move {
+    //   sleep(Duration::from_secs(2)).await;
+    //   log_if_err!(core.activate_enhanced(true));
+    // });
 
     // timer initialize
     let mut timer = self.timer.lock();
@@ -139,8 +141,8 @@ impl Core {
     service.restart()?;
     drop(service);
 
-    self.activate()?;
-    self.activate_enhanced(true)
+    self.activate()
+    // self.activate_enhanced(true)
   }
 
   /// change the clash core
@@ -164,8 +166,8 @@ impl Core {
     service.start()?;
     drop(service);
 
-    self.activate()?;
-    self.activate_enhanced(true)
+    self.activate()
+    // self.activate_enhanced(true)
   }
 
   /// Patch Clash
@@ -184,7 +186,7 @@ impl Core {
       drop(service);
 
       self.activate()?;
-      self.activate_enhanced(true)?;
+      // self.activate_enhanced(true)?;
 
       let mut sysopt = self.sysopt.lock();
       let verge = self.verge.lock();
@@ -219,7 +221,8 @@ impl Core {
         service.start()?;
         drop(service);
 
-        self.activate_enhanced(false)?;
+        // self.activate_enhanced(false)?;
+        self.activate()?;
       }
     }
 
@@ -257,7 +260,8 @@ impl Core {
     }
 
     if tun_mode.is_some() {
-      self.activate_enhanced(false)?;
+      // self.activate_enhanced(false)?;
+      self.activate()?;
     }
 
     Ok(())
@@ -341,127 +345,130 @@ impl Core {
   /// activate the profile
   /// auto activate enhanced profile
   pub fn activate(&self) -> Result<()> {
-    let data = {
-      let profiles = self.profiles.lock();
-      let data = profiles.gen_activate()?;
-      Clash::strict_filter(data)
-    };
-
-    let mut clash = self.clash.lock();
-
-    let mut config = clash.config.clone();
-    let info = clash.info.clone();
-
-    for (key, value) in data.into_iter() {
-      config.insert(key, value);
-    }
-
-    let config = {
-      let verge = self.verge.lock();
-      let tun_mode = verge.enable_tun_mode.unwrap_or(false);
-      Clash::_tun_mode(config, tun_mode)
-    };
-
-    let notice = {
-      let window = self.window.lock();
-      Notice::from(window.clone())
-    };
-
-    clash.set_running_config(&config);
-    drop(clash);
-
-    let service = self.service.lock();
-    service.set_config(info, config, notice)
-  }
-
-  /// Enhanced
-  /// enhanced profiles mode
-  pub fn activate_enhanced(&self, skip: bool) -> Result<()> {
-    let window = self.window.lock();
-    if window.is_none() {
-      bail!("failed to get the main window");
-    }
-
-    let event_name = help::get_uid("e");
-    let event_name = format!("enhanced-cb-{event_name}");
-
-    // generate the payload
-    let payload = {
-      let profiles = self.profiles.lock();
-      profiles.gen_enhanced(event_name.clone())?
-    };
-
-    // do not run enhanced
-    if payload.chain.len() == 0 {
-      if skip {
-        return Ok(());
-      }
-
-      drop(window);
-      return self.activate();
-    }
+    let profiles = self.profiles.lock();
+    let profile_config = profiles.gen_activate()?;
+    let profile_enhanced = profiles.gen_enhanced("".into())?;
+    drop(profiles);
 
     let tun_mode = {
       let verge = self.verge.lock();
       verge.enable_tun_mode.unwrap_or(false)
     };
 
-    let info = {
-      let clash = self.clash.lock();
-      clash.info.clone()
+    let mut clash = self.clash.lock();
+    let clash_config = clash.config.clone();
+
+    let (config, result) = runtime_config(
+      clash_config,
+      profile_config,
+      profile_enhanced.chain,
+      profile_enhanced.valid,
+    );
+
+    dbg!(result);
+
+    let info = clash.info.clone();
+
+    clash.set_running_config(&config);
+    drop(clash);
+
+    let notice = {
+      let window = self.window.lock();
+      Notice::from(window.clone())
     };
 
-    let notice = Notice::from(window.clone());
-    let service = self.service.clone();
-
-    let window = window.clone().unwrap();
-    window.once(&event_name, move |event| {
-      let result = event.payload();
-
-      if result.is_none() {
-        log::warn!(target: "app", "event payload result is none");
-        return;
-      }
-
-      let result = result.unwrap();
-      let result: PrfEnhancedResult = serde_json::from_str(result).unwrap();
-
-      if let Some(data) = result.data {
-        let mut config = Clash::read_config();
-        let filter_data = Clash::loose_filter(data); // loose filter
-
-        for (key, value) in filter_data.into_iter() {
-          config.insert(key, value);
-        }
-
-        let config = Clash::_tun_mode(config, tun_mode);
-
-        let service = service.lock();
-        log_if_err!(service.set_config(info, config, notice));
-
-        log::info!(target: "app", "profile enhanced status {}", result.status);
-      }
-
-      result.error.map(|err| log::error!(target: "app", "{err}"));
-    });
-
-    let verge = self.verge.lock();
-    let silent_start = verge.enable_silent_start.clone();
-
-    let closable = unsafe { WINDOW_CLOSABLE };
-
-    if silent_start.unwrap_or(false) && closable {
-      unsafe {
-        WINDOW_CLOSABLE = false;
-      }
-
-      window.emit("script-handler-close", payload).unwrap();
-    } else {
-      window.emit("script-handler", payload).unwrap();
-    }
-
-    Ok(())
+    let service = self.service.lock();
+    service.set_config(info, config, notice)
   }
+
+  // /// Enhanced
+  // /// enhanced profiles mode
+  // pub fn activate_enhanced(&self, skip: bool) -> Result<()> {
+  //   let window = self.window.lock();
+  //   if window.is_none() {
+  //     bail!("failed to get the main window");
+  //   }
+
+  //   let event_name = help::get_uid("e");
+  //   let event_name = format!("enhanced-cb-{event_name}");
+
+  //   // generate the payload
+  //   let payload = {
+  //     let profiles = self.profiles.lock();
+  //     profiles.gen_enhanced(event_name.clone())?
+  //   };
+
+  //   // do not run enhanced
+  //   if payload.chain.len() == 0 {
+  //     if skip {
+  //       return Ok(());
+  //     }
+
+  //     drop(window);
+  //     return self.activate();
+  //   }
+
+  //   let tun_mode = {
+  //     let verge = self.verge.lock();
+  //     verge.enable_tun_mode.unwrap_or(false)
+  //   };
+
+  //   let info = {
+  //     let clash = self.clash.lock();
+  //     clash.info.clone()
+  //   };
+
+  //   let notice = Notice::from(window.clone());
+  //   let service = self.service.clone();
+
+  //   let window = window.clone().unwrap();
+  //   window.once(&event_name, move |event| {
+  //     let result = event.payload();
+
+  //     if result.is_none() {
+  //       log::warn!(target: "app", "event payload result is none");
+  //       return;
+  //     }
+
+  //     let result = result.unwrap();
+  //     let result: PrfEnhancedResult = serde_json::from_str(result).unwrap();
+
+  //     if let Some(data) = result.data {
+  //       let mut config = Clash::read_config();
+  //       let filter_data = Clash::loose_filter(data); // loose filter
+
+  //       for (key, value) in filter_data.into_iter() {
+  //         config.insert(key, value);
+  //       }
+
+  //       let config = Clash::_tun_mode(config, tun_mode);
+
+  //       let service = service.lock();
+  //       log_if_err!(service.set_config(info, config, notice));
+
+  //       log::info!(target: "app", "profile enhanced status {}", result.status);
+  //     }
+
+  //     result.error.map(|err| log::error!(target: "app", "{err}"));
+  //   });
+
+  //   let verge = self.verge.lock();
+  //   let silent_start = verge.enable_silent_start.clone();
+
+  //   let closable = unsafe { WINDOW_CLOSABLE };
+
+  //   if silent_start.unwrap_or(false) && closable {
+  //     unsafe {
+  //       WINDOW_CLOSABLE = false;
+  //     }
+
+  //     window.emit("script-handler-close", payload).unwrap();
+  //   } else {
+  //     window.emit("script-handler", payload).unwrap();
+  //   }
+
+  //   Ok(())
+  // }
 }
 
 impl Core {
@@ -482,7 +489,8 @@ impl Core {
           // reactivate the config
           if Some(uid) == profiles.get_current() {
             drop(profiles);
-            return core.activate_enhanced(false);
+            // return core.activate_enhanced(false);
+            return core.activate();
           }
 
           return Ok(());
@@ -505,7 +513,8 @@ impl Core {
     // reactivate the profile
     if Some(uid) == profiles.get_current() {
       drop(profiles);
-      core.activate_enhanced(false)?;
+      // core.activate_enhanced(false)?;
+      core.activate()?;
     }
 
     Ok(())

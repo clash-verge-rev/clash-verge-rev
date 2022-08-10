@@ -4,6 +4,7 @@
 )]
 
 mod cmds;
+mod config;
 mod core;
 mod utils;
 
