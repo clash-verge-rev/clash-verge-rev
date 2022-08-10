@@ -163,79 +163,79 @@ impl Clash {
     Ok((change_port, change_mode))
   }
 
-  /// revise the `tun` and `dns` config
-  pub fn _tun_mode(mut config: Mapping, enable: bool) -> Mapping {
-    macro_rules! revise {
-      ($map: expr, $key: expr, $val: expr) => {
-        let ret_key = Value::String($key.into());
-        $map.insert(ret_key, Value::from($val));
-      };
-    }
+  // /// revise the `tun` and `dns` config
+  // pub fn _tun_mode(mut config: Mapping, enable: bool) -> Mapping {
+  //   macro_rules! revise {
+  //     ($map: expr, $key: expr, $val: expr) => {
+  //       let ret_key = Value::String($key.into());
+  //       $map.insert(ret_key, Value::from($val));
+  //     };
+  //   }
 
-    // if key not exists then append value
-    macro_rules! append {
-      ($map: expr, $key: expr, $val: expr) => {
-        let ret_key = Value::String($key.into());
-        if !$map.contains_key(&ret_key) {
-          $map.insert(ret_key, Value::from($val));
-        }
-      };
-    }
+  //   // if key not exists then append value
+  //   macro_rules! append {
+  //     ($map: expr, $key: expr, $val: expr) => {
+  //       let ret_key = Value::String($key.into());
+  //       if !$map.contains_key(&ret_key) {
+  //         $map.insert(ret_key, Value::from($val));
+  //       }
+  //     };
+  //   }
 
-    // tun config
-    let tun_val = config.get(&Value::from("tun"));
-    let mut new_tun = Mapping::new();
+  //   // tun config
+  //   let tun_val = config.get(&Value::from("tun"));
+  //   let mut new_tun = Mapping::new();
 
-    if tun_val.is_some() && tun_val.as_ref().unwrap().is_mapping() {
-      new_tun = tun_val.as_ref().unwrap().as_mapping().unwrap().clone();
-    }
+  //   if tun_val.is_some() && tun_val.as_ref().unwrap().is_mapping() {
+  //     new_tun = tun_val.as_ref().unwrap().as_mapping().unwrap().clone();
+  //   }
 
-    revise!(new_tun, "enable", enable);
+  //   revise!(new_tun, "enable", enable);
 
-    if enable {
-      append!(new_tun, "stack", "gvisor");
-      append!(new_tun, "dns-hijack", vec!["198.18.0.2:53"]);
-      append!(new_tun, "auto-route", true);
-      append!(new_tun, "auto-detect-interface", true);
-    }
+  //   if enable {
+  //     append!(new_tun, "stack", "gvisor");
+  //     append!(new_tun, "dns-hijack", vec!["198.18.0.2:53"]);
+  //     append!(new_tun, "auto-route", true);
+  //     append!(new_tun, "auto-detect-interface", true);
+  //   }
 
-    revise!(config, "tun", new_tun);
+  //   revise!(config, "tun", new_tun);
 
-    if enable {
-      // dns config
-      let dns_val = config.get(&Value::from("dns"));
-      let mut new_dns = Mapping::new();
+  //   if enable {
+  //     // dns config
+  //     let dns_val = config.get(&Value::from("dns"));
+  //     let mut new_dns = Mapping::new();
 
-      if dns_val.is_some() && dns_val.as_ref().unwrap().is_mapping() {
-        new_dns = dns_val.as_ref().unwrap().as_mapping().unwrap().clone();
-      }
-      revise!(new_dns, "enable", enable);
+  //     if dns_val.is_some() && dns_val.as_ref().unwrap().is_mapping() {
+  //       new_dns = dns_val.as_ref().unwrap().as_mapping().unwrap().clone();
+  //     }
+  //     revise!(new_dns, "enable", enable);
 
-      // 借鉴cfw的默认配置
-      append!(new_dns, "enhanced-mode", "fake-ip");
-      append!(
-        new_dns,
-        "nameserver",
-        vec!["114.114.114.114", "223.5.5.5", "8.8.8.8"]
-      );
-      append!(new_dns, "fallback", vec![] as Vec<&str>);
+  //     // 借鉴cfw的默认配置
+  //     append!(new_dns, "enhanced-mode", "fake-ip");
+  //     append!(
+  //       new_dns,
+  //       "nameserver",
+  //       vec!["114.114.114.114", "223.5.5.5", "8.8.8.8"]
+  //     );
+  //     append!(new_dns, "fallback", vec![] as Vec<&str>);
 
-      #[cfg(target_os = "windows")]
-      append!(
-        new_dns,
-        "fake-ip-filter",
-        vec![
-          "dns.msftncsi.com",
-          "www.msftncsi.com",
-          "www.msftconnecttest.com"
-        ]
-      );
+  //     #[cfg(target_os = "windows")]
+  //     append!(
+  //       new_dns,
+  //       "fake-ip-filter",
+  //       vec![
+  //         "dns.msftncsi.com",
+  //         "www.msftncsi.com",
+  //         "www.msftconnecttest.com"
+  //       ]
+  //     );
 
-      revise!(config, "dns", new_dns);
-    }
+  //     revise!(config, "dns", new_dns);
+  //   }
 
-    config
-  }
+  //   config
+  // }
 
   // /// only 5 default fields available (clash config fields)
   // /// convert to lowercase

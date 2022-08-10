@@ -363,6 +363,7 @@ impl Core {
       profile_config,
       profile_enhanced.chain,
       profile_enhanced.valid,
+      tun_mode,
     );
 
     dbg!(result);
