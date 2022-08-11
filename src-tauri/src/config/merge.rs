@@ -1,4 +1,4 @@
-use super::{use_filter, use_valid_fields};
+use super::{use_filter, use_lowercase};
 use serde_yaml::{self, Mapping, Sequence, Value};
 
 #[allow(unused)]
@@ -11,17 +11,16 @@ const MERGE_FIELDS: [&str; 6] = [
   "append-proxy-groups",
 ];
 
-pub fn use_merge(merge: Mapping, mut config: Mapping, valid: Vec<String>) -> Mapping {
-  let valid_list = use_valid_fields(valid);
-  let merge_valid = use_filter(merge.clone(), valid_list);
-
+pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
   // 直接覆盖原字段
-  merge_valid.into_iter().for_each(|(key, value)| {
-    config.insert(key, value);
-  });
+  use_lowercase(merge.clone())
+    .into_iter()
+    .for_each(|(key, value)| {
+      config.insert(key, value);
+    });
 
   let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
-  let merge = use_filter(merge, merge_list.collect());
+  let merge = use_filter(merge, &merge_list.collect());
 
   ["rules", "proxies", "proxy-groups"]
     .iter()
@@ -52,7 +51,6 @@ pub fn use_merge(merge: Mapping, mut config: Mapping, valid: Vec<String>) -> Map
 
       config.insert(key_val, Value::from(list));
     });
-
   config
 }
 
@@ -87,11 +85,7 @@ fn test_merge() -> anyhow::Result<()> {
   let merge = serde_yaml::from_str::<Mapping>(merge)?;
   let config = serde_yaml::from_str::<Mapping>(config)?;
 
-  let result = serde_yaml::to_string(&use_merge(
-    merge,
-    config,
-    vec!["tun"].iter().map(|s| s.to_string()).collect(),
-  ))?;
+  let result = serde_yaml::to_string(&use_merge(merge, config))?;
 
   println!("{result}");
 

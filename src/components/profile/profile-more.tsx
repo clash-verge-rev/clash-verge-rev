@@ -12,7 +12,6 @@ import {
   Menu,
 } from "@mui/material";
 import { viewProfile } from "@/services/cmds";
-import enhance from "@/services/enhance";
 import ProfileEdit from "./profile-edit";
 import FileEditor from "./file-editor";
 import Notice from "../base/base-notice";
@@ -32,6 +31,7 @@ interface Props {
   selected: boolean;
   itemData: CmdType.ProfileItem;
   enableNum: number;
+  logInfo?: [string, string][];
   onEnable: () => void;
   onDisable: () => void;
   onMoveTop: () => void;
@@ -45,6 +45,7 @@ const ProfileMore = (props: Props) => {
     selected,
     itemData,
     enableNum,
+    logInfo = [],
     onEnable,
     onDisable,
     onMoveTop,
@@ -59,13 +60,13 @@ const ProfileMore = (props: Props) => {
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [editOpen, setEditOpen] = useState(false);
   const [fileOpen, setFileOpen] = useState(false);
-  const [status, setStatus] = useState(enhance.status(uid));
+  // const [status, setStatus] = useState(enhance.status(uid));
 
   // unlisten when unmount
-  useEffect(() => enhance.listen(uid, setStatus), [uid]);
+  // useEffect(() => enhance.listen(uid, setStatus), [uid]);
 
   // error during enhanced mode
-  const hasError = selected && status?.status === "error";
+  const hasError = !!logInfo.find((e) => e[0] === "exception"); // selected && status?.status === "error";
 
   const onEditInfo = () => {
     setAnchorEl(null);
@@ -188,9 +189,11 @@ const ProfileMore = (props: Props) => {
               noWrap
               color="error"
               sx={{ width: "calc(100% - 75px)" }}
-              title={status.message}
+              // title={status.message}
+              title="error"
             >
-              {status.message}
+              {/* {status.message} */}
+              error
             </Typography>
           ) : (
             <Typography

@@ -140,7 +140,7 @@ impl Timer {
   /// the task runner
   async fn async_task(core: Core, uid: String) {
     log::info!(target: "app", "running timer task `{uid}`");
-    log_if_err!(Core::update_profile_item(core, uid, None).await);
+    log_if_err!(core.update_profile_item(uid, None).await);
   }
 }
 

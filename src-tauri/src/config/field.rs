@@ -63,19 +63,28 @@ pub fn use_valid_fields(mut valid: Vec<String>) -> Vec<String> {
     .collect()
 }
 
-pub fn use_filter(config: Mapping, filter: Vec<String>) -> Mapping {
+pub fn use_filter(config: Mapping, filter: &Vec<String>) -> Mapping {
   let mut ret = Mapping::new();
 
   for (key, value) in config.into_iter() {
-    key.as_str().map(|key_str| {
-      // change to lowercase
+    if let Some(key) = key.as_str() {
+      if filter.contains(&key.to_string()) {
+        ret.insert(Value::from(key), value);
+      }
+    }
+  }
+  ret
+}
+
+pub fn use_lowercase(config: Mapping) -> Mapping {
+  let mut ret = Mapping::new();
+
+  for (key, value) in config.into_iter() {
+    if let Some(key_str) = key.as_str() {
       let mut key_str = String::from(key_str);
       key_str.make_ascii_lowercase();
-
-      if filter.contains(&key_str) {
-        ret.insert(Value::from(key_str), value);
-      }
-    });
+      ret.insert(Value::from(key_str), value);
+    }
   }
   ret
 }
@@ -94,4 +103,16 @@ pub fn use_sort(config: Mapping) -> Mapping {
       });
     });
   ret
+}
+
+pub fn use_keys(config: &Mapping) -> Vec<String> {
+  config
+    .iter()
+    .filter_map(|(key, _)| key.as_str())
+    .map(|s| {
+      let mut s = s.to_string();
+      s.make_ascii_lowercase();
+      return s;
+    })
+    .collect()
 }
