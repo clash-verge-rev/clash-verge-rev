@@ -87,9 +87,6 @@ pub struct Clash {
 
   /// some info
   pub info: ClashInfo,
-
-  /// save the running config
-  pub running_config: Option<String>,
 }
 
 impl Clash {
@@ -97,11 +94,7 @@ impl Clash {
     let config = Clash::read_config();
     let info = ClashInfo::from(&config);
 
-    Clash {
-      config,
-      info,
-      running_config: None,
-    }
+    Clash { config, info }
   }
 
   /// get clash config
@@ -116,14 +109,6 @@ impl Clash {
       &self.config,
       Some("# Default Config For Clash Core\n\n"),
     )
-  }
-
-  /// save running config
-  pub fn set_running_config(&mut self, config: &Mapping) {
-    self.running_config = match serde_yaml::to_string(config) {
-      Ok(config_str) => Some(config_str),
-      Err(_) => None,
-    };
   }
 
   /// patch update the clash config

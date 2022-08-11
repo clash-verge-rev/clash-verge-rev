@@ -11,6 +11,7 @@ impl Notice {
     Notice { win }
   }
 
+  #[allow(unused)]
   pub fn set_win(&mut self, win: Option<Window>) {
     self.win = win;
   }
@@ -27,6 +28,7 @@ impl Notice {
     }
   }
 
+  #[allow(unused)]
   pub fn refresh_profiles(&self) {
     if let Some(window) = self.win.as_ref() {
       log_if_err!(window.emit("verge://refresh-profiles-config", "yes"));

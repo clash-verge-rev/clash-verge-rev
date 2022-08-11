@@ -1,9 +1,10 @@
-use super::enhance::{PrfData, PrfEnhanced};
 use super::prfitem::PrfItem;
+use super::ChainItem;
 use crate::utils::{config, dirs, help};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
+use std::collections::HashMap;
 use std::{fs, io::Write};
 
 ///
@@ -262,8 +263,8 @@ impl Profiles {
     Ok(current == uid)
   }
 
-  /// only generate config mapping
-  pub fn gen_activate(&self) -> Result<Mapping> {
+  /// generate the current Mapping data
+  fn gen_current(&self) -> Result<Mapping> {
     let config = Mapping::new();
 
     if self.current.is_none() || self.items.is_none() {
@@ -271,7 +272,6 @@ impl Profiles {
     }
 
     let current = self.current.clone().unwrap();
-
     for item in self.items.as_ref().unwrap().iter() {
       if item.uid == Some(current.clone()) {
         let file_path = match item.file.clone() {
@@ -286,34 +286,43 @@ impl Profiles {
         return Ok(config::read_yaml::<Mapping>(file_path.clone()));
       }
     }
-
     bail!("failed to found the uid \"{current}\"");
   }
 
-  /// gen the enhanced profiles
-  pub fn gen_enhanced(&self, callback: String) -> Result<PrfEnhanced> {
-    let current = self.gen_activate()?;
-
+  /// generate the data for activate clash config
+  pub fn gen_activate(&self) -> Result<PrfActivate> {
+    let current = self.gen_current()?;
     let chain = match self.chain.as_ref() {
       Some(chain) => chain
         .iter()
-        .map(|uid| self.get_item(uid))
-        .filter(|item| item.is_ok())
-        .map(|item| item.unwrap())
-        .map(|item| PrfData::from_item(item))
-        .filter(|o| o.is_some())
-        .map(|o| o.unwrap())
-        .collect::<Vec<PrfData>>(),
+        .filter_map(|uid| self.get_item(uid).ok())
+        .filter_map(|item| item.to_enhance())
+        .collect::<Vec<ChainItem>>(),
       None => vec![],
     };
-
     let valid = self.valid.clone().unwrap_or(vec![]);
 
-    Ok(PrfEnhanced {
+    Ok(PrfActivate {
       current,
       chain,
       valid,
-      callback,
     })
   }
+}
+
+#[derive(Default, Clone)]
+pub struct PrfActivate {
+  pub current: Mapping,
+  pub chain: Vec<ChainItem>,
+  pub valid: Vec<String>,
+}
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+pub struct RuntimeResult {
+  pub config: Option<Mapping>,
+  pub config_yaml: Option<String>,
+  // 记录在配置中（包括merge和script生成的）出现过的keys
+  // 这些keys不一定都生效
+  pub exists_keys: Vec<String>,
+  pub chain_logs: HashMap<String, Vec<(String, String)>>,
 }

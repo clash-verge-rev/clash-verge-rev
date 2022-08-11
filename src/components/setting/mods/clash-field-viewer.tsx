@@ -13,14 +13,18 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { BuildCircleRounded, InfoRounded } from "@mui/icons-material";
-import { changeProfileValid, getProfiles } from "@/services/cmds";
+import { InfoRounded } from "@mui/icons-material";
+import {
+  changeProfileValid,
+  getProfiles,
+  getRuntimeExists,
+} from "@/services/cmds";
 import { ModalHandler } from "@/hooks/use-modal-handler";
-import enhance, {
-  DEFAULT_FIELDS,
+import {
   HANDLE_FIELDS,
-  USE_FLAG_FIELDS,
-} from "@/services/enhance";
+  DEFAULT_FIELDS,
+  OTHERS_FIELDS,
+} from "@/utils/clash-fields";
 import Notice from "@/components/base/base-notice";
 
 interface Props {
@@ -36,18 +40,20 @@ const fieldSorter = (a: string, b: string) => {
   return 0;
 };
 
-const useFields = [...USE_FLAG_FIELDS].sort(fieldSorter);
+const otherFields = [...OTHERS_FIELDS].sort(fieldSorter);
 const handleFields = [...HANDLE_FIELDS, ...DEFAULT_FIELDS].sort(fieldSorter);
 
 const ClashFieldViewer = ({ handler }: Props) => {
   const { t } = useTranslation();
 
   const { data, mutate } = useSWR("getProfiles", getProfiles);
+  const { data: existsKeys = [] } = useSWR(
+    "getRuntimeExists",
+    getRuntimeExists
+  );
 
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-
-  const { config: enhanceConfig, use: enhanceUse } = enhance.getFieldsState();
 
   if (handler) {
     handler.current = {
@@ -61,8 +67,8 @@ const ClashFieldViewer = ({ handler }: Props) => {
   }, [open]);
 
   useEffect(() => {
-    setSelected([...(data?.valid || []), ...enhanceUse]);
-  }, [data?.valid, enhanceUse]);
+    setSelected(data?.valid || []);
+  }, [data?.valid]);
 
   const handleChange = (item: string) => {
     if (!item) return;
@@ -75,7 +81,7 @@ const ClashFieldViewer = ({ handler }: Props) => {
   const handleSave = async () => {
     setOpen(false);
 
-    const oldSet = new Set([...(data?.valid || []), ...enhanceUse]);
+    const oldSet = new Set(data?.valid || []);
     const curSet = new Set(selected);
     const joinSet = new Set(selected.concat([...oldSet]));
 
@@ -103,10 +109,9 @@ const ClashFieldViewer = ({ handler }: Props) => {
           userSelect: "text",
         }}
       >
-        {useFields.map((item) => {
+        {otherFields.map((item) => {
           const inSelect = selected.includes(item);
-          const inConfig = enhanceConfig.includes(item);
-          const inConfigUse = enhanceUse.includes(item);
+          const inConfig = existsKeys.includes(item);
           const inValid = data?.valid?.includes(item);
 
           return (
@@ -119,8 +124,7 @@ const ClashFieldViewer = ({ handler }: Props) => {
               />
               <Typography width="100%">{item}</Typography>
 
-              {inConfigUse && !inValid && <InfoIcon />}
-              {!inSelect && inConfig && <WarnIcon />}
+              {!inSelect && inConfig && !inValid && <WarnIcon />}
             </Stack>
           );
         })}
@@ -155,17 +159,6 @@ function WarnIcon() {
   return (
     <Tooltip title="The field exists in the config but not enabled.">
       <InfoRounded color="warning" sx={{ cursor: "pointer", opacity: 0.5 }} />
-    </Tooltip>
-  );
-}
-
-function InfoIcon() {
-  return (
-    <Tooltip title="This field is provided by Merge Profile.">
-      <BuildCircleRounded
-        color="info"
-        sx={{ cursor: "pointer", opacity: 0.5 }}
-      />
     </Tooltip>
   );
 }

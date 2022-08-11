@@ -69,8 +69,20 @@ export async function getClashInfo() {
   return invoke<CmdType.ClashInfo | null>("get_clash_info");
 }
 
-export async function getRunningConfig() {
-  return invoke<string | null>("get_running_config");
+export async function getRuntimeConfig() {
+  return invoke<any | null>("get_runtime_config");
+}
+
+export async function getRuntimeYaml() {
+  return invoke<string | null>("get_runtime_yaml");
+}
+
+export async function getRuntimeExists() {
+  return invoke<string[]>("get_runtime_exists");
+}
+
+export async function getRuntimeLogs() {
+  return invoke<Record<string, [string, string][]>>("get_runtime_logs");
 }
 
 export async function patchClashConfig(payload: Partial<ApiType.ConfigData>) {

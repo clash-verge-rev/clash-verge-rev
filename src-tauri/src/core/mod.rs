@@ -1,21 +1,16 @@
 use self::notice::Notice;
 use self::sysopt::Sysopt;
 use self::timer::Timer;
-use crate::config::runtime_config;
-use crate::core::enhance::PrfEnhancedResult;
+use crate::config::enhance_config;
 use crate::log_if_err;
-use crate::utils::help;
 use anyhow::{bail, Result};
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
 use serde_yaml::Value;
 use std::sync::Arc;
-use std::time::Duration;
 use tauri::{AppHandle, Manager, Window};
-use tokio::time::sleep;
 
 mod clash;
-mod enhance;
 mod notice;
 mod prfitem;
 mod profiles;
@@ -25,47 +20,33 @@ mod timer;
 mod verge;
 
 pub use self::clash::*;
-pub use self::enhance::*;
 pub use self::prfitem::*;
 pub use self::profiles::*;
 pub use self::service::*;
 pub use self::verge::*;
 
-/// close the window for slient start
-/// after enhance mode
-static mut WINDOW_CLOSABLE: bool = true;
-
 #[derive(Clone)]
 pub struct Core {
   pub clash: Arc<Mutex<Clash>>,
-
   pub verge: Arc<Mutex<Verge>>,
-
   pub profiles: Arc<Mutex<Profiles>>,
-
   pub service: Arc<Mutex<Service>>,
-
   pub sysopt: Arc<Mutex<Sysopt>>,
-
   pub timer: Arc<Mutex<Timer>>,
-
+  pub runtime: Arc<Mutex<RuntimeResult>>,
   pub window: Arc<Mutex<Option<Window>>>,
 }
 
 impl Core {
   pub fn new() -> Core {
-    let clash = Clash::new();
-    let verge = Verge::new();
-    let profiles = Profiles::new();
-    let service = Service::new();
-
     Core {
-      clash: Arc::new(Mutex::new(clash)),
-      verge: Arc::new(Mutex::new(verge)),
-      profiles: Arc::new(Mutex::new(profiles)),
-      service: Arc::new(Mutex::new(service)),
+      clash: Arc::new(Mutex::new(Clash::new())),
+      verge: Arc::new(Mutex::new(Verge::new())),
+      profiles: Arc::new(Mutex::new(Profiles::new())),
+      service: Arc::new(Mutex::new(Service::new())),
       sysopt: Arc::new(Mutex::new(Sysopt::new())),
       timer: Arc::new(Mutex::new(Timer::new())),
+      runtime: Arc::new(Mutex::new(RuntimeResult::default())),
       window: Arc::new(Mutex::new(None)),
     }
   }
@@ -95,15 +76,6 @@ impl Core {
 
     // let silent_start = verge.enable_silent_start.clone();
     let auto_launch = verge.enable_auto_launch.clone();
-
-    // silent start
-    // if silent_start.unwrap_or(false) {
-    //   let window = self.window.lock();
-    //   window.as_ref().map(|win| {
-    //     win.hide().unwrap();
-    //   });
-    // }
-
     let mut sysopt = self.sysopt.lock();
 
     sysopt.init_sysproxy(clash.info.port.clone(), &verge);
@@ -115,13 +87,6 @@ impl Core {
 
     log_if_err!(self.update_systray(&app_handle));
     log_if_err!(self.update_systray_clash(&app_handle));
-
-    // // wait the window setup during resolve app
-    // let core = self.clone();
-    // tauri::async_runtime::spawn(async move {
-    //   sleep(Duration::from_secs(2)).await;
-    //   log_if_err!(core.activate_enhanced(true));
-    // });
 
     // timer initialize
     let mut timer = self.timer.lock();
@@ -140,9 +105,7 @@ impl Core {
     let mut service = self.service.lock();
     service.restart()?;
     drop(service);
-
     self.activate()
-    // self.activate_enhanced(true)
   }
 
   /// change the clash core
@@ -167,7 +130,6 @@ impl Core {
     drop(service);
 
     self.activate()
-    // self.activate_enhanced(true)
   }
 
   /// Patch Clash
@@ -186,7 +148,6 @@ impl Core {
       drop(service);
 
       self.activate()?;
-      // self.activate_enhanced(true)?;
 
       let mut sysopt = self.sysopt.lock();
       let verge = self.verge.lock();
@@ -260,7 +221,6 @@ impl Core {
     }
 
     if tun_mode.is_some() {
-      // self.activate_enhanced(false)?;
       self.activate()?;
     }
 
@@ -345,33 +305,34 @@ impl Core {
   /// activate the profile
   /// auto activate enhanced profile
   pub fn activate(&self) -> Result<()> {
-    let profiles = self.profiles.lock();
-    let profile_config = profiles.gen_activate()?;
-    let profile_enhanced = profiles.gen_enhanced("".into())?;
-    drop(profiles);
+    let profile_activate = {
+      let profiles = self.profiles.lock();
+      profiles.gen_activate()?
+    };
+
+    let (clash_config, clash_info) = {
+      let clash = self.clash.lock();
+      (clash.config.clone(), clash.info.clone())
+    };
 
     let tun_mode = {
       let verge = self.verge.lock();
       verge.enable_tun_mode.unwrap_or(false)
     };
 
-    let mut clash = self.clash.lock();
-    let clash_config = clash.config.clone();
-
-    let (config, result) = runtime_config(
+    let (config, exists_keys, logs) = enhance_config(
       clash_config,
-      profile_config,
-      profile_enhanced.chain,
-      profile_enhanced.valid,
+      profile_activate.current,
+      profile_activate.chain,
+      profile_activate.valid,
       tun_mode,
     );
 
-    dbg!(result);
-
-    let info = clash.info.clone();
-
-    clash.set_running_config(&config);
-    drop(clash);
+    let mut runtime = self.runtime.lock();
+    runtime.config = Some(config.clone());
+    runtime.config_yaml = Some(serde_yaml::to_string(&config).unwrap_or("".into()));
+    runtime.exists_keys = exists_keys;
+    runtime.chain_logs = logs;
 
     let notice = {
       let window = self.window.lock();
@@ -379,109 +340,14 @@ impl Core {
     };
 
     let service = self.service.lock();
-    service.set_config(info, config, notice)
+    service.set_config(clash_info, config, notice)
   }
 
-  // /// Enhanced
-  // /// enhanced profiles mode
-  // pub fn activate_enhanced(&self, skip: bool) -> Result<()> {
-  //   let window = self.window.lock();
-  //   if window.is_none() {
-  //     bail!("failed to get the main window");
-  //   }
-
-  //   let event_name = help::get_uid("e");
-  //   let event_name = format!("enhanced-cb-{event_name}");
-
-  //   // generate the payload
-  //   let payload = {
-  //     let profiles = self.profiles.lock();
-  //     profiles.gen_enhanced(event_name.clone())?
-  //   };
-
-  //   // do not run enhanced
-  //   if payload.chain.len() == 0 {
-  //     if skip {
-  //       return Ok(());
-  //     }
-
-  //     drop(window);
-  //     return self.activate();
-  //   }
-
-  //   let tun_mode = {
-  //     let verge = self.verge.lock();
-  //     verge.enable_tun_mode.unwrap_or(false)
-  //   };
-
-  //   let info = {
-  //     let clash = self.clash.lock();
-  //     clash.info.clone()
-  //   };
-
-  //   let notice = Notice::from(window.clone());
-  //   let service = self.service.clone();
-
-  //   let window = window.clone().unwrap();
-  //   window.once(&event_name, move |event| {
-  //     let result = event.payload();
-
-  //     if result.is_none() {
-  //       log::warn!(target: "app", "event payload result is none");
-  //       return;
-  //     }
-
-  //     let result = result.unwrap();
-  //     let result: PrfEnhancedResult = serde_json::from_str(result).unwrap();
-
-  //     if let Some(data) = result.data {
-  //       let mut config = Clash::read_config();
-  //       let filter_data = Clash::loose_filter(data); // loose filter
-
-  //       for (key, value) in filter_data.into_iter() {
-  //         config.insert(key, value);
-  //       }
-
-  //       let config = Clash::_tun_mode(config, tun_mode);
-
-  //       let service = service.lock();
-  //       log_if_err!(service.set_config(info, config, notice));
-
-  //       log::info!(target: "app", "profile enhanced status {}", result.status);
-  //     }
-
-  //     result.error.map(|err| log::error!(target: "app", "{err}"));
-  //   });
-
-  //   let verge = self.verge.lock();
-  //   let silent_start = verge.enable_silent_start.clone();
-
-  //   let closable = unsafe { WINDOW_CLOSABLE };
-
-  //   if silent_start.unwrap_or(false) && closable {
-  //     unsafe {
-  //       WINDOW_CLOSABLE = false;
-  //     }
-
-  //     window.emit("script-handler-close", payload).unwrap();
-  //   } else {
-  //     window.emit("script-handler", payload).unwrap();
-  //   }
-
-  //   Ok(())
-  // }
-}
-
-impl Core {
   /// Static function
   /// update profile item
-  pub async fn update_profile_item(
-    core: Core,
-    uid: String,
-    option: Option<PrfOption>,
-  ) -> Result<()> {
+  pub async fn update_profile_item(&self, uid: String, option: Option<PrfOption>) -> Result<()> {
     let (url, opt) = {
-      let profiles = core.profiles.lock();
+      let profiles = self.profiles.lock();
       let item = profiles.get_item(&uid)?;
 
       if let Some(typ) = item.itype.as_ref() {
@@ -490,32 +356,27 @@ impl Core {
           // reactivate the config
           if Some(uid) == profiles.get_current() {
             drop(profiles);
-            // return core.activate_enhanced(false);
-            return core.activate();
+            return self.activate();
           }
-
           return Ok(());
         }
       }
-
       if item.url.is_none() {
         bail!("failed to get the profile item url");
       }
-
       (item.url.clone().unwrap(), item.option.clone())
     };
 
     let merged_opt = PrfOption::merge(opt, option);
     let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
 
-    let mut profiles = core.profiles.lock();
+    let mut profiles = self.profiles.lock();
     profiles.update_item(uid.clone(), item)?;
 
     // reactivate the profile
     if Some(uid) == profiles.get_current() {
       drop(profiles);
-      // core.activate_enhanced(false)?;
-      core.activate()?;
+      self.activate()?;
     }
 
     Ok(())

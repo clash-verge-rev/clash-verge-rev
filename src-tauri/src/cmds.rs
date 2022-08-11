@@ -5,6 +5,7 @@ use crate::{
 use crate::{log_if_err, ret_err, wrap_err};
 use anyhow::Result;
 use serde_yaml::Mapping;
+use std::collections::HashMap;
 use tauri::{api, State};
 
 type CmdResult<T = ()> = Result<T, String>;
@@ -19,7 +20,6 @@ pub fn get_profiles(core: State<'_, Core>) -> CmdResult<Profiles> {
 /// manually exec enhanced profile
 #[tauri::command]
 pub fn enhance_profiles(core: State<'_, Core>) -> CmdResult {
-  // wrap_err!(core.activate_enhanced(false))
   wrap_err!(core.activate())
 }
 
@@ -59,7 +59,7 @@ pub async fn update_profile(
   option: Option<PrfOption>,
   core: State<'_, Core>,
 ) -> CmdResult {
-  wrap_err!(Core::update_profile_item(core.inner().clone(), index, option).await)
+  wrap_err!(core.update_profile_item(index, option).await)
 }
 
 /// change the current profile
@@ -67,10 +67,7 @@ pub async fn update_profile(
 pub fn select_profile(index: String, core: State<'_, Core>) -> CmdResult {
   let mut profiles = core.profiles.lock();
   wrap_err!(profiles.put_current(index))?;
-
   drop(profiles);
-
-  // wrap_err!(core.activate_enhanced(false))
   wrap_err!(core.activate())
 }
 
@@ -79,10 +76,7 @@ pub fn select_profile(index: String, core: State<'_, Core>) -> CmdResult {
 pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -> CmdResult {
   let mut profiles = core.profiles.lock();
   wrap_err!(profiles.put_chain(chain))?;
-
   drop(profiles);
-
-  // wrap_err!(core.activate_enhanced(false))
   wrap_err!(core.activate())
 }
 
@@ -91,10 +85,7 @@ pub fn change_profile_chain(chain: Option<Vec<String>>, core: State<'_, Core>) -
 pub fn change_profile_valid(valid: Option<Vec<String>>, core: State<Core>) -> CmdResult {
   let mut profiles = core.profiles.lock();
   wrap_err!(profiles.put_valid(valid))?;
-
   drop(profiles);
-
-  // wrap_err!(core.activate_enhanced(false))
   wrap_err!(core.activate())
 }
 
@@ -102,14 +93,10 @@ pub fn change_profile_valid(valid: Option<Vec<String>>, core: State<Core>) -> Cm
 #[tauri::command]
 pub fn delete_profile(index: String, core: State<'_, Core>) -> CmdResult {
   let mut profiles = core.profiles.lock();
-
   if wrap_err!(profiles.delete_item(index))? {
     drop(profiles);
-
-    // log_if_err!(core.activate_enhanced(false));
     log_if_err!(core.activate());
   }
-
   Ok(())
 }
 
@@ -148,10 +135,8 @@ pub fn view_profile(index: String, core: State<'_, Core>) -> CmdResult {
 #[tauri::command]
 pub fn read_profile_file(index: String, core: State<'_, Core>) -> CmdResult<String> {
   let profiles = core.profiles.lock();
-
   let item = wrap_err!(profiles.get_item(&index))?;
   let data = wrap_err!(item.read_file())?;
-
   Ok(data)
 }
 
@@ -179,11 +164,34 @@ pub fn get_clash_info(core: State<'_, Core>) -> CmdResult<ClashInfo> {
   Ok(clash.info.clone())
 }
 
-/// get the running clash config string
+/// get the runtime clash config mapping
 #[tauri::command]
-pub fn get_running_config(core: State<'_, Core>) -> CmdResult<Option<String>> {
-  let clash = core.clash.lock();
-  Ok(clash.running_config.clone())
+pub fn get_runtime_config(core: State<'_, Core>) -> CmdResult<Option<Mapping>> {
+  let rt = core.runtime.lock();
+  Ok(rt.config.clone())
+}
+
+/// get the runtime clash config yaml string
+#[tauri::command]
+pub fn get_runtime_yaml(core: State<'_, Core>) -> CmdResult<Option<String>> {
+  let rt = core.runtime.lock();
+  Ok(rt.config_yaml.clone())
+}
+
+/// get the runtime config exists keys
+#[tauri::command]
+pub fn get_runtime_exists(core: State<'_, Core>) -> CmdResult<Vec<String>> {
+  let rt = core.runtime.lock();
+  Ok(rt.exists_keys.clone())
+}
+
+/// get the runtime enhanced chain log
+#[tauri::command]
+pub fn get_runtime_logs(
+  core: State<'_, Core>,
+) -> CmdResult<HashMap<String, Vec<(String, String)>>> {
+  let rt = core.runtime.lock();
+  Ok(rt.chain_logs.clone())
 }
 
 /// update the clash core config

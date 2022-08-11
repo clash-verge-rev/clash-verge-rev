@@ -1,12 +1,8 @@
-use super::{use_filter, use_valid_fields};
+use super::use_lowercase;
 use anyhow::Result;
-use serde_yaml::{self, Mapping};
+use serde_yaml::Mapping;
 
-pub fn use_script(
-  script: String,
-  config: Mapping,
-  valid: Vec<String>,
-) -> Result<(Mapping, Vec<(String, String)>)> {
+pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(String, String)>)> {
   use rquickjs::{Context, Func, Runtime};
   use std::sync::{Arc, Mutex};
 
@@ -33,25 +29,32 @@ pub fn use_script(
       });"#,
     )?;
 
+    let config = use_lowercase(config.clone());
     let config_str = serde_json::to_string(&config)?;
 
-    let code = format!("\n{script}\n;\nJSON.stringify(main({config_str})||'')");
+    let code = format!(
+      r#"try{{
+        {script}\n;
+        JSON.stringify(main({config_str})||'')
+      }} catch(err) {{
+        `__error_flag__ ${{err.toString()}}`
+      }}"#
+    );
     let result: String = ctx.eval(code.as_str())?;
+    // if result.starts_with("__error_flag__") {
+    //   anyhow::bail!(result.slice_unchecked(begin, end));
+    // }
     if result == "\"\"" {
       anyhow::bail!("main function should return object");
     }
-    Ok(serde_json::from_str::<Mapping>(result.as_str())?)
+    return Ok(serde_json::from_str::<Mapping>(result.as_str())?);
   });
 
   let mut out = outputs.lock().unwrap();
   match result {
-    Ok(config) => {
-      let valid = use_valid_fields(valid);
-      let config = use_filter(config, valid);
-      Ok((config, out.to_vec()))
-    }
+    Ok(config) => Ok((use_lowercase(config), out.to_vec())),
     Err(err) => {
-      out.push(("error".into(), err.to_string()));
+      out.push(("exception".into(), err.to_string()));
       Ok((config, out.to_vec()))
     }
   }
@@ -81,12 +84,7 @@ fn test_script() {
   "#;
 
   let config = serde_yaml::from_str(config).unwrap();
-  let (config, results) = use_script(
-    script.into(),
-    config,
-    vec!["tun"].iter().map(|s| s.to_string()).collect(),
-  )
-  .unwrap();
+  let (config, results) = use_script(script.into(), config).unwrap();
 
   let config_str = serde_yaml::to_string(&config).unwrap();
 

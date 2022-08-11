@@ -10,8 +10,8 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { InfoRounded } from "@mui/icons-material";
-import { atomThemeMode } from "../../../services/states";
-import { getRunningConfig } from "../../../services/cmds";
+import { atomThemeMode } from "@/services/states";
+import { getRuntimeYaml } from "@/services/cmds";
 
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js";
@@ -29,7 +29,7 @@ const ConfigViewer = () => {
   useEffect(() => {
     if (!open) return;
 
-    getRunningConfig().then((data) => {
+    getRuntimeYaml().then((data) => {
       const dom = editorRef.current;
 
       if (!dom) return;
@@ -56,7 +56,7 @@ const ConfigViewer = () => {
     <>
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>
-          {t("Running Config")} <Chip label="ReadOnly" size="small" />
+          {t("Runtime Config")} <Chip label="ReadOnly" size="small" />
         </DialogTitle>
 
         <DialogContent sx={{ width: 520, pb: 1 }}>

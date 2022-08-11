@@ -1,4 +1,4 @@
-use crate::utils::{dirs, help, tmpl};
+use crate::utils::{config, dirs, help, tmpl};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
@@ -333,4 +333,40 @@ impl PrfItem {
     let path = dirs::app_profiles_dir().join(file);
     fs::write(path, data.as_bytes()).context("failed to save the file")
   }
+
+  /// get the data for enhanced mode
+  pub fn to_enhance(&self) -> Option<ChainItem> {
+    let itype = self.itype.as_ref()?.as_str();
+    let file = self.file.clone()?;
+    let uid = self.uid.clone().unwrap_or("".into());
+    let path = dirs::app_profiles_dir().join(file);
+
+    if !path.exists() {
+      return None;
+    }
+
+    match itype {
+      "script" => Some(ChainItem {
+        uid,
+        data: ChainType::Script(fs::read_to_string(path).unwrap_or("".into())),
+      }),
+      "merge" => Some(ChainItem {
+        uid,
+        data: ChainType::Merge(config::read_yaml::<Mapping>(path)),
+      }),
+      _ => None,
+    }
+  }
+}
+
+#[derive(Debug, Clone)]
+pub struct ChainItem {
+  pub uid: String,
+  pub data: ChainType,
+}
+
+#[derive(Debug, Clone)]
+pub enum ChainType {
+  Merge(Mapping),
+  Script(String),
 }
