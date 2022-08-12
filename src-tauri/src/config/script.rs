@@ -34,7 +34,7 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
 
     let code = format!(
       r#"try{{
-        {script}\n;
+        {script};
         JSON.stringify(main({config_str})||'')
       }} catch(err) {{
         `__error_flag__ ${{err.toString()}}`
