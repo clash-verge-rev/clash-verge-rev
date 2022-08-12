@@ -41,9 +41,9 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
       }}"#
     );
     let result: String = ctx.eval(code.as_str())?;
-    // if result.starts_with("__error_flag__") {
-    //   anyhow::bail!(result.slice_unchecked(begin, end));
-    // }
+    if result.starts_with("__error_flag__") {
+      anyhow::bail!(result[15..].to_owned());
+    }
     if result == "\"\"" {
       anyhow::bail!("main function should return object");
     }
