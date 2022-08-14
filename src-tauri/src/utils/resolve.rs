@@ -88,6 +88,8 @@ pub fn create_window(app_handle: &AppHandle) {
   #[cfg(target_os = "windows")]
   {
     use crate::utils::winhelp;
+    use std::time::Duration;
+    use tokio::time::sleep;
     use window_shadows::set_shadow;
     use window_vibrancy::apply_blur;
 
@@ -101,6 +103,8 @@ pub fn create_window(app_handle: &AppHandle) {
         let app_handle = app_handle.clone();
 
         tauri::async_runtime::spawn(async move {
+          sleep(Duration::from_secs(1)).await;
+
           if let Some(window) = app_handle.get_window("main") {
             let _ = window.show();
             let _ = set_shadow(&window, true);
