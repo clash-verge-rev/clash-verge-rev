@@ -61,6 +61,9 @@
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
+  "Clash Field": "Clash Field",
+  "Runtime Config": "Runtime Config",
+  "ReadOnly": "ReadOnly",
 
   "Back": "Back",
   "Save": "Save",
