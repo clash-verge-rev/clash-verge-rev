@@ -145,7 +145,9 @@ const WebUIViewer = ({ handler, onError }: Props) => {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={() => setOpen(false)}>{t("Back")}</Button>
+        <Button variant="outlined" onClick={() => setOpen(false)}>
+          {t("Back")}
+        </Button>
       </DialogActions>
     </Dialog>
   );
