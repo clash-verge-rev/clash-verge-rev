@@ -1,8 +1,8 @@
-import useSWR, { useSWRConfig } from "swr";
+import useSWR, { mutate } from "swr";
 import { useLockFn } from "ahooks";
 import { useEffect, useMemo, useState } from "react";
 import { useSetRecoilState } from "recoil";
-import { Box, Button, Grid, TextField } from "@mui/material";
+import { Button, Grid, Stack, TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import {
   getProfiles,
@@ -20,7 +20,6 @@ import EnhancedMode from "@/components/profile/enhanced";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
-  const { mutate } = useSWRConfig();
 
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
@@ -110,10 +109,13 @@ const ProfilePage = () => {
       getProfiles().then((newProfiles) => {
         mutate("getProfiles", newProfiles);
 
-        if (!newProfiles.current && newProfiles.items?.length) {
-          const current = newProfiles.items[0].uid;
+        const remoteItem = newProfiles.items?.find((e) => e.type === "remote");
+
+        if (!newProfiles.current && remoteItem) {
+          const current = remoteItem.uid;
           selectProfile(current);
           mutate("getProfiles", { ...newProfiles, current }, true);
+          mutate("getRuntimeLogs");
         }
       });
     } catch {
@@ -130,6 +132,7 @@ const ProfilePage = () => {
       await selectProfile(uid);
       setCurrentProfile(uid);
       mutate("getProfiles", { ...profiles, current: uid }, true);
+      mutate("getRuntimeLogs");
       if (force) Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
@@ -138,29 +141,34 @@ const ProfilePage = () => {
 
   return (
     <BasePage title={t("Profiles")}>
-      <Box sx={{ display: "flex", mb: 2.5 }}>
+      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <TextField
-          id="clas_verge_profile_url"
-          name="profile_url"
-          label={t("Profile URL")}
-          size="small"
+          hiddenLabel
           fullWidth
+          size="small"
           value={url}
+          variant="outlined"
+          autoComplete="off"
           onChange={(e) => setUrl(e.target.value)}
-          sx={{ mr: 1 }}
+          sx={{ input: { py: 0.65, px: 1.25 } }}
+          placeholder={t("Profile URL")}
         />
         <Button
           disabled={!url || disabled}
           variant="contained"
+          size="small"
           onClick={onImport}
-          sx={{ mr: 1 }}
         >
           {t("Import")}
         </Button>
-        <Button variant="contained" onClick={() => setDialogOpen(true)}>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => setDialogOpen(true)}
+        >
           {t("New")}
         </Button>
-      </Box>
+      </Stack>
 
       <Grid container spacing={2}>
         {regularItems.map((item) => (

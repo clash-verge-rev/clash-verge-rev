@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useLockFn } from "ahooks";
+import { useTranslation } from "react-i18next";
 import { Box, Button, Typography } from "@mui/material";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 const FileInput = (props: Props) => {
   const { onChange } = props;
 
+  const { t } = useTranslation();
   // file input
   const inputRef = useRef<any>();
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ const FileInput = (props: Props) => {
         sx={{ flex: "none" }}
         onClick={() => inputRef.current?.click()}
       >
-        Choose File
+        {t("Choose File")}
       </Button>
 
       <input

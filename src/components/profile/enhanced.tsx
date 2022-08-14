@@ -21,12 +21,16 @@ const EnhancedMode = (props: Props) => {
   const { items, chain } = props;
 
   const { mutate: mutateProfiles } = useSWR("getProfiles", getProfiles);
-  const { data: chainLogs = {} } = useSWR("getRuntimeLogs", getRuntimeLogs);
+  const { data: chainLogs = {}, mutate: mutateLogs } = useSWR(
+    "getRuntimeLogs",
+    getRuntimeLogs
+  );
 
   // handler
   const onEnhance = useLockFn(async () => {
     try {
       await enhanceProfiles();
+      mutateLogs();
       Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
@@ -39,6 +43,7 @@ const EnhancedMode = (props: Props) => {
     const newChain = [...chain, uid];
     await changeProfileChain(newChain);
     mutateProfiles((conf = {}) => ({ ...conf, chain: newChain }), true);
+    mutateLogs();
   });
 
   const onEnhanceDisable = useLockFn(async (uid: string) => {
@@ -47,6 +52,7 @@ const EnhancedMode = (props: Props) => {
     const newChain = chain.filter((i) => i !== uid);
     await changeProfileChain(newChain);
     mutateProfiles((conf = {}) => ({ ...conf, chain: newChain }), true);
+    mutateLogs();
   });
 
   const onEnhanceDelete = useLockFn(async (uid: string) => {
@@ -54,6 +60,7 @@ const EnhancedMode = (props: Props) => {
       await onEnhanceDisable(uid);
       await deleteProfile(uid);
       mutateProfiles();
+      mutateLogs();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
@@ -65,6 +72,7 @@ const EnhancedMode = (props: Props) => {
     const newChain = [uid].concat(chain.filter((i) => i !== uid));
     await changeProfileChain(newChain);
     mutateProfiles((conf = {}) => ({ ...conf, chain: newChain }), true);
+    mutateLogs();
   });
 
   const onMoveEnd = useLockFn(async (uid: string) => {
@@ -73,10 +81,11 @@ const EnhancedMode = (props: Props) => {
     const newChain = chain.filter((i) => i !== uid).concat([uid]);
     await changeProfileChain(newChain);
     mutateProfiles((conf = {}) => ({ ...conf, chain: newChain }), true);
+    mutateLogs();
   });
 
   return (
-    <Box sx={{ mt: 4 }}>
+    <Box sx={{ mt: 2 }}>
       <Stack
         spacing={1}
         direction="row"

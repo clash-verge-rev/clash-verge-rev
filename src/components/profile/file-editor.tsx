@@ -82,7 +82,9 @@ const FileEditor = (props: Props) => {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>{t("Cancel")}</Button>
+        <Button onClick={onClose} variant="outlined">
+          {t("Cancel")}
+        </Button>
         <Button onClick={onSave} variant="contained">
           {t("Save")}
         </Button>
