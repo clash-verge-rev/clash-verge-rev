@@ -40,6 +40,7 @@ fn main() -> std::io::Result<()> {
     .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
     .add_item(CustomMenuItem::new("tun_mode", "Tun Mode"))
     .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
+    .add_item(CustomMenuItem::new("restart_app", "Restart App"))
     .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(CustomMenuItem::new("quit", "Quit").accelerator("CmdOrControl+Q"));
 
@@ -90,6 +91,9 @@ fn main() -> std::io::Result<()> {
         "restart_clash" => {
           let core = app_handle.state::<core::Core>();
           crate::log_if_err!(core.restart_clash());
+        }
+        "restart_app" => {
+          api::process::restart(&app_handle.env());
         }
         "quit" => {
           resolve::resolve_reset(app_handle);
