@@ -2,6 +2,7 @@ import useSWR from "swr";
 import snarkdown from "snarkdown";
 import { useMemo } from "react";
 import { useRecoilState } from "recoil";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -28,6 +29,7 @@ const UpdateLog = styled(Box)(() => ({
 
 const UpdateDialog = (props: Props) => {
   const { open, onClose } = props;
+  const { t } = useTranslation();
   const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
     errorRetryCount: 2,
     revalidateIfStale: false,
@@ -69,14 +71,16 @@ const UpdateDialog = (props: Props) => {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="outlined" onClick={onClose}>
+          {t("Cancel")}
+        </Button>
         <Button
           autoFocus
           variant="contained"
           disabled={updateState}
           onClick={onUpdate}
         >
-          Update
+          {t("Update")}
         </Button>
       </DialogActions>
     </Dialog>
