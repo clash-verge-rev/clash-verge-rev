@@ -23,7 +23,7 @@ interface Props {
 
 // edit the profile item
 // remote / local file / merge / script
-const ProfileEdit = (props: Props) => {
+const InfoEditor = (props: Props) => {
   const { open, itemData, onClose } = props;
 
   const { t } = useTranslation();
@@ -56,7 +56,6 @@ const ProfileEdit = (props: Props) => {
       }
 
       await patchProfile(uid, { uid, name, desc, url, option: option_ });
-      setShowOpt(false);
       mutate("getProfiles");
       onClose();
     } catch (err: any) {
@@ -133,7 +132,7 @@ const ProfileEdit = (props: Props) => {
             value={option.update_interval}
             onChange={(e) => {
               const str = e.target.value?.replace(/\D/, "");
-              setOption({ update_interval: str != null ? +str : str });
+              setOption({ update_interval: !!str ? +str : undefined });
             }}
             onKeyDown={(e) => e.key === "Enter" && onUpdate()}
           />
@@ -144,6 +143,7 @@ const ProfileEdit = (props: Props) => {
         {form.type === "remote" && (
           <IconButton
             size="small"
+            color="inherit"
             sx={{ position: "absolute", left: 18 }}
             onClick={() => setShowOpt((o) => !o)}
           >
@@ -151,13 +151,15 @@ const ProfileEdit = (props: Props) => {
           </IconButton>
         )}
 
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose} variant="outlined">
+          {t("Cancel")}
+        </Button>
         <Button onClick={onUpdate} variant="contained">
-          Update
+          {t("Save")}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default ProfileEdit;
+export default InfoEditor;

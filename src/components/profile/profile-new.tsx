@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { useSWRConfig } from "swr";
+import { mutate } from "swr";
+import { useTranslation } from "react-i18next";
 import { useLockFn, useSetState } from "ahooks";
 import {
   Button,
@@ -29,7 +30,7 @@ interface Props {
 const ProfileNew = (props: Props) => {
   const { open, onClose } = props;
 
-  const { mutate } = useSWRConfig();
+  const { t } = useTranslation();
   const [form, setForm] = useSetState({
     type: "remote",
     name: "",
@@ -83,7 +84,7 @@ const ProfileNew = (props: Props) => {
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle sx={{ pb: 0.5 }}>Create Profile</DialogTitle>
+      <DialogTitle sx={{ pb: 0.5 }}>{t("Create Profile")}</DialogTitle>
 
       <DialogContent sx={{ width: 336, pb: 1 }}>
         <FormControl size="small" fullWidth sx={{ mt: 2, mb: 1 }}>
@@ -120,7 +121,7 @@ const ProfileNew = (props: Props) => {
         {form.type === "remote" && (
           <TextField
             {...textFieldProps}
-            label="Subscription Url"
+            label="Subscription URL"
             autoComplete="off"
             value={form.url}
             onChange={(e) => setForm({ url: e.target.value })}
@@ -146,6 +147,7 @@ const ProfileNew = (props: Props) => {
         {form.type === "remote" && (
           <IconButton
             size="small"
+            color="inherit"
             sx={{ position: "absolute", left: 18 }}
             onClick={() => setShowOpt((o) => !o)}
           >
@@ -153,9 +155,11 @@ const ProfileNew = (props: Props) => {
           </IconButton>
         )}
 
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose} variant="outlined">
+          {t("Cancel")}
+        </Button>
         <Button onClick={onCreate} variant="contained">
-          Create
+          {t("Save")}
         </Button>
       </DialogActions>
     </Dialog>
