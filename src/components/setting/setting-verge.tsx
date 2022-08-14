@@ -1,4 +1,4 @@
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,6 +18,7 @@ import { ArrowForward } from "@mui/icons-material";
 import { SettingList, SettingItem } from "./setting";
 import { version } from "@root/package.json";
 import ThemeModeSwitch from "./mods/theme-mode-switch";
+import ConfigViewer from "./mods/config-viewer";
 import GuardState from "./mods/guard-state";
 import SettingTheme from "./setting-theme";
 
@@ -27,16 +28,19 @@ interface Props {
 
 const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
-  const { mutate } = useSWRConfig();
-  const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
+  const { data: vergeConfig, mutate: mutateVerge } = useSWR(
+    "getVergeConfig",
+    getVergeConfig
+  );
 
   const { theme_mode, theme_blur, traffic_graph, language } = vergeConfig ?? {};
 
   const [themeOpen, setThemeOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<CmdType.VergeConfig>) => {
-    mutate("getVergeConfig", { ...vergeConfig, ...patch }, false);
+    mutateVerge({ ...vergeConfig, ...patch }, false);
   };
 
   return (
@@ -104,6 +108,17 @@ const SettingVerge = ({ onError }: Props) => {
         </IconButton>
       </SettingItem>
 
+      <SettingItem label={t("Runtime Config")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => setConfigOpen(true)}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
+
       <SettingItem label={t("Open App Dir")}>
         <IconButton
           color="inherit"
@@ -131,6 +146,7 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingTheme open={themeOpen} onClose={() => setThemeOpen(false)} />
+      <ConfigViewer open={configOpen} onClose={() => setConfigOpen(false)} />
     </SettingList>
   );
 };

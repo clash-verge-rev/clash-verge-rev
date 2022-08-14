@@ -62,6 +62,8 @@
   "theme.dark": "深色",
   "theme.system": "系统",
   "Clash Field": "Clash 字段",
+  "Runtime Config": "运行配置",
+  "ReadOnly": "只读",
 
   "Back": "返回",
   "Save": "保存",

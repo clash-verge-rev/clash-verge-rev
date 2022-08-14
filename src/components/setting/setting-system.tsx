@@ -12,7 +12,6 @@ import { SettingList, SettingItem } from "./setting";
 import getSystem from "@/utils/get-system";
 import GuardState from "./mods/guard-state";
 import ServiceMode from "./mods/service-mode";
-import ConfigViewer from "./mods/config-viewer";
 import SysproxyTooltip from "./mods/sysproxy-tooltip";
 
 interface Props {
@@ -51,7 +50,7 @@ const SettingSystem = ({ onError }: Props) => {
 
   return (
     <SettingList title={t("System Setting")}>
-      <SettingItem label={t("Tun Mode")} extra={<ConfigViewer />}>
+      <SettingItem label={t("Tun Mode")}>
         <GuardState
           value={enable_tun_mode ?? false}
           valueProps="checked"
