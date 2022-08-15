@@ -22,6 +22,10 @@ import useCustomTheme from "@/components/layout/use-custom-theme";
 import getSystem from "@/utils/get-system";
 import "dayjs/locale/zh-cn";
 
+declare global {
+  const WIN_PORTABLE: boolean;
+}
+
 dayjs.extend(relativeTime);
 
 const OS = getSystem();
@@ -87,7 +91,9 @@ const Layout = () => {
             <div className="the-logo" data-windrag>
               <LogoSvg />
 
-              <UpdateButton className="the-newbtn" />
+              {!(OS === "windows" && WIN_PORTABLE) && (
+                <UpdateButton className="the-newbtn" />
+              )}
             </div>
 
             <List className="the-menu">
