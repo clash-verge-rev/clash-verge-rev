@@ -146,7 +146,7 @@ const ProfileMore = (props: Props) => {
         <Box sx={boxStyle}>
           {selected ? (
             hasError ? (
-              <Badge color="primary" variant="dot" overlap="circular">
+              <Badge color="error" variant="dot" overlap="circular">
                 <IconButton
                   size="small"
                   edge="start"
