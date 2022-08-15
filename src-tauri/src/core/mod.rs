@@ -135,14 +135,17 @@ impl Core {
   /// Patch Clash
   /// handle the clash config changed
   pub fn patch_clash(&self, patch: Mapping, app_handle: &AppHandle) -> Result<()> {
-    let ((changed_port, changed_mode), port) = {
+    let has_port = patch.contains_key(&Value::from("mixed-port"));
+    let has_mode = patch.contains_key(&Value::from("mode"));
+
+    let port = {
       let mut clash = self.clash.lock();
-      (clash.patch_config(patch)?, clash.info.port.clone())
+      clash.patch_config(patch)?;
+      clash.info.port.clone()
     };
 
     // todo: port check
-
-    if changed_port {
+    if has_port && port.is_some() {
       let mut service = self.service.lock();
       service.restart()?;
       drop(service);
@@ -154,7 +157,7 @@ impl Core {
       sysopt.init_sysproxy(port, &verge);
     }
 
-    if changed_mode {
+    if has_mode {
       self.update_systray_clash(app_handle)?;
     }
 
