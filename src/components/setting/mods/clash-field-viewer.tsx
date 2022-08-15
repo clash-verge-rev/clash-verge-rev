@@ -46,8 +46,11 @@ const handleFields = [...HANDLE_FIELDS, ...DEFAULT_FIELDS].sort(fieldSorter);
 const ClashFieldViewer = ({ handler }: Props) => {
   const { t } = useTranslation();
 
-  const { data, mutate } = useSWR("getProfiles", getProfiles);
-  const { data: existsKeys = [] } = useSWR(
+  const { data: profiles = {}, mutate: mutateProfile } = useSWR(
+    "getProfiles",
+    getProfiles
+  );
+  const { data: existsKeys = [], mutate: mutateExists } = useSWR(
     "getRuntimeExists",
     getRuntimeExists
   );
@@ -63,12 +66,12 @@ const ClashFieldViewer = ({ handler }: Props) => {
   }
 
   useEffect(() => {
-    if (open) mutate();
-  }, [open]);
-
-  useEffect(() => {
-    setSelected(data?.valid || []);
-  }, [data?.valid]);
+    if (open) {
+      mutateProfile();
+      mutateExists();
+      setSelected(profiles.valid || []);
+    }
+  }, [open, profiles.valid]);
 
   const handleChange = (item: string) => {
     if (!item) return;
@@ -81,7 +84,7 @@ const ClashFieldViewer = ({ handler }: Props) => {
   const handleSave = async () => {
     setOpen(false);
 
-    const oldSet = new Set(data?.valid || []);
+    const oldSet = new Set(profiles.valid || []);
     const curSet = new Set(selected);
     const joinSet = new Set(selected.concat([...oldSet]));
 
@@ -89,7 +92,7 @@ const ClashFieldViewer = ({ handler }: Props) => {
 
     try {
       await changeProfileValid([...curSet]);
-      mutate();
+      mutateProfile();
       Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
@@ -112,7 +115,6 @@ const ClashFieldViewer = ({ handler }: Props) => {
         {otherFields.map((item) => {
           const inSelect = selected.includes(item);
           const inConfig = existsKeys.includes(item);
-          const inValid = data?.valid?.includes(item);
 
           return (
             <Stack key={item} mb={0.5} direction="row" alignItems="center">
@@ -124,7 +126,7 @@ const ClashFieldViewer = ({ handler }: Props) => {
               />
               <Typography width="100%">{item}</Typography>
 
-              {!inSelect && inConfig && !inValid && <WarnIcon />}
+              {!inSelect && inConfig && <WarnIcon />}
             </Stack>
           );
         })}
