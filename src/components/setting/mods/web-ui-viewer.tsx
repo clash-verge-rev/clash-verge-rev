@@ -76,8 +76,17 @@ const WebUIViewer = ({ handler, onError }: Props) => {
 
       if (url.includes("%port") || url.includes("%secret")) {
         if (!clashInfo) throw new Error("failed to get clash info");
+        if (!clashInfo.server?.includes(":")) {
+          throw new Error(
+            `failed to parse server with status ${clashInfo.status}`
+          );
+        }
 
-        url = url.replaceAll("%port", clashInfo.port || "9090");
+        const port = clashInfo.server
+          .slice(clashInfo.server.indexOf(":") + 1)
+          .trim();
+
+        url = url.replaceAll("%port", port || "9090");
         url = url.replaceAll("%secret", clashInfo.secret || "");
       }
 
