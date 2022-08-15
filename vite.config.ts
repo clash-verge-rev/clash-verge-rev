@@ -22,4 +22,7 @@ export default defineConfig({
       "@root": path.resolve("."),
     },
   },
+  define: {
+    WIN_PORTABLE: !!process.env.VITE_WIN_PORTABLE,
+  },
 });
