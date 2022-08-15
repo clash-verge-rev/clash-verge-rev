@@ -196,10 +196,11 @@ impl Service {
   /// get clash client url and headers from clash info
   fn clash_client_info(info: ClashInfo) -> Result<(String, HeaderMap)> {
     if info.server.is_none() {
+      let status = &info.status;
       if info.port.is_none() {
-        bail!("failed to parse config.yaml file");
+        bail!("failed to parse config.yaml file with status {status}");
       } else {
-        bail!("failed to parse the server");
+        bail!("failed to parse the server with status {status}");
       }
     }
 

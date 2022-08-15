@@ -193,7 +193,10 @@ impl Sysopt {
 
             log_if_err!(sysproxy.set_sys());
           }
-          None => log::error!(target: "app", "failed to parse clash port"),
+          None => {
+            let status = &clash.info.status;
+            log::error!(target: "app", "failed to parse clash port with status {status}")
+          }
         }
       }
 
