@@ -87,6 +87,14 @@ impl Sysopt {
   /// reset the sysproxy
   pub fn reset_sysproxy(&mut self) {
     if let Some(sysproxy) = self.old_sysproxy.take() {
+      // 如果原代理设置是开启的，且域名端口设置和当前的一致，就不恢复原设置
+      // https://github.com/zzzgydi/clash-verge/issues/157
+      if let Some(cur) = self.cur_sysproxy.as_ref() {
+        if sysproxy.enable && cur.server == sysproxy.server {
+          return;
+        }
+      }
+
       match sysproxy.set_sys() {
         Ok(_) => self.cur_sysproxy = None,
         Err(_) => log::error!(target: "app", "failed to reset proxy"),
