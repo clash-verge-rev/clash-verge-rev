@@ -151,6 +151,7 @@ const ProfileMore = (props: Props) => {
                   size="small"
                   edge="start"
                   color="error"
+                  title="Console"
                   onClick={() => setLogOpen(true)}
                 >
                   <FeaturedPlayListRounded fontSize="inherit" />
@@ -161,6 +162,7 @@ const ProfileMore = (props: Props) => {
                 size="small"
                 edge="start"
                 color="inherit"
+                title="Console"
                 onClick={() => setLogOpen(true)}
               >
                 <FeaturedPlayListRounded fontSize="inherit" />
