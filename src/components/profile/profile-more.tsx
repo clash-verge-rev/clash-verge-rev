@@ -144,7 +144,7 @@ const ProfileMore = (props: Props) => {
         </Box>
 
         <Box sx={boxStyle}>
-          {selected ? (
+          {selected && type === "script" ? (
             hasError ? (
               <Badge color="error" variant="dot" overlap="circular">
                 <IconButton
