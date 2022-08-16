@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "Clash Verge",
-    "version": "1.0.4"
+    "version": "1.0.5"
   },
   "build": {
     "distDir": "../dist",
@@ -25,13 +25,8 @@
         "icons/icon-new.icns",
         "icons/icon.ico"
       ],
-      "resources": [
-        "resources"
-      ],
-      "externalBin": [
-        "sidecar/clash",
-        "sidecar/clash-meta"
-      ],
+      "resources": ["resources"],
+      "externalBin": ["sidecar/clash", "sidecar/clash-meta"],
       "copyright": "© 2022 zzzgydi All Rights Reserved",
       "category": "DeveloperTool",
       "shortDescription": "A Clash GUI based on tauri.",
@@ -51,10 +46,7 @@
         "digestAlgorithm": "sha256",
         "timestampUrl": "",
         "wix": {
-          "language": [
-            "zh-CN",
-            "en-US"
-          ]
+          "language": ["zh-CN", "en-US"]
         }
       }
     },
