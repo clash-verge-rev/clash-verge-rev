@@ -1,3 +1,21 @@
+## v1.0.5
+
+### Features
+
+- reimplement profile enhanced mode with quick-js
+- optimize the runtime config generation process
+- support web ui management
+- support clash field management
+- support viewing the runtime config
+- adjust some pages style
+
+### Bug Fixes
+
+- fix silent start
+- fix incorrectly reset system proxy on exit
+
+---
+
 ## v1.0.4
 
 ### Features
