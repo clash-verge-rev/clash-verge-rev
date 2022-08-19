@@ -121,7 +121,7 @@ impl Profiles {
       }
     }
 
-    bail!("failed to get the item by \"{}\"", uid);
+    bail!("failed to get the profile item \"uid:{uid}\"");
   }
 
   /// append new item
@@ -178,7 +178,7 @@ impl Profiles {
     }
 
     self.items = Some(items);
-    bail!("failed to found the uid \"{uid}\"")
+    bail!("failed to find the profile item \"uid:{uid}\"")
   }
 
   /// be used to update the remote item
@@ -286,7 +286,7 @@ impl Profiles {
         return Ok(config::read_yaml::<Mapping>(file_path.clone()));
       }
     }
-    bail!("failed to found the uid \"{current}\"");
+    bail!("failed to find current profile \"uid:{current}\"");
   }
 
   /// generate the data for activate clash config
