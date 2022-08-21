@@ -3,6 +3,8 @@ use crate::log_if_err;
 use anyhow::{bail, Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use std::collections::HashMap;
+use std::ops::Mul;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 type TaskID = u64;
 
@@ -60,6 +62,38 @@ impl Timer {
       }
     }
 
+    Ok(())
+  }
+
+  /// restore timer
+  pub fn restore(&mut self) -> Result<()> {
+    log_if_err!(self.refresh());
+    let profiles = self.core.as_ref().unwrap().profiles.lock();
+    let cur_timestamp = SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .unwrap()
+      .as_secs() as usize;
+
+    for item in profiles.get_items().unwrap() {
+      // if current_time - last_update_time >= interval, cron job should execute immediately.
+      if cur_timestamp - item.updated.unwrap()
+        >= item
+          .option
+          .as_ref()
+          .unwrap()
+          .update_interval
+          .unwrap_or(0xffffffff)
+          .mul(60) // minute to secs
+          .try_into()
+          .unwrap()
+      {
+        let (task_id, _) = self
+          .timer_map
+          .get(&item.uid.as_ref().unwrap().clone())
+          .unwrap();
+        log_if_err!(self.delay_timer.advance_task(*task_id));
+      }
+    }
     Ok(())
   }
 
