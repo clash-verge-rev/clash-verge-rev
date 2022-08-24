@@ -123,7 +123,7 @@ impl Sysopt {
     let auto = AutoLaunchBuilder::new()
       .set_app_name(app_name)
       .set_app_path(app_path)
-      .build();
+      .build()?;
 
     if let Some(enable) = enable {
       // fix issue #26
