@@ -1,5 +1,6 @@
 use super::Core;
 use crate::log_if_err;
+use crate::utils::help::get_now;
 use anyhow::{bail, Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use std::collections::HashMap;
@@ -59,6 +60,34 @@ impl Timer {
         }
       }
     }
+
+    Ok(())
+  }
+
+  /// restore timer
+  pub fn restore(&mut self) -> Result<()> {
+    self.refresh()?;
+
+    let cur_timestamp = get_now(); // seconds
+    let profiles = self.core.as_ref().unwrap().profiles.lock();
+
+    profiles
+      .get_items()
+      .unwrap_or(&vec![])
+      .iter()
+      .filter(|item| item.uid.is_some() && item.updated.is_some() && item.option.is_some())
+      .filter(|item| {
+        // mins to seconds
+        let interval = item.option.as_ref().unwrap().update_interval.unwrap_or(0) as usize * 60;
+        let updated = item.updated.unwrap();
+        return interval > 0 && cur_timestamp - updated >= interval;
+      })
+      .for_each(|item| {
+        let uid = item.uid.as_ref().unwrap();
+        if let Some((task_id, _)) = self.timer_map.get(uid) {
+          log_if_err!(self.delay_timer.advance_task(*task_id));
+        }
+      });
 
     Ok(())
   }

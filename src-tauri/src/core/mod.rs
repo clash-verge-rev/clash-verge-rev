@@ -91,7 +91,7 @@ impl Core {
     // timer initialize
     let mut timer = self.timer.lock();
     timer.set_core(self.clone());
-    log_if_err!(timer.refresh());
+    log_if_err!(timer.restore());
   }
 
   /// save the window instance
