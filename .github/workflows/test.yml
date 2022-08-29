@@ -12,6 +12,14 @@ on:
           - windows-latest
           - ubuntu-latest
           - macos-latest
+          - ubuntu-18.04
+          - ubuntu-20.04
+          - ubuntu-22.04
+          - macos-10.15
+          - macos-11
+          - macos-12
+          - windows-2019
+          - windows-2022
 
 env:
   CARGO_INCREMENTAL: 0
