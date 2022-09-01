@@ -68,6 +68,10 @@ impl ClashInfo {
         Some(val_str) => {
           if val_str.starts_with(":") {
             Some(format!("127.0.0.1{val_str}"))
+          } else if val_str.starts_with("0.0.0.0:") {
+            Some(format!("127.0.0.1:{}", &val_str[8..]))
+          } else if val_str.starts_with("[::]:") {
+            Some(format!("127.0.0.1:{}", &val_str[5..]))
           } else {
             Some(val_str.into())
           }
