@@ -97,7 +97,7 @@ const ProxyGroup = ({ group }: Props) => {
     const names = sortedProxies.map((p) => p.name);
     const groupName = group.name;
 
-    await delayManager.checkListDelay({ names, groupName, skipNum: 8 }, () =>
+    await delayManager.checkListDelay({ names, groupName, skipNum: 16 }, () =>
       mutate("getProxies")
     );
   });
