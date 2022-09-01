@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { atomLogData } from "@/services/states";
 import BasePage from "@/components/base/base-page";
 import LogItem from "@/components/log/log-item";
+import BaseEmpty from "@/components/base/base-empty";
 
 const LogPage = () => {
   const { t } = useTranslation();
@@ -75,12 +76,16 @@ const LogPage = () => {
         </Box>
 
         <Box height="calc(100% - 50px)">
-          <Virtuoso
-            initialTopMostItemIndex={999}
-            data={filterLogs}
-            itemContent={(index, item) => <LogItem value={item} />}
-            followOutput={"smooth"}
-          />
+          {filterLogs.length > 0 ? (
+            <Virtuoso
+              initialTopMostItemIndex={999}
+              data={filterLogs}
+              itemContent={(index, item) => <LogItem value={item} />}
+              followOutput={"smooth"}
+            />
+          ) : (
+            <BaseEmpty text="No Logs" />
+          )}
         </Box>
       </Paper>
     </BasePage>
