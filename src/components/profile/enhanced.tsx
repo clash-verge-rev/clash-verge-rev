@@ -1,5 +1,6 @@
 import useSWR from "swr";
 import { useLockFn } from "ahooks";
+import { useTranslation } from "react-i18next";
 import { Box, Grid, IconButton, Stack } from "@mui/material";
 import { RestartAltRounded } from "@mui/icons-material";
 import {
@@ -20,6 +21,7 @@ interface Props {
 const EnhancedMode = (props: Props) => {
   const { items, chain } = props;
 
+  const { t } = useTranslation();
   const { mutate: mutateProfiles } = useSWR("getProfiles", getProfiles);
   const { data: chainLogs = {}, mutate: mutateLogs } = useSWR(
     "getRuntimeLogs",
@@ -96,7 +98,7 @@ const EnhancedMode = (props: Props) => {
         <IconButton
           size="small"
           color="inherit"
-          title="refresh enhanced profiles"
+          title={t("Refresh profiles")}
           onClick={onEnhance}
         >
           <RestartAltRounded />

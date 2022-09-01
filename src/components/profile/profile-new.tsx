@@ -91,7 +91,7 @@ const ProfileNew = (props: Props) => {
           <InputLabel>Type</InputLabel>
           <Select
             autoFocus
-            label="Type"
+            label={t("Type")}
             value={form.type}
             onChange={(e) => setForm({ type: e.target.value })}
           >
@@ -104,7 +104,7 @@ const ProfileNew = (props: Props) => {
 
         <TextField
           {...textFieldProps}
-          label="Name"
+          label={t("Name")}
           autoComplete="off"
           value={form.name}
           onChange={(e) => setForm({ name: e.target.value })}
@@ -112,7 +112,7 @@ const ProfileNew = (props: Props) => {
 
         <TextField
           {...textFieldProps}
-          label="Descriptions"
+          label={t("Descriptions")}
           autoComplete="off"
           value={form.desc}
           onChange={(e) => setForm({ desc: e.target.value })}
@@ -121,7 +121,7 @@ const ProfileNew = (props: Props) => {
         {form.type === "remote" && (
           <TextField
             {...textFieldProps}
-            label="Subscription URL"
+            label={t("Subscription URL")}
             autoComplete="off"
             value={form.url}
             onChange={(e) => setForm({ url: e.target.value })}

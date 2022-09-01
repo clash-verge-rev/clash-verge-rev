@@ -34,6 +34,23 @@
   "To Top": "To Top",
   "To End": "To End",
 
+  "Location": "Location",
+  "Delay check": "Delay check",
+  "Sort by default": "Sort by default",
+  "Sort by delay": "Sort by delay",
+  "Sort by name": "Sort by name",
+  "Delay check URL": "Delay check URL",
+  "Proxy detail": "Proxy detail",
+  "Filter": "Filter",
+  "Filter conditions": "Filter conditions",
+  "Refresh profiles": "Refresh profiles",
+
+  "Type": "Type",
+  "Name": "Name",
+  "Descriptions": "Descriptions",
+  "Subscription URL": "Subscription URL",
+  "Update Interval(mins)": "Update Interval(mins)",
+
   "Settings": "Settings",
   "Clash Setting": "Clash Setting",
   "System Setting": "System Setting",

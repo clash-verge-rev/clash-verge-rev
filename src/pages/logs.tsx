@@ -67,7 +67,7 @@ const LogPage = () => {
             size="small"
             autoComplete="off"
             variant="outlined"
-            placeholder="Filter conditions"
+            placeholder={t("Filter conditions")}
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             sx={{ input: { py: 0.65, px: 1.25 } }}
