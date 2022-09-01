@@ -7,6 +7,7 @@ import monaco from "vite-plugin-monaco-editor";
 // https://vitejs.dev/config/
 export default defineConfig({
   root: "src",
+  server: { port: 3000 },
   plugins: [
     svgr(),
     react(),
