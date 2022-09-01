@@ -34,6 +34,23 @@
   "To Top": "移到最前",
   "To End": "移到末尾",
 
+  "Location": "当前节点",
+  "Delay check": "延迟测试",
+  "Sort by default": "默认排序",
+  "Sort by delay": "按延迟排序",
+  "Sort by name": "按名称排序",
+  "Delay check URL": "延迟测试链接",
+  "Proxy detail": "展示节点细节",
+  "Filter": "过滤节点",
+  "Filter conditions": "过滤条件",
+  "Refresh profiles": "刷新配置",
+
+  "Type": "类型",
+  "Name": "名称",
+  "Descriptions": "描述",
+  "Subscription URL": "订阅链接",
+  "Update Interval(mins)": "更新间隔(分钟)",
+
   "Settings": "设置",
   "Clash Setting": "Clash 设置",
   "System Setting": "系统设置",

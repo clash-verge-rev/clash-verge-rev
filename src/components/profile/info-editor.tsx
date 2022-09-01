@@ -82,7 +82,7 @@ const InfoEditor = (props: Props) => {
         <TextField
           {...textFieldProps}
           disabled
-          label="Type"
+          label={t("Type")}
           value={type}
           sx={{ input: { textTransform: "capitalize" } }}
         />
@@ -90,7 +90,7 @@ const InfoEditor = (props: Props) => {
         <TextField
           {...textFieldProps}
           autoFocus
-          label="Name"
+          label={t("Name")}
           value={form.name}
           onChange={(e) => setForm({ name: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && onUpdate()}
@@ -98,7 +98,7 @@ const InfoEditor = (props: Props) => {
 
         <TextField
           {...textFieldProps}
-          label="Descriptions"
+          label={t("Descriptions")}
           value={form.desc}
           onChange={(e) => setForm({ desc: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && onUpdate()}
@@ -107,7 +107,7 @@ const InfoEditor = (props: Props) => {
         {type === "remote" && (
           <TextField
             {...textFieldProps}
-            label="Subscription URL"
+            label={t("Subscription URL")}
             value={form.url}
             onChange={(e) => setForm({ url: e.target.value })}
             onKeyDown={(e) => e.key === "Enter" && onUpdate()}
@@ -128,7 +128,7 @@ const InfoEditor = (props: Props) => {
         {((type === "remote" && showOpt) || type === "local") && (
           <TextField
             {...textFieldProps}
-            label="Update Interval (mins)"
+            label={t("Update Interval(mins)")}
             value={option.update_interval}
             onChange={(e) => {
               const str = e.target.value?.replace(/\D/, "");
