@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { closeAllConnections, getInformation } from "@/services/api";
 import BasePage from "@/components/base/base-page";
 import ConnectionItem from "@/components/connection/connection-item";
+import BaseEmpty from "@/components/base/base-empty";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -122,10 +123,14 @@ const ConnectionsPage = () => {
         </Box>
 
         <Box height="calc(100% - 50px)">
-          <Virtuoso
-            data={filterConn}
-            itemContent={(index, item) => <ConnectionItem value={item} />}
-          />
+          {filterConn.length > 0 ? (
+            <Virtuoso
+              data={filterConn}
+              itemContent={(index, item) => <ConnectionItem value={item} />}
+            />
+          ) : (
+            <BaseEmpty text="No Connections" />
+          )}
         </Box>
       </Paper>
     </BasePage>
