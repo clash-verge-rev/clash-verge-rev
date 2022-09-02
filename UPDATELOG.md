@@ -1,3 +1,16 @@
+## v1.0.6
+
+### Features
+
+- update clash and clash.meta
+
+### Bug Fixes
+
+- only script profile display console
+- automatic configuration update on demand at launch
+
+---
+
 ## v1.0.5
 
 ### Features
