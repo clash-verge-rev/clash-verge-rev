@@ -31,11 +31,20 @@ declare namespace ApiType {
     }[];
     all?: string[];
     now?: string;
+    provider?: string; // 记录是否来自provider
   }
 
   type ProxyGroupItem = Omit<ProxyItem, "all"> & {
     all: ProxyItem[];
   };
+
+  interface ProviderItem {
+    name: string;
+    type: string;
+    proxies: ProxyItem[];
+    updatedAt: string;
+    vehicleType: string;
+  }
 
   interface TrafficItem {
     up: number;

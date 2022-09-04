@@ -46,8 +46,17 @@ const ProxyItem = (props: Props) => {
   const [delay, setDelay] = useState(-1);
 
   useEffect(() => {
-    if (proxy) {
+    if (!proxy) return;
+
+    if (!proxy.provider) {
       setDelay(delayManager.getDelay(proxy.name, groupName));
+      return;
+    }
+
+    const { history = [] } = proxy;
+    if (history.length > 0) {
+      // 0ms以error显示
+      setDelay(history[history.length - 1].delay || 1e6);
     }
   }, [proxy]);
 
@@ -95,6 +104,9 @@ const ProxyItem = (props: Props) => {
             <>
               {proxy.name}
 
+              {showType && !!proxy.provider && (
+                <TypeBox component="span">{proxy.provider}</TypeBox>
+              )}
               {showType && <TypeBox component="span">{proxy.type}</TypeBox>}
               {showType && proxy.udp && <TypeBox component="span">UDP</TypeBox>}
             </>
@@ -104,23 +116,27 @@ const ProxyItem = (props: Props) => {
         <ListItemIcon
           sx={{ justifyContent: "flex-end", color: "primary.main" }}
         >
-          <Widget
-            className="the-check"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDelay();
-            }}
-            sx={(theme) => ({
-              ":hover": { bgcolor: alpha(theme.palette.primary.main, 0.15) },
-            })}
-          >
-            Check
-          </Widget>
+          {!proxy.provider && (
+            <Widget
+              className="the-check"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelay();
+              }}
+              sx={(theme) => ({
+                ":hover": { bgcolor: alpha(theme.palette.primary.main, 0.15) },
+              })}
+            >
+              Check
+            </Widget>
+          )}
 
           <Widget
             className="the-delay"
             onClick={(e) => {
+              if (proxy.provider) return;
+
               e.preventDefault();
               e.stopPropagation();
               onDelay();
@@ -132,9 +148,11 @@ const ProxyItem = (props: Props) => {
                 ? "success.main"
                 : "text.secondary"
             }
-            sx={(theme) => ({
-              ":hover": { bgcolor: alpha(theme.palette.primary.main, 0.15) },
-            })}
+            sx={({ palette }) =>
+              !proxy.provider
+                ? { ":hover": { bgcolor: alpha(palette.primary.main, 0.15) } }
+                : {}
+            }
           >
             {delay > 1e5 ? "Error" : delay > 3000 ? "Timeout" : `${delay}ms`}
           </Widget>

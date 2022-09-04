@@ -85,64 +85,93 @@ export async function updateProxy(group: string, proxy: string) {
   return instance.put(`/proxies/${encodeURIComponent(group)}`, { name: proxy });
 }
 
+// get proxy
+async function getProxiesInner() {
+  try {
+    const instance = await getAxios();
+    const response = await instance.get<any, any>("/proxies");
+    return (response?.proxies || {}) as Record<string, ApiType.ProxyItem>;
+  } catch {
+    return {};
+  }
+}
+
 /// Get the Proxy infomation
 export async function getProxies() {
-  const instance = await getAxios();
-  const response = await instance.get<any, any>("/proxies");
-  const records = (response?.proxies ?? {}) as Record<
-    string,
-    ApiType.ProxyItem
-  >;
+  const [proxyRecord, providerRecord] = await Promise.all([
+    getProxiesInner(),
+    getProviders(),
+  ]);
 
-  const global = records["GLOBAL"];
-  const direct = records["DIRECT"];
-  const reject = records["REJECT"];
-  const order = global?.all;
-
-  let groups: ApiType.ProxyGroupItem[] = [];
+  // provider name map
+  const providerMap = Object.fromEntries(
+    Object.entries(providerRecord).flatMap(([provider, item]) =>
+      item.proxies.map((p) => [p.name, { ...p, provider }])
+    )
+  );
 
   // compatible with proxy-providers
   const generateItem = (name: string) => {
-    if (records[name]) return records[name];
+    if (proxyRecord[name]) return proxyRecord[name];
+    if (providerMap[name]) return providerMap[name];
     return { name, type: "unknown", udp: false, history: [] };
   };
 
-  if (order) {
-    groups = order
-      .filter((name) => records[name]?.all)
-      .map((name) => records[name])
+  const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
+
+  let groups: ApiType.ProxyGroupItem[] = [];
+
+  if (global?.all) {
+    groups = global.all
+      .filter((name) => proxyRecord[name]?.all)
+      .map((name) => proxyRecord[name])
       .map((each) => ({
         ...each,
         all: each.all!.map((item) => generateItem(item)),
       }));
   } else {
-    groups = Object.values(records)
+    groups = Object.values(proxyRecord)
       .filter((each) => each.name !== "GLOBAL" && each.all)
       .map((each) => ({
         ...each,
         all: each.all!.map((item) => generateItem(item)),
-      }));
-    groups.sort((a, b) => b.name.localeCompare(a.name));
+      }))
+      .sort((a, b) => b.name.localeCompare(a.name));
   }
 
   const proxies = [direct, reject].concat(
-    Object.values(records).filter(
+    Object.values(proxyRecord).filter(
       (p) => !p.all?.length && p.name !== "DIRECT" && p.name !== "REJECT"
     )
   );
 
-  return { global, direct, groups, records, proxies };
+  return { global, direct, groups, records: proxyRecord, proxies };
 }
 
-// todo: get proxy providers
+// get proxy providers
 export async function getProviders() {
-  const instance = await getAxios();
-  const response = await instance.get<any, any>("/providers/proxies");
-  return response.providers as any;
+  try {
+    const instance = await getAxios();
+    const response = await instance.get<any, any>("/providers/proxies");
+
+    const providers = (response.providers || {}) as Record<
+      string,
+      ApiType.ProviderItem
+    >;
+
+    return Object.fromEntries(
+      Object.entries(providers).filter(([key, item]) => {
+        const type = item.vehicleType.toLowerCase();
+        return type === "http" || type === "file";
+      })
+    );
+  } catch {
+    return {};
+  }
 }
 
-// todo: proxy providers health check
-export async function getProviderHealthCheck(name: string) {
+// proxy providers health check
+export async function providerHealthCheck(name: string) {
   const instance = await getAxios();
   return instance.get(
     `/providers/proxies/${encodeURIComponent(name)}/healthcheck`
