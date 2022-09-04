@@ -15,7 +15,7 @@ import {
   ExpandLessRounded,
   ExpandMoreRounded,
 } from "@mui/icons-material";
-import { updateProxy } from "@/services/api";
+import { providerHealthCheck, updateProxy } from "@/services/api";
 import { getProfiles, patchProfile } from "@/services/cmds";
 import delayManager from "@/services/delay";
 import useSortProxy from "./use-sort-proxy";
@@ -94,11 +94,23 @@ const ProxyGroup = ({ group }: Props) => {
   };
 
   const onCheckAll = useLockFn(async () => {
-    const names = sortedProxies.map((p) => p.name);
-    const groupName = group.name;
+    const providers = new Set(
+      sortedProxies.map((p) => p.provider!).filter(Boolean)
+    );
 
-    await delayManager.checkListDelay({ names, groupName, skipNum: 16 }, () =>
-      mutate("getProxies")
+    if (providers.size) {
+      Promise.allSettled(
+        [...providers].map((p) => providerHealthCheck(p))
+      ).then(() => mutate("getProxies"));
+    }
+
+    await delayManager.checkListDelay(
+      {
+        names: sortedProxies.filter((p) => !p.provider).map((p) => p.name),
+        groupName: group.name,
+        skipNum: 16,
+      },
+      () => mutate("getProxies")
     );
   });
 

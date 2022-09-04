@@ -2,7 +2,7 @@ import useSWR, { useSWRConfig } from "swr";
 import { useEffect, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Virtuoso } from "react-virtuoso";
-import { updateProxy } from "@/services/api";
+import { providerHealthCheck, updateProxy } from "@/services/api";
 import { getProfiles, patchProfile } from "@/services/cmds";
 import delayManager from "@/services/delay";
 import useSortProxy from "./use-sort-proxy";
@@ -74,10 +74,23 @@ const ProxyGlobal = (props: Props) => {
   };
 
   const onCheckAll = useLockFn(async () => {
-    const names = sortedProxies.map((p) => p.name);
+    const providers = new Set(
+      sortedProxies.map((p) => p.provider!).filter(Boolean)
+    );
 
-    await delayManager.checkListDelay({ names, groupName, skipNum: 8 }, () =>
-      mutate("getProxies")
+    if (providers.size) {
+      Promise.allSettled(
+        [...providers].map((p) => providerHealthCheck(p))
+      ).then(() => mutate("getProxies"));
+    }
+
+    await delayManager.checkListDelay(
+      {
+        names: sortedProxies.filter((p) => !p.provider).map((p) => p.name),
+        groupName,
+        skipNum: 16,
+      },
+      () => mutate("getProxies")
     );
   });
 
