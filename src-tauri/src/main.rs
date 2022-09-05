@@ -118,6 +118,7 @@ fn main() -> std::io::Result<()> {
       cmds::restart_sidecar,
       // clash
       cmds::get_clash_info,
+      cmds::get_clash_logs,
       cmds::patch_clash_config,
       cmds::change_clash_core,
       cmds::get_runtime_config,

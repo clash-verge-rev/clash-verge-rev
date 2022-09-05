@@ -2,19 +2,27 @@ use super::{notice::Notice, ClashInfo};
 use crate::log_if_err;
 use crate::utils::{config, dirs};
 use anyhow::{bail, Result};
+use parking_lot::RwLock;
 use reqwest::header::HeaderMap;
 use serde_yaml::Mapping;
 use std::fs;
 use std::io::Write;
-use std::{collections::HashMap, time::Duration};
+use std::sync::Arc;
+use std::{
+  collections::{HashMap, VecDeque},
+  time::Duration,
+};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time::sleep;
 
 static mut CLASH_CORE: &str = "clash";
+const LOGS_QUEUE_LEN: usize = 100;
 
 #[derive(Debug)]
 pub struct Service {
   sidecar: Option<CommandChild>,
+
+  logs: Arc<RwLock<VecDeque<String>>>,
 
   #[allow(unused)]
   service_mode: bool,
@@ -22,8 +30,10 @@ pub struct Service {
 
 impl Service {
   pub fn new() -> Service {
+    let queue = VecDeque::with_capacity(LOGS_QUEUE_LEN + 10);
     Service {
       sidecar: None,
+      logs: Arc::new(RwLock::new(queue)),
       service_mode: false,
     }
   }
@@ -39,46 +49,46 @@ impl Service {
     self.service_mode = enable;
   }
 
-  #[cfg(not(windows))]
   pub fn start(&mut self) -> Result<()> {
-    self.start_clash_by_sidecar()
-  }
+    #[cfg(not(windows))]
+    self.start_clash_by_sidecar()?;
 
-  #[cfg(windows)]
-  pub fn start(&mut self) -> Result<()> {
-    if !self.service_mode {
-      return self.start_clash_by_sidecar();
-    }
-
-    tauri::async_runtime::spawn(async move {
-      match Self::check_service().await {
-        Ok(status) => {
-          // 未启动clash
-          if status.code != 0 {
-            log_if_err!(Self::start_clash_by_service().await);
-          }
-        }
-        Err(err) => log::error!(target: "app", "{err}"),
+    #[cfg(windows)]
+    {
+      if !self.service_mode {
+        return self.start_clash_by_sidecar();
       }
-    });
+
+      tauri::async_runtime::spawn(async move {
+        match Self::check_service().await {
+          Ok(status) => {
+            // 未启动clash
+            if status.code != 0 {
+              log_if_err!(Self::start_clash_by_service().await);
+            }
+          }
+          Err(err) => log::error!(target: "app", "{err}"),
+        }
+      });
+    }
 
     Ok(())
   }
 
-  #[cfg(not(windows))]
   pub fn stop(&mut self) -> Result<()> {
-    self.stop_clash_by_sidecar()
-  }
+    #[cfg(not(windows))]
+    self.stop_clash_by_sidecar()?;
 
-  #[cfg(windows)]
-  pub fn stop(&mut self) -> Result<()> {
-    if !self.service_mode {
-      return self.stop_clash_by_sidecar();
+    #[cfg(windows)]
+    {
+      if !self.service_mode {
+        return self.stop_clash_by_sidecar();
+      }
+
+      tauri::async_runtime::spawn(async move {
+        log_if_err!(Self::stop_clash_by_service().await);
+      });
     }
-
-    tauri::async_runtime::spawn(async move {
-      log_if_err!(Self::stop_clash_by_service().await);
-    });
 
     Ok(())
   }
@@ -86,6 +96,24 @@ impl Service {
   pub fn restart(&mut self) -> Result<()> {
     self.stop()?;
     self.start()
+  }
+
+  pub fn get_logs(&self) -> VecDeque<String> {
+    self.logs.read().clone()
+  }
+
+  #[allow(unused)]
+  pub fn set_logs(&self, text: String) {
+    let mut logs = self.logs.write();
+    if logs.len() > LOGS_QUEUE_LEN {
+      (*logs).pop_front();
+    }
+    (*logs).push_back(text);
+  }
+
+  pub fn clear_logs(&self) {
+    let mut logs = self.logs.write();
+    (*logs).clear();
   }
 
   /// start the clash sidecar
@@ -112,14 +140,28 @@ impl Service {
     self.sidecar = Some(cmd_child);
 
     // clash log
+    let logs = self.logs.clone();
     tauri::async_runtime::spawn(async move {
+      let write_log = |text: String| {
+        let mut logs = logs.write();
+        if logs.len() >= LOGS_QUEUE_LEN {
+          (*logs).pop_front();
+        }
+        (*logs).push_back(text);
+      };
+
       while let Some(event) = rx.recv().await {
         match event {
           CommandEvent::Stdout(line) => {
-            let stdout = if line.len() > 33 { &line[33..] } else { &line };
+            let can_short = line.starts_with("time=") && line.len() > 33;
+            let stdout = if can_short { &line[33..] } else { &line };
             log::info!(target: "app" ,"[clash]: {}", stdout);
+            write_log(line);
           }
-          CommandEvent::Stderr(err) => log::error!(target: "app" ,"[clash error]: {}", err),
+          CommandEvent::Stderr(err) => {
+            log::error!(target: "app" ,"[clash error]: {}", err);
+            write_log(err);
+          }
           _ => {}
         }
       }

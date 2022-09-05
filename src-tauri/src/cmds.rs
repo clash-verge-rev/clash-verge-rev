@@ -5,7 +5,7 @@ use crate::{
 use crate::{log_if_err, ret_err, wrap_err};
 use anyhow::Result;
 use serde_yaml::Mapping;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use tauri::{api, State};
 
 type CmdResult<T = ()> = Result<T, String>;
@@ -254,6 +254,12 @@ pub fn get_sys_proxy() -> Result<SysProxyConfig, String> {
 pub fn get_cur_proxy(core: State<'_, Core>) -> CmdResult<Option<SysProxyConfig>> {
   let sysopt = core.sysopt.lock();
   wrap_err!(sysopt.get_sysproxy())
+}
+
+#[tauri::command]
+pub fn get_clash_logs(core: State<'_, Core>) -> CmdResult<VecDeque<String>> {
+  let service = core.service.lock();
+  Ok(service.get_logs())
 }
 
 /// open app config dir

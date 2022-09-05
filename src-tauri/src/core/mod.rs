@@ -129,6 +129,7 @@ impl Core {
     let mut service = self.service.lock();
     service.stop()?;
     service.set_core(Some(clash_core));
+    service.clear_logs();
     service.start()?;
     drop(service);
 
