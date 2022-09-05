@@ -5,6 +5,10 @@ use serde::{Deserialize, Serialize};
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct Verge {
+  /// app listening port
+  /// for app singleton
+  pub app_singleton_port: Option<u16>,
+
   // i18n
   pub language: Option<String>,
 
