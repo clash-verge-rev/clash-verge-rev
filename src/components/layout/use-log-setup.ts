@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { listen } from "@tauri-apps/api/event";
 import { getInformation } from "@/services/api";
+import { getClashLogs } from "@/services/cmds";
 import { atomLogData } from "@/services/states";
 
 const MAX_LOG_NUM = 1000;
@@ -13,6 +14,8 @@ export default function useLogSetup() {
   const setLogData = useSetRecoilState(atomLogData);
 
   useEffect(() => {
+    getClashLogs().then(setLogData);
+
     let ws: WebSocket = null!;
 
     const handler = (event: MessageEvent<any>) => {
