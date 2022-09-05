@@ -4,6 +4,8 @@ use crate::utils::{config, dirs};
 use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
 use serde_yaml::Mapping;
+use std::fs;
+use std::io::Write;
 use std::{collections::HashMap, time::Duration};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time::sleep;
@@ -98,6 +100,14 @@ impl Service {
     let clash_core = unsafe { CLASH_CORE };
     let cmd = Command::new_sidecar(clash_core)?;
     let (mut rx, cmd_child) = cmd.args(["-d", app_dir]).spawn()?;
+
+    // 将pid写入文件中
+    let pid = cmd_child.pid();
+    log_if_err!(|| -> Result<()> {
+      let path = dirs::clash_pid_path();
+      fs::File::create(path)?.write(format!("{pid}").as_bytes())?;
+      Ok(())
+    }());
 
     self.sidecar = Some(cmd_child);
 
@@ -216,6 +226,23 @@ impl Service {
     }
 
     Ok((server, headers))
+  }
+
+  /// kill old clash process
+  pub fn kill_old_clash() {
+    use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt};
+
+    if let Ok(pid) = fs::read(dirs::clash_pid_path()) {
+      if let Ok(pid) = String::from_utf8_lossy(&pid).parse() {
+        let mut system = System::new();
+        system.refresh_all();
+
+        let proc = system.process(Pid::from_u32(pid));
+        if let Some(proc) = proc {
+          proc.kill();
+        }
+      }
+    }
   }
 }
 

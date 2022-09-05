@@ -53,6 +53,9 @@ impl Core {
 
   /// initialize the core state
   pub fn init(&self, app_handle: tauri::AppHandle) {
+    // kill old clash process
+    Service::kill_old_clash();
+
     let verge = self.verge.lock();
     let clash_core = verge.clash_core.clone();
 

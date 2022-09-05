@@ -15,7 +15,6 @@ static VERGE_CONFIG: &str = "verge.yaml";
 static PROFILE_YAML: &str = "profiles.yaml";
 static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
 
-#[cfg(windows)]
 static mut RESOURCE_DIR: Option<PathBuf> = None;
 
 /// portable flag
@@ -65,7 +64,6 @@ pub fn app_resources_dir(package_info: &PackageInfo) -> PathBuf {
     .unwrap()
     .join("resources");
 
-  #[cfg(windows)]
   unsafe {
     RESOURCE_DIR = Some(res_dir.clone());
   }
@@ -101,6 +99,10 @@ pub fn profiles_temp_path() -> PathBuf {
 
   #[cfg(feature = "debug-yml")]
   return app_home_dir().join(PROFILE_TEMP);
+}
+
+pub fn clash_pid_path() -> PathBuf {
+  unsafe { RESOURCE_DIR.clone().unwrap().join("clash.pid") }
 }
 
 #[cfg(windows)]
