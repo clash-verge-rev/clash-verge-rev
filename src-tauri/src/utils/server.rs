@@ -1,19 +1,22 @@
 extern crate warp;
 
+use super::resolve;
 use port_scanner::local_port_available;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use warp::Filter;
 
 #[cfg(not(feature = "verge-dev"))]
-const SERVER_PORT: u16 = 33333;
+const SERVER_PORT: u16 = 33331;
 #[cfg(feature = "verge-dev")]
 const SERVER_PORT: u16 = 11233;
 
 /// check whether there is already exists
-pub fn check_singleton() -> Result<(), ()> {
-  if !local_port_available(SERVER_PORT) {
+pub fn check_singleton(port: Option<u16>) -> Result<(), ()> {
+  let port = port.unwrap_or(SERVER_PORT);
+
+  if !local_port_available(port) {
     tauri::async_runtime::block_on(async {
-      let url = format!("http://127.0.0.1:{}/commands/visible", SERVER_PORT);
+      let url = format!("http://127.0.0.1:{}/commands/visible", port);
       reqwest::get(url).await.unwrap();
       Err(())
     })
@@ -24,18 +27,16 @@ pub fn check_singleton() -> Result<(), ()> {
 
 /// The embed server only be used to implement singleton process
 /// maybe it can be used as pac server later
-pub fn embed_server(app: &AppHandle) {
-  let window = app.get_window("main").unwrap();
+pub fn embed_server(app_handle: &AppHandle, port: Option<u16>) {
+  let app_handle = app_handle.clone();
+  let port = port.unwrap_or(SERVER_PORT);
 
   tauri::async_runtime::spawn(async move {
     let commands = warp::path!("commands" / "visible").map(move || {
-      window.show().unwrap();
-      window.set_focus().unwrap();
+      resolve::create_window(&app_handle);
       return format!("ok");
     });
 
-    warp::serve(commands)
-      .bind(([127, 0, 0, 1], SERVER_PORT))
-      .await;
+    warp::serve(commands).bind(([127, 0, 0, 1], port)).await;
   });
 }

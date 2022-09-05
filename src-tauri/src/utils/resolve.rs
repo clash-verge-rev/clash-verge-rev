@@ -3,15 +3,20 @@ use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
 pub fn resolve_setup(app: &App) {
-  // setup a simple http server for singleton
-  server::embed_server(&app.handle());
-
   // init app config
   init::init_app(app.package_info());
 
   // init core
   // should be initialized after init_app fix #122
   let core = Core::new();
+
+  {
+    let verge = core.verge.lock();
+    let singleton = verge.app_singleton_port.clone();
+
+    // setup a simple http server for singleton
+    server::embed_server(&app.handle(), singleton);
+  }
 
   core.set_win(app.get_window("main"));
   core.init(app.app_handle());
