@@ -121,7 +121,11 @@ export async function patchVergeConfig(payload: CmdType.VergeConfig) {
 }
 
 export async function getSystemProxy() {
-  return invoke<any>("get_sys_proxy");
+  return invoke<{
+    enable: boolean;
+    server: string;
+    bypass: string;
+  }>("get_sys_proxy");
 }
 
 export async function changeClashCore(clashCore: string) {
