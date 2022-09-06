@@ -91,7 +91,8 @@ const SettingClash = ({ onError }: Props) => {
 
       <SettingItem label={t("Log Level")}>
         <GuardState
-          value={logLevel ?? "info"}
+          // clash premium 2022.08.26 值为warn
+          value={logLevel === "warn" ? "warning" : logLevel ?? "info"}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ "log-level": e })}
@@ -100,7 +101,7 @@ const SettingClash = ({ onError }: Props) => {
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="debug">Debug</MenuItem>
             <MenuItem value="info">Info</MenuItem>
-            <MenuItem value="warn">Warn</MenuItem>
+            <MenuItem value="warning">Warn</MenuItem>
             <MenuItem value="error">Error</MenuItem>
             <MenuItem value="silent">Silent</MenuItem>
           </Select>
