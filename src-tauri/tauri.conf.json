@@ -75,6 +75,7 @@
         "title": "Clash Verge",
         "width": 800,
         "height": 636,
+        "center": true,
         "resizable": true,
         "fullscreen": false,
         "decorations": false,
