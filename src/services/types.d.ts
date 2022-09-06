@@ -144,6 +144,7 @@ declare namespace CmdType {
     enable_silent_start?: boolean;
     enable_system_proxy?: boolean;
     enable_proxy_guard?: boolean;
+    proxy_guard_duration?: number;
     system_proxy_bypass?: string;
     web_ui_list?: string[];
     theme_setting?: {
