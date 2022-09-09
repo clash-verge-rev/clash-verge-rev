@@ -4,7 +4,6 @@ import { useLockFn } from "ahooks";
 import { Menu, MenuItem } from "@mui/material";
 import { Settings } from "@mui/icons-material";
 import { changeClashCore, getVergeConfig } from "@/services/cmds";
-import { getVersion } from "@/services/api";
 import Notice from "@/components/base/base-notice";
 
 const VALID_CORE = [
@@ -28,8 +27,10 @@ const CoreSwitch = () => {
     try {
       await changeClashCore(core);
       mutate("getVergeConfig");
-      mutate("getClashConfig");
-      mutate("getVersion", getVersion());
+      setTimeout(() => {
+        mutate("getClashConfig");
+        mutate("getVersion");
+      }, 100);
       setAnchorEl(null);
       Notice.success(`Successfully switch to ${core}`, 1000);
     } catch (err: any) {
