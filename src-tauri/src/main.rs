@@ -14,6 +14,7 @@ use crate::{
 };
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
+  WindowEvent,
 };
 
 fn main() -> std::io::Result<()> {
@@ -176,19 +177,41 @@ fn main() -> std::io::Result<()> {
     builder = builder.menu(Menu::new().add_submenu(submenu_file));
   }
 
-  builder
+  let app = builder
     .build(context)
-    .expect("error while running tauri application")
-    .run(|app_handle, e| match e {
-      tauri::RunEvent::ExitRequested { api, .. } => {
-        api.prevent_exit();
+    .expect("error while running tauri application");
+
+  let app_handle = app.app_handle();
+  ctrlc::set_handler(move || {
+    resolve::resolve_reset(&app_handle);
+    app_handle.exit(0);
+  })
+  .expect("error when exiting.");
+
+  app.run(|app_handle, e| match e {
+    tauri::RunEvent::ExitRequested { api, .. } => {
+      api.prevent_exit();
+    }
+    tauri::RunEvent::Exit => {
+      resolve::resolve_reset(app_handle);
+      api::process::kill_children();
+    }
+    #[cfg(target_os = "macos")]
+    tauri::RunEvent::WindowEvent { label, event, .. } => {
+      if label == "main" {
+        match event {
+          WindowEvent::CloseRequested { api, .. } => {
+            api.prevent_close();
+            app_handle.get_window("main").map(|win| {
+              let _ = win.hide();
+            });
+          }
+          _ => {}
+        }
       }
-      tauri::RunEvent::Exit => {
-        resolve::resolve_reset(app_handle);
-        api::process::kill_children();
-      }
-      _ => {}
-    });
+    }
+    _ => {}
+  });
 
   Ok(())
 }
