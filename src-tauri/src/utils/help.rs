@@ -58,22 +58,20 @@ pub fn open_file(path: PathBuf) -> Result<()> {
         .arg(path)
         .spawn()
       {
-        bail!(format!("failed to open file by VScode for `{err}`"));
+        bail!("failed to open file by VScode for `{err}`");
       }
     }
 
     #[cfg(not(target_os = "windows"))]
     if let Err(err) = Command::new(code).arg(path).spawn() {
-      bail!(format!("failed to open file by VScode for `{err}`"));
+      bail!("failed to open file by VScode for `{err}`");
     }
 
     return Ok(());
   }
 
-  match open::that(path) {
-    Ok(_) => Ok(()),
-    Err(err) => bail!(format!("failed to open file for `{err}`")),
-  }
+  open::that(path)?;
+  Ok(())
 }
 
 #[macro_export]

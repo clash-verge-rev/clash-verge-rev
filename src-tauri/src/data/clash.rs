@@ -106,6 +106,7 @@ impl ClashInfo {
   }
 }
 
+#[derive(Debug)]
 pub struct Clash {
   /// maintain the clash config
   pub config: Mapping,

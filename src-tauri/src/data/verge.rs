@@ -12,7 +12,7 @@ pub struct Verge {
   // i18n
   pub language: Option<String>,
 
-  /// `light` or `dark`
+  /// `light` or `dark` or `system`
   pub theme_mode: Option<String>,
 
   /// enable blur mode

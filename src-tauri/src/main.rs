@@ -6,15 +6,16 @@
 mod cmds;
 mod config;
 mod core;
+mod data;
 mod utils;
 
 use crate::{
-  core::Verge,
+  core::Core,
+  data::{Data, Verge},
   utils::{resolve, server},
 };
 use tauri::{
   api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
-  WindowEvent,
 };
 
 fn main() -> std::io::Result<()> {
@@ -65,14 +66,15 @@ fn main() -> std::io::Result<()> {
         }
         mode @ ("rule_mode" | "global_mode" | "direct_mode" | "script_mode") => {
           let mode = &mode[0..mode.len() - 5];
-          let core = app_handle.state::<core::Core>();
-          crate::log_if_err!(core.update_mode(app_handle, mode));
+          let core = Core::global();
+          crate::log_if_err!(core.update_mode(mode));
         }
         "system_proxy" => {
-          let core = app_handle.state::<core::Core>();
+          let core = Core::global();
 
           let new_value = {
-            let verge = core.verge.lock();
+            let global = Data::global();
+            let verge = global.verge.lock();
             !verge.enable_system_proxy.clone().unwrap_or(false)
           };
 
@@ -81,13 +83,14 @@ fn main() -> std::io::Result<()> {
             ..Verge::default()
           };
 
-          crate::log_if_err!(core.patch_verge(patch, app_handle));
+          crate::log_if_err!(core.patch_verge(patch));
         }
         "tun_mode" => {
-          let core = app_handle.state::<core::Core>();
+          let core = Core::global();
 
           let new_value = {
-            let verge = core.verge.lock();
+            let global = Data::global();
+            let verge = global.verge.lock();
             !verge.enable_tun_mode.clone().unwrap_or(false)
           };
 
@@ -96,17 +99,17 @@ fn main() -> std::io::Result<()> {
             ..Verge::default()
           };
 
-          crate::log_if_err!(core.patch_verge(patch, app_handle));
+          crate::log_if_err!(core.patch_verge(patch));
         }
         "restart_clash" => {
-          let core = app_handle.state::<core::Core>();
+          let core = Core::global();
           crate::log_if_err!(core.restart_clash());
         }
         "restart_app" => {
           api::process::restart(&app_handle.env());
         }
         "quit" => {
-          resolve::resolve_reset(app_handle);
+          resolve::resolve_reset();
           app_handle.exit(0);
         }
         _ => {}
@@ -120,7 +123,6 @@ fn main() -> std::io::Result<()> {
     .invoke_handler(tauri::generate_handler![
       // common
       cmds::get_sys_proxy,
-      cmds::get_cur_proxy,
       cmds::open_app_dir,
       cmds::open_logs_dir,
       cmds::open_web_url,
@@ -183,24 +185,24 @@ fn main() -> std::io::Result<()> {
 
   let app_handle = app.app_handle();
   ctrlc::set_handler(move || {
-    resolve::resolve_reset(&app_handle);
+    resolve::resolve_reset();
     app_handle.exit(0);
   })
   .expect("error when exiting.");
 
-  app.run(|app_handle, e| match e {
+  app.run(|_, e| match e {
     tauri::RunEvent::ExitRequested { api, .. } => {
       api.prevent_exit();
     }
     tauri::RunEvent::Exit => {
-      resolve::resolve_reset(app_handle);
+      resolve::resolve_reset();
       api::process::kill_children();
     }
     #[cfg(target_os = "macos")]
     tauri::RunEvent::WindowEvent { label, event, .. } => {
       if label == "main" {
         match event {
-          WindowEvent::CloseRequested { api, .. } => {
+          tauri::WindowEvent::CloseRequested { api, .. } => {
             api.prevent_close();
             app_handle.get_window("main").map(|win| {
               let _ = win.hide();
