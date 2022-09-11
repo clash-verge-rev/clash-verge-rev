@@ -97,6 +97,7 @@ const SettingSystem = ({ onError }: Props) => {
             <IconButton
               color="inherit"
               size="small"
+              sx={{ my: "2px" }}
               onClick={() => setServiceOpen(true)}
             >
               <ArrowForward />

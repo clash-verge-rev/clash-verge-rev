@@ -38,6 +38,7 @@ const ConnectionItem = (props: Props) => {
       }
     >
       <ListItemText
+        sx={{ userSelect: "text" }}
         primary={metadata.host || metadata.destinationIP}
         secondary={
           <>
