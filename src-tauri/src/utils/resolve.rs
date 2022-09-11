@@ -16,7 +16,7 @@ pub fn resolve_setup(app: &App) {
   }
 
   // core should be initialized after init_app fix #122
-  let mut core = Core::global();
+  let core = Core::global();
   core.init(app.app_handle());
 
   resolve_window(app);

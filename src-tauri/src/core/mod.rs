@@ -22,7 +22,7 @@ static CORE: Lazy<Core> = Lazy::new(|| Core {
   sysopt: Arc::new(Mutex::new(Sysopt::new())),
   timer: Arc::new(Mutex::new(Timer::new())),
   runtime: Arc::new(Mutex::new(RuntimeResult::default())),
-  handle: Handle::default(),
+  handle: Arc::new(Mutex::new(Handle::default())),
 });
 
 #[derive(Clone)]
@@ -31,7 +31,7 @@ pub struct Core {
   pub sysopt: Arc<Mutex<Sysopt>>,
   pub timer: Arc<Mutex<Timer>>,
   pub runtime: Arc<Mutex<RuntimeResult>>,
-  pub handle: Handle,
+  pub handle: Arc<Mutex<Handle>>,
 }
 
 impl Core {
@@ -40,10 +40,14 @@ impl Core {
   }
 
   /// initialize the core state
-  pub fn init(&mut self, app_handle: tauri::AppHandle) {
+  pub fn init(&self, app_handle: tauri::AppHandle) {
     // kill old clash process
     Service::kill_old_clash();
-    self.handle = Handle::from(Some(app_handle));
+
+    {
+      let mut handle = self.handle.lock();
+      handle.set_inner(app_handle);
+    }
 
     {
       let mut service = self.service.lock();
@@ -58,8 +62,11 @@ impl Core {
       log_if_err!(sysopt.init_sysproxy());
     }
 
-    log_if_err!(self.handle.update_systray());
-    log_if_err!(self.handle.update_systray_clash());
+    {
+      let handle = self.handle.lock();
+      log_if_err!(handle.update_systray());
+      log_if_err!(handle.update_systray_clash());
+    }
 
     // timer initialize
     let mut timer = self.timer.lock();
@@ -124,7 +131,8 @@ impl Core {
     }
 
     if has_mode {
-      self.handle.update_systray_clash()?;
+      let handle = self.handle.lock();
+      handle.update_systray_clash()?;
     }
 
     Ok(())
@@ -186,7 +194,8 @@ impl Core {
     }
 
     if system_proxy.is_some() || tun_mode.is_some() {
-      self.handle.update_systray()?;
+      let handle = self.handle.lock();
+      handle.update_systray()?;
     }
 
     Ok(())
@@ -211,7 +220,8 @@ impl Core {
     });
 
     // update tray
-    self.handle.update_systray_clash()?;
+    let handle = self.handle.lock();
+    handle.update_systray_clash()?;
 
     Ok(())
   }
@@ -260,7 +270,10 @@ impl Core {
     let handle = self.handle.clone();
     tauri::async_runtime::spawn(async move {
       match Service::set_config(clash_info, config).await {
-        Ok(_) => handle.refresh_clash(),
+        Ok(_) => {
+          let handle = handle.lock();
+          handle.refresh_clash()
+        }
         Err(err) => log::error!(target: "app", "{err}"),
       }
     });

@@ -10,8 +10,8 @@ pub struct Handle {
 }
 
 impl Handle {
-  pub fn from(app_handle: Option<AppHandle>) -> Handle {
-    Handle { app_handle }
+  pub fn set_inner(&mut self, app_handle: AppHandle) {
+    self.app_handle = Some(app_handle);
   }
 
   pub fn get_window(&self) -> Option<Window> {
