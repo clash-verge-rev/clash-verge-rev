@@ -1,4 +1,4 @@
-use crate::{core::Core, utils::init, utils::server};
+use crate::{core::Core, data::Data, utils::init, utils::server};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
@@ -6,32 +6,27 @@ pub fn resolve_setup(app: &App) {
   // init app config
   init::init_app(app.package_info());
 
-  // init core
-  // should be initialized after init_app fix #122
-  let core = Core::new();
-
   {
-    let verge = core.verge.lock();
+    let global = Data::global();
+    let verge = global.verge.lock();
     let singleton = verge.app_singleton_port.clone();
 
     // setup a simple http server for singleton
     server::embed_server(&app.handle(), singleton);
   }
 
-  core.set_win(app.get_window("main"));
+  // core should be initialized after init_app fix #122
+  let mut core = Core::global();
   core.init(app.app_handle());
-
-  // fix #122
-  app.manage(core);
 
   resolve_window(app);
 }
 
 /// reset system proxy
-pub fn resolve_reset(app_handle: &AppHandle) {
-  let core = app_handle.state::<Core>();
+pub fn resolve_reset() {
+  let core = Core::global();
   let mut sysopt = core.sysopt.lock();
-  sysopt.reset_sysproxy();
+  crate::log_if_err!(sysopt.reset_sysproxy());
   drop(sysopt);
 
   let mut service = core.service.lock();

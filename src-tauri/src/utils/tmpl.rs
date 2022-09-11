@@ -29,7 +29,6 @@ enable_self_startup: false
 enable_system_proxy: false
 enable_proxy_guard: false
 proxy_guard_duration: 10
-system_proxy_bypass: localhost;127.*;10.*;192.168.*;<local>
 ";
 
 /// template for new a profile item
@@ -60,7 +59,7 @@ append-proxy-groups:
 ";
 
 /// enhanced profile
-pub const ITEM_SCRIPT: &str = "// Should define the `main` function
+pub const ITEM_SCRIPT: &str = "// Define the `main` function
 // The argument to this function is the clash config 
 // or the result of the previous handler
 // so you should return the config after processing

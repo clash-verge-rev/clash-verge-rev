@@ -1,4 +1,4 @@
-use super::{notice::Notice, ClashInfo};
+use crate::data::{ClashInfo, Data};
 use crate::log_if_err;
 use crate::utils::{config, dirs};
 use anyhow::{bail, Result};
@@ -15,7 +15,6 @@ use std::{
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time::sleep;
 
-static mut CLASH_CORE: &str = "clash";
 const LOGS_QUEUE_LEN: usize = 100;
 
 #[derive(Debug)]
@@ -23,39 +22,31 @@ pub struct Service {
   sidecar: Option<CommandChild>,
 
   logs: Arc<RwLock<VecDeque<String>>>,
-
-  #[allow(unused)]
-  service_mode: bool,
 }
 
 impl Service {
   pub fn new() -> Service {
     let queue = VecDeque::with_capacity(LOGS_QUEUE_LEN + 10);
+
     Service {
       sidecar: None,
       logs: Arc::new(RwLock::new(queue)),
-      service_mode: false,
     }
-  }
-
-  pub fn set_core(&mut self, clash_core: Option<String>) {
-    unsafe {
-      CLASH_CORE = Box::leak(clash_core.unwrap_or("clash".into()).into_boxed_str());
-    }
-  }
-
-  #[allow(unused)]
-  pub fn set_mode(&mut self, enable: bool) {
-    self.service_mode = enable;
   }
 
   pub fn start(&mut self) -> Result<()> {
-    #[cfg(not(windows))]
+    #[cfg(not(target_os = "windows"))]
     self.start_clash_by_sidecar()?;
 
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     {
-      if !self.service_mode {
+      let enable = {
+        let data = Data::global();
+        let verge = data.verge.lock();
+        verge.enable_service_mode.clone().unwrap_or(false)
+      };
+
+      if !enable {
         return self.start_clash_by_sidecar();
       }
 
@@ -76,18 +67,24 @@ impl Service {
   }
 
   pub fn stop(&mut self) -> Result<()> {
-    #[cfg(not(windows))]
+    #[cfg(not(target_os = "windows"))]
     self.stop_clash_by_sidecar()?;
 
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     {
-      if !self.service_mode {
-        return self.stop_clash_by_sidecar();
-      }
+      let _ = self.stop_clash_by_sidecar();
 
-      tauri::async_runtime::spawn(async move {
-        log_if_err!(Self::stop_clash_by_service().await);
-      });
+      let enable = {
+        let data = Data::global();
+        let verge = data.verge.lock();
+        verge.enable_service_mode.clone().unwrap_or(false)
+      };
+
+      if enable {
+        tauri::async_runtime::spawn(async move {
+          log_if_err!(Self::stop_clash_by_service().await);
+        });
+      }
     }
 
     Ok(())
@@ -119,13 +116,19 @@ impl Service {
   /// start the clash sidecar
   fn start_clash_by_sidecar(&mut self) -> Result<()> {
     if self.sidecar.is_some() {
-      bail!("could not run clash sidecar twice");
+      let sidecar = self.sidecar.take().unwrap();
+      let _ = sidecar.kill();
     }
+
+    let clash_core: String = {
+      let global = Data::global();
+      let verge = global.verge.lock();
+      verge.clash_core.clone().unwrap_or("clash".into())
+    };
 
     let app_dir = dirs::app_home_dir();
     let app_dir = app_dir.as_os_str().to_str().unwrap();
 
-    let clash_core = unsafe { CLASH_CORE };
     let cmd = Command::new_sidecar(clash_core)?;
     let (mut rx, cmd_child) = cmd.args(["-d", app_dir]).spawn()?;
 
@@ -178,70 +181,70 @@ impl Service {
     Ok(())
   }
 
-  /// update clash config
-  /// using PUT methods
-  pub fn set_config(&self, info: ClashInfo, config: Mapping, notice: Notice) -> Result<()> {
-    if !self.service_mode && self.sidecar.is_none() {
-      bail!("did not start sidecar");
+  pub fn check_start(&mut self) -> Result<()> {
+    let global = Data::global();
+    #[cfg(target_os = "windows")]
+    {
+      let verge = global.verge.lock();
+      let service_mode = verge.enable_service_mode.unwrap_or(false);
+
+      if !service_mode && self.sidecar.is_none() {
+        self.start()?;
+      }
     }
 
+    #[cfg(not(target_os = "windows"))]
+    if self.sidecar.is_none() {
+      self.start()?;
+    }
+
+    Ok(())
+  }
+
+  /// update clash config
+  /// using PUT methods
+  pub async fn set_config(info: ClashInfo, config: Mapping) -> Result<()> {
     let temp_path = dirs::profiles_temp_path();
     config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
     let (server, headers) = Self::clash_client_info(info)?;
 
-    tauri::async_runtime::spawn(async move {
-      let mut data = HashMap::new();
-      data.insert("path", temp_path.as_os_str().to_str().unwrap());
+    let mut data = HashMap::new();
+    data.insert("path", temp_path.as_os_str().to_str().unwrap());
 
-      // retry 5 times
-      for _ in 0..5 {
-        match reqwest::ClientBuilder::new().no_proxy().build() {
-          Ok(client) => {
-            let builder = client.put(&server).headers(headers.clone()).json(&data);
-
-            match builder.send().await {
-              Ok(resp) => {
-                if resp.status() != 204 {
-                  log::error!(target: "app", "failed to activate clash with status \"{}\"", resp.status());
-                }
-
-                notice.refresh_clash();
-
-                // do not retry
-                break;
+    // retry 5 times
+    for _ in 0..5 {
+      let headers = headers.clone();
+      match reqwest::ClientBuilder::new().no_proxy().build() {
+        Ok(client) => {
+          let builder = client.put(&server).headers(headers).json(&data);
+          match builder.send().await {
+            Ok(resp) => match resp.status().as_u16() {
+              204 => break,
+              // 配置有问题不重试
+              400 => bail!("failed to update clash config with status 400"),
+              status @ _ => {
+                log::error!(target: "app", "failed to activate clash with status \"{status}\"");
               }
-              Err(err) => log::error!(target: "app", "failed to activate for `{err}`"),
-            }
+            },
+            Err(err) => log::error!(target: "app", "{err}"),
           }
-          Err(err) => log::error!(target: "app", "failed to activate for `{err}`"),
         }
-        sleep(Duration::from_millis(500)).await;
+        Err(err) => log::error!(target: "app", "{err}"),
       }
-    });
+      sleep(Duration::from_millis(500)).await;
+    }
 
     Ok(())
   }
 
   /// patch clash config
-  pub fn patch_config(&self, info: ClashInfo, config: Mapping, notice: Notice) -> Result<()> {
-    if !self.service_mode && self.sidecar.is_none() {
-      bail!("did not start sidecar");
-    }
-
+  pub async fn patch_config(info: ClashInfo, config: Mapping) -> Result<()> {
     let (server, headers) = Self::clash_client_info(info)?;
 
-    tauri::async_runtime::spawn(async move {
-      if let Ok(client) = reqwest::ClientBuilder::new().no_proxy().build() {
-        let builder = client.patch(&server).headers(headers.clone()).json(&config);
-
-        match builder.send().await {
-          Ok(_) => notice.refresh_clash(),
-          Err(err) => log::error!(target: "app", "{err}"),
-        }
-      }
-    });
-
+    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
+    let builder = client.patch(&server).headers(headers.clone()).json(&config);
+    builder.send().await?;
     Ok(())
   }
 
@@ -296,7 +299,7 @@ impl Drop for Service {
 
 /// ### Service Mode
 ///
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 pub mod win_service {
   use super::*;
   use anyhow::Context;
@@ -453,7 +456,12 @@ pub mod win_service {
         sleep(Duration::from_secs(1)).await;
       }
 
-      let clash_core = unsafe { CLASH_CORE };
+      let clash_core = {
+        let global = Data::global();
+        let verge = global.verge.lock();
+        verge.clash_core.clone().unwrap_or("clash".into())
+      };
+
       let clash_bin = format!("{clash_core}.exe");
       let bin_path = current_exe().unwrap().with_file_name(clash_bin);
       let bin_path = bin_path.as_os_str().to_str().unwrap();

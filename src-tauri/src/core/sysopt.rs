@@ -1,17 +1,17 @@
-use super::{Clash, Verge};
-use crate::{log_if_err, utils::sysopt::SysProxyConfig};
+use crate::{data::*, log_if_err};
 use anyhow::{bail, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use std::sync::Arc;
+use sysproxy::Sysproxy;
 use tauri::{async_runtime::Mutex, utils::platform::current_exe};
 
 pub struct Sysopt {
   /// current system proxy setting
-  cur_sysproxy: Option<SysProxyConfig>,
+  cur_sysproxy: Option<Sysproxy>,
 
   /// record the original system proxy
   /// recover it when exit
-  old_sysproxy: Option<SysProxyConfig>,
+  old_sysproxy: Option<Sysproxy>,
 
   /// helps to auto launch the app
   auto_launch: Option<AutoLaunch>,
@@ -19,6 +19,13 @@ pub struct Sysopt {
   /// record whether the guard async is running or not
   guard_state: Arc<Mutex<bool>>,
 }
+
+#[cfg(target_os = "windows")]
+static DEFAULT_BYPASS: &str = "localhost;127.*;192.168.*;<local>";
+#[cfg(target_os = "linux")]
+static DEFAULT_BYPASS: &str = "localhost,127.0.0.1/8,::1";
+#[cfg(target_os = "macos")]
+static DEFAULT_BYPASS: &str = "127.0.0.1,localhost,<local>";
 
 impl Sysopt {
   pub fn new() -> Sysopt {
@@ -31,84 +38,105 @@ impl Sysopt {
   }
 
   /// init the sysproxy
-  pub fn init_sysproxy(&mut self, port: Option<String>, verge: &Verge) {
-    if let Some(port) = port {
-      let enable = verge.enable_system_proxy.clone().unwrap_or(false);
+  pub fn init_sysproxy(&mut self) -> Result<()> {
+    let data = Data::global();
+    let clash = data.clash.lock();
+    let port = clash.info.port.clone();
 
-      self.old_sysproxy = match SysProxyConfig::get_sys() {
-        Ok(proxy) => Some(proxy),
-        Err(_) => None,
-      };
+    if port.is_none() {
+      bail!("clash port is none");
+    }
 
-      let bypass = verge.system_proxy_bypass.clone();
-      let sysproxy = SysProxyConfig::new(enable, port, bypass);
+    let verge = data.verge.lock();
 
-      if enable {
-        if let Err(err) = sysproxy.set_sys() {
-          log::error!(target: "app", "failed to set system proxy for `{err}`");
-        }
-      }
+    let enable = verge.enable_system_proxy.clone().unwrap_or(false);
+    let bypass = verge.system_proxy_bypass.clone();
+    let bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
 
-      self.cur_sysproxy = Some(sysproxy);
+    let port = port.unwrap().parse::<u16>()?;
+    let host = String::from("127.0.0.1");
+
+    self.cur_sysproxy = Some(Sysproxy {
+      enable,
+      host,
+      port,
+      bypass,
+    });
+
+    if enable {
+      self.old_sysproxy = Sysproxy::get_system_proxy().map_or(None, |p| Some(p));
+      self.cur_sysproxy.as_ref().unwrap().set_system_proxy()?;
     }
 
     // launchs the system proxy guard
     self.guard_proxy();
+    Ok(())
   }
 
   /// update the system proxy
-  /// when the verge config is changed
-  pub fn update_sysproxy(&mut self, enable: Option<bool>, bypass: Option<String>) -> Result<()> {
-    let sysproxy = self.cur_sysproxy.take();
-
-    if sysproxy.is_none() {
-      bail!("unhandle error for sysproxy is none");
+  pub fn update_sysproxy(&mut self) -> Result<()> {
+    if self.cur_sysproxy.is_none() {
+      return self.init_sysproxy();
     }
 
-    let mut sysproxy = sysproxy.unwrap();
+    let data = Data::global();
+    let verge = data.verge.lock();
 
-    if let Some(enable) = enable {
-      sysproxy.enable = enable;
-    }
+    let enable = verge.enable_system_proxy.clone().unwrap_or(false);
+    let bypass = verge.system_proxy_bypass.clone();
+    let bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
 
-    if let Some(bypass) = bypass {
-      sysproxy.bypass = bypass;
-    }
+    let mut sysproxy = self.cur_sysproxy.take().unwrap();
+
+    sysproxy.enable = enable;
+    sysproxy.bypass = bypass;
 
     self.cur_sysproxy = Some(sysproxy);
-
-    if self.cur_sysproxy.as_ref().unwrap().set_sys().is_err() {
-      bail!("failed to set system proxy");
-    }
+    self.cur_sysproxy.as_ref().unwrap().set_system_proxy()?;
 
     Ok(())
   }
 
   /// reset the sysproxy
-  pub fn reset_sysproxy(&mut self) {
-    if let Some(sysproxy) = self.old_sysproxy.take() {
-      // 如果原代理设置是开启的，且域名端口设置和当前的一致，就不恢复原设置
-      // https://github.com/zzzgydi/clash-verge/issues/157
-      if let Some(cur) = self.cur_sysproxy.as_ref() {
-        if sysproxy.enable && cur.server == sysproxy.server {
-          return;
+  pub fn reset_sysproxy(&mut self) -> Result<()> {
+    if self.cur_sysproxy.is_none() {
+      return Ok(());
+    }
+
+    let mut cur = self.cur_sysproxy.take().unwrap();
+
+    match self.old_sysproxy.take() {
+      Some(old) => {
+        // 如果原代理设置和当前的设置是一样的，需要关闭
+        // 否则就恢复原代理设置
+        if old.enable && old.host == cur.host && old.port == cur.port {
+          cur.enable = false;
+          cur.set_system_proxy()?;
+        } else {
+          old.set_system_proxy()?;
         }
       }
-
-      match sysproxy.set_sys() {
-        Ok(_) => self.cur_sysproxy = None,
-        Err(_) => log::error!(target: "app", "failed to reset proxy"),
+      None => {
+        if cur.enable {
+          cur.enable = false;
+          cur.set_system_proxy()?;
+        }
       }
     }
-  }
 
-  /// get current proxy
-  pub fn get_sysproxy(&self) -> Result<Option<SysProxyConfig>> {
-    Ok(self.cur_sysproxy.clone())
+    Ok(())
   }
 
   /// init the auto launch
-  pub fn init_launch(&mut self, enable: Option<bool>) -> Result<()> {
+  pub fn init_launch(&mut self) -> Result<()> {
+    let data = Data::global();
+    let verge = data.verge.lock();
+    let enable = verge.enable_auto_launch.clone().unwrap_or(false);
+
+    if !enable {
+      return Ok(());
+    }
+
     let app_exe = current_exe().unwrap();
     let app_exe = dunce::canonicalize(app_exe).unwrap();
     let app_name = app_exe.file_stem().unwrap().to_str().unwrap();
@@ -125,25 +153,23 @@ impl Sysopt {
       .set_app_path(app_path)
       .build()?;
 
-    if let Some(enable) = enable {
-      // fix issue #26
-      if enable {
-        auto.enable()?;
-      }
-    }
-
+    // fix issue #26
+    auto.enable()?;
     self.auto_launch = Some(auto);
 
     Ok(())
   }
 
   /// update the startup
-  pub fn update_launch(&mut self, enable: Option<bool>) -> Result<()> {
-    if enable.is_none() {
-      return Ok(());
+  pub fn update_launch(&mut self) -> Result<()> {
+    if self.auto_launch.is_none() {
+      return self.init_launch();
     }
 
-    let enable = enable.unwrap();
+    let data = Data::global();
+    let verge = data.verge.lock();
+    let enable = verge.enable_auto_launch.clone().unwrap_or(false);
+
     let auto_launch = self.auto_launch.as_ref().unwrap();
 
     match enable {
@@ -176,35 +202,42 @@ impl Sysopt {
       loop {
         sleep(Duration::from_secs(wait_secs)).await;
 
-        let verge = Verge::new();
+        let global = Data::global();
+        let verge = global.verge.lock();
 
-        let enable_proxy = verge.enable_system_proxy.unwrap_or(false);
-        let enable_guard = verge.enable_proxy_guard.unwrap_or(false);
-        let guard_duration = verge.proxy_guard_duration.unwrap_or(10);
+        let enable = verge.enable_system_proxy.clone().unwrap_or(false);
+        let guard = verge.enable_proxy_guard.clone().unwrap_or(false);
+        let guard_duration = verge.proxy_guard_duration.clone().unwrap_or(10);
+        let bypass = verge.system_proxy_bypass.clone();
+        drop(verge);
+
+        // stop loop
+        if !enable || !guard {
+          break;
+        }
 
         // update duration
         wait_secs = guard_duration;
 
-        // stop loop
-        if !enable_guard || !enable_proxy {
-          break;
-        }
+        let clash = global.clash.lock();
+        let port = clash.info.port.clone();
+        let port = port.unwrap_or("".into()).parse::<u16>();
+        drop(clash);
 
         log::debug!(target: "app", "try to guard the system proxy");
 
-        let clash = Clash::new();
+        match port {
+          Ok(port) => {
+            let sysproxy = Sysproxy {
+              enable: true,
+              host: "127.0.0.1".into(),
+              port,
+              bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+            };
 
-        match &clash.info.port {
-          Some(port) => {
-            let bypass = verge.system_proxy_bypass.clone();
-            let sysproxy = SysProxyConfig::new(true, port.clone(), bypass);
-
-            log_if_err!(sysproxy.set_sys());
+            log_if_err!(sysproxy.set_system_proxy());
           }
-          None => {
-            let status = &clash.info.status;
-            log::error!(target: "app", "failed to parse clash port with status {status}")
-          }
+          Err(_) => log::error!(target: "app", "failed to parse clash port"),
         }
       }
 
