@@ -89,6 +89,13 @@
 .windows,
 .unknown {
   &.layout {
+    $maxLogo: 115px;
+    .layout__left .the-logo {
+      flex: 0 1 $maxLogo;
+      max-width: $maxLogo + 32px;
+      max-height: $maxLogo;
+    }
+
     .layout__right .the-content {
       top: 30px;
     }
