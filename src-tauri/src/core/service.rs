@@ -182,9 +182,9 @@ impl Service {
   }
 
   pub fn check_start(&mut self) -> Result<()> {
-    let global = Data::global();
     #[cfg(target_os = "windows")]
     {
+      let global = Data::global();
       let verge = global.verge.lock();
       let service_mode = verge.enable_service_mode.unwrap_or(false);
 
