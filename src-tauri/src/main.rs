@@ -190,7 +190,8 @@ fn main() -> std::io::Result<()> {
   })
   .expect("error when exiting.");
 
-  app.run(|_, e| match e {
+  #[allow(unused)]
+  app.run(|app_handle, e| match e {
     tauri::RunEvent::ExitRequested { api, .. } => {
       api.prevent_exit();
     }
