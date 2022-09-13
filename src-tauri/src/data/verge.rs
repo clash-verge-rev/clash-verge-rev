@@ -56,6 +56,10 @@ pub struct Verge {
   /// clash core path
   #[serde(skip_serializing_if = "Option::is_none")]
   pub clash_core: Option<String>,
+
+  /// hotkey map
+  /// format: {func},{key}
+  pub hotkeys: Option<Vec<String>>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -116,6 +120,7 @@ impl Verge {
     patch!(theme_setting);
     patch!(web_ui_list);
     patch!(clash_core);
+    patch!(hotkeys);
 
     self.save_file()
   }

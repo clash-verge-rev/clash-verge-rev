@@ -7,11 +7,11 @@ mod cmds;
 mod config;
 mod core;
 mod data;
+mod feat;
 mod utils;
 
 use crate::{
-  core::Core,
-  data::{Data, Verge},
+  data::Verge,
   utils::{resolve, server},
 };
 use tauri::{
@@ -66,45 +66,10 @@ fn main() -> std::io::Result<()> {
         }
         mode @ ("rule_mode" | "global_mode" | "direct_mode" | "script_mode") => {
           let mode = &mode[0..mode.len() - 5];
-          let core = Core::global();
-          crate::log_if_err!(core.update_mode(mode));
+          feat::change_clash_mode(mode);
         }
-        "system_proxy" => {
-          let core = Core::global();
-
-          let new_value = {
-            let global = Data::global();
-            let verge = global.verge.lock();
-            !verge.enable_system_proxy.clone().unwrap_or(false)
-          };
-
-          let patch = Verge {
-            enable_system_proxy: Some(new_value),
-            ..Verge::default()
-          };
-
-          crate::log_if_err!(core.patch_verge(patch));
-        }
-        "tun_mode" => {
-          let core = Core::global();
-
-          let new_value = {
-            let global = Data::global();
-            let verge = global.verge.lock();
-            !verge.enable_tun_mode.clone().unwrap_or(false)
-          };
-
-          let patch = Verge {
-            enable_tun_mode: Some(new_value),
-            ..Verge::default()
-          };
-
-          crate::log_if_err!(core.patch_verge(patch));
-        }
-        "restart_clash" => {
-          let core = Core::global();
-          crate::log_if_err!(core.restart_clash());
-        }
+        "system_proxy" => feat::toggle_system_proxy(),
+        "tun_mode" => feat::toggle_tun_mode(),
         "restart_app" => {
           api::process::restart(&app_handle.env());
         }
@@ -140,6 +105,7 @@ fn main() -> std::io::Result<()> {
       // verge
       cmds::get_verge_config,
       cmds::patch_verge_config,
+      cmds::update_hotkeys,
       // profile
       cmds::view_profile,
       cmds::patch_profile,
@@ -188,7 +154,7 @@ fn main() -> std::io::Result<()> {
     resolve::resolve_reset();
     app_handle.exit(0);
   })
-  .expect("error when exiting.");
+  .expect("error while exiting.");
 
   #[allow(unused)]
   app.run(|app_handle, e| match e {

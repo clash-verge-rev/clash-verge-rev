@@ -213,7 +213,6 @@ pub fn patch_clash_config(payload: Mapping) -> CmdResult {
   wrap_err!(core.patch_clash(payload))
 }
 
-/// get the verge config
 #[tauri::command]
 pub fn get_verge_config() -> CmdResult<Verge> {
   let global = Data::global();
@@ -227,6 +226,13 @@ pub fn get_verge_config() -> CmdResult<Verge> {
 pub fn patch_verge_config(payload: Verge) -> CmdResult {
   let core = Core::global();
   wrap_err!(core.patch_verge(payload))
+}
+
+#[tauri::command]
+pub fn update_hotkeys(hotkeys: Vec<String>) -> CmdResult {
+  let core = Core::global();
+  let mut hotkey = core.hotkey.lock();
+  wrap_err!(hotkey.update(hotkeys))
 }
 
 /// change clash core
