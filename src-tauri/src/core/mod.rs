@@ -1,4 +1,5 @@
 use self::handle::Handle;
+use self::hotkey::Hotkey;
 use self::sysopt::Sysopt;
 use self::timer::Timer;
 use crate::config::enhance_config;
@@ -11,6 +12,7 @@ use serde_yaml::{Mapping, Value};
 use std::sync::Arc;
 
 mod handle;
+mod hotkey;
 mod service;
 mod sysopt;
 mod timer;
@@ -21,6 +23,7 @@ static CORE: Lazy<Core> = Lazy::new(|| Core {
   service: Arc::new(Mutex::new(Service::new())),
   sysopt: Arc::new(Mutex::new(Sysopt::new())),
   timer: Arc::new(Mutex::new(Timer::new())),
+  hotkey: Arc::new(Mutex::new(Hotkey::new())),
   runtime: Arc::new(Mutex::new(RuntimeResult::default())),
   handle: Arc::new(Mutex::new(Handle::default())),
 });
@@ -30,6 +33,7 @@ pub struct Core {
   pub service: Arc<Mutex<Service>>,
   pub sysopt: Arc<Mutex<Sysopt>>,
   pub timer: Arc<Mutex<Timer>>,
+  pub hotkey: Arc<Mutex<Hotkey>>,
   pub runtime: Arc<Mutex<RuntimeResult>>,
   pub handle: Arc<Mutex<Handle>>,
 }
@@ -44,29 +48,29 @@ impl Core {
     // kill old clash process
     Service::kill_old_clash();
 
-    {
-      let mut handle = self.handle.lock();
-      handle.set_inner(app_handle);
-    }
+    let mut handle = self.handle.lock();
+    handle.set_inner(app_handle);
+    drop(handle);
 
-    {
-      let mut service = self.service.lock();
-      log_if_err!(service.start());
-    }
+    let mut service = self.service.lock();
+    log_if_err!(service.start());
+    drop(service);
 
     log_if_err!(self.activate());
 
-    {
-      let mut sysopt = self.sysopt.lock();
-      log_if_err!(sysopt.init_launch());
-      log_if_err!(sysopt.init_sysproxy());
-    }
+    let mut sysopt = self.sysopt.lock();
+    log_if_err!(sysopt.init_launch());
+    log_if_err!(sysopt.init_sysproxy());
+    drop(sysopt);
 
-    {
-      let handle = self.handle.lock();
-      log_if_err!(handle.update_systray());
-      log_if_err!(handle.update_systray_clash());
-    }
+    let handle = self.handle.lock();
+    log_if_err!(handle.update_systray());
+    log_if_err!(handle.update_systray_clash());
+    drop(handle);
+
+    let mut hotkey = self.hotkey.lock();
+    log_if_err!(hotkey.init());
+    drop(hotkey);
 
     // timer initialize
     let mut timer = self.timer.lock();
