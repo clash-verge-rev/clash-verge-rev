@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, Paper, TextField } from "@mui/material";
+import { Box, Button, ButtonGroup, Paper, TextField } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import { closeAllConnections, getInformation } from "@/services/api";
@@ -9,6 +9,14 @@ import ConnectionItem from "@/components/connection/connection-item";
 import BaseEmpty from "@/components/base/base-empty";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
+
+type IOderOpts = {
+  [key in string]: {
+    orderFunc(
+      connections: ApiType.ConnectionsItem[]
+    ): ApiType.ConnectionsItem[];
+  };
+};
 
 const ConnectionsPage = () => {
   const { t } = useTranslation();
@@ -21,6 +29,25 @@ const ConnectionsPage = () => {
       (conn.metadata.host || conn.metadata.destinationIP)?.includes(filterText)
     );
   }, [connData, filterText]);
+
+  const orderOpts: IOderOpts = {
+    Default: {
+      orderFunc: (list) => list,
+    },
+    // "Download Traffic": {
+    //   orderFunc: (list) => list,
+    // },
+    // "Upload Traffic": {
+    //   orderFunc: (list) => list,
+    // },
+    "Download Speed": {
+      orderFunc: (list) => list.sort((a, b) => b.curDownload! - a.curDownload!),
+    },
+    "Upload Speed": {
+      orderFunc: (list) => list.sort((a, b) => b.curUpload! - a.curUpload!),
+    },
+  };
+  const [curOrderOpt, setOrderOpt] = useState("Default");
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -61,13 +88,19 @@ const ConnectionsPage = () => {
             }
           }
 
-          return { ...data, connections };
+          const orderedConnections =
+            orderOpts[curOrderOpt].orderFunc(connections);
+
+          return {
+            ...data,
+            connections: orderedConnections,
+          };
         });
       });
     });
 
     return () => ws?.close();
-  }, []);
+  }, [curOrderOpt]);
 
   const onCloseAll = useLockFn(closeAllConnections);
 
@@ -122,7 +155,25 @@ const ConnectionsPage = () => {
           />
         </Box>
 
-        <Box height="calc(100% - 50px)">
+        <Box sx={{ mx: "12px", mb: 0.5 }}>
+          <ButtonGroup size="small" sx={{ width: "100%" }}>
+            {Object.keys(orderOpts).map((opt) => (
+              <Button
+                key={opt}
+                variant={opt === curOrderOpt ? "contained" : "outlined"}
+                onClick={() => setOrderOpt(opt)}
+                sx={{
+                  fontSize: "0.5rem",
+                  textTransform: "capitalize",
+                }}
+              >
+                {t(opt)}
+              </Button>
+            ))}
+          </ButtonGroup>
+        </Box>
+
+        <Box height="calc(100% - 50px - 30px)">
           {filterConn.length > 0 ? (
             <Virtuoso
               data={filterConn}
