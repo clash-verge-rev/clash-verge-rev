@@ -74,8 +74,8 @@ declare namespace ApiType {
     chains: string[];
     rule: string;
     rulePayload: string;
-    curUpload?: number; // calculate
-    curDownload?: number; // calculate
+    curUpload?: number; // upload speed, calculate at runtime
+    curDownload?: number; // download speed, calculate at runtime
   }
 
   interface Connections {
