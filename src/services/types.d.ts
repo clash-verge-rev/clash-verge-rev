@@ -147,6 +147,7 @@ declare namespace CmdType {
     proxy_guard_duration?: number;
     system_proxy_bypass?: string;
     web_ui_list?: string[];
+    hotkeys?: string[];
     theme_setting?: {
       primary_color?: string;
       secondary_color?: string;

@@ -17,8 +17,10 @@ import {
 import { ArrowForward } from "@mui/icons-material";
 import { SettingList, SettingItem } from "./setting";
 import { version } from "@root/package.json";
+import useModalHandler from "@/hooks/use-modal-handler";
 import ThemeModeSwitch from "./mods/theme-mode-switch";
 import ConfigViewer from "./mods/config-viewer";
+import HotkeyViewer from "./mods/hotkey-viewer";
 import GuardState from "./mods/guard-state";
 import SettingTheme from "./setting-theme";
 
@@ -43,8 +45,12 @@ const SettingVerge = ({ onError }: Props) => {
     mutateVerge({ ...vergeConfig, ...patch }, false);
   };
 
+  const hotkeyHandler = useModalHandler();
+
   return (
     <SettingList title={t("Verge Setting")}>
+      <HotkeyViewer handler={hotkeyHandler} />
+
       <SettingItem label={t("Language")}>
         <GuardState
           value={language ?? "en"}
@@ -103,6 +109,17 @@ const SettingVerge = ({ onError }: Props) => {
           size="small"
           sx={{ my: "2px" }}
           onClick={() => setThemeOpen(true)}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
+
+      <SettingItem label={t("Hotkey Setting")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => hotkeyHandler.current.open()}
         >
           <ArrowForward />
         </IconButton>
