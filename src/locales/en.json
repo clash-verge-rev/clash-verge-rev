@@ -3,6 +3,7 @@
   "Label-Profiles": "Profiles",
   "Label-Connections": "Connections",
   "Label-Logs": "Logs",
+  "Label-Rules": "Rules",
   "Label-Settings": "Settings",
 
   "Connections": "Connections",
@@ -73,6 +74,7 @@
   "Theme Mode": "Theme Mode",
   "Theme Blur": "Theme Blur",
   "Theme Setting": "Theme Setting",
+  "Hotkey Setting": "Hotkey Setting",
   "Traffic Graph": "Traffic Graph",
   "Language": "Language",
   "Open App Dir": "Open App Dir",
