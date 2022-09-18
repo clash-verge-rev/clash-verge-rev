@@ -3,6 +3,7 @@ import ProxiesPage from "./proxies";
 import ProfilesPage from "./profiles";
 import SettingsPage from "./settings";
 import ConnectionsPage from "./connections";
+import RulesPage from "./rules";
 
 export const routers = [
   {
@@ -14,6 +15,11 @@ export const routers = [
     label: "Label-Profiles",
     link: "/profile",
     ele: ProfilesPage,
+  },
+  {
+    label: "Label-Rules",
+    link: "/rules",
+    ele: RulesPage,
   },
   {
     label: "Label-Connections",

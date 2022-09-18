@@ -62,7 +62,8 @@ export async function updateConfigs(config: Partial<ApiType.ConfigData>) {
 /// Get current rules
 export async function getRules() {
   const instance = await getAxios();
-  return instance.get("/rules") as Promise<ApiType.RuleItem[]>;
+  const response = await instance.get<any, any>("/rules");
+  return response?.rules as ApiType.RuleItem[];
 }
 
 /// Get Proxy delay

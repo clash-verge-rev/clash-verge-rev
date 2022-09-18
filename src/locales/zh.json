@@ -3,6 +3,7 @@
   "Label-Profiles": "配 置",
   "Label-Connections": "连 接",
   "Label-Logs": "日 志",
+  "Label-Rules": "规 则",
   "Label-Settings": "设 置",
 
   "Connections": "连接",
@@ -73,6 +74,7 @@
   "Theme Mode": "主题模式",
   "Theme Blur": "背景模糊",
   "Theme Setting": "主题设置",
+  "Hotkey Setting": "热键设置",
   "Traffic Graph": "流量图显",
   "Language": "语言设置",
   "Open App Dir": "应用目录",
