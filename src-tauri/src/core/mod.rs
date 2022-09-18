@@ -202,6 +202,11 @@ impl Core {
       handle.update_systray()?;
     }
 
+    if patch.hotkeys.is_some() {
+      let mut hotkey = self.hotkey.lock();
+      hotkey.update(patch.hotkeys.unwrap())?;
+    }
+
     Ok(())
   }
 
@@ -225,6 +230,7 @@ impl Core {
 
     // update tray
     let handle = self.handle.lock();
+    handle.refresh_clash();
     handle.update_systray_clash()?;
 
     Ok(())

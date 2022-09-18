@@ -21,6 +21,9 @@ pub fn toggle_system_proxy() {
     enable_system_proxy: Some(enable),
     ..Verge::default()
   }));
+
+  let handle = core.handle.lock();
+  let _ = handle.refresh_verge();
 }
 
 // 打开系统代理
@@ -30,6 +33,9 @@ pub fn enable_system_proxy() {
     enable_system_proxy: Some(true),
     ..Verge::default()
   }));
+
+  let handle = core.handle.lock();
+  let _ = handle.refresh_verge();
 }
 
 // 关闭系统代理
@@ -39,6 +45,9 @@ pub fn disable_system_proxy() {
     enable_system_proxy: Some(false),
     ..Verge::default()
   }));
+
+  let handle = core.handle.lock();
+  let _ = handle.refresh_verge();
 }
 
 // 切换tun模式
@@ -54,6 +63,9 @@ pub fn toggle_tun_mode() {
     enable_tun_mode: Some(enable),
     ..Verge::default()
   }));
+
+  let handle = core.handle.lock();
+  let _ = handle.refresh_verge();
 }
 
 // 打开tun模式
@@ -63,6 +75,9 @@ pub fn enable_tun_mode() {
     enable_tun_mode: Some(true),
     ..Verge::default()
   }));
+
+  let handle = core.handle.lock();
+  let _ = handle.refresh_verge();
 }
 
 // 关闭tun模式
@@ -72,4 +87,7 @@ pub fn disable_tun_mode() {
     enable_tun_mode: Some(false),
     ..Verge::default()
   }));
+
+  let handle = core.handle.lock();
+  let _ = handle.refresh_verge();
 }
