@@ -4,12 +4,14 @@ use std::collections::HashMap;
 use tauri_hotkey::{parse_hotkey, HotkeyManager};
 
 pub struct Hotkey {
+  current: Vec<String>, // 保存当前的热键设置
   manager: HotkeyManager,
 }
 
 impl Hotkey {
   pub fn new() -> Hotkey {
     Hotkey {
+      current: Vec::new(),
       manager: HotkeyManager::new(),
     }
   }
@@ -30,6 +32,7 @@ impl Hotkey {
           log::error!(target: "app", "invalid hotkey \"{}\":\"{}\"", func.unwrap_or("None"), key.unwrap_or("None"));
         }
       }
+      self.current = hotkeys.clone();
     }
 
     Ok(())
@@ -58,23 +61,20 @@ impl Hotkey {
     };
 
     self.manager.register(hotkey, f)?;
+    log::info!(target: "app", "register hotkey {func} {key}");
     Ok(())
   }
 
   fn unregister(&mut self, key: &str) -> Result<()> {
     let hotkey = parse_hotkey(key.trim())?;
     self.manager.unregister(&hotkey)?;
+    log::info!(target: "app", "unregister hotkey {key}");
     Ok(())
   }
 
   pub fn update(&mut self, new_hotkeys: Vec<String>) -> Result<()> {
-    let data = Data::global();
-    let mut verge = data.verge.lock();
-
-    let default = Vec::new();
-    let old_hotkeys = verge.hotkeys.as_ref().unwrap_or(&default);
-
-    let old_map = Self::get_map_from_vec(old_hotkeys);
+    let current = self.current.to_owned();
+    let old_map = Self::get_map_from_vec(&current);
     let new_map = Self::get_map_from_vec(&new_hotkeys);
 
     for diff in Self::get_diff(old_map, new_map).iter() {
@@ -92,11 +92,7 @@ impl Hotkey {
       }
     }
 
-    verge.patch_config(Verge {
-      hotkeys: Some(new_hotkeys),
-      ..Verge::default()
-    })?;
-
+    self.current = new_hotkeys;
     Ok(())
   }
 
