@@ -1,16 +1,29 @@
 import { useMemo, useState } from "react";
 import { useRecoilState } from "recoil";
-import { Box, Button, MenuItem, Paper, Select, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+} from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
-import { atomLogData } from "@/services/states";
+import {
+  PlayCircleOutlineRounded,
+  PauseCircleOutlineRounded,
+} from "@mui/icons-material";
+import { atomEnableLog, atomLogData } from "@/services/states";
 import BasePage from "@/components/base/base-page";
-import LogItem from "@/components/log/log-item";
 import BaseEmpty from "@/components/base/base-empty";
+import LogItem from "@/components/log/log-item";
 
 const LogPage = () => {
   const { t } = useTranslation();
   const [logData, setLogData] = useRecoilState(atomLogData);
+  const [enableLog, setEnableLog] = useRecoilState(atomEnableLog);
 
   const [logState, setLogState] = useState("all");
   const [filterText, setFilterText] = useState("");
@@ -29,14 +42,27 @@ const LogPage = () => {
       title={t("Logs")}
       contentStyle={{ height: "100%" }}
       header={
-        <Button
-          size="small"
-          sx={{ mt: 1 }}
-          variant="contained"
-          onClick={() => setLogData([])}
-        >
-          {t("Clear")}
-        </Button>
+        <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
+          <IconButton
+            size="small"
+            sx={{ mr: 2 }}
+            onClick={() => setEnableLog((e) => !e)}
+          >
+            {enableLog ? (
+              <PauseCircleOutlineRounded />
+            ) : (
+              <PlayCircleOutlineRounded />
+            )}
+          </IconButton>
+
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => setLogData([])}
+          >
+            {t("Clear")}
+          </Button>
+        </Box>
       }
     >
       <Paper sx={{ boxSizing: "border-box", boxShadow: 2, height: "100%" }}>

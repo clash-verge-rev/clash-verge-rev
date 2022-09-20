@@ -5,15 +5,20 @@ import { listen } from "@tauri-apps/api/event";
 import { getInformation } from "@/services/api";
 import { getClashLogs } from "@/services/cmds";
 import { atomLogData } from "@/services/states";
+import useLogToggle from "./use-log-toggle";
 
 const MAX_LOG_NUM = 1000;
 
 // setup the log websocket
 export default function useLogSetup() {
   const [refresh, setRefresh] = useState({});
+
+  const [enableLog] = useLogToggle();
   const setLogData = useSetRecoilState(atomLogData);
 
   useEffect(() => {
+    if (!enableLog) return;
+
     getClashLogs().then(setLogData);
 
     let ws: WebSocket = null!;
@@ -41,5 +46,5 @@ export default function useLogSetup() {
       ws?.close();
       unlisten?.then((fn) => fn());
     };
-  }, [refresh]);
+  }, [refresh, enableLog]);
 }
