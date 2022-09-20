@@ -15,6 +15,11 @@ export const atomLogData = atom<ApiType.LogItem[]>({
   default: [],
 });
 
+export const atomEnableLog = atom<boolean>({
+  key: "atomEnableLog",
+  default: true,
+});
+
 // save the state of each profile item loading
 export const atomLoadingCache = atom<Record<string, boolean>>({
   key: "atomLoadingCache",
