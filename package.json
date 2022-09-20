@@ -22,7 +22,7 @@
     "@emotion/styled": "^11.10.4",
     "@mui/icons-material": "^5.10.3",
     "@mui/material": "^5.10.3",
-    "@tauri-apps/api": "^1.0.2",
+    "@tauri-apps/api": "^1.1.0",
     "ahooks": "^3.7.0",
     "axios": "^0.27.2",
     "dayjs": "^1.11.5",
@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@actions/github": "^5.0.3",
-    "@tauri-apps/cli": "^1.0.5",
+    "@tauri-apps/cli": "^1.1.1",
     "@types/fs-extra": "^9.0.13",
     "@types/js-cookie": "^3.0.2",
     "@types/lodash": "^4.14.180",
