@@ -283,7 +283,7 @@ impl Profiles {
           bail!("failed to read the file \"{}\"", file_path.display());
         }
 
-        return Ok(config::read_yaml::<Mapping>(file_path.clone()));
+        return Ok(config::read_merge_mapping(file_path.clone()));
       }
     }
     bail!("failed to find current profile \"uid:{current}\"");
