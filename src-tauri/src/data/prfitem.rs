@@ -352,7 +352,7 @@ impl PrfItem {
       }),
       "merge" => Some(ChainItem {
         uid,
-        data: ChainType::Merge(config::read_yaml::<Mapping>(path)),
+        data: ChainType::Merge(config::read_merge_mapping(path)),
       }),
       _ => None,
     }

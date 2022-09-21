@@ -125,7 +125,7 @@ impl Clash {
 
   /// get clash config
   pub fn read_config() -> Mapping {
-    config::read_yaml::<Mapping>(dirs::clash_path())
+    config::read_merge_mapping(dirs::clash_path())
   }
 
   /// save the clash config
