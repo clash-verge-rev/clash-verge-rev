@@ -89,5 +89,9 @@
 
   "Back": "返回",
   "Save": "保存",
-  "Cancel": "取消"
+  "Cancel": "取消",
+
+  "Default": "默认",
+  "Download Speed": "下载速度",
+  "Upload Speed": "上传速度"
 }
