@@ -25,9 +25,9 @@ const ItemWrapper = styled("div")`
 
 const HOTKEY_FUNC = [
   "clash_mode_rule",
-  "clash_mode_direct",
   "clash_mode_global",
-  "clash_moda_script",
+  "clash_mode_direct",
+  "clash_mode_script",
   "toggle_system_proxy",
   "enable_system_proxy",
   "disable_system_proxy",

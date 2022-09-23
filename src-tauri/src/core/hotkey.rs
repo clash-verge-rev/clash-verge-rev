@@ -1,22 +1,23 @@
 use crate::{data::*, feat, log_if_err};
 use anyhow::{bail, Result};
 use std::collections::HashMap;
-use tauri_hotkey::{parse_hotkey, HotkeyManager};
+use tauri::{AppHandle, GlobalShortcutManager};
 
 pub struct Hotkey {
   current: Vec<String>, // 保存当前的热键设置
-  manager: HotkeyManager,
+  manager: Option<AppHandle>,
 }
 
 impl Hotkey {
   pub fn new() -> Hotkey {
     Hotkey {
       current: Vec::new(),
-      manager: HotkeyManager::new(),
+      manager: None,
     }
   }
 
-  pub fn init(&mut self) -> Result<()> {
+  pub fn init(&mut self, app_handle: AppHandle) -> Result<()> {
+    self.manager = Some(app_handle);
     let data = Data::global();
     let verge = data.verge.lock();
 
@@ -27,9 +28,9 @@ impl Hotkey {
         let key = iter.next();
 
         if func.is_some() && key.is_some() {
-          log_if_err!(self.register(func.unwrap(), key.unwrap()));
+          log_if_err!(self.register(key.unwrap(), func.unwrap()));
         } else {
-          log::error!(target: "app", "invalid hotkey \"{}\":\"{}\"", func.unwrap_or("None"), key.unwrap_or("None"));
+          log::error!(target: "app", "invalid hotkey \"{}\":\"{}\"", key.unwrap_or("None"), func.unwrap_or("None"));
         }
       }
       self.current = hotkeys.clone();
@@ -38,18 +39,25 @@ impl Hotkey {
     Ok(())
   }
 
-  fn register(&mut self, func: &str, key: &str) -> Result<()> {
-    let hotkey = parse_hotkey(key.trim())?;
+  fn get_manager(&self) -> Result<impl GlobalShortcutManager> {
+    if self.manager.is_none() {
+      bail!("failed to get hotkey manager");
+    }
+    Ok(self.manager.as_ref().unwrap().global_shortcut_manager())
+  }
 
-    if self.manager.is_registered(&hotkey) {
-      self.manager.unregister(&hotkey)?;
+  fn register(&mut self, hotkey: &str, func: &str) -> Result<()> {
+    let mut manager = self.get_manager()?;
+
+    if manager.is_registered(hotkey)? {
+      manager.unregister(hotkey)?;
     }
 
     let f = match func.trim() {
       "clash_mode_rule" => || feat::change_clash_mode("rule"),
-      "clash_mode_direct" => || feat::change_clash_mode("direct"),
       "clash_mode_global" => || feat::change_clash_mode("global"),
-      "clash_moda_script" => || feat::change_clash_mode("script"),
+      "clash_mode_direct" => || feat::change_clash_mode("direct"),
+      "clash_mode_script" => || feat::change_clash_mode("script"),
       "toggle_system_proxy" => || feat::toggle_system_proxy(),
       "enable_system_proxy" => || feat::enable_system_proxy(),
       "disable_system_proxy" => || feat::disable_system_proxy(),
@@ -60,15 +68,14 @@ impl Hotkey {
       _ => bail!("invalid function \"{func}\""),
     };
 
-    self.manager.register(hotkey, f)?;
-    log::info!(target: "app", "register hotkey {func} {key}");
+    manager.register(hotkey, f)?;
+    log::info!(target: "app", "register hotkey {hotkey} {func}");
     Ok(())
   }
 
-  fn unregister(&mut self, key: &str) -> Result<()> {
-    let hotkey = parse_hotkey(key.trim())?;
-    self.manager.unregister(&hotkey)?;
-    log::info!(target: "app", "unregister hotkey {key}");
+  fn unregister(&mut self, hotkey: &str) -> Result<()> {
+    self.get_manager()?.unregister(&hotkey)?;
+    log::info!(target: "app", "unregister hotkey {hotkey}");
     Ok(())
   }
 
@@ -77,20 +84,15 @@ impl Hotkey {
     let old_map = Self::get_map_from_vec(&current);
     let new_map = Self::get_map_from_vec(&new_hotkeys);
 
-    for diff in Self::get_diff(old_map, new_map).iter() {
-      match diff {
-        Diff::Del(key) => {
-          let _ = self.unregister(key);
-        }
-        Diff::Mod(key, func) => {
-          let _ = self.unregister(key);
-          log_if_err!(self.register(func, key));
-        }
-        Diff::Add(key, func) => {
-          log_if_err!(self.register(func, key));
-        }
-      }
-    }
+    let (del, add) = Self::get_diff(old_map, new_map);
+
+    del.iter().for_each(|key| {
+      let _ = self.unregister(key);
+    });
+
+    add.iter().for_each(|(key, func)| {
+      log_if_err!(self.register(key, func));
+    });
 
     self.current = new_hotkeys;
     Ok(())
@@ -116,38 +118,36 @@ impl Hotkey {
   fn get_diff<'a>(
     old_map: HashMap<&'a str, &'a str>,
     new_map: HashMap<&'a str, &'a str>,
-  ) -> Vec<Diff<'a>> {
-    let mut list = vec![];
+  ) -> (Vec<&'a str>, Vec<(&'a str, &'a str)>) {
+    let mut del_list = vec![];
+    let mut add_list = vec![];
 
-    old_map
-      .iter()
-      .for_each(|(key, func)| match new_map.get(key) {
+    old_map.iter().for_each(|(&key, func)| {
+      match new_map.get(key) {
         Some(new_func) => {
           if new_func != func {
-            list.push(Diff::Mod(key, new_func));
+            del_list.push(key);
+            add_list.push((key, *new_func));
           }
         }
-        None => list.push(Diff::Del(key)),
-      });
+        None => del_list.push(key),
+      };
+    });
 
-    new_map.iter().for_each(|(key, func)| {
+    new_map.iter().for_each(|(&key, &func)| {
       if old_map.get(key).is_none() {
-        list.push(Diff::Add(key, func));
+        add_list.push((key, func));
       }
     });
 
-    list
+    (del_list, add_list)
   }
 }
 
 impl Drop for Hotkey {
   fn drop(&mut self) {
-    let _ = self.manager.unregister_all();
+    if let Ok(mut manager) = self.get_manager() {
+      let _ = manager.unregister_all();
+    }
   }
-}
-
-enum Diff<'a> {
-  Del(&'a str),          // key
-  Add(&'a str, &'a str), // key, func
-  Mod(&'a str, &'a str), // key, func
 }

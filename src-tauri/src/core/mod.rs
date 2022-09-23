@@ -49,7 +49,7 @@ impl Core {
     Service::kill_old_clash();
 
     let mut handle = self.handle.lock();
-    handle.set_inner(app_handle);
+    handle.set_inner(app_handle.clone());
     drop(handle);
 
     let mut service = self.service.lock();
@@ -69,7 +69,7 @@ impl Core {
     drop(handle);
 
     let mut hotkey = self.hotkey.lock();
-    log_if_err!(hotkey.init());
+    log_if_err!(hotkey.init(app_handle));
     drop(hotkey);
 
     // timer initialize
