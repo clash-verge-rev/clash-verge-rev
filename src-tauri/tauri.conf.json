@@ -68,6 +68,9 @@
       },
       "process": {
         "all": true
+      },
+      "globalShortcut": {
+        "all": true
       }
     },
     "windows": [
