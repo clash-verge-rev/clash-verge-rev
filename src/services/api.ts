@@ -5,7 +5,7 @@ let axiosIns: AxiosInstance = null!;
 let server = "";
 let secret = "";
 
-/// initialize some infomation
+/// initialize some information
 /// enable force update axiosIns
 export async function getAxios(force: boolean = false) {
   if (axiosIns && !force) return axiosIns;
@@ -97,7 +97,7 @@ async function getProxiesInner() {
   }
 }
 
-/// Get the Proxy infomation
+/// Get the Proxy information
 export async function getProxies() {
   const [proxyRecord, providerRecord] = await Promise.all([
     getProxiesInner(),
