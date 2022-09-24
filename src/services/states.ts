@@ -17,7 +17,21 @@ export const atomLogData = atom<ApiType.LogItem[]>({
 
 export const atomEnableLog = atom<boolean>({
   key: "atomEnableLog",
-  default: true,
+  effects: [
+    ({ setSelf, onSet }) => {
+      const key = "enable-log";
+
+      setSelf(localStorage.getItem(key) !== "false");
+
+      onSet((newValue, _, isReset) => {
+        if (isReset) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, newValue.toString());
+        }
+      });
+    },
+  ],
 });
 
 // save the state of each profile item loading

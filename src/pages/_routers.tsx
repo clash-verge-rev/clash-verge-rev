@@ -17,14 +17,14 @@ export const routers = [
     ele: ProfilesPage,
   },
   {
-    label: "Label-Rules",
-    link: "/rules",
-    ele: RulesPage,
-  },
-  {
     label: "Label-Connections",
     link: "/connections",
     ele: ConnectionsPage,
+  },
+  {
+    label: "Label-Rules",
+    link: "/rules",
+    ele: RulesPage,
   },
   {
     label: "Label-Logs",
