@@ -1,12 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, MenuItem, Paper, Select, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+} from "@mui/material";
+import { useRecoilState } from "recoil";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
+import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
 import { closeAllConnections, getInformation } from "@/services/api";
+import { atomConnectionSetting } from "@/services/states";
 import BasePage from "@/components/base/base-page";
 import BaseEmpty from "@/components/base/base-empty";
 import ConnectionItem from "@/components/connection/connection-item";
+import ConnectionTable from "@/components/connection/connection-table";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -19,10 +31,12 @@ const ConnectionsPage = () => {
   const [curOrderOpt, setOrderOpt] = useState("Default");
   const [connData, setConnData] = useState<ApiType.Connections>(initConn);
 
+  const [setting, setSetting] = useRecoilState(atomConnectionSetting);
+
+  const isTableLayout = setting.layout === "table";
+
   const orderOpts: Record<string, OrderFunc> = {
     Default: (list) => list,
-    // "Download Traffic": (list) => list,
-    // "Upload Traffic": (list) => list,
     "Upload Speed": (list) => list.sort((a, b) => b.curUpload! - a.curUpload!),
     "Download Speed": (list) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
@@ -92,14 +106,29 @@ const ConnectionsPage = () => {
       title={t("Connections")}
       contentStyle={{ height: "100%" }}
       header={
-        <Button
-          size="small"
-          sx={{ mt: 1 }}
-          variant="contained"
-          onClick={onCloseAll}
-        >
-          {t("Close All")}
-        </Button>
+        <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
+          <IconButton
+            size="small"
+            sx={{ mr: 2 }}
+            onClick={() =>
+              setSetting((o) =>
+                o.layout === "list"
+                  ? { ...o, layout: "table" }
+                  : { ...o, layout: "list" }
+              )
+            }
+          >
+            {isTableLayout ? (
+              <TableChartRounded fontSize="inherit" />
+            ) : (
+              <TableRowsRounded fontSize="inherit" />
+            )}
+          </IconButton>
+
+          <Button size="small" variant="contained" onClick={onCloseAll}>
+            {t("Close All")}
+          </Button>
+        </Box>
       }
     >
       <Paper sx={{ boxShadow: 2, height: "100%" }}>
@@ -113,23 +142,25 @@ const ConnectionsPage = () => {
             alignItems: "center",
           }}
         >
-          <Select
-            size="small"
-            autoComplete="off"
-            value={curOrderOpt}
-            onChange={(e) => setOrderOpt(e.target.value)}
-            sx={{
-              mr: 1,
-              width: i18n.language === "en" ? 190 : 120,
-              '[role="button"]': { py: 0.65 },
-            }}
-          >
-            {Object.keys(orderOpts).map((opt) => (
-              <MenuItem key={opt} value={opt}>
-                <span style={{ fontSize: 14 }}>{t(opt)}</span>
-              </MenuItem>
-            ))}
-          </Select>
+          {!isTableLayout && (
+            <Select
+              size="small"
+              autoComplete="off"
+              value={curOrderOpt}
+              onChange={(e) => setOrderOpt(e.target.value)}
+              sx={{
+                mr: 1,
+                width: i18n.language === "en" ? 190 : 120,
+                '[role="button"]': { py: 0.65 },
+              }}
+            >
+              {Object.keys(orderOpts).map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  <span style={{ fontSize: 14 }}>{t(opt)}</span>
+                </MenuItem>
+              ))}
+            </Select>
+          )}
 
           <TextField
             hiddenLabel
@@ -145,13 +176,15 @@ const ConnectionsPage = () => {
         </Box>
 
         <Box height="calc(100% - 50px)">
-          {filterConn.length > 0 ? (
+          {filterConn.length === 0 ? (
+            <BaseEmpty text="No Connections" />
+          ) : isTableLayout ? (
+            <ConnectionTable connections={filterConn} />
+          ) : (
             <Virtuoso
               data={filterConn}
               itemContent={(index, item) => <ConnectionItem value={item} />}
             />
-          ) : (
-            <BaseEmpty text="No Connections" />
           )}
         </Box>
       </Paper>

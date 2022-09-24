@@ -1,19 +1,25 @@
 import dayjs from "dayjs";
 import { useLockFn } from "ahooks";
-import { styled, ListItem, IconButton, ListItemText } from "@mui/material";
+import {
+  styled,
+  ListItem,
+  IconButton,
+  ListItemText,
+  Box,
+  alpha,
+} from "@mui/material";
 import { CloseRounded } from "@mui/icons-material";
 import { deleteConnection } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
 
 const Tag = styled("span")(({ theme }) => ({
-  display: "inline-block",
-  fontSize: "12px",
+  fontSize: "10px",
   padding: "0 4px",
   lineHeight: 1.375,
-  border: "1px solid #ccc",
+  border: "1px solid",
   borderRadius: 4,
-  marginRight: "0.1em",
-  transform: "scale(0.92)",
+  borderColor: alpha(theme.palette.text.secondary, 0.35),
+  marginRight: "4px",
 }));
 
 interface Props {
@@ -26,7 +32,7 @@ const ConnectionItem = (props: Props) => {
   const { id, metadata, chains, start, curUpload, curDownload } = value;
 
   const onDelete = useLockFn(async () => deleteConnection(id));
-  const showTraffic = curUpload! > 1024 || curDownload! > 1024;
+  const showTraffic = curUpload! >= 100 || curDownload! >= 100;
 
   return (
     <ListItem
@@ -41,18 +47,16 @@ const ConnectionItem = (props: Props) => {
         sx={{ userSelect: "text" }}
         primary={metadata.host || metadata.destinationIP}
         secondary={
-          <>
+          <Box sx={{ display: "flex", flexWrap: "wrap" }}>
             <Tag sx={{ textTransform: "uppercase", color: "success" }}>
               {metadata.network}
             </Tag>
 
             <Tag>{metadata.type}</Tag>
 
-            {metadata.process && <Tag>{metadata.process}</Tag>}
+            {!!metadata.process && <Tag>{metadata.process}</Tag>}
 
             {chains.length > 0 && <Tag>{chains[value.chains.length - 1]}</Tag>}
-
-            {chains.length > 0 && <Tag>{chains[0]}</Tag>}
 
             <Tag>{dayjs(start).fromNow()}</Tag>
 
@@ -61,7 +65,7 @@ const ConnectionItem = (props: Props) => {
                 {parseTraffic(curUpload!)} / {parseTraffic(curDownload!)}
               </Tag>
             )}
-          </>
+          </Box>
         }
       />
     </ListItem>

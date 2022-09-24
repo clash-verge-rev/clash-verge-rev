@@ -22,6 +22,7 @@
     "@emotion/styled": "^11.10.4",
     "@mui/icons-material": "^5.10.3",
     "@mui/material": "^5.10.3",
+    "@mui/x-data-grid": "^5.17.4",
     "@tauri-apps/api": "^1.1.0",
     "ahooks": "^3.7.0",
     "axios": "^0.27.2",

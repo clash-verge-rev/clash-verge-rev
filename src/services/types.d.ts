@@ -68,6 +68,7 @@ declare namespace ApiType {
       destinationPort: string;
       destinationIP?: string;
       process?: string;
+      processPath?: string;
     };
     upload: number;
     download: number;
