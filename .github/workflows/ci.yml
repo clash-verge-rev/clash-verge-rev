@@ -10,7 +10,7 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-18.04, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     if: |
       startsWith(github.repository, 'zzzgydi') &&
