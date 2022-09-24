@@ -43,7 +43,7 @@ impl Handle {
   // update system tray state (clash config)
   pub fn update_systray_clash(&self) -> Result<()> {
     if self.app_handle.is_none() {
-      bail!("unhandle error");
+      bail!("update_systray_clash unhandle error");
     }
 
     let app_handle = self.app_handle.as_ref().unwrap();
@@ -75,7 +75,7 @@ impl Handle {
   /// update the system tray state (verge config)
   pub fn update_systray(&self) -> Result<()> {
     if self.app_handle.is_none() {
-      bail!("unhandle error");
+      bail!("update_systray unhandle error");
     }
 
     let app_handle = self.app_handle.as_ref().unwrap();

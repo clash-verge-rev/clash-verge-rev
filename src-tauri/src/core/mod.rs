@@ -224,14 +224,16 @@ impl Core {
     let mut mapping = Mapping::new();
     mapping.insert(Value::from("mode"), Value::from(mode));
 
+    let handle = self.handle.clone();
+
     tauri::async_runtime::spawn(async move {
       log_if_err!(Service::patch_config(info, mapping.to_owned()).await);
-    });
 
-    // update tray
-    let handle = self.handle.lock();
-    handle.refresh_clash();
-    handle.update_systray_clash()?;
+      // update tray
+      let handle = handle.lock();
+      handle.refresh_clash();
+      log_if_err!(handle.update_systray_clash());
+    });
 
     Ok(())
   }
