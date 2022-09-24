@@ -93,5 +93,16 @@
 
   "Default": "默认",
   "Download Speed": "下载速度",
-  "Upload Speed": "上传速度"
+  "Upload Speed": "上传速度",
+
+  "clash_mode_rule": "规则模式",
+  "clash_mode_global": "全局模式",
+  "clash_mode_direct": "直连模式",
+  "clash_mode_script": "脚本模式",
+  "toggle_system_proxy": "切换系统代理",
+  "enable_system_proxy": "开启系统代理",
+  "disable_system_proxy": "关闭系统代理",
+  "toggle_tun_mode": "切换Tun模式",
+  "enable_tun_mode": "开启Tun模式",
+  "disable_tun_mode": "关闭Tun模式"
 }
