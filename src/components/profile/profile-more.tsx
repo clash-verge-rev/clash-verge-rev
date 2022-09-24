@@ -46,7 +46,7 @@ const ProfileMore = (props: Props) => {
   } = props;
 
   const { uid, type } = itemData;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [editOpen, setEditOpen] = useState(false);
@@ -110,6 +110,7 @@ const ProfileMore = (props: Props) => {
     <>
       <ProfileBox
         aria-selected={selected}
+        onDoubleClick={onEditFile}
         // onClick={() => onSelect(false)}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
@@ -172,13 +173,14 @@ const ProfileMore = (props: Props) => {
             <Typography
               noWrap
               title={itemData.desc}
-              sx={{ width: "calc(100% - 75px)" }}
+              sx={i18n.language === "zh" ? { width: "calc(100% - 75px)" } : {}}
             >
               {itemData.desc}
             </Typography>
           )}
 
           <Typography
+            noWrap
             component="span"
             title={`Updated Time: ${parseExpire(itemData.updated)}`}
             style={{ fontSize: 14 }}
