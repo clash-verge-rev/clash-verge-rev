@@ -48,7 +48,11 @@ const ConnectionItem = (props: Props) => {
 
             <Tag>{metadata.type}</Tag>
 
+            {metadata.process && <Tag>{metadata.process}</Tag>}
+
             {chains.length > 0 && <Tag>{chains[value.chains.length - 1]}</Tag>}
+
+            {chains.length > 0 && <Tag>{chains[0]}</Tag>}
 
             <Tag>{dayjs(start).fromNow()}</Tag>
 
