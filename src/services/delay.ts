@@ -59,6 +59,9 @@ class DelayManager {
     let count = 0;
     let current = 0;
 
+    // 设置正在延迟测试中
+    names.forEach((name) => this.setDelay(name, groupName, -2));
+
     return new Promise((resolve) => {
       const help = async (): Promise<void> => {
         if (current >= skipNum) return;
