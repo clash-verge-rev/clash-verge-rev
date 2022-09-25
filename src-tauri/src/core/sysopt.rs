@@ -1,5 +1,5 @@
 use crate::{data::*, log_if_err};
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use std::sync::Arc;
 use sysproxy::Sysproxy;
@@ -133,29 +133,61 @@ impl Sysopt {
     let verge = data.verge.lock();
     let enable = verge.enable_auto_launch.clone().unwrap_or(false);
 
-    if !enable {
-      return Ok(());
-    }
+    let app_exe = current_exe()?;
+    let app_exe = dunce::canonicalize(app_exe)?;
+    let app_name = app_exe
+      .file_stem()
+      .and_then(|f| f.to_str())
+      .ok_or(anyhow!("failed to get file stem"))?;
 
-    let app_exe = current_exe().unwrap();
-    let app_exe = dunce::canonicalize(app_exe).unwrap();
-    let app_name = app_exe.file_stem().unwrap().to_str().unwrap();
-    let app_path = app_exe.as_os_str().to_str().unwrap();
+    let app_path = app_exe
+      .as_os_str()
+      .to_str()
+      .ok_or(anyhow!("failed to get app_path"))?
+      .to_string();
 
     // fix issue #26
     #[cfg(target_os = "windows")]
     let app_path = format!("\"{app_path}\"");
-    #[cfg(target_os = "windows")]
-    let app_path = app_path.as_str();
+
+    // use the /Applications/Clash Verge.app path
+    #[cfg(target_os = "macos")]
+    let app_path = (|| -> Option<String> {
+      let path = std::path::PathBuf::from(&app_path);
+      let path = path.parent()?.parent()?.parent()?;
+      let extension = path.extension()?.to_str()?;
+      match extension == "app" {
+        true => Some(path.as_os_str().to_str()?.to_string()),
+        false => None,
+      }
+    })()
+    .unwrap_or(app_path);
 
     let auto = AutoLaunchBuilder::new()
       .set_app_name(app_name)
-      .set_app_path(app_path)
+      .set_app_path(&app_path)
       .build()?;
 
-    // fix issue #26
-    auto.enable()?;
     self.auto_launch = Some(auto);
+
+    let auto = self.auto_launch.as_ref().unwrap();
+
+    // macos每次启动都更新登录项，避免重复设置登录项
+    #[cfg(target_os = "macos")]
+    {
+      let _ = auto.disable();
+      if enable {
+        auto.enable()?;
+      }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+      match enable {
+        true => auto.enable()?,
+        false => auto.disable()?,
+      };
+    }
 
     Ok(())
   }
