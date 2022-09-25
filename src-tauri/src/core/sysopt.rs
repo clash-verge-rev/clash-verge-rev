@@ -170,6 +170,12 @@ impl Sysopt {
 
     self.auto_launch = Some(auto);
 
+    // 避免在开发时将自启动关了
+    #[cfg(feature = "verge-dev")]
+    if !enable {
+      return Ok(());
+    }
+
     let auto = self.auto_launch.as_ref().unwrap();
 
     // macos每次启动都更新登录项，避免重复设置登录项
