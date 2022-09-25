@@ -206,7 +206,7 @@ impl Sysopt {
 
     match enable {
       true => auto_launch.enable()?,
-      false => auto_launch.disable()?,
+      false => crate::log_if_err!(auto_launch.disable()), // 忽略关闭的错误
     };
 
     Ok(())
