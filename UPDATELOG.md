@@ -1,3 +1,21 @@
+## v1.1.0
+
+### Features
+
+- add rule page
+- supports proxy providers delay check
+- add proxy delay check loading status
+- supports hotkey/shortcut management
+- supports displaying connections data in table layout(refer to yacd)
+
+### Bug Fixes
+
+- supports yaml merge key in clash config
+- detect the network interface and set the system proxy(macOS)
+- fix some other glitches
+
+---
+
 ## v1.0.6
 
 ### Features
