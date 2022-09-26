@@ -284,9 +284,14 @@ impl Core {
       match Service::set_config(clash_info, config).await {
         Ok(_) => {
           let handle = handle.lock();
-          handle.refresh_clash()
+          handle.refresh_clash();
+          handle.notice_message("set_config::ok".into(), "ok".into());
         }
-        Err(err) => log::error!(target: "app", "{err}"),
+        Err(err) => {
+          let handle = handle.lock();
+          handle.notice_message("set_config::error".into(), format!("{err}"));
+          log::error!(target: "app", "last {err}")
+        }
       }
     });
 

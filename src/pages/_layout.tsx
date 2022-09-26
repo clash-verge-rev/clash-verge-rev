@@ -14,6 +14,7 @@ import { getAxios } from "@/services/api";
 import { atomCurrentProfile } from "@/services/states";
 import { getVergeConfig, getProfiles } from "@/services/cmds";
 import { ReactComponent as LogoSvg } from "@/assets/image/logo.svg";
+import Notice from "@/components/base/base-notice";
 import LayoutItem from "@/components/layout/layout-item";
 import LayoutControl from "@/components/layout/layout-control";
 import LayoutTraffic from "@/components/layout/layout-traffic";
@@ -58,6 +59,21 @@ const Layout = () => {
 
     // update the verge config
     listen("verge://refresh-verge-config", () => mutate("getVergeConfig"));
+
+    // 设置提示监听
+    listen("verge://notice-message", ({ payload }) => {
+      const [status, msg] = payload as [string, string];
+      switch (status) {
+        case "set_config::ok":
+          Notice.success("Refresh clash config");
+          break;
+        case "set_config::error":
+          Notice.error(msg);
+          break;
+        default:
+          break;
+      }
+    });
 
     // set current profile uid
     getProfiles().then((data) => setCurrentProfile(data.current ?? ""));
