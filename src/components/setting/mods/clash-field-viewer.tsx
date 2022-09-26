@@ -93,7 +93,7 @@ const ClashFieldViewer = ({ handler }: Props) => {
     try {
       await changeProfileValid([...curSet]);
       mutateProfile();
-      Notice.success("Refresh clash config", 1000);
+      // Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }

@@ -40,6 +40,12 @@ impl Handle {
     }
   }
 
+  pub fn notice_message(&self, status: String, msg: String) {
+    if let Some(window) = self.get_window() {
+      log_if_err!(window.emit("verge://notice-message", (status, msg)));
+    }
+  }
+
   // update system tray state (clash config)
   pub fn update_systray_clash(&self) -> Result<()> {
     if self.app_handle.is_none() {

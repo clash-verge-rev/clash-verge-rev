@@ -212,8 +212,17 @@ impl Service {
     let mut data = HashMap::new();
     data.insert("path", temp_path.as_os_str().to_str().unwrap());
 
+    macro_rules! report_err {
+      ($i: expr, $e: expr) => {
+        match $i {
+          4 => bail!($e),
+          _ => log::error!(target: "app", $e),
+        }
+      };
+    }
+
     // retry 5 times
-    for _ in 0..5 {
+    for i in 0..5 {
       let headers = headers.clone();
       match reqwest::ClientBuilder::new().no_proxy().build() {
         Ok(client) => {
@@ -223,14 +232,12 @@ impl Service {
               204 => break,
               // 配置有问题不重试
               400 => bail!("failed to update clash config with status 400"),
-              status @ _ => {
-                log::error!(target: "app", "failed to activate clash with status \"{status}\"");
-              }
+              status @ _ => report_err!(i, "failed to activate clash with status \"{status}\""),
             },
-            Err(err) => log::error!(target: "app", "{err}"),
+            Err(err) => report_err!(i, "{err}"),
           }
         }
-        Err(err) => log::error!(target: "app", "{err}"),
+        Err(err) => report_err!(i, "{err}"),
       }
       sleep(Duration::from_millis(500)).await;
     }
