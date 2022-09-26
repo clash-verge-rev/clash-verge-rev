@@ -58,7 +58,7 @@ async function resolveClashMeta() {
     "win32-x64": "Clash.Meta-windows-amd64",
     "darwin-x64": "Clash.Meta-darwin-amd64",
     "darwin-arm64": "Clash.Meta-darwin-arm64",
-    "linux-x64": "Clash.Meta-linux-amd64",
+    "linux-x64": "Clash.Meta-linux-amd64-compatible",
   };
 
   const name = map[`${platform}-${arch}`];
