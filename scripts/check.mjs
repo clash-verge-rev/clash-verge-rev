@@ -28,6 +28,7 @@ function resolveClash() {
     "darwin-x64": "clash-darwin-amd64",
     "darwin-arm64": "clash-darwin-arm64",
     "linux-x64": "clash-linux-amd64",
+    "linux-arm64": "clash-linux-armv8",
   };
 
   const name = map[`${platform}-${arch}`];
@@ -59,6 +60,7 @@ async function resolveClashMeta() {
     "darwin-x64": "Clash.Meta-darwin-amd64",
     "darwin-arm64": "Clash.Meta-darwin-arm64",
     "linux-x64": "Clash.Meta-linux-amd64-compatible",
+    "linux-arm64": "Clash.Meta-linux-arm64",
   };
 
   const name = map[`${platform}-${arch}`];
