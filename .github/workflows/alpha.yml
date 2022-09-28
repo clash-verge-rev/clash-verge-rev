@@ -96,7 +96,7 @@ jobs:
           releaseBody: "Alpha Version"
           releaseDraft: true
           prerelease: true
-          args: --target aarc64-pc-windows-msvc
+          args: --target aarch64-pc-windows-msvc
 
       # - name: Portable Bundle
       #   if: matrix.os == 'windows-latest'

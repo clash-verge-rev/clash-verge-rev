@@ -60,6 +60,7 @@ jobs:
         if: startsWith(github.event.inputs.os, 'windows-')
         run: |
           rustup target add aarch64-pc-windows-msvc
+          rustup target list
 
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
@@ -96,4 +97,4 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          args: --target aarc64-pc-windows-msvc
+          args: --target aarch64-pc-windows-msvc
