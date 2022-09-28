@@ -55,6 +55,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libappindicator3-dev librsvg2-dev libayatana-appindicator3-dev
+      
+      - name: Install ARM64 toolchain (windows only)
+        if: startsWith(matrix.os, 'windows-')
+        run: |
+          rustup target add aarch64-pc-windows-msvc
 
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
@@ -80,3 +85,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+      
+      - name: Tauri build arm64 (windows only)
+        if: startsWith(matrix.os, 'windows-')
+        uses: tauri-apps/tauri-action@0e558392ccadcb49bcc89e7df15a400e8f0c954d
+        # enable cache even though failed
+        # continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          args: --target aarc64-pc-windows-msvc
