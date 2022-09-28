@@ -44,12 +44,12 @@ const ConnectionsPage = () => {
 
   const filterConn = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
-    const connetions = connData.connections.filter((conn) =>
+    const connections = connData.connections.filter((conn) =>
       (conn.metadata.host || conn.metadata.destinationIP)?.includes(filterText)
     );
 
-    if (orderFunc) return orderFunc(connetions);
-    return connetions;
+    if (orderFunc) return orderFunc(connections);
+    return connections;
   }, [connData, filterText, curOrderOpt]);
 
   useEffect(() => {
@@ -167,6 +167,7 @@ const ConnectionsPage = () => {
             fullWidth
             size="small"
             autoComplete="off"
+            spellCheck="false"
             variant="outlined"
             placeholder={t("Filter conditions")}
             value={filterText}

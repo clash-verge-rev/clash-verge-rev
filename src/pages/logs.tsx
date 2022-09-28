@@ -93,6 +93,7 @@ const LogPage = () => {
             fullWidth
             size="small"
             autoComplete="off"
+            spellCheck="false"
             variant="outlined"
             placeholder={t("Filter conditions")}
             value={filterText}
