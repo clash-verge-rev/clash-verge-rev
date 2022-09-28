@@ -40,10 +40,10 @@ jobs:
           profile: minimal
           override: true
 
-      # - name: Rust Cache
-      #   uses: Swatinem/rust-cache@v1
-      #   with:
-      #     working-directory: src-tauri
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
+        with:
+          working-directory: src-tauri
 
       - name: Install Node
         uses: actions/setup-node@v1
@@ -55,14 +55,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libappindicator3-dev librsvg2-dev libayatana-appindicator3-dev
-      
-      - name: Install ARM64 toolchain (windows only)
-        if: startsWith(github.event.inputs.os, 'windows-')
-        run: |
-          rustup target add aarch64-pc-windows-msvc
-          rustup target list
-
-          rm ./src-tauri/Cargo.lock
 
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
@@ -82,19 +74,9 @@ jobs:
           yarn install --network-timeout 1000000
           yarn run check
 
-      # - name: Tauri build
-      #   uses: tauri-apps/tauri-action@0e558392ccadcb49bcc89e7df15a400e8f0c954d
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-      #     TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-      
-      - name: Tauri build arm64 (windows only)
-        if: startsWith(github.event.inputs.os, 'windows-')
+      - name: Tauri build
         uses: tauri-apps/tauri-action@0e558392ccadcb49bcc89e7df15a400e8f0c954d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-        with:
-          args: --target aarch64-pc-windows-msvc
