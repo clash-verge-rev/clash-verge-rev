@@ -62,6 +62,8 @@ jobs:
           rustup target add aarch64-pc-windows-msvc
           rustup target list
 
+          rm ./src-tauri/Cargo.lock
+
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
