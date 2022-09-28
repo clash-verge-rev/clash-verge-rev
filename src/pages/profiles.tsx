@@ -149,6 +149,7 @@ const ProfilePage = () => {
           value={url}
           variant="outlined"
           autoComplete="off"
+          spellCheck="false"
           onChange={(e) => setUrl(e.target.value)}
           sx={{ input: { py: 0.65, px: 1.25 } }}
           placeholder={t("Profile URL")}

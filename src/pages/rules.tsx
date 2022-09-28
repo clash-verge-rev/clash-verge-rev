@@ -37,6 +37,7 @@ const RulesPage = () => {
             size="small"
             autoComplete="off"
             variant="outlined"
+            spellCheck="false"
             placeholder={t("Filter conditions")}
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
