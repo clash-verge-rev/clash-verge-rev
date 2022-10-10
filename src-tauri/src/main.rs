@@ -145,9 +145,13 @@ fn main() -> std::io::Result<()> {
     builder = builder.menu(Menu::new().add_submenu(submenu_file));
   }
 
-  let app = builder
+  #[allow(unused_mut)]
+  let mut app = builder
     .build(context)
     .expect("error while running tauri application");
+
+  #[cfg(target_os = "macos")]
+  app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
   let app_handle = app.app_handle();
   ctrlc::set_handler(move || {
