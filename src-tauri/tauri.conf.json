@@ -25,13 +25,8 @@
         "icons/icon-new.icns",
         "icons/icon.ico"
       ],
-      "resources": [
-        "resources"
-      ],
-      "externalBin": [
-        "sidecar/clash",
-        "sidecar/clash-meta"
-      ],
+      "resources": ["resources"],
+      "externalBin": ["sidecar/clash", "sidecar/clash-meta"],
       "copyright": "© 2022 zzzgydi All Rights Reserved",
       "category": "DeveloperTool",
       "shortDescription": "A Clash GUI based on tauri.",
@@ -51,10 +46,7 @@
         "digestAlgorithm": "sha256",
         "timestampUrl": "",
         "wix": {
-          "language": [
-            "zh-CN",
-            "en-US"
-          ]
+          "language": ["zh-CN", "en-US"]
         }
       }
     },
@@ -81,20 +73,7 @@
         "all": true
       }
     },
-    "windows": [
-      {
-        "title": "Clash Verge",
-        "width": 800,
-        "height": 636,
-        "center": true,
-        "resizable": true,
-        "fullscreen": false,
-        "decorations": false,
-        "transparent": true,
-        "minWidth": 600,
-        "minHeight": 520
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": "script-src 'unsafe-eval' 'self'; default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'; img-src data: 'self';"
     }
