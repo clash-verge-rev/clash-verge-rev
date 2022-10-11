@@ -67,7 +67,6 @@ export default function useCustomTheme() {
     const scrollColor = mode === "light" ? "#90939980" : "#54545480";
 
     const rootEle = document.documentElement;
-    rootEle.style.background = "transparent";
     rootEle.style.setProperty("--selection-color", selectColor);
     rootEle.style.setProperty("--scroller-color", scrollColor);
     rootEle.style.setProperty("--primary-main", theme.palette.primary.main);
