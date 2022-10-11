@@ -31,3 +31,9 @@ body {
 
 @import "./layout.scss";
 @import "./page.scss";
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    background-color: rgba(18, 18, 18, 1);
+  }
+}
