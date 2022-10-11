@@ -23,8 +23,8 @@ export default function useSortProxy(
         const ad = delayManager.getDelay(a.name, groupName);
         const bd = delayManager.getDelay(b.name, groupName);
 
-        if (ad === -1) return 1;
-        if (bd === -1) return -1;
+        if (ad === -1 || ad === -2) return 1;
+        if (bd === -1 || bd === -2) return -1;
 
         return ad - bd;
       });
