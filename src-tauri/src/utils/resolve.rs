@@ -21,7 +21,7 @@ pub fn resolve_setup(app: &App) {
   let core = Core::global();
   core.init(app.app_handle());
 
-  if !silent_start || cfg!(target_os = "macos") {
+  if !silent_start {
     create_window(&app.app_handle());
   }
 }
