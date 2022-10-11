@@ -129,8 +129,15 @@ impl Service {
     let app_dir = dirs::app_home_dir();
     let app_dir = app_dir.as_os_str().to_str().unwrap();
 
+    // fix #212
+    let args = match clash_core.as_str() {
+      "clash-meta" => vec!["-m", "-d", app_dir],
+      _ => vec!["-d", app_dir],
+    };
+
     let cmd = Command::new_sidecar(clash_core)?;
-    let (mut rx, cmd_child) = cmd.args(["-d", app_dir]).spawn()?;
+
+    let (mut rx, cmd_child) = cmd.args(args).spawn()?;
 
     // 将pid写入文件中
     let pid = cmd_child.pid();
