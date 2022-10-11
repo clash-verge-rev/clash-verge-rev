@@ -88,13 +88,9 @@ export async function updateProxy(group: string, proxy: string) {
 
 // get proxy
 async function getProxiesInner() {
-  try {
-    const instance = await getAxios();
-    const response = await instance.get<any, any>("/proxies");
-    return (response?.proxies || {}) as Record<string, ApiType.ProxyItem>;
-  } catch {
-    return {};
-  }
+  const instance = await getAxios();
+  const response = await instance.get<any, any>("/proxies");
+  return (response?.proxies || {}) as Record<string, ApiType.ProxyItem>;
 }
 
 /// Get the Proxy information
@@ -151,24 +147,20 @@ export async function getProxies() {
 
 // get proxy providers
 export async function getProviders() {
-  try {
-    const instance = await getAxios();
-    const response = await instance.get<any, any>("/providers/proxies");
+  const instance = await getAxios();
+  const response = await instance.get<any, any>("/providers/proxies");
 
-    const providers = (response.providers || {}) as Record<
-      string,
-      ApiType.ProviderItem
-    >;
+  const providers = (response.providers || {}) as Record<
+    string,
+    ApiType.ProviderItem
+  >;
 
-    return Object.fromEntries(
-      Object.entries(providers).filter(([key, item]) => {
-        const type = item.vehicleType.toLowerCase();
-        return type === "http" || type === "file";
-      })
-    );
-  } catch {
-    return {};
-  }
+  return Object.fromEntries(
+    Object.entries(providers).filter(([key, item]) => {
+      const type = item.vehicleType.toLowerCase();
+      return type === "http" || type === "file";
+    })
+  );
 }
 
 // proxy providers health check
