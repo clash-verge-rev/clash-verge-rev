@@ -1,3 +1,17 @@
+## v1.1.1
+
+### Features
+
+- optimize clash config feedback
+- hide macOS dock icon
+- use clash meta compatible version (Linux)
+
+### Bug Fixes
+
+- fix some other glitches
+
+---
+
 ## v1.1.0
 
 ### Features
