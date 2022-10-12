@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { Settings } from "@mui/icons-material";
 import { patchProfile } from "@/services/cmds";
+import { version } from "@root/package.json";
 import Notice from "../base/base-notice";
 
 interface Props {
@@ -119,7 +120,7 @@ const InfoEditor = (props: Props) => {
             {...textFieldProps}
             label="User Agent"
             value={option.user_agent}
-            placeholder="clash-verge/v1.0.0"
+            placeholder={`clash-verge/v${version}`}
             onChange={(e) => setOption({ user_agent: e.target.value })}
             onKeyDown={(e) => e.key === "Enter" && onUpdate()}
           />
