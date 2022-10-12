@@ -204,7 +204,9 @@ impl PrfItem {
       builder = builder.no_proxy();
     }
 
-    builder = builder.user_agent(user_agent.unwrap_or("clash-verge/v1.0.0".into()));
+    let version = unsafe { dirs::APP_VERSION };
+    let version = format!("clash-verge/{version}");
+    builder = builder.user_agent(user_agent.unwrap_or(version));
 
     let resp = builder.build()?.get(url).send().await?;
     let header = resp.headers();

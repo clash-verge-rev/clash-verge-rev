@@ -21,6 +21,8 @@ static mut RESOURCE_DIR: Option<PathBuf> = None;
 #[allow(unused)]
 static mut PORTABLE_FLAG: bool = false;
 
+pub static mut APP_VERSION: &str = "v1.1.1";
+
 /// initialize portable flag
 #[allow(unused)]
 pub unsafe fn init_portable_flag() {
@@ -66,6 +68,10 @@ pub fn app_resources_dir(package_info: &PackageInfo) -> PathBuf {
 
   unsafe {
     RESOURCE_DIR = Some(res_dir.clone());
+
+    let ver = &package_info.version;
+    let ver_str = format!("v{}.{}.{}", ver.major, ver.minor, ver.patch);
+    APP_VERSION = Box::leak(Box::new(ver_str));
   }
 
   res_dir
