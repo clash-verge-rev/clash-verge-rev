@@ -1,5 +1,5 @@
 import useSWR, { useSWRConfig } from "swr";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup, List, Paper } from "@mui/material";
@@ -7,8 +7,8 @@ import { getClashConfig, updateConfigs } from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
 import { getProxies } from "@/services/api";
 import BasePage from "@/components/base/base-page";
+import BaseEmpty from "@/components/base/base-empty";
 import ProxyGroup from "@/components/proxy/proxy-group";
-import ProxyGlobal from "@/components/proxy/proxy-global";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
@@ -18,7 +18,7 @@ const ProxyPage = () => {
 
   const modeList = ["rule", "global", "direct", "script"];
   const curMode = clashConfig?.mode.toLowerCase();
-  const { groups = [], proxies = [] } = proxiesData ?? {};
+  const { global, groups = [], proxies = [] } = proxiesData ?? {};
 
   // make sure that fetch the proxies successfully
   useEffect(() => {
@@ -37,9 +37,15 @@ const ProxyPage = () => {
     mutate("getClashConfig");
   });
 
+  const displayGroups = useMemo(() => {
+    if (!global) return groups;
+    if (curMode === "global" || curMode === "direct")
+      return [global, ...groups];
+    return groups;
+  }, [global, groups, curMode]);
+
   // difference style
-  const showGroup =
-    (curMode === "rule" || curMode === "script") && !!groups.length;
+  const showGroup = displayGroups.length > 0;
   const pageStyle = showGroup ? {} : { height: "100%" };
   const paperStyle: any = showGroup
     ? { mb: 0.5 }
@@ -48,7 +54,7 @@ const ProxyPage = () => {
   return (
     <BasePage
       contentStyle={pageStyle}
-      title={showGroup ? t("Proxy Groups") : t("Proxies")}
+      title={t("Proxy Groups")}
       header={
         <ButtonGroup size="small">
           {modeList.map((mode) => (
@@ -65,26 +71,14 @@ const ProxyPage = () => {
       }
     >
       <Paper sx={{ borderRadius: 1, boxShadow: 2, ...paperStyle }}>
-        {(curMode === "rule" || curMode === "script") && !!groups.length && (
+        {displayGroups.length > 0 ? (
           <List>
-            {groups.map((group) => (
+            {displayGroups.map((group) => (
               <ProxyGroup key={group.name} group={group} />
             ))}
           </List>
-        )}
-        {((curMode === "rule" && !groups.length) || curMode === "global") && (
-          <ProxyGlobal
-            groupName="GLOBAL"
-            curProxy={proxiesData?.global?.now}
-            proxies={proxies}
-          />
-        )}
-        {curMode === "direct" && (
-          <ProxyGlobal
-            groupName="DIRECT"
-            curProxy="DIRECT"
-            proxies={[proxiesData?.direct!].filter(Boolean)}
-          />
+        ) : (
+          <BaseEmpty />
         )}
       </Paper>
     </BasePage>
