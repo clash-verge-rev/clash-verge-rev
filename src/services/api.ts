@@ -142,7 +142,12 @@ export async function getProxies() {
     )
   );
 
-  return { global, direct, groups, records: proxyRecord, proxies };
+  const _global: ApiType.ProxyGroupItem = {
+    ...global,
+    all: global?.all?.map((item) => generateItem(item)) || [],
+  };
+
+  return { global: _global, direct, groups, records: proxyRecord, proxies };
 }
 
 // get proxy providers
