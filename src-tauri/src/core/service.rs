@@ -172,6 +172,8 @@ impl Service {
             log::error!(target: "app" ,"[clash error]: {}", err);
             write_log(err);
           }
+          CommandEvent::Error(err) => log::error!(target: "app" ,"{err}"),
+          CommandEvent::Terminated(_) => break,
           _ => {}
         }
       }
