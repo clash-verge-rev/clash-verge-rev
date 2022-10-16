@@ -69,8 +69,8 @@ pub fn app_resources_dir(package_info: &PackageInfo) -> PathBuf {
   unsafe {
     RESOURCE_DIR = Some(res_dir.clone());
 
-    let ver = &package_info.version;
-    let ver_str = format!("v{}.{}.{}", ver.major, ver.minor, ver.patch);
+    let ver = package_info.version.to_string();
+    let ver_str = format!("v{ver}");
     APP_VERSION = Box::leak(Box::new(ver_str));
   }
 
