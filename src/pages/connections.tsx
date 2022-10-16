@@ -108,6 +108,7 @@ const ConnectionsPage = () => {
       header={
         <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
           <IconButton
+            color="inherit"
             size="small"
             sx={{ mr: 2 }}
             onClick={() =>
