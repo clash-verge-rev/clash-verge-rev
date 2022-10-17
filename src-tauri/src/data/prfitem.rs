@@ -78,30 +78,15 @@ pub struct PrfOption {
 
 impl PrfOption {
   pub fn merge(one: Option<Self>, other: Option<Self>) -> Option<Self> {
-    if one.is_none() {
-      return other;
+    match (one, other) {
+      (Some(mut a), Some(b)) => {
+        a.user_agent = a.user_agent.or(b.user_agent);
+        a.with_proxy = a.with_proxy.or(b.with_proxy);
+        a.update_interval = a.update_interval.or(b.update_interval);
+        Some(a)
+      }
+      t @ _ => t.0.or(t.1),
     }
-
-    if one.is_some() && other.is_some() {
-      let mut one = one.unwrap();
-      let other = other.unwrap();
-
-      if let Some(val) = other.user_agent {
-        one.user_agent = Some(val);
-      }
-
-      if let Some(val) = other.with_proxy {
-        one.with_proxy = Some(val);
-      }
-
-      if let Some(val) = other.update_interval {
-        one.update_interval = Some(val);
-      }
-
-      return Some(one);
-    }
-
-    return one;
   }
 }
 
