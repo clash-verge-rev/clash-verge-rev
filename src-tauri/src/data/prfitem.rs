@@ -69,8 +69,14 @@ pub struct PrfOption {
   pub user_agent: Option<String>,
 
   /// for `remote` profile
+  /// use system proxy
   #[serde(skip_serializing_if = "Option::is_none")]
   pub with_proxy: Option<bool>,
+
+  /// for `remote` profile
+  /// use self proxy
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub self_proxy: Option<bool>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
   pub update_interval: Option<u64>,
@@ -80,9 +86,10 @@ impl PrfOption {
   pub fn merge(one: Option<Self>, other: Option<Self>) -> Option<Self> {
     match (one, other) {
       (Some(mut a), Some(b)) => {
-        a.user_agent = a.user_agent.or(b.user_agent);
-        a.with_proxy = a.with_proxy.or(b.with_proxy);
-        a.update_interval = a.update_interval.or(b.update_interval);
+        a.user_agent = b.user_agent.or(a.user_agent);
+        a.with_proxy = b.with_proxy.or(a.with_proxy);
+        a.self_proxy = b.self_proxy.or(a.self_proxy);
+        a.update_interval = b.update_interval.or(a.update_interval);
         Some(a)
       }
       t @ _ => t.0.or(t.1),
@@ -174,19 +181,31 @@ impl PrfItem {
     desc: Option<String>,
     option: Option<PrfOption>,
   ) -> Result<PrfItem> {
-    let with_proxy = match option.as_ref() {
-      Some(opt) => opt.with_proxy.unwrap_or(false),
-      None => false,
-    };
-    let user_agent = match option.as_ref() {
-      Some(opt) => opt.user_agent.clone(),
-      None => None,
-    };
+    let opt_ref = option.as_ref();
+    let with_proxy = opt_ref.map_or(false, |o| o.with_proxy.unwrap_or(false));
+    let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
+    let user_agent = opt_ref.map_or(None, |o| o.user_agent.clone());
 
     let mut builder = reqwest::ClientBuilder::new();
 
-    if !with_proxy {
+    if !with_proxy && !self_proxy {
       builder = builder.no_proxy();
+    } else if self_proxy {
+      // 使用软件自己的代理
+      let data = super::Data::global();
+      let port = data.clash.lock().info.port.clone();
+      let port = port.ok_or(anyhow::anyhow!("failed to get clash info port"))?;
+      let proxy_scheme = format!("http://127.0.0.1:{port}");
+
+      if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
+        builder = builder.proxy(proxy);
+      }
+      if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
+        builder = builder.proxy(proxy);
+      }
+      if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
+        builder = builder.proxy(proxy);
+      }
     }
 
     let version = unsafe { dirs::APP_VERSION };

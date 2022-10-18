@@ -9,10 +9,12 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  FormControlLabel,
   IconButton,
   InputLabel,
   MenuItem,
   Select,
+  Switch,
   TextField,
 } from "@mui/material";
 import { Settings } from "@mui/icons-material";
@@ -40,7 +42,11 @@ const ProfileNew = (props: Props) => {
 
   const [showOpt, setShowOpt] = useState(false);
   // can add more option
-  const [option, setOption] = useSetState({ user_agent: "" });
+  const [option, setOption] = useSetState({
+    user_agent: "",
+    with_proxy: false,
+    self_proxy: false,
+  });
   // file input
   const fileDataRef = useRef<string | null>(null);
 
@@ -139,6 +145,46 @@ const ProfileNew = (props: Props) => {
             autoComplete="off"
             value={option.user_agent}
             onChange={(e) => setOption({ user_agent: e.target.value })}
+          />
+        )}
+
+        {form.type === "remote" && showOpt && (
+          <FormControlLabel
+            label={t("Use System Proxy")}
+            labelPlacement="start"
+            sx={{ ml: 0, my: 1 }}
+            control={
+              <Switch
+                color="primary"
+                checked={option.with_proxy}
+                onChange={(_e, c) =>
+                  setOption((o) => ({
+                    self_proxy: c ? false : o.self_proxy,
+                    with_proxy: c,
+                  }))
+                }
+              />
+            }
+          />
+        )}
+
+        {form.type === "remote" && showOpt && (
+          <FormControlLabel
+            label={t("Use Clash Proxy")}
+            labelPlacement="start"
+            sx={{ ml: 0, my: 1 }}
+            control={
+              <Switch
+                color="primary"
+                checked={option.self_proxy}
+                onChange={(_e, c) =>
+                  setOption((o) => ({
+                    with_proxy: c ? false : o.with_proxy,
+                    self_proxy: c,
+                  }))
+                }
+              />
+            }
           />
         )}
       </DialogContent>
