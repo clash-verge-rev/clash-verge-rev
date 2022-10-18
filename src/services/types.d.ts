@@ -124,6 +124,7 @@ declare namespace CmdType {
   interface ProfileOption {
     user_agent?: string;
     with_proxy?: boolean;
+    self_proxy?: boolean;
     update_interval?: number;
   }
 

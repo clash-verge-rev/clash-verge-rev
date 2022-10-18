@@ -110,12 +110,32 @@ const ProfileItem = (props: Props) => {
     }
   });
 
-  const onUpdate = useLockFn(async (withProxy: boolean) => {
+  /// 0 不使用任何代理
+  /// 1 使用配置好的代理
+  /// 2 至少使用一个代理，根据配置，如果没配置，默认使用系统代理
+  const onUpdate = useLockFn(async (type: 0 | 1 | 2) => {
     setAnchorEl(null);
     setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }));
 
+    const option: Partial<CmdType.ProfileOption> = {};
+
+    if (type === 0) {
+      option.with_proxy = false;
+      option.self_proxy = false;
+    } else if (type === 1) {
+      // nothing
+    } else if (type === 2) {
+      if (itemData.option?.self_proxy) {
+        option.with_proxy = false;
+        option.self_proxy = true;
+      } else {
+        option.with_proxy = true;
+        option.self_proxy = false;
+      }
+    }
+
     try {
-      await updateProfile(itemData.uid, { with_proxy: withProxy });
+      await updateProfile(itemData.uid, option);
       mutate("getProfiles");
     } catch (err: any) {
       const errmsg = err?.message || err.toString();
@@ -142,8 +162,8 @@ const ProfileItem = (props: Props) => {
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
-    { label: "Update", handler: () => onUpdate(false) },
-    { label: "Update(Proxy)", handler: () => onUpdate(true) },
+    { label: "Update", handler: () => onUpdate(0) },
+    { label: "Update(Proxy)", handler: () => onUpdate(2) },
     { label: "Delete", handler: onDelete },
   ];
   const fileModeMenu = [
@@ -199,7 +219,7 @@ const ProfileItem = (props: Props) => {
               disabled={loading}
               onClick={(e) => {
                 e.stopPropagation();
-                onUpdate(false);
+                onUpdate(1);
               }}
             >
               <RefreshRounded color="inherit" />
