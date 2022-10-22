@@ -260,7 +260,7 @@ async function resolveService() {
  */
 async function resolveMmdb() {
   const url =
-    "https://github.com/Dreamacro/maxmind-geoip/releases/download/20220812/Country.mmdb";
+    "https://github.com/Dreamacro/maxmind-geoip/releases/download/20221012/Country.mmdb";
 
   const resDir = path.join(cwd, "src-tauri", "resources");
   const resPath = path.join(resDir, "Country.mmdb");
