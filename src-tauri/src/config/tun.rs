@@ -57,8 +57,8 @@ fn use_dns_for_tun(mut config: Mapping) -> Mapping {
   // 开启tun将同时开启dns
   revise!(dns_val, "enable", true);
 
-  // 借鉴cfw的默认配置
   append!(dns_val, "enhanced-mode", "fake-ip");
+  append!(dns_val, "fake-ip-range", "198.18.0.1/16");
   append!(
     dns_val,
     "nameserver",
