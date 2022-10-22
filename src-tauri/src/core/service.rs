@@ -22,6 +22,9 @@ pub struct Service {
   sidecar: Option<CommandChild>,
 
   logs: Arc<RwLock<VecDeque<String>>>,
+
+  #[allow(unused)]
+  use_service_mode: bool,
 }
 
 impl Service {
@@ -31,6 +34,7 @@ impl Service {
     Service {
       sidecar: None,
       logs: Arc::new(RwLock::new(queue)),
+      use_service_mode: false,
     }
   }
 
@@ -45,6 +49,8 @@ impl Service {
         let verge = data.verge.lock();
         verge.enable_service_mode.clone().unwrap_or(false)
       };
+
+      self.use_service_mode = enable;
 
       if !enable {
         return self.start_clash_by_sidecar();
@@ -74,14 +80,8 @@ impl Service {
     {
       let _ = self.stop_clash_by_sidecar();
 
-      let enable = {
-        let data = Data::global();
-        let verge = data.verge.lock();
-        verge.enable_service_mode.clone().unwrap_or(false)
-      };
-
-      if enable {
-        tauri::async_runtime::spawn(async move {
+      if self.use_service_mode {
+        tauri::async_runtime::block_on(async move {
           log_if_err!(Self::stop_clash_by_service().await);
         });
       }
