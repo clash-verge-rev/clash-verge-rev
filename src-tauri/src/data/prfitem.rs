@@ -1,5 +1,6 @@
 use crate::utils::{config, dirs, help, tmpl};
 use anyhow::{bail, Context, Result};
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::fs;
@@ -213,6 +214,12 @@ impl PrfItem {
     builder = builder.user_agent(user_agent.unwrap_or(version));
 
     let resp = builder.build()?.get(url).send().await?;
+
+    let status_code = resp.status();
+    if !StatusCode::is_success(&status_code) {
+      bail!("Error requesting remote profile.")
+    }
+    
     let header = resp.headers();
 
     // parse the Subscription Userinfo
