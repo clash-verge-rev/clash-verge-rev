@@ -4,6 +4,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::fs;
+use sysproxy::Sysproxy;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PrfItem {
@@ -187,12 +188,10 @@ impl PrfItem {
     let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
     let user_agent = opt_ref.map_or(None, |o| o.user_agent.clone());
 
-    let mut builder = reqwest::ClientBuilder::new();
+    let mut builder = reqwest::ClientBuilder::new().no_proxy();
 
-    if !with_proxy && !self_proxy {
-      builder = builder.no_proxy();
-    } else if self_proxy {
-      // 使用软件自己的代理
+    // 使用软件自己的代理
+    if self_proxy {
       let data = super::Data::global();
       let port = data.clash.lock().info.port.clone();
       let port = port.ok_or(anyhow::anyhow!("failed to get clash info port"))?;
@@ -208,6 +207,18 @@ impl PrfItem {
         builder = builder.proxy(proxy);
       }
     }
+    // 使用系统代理
+    else if with_proxy {
+      match Sysproxy::get_system_proxy() {
+        Ok(p @ Sysproxy { enable: true, .. }) => {
+          let proxy_scheme = format!("http://{}:{}", p.host, p.port);
+          if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
+            builder = builder.proxy(proxy);
+          }
+        }
+        _ => {}
+      };
+    }
 
     let version = unsafe { dirs::APP_VERSION };
     let version = format!("clash-verge/{version}");
@@ -217,9 +228,9 @@ impl PrfItem {
 
     let status_code = resp.status();
     if !StatusCode::is_success(&status_code) {
-      bail!("Error requesting remote profile.")
+      bail!("failed to fetch remote profile with status {status_code}")
     }
-    
+
     let header = resp.headers();
 
     // parse the Subscription Userinfo
