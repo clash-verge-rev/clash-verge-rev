@@ -33,7 +33,7 @@
     "react-dom": "^17.0.2",
     "react-i18next": "^11.17.4",
     "react-router-dom": "^6.3.0",
-    "react-virtuoso": "^2.17.2",
+    "react-virtuoso": "^3.1.0",
     "recoil": "^0.7.5",
     "snarkdown": "^2.0.0",
     "swr": "^1.3.0"
