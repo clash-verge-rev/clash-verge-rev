@@ -1992,10 +1992,10 @@ react-transition-group@^4.4.5:
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
 
-react-virtuoso@^2.17.2:
-  version "2.17.2"
-  resolved "https://registry.yarnpkg.com/react-virtuoso/-/react-virtuoso-2.17.2.tgz#cc7323f300d5d80311bf828efcda95f6cc1edd51"
-  integrity sha512-5xl0mCCVEANzY0SbVbUjQgRrc2it3vdGCn72kUQo0wy4s3QGVR8S3QcLZj3lBrHocGIf/ONEJ3g/uqs0KEl9eA==
+react-virtuoso@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.npmmirror.com/react-virtuoso/-/react-virtuoso-3.1.0.tgz#e358a39b9fd99895bcc72671a585091b756a1c92"
+  integrity sha512-Rur0d7xiZthRxy3f7Z217Q+U6k1sTsPZZU/kKT73GPB3ROtJCr4Y0Qehg/WxeKhochQPnSuT8VfcsAasdpX2ig==
   dependencies:
     "@virtuoso.dev/react-urx" "^0.2.12"
     "@virtuoso.dev/urx" "^0.2.12"
