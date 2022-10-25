@@ -50,6 +50,14 @@ const ProxyItem = (props: Props) => {
   const [delay, setDelay] = useState(-1);
 
   useEffect(() => {
+    delayManager.setListener(proxy.name, groupName, setDelay);
+
+    return () => {
+      delayManager.removeListener(proxy.name, groupName);
+    };
+  }, [proxy.name, groupName]);
+
+  useEffect(() => {
     if (!proxy) return;
 
     if (!proxy.provider) {
@@ -66,10 +74,7 @@ const ProxyItem = (props: Props) => {
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);
-    return delayManager
-      .checkDelay(proxy.name, groupName)
-      .then((result) => setDelay(result))
-      .catch(() => setDelay(1e6));
+    setDelay(await delayManager.checkDelay(proxy.name, groupName));
   });
 
   return (

@@ -6,6 +6,12 @@ class DelayManager {
   private cache = new Map<string, [number, number]>();
   private urlMap = new Map<string, string>();
 
+  // 每个item的监听
+  private listenerMap = new Map<string, (time: number) => void>();
+
+  // 每个分组的监听
+  private groupListenerMap = new Map<string, () => void>();
+
   setUrl(group: string, url: string) {
     this.urlMap.set(group, url);
   }
@@ -14,8 +20,29 @@ class DelayManager {
     return this.urlMap.get(group);
   }
 
+  setListener(name: string, group: string, listener: (time: number) => void) {
+    const key = hashKey(name, group);
+    this.listenerMap.set(key, listener);
+  }
+
+  removeListener(name: string, group: string) {
+    const key = hashKey(name, group);
+    this.listenerMap.delete(key);
+  }
+
+  setGroupListener(group: string, listener: () => void) {
+    this.groupListenerMap.set(group, listener);
+  }
+
+  removeGroupListener(group: string) {
+    this.groupListenerMap.delete(group);
+  }
+
   setDelay(name: string, group: string, delay: number) {
-    this.cache.set(hashKey(name, group), [Date.now(), delay]);
+    const key = hashKey(name, group);
+    this.cache.set(key, [Date.now(), delay]);
+    this.listenerMap.get(key)?.(delay);
+    this.groupListenerMap.get(group)?.();
   }
 
   getDelay(name: string, group: string) {
@@ -44,19 +71,13 @@ class DelayManager {
   }
 
   async checkListDelay(
-    options: {
-      names: readonly string[];
-      groupName: string;
-      skipNum: number;
-    },
-    callback: Function
+    nameList: readonly string[],
+    groupName: string,
+    concurrency: number
   ) {
-    const { groupName, skipNum } = options;
+    const names = [...nameList];
 
-    const names = [...options.names];
-    const total = names.length;
-
-    let count = 0;
+    let total = names.length;
     let current = 0;
 
     // 设置正在延迟测试中
@@ -64,7 +85,7 @@ class DelayManager {
 
     return new Promise((resolve) => {
       const help = async (): Promise<void> => {
-        if (current >= skipNum) return;
+        if (current >= concurrency) return;
 
         const task = names.shift();
         if (!task) return;
@@ -72,14 +93,13 @@ class DelayManager {
         current += 1;
         await this.checkDelay(task, groupName);
         current -= 1;
+        total -= 1;
 
-        if (count++ % skipNum === 0 || count === total) callback();
-        if (count === total) resolve(null);
-
-        return help();
+        if (total <= 0) resolve(null);
+        else return help();
       };
 
-      for (let i = 0; i < skipNum; ++i) help();
+      for (let i = 0; i < concurrency; ++i) help();
     });
   }
 }
