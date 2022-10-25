@@ -5,9 +5,8 @@ import { Virtuoso } from "react-virtuoso";
 import { providerHealthCheck, updateProxy } from "@/services/api";
 import { getProfiles, patchProfile } from "@/services/cmds";
 import delayManager from "@/services/delay";
-import useSortProxy from "./use-sort-proxy";
 import useHeadState from "./use-head-state";
-import useFilterProxy from "./use-filter-proxy";
+import useFilterSort from "./use-filter-sort";
 import ProxyHead from "./proxy-head";
 import ProxyItem from "./proxy-item";
 
@@ -27,14 +26,10 @@ const ProxyGlobal = (props: Props) => {
   const [headState, setHeadState] = useHeadState(groupName);
 
   const virtuosoRef = useRef<any>();
-  const filterProxies = useFilterProxy(
+  const sortedProxies = useFilterSort(
     proxies,
     groupName,
-    headState.filterText
-  );
-  const sortedProxies = useSortProxy(
-    filterProxies,
-    groupName,
+    headState.filterText,
     headState.sortType
   );
 
@@ -85,13 +80,12 @@ const ProxyGlobal = (props: Props) => {
     }
 
     await delayManager.checkListDelay(
-      {
-        names: sortedProxies.filter((p) => !p.provider).map((p) => p.name),
-        groupName,
-        skipNum: 16,
-      },
-      () => mutate("getProxies")
+      sortedProxies.filter((p) => !p.provider).map((p) => p.name),
+      groupName,
+      16
     );
+
+    mutate("getProxies");
   });
 
   useEffect(() => onLocation(false), [groupName]);

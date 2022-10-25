@@ -16,7 +16,7 @@ import {
 } from "@mui/icons-material";
 import delayManager from "@/services/delay";
 import type { HeadState } from "./use-head-state";
-import type { ProxySortType } from "./use-sort-proxy";
+import type { ProxySortType } from "./use-filter-sort";
 
 interface Props {
   sx?: SxProps;
