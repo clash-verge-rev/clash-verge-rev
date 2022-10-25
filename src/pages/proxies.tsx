@@ -13,7 +13,9 @@ import ProxyGroup from "@/components/proxy/proxy-group";
 const ProxyPage = () => {
   const { t } = useTranslation();
   const { mutate } = useSWRConfig();
-  const { data: proxiesData } = useSWR("getProxies", getProxies);
+  const { data: proxiesData } = useSWR("getProxies", getProxies, {
+    refreshInterval: 45000, // 45s
+  });
   const { data: clashConfig } = useSWR("getClashConfig", getClashConfig);
 
   const modeList = ["rule", "global", "direct", "script"];
@@ -37,6 +39,7 @@ const ProxyPage = () => {
     mutate("getClashConfig");
   });
 
+  // 仅mode为全局和直连的时候展示global分组
   const displayGroups = useMemo(() => {
     if (!global) return groups;
     if (curMode === "global" || curMode === "direct")
