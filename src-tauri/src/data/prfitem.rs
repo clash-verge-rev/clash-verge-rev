@@ -212,7 +212,14 @@ impl PrfItem {
       match Sysproxy::get_system_proxy() {
         Ok(p @ Sysproxy { enable: true, .. }) => {
           let proxy_scheme = format!("http://{}:{}", p.host, p.port);
+
           if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
+            builder = builder.proxy(proxy);
+          }
+          if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
+            builder = builder.proxy(proxy);
+          }
+          if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
             builder = builder.proxy(proxy);
           }
         }
@@ -233,7 +240,7 @@ impl PrfItem {
 
     let header = resp.headers();
 
-    // parse the Subscription Userinfo
+    // parse the Subscription UserInfo
     let extra = match header.get("Subscription-Userinfo") {
       Some(value) => {
         let sub_info = value.to_str().unwrap_or("");
