@@ -114,7 +114,7 @@ impl Sysopt {
       }
 
       old.set_system_proxy()?;
-    } else if let Some(mut cur) = cur {
+    } else if let Some(mut cur @ Sysproxy { enable: true, .. }) = cur {
       // 没有原代理，就按现在的代理设置disable即可
       log::info!(target: "app", "reset proxy by disabling the current proxy");
       cur.enable = false;
