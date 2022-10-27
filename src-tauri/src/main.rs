@@ -10,20 +10,14 @@ mod data;
 mod feat;
 mod utils;
 
-use crate::{
-  data::Verge,
-  utils::{resolve, server},
-};
+use crate::utils::{init, resolve, server};
 use tauri::{api, Manager, SystemTray};
 
 fn main() -> std::io::Result<()> {
-  {
-    let verge = Verge::new();
-
-    if server::check_singleton(verge.app_singleton_port).is_err() {
-      println!("app exists");
-      return Ok(());
-    }
+  // 单例检测
+  if server::check_singleton().is_err() {
+    println!("app exists");
+    return Ok(());
   }
 
   #[cfg(target_os = "windows")]
@@ -31,6 +25,8 @@ fn main() -> std::io::Result<()> {
     use crate::utils::dirs;
     dirs::init_portable_flag();
   }
+
+  crate::log_if_err!(init::init_config());
 
   #[allow(unused_mut)]
   let mut builder = tauri::Builder::default()

@@ -6,7 +6,7 @@ use crate::config::enhance_config;
 use crate::data::*;
 use crate::log_if_err;
 use anyhow::{bail, Result};
-use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::{Mapping, Value};
 use std::sync::Arc;
@@ -20,15 +20,6 @@ pub mod tray;
 
 pub use self::service::*;
 
-static CORE: Lazy<Core> = Lazy::new(|| Core {
-  service: Arc::new(Mutex::new(Service::new())),
-  sysopt: Arc::new(Mutex::new(Sysopt::new())),
-  timer: Arc::new(Mutex::new(Timer::new())),
-  hotkey: Arc::new(Mutex::new(Hotkey::new())),
-  runtime: Arc::new(Mutex::new(RuntimeResult::default())),
-  handle: Arc::new(Mutex::new(Handle::default())),
-});
-
 #[derive(Clone)]
 pub struct Core {
   pub service: Arc<Mutex<Service>>,
@@ -40,8 +31,17 @@ pub struct Core {
 }
 
 impl Core {
-  pub fn global() -> Core {
-    CORE.clone()
+  pub fn global() -> &'static Core {
+    static CORE: OnceCell<Core> = OnceCell::new();
+
+    CORE.get_or_init(|| Core {
+      service: Arc::new(Mutex::new(Service::new())),
+      sysopt: Arc::new(Mutex::new(Sysopt::new())),
+      timer: Arc::new(Mutex::new(Timer::new())),
+      hotkey: Arc::new(Mutex::new(Hotkey::new())),
+      runtime: Arc::new(Mutex::new(RuntimeResult::default())),
+      handle: Arc::new(Mutex::new(Handle::default())),
+    })
   }
 
   /// initialize the core state

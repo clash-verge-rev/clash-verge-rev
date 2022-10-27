@@ -3,8 +3,7 @@ use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
 pub fn resolve_setup(app: &App) {
-  // init app config
-  init::init_app(app.package_info());
+  init::init_resources(app.package_info());
 
   let silent_start = {
     let global = Data::global();

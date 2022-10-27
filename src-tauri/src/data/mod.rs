@@ -8,15 +8,9 @@ pub use self::prfitem::*;
 pub use self::profiles::*;
 pub use self::verge::*;
 
-use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::sync::Arc;
-
-static DATA: Lazy<Data> = Lazy::new(|| Data {
-  clash: Arc::new(Mutex::new(Clash::new())),
-  verge: Arc::new(Mutex::new(Verge::new())),
-  profiles: Arc::new(Mutex::new(Profiles::new())),
-});
 
 #[derive(Debug, Clone)]
 pub struct Data {
@@ -26,7 +20,13 @@ pub struct Data {
 }
 
 impl Data {
-  pub fn global() -> Data {
-    DATA.clone()
+  pub fn global() -> &'static Data {
+    static DATA: OnceCell<Data> = OnceCell::new();
+
+    DATA.get_or_init(|| Data {
+      clash: Arc::new(Mutex::new(Clash::new())),
+      verge: Arc::new(Mutex::new(Verge::new())),
+      profiles: Arc::new(Mutex::new(Profiles::new())),
+    })
   }
 }
