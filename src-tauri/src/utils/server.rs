@@ -1,6 +1,7 @@
 extern crate warp;
 
 use super::resolve;
+use crate::data::Verge;
 use port_scanner::local_port_available;
 use tauri::AppHandle;
 use warp::Filter;
@@ -11,8 +12,9 @@ const SERVER_PORT: u16 = 33331;
 const SERVER_PORT: u16 = 11233;
 
 /// check whether there is already exists
-pub fn check_singleton(port: Option<u16>) -> Result<(), ()> {
-  let port = port.unwrap_or(SERVER_PORT);
+pub fn check_singleton() -> Result<(), ()> {
+  let verge = Verge::new();
+  let port = verge.app_singleton_port.unwrap_or(SERVER_PORT);
 
   if !local_port_available(port) {
     tauri::async_runtime::block_on(async {

@@ -8,11 +8,15 @@ use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::fs;
 use std::io::Write;
-use std::path::PathBuf;
 use tauri::PackageInfo;
 
 /// initialize this instance's log file
-fn init_log(log_dir: &PathBuf) -> Result<()> {
+fn init_log() -> Result<()> {
+  let log_dir = dirs::app_logs_dir();
+  if !log_dir.exists() {
+    let _ = fs::create_dir_all(&log_dir);
+  }
+
   let local_time = Local::now().format("%Y-%m-%d-%H%M%S").to_string();
   let log_file = format!("{}.log", local_time);
   let log_file = log_dir.join(log_file);
@@ -42,7 +46,19 @@ fn init_log(log_dir: &PathBuf) -> Result<()> {
 }
 
 /// Initialize all the files from resources
-fn init_config(app_dir: &PathBuf) -> Result<()> {
+pub fn init_config() -> Result<()> {
+  let _ = init_log();
+
+  let app_dir = dirs::app_home_dir();
+  let profiles_dir = dirs::app_profiles_dir();
+
+  if !app_dir.exists() {
+    let _ = fs::create_dir_all(&app_dir);
+  }
+  if !profiles_dir.exists() {
+    let _ = fs::create_dir_all(&profiles_dir);
+  }
+
   // target path
   let clash_path = app_dir.join("config.yaml");
   let verge_path = app_dir.join("verge.yaml");
@@ -61,27 +77,14 @@ fn init_config(app_dir: &PathBuf) -> Result<()> {
 }
 
 /// initialize app
-pub fn init_app(package_info: &PackageInfo) {
+pub fn init_resources(package_info: &PackageInfo) {
   // create app dir
   let app_dir = dirs::app_home_dir();
-  let log_dir = dirs::app_logs_dir();
-  let profiles_dir = dirs::app_profiles_dir();
-
   let res_dir = dirs::app_resources_dir(package_info);
 
   if !app_dir.exists() {
     let _ = fs::create_dir_all(&app_dir);
   }
-  if !log_dir.exists() {
-    let _ = fs::create_dir_all(&log_dir);
-  }
-  if !profiles_dir.exists() {
-    let _ = fs::create_dir_all(&profiles_dir);
-  }
-
-  crate::log_if_err!(init_log(&log_dir));
-
-  crate::log_if_err!(init_config(&app_dir));
 
   // copy the resource file
   let mmdb_path = app_dir.join("Country.mmdb");
