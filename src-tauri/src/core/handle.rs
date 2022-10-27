@@ -1,7 +1,6 @@
-use crate::data::*;
+use super::tray::Tray;
 use crate::log_if_err;
 use anyhow::{bail, Result};
-use serde_yaml::Value;
 use tauri::{AppHandle, Manager, Window};
 
 #[derive(Debug, Default, Clone)]
@@ -46,62 +45,22 @@ impl Handle {
     }
   }
 
-  // update system tray state (clash config)
-  pub fn update_systray_clash(&self) -> Result<()> {
-    if self.app_handle.is_none() {
-      bail!("update_systray_clash unhandle error");
-    }
-
-    let app_handle = self.app_handle.as_ref().unwrap();
-
-    let global = Data::global();
-    let clash = global.clash.lock();
-    let mode = clash
-      .config
-      .get(&Value::from("mode"))
-      .map(|val| val.as_str().unwrap_or("rule"))
-      .unwrap_or("rule");
-
-    let tray = app_handle.tray_handle();
-
-    tray.get_item("rule_mode").set_selected(mode == "rule")?;
-    tray
-      .get_item("global_mode")
-      .set_selected(mode == "global")?;
-    tray
-      .get_item("direct_mode")
-      .set_selected(mode == "direct")?;
-    tray
-      .get_item("script_mode")
-      .set_selected(mode == "script")?;
-
-    Ok(())
-  }
-
-  /// update the system tray state (verge config)
   pub fn update_systray(&self) -> Result<()> {
     if self.app_handle.is_none() {
       bail!("update_systray unhandle error");
     }
-
     let app_handle = self.app_handle.as_ref().unwrap();
-    let tray = app_handle.tray_handle();
+    Tray::update_systray(app_handle)?;
+    Ok(())
+  }
 
-    let global = Data::global();
-    let verge = global.verge.lock();
-    let system_proxy = verge.enable_system_proxy.as_ref();
-    let tun_mode = verge.enable_tun_mode.as_ref();
-
-    tray
-      .get_item("system_proxy")
-      .set_selected(*system_proxy.unwrap_or(&false))?;
-    tray
-      .get_item("tun_mode")
-      .set_selected(*tun_mode.unwrap_or(&false))?;
-
-    // update verge config
-    self.refresh_verge();
-
+  /// update the system tray state
+  pub fn update_systray_part(&self) -> Result<()> {
+    if self.app_handle.is_none() {
+      bail!("update_systray unhandle error");
+    }
+    let app_handle = self.app_handle.as_ref().unwrap();
+    Tray::update_part(app_handle)?;
     Ok(())
   }
 }

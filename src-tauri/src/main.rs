@@ -14,9 +14,7 @@ use crate::{
   data::Verge,
   utils::{resolve, server},
 };
-use tauri::{
-  api, CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
-};
+use tauri::{api, Manager, SystemTray};
 
 fn main() -> std::io::Result<()> {
   {
@@ -34,51 +32,11 @@ fn main() -> std::io::Result<()> {
     dirs::init_portable_flag();
   }
 
-  let tray_menu = SystemTrayMenu::new()
-    .add_item(CustomMenuItem::new("open_window", "Show"))
-    .add_native_item(SystemTrayMenuItem::Separator)
-    .add_item(CustomMenuItem::new("rule_mode", "Rule Mode"))
-    .add_item(CustomMenuItem::new("global_mode", "Global Mode"))
-    .add_item(CustomMenuItem::new("direct_mode", "Direct Mode"))
-    .add_item(CustomMenuItem::new("script_mode", "Script Mode"))
-    .add_native_item(SystemTrayMenuItem::Separator)
-    .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
-    .add_item(CustomMenuItem::new("tun_mode", "Tun Mode"))
-    .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
-    .add_item(CustomMenuItem::new("restart_app", "Restart App"))
-    .add_native_item(SystemTrayMenuItem::Separator)
-    .add_item(CustomMenuItem::new("quit", "Quit").accelerator("CmdOrControl+Q"));
-
   #[allow(unused_mut)]
   let mut builder = tauri::Builder::default()
     .setup(|app| Ok(resolve::resolve_setup(app)))
-    .system_tray(SystemTray::new().with_menu(tray_menu))
-    .on_system_tray_event(move |app_handle, event| match event {
-      SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-        "open_window" => {
-          resolve::create_window(app_handle);
-        }
-        mode @ ("rule_mode" | "global_mode" | "direct_mode" | "script_mode") => {
-          let mode = &mode[0..mode.len() - 5];
-          feat::change_clash_mode(mode);
-        }
-        "system_proxy" => feat::toggle_system_proxy(),
-        "tun_mode" => feat::toggle_tun_mode(),
-        "restart_app" => {
-          api::process::restart(&app_handle.env());
-        }
-        "quit" => {
-          resolve::resolve_reset();
-          app_handle.exit(0);
-        }
-        _ => {}
-      },
-      #[cfg(target_os = "windows")]
-      SystemTrayEvent::LeftClick { .. } => {
-        resolve::create_window(app_handle);
-      }
-      _ => {}
-    })
+    .system_tray(SystemTray::new().with_menu(core::tray::Tray::tray_menu()))
+    .on_system_tray_event(core::tray::Tray::on_system_tray_event)
     .invoke_handler(tauri::generate_handler![
       // common
       cmds::get_sys_proxy,
@@ -126,17 +84,18 @@ fn main() -> std::io::Result<()> {
   {
     use tauri::{Menu, MenuItem, Submenu};
 
-    let submenu_file = Submenu::new(
-      "File",
-      Menu::new()
-        .add_native_item(MenuItem::Undo)
-        .add_native_item(MenuItem::Redo)
-        .add_native_item(MenuItem::Copy)
-        .add_native_item(MenuItem::Paste)
-        .add_native_item(MenuItem::Cut)
-        .add_native_item(MenuItem::SelectAll),
+    builder = builder.menu(
+      Menu::new().add_submenu(Submenu::new(
+        "File",
+        Menu::new()
+          .add_native_item(MenuItem::Undo)
+          .add_native_item(MenuItem::Redo)
+          .add_native_item(MenuItem::Copy)
+          .add_native_item(MenuItem::Paste)
+          .add_native_item(MenuItem::Cut)
+          .add_native_item(MenuItem::SelectAll),
+      )),
     );
-    builder = builder.menu(Menu::new().add_submenu(submenu_file));
   }
 
   #[allow(unused_mut)]
@@ -162,6 +121,7 @@ fn main() -> std::io::Result<()> {
     tauri::RunEvent::Exit => {
       resolve::resolve_reset();
       api::process::kill_children();
+      app_handle.exit(0);
     }
     #[cfg(target_os = "macos")]
     tauri::RunEvent::WindowEvent { label, event, .. } => {

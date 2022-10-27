@@ -2,6 +2,15 @@ use crate::core::*;
 use crate::data::*;
 use crate::log_if_err;
 
+// 重启clash
+pub fn restart_clash_core() {
+  let core = Core::global();
+  let mut service = core.service.lock();
+  log_if_err!(service.restart());
+  drop(service);
+  log_if_err!(core.activate());
+}
+
 // 切换模式
 pub fn change_clash_mode(mode: &str) {
   let core = Core::global();
