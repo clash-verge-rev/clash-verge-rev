@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use nanoid::nanoid;
 use std::path::PathBuf;
 use std::process::Command;
@@ -28,20 +28,16 @@ pub fn get_uid(prefix: &str) -> String {
 /// parse the string
 /// xxx=123123; => 123123
 pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
-  match target.find(key) {
-    Some(idx) => {
-      let idx = idx + key.len();
-      let value = &target[idx..];
-      match match value.split(';').nth(0) {
-        Some(value) => value.trim().parse(),
-        None => value.trim().parse(),
-      } {
-        Ok(r) => Some(r),
-        Err(_) => None,
-      }
+  target.find(key).and_then(|idx| {
+    let idx = idx + key.len();
+    let value = &target[idx..];
+
+    match value.split(';').nth(0) {
+      Some(value) => value.trim().parse(),
+      None => value.trim().parse(),
     }
-    None => None,
-  }
+    .ok()
+  })
 }
 
 /// open file
@@ -49,22 +45,17 @@ pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
 pub fn open_file(path: PathBuf) -> Result<()> {
   // use vscode first
   if let Ok(code) = which::which("code") {
+    let mut command = Command::new(&code);
+
     #[cfg(target_os = "windows")]
     {
       use std::os::windows::process::CommandExt;
-
-      if let Err(err) = Command::new(code)
-        .creation_flags(0x08000000)
-        .arg(path)
-        .spawn()
-      {
-        bail!("failed to open file by VScode for `{err}`");
-      }
+      command = command.creation_flags(0x08000000);
     }
 
-    #[cfg(not(target_os = "windows"))]
-    if let Err(err) = Command::new(code).arg(path).spawn() {
-      bail!("failed to open file by VScode for `{err}`");
+    if let Err(err) = command.arg(&path).spawn() {
+      log::error!(target: "app", "failed to open with VScode `{err}`");
+      open::that(path)?;
     }
 
     return Ok(());
