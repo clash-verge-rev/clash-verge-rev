@@ -75,7 +75,7 @@ impl Sysopt {
 
   /// update the system proxy
   pub fn update_sysproxy(&mut self) -> Result<()> {
-    if self.cur_sysproxy.is_none() {
+    if self.cur_sysproxy.is_none() || self.old_sysproxy.is_none() {
       return self.init_sysproxy();
     }
 
