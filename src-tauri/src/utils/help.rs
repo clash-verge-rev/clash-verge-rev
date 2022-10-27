@@ -50,9 +50,13 @@ pub fn open_file(path: PathBuf) -> Result<()> {
     #[cfg(target_os = "windows")]
     {
       use std::os::windows::process::CommandExt;
-      command = command.creation_flags(0x08000000);
+      if let Err(err) = command.creation_flags(0x08000000).arg(&path).spawn() {
+        log::error!(target: "app", "failed to open with VScode `{err}`");
+        open::that(path)?;
+      }
     }
 
+    #[cfg(not(target_os = "windows"))]
     if let Err(err) = command.arg(&path).spawn() {
       log::error!(target: "app", "failed to open with VScode `{err}`");
       open::that(path)?;
