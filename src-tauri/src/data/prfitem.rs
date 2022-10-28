@@ -282,8 +282,11 @@ impl PrfItem {
     let data = resp.text_with_charset("utf-8").await?;
 
     // check the data whether the valid yaml format
-    if !serde_yaml::from_str::<Mapping>(&data).is_ok() {
-      bail!("the remote profile data is invalid yaml");
+    let yaml = serde_yaml::from_str::<Mapping>(&data) //
+      .context("the remote profile data is invalid yaml")?;
+
+    if !yaml.contains_key("proxies") || !yaml.contains_key("proxy-providers") {
+      bail!("profile does not contain `proxies` or `proxy-providers`");
     }
 
     Ok(PrfItem {
