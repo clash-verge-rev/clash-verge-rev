@@ -4,6 +4,7 @@ import { useLockFn, useSetState } from "ahooks";
 import { useTranslation } from "react-i18next";
 import {
   Button,
+  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
@@ -121,18 +122,7 @@ const InfoEditor = (props: Props) => {
           />
         )}
 
-        {showOpt && (
-          <TextField
-            {...textFieldProps}
-            label="User Agent"
-            value={option.user_agent}
-            placeholder={`clash-verge/v${version}`}
-            onChange={(e) => setOption({ user_agent: e.target.value })}
-            onKeyDown={(e) => e.key === "Enter" && onUpdate()}
-          />
-        )}
-
-        {((type === "remote" && showOpt) || type === "local") && (
+        {(type === "remote" || type === "local") && (
           <TextField
             {...textFieldProps}
             label={t("Update Interval(mins)")}
@@ -145,7 +135,20 @@ const InfoEditor = (props: Props) => {
           />
         )}
 
-        {form.type === "remote" && showOpt && (
+        <Collapse
+          in={type === "remote" && showOpt}
+          timeout="auto"
+          unmountOnExit
+        >
+          <TextField
+            {...textFieldProps}
+            label="User Agent"
+            value={option.user_agent}
+            placeholder={`clash-verge/v${version}`}
+            onChange={(e) => setOption({ user_agent: e.target.value })}
+            onKeyDown={(e) => e.key === "Enter" && onUpdate()}
+          />
+
           <FormControlLabel
             label={t("Use System Proxy")}
             labelPlacement="start"
@@ -163,9 +166,7 @@ const InfoEditor = (props: Props) => {
               />
             }
           />
-        )}
 
-        {form.type === "remote" && showOpt && (
           <FormControlLabel
             label={t("Use Clash Proxy")}
             labelPlacement="start"
@@ -183,7 +184,7 @@ const InfoEditor = (props: Props) => {
               />
             }
           />
-        )}
+        </Collapse>
       </DialogContent>
 
       <DialogActions sx={{ px: 2, pb: 2, position: "relative" }}>
