@@ -45,6 +45,7 @@ const LogPage = () => {
         <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
           <IconButton
             size="small"
+            color="inherit"
             sx={{ mr: 2 }}
             onClick={() => setEnableLog((e) => !e)}
           >
