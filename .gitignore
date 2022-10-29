@@ -5,3 +5,4 @@ dist-ssr
 *.local
 update.json
 scripts/_env.sh
+.vscode

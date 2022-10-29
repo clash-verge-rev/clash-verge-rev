@@ -21,6 +21,7 @@ import { Settings } from "@mui/icons-material";
 import { createProfile } from "@/services/cmds";
 import Notice from "../base/base-notice";
 import FileInput from "./file-input";
+import { Smoother } from "./smoother";
 
 interface Props {
   open: boolean;
@@ -93,100 +94,98 @@ const ProfileNew = (props: Props) => {
       <DialogTitle sx={{ pb: 0.5 }}>{t("Create Profile")}</DialogTitle>
 
       <DialogContent sx={{ width: 336, pb: 1 }}>
-        <FormControl size="small" fullWidth sx={{ mt: 2, mb: 1 }}>
-          <InputLabel>Type</InputLabel>
-          <Select
-            autoFocus
-            label={t("Type")}
-            value={form.type}
-            onChange={(e) => setForm({ type: e.target.value })}
-          >
-            <MenuItem value="remote">Remote</MenuItem>
-            <MenuItem value="local">Local</MenuItem>
-            <MenuItem value="script">Script</MenuItem>
-            <MenuItem value="merge">Merge</MenuItem>
-          </Select>
-        </FormControl>
+        <Smoother>
+          <FormControl size="small" fullWidth sx={{ mt: 2, mb: 1 }}>
+            <InputLabel>Type</InputLabel>
+            <Select
+              autoFocus
+              label={t("Type")}
+              value={form.type}
+              onChange={(e) => setForm({ type: e.target.value })}
+            >
+              <MenuItem value="remote">Remote</MenuItem>
+              <MenuItem value="local">Local</MenuItem>
+              <MenuItem value="script">Script</MenuItem>
+              <MenuItem value="merge">Merge</MenuItem>
+            </Select>
+          </FormControl>
 
-        <TextField
-          {...textFieldProps}
-          label={t("Name")}
-          autoComplete="off"
-          value={form.name}
-          onChange={(e) => setForm({ name: e.target.value })}
-        />
-
-        <TextField
-          {...textFieldProps}
-          label={t("Descriptions")}
-          autoComplete="off"
-          value={form.desc}
-          onChange={(e) => setForm({ desc: e.target.value })}
-        />
-
-        {form.type === "remote" && (
           <TextField
             {...textFieldProps}
-            label={t("Subscription URL")}
+            label={t("Name")}
             autoComplete="off"
-            value={form.url}
-            onChange={(e) => setForm({ url: e.target.value })}
+            value={form.name}
+            onChange={(e) => setForm({ name: e.target.value })}
           />
-        )}
 
-        {form.type === "local" && (
-          <FileInput onChange={(val) => (fileDataRef.current = val)} />
-        )}
-
-        {showOpt && (
           <TextField
             {...textFieldProps}
-            label="User Agent"
+            label={t("Descriptions")}
             autoComplete="off"
-            value={option.user_agent}
-            onChange={(e) => setOption({ user_agent: e.target.value })}
+            value={form.desc}
+            onChange={(e) => setForm({ desc: e.target.value })}
           />
-        )}
 
-        {form.type === "remote" && showOpt && (
-          <FormControlLabel
-            label={t("Use System Proxy")}
-            labelPlacement="start"
-            sx={{ ml: 0, my: 1 }}
-            control={
-              <Switch
-                color="primary"
-                checked={option.with_proxy}
-                onChange={(_e, c) =>
-                  setOption((o) => ({
-                    self_proxy: c ? false : o.self_proxy,
-                    with_proxy: c,
-                  }))
+          {form.type === "remote" && (
+            <TextField
+              {...textFieldProps}
+              label={t("Subscription URL")}
+              autoComplete="off"
+              value={form.url}
+              onChange={(e) => setForm({ url: e.target.value })}
+            />
+          )}
+
+          {form.type === "local" && (
+            <FileInput onChange={(val) => (fileDataRef.current = val)} />
+          )}
+
+          {form.type === "remote" && showOpt && (
+            <>
+              <TextField
+                {...textFieldProps}
+                label="User Agent"
+                autoComplete="off"
+                value={option.user_agent}
+                onChange={(e) => setOption({ user_agent: e.target.value })}
+              />
+              <FormControlLabel
+                label={t("Use System Proxy")}
+                labelPlacement="start"
+                sx={{ ml: 0, my: 1 }}
+                control={
+                  <Switch
+                    color="primary"
+                    checked={option.with_proxy}
+                    onChange={(_e, c) =>
+                      setOption((o) => ({
+                        self_proxy: c ? false : o.self_proxy,
+                        with_proxy: c,
+                      }))
+                    }
+                  />
                 }
               />
-            }
-          />
-        )}
-
-        {form.type === "remote" && showOpt && (
-          <FormControlLabel
-            label={t("Use Clash Proxy")}
-            labelPlacement="start"
-            sx={{ ml: 0, my: 1 }}
-            control={
-              <Switch
-                color="primary"
-                checked={option.self_proxy}
-                onChange={(_e, c) =>
-                  setOption((o) => ({
-                    with_proxy: c ? false : o.with_proxy,
-                    self_proxy: c,
-                  }))
+              <FormControlLabel
+                label={t("Use Clash Proxy")}
+                labelPlacement="start"
+                sx={{ ml: 0, my: 1 }}
+                control={
+                  <Switch
+                    color="primary"
+                    checked={option.self_proxy}
+                    onChange={(_e, c) =>
+                      setOption((o) => ({
+                        with_proxy: c ? false : o.with_proxy,
+                        self_proxy: c,
+                      }))
+                    }
+                  />
                 }
               />
-            }
-          />
-        )}
+            </>
+          )}
+        </Smoother>
       </DialogContent>
 
       <DialogActions sx={{ px: 2, pb: 2, position: "relative" }}>
