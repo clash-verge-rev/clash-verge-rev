@@ -31,7 +31,7 @@ fn main() -> std::io::Result<()> {
   #[allow(unused_mut)]
   let mut builder = tauri::Builder::default()
     .setup(|app| Ok(resolve::resolve_setup(app)))
-    .system_tray(SystemTray::new().with_menu(core::tray::Tray::tray_menu()))
+    .system_tray(SystemTray::new())
     .on_system_tray_event(core::tray::Tray::on_system_tray_event)
     .invoke_handler(tauri::generate_handler![
       // common
