@@ -2,17 +2,20 @@ use crate::{data::Data, feat, utils::resolve};
 use anyhow::{Ok, Result};
 use tauri::{
   api, AppHandle, CustomMenuItem, Manager, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
+  SystemTraySubmenu,
 };
 
 pub struct Tray {}
 
 impl Tray {
-  pub fn tray_menu() -> SystemTrayMenu {
+  pub fn tray_menu(app_handle: &AppHandle) -> SystemTrayMenu {
     let data = Data::global();
     let zh = {
       let verge = data.verge.lock();
       verge.language == Some("zh".into())
     };
+
+    let version = app_handle.package_info().version.to_string();
 
     if zh {
       SystemTrayMenu::new()
@@ -25,8 +28,13 @@ impl Tray {
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(CustomMenuItem::new("system_proxy", "系统代理"))
         .add_item(CustomMenuItem::new("tun_mode", "TUN 模式"))
-        .add_item(CustomMenuItem::new("restart_clash", "重启 Clash"))
-        .add_item(CustomMenuItem::new("restart_app", "重启应用"))
+        .add_submenu(SystemTraySubmenu::new(
+          "更多",
+          SystemTrayMenu::new()
+            .add_item(CustomMenuItem::new("restart_clash", "重启 Clash"))
+            .add_item(CustomMenuItem::new("restart_app", "重启应用"))
+            .add_item(CustomMenuItem::new("app_version", format!("Version {version}")).disabled()),
+        ))
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(CustomMenuItem::new("quit", "退出").accelerator("CmdOrControl+Q"))
     } else {
@@ -40,15 +48,22 @@ impl Tray {
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
         .add_item(CustomMenuItem::new("tun_mode", "Tun Mode"))
-        .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
-        .add_item(CustomMenuItem::new("restart_app", "Restart App"))
+        .add_submenu(SystemTraySubmenu::new(
+          "More",
+          SystemTrayMenu::new()
+            .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
+            .add_item(CustomMenuItem::new("restart_app", "Restart App"))
+            .add_item(CustomMenuItem::new("app_version", format!("Version {version}")).disabled()),
+        ))
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(CustomMenuItem::new("quit", "Quit").accelerator("CmdOrControl+Q"))
     }
   }
 
   pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
-    app_handle.tray_handle().set_menu(Tray::tray_menu())?;
+    app_handle
+      .tray_handle()
+      .set_menu(Tray::tray_menu(app_handle))?;
     Tray::update_part(app_handle)?;
     Ok(())
   }

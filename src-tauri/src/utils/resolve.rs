@@ -1,8 +1,17 @@
-use crate::{core::Core, data::Data, utils::init, utils::server};
+use crate::{
+  core::{tray, Core},
+  data::Data,
+  utils::init,
+  utils::server,
+};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
 pub fn resolve_setup(app: &App) {
+  let _ = app
+    .tray_handle()
+    .set_menu(tray::Tray::tray_menu(&app.app_handle()));
+
   init::init_resources(app.package_info());
 
   let silent_start = {
@@ -11,7 +20,7 @@ pub fn resolve_setup(app: &App) {
     let singleton = verge.app_singleton_port.clone();
 
     // setup a simple http server for singleton
-    server::embed_server(&app.handle(), singleton);
+    server::embed_server(&app.app_handle(), singleton);
 
     verge.enable_silent_start.clone().unwrap_or(false)
   };
