@@ -1,3 +1,21 @@
+## v1.1.2
+
+### Features
+
+- the system tray follows i18n
+- change the proxy group ui of global mode
+- support to update profile with the system proxy/clash proxy
+- check the remote profile more strictly
+
+### Bug Fixes
+
+- use app version as default user agent
+- the clash not exit in service mode
+- reset the system proxy when quit the app
+- fix some other glitches
+
+---
+
 ## v1.1.1
 
 ### Features
