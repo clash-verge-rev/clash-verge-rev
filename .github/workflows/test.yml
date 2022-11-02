@@ -54,7 +54,7 @@ jobs:
         if: startsWith(github.event.inputs.os, 'ubuntu-')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libappindicator3-dev librsvg2-dev libayatana-appindicator3-dev
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
 
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
