@@ -1,6 +1,9 @@
 name: Release CI
 
-on: [push]
+on:
+  push:
+    tags:
+      - v**
 
 env:
   CARGO_INCREMENTAL: 0
