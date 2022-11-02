@@ -30,6 +30,10 @@ jobs:
     runs-on: ${{ github.event.inputs.os }}
     if: startsWith(github.repository, 'zzzgydi')
     steps:
+      - name: System Version
+        run: |
+          echo ${{ github.event.inputs.os }}
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
