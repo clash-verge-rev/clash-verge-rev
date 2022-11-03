@@ -53,7 +53,7 @@ async function resolveClashMeta() {
   const { platform, arch } = process;
 
   const urlPrefix = `https://github.com/MetaCubeX/Clash.Meta/releases/download/`;
-  const latestVersion = "v1.13.1";
+  const latestVersion = "v1.13.2";
 
   const map = {
     "win32-x64": "Clash.Meta-windows-amd64",
