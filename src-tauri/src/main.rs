@@ -82,14 +82,16 @@ fn main() -> std::io::Result<()> {
 
     builder = builder.menu(
       Menu::new().add_submenu(Submenu::new(
-        "File",
+        "Edit",
         Menu::new()
           .add_native_item(MenuItem::Undo)
           .add_native_item(MenuItem::Redo)
           .add_native_item(MenuItem::Copy)
           .add_native_item(MenuItem::Paste)
           .add_native_item(MenuItem::Cut)
-          .add_native_item(MenuItem::SelectAll),
+          .add_native_item(MenuItem::SelectAll)
+          .add_native_item(MenuItem::CloseWindow)
+          .add_native_item(MenuItem::Quit)
       )),
     );
   }
