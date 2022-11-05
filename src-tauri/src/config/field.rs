@@ -20,7 +20,7 @@ pub const DEFAULT_FIELDS: [&str; 5] = [
   "rule-providers",
 ];
 
-pub const OTHERS_FIELDS: [&str; 20] = [
+pub const OTHERS_FIELDS: [&str; 21] = [
   "tun",
   "dns",
   "ebpf",
@@ -39,6 +39,7 @@ pub const OTHERS_FIELDS: [&str; 20] = [
   "bind-address",
   "authentication",
   "sniffer",        // meta
+  "sub-rules",      // meta
   "geodata-mode",   // meta
   "tcp-concurrent", // meta
 ];
