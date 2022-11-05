@@ -37,6 +37,7 @@ export const OTHERS_FIELDS = [
   "bind-address",
   "authentication",
   "sniffer", // meta
+  "sub-rules", // meta
   "geodata-mode", // meta
   "tcp-concurrent", // meta
 ] as const;
