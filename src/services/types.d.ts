@@ -13,6 +13,8 @@ declare namespace ApiType {
     "redir-port": number;
     "socks-port": number;
     "tproxy-port": number;
+    "external-controller": string;
+    secret: string;
   }
 
   interface RuleItem {
@@ -95,8 +97,8 @@ declare namespace CmdType {
 
   interface ClashInfo {
     status: string;
-    port?: string;
-    server?: string;
+    port?: string; // clash mixed port
+    server?: string; // external-controller
     secret?: string;
   }
 
