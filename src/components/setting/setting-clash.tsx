@@ -18,6 +18,7 @@ import CoreSwitch from "./mods/core-switch";
 import WebUIViewer from "./mods/web-ui-viewer";
 import ClashFieldViewer from "./mods/clash-field-viewer";
 import ClashPortViewer from "./mods/clash-port-viewer";
+import ControllerViewer from "./mods/controller-viewer";
 
 interface Props {
   onError: (err: Error) => void;
@@ -42,6 +43,7 @@ const SettingClash = ({ onError }: Props) => {
   const webUIHandler = useModalHandler();
   const fieldHandler = useModalHandler();
   const portHandler = useModalHandler();
+  const controllerHandler = useModalHandler();
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
@@ -62,6 +64,7 @@ const SettingClash = ({ onError }: Props) => {
       <WebUIViewer handler={webUIHandler} onError={onError} />
       <ClashFieldViewer handler={fieldHandler} />
       <ClashPortViewer handler={portHandler} />
+      <ControllerViewer handler={controllerHandler} />
 
       <SettingItem label={t("Allow Lan")}>
         <GuardState
@@ -113,12 +116,23 @@ const SettingClash = ({ onError }: Props) => {
           autoComplete="off"
           size="small"
           value={mixedPort ?? 0}
-          sx={{ width: 100, input: { py: "7.5px" } }}
+          sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}
           onClick={(e) => {
             portHandler.current.open();
             (e.target as any).blur();
           }}
         />
+      </SettingItem>
+
+      <SettingItem label={t("External Controller")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => controllerHandler.current.open()}
+        >
+          <ArrowForward />
+        </IconButton>
       </SettingItem>
 
       <SettingItem label={t("Web UI")}>

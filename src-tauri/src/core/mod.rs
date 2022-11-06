@@ -112,18 +112,21 @@ impl Core {
   /// Patch Clash
   /// handle the clash config changed
   pub fn patch_clash(&self, patch: Mapping) -> Result<()> {
-    let has_port = patch.contains_key(&Value::from("mixed-port"));
-    let has_mode = patch.contains_key(&Value::from("mode"));
+    let patch_cloned = patch.clone();
+    let clash_mode = patch.get("mode");
+    let mixed_port = patch.get("mixed-port");
+    let external = patch.get("external-controller");
+    let secret = patch.get("secret");
 
-    let port = {
+    let valid_port = {
       let global = Data::global();
       let mut clash = global.clash.lock();
-      clash.patch_config(patch)?;
-      clash.info.port.clone()
+      clash.patch_config(patch_cloned)?;
+      clash.info.port.is_some()
     };
 
     // todo: port check
-    if has_port && port.is_some() {
+    if (mixed_port.is_some() && valid_port) || external.is_some() || secret.is_some() {
       let mut service = self.service.lock();
       service.restart()?;
       drop(service);
@@ -134,7 +137,7 @@ impl Core {
       sysopt.init_sysproxy()?;
     }
 
-    if has_mode {
+    if clash_mode.is_some() {
       let handle = self.handle.lock();
       handle.update_systray_part()?;
     }
