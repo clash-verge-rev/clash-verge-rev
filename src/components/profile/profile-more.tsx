@@ -199,6 +199,7 @@ const ProfileMore = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
+        MenuListProps={{ sx: { py: 0.5 } }}
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
@@ -210,7 +211,8 @@ const ProfileMore = (props: Props) => {
             <MenuItem
               key={item.label}
               onClick={item.handler}
-              sx={{ minWidth: 133 }}
+              sx={{ minWidth: 120 }}
+              dense
             >
               {t(item.label)}
             </MenuItem>
