@@ -115,14 +115,14 @@ const ProxyGroup = ({ group }: Props) => {
     }
   }, [headState.open, sortedProxies]);
 
-  // auto scroll when sorted changed
-  const timerRef = useRef<any>();
-  useEffect(() => {
-    if (headState.open) {
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => onLocation(false), 500);
-    }
-  }, [headState.open, sortedProxies]);
+  // // auto scroll when sorted changed
+  // const timerRef = useRef<any>();
+  // useEffect(() => {
+  //   if (headState.open) {
+  //     clearTimeout(timerRef.current);
+  //     timerRef.current = setTimeout(() => onLocation(false), 500);
+  //   }
+  // }, [headState.open, sortedProxies]);
 
   return (
     <>
