@@ -176,6 +176,12 @@ export async function providerHealthCheck(name: string) {
   );
 }
 
+export async function getConnections() {
+  const instance = await getAxios();
+  const result = await instance.get("/connections");
+  return result as any as ApiType.Connections;
+}
+
 // Close specific connection
 export async function deleteConnection(id: string) {
   const instance = await getAxios();

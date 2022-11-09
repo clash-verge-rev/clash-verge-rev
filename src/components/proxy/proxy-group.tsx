@@ -15,8 +15,14 @@ import {
   ExpandLessRounded,
   ExpandMoreRounded,
 } from "@mui/icons-material";
-import { providerHealthCheck, updateProxy } from "@/services/api";
+import {
+  getConnections,
+  providerHealthCheck,
+  updateProxy,
+  deleteConnection,
+} from "@/services/api";
 import { getProfiles, patchProfile } from "@/services/cmds";
+import { useVergeConfig } from "@/hooks/use-verge-config";
 import delayManager from "@/services/delay";
 import useHeadState from "./use-head-state";
 import useFilterSort from "./use-filter-sort";
@@ -42,6 +48,7 @@ const ProxyGroup = ({ group }: Props) => {
   );
 
   const { data: profiles } = useSWR("getProfiles", getProfiles);
+  const { data: vergeConfig } = useVergeConfig();
 
   const onChangeProxy = useLockFn(async (name: string) => {
     // Todo: support another proxy group type
@@ -51,6 +58,16 @@ const ProxyGroup = ({ group }: Props) => {
     try {
       setNow(name);
       await updateProxy(group.name, name);
+
+      if (vergeConfig?.auto_close_connection) {
+        getConnections().then((snapshot) => {
+          snapshot.connections.forEach((conn) => {
+            if (conn.chains.includes(oldValue!)) {
+              deleteConnection(conn.id);
+            }
+          });
+        });
+      }
     } catch {
       setNow(oldValue);
       return; // do not update profile

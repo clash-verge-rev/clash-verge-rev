@@ -22,6 +22,7 @@ import ThemeModeSwitch from "./mods/theme-mode-switch";
 import ConfigViewer from "./mods/config-viewer";
 import HotkeyViewer from "./mods/hotkey-viewer";
 import GuardState from "./mods/guard-state";
+import MiscViewer from "./mods/misc-viewer";
 import SettingTheme from "./setting-theme";
 
 interface Props {
@@ -45,11 +46,13 @@ const SettingVerge = ({ onError }: Props) => {
     mutateVerge({ ...vergeConfig, ...patch }, false);
   };
 
+  const miscHandler = useModalHandler();
   const hotkeyHandler = useModalHandler();
 
   return (
     <SettingList title={t("Verge Setting")}>
       <HotkeyViewer handler={hotkeyHandler} />
+      <MiscViewer handler={miscHandler} />
 
       <SettingItem label={t("Language")}>
         <GuardState
@@ -101,6 +104,17 @@ const SettingVerge = ({ onError }: Props) => {
         >
           <Switch edge="end" />
         </GuardState>
+      </SettingItem>
+
+      <SettingItem label={t("Miscellaneous")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => miscHandler.current.open()}
+        >
+          <ArrowForward />
+        </IconButton>
       </SettingItem>
 
       <SettingItem label={t("Theme Setting")}>
