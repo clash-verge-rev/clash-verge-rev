@@ -165,6 +165,8 @@ declare namespace CmdType {
       font_family?: string;
       css_injection?: string;
     };
+    auto_close_connection?: boolean;
+    default_latency_test?: string;
   }
 
   type ClashConfigValue = any;

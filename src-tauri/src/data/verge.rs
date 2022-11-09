@@ -60,6 +60,12 @@ pub struct Verge {
   /// hotkey map
   /// format: {func},{key}
   pub hotkeys: Option<Vec<String>>,
+
+  /// 切换代理时自动关闭连接
+  pub auto_close_connection: Option<bool>,
+
+  /// 默认的延迟测试连接
+  pub default_latency_test: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -121,6 +127,9 @@ impl Verge {
     patch!(web_ui_list);
     patch!(clash_core);
     patch!(hotkeys);
+
+    patch!(auto_close_connection);
+    patch!(default_latency_test);
 
     self.save_file()
   }

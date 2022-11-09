@@ -124,7 +124,7 @@ const SettingClash = ({ onError }: Props) => {
         />
       </SettingItem>
 
-      <SettingItem label={t("External Controller")}>
+      <SettingItem label={t("External")}>
         <IconButton
           color="inherit"
           size="small"
