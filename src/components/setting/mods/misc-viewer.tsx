@@ -81,6 +81,9 @@ const MiscViewer = ({ handler }: Props) => {
             <TextField
               size="small"
               autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
               sx={{ width: 200 }}
               value={values.defaultLatencyTest}
               placeholder="http://www.gstatic.com/generate_204"
