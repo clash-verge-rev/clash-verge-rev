@@ -59,17 +59,7 @@ const ProxyItem = (props: Props) => {
 
   useEffect(() => {
     if (!proxy) return;
-
-    if (!proxy.provider) {
-      setDelay(delayManager.getDelay(proxy.name, groupName));
-      return;
-    }
-
-    const { history = [] } = proxy;
-    if (history.length > 0) {
-      // 0ms以error显示
-      setDelay(history[history.length - 1].delay || 1e6);
-    }
+    setDelay(delayManager.getDelayFix(proxy, groupName));
   }, [proxy]);
 
   const onDelay = useLockFn(async () => {

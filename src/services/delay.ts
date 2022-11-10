@@ -55,6 +55,17 @@ class DelayManager {
     return -1;
   }
 
+  /// 暂时修复provider的节点延迟排序的问题
+  getDelayFix(proxy: ApiType.ProxyItem, group: string) {
+    if (!proxy.provider) return this.getDelay(proxy.name, group);
+
+    if (proxy.history.length > 0) {
+      // 0ms以error显示
+      return proxy.history[proxy.history.length - 1].delay || 1e6;
+    }
+    return -1;
+  }
+
   async checkDelay(name: string, group: string) {
     let delay = -1;
 
