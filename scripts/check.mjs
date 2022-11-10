@@ -56,7 +56,7 @@ async function resolveClashMeta() {
   const latestVersion = "v1.13.2";
 
   const map = {
-    "win32-x64": "Clash.Meta-windows-amd64",
+    "win32-x64": "Clash.Meta-windows-amd64-compatible",
     "darwin-x64": "Clash.Meta-darwin-amd64",
     "darwin-arm64": "Clash.Meta-darwin-arm64",
     "linux-x64": "Clash.Meta-linux-amd64-compatible",
@@ -272,6 +272,38 @@ async function resolveMmdb() {
 }
 
 /**
+ * get the geosite.dat for meta
+ */
+async function resolveGeosite() {
+  const url =
+    "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat";
+
+  const resDir = path.join(cwd, "src-tauri", "resources");
+  const resPath = path.join(resDir, "geosite.dat");
+
+  if (!FORCE && (await fs.pathExists(resPath))) return;
+
+  await fs.mkdirp(resDir);
+  await downloadFile(url, resPath);
+}
+
+/**
+ * get the geoip.dat for meta
+ */
+async function resolveGeoIP() {
+  const url =
+    "https://github.com/Loyalsoldier/geoip/releases/latest/download/geoip.dat";
+
+  const resDir = path.join(cwd, "src-tauri", "resources");
+  const resPath = path.join(resDir, "geoip.dat");
+
+  if (!FORCE && (await fs.pathExists(resPath))) return;
+
+  await fs.mkdirp(resDir);
+  await downloadFile(url, resPath);
+}
+
+/**
  * download file and save to `path`
  */
 async function downloadFile(url, path) {
@@ -302,6 +334,14 @@ async function downloadFile(url, path) {
 
 /// main
 resolveSidecar().catch(console.error);
-resolveWintun().catch(console.error);
-resolveMmdb().catch(console.error);
-resolveService().catch(console.error);
+resolveWintun()
+  .catch(console.error)
+  .finally(() => {
+    resolveService().catch(console.error);
+  });
+resolveMmdb()
+  .catch(console.error)
+  .finally(() => {
+    resolveGeosite().catch(console.error);
+    // resolveGeoIP().catch(console.error);
+  });
