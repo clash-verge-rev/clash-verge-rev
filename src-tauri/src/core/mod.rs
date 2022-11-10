@@ -298,7 +298,7 @@ impl Core {
         Err(err) => {
           let handle = handle.lock();
           handle.notice_message("set_config::error".into(), format!("{err}"));
-          log::error!(target: "app", "last {err}")
+          log::error!(target: "app", "{err}")
         }
       }
     });
