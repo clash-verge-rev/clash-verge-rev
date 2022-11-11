@@ -42,7 +42,7 @@ const ProxyPage = () => {
   // 仅mode为全局和直连的时候展示global分组
   const displayGroups = useMemo(() => {
     if (!global) return groups;
-    if (curMode === "global" || curMode === "direct")
+    if (curMode === "global" || curMode === "direct" || groups.length === 0)
       return [global, ...groups];
     return groups;
   }, [global, groups, curMode]);

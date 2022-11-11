@@ -54,6 +54,7 @@ const Layout = () => {
       // the clash info may be updated
       await getAxios(true);
       mutate("getProxies");
+      mutate("getVersion");
       mutate("getClashConfig");
     });
 
