@@ -1,6 +1,6 @@
 max_width = 100
 hard_tabs = false
-tab_spaces = 2
+tab_spaces = 4
 newline_style = "Auto"
 use_small_heuristics = "Default"
 reorder_imports = true
