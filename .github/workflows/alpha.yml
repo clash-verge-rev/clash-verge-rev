@@ -1,8 +1,6 @@
 name: Alpha CI
 
-on:
-  push:
-    branches: [alpha]
+on: workflow_dispatch
 
 env:
   CARGO_INCREMENTAL: 0
