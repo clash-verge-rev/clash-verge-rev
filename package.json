@@ -26,7 +26,7 @@
     "@tauri-apps/api": "^1.2.0",
     "ahooks": "^3.7.2",
     "axios": "^1.1.3",
-    "dayjs": "^1.11.6",
+    "dayjs": "1.11.5",
     "i18next": "^22.0.4",
     "monaco-editor": "^0.34.1",
     "react": "^17.0.2",
