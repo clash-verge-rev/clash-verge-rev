@@ -62,7 +62,7 @@ jobs:
           yarn run check
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@0
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
