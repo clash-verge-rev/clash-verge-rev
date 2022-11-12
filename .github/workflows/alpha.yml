@@ -11,6 +11,7 @@ env:
 jobs:
   release:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -27,20 +28,20 @@ jobs:
           override: true
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@ce325b60658c1b38465c06cc965b79baf32c1e72
+        uses: Swatinem/rust-cache@v2
         with:
-          working-directory: src-tauri
+          workspaces: src-tauri
 
       - name: Install Node
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Install Dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libappindicator3-dev librsvg2-dev libayatana-appindicator3-dev
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
 
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
@@ -61,19 +62,17 @@ jobs:
           yarn run check
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@743a37fd53cbdd122910b818b9bef7b7aa019134
-        # enable cache even though failed
-        continue-on-error: true
+        uses: tauri-apps/tauri-action@0
         env:
-          VITE_MULTI_CORE: 1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tagName: alpha
           releaseName: "Clash Verge Alpha"
-          releaseBody: "Alpha Version"
-          releaseDraft: true
+          releaseBody: "Alpha Version (include debug)"
+          releaseDraft: false
+          includeDebug: true
           prerelease: true
 
       # - name: Portable Bundle
