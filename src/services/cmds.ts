@@ -136,9 +136,9 @@ export async function restartSidecar() {
   return invoke<void>("restart_sidecar");
 }
 
-export async function killSidecar() {
-  return invoke<any>("kill_sidecar");
-}
+// export async function killSidecar() {
+//   return invoke<any>("kill_sidecar");
+// }
 
 export async function openAppDir() {
   return invoke<void>("open_app_dir").catch((err) =>

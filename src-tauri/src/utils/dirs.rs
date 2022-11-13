@@ -1,4 +1,3 @@
-use std::env::temp_dir;
 use std::path::PathBuf;
 use tauri::{
     api::path::{home_dir, resource_dir},
@@ -13,7 +12,7 @@ static APP_DIR: &str = "clash-verge-dev";
 static CLASH_CONFIG: &str = "config.yaml";
 static VERGE_CONFIG: &str = "verge.yaml";
 static PROFILE_YAML: &str = "profiles.yaml";
-static PROFILE_TEMP: &str = "clash-verge-runtime.yaml";
+static CLASH_RUNTIME_YAML: &str = "clash-verge-runtime.yaml";
 
 static mut RESOURCE_DIR: Option<PathBuf> = None;
 
@@ -99,12 +98,8 @@ pub fn profiles_path() -> PathBuf {
     app_home_dir().join(PROFILE_YAML)
 }
 
-pub fn profiles_temp_path() -> PathBuf {
-    #[cfg(not(feature = "debug-yml"))]
-    return temp_dir().join(PROFILE_TEMP);
-
-    #[cfg(feature = "debug-yml")]
-    return app_home_dir().join(PROFILE_TEMP);
+pub fn clash_runtime_yaml() -> PathBuf {
+    app_home_dir().join(CLASH_RUNTIME_YAML)
 }
 
 pub fn clash_pid_path() -> PathBuf {
@@ -135,4 +130,12 @@ pub fn service_log_file() -> PathBuf {
     std::fs::create_dir_all(&log_dir).unwrap();
 
     log_file
+}
+
+pub fn path_to_str(path: &PathBuf) -> anyhow::Result<&str> {
+    let path_str = path
+        .as_os_str()
+        .to_str()
+        .ok_or(anyhow::anyhow!("failed to get path from {:?}", path))?;
+    Ok(path_str)
 }

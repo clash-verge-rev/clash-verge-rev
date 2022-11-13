@@ -1,48 +1,48 @@
-use crate::{
-    core::{tray, Core},
-    data::Data,
-    utils::init,
-    utils::server,
-};
+use crate::log_err;
+use crate::{config::VergeN, core::*, utils::init, utils::server};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
-pub fn resolve_setup(app: &App) {
-    let _ = app
-        .tray_handle()
-        .set_menu(tray::Tray::tray_menu(&app.app_handle()));
+pub fn resolve_setup(app: &mut App) {
+    #[cfg(target_os = "macos")]
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
+    handle::Handle::global().init(app.app_handle());
 
     init::init_resources(app.package_info());
 
+    // 启动核心
+    log_err!(CoreManager::global().init());
+
+    // log_err!(app
+    //     .tray_handle()
+    //     .set_menu(tray::Tray::tray_menu(&app.app_handle())));
+
+    log_err!(tray::Tray::update_systray(&app.app_handle()));
+
+    // setup a simple http server for singleton
+    server::embed_server(app.app_handle());
+
     let silent_start = {
-        let global = Data::global();
-        let verge = global.verge.lock();
-        let singleton = verge.app_singleton_port.clone();
-
-        // setup a simple http server for singleton
-        server::embed_server(&app.app_handle(), singleton);
-
-        verge.enable_silent_start.clone().unwrap_or(false)
+        let verge = VergeN::global().config.lock();
+        verge.enable_silent_start.clone()
     };
-
-    // core should be initialized after init_app fix #122
-    let core = Core::global();
-    core.init(app.app_handle());
-
-    if !silent_start {
+    if !silent_start.unwrap_or(false) {
         create_window(&app.app_handle());
     }
+
+    log_err!(sysopt::Sysopt::global().init_launch());
+    log_err!(sysopt::Sysopt::global().init_sysproxy());
+
+    log_err!(handle::Handle::update_systray_part());
+    log_err!(hotkey::Hotkey::global().init(app.app_handle()));
+    log_err!(timer::Timer::global().init());
 }
 
 /// reset system proxy
 pub fn resolve_reset() {
-    let core = Core::global();
-    let mut sysopt = core.sysopt.lock();
-    crate::log_if_err!(sysopt.reset_sysproxy());
-    drop(sysopt);
-
-    let mut service = core.service.lock();
-    crate::log_if_err!(service.stop());
+    log_err!(sysopt::Sysopt::global().reset_sysproxy());
+    log_err!(CoreManager::global().stop_core());
 }
 
 /// create main window

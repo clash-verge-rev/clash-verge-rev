@@ -50,7 +50,7 @@ pub fn save_yaml<T: Serialize>(path: PathBuf, data: &T, prefix: Option<&str>) ->
     let data_str = serde_yaml::to_string(data)?;
 
     let yaml_str = match prefix {
-        Some(prefix) => format!("{prefix}{data_str}"),
+        Some(prefix) => format!("{prefix}\n{data_str}"),
         None => data_str,
     };
 
