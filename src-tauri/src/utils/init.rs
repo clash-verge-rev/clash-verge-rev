@@ -87,19 +87,28 @@ pub fn init_resources(package_info: &PackageInfo) {
     }
 
     // copy the resource file
-    let mmdb_path = app_dir.join("Country.mmdb");
-    let mmdb_tmpl = res_dir.join("Country.mmdb");
-    if !mmdb_path.exists() && mmdb_tmpl.exists() {
-        let _ = fs::copy(mmdb_tmpl, mmdb_path);
-    }
-
-    // copy the wintun.dll
-    #[cfg(target_os = "windows")]
-    {
-        let wintun_path = app_dir.join("wintun.dll");
-        let wintun_tmpl = res_dir.join("wintun.dll");
-        if !wintun_path.exists() && wintun_tmpl.exists() {
-            let _ = fs::copy(wintun_tmpl, wintun_path);
+    for file in ["Country.mmdb", "geoip.dat", "geosite.dat", "wintun.dll"].iter() {
+        let src_path = res_dir.join(file);
+        let target_path = app_dir.join(file);
+        if src_path.exists() {
+            let _ = fs::copy(src_path, target_path);
         }
     }
+
+    // // copy the resource file
+    // let mmdb_path = app_dir.join("Country.mmdb");
+    // let mmdb_tmpl = res_dir.join("Country.mmdb");
+    // if !mmdb_path.exists() && mmdb_tmpl.exists() {
+    //     let _ = fs::copy(mmdb_tmpl, mmdb_path);
+    // }
+
+    // // copy the wintun.dll
+    // #[cfg(target_os = "windows")]
+    // {
+    //     let wintun_path = app_dir.join("wintun.dll");
+    //     let wintun_tmpl = res_dir.join("wintun.dll");
+    //     if !wintun_path.exists() && wintun_tmpl.exists() {
+    //         let _ = fs::copy(wintun_tmpl, wintun_path);
+    //     }
+    // }
 }

@@ -213,7 +213,7 @@ impl Service {
     /// update clash config
     /// using PUT methods
     pub async fn set_config(info: ClashInfo, config: Mapping) -> Result<()> {
-        let temp_path = dirs::profiles_temp_path();
+        let temp_path = dirs::clash_runtime_yaml();
         config::save_yaml(temp_path.clone(), &config, Some("# Clash Verge Temp File"))?;
 
         let (server, headers) = Self::clash_client_info(info)?;
@@ -222,13 +222,13 @@ impl Service {
         data.insert("path", temp_path.as_os_str().to_str().unwrap());
 
         macro_rules! report_err {
-      ($i: expr, $e: expr) => {
-        match $i {
-          4 => bail!($e),
-          _ => log::error!(target: "app", $e),
+            ($i: expr, $e: expr) => {
+                match $i {
+                    4 => bail!($e),
+                    _ => log::error!(target: "app", $e),
+                }
+            };
         }
-      };
-    }
 
         // retry 5 times
         for i in 0..5 {
