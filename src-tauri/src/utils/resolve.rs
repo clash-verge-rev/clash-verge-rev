@@ -14,14 +14,10 @@ pub fn resolve_setup(app: &mut App) {
     // 启动核心
     log_err!(CoreManager::global().init());
 
-    // log_err!(app
-    //     .tray_handle()
-    //     .set_menu(tray::Tray::tray_menu(&app.app_handle())));
-
-    log_err!(tray::Tray::update_systray(&app.app_handle()));
-
     // setup a simple http server for singleton
     server::embed_server(app.app_handle());
+
+    log_err!(tray::Tray::update_systray(&app.app_handle()));
 
     let silent_start = {
         let verge = VergeN::global().config.lock();

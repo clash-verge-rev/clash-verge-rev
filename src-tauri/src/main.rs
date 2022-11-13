@@ -12,7 +12,7 @@ mod feat;
 mod utils;
 
 use crate::utils::{init, resolve, server};
-use tauri::{api, CustomMenuItem, Manager, SystemTray, SystemTrayMenu};
+use tauri::{api, Manager, SystemTray};
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -59,7 +59,7 @@ fn main() -> std::io::Result<()> {
             cmds::view_profile,
             cmds::patch_profile,
             cmds::create_profile,
-            // cmds::import_profile,
+            cmds::import_profile,
             cmds::update_profile,
             cmds::delete_profile,
             cmds::select_profile,
