@@ -17,9 +17,6 @@ impl Tray {
 
         let version = app_handle.package_info().version.to_string();
 
-        dbg!(&zh);
-        dbg!(&version);
-
         if zh {
             SystemTrayMenu::new()
                 .add_item(CustomMenuItem::new("open_window", "打开面板"))
@@ -128,9 +125,7 @@ impl Tray {
             SystemTrayEvent::LeftClick { .. } => {
                 resolve::create_window(app_handle);
             }
-            e @ _ => {
-                dbg!("trya");
-            }
+            _ => {}
         }
     }
 }

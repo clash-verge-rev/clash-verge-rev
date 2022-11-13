@@ -75,7 +75,7 @@ impl Timer {
         let diff_map = self.gen_diff();
 
         let mut timer_map = self.timer_map.lock();
-        let delay_timer = self.delay_timer.lock();
+        let mut delay_timer = self.delay_timer.lock();
 
         for (uid, diff) in diff_map.into_iter() {
             match diff {
@@ -85,12 +85,12 @@ impl Timer {
                 }
                 DiffFlag::Add(tid, val) => {
                     let _ = timer_map.insert(uid.clone(), (tid, val));
-                    crate::log_err!(self.add_task(uid, tid, val));
+                    crate::log_err!(self.add_task(&mut delay_timer, uid, tid, val));
                 }
                 DiffFlag::Mod(tid, val) => {
                     let _ = timer_map.insert(uid.clone(), (tid, val));
                     crate::log_err!(delay_timer.remove_task(tid));
-                    crate::log_err!(self.add_task(uid, tid, val));
+                    crate::log_err!(self.add_task(&mut delay_timer, uid, tid, val));
                 }
             }
         }
@@ -153,7 +153,13 @@ impl Timer {
     }
 
     /// add a cron task
-    fn add_task(&self, uid: String, tid: TaskID, minutes: u64) -> Result<()> {
+    fn add_task(
+        &self,
+        delay_timer: &mut DelayTimer,
+        uid: String,
+        tid: TaskID,
+        minutes: u64,
+    ) -> Result<()> {
         let task = TaskBuilder::default()
             .set_task_id(tid)
             .set_maximum_parallel_runnable_num(1)
@@ -162,8 +168,7 @@ impl Timer {
             .spawn_async_routine(move || Self::async_task(uid.to_owned()))
             .context("failed to create timer task")?;
 
-        self.delay_timer
-            .lock()
+        delay_timer
             .add_task(task)
             .context("failed to add timer task")?;
 
