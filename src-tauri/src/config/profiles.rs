@@ -27,41 +27,35 @@ impl ProfilesN {
 
     /// 更新单个配置
     pub async fn update_item(&self, uid: String, option: Option<PrfOption>) -> Result<()> {
-        let (url, opt) = {
+        let url_opt = {
             let profiles = self.config.lock();
             let item = profiles.get_item(&uid)?;
+            let is_remote = item.itype.as_ref().map_or(false, |s| s == "remote");
 
-            if let Some(typ) = item.itype.as_ref() {
-                // maybe only valid for `local` profile
-                if *typ != "remote" {
-                    // reactivate the config
-                    if Some(uid) == profiles.get_current() {
-                        drop(profiles);
-                        tauri::async_runtime::block_on(async {
-                            CoreManager::global().activate_config().await
-                        })?;
-                    }
-                    return Ok(());
-                }
-            }
-            if item.url.is_none() {
+            if !is_remote {
+                None // 直接更新
+            } else if item.url.is_none() {
                 bail!("failed to get the profile item url");
+            } else {
+                Some((item.url.clone().unwrap(), item.option.clone()))
             }
-            (item.url.clone().unwrap(), item.option.clone())
         };
 
-        let merged_opt = PrfOption::merge(opt, option);
-        let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
+        let should_update = match url_opt {
+            Some((url, opt)) => {
+                let merged_opt = PrfOption::merge(opt, option);
+                let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
 
-        let mut profiles = self.config.lock();
-        profiles.update_item(uid.clone(), item)?;
+                let mut profiles = self.config.lock();
+                profiles.update_item(uid.clone(), item)?;
 
-        // reactivate the profile
-        if Some(uid) == profiles.get_current() {
-            drop(profiles);
-            tauri::async_runtime::block_on(async {
-                CoreManager::global().activate_config().await
-            })?;
+                Some(uid) == profiles.get_current()
+            }
+            None => true,
+        };
+
+        if should_update {
+            CoreManager::global().activate_config().await?;
         }
 
         Ok(())
