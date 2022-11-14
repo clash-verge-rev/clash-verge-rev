@@ -3,7 +3,7 @@ use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 use serde_yaml::Mapping;
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Draft<T: Clone + ToOwned> {
     inner: Arc<Mutex<(T, Option<T>)>>,
 }
