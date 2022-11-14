@@ -67,6 +67,7 @@ impl VergeN {
         patch!(auto_close_connection);
         patch!(default_latency_test);
 
+        drop(config);
         self.save_file()
     }
 

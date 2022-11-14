@@ -79,12 +79,12 @@ impl CoreManager {
         let clash_core = { self.clash_core.lock().clone() };
 
         let output = Command::new_sidecar(clash_core)?
-            .args(["-t", config_path])
+            .args(["-t", "-f", config_path])
             .output()?;
 
         if !output.status.success() {
-            Logger::global().set_log(output.stderr.clone());
-            bail!("{}", output.stderr); // 过滤掉终端颜色值
+            Logger::global().set_log(output.stdout.clone());
+            bail!("{}", output.stdout); // 过滤掉终端颜色值
         }
 
         Ok(())
@@ -177,17 +177,19 @@ impl CoreManager {
         // 清掉旧日志
         Logger::global().clear_log();
 
-        let mut self_core = self.clash_core.lock();
-        let old_core = self_core.clone(); // 保存一下旧值
-        *self_core = clash_core.clone();
-        drop(self_core);
+        let old_core = {
+            let mut self_core = self.clash_core.lock();
+            let old_core = self_core.to_owned(); // 保存一下旧值
+            *self_core = clash_core.clone();
+            old_core
+        };
 
         match self.run_core() {
             Ok(_) => {
                 // 更新到配置文件
-                let mut verge = VergeN::global().config.lock();
-                verge.clash_core = Some(clash_core);
-                drop(verge);
+                {
+                    VergeN::global().config.lock().clash_core = Some(clash_core);
+                }
 
                 let _ = VergeN::global().save_file();
 

@@ -44,49 +44,32 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 }
 
 #[tauri::command]
-pub fn select_profile(index: String) -> CmdResult {
-    let mut profiles = ProfilesN::global().config.lock();
-    wrap_err!(profiles.put_current(index))?;
-    drop(profiles);
-
-    wrap_err!(tauri::async_runtime::block_on(async {
-        CoreManager::global().activate_config().await
-    }))
+pub async fn select_profile(index: String) -> CmdResult {
+    wrap_err!({ ProfilesN::global().config.lock().put_current(index) })?;
+    wrap_err!(CoreManager::global().activate_config().await)
 }
 
 /// change the profile chain
 #[tauri::command]
-pub fn change_profile_chain(chain: Option<Vec<String>>) -> CmdResult {
-    let mut profiles = ProfilesN::global().config.lock();
-    wrap_err!(profiles.put_chain(chain))?;
-    drop(profiles);
-
-    wrap_err!(tauri::async_runtime::block_on(async {
-        CoreManager::global().activate_config().await
-    }))
+pub async fn change_profile_chain(chain: Option<Vec<String>>) -> CmdResult {
+    wrap_err!({ ProfilesN::global().config.lock().put_chain(chain) })?;
+    wrap_err!(CoreManager::global().activate_config().await)
 }
 
 #[tauri::command]
-pub fn change_profile_valid(valid: Option<Vec<String>>) -> CmdResult {
-    let mut profiles = ProfilesN::global().config.lock();
-    wrap_err!(profiles.put_valid(valid))?;
-    drop(profiles);
-
-    wrap_err!(tauri::async_runtime::block_on(async {
-        CoreManager::global().activate_config().await
-    }))
+pub async fn change_profile_valid(valid: Option<Vec<String>>) -> CmdResult {
+    wrap_err!({ ProfilesN::global().config.lock().put_valid(valid) })?;
+    wrap_err!(CoreManager::global().activate_config().await)
 }
 
 #[tauri::command]
-pub fn delete_profile(index: String) -> CmdResult {
-    let mut profiles = ProfilesN::global().config.lock();
-    if wrap_err!(profiles.delete_item(index))? {
-        drop(profiles);
+pub async fn delete_profile(index: String) -> CmdResult {
+    let should_update = { wrap_err!(ProfilesN::global().config.lock().delete_item(index))? };
 
-        wrap_err!(tauri::async_runtime::block_on(async {
-            CoreManager::global().activate_config().await
-        }))?;
+    if should_update {
+        wrap_err!(CoreManager::global().activate_config().await)?;
     }
+
     Ok(())
 }
 
@@ -185,10 +168,8 @@ pub fn patch_verge_config(payload: IVerge) -> CmdResult {
 }
 
 #[tauri::command]
-pub fn change_clash_core(clash_core: Option<String>) -> CmdResult {
-    wrap_err!(tauri::async_runtime::block_on(async {
-        CoreManager::global().change_core(clash_core).await
-    }))
+pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
+    wrap_err!(CoreManager::global().change_core(clash_core).await)
 }
 
 /// restart the sidecar
