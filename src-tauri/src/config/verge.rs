@@ -23,51 +23,15 @@ impl VergeN {
 
     /// Save IVerge App Config
     pub fn save_file(&self) -> Result<()> {
-        let config = self.config.lock();
-
-        config::save_yaml(
-            dirs::verge_path(),
-            &*config,
-            Some("# The Config for Clash IVerge App\n\n"),
-        )
+        self.config.lock().save_file()
     }
 
     /// patch verge config
     /// only save to file
     pub fn patch_config(&self, patch: IVerge) -> Result<()> {
-        let mut config = self.config.lock();
-
-        macro_rules! patch {
-            ($key: tt) => {
-                if patch.$key.is_some() {
-                    config.$key = patch.$key;
-                }
-            };
+        {
+            self.config.lock().patch_config(patch);
         }
-
-        patch!(language);
-        patch!(theme_mode);
-        patch!(theme_blur);
-        patch!(traffic_graph);
-
-        patch!(enable_tun_mode);
-        patch!(enable_service_mode);
-        patch!(enable_auto_launch);
-        patch!(enable_silent_start);
-        patch!(enable_system_proxy);
-        patch!(enable_proxy_guard);
-        patch!(system_proxy_bypass);
-        patch!(proxy_guard_duration);
-
-        patch!(theme_setting);
-        patch!(web_ui_list);
-        patch!(clash_core);
-        patch!(hotkeys);
-
-        patch!(auto_close_connection);
-        patch!(default_latency_test);
-
-        drop(config);
         self.save_file()
     }
 
@@ -164,4 +128,53 @@ pub struct IVergeTheme {
 
     pub font_family: Option<String>,
     pub css_injection: Option<String>,
+}
+
+impl IVerge {
+    pub fn new() -> Self {
+        config::read_yaml::<IVerge>(dirs::verge_path())
+    }
+
+    /// Save IVerge App Config
+    pub fn save_file(&self) -> Result<()> {
+        config::save_yaml(
+            dirs::verge_path(),
+            &self,
+            Some("# The Config for Clash IVerge App\n\n"),
+        )
+    }
+
+    /// patch verge config
+    /// only save to file
+    pub fn patch_config(&mut self, patch: IVerge) {
+        macro_rules! patch {
+            ($key: tt) => {
+                if patch.$key.is_some() {
+                    self.$key = patch.$key;
+                }
+            };
+        }
+
+        patch!(language);
+        patch!(theme_mode);
+        patch!(theme_blur);
+        patch!(traffic_graph);
+
+        patch!(enable_tun_mode);
+        patch!(enable_service_mode);
+        patch!(enable_auto_launch);
+        patch!(enable_silent_start);
+        patch!(enable_system_proxy);
+        patch!(enable_proxy_guard);
+        patch!(system_proxy_bypass);
+        patch!(proxy_guard_duration);
+
+        patch!(theme_setting);
+        patch!(web_ui_list);
+        patch!(clash_core);
+        patch!(hotkeys);
+
+        patch!(auto_close_connection);
+        patch!(default_latency_test);
+    }
 }
