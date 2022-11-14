@@ -58,22 +58,11 @@ impl ClashN {
     pub fn patch_config(&self, patch: Mapping) -> Result<()> {
         let mut config = self.config.lock();
 
-        let port_key = Value::from("mixed-port");
-        let server_key = Value::from("external-controller");
-        let secret_key = Value::from("secret");
-
-        let change_info = patch.contains_key(&port_key)
-            || patch.contains_key(&server_key)
-            || patch.contains_key(&secret_key);
-
         for (key, value) in patch.into_iter() {
             config.insert(key, value);
         }
 
-        if change_info {
-            let mut info = self.info.lock();
-            *info = ClashInfoN::from(&*config);
-        }
+        drop(config);
 
         self.save_config()
     }
