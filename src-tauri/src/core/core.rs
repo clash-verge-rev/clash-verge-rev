@@ -1,7 +1,7 @@
 use super::{clash_api, logger::Logger};
 use crate::{
     config::*,
-    enhance,
+    enhance, log_err,
     utils::{self, dirs},
 };
 use anyhow::{bail, Context, Result};
@@ -14,8 +14,6 @@ use tokio::time::sleep;
 
 #[derive(Debug)]
 pub struct CoreManager {
-    clash_core: Arc<Mutex<String>>,
-
     sidecar: Arc<Mutex<Option<CommandChild>>>,
 
     #[allow(unused)]
@@ -29,7 +27,6 @@ impl CoreManager {
         static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
 
         CORE_MANAGER.get_or_init(|| CoreManager {
-            clash_core: Arc::new(Mutex::new("clash".into())),
             sidecar: Arc::new(Mutex::new(None)),
             runtime_config: Arc::new(Mutex::new(RuntimeResult::default())),
             use_service_mode: Arc::new(Mutex::new(false)),
@@ -50,14 +47,14 @@ impl CoreManager {
             }
         }
 
-        // 使用配置的核心
-        let verge = VergeN::global().config.lock();
-        if let Some(verge_core) = verge.clash_core.as_ref() {
-            if verge_core == "clash" || verge_core == "clash-meta" {
-                let mut clash_core = self.clash_core.lock();
-                *clash_core = verge_core.clone();
-            }
-        }
+        // // 使用配置的核心
+        // let verge_core = { Config::verge().clash_core.clone() };
+        // if let Some(verge_core) = verge_core {
+        //     if verge_core == "clash" || verge_core == "clash-meta" {
+        //         let mut clash_core = self.clash_core.lock();
+        //         *clash_core = verge_core;
+        //     }
+        // }
 
         // 启动clash
         self.run_core()?;
@@ -76,7 +73,8 @@ impl CoreManager {
         let config_path = dirs::clash_runtime_yaml();
         let config_path = dirs::path_to_str(&config_path)?;
 
-        let clash_core = { self.clash_core.lock().clone() };
+        let clash_core = { Config::verge().latest().clash_core.clone() };
+        let clash_core = clash_core.unwrap_or("clash".into());
 
         let output = Command::new_sidecar(clash_core)?
             .args(["-t", "-f", config_path])
@@ -104,7 +102,8 @@ impl CoreManager {
         let app_dir = dirs::app_home_dir();
         let app_dir = dirs::path_to_str(&app_dir)?;
 
-        let clash_core = { self.clash_core.lock().clone() };
+        let clash_core = { Config::verge().latest().clash_core.clone() };
+        let clash_core = clash_core.unwrap_or("clash".into());
 
         // fix #212
         let args = match clash_core.as_str() {
@@ -177,30 +176,23 @@ impl CoreManager {
         // 清掉旧日志
         Logger::global().clear_log();
 
-        let old_core = {
-            let mut self_core = self.clash_core.lock();
-            let old_core = self_core.to_owned(); // 保存一下旧值
-            *self_core = clash_core.clone();
-            old_core
-        };
+        {
+            Config::verge().draft().clash_core = Some(clash_core);
+        }
 
         match self.run_core() {
             Ok(_) => {
-                // 更新到配置文件
-                {
-                    VergeN::global().config.lock().clash_core = Some(clash_core);
-                }
-
-                let _ = VergeN::global().save_file();
+                log_err!({
+                    Config::verge().apply();
+                    Config::verge().latest().save_file()
+                });
 
                 sleep(Duration::from_millis(100)).await; // 等一会儿再更新配置
                 self.activate_config().await?;
                 Ok(())
             }
             Err(err) => {
-                // 恢复旧的值
-                let mut self_core = self.clash_core.lock();
-                *self_core = old_core;
+                Config::verge().discard();
                 Err(err)
             }
         }
@@ -215,15 +207,15 @@ impl CoreManager {
 
     /// 激活一个配置
     pub async fn activate_config(&self) -> Result<()> {
-        let clash_config = { ClashN::global().config.lock().clone() };
+        let clash_config = { Config::clash().latest().clone() };
 
-        let tun_mode = { VergeN::global().config.lock().enable_tun_mode.clone() };
+        let tun_mode = { Config::verge().latest().enable_tun_mode.clone() };
         let tun_mode = tun_mode.unwrap_or(false);
 
-        let pa = { ProfilesN::global().config.lock().gen_activate()? };
+        let pa = { Config::profiles().latest().gen_activate()? };
 
         let (config, exists_keys, logs) =
-            enhance::enhance_config(clash_config, pa.current, pa.chain, pa.valid, tun_mode);
+            enhance::enhance_config(clash_config.0, pa.current, pa.chain, pa.valid, tun_mode);
 
         // 保存到文件中
         let runtime_path = dirs::clash_runtime_yaml();

@@ -1,4 +1,4 @@
-use super::{IProfiles, IVerge};
+use super::{IClash, IClashTemp, IProfiles, IVerge};
 use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 use serde_yaml::Mapping;
 use std::sync::Arc;
@@ -13,6 +13,16 @@ macro_rules! draft_define {
         impl Draft<$id> {
             pub fn data(&self) -> MappedMutexGuard<$id> {
                 MutexGuard::map(self.inner.lock(), |guard| &mut guard.0)
+            }
+
+            pub fn latest(&self) -> MappedMutexGuard<$id> {
+                MutexGuard::map(self.inner.lock(), |inner| {
+                    if inner.1.is_none() {
+                        &mut inner.0
+                    } else {
+                        inner.1.as_mut().unwrap()
+                    }
+                })
             }
 
             pub fn draft(&self) -> MappedMutexGuard<$id> {
@@ -54,6 +64,8 @@ macro_rules! draft_define {
     };
 }
 
+draft_define!(IClash);
+draft_define!(IClashTemp);
 draft_define!(IVerge);
 draft_define!(Mapping);
 draft_define!(IProfiles);
@@ -84,6 +96,9 @@ fn test_draft() {
 
     assert_eq!(draft.draft().enable_auto_launch, Some(false));
     assert_eq!(draft.draft().enable_tun_mode, Some(true));
+
+    assert_eq!(draft.latest().enable_auto_launch, Some(false));
+    assert_eq!(draft.latest().enable_tun_mode, Some(true));
 
     assert!(draft.apply().is_some());
     assert!(draft.apply().is_none());
