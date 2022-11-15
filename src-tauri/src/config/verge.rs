@@ -5,6 +5,7 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
+#[deprecated]
 pub struct VergeN {
     pub config: Arc<Mutex<IVerge>>,
 }
@@ -51,8 +52,7 @@ impl VergeN {
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVerge {
-    /// app listening port
-    /// for app singleton
+    /// app listening port for app singleton
     pub app_singleton_port: Option<u16>,
 
     // i18n

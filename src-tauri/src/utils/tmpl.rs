@@ -19,7 +19,7 @@ items: ~
 ";
 
 /// template for `verge.yaml`
-pub const VERGE_CONFIG: &[u8] = b"# Defaulf Config For Clash Verge
+pub const VERGE_CONFIG: &[u8] = b"# Default Config For Clash Verge
 
 language: en
 theme_mode: light

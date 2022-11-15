@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::{fs, io::Write};
 
+#[deprecated]
 pub struct ProfilesN {
     pub config: Arc<Mutex<IProfiles>>,
 }
@@ -87,6 +88,10 @@ macro_rules! patch {
 }
 
 impl IProfiles {
+    pub fn new() -> Self {
+        Self::read_file()
+    }
+
     /// read the config from the file
     pub fn read_file() -> Self {
         let mut profiles = config::read_yaml::<Self>(dirs::profiles_path());

@@ -212,3 +212,9 @@ pub async fn handle_activate() -> Result<()> {
         }
     }
 }
+
+/// 更新某个profile
+/// 如果更新当前配置就激活配置
+pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()> {
+    Ok(())
+}

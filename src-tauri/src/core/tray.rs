@@ -1,5 +1,5 @@
 use crate::log_err;
-use crate::{config, feat, utils::resolve};
+use crate::{config::Config, feat, utils::resolve};
 use anyhow::Result;
 use tauri::{
     api, AppHandle, CustomMenuItem, Manager, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
@@ -10,10 +10,7 @@ pub struct Tray {}
 
 impl Tray {
     pub fn tray_menu(app_handle: &AppHandle) -> SystemTrayMenu {
-        let zh = {
-            let verge = config::VergeN::global().config.lock();
-            verge.language == Some("zh".into())
-        };
+        let zh = { Config::verge().latest().language == Some("zh".into()) };
 
         let version = app_handle.package_info().version.to_string();
 
@@ -76,8 +73,9 @@ impl Tray {
 
     pub fn update_part(app_handle: &AppHandle) -> Result<()> {
         let mode = {
-            let clash = config::ClashN::global().config.lock();
-            clash
+            Config::clash()
+                .latest()
+                .0
                 .get("mode")
                 .map(|val| val.as_str().unwrap_or("rule"))
                 .unwrap_or("rule")
@@ -91,7 +89,8 @@ impl Tray {
         let _ = tray.get_item("direct_mode").set_selected(mode == "direct");
         let _ = tray.get_item("script_mode").set_selected(mode == "script");
 
-        let verge = config::VergeN::global().config.lock();
+        let verge = Config::verge();
+        let verge = verge.latest();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 

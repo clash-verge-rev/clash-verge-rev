@@ -1,4 +1,4 @@
-use crate::{config, feat, log_err};
+use crate::{config::Config, feat, log_err};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -24,9 +24,9 @@ impl Hotkey {
     pub fn init(&self, app_handle: AppHandle) -> Result<()> {
         *self.app_handle.lock() = Some(app_handle);
 
-        let verge = config::VergeN::global().config.lock();
+        let verge = Config::verge();
 
-        if let Some(hotkeys) = verge.hotkeys.as_ref() {
+        if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
                 let func = iter.next();

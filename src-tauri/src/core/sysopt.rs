@@ -1,4 +1,4 @@
-use crate::{config, log_err};
+use crate::{config::Config, log_err};
 use anyhow::{anyhow, bail, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use once_cell::sync::OnceCell;
@@ -43,7 +43,7 @@ impl Sysopt {
 
     /// init the sysproxy
     pub fn init_sysproxy(&self) -> Result<()> {
-        let port = { config::ClashN::global().info.lock().port.clone() };
+        let port = { Config::clash().latest().get_info()?.port };
 
         if port.is_none() {
             bail!("clash port is none");
@@ -51,16 +51,20 @@ impl Sysopt {
 
         let port = port.unwrap().parse::<u16>()?;
 
-        let verge = config::VergeN::global().config.lock();
-        let enable = verge.enable_system_proxy.clone().unwrap_or(false);
-        let bypass = verge.system_proxy_bypass.clone();
-        let bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
+        let (enable, bypass) = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            (
+                verge.enable_system_proxy.clone().unwrap_or(false),
+                verge.system_proxy_bypass.clone(),
+            )
+        };
 
         let current = Sysproxy {
             enable,
             host: String::from("127.0.0.1"),
             port,
-            bypass,
+            bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
         };
 
         if enable {
@@ -87,16 +91,18 @@ impl Sysopt {
             return self.init_sysproxy();
         }
 
-        let verge = config::VergeN::global().config.lock();
-
-        let enable = verge.enable_system_proxy.clone().unwrap_or(false);
-        let bypass = verge.system_proxy_bypass.clone();
-        let bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
-
+        let (enable, bypass) = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            (
+                verge.enable_system_proxy.clone().unwrap_or(false),
+                verge.system_proxy_bypass.clone(),
+            )
+        };
         let mut sysproxy = cur_sysproxy.take().unwrap();
 
         sysproxy.enable = enable;
-        sysproxy.bypass = bypass;
+        sysproxy.bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
 
         sysproxy.set_system_proxy()?;
         *cur_sysproxy = Some(sysproxy);
@@ -138,8 +144,13 @@ impl Sysopt {
 
     /// init the auto launch
     pub fn init_launch(&self) -> Result<()> {
-        let verge = config::VergeN::global().config.lock();
-        let enable = verge.enable_auto_launch.clone().unwrap_or(false);
+        let enable = {
+            Config::verge()
+                .latest()
+                .enable_auto_launch
+                .clone()
+                .unwrap_or(false)
+        };
 
         let app_exe = current_exe()?;
         let app_exe = dunce::canonicalize(app_exe)?;
@@ -202,10 +213,13 @@ impl Sysopt {
             drop(auto_launch);
             return self.init_launch();
         }
-
-        let verge = config::VergeN::global().config.lock();
-        let enable = verge.enable_auto_launch.clone().unwrap_or(false);
-
+        let enable = {
+            Config::verge()
+                .latest()
+                .enable_auto_launch
+                .clone()
+                .unwrap_or(false)
+        };
         let auto_launch = auto_launch.as_ref().unwrap();
 
         match enable {
@@ -238,13 +252,16 @@ impl Sysopt {
             loop {
                 sleep(Duration::from_secs(wait_secs)).await;
 
-                let verge = config::VergeN::global().config.lock();
-
-                let enable = verge.enable_system_proxy.clone().unwrap_or(false);
-                let guard = verge.enable_proxy_guard.clone().unwrap_or(false);
-                let guard_duration = verge.proxy_guard_duration.clone().unwrap_or(10);
-                let bypass = verge.system_proxy_bypass.clone();
-                drop(verge);
+                let (enable, guard, guard_duration, bypass) = {
+                    let verge = Config::verge();
+                    let verge = verge.latest();
+                    (
+                        verge.enable_system_proxy.clone().unwrap_or(false),
+                        verge.enable_proxy_guard.clone().unwrap_or(false),
+                        verge.proxy_guard_duration.clone().unwrap_or(10),
+                        verge.system_proxy_bypass.clone(),
+                    )
+                };
 
                 // stop loop
                 if !enable || !guard {
@@ -256,20 +273,21 @@ impl Sysopt {
 
                 log::debug!(target: "app", "try to guard the system proxy");
 
-                let port = { config::ClashN::global().info.lock().port.clone() };
-                match port.unwrap_or("".into()).parse::<u16>() {
-                    Ok(port) => {
-                        let sysproxy = Sysproxy {
-                            enable: true,
-                            host: "127.0.0.1".into(),
-                            port,
-                            bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
-                        };
+                if let Ok(info) = { Config::clash().latest().get_info() } {
+                    match info.port.unwrap_or("".into()).parse::<u16>() {
+                        Ok(port) => {
+                            let sysproxy = Sysproxy {
+                                enable: true,
+                                host: "127.0.0.1".into(),
+                                port,
+                                bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+                            };
 
-                        log_err!(sysproxy.set_system_proxy());
-                    }
-                    Err(_) => {
-                        log::error!(target: "app", "failed to parse clash port in guard proxy")
+                            log_err!(sysproxy.set_system_proxy());
+                        }
+                        Err(_) => {
+                            log::error!(target: "app", "failed to parse clash port in guard proxy")
+                        }
                     }
                 }
             }
