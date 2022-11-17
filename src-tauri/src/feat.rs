@@ -1,7 +1,7 @@
 use crate::config::*;
 use crate::core::*;
 use crate::log_err;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
 
 // 重启clash
@@ -22,11 +22,9 @@ pub fn change_clash_mode(mode: String) {
         match clash_api::patch_configs(&mapping).await {
             Ok(_) => {
                 // 更新配置
-                let mut clash = ClashN::global().config.lock();
-                clash.insert(Value::from("mode"), mode.into());
-                drop(clash);
+                Config::clash().data().patch_config(mapping);
 
-                if let Ok(_) = ClashN::global().save_config() {
+                if let Ok(_) = Config::clash().data().save_config() {
                     handle::Handle::refresh_clash();
                     log_err!(handle::Handle::update_systray_part());
                 }
@@ -39,163 +37,199 @@ pub fn change_clash_mode(mode: String) {
 }
 
 // 切换系统代理
-pub fn toggle_system_proxy() -> Result<()> {
-    let enable = {
-        let verge = VergeN::global().config.lock();
-        verge.enable_system_proxy.clone().unwrap_or(false)
-    };
-    patch_verge(IVerge {
-        enable_system_proxy: Some(!enable),
-        ..IVerge::default()
-    })?;
-    handle::Handle::refresh_verge();
-    Ok(())
-}
+pub fn toggle_system_proxy() {
+    let enable = Config::verge().draft().enable_system_proxy.clone();
+    let enable = enable.unwrap_or(false);
 
-// 打开系统代理
-pub fn enable_system_proxy() -> Result<()> {
-    patch_verge(IVerge {
-        enable_system_proxy: Some(true),
-        ..IVerge::default()
-    })?;
-    handle::Handle::refresh_verge();
-    Ok(())
-}
-
-// 关闭系统代理
-pub fn disable_system_proxy() -> Result<()> {
-    patch_verge(IVerge {
-        enable_system_proxy: Some(false),
-        ..IVerge::default()
-    })?;
-    handle::Handle::refresh_verge();
-    Ok(())
-}
-
-// 切换tun模式
-pub fn toggle_tun_mode() -> Result<()> {
-    let enable = {
-        let verge = VergeN::global().config.lock();
-        verge.enable_tun_mode.clone().unwrap_or(false)
-    };
-
-    patch_verge(IVerge {
-        enable_tun_mode: Some(!enable),
-        ..IVerge::default()
-    })?;
-    handle::Handle::refresh_verge();
-    Ok(())
-}
-
-// 打开tun模式
-pub fn enable_tun_mode() -> Result<()> {
-    patch_verge(IVerge {
-        enable_tun_mode: Some(true),
-        ..IVerge::default()
-    })?;
-    handle::Handle::refresh_verge();
-    Ok(())
-}
-
-// 关闭tun模式
-pub fn disable_tun_mode() -> Result<()> {
-    patch_verge(IVerge {
-        enable_tun_mode: Some(false),
-        ..IVerge::default()
-    })?;
-    handle::Handle::refresh_verge();
-    Ok(())
-}
-
-/// 修改clash的配置
-pub fn patch_clash(patch: Mapping) -> Result<()> {
-    let patch_cloned = patch.clone();
-    let clash_mode = patch.get("mode").is_some();
-    let mixed_port = patch.get("mixed-port").is_some();
-    let external = patch.get("external-controller").is_some();
-    let secret = patch.get("secret").is_some();
-
-    // 更新info信息
-    if mixed_port || external || secret {
-        let mut tmp_config = { ClashN::global().config.lock().clone() };
-
-        for (key, value) in patch.into_iter() {
-            tmp_config.insert(key, value);
-        }
-
-        let old_info = ClashN::global().patch_info(ClashInfoN::from(&tmp_config))?;
-
-        if let Err(err) = CoreManager::global().run_core() {
-            // 恢复旧值
-            ClashN::global().patch_info(old_info)?;
-            return Err(err);
-        }
-    }
-    // 存好再搞
-    ClashN::global().patch_config(patch_cloned)?;
-
-    // 激活配置
     tauri::async_runtime::spawn(async move {
-        match handle_activate().await {
-            Ok(_) => {
-                // 更新系统代理
-                if mixed_port {
-                    log_err!(sysopt::Sysopt::global().init_sysproxy());
-                }
-
-                if clash_mode {
-                    log_err!(handle::Handle::update_systray_part());
-                }
-            }
+        match patch_verge(IVerge {
+            enable_system_proxy: Some(!enable),
+            ..IVerge::default()
+        })
+        .await
+        {
+            Ok(_) => handle::Handle::refresh_verge(),
             Err(err) => log::error!(target: "app", "{err}"),
         }
     });
-    Ok(())
+}
+
+// 打开系统代理
+pub fn enable_system_proxy() {
+    tauri::async_runtime::spawn(async {
+        match patch_verge(IVerge {
+            enable_system_proxy: Some(true),
+            ..IVerge::default()
+        })
+        .await
+        {
+            Ok(_) => handle::Handle::refresh_verge(),
+            Err(err) => log::error!(target: "app", "{err}"),
+        }
+    });
+}
+
+// 关闭系统代理
+pub fn disable_system_proxy() {
+    tauri::async_runtime::spawn(async {
+        match patch_verge(IVerge {
+            enable_system_proxy: Some(false),
+            ..IVerge::default()
+        })
+        .await
+        {
+            Ok(_) => handle::Handle::refresh_verge(),
+            Err(err) => log::error!(target: "app", "{err}"),
+        }
+    });
+}
+
+// 切换tun模式
+pub fn toggle_tun_mode() {
+    let enable = Config::verge().data().enable_tun_mode.clone();
+    let enable = enable.unwrap_or(false);
+
+    tauri::async_runtime::spawn(async move {
+        match patch_verge(IVerge {
+            enable_tun_mode: Some(!enable),
+            ..IVerge::default()
+        })
+        .await
+        {
+            Ok(_) => handle::Handle::refresh_verge(),
+            Err(err) => log::error!(target: "app", "{err}"),
+        }
+    });
+}
+
+// 打开tun模式
+pub fn enable_tun_mode() {
+    tauri::async_runtime::spawn(async {
+        match patch_verge(IVerge {
+            enable_tun_mode: Some(true),
+            ..IVerge::default()
+        })
+        .await
+        {
+            Ok(_) => handle::Handle::refresh_verge(),
+            Err(err) => log::error!(target: "app", "{err}"),
+        }
+    });
+}
+
+// 关闭tun模式
+pub fn disable_tun_mode() {
+    tauri::async_runtime::spawn(async {
+        match patch_verge(IVerge {
+            enable_tun_mode: Some(false),
+            ..IVerge::default()
+        })
+        .await
+        {
+            Ok(_) => handle::Handle::refresh_verge(),
+            Err(err) => log::error!(target: "app", "{err}"),
+        }
+    });
+}
+
+/// 修改clash的配置
+pub async fn patch_clash(patch: Mapping) -> Result<()> {
+    Config::clash().draft().patch_config(patch.clone());
+
+    match {
+        let mixed_port = patch.get("mixed-port");
+        if mixed_port.is_some() {
+            let changed = mixed_port != Config::clash().data().0.get("mixed-port");
+            // 检查端口占用
+            if changed {
+                if let Some(port) = mixed_port.clone().unwrap().as_u64() {
+                    if !port_scanner::local_port_available(port as u16) {
+                        Config::clash().discard();
+                        bail!("the port not available");
+                    }
+                }
+            }
+        };
+
+        // 激活配置
+        handle_activate().await?;
+
+        // 更新系统代理
+        if mixed_port.is_some() {
+            log_err!(sysopt::Sysopt::global().init_sysproxy());
+        }
+
+        if patch.get("mode").is_some() {
+            log_err!(handle::Handle::update_systray_part());
+        }
+
+        <Result<()>>::Ok(())
+    } {
+        Ok(()) => {
+            Config::clash().apply();
+            Config::clash().data().save_config()?;
+            Ok(())
+        }
+        Err(err) => {
+            Config::clash().discard();
+            Err(err)
+        }
+    }
 }
 
 /// 修改verge的配置
 /// 一般都是一个个的修改
-pub fn patch_verge(patch: IVerge) -> Result<()> {
-    VergeN::global().patch_config(patch.clone())?;
+pub async fn patch_verge(patch: IVerge) -> Result<()> {
+    Config::verge().draft().patch_config(patch.clone());
 
     let tun_mode = patch.enable_tun_mode;
     let auto_launch = patch.enable_auto_launch;
     let system_proxy = patch.enable_system_proxy;
     let proxy_bypass = patch.system_proxy_bypass;
-    let proxy_guard = patch.enable_proxy_guard;
     let language = patch.language;
 
-    #[cfg(target_os = "windows")]
-    {}
+    match {
+        #[cfg(target_os = "windows")]
+        {}
 
-    if tun_mode.is_some() {
-        tauri::async_runtime::spawn(async {
-            log_err!(handle_activate().await);
-        });
-    }
+        if tun_mode.is_some() {
+            handle_activate().await?;
+        }
 
-    if auto_launch.is_some() {
-        sysopt::Sysopt::global().update_launch()?;
-    }
-    if system_proxy.is_some() || proxy_bypass.is_some() {
-        sysopt::Sysopt::global().update_sysproxy()?;
-        sysopt::Sysopt::global().guard_proxy();
-    }
-    if proxy_guard.unwrap_or(false) {
-        sysopt::Sysopt::global().guard_proxy();
-    }
+        if auto_launch.is_some() {
+            sysopt::Sysopt::global().update_launch()?;
+        }
+        if system_proxy.is_some() || proxy_bypass.is_some() {
+            sysopt::Sysopt::global().update_sysproxy()?;
+            sysopt::Sysopt::global().guard_proxy();
+        }
 
-    if language.is_some() {
-        handle::Handle::update_systray()?;
-    } else if system_proxy.or(tun_mode).is_some() {
-        handle::Handle::update_systray_part()?;
-    }
+        if let Some(true) = patch.enable_proxy_guard {
+            sysopt::Sysopt::global().guard_proxy();
+        }
 
-    if patch.hotkeys.is_some() {
-        hotkey::Hotkey::global().update(patch.hotkeys.unwrap())?;
-    }
+        if let Some(hotkeys) = patch.hotkeys {
+            hotkey::Hotkey::global().update(hotkeys)?;
+        }
 
-    Ok(())
+        if language.is_some() {
+            handle::Handle::update_systray()?;
+        } else if system_proxy.or(tun_mode).is_some() {
+            handle::Handle::update_systray_part()?;
+        }
+
+        <Result<()>>::Ok(())
+    } {
+        Ok(()) => {
+            Config::verge().apply();
+            Config::verge().data().save_file()?;
+            Ok(())
+        }
+        Err(err) => {
+            Config::verge().discard();
+            Err(err)
+        }
+    }
 }
 
 /// 激活配置
@@ -216,5 +250,38 @@ pub async fn handle_activate() -> Result<()> {
 /// 更新某个profile
 /// 如果更新当前配置就激活配置
 pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()> {
+    let url_opt = {
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
+        let item = profiles.get_item(&uid)?;
+        let is_remote = item.itype.as_ref().map_or(false, |s| s == "remote");
+
+        if !is_remote {
+            None // 直接更新
+        } else if item.url.is_none() {
+            bail!("failed to get the profile item url");
+        } else {
+            Some((item.url.clone().unwrap(), item.option.clone()))
+        }
+    };
+
+    let should_update = match url_opt {
+        Some((url, opt)) => {
+            let merged_opt = PrfOption::merge(opt, option);
+            let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
+
+            let profiles = Config::profiles();
+            let mut profiles = profiles.latest();
+            profiles.update_item(uid.clone(), item)?;
+
+            Some(uid) == profiles.get_current()
+        }
+        None => true,
+    };
+
+    if should_update {
+        handle_activate().await?;
+    }
+
     Ok(())
 }

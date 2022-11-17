@@ -1,4 +1,5 @@
-use crate::config::{self, ProfilesN};
+use crate::config::Config;
+use crate::feat;
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
@@ -36,12 +37,10 @@ impl Timer {
 
         let cur_timestamp = chrono::Local::now().timestamp();
 
-        let profiles = config::ProfilesN::global().config.lock();
-
         let timer_map = self.timer_map.lock();
         let delay_timer = self.delay_timer.lock();
 
-        profiles.get_items().map(|items| {
+        Config::profiles().latest().get_items().map(|items| {
             items
                 .iter()
                 // .filter_map(|item| {
@@ -100,11 +99,9 @@ impl Timer {
 
     /// generate a uid -> update_interval map
     fn gen_map(&self) -> HashMap<String, u64> {
-        let profiles = config::ProfilesN::global().config.lock();
-
         let mut new_map = HashMap::new();
 
-        if let Some(items) = profiles.get_items() {
+        if let Some(items) = Config::profiles().latest().get_items() {
             for item in items.iter() {
                 if item.option.is_some() {
                     let option = item.option.as_ref().unwrap();
@@ -178,7 +175,7 @@ impl Timer {
     /// the task runner
     async fn async_task(uid: String) {
         log::info!(target: "app", "running timer task `{uid}`");
-        crate::log_err!(ProfilesN::global().update_item(uid, None).await);
+        crate::log_err!(feat::update_profile(uid, None).await);
     }
 }
 

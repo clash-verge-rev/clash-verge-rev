@@ -1,82 +1,25 @@
-use super::{prfitem::PrfItem, ChainItem, PrfOption};
-use crate::{
-    core::CoreManager,
-    utils::{config, dirs, help},
-};
+use super::{prfitem::PrfItem, ChainItem};
+use crate::utils::{config, dirs, help};
 use anyhow::{bail, Context, Result};
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::{fs, io::Write};
-
-#[deprecated]
-pub struct ProfilesN {
-    pub config: Arc<Mutex<IProfiles>>,
-}
-
-impl ProfilesN {
-    pub fn global() -> &'static ProfilesN {
-        static PROFILES: OnceCell<ProfilesN> = OnceCell::new();
-
-        PROFILES.get_or_init(|| ProfilesN {
-            config: Arc::new(Mutex::new(IProfiles::read_file())),
-        })
-    }
-
-    /// 更新单个配置
-    pub async fn update_item(&self, uid: String, option: Option<PrfOption>) -> Result<()> {
-        let url_opt = {
-            let profiles = self.config.lock();
-            let item = profiles.get_item(&uid)?;
-            let is_remote = item.itype.as_ref().map_or(false, |s| s == "remote");
-
-            if !is_remote {
-                None // 直接更新
-            } else if item.url.is_none() {
-                bail!("failed to get the profile item url");
-            } else {
-                Some((item.url.clone().unwrap(), item.option.clone()))
-            }
-        };
-
-        let should_update = match url_opt {
-            Some((url, opt)) => {
-                let merged_opt = PrfOption::merge(opt, option);
-                let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
-
-                let mut profiles = self.config.lock();
-                profiles.update_item(uid.clone(), item)?;
-
-                Some(uid) == profiles.get_current()
-            }
-            None => true,
-        };
-
-        if should_update {
-            CoreManager::global().activate_config().await?;
-        }
-
-        Ok(())
-    }
-}
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IProfiles {
     /// same as PrfConfig.current
-    current: Option<String>,
+    pub current: Option<String>,
 
     /// same as PrfConfig.chain
-    chain: Option<Vec<String>>,
+    pub chain: Option<Vec<String>>,
 
     /// record valid fields for clash
-    valid: Option<Vec<String>>,
+    pub valid: Option<Vec<String>>,
 
     /// profile list
-    items: Option<Vec<PrfItem>>,
+    pub items: Option<Vec<PrfItem>>,
 }
 
 macro_rules! patch {
@@ -134,7 +77,7 @@ impl IProfiles {
 
         if items.iter().find(|&each| each.uid == some_uid).is_some() {
             self.current = some_uid;
-            return self.save_file();
+            return self.save_file(); // todo remove
         }
 
         bail!("invalid uid \"{uid}\"");

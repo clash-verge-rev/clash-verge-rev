@@ -6,6 +6,8 @@ use serde_yaml::Mapping;
 use std::fs;
 use sysproxy::Sysproxy;
 
+use super::Config;
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PrfItem {
     pub uid: Option<String>,
@@ -192,9 +194,9 @@ impl PrfItem {
 
         // 使用软件自己的代理
         if self_proxy {
-            let clash = super::ClashN::global();
-            let port = clash.info.lock().port.clone();
+            let port = Config::clash().data().get_info()?.port;
             let port = port.ok_or(anyhow::anyhow!("failed to get clash info port"))?;
+
             let proxy_scheme = format!("http://127.0.0.1:{port}");
 
             if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {

@@ -1,5 +1,6 @@
+use crate::config::Config;
 use crate::log_err;
-use crate::{config::VergeN, core::*, utils::init, utils::server};
+use crate::{core::*, utils::init, utils::server};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
@@ -19,10 +20,7 @@ pub fn resolve_setup(app: &mut App) {
 
     log_err!(tray::Tray::update_systray(&app.app_handle()));
 
-    let silent_start = {
-        let verge = VergeN::global().config.lock();
-        verge.enable_silent_start.clone()
-    };
+    let silent_start = { Config::verge().data().enable_silent_start.clone() };
     if !silent_start.unwrap_or(false) {
         create_window(&app.app_handle());
     }
