@@ -7,9 +7,10 @@ use serde_yaml::{Mapping, Value};
 // 重启clash
 pub fn restart_clash_core() {
     tauri::async_runtime::spawn(async {
-        CoreManager::global().run_core()?;
-        log_err!(handle_activate().await);
-        <Result<()>>::Ok(())
+        match CoreManager::global().run_core().await {
+            Ok(_) => log_err!(handle_activate().await),
+            Err(err) => log::error!(target: "app", "{err}"),
+        }
     });
 }
 

@@ -47,22 +47,13 @@ impl CoreManager {
             }
         }
 
-        // // 使用配置的核心
-        // let verge_core = { Config::verge().clash_core.clone() };
-        // if let Some(verge_core) = verge_core {
-        //     if verge_core == "clash" || verge_core == "clash-meta" {
-        //         let mut clash_core = self.clash_core.lock();
-        //         *clash_core = verge_core;
-        //     }
-        // }
-
-        // 启动clash
-        self.run_core()?;
-
-        // 更新配置
         tauri::async_runtime::spawn(async {
-            sleep(Duration::from_millis(100)).await;
-            crate::log_err!(Self::global().activate_config().await);
+            // 启动clash
+            if Self::global().run_core().await.is_ok() {
+                // 更新配置
+                sleep(Duration::from_millis(100)).await;
+                crate::log_err!(Self::global().activate_config().await);
+            }
         });
 
         Ok(())
@@ -89,9 +80,35 @@ impl CoreManager {
     }
 
     /// 启动核心
-    pub fn run_core(&self) -> Result<()> {
-        // 先纠正重要的配置字段
-        self.correct_config()?;
+    pub async fn run_core(&self) -> Result<()> {
+        #[cfg(target_os = "windows")]
+        {
+            use super::win_service;
+
+            // 服务模式
+            let enable = {
+                let enable = Config::verge().data().enable_service_mode.clone();
+                enable.unwrap_or(false)
+            };
+
+            *self.use_service_mode.lock() = enable;
+
+            if enable {
+                // 服务模式启动失败就直接运行sidecar
+                match {
+                    win_service::check_service().await?;
+                    win_service::run_core_by_service().await
+                } {
+                    Ok(_) => return Ok(()),
+                    Err(err) => {
+                        // 修改这个值，免得stop出错
+                        *self.use_service_mode.lock() = false;
+
+                        log::error!(target: "app", "{err}");
+                    }
+                }
+            }
+        }
 
         let mut sidecar = self.sidecar.lock();
 
@@ -137,15 +154,15 @@ impl CoreManager {
                         Logger::global().set_log(line);
                     }
                     CommandEvent::Stderr(err) => {
-                        log::error!(target: "app" ,"[clash error]: {err}");
+                        log::error!(target: "app" ,"[clash]: {err}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Error(err) => {
-                        log::error!(target: "app" ,"[clash error]: {err}");
+                        log::error!(target: "app" ,"[clash]: {err}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Terminated(_) => {
-                        log::info!(target: "app" ,"clash core Terminated");
+                        log::info!(target: "app" ,"clash core terminated");
                         break;
                     }
                     _ => {}
@@ -158,6 +175,14 @@ impl CoreManager {
 
     /// 停止核心运行
     pub fn stop_core(&self) -> Result<()> {
+        #[cfg(target_os = "windows")]
+        if *self.use_service_mode.lock() {
+            tauri::async_runtime::block_on(async move {
+                log_err!(super::win_service::stop_core_by_service().await);
+            });
+            return Ok(());
+        }
+
         let mut sidecar = self.sidecar.lock();
         if let Some(child) = sidecar.take() {
             let _ = child.kill();
@@ -180,7 +205,7 @@ impl CoreManager {
             Config::verge().draft().clash_core = Some(clash_core);
         }
 
-        match self.run_core() {
+        match self.run_core().await {
             Ok(_) => {
                 log_err!({
                     Config::verge().apply();
@@ -196,13 +221,6 @@ impl CoreManager {
                 Err(err)
             }
         }
-    }
-
-    /// 纠正一下配置
-    /// 将mixed-port和external-controller都改为配置的内容
-    pub fn correct_config(&self) -> Result<()> {
-        // todo!()
-        Ok(())
     }
 
     /// 激活一个配置
@@ -223,8 +241,6 @@ impl CoreManager {
 
         // 检查配置是否正常
         self.check_config()?;
-
-        // todo 是否需要检查核心是否运行
 
         // 发送请求 发送5次
         for i in 0..5 {

@@ -93,10 +93,10 @@ pub fn create_window(app_handle: &AppHandle) {
     }
 
     #[cfg(target_os = "macos")]
-    crate::log_if_err!(builder.decorations(true).inner_size(800.0, 642.0).build());
+    crate::log_err!(builder.decorations(true).inner_size(800.0, 642.0).build());
 
     #[cfg(target_os = "linux")]
-    crate::log_if_err!(builder
+    crate::log_err!(builder
         .decorations(false)
         .transparent(true)
         .inner_size(800.0, 636.0)
