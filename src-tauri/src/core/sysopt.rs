@@ -144,13 +144,8 @@ impl Sysopt {
 
     /// init the auto launch
     pub fn init_launch(&self) -> Result<()> {
-        let enable = {
-            Config::verge()
-                .latest()
-                .enable_auto_launch
-                .clone()
-                .unwrap_or(false)
-        };
+        let enable = { Config::verge().latest().enable_auto_launch.clone() };
+        let enable = enable.unwrap_or(false);
 
         let app_exe = current_exe()?;
         let app_exe = dunce::canonicalize(app_exe)?;
@@ -213,13 +208,8 @@ impl Sysopt {
             drop(auto_launch);
             return self.init_launch();
         }
-        let enable = {
-            Config::verge()
-                .latest()
-                .enable_auto_launch
-                .clone()
-                .unwrap_or(false)
-        };
+        let enable = { Config::verge().latest().enable_auto_launch.clone() };
+        let enable = enable.unwrap_or(false);
         let auto_launch = auto_launch.as_ref().unwrap();
 
         match enable {

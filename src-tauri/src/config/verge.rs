@@ -1,53 +1,6 @@
 use crate::utils::{config, dirs};
 use anyhow::Result;
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-
-#[deprecated]
-pub struct VergeN {
-    pub config: Arc<Mutex<IVerge>>,
-}
-
-impl VergeN {
-    pub fn global() -> &'static VergeN {
-        static DATA: OnceCell<VergeN> = OnceCell::new();
-
-        DATA.get_or_init(|| {
-            let config = config::read_yaml::<IVerge>(dirs::verge_path());
-            VergeN {
-                config: Arc::new(Mutex::new(config)),
-            }
-        })
-    }
-
-    /// Save IVerge App Config
-    pub fn save_file(&self) -> Result<()> {
-        self.config.lock().save_file()
-    }
-
-    /// patch verge config
-    /// only save to file
-    pub fn patch_config(&self, patch: IVerge) -> Result<()> {
-        {
-            self.config.lock().patch_config(patch);
-        }
-        self.save_file()
-    }
-
-    /// 在初始化前尝试拿到单例端口的值
-    pub fn get_singleton_port() -> u16 {
-        let config = config::read_yaml::<IVerge>(dirs::verge_path());
-
-        #[cfg(not(feature = "verge-dev"))]
-        const SERVER_PORT: u16 = 33331;
-        #[cfg(feature = "verge-dev")]
-        const SERVER_PORT: u16 = 11233;
-
-        config.app_singleton_port.unwrap_or(SERVER_PORT)
-    }
-}
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -176,5 +129,17 @@ impl IVerge {
 
         patch!(auto_close_connection);
         patch!(default_latency_test);
+    }
+
+    /// 在初始化前尝试拿到单例端口的值
+    pub fn get_singleton_port() -> u16 {
+        let config = config::read_yaml::<IVerge>(dirs::verge_path());
+
+        #[cfg(not(feature = "verge-dev"))]
+        const SERVER_PORT: u16 = 33331;
+        #[cfg(feature = "verge-dev")]
+        const SERVER_PORT: u16 = 11233;
+
+        config.app_singleton_port.unwrap_or(SERVER_PORT)
     }
 }

@@ -1,14 +1,14 @@
 extern crate warp;
 
 use super::resolve;
-use crate::config::VergeN;
+use crate::config::IVerge;
 use port_scanner::local_port_available;
 use tauri::AppHandle;
 use warp::Filter;
 
 /// check whether there is already exists
 pub fn check_singleton() -> Result<(), ()> {
-    let port = VergeN::get_singleton_port();
+    let port = IVerge::get_singleton_port();
 
     if !local_port_available(port) {
         tauri::async_runtime::block_on(async {
@@ -25,7 +25,7 @@ pub fn check_singleton() -> Result<(), ()> {
 /// maybe it can be used as pac server later
 pub fn embed_server(app_handle: AppHandle) {
     let app_handle = app_handle.clone();
-    let port = VergeN::get_singleton_port();
+    let port = IVerge::get_singleton_port();
 
     tauri::async_runtime::spawn(async move {
         let commands = warp::path!("commands" / "visible").map(move || {

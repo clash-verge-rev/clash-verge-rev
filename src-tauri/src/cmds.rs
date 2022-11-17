@@ -14,8 +14,7 @@ type CmdResult<T = ()> = Result<T, String>;
 
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
-    let profiles = ProfilesN::global().config.lock();
-    Ok(profiles.clone())
+    Ok(Config::profiles().data().clone())
 }
 
 #[tauri::command]
@@ -27,47 +26,80 @@ pub async fn enhance_profiles() -> CmdResult {
 #[tauri::command]
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
-    let mut profiles = ProfilesN::global().config.lock();
-    wrap_err!(profiles.append_item(item))
+    wrap_err!(Config::profiles().data().append_item(item))
 }
 
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
     let item = wrap_err!(PrfItem::from(item, file_data).await)?;
-    let mut profiles = ProfilesN::global().config.lock();
-    wrap_err!(profiles.append_item(item))
+    wrap_err!(Config::profiles().data().append_item(item))
 }
 
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    wrap_err!(ProfilesN::global().update_item(index, option).await)
+    wrap_err!(feat::update_profile(index, option).await)
 }
 
 #[tauri::command]
 pub async fn select_profile(index: String) -> CmdResult {
-    wrap_err!({ ProfilesN::global().config.lock().put_current(index) })?;
-    wrap_err!(CoreManager::global().activate_config().await)
+    wrap_err!({ Config::profiles().draft().put_current(index) })?;
+
+    match feat::handle_activate().await {
+        Ok(_) => {
+            Config::profiles().apply();
+            wrap_err!(Config::profiles().data().save_file())?;
+            Ok(())
+        }
+        Err(err) => {
+            Config::profiles().discard();
+            log::error!(target: "app", "{err}");
+            Err(format!("{err}"))
+        }
+    }
 }
 
 /// change the profile chain
 #[tauri::command]
 pub async fn change_profile_chain(chain: Option<Vec<String>>) -> CmdResult {
-    wrap_err!({ ProfilesN::global().config.lock().put_chain(chain) })?;
-    wrap_err!(CoreManager::global().activate_config().await)
+    wrap_err!({ Config::profiles().draft().put_chain(chain) })?;
+
+    match feat::handle_activate().await {
+        Ok(_) => {
+            Config::profiles().apply();
+            wrap_err!(Config::profiles().data().save_file())?;
+            Ok(())
+        }
+        Err(err) => {
+            Config::profiles().discard();
+            log::error!(target: "app", "{err}");
+            Err(format!("{err}"))
+        }
+    }
 }
 
 #[tauri::command]
 pub async fn change_profile_valid(valid: Option<Vec<String>>) -> CmdResult {
-    wrap_err!({ ProfilesN::global().config.lock().put_valid(valid) })?;
-    wrap_err!(CoreManager::global().activate_config().await)
+    wrap_err!({ Config::profiles().draft().put_valid(valid) })?;
+
+    match feat::handle_activate().await {
+        Ok(_) => {
+            Config::profiles().apply();
+            wrap_err!(Config::profiles().data().save_file())?;
+            Ok(())
+        }
+        Err(err) => {
+            Config::profiles().discard();
+            log::error!(target: "app", "{err}");
+            Err(format!("{err}"))
+        }
+    }
 }
 
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
-    let should_update = { wrap_err!(ProfilesN::global().config.lock().delete_item(index))? };
-
+    let should_update = wrap_err!({ Config::profiles().data().delete_item(index) })?;
     if should_update {
-        wrap_err!(CoreManager::global().activate_config().await)?;
+        wrap_err!(feat::handle_activate().await)?;
     }
 
     Ok(())
@@ -75,19 +107,20 @@ pub async fn delete_profile(index: String) -> CmdResult {
 
 #[tauri::command]
 pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
-    let mut profiles = ProfilesN::global().config.lock();
-    wrap_err!(profiles.patch_item(index, profile))?;
-    drop(profiles);
+    wrap_err!(Config::profiles().data().patch_item(index, profile))?;
 
     wrap_err!(timer::Timer::global().refresh())
 }
 
 #[tauri::command]
 pub fn view_profile(index: String) -> CmdResult {
-    let profiles = ProfilesN::global().config.lock();
-    let item = wrap_err!(profiles.get_item(&index))?;
+    let file = {
+        wrap_err!(Config::profiles().latest().get_item(&index))?
+            .file
+            .clone()
+            .ok_or("the file field is null")
+    }?;
 
-    let file = item.file.clone().ok_or("the file field is null")?;
     let path = dirs::app_profiles_dir().join(file);
     if !path.exists() {
         ret_err!("the file not found");
@@ -98,7 +131,8 @@ pub fn view_profile(index: String) -> CmdResult {
 
 #[tauri::command]
 pub fn read_profile_file(index: String) -> CmdResult<String> {
-    let profiles = ProfilesN::global().config.lock();
+    let profiles = Config::profiles();
+    let profiles = profiles.latest();
     let item = wrap_err!(profiles.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
@@ -110,14 +144,15 @@ pub fn save_profile_file(index: String, file_data: Option<String>) -> CmdResult 
         return Ok(());
     }
 
-    let profiles = ProfilesN::global().config.lock();
+    let profiles = Config::profiles();
+    let profiles = profiles.latest();
     let item = wrap_err!(profiles.get_item(&index))?;
     wrap_err!(item.save_file(file_data.unwrap()))
 }
 
 #[tauri::command]
 pub fn get_clash_info() -> CmdResult<ClashInfoN> {
-    Ok(ClashN::global().info.lock().clone())
+    wrap_err!(Config::clash().latest().get_info())
 }
 
 #[tauri::command]
@@ -153,18 +188,18 @@ pub fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String)>>> {
 }
 
 #[tauri::command]
-pub fn patch_clash_config(payload: Mapping) -> CmdResult {
-    wrap_err!(feat::patch_clash(payload))
+pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
+    wrap_err!(feat::patch_clash(payload).await)
 }
 
 #[tauri::command]
 pub fn get_verge_config() -> CmdResult<IVerge> {
-    Ok(VergeN::global().config.lock().clone())
+    Ok(Config::verge().data().clone())
 }
 
 #[tauri::command]
-pub fn patch_verge_config(payload: IVerge) -> CmdResult {
-    wrap_err!(feat::patch_verge(payload))
+pub async fn patch_verge_config(payload: IVerge) -> CmdResult {
+    wrap_err!(feat::patch_verge(payload).await)
 }
 
 #[tauri::command]

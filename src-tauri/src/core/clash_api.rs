@@ -1,4 +1,4 @@
-use crate::{config, utils::dirs};
+use crate::{config::Config, utils::dirs};
 use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
 use serde_yaml::Mapping;
@@ -40,7 +40,7 @@ pub async fn patch_configs(config: &Mapping) -> Result<()> {
 
 /// 根据clash info获取clash服务地址和请求头
 fn clash_client_info() -> Result<(String, HeaderMap)> {
-    let info = { config::ClashN::global().info.lock().clone() };
+    let info = { Config::clash().data().get_info()? };
 
     if info.server.is_none() {
         let status = &info.status;

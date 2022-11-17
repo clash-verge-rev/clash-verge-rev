@@ -1,10 +1,7 @@
 use crate::utils::{config, dirs};
 use anyhow::Result;
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
-use std::{net::SocketAddr, sync::Arc};
 
 #[derive(Default, Debug, Clone)]
 pub struct IClashTemp(pub Mapping);
@@ -30,69 +27,6 @@ impl IClashTemp {
 
     pub fn get_info(&self) -> Result<ClashInfoN> {
         Ok(ClashInfoN::from(&self.0))
-    }
-}
-
-#[derive(Debug)]
-#[deprecated]
-pub struct ClashN {
-    /// maintain the clash config
-    pub config: Arc<Mutex<Mapping>>,
-    /// some info
-    pub info: Arc<Mutex<ClashInfoN>>,
-}
-
-impl ClashN {
-    pub fn global() -> &'static ClashN {
-        static DATA: OnceCell<ClashN> = OnceCell::new();
-
-        DATA.get_or_init(|| {
-            let config = ClashN::read_config();
-            let info = ClashInfoN::from(&config);
-
-            ClashN {
-                config: Arc::new(Mutex::new(config)),
-                info: Arc::new(Mutex::new(info)),
-            }
-        })
-    }
-
-    /// get clash config
-    pub fn read_config() -> Mapping {
-        config::read_merge_mapping(dirs::clash_path())
-    }
-
-    /// save the clash config
-    pub fn save_config(&self) -> Result<()> {
-        let config = self.config.lock();
-
-        config::save_yaml(
-            dirs::clash_path(),
-            &*config,
-            Some("# Default Config For ClashN Core\n\n"),
-        )
-    }
-
-    /// 返回旧值
-    pub fn patch_info(&self, info: ClashInfoN) -> Result<ClashInfoN> {
-        let mut old_info = self.info.lock();
-        let old = (*old_info).to_owned();
-        *old_info = info;
-        Ok(old)
-    }
-
-    /// patch update the clash config
-    /// if the port is changed then return true
-    pub fn patch_config(&self, patch: Mapping) -> Result<()> {
-        let mut config = self.config.lock();
-
-        for (key, value) in patch.into_iter() {
-            config.insert(key, value);
-        }
-
-        drop(config);
-
-        self.save_config()
     }
 }
 
@@ -244,22 +178,4 @@ pub struct IClashFallbackFilter {
     pub geoip_code: Option<String>,
     pub ipcidr: Option<Vec<String>>,
     pub domain: Option<Vec<String>>,
-}
-
-#[test]
-fn test() {
-    let socket = SocketAddr::new("127.0.0.1".parse().unwrap(), 9090);
-
-    let s = "[::]:8080".parse::<SocketAddr>();
-
-    dbg!(s);
-
-    // match "::8080".parse::<SocketAddr>() {
-    //     Ok(_) => {}
-    //     Err(err) => {
-
-    //     }
-    // }
-
-    // assert_eq!(":8080".parse(), Ok(socket));
 }

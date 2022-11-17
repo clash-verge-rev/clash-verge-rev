@@ -1,4 +1,3 @@
-use crate::log_err;
 use crate::{config::Config, feat, utils::resolve};
 use anyhow::Result;
 use tauri::{
@@ -109,8 +108,8 @@ impl Tray {
                 }
 
                 "open_window" => resolve::create_window(app_handle),
-                "system_proxy" => log_err!(feat::toggle_system_proxy()),
-                "tun_mode" => log_err!(feat::toggle_tun_mode()),
+                "system_proxy" => feat::toggle_system_proxy(),
+                "tun_mode" => feat::toggle_tun_mode(),
                 "restart_clash" => feat::restart_clash_core(),
                 "restart_app" => api::process::restart(&app_handle.env()),
                 "quit" => {

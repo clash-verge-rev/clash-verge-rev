@@ -1,6 +1,5 @@
-use super::{IClash, IClashTemp, IProfiles, IVerge};
+use super::{IClashTemp, IProfiles, IVerge};
 use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
-use serde_yaml::Mapping;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
@@ -64,10 +63,10 @@ macro_rules! draft_define {
     };
 }
 
-draft_define!(IClash);
+// draft_define!(IClash);
 draft_define!(IClashTemp);
 draft_define!(IVerge);
-draft_define!(Mapping);
+// draft_define!(Mapping);
 draft_define!(IProfiles);
 
 #[test]
