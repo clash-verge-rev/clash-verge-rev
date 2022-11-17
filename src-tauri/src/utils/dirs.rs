@@ -109,13 +109,10 @@ pub fn clash_pid_path() -> PathBuf {
 }
 
 #[cfg(windows)]
-static SERVICE_PATH: &str = "clash-verge-service.exe";
-
-#[cfg(windows)]
 pub fn service_path() -> PathBuf {
     unsafe {
         let res_dir = RESOURCE_DIR.clone().unwrap();
-        res_dir.join(SERVICE_PATH)
+        res_dir.join("clash-verge-service.exe")
     }
 }
 
@@ -134,7 +131,7 @@ pub fn service_log_file() -> PathBuf {
     log_file
 }
 
-pub fn path_to_str(path: &PathBuf) -> anyhow::Result<&str> {
+pub fn path_to_str(path: &PathBuf) -> Result<&str> {
     let path_str = path
         .as_os_str()
         .to_str()

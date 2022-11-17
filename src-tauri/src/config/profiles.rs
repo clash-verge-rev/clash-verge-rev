@@ -77,7 +77,7 @@ impl IProfiles {
 
         if items.iter().find(|&each| each.uid == some_uid).is_some() {
             self.current = some_uid;
-            return self.save_file(); // todo remove
+            return Ok(());
         }
 
         bail!("invalid uid \"{uid}\"");
@@ -102,8 +102,7 @@ impl IProfiles {
 
     /// find the item by the uid
     pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
-        if self.items.is_some() {
-            let items = self.items.as_ref().unwrap();
+        if let Some(items) = self.items.as_ref() {
             let some_uid = Some(uid.clone());
 
             for each in items.iter() {
