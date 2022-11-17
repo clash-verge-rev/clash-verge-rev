@@ -1,5 +1,5 @@
 use super::tray::Tray;
-use crate::log_if_err;
+use crate::log_err;
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -33,26 +33,26 @@ impl Handle {
 
     pub fn refresh_clash() {
         if let Some(window) = Self::global().get_window() {
-            log_if_err!(window.emit("verge://refresh-clash-config", "yes"));
+            log_err!(window.emit("verge://refresh-clash-config", "yes"));
         }
     }
 
     pub fn refresh_verge() {
         if let Some(window) = Self::global().get_window() {
-            log_if_err!(window.emit("verge://refresh-verge-config", "yes"));
+            log_err!(window.emit("verge://refresh-verge-config", "yes"));
         }
     }
 
     #[allow(unused)]
     pub fn refresh_profiles() {
         if let Some(window) = Self::global().get_window() {
-            log_if_err!(window.emit("verge://refresh-profiles-config", "yes"));
+            log_err!(window.emit("verge://refresh-profiles-config", "yes"));
         }
     }
 
     pub fn notice_message<S: Into<String>, M: Into<String>>(status: S, msg: M) {
         if let Some(window) = Self::global().get_window() {
-            log_if_err!(window.emit("verge://notice-message", (status.into(), msg.into())));
+            log_err!(window.emit("verge://notice-message", (status.into(), msg.into())));
         }
     }
 

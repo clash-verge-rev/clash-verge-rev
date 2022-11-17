@@ -17,11 +17,11 @@ fn init_log() -> Result<()> {
         let _ = fs::create_dir_all(&log_dir);
     }
 
-    let local_time = Local::now().format("%Y-%m-%d-%H%M%S").to_string();
+    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{}.log", local_time);
     let log_file = log_dir.join(log_file);
 
-    let time_format = "{d(%Y-%m-%d %H:%M:%S)} - {m}{n}";
+    let time_format = "{d(%Y-%m-%d %H:%M:%S)} {l} - {m}{n}";
     let stdout = ConsoleAppender::builder()
         .encoder(Box::new(PatternEncoder::new(time_format)))
         .build();
@@ -47,6 +47,11 @@ fn init_log() -> Result<()> {
 
 /// Initialize all the files from resources
 pub fn init_config() -> Result<()> {
+    #[cfg(target_os = "windows")]
+    unsafe {
+        let _ = dirs::init_portable_flag();
+    }
+
     let _ = init_log();
 
     let app_dir = dirs::app_home_dir();
@@ -94,21 +99,4 @@ pub fn init_resources(package_info: &PackageInfo) {
             let _ = fs::copy(src_path, target_path);
         }
     }
-
-    // // copy the resource file
-    // let mmdb_path = app_dir.join("Country.mmdb");
-    // let mmdb_tmpl = res_dir.join("Country.mmdb");
-    // if !mmdb_path.exists() && mmdb_tmpl.exists() {
-    //     let _ = fs::copy(mmdb_tmpl, mmdb_path);
-    // }
-
-    // // copy the wintun.dll
-    // #[cfg(target_os = "windows")]
-    // {
-    //     let wintun_path = app_dir.join("wintun.dll");
-    //     let wintun_tmpl = res_dir.join("wintun.dll");
-    //     if !wintun_path.exists() && wintun_tmpl.exists() {
-    //         let _ = fs::copy(wintun_tmpl, wintun_path);
-    //     }
-    // }
 }

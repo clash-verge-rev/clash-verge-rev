@@ -34,7 +34,7 @@ pub fn read_merge_mapping(path: PathBuf) -> Mapping {
 
     match serde_yaml::from_str::<Value>(&yaml_str) {
         Ok(mut val) => {
-            crate::log_if_err!(val.apply_merge());
+            crate::log_err!(val.apply_merge());
             val.as_mapping().unwrap_or(&map).to_owned()
         }
         Err(_) => {

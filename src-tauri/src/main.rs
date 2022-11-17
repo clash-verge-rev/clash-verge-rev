@@ -11,7 +11,7 @@ mod feat;
 mod utils;
 
 use crate::utils::{init, resolve, server};
-use tauri::{api, Manager, SystemTray};
+use tauri::{api, SystemTray};
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -20,13 +20,7 @@ fn main() -> std::io::Result<()> {
         return Ok(());
     }
 
-    #[cfg(target_os = "windows")]
-    unsafe {
-        use crate::utils::dirs;
-        dirs::init_portable_flag();
-    }
-
-    crate::log_if_err!(init::init_config());
+    crate::log_err!(init::init_config());
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
@@ -118,6 +112,8 @@ fn main() -> std::io::Result<()> {
         }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::WindowEvent { label, event, .. } => {
+            use tauri::Manager;
+
             if label == "main" {
                 match event {
                     tauri::WindowEvent::CloseRequested { api, .. } => {

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::path::PathBuf;
 use tauri::{
     api::path::{home_dir, resource_dir},
@@ -23,20 +24,21 @@ static mut PORTABLE_FLAG: bool = false;
 pub static mut APP_VERSION: &str = "v1.1.1";
 
 /// initialize portable flag
-#[allow(unused)]
-pub unsafe fn init_portable_flag() {
-    #[cfg(target_os = "windows")]
-    {
-        use tauri::utils::platform::current_exe;
+#[cfg(target_os = "windows")]
+pub unsafe fn init_portable_flag() -> Result<()> {
+    use tauri::utils::platform::current_exe;
 
-        let exe = current_exe().unwrap();
-        let dir = exe.parent().unwrap();
+    let exe = current_exe()?;
+
+    if let Some(dir) = exe.parent() {
         let dir = PathBuf::from(dir).join(".config/PORTABLE");
 
         if dir.exists() {
             PORTABLE_FLAG = true;
         }
     }
+
+    Ok(())
 }
 
 /// get the verge app home dir
@@ -123,7 +125,7 @@ pub fn service_log_file() -> PathBuf {
 
     let log_dir = app_logs_dir().join("service");
 
-    let local_time = Local::now().format("%Y-%m-%d-%H%M%S").to_string();
+    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{}.log", local_time);
     let log_file = log_dir.join(log_file);
 

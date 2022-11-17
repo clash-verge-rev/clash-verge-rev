@@ -19,7 +19,7 @@ pub fn get_profiles() -> CmdResult<IProfiles> {
 
 #[tauri::command]
 pub async fn enhance_profiles() -> CmdResult {
-    wrap_err!(CoreManager::global().activate_config().await)
+    wrap_err!(feat::handle_activate().await)
 }
 
 #[deprecated]
@@ -209,8 +209,8 @@ pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
 
 /// restart the sidecar
 #[tauri::command]
-pub fn restart_sidecar() -> CmdResult {
-    wrap_err!(CoreManager::global().run_core())
+pub async fn restart_sidecar() -> CmdResult {
+    wrap_err!(CoreManager::global().run_core().await)
 }
 
 /// get the system proxy
@@ -254,22 +254,22 @@ pub fn open_web_url(url: String) -> CmdResult<()> {
 #[cfg(windows)]
 pub mod service {
     use super::*;
-    use crate::core::win_service::JsonResponse;
+    use crate::core::win_service;
 
     #[tauri::command]
     pub async fn start_service() -> CmdResult {
-        wrap_err!(crate::core::Service::start_service().await)
+        wrap_err!(win_service::start_service().await)
     }
 
     #[tauri::command]
     pub async fn stop_service() -> CmdResult {
-        wrap_err!(crate::core::Service::stop_service().await)
+        wrap_err!(win_service::stop_service().await)
     }
 
     #[tauri::command]
-    pub async fn check_service() -> CmdResult<JsonResponse> {
+    pub async fn check_service() -> CmdResult<win_service::JsonResponse> {
         // no log
-        match crate::core::Service::check_service().await {
+        match win_service::check_service().await {
             Ok(res) => Ok(res),
             Err(err) => Err(err.to_string()),
         }
@@ -277,12 +277,12 @@ pub mod service {
 
     #[tauri::command]
     pub async fn install_service() -> CmdResult {
-        wrap_err!(crate::core::Service::install_service().await)
+        wrap_err!(win_service::install_service().await)
     }
 
     #[tauri::command]
     pub async fn uninstall_service() -> CmdResult {
-        wrap_err!(crate::core::Service::uninstall_service().await)
+        wrap_err!(win_service::uninstall_service().await)
     }
 }
 

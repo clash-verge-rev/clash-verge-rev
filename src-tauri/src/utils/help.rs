@@ -3,14 +3,6 @@ use nanoid::nanoid;
 use std::path::PathBuf;
 use std::process::Command;
 use std::str::FromStr;
-use std::time::{SystemTime, UNIX_EPOCH};
-
-pub fn get_now() -> usize {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as _
-}
 
 const ALPHABET: [char; 62] = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
@@ -76,6 +68,7 @@ macro_rules! error {
     };
 }
 
+#[deprecated]
 #[macro_export]
 macro_rules! log_if_err {
     ($result: expr) => {

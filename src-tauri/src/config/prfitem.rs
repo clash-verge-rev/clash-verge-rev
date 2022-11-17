@@ -172,7 +172,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
-            updated: Some(help::get_now()),
+            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
         })
     }
@@ -301,7 +301,7 @@ impl PrfItem {
             selected: None,
             extra,
             option,
-            updated: Some(help::get_now()),
+            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(data),
         })
     }
@@ -322,7 +322,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
-            updated: Some(help::get_now()),
+            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_MERGE.into()),
         })
     }
@@ -343,7 +343,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
-            updated: Some(help::get_now()),
+            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
         })
     }
