@@ -15,20 +15,26 @@ secret: ""
 pub const PROFILES_CONFIG: &[u8] = b"# Profiles Config for Clash Verge
 
 current: ~
+chain: ~
+valid:
+  - dns
 items: ~
 ";
 
 /// template for `verge.yaml`
 pub const VERGE_CONFIG: &[u8] = b"# Default Config For Clash Verge
 
+clash_core: clash
 language: en
-theme_mode: light
+theme_mode: system
 theme_blur: false
 traffic_graph: true
-enable_self_startup: false
+enable_auto_launch: false
+enable_silent_start: false
 enable_system_proxy: false
 enable_proxy_guard: false
 proxy_guard_duration: 10
+auto_close_connection: true
 ";
 
 /// template for new a profile item
@@ -60,9 +66,7 @@ append-proxy-groups:
 
 /// enhanced profile
 pub const ITEM_SCRIPT: &str = "// Define the `main` function
-// The argument to this function is the clash config 
-// or the result of the previous handler
-// so you should return the config after processing
+
 function main(params) {
   return params;
 }
