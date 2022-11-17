@@ -12,8 +12,6 @@ use std::time::Duration;
 use std::{env::current_exe, process::Command as StdCommand};
 use tokio::time::sleep;
 
-const SERVICE_NAME: &str = "clash_verge_service";
-
 const SERVICE_URL: &str = "http://127.0.0.1:33211";
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
