@@ -257,22 +257,8 @@ pub mod service {
     use crate::core::win_service;
 
     #[tauri::command]
-    pub async fn start_service() -> CmdResult {
-        wrap_err!(win_service::start_service().await)
-    }
-
-    #[tauri::command]
-    pub async fn stop_service() -> CmdResult {
-        wrap_err!(win_service::stop_service().await)
-    }
-
-    #[tauri::command]
     pub async fn check_service() -> CmdResult<win_service::JsonResponse> {
-        // no log
-        match win_service::check_service().await {
-            Ok(res) => Ok(res),
-            Err(err) => Err(err.to_string()),
-        }
+        wrap_err!(win_service::check_service().await)
     }
 
     #[tauri::command]
@@ -290,14 +276,6 @@ pub mod service {
 pub mod service {
     use super::*;
 
-    #[tauri::command]
-    pub async fn start_service() -> CmdResult {
-        Ok(())
-    }
-    #[tauri::command]
-    pub async fn stop_service() -> CmdResult {
-        Ok(())
-    }
     #[tauri::command]
     pub async fn check_service() -> CmdResult {
         Ok(())

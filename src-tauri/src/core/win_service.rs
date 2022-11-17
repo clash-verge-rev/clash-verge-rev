@@ -91,49 +91,6 @@ pub async fn uninstall_service() -> Result<()> {
     Ok(())
 }
 
-/// start service
-/// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
-#[deprecated]
-pub async fn start_service() -> Result<()> {
-    let token = Token::with_current_process()?;
-    let level = token.privilege_level()?;
-
-    let args = ["start", SERVICE_NAME];
-
-    let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new("sc").args(&args).status()?,
-        _ => StdCommand::new("sc").args(&args).status()?,
-    };
-
-    match status.success() {
-        true => Ok(()),
-        false => bail!(
-            "failed to start service with status {}",
-            status.code().unwrap()
-        ),
-    }
-}
-
-/// stop service
-pub async fn stop_service() -> Result<()> {
-    let url = format!("{SERVICE_URL}/stop_service");
-    let res = reqwest::ClientBuilder::new()
-        .no_proxy()
-        .build()?
-        .post(url)
-        .send()
-        .await?
-        .json::<JsonResponse>()
-        .await
-        .context("failed to connect to the Clash Verge Service")?;
-
-    if res.code != 0 {
-        bail!(res.msg);
-    }
-
-    Ok(())
-}
-
 /// check the windows service status
 pub async fn check_service() -> Result<JsonResponse> {
     let url = format!("{SERVICE_URL}/get_clash");

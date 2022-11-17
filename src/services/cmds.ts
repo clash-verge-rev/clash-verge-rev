@@ -158,14 +158,6 @@ export async function openWebUrl(url: string) {
 
 /// service mode
 
-export async function startService() {
-  return invoke<void>("start_service");
-}
-
-export async function stopService() {
-  return invoke<void>("stop_service");
-}
-
 export async function checkService() {
   try {
     const result = await invoke<any>("check_service");
