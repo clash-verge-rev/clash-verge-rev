@@ -60,31 +60,31 @@ pub fn create_window(app_handle: &AppHandle) {
 
     #[cfg(target_os = "windows")]
     {
-        use crate::utils::winhelp;
         use std::time::Duration;
         use tokio::time::sleep;
         use window_shadows::set_shadow;
-        use window_vibrancy::apply_blur;
 
         match builder
             .decorations(false)
             .transparent(true)
             .inner_size(800.0, 636.0)
+            .visible(false)
             .build()
         {
             Ok(_) => {
                 let app_handle = app_handle.clone();
+
+                if let Some(window) = app_handle.get_window("main") {
+                    let _ = set_shadow(&window, true);
+                }
 
                 tauri::async_runtime::spawn(async move {
                     sleep(Duration::from_secs(1)).await;
 
                     if let Some(window) = app_handle.get_window("main") {
                         let _ = window.show();
-                        let _ = set_shadow(&window, true);
-
-                        if !winhelp::is_win11() {
-                            let _ = apply_blur(&window, None);
-                        }
+                        let _ = window.unminimize();
+                        let _ = window.set_focus();
                     }
                 });
             }

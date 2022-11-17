@@ -153,7 +153,12 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         };
 
         // 激活配置
-        handle_activate().await?;
+        if mixed_port.is_some()
+            || patch.get("secret").is_some()
+            || patch.get("external-controller").is_some()
+        {
+            handle_activate().await?;
+        }
 
         // 更新系统代理
         if mixed_port.is_some() {
