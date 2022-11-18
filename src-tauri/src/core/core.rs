@@ -37,6 +37,7 @@ impl CoreManager {
                 system.refresh_all();
                 system.process(Pid::from_u32(pid)).map(|proc| {
                     if proc.name().contains("clash") {
+                        log::debug!(target: "app", "kill old clash process");
                         proc.kill();
                     }
                 });
@@ -63,8 +64,9 @@ impl CoreManager {
             .output()?;
 
         if !output.status.success() {
-            Logger::global().set_log(output.stdout.clone());
-            bail!("{}", output.stdout); // 过滤掉终端颜色值
+            let error = clash_api::parse_check_output(output.stdout.clone());
+            Logger::global().set_log(output.stdout);
+            bail!("{error}");
         }
 
         Ok(())
@@ -74,8 +76,18 @@ impl CoreManager {
     pub async fn run_core(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Run)?;
 
-        if let Some(child) = self.sidecar.lock().take() {
-            let _ = child.kill();
+        let should_kill = match self.sidecar.lock().take() {
+            Some(child) => {
+                log::debug!(target: "app", "stop the core sidecar");
+                let _ = child.kill();
+                true
+            }
+            None => false,
+        };
+
+        // 这里得等一会儿
+        if should_kill {
+            sleep(Duration::from_millis(500)).await;
         }
 
         #[cfg(target_os = "windows")]
@@ -93,6 +105,7 @@ impl CoreManager {
             if enable {
                 // 服务模式启动失败就直接运行sidecar
                 match {
+                    log::debug!(target: "app", "try to run core in service mode");
                     win_service::check_service().await?;
                     win_service::run_core_by_service(&config_path).await
                 } {
@@ -142,21 +155,21 @@ impl CoreManager {
             while let Some(event) = rx.recv().await {
                 match event {
                     CommandEvent::Stdout(line) => {
-                        let can_short = line.starts_with("time=") && line.len() > 33;
-                        let stdout = if can_short { &line[33..] } else { &line };
-                        log::info!(target: "app" ,"[clash]: {}", stdout);
+                        let stdout = clash_api::parse_log(line.clone());
+                        log::info!(target: "app", "[clash]: {stdout}");
                         Logger::global().set_log(line);
                     }
                     CommandEvent::Stderr(err) => {
-                        log::error!(target: "app" ,"[clash]: {err}");
+                        let stdout = clash_api::parse_log(err.clone());
+                        log::error!(target: "app", "[clash]: {stdout}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Error(err) => {
-                        log::error!(target: "app" ,"[clash]: {err}");
+                        log::error!(target: "app", "[clash]: {err}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Terminated(_) => {
-                        log::info!(target: "app" ,"clash core terminated");
+                        log::info!(target: "app", "clash core terminated");
                         break;
                     }
                     _ => {}
@@ -171,6 +184,7 @@ impl CoreManager {
     pub fn stop_core(&self) -> Result<()> {
         #[cfg(target_os = "windows")]
         if *self.use_service_mode.lock() {
+            log::debug!(target: "app", "stop core by service");
             tauri::async_runtime::block_on(async move {
                 log_err!(super::win_service::stop_core_by_service().await);
             });
@@ -217,6 +231,8 @@ impl CoreManager {
     /// 更新proxies那些
     /// 如果涉及端口和外部控制则需要重启
     pub async fn update_config(&self) -> Result<()> {
+        log::debug!(target: "app", "try to update clash config");
+
         // 更新配置
         Config::generate()?;
 
@@ -233,7 +249,7 @@ impl CoreManager {
                 Ok(_) => break,
                 Err(err) => {
                     if i < 4 {
-                        log::error!(target: "app", "{err}");
+                        log::info!(target: "app", "{err}");
                     } else {
                         bail!(err);
                     }
