@@ -169,7 +169,9 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             || patch.get("secret").is_some()
             || patch.get("external-controller").is_some()
         {
+            Config::generate()?;
             CoreManager::global().run_core().await?;
+            handle::Handle::refresh_clash();
         }
 
         // 更新系统代理

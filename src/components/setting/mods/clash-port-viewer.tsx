@@ -61,10 +61,14 @@ const ClashPortViewer = ({ handler }: Props) => {
     setOpen(false);
     if (port === config?.["mixed-port"]) return;
 
-    await patchClashConfig({ "mixed-port": port });
-    setGlobalClashPort(port);
-    Notice.success("Change Clash port successfully!", 1000);
-    mutateClash();
+    try {
+      await patchClashConfig({ "mixed-port": port });
+      setGlobalClashPort(port);
+      Notice.success("Change Clash port successfully!", 1000);
+      mutateClash();
+    } catch (err: any) {
+      Notice.error(err.message || err.toString(), 5000);
+    }
   });
 
   return (
