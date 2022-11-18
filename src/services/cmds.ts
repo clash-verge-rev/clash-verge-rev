@@ -33,7 +33,7 @@ export async function enhanceProfiles() {
 }
 
 export async function patchProfilesConfig(profiles: CmdType.ProfilesConfig) {
-  return invoke<void>("patch_profiles_config");
+  return invoke<void>("patch_profiles_config", { profiles });
 }
 
 export async function createProfile(
