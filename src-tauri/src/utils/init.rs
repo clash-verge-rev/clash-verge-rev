@@ -44,7 +44,7 @@ fn init_log() -> Result<()> {
                 .additive(false)
                 .build("app", level),
         )
-        .build(Root::builder().appender("stdout").build(level))?;
+        .build(Root::builder().appender("stdout").build(LevelFilter::Info))?;
 
     log4rs::init_config(config)?;
 
