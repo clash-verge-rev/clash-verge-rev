@@ -133,9 +133,9 @@ const ProfilePage = () => {
       setCurrentProfile(current);
       mutate("getProfiles", { ...profiles, current: current }, true);
       mutate("getRuntimeLogs");
-      // if (force) Notice.success("Refresh clash config", 1000);
+      Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      Notice.error(err?.message || err.toString(), 4000);
     }
   });
 
