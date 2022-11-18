@@ -35,8 +35,10 @@ impl CoreManager {
 
     pub fn init(&self) -> Result<()> {
         // kill old clash process
-        if let Ok(pid) = fs::read(dirs::clash_pid_path()) {
-            if let Ok(pid) = String::from_utf8_lossy(&pid).parse() {
+        let _ = dirs::clash_pid_path()
+            .and_then(|path| fs::read(path).map(|p| p.to_vec()).context(""))
+            .and_then(|pid| String::from_utf8_lossy(&pid).parse().context(""))
+            .map(|pid| {
                 let mut system = System::new();
                 system.refresh_all();
                 system.process(Pid::from_u32(pid)).map(|proc| {
@@ -44,8 +46,7 @@ impl CoreManager {
                         proc.kill();
                     }
                 });
-            }
-        }
+            });
 
         tauri::async_runtime::spawn(async {
             // 启动clash
@@ -61,7 +62,7 @@ impl CoreManager {
 
     /// 检查配置是否正确
     pub fn check_config(&self) -> Result<()> {
-        let config_path = dirs::clash_runtime_yaml();
+        let config_path = dirs::clash_runtime_yaml()?;
         let config_path = dirs::path_to_str(&config_path)?;
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
@@ -116,7 +117,7 @@ impl CoreManager {
             let _ = child.kill();
         }
 
-        let app_dir = dirs::app_home_dir();
+        let app_dir = dirs::app_home_dir()?;
         let app_dir = dirs::path_to_str(&app_dir)?;
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
@@ -134,7 +135,7 @@ impl CoreManager {
         // 将pid写入文件中
         crate::log_err!({
             let pid = cmd_child.pid();
-            let path = dirs::clash_pid_path();
+            let path = dirs::clash_pid_path()?;
             fs::File::create(path)
                 .context("failed to create the pid file")?
                 .write(format!("{pid}").as_bytes())
@@ -236,7 +237,7 @@ impl CoreManager {
             enhance::enhance_config(clash_config.0, pa.current, pa.chain, pa.valid, tun_mode);
 
         // 保存到文件中
-        let runtime_path = dirs::clash_runtime_yaml();
+        let runtime_path = dirs::clash_runtime_yaml()?;
         utils::config::save_yaml(runtime_path, &config, Some("# Clash Verge Runtime Config"))?;
 
         // 检查配置是否正常

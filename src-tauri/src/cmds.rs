@@ -121,7 +121,7 @@ pub fn view_profile(index: String) -> CmdResult {
             .ok_or("the file field is null")
     }?;
 
-    let path = dirs::app_profiles_dir().join(file);
+    let path = wrap_err!(dirs::app_profiles_dir())?.join(file);
     if !path.exists() {
         ret_err!("the file not found");
     }
@@ -236,13 +236,13 @@ pub fn get_clash_logs() -> CmdResult<VecDeque<String>> {
 
 #[tauri::command]
 pub fn open_app_dir() -> CmdResult<()> {
-    let app_dir = dirs::app_home_dir();
+    let app_dir = wrap_err!(dirs::app_home_dir())?;
     wrap_err!(open::that(app_dir))
 }
 
 #[tauri::command]
 pub fn open_logs_dir() -> CmdResult<()> {
-    let log_dir = dirs::app_logs_dir();
+    let log_dir = wrap_err!(dirs::app_logs_dir())?;
     wrap_err!(open::that(log_dir))
 }
 

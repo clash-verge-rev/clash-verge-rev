@@ -12,7 +12,7 @@ use tauri::PackageInfo;
 
 /// initialize this instance's log file
 fn init_log() -> Result<()> {
-    let log_dir = dirs::app_logs_dir();
+    let log_dir = dirs::app_logs_dir()?;
     if !log_dir.exists() {
         let _ = fs::create_dir_all(&log_dir);
     }
@@ -54,42 +54,40 @@ pub fn init_config() -> Result<()> {
 
     let _ = init_log();
 
-    let app_dir = dirs::app_home_dir();
-    let profiles_dir = dirs::app_profiles_dir();
+    let _ = dirs::app_home_dir().map(|app_dir| {
+        if !app_dir.exists() {
+            let _ = fs::create_dir_all(&app_dir);
+        }
 
-    if !app_dir.exists() {
-        let _ = fs::create_dir_all(&app_dir);
-    }
-    if !profiles_dir.exists() {
-        let _ = fs::create_dir_all(&profiles_dir);
-    }
+        // // target path
+        // let clash_path = app_dir.join("config.yaml");
+        // let verge_path = app_dir.join("verge.yaml");
+        // let profile_path = app_dir.join("profiles.yaml");
 
-    // target path
-    let clash_path = app_dir.join("config.yaml");
-    let verge_path = app_dir.join("verge.yaml");
-    let profile_path = app_dir.join("profiles.yaml");
+        // if !clash_path.exists() {
+        //     fs::File::create(clash_path)?.write(tmpl::CLASH_CONFIG)?;
+        // }
+        // if !verge_path.exists() {
+        //     fs::File::create(verge_path)?.write(tmpl::VERGE_CONFIG)?;
+        // }
+        // if !profile_path.exists() {
+        //     fs::File::create(profile_path)?.write(tmpl::PROFILES_CONFIG)?;
+        // }
+    });
 
-    if !clash_path.exists() {
-        fs::File::create(clash_path)?.write(tmpl::CLASH_CONFIG)?;
-    }
-    if !verge_path.exists() {
-        fs::File::create(verge_path)?.write(tmpl::VERGE_CONFIG)?;
-    }
-    if !profile_path.exists() {
-        fs::File::create(profile_path)?.write(tmpl::PROFILES_CONFIG)?;
-    }
+    let _ = dirs::app_profiles_dir().map(|profiles_dir| {
+        if !profiles_dir.exists() {
+            let _ = fs::create_dir_all(&profiles_dir);
+        }
+    });
+
     Ok(())
 }
 
 /// initialize app
-pub fn init_resources(package_info: &PackageInfo) {
-    // create app dir
-    let app_dir = dirs::app_home_dir();
-    let res_dir = dirs::app_resources_dir(package_info);
-
-    if !app_dir.exists() {
-        let _ = fs::create_dir_all(&app_dir);
-    }
+pub fn init_resources(package_info: &PackageInfo) -> Result<()> {
+    let app_dir = dirs::app_home_dir()?;
+    let res_dir = dirs::app_resources_dir(package_info)?;
 
     // copy the resource file
     for file in ["Country.mmdb", "geoip.dat", "geosite.dat", "wintun.dll"].iter() {
@@ -99,4 +97,6 @@ pub fn init_resources(package_info: &PackageInfo) {
             let _ = fs::copy(src_path, target_path);
         }
     }
+
+    Ok(())
 }

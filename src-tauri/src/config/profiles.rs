@@ -32,30 +32,40 @@ macro_rules! patch {
 
 impl IProfiles {
     pub fn new() -> Self {
-        Self::read_file()
+        match dirs::profiles_path().and_then(|path| config::read_yaml::<Self>(&path)) {
+            Ok(mut profiles) => {
+                if profiles.items.is_none() {
+                    profiles.items = Some(vec![]);
+                }
+                // compatible with the old old old version
+                profiles.items.as_mut().map(|items| {
+                    for mut item in items.iter_mut() {
+                        if item.uid.is_none() {
+                            item.uid = Some(help::get_uid("d"));
+                        }
+                    }
+                });
+                profiles
+            }
+            Err(err) => {
+                log::error!(target: "app", "{err}");
+                Self::template()
+            }
+        }
     }
 
-    /// read the config from the file
-    pub fn read_file() -> Self {
-        let mut profiles = config::read_yaml::<Self>(dirs::profiles_path());
-        if profiles.items.is_none() {
-            profiles.items = Some(vec![]);
+    pub fn template() -> Self {
+        Self {
+            valid: Some(vec!["dns".into()]),
+            items: Some(vec![]),
+            ..Self::default()
         }
-        // compatible with the old old old version
-        profiles.items.as_mut().map(|items| {
-            for mut item in items.iter_mut() {
-                if item.uid.is_none() {
-                    item.uid = Some(help::get_uid("d"));
-                }
-            }
-        });
-        profiles
     }
 
     /// save the config to the file
     pub fn save_file(&self) -> Result<()> {
         config::save_yaml(
-            dirs::profiles_path(),
+            dirs::profiles_path()?,
             self,
             Some("# Profiles Config for Clash Verge\n\n"),
         )
@@ -131,7 +141,7 @@ impl IProfiles {
             }
 
             let file = item.file.clone().unwrap();
-            let path = dirs::app_profiles_dir().join(&file);
+            let path = dirs::app_profiles_dir()?.join(&file);
 
             fs::File::create(path)
                 .context(format!("failed to create file \"{}\"", file))?
@@ -200,7 +210,7 @@ impl IProfiles {
                         // the file must exists
                         each.file = Some(file.clone());
 
-                        let path = dirs::app_profiles_dir().join(&file);
+                        let path = dirs::app_profiles_dir()?.join(&file);
 
                         fs::File::create(path)
                             .context(format!("failed to create file \"{}\"", file))?
@@ -235,10 +245,12 @@ impl IProfiles {
 
         if let Some(index) = index {
             items.remove(index).file.map(|file| {
-                let path = dirs::app_profiles_dir().join(file);
-                if path.exists() {
-                    let _ = fs::remove_file(path);
-                }
+                let _ = dirs::app_profiles_dir().map(|path| {
+                    let path = path.join(file);
+                    if path.exists() {
+                        let _ = fs::remove_file(path);
+                    }
+                });
             });
         }
 
@@ -263,22 +275,18 @@ impl IProfiles {
             return Ok(config);
         }
 
-        let current = self.current.clone().unwrap();
+        let current = self.current.as_ref().unwrap();
         for item in self.items.as_ref().unwrap().iter() {
-            if item.uid == Some(current.clone()) {
-                let file_path = match item.file.clone() {
-                    Some(file) => dirs::app_profiles_dir().join(file),
+            if item.uid.as_ref() == Some(current) {
+                let file_path = match item.file.as_ref() {
+                    Some(file) => dirs::app_profiles_dir()?.join(file),
                     None => bail!("failed to get the file field"),
                 };
 
-                if !file_path.exists() {
-                    bail!("failed to read the file \"{}\"", file_path.display());
-                }
-
-                return Ok(config::read_merge_mapping(file_path.clone()));
+                return Ok(config::read_merge_mapping(&file_path)?);
             }
         }
-        bail!("failed to find current profile \"uid:{current}\"");
+        bail!("failed to find the current profile \"uid:{current}\"");
     }
 
     /// generate the data for activate clash config

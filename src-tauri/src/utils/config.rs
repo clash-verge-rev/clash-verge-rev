@@ -1,47 +1,36 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf};
 
 /// read data from yaml as struct T
-pub fn read_yaml<T: DeserializeOwned + Default>(path: PathBuf) -> T {
+pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
     if !path.exists() {
-        log::error!(target: "app", "file not found \"{}\"", path.display());
-        return T::default();
+        bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = fs::read_to_string(&path).unwrap_or("".into());
+    let yaml_str = fs::read_to_string(&path)
+        .context(format!("failed to read the file \"{}\"", path.display()))?;
 
-    match serde_yaml::from_str::<T>(&yaml_str) {
-        Ok(val) => val,
-        Err(_) => {
-            log::error!(target: "app", "failed to read yaml file \"{}\"", path.display());
-            T::default()
-        }
-    }
+    serde_yaml::from_str::<T>(&yaml_str).context(format!(
+        "failed to read the file with yaml format \"{}\"",
+        path.display()
+    ))
 }
 
 /// read mapping from yaml fix #165
-pub fn read_merge_mapping(path: PathBuf) -> Mapping {
-    let map = Mapping::new();
+pub fn read_merge_mapping(path: &PathBuf) -> Result<Mapping> {
+    let mut val: Value = read_yaml(path)?;
+    val.apply_merge()
+        .context(format!("failed to apply merge \"{}\"", path.display()))?;
 
-    if !path.exists() {
-        log::error!(target: "app", "file not found \"{}\"", path.display());
-        return map;
-    }
-
-    let yaml_str = fs::read_to_string(&path).unwrap_or("".into());
-
-    match serde_yaml::from_str::<Value>(&yaml_str) {
-        Ok(mut val) => {
-            crate::log_err!(val.apply_merge());
-            val.as_mapping().unwrap_or(&map).to_owned()
-        }
-        Err(_) => {
-            log::error!(target: "app", "failed to read yaml file \"{}\"", path.display());
-            map
-        }
-    }
+    Ok(val
+        .as_mapping()
+        .ok_or(anyhow!(
+            "failed to transform to yaml mapping \"{}\"",
+            path.display()
+        ))?
+        .to_owned())
 }
 
 /// save the data to the file
