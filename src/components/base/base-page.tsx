@@ -1,5 +1,6 @@
-import { Typography } from "@mui/material";
 import React from "react";
+import { Typography } from "@mui/material";
+import BaseErrorBoundary from "./base-error-boundary";
 
 interface Props {
   title?: React.ReactNode; // the page title
@@ -11,21 +12,23 @@ const BasePage: React.FC<Props> = (props) => {
   const { title, header, contentStyle, children } = props;
 
   return (
-    <div className="base-page" data-windrag>
-      <header data-windrag style={{ userSelect: "none" }}>
-        <Typography variant="h4" component="h1" data-windrag>
-          {title}
-        </Typography>
+    <BaseErrorBoundary>
+      <div className="base-page" data-windrag>
+        <header data-windrag style={{ userSelect: "none" }}>
+          <Typography variant="h4" component="h1" data-windrag>
+            {title}
+          </Typography>
 
-        {header}
-      </header>
+          {header}
+        </header>
 
-      <section>
-        <div className="base-content" style={contentStyle} data-windrag>
-          {children}
-        </div>
-      </section>
-    </div>
+        <section>
+          <div className="base-content" style={contentStyle} data-windrag>
+            {children}
+          </div>
+        </section>
+      </div>
+    </BaseErrorBoundary>
   );
 };
 

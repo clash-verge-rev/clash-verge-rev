@@ -20,6 +20,7 @@ import LayoutControl from "@/components/layout/layout-control";
 import LayoutTraffic from "@/components/layout/layout-traffic";
 import UpdateButton from "@/components/layout/update-button";
 import useCustomTheme from "@/components/layout/use-custom-theme";
+import BaseErrorBoundary from "@/components/base/base-error-boundary";
 import getSystem from "@/utils/get-system";
 import "dayjs/locale/zh-cn";
 
@@ -137,11 +138,13 @@ const Layout = () => {
             )}
 
             <div className="the-content">
-              <Routes>
-                {routers.map(({ label, link, ele: Ele }) => (
-                  <Route key={label} path={link} element={<Ele />} />
-                ))}
-              </Routes>
+              <BaseErrorBoundary>
+                <Routes>
+                  {routers.map(({ label, link, ele: Ele }) => (
+                    <Route key={label} path={link} element={<Ele />} />
+                  ))}
+                </Routes>
+              </BaseErrorBoundary>
             </div>
           </div>
         </Paper>
