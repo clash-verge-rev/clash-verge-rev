@@ -42,9 +42,7 @@ pub fn change_clash_mode(mode: String) {
                     log_err!(handle::Handle::update_systray_part());
                 }
             }
-            Err(err) => {
-                log::error!(target: "app", "{err}");
-            }
+            Err(err) => log::error!(target: "app", "{err}"),
         }
     });
 }
@@ -211,9 +209,17 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     match {
         #[cfg(target_os = "windows")]
         {
-            todo!()
+            let service_mode = patch.enable_service_mode;
+
+            if service_mode.is_some() {
+                Config::generate()?;
+                CoreManager::global().run_core().await?;
+            } else if tun_mode.is_some() {
+                update_core_config().await?;
+            }
         }
 
+        #[cfg(not(target_os = "windows"))]
         if tun_mode.is_some() {
             update_core_config().await?;
         }

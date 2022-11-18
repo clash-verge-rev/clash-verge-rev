@@ -116,30 +116,37 @@ pub fn app_res_dir() -> Result<PathBuf> {
 }
 
 pub fn clash_pid_path() -> Result<PathBuf> {
-    unsafe { Ok(RESOURCE_DIR.clone().unwrap().join("clash.pid")) }
-}
-
-#[cfg(windows)]
-pub fn service_path() -> PathBuf {
     unsafe {
-        let res_dir = RESOURCE_DIR.clone().unwrap();
-        res_dir.join("clash-verge-service.exe")
+        Ok(RESOURCE_DIR
+            .clone()
+            .ok_or(anyhow::anyhow!("failed to get the resource dir"))?
+            .join("clash.pid"))
     }
 }
 
 #[cfg(windows)]
-pub fn service_log_file() -> PathBuf {
+pub fn service_path() -> Result<PathBuf> {
+    unsafe {
+        let res_dir = RESOURCE_DIR
+            .clone()
+            .ok_or(anyhow::anyhow!("failed to get the resource dir"))?;
+        Ok(res_dir.join("clash-verge-service.exe"))
+    }
+}
+
+#[cfg(windows)]
+pub fn service_log_file() -> Result<PathBuf> {
     use chrono::Local;
 
-    let log_dir = app_logs_dir().join("service");
+    let log_dir = app_logs_dir()?.join("service");
 
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{}.log", local_time);
     let log_file = log_dir.join(log_file);
 
-    std::fs::create_dir_all(&log_dir).unwrap();
+    let _ = std::fs::create_dir_all(&log_dir);
 
-    log_file
+    Ok(log_file)
 }
 
 pub fn path_to_str(path: &PathBuf) -> Result<&str> {
