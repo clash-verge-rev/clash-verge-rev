@@ -1,23 +1,25 @@
-use crate::{data::*, log_if_err};
+use crate::{config::Config, log_err};
 use anyhow::{anyhow, bail, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use std::sync::Arc;
 use sysproxy::Sysproxy;
-use tauri::{async_runtime::Mutex, utils::platform::current_exe};
+use tauri::{async_runtime::Mutex as TokioMutex, utils::platform::current_exe};
 
 pub struct Sysopt {
     /// current system proxy setting
-    cur_sysproxy: Option<Sysproxy>,
+    cur_sysproxy: Arc<Mutex<Option<Sysproxy>>>,
 
     /// record the original system proxy
     /// recover it when exit
-    old_sysproxy: Option<Sysproxy>,
+    old_sysproxy: Arc<Mutex<Option<Sysproxy>>>,
 
     /// helps to auto launch the app
-    auto_launch: Option<AutoLaunch>,
+    auto_launch: Arc<Mutex<Option<AutoLaunch>>>,
 
     /// record whether the guard async is running or not
-    guard_state: Arc<Mutex<bool>>,
+    guard_state: Arc<TokioMutex<bool>>,
 }
 
 #[cfg(target_os = "windows")]
@@ -28,44 +30,49 @@ static DEFAULT_BYPASS: &str = "localhost,127.0.0.1/8,::1";
 static DEFAULT_BYPASS: &str = "127.0.0.1,localhost,<local>";
 
 impl Sysopt {
-    pub fn new() -> Sysopt {
-        Sysopt {
-            cur_sysproxy: None,
-            old_sysproxy: None,
-            auto_launch: None,
-            guard_state: Arc::new(Mutex::new(false)),
-        }
+    pub fn global() -> &'static Sysopt {
+        static SYSOPT: OnceCell<Sysopt> = OnceCell::new();
+
+        SYSOPT.get_or_init(|| Sysopt {
+            cur_sysproxy: Arc::new(Mutex::new(None)),
+            old_sysproxy: Arc::new(Mutex::new(None)),
+            auto_launch: Arc::new(Mutex::new(None)),
+            guard_state: Arc::new(TokioMutex::new(false)),
+        })
     }
 
     /// init the sysproxy
-    pub fn init_sysproxy(&mut self) -> Result<()> {
-        let data = Data::global();
-        let clash = data.clash.lock();
-        let port = clash.info.port.clone();
+    pub fn init_sysproxy(&self) -> Result<()> {
+        let port = { Config::clash().latest().get_info()?.port };
 
         if port.is_none() {
             bail!("clash port is none");
         }
 
-        let verge = data.verge.lock();
-
-        let enable = verge.enable_system_proxy.clone().unwrap_or(false);
-        let bypass = verge.system_proxy_bypass.clone();
-        let bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
-
         let port = port.unwrap().parse::<u16>()?;
-        let host = String::from("127.0.0.1");
 
-        self.cur_sysproxy = Some(Sysproxy {
+        let (enable, bypass) = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            (
+                verge.enable_system_proxy.clone().unwrap_or(false),
+                verge.system_proxy_bypass.clone(),
+            )
+        };
+
+        let current = Sysproxy {
             enable,
-            host,
+            host: String::from("127.0.0.1"),
             port,
-            bypass,
-        });
+            bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+        };
 
         if enable {
-            self.old_sysproxy = Sysproxy::get_system_proxy().map_or(None, |p| Some(p));
-            self.cur_sysproxy.as_ref().unwrap().set_system_proxy()?;
+            let old = Sysproxy::get_system_proxy().map_or(None, |p| Some(p));
+            current.set_system_proxy()?;
+
+            *self.old_sysproxy.lock() = old;
+            *self.cur_sysproxy.lock() = Some(current);
         }
 
         // run the system proxy guard
@@ -74,37 +81,46 @@ impl Sysopt {
     }
 
     /// update the system proxy
-    pub fn update_sysproxy(&mut self) -> Result<()> {
-        if self.cur_sysproxy.is_none() || self.old_sysproxy.is_none() {
+    pub fn update_sysproxy(&self) -> Result<()> {
+        let mut cur_sysproxy = self.cur_sysproxy.lock();
+        let old_sysproxy = self.old_sysproxy.lock();
+
+        if cur_sysproxy.is_none() || old_sysproxy.is_none() {
+            drop(cur_sysproxy);
+            drop(old_sysproxy);
             return self.init_sysproxy();
         }
 
-        let data = Data::global();
-        let verge = data.verge.lock();
-
-        let enable = verge.enable_system_proxy.clone().unwrap_or(false);
-        let bypass = verge.system_proxy_bypass.clone();
-        let bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
-
-        let mut sysproxy = self.cur_sysproxy.take().unwrap();
+        let (enable, bypass) = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            (
+                verge.enable_system_proxy.clone().unwrap_or(false),
+                verge.system_proxy_bypass.clone(),
+            )
+        };
+        let mut sysproxy = cur_sysproxy.take().unwrap();
 
         sysproxy.enable = enable;
-        sysproxy.bypass = bypass;
+        sysproxy.bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
 
-        self.cur_sysproxy = Some(sysproxy);
-        self.cur_sysproxy.as_ref().unwrap().set_system_proxy()?;
+        sysproxy.set_system_proxy()?;
+        *cur_sysproxy = Some(sysproxy);
 
         Ok(())
     }
 
     /// reset the sysproxy
-    pub fn reset_sysproxy(&mut self) -> Result<()> {
-        let cur = self.cur_sysproxy.take();
+    pub fn reset_sysproxy(&self) -> Result<()> {
+        let mut cur_sysproxy = self.cur_sysproxy.lock();
+        let mut old_sysproxy = self.old_sysproxy.lock();
 
-        if let Some(mut old) = self.old_sysproxy.take() {
+        let cur_sysproxy = cur_sysproxy.take();
+
+        if let Some(mut old) = old_sysproxy.take() {
             // 如果原代理和当前代理 端口一致，就disable关闭，否则就恢复原代理设置
             // 当前没有设置代理的时候，不确定旧设置是否和当前一致，全关了
-            let port_same = cur.map_or(true, |cur| old.port == cur.port);
+            let port_same = cur_sysproxy.map_or(true, |cur| old.port == cur.port);
 
             if old.enable && port_same {
                 old.enable = false;
@@ -114,7 +130,7 @@ impl Sysopt {
             }
 
             old.set_system_proxy()?;
-        } else if let Some(mut cur @ Sysproxy { enable: true, .. }) = cur {
+        } else if let Some(mut cur @ Sysproxy { enable: true, .. }) = cur_sysproxy {
             // 没有原代理，就按现在的代理设置disable即可
             log::info!(target: "app", "reset proxy by disabling the current proxy");
             cur.enable = false;
@@ -127,10 +143,9 @@ impl Sysopt {
     }
 
     /// init the auto launch
-    pub fn init_launch(&mut self) -> Result<()> {
-        let data = Data::global();
-        let verge = data.verge.lock();
-        let enable = verge.enable_auto_launch.clone().unwrap_or(false);
+    pub fn init_launch(&self) -> Result<()> {
+        let enable = { Config::verge().latest().enable_auto_launch.clone() };
+        let enable = enable.unwrap_or(false);
 
         let app_exe = current_exe()?;
         let app_exe = dunce::canonicalize(app_exe)?;
@@ -167,51 +182,39 @@ impl Sysopt {
             .set_app_path(&app_path)
             .build()?;
 
-        self.auto_launch = Some(auto);
-
         // 避免在开发时将自启动关了
         #[cfg(feature = "verge-dev")]
         if !enable {
             return Ok(());
         }
 
-        let auto = self.auto_launch.as_ref().unwrap();
-
         // macos每次启动都更新登录项，避免重复设置登录项
         #[cfg(target_os = "macos")]
-        {
-            let _ = auto.disable();
-            if enable {
-                auto.enable()?;
-            }
-        }
+        let _ = auto.disable();
 
-        #[cfg(not(target_os = "macos"))]
-        {
-            match enable {
-                true => auto.enable()?,
-                false => auto.disable()?,
-            };
+        if enable {
+            auto.enable()?;
         }
+        *self.auto_launch.lock() = Some(auto);
 
         Ok(())
     }
 
     /// update the startup
-    pub fn update_launch(&mut self) -> Result<()> {
-        if self.auto_launch.is_none() {
+    pub fn update_launch(&self) -> Result<()> {
+        let auto_launch = self.auto_launch.lock();
+
+        if auto_launch.is_none() {
+            drop(auto_launch);
             return self.init_launch();
         }
-
-        let data = Data::global();
-        let verge = data.verge.lock();
-        let enable = verge.enable_auto_launch.clone().unwrap_or(false);
-
-        let auto_launch = self.auto_launch.as_ref().unwrap();
+        let enable = { Config::verge().latest().enable_auto_launch.clone() };
+        let enable = enable.unwrap_or(false);
+        let auto_launch = auto_launch.as_ref().unwrap();
 
         match enable {
             true => auto_launch.enable()?,
-            false => crate::log_if_err!(auto_launch.disable()), // 忽略关闭的错误
+            false => log_err!(auto_launch.disable()), // 忽略关闭的错误
         };
 
         Ok(())
@@ -239,14 +242,16 @@ impl Sysopt {
             loop {
                 sleep(Duration::from_secs(wait_secs)).await;
 
-                let global = Data::global();
-                let verge = global.verge.lock();
-
-                let enable = verge.enable_system_proxy.clone().unwrap_or(false);
-                let guard = verge.enable_proxy_guard.clone().unwrap_or(false);
-                let guard_duration = verge.proxy_guard_duration.clone().unwrap_or(10);
-                let bypass = verge.system_proxy_bypass.clone();
-                drop(verge);
+                let (enable, guard, guard_duration, bypass) = {
+                    let verge = Config::verge();
+                    let verge = verge.latest();
+                    (
+                        verge.enable_system_proxy.clone().unwrap_or(false),
+                        verge.enable_proxy_guard.clone().unwrap_or(false),
+                        verge.proxy_guard_duration.clone().unwrap_or(10),
+                        verge.system_proxy_bypass.clone(),
+                    )
+                };
 
                 // stop loop
                 if !enable || !guard {
@@ -256,30 +261,30 @@ impl Sysopt {
                 // update duration
                 wait_secs = guard_duration;
 
-                let clash = global.clash.lock();
-                let port = clash.info.port.clone();
-                let port = port.unwrap_or("".into()).parse::<u16>();
-                drop(clash);
-
                 log::debug!(target: "app", "try to guard the system proxy");
 
-                match port {
-                    Ok(port) => {
-                        let sysproxy = Sysproxy {
-                            enable: true,
-                            host: "127.0.0.1".into(),
-                            port,
-                            bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
-                        };
+                if let Ok(info) = { Config::clash().latest().get_info() } {
+                    match info.port.unwrap_or("".into()).parse::<u16>() {
+                        Ok(port) => {
+                            let sysproxy = Sysproxy {
+                                enable: true,
+                                host: "127.0.0.1".into(),
+                                port,
+                                bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+                            };
 
-                        log_if_err!(sysproxy.set_system_proxy());
+                            log_err!(sysproxy.set_system_proxy());
+                        }
+                        Err(_) => {
+                            log::error!(target: "app", "failed to parse clash port in guard proxy")
+                        }
                     }
-                    Err(_) => log::error!(target: "app", "failed to parse clash port"),
                 }
             }
 
             let mut state = guard_state.lock().await;
             *state = false;
+            drop(state);
         });
     }
 }

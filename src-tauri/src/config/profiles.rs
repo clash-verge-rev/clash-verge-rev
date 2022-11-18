@@ -1,30 +1,24 @@
-use super::prfitem::PrfItem;
-use super::ChainItem;
-use crate::utils::{config, dirs, help};
+use super::{prfitem::PrfItem, ChainItem};
+use crate::utils::{dirs, help};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::collections::HashMap;
 use std::{fs, io::Write};
 
-///
-/// ## Profiles Config
-///
 /// Define the `profiles.yaml` schema
-///
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct Profiles {
+pub struct IProfiles {
     /// same as PrfConfig.current
-    current: Option<String>,
+    pub current: Option<String>,
 
     /// same as PrfConfig.chain
-    chain: Option<Vec<String>>,
+    pub chain: Option<Vec<String>>,
 
     /// record valid fields for clash
-    valid: Option<Vec<String>>,
+    pub valid: Option<Vec<String>>,
 
     /// profile list
-    items: Option<Vec<PrfItem>>,
+    pub items: Option<Vec<PrfItem>>,
 }
 
 macro_rules! patch {
@@ -35,72 +29,74 @@ macro_rules! patch {
     };
 }
 
-impl Profiles {
+impl IProfiles {
     pub fn new() -> Self {
-        Profiles::read_file()
-    }
-
-    /// read the config from the file
-    pub fn read_file() -> Self {
-        let mut profiles = config::read_yaml::<Self>(dirs::profiles_path());
-
-        if profiles.items.is_none() {
-            profiles.items = Some(vec![]);
-        }
-
-        // compatiable with the old old old version
-        profiles.items.as_mut().map(|items| {
-            for mut item in items.iter_mut() {
-                if item.uid.is_none() {
-                    item.uid = Some(help::get_uid("d"));
+        match dirs::profiles_path().and_then(|path| help::read_yaml::<Self>(&path)) {
+            Ok(mut profiles) => {
+                if profiles.items.is_none() {
+                    profiles.items = Some(vec![]);
                 }
+                // compatible with the old old old version
+                profiles.items.as_mut().map(|items| {
+                    for mut item in items.iter_mut() {
+                        if item.uid.is_none() {
+                            item.uid = Some(help::get_uid("d"));
+                        }
+                    }
+                });
+                profiles
             }
-        });
-
-        profiles
+            Err(err) => {
+                log::error!(target: "app", "{err}");
+                Self::template()
+            }
+        }
     }
 
-    /// save the config to the file
+    pub fn template() -> Self {
+        Self {
+            valid: Some(vec!["dns".into()]),
+            items: Some(vec![]),
+            ..Self::default()
+        }
+    }
+
     pub fn save_file(&self) -> Result<()> {
-        config::save_yaml(
-            dirs::profiles_path(),
+        help::save_yaml(
+            &dirs::profiles_path()?,
             self,
-            Some("# Profiles Config for Clash Verge\n\n"),
+            Some("# Profiles Config for Clash Verge"),
         )
     }
 
-    /// get the current uid
-    pub fn get_current(&self) -> Option<String> {
-        self.current.clone()
-    }
-
-    /// only change the main to the target id
-    pub fn put_current(&mut self, uid: String) -> Result<()> {
+    /// 只修改current，valid和chain
+    pub fn patch_config(&mut self, patch: IProfiles) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
-        let items = self.items.as_ref().unwrap();
-        let some_uid = Some(uid.clone());
+        if let Some(current) = patch.current {
+            let items = self.items.as_ref().unwrap();
+            let some_uid = Some(current);
 
-        if items.iter().find(|&each| each.uid == some_uid).is_some() {
-            self.current = some_uid;
-            return self.save_file();
+            if items.iter().any(|e| e.uid == some_uid) {
+                self.current = some_uid;
+            }
         }
 
-        bail!("invalid uid \"{uid}\"");
+        if let Some(chain) = patch.chain {
+            self.chain = Some(chain);
+        }
+
+        if let Some(valid) = patch.valid {
+            self.valid = Some(valid);
+        }
+
+        Ok(())
     }
 
-    /// just change the `chain`
-    pub fn put_chain(&mut self, chain: Option<Vec<String>>) -> Result<()> {
-        self.chain = chain;
-        self.save_file()
-    }
-
-    /// just change the `field`
-    pub fn put_valid(&mut self, valid: Option<Vec<String>>) -> Result<()> {
-        self.valid = valid;
-        self.save_file()
+    pub fn get_current(&self) -> Option<String> {
+        self.current.clone()
     }
 
     /// get items ref
@@ -110,8 +106,7 @@ impl Profiles {
 
     /// find the item by the uid
     pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
-        if self.items.is_some() {
-            let items = self.items.as_ref().unwrap();
+        if let Some(items) = self.items.as_ref() {
             let some_uid = Some(uid.clone());
 
             for each in items.iter() {
@@ -140,7 +135,7 @@ impl Profiles {
             }
 
             let file = item.file.clone().unwrap();
-            let path = dirs::app_profiles_dir().join(&file);
+            let path = dirs::app_profiles_dir()?.join(&file);
 
             fs::File::create(path)
                 .context(format!("failed to create file \"{}\"", file))?
@@ -209,7 +204,7 @@ impl Profiles {
                         // the file must exists
                         each.file = Some(file.clone());
 
-                        let path = dirs::app_profiles_dir().join(&file);
+                        let path = dirs::app_profiles_dir()?.join(&file);
 
                         fs::File::create(path)
                             .context(format!("failed to create file \"{}\"", file))?
@@ -244,10 +239,12 @@ impl Profiles {
 
         if let Some(index) = index {
             items.remove(index).file.map(|file| {
-                let path = dirs::app_profiles_dir().join(file);
-                if path.exists() {
-                    let _ = fs::remove_file(path);
-                }
+                let _ = dirs::app_profiles_dir().map(|path| {
+                    let path = path.join(file);
+                    if path.exists() {
+                        let _ = fs::remove_file(path);
+                    }
+                });
             });
         }
 
@@ -272,22 +269,18 @@ impl Profiles {
             return Ok(config);
         }
 
-        let current = self.current.clone().unwrap();
+        let current = self.current.as_ref().unwrap();
         for item in self.items.as_ref().unwrap().iter() {
-            if item.uid == Some(current.clone()) {
-                let file_path = match item.file.clone() {
-                    Some(file) => dirs::app_profiles_dir().join(file),
+            if item.uid.as_ref() == Some(current) {
+                let file_path = match item.file.as_ref() {
+                    Some(file) => dirs::app_profiles_dir()?.join(file),
                     None => bail!("failed to get the file field"),
                 };
 
-                if !file_path.exists() {
-                    bail!("failed to read the file \"{}\"", file_path.display());
-                }
-
-                return Ok(config::read_merge_mapping(file_path.clone()));
+                return Ok(help::read_merge_mapping(&file_path)?);
             }
         }
-        bail!("failed to find current profile \"uid:{current}\"");
+        bail!("failed to find the current profile \"uid:{current}\"");
     }
 
     /// generate the data for activate clash config
@@ -316,14 +309,4 @@ pub struct PrfActivate {
     pub current: Mapping,
     pub chain: Vec<ChainItem>,
     pub valid: Vec<String>,
-}
-
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct RuntimeResult {
-    pub config: Option<Mapping>,
-    pub config_yaml: Option<String>,
-    // 记录在配置中（包括merge和script生成的）出现过的keys
-    // 这些keys不一定都生效
-    pub exists_keys: Vec<String>,
-    pub chain_logs: HashMap<String, Vec<(String, String)>>,
 }

@@ -6,12 +6,12 @@
 mod cmds;
 mod config;
 mod core;
-mod data;
+mod enhance;
 mod feat;
 mod utils;
 
 use crate::utils::{init, resolve, server};
-use tauri::{api, Manager, SystemTray};
+use tauri::{api, SystemTray};
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -20,18 +20,12 @@ fn main() -> std::io::Result<()> {
         return Ok(());
     }
 
-    #[cfg(target_os = "windows")]
-    unsafe {
-        use crate::utils::dirs;
-        dirs::init_portable_flag();
-    }
-
-    crate::log_if_err!(init::init_config());
+    crate::log_err!(init::init_config());
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
-        .setup(|app| Ok(resolve::resolve_setup(app)))
         .system_tray(SystemTray::new())
+        .setup(|app| Ok(resolve::resolve_setup(app)))
         .on_system_tray_event(core::tray::Tray::on_system_tray_event)
         .invoke_handler(tauri::generate_handler![
             // common
@@ -39,7 +33,7 @@ fn main() -> std::io::Result<()> {
             cmds::open_app_dir,
             cmds::open_logs_dir,
             cmds::open_web_url,
-            cmds::kill_sidecar,
+            // cmds::kill_sidecar,
             cmds::restart_sidecar,
             // clash
             cmds::get_clash_info,
@@ -53,24 +47,20 @@ fn main() -> std::io::Result<()> {
             // verge
             cmds::get_verge_config,
             cmds::patch_verge_config,
-            cmds::update_hotkeys,
+            // cmds::update_hotkeys,
             // profile
+            cmds::get_profiles,
+            cmds::enhance_profiles,
+            cmds::patch_profiles_config,
             cmds::view_profile,
             cmds::patch_profile,
             cmds::create_profile,
             cmds::import_profile,
             cmds::update_profile,
             cmds::delete_profile,
-            cmds::select_profile,
-            cmds::get_profiles,
-            cmds::enhance_profiles,
-            cmds::change_profile_chain,
-            cmds::change_profile_valid,
             cmds::read_profile_file,
             cmds::save_profile_file,
             // service mode
-            cmds::service::start_service,
-            cmds::service::stop_service,
             cmds::service::check_service,
             cmds::service::install_service,
             cmds::service::uninstall_service,
@@ -96,22 +86,10 @@ fn main() -> std::io::Result<()> {
         );
     }
 
-    #[allow(unused_mut)]
-    let mut app = builder
+    let app = builder
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
 
-    #[cfg(target_os = "macos")]
-    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-
-    let app_handle = app.app_handle();
-    ctrlc::set_handler(move || {
-        resolve::resolve_reset();
-        app_handle.exit(0);
-    })
-    .expect("error while exiting.");
-
-    #[allow(unused)]
     app.run(|app_handle, e| match e {
         tauri::RunEvent::ExitRequested { api, .. } => {
             api.prevent_exit();
@@ -123,6 +101,8 @@ fn main() -> std::io::Result<()> {
         }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::WindowEvent { label, event, .. } => {
+            use tauri::Manager;
+
             if label == "main" {
                 match event {
                     tauri::WindowEvent::CloseRequested { api, .. } => {
