@@ -99,35 +99,6 @@ impl IProfiles {
         self.current.clone()
     }
 
-    #[deprecated]
-    pub fn put_current(&mut self, uid: String) -> Result<()> {
-        if self.items.is_none() {
-            self.items = Some(vec![]);
-        }
-
-        let items = self.items.as_ref().unwrap();
-        let some_uid = Some(uid.clone());
-
-        if items.iter().find(|&each| each.uid == some_uid).is_some() {
-            self.current = some_uid;
-            return Ok(());
-        }
-
-        bail!("invalid uid \"{uid}\"");
-    }
-
-    #[deprecated]
-    pub fn put_chain(&mut self, chain: Option<Vec<String>>) -> Result<()> {
-        self.chain = chain;
-        self.save_file()
-    }
-
-    #[deprecated]
-    pub fn put_valid(&mut self, valid: Option<Vec<String>>) -> Result<()> {
-        self.valid = valid;
-        self.save_file()
-    }
-
     /// get items ref
     pub fn get_items(&self) -> Option<&Vec<PrfItem>> {
         self.items.as_ref()
