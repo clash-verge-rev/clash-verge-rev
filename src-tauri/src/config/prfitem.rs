@@ -355,7 +355,7 @@ impl PrfItem {
         }
 
         let file = self.file.clone().unwrap();
-        let path = dirs::app_profiles_dir().join(file);
+        let path = dirs::app_profiles_dir()?.join(file);
         fs::read_to_string(path).context("failed to read the file")
     }
 
@@ -366,7 +366,7 @@ impl PrfItem {
         }
 
         let file = self.file.clone().unwrap();
-        let path = dirs::app_profiles_dir().join(file);
+        let path = dirs::app_profiles_dir()?.join(file);
         fs::write(path, data.as_bytes()).context("failed to save the file")
     }
 
@@ -375,7 +375,7 @@ impl PrfItem {
         let itype = self.itype.as_ref()?.as_str();
         let file = self.file.clone()?;
         let uid = self.uid.clone().unwrap_or("".into());
-        let path = dirs::app_profiles_dir().join(file);
+        let path = dirs::app_profiles_dir().ok()?.join(file);
 
         if !path.exists() {
             return None;
@@ -384,11 +384,11 @@ impl PrfItem {
         match itype {
             "script" => Some(ChainItem {
                 uid,
-                data: ChainType::Script(fs::read_to_string(path).unwrap_or("".into())),
+                data: ChainType::Script(fs::read_to_string(path).ok()?),
             }),
             "merge" => Some(ChainItem {
                 uid,
-                data: ChainType::Merge(config::read_merge_mapping(path)),
+                data: ChainType::Merge(config::read_merge_mapping(&path).ok()?),
             }),
             _ => None,
         }

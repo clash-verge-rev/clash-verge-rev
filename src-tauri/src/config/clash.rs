@@ -8,7 +8,26 @@ pub struct IClashTemp(pub Mapping);
 
 impl IClashTemp {
     pub fn new() -> Self {
-        Self(config::read_merge_mapping(dirs::clash_path()))
+        match dirs::clash_path().and_then(|path| config::read_merge_mapping(&path)) {
+            Ok(map) => Self(map),
+            Err(err) => {
+                log::error!(target: "app", "{err}");
+                Self::template()
+            }
+        }
+    }
+
+    pub fn template() -> Self {
+        let mut map = Mapping::new();
+
+        map.insert("mixed-port".into(), 7892.into());
+        map.insert("log-level".into(), "info".into());
+        map.insert("allow-lan".into(), false.into());
+        map.insert("mode".into(), "rule".into());
+        map.insert("external-controller".into(), "127.0.0.1:9090".into());
+        map.insert("secret".into(), "".into());
+
+        Self(map)
     }
 
     pub fn patch_config(&mut self, patch: Mapping) {
@@ -19,7 +38,7 @@ impl IClashTemp {
 
     pub fn save_config(&self) -> Result<()> {
         config::save_yaml(
-            dirs::clash_path(),
+            dirs::clash_path()?,
             &self.0,
             Some("# Default Config For ClashN Core\n\n"),
         )

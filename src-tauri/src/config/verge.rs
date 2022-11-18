@@ -85,13 +85,36 @@ pub struct IVergeTheme {
 
 impl IVerge {
     pub fn new() -> Self {
-        config::read_yaml::<IVerge>(dirs::verge_path())
+        match dirs::verge_path().and_then(|path| config::read_yaml::<IVerge>(&path)) {
+            Ok(config) => config,
+            Err(err) => {
+                log::error!(target: "app", "{err}");
+                Self::template()
+            }
+        }
+    }
+
+    pub fn template() -> Self {
+        Self {
+            clash_core: Some("clash".into()),
+            language: Some("en".into()),
+            theme_mode: Some("system".into()),
+            theme_blur: Some(false),
+            traffic_graph: Some(true),
+            enable_auto_launch: Some(false),
+            enable_silent_start: Some(false),
+            enable_system_proxy: Some(false),
+            enable_proxy_guard: Some(false),
+            proxy_guard_duration: Some(30),
+            auto_close_connection: Some(true),
+            ..Self::default()
+        }
     }
 
     /// Save IVerge App Config
     pub fn save_file(&self) -> Result<()> {
         config::save_yaml(
-            dirs::verge_path(),
+            dirs::verge_path()?,
             &self,
             Some("# The Config for Clash IVerge App\n\n"),
         )
@@ -133,13 +156,14 @@ impl IVerge {
 
     /// 在初始化前尝试拿到单例端口的值
     pub fn get_singleton_port() -> u16 {
-        let config = config::read_yaml::<IVerge>(dirs::verge_path());
-
         #[cfg(not(feature = "verge-dev"))]
         const SERVER_PORT: u16 = 33331;
         #[cfg(feature = "verge-dev")]
         const SERVER_PORT: u16 = 11233;
 
-        config.app_singleton_port.unwrap_or(SERVER_PORT)
+        match dirs::verge_path().and_then(|path| config::read_yaml::<IVerge>(&path)) {
+            Ok(config) => config.app_singleton_port.unwrap_or(SERVER_PORT),
+            Err(_) => SERVER_PORT, // 这里就不log错误了
+        }
     }
 }

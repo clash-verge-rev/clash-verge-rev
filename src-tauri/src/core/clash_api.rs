@@ -9,7 +9,7 @@ pub async fn put_configs() -> Result<()> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/configs");
 
-    let runtime_yaml = dirs::clash_runtime_yaml();
+    let runtime_yaml = dirs::clash_runtime_yaml()?;
     let runtime_yaml = dirs::path_to_str(&runtime_yaml)?;
 
     let mut data = HashMap::new();
