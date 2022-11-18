@@ -1,4 +1,4 @@
-use super::{IClashTemp, IProfiles, IVerge};
+use super::{IClashTemp, IProfiles, IRuntime, IVerge};
 use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 use std::sync::Arc;
 
@@ -10,6 +10,7 @@ pub struct Draft<T: Clone + ToOwned> {
 macro_rules! draft_define {
     ($id: ident) => {
         impl Draft<$id> {
+            #[allow(unused)]
             pub fn data(&self) -> MappedMutexGuard<$id> {
                 MutexGuard::map(self.inner.lock(), |guard| &mut guard.0)
             }
@@ -65,9 +66,9 @@ macro_rules! draft_define {
 
 // draft_define!(IClash);
 draft_define!(IClashTemp);
-draft_define!(IVerge);
-// draft_define!(Mapping);
 draft_define!(IProfiles);
+draft_define!(IRuntime);
+draft_define!(IVerge);
 
 #[test]
 fn test_draft() {

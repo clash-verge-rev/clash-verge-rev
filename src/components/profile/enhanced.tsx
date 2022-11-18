@@ -7,7 +7,7 @@ import {
   getProfiles,
   deleteProfile,
   enhanceProfiles,
-  changeProfileChain,
+  patchProfilesConfig,
   getRuntimeLogs,
 } from "@/services/cmds";
 import ProfileMore from "./profile-more";
@@ -43,7 +43,7 @@ const EnhancedMode = (props: Props) => {
     if (chain.includes(uid)) return;
 
     const newChain = [...chain, uid];
-    await changeProfileChain(newChain);
+    await patchProfilesConfig({ chain: newChain });
     mutateProfiles((conf = {}) => ({ ...conf, chain: newChain }), true);
     mutateLogs();
   });
@@ -52,7 +52,7 @@ const EnhancedMode = (props: Props) => {
     if (!chain.includes(uid)) return;
 
     const newChain = chain.filter((i) => i !== uid);
-    await changeProfileChain(newChain);
+    await patchProfilesConfig({ chain: newChain });
     mutateProfiles((conf = {}) => ({ ...conf, chain: newChain }), true);
     mutateLogs();
   });
@@ -72,7 +72,7 @@ const EnhancedMode = (props: Props) => {
     if (!chain.includes(uid)) return;
 
     const newChain = [uid].concat(chain.filter((i) => i !== uid));
-    await changeProfileChain(newChain);
+    await patchProfilesConfig({ chain: newChain });
     mutateProfiles((conf = {}) => ({ ...conf, chain: newChain }), true);
     mutateLogs();
   });
@@ -81,7 +81,7 @@ const EnhancedMode = (props: Props) => {
     if (!chain.includes(uid)) return;
 
     const newChain = chain.filter((i) => i !== uid).concat([uid]);
-    await changeProfileChain(newChain);
+    await patchProfilesConfig({ chain: newChain });
     mutateProfiles((conf = {}) => ({ ...conf, chain: newChain }), true);
     mutateLogs();
   });

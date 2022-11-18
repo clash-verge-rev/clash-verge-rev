@@ -1,4 +1,4 @@
-use crate::utils::{config, dirs, help, tmpl};
+use crate::utils::{dirs, help, tmpl};
 use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -388,7 +388,7 @@ impl PrfItem {
             }),
             "merge" => Some(ChainItem {
                 uid,
-                data: ChainType::Merge(config::read_merge_mapping(&path).ok()?),
+                data: ChainType::Merge(help::read_merge_mapping(&path).ok()?),
             }),
             _ => None,
         }

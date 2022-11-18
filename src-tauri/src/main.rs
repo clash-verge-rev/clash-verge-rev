@@ -49,17 +49,15 @@ fn main() -> std::io::Result<()> {
             cmds::patch_verge_config,
             // cmds::update_hotkeys,
             // profile
+            cmds::get_profiles,
+            cmds::enhance_profiles,
+            cmds::patch_profiles_config,
             cmds::view_profile,
             cmds::patch_profile,
             cmds::create_profile,
             cmds::import_profile,
             cmds::update_profile,
             cmds::delete_profile,
-            cmds::select_profile,
-            cmds::get_profiles,
-            cmds::enhance_profiles,
-            cmds::change_profile_chain,
-            cmds::change_profile_valid,
             cmds::read_profile_file,
             cmds::save_profile_file,
             // service mode
@@ -91,13 +89,6 @@ fn main() -> std::io::Result<()> {
     let app = builder
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
-
-    // let app_handle = app.app_handle();
-    // ctrlc::set_handler(move || {
-    //     resolve::resolve_reset();
-    //     app_handle.exit(0);
-    // })
-    // .expect("error while exiting.");
 
     app.run(|app_handle, e| match e {
         tauri::RunEvent::ExitRequested { api, .. } => {

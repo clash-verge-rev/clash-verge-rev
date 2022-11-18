@@ -1,4 +1,4 @@
-use crate::utils::{config, dirs};
+use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -85,7 +85,7 @@ pub struct IVergeTheme {
 
 impl IVerge {
     pub fn new() -> Self {
-        match dirs::verge_path().and_then(|path| config::read_yaml::<IVerge>(&path)) {
+        match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
             Ok(config) => config,
             Err(err) => {
                 log::error!(target: "app", "{err}");
@@ -113,11 +113,7 @@ impl IVerge {
 
     /// Save IVerge App Config
     pub fn save_file(&self) -> Result<()> {
-        config::save_yaml(
-            dirs::verge_path()?,
-            &self,
-            Some("# The Config for Clash IVerge App\n\n"),
-        )
+        help::save_yaml(&dirs::verge_path()?, &self, Some("# Clash Verge Config"))
     }
 
     /// patch verge config
@@ -161,7 +157,7 @@ impl IVerge {
         #[cfg(feature = "verge-dev")]
         const SERVER_PORT: u16 = 11233;
 
-        match dirs::verge_path().and_then(|path| config::read_yaml::<IVerge>(&path)) {
+        match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
             Ok(config) => config.app_singleton_port.unwrap_or(SERVER_PORT),
             Err(_) => SERVER_PORT, // 这里就不log错误了
         }
