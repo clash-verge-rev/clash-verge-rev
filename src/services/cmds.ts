@@ -32,6 +32,10 @@ export async function enhanceProfiles() {
   return invoke<void>("enhance_profiles");
 }
 
+export async function patchProfilesConfig(profiles: CmdType.ProfilesConfig) {
+  return invoke<void>("patch_profiles_config");
+}
+
 export async function createProfile(
   item: Partial<CmdType.ProfileItem>,
   fileData?: string | null
@@ -74,18 +78,6 @@ export async function patchProfile(
   profile: Partial<CmdType.ProfileItem>
 ) {
   return invoke<void>("patch_profile", { index, profile });
-}
-
-export async function selectProfile(index: string) {
-  return invoke<void>("select_profile", { index });
-}
-
-export async function changeProfileChain(chain?: string[]) {
-  return invoke<void>("change_profile_chain", { chain });
-}
-
-export async function changeProfileValid(valid?: string[]) {
-  return invoke<void>("change_profile_valid", { valid });
 }
 
 export async function getClashInfo() {
@@ -135,10 +127,6 @@ export async function changeClashCore(clashCore: string) {
 export async function restartSidecar() {
   return invoke<void>("restart_sidecar");
 }
-
-// export async function killSidecar() {
-//   return invoke<any>("kill_sidecar");
-// }
 
 export async function openAppDir() {
   return invoke<void>("open_app_dir").catch((err) =>

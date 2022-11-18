@@ -43,9 +43,6 @@ impl Timer {
         Config::profiles().latest().get_items().map(|items| {
             items
                 .iter()
-                // .filter_map(|item| {
-                //     item.uid.is_some() && item.updated.is_some() && item.option.is_some()
-                // })
                 .filter_map(|item| {
                     // mins to seconds
                     let interval = ((item.option.as_ref()?.update_interval?) as i64) * 60;

@@ -1,9 +1,6 @@
 use super::{clash_api, logger::Logger};
-use crate::{
-    config::*,
-    enhance, log_err,
-    utils::{self, dirs},
-};
+use crate::log_err;
+use crate::{config::*, utils::dirs};
 use anyhow::{bail, Context, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -18,8 +15,6 @@ pub struct CoreManager {
 
     #[allow(unused)]
     use_service_mode: Arc<Mutex<bool>>,
-
-    pub runtime_config: Arc<Mutex<RuntimeResult>>,
 }
 
 impl CoreManager {
@@ -28,7 +23,6 @@ impl CoreManager {
 
         CORE_MANAGER.get_or_init(|| CoreManager {
             sidecar: Arc::new(Mutex::new(None)),
-            runtime_config: Arc::new(Mutex::new(RuntimeResult::default())),
             use_service_mode: Arc::new(Mutex::new(false)),
         })
     }
@@ -50,11 +44,7 @@ impl CoreManager {
 
         tauri::async_runtime::spawn(async {
             // 启动clash
-            if Self::global().run_core().await.is_ok() {
-                // 更新配置
-                sleep(Duration::from_millis(100)).await;
-                crate::log_err!(Self::global().activate_config().await);
-            }
+            log_err!(Self::global().run_core().await);
         });
 
         Ok(())
@@ -62,7 +52,7 @@ impl CoreManager {
 
     /// 检查配置是否正确
     pub fn check_config(&self) -> Result<()> {
-        let config_path = dirs::clash_runtime_yaml()?;
+        let config_path = Config::generate_file(ConfigType::Check)?;
         let config_path = dirs::path_to_str(&config_path)?;
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
@@ -82,6 +72,8 @@ impl CoreManager {
 
     /// 启动核心
     pub async fn run_core(&self) -> Result<()> {
+        let config_path = Config::generate_file(ConfigType::Run)?;
+
         #[cfg(target_os = "windows")]
         {
             use super::win_service;
@@ -123,10 +115,12 @@ impl CoreManager {
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let clash_core = clash_core.unwrap_or("clash".into());
 
+        let config_path = dirs::path_to_str(&config_path)?;
+
         // fix #212
         let args = match clash_core.as_str() {
-            "clash-meta" => vec!["-m", "-d", app_dir],
-            _ => vec!["-d", app_dir],
+            "clash-meta" => vec!["-m", "-d", app_dir, "-f", config_path],
+            _ => vec!["-d", app_dir, "-f", config_path],
         };
 
         let cmd = Command::new_sidecar(clash_core)?;
@@ -199,53 +193,42 @@ impl CoreManager {
             bail!("invalid clash core name \"{clash_core}\"");
         }
 
+        Config::verge().draft().clash_core = Some(clash_core);
+
         // 清掉旧日志
         Logger::global().clear_log();
 
-        {
-            Config::verge().draft().clash_core = Some(clash_core);
-        }
-
         match self.run_core().await {
             Ok(_) => {
-                log_err!({
-                    Config::verge().apply();
-                    Config::verge().latest().save_file()
-                });
-
-                sleep(Duration::from_millis(100)).await; // 等一会儿再更新配置
-                self.activate_config().await?;
+                Config::verge().apply();
+                Config::runtime().apply();
+                log_err!(Config::verge().latest().save_file());
                 Ok(())
             }
             Err(err) => {
                 Config::verge().discard();
+                Config::runtime().discard();
                 Err(err)
             }
         }
     }
 
-    /// 激活一个配置
-    pub async fn activate_config(&self) -> Result<()> {
-        let clash_config = { Config::clash().latest().clone() };
-
-        let tun_mode = { Config::verge().latest().enable_tun_mode.clone() };
-        let tun_mode = tun_mode.unwrap_or(false);
-
-        let pa = { Config::profiles().latest().gen_activate()? };
-
-        let (config, exists_keys, logs) =
-            enhance::enhance_config(clash_config.0, pa.current, pa.chain, pa.valid, tun_mode);
-
-        // 保存到文件中
-        let runtime_path = dirs::clash_runtime_yaml()?;
-        utils::config::save_yaml(runtime_path, &config, Some("# Clash Verge Runtime Config"))?;
+    /// 更新proxies那些
+    /// 如果涉及端口和外部控制则需要重启
+    pub async fn update_config(&self) -> Result<()> {
+        // 更新配置
+        Config::generate()?;
 
         // 检查配置是否正常
         self.check_config()?;
 
+        // 更新运行时配置
+        let path = Config::generate_file(ConfigType::Run)?;
+        let path = dirs::path_to_str(&path)?;
+
         // 发送请求 发送5次
         for i in 0..5 {
-            match clash_api::put_configs().await {
+            match clash_api::put_configs(path).await {
                 Ok(_) => break,
                 Err(err) => {
                     if i < 4 {
@@ -257,16 +240,6 @@ impl CoreManager {
             }
             sleep(Duration::from_millis(250)).await;
         }
-
-        // 保存结果
-        let mut runtime = self.runtime_config.lock();
-        let config_yaml = Some(serde_yaml::to_string(&config).unwrap_or("".into()));
-        *runtime = RuntimeResult {
-            config: Some(config),
-            config_yaml,
-            exists_keys,
-            chain_logs: logs,
-        };
 
         Ok(())
     }

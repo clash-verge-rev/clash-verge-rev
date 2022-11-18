@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import {
   getProfiles,
   patchProfile,
-  selectProfile,
+  patchProfilesConfig,
   importProfile,
 } from "@/services/cmds";
 import { getProxies, updateProxy } from "@/services/api";
@@ -113,7 +113,7 @@ const ProfilePage = () => {
 
         if (!newProfiles.current && remoteItem) {
           const current = remoteItem.uid;
-          selectProfile(current);
+          patchProfilesConfig({ current });
           mutate("getProfiles", { ...newProfiles, current }, true);
           mutate("getRuntimeLogs");
         }
@@ -125,13 +125,13 @@ const ProfilePage = () => {
     }
   };
 
-  const onSelect = useLockFn(async (uid: string, force: boolean) => {
-    if (!force && uid === profiles.current) return;
+  const onSelect = useLockFn(async (current: string, force: boolean) => {
+    if (!force && current === profiles.current) return;
 
     try {
-      await selectProfile(uid);
-      setCurrentProfile(uid);
-      mutate("getProfiles", { ...profiles, current: uid }, true);
+      await patchProfilesConfig({ current });
+      setCurrentProfile(current);
+      mutate("getProfiles", { ...profiles, current: current }, true);
       mutate("getRuntimeLogs");
       // if (force) Notice.success("Refresh clash config", 1000);
     } catch (err: any) {

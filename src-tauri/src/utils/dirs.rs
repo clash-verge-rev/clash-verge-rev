@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::{env::temp_dir, path::PathBuf};
+use std::path::PathBuf;
 use tauri::{
     api::path::{home_dir, resource_dir},
     Env, PackageInfo,
@@ -105,14 +105,6 @@ pub fn verge_path() -> Result<PathBuf> {
 
 pub fn profiles_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
-}
-
-pub fn clash_runtime_yaml() -> Result<PathBuf> {
-    Ok(app_home_dir()?.join("clash-verge-runtime.yaml"))
-}
-
-pub fn clash_check_yaml() -> Result<PathBuf> {
-    Ok(temp_dir().join("clash-verge-check.yaml"))
 }
 
 pub fn app_res_dir() -> Result<PathBuf> {

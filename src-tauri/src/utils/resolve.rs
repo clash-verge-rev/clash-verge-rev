@@ -10,9 +10,10 @@ pub fn resolve_setup(app: &mut App) {
 
     handle::Handle::global().init(app.app_handle());
 
-    init::init_resources(app.package_info());
+    log_err!(init::init_resources(app.package_info()));
 
     // 启动核心
+    log_err!(Config::init_config());
     log_err!(CoreManager::global().init());
 
     // setup a simple http server for singleton

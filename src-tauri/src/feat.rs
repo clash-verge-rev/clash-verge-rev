@@ -1,3 +1,9 @@
+//！
+//! feat mod 里的函数主要用于
+//! - hotkey 快捷键
+//! - timer 定时器
+//! - cmds 页面调用
+//!
 use crate::config::*;
 use crate::core::*;
 use crate::log_err;
@@ -8,8 +14,14 @@ use serde_yaml::{Mapping, Value};
 pub fn restart_clash_core() {
     tauri::async_runtime::spawn(async {
         match CoreManager::global().run_core().await {
-            Ok(_) => log_err!(handle_activate().await),
-            Err(err) => log::error!(target: "app", "{err}"),
+            Ok(_) => {
+                handle::Handle::refresh_clash();
+                handle::Handle::notice_message("set_config::ok", "ok");
+            }
+            Err(err) => {
+                handle::Handle::notice_message("set_config::error", format!("{err}"));
+                log::error!(target:"app", "{err}");
+            }
         }
     });
 }
@@ -157,7 +169,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             || patch.get("secret").is_some()
             || patch.get("external-controller").is_some()
         {
-            handle_activate().await?;
+            CoreManager::global().run_core().await?;
         }
 
         // 更新系统代理
@@ -196,10 +208,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
 
     match {
         #[cfg(target_os = "windows")]
-        {}
+        {
+            todo!()
+        }
 
         if tun_mode.is_some() {
-            handle_activate().await?;
+            update_core_config().await?;
         }
 
         if auto_launch.is_some() {
@@ -238,21 +252,6 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     }
 }
 
-/// 激活配置
-pub async fn handle_activate() -> Result<()> {
-    match CoreManager::global().activate_config().await {
-        Ok(_) => {
-            handle::Handle::refresh_clash();
-            handle::Handle::notice_message("set_config::ok", "ok");
-            Ok(())
-        }
-        Err(err) => {
-            handle::Handle::notice_message("set_config::error", format!("{err}"));
-            Err(err)
-        }
-    }
-}
-
 /// 更新某个profile
 /// 如果更新当前配置就激活配置
 pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()> {
@@ -286,8 +285,23 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
     };
 
     if should_update {
-        handle_activate().await?;
+        update_core_config().await?;
     }
 
     Ok(())
+}
+
+/// 更新配置
+async fn update_core_config() -> Result<()> {
+    match CoreManager::global().update_config().await {
+        Ok(_) => {
+            handle::Handle::refresh_clash();
+            handle::Handle::notice_message("set_config::ok", "ok");
+            Ok(())
+        }
+        Err(err) => {
+            handle::Handle::notice_message("set_config::error", format!("{err}"));
+            Err(err)
+        }
+    }
 }

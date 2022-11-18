@@ -15,9 +15,9 @@ import {
 } from "@mui/material";
 import { InfoRounded } from "@mui/icons-material";
 import {
-  changeProfileValid,
   getProfiles,
   getRuntimeExists,
+  patchProfilesConfig,
 } from "@/services/cmds";
 import { ModalHandler } from "@/hooks/use-modal-handler";
 import {
@@ -91,7 +91,7 @@ const ClashFieldViewer = ({ handler }: Props) => {
     if (curSet.size === oldSet.size && curSet.size === joinSet.size) return;
 
     try {
-      await changeProfileValid([...curSet]);
+      await patchProfilesConfig({ valid: [...curSet] });
       mutateProfile();
       // Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
