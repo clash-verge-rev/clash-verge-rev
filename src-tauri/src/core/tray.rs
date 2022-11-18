@@ -116,6 +116,7 @@ impl Tray {
                     resolve::resolve_reset();
                     api::process::kill_children();
                     app_handle.exit(0);
+                    std::process::exit(0);
                 }
                 _ => {}
             },

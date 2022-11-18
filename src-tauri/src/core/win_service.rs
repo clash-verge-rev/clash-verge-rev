@@ -98,10 +98,11 @@ pub async fn check_service() -> Result<JsonResponse> {
         .build()?
         .get(url)
         .send()
-        .await?
+        .await
+        .context("failed to connect to the Clash Verge Service")?
         .json::<JsonResponse>()
         .await
-        .context("failed to connect to the Clash Verge Service")?;
+        .context("failed to parse the Clash Verge Service response")?;
 
     Ok(response)
 }
