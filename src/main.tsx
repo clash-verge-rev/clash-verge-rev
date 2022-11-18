@@ -1,7 +1,6 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-svgr/client" />
 import "./assets/styles/index.scss";
-import "@/utils/polyfill";
 
 import React from "react";
 import ReactDOM from "react-dom";
