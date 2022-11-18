@@ -1,48 +1,43 @@
-use crate::{
-    core::{tray, Core},
-    data::Data,
-    utils::init,
-    utils::server,
-};
+use crate::config::Config;
+use crate::log_err;
+use crate::{core::*, utils::init, utils::server};
 use tauri::{App, AppHandle, Manager};
 
 /// handle something when start app
-pub fn resolve_setup(app: &App) {
-    let _ = app
-        .tray_handle()
-        .set_menu(tray::Tray::tray_menu(&app.app_handle()));
+pub fn resolve_setup(app: &mut App) {
+    #[cfg(target_os = "macos")]
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-    init::init_resources(app.package_info());
+    handle::Handle::global().init(app.app_handle());
 
-    let silent_start = {
-        let global = Data::global();
-        let verge = global.verge.lock();
-        let singleton = verge.app_singleton_port.clone();
+    log_err!(init::init_resources(app.package_info()));
 
-        // setup a simple http server for singleton
-        server::embed_server(&app.app_handle(), singleton);
+    // 启动核心
+    log_err!(Config::init_config());
+    log_err!(CoreManager::global().init());
 
-        verge.enable_silent_start.clone().unwrap_or(false)
-    };
+    // setup a simple http server for singleton
+    server::embed_server(app.app_handle());
 
-    // core should be initialized after init_app fix #122
-    let core = Core::global();
-    core.init(app.app_handle());
+    log_err!(tray::Tray::update_systray(&app.app_handle()));
 
-    if !silent_start {
+    let silent_start = { Config::verge().data().enable_silent_start.clone() };
+    if !silent_start.unwrap_or(false) {
         create_window(&app.app_handle());
     }
+
+    log_err!(sysopt::Sysopt::global().init_launch());
+    log_err!(sysopt::Sysopt::global().init_sysproxy());
+
+    log_err!(handle::Handle::update_systray_part());
+    log_err!(hotkey::Hotkey::global().init(app.app_handle()));
+    log_err!(timer::Timer::global().init());
 }
 
 /// reset system proxy
 pub fn resolve_reset() {
-    let core = Core::global();
-    let mut sysopt = core.sysopt.lock();
-    crate::log_if_err!(sysopt.reset_sysproxy());
-    drop(sysopt);
-
-    let mut service = core.service.lock();
-    crate::log_if_err!(service.stop());
+    log_err!(sysopt::Sysopt::global().reset_sysproxy());
+    log_err!(CoreManager::global().stop_core());
 }
 
 /// create main window
@@ -66,31 +61,31 @@ pub fn create_window(app_handle: &AppHandle) {
 
     #[cfg(target_os = "windows")]
     {
-        use crate::utils::winhelp;
         use std::time::Duration;
         use tokio::time::sleep;
         use window_shadows::set_shadow;
-        use window_vibrancy::apply_blur;
 
         match builder
             .decorations(false)
             .transparent(true)
             .inner_size(800.0, 636.0)
+            .visible(false)
             .build()
         {
             Ok(_) => {
                 let app_handle = app_handle.clone();
+
+                if let Some(window) = app_handle.get_window("main") {
+                    let _ = set_shadow(&window, true);
+                }
 
                 tauri::async_runtime::spawn(async move {
                     sleep(Duration::from_secs(1)).await;
 
                     if let Some(window) = app_handle.get_window("main") {
                         let _ = window.show();
-                        let _ = set_shadow(&window, true);
-
-                        if !winhelp::is_win11() {
-                            let _ = apply_blur(&window, None);
-                        }
+                        let _ = window.unminimize();
+                        let _ = window.set_focus();
                     }
                 });
             }
@@ -99,10 +94,10 @@ pub fn create_window(app_handle: &AppHandle) {
     }
 
     #[cfg(target_os = "macos")]
-    crate::log_if_err!(builder.decorations(true).inner_size(800.0, 642.0).build());
+    crate::log_err!(builder.decorations(true).inner_size(800.0, 642.0).build());
 
     #[cfg(target_os = "linux")]
-    crate::log_if_err!(builder
+    crate::log_err!(builder
         .decorations(false)
         .transparent(true)
         .inner_size(800.0, 636.0)

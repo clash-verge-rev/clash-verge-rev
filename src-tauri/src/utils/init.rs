@@ -1,4 +1,4 @@
-use crate::utils::{dirs, tmpl};
+use crate::utils::dirs;
 use anyhow::Result;
 use chrono::Local;
 use log::LevelFilter;
@@ -7,27 +7,33 @@ use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::fs;
-use std::io::Write;
 use tauri::PackageInfo;
 
 /// initialize this instance's log file
 fn init_log() -> Result<()> {
-    let log_dir = dirs::app_logs_dir();
+    let log_dir = dirs::app_logs_dir()?;
     if !log_dir.exists() {
         let _ = fs::create_dir_all(&log_dir);
     }
 
-    let local_time = Local::now().format("%Y-%m-%d-%H%M%S").to_string();
+    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{}.log", local_time);
     let log_file = log_dir.join(log_file);
 
-    let time_format = "{d(%Y-%m-%d %H:%M:%S)} - {m}{n}";
-    let stdout = ConsoleAppender::builder()
-        .encoder(Box::new(PatternEncoder::new(time_format)))
-        .build();
-    let tofile = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new(time_format)))
-        .build(log_file)?;
+    #[cfg(feature = "verge-dev")]
+    let time_format = "{d(%Y-%m-%d %H:%M:%S)} {l} - {M} {m}{n}";
+    #[cfg(not(feature = "verge-dev"))]
+    let time_format = "{d(%Y-%m-%d %H:%M:%S)} {l} - {m}{n}";
+
+    let encode = Box::new(PatternEncoder::new(time_format));
+
+    let stdout = ConsoleAppender::builder().encoder(encode.clone()).build();
+    let tofile = FileAppender::builder().encoder(encode).build(log_file)?;
+
+    #[cfg(feature = "verge-dev")]
+    let level = LevelFilter::Debug;
+    #[cfg(not(feature = "verge-dev"))]
+    let level = LevelFilter::Info;
 
     let config = Config::builder()
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
@@ -36,9 +42,9 @@ fn init_log() -> Result<()> {
             Logger::builder()
                 .appenders(["file", "stdout"])
                 .additive(false)
-                .build("app", LevelFilter::Info),
+                .build("app", level),
         )
-        .build(Root::builder().appender("stdout").build(LevelFilter::Info))?;
+        .build(Root::builder().appender("stdout").build(level))?;
 
     log4rs::init_config(config)?;
 
@@ -47,44 +53,32 @@ fn init_log() -> Result<()> {
 
 /// Initialize all the files from resources
 pub fn init_config() -> Result<()> {
+    #[cfg(target_os = "windows")]
+    unsafe {
+        let _ = dirs::init_portable_flag();
+    }
+
     let _ = init_log();
 
-    let app_dir = dirs::app_home_dir();
-    let profiles_dir = dirs::app_profiles_dir();
+    let _ = dirs::app_home_dir().map(|app_dir| {
+        if !app_dir.exists() {
+            let _ = fs::create_dir_all(&app_dir);
+        }
+    });
 
-    if !app_dir.exists() {
-        let _ = fs::create_dir_all(&app_dir);
-    }
-    if !profiles_dir.exists() {
-        let _ = fs::create_dir_all(&profiles_dir);
-    }
+    let _ = dirs::app_profiles_dir().map(|profiles_dir| {
+        if !profiles_dir.exists() {
+            let _ = fs::create_dir_all(&profiles_dir);
+        }
+    });
 
-    // target path
-    let clash_path = app_dir.join("config.yaml");
-    let verge_path = app_dir.join("verge.yaml");
-    let profile_path = app_dir.join("profiles.yaml");
-
-    if !clash_path.exists() {
-        fs::File::create(clash_path)?.write(tmpl::CLASH_CONFIG)?;
-    }
-    if !verge_path.exists() {
-        fs::File::create(verge_path)?.write(tmpl::VERGE_CONFIG)?;
-    }
-    if !profile_path.exists() {
-        fs::File::create(profile_path)?.write(tmpl::PROFILES_CONFIG)?;
-    }
     Ok(())
 }
 
 /// initialize app
-pub fn init_resources(package_info: &PackageInfo) {
-    // create app dir
-    let app_dir = dirs::app_home_dir();
-    let res_dir = dirs::app_resources_dir(package_info);
-
-    if !app_dir.exists() {
-        let _ = fs::create_dir_all(&app_dir);
-    }
+pub fn init_resources(package_info: &PackageInfo) -> Result<()> {
+    let app_dir = dirs::app_home_dir()?;
+    let res_dir = dirs::app_resources_dir(package_info)?;
 
     // copy the resource file
     for file in ["Country.mmdb", "geoip.dat", "geosite.dat", "wintun.dll"].iter() {
@@ -94,4 +88,6 @@ pub fn init_resources(package_info: &PackageInfo) {
             let _ = fs::copy(src_path, target_path);
         }
     }
+
+    Ok(())
 }

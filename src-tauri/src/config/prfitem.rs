@@ -1,10 +1,12 @@
-use crate::utils::{config, dirs, help, tmpl};
+use crate::utils::{dirs, help, tmpl};
 use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::fs;
 use sysproxy::Sysproxy;
+
+use super::Config;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PrfItem {
@@ -29,7 +31,7 @@ pub struct PrfItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 
-    /// selected infomation
+    /// selected information
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected: Option<Vec<PrfSelected>>,
 
@@ -170,7 +172,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
-            updated: Some(help::get_now()),
+            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
         })
     }
@@ -192,9 +194,9 @@ impl PrfItem {
 
         // 使用软件自己的代理
         if self_proxy {
-            let data = super::Data::global();
-            let port = data.clash.lock().info.port.clone();
+            let port = Config::clash().data().get_info()?.port;
             let port = port.ok_or(anyhow::anyhow!("failed to get clash info port"))?;
+
             let proxy_scheme = format!("http://127.0.0.1:{port}");
 
             if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
@@ -299,7 +301,7 @@ impl PrfItem {
             selected: None,
             extra,
             option,
-            updated: Some(help::get_now()),
+            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(data),
         })
     }
@@ -320,13 +322,13 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
-            updated: Some(help::get_now()),
+            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_MERGE.into()),
         })
     }
 
     /// ## Script type (enhance)
-    /// create the enhanced item by using javascript(browserjs)
+    /// create the enhanced item by using javascript quick.js
     pub fn from_script(name: String, desc: String) -> Result<PrfItem> {
         let uid = help::get_uid("s");
         let file = format!("{uid}.js"); // js ext
@@ -341,7 +343,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
-            updated: Some(help::get_now()),
+            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
         })
     }
@@ -353,7 +355,7 @@ impl PrfItem {
         }
 
         let file = self.file.clone().unwrap();
-        let path = dirs::app_profiles_dir().join(file);
+        let path = dirs::app_profiles_dir()?.join(file);
         fs::read_to_string(path).context("failed to read the file")
     }
 
@@ -364,7 +366,7 @@ impl PrfItem {
         }
 
         let file = self.file.clone().unwrap();
-        let path = dirs::app_profiles_dir().join(file);
+        let path = dirs::app_profiles_dir()?.join(file);
         fs::write(path, data.as_bytes()).context("failed to save the file")
     }
 
@@ -373,7 +375,7 @@ impl PrfItem {
         let itype = self.itype.as_ref()?.as_str();
         let file = self.file.clone()?;
         let uid = self.uid.clone().unwrap_or("".into());
-        let path = dirs::app_profiles_dir().join(file);
+        let path = dirs::app_profiles_dir().ok()?.join(file);
 
         if !path.exists() {
             return None;
@@ -382,11 +384,11 @@ impl PrfItem {
         match itype {
             "script" => Some(ChainItem {
                 uid,
-                data: ChainType::Script(fs::read_to_string(path).unwrap_or("".into())),
+                data: ChainType::Script(fs::read_to_string(path).ok()?),
             }),
             "merge" => Some(ChainItem {
                 uid,
-                data: ChainType::Merge(config::read_merge_mapping(path)),
+                data: ChainType::Merge(help::read_merge_mapping(&path).ok()?),
             }),
             _ => None,
         }

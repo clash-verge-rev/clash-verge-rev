@@ -1,12 +1,11 @@
-use crate::utils::{config, dirs};
+use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct Verge {
-    /// app listening port
-    /// for app singleton
+pub struct IVerge {
+    /// app listening port for app singleton
     pub app_singleton_port: Option<u16>,
 
     // i18n
@@ -48,7 +47,7 @@ pub struct Verge {
     pub proxy_guard_duration: Option<u64>,
 
     /// theme setting
-    pub theme_setting: Option<VergeTheme>,
+    pub theme_setting: Option<IVergeTheme>,
 
     /// web ui list
     pub web_ui_list: Option<Vec<String>>,
@@ -69,7 +68,7 @@ pub struct Verge {
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct VergeTheme {
+pub struct IVergeTheme {
     pub primary_color: Option<String>,
     pub secondary_color: Option<String>,
     pub primary_text: Option<String>,
@@ -84,23 +83,42 @@ pub struct VergeTheme {
     pub css_injection: Option<String>,
 }
 
-impl Verge {
+impl IVerge {
     pub fn new() -> Self {
-        config::read_yaml::<Verge>(dirs::verge_path())
+        match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
+            Ok(config) => config,
+            Err(err) => {
+                log::error!(target: "app", "{err}");
+                Self::template()
+            }
+        }
     }
 
-    /// Save Verge App Config
+    pub fn template() -> Self {
+        Self {
+            clash_core: Some("clash".into()),
+            language: Some("en".into()),
+            theme_mode: Some("system".into()),
+            theme_blur: Some(false),
+            traffic_graph: Some(true),
+            enable_auto_launch: Some(false),
+            enable_silent_start: Some(false),
+            enable_system_proxy: Some(false),
+            enable_proxy_guard: Some(false),
+            proxy_guard_duration: Some(30),
+            auto_close_connection: Some(true),
+            ..Self::default()
+        }
+    }
+
+    /// Save IVerge App Config
     pub fn save_file(&self) -> Result<()> {
-        config::save_yaml(
-            dirs::verge_path(),
-            self,
-            Some("# The Config for Clash Verge App\n\n"),
-        )
+        help::save_yaml(&dirs::verge_path()?, &self, Some("# Clash Verge Config"))
     }
 
     /// patch verge config
     /// only save to file
-    pub fn patch_config(&mut self, patch: Verge) -> Result<()> {
+    pub fn patch_config(&mut self, patch: IVerge) {
         macro_rules! patch {
             ($key: tt) => {
                 if patch.$key.is_some() {
@@ -130,7 +148,18 @@ impl Verge {
 
         patch!(auto_close_connection);
         patch!(default_latency_test);
+    }
 
-        self.save_file()
+    /// 在初始化前尝试拿到单例端口的值
+    pub fn get_singleton_port() -> u16 {
+        #[cfg(not(feature = "verge-dev"))]
+        const SERVER_PORT: u16 = 33331;
+        #[cfg(feature = "verge-dev")]
+        const SERVER_PORT: u16 = 11233;
+
+        match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
+            Ok(config) => config.app_singleton_port.unwrap_or(SERVER_PORT),
+            Err(_) => SERVER_PORT, // 这里就不log错误了
+        }
     }
 }

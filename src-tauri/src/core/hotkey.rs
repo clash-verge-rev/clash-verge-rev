@@ -1,52 +1,58 @@
-use crate::{data::*, feat, log_if_err};
+use crate::{config::Config, feat, log_err};
 use anyhow::{bail, Result};
-use std::collections::HashMap;
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
+use std::{collections::HashMap, sync::Arc};
 use tauri::{AppHandle, GlobalShortcutManager};
 
 pub struct Hotkey {
-    current: Vec<String>, // 保存当前的热键设置
-    manager: Option<AppHandle>,
+    current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
+
+    app_handle: Arc<Mutex<Option<AppHandle>>>,
 }
 
 impl Hotkey {
-    pub fn new() -> Hotkey {
-        Hotkey {
-            current: Vec::new(),
-            manager: None,
-        }
+    pub fn global() -> &'static Hotkey {
+        static HOTKEY: OnceCell<Hotkey> = OnceCell::new();
+
+        HOTKEY.get_or_init(|| Hotkey {
+            current: Arc::new(Mutex::new(Vec::new())),
+            app_handle: Arc::new(Mutex::new(None)),
+        })
     }
 
-    pub fn init(&mut self, app_handle: AppHandle) -> Result<()> {
-        self.manager = Some(app_handle);
-        let data = Data::global();
-        let verge = data.verge.lock();
+    pub fn init(&self, app_handle: AppHandle) -> Result<()> {
+        *self.app_handle.lock() = Some(app_handle);
 
-        if let Some(hotkeys) = verge.hotkeys.as_ref() {
+        let verge = Config::verge();
+
+        if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
                 let func = iter.next();
                 let key = iter.next();
 
                 if func.is_some() && key.is_some() {
-                    log_if_err!(self.register(key.unwrap(), func.unwrap()));
+                    log_err!(self.register(key.unwrap(), func.unwrap()));
                 } else {
                     log::error!(target: "app", "invalid hotkey \"{}\":\"{}\"", key.unwrap_or("None"), func.unwrap_or("None"));
                 }
             }
-            self.current = hotkeys.clone();
+            *self.current.lock() = hotkeys.clone();
         }
 
         Ok(())
     }
 
     fn get_manager(&self) -> Result<impl GlobalShortcutManager> {
-        if self.manager.is_none() {
+        let app_handle = self.app_handle.lock();
+        if app_handle.is_none() {
             bail!("failed to get hotkey manager");
         }
-        Ok(self.manager.as_ref().unwrap().global_shortcut_manager())
+        Ok(app_handle.as_ref().unwrap().global_shortcut_manager())
     }
 
-    fn register(&mut self, hotkey: &str, func: &str) -> Result<()> {
+    fn register(&self, hotkey: &str, func: &str) -> Result<()> {
         let mut manager = self.get_manager()?;
 
         if manager.is_registered(hotkey)? {
@@ -54,10 +60,10 @@ impl Hotkey {
         }
 
         let f = match func.trim() {
-            "clash_mode_rule" => || feat::change_clash_mode("rule"),
-            "clash_mode_global" => || feat::change_clash_mode("global"),
-            "clash_mode_direct" => || feat::change_clash_mode("direct"),
-            "clash_mode_script" => || feat::change_clash_mode("script"),
+            "clash_mode_rule" => || feat::change_clash_mode("rule".into()),
+            "clash_mode_global" => || feat::change_clash_mode("global".into()),
+            "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
+            "clash_mode_script" => || feat::change_clash_mode("script".into()),
             "toggle_system_proxy" => || feat::toggle_system_proxy(),
             "enable_system_proxy" => || feat::enable_system_proxy(),
             "disable_system_proxy" => || feat::disable_system_proxy(),
@@ -73,14 +79,14 @@ impl Hotkey {
         Ok(())
     }
 
-    fn unregister(&mut self, hotkey: &str) -> Result<()> {
+    fn unregister(&self, hotkey: &str) -> Result<()> {
         self.get_manager()?.unregister(&hotkey)?;
         log::info!(target: "app", "unregister hotkey {hotkey}");
         Ok(())
     }
 
-    pub fn update(&mut self, new_hotkeys: Vec<String>) -> Result<()> {
-        let current = self.current.to_owned();
+    pub fn update(&self, new_hotkeys: Vec<String>) -> Result<()> {
+        let mut current = self.current.lock();
         let old_map = Self::get_map_from_vec(&current);
         let new_map = Self::get_map_from_vec(&new_hotkeys);
 
@@ -91,10 +97,10 @@ impl Hotkey {
         });
 
         add.iter().for_each(|(key, func)| {
-            log_if_err!(self.register(key, func));
+            log_err!(self.register(key, func));
         });
 
-        self.current = new_hotkeys;
+        *current = new_hotkeys;
         Ok(())
     }
 
