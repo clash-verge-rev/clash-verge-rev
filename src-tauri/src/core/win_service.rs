@@ -8,6 +8,7 @@ use runas::Command as RunasCommand;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::os::windows::process::CommandExt;
+use std::path::PathBuf;
 use std::time::Duration;
 use std::{env::current_exe, process::Command as StdCommand};
 use tokio::time::sleep;
@@ -32,7 +33,7 @@ pub struct JsonResponse {
 /// Install the Clash Verge Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 pub async fn install_service() -> Result<()> {
-    let binary_path = dirs::service_path();
+    let binary_path = dirs::service_path()?;
     let install_path = binary_path.with_file_name("install-service.exe");
 
     if !install_path.exists() {
@@ -62,7 +63,7 @@ pub async fn install_service() -> Result<()> {
 /// Uninstall the Clash Verge Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 pub async fn uninstall_service() -> Result<()> {
-    let binary_path = dirs::service_path();
+    let binary_path = dirs::service_path()?;
     let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
 
     if !uninstall_path.exists() {
@@ -106,7 +107,7 @@ pub async fn check_service() -> Result<JsonResponse> {
 }
 
 /// start the clash by service
-pub(super) async fn run_core_by_service() -> Result<()> {
+pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     let status = check_service().await?;
 
     if status.code == 0 {
@@ -121,16 +122,19 @@ pub(super) async fn run_core_by_service() -> Result<()> {
     let bin_path = current_exe()?.with_file_name(clash_bin);
     let bin_path = dirs::path_to_str(&bin_path)?;
 
-    let config_dir = dirs::app_home_dir();
+    let config_dir = dirs::app_home_dir()?;
     let config_dir = dirs::path_to_str(&config_dir)?;
 
-    let log_path = dirs::service_log_file();
+    let log_path = dirs::service_log_file()?;
     let log_path = dirs::path_to_str(&log_path)?;
+
+    let config_file = dirs::path_to_str(config_file)?;
 
     let mut map = HashMap::new();
     map.insert("core_type", clash_core.as_str());
     map.insert("bin_path", bin_path);
     map.insert("config_dir", config_dir);
+    map.insert("config_file", config_file);
     map.insert("log_file", log_path);
 
     let url = format!("{SERVICE_URL}/start_clash");

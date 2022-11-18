@@ -74,6 +74,10 @@ impl CoreManager {
     pub async fn run_core(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Run)?;
 
+        if let Some(child) = self.sidecar.lock().take() {
+            let _ = child.kill();
+        }
+
         #[cfg(target_os = "windows")]
         {
             use super::win_service;
@@ -90,7 +94,7 @@ impl CoreManager {
                 // 服务模式启动失败就直接运行sidecar
                 match {
                     win_service::check_service().await?;
-                    win_service::run_core_by_service().await
+                    win_service::run_core_by_service(&config_path).await
                 } {
                     Ok(_) => return Ok(()),
                     Err(err) => {
@@ -101,12 +105,6 @@ impl CoreManager {
                     }
                 }
             }
-        }
-
-        let mut sidecar = self.sidecar.lock();
-
-        if let Some(child) = sidecar.take() {
-            let _ = child.kill();
         }
 
         let app_dir = dirs::app_home_dir()?;
@@ -137,6 +135,7 @@ impl CoreManager {
             <Result<()>>::Ok(())
         });
 
+        let mut sidecar = self.sidecar.lock();
         *sidecar = Some(cmd_child);
 
         tauri::async_runtime::spawn(async move {
@@ -192,6 +191,8 @@ impl CoreManager {
         if &clash_core != "clash" && &clash_core != "clash-meta" {
             bail!("invalid clash core name \"{clash_core}\"");
         }
+
+        log::debug!(target: "app", "change core to `{clash_core}`");
 
         Config::verge().draft().clash_core = Some(clash_core);
 
