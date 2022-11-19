@@ -21,23 +21,23 @@ export async function getClashLogs() {
       }
       return null;
     })
-    .filter(Boolean) as ApiType.LogItem[];
+    .filter(Boolean) as ILogItem[];
 }
 
 export async function getProfiles() {
-  return invoke<CmdType.ProfilesConfig>("get_profiles");
+  return invoke<IProfilesConfig>("get_profiles");
 }
 
 export async function enhanceProfiles() {
   return invoke<void>("enhance_profiles");
 }
 
-export async function patchProfilesConfig(profiles: CmdType.ProfilesConfig) {
+export async function patchProfilesConfig(profiles: IProfilesConfig) {
   return invoke<void>("patch_profiles_config", { profiles });
 }
 
 export async function createProfile(
-  item: Partial<CmdType.ProfileItem>,
+  item: Partial<IProfileItem>,
   fileData?: string | null
 ) {
   return invoke<void>("create_profile", { item, fileData });
@@ -62,10 +62,7 @@ export async function importProfile(url: string) {
   });
 }
 
-export async function updateProfile(
-  index: string,
-  option?: CmdType.ProfileOption
-) {
+export async function updateProfile(index: string, option?: IProfileOption) {
   return invoke<void>("update_profile", { index, option });
 }
 
@@ -75,13 +72,13 @@ export async function deleteProfile(index: string) {
 
 export async function patchProfile(
   index: string,
-  profile: Partial<CmdType.ProfileItem>
+  profile: Partial<IProfileItem>
 ) {
   return invoke<void>("patch_profile", { index, profile });
 }
 
 export async function getClashInfo() {
-  return invoke<CmdType.ClashInfo | null>("get_clash_info");
+  return invoke<IClashInfo | null>("get_clash_info");
 }
 
 export async function getRuntimeConfig() {
@@ -100,15 +97,15 @@ export async function getRuntimeLogs() {
   return invoke<Record<string, [string, string][]>>("get_runtime_logs");
 }
 
-export async function patchClashConfig(payload: Partial<ApiType.ConfigData>) {
+export async function patchClashConfig(payload: Partial<IConfigData>) {
   return invoke<void>("patch_clash_config", { payload });
 }
 
 export async function getVergeConfig() {
-  return invoke<CmdType.VergeConfig>("get_verge_config");
+  return invoke<IVergeConfig>("get_verge_config");
 }
 
-export async function patchVergeConfig(payload: CmdType.VergeConfig) {
+export async function patchVergeConfig(payload: IVergeConfig) {
   return invoke<void>("patch_verge_config", { payload });
 }
 

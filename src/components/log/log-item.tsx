@@ -20,7 +20,7 @@ const Item = styled(Box)(({ theme }) => ({
 }));
 
 interface Props {
-  value: ApiType.LogItem;
+  value: ILogItem;
 }
 
 const LogItem = (props: Props) => {

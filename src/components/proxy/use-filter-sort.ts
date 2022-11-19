@@ -5,7 +5,7 @@ import delayManager from "@/services/delay";
 export type ProxySortType = 0 | 1 | 2;
 
 export default function useFilterSort(
-  proxies: ApiType.ProxyItem[],
+  proxies: IProxyItem[],
   groupName: string,
   filterText: string,
   sortType: ProxySortType
@@ -47,7 +47,7 @@ const regex2 = /type=(.*)/i;
  * according to the regular conditions
  */
 function filterProxies(
-  proxies: ApiType.ProxyItem[],
+  proxies: IProxyItem[],
   groupName: string,
   filterText: string
 ) {
@@ -87,7 +87,7 @@ function filterProxies(
  * sort the proxy
  */
 function sortProxies(
-  proxies: ApiType.ProxyItem[],
+  proxies: IProxyItem[],
   groupName: string,
   sortType: ProxySortType
 ) {

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup } from "@mui/material";
 
-type ThemeValue = CmdType.VergeConfig["theme_mode"];
+type ThemeValue = IVergeConfig["theme_mode"];
 
 interface Props {
   value?: ThemeValue;

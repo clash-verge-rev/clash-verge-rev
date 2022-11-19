@@ -30,7 +30,7 @@ import ProxyHead from "./proxy-head";
 import ProxyItem from "./proxy-item";
 
 interface Props {
-  group: ApiType.ProxyGroupItem;
+  group: IProxyGroupItem;
 }
 
 const ProxyGroup = ({ group }: Props) => {

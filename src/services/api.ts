@@ -50,11 +50,11 @@ export async function getVersion() {
 /// Get current base configs
 export async function getClashConfig() {
   const instance = await getAxios();
-  return instance.get("/configs") as Promise<ApiType.ConfigData>;
+  return instance.get("/configs") as Promise<IConfigData>;
 }
 
 /// Update current configs
-export async function updateConfigs(config: Partial<ApiType.ConfigData>) {
+export async function updateConfigs(config: Partial<IConfigData>) {
   const instance = await getAxios();
   return instance.patch("/configs", config);
 }
@@ -63,7 +63,7 @@ export async function updateConfigs(config: Partial<ApiType.ConfigData>) {
 export async function getRules() {
   const instance = await getAxios();
   const response = await instance.get<any, any>("/rules");
-  return response?.rules as ApiType.RuleItem[];
+  return response?.rules as IRuleItem[];
 }
 
 /// Get Proxy delay
@@ -90,7 +90,7 @@ export async function updateProxy(group: string, proxy: string) {
 async function getProxiesInner() {
   const instance = await getAxios();
   const response = await instance.get<any, any>("/proxies");
-  return (response?.proxies || {}) as Record<string, ApiType.ProxyItem>;
+  return (response?.proxies || {}) as Record<string, IProxyItem>;
 }
 
 /// Get the Proxy information
@@ -116,7 +116,7 @@ export async function getProxies() {
 
   const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
 
-  let groups: ApiType.ProxyGroupItem[] = [];
+  let groups: IProxyGroupItem[] = [];
 
   if (global?.all) {
     groups = global.all
@@ -142,7 +142,7 @@ export async function getProxies() {
     )
   );
 
-  const _global: ApiType.ProxyGroupItem = {
+  const _global: IProxyGroupItem = {
     ...global,
     all: global?.all?.map((item) => generateItem(item)) || [],
   };
@@ -155,10 +155,7 @@ export async function getProviders() {
   const instance = await getAxios();
   const response = await instance.get<any, any>("/providers/proxies");
 
-  const providers = (response.providers || {}) as Record<
-    string,
-    ApiType.ProviderItem
-  >;
+  const providers = (response.providers || {}) as Record<string, IProviderItem>;
 
   return Object.fromEntries(
     Object.entries(providers).filter(([key, item]) => {
@@ -179,7 +176,7 @@ export async function providerHealthCheck(name: string) {
 export async function getConnections() {
   const instance = await getAxios();
   const result = await instance.get("/connections");
-  return result as any as ApiType.Connections;
+  return result as any as IConnections;
 }
 
 // Close specific connection

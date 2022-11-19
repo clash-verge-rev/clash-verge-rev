@@ -21,7 +21,7 @@ import Notice from "../base/base-notice";
 
 interface Props {
   selected: boolean;
-  itemData: CmdType.ProfileItem;
+  itemData: IProfileItem;
   enableNum: number;
   logInfo?: [string, string][];
   onEnable: () => void;

@@ -13,7 +13,7 @@ import ProxyItem from "./proxy-item";
 interface Props {
   groupName: string;
   curProxy?: string;
-  proxies: ApiType.ProxyItem[];
+  proxies: IProxyItem[];
 }
 
 // this component will be used for DIRECT/GLOBAL

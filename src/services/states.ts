@@ -10,7 +10,7 @@ export const atomClashPort = atom<number>({
   default: 0,
 });
 
-export const atomLogData = atom<ApiType.LogItem[]>({
+export const atomLogData = atom<ILogItem[]>({
   key: "atomLogData",
   default: [],
 });
@@ -50,10 +50,10 @@ export const atomConnectionSetting = atom<IConnectionSetting>({
 
       try {
         const value = localStorage.getItem(key);
-        const data = value == null ? { layout: "list" } : JSON.parse(value);
+        const data = value == null ? { layout: "table" } : JSON.parse(value);
         setSelf(data);
       } catch {
-        setSelf({ layout: "list" });
+        setSelf({ layout: "table" });
       }
 
       onSet((newValue) => {

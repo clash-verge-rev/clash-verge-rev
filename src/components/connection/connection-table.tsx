@@ -4,7 +4,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import parseTraffic from "@/utils/parse-traffic";
 
 interface Props {
-  connections: ApiType.ConnectionsItem[];
+  connections: IConnectionsItem[];
 }
 
 const ConnectionTable = (props: Props) => {

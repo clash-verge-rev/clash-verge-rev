@@ -14,7 +14,7 @@ import ProfileMore from "./profile-more";
 import Notice from "../base/base-notice";
 
 interface Props {
-  items: CmdType.ProfileItem[];
+  items: IProfileItem[];
   chain: string[];
 }
 
