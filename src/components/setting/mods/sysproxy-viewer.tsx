@@ -89,7 +89,7 @@ const SysproxyViewer = ({ handler }: Props) => {
       return;
     }
 
-    const patch: Partial<CmdType.VergeConfig> = {};
+    const patch: Partial<IVergeConfig> = {};
 
     if (value.guard !== enable_proxy_guard) {
       patch.enable_proxy_guard = value.guard;

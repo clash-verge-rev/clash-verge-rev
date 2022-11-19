@@ -29,7 +29,7 @@ const round = keyframes`
 
 interface Props {
   selected: boolean;
-  itemData: CmdType.ProfileItem;
+  itemData: IProfileItem;
   onSelect: (force: boolean) => void;
 }
 
@@ -117,7 +117,7 @@ const ProfileItem = (props: Props) => {
     setAnchorEl(null);
     setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }));
 
-    const option: Partial<CmdType.ProfileOption> = {};
+    const option: Partial<IProfileOption> = {};
 
     if (type === 0) {
       option.with_proxy = false;

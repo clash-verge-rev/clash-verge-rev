@@ -46,10 +46,10 @@ const SettingClash = ({ onError }: Props) => {
   const controllerHandler = useModalHandler();
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
-  const onChangeData = (patch: Partial<ApiType.ConfigData>) => {
+  const onChangeData = (patch: Partial<IConfigData>) => {
     mutateClash((old) => ({ ...(old! || {}), ...patch }), false);
   };
-  const onUpdateData = async (patch: Partial<ApiType.ConfigData>) => {
+  const onUpdateData = async (patch: Partial<IConfigData>) => {
     await updateConfigs(patch);
     await patchClashConfig(patch);
   };

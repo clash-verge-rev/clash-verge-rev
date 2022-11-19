@@ -21,7 +21,7 @@ export default function useLogSetup() {
     getClashLogs().then(setLogData);
 
     const handler = (event: MessageEvent<any>) => {
-      const data = JSON.parse(event.data) as ApiType.LogItem;
+      const data = JSON.parse(event.data) as ILogItem;
       const time = dayjs().format("MM-DD HH:mm:ss");
       setLogData((l) => {
         if (l.length >= MAX_LOG_NUM) l.shift();

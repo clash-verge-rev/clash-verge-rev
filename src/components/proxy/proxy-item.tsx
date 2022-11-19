@@ -17,7 +17,7 @@ import BaseLoading from "../base/base-loading";
 
 interface Props {
   groupName: string;
-  proxy: ApiType.ProxyItem;
+  proxy: IProxyItem;
   selected: boolean;
   showType?: boolean;
   sx?: SxProps<Theme>;

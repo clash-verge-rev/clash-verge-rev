@@ -45,7 +45,7 @@ const LayoutTraffic = () => {
       ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
 
       ws.addEventListener("message", (event) => {
-        const data = JSON.parse(event.data) as ApiType.TrafficItem;
+        const data = JSON.parse(event.data) as ITrafficItem;
         trafficRef.current?.appendData(data);
         setTraffic(data);
       });

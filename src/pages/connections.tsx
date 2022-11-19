@@ -22,14 +22,14 @@ import ConnectionTable from "@/components/connection/connection-table";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
-type OrderFunc = (list: ApiType.ConnectionsItem[]) => ApiType.ConnectionsItem[];
+type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
 const ConnectionsPage = () => {
   const { t, i18n } = useTranslation();
 
   const [filterText, setFilterText] = useState("");
   const [curOrderOpt, setOrderOpt] = useState("Default");
-  const [connData, setConnData] = useState<ApiType.Connections>(initConn);
+  const [connData, setConnData] = useState<IConnections>(initConn);
 
   const [setting, setSetting] = useRecoilState(atomConnectionSetting);
 
@@ -60,7 +60,7 @@ const ConnectionsPage = () => {
       ws = new WebSocket(`ws://${server}/connections?token=${secret}`);
 
       ws.addEventListener("message", (event) => {
-        const data = JSON.parse(event.data) as ApiType.Connections;
+        const data = JSON.parse(event.data) as IConnections;
 
         // 与前一次connections的展示顺序尽量保持一致
         setConnData((old) => {

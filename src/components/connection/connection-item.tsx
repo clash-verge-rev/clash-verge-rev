@@ -23,7 +23,7 @@ const Tag = styled("span")(({ theme }) => ({
 }));
 
 interface Props {
-  value: ApiType.ConnectionsItem;
+  value: IConnectionsItem;
 }
 
 const ConnectionItem = (props: Props) => {

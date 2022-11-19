@@ -46,7 +46,7 @@ const SettingSystem = ({ onError }: Props) => {
   } = vergeConfig ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
-  const onChangeData = (patch: Partial<CmdType.VergeConfig>) => {
+  const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...vergeConfig, ...patch }, false);
   };
 

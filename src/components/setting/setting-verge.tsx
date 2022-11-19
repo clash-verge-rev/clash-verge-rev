@@ -42,7 +42,7 @@ const SettingVerge = ({ onError }: Props) => {
   const [configOpen, setConfigOpen] = useState(false);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
-  const onChangeData = (patch: Partial<CmdType.VergeConfig>) => {
+  const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...vergeConfig, ...patch }, false);
   };
 

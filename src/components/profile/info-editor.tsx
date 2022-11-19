@@ -21,7 +21,7 @@ import Notice from "../base/base-notice";
 
 interface Props {
   open: boolean;
-  itemData: CmdType.ProfileItem;
+  itemData: IProfileItem;
   onClose: () => void;
 }
 

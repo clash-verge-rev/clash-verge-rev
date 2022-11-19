@@ -56,7 +56,7 @@ class DelayManager {
   }
 
   /// 暂时修复provider的节点延迟排序的问题
-  getDelayFix(proxy: ApiType.ProxyItem, group: string) {
+  getDelayFix(proxy: IProxyItem, group: string) {
     if (!proxy.provider) return this.getDelay(proxy.name, group);
 
     if (proxy.history.length > 0) {

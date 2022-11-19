@@ -19,7 +19,7 @@ const COLOR = [
 
 interface Props {
   index: number;
-  value: ApiType.RuleItem;
+  value: IRuleItem;
 }
 
 const parseColor = (text: string) => {
