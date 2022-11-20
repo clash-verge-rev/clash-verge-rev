@@ -8,7 +8,7 @@ interface Props {
   onChange?: (value: ThemeValue) => void;
 }
 
-const ThemeModeSwitch = (props: Props) => {
+export const ThemeModeSwitch = (props: Props) => {
   const { value, onChange } = props;
   const { t } = useTranslation();
 
@@ -29,5 +29,3 @@ const ThemeModeSwitch = (props: Props) => {
     </ButtonGroup>
   );
 };
-
-export default ThemeModeSwitch;

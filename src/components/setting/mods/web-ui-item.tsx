@@ -23,7 +23,7 @@ interface Props {
   onCancel?: () => void;
 }
 
-const WebUIItem = (props: Props) => {
+export const WebUIItem = (props: Props) => {
   const {
     value,
     onlyEdit = false,
@@ -128,5 +128,3 @@ const WebUIItem = (props: Props) => {
     </>
   );
 };
-
-export default WebUIItem;

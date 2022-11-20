@@ -1,28 +1,14 @@
 import useSWR from "swr";
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemText,
-  TextField,
-} from "@mui/material";
+import { List, ListItem, ListItemText, TextField } from "@mui/material";
 import { getClashInfo, patchClashConfig } from "@/services/cmds";
-import { ModalHandler } from "@/hooks/use-modal-handler";
 import { getAxios } from "@/services/api";
+import { BaseDialog, DialogRef } from "@/components/base";
 import Notice from "@/components/base/base-notice";
 
-interface Props {
-  handler: ModalHandler;
-}
-
-const ControllerViewer = ({ handler }: Props) => {
+export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -30,16 +16,14 @@ const ControllerViewer = ({ handler }: Props) => {
   const [controller, setController] = useState(clashInfo?.server || "");
   const [secret, setSecret] = useState(clashInfo?.secret || "");
 
-  if (handler) {
-    handler.current = {
-      open: () => {
-        setOpen(true);
-        setController(clashInfo?.server || "");
-        setSecret(clashInfo?.secret || "");
-      },
-      close: () => setOpen(false),
-    };
-  }
+  useImperativeHandle(ref, () => ({
+    open: () => {
+      setOpen(true);
+      setController(clashInfo?.server || "");
+      setSecret(clashInfo?.secret || "");
+    },
+    close: () => setOpen(false),
+  }));
 
   const onSave = useLockFn(async () => {
     try {
@@ -55,47 +39,41 @@ const ControllerViewer = ({ handler }: Props) => {
   });
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)}>
-      <DialogTitle>{t("Clash Port")}</DialogTitle>
+    <BaseDialog
+      open={open}
+      title={t("Clash Port")}
+      contentSx={{ width: 400 }}
+      okBtn={t("Save")}
+      cancelBtn={t("Cancel")}
+      onClose={() => setOpen(false)}
+      onCancel={() => setOpen(false)}
+      onOk={onSave}
+    >
+      <List>
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="External Controller" />
+          <TextField
+            size="small"
+            autoComplete="off"
+            sx={{ width: 175 }}
+            value={controller}
+            placeholder="Required"
+            onChange={(e) => setController(e.target.value)}
+          />
+        </ListItem>
 
-      <DialogContent sx={{ width: 400 }}>
-        <List>
-          <ListItem sx={{ padding: "5px 2px" }}>
-            <ListItemText primary="External Controller" />
-            <TextField
-              size="small"
-              autoComplete="off"
-              sx={{ width: 175 }}
-              value={controller}
-              placeholder="Required"
-              onChange={(e) => setController(e.target.value)}
-            />
-          </ListItem>
-
-          <ListItem sx={{ padding: "5px 2px" }}>
-            <ListItemText primary="Core Secret" />
-            <TextField
-              size="small"
-              autoComplete="off"
-              sx={{ width: 175 }}
-              value={secret}
-              placeholder="Recommanded"
-              onChange={(e) => setSecret(e.target.value)}
-            />
-          </ListItem>
-        </List>
-      </DialogContent>
-
-      <DialogActions>
-        <Button variant="outlined" onClick={() => setOpen(false)}>
-          {t("Cancel")}
-        </Button>
-        <Button onClick={onSave} variant="contained">
-          {t("Save")}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="Core Secret" />
+          <TextField
+            size="small"
+            autoComplete="off"
+            sx={{ width: 175 }}
+            value={secret}
+            placeholder="Recommended"
+            onChange={(e) => setSecret(e.target.value)}
+          />
+        </ListItem>
+      </List>
+    </BaseDialog>
   );
-};
-
-export default ControllerViewer;
+});

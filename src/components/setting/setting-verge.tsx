@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   IconButton,
@@ -10,15 +10,15 @@ import {
 import { openAppDir, openLogsDir, patchVergeConfig } from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
-import { SettingList, SettingItem } from "./setting";
 import { version } from "@root/package.json";
-import useModalHandler from "@/hooks/use-modal-handler";
-import ThemeModeSwitch from "./mods/theme-mode-switch";
-import ConfigViewer from "./mods/config-viewer";
-import HotkeyViewer from "./mods/hotkey-viewer";
-import GuardState from "./mods/guard-state";
-import MiscViewer from "./mods/misc-viewer";
-import SettingTheme from "./setting-theme";
+import { DialogRef } from "@/components/base";
+import { SettingList, SettingItem } from "./mods/setting-comp";
+import { ThemeModeSwitch } from "./mods/theme-mode-switch";
+import { ConfigViewer } from "./mods/config-viewer";
+import { HotkeyViewer } from "./mods/hotkey-viewer";
+import { MiscViewer } from "./mods/misc-viewer";
+import { ThemeViewer } from "./mods/theme-viewer";
+import { GuardState } from "./mods/guard-state";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -31,21 +31,22 @@ const SettingVerge = ({ onError }: Props) => {
 
   const { theme_mode, theme_blur, traffic_graph, language } = verge ?? {};
 
-  const [themeOpen, setThemeOpen] = useState(false);
-  const [configOpen, setConfigOpen] = useState(false);
+  const configRef = useRef<DialogRef>(null);
+  const hotkeyRef = useRef<DialogRef>(null);
+  const miscRef = useRef<DialogRef>(null);
+  const themeRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
 
-  const miscHandler = useModalHandler();
-  const hotkeyHandler = useModalHandler();
-
   return (
     <SettingList title={t("Verge Setting")}>
-      <HotkeyViewer handler={hotkeyHandler} />
-      <MiscViewer handler={miscHandler} />
+      <ThemeViewer ref={themeRef} />
+      <ConfigViewer ref={configRef} />
+      <HotkeyViewer ref={hotkeyRef} />
+      <MiscViewer ref={miscRef} />
 
       <SettingItem label={t("Language")}>
         <GuardState
@@ -104,7 +105,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => miscHandler.current.open()}
+          onClick={() => miscRef.current?.open()}
         >
           <ArrowForward />
         </IconButton>
@@ -115,7 +116,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => setThemeOpen(true)}
+          onClick={() => themeRef.current?.open()}
         >
           <ArrowForward />
         </IconButton>
@@ -126,7 +127,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => hotkeyHandler.current.open()}
+          onClick={() => hotkeyRef.current?.open()}
         >
           <ArrowForward />
         </IconButton>
@@ -137,7 +138,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => setConfigOpen(true)}
+          onClick={() => configRef.current?.open()}
         >
           <ArrowForward />
         </IconButton>
@@ -168,9 +169,6 @@ const SettingVerge = ({ onError }: Props) => {
       <SettingItem label={t("Verge Version")}>
         <Typography sx={{ py: "7px" }}>v{version}</Typography>
       </SettingItem>
-
-      <SettingTheme open={themeOpen} onClose={() => setThemeOpen(false)} />
-      <ConfigViewer open={configOpen} onClose={() => setConfigOpen(false)} />
     </SettingList>
   );
 };

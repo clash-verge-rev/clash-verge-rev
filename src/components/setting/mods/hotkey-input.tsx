@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { alpha, Box, IconButton, styled } from "@mui/material";
 import { DeleteRounded } from "@mui/icons-material";
 import parseHotkey from "@/utils/parse-hotkey";
@@ -52,7 +51,7 @@ interface Props {
   onChange: (value: string[]) => void;
 }
 
-const HotkeyInput = (props: Props) => {
+export const HotkeyInput = (props: Props) => {
   const { value, onChange } = props;
 
   return (
@@ -92,5 +91,3 @@ const HotkeyInput = (props: Props) => {
     </Box>
   );
 };
-
-export default HotkeyInput;
