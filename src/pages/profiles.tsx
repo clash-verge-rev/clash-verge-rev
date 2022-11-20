@@ -2,20 +2,22 @@ import useSWR, { mutate } from "swr";
 import { useLockFn } from "ahooks";
 import { useEffect, useMemo, useState } from "react";
 import { useSetRecoilState } from "recoil";
-import { Button, Grid, Stack, TextField } from "@mui/material";
+import { Box, Button, Grid, IconButton, Stack, TextField } from "@mui/material";
+import { CachedRounded } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
   getProfiles,
   patchProfile,
   patchProfilesConfig,
   importProfile,
+  enhanceProfiles,
 } from "@/services/cmds";
 import { getProxies, updateProxy } from "@/services/api";
 import { atomCurrentProfile } from "@/services/states";
 import { BasePage, Notice } from "@/components/base";
-import ProfileNew from "@/components/profile/profile-new";
-import ProfileItem from "@/components/profile/profile-item";
-import EnhancedMode from "@/components/profile/enhanced";
+import { ProfileNew } from "@/components/profile/profile-new";
+import { ProfileItem } from "@/components/profile/profile-item";
+import { EnhancedMode } from "@/components/profile/enhanced";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -138,8 +140,32 @@ const ProfilePage = () => {
     }
   });
 
+  const onEnhance = useLockFn(async () => {
+    try {
+      await enhanceProfiles();
+      mutate("getRuntimeLogs");
+      // Notice.success("Refresh clash config", 1000);
+    } catch (err: any) {
+      Notice.error(err.message || err.toString(), 3000);
+    }
+  });
+
   return (
-    <BasePage title={t("Profiles")}>
+    <BasePage
+      title={t("Profiles")}
+      header={
+        <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
+          <IconButton
+            size="small"
+            color="inherit"
+            title={t("Refresh profiles")}
+            onClick={onEnhance}
+          >
+            <CachedRounded />
+          </IconButton>
+        </Box>
+      }
+    >
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <TextField
           hiddenLabel
@@ -170,17 +196,19 @@ const ProfilePage = () => {
         </Button>
       </Stack>
 
-      <Grid container spacing={2}>
-        {regularItems.map((item) => (
-          <Grid item xs={12} sm={6} key={item.file}>
-            <ProfileItem
-              selected={profiles.current === item.uid}
-              itemData={item}
-              onSelect={(f) => onSelect(item.uid, f)}
-            />
-          </Grid>
-        ))}
-      </Grid>
+      <Box sx={{ mb: 4.5 }}>
+        <Grid container spacing={{ xs: 2, lg: 3 }}>
+          {regularItems.map((item) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
+              <ProfileItem
+                selected={profiles.current === item.uid}
+                itemData={item}
+                onSelect={(f) => onSelect(item.uid, f)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
 
       {enhanceItems.length > 0 && (
         <EnhancedMode items={enhanceItems} chain={profiles.chain || []} />

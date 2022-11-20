@@ -17,10 +17,10 @@ import { RefreshRounded } from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
+import { InfoViewer } from "./info-viewer";
+import { EditorViewer } from "./editor-viewer";
+import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
-import ProfileBox from "./profile-box";
-import InfoEditor from "./info-editor";
-import { FileEditor } from "./file-editor";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -33,7 +33,7 @@ interface Props {
   onSelect: (force: boolean) => void;
 }
 
-const ProfileItem = (props: Props) => {
+export const ProfileItem = (props: Props) => {
   const { selected, itemData, onSelect } = props;
 
   const { t } = useTranslation();
@@ -298,13 +298,13 @@ const ProfileItem = (props: Props) => {
         ))}
       </Menu>
 
-      <InfoEditor
+      <InfoViewer
         open={editOpen}
         itemData={itemData}
         onClose={() => setEditOpen(false)}
       />
 
-      <FileEditor
+      <EditorViewer
         uid={uid}
         open={fileOpen}
         mode="yaml"
@@ -325,5 +325,3 @@ function parseExpire(expire?: number) {
   if (!expire) return "-";
   return dayjs(expire * 1000).format("YYYY-MM-DD");
 }
-
-export default ProfileItem;

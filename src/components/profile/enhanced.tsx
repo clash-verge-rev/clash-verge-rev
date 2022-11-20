@@ -1,43 +1,28 @@
 import useSWR from "swr";
 import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { Box, Grid, IconButton, Stack } from "@mui/material";
-import { RestartAltRounded } from "@mui/icons-material";
+import { Grid } from "@mui/material";
 import {
   getProfiles,
   deleteProfile,
-  enhanceProfiles,
   patchProfilesConfig,
   getRuntimeLogs,
 } from "@/services/cmds";
 import { Notice } from "@/components/base";
-import ProfileMore from "./profile-more";
+import { ProfileMore } from "./profile-more";
 
 interface Props {
   items: IProfileItem[];
   chain: string[];
 }
 
-const EnhancedMode = (props: Props) => {
+export const EnhancedMode = (props: Props) => {
   const { items, chain } = props;
 
-  const { t } = useTranslation();
   const { mutate: mutateProfiles } = useSWR("getProfiles", getProfiles);
   const { data: chainLogs = {}, mutate: mutateLogs } = useSWR(
     "getRuntimeLogs",
     getRuntimeLogs
   );
-
-  // handler
-  const onEnhance = useLockFn(async () => {
-    try {
-      await enhanceProfiles();
-      mutateLogs();
-      // Notice.success("Refresh clash config", 1000);
-    } catch (err: any) {
-      Notice.error(err.message || err.toString());
-    }
-  });
 
   const onEnhanceEnable = useLockFn(async (uid: string) => {
     if (chain.includes(uid)) return;
@@ -87,43 +72,22 @@ const EnhancedMode = (props: Props) => {
   });
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Stack
-        spacing={1}
-        direction="row"
-        alignItems="center"
-        justifyContent="flex-end"
-        sx={{ mb: 0.5 }}
-      >
-        <IconButton
-          size="small"
-          color="inherit"
-          title={t("Refresh profiles")}
-          onClick={onEnhance}
-        >
-          <RestartAltRounded />
-        </IconButton>
-      </Stack>
-
-      <Grid container spacing={2}>
-        {items.map((item) => (
-          <Grid item xs={12} sm={6} key={item.file}>
-            <ProfileMore
-              selected={!!chain.includes(item.uid)}
-              itemData={item}
-              enableNum={chain.length}
-              logInfo={chainLogs[item.uid]}
-              onEnable={() => onEnhanceEnable(item.uid)}
-              onDisable={() => onEnhanceDisable(item.uid)}
-              onDelete={() => onEnhanceDelete(item.uid)}
-              onMoveTop={() => onMoveTop(item.uid)}
-              onMoveEnd={() => onMoveEnd(item.uid)}
-            />
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
+    <Grid container spacing={{ xs: 2, lg: 3 }}>
+      {items.map((item) => (
+        <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
+          <ProfileMore
+            selected={!!chain.includes(item.uid)}
+            itemData={item}
+            enableNum={chain.length}
+            logInfo={chainLogs[item.uid]}
+            onEnable={() => onEnhanceEnable(item.uid)}
+            onDisable={() => onEnhanceDisable(item.uid)}
+            onDelete={() => onEnhanceDelete(item.uid)}
+            onMoveTop={() => onMoveTop(item.uid)}
+            onMoveEnd={() => onMoveEnd(item.uid)}
+          />
+        </Grid>
+      ))}
+    </Grid>
   );
 };
-
-export default EnhancedMode;
