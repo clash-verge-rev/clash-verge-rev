@@ -7,8 +7,7 @@ import { List, ListItem, ListItemText, TextField } from "@mui/material";
 import { atomClashPort } from "@/services/states";
 import { getClashConfig } from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
-import { BaseDialog, DialogRef } from "@/components/base";
-import Notice from "@/components/base/base-notice";
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
 export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

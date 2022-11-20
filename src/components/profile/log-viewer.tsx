@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -9,8 +10,7 @@ import {
   Divider,
   Typography,
 } from "@mui/material";
-import BaseEmpty from "../base/base-empty";
-import { Fragment } from "react";
+import { BaseEmpty } from "@/components/base";
 
 interface Props {
   open: boolean;

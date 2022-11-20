@@ -16,8 +16,7 @@ import {
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
 import { atomEnableLog, atomLogData } from "@/services/states";
-import BasePage from "@/components/base/base-page";
-import BaseEmpty from "@/components/base/base-empty";
+import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
 
 const LogPage = () => {

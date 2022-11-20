@@ -11,7 +11,7 @@ import {
 } from "@/utils/clash-fields";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
-import Notice from "@/components/base/base-notice";
+import { Notice } from "@/components/base";
 
 const fieldSorter = (a: string, b: string) => {
   if (a.includes("-") === a.includes("-")) {

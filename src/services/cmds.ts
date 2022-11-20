@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri";
-import Notice from "@/components/base/base-notice";
+import { Notice } from "@/components/base";
 
 export async function getClashLogs() {
   const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/;

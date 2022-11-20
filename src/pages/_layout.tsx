@@ -15,13 +15,12 @@ import { atomCurrentProfile } from "@/services/states";
 import { getProfiles } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { ReactComponent as LogoSvg } from "@/assets/image/logo.svg";
-import Notice from "@/components/base/base-notice";
+import { BaseErrorBoundary, Notice } from "@/components/base";
 import LayoutItem from "@/components/layout/layout-item";
 import LayoutControl from "@/components/layout/layout-control";
 import LayoutTraffic from "@/components/layout/layout-traffic";
 import UpdateButton from "@/components/layout/update-button";
 import useCustomTheme from "@/components/layout/use-custom-theme";
-import BaseErrorBoundary from "@/components/base/base-error-boundary";
 import getSystem from "@/utils/get-system";
 import "dayjs/locale/zh-cn";
 

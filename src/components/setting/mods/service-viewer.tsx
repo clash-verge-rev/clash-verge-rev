@@ -9,8 +9,7 @@ import {
   patchVergeConfig,
 } from "@/services/cmds";
 import { forwardRef, useState } from "react";
-import { BaseDialog, DialogRef } from "@/components/base";
-import Notice from "@/components/base/base-notice";
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
 interface Props {
   enable: boolean;

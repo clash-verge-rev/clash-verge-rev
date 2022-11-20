@@ -5,7 +5,7 @@ import { Menu, MenuItem } from "@mui/material";
 import { Settings } from "@mui/icons-material";
 import { changeClashCore } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
-import Notice from "@/components/base/base-notice";
+import { Notice } from "@/components/base";
 
 const VALID_CORE = [
   { name: "Clash", core: "clash" },

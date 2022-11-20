@@ -5,10 +5,8 @@ import { useTranslation } from "react-i18next";
 import { Button, Box, Typography } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { getClashInfo, openWebUrl } from "@/services/cmds";
+import { BaseDialog, BaseEmpty, DialogRef, Notice } from "@/components/base";
 import { WebUIItem } from "./web-ui-item";
-import { BaseDialog, DialogRef } from "@/components/base";
-import BaseEmpty from "@/components/base/base-empty";
-import Notice from "@/components/base/base-notice";
 
 export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

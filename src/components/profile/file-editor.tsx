@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { atomThemeMode } from "@/services/states";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import Notice from "../base/base-notice";
+import { Notice } from "@/components/base";
 
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js";
@@ -26,7 +26,7 @@ interface Props {
   onChange?: () => void;
 }
 
-const FileEditor = (props: Props) => {
+export const FileEditor = (props: Props) => {
   const { uid, open, mode, onClose, onChange } = props;
 
   const { t } = useTranslation();
@@ -92,5 +92,3 @@ const FileEditor = (props: Props) => {
     </Dialog>
   );
 };
-
-export default FileEditor;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Typography } from "@mui/material";
-import BaseErrorBoundary from "./base-error-boundary";
+import { BaseErrorBoundary } from "./base-error-boundary";
 
 interface Props {
   title?: React.ReactNode; // the page title
@@ -8,7 +8,7 @@ interface Props {
   contentStyle?: React.CSSProperties;
 }
 
-const BasePage: React.FC<Props> = (props) => {
+export const BasePage: React.FC<Props> = (props) => {
   const { title, header, contentStyle, children } = props;
 
   return (
@@ -31,5 +31,3 @@ const BasePage: React.FC<Props> = (props) => {
     </BaseErrorBoundary>
   );
 };
-
-export default BasePage;
