@@ -1,9 +1,10 @@
-import useSWR, { useSWRConfig } from "swr";
+import { mutate } from "swr";
 import { useState } from "react";
 import { useLockFn } from "ahooks";
 import { Menu, MenuItem } from "@mui/material";
 import { Settings } from "@mui/icons-material";
-import { changeClashCore, getVergeConfig } from "@/services/cmds";
+import { changeClashCore } from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
 import Notice from "@/components/base/base-notice";
 
 const VALID_CORE = [
@@ -12,21 +13,19 @@ const VALID_CORE = [
 ];
 
 const CoreSwitch = () => {
-  const { mutate } = useSWRConfig();
-
-  const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
+  const { verge, mutateVerge } = useVerge();
 
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
 
-  const { clash_core = "clash" } = vergeConfig ?? {};
+  const { clash_core = "clash" } = verge ?? {};
 
   const onCoreChange = useLockFn(async (core: string) => {
     if (core === clash_core) return;
 
     try {
       await changeClashCore(core);
-      mutate("getVergeConfig");
+      mutateVerge();
       setTimeout(() => {
         mutate("getClashConfig");
         mutate("getVersion");

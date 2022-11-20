@@ -18,11 +18,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import {
-  getSystemProxy,
-  getVergeConfig,
-  patchVergeConfig,
-} from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
+import { getSystemProxy } from "@/services/cmds";
 import { ModalHandler } from "@/hooks/use-modal-handler";
 import Notice from "@/components/base/base-notice";
 
@@ -52,17 +49,14 @@ const SysproxyViewer = ({ handler }: Props) => {
     };
   }
 
-  const { data: vergeConfig, mutate: mutateVerge } = useSWR(
-    "getVergeConfig",
-    getVergeConfig
-  );
+  const { verge, patchVerge } = useVerge();
 
   const {
     enable_system_proxy: enabled,
     enable_proxy_guard,
     system_proxy_bypass,
     proxy_guard_duration,
-  } = vergeConfig ?? {};
+  } = verge ?? {};
 
   const { data: sysproxy } = useSWR(
     open ? "getSystemProxy" : null,
@@ -81,7 +75,7 @@ const SysproxyViewer = ({ handler }: Props) => {
       bypass: system_proxy_bypass,
       duration: proxy_guard_duration ?? 10,
     });
-  }, [vergeConfig]);
+  }, [verge]);
 
   const onSave = useLockFn(async () => {
     if (value.duration < 5) {
@@ -102,8 +96,7 @@ const SysproxyViewer = ({ handler }: Props) => {
     }
 
     try {
-      await patchVergeConfig(patch);
-      mutateVerge();
+      await patchVerge(patch);
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());

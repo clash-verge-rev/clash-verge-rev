@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
-import useSWR, { SWRConfig, useSWRConfig } from "swr";
+import { SWRConfig, mutate } from "swr";
 import { useEffect } from "react";
 import { useSetRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,8 @@ import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { atomCurrentProfile } from "@/services/states";
-import { getVergeConfig, getProfiles } from "@/services/cmds";
+import { getProfiles } from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
 import { ReactComponent as LogoSvg } from "@/assets/image/logo.svg";
 import Notice from "@/components/base/base-notice";
 import LayoutItem from "@/components/layout/layout-item";
@@ -34,12 +35,11 @@ const OS = getSystem();
 
 const Layout = () => {
   const { t } = useTranslation();
-  const { mutate } = useSWRConfig();
 
   const { theme } = useCustomTheme();
 
-  const { data: vergeConfig } = useSWR("getVergeConfig", getVergeConfig);
-  const { theme_blur, language } = vergeConfig || {};
+  const { verge } = useVerge();
+  const { theme_blur, language } = verge || {};
 
   const setCurrentProfile = useSetRecoilState(atomCurrentProfile);
 

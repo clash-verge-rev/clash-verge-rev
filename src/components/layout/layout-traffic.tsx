@@ -1,12 +1,11 @@
-import useSWR from "swr";
 import { useEffect, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import { listen } from "@tauri-apps/api/event";
 import { getInformation } from "@/services/api";
-import { getVergeConfig } from "@/services/cmds";
 import { atomClashPort } from "@/services/states";
+import { useVerge } from "@/hooks/use-verge";
 import TrafficGraph from "./traffic-graph";
 import useLogSetup from "./use-log-setup";
 import parseTraffic from "@/utils/parse-traffic";
@@ -20,8 +19,8 @@ const LayoutTraffic = () => {
   const trafficRef = useRef<any>();
 
   // whether hide traffic graph
-  const { data } = useSWR("getVergeConfig", getVergeConfig);
-  const trafficGraph = data?.traffic_graph ?? true;
+  const { verge } = useVerge();
+  const trafficGraph = verge?.traffic_graph ?? true;
 
   // setup log ws during layout
   useLogSetup();

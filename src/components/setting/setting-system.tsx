@@ -3,11 +3,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton, Switch } from "@mui/material";
 import { ArrowForward, PrivacyTipRounded, Settings } from "@mui/icons-material";
-import {
-  checkService,
-  getVergeConfig,
-  patchVergeConfig,
-} from "@/services/cmds";
+import { checkService } from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
 import { SettingList, SettingItem } from "./setting";
 import useModalHandler from "@/hooks/use-modal-handler";
 import getSystem from "@/utils/get-system";
@@ -24,17 +21,14 @@ const isWIN = getSystem() === "windows";
 const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation();
 
-  const { data: vergeConfig, mutate: mutateVerge } = useSWR(
-    "getVergeConfig",
-    getVergeConfig
-  );
+  const { verge, mutateVerge, patchVerge } = useVerge();
 
   // service mode
   const [serviceOpen, setServiceOpen] = useState(false);
   const { data: serviceStatus } = useSWR(
     isWIN ? "checkService" : null,
     checkService,
-    { revalidateIfStale: true, shouldRetryOnError: false }
+    { revalidateIfStale: false, shouldRetryOnError: false }
   );
 
   const {
@@ -43,11 +37,11 @@ const SettingSystem = ({ onError }: Props) => {
     enable_service_mode,
     enable_silent_start,
     enable_system_proxy,
-  } = vergeConfig ?? {};
+  } = verge ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...vergeConfig, ...patch }, false);
+    mutateVerge({ ...verge, ...patch }, false);
   };
 
   const sysproxyHandler = useModalHandler();
@@ -63,7 +57,7 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_tun_mode: e })}
-          onGuard={(e) => patchVergeConfig({ enable_tun_mode: e })}
+          onGuard={(e) => patchVerge({ enable_tun_mode: e })}
         >
           <Switch edge="end" />
         </GuardState>
@@ -89,7 +83,7 @@ const SettingSystem = ({ onError }: Props) => {
               onCatch={onError}
               onFormat={onSwitchFormat}
               onChange={(e) => onChangeData({ enable_service_mode: e })}
-              onGuard={(e) => patchVergeConfig({ enable_service_mode: e })}
+              onGuard={(e) => patchVerge({ enable_service_mode: e })}
             >
               <Switch edge="end" />
             </GuardState>
@@ -131,10 +125,7 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_system_proxy: e })}
-          onGuard={async (e) => {
-            await patchVergeConfig({ enable_system_proxy: e });
-            mutateVerge(); // update bypass value
-          }}
+          onGuard={(e) => patchVerge({ enable_system_proxy: e })}
         >
           <Switch edge="end" />
         </GuardState>
@@ -147,7 +138,7 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_auto_launch: e })}
-          onGuard={(e) => patchVergeConfig({ enable_auto_launch: e })}
+          onGuard={(e) => patchVerge({ enable_auto_launch: e })}
         >
           <Switch edge="end" />
         </GuardState>
@@ -160,7 +151,7 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_silent_start: e })}
-          onGuard={(e) => patchVergeConfig({ enable_silent_start: e })}
+          onGuard={(e) => patchVerge({ enable_silent_start: e })}
         >
           <Switch edge="end" />
         </GuardState>

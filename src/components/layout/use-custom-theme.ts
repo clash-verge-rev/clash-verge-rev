@@ -1,18 +1,17 @@
-import useSWR from "swr";
 import { useEffect, useMemo } from "react";
 import { useRecoilState } from "recoil";
 import { createTheme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
-import { getVergeConfig } from "@/services/cmds";
 import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
+import { useVerge } from "@/hooks/use-verge";
 
 /**
- * custome theme
+ * custom theme
  */
 export default function useCustomTheme() {
-  const { data } = useSWR("getVergeConfig", getVergeConfig);
-  const { theme_mode, theme_setting } = data ?? {};
+  const { verge } = useVerge();
+  const { theme_mode, theme_setting } = verge ?? {};
   const [mode, setMode] = useRecoilState(atomThemeMode);
 
   useEffect(() => {

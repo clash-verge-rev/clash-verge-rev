@@ -1,4 +1,3 @@
-import useSWR from "swr";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,13 +7,9 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import {
-  getVergeConfig,
-  openAppDir,
-  openLogsDir,
-  patchVergeConfig,
-} from "@/services/cmds";
+import { openAppDir, openLogsDir, patchVergeConfig } from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
+import { useVerge } from "@/hooks/use-verge";
 import { SettingList, SettingItem } from "./setting";
 import { version } from "@root/package.json";
 import useModalHandler from "@/hooks/use-modal-handler";
@@ -31,19 +26,17 @@ interface Props {
 
 const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
-  const { data: vergeConfig, mutate: mutateVerge } = useSWR(
-    "getVergeConfig",
-    getVergeConfig
-  );
 
-  const { theme_mode, theme_blur, traffic_graph, language } = vergeConfig ?? {};
+  const { verge, patchVerge, mutateVerge } = useVerge();
+
+  const { theme_mode, theme_blur, traffic_graph, language } = verge ?? {};
 
   const [themeOpen, setThemeOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...vergeConfig, ...patch }, false);
+    mutateVerge({ ...verge, ...patch }, false);
   };
 
   const miscHandler = useModalHandler();
@@ -60,7 +53,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ language: e })}
-          onGuard={(e) => patchVergeConfig({ language: e })}
+          onGuard={(e) => patchVerge({ language: e })}
         >
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="zh">中文</MenuItem>
@@ -74,7 +67,7 @@ const SettingVerge = ({ onError }: Props) => {
           value={theme_mode}
           onCatch={onError}
           onChange={(e) => onChangeData({ theme_mode: e })}
-          onGuard={(e) => patchVergeConfig({ theme_mode: e })}
+          onGuard={(e) => patchVerge({ theme_mode: e })}
         >
           <ThemeModeSwitch />
         </GuardState>
@@ -87,7 +80,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ theme_blur: e })}
-          onGuard={(e) => patchVergeConfig({ theme_blur: e })}
+          onGuard={(e) => patchVerge({ theme_blur: e })}
         >
           <Switch edge="end" />
         </GuardState>

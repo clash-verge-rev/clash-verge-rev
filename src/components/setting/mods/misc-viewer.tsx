@@ -14,7 +14,7 @@ import {
   TextField,
 } from "@mui/material";
 import { ModalHandler } from "@/hooks/use-modal-handler";
-import { useVergeConfig } from "@/hooks/use-verge-config";
+import { useVerge } from "@/hooks/use-verge";
 import Notice from "@/components/base/base-notice";
 
 interface Props {
@@ -23,7 +23,7 @@ interface Props {
 
 const MiscViewer = ({ handler }: Props) => {
   const { t } = useTranslation();
-  const { data, patchVerge } = useVergeConfig();
+  const { verge, patchVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
@@ -41,11 +41,11 @@ const MiscViewer = ({ handler }: Props) => {
   useEffect(() => {
     if (open) {
       setValues({
-        autoCloseConnection: data?.auto_close_connection || false,
-        defaultLatencyTest: data?.default_latency_test || "",
+        autoCloseConnection: verge?.auto_close_connection || false,
+        defaultLatencyTest: verge?.default_latency_test || "",
       });
     }
-  }, [open, data]);
+  }, [open, verge]);
 
   const onSave = useLockFn(async () => {
     try {

@@ -14,10 +14,10 @@ import {
   SortByAlphaRounded,
   SortRounded,
 } from "@mui/icons-material";
-import { useVergeConfig } from "@/hooks/use-verge-config";
-import delayManager from "@/services/delay";
+import { useVerge } from "@/hooks/use-verge";
 import type { HeadState } from "./use-head-state";
 import type { ProxySortType } from "./use-filter-sort";
+import delayManager from "@/services/delay";
 
 interface Props {
   sx?: SxProps;
@@ -42,14 +42,11 @@ export const ProxyHead = (props: Props) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const { data: vergeConfig } = useVergeConfig();
+  const { verge } = useVerge();
 
   useEffect(() => {
-    delayManager.setUrl(
-      groupName,
-      testUrl || vergeConfig?.default_latency_test!
-    );
-  }, [groupName, testUrl, vergeConfig?.default_latency_test]);
+    delayManager.setUrl(groupName, testUrl || verge?.default_latency_test!);
+  }, [groupName, testUrl, verge?.default_latency_test]);
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", ...sx }}>
