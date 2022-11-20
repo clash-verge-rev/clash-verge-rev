@@ -44,7 +44,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       # - name: Install Dependencies (ubuntu18 only)
       #   if: matrix.targets.os == 'ubuntu-18.04'
