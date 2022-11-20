@@ -28,7 +28,7 @@ interface Props {
   onHeadState: (val: Partial<HeadState>) => void;
 }
 
-const ProxyHead = (props: Props) => {
+export const ProxyHead = (props: Props) => {
   const { sx = {}, groupName, headState, onHeadState } = props;
 
   const { showType, sortType, filterText, textState, testUrl } = headState;
@@ -163,5 +163,3 @@ const ProxyHead = (props: Props) => {
     </Box>
   );
 };
-
-export default ProxyHead;
