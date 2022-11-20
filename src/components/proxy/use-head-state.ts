@@ -15,7 +15,7 @@ export interface HeadState {
 type HeadStateStorage = Record<string, Record<string, HeadState>>;
 
 const HEAD_STATE_KEY = "proxy-head-state";
-const DEFAULT_STATE: HeadState = {
+export const DEFAULT_STATE: HeadState = {
   open: false,
   showType: false,
   sortType: 0,
@@ -74,6 +74,62 @@ export default function useHeadState(groupName: string) {
       });
     },
     [current, groupName]
+  );
+
+  return [state, setHeadState] as const;
+}
+
+export function useHeadStateNew() {
+  const current = useRecoilValue(atomCurrentProfile);
+
+  const [state, setState] = useState<Record<string, HeadState>>({});
+
+  useEffect(() => {
+    if (!current) {
+      setState({});
+      return;
+    }
+
+    try {
+      const data = JSON.parse(
+        localStorage.getItem(HEAD_STATE_KEY)!
+      ) as HeadStateStorage;
+
+      const value = data[current] || {};
+
+      if (value && typeof value === "object") {
+        setState(value);
+      } else {
+        setState({});
+      }
+    } catch {}
+  }, [current]);
+
+  const setHeadState = useCallback(
+    (groupName: string, obj: Partial<HeadState>) => {
+      setState((old) => {
+        const state = old[groupName] || DEFAULT_STATE;
+        const ret = { ...old, [groupName]: { ...state, ...obj } };
+
+        // 保存到存储中
+        setTimeout(() => {
+          try {
+            const item = localStorage.getItem(HEAD_STATE_KEY);
+
+            let data = (item ? JSON.parse(item) : {}) as HeadStateStorage;
+
+            if (!data || typeof data !== "object") data = {};
+
+            data[current] = ret;
+
+            localStorage.setItem(HEAD_STATE_KEY, JSON.stringify(data));
+          } catch {}
+        });
+
+        return ret;
+      });
+    },
+    [current]
   );
 
   return [state, setHeadState] as const;

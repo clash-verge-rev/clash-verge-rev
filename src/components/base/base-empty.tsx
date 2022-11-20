@@ -1,5 +1,5 @@
 import { alpha, Box, Typography } from "@mui/material";
-import { BlurOnRounded } from "@mui/icons-material";
+import { InboxRounded } from "@mui/icons-material";
 
 interface Props {
   text?: React.ReactNode;
@@ -21,7 +21,7 @@ const BaseEmpty = (props: Props) => {
         color: alpha(palette.text.secondary, 0.75),
       })}
     >
-      <BlurOnRounded sx={{ fontSize: "4em" }} />
+      <InboxRounded sx={{ fontSize: "4em" }} />
       <Typography sx={{ fontSize: "1.25em" }}>{text}</Typography>
       {extra}
     </Box>

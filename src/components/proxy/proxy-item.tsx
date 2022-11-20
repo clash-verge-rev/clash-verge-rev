@@ -42,7 +42,7 @@ const TypeBox = styled(Box)(({ theme }) => ({
   lineHeight: 1.25,
 }));
 
-const ProxyItem = (props: Props) => {
+export const ProxyItem = (props: Props) => {
   const { groupName, proxy, selected, showType = true, sx, onClick } = props;
 
   // -1/<=0 为 不显示
@@ -174,5 +174,3 @@ const ProxyItem = (props: Props) => {
     </ListItem>
   );
 };
-
-export default ProxyItem;

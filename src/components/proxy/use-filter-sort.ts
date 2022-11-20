@@ -36,6 +36,17 @@ export default function useFilterSort(
   }, [proxies, groupName, filterText, sortType, refresh]);
 }
 
+export function filterSort(
+  proxies: IProxyItem[],
+  groupName: string,
+  filterText: string,
+  sortType: ProxySortType
+) {
+  const fp = filterProxies(proxies, groupName, filterText);
+  const sp = sortProxies(fp, groupName, sortType);
+  return sp;
+}
+
 /**
  * 可以通过延迟数/节点类型 过滤
  */
