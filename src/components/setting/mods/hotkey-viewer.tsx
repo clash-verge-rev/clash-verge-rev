@@ -1,4 +1,3 @@
-import useSWR from "swr";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
@@ -11,7 +10,7 @@ import {
   styled,
   Typography,
 } from "@mui/material";
-import { getVergeConfig, patchVergeConfig } from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
 import { ModalHandler } from "@/hooks/use-modal-handler";
 import Notice from "@/components/base/base-notice";
 import HotkeyInput from "./hotkey-input";
@@ -51,10 +50,7 @@ const HotkeyViewer = ({ handler }: Props) => {
     };
   }
 
-  const { data: vergeConfig, mutate: mutateVerge } = useSWR(
-    "getVergeConfig",
-    getVergeConfig
-  );
+  const { verge, patchVerge } = useVerge();
 
   const [hotkeyMap, setHotkeyMap] = useState<Record<string, string[]>>({});
 
@@ -62,7 +58,7 @@ const HotkeyViewer = ({ handler }: Props) => {
     if (!open) return;
     const map = {} as typeof hotkeyMap;
 
-    vergeConfig?.hotkeys?.forEach((text) => {
+    verge?.hotkeys?.forEach((text) => {
       const [func, key] = text.split(",").map((e) => e.trim());
 
       if (!func || !key) return;
@@ -74,7 +70,7 @@ const HotkeyViewer = ({ handler }: Props) => {
     });
 
     setHotkeyMap(map);
-  }, [vergeConfig?.hotkeys, open]);
+  }, [verge?.hotkeys, open]);
 
   const onSave = useLockFn(async () => {
     const hotkeys = Object.entries(hotkeyMap)
@@ -93,9 +89,8 @@ const HotkeyViewer = ({ handler }: Props) => {
       .filter(Boolean);
 
     try {
-      patchVergeConfig({ hotkeys });
+      patchVerge({ hotkeys });
       setOpen(false);
-      mutateVerge();
     } catch (err: any) {
       Notice.error(err.message || err.toString());
     }

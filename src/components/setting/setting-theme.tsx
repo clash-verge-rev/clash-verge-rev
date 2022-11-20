@@ -1,4 +1,3 @@
-import useSWR from "swr";
 import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
@@ -15,7 +14,7 @@ import {
   TextField,
   useTheme,
 } from "@mui/material";
-import { getVergeConfig, patchVergeConfig } from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 
 interface Props {
@@ -40,12 +39,10 @@ const SettingTheme = (props: Props) => {
   const { open, onClose, onError } = props;
 
   const { t } = useTranslation();
-  const { data: vergeConfig, mutate } = useSWR(
-    "getVergeConfig",
-    getVergeConfig
-  );
 
-  const { theme_setting } = vergeConfig ?? {};
+  const { verge, patchVerge } = useVerge();
+
+  const { theme_setting } = verge ?? {};
   const [theme, setTheme] = useState(theme_setting || {});
 
   useEffect(() => {
@@ -64,8 +61,7 @@ const SettingTheme = (props: Props) => {
 
   const onSave = useLockFn(async () => {
     try {
-      await patchVergeConfig({ theme_setting: theme });
-      mutate();
+      await patchVerge({ theme_setting: theme });
       onClose();
     } catch (err: any) {
       onError?.(err);

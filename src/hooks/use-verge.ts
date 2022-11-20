@@ -1,16 +1,20 @@
 import useSWR from "swr";
 import { getVergeConfig, patchVergeConfig } from "@/services/cmds";
 
-export const useVergeConfig = () => {
-  const { data, mutate } = useSWR("getVergeConfig", getVergeConfig);
+export const useVerge = () => {
+  const { data: verge, mutate: mutateVerge } = useSWR(
+    "getVergeConfig",
+    getVergeConfig
+  );
 
   const patchVerge = async (value: Partial<IVergeConfig>) => {
     await patchVergeConfig(value);
-    mutate();
+    mutateVerge();
   };
 
   return {
-    data,
+    verge,
+    mutateVerge,
     patchVerge,
   };
 };

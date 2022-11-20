@@ -1,12 +1,6 @@
 import { useRef } from "react";
 import { useLockFn } from "ahooks";
-import {
-  Box,
-  Divider,
-  ListItem,
-  ListItemText,
-  Typography,
-} from "@mui/material";
+import { Box, ListItem, ListItemText, Typography } from "@mui/material";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import {
   ExpandLessRounded,
@@ -21,7 +15,7 @@ import {
   deleteConnection,
 } from "@/services/api";
 import { useProfiles } from "@/hooks/use-profiles";
-import { useVergeConfig } from "@/hooks/use-verge-config";
+import { useVerge } from "@/hooks/use-verge";
 import { useRenderList, type IRenderItem } from "./use-render-list";
 import { HeadState } from "./use-head-state";
 import { ProxyHead } from "./proxy-head";
@@ -37,7 +31,7 @@ export const ProxyGroups = (props: Props) => {
 
   const { renderList, onProxies, onHeadState } = useRenderList(mode);
 
-  const { data: vergeConfig } = useVergeConfig();
+  const { verge } = useVerge();
   const { current, patchCurrent } = useProfiles();
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
@@ -52,7 +46,7 @@ export const ProxyGroups = (props: Props) => {
       onProxies();
 
       // 断开连接
-      if (vergeConfig?.auto_close_connection) {
+      if (verge?.auto_close_connection) {
         getConnections().then(({ connections }) => {
           connections.forEach((conn) => {
             if (conn.chains.includes(now!)) {

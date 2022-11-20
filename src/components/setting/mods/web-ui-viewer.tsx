@@ -10,12 +10,8 @@ import {
   DialogTitle,
   Typography,
 } from "@mui/material";
-import {
-  getClashInfo,
-  getVergeConfig,
-  openWebUrl,
-  patchVergeConfig,
-} from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
+import { getClashInfo, openWebUrl } from "@/services/cmds";
 import { ModalHandler } from "@/hooks/use-modal-handler";
 import BaseEmpty from "@/components/base/base-empty";
 import WebUIItem from "./web-ui-item";
@@ -27,12 +23,10 @@ interface Props {
 
 const WebUIViewer = ({ handler, onError }: Props) => {
   const { t } = useTranslation();
-  const { data: vergeConfig, mutate: mutateVerge } = useSWR(
-    "getVergeConfig",
-    getVergeConfig
-  );
 
-  const webUIList = vergeConfig?.web_ui_list || [];
+  const { verge, patchVerge, mutateVerge } = useVerge();
+
+  const webUIList = verge?.web_ui_list || [];
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -47,24 +41,21 @@ const WebUIViewer = ({ handler, onError }: Props) => {
   const handleAdd = useLockFn(async (value: string) => {
     const newList = [value, ...webUIList];
     mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false);
-    await patchVergeConfig({ web_ui_list: newList });
-    await mutateVerge();
+    await patchVerge({ web_ui_list: newList });
   });
 
   const handleChange = useLockFn(async (index: number, value?: string) => {
     const newList = [...webUIList];
     newList[index] = value ?? "";
     mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false);
-    await patchVergeConfig({ web_ui_list: newList });
-    await mutateVerge();
+    await patchVerge({ web_ui_list: newList });
   });
 
   const handleDelete = useLockFn(async (index: number) => {
     const newList = [...webUIList];
     newList.splice(index, 1);
     mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false);
-    await patchVergeConfig({ web_ui_list: newList });
-    await mutateVerge();
+    await patchVerge({ web_ui_list: newList });
   });
 
   const { data: clashInfo } = useSWR("getClashInfo", getClashInfo);
