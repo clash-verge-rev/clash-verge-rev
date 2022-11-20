@@ -13,7 +13,7 @@ interface Props<Value> {
   children: ReactNode;
 }
 
-function GuardState<T>(props: Props<T>) {
+export function GuardState<T>(props: Props<T>) {
   const {
     value,
     children,
@@ -83,5 +83,3 @@ function GuardState<T>(props: Props<T>) {
   };
   return cloneElement(children, childProps);
 }
-
-export default GuardState;

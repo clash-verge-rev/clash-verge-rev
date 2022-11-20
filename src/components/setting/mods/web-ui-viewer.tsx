@@ -1,42 +1,31 @@
 import useSWR from "swr";
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from "@mui/material";
+import { Button, Box, Typography } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { getClashInfo, openWebUrl } from "@/services/cmds";
-import { ModalHandler } from "@/hooks/use-modal-handler";
+import { WebUIItem } from "./web-ui-item";
+import { BaseDialog, DialogRef } from "@/components/base";
 import BaseEmpty from "@/components/base/base-empty";
-import WebUIItem from "./web-ui-item";
+import Notice from "@/components/base/base-notice";
 
-interface Props {
-  handler: ModalHandler;
-  onError: (err: Error) => void;
-}
-
-const WebUIViewer = ({ handler, onError }: Props) => {
+export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const { verge, patchVerge, mutateVerge } = useVerge();
 
-  const webUIList = verge?.web_ui_list || [];
-
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
 
-  if (handler) {
-    handler.current = {
-      open: () => setOpen(true),
-      close: () => setOpen(false),
-    };
-  }
+  const { data: clashInfo } = useSWR("getClashInfo", getClashInfo);
+
+  useImperativeHandle(ref, () => ({
+    open: () => setOpen(true),
+    close: () => setOpen(false),
+  }));
+
+  const webUIList = verge?.web_ui_list || [];
 
   const handleAdd = useLockFn(async (value: string) => {
     const newList = [value, ...webUIList];
@@ -57,8 +46,6 @@ const WebUIViewer = ({ handler, onError }: Props) => {
     mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false);
     await patchVerge({ web_ui_list: newList });
   });
-
-  const { data: clashInfo } = useSWR("getClashInfo", getClashInfo);
 
   const handleOpenUrl = useLockFn(async (value?: string) => {
     if (!value) return;
@@ -83,74 +70,70 @@ const WebUIViewer = ({ handler, onError }: Props) => {
 
       await openWebUrl(url);
     } catch (e: any) {
-      onError(e);
+      Notice.error(e.message || e.toString());
     }
   });
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)}>
-      <DialogTitle display="flex" justifyContent="space-between">
-        {t("Web UI")}
-        <Button
-          variant="contained"
-          size="small"
-          disabled={editing}
-          onClick={() => setEditing(true)}
-        >
-          {t("New")}
-        </Button>
-      </DialogTitle>
+    <BaseDialog
+      open={open}
+      title={
+        <Box display="flex" justifyContent="space-between">
+          {t("Web UI")}
+          <Button
+            variant="contained"
+            size="small"
+            disabled={editing}
+            onClick={() => setEditing(true)}
+          >
+            {t("New")}
+          </Button>
+        </Box>
+      }
+      contentSx={{
+        width: 450,
+        height: 300,
+        pb: 1,
+        overflowY: "auto",
+        userSelect: "text",
+      }}
+      cancelBtn={t("Back")}
+      disableOk
+      onClose={() => setOpen(false)}
+      onCancel={() => setOpen(false)}
+    >
+      {editing && (
+        <WebUIItem
+          value=""
+          onlyEdit
+          onChange={(v) => {
+            setEditing(false);
+            handleAdd(v || "");
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      )}
 
-      <DialogContent
-        sx={{
-          width: 450,
-          height: 300,
-          pb: 1,
-          overflowY: "auto",
-          userSelect: "text",
-        }}
-      >
-        {editing && (
-          <WebUIItem
-            value=""
-            onlyEdit
-            onChange={(v) => {
-              setEditing(false);
-              handleAdd(v || "");
-            }}
-            onCancel={() => setEditing(false)}
-          />
-        )}
+      {!editing && webUIList.length === 0 && (
+        <BaseEmpty
+          text="Empty List"
+          extra={
+            <Typography mt={2} sx={{ fontSize: "12px" }}>
+              Replace host, port, secret with "%host" "%port" "%secret"
+            </Typography>
+          }
+        />
+      )}
 
-        {!editing && webUIList.length === 0 && (
-          <BaseEmpty
-            text="Empty List"
-            extra={
-              <Typography mt={2} sx={{ fontSize: "12px" }}>
-                Replace host, port, secret with "%host" "%port" "%secret"
-              </Typography>
-            }
-          />
-        )}
-
-        {webUIList.map((item, index) => (
-          <WebUIItem
-            key={index}
-            value={item}
-            onChange={(v) => handleChange(index, v)}
-            onDelete={() => handleDelete(index)}
-            onOpenUrl={handleOpenUrl}
-          />
-        ))}
-      </DialogContent>
-
-      <DialogActions>
-        <Button variant="outlined" onClick={() => setOpen(false)}>
-          {t("Back")}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      {webUIList.map((item, index) => (
+        <WebUIItem
+          key={index}
+          value={item}
+          onChange={(v) => handleChange(index, v)}
+          onDelete={() => handleDelete(index)}
+          onOpenUrl={handleOpenUrl}
+        />
+      ))}
+    </BaseDialog>
   );
-};
-
-export default WebUIViewer;
+});

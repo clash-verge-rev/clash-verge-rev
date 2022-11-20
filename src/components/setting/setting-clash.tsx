@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   TextField,
@@ -10,15 +11,15 @@ import {
 } from "@mui/material";
 import { ArrowForward } from "@mui/icons-material";
 import { patchClashConfig } from "@/services/cmds";
-import { SettingList, SettingItem } from "./setting";
 import { getClashConfig, getVersion, updateConfigs } from "@/services/api";
-import useModalHandler from "@/hooks/use-modal-handler";
-import GuardState from "./mods/guard-state";
-import CoreSwitch from "./mods/core-switch";
-import WebUIViewer from "./mods/web-ui-viewer";
-import ClashFieldViewer from "./mods/clash-field-viewer";
-import ClashPortViewer from "./mods/clash-port-viewer";
-import ControllerViewer from "./mods/controller-viewer";
+import { DialogRef } from "@/components/base";
+import { GuardState } from "./mods/guard-state";
+import { CoreSwitch } from "./mods/core-switch";
+import { WebUIViewer } from "./mods/web-ui-viewer";
+import { ClashFieldViewer } from "./mods/clash-field-viewer";
+import { ClashPortViewer } from "./mods/clash-port-viewer";
+import { ControllerViewer } from "./mods/controller-viewer";
+import { SettingList, SettingItem } from "./mods/setting-comp";
 
 interface Props {
   onError: (err: Error) => void;
@@ -40,10 +41,10 @@ const SettingClash = ({ onError }: Props) => {
     "mixed-port": mixedPort,
   } = clashConfig ?? {};
 
-  const webUIHandler = useModalHandler();
-  const fieldHandler = useModalHandler();
-  const portHandler = useModalHandler();
-  const controllerHandler = useModalHandler();
+  const webRef = useRef<DialogRef>(null);
+  const fieldRef = useRef<DialogRef>(null);
+  const portRef = useRef<DialogRef>(null);
+  const ctrlRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -61,10 +62,10 @@ const SettingClash = ({ onError }: Props) => {
 
   return (
     <SettingList title={t("Clash Setting")}>
-      <WebUIViewer handler={webUIHandler} onError={onError} />
-      <ClashFieldViewer handler={fieldHandler} />
-      <ClashPortViewer handler={portHandler} />
-      <ControllerViewer handler={controllerHandler} />
+      <WebUIViewer ref={webRef} />
+      <ClashFieldViewer ref={fieldRef} />
+      <ClashPortViewer ref={portRef} />
+      <ControllerViewer ref={ctrlRef} />
 
       <SettingItem label={t("Allow Lan")}>
         <GuardState
@@ -118,7 +119,7 @@ const SettingClash = ({ onError }: Props) => {
           value={mixedPort ?? 0}
           sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}
           onClick={(e) => {
-            portHandler.current.open();
+            portRef.current?.open();
             (e.target as any).blur();
           }}
         />
@@ -129,7 +130,7 @@ const SettingClash = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => controllerHandler.current.open()}
+          onClick={() => ctrlRef.current?.open()}
         >
           <ArrowForward />
         </IconButton>
@@ -140,7 +141,7 @@ const SettingClash = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => webUIHandler.current.open()}
+          onClick={() => webRef.current?.open()}
         >
           <ArrowForward />
         </IconButton>
@@ -151,7 +152,7 @@ const SettingClash = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => fieldHandler.current.open()}
+          onClick={() => fieldRef.current?.open()}
         >
           <ArrowForward />
         </IconButton>

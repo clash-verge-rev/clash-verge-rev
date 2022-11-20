@@ -1,16 +1,16 @@
 import useSWR from "swr";
-import { useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton, Switch } from "@mui/material";
 import { ArrowForward, PrivacyTipRounded, Settings } from "@mui/icons-material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
-import { SettingList, SettingItem } from "./setting";
-import useModalHandler from "@/hooks/use-modal-handler";
+import { DialogRef } from "@/components/base";
+import { SettingList, SettingItem } from "./mods/setting-comp";
+import { GuardState } from "./mods/guard-state";
+import { ServiceViewer } from "./mods/service-viewer";
+import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import getSystem from "@/utils/get-system";
-import GuardState from "./mods/guard-state";
-import ServiceMode from "./mods/service-mode";
-import SysproxyViewer from "./mods/sysproxy-viewer";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -24,12 +24,14 @@ const SettingSystem = ({ onError }: Props) => {
   const { verge, mutateVerge, patchVerge } = useVerge();
 
   // service mode
-  const [serviceOpen, setServiceOpen] = useState(false);
   const { data: serviceStatus } = useSWR(
     isWIN ? "checkService" : null,
     checkService,
     { revalidateIfStale: false, shouldRetryOnError: false }
   );
+
+  const serviceRef = useRef<DialogRef>(null);
+  const sysproxyRef = useRef<DialogRef>(null);
 
   const {
     enable_tun_mode,
@@ -44,11 +46,12 @@ const SettingSystem = ({ onError }: Props) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
 
-  const sysproxyHandler = useModalHandler();
-
   return (
     <SettingList title={t("System Setting")}>
-      <SysproxyViewer handler={sysproxyHandler} />
+      <SysproxyViewer ref={sysproxyRef} />
+      {isWIN && (
+        <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
+      )}
 
       <SettingItem label={t("Tun Mode")}>
         <GuardState
@@ -71,7 +74,7 @@ const SettingSystem = ({ onError }: Props) => {
               <PrivacyTipRounded
                 fontSize="small"
                 style={{ cursor: "pointer", opacity: 0.75 }}
-                onClick={() => setServiceOpen(true)}
+                onClick={() => sysproxyRef.current?.open()}
               />
             )
           }
@@ -92,21 +95,12 @@ const SettingSystem = ({ onError }: Props) => {
               color="inherit"
               size="small"
               sx={{ my: "2px" }}
-              onClick={() => setServiceOpen(true)}
+              onClick={() => sysproxyRef.current?.open()}
             >
               <ArrowForward />
             </IconButton>
           )}
         </SettingItem>
-      )}
-
-      {isWIN && (
-        <ServiceMode
-          open={serviceOpen}
-          enable={!!enable_service_mode}
-          onError={onError}
-          onClose={() => setServiceOpen(false)}
-        />
       )}
 
       <SettingItem
@@ -115,7 +109,7 @@ const SettingSystem = ({ onError }: Props) => {
           <Settings
             fontSize="small"
             style={{ cursor: "pointer", opacity: 0.75 }}
-            onClick={() => sysproxyHandler.current.open()}
+            onClick={() => sysproxyRef.current?.open()}
           />
         }
       >

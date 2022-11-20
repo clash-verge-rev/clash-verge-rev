@@ -12,7 +12,7 @@ const VALID_CORE = [
   { name: "Clash Meta", core: "clash-meta" },
 ];
 
-const CoreSwitch = () => {
+export const CoreSwitch = () => {
   const { verge, mutateVerge } = useVerge();
 
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -75,5 +75,3 @@ const CoreSwitch = () => {
     </>
   );
 };
-
-export default CoreSwitch;

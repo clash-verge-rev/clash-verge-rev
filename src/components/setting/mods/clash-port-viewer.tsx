@@ -1,30 +1,16 @@
 import useSWR from "swr";
-import { useEffect, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemText,
-  TextField,
-} from "@mui/material";
+import { List, ListItem, ListItemText, TextField } from "@mui/material";
 import { atomClashPort } from "@/services/states";
 import { getClashConfig } from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
-import { ModalHandler } from "@/hooks/use-modal-handler";
+import { BaseDialog, DialogRef } from "@/components/base";
 import Notice from "@/components/base/base-notice";
 
-interface Props {
-  handler: ModalHandler;
-}
-
-const ClashPortViewer = ({ handler }: Props) => {
+export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const { data: config, mutate: mutateClash } = useSWR(
@@ -37,18 +23,15 @@ const ClashPortViewer = ({ handler }: Props) => {
 
   const setGlobalClashPort = useSetRecoilState(atomClashPort);
 
-  if (handler) {
-    handler.current = {
-      open: () => setOpen(true),
-      close: () => setOpen(false),
-    };
-  }
-
-  useEffect(() => {
-    if (open && config?.["mixed-port"]) {
-      setPort(config["mixed-port"]);
-    }
-  }, [open, config?.["mixed-port"]]);
+  useImperativeHandle(ref, () => ({
+    open: () => {
+      if (config?.["mixed-port"]) {
+        setPort(config["mixed-port"]);
+      }
+      setOpen(true);
+    },
+    close: () => setOpen(false),
+  }));
 
   const onSave = useLockFn(async () => {
     if (port < 1000) {
@@ -72,36 +55,30 @@ const ClashPortViewer = ({ handler }: Props) => {
   });
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)}>
-      <DialogTitle>{t("Clash Port")}</DialogTitle>
-
-      <DialogContent sx={{ width: 300 }}>
-        <List>
-          <ListItem sx={{ padding: "5px 2px" }}>
-            <ListItemText primary="Mixed Port" />
-            <TextField
-              size="small"
-              autoComplete="off"
-              sx={{ width: 135 }}
-              value={port}
-              onChange={(e) =>
-                setPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
-              }
-            />
-          </ListItem>
-        </List>
-      </DialogContent>
-
-      <DialogActions>
-        <Button variant="outlined" onClick={() => setOpen(false)}>
-          {t("Cancel")}
-        </Button>
-        <Button onClick={onSave} variant="contained">
-          {t("Save")}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <BaseDialog
+      open={open}
+      title={t("Clash Port")}
+      contentSx={{ width: 300 }}
+      okBtn={t("Save")}
+      cancelBtn={t("Cancel")}
+      onClose={() => setOpen(false)}
+      onCancel={() => setOpen(false)}
+      onOk={onSave}
+    >
+      <List>
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="Mixed Port" />
+          <TextField
+            size="small"
+            autoComplete="off"
+            sx={{ width: 135 }}
+            value={port}
+            onChange={(e) =>
+              setPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
+            }
+          />
+        </ListItem>
+      </List>
+    </BaseDialog>
   );
-};
-
-export default ClashPortViewer;
+});
