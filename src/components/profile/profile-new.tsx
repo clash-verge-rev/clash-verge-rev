@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { Settings } from "@mui/icons-material";
 import { createProfile } from "@/services/cmds";
-import Notice from "../base/base-notice";
+import { Notice } from "@/components/base";
 import FileInput from "./file-input";
 
 interface Props {

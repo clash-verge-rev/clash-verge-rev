@@ -12,8 +12,8 @@ import {
   SxProps,
   Theme,
 } from "@mui/material";
+import { BaseLoading } from "@/components/base";
 import delayManager from "@/services/delay";
-import BaseLoading from "../base/base-loading";
 
 interface Props {
   groupName: string;

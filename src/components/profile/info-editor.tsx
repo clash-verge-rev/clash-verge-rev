@@ -17,7 +17,7 @@ import {
 import { Settings } from "@mui/icons-material";
 import { patchProfile } from "@/services/cmds";
 import { version } from "@root/package.json";
-import Notice from "../base/base-notice";
+import { Notice } from "@/components/base";
 
 interface Props {
   open: boolean;

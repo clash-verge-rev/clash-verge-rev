@@ -3,8 +3,7 @@ import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { List, ListItem, ListItemText, Switch, TextField } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef } from "@/components/base";
-import Notice from "@/components/base/base-notice";
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

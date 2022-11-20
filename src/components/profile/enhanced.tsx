@@ -10,8 +10,8 @@ import {
   patchProfilesConfig,
   getRuntimeLogs,
 } from "@/services/cmds";
+import { Notice } from "@/components/base";
 import ProfileMore from "./profile-more";
-import Notice from "../base/base-notice";
 
 interface Props {
   items: IProfileItem[];

@@ -5,7 +5,7 @@ import { Button, ButtonGroup, Paper } from "@mui/material";
 import { getClashConfig, updateConfigs } from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
 import { ProxyGroups } from "@/components/proxy/proxy-groups";
-import BasePage from "@/components/base/base-page";
+import { BasePage } from "@/components/base";
 
 const ProxyPage = () => {
   const { t } = useTranslation();

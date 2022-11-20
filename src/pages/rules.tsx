@@ -2,10 +2,9 @@ import useSWR from "swr";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
-import { Box, Button, MenuItem, Paper, Select, TextField } from "@mui/material";
+import { Box, Paper, TextField } from "@mui/material";
 import { getRules } from "@/services/api";
-import BasePage from "@/components/base/base-page";
-import BaseEmpty from "@/components/base/base-empty";
+import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
 
 const RulesPage = () => {

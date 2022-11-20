@@ -69,7 +69,7 @@ interface NoticeInstance {
 let parent: HTMLDivElement = null!;
 
 // @ts-ignore
-const Notice: NoticeInstance = (props) => {
+export const Notice: NoticeInstance = (props) => {
   if (!parent) {
     parent = document.createElement("div");
     document.body.appendChild(parent);
@@ -91,5 +91,3 @@ const Notice: NoticeInstance = (props) => {
     setTimeout(() => Notice({ type, message, duration }), 0);
   };
 });
-
-export default Notice;

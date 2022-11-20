@@ -13,11 +13,11 @@ import {
 } from "@mui/material";
 import { FeaturedPlayListRounded } from "@mui/icons-material";
 import { viewProfile } from "@/services/cmds";
+import { Notice } from "@/components/base";
 import InfoEditor from "./info-editor";
-import FileEditor from "./file-editor";
+import { FileEditor } from "./file-editor";
 import ProfileBox from "./profile-box";
 import LogViewer from "./log-viewer";
-import Notice from "../base/base-notice";
 
 interface Props {
   selected: boolean;

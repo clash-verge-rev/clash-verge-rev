@@ -15,8 +15,7 @@ import { useTranslation } from "react-i18next";
 import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
 import { closeAllConnections, getInformation } from "@/services/api";
 import { atomConnectionSetting } from "@/services/states";
-import BasePage from "@/components/base/base-page";
-import BaseEmpty from "@/components/base/base-empty";
+import { BaseEmpty, BasePage } from "@/components/base";
 import ConnectionItem from "@/components/connection/connection-item";
 import ConnectionTable from "@/components/connection/connection-table";
 

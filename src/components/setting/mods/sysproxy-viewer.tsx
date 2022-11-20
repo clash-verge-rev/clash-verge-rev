@@ -14,8 +14,7 @@ import {
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { getSystemProxy } from "@/services/cmds";
-import { BaseDialog, DialogRef } from "@/components/base";
-import Notice from "@/components/base/base-notice";
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

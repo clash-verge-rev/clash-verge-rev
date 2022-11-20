@@ -15,7 +15,7 @@ import {
 import { relaunch } from "@tauri-apps/api/process";
 import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
 import { atomUpdateState } from "@/services/states";
-import Notice from "../base/base-notice";
+import { Notice } from "@/components/base";
 
 interface Props {
   open: boolean;

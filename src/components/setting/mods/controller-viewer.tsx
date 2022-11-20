@@ -5,8 +5,7 @@ import { useTranslation } from "react-i18next";
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
 import { getClashInfo, patchClashConfig } from "@/services/cmds";
 import { getAxios } from "@/services/api";
-import { BaseDialog, DialogRef } from "@/components/base";
-import Notice from "@/components/base/base-notice";
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
 export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

@@ -9,12 +9,10 @@ function ErrorFallback({ error }: FallbackProps) {
   );
 }
 
-const BaseErrorBoundary: React.FC = (props) => {
+export const BaseErrorBoundary: React.FC = (props) => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       {props.children}
     </ErrorBoundary>
   );
 };
-
-export default BaseErrorBoundary;

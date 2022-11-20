@@ -16,7 +16,7 @@ export const useRenderList = (mode: string) => {
   const { data: proxiesData, mutate: mutateProxies } = useSWR(
     "getProxies",
     getProxies,
-    { refreshInterval: 45000, suspense: true }
+    { refreshInterval: 45000 }
   );
 
   const [headStates, setHeadState] = useHeadStateNew();
@@ -35,6 +35,7 @@ export const useRenderList = (mode: string) => {
   }, [proxiesData, mode]);
 
   const renderList: IRenderItem[] = useMemo(() => {
+    if (!proxiesData) return [];
     const useRule = mode === "rule" || mode === "script";
     const renderGroups =
       (useRule ? proxiesData?.groups : [proxiesData?.global!]) || [];

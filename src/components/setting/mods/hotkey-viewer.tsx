@@ -3,9 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { styled, Typography } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef } from "@/components/base";
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { HotkeyInput } from "./hotkey-input";
-import Notice from "@/components/base/base-notice";
 
 const ItemWrapper = styled("div")`
   display: flex;

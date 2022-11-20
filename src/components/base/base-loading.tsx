@@ -37,7 +37,7 @@ const LoadingItem = styled("div")(({ theme }) => ({
   background: theme.palette.text.secondary,
 }));
 
-const BaseLoading = () => {
+export const BaseLoading = () => {
   return (
     <Loading>
       <LoadingItem />
@@ -46,5 +46,3 @@ const BaseLoading = () => {
     </Loading>
   );
 };
-
-export default BaseLoading;

@@ -1,7 +1,6 @@
 import { Paper } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import Notice from "@/components/base/base-notice";
-import BasePage from "@/components/base/base-page";
+import { BasePage, Notice } from "@/components/base";
 import SettingVerge from "@/components/setting/setting-verge";
 import SettingClash from "@/components/setting/setting-clash";
 import SettingSystem from "@/components/setting/setting-system";

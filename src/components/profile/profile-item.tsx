@@ -16,11 +16,11 @@ import {
 import { RefreshRounded } from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
+import { Notice } from "@/components/base";
 import parseTraffic from "@/utils/parse-traffic";
 import ProfileBox from "./profile-box";
 import InfoEditor from "./info-editor";
-import FileEditor from "./file-editor";
-import Notice from "../base/base-notice";
+import { FileEditor } from "./file-editor";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
