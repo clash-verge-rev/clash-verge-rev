@@ -26,7 +26,7 @@ interface Props {
   onChange?: () => void;
 }
 
-export const FileEditor = (props: Props) => {
+export const EditorViewer = (props: Props) => {
   const { uid, open, mode, onClose, onChange } = props;
 
   const { t } = useTranslation();

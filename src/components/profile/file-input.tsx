@@ -7,7 +7,7 @@ interface Props {
   onChange: (value: string) => void;
 }
 
-const FileInput = (props: Props) => {
+export const FileInput = (props: Props) => {
   const { onChange } = props;
 
   const { t } = useTranslation();
@@ -59,5 +59,3 @@ const FileInput = (props: Props) => {
     </Box>
   );
 };
-
-export default FileInput;

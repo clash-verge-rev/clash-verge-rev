@@ -27,7 +27,7 @@ interface Props {
 
 // edit the profile item
 // remote / local file / merge / script
-const InfoEditor = (props: Props) => {
+export const InfoViewer = (props: Props) => {
   const { open, itemData, onClose } = props;
 
   const { t } = useTranslation();
@@ -209,5 +209,3 @@ const InfoEditor = (props: Props) => {
     </Dialog>
   );
 };
-
-export default InfoEditor;

@@ -14,10 +14,10 @@ import {
 import { FeaturedPlayListRounded } from "@mui/icons-material";
 import { viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
-import InfoEditor from "./info-editor";
-import { FileEditor } from "./file-editor";
-import ProfileBox from "./profile-box";
-import LogViewer from "./log-viewer";
+import { InfoViewer } from "./info-viewer";
+import { EditorViewer } from "./editor-viewer";
+import { ProfileBox } from "./profile-box";
+import { LogViewer } from "./log-viewer";
 
 interface Props {
   selected: boolean;
@@ -32,7 +32,7 @@ interface Props {
 }
 
 // profile enhanced item
-const ProfileMore = (props: Props) => {
+export const ProfileMore = (props: Props) => {
   const {
     selected,
     itemData,
@@ -219,13 +219,13 @@ const ProfileMore = (props: Props) => {
           ))}
       </Menu>
 
-      <InfoEditor
+      <InfoViewer
         open={editOpen}
         itemData={itemData}
         onClose={() => setEditOpen(false)}
       />
 
-      <FileEditor
+      <EditorViewer
         uid={uid}
         open={fileOpen}
         mode={type === "merge" ? "yaml" : "javascript"}
@@ -247,5 +247,3 @@ function parseExpire(expire?: number) {
   if (!expire) return "-";
   return dayjs(expire * 1000).format("YYYY-MM-DD");
 }
-
-export default ProfileMore;

@@ -21,7 +21,7 @@ import {
 import { Settings } from "@mui/icons-material";
 import { createProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
-import FileInput from "./file-input";
+import { FileInput } from "./file-input";
 
 interface Props {
   open: boolean;
@@ -30,7 +30,7 @@ interface Props {
 
 // create a new profile
 // remote / local file / merge / script
-const ProfileNew = (props: Props) => {
+export const ProfileNew = (props: Props) => {
   const { open, onClose } = props;
 
   const { t } = useTranslation();
@@ -210,5 +210,3 @@ const ProfileNew = (props: Props) => {
     </Dialog>
   );
 };
-
-export default ProfileNew;

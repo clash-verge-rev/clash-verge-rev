@@ -18,7 +18,7 @@ interface Props {
   onClose: () => void;
 }
 
-const LogViewer = (props: Props) => {
+export const LogViewer = (props: Props) => {
   const { open, logInfo, onClose } = props;
 
   const { t } = useTranslation();
@@ -67,5 +67,3 @@ const LogViewer = (props: Props) => {
     </Dialog>
   );
 };
-
-export default LogViewer;
