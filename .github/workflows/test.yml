@@ -45,9 +45,9 @@ jobs:
           override: true
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
         with:
-          working-directory: src-tauri
+          workspaces: src-tauri
 
       - name: Install Node
         uses: actions/setup-node@v1
@@ -79,7 +79,7 @@ jobs:
           yarn run check
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@0e558392ccadcb49bcc89e7df15a400e8f0c954d
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}

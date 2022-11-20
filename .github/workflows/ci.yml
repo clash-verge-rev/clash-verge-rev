@@ -30,9 +30,9 @@ jobs:
           override: true
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@ce325b60658c1b38465c06cc965b79baf32c1e72
+        uses: Swatinem/rust-cache@v2
         with:
-          working-directory: src-tauri
+          workspaces: src-tauri
 
       - name: Install Node
         uses: actions/setup-node@v1
@@ -64,7 +64,7 @@ jobs:
           yarn run check
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@0e558392ccadcb49bcc89e7df15a400e8f0c954d
+        uses: tauri-apps/tauri-action@v0
         # enable cache even though failed
         # continue-on-error: true
         env:
