@@ -1,30 +1,12 @@
-/**
- * parse the traffic to
- * xxx B
- * xxx KB
- * xxx MB
- * xxx GB
- */
-const parseTraffic = (num: number) => {
-  const gb = 1024 ** 3;
-  const mb = 1024 ** 2;
-  const kb = 1024;
-  let t = num;
-  let u = "B";
+const UNITS = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
-  if (num < 1000) return [`${Math.round(t)}`, "B"];
-  if (num <= mb) {
-    t = num / kb;
-    u = "KB";
-  } else if (num <= gb) {
-    t = num / mb;
-    u = "MB";
-  } else {
-    t = num / gb;
-    u = "GB";
-  }
-  if (t >= 100) return [`${Math.round(t)}`, u];
-  return [`${Math.round(t * 10) / 10}`, u];
+const parseTraffic = (num: number) => {
+  if (num < 1000) return [`${Math.round(num)}`, "B"];
+  const exp = Math.min(Math.floor(Math.log10(num) / 3), UNITS.length - 1);
+  const ret = (num / Math.pow(1000, exp)).toPrecision(3);
+  const unit = UNITS[exp];
+
+  return [ret, unit];
 };
 
 export default parseTraffic;
