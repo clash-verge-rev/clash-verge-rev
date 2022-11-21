@@ -78,9 +78,10 @@ jobs:
           includeDebug: ${{ github.event.inputs.debug }}
           prerelease: true
 
-      # - name: Portable Bundle
-      #   if: matrix.os == 'windows-latest'
-      #   run: |
-      #     yarn run portable
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Portable Bundle
+        if: matrix.os == 'windows-latest'
+        run: |
+          yarn run portable
+        env:
+          TAG_NAME: alpha
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
