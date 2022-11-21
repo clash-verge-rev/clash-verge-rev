@@ -49,7 +49,7 @@ export const ProxyHead = (props: Props) => {
   }, [groupName, testUrl, verge?.default_latency_test]);
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", ...sx }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ...sx }}>
       <IconButton
         size="small"
         color="inherit"
@@ -86,7 +86,7 @@ export const ProxyHead = (props: Props) => {
           onHeadState({ sortType: ((sortType + 1) % 3) as ProxySortType })
         }
       >
-        {sortType === 0 && <SortRounded />}
+        {sortType !== 1 && sortType !== 2 && <SortRounded />}
         {sortType === 1 && <AccessTimeRounded />}
         {sortType === 2 && <SortByAlphaRounded />}
       </IconButton>
