@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Button, Stack, Typography } from "@mui/material";
@@ -8,7 +9,6 @@ import {
   uninstallService,
   patchVergeConfig,
 } from "@/services/cmds";
-import { forwardRef, useState } from "react";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
 interface Props {
@@ -26,6 +26,11 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
     checkService,
     { revalidateIfStale: false, shouldRetryOnError: false }
   );
+
+  useImperativeHandle(ref, () => ({
+    open: () => setOpen(true),
+    close: () => setOpen(false),
+  }));
 
   const state = status != null ? status : "pending";
 
