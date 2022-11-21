@@ -84,15 +84,7 @@ impl Config {
 
     /// 生成配置存好
     pub fn generate() -> Result<()> {
-        let clash_config = { Config::clash().latest().clone() };
-
-        let tun_mode = { Config::verge().latest().enable_tun_mode.clone() };
-        let tun_mode = tun_mode.unwrap_or(false);
-
-        let pa = { Config::profiles().latest().gen_activate()? };
-
-        let (config, exists_keys, logs) =
-            enhance::enhance_config(clash_config.0, pa.current, pa.chain, pa.valid, tun_mode);
+        let (config, exists_keys, logs) = enhance::enhance();
 
         *Config::runtime().draft() = IRuntime {
             config: Some(config),

@@ -1,31 +1,66 @@
+mod chain;
 mod field;
 mod merge;
 mod script;
 mod tun;
 
+use self::chain::*;
 pub(self) use self::field::*;
 use self::merge::*;
 use self::script::*;
 use self::tun::*;
-use crate::config::{ChainItem, ChainType};
+use crate::config::Config;
 use serde_yaml::Mapping;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
 type ResultLog = Vec<(String, String)>;
 
-pub fn enhance_config(
-    clash_config: Mapping,
-    profile_config: Mapping,
-    chain: Vec<ChainItem>,
-    valid: Vec<String>,
-    tun_mode: bool,
-) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
-    let mut config = profile_config;
+/// Enhance mode
+/// 返回最终配置、该配置包含的键、和script执行的结果
+pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+    let clash_config = { Config::clash().latest().0.clone() };
+
+    let (tun_mode, enable_builtin) = {
+        let verge = Config::verge();
+        let verge = verge.latest();
+        (
+            verge.enable_tun_mode.clone(),
+            verge.enable_builtin_enhanced.clone(),
+        )
+    };
+
+    let tun_mode = tun_mode.unwrap_or(false);
+    let enable_builtin = enable_builtin.unwrap_or(true);
+
+    let (mut config, mut chain, valid) = {
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
+
+        let current = profiles.current_mapping().unwrap_or(Mapping::new());
+
+        let chain = match profiles.chain.as_ref() {
+            Some(chain) => chain
+                .iter()
+                .filter_map(|uid| profiles.get_item(uid).ok())
+                .filter_map(|item| <Option<ChainItem>>::from(item))
+                .collect::<Vec<ChainItem>>(),
+            None => vec![],
+        };
+
+        let valid = profiles.valid.clone().unwrap_or(vec![]);
+
+        (current, chain, valid)
+    };
+
     let mut result_map = HashMap::new();
     let mut exists_keys = use_keys(&config);
 
     let valid = use_valid_fields(valid);
+
+    if enable_builtin {
+        chain.extend(ChainItem::builtin().into_iter());
+    }
 
     chain.into_iter().for_each(|item| match item.data {
         ChainType::Merge(merge) => {
