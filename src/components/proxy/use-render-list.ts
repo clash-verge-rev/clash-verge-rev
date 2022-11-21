@@ -44,7 +44,9 @@ export const useRenderList = (mode: string) => {
     // global 和 direct 使用展开的样式
     const useRule = mode === "rule" || mode === "script";
     const renderGroups =
-      (useRule ? proxiesData?.groups : [proxiesData?.global!]) || [];
+      (useRule && proxiesData.groups.length
+        ? proxiesData.groups
+        : [proxiesData.global!]) || [];
 
     const retList = renderGroups.flatMap((group) => {
       const headState = headStates[group.name] || DEFAULT_STATE;
