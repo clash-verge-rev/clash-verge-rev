@@ -65,6 +65,9 @@ pub struct IVerge {
 
     /// 默认的延迟测试连接
     pub default_latency_test: Option<String>,
+
+    /// 是否使用内部的脚本支持，默认为真
+    pub enable_builtin_enhanced: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -107,6 +110,7 @@ impl IVerge {
             enable_proxy_guard: Some(false),
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
+            enable_builtin_enhanced: Some(true),
             ..Self::default()
         }
     }
@@ -148,6 +152,7 @@ impl IVerge {
 
         patch!(auto_close_connection);
         patch!(default_latency_test);
+        patch!(enable_builtin_enhanced);
     }
 
     /// 在初始化前尝试拿到单例端口的值

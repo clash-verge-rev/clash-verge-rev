@@ -1,4 +1,4 @@
-use super::{prfitem::PrfItem, ChainItem};
+use super::prfitem::PrfItem;
 use crate::utils::{dirs, help};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -261,52 +261,20 @@ impl IProfiles {
         Ok(current == uid)
     }
 
-    /// generate the current Mapping data
-    fn gen_current(&self) -> Result<Mapping> {
-        let config = Mapping::new();
-
-        if self.current.is_none() || self.items.is_none() {
-            return Ok(config);
-        }
-
-        let current = self.current.as_ref().unwrap();
-        for item in self.items.as_ref().unwrap().iter() {
-            if item.uid.as_ref() == Some(current) {
-                let file_path = match item.file.as_ref() {
-                    Some(file) => dirs::app_profiles_dir()?.join(file),
-                    None => bail!("failed to get the file field"),
-                };
-
-                return Ok(help::read_merge_mapping(&file_path)?);
+    /// 获取current指向的配置内容
+    pub fn current_mapping(&self) -> Result<Mapping> {
+        match (self.current.as_ref(), self.items.as_ref()) {
+            (Some(current), Some(items)) => {
+                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
+                    let file_path = match item.file.as_ref() {
+                        Some(file) => dirs::app_profiles_dir()?.join(file),
+                        None => bail!("failed to get the file field"),
+                    };
+                    return Ok(help::read_merge_mapping(&file_path)?);
+                }
+                bail!("failed to find the current profile \"uid:{current}\"");
             }
+            _ => Ok(Mapping::new()),
         }
-        bail!("failed to find the current profile \"uid:{current}\"");
     }
-
-    /// generate the data for activate clash config
-    pub fn gen_activate(&self) -> Result<PrfActivate> {
-        let current = self.gen_current()?;
-        let chain = match self.chain.as_ref() {
-            Some(chain) => chain
-                .iter()
-                .filter_map(|uid| self.get_item(uid).ok())
-                .filter_map(|item| item.to_enhance())
-                .collect::<Vec<ChainItem>>(),
-            None => vec![],
-        };
-        let valid = self.valid.clone().unwrap_or(vec![]);
-
-        Ok(PrfActivate {
-            current,
-            chain,
-            valid,
-        })
-    }
-}
-
-#[derive(Default, Clone)]
-pub struct PrfActivate {
-    pub current: Mapping,
-    pub chain: Vec<ChainItem>,
-    pub valid: Vec<String>,
 }
