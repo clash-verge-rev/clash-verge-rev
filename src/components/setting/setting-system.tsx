@@ -74,7 +74,7 @@ const SettingSystem = ({ onError }: Props) => {
               <PrivacyTipRounded
                 fontSize="small"
                 style={{ cursor: "pointer", opacity: 0.75 }}
-                onClick={() => sysproxyRef.current?.open()}
+                onClick={() => serviceRef.current?.open()}
               />
             )
           }
@@ -95,7 +95,7 @@ const SettingSystem = ({ onError }: Props) => {
               color="inherit"
               size="small"
               sx={{ my: "2px" }}
-              onClick={() => sysproxyRef.current?.open()}
+              onClick={() => serviceRef.current?.open()}
             >
               <ArrowForward />
             </IconButton>
