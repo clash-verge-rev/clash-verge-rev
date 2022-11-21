@@ -59,8 +59,11 @@ impl CoreManager {
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let clash_core = clash_core.unwrap_or("clash".into());
 
+        let app_dir = dirs::app_home_dir()?;
+        let app_dir = dirs::path_to_str(&app_dir)?;
+
         let output = Command::new_sidecar(clash_core)?
-            .args(["-t", "-f", config_path])
+            .args(["-t", "-d", app_dir, "-f", config_path])
             .output()?;
 
         if !output.status.success() {
