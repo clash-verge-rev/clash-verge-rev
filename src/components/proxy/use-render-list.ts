@@ -2,7 +2,11 @@ import useSWR from "swr";
 import { getProxies } from "@/services/api";
 import { useEffect, useMemo } from "react";
 import { filterSort } from "./use-filter-sort";
-import { useHeadStateNew, type HeadState } from "./use-head-state";
+import {
+  useHeadStateNew,
+  DEFAULT_STATE,
+  type HeadState,
+} from "./use-head-state";
 
 export interface IRenderItem {
   type: 0 | 1 | 2 | 3; // 组 ｜ head ｜ item ｜ empty
@@ -36,17 +40,19 @@ export const useRenderList = (mode: string) => {
 
   const renderList: IRenderItem[] = useMemo(() => {
     if (!proxiesData) return [];
+
+    // global 和 direct 使用展开的样式
     const useRule = mode === "rule" || mode === "script";
     const renderGroups =
       (useRule ? proxiesData?.groups : [proxiesData?.global!]) || [];
 
     const retList = renderGroups.flatMap((group) => {
-      const headState = headStates[group.name];
+      const headState = headStates[group.name] || DEFAULT_STATE;
       const ret: IRenderItem[] = [
         { type: 0, key: group.name, group, headState },
       ];
 
-      if (headState?.open) {
+      if (headState?.open || !useRule) {
         const proxies = filterSort(
           group.all,
           group.name,

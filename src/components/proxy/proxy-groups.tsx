@@ -174,7 +174,7 @@ function ProxyRenderItem(props: RenderProps) {
   if (type === 1) {
     return (
       <ProxyHead
-        sx={{ pl: indent ? 4.5 : 2.5, pr: 3, my: 1, button: { mr: 0.5 } }}
+        sx={{ pl: indent ? 4.5 : 2.5, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
         groupName={group.name}
         headState={headState!}
         onLocation={() => onLocation(group)}
