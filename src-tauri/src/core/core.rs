@@ -210,6 +210,8 @@ impl CoreManager {
 
         Config::verge().draft().clash_core = Some(clash_core);
 
+        self.check_config()?;
+
         // 清掉旧日志
         Logger::global().clear_log();
 
