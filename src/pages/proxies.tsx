@@ -1,11 +1,13 @@
 import useSWR from "swr";
+import { useEffect, useMemo } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup, Paper } from "@mui/material";
 import { getClashConfig, updateConfigs } from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
-import { ProxyGroups } from "@/components/proxy/proxy-groups";
+import { useVerge } from "@/hooks/use-verge";
 import { BasePage } from "@/components/base";
+import { ProxyGroups } from "@/components/proxy/proxy-groups";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
@@ -15,7 +17,15 @@ const ProxyPage = () => {
     getClashConfig
   );
 
-  const modeList = ["rule", "global", "direct", "script"];
+  const { verge } = useVerge();
+
+  const modeList = useMemo(() => {
+    if (verge?.clash_core === "clash-meta") {
+      return ["rule", "global", "direct"];
+    }
+    return ["rule", "global", "direct", "script"];
+  }, [verge?.clash_core]);
+
   const curMode = clashConfig?.mode.toLowerCase();
 
   const onChangeMode = useLockFn(async (mode: string) => {
@@ -23,6 +33,12 @@ const ProxyPage = () => {
     await patchClashConfig({ mode });
     mutateClash();
   });
+
+  useEffect(() => {
+    if (curMode && !modeList.includes(curMode)) {
+      onChangeMode("rule");
+    }
+  }, [curMode]);
 
   return (
     <BasePage
