@@ -2,6 +2,10 @@ name: Alpha CI
 
 on:
   workflow_dispatch:
+    inputs:
+      debug:
+        type: boolean
+        default: false
 
 env:
   CARGO_INCREMENTAL: 0
@@ -71,7 +75,7 @@ jobs:
           releaseName: "Clash Verge Alpha"
           releaseBody: "Alpha Version (include debug)"
           releaseDraft: false
-          includeDebug: true
+          includeDebug: ${{ github.event.inputs.debug }}
           prerelease: true
 
       # - name: Portable Bundle
