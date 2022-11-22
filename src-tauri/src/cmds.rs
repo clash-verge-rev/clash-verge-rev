@@ -24,7 +24,6 @@ pub async fn enhance_profiles() -> CmdResult {
     Ok(())
 }
 
-#[deprecated]
 #[tauri::command]
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;

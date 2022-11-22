@@ -79,6 +79,7 @@ impl CoreManager {
     pub async fn run_core(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Run)?;
 
+        #[allow(unused_mut)]
         let mut should_kill = match self.sidecar.lock().take() {
             Some(child) => {
                 log::debug!(target: "app", "stop the core by sidecar");
