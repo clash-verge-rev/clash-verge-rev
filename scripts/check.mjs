@@ -8,181 +8,131 @@ import { execSync } from "child_process";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
-
 const FORCE = process.argv.includes("--force");
-const NO_META = process.argv.includes("--no-meta") || false;
+
+const SIDECAR_HOST = execSync("rustc -vV")
+  .toString()
+  .match(/(?<=host: ).+(?=\s*)/g)[0];
+
+/* ======= clash ======= */
+const CLASH_URL_PREFIX =
+  "https://github.com/Dreamacro/clash/releases/download/premium/";
+const CLASH_LATEST_DATE = "2022.08.26";
+
+const CLASH_MAP = {
+  "win32-x64": "clash-windows-amd64",
+  "darwin-x64": "clash-darwin-amd64",
+  "darwin-arm64": "clash-darwin-arm64",
+  "linux-x64": "clash-linux-amd64",
+  "linux-arm64": "clash-linux-armv8",
+};
+
+/* ======= clash meta ======= */
+const META_URL_PREFIX = `https://github.com/MetaCubeX/Clash.Meta/releases/download/`;
+const META_VERSION = "v1.13.2";
+
+const META_MAP = {
+  "win32-x64": "Clash.Meta-windows-amd64-compatible",
+  "darwin-x64": "Clash.Meta-darwin-amd64",
+  "darwin-arm64": "Clash.Meta-darwin-arm64",
+  "linux-x64": "Clash.Meta-linux-amd64-compatible",
+  "linux-arm64": "Clash.Meta-linux-arm64",
+};
 
 /**
- * get the correct clash release infomation
+ * check available
  */
-function resolveClash() {
-  const { platform, arch } = process;
 
-  const CLASH_URL_PREFIX =
-    "https://github.com/Dreamacro/clash/releases/download/premium/";
-  const CLASH_LATEST_DATE = "2022.08.26";
+const { platform, arch } = process;
+if (!CLASH_MAP[`${platform}-${arch}`]) {
+  throw new Error(`clash unsupport platform "${platform}-${arch}"`);
+}
+if (!META_MAP[`${platform}-${arch}`]) {
+  throw new Error(`clash meta unsupport platform "${platform}-${arch}"`);
+}
 
-  // todo
-  const map = {
-    "win32-x64": "clash-windows-amd64",
-    "darwin-x64": "clash-darwin-amd64",
-    "darwin-arm64": "clash-darwin-arm64",
-    "linux-x64": "clash-linux-amd64",
-    "linux-arm64": "clash-linux-armv8",
-  };
-
-  const name = map[`${platform}-${arch}`];
-
-  if (!name) {
-    throw new Error(`unsupport platform "${platform}-${arch}"`);
-  }
+function clash() {
+  const name = CLASH_MAP[`${platform}-${arch}`];
 
   const isWin = platform === "win32";
-  const zip = isWin ? "zip" : "gz";
-  const url = `${CLASH_URL_PREFIX}${name}-${CLASH_LATEST_DATE}.${zip}`;
-  const exefile = `${name}${isWin ? ".exe" : ""}`;
-  const zipfile = `${name}.${zip}`;
+  const urlExt = isWin ? "zip" : "gz";
+  const downloadURL = `${CLASH_URL_PREFIX}${name}-${CLASH_LATEST_DATE}.${urlExt}`;
+  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const zipFile = `${name}.${urlExt}`;
 
-  return { url, zip, exefile, zipfile };
+  return {
+    name: "clash",
+    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    exeFile,
+    zipFile,
+    downloadURL,
+  };
+}
+
+function clashMeta() {
+  const name = META_MAP[`${platform}-${arch}`];
+  const isWin = platform === "win32";
+  const urlExt = isWin ? "zip" : "gz";
+  const downloadURL = `${META_URL_PREFIX}${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
+  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const zipFile = `${name}-${META_VERSION}.${urlExt}`;
+
+  return {
+    name: "clash-meta",
+    targetFile: `clash-meta-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    exeFile,
+    zipFile,
+    downloadURL,
+  };
 }
 
 /**
- * get the correct Clash.Meta release infomation
+ * download sidecar and rename
  */
-async function resolveClashMeta() {
-  const { platform, arch } = process;
+async function resolveSidecar(binInfo) {
+  const { name, targetFile, zipFile, exeFile, downloadURL } = binInfo;
 
-  const urlPrefix = `https://github.com/MetaCubeX/Clash.Meta/releases/download/`;
-  const latestVersion = "v1.13.2";
-
-  const map = {
-    "win32-x64": "Clash.Meta-windows-amd64-compatible",
-    "darwin-x64": "Clash.Meta-darwin-amd64",
-    "darwin-arm64": "Clash.Meta-darwin-arm64",
-    "linux-x64": "Clash.Meta-linux-amd64-compatible",
-    "linux-arm64": "Clash.Meta-linux-arm64",
-  };
-
-  const name = map[`${platform}-${arch}`];
-
-  if (!name) {
-    throw new Error(`unsupport platform "${platform}-${arch}"`);
-  }
-
-  const isWin = platform === "win32";
-  const ext = isWin ? "zip" : "gz";
-  const url = `${urlPrefix}${latestVersion}/${name}-${latestVersion}.${ext}`;
-  const exefile = `${name}${isWin ? ".exe" : ""}`;
-  const zipfile = `${name}-${latestVersion}.${ext}`;
-
-  return { url, zip: ext, exefile, zipfile };
-}
-
-/**
- * get the sidecar bin
- * clash and Clash Meta
- */
-async function resolveSidecar() {
   const sidecarDir = path.join(cwd, "src-tauri", "sidecar");
+  const sidecarPath = path.join(sidecarDir, targetFile);
 
-  const host = execSync("rustc -vV")
-    .toString()
-    .match(/(?<=host: ).+(?=\s*)/g)[0];
+  await fs.mkdirp(sidecarDir);
+  if (!FORCE && (await fs.pathExists(sidecarPath))) return;
 
-  const ext = process.platform === "win32" ? ".exe" : "";
+  const tempDir = path.join(TEMP_DIR, name);
+  const tempZip = path.join(tempDir, zipFile);
+  const tempExe = path.join(tempDir, exeFile);
 
-  await clash();
-  if (!NO_META) await clashMeta();
+  await fs.mkdirp(tempDir);
+  if (!(await fs.pathExists(tempZip))) await downloadFile(downloadURL, tempZip);
 
-  async function clash() {
-    const sidecarFile = `clash-${host}${ext}`;
-    const sidecarPath = path.join(sidecarDir, sidecarFile);
-
-    await fs.mkdirp(sidecarDir);
-    if (!FORCE && (await fs.pathExists(sidecarPath))) return;
-
-    // download sidecar
-    const binInfo = resolveClash();
-    const tempDir = path.join(TEMP_DIR, "clash");
-    const tempZip = path.join(tempDir, binInfo.zipfile);
-    const tempExe = path.join(tempDir, binInfo.exefile);
-
-    await fs.mkdirp(tempDir);
-    if (!(await fs.pathExists(tempZip)))
-      await downloadFile(binInfo.url, tempZip);
-
-    if (binInfo.zip === "zip") {
-      const zip = new AdmZip(tempZip);
-      zip.getEntries().forEach((entry) => {
-        console.log("[INFO]: entry name", entry.entryName);
+  if (zipFile.endsWith(".zip")) {
+    const zip = new AdmZip(tempZip);
+    zip.getEntries().forEach((entry) => {
+      console.log(`[DEBUG]: ${name} entry name`, entry.entryName);
+    });
+    zip.extractAllTo(tempDir, true);
+    await fs.rename(tempExe, sidecarPath);
+    console.log(`[INFO]: ${name} unzip finished`);
+  } else {
+    // gz
+    const readStream = fs.createReadStream(tempZip);
+    const writeStream = fs.createWriteStream(sidecarPath);
+    readStream
+      .pipe(zlib.createGunzip())
+      .pipe(writeStream)
+      .on("finish", () => {
+        console.log(`[INFO]: ${name} gunzip finished`);
+        execSync(`chmod 755 ${sidecarPath}`);
+        console.log(`[INFO]: ${name} chmod binary finished`);
+      })
+      .on("error", (error) => {
+        console.error(`[ERROR]: ${name} gz failed`, error.message);
+        throw error;
       });
-      zip.extractAllTo(tempDir, true);
-      // save as sidecar
-      await fs.rename(tempExe, sidecarPath);
-      console.log(`[INFO]: unzip finished`);
-    } else {
-      // gz
-      const readStream = fs.createReadStream(tempZip);
-      const writeStream = fs.createWriteStream(sidecarPath);
-      readStream
-        .pipe(zlib.createGunzip())
-        .pipe(writeStream)
-        .on("finish", () => {
-          console.log(`[INFO]: gunzip finished`);
-          execSync(`chmod 755 ${sidecarPath}`);
-          console.log(`[INFO]: chmod binary finished`);
-        })
-        .on("error", (error) => console.error(error));
-    }
-
-    // delete temp dir
-    await fs.remove(tempDir);
   }
 
-  async function clashMeta() {
-    const sidecarFile = `clash-meta-${host}${ext}`;
-    const sidecarPath = path.join(sidecarDir, sidecarFile);
-
-    await fs.mkdirp(sidecarDir);
-    if (!FORCE && (await fs.pathExists(sidecarPath))) return;
-
-    // download sidecar
-    const binInfo = await resolveClashMeta();
-    const tempDir = path.join(TEMP_DIR, "clash-meta");
-    const tempZip = path.join(tempDir, binInfo.zipfile);
-    const tempExe = path.join(tempDir, binInfo.exefile);
-
-    await fs.mkdirp(tempDir);
-    if (!(await fs.pathExists(tempZip)))
-      await downloadFile(binInfo.url, tempZip);
-
-    if (binInfo.zip === "zip") {
-      const zip = new AdmZip(tempZip);
-      zip.getEntries().forEach((entry) => {
-        console.log("[INFO]: entry name", entry.entryName);
-      });
-      zip.extractAllTo(tempDir, true);
-      // save as sidecar
-      await fs.rename(tempExe, sidecarPath);
-      console.log(`[INFO]: unzip finished`);
-    } else {
-      // gz
-      const readStream = fs.createReadStream(tempZip);
-      const writeStream = fs.createWriteStream(sidecarPath);
-      readStream
-        .pipe(zlib.createGunzip())
-        .pipe(writeStream)
-        .on("finish", () => {
-          console.log(`[INFO]: gunzip finished`);
-          execSync(`chmod 755 ${sidecarPath}`);
-          console.log(`[INFO]: chmod binary finished`);
-        })
-        .on("error", (error) => console.error(error));
-    }
-
-    // delete temp dir
-    await fs.remove(tempDir);
-  }
+  // delete temp dir
+  await fs.remove(tempDir);
 }
 
 /**
@@ -225,90 +175,26 @@ async function resolveWintun() {
 }
 
 /**
- * only Windows
- * get the clash-verge-service.exe
+ * download the file to the resources dir
  */
-async function resolveService() {
-  const { platform } = process;
-
-  if (platform !== "win32") return;
+async function resolveResource(binInfo) {
+  const { file, downloadURL } = binInfo;
 
   const resDir = path.join(cwd, "src-tauri/resources");
+  const targetPath = path.join(resDir, file);
 
-  const repo =
-    "https://github.com/zzzgydi/clash-verge-service/releases/download/latest";
-
-  async function help(bin) {
-    const targetPath = path.join(resDir, bin);
-
-    if (!FORCE && (await fs.pathExists(targetPath))) return;
-
-    const url = `${repo}/${bin}`;
-    await downloadFile(url, targetPath);
-  }
+  if (!FORCE && (await fs.pathExists(targetPath))) return;
 
   await fs.mkdirp(resDir);
-  await help("clash-verge-service.exe");
-  await help("install-service.exe");
-  await help("uninstall-service.exe");
+  await downloadFile(downloadURL, targetPath);
 
-  console.log(`[INFO]: resolve Service finished`);
-}
-
-/**
- * get the Country.mmdb (not required)
- */
-async function resolveMmdb() {
-  const url =
-    "https://github.com/Dreamacro/maxmind-geoip/releases/download/20221012/Country.mmdb";
-
-  const resDir = path.join(cwd, "src-tauri", "resources");
-  const resPath = path.join(resDir, "Country.mmdb");
-
-  if (!FORCE && (await fs.pathExists(resPath))) return;
-
-  await fs.mkdirp(resDir);
-  await downloadFile(url, resPath);
-}
-
-/**
- * get the geosite.dat for meta
- */
-async function resolveGeosite() {
-  const url =
-    "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat";
-
-  const resDir = path.join(cwd, "src-tauri", "resources");
-  const resPath = path.join(resDir, "geosite.dat");
-
-  if (!FORCE && (await fs.pathExists(resPath))) return;
-
-  await fs.mkdirp(resDir);
-  await downloadFile(url, resPath);
-}
-
-/**
- * get the geoip.dat for meta
- */
-async function resolveGeoIP() {
-  const url =
-    "https://github.com/Loyalsoldier/geoip/releases/latest/download/geoip.dat";
-
-  const resDir = path.join(cwd, "src-tauri", "resources");
-  const resPath = path.join(resDir, "geoip.dat");
-
-  if (!FORCE && (await fs.pathExists(resPath))) return;
-
-  await fs.mkdirp(resDir);
-  await downloadFile(url, resPath);
+  console.log(`[INFO]: ${file} finished`);
 }
 
 /**
  * download file and save to `path`
  */
 async function downloadFile(url, path) {
-  console.log(`[INFO]: downloading from "${url}"`);
-
   const options = {};
 
   const httpProxy =
@@ -332,16 +218,70 @@ async function downloadFile(url, path) {
   console.log(`[INFO]: download finished "${url}"`);
 }
 
-/// main
-resolveSidecar().catch(console.error);
-resolveWintun()
-  .catch(console.error)
-  .finally(() => {
-    resolveService().catch(console.error);
+/**
+ * main
+ */
+const SERVICE_URL =
+  "https://github.com/zzzgydi/clash-verge-service/releases/download/latest";
+
+const resolveService = () =>
+  resolveResource({
+    file: "clash-verge-service.exe",
+    downloadURL: `${SERVICE_URL}/clash-verge-service.exe`,
   });
-resolveMmdb()
-  .catch(console.error)
-  .finally(() => {
-    resolveGeosite().catch(console.error);
-    // resolveGeoIP().catch(console.error);
+const resolveInstall = () =>
+  resolveResource({
+    file: "install-service.exe",
+    downloadURL: `${SERVICE_URL}/install-service.exe`,
   });
+const resolveUninstall = () =>
+  resolveResource({
+    file: "uninstall-service.exe",
+    downloadURL: `${SERVICE_URL}/uninstall-service.exe`,
+  });
+const resolveMmdb = () =>
+  resolveResource({
+    file: "Country.mmdb",
+    downloadURL: `https://github.com/Dreamacro/maxmind-geoip/releases/download/latest/Country.mmdb`,
+  });
+const resolveGeosite = () =>
+  resolveResource({
+    file: "geosite.dat",
+    downloadURL: `https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat`,
+  });
+const resolveGeoIP = () =>
+  resolveResource({
+    file: "geoip.dat",
+    downloadURL: `https://github.com/Loyalsoldier/geoip/releases/latest/download/geoip.dat`,
+  });
+
+const tasks = [
+  { name: "clash", func: () => resolveSidecar(clash()), retry: 5 },
+  { name: "clash-meta", func: () => resolveSidecar(clashMeta()), retry: 5 },
+  { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
+  { name: "service", func: resolveService, retry: 5, winOnly: true },
+  { name: "install", func: resolveInstall, retry: 5, winOnly: true },
+  { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
+  { name: "mmdb", func: resolveMmdb, retry: 5 },
+  { name: "geosite", func: resolveGeosite, retry: 5 },
+  { name: "geoip", func: resolveGeoIP, retry: 5 },
+];
+
+async function runTask() {
+  const task = tasks.shift();
+  if (!task) return;
+  if (task.winOnly && process.platform !== "win32") return;
+
+  for (let i = 0; i < task.retry; i++) {
+    try {
+      await task.func();
+      break;
+    } catch (err) {
+      console.error(`[ERROR]: task::${task.name} try ${i} == `, err.message);
+    }
+  }
+  return runTask();
+}
+
+runTask();
+runTask();
