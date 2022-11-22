@@ -1,5 +1,5 @@
 use crate::{config::Config, log_err};
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -43,13 +43,7 @@ impl Sysopt {
 
     /// init the sysproxy
     pub fn init_sysproxy(&self) -> Result<()> {
-        let port = { Config::clash().latest().get_info()?.port };
-
-        if port.is_none() {
-            bail!("clash port is none");
-        }
-
-        let port = port.unwrap().parse::<u16>()?;
+        let port = { Config::clash().latest().get_mixed_port() };
 
         let (enable, bypass) = {
             let verge = Config::verge();
@@ -263,23 +257,16 @@ impl Sysopt {
 
                 log::debug!(target: "app", "try to guard the system proxy");
 
-                if let Ok(info) = { Config::clash().latest().get_info() } {
-                    match info.port.unwrap_or("".into()).parse::<u16>() {
-                        Ok(port) => {
-                            let sysproxy = Sysproxy {
-                                enable: true,
-                                host: "127.0.0.1".into(),
-                                port,
-                                bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
-                            };
+                let port = { Config::clash().latest().get_mixed_port() };
 
-                            log_err!(sysproxy.set_system_proxy());
-                        }
-                        Err(_) => {
-                            log::error!(target: "app", "failed to parse clash port in guard proxy")
-                        }
-                    }
-                }
+                let sysproxy = Sysproxy {
+                    enable: true,
+                    host: "127.0.0.1".into(),
+                    port,
+                    bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+                };
+
+                log_err!(sysproxy.set_system_proxy());
             }
 
             let mut state = guard_state.lock().await;

@@ -119,8 +119,8 @@ pub fn save_profile_file(index: String, file_data: Option<String>) -> CmdResult 
 }
 
 #[tauri::command]
-pub fn get_clash_info() -> CmdResult<ClashInfoN> {
-    wrap_err!(Config::clash().latest().get_info())
+pub fn get_clash_info() -> CmdResult<ClashInfo> {
+    Ok(Config::clash().latest().get_client_info())
 }
 
 #[tauri::command]

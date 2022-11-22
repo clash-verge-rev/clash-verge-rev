@@ -2,6 +2,10 @@ use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    str::FromStr,
+};
 
 #[derive(Default, Debug, Clone)]
 pub struct IClashTemp(pub Mapping);
@@ -9,7 +13,7 @@ pub struct IClashTemp(pub Mapping);
 impl IClashTemp {
     pub fn new() -> Self {
         match dirs::clash_path().and_then(|path| help::read_merge_mapping(&path)) {
-            Ok(map) => Self(map),
+            Ok(map) => Self(Self::guard(map)),
             Err(err) => {
                 log::error!(target: "app", "{err}");
                 Self::template()
@@ -27,7 +31,16 @@ impl IClashTemp {
         map.insert("external-controller".into(), "127.0.0.1:9090".into());
         map.insert("secret".into(), "".into());
 
-        Self(map)
+        Self(Self::guard(map))
+    }
+
+    fn guard(mut config: Mapping) -> Mapping {
+        let port = Self::guard_mixed_port(&config);
+        let ctrl = Self::guard_server_ctrl(&config);
+
+        config.insert("mixed-port".into(), port.into());
+        config.insert("external-controller".into(), ctrl.into());
+        config
     }
 
     pub fn patch_config(&mut self, patch: Mapping) {
@@ -44,109 +57,150 @@ impl IClashTemp {
         )
     }
 
-    pub fn get_info(&self) -> Result<ClashInfoN> {
-        Ok(ClashInfoN::from(&self.0))
+    // pub fn get_info(&self) -> ClashInfo {
+    //     self.1.clone()
+    // }
+
+    pub fn get_mixed_port(&self) -> u16 {
+        Self::guard_mixed_port(&self.0)
     }
-}
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct ClashInfoN {
-    /// clash sidecar status
-    pub status: String,
-    /// clash core port
-    pub port: Option<String>,
-    /// same as `external-controller`
-    pub server: Option<String>,
-    /// clash secret
-    pub secret: Option<String>,
-}
+    pub fn get_client_info(&self) -> ClashInfo {
+        let config = &self.0;
 
-impl ClashInfoN {
-    /// parse the clash's config.yaml
-    /// get some information
-    pub fn from(config: &Mapping) -> ClashInfoN {
-        let key_port_1 = Value::from("mixed-port");
-        let key_port_2 = Value::from("port");
-        let key_server = Value::from("external-controller");
-        let key_secret = Value::from("secret");
-
-        let mut status: u32 = 0;
-
-        let port = match config.get(&key_port_1) {
-            Some(value) => match value {
-                Value::String(val_str) => Some(val_str.clone()),
-                Value::Number(val_num) => Some(val_num.to_string()),
-                _ => {
-                    status |= 0b1;
-                    None
-                }
-            },
-            _ => {
-                status |= 0b10;
-                None
-            }
-        };
-        let port = match port {
-            Some(_) => port,
-            None => match config.get(&key_port_2) {
-                Some(value) => match value {
-                    Value::String(val_str) => Some(val_str.clone()),
-                    Value::Number(val_num) => Some(val_num.to_string()),
-                    _ => {
-                        status |= 0b100;
-                        None
-                    }
-                },
-                _ => {
-                    status |= 0b1000;
-                    None
-                }
-            },
-        };
-
-        // `external-controller` could be
-        // "127.0.0.1:9090" or ":9090"
-        let server = match config.get(&key_server) {
-            Some(value) => match value.as_str() {
-                Some(val_str) => {
-                    if val_str.starts_with(":") {
-                        Some(format!("127.0.0.1{val_str}"))
-                    } else if val_str.starts_with("0.0.0.0:") {
-                        Some(format!("127.0.0.1:{}", &val_str[8..]))
-                    } else if val_str.starts_with("[::]:") {
-                        Some(format!("127.0.0.1:{}", &val_str[5..]))
-                    } else {
-                        Some(val_str.into())
-                    }
-                }
-                None => {
-                    status |= 0b10000;
-                    None
-                }
-            },
-            None => {
-                status |= 0b100000;
-                None
-            }
-        };
-
-        let secret = match config.get(&key_secret) {
-            Some(value) => match value {
+        ClashInfo {
+            port: Self::guard_mixed_port(&config),
+            server: Self::guard_client_ctrl(&config),
+            secret: config.get("secret").and_then(|value| match value {
                 Value::String(val_str) => Some(val_str.clone()),
                 Value::Bool(val_bool) => Some(val_bool.to_string()),
                 Value::Number(val_num) => Some(val_num.to_string()),
                 _ => None,
-            },
-            _ => None,
-        };
-
-        ClashInfoN {
-            status: format!("{status}"),
-            port,
-            server,
-            secret,
+            }),
         }
     }
+
+    pub fn guard_mixed_port(config: &Mapping) -> u16 {
+        let mut port = config
+            .get("mixed-port")
+            .and_then(|value| match value {
+                Value::String(val_str) => val_str.parse().ok(),
+                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
+                _ => None,
+            })
+            .unwrap_or(7890);
+        if port == 0 {
+            port = 7890;
+        }
+        port
+    }
+
+    pub fn guard_server_ctrl(config: &Mapping) -> String {
+        config
+            .get("external-controller")
+            .and_then(|value| match value.as_str() {
+                Some(val_str) => {
+                    let val_str = val_str.trim();
+
+                    let val = match val_str.starts_with(":") {
+                        true => format!("127.0.0.1{val_str}"),
+                        false => val_str.to_owned(),
+                    };
+
+                    SocketAddr::from_str(val.as_str())
+                        .ok()
+                        .map(|s| s.to_string())
+                }
+                None => None,
+            })
+            .unwrap_or("127.0.0.1:9090".into())
+    }
+
+    pub fn guard_client_ctrl(config: &Mapping) -> String {
+        let value = Self::guard_server_ctrl(config);
+        match SocketAddr::from_str(value.as_str()) {
+            Ok(mut socket) => {
+                if socket.ip().is_unspecified() {
+                    socket.set_ip(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)));
+                }
+                socket.to_string()
+            }
+            Err(_) => "127.0.0.1:9090".into(),
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ClashInfo {
+    /// clash core port
+    pub port: u16,
+    /// same as `external-controller`
+    pub server: String,
+    /// clash secret
+    pub secret: Option<String>,
+}
+
+#[test]
+fn test_clash_info() {
+    fn get_case<T: Into<Value>, D: Into<Value>>(mp: T, ec: D) -> ClashInfo {
+        let mut map = Mapping::new();
+        map.insert("mixed-port".into(), mp.into());
+        map.insert("external-controller".into(), ec.into());
+
+        IClashTemp(IClashTemp::guard(map)).get_client_info()
+    }
+
+    fn get_result<S: Into<String>>(port: u16, server: S) -> ClashInfo {
+        ClashInfo {
+            port,
+            server: server.into(),
+            secret: None,
+        }
+    }
+
+    assert_eq!(
+        IClashTemp(IClashTemp::guard(Mapping::new())).get_client_info(),
+        get_result(7890, "127.0.0.1:9090")
+    );
+
+    assert_eq!(get_case("", ""), get_result(7890, "127.0.0.1:9090"));
+
+    assert_eq!(get_case(65537, ""), get_result(1, "127.0.0.1:9090"));
+
+    assert_eq!(
+        get_case(8888, "127.0.0.1:8888"),
+        get_result(8888, "127.0.0.1:8888")
+    );
+
+    assert_eq!(
+        get_case(8888, "   :98888 "),
+        get_result(8888, "127.0.0.1:9090")
+    );
+
+    assert_eq!(
+        get_case(8888, "0.0.0.0:8080  "),
+        get_result(8888, "127.0.0.1:8080")
+    );
+
+    assert_eq!(
+        get_case(8888, "0.0.0.0:8080"),
+        get_result(8888, "127.0.0.1:8080")
+    );
+
+    assert_eq!(
+        get_case(8888, "[::]:8080"),
+        get_result(8888, "127.0.0.1:8080")
+    );
+
+    assert_eq!(
+        get_case(8888, "192.168.1.1:8080"),
+        get_result(8888, "192.168.1.1:8080")
+    );
+
+    assert_eq!(
+        get_case(8888, "192.168.1.1:80800"),
+        get_result(8888, "127.0.0.1:9090")
+    );
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]

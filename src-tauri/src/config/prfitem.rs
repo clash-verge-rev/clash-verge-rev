@@ -194,8 +194,7 @@ impl PrfItem {
 
         // 使用软件自己的代理
         if self_proxy {
-            let port = Config::clash().data().get_info()?.port;
-            let port = port.ok_or(anyhow::anyhow!("failed to get clash info port"))?;
+            let port = Config::clash().data().get_mixed_port();
 
             let proxy_scheme = format!("http://127.0.0.1:{port}");
 
