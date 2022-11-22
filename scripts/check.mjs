@@ -270,7 +270,7 @@ const tasks = [
 async function runTask() {
   const task = tasks.shift();
   if (!task) return;
-  if (task.winOnly && process.platform !== "win32") return;
+  if (task.winOnly && process.platform !== "win32") return runTask();
 
   for (let i = 0; i < task.retry; i++) {
     try {
