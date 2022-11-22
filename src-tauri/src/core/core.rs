@@ -107,16 +107,18 @@ impl CoreManager {
 
             if enable {
                 // 服务模式启动失败就直接运行sidecar
-                match {
-                    log::debug!(target: "app", "try to run core in service mode");
+                log::debug!(target: "app", "try to run core in service mode");
+
+                match (|| async {
                     win_service::check_service().await?;
                     win_service::run_core_by_service(&config_path).await
-                } {
+                })()
+                .await
+                {
                     Ok(_) => return Ok(()),
                     Err(err) => {
                         // 修改这个值，免得stop出错
                         *self.use_service_mode.lock() = false;
-
                         log::error!(target: "app", "{err}");
                     }
                 }
@@ -141,7 +143,7 @@ impl CoreManager {
         let (mut rx, cmd_child) = cmd.args(args).spawn()?;
 
         // 将pid写入文件中
-        crate::log_err!({
+        crate::log_err!((|| {
             let pid = cmd_child.pid();
             let path = dirs::clash_pid_path()?;
             fs::File::create(path)
@@ -149,7 +151,7 @@ impl CoreManager {
                 .write(format!("{pid}").as_bytes())
                 .context("failed to write pid to the file")?;
             <Result<()>>::Ok(())
-        });
+        })());
 
         let mut sidecar = self.sidecar.lock();
         *sidecar = Some(cmd_child);
