@@ -48,7 +48,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
 
   const onUninstall = useLockFn(async () => {
     try {
-      if (state === "active" && enable) {
+      if (enable) {
         await patchVergeConfig({ enable_service_mode: false });
       }
 

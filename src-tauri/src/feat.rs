@@ -212,6 +212,8 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             let service_mode = patch.enable_service_mode;
 
             if service_mode.is_some() {
+                log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
+
                 Config::generate()?;
                 CoreManager::global().run_core().await?;
             } else if tun_mode.is_some() {
