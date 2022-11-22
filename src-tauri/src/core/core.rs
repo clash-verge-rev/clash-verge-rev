@@ -79,14 +79,21 @@ impl CoreManager {
     pub async fn run_core(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Run)?;
 
-        let should_kill = match self.sidecar.lock().take() {
+        let mut should_kill = match self.sidecar.lock().take() {
             Some(child) => {
-                log::debug!(target: "app", "stop the core sidecar");
+                log::debug!(target: "app", "stop the core by sidecar");
                 let _ = child.kill();
                 true
             }
             None => false,
         };
+
+        #[cfg(target_os = "windows")]
+        if *self.use_service_mode.lock() {
+            log::debug!(target: "app", "stop the core by service");
+            log_err!(super::win_service::stop_core_by_service().await);
+            should_kill = true;
+        }
 
         // 这里得等一会儿
         if should_kill {
@@ -98,10 +105,8 @@ impl CoreManager {
             use super::win_service;
 
             // 服务模式
-            let enable = {
-                let enable = Config::verge().data().enable_service_mode.clone();
-                enable.unwrap_or(false)
-            };
+            let enable = { Config::verge().latest().enable_service_mode.clone() };
+            let enable = enable.unwrap_or(false);
 
             *self.use_service_mode.lock() = enable;
 
@@ -189,7 +194,7 @@ impl CoreManager {
     pub fn stop_core(&self) -> Result<()> {
         #[cfg(target_os = "windows")]
         if *self.use_service_mode.lock() {
-            log::debug!(target: "app", "stop core by service");
+            log::debug!(target: "app", "stop the core by service");
             tauri::async_runtime::block_on(async move {
                 log_err!(super::win_service::stop_core_by_service().await);
             });
@@ -198,6 +203,7 @@ impl CoreManager {
 
         let mut sidecar = self.sidecar.lock();
         if let Some(child) = sidecar.take() {
+            log::debug!(target: "app", "stop the core by sidecar");
             let _ = child.kill();
         }
         Ok(())

@@ -44,7 +44,7 @@ pub async fn install_service() -> Result<()> {
     let level = token.privilege_level()?;
 
     let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).status()?,
+        PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).status()?,
         _ => StdCommand::new(install_path)
             .creation_flags(0x08000000)
             .status()?,
@@ -74,7 +74,7 @@ pub async fn uninstall_service() -> Result<()> {
     let level = token.privilege_level()?;
 
     let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).status()?,
+        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
         _ => StdCommand::new(uninstall_path)
             .creation_flags(0x08000000)
             .status()?,
