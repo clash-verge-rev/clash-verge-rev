@@ -38,25 +38,15 @@ pub async fn patch_configs(config: &Mapping) -> Result<()> {
 
 /// 根据clash info获取clash服务地址和请求头
 fn clash_client_info() -> Result<(String, HeaderMap)> {
-    let info = { Config::clash().data().get_info()? };
+    let client = { Config::clash().data().get_client_info() };
 
-    if info.server.is_none() {
-        let status = &info.status;
-        if info.port.is_none() {
-            bail!("failed to parse config.yaml file with status {status}");
-        } else {
-            bail!("failed to parse the server with status {status}");
-        }
-    }
-
-    let server = info.server.unwrap();
-    let server = format!("http://{server}");
+    let server = format!("http://{}", client.server);
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "application/json".parse()?);
 
-    if let Some(secret) = info.secret.as_ref() {
-        let secret = format!("Bearer {}", secret.clone()).parse()?;
+    if let Some(secret) = client.secret {
+        let secret = format!("Bearer {}", secret).parse()?;
         headers.insert("Authorization", secret);
     }
 

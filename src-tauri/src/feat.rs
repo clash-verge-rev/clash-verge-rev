@@ -156,7 +156,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 if let Some(port) = mixed_port.clone().unwrap().as_u64() {
                     if !port_scanner::local_port_available(port as u16) {
                         Config::clash().discard();
-                        bail!("the port not available");
+                        bail!("port already in use");
                     }
                 }
             }
