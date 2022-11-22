@@ -1,4 +1,5 @@
-use crate::utils::dirs;
+use crate::config::*;
+use crate::utils::{dirs, help};
 use anyhow::Result;
 use chrono::Local;
 use log::LevelFilter;
@@ -60,17 +61,38 @@ pub fn init_config() -> Result<()> {
 
     let _ = init_log();
 
-    let _ = dirs::app_home_dir().map(|app_dir| {
+    crate::log_err!(dirs::app_home_dir().map(|app_dir| {
         if !app_dir.exists() {
             let _ = fs::create_dir_all(&app_dir);
         }
-    });
+    }));
 
-    let _ = dirs::app_profiles_dir().map(|profiles_dir| {
+    crate::log_err!(dirs::app_profiles_dir().map(|profiles_dir| {
         if !profiles_dir.exists() {
             let _ = fs::create_dir_all(&profiles_dir);
         }
-    });
+    }));
+
+    crate::log_err!(dirs::clash_path().map(|path| {
+        if !path.exists() {
+            help::save_yaml(&path, &IClashTemp::template().0, Some("# Clash Verge"))?;
+        }
+        <Result<()>>::Ok(())
+    }));
+
+    crate::log_err!(dirs::verge_path().map(|path| {
+        if !path.exists() {
+            help::save_yaml(&path, &IVerge::template(), Some("# Clash Verge"))?;
+        }
+        <Result<()>>::Ok(())
+    }));
+
+    crate::log_err!(dirs::profiles_path().map(|path| {
+        if !path.exists() {
+            help::save_yaml(&path, &IProfiles::template(), Some("# Clash Verge"))?;
+        }
+        <Result<()>>::Ok(())
+    }));
 
     Ok(())
 }
@@ -79,6 +101,13 @@ pub fn init_config() -> Result<()> {
 pub fn init_resources(package_info: &PackageInfo) -> Result<()> {
     let app_dir = dirs::app_home_dir()?;
     let res_dir = dirs::app_resources_dir(package_info)?;
+
+    if !app_dir.exists() {
+        let _ = fs::create_dir_all(&app_dir);
+    }
+    if !res_dir.exists() {
+        let _ = fs::create_dir_all(&res_dir);
+    }
 
     // copy the resource file
     for file in ["Country.mmdb", "geoip.dat", "geosite.dat", "wintun.dll"].iter() {
