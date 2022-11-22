@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useRecoilState } from "recoil";
-import { createTheme } from "@mui/material";
+import { createTheme, Theme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
 import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
@@ -36,30 +36,52 @@ export default function useCustomTheme() {
     const setting = theme_setting || {};
     const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
 
-    const theme = createTheme({
-      breakpoints: {
-        values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
-      },
-      palette: {
-        mode,
-        primary: { main: setting.primary_color || dt.primary_color },
-        secondary: { main: setting.secondary_color || dt.secondary_color },
-        info: { main: setting.info_color || dt.info_color },
-        error: { main: setting.error_color || dt.error_color },
-        warning: { main: setting.warning_color || dt.warning_color },
-        success: { main: setting.success_color || dt.success_color },
-        text: {
-          primary: setting.primary_text || dt.primary_text,
-          secondary: setting.secondary_text || dt.secondary_text,
+    let theme: Theme;
+
+    try {
+      theme = createTheme({
+        breakpoints: {
+          values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
         },
-      },
-      typography: {
-        // todo
-        fontFamily: setting.font_family
-          ? `${setting.font_family}, ${dt.font_family}`
-          : dt.font_family,
-      },
-    });
+        palette: {
+          mode,
+          primary: { main: setting.primary_color || dt.primary_color },
+          secondary: { main: setting.secondary_color || dt.secondary_color },
+          info: { main: setting.info_color || dt.info_color },
+          error: { main: setting.error_color || dt.error_color },
+          warning: { main: setting.warning_color || dt.warning_color },
+          success: { main: setting.success_color || dt.success_color },
+          text: {
+            primary: setting.primary_text || dt.primary_text,
+            secondary: setting.secondary_text || dt.secondary_text,
+          },
+        },
+        typography: {
+          // todo
+          fontFamily: setting.font_family
+            ? `${setting.font_family}, ${dt.font_family}`
+            : dt.font_family,
+        },
+      });
+    } catch {
+      // fix #294
+      theme = createTheme({
+        breakpoints: {
+          values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
+        },
+        palette: {
+          mode,
+          primary: { main: dt.primary_color },
+          secondary: { main: dt.secondary_color },
+          info: { main: dt.info_color },
+          error: { main: dt.error_color },
+          warning: { main: dt.warning_color },
+          success: { main: dt.success_color },
+          text: { primary: dt.primary_text, secondary: dt.secondary_text },
+        },
+        typography: { fontFamily: dt.font_family },
+      });
+    }
 
     // css
     const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
