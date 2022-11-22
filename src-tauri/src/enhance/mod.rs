@@ -4,8 +4,9 @@ mod merge;
 mod script;
 mod tun;
 
-use self::chain::*;
 pub(self) use self::field::*;
+
+use self::chain::*;
 use self::merge::*;
 use self::script::*;
 use self::tun::*;
@@ -19,21 +20,21 @@ type ResultLog = Vec<(String, String)>;
 /// Enhance mode
 /// 返回最终配置、该配置包含的键、和script执行的结果
 pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+    // config.yaml 的配置
     let clash_config = { Config::clash().latest().0.clone() };
 
-    let (tun_mode, enable_builtin) = {
+    let (clash_core, tun_mode, enable_builtin) = {
         let verge = Config::verge();
         let verge = verge.latest();
         (
+            verge.clash_core.clone(),
             verge.enable_tun_mode.clone(),
             verge.enable_builtin_enhanced.clone(),
         )
     };
 
-    let tun_mode = tun_mode.unwrap_or(false);
-    let enable_builtin = enable_builtin.unwrap_or(true);
-
-    let (mut config, mut chain, valid) = {
+    // 从profiles里拿东西
+    let (mut config, chain, valid) = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
 
@@ -53,15 +54,13 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         (current, chain, valid)
     };
 
-    let mut result_map = HashMap::new();
-    let mut exists_keys = use_keys(&config);
+    let mut result_map = HashMap::new(); // 保存脚本日志
+    let mut exists_keys = use_keys(&config); // 保存出现过的keys
 
     let valid = use_valid_fields(valid);
+    config = use_filter(config, &valid);
 
-    if enable_builtin {
-        chain.extend(ChainItem::builtin().into_iter());
-    }
-
+    // 处理用户的profile
     chain.into_iter().for_each(|item| match item.data {
         ChainType::Merge(merge) => {
             exists_keys.extend(use_keys(&merge));
@@ -84,15 +83,38 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         }
     });
 
-    config = use_filter(config, &valid);
-
+    // 合并默认的config
     for (key, value) in clash_config.into_iter() {
         config.insert(key, value);
     }
 
     let clash_fields = use_clash_fields();
+
+    // 内建脚本最后跑
+    if enable_builtin.unwrap_or(true) {
+        ChainItem::builtin()
+            .into_iter()
+            .filter(|(s, _)| s.is_support(clash_core.as_ref()))
+            .map(|(_, c)| c)
+            .for_each(|item| {
+                log::debug!(target: "app", "run builtin script {}", item.uid);
+
+                match item.data {
+                    ChainType::Script(script) => match use_script(script, config.to_owned()) {
+                        Ok((res_config, _)) => {
+                            config = use_filter(res_config, &clash_fields);
+                        }
+                        Err(err) => {
+                            log::error!(target: "app", "builtin script error `{err}`");
+                        }
+                    },
+                    _ => {}
+                }
+            });
+    }
+
     config = use_filter(config, &clash_fields);
-    config = use_tun(config, tun_mode);
+    config = use_tun(config, tun_mode.unwrap_or(false));
     config = use_sort(config);
 
     let mut exists_set = HashSet::new();
