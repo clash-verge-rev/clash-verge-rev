@@ -12,7 +12,7 @@ import {
   importProfile,
   enhanceProfiles,
 } from "@/services/cmds";
-import { getProxies, updateProxy } from "@/services/api";
+import { closeAllConnections, getProxies, updateProxy } from "@/services/api";
 import { atomCurrentProfile } from "@/services/states";
 import { BasePage, Notice } from "@/components/base";
 import { ProfileNew } from "@/components/profile/profile-new";
@@ -134,6 +134,7 @@ const ProfilePage = () => {
       setCurrentProfile(current);
       mutate("getProfiles", { ...profiles, current: current }, true);
       mutate("getRuntimeLogs");
+      closeAllConnections();
       Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString(), 4000);
