@@ -74,6 +74,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       open={open}
       title={t("Service Mode")}
       contentSx={{ width: 360, userSelect: "text" }}
+      disableFooter
       onClose={() => setOpen(false)}
     >
       <Typography>Current State: {state}</Typography>
