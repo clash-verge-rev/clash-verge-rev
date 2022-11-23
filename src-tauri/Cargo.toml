@@ -26,6 +26,7 @@ nanoid = "0.4.0"
 chrono = "0.4.19"
 sysinfo = "0.26.2"
 sysproxy = "0.1"
+rquickjs = "0.1.7"
 serde_json = "1.0"
 serde_yaml = "0.9"
 auto-launch = "0.4"
@@ -37,9 +38,9 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.11", features = ["json"] }
 tauri = { version = "1.1.1", features = ["global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all"] }
-rquickjs = { version = "0.1.7" }
-window-shadows = { version = "0.2.0" }
+tauri-runtime-wry = { version = "0.12" }
 window-vibrancy = { version = "0.3.0" }
+window-shadows = { version = "0.2.0" }
 
 [target.'cfg(windows)'.dependencies]
 runas = "0.2.1"
