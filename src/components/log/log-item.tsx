@@ -10,7 +10,7 @@ const Item = styled(Box)(({ theme }) => ({
   "& .time": {},
   "& .type": {
     display: "inline-block",
-    padding: "0 6px",
+    marginLeft: 8,
     textAlign: "center",
     borderRadius: 2,
     textTransform: "uppercase",
@@ -28,9 +28,13 @@ const LogItem = (props: Props) => {
 
   return (
     <Item>
-      <span className="time">{value.time}</span>
-      <span className="type">{value.type}</span>
-      <span className="data">{value.payload}</span>
+      <div>
+        <span className="time">{value.time}</span>
+        <span className="type">{value.type}</span>
+      </div>
+      <div>
+        <span className="data">{value.payload}</span>
+      </div>
     </Item>
   );
 };

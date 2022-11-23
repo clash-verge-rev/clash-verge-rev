@@ -2,9 +2,8 @@ import { styled, Box, Typography } from "@mui/material";
 
 const Item = styled(Box)(({ theme }) => ({
   display: "flex",
-  padding: "6px 16px",
+  padding: "4px 16px",
   color: theme.palette.text.primary,
-  marginBottom: "6px",
 }));
 
 const COLOR = [
