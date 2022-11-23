@@ -37,7 +37,7 @@ const TypeBox = styled(Box)(({ theme }) => ({
   color: alpha(theme.palette.text.secondary, 0.42),
   borderRadius: 4,
   fontSize: 10,
-  marginLeft: 4,
+  marginRight: "4px",
   padding: "0 2px",
   lineHeight: 1.25,
 }));
@@ -97,7 +97,7 @@ export const ProxyItem = (props: Props) => {
           title={proxy.name}
           secondary={
             <>
-              {proxy.name}
+              <span style={{ marginRight: 4 }}>{proxy.name}</span>
 
               {showType && !!proxy.provider && (
                 <TypeBox component="span">{proxy.provider}</TypeBox>
