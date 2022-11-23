@@ -167,7 +167,7 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem label={t("Verge Version")}>
-        <Typography sx={{ py: "7px" }}>v{version}</Typography>
+        <Typography sx={{ py: "7px", pr: 1 }}>v{version}</Typography>
       </SettingItem>
     </SettingList>
   );

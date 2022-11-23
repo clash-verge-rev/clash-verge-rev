@@ -19,7 +19,7 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
     label
   ) : (
     <Box sx={{ display: "flex", alignItems: "center" }}>
-      <span style={{ marginRight: 4 }}>{label}</span>
+      <span>{label}</span>
       {extra}
     </Box>
   );

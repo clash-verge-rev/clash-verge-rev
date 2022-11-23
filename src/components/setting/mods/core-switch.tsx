@@ -1,9 +1,10 @@
 import { mutate } from "swr";
 import { useState } from "react";
 import { useLockFn } from "ahooks";
-import { Menu, MenuItem } from "@mui/material";
+import { IconButton, Menu, MenuItem } from "@mui/material";
 import { Settings } from "@mui/icons-material";
 import { changeClashCore } from "@/services/cmds";
+import { closeAllConnections } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import { Notice } from "@/components/base";
 
@@ -24,6 +25,7 @@ export const CoreSwitch = () => {
     if (core === clash_core) return;
 
     try {
+      closeAllConnections();
       await changeClashCore(core);
       mutateVerge();
       setTimeout(() => {
@@ -39,15 +41,20 @@ export const CoreSwitch = () => {
 
   return (
     <>
-      <Settings
-        fontSize="small"
-        style={{ cursor: "pointer", opacity: 0.75 }}
+      <IconButton
+        color="inherit"
+        size="small"
         onClick={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });
           setAnchorEl(event.currentTarget);
         }}
-      />
+      >
+        <Settings
+          fontSize="inherit"
+          style={{ cursor: "pointer", opacity: 0.75 }}
+        />
+      </IconButton>
 
       <Menu
         open={!!anchorEl}
