@@ -222,6 +222,9 @@ impl CoreManager {
 
         Config::verge().draft().clash_core = Some(clash_core);
 
+        // 更新配置
+        Config::generate()?;
+
         self.check_config()?;
 
         // 清掉旧日志
