@@ -1,13 +1,6 @@
 import { useRef } from "react";
 import { useLockFn } from "ahooks";
-import { Box, ListItem, ListItemText, Typography } from "@mui/material";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import {
-  ExpandLessRounded,
-  ExpandMoreRounded,
-  InboxRounded,
-  SendRounded,
-} from "@mui/icons-material";
 import {
   getConnections,
   providerHealthCheck,
@@ -16,10 +9,8 @@ import {
 } from "@/services/api";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
-import { useRenderList, type IRenderItem } from "./use-render-list";
-import { HeadState } from "./use-head-state";
-import { ProxyHead } from "./proxy-head";
-import { ProxyItem } from "./proxy-item";
+import { useRenderList } from "./use-render-list";
+import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
 
 interface Props {
@@ -39,7 +30,7 @@ export const ProxyGroups = (props: Props) => {
   // 切换分组的节点代理
   const handleChangeProxy = useLockFn(
     async (group: IProxyGroupItem, proxy: IProxyItem) => {
-      if (group.type !== "Selector") return;
+      if (group.type !== "Selector" && group.type !== "Fallback") return;
 
       const { name, now } = group;
       await updateProxy(name, proxy.name);
@@ -118,7 +109,7 @@ export const ProxyGroups = (props: Props) => {
       style={{ height: "100%" }}
       totalCount={renderList.length}
       itemContent={(index) => (
-        <ProxyRenderItem
+        <ProxyRender
           key={renderList[index].key}
           item={renderList[index]}
           indent={mode === "rule" || mode === "script"}
@@ -131,89 +122,3 @@ export const ProxyGroups = (props: Props) => {
     />
   );
 };
-
-interface RenderProps {
-  item: IRenderItem;
-  indent: boolean;
-  onLocation: (group: IProxyGroupItem) => void;
-  onCheckAll: (groupName: string) => void;
-  onHeadState: (groupName: string, patch: Partial<HeadState>) => void;
-  onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void;
-}
-
-function ProxyRenderItem(props: RenderProps) {
-  const { indent, item, onLocation, onCheckAll, onHeadState, onChangeProxy } =
-    props;
-  const { type, group, headState, proxy } = item;
-
-  if (type === 0) {
-    return (
-      <ListItem
-        button
-        dense
-        onClick={() => onHeadState(group.name, { open: !headState?.open })}
-      >
-        <ListItemText
-          primary={group.name}
-          secondary={
-            <>
-              <SendRounded color="primary" sx={{ mr: 1, fontSize: 14 }} />
-              {/* <span>{group.type}</span> */}
-              <span>{group.now}</span>
-            </>
-          }
-          secondaryTypographyProps={{
-            sx: { display: "flex", alignItems: "center" },
-          }}
-        />
-        {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
-      </ListItem>
-    );
-  }
-
-  if (type === 1) {
-    return (
-      <ProxyHead
-        sx={{ pl: indent ? 4.5 : 2.5, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
-        groupName={group.name}
-        headState={headState!}
-        onLocation={() => onLocation(group)}
-        onCheckDelay={() => onCheckAll(group.name)}
-        onHeadState={(p) => onHeadState(group.name, p)}
-      />
-    );
-  }
-
-  if (type === 2) {
-    return (
-      <ProxyItem
-        groupName={group.name}
-        proxy={proxy!}
-        selected={group.now === proxy?.name}
-        showType={headState?.showType}
-        sx={{ py: 0, pl: indent ? 4 : 2 }}
-        onClick={() => onChangeProxy(group, proxy!)}
-      />
-    );
-  }
-
-  if (type === 3) {
-    return (
-      <Box
-        sx={{
-          py: 2,
-          pl: indent ? 4.5 : 0,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <InboxRounded sx={{ fontSize: "2.5em", color: "inherit" }} />
-        <Typography sx={{ color: "inherit" }}>No Proxies</Typography>
-      </Box>
-    );
-  }
-
-  return null;
-}
