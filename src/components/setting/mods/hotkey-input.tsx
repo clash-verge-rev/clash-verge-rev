@@ -1,6 +1,7 @@
+import { useRef, useState } from "react";
 import { alpha, Box, IconButton, styled } from "@mui/material";
 import { DeleteRounded } from "@mui/icons-material";
-import parseHotkey from "@/utils/parse-hotkey";
+import { parseHotkey } from "@/utils/parse-hotkey";
 
 const KeyWrapper = styled("div")(({ theme }) => ({
   position: "relative",
@@ -54,10 +55,20 @@ interface Props {
 export const HotkeyInput = (props: Props) => {
   const { value, onChange } = props;
 
+  const changeRef = useRef<string[]>([]);
+  const [keys, setKeys] = useState(value);
+
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
       <KeyWrapper>
         <input
+          onKeyUp={() => {
+            const ret = changeRef.current.slice();
+            if (ret.length) {
+              onChange(ret);
+              changeRef.current = [];
+            }
+          }}
           onKeyDown={(e) => {
             const evt = e.nativeEvent;
             e.preventDefault();
@@ -66,13 +77,13 @@ export const HotkeyInput = (props: Props) => {
             const key = parseHotkey(evt.key);
             if (key === "UNIDENTIFIED") return;
 
-            const newList = [...new Set([...value, key])];
-            onChange(newList);
+            changeRef.current = [...new Set([...changeRef.current, key])];
+            setKeys(changeRef.current);
           }}
         />
 
         <div className="list">
-          {value.map((key) => (
+          {keys.map((key) => (
             <div key={key} className="item">
               {key}
             </div>
@@ -84,7 +95,10 @@ export const HotkeyInput = (props: Props) => {
         size="small"
         title="Delete"
         color="inherit"
-        onClick={() => onChange([])}
+        onClick={() => {
+          onChange([]);
+          setKeys([]);
+        }}
       >
         <DeleteRounded fontSize="inherit" />
       </IconButton>

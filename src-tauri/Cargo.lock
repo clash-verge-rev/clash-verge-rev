@@ -530,6 +530,7 @@ dependencies = [
  "sysproxy",
  "tauri",
  "tauri-build",
+ "tauri-runtime-wry",
  "tokio",
  "warp",
  "which 4.3.0",

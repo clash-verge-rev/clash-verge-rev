@@ -73,7 +73,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
       .filter(Boolean);
 
     try {
-      patchVerge({ hotkeys });
+      await patchVerge({ hotkeys });
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());

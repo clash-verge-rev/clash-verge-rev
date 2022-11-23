@@ -1,4 +1,26 @@
-const parseHotkey = (key: string) => {
+const KEY_MAP: Record<string, string> = {
+  '"': "'",
+  ":": ";",
+  "?": "/",
+  ">": ".",
+  "<": ",",
+  "{": "[",
+  "}": "]",
+  "|": "\\",
+  "!": "1",
+  "@": "2",
+  "#": "3",
+  $: "4",
+  "%": "5",
+  "^": "6",
+  "&": "7",
+  "*": "8",
+  "(": "9",
+  ")": "0",
+  "~": "`",
+};
+
+export const parseHotkey = (key: string) => {
   let temp = key.toUpperCase();
 
   if (temp.startsWith("ARROW")) {
@@ -20,10 +42,7 @@ const parseHotkey = (key: string) => {
       return "CMD";
     case " ":
       return "SPACE";
-
     default:
-      return temp;
+      return KEY_MAP[temp] || temp;
   }
 };
-
-export default parseHotkey;

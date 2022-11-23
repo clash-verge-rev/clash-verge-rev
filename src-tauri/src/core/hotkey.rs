@@ -4,6 +4,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
 use tauri::{AppHandle, GlobalShortcutManager};
+use tauri_runtime_wry::wry::application::accelerator::Accelerator;
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
@@ -32,10 +33,15 @@ impl Hotkey {
                 let func = iter.next();
                 let key = iter.next();
 
-                if func.is_some() && key.is_some() {
-                    log_err!(self.register(key.unwrap(), func.unwrap()));
-                } else {
-                    log::error!(target: "app", "invalid hotkey \"{}\":\"{}\"", key.unwrap_or("None"), func.unwrap_or("None"));
+                match (key, func) {
+                    (Some(key), Some(func)) => {
+                        log_err!(Self::check_key(key).and_then(|_| self.register(key, func)));
+                    }
+                    _ => {
+                        let key = key.unwrap_or("None");
+                        let func = func.unwrap_or("None");
+                        log::error!(target: "app", "invalid hotkey `{key}`:`{func}`");
+                    }
                 }
             }
             *self.current.lock() = hotkeys.clone();
@@ -44,10 +50,20 @@ impl Hotkey {
         Ok(())
     }
 
+    /// 检查一个键是否合法
+    fn check_key(hotkey: &str) -> Result<()> {
+        // fix #287
+        // tauri的这几个方法全部有Result expect，会panic，先检测一遍避免挂了
+        if hotkey.parse::<Accelerator>().is_err() {
+            bail!("invalid hotkey `{hotkey}`");
+        }
+        Ok(())
+    }
+
     fn get_manager(&self) -> Result<impl GlobalShortcutManager> {
         let app_handle = self.app_handle.lock();
         if app_handle.is_none() {
-            bail!("failed to get hotkey manager");
+            bail!("failed to get the hotkey manager");
         }
         Ok(app_handle.as_ref().unwrap().global_shortcut_manager())
     }
@@ -91,6 +107,11 @@ impl Hotkey {
         let new_map = Self::get_map_from_vec(&new_hotkeys);
 
         let (del, add) = Self::get_diff(old_map, new_map);
+
+        // 先检查一遍所有新的热键是不是可以用的
+        for (hotkey, _) in add.iter() {
+            Self::check_key(hotkey)?;
+        }
 
         del.iter().for_each(|key| {
             let _ = self.unregister(key);
