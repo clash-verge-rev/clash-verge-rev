@@ -24,7 +24,11 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const { data: status, mutate: mutateCheck } = useSWR(
     "checkService",
     checkService,
-    { revalidateIfStale: false, shouldRetryOnError: false }
+    {
+      revalidateIfStale: false,
+      shouldRetryOnError: false,
+      focusThrottleInterval: 36e5, // 1 hour
+    }
   );
 
   useImperativeHandle(ref, () => ({
@@ -64,9 +68,14 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
 
   // fix unhandled error of the service mode
   const onDisable = useLockFn(async () => {
-    await patchVergeConfig({ enable_service_mode: false });
-    mutateCheck();
-    setOpen(false);
+    try {
+      await patchVergeConfig({ enable_service_mode: false });
+      mutateCheck();
+      setOpen(false);
+    } catch (err: any) {
+      mutateCheck();
+      Notice.error(err.message || err.toString());
+    }
   });
 
   return (
@@ -81,8 +90,8 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
 
       {(state === "unknown" || state === "uninstall") && (
         <Typography>
-          Information: Please make sure the Clash Verge Service is installed and
-          enabled
+          Information: Please make sure that the Clash Verge Service is
+          installed and enabled
         </Typography>
       )}
 
