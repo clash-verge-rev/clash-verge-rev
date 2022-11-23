@@ -1,3 +1,24 @@
+## v1.2.0
+
+### Features
+
+- update clash meta version
+- support to change external-controller
+- support to change default latency test URL
+- close all connections when proxy changed or profile changed
+- check the config by using the core
+- increase the robustness of the program
+- optimize windows service mode (need to reinstall)
+- optimize ui
+
+### Bug Fixes
+
+- invalid hotkey cause panic
+- invalid theme setting cause panic
+- fix some other glitches
+
+---
+
 ## v1.1.2
 
 ### Features
