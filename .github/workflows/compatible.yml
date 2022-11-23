@@ -2,9 +2,9 @@ name: Compatible CI
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - v**
+  # push:
+  #   tags:
+  #     - v**
 
 env:
   CARGO_INCREMENTAL: 0
