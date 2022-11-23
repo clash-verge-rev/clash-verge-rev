@@ -32,12 +32,14 @@ pub fn change_clash_mode(mode: String) {
     mapping.insert(Value::from("mode"), mode.clone().into());
 
     tauri::async_runtime::spawn(async move {
+        log::debug!(target: "app", "change clash mode to {mode}");
+
         match clash_api::patch_configs(&mapping).await {
             Ok(_) => {
                 // 更新配置
                 Config::clash().data().patch_config(mapping);
 
-                if let Ok(_) = Config::clash().data().save_config() {
+                if Config::clash().data().save_config().is_ok() {
                     handle::Handle::refresh_clash();
                     log_err!(handle::Handle::update_systray_part());
                 }
