@@ -27,7 +27,11 @@ const SettingSystem = ({ onError }: Props) => {
   const { data: serviceStatus } = useSWR(
     isWIN ? "checkService" : null,
     checkService,
-    { revalidateIfStale: false, shouldRetryOnError: false }
+    {
+      revalidateIfStale: false,
+      shouldRetryOnError: false,
+      focusThrottleInterval: 36e5, // 1 hour
+    }
   );
 
   const serviceRef = useRef<DialogRef>(null);
@@ -70,47 +74,49 @@ const SettingSystem = ({ onError }: Props) => {
         <SettingItem
           label={t("Service Mode")}
           extra={
-            (serviceStatus === "active" || serviceStatus === "installed") && (
-              <PrivacyTipRounded
-                fontSize="small"
-                style={{ cursor: "pointer", opacity: 0.75 }}
-                onClick={() => serviceRef.current?.open()}
-              />
-            )
-          }
-        >
-          {serviceStatus === "active" || serviceStatus === "installed" ? (
-            <GuardState
-              value={enable_service_mode ?? false}
-              valueProps="checked"
-              onCatch={onError}
-              onFormat={onSwitchFormat}
-              onChange={(e) => onChangeData({ enable_service_mode: e })}
-              onGuard={(e) => patchVerge({ enable_service_mode: e })}
-            >
-              <Switch edge="end" />
-            </GuardState>
-          ) : (
             <IconButton
               color="inherit"
               size="small"
-              sx={{ my: "2px" }}
               onClick={() => serviceRef.current?.open()}
             >
-              <ArrowForward />
+              <PrivacyTipRounded
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
             </IconButton>
-          )}
+          }
+        >
+          <GuardState
+            value={enable_service_mode ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_service_mode: e })}
+            onGuard={(e) => patchVerge({ enable_service_mode: e })}
+          >
+            <Switch
+              edge="end"
+              disabled={
+                serviceStatus !== "active" && serviceStatus !== "installed"
+              }
+            />
+          </GuardState>
         </SettingItem>
       )}
 
       <SettingItem
         label={t("System Proxy")}
         extra={
-          <Settings
-            fontSize="small"
-            style={{ cursor: "pointer", opacity: 0.75 }}
+          <IconButton
+            color="inherit"
+            size="small"
             onClick={() => sysproxyRef.current?.open()}
-          />
+          >
+            <Settings
+              fontSize="inherit"
+              style={{ cursor: "pointer", opacity: 0.75 }}
+            />
+          </IconButton>
         }
       >
         <GuardState
