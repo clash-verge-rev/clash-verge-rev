@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { useTheme } from "@mui/material";
 
 const maxPoint = 30;
@@ -16,34 +16,40 @@ const defaultList = Array(maxPoint + 2).fill({ up: 0, down: 0 });
 
 type TrafficData = { up: number; down: number };
 
-interface Props {
-  instance: React.MutableRefObject<{
-    appendData: (data: TrafficData) => void;
-    toggleStyle: () => void;
-  }>;
+export interface TrafficRef {
+  appendData: (data: TrafficData) => void;
+  toggleStyle: () => void;
 }
 
 /**
  * draw the traffic graph
  */
-const TrafficGraph = (props: Props) => {
-  const { instance } = props;
-
+export const TrafficGraph = forwardRef<TrafficRef>((props, ref) => {
   const countRef = useRef(0);
   const styleRef = useRef(true);
   const listRef = useRef<TrafficData[]>(defaultList);
   const canvasRef = useRef<HTMLCanvasElement>(null!);
 
+  const cacheRef = useRef<TrafficData | null>(null);
+
   const { palette } = useTheme();
+
+  useImperativeHandle(ref, () => ({
+    appendData: (data: TrafficData) => {
+      cacheRef.current = data;
+    },
+    toggleStyle: () => {
+      styleRef.current = !styleRef.current;
+    },
+  }));
 
   useEffect(() => {
     let timer: any;
-    let cache: TrafficData | null = null;
     const zero = { up: 0, down: 0 };
 
     const handleData = () => {
-      const data = cache ? cache : zero;
-      cache = null;
+      const data = cacheRef.current ? cacheRef.current : zero;
+      cacheRef.current = null;
 
       const list = listRef.current;
       if (list.length > maxPoint + 2) list.shift();
@@ -53,19 +59,9 @@ const TrafficGraph = (props: Props) => {
       timer = setTimeout(handleData, 1000);
     };
 
-    instance.current = {
-      appendData: (data: TrafficData) => {
-        cache = data;
-      },
-      toggleStyle: () => {
-        styleRef.current = !styleRef.current;
-      },
-    };
-
     handleData();
 
     return () => {
-      instance.current = null!;
       if (timer) clearTimeout(timer);
     };
   }, []);
@@ -196,6 +192,4 @@ const TrafficGraph = (props: Props) => {
   }, [palette]);
 
   return <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />;
-};
-
-export default TrafficGraph;
+});

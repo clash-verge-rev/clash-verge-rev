@@ -43,6 +43,7 @@ export async function getVersion() {
   const instance = await getAxios();
   return instance.get("/version") as Promise<{
     premium: boolean;
+    meta?: boolean;
     version: string;
   }>;
 }

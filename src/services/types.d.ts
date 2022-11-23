@@ -94,8 +94,8 @@ interface IConnections {
 type IProfileType = "local" | "remote" | "merge" | "script";
 
 interface IClashInfo {
-  status: string;
-  port?: string; // clash mixed port
+  // status: string;
+  port?: number; // clash mixed port
   server?: string; // external-controller
   secret?: string;
 }

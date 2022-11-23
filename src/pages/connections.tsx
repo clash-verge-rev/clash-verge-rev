@@ -13,8 +13,9 @@ import { useRecoilState } from "recoil";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
-import { closeAllConnections, getInformation } from "@/services/api";
+import { closeAllConnections } from "@/services/api";
 import { atomConnectionSetting } from "@/services/states";
+import { useClashInfo } from "@/hooks/use-clash";
 import { BaseEmpty, BasePage } from "@/components/base";
 import ConnectionItem from "@/components/connection/connection-item";
 import ConnectionTable from "@/components/connection/connection-table";
@@ -25,6 +26,7 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
 const ConnectionsPage = () => {
   const { t, i18n } = useTranslation();
+  const { clashInfo } = useClashInfo();
 
   const [filterText, setFilterText] = useState("");
   const [curOrderOpt, setOrderOpt] = useState("Default");
@@ -52,51 +54,49 @@ const ConnectionsPage = () => {
   }, [connData, filterText, curOrderOpt]);
 
   useEffect(() => {
-    let ws: WebSocket | null = null;
+    if (!clashInfo) return;
 
-    getInformation().then((result) => {
-      const { server = "", secret = "" } = result;
-      ws = new WebSocket(`ws://${server}/connections?token=${secret}`);
+    const { server = "", secret = "" } = clashInfo;
+    const ws = new WebSocket(`ws://${server}/connections?token=${secret}`);
 
-      ws.addEventListener("message", (event) => {
-        const data = JSON.parse(event.data) as IConnections;
+    ws.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data) as IConnections;
 
-        // 与前一次connections的展示顺序尽量保持一致
-        setConnData((old) => {
-          const oldConn = old.connections;
-          const maxLen = data.connections.length;
+      // 尽量与前一次connections的展示顺序保持一致
+      setConnData((old) => {
+        const oldConn = old.connections;
+        const maxLen = data.connections.length;
 
-          const connections: typeof oldConn = [];
+        const connections: typeof oldConn = [];
 
-          const rest = data.connections.filter((each) => {
-            const index = oldConn.findIndex((o) => o.id === each.id);
+        const rest = data.connections.filter((each) => {
+          const index = oldConn.findIndex((o) => o.id === each.id);
 
-            if (index >= 0 && index < maxLen) {
-              const old = oldConn[index];
-              each.curUpload = each.upload - old.upload;
-              each.curDownload = each.download - old.download;
+          if (index >= 0 && index < maxLen) {
+            const old = oldConn[index];
+            each.curUpload = each.upload - old.upload;
+            each.curDownload = each.download - old.download;
 
-              connections[index] = each;
-              return false;
-            }
-            return true;
-          });
-
-          for (let i = 0; i < maxLen; ++i) {
-            if (!connections[i] && rest.length > 0) {
-              connections[i] = rest.shift()!;
-              connections[i].curUpload = 0;
-              connections[i].curDownload = 0;
-            }
+            connections[index] = each;
+            return false;
           }
-
-          return { ...data, connections };
+          return true;
         });
+
+        for (let i = 0; i < maxLen; ++i) {
+          if (!connections[i] && rest.length > 0) {
+            connections[i] = rest.shift()!;
+            connections[i].curUpload = 0;
+            connections[i].curDownload = 0;
+          }
+        }
+
+        return { ...data, connections };
       });
     });
 
     return () => ws?.close();
-  }, []);
+  }, [clashInfo]);
 
   const onCloseAll = useLockFn(closeAllConnections);
 
@@ -140,6 +140,7 @@ const ConnectionsPage = () => {
             height: "36px",
             display: "flex",
             alignItems: "center",
+            userSelect: "text",
           }}
         >
           {!isTableLayout && (
@@ -176,7 +177,7 @@ const ConnectionsPage = () => {
           />
         </Box>
 
-        <Box height="calc(100% - 50px)">
+        <Box height="calc(100% - 50px)" sx={{ userSelect: "text" }}>
           {filterConn.length === 0 ? (
             <BaseEmpty text="No Connections" />
           ) : isTableLayout ? (

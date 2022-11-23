@@ -1,57 +1,40 @@
 import { useEffect, useRef, useState } from "react";
-import { useRecoilValue } from "recoil";
 import { Box, Typography } from "@mui/material";
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
-import { listen } from "@tauri-apps/api/event";
-import { getInformation } from "@/services/api";
-import { atomClashPort } from "@/services/states";
+import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-import TrafficGraph from "./traffic-graph";
-import useLogSetup from "./use-log-setup";
+import { TrafficGraph, type TrafficRef } from "./traffic-graph";
+import { useLogSetup } from "./use-log-setup";
 import parseTraffic from "@/utils/parse-traffic";
 
 // setup the traffic
 const LayoutTraffic = () => {
-  const portValue = useRecoilValue(atomClashPort);
-  const [traffic, setTraffic] = useState({ up: 0, down: 0 });
-  const [refresh, setRefresh] = useState({});
-
-  const trafficRef = useRef<any>();
+  const { clashInfo } = useClashInfo();
 
   // whether hide traffic graph
   const { verge } = useVerge();
   const trafficGraph = verge?.traffic_graph ?? true;
 
+  const trafficRef = useRef<TrafficRef>(null);
+  const [traffic, setTraffic] = useState({ up: 0, down: 0 });
+
   // setup log ws during layout
   useLogSetup();
 
   useEffect(() => {
-    // should reconnect the traffic ws
-    const unlisten = listen("verge://refresh-clash-config", () =>
-      setRefresh({})
-    );
+    if (!clashInfo) return;
 
-    return () => {
-      unlisten.then((fn) => fn());
-    };
-  }, []);
+    const { server = "", secret = "" } = clashInfo;
+    const ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
 
-  useEffect(() => {
-    let ws: WebSocket | null = null;
-
-    getInformation().then((result) => {
-      const { server = "", secret = "" } = result;
-      ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
-
-      ws.addEventListener("message", (event) => {
-        const data = JSON.parse(event.data) as ITrafficItem;
-        trafficRef.current?.appendData(data);
-        setTraffic(data);
-      });
+    ws.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data) as ITrafficItem;
+      trafficRef.current?.appendData(data);
+      setTraffic(data);
     });
 
     return () => ws?.close();
-  }, [portValue, refresh]);
+  }, [clashInfo]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
@@ -60,7 +43,7 @@ const LayoutTraffic = () => {
     component: "span",
     color: "primary",
     textAlign: "center",
-    sx: { flex: "1 1 54px" },
+    sx: { flex: "1 1 54px", userSelect: "none" },
   };
   const unitStyle: any = {
     component: "span",
@@ -78,7 +61,7 @@ const LayoutTraffic = () => {
     >
       {trafficGraph && (
         <div style={{ width: "100%", height: 60, marginBottom: 6 }}>
-          <TrafficGraph instance={trafficRef} />
+          <TrafficGraph ref={trafficRef} />
         </div>
       )}
 

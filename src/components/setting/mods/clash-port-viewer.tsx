@@ -1,55 +1,37 @@
-import useSWR from "swr";
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { useSetRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
-import { atomClashPort } from "@/services/states";
-import { getClashConfig } from "@/services/api";
-import { patchClashConfig } from "@/services/cmds";
+import { useClashInfo } from "@/hooks/use-clash";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
 export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
-  const { data: config, mutate: mutateClash } = useSWR(
-    "getClashConfig",
-    getClashConfig
-  );
+  const { clashInfo, patchInfo } = useClashInfo();
 
   const [open, setOpen] = useState(false);
-  const [port, setPort] = useState(config?.["mixed-port"] ?? 9090);
-
-  const setGlobalClashPort = useSetRecoilState(atomClashPort);
+  const [port, setPort] = useState(clashInfo?.port ?? 7890);
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      if (config?.["mixed-port"]) {
-        setPort(config["mixed-port"]);
-      }
+      if (clashInfo?.port) setPort(clashInfo?.port);
       setOpen(true);
     },
     close: () => setOpen(false),
   }));
 
   const onSave = useLockFn(async () => {
-    if (port < 1000) {
-      return Notice.error("The port should not < 1000");
+    if (port === clashInfo?.port) {
+      setOpen(false);
+      return;
     }
-    if (port > 65536) {
-      return Notice.error("The port should not > 65536");
-    }
-
-    setOpen(false);
-    if (port === config?.["mixed-port"]) return;
-
     try {
-      await patchClashConfig({ "mixed-port": port });
-      setGlobalClashPort(port);
+      await patchInfo({ "mixed-port": port });
+      setOpen(false);
       Notice.success("Change Clash port successfully!", 1000);
-      mutateClash();
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 5000);
+      Notice.error(err.message || err.toString(), 4000);
     }
   });
 
