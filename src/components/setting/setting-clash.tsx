@@ -1,4 +1,3 @@
-import useSWR from "swr";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,9 +9,8 @@ import {
   IconButton,
 } from "@mui/material";
 import { ArrowForward } from "@mui/icons-material";
-import { patchClashConfig } from "@/services/cmds";
-import { getClashConfig, getVersion, updateConfigs } from "@/services/api";
 import { DialogRef } from "@/components/base";
+import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
 import { CoreSwitch } from "./mods/core-switch";
 import { WebUIViewer } from "./mods/web-ui-viewer";
@@ -28,18 +26,14 @@ interface Props {
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
 
-  const { data: clashConfig, mutate: mutateClash } = useSWR(
-    "getClashConfig",
-    getClashConfig
-  );
-  const { data: versionData } = useSWR("getVersion", getVersion);
+  const { clash, version, mutateClash, patchClash } = useClash();
 
   const {
     ipv6,
     "allow-lan": allowLan,
     "log-level": logLevel,
     "mixed-port": mixedPort,
-  } = clashConfig ?? {};
+  } = clash ?? {};
 
   const webRef = useRef<DialogRef>(null);
   const fieldRef = useRef<DialogRef>(null);
@@ -50,15 +44,6 @@ const SettingClash = ({ onError }: Props) => {
   const onChangeData = (patch: Partial<IConfigData>) => {
     mutateClash((old) => ({ ...(old! || {}), ...patch }), false);
   };
-  const onUpdateData = async (patch: Partial<IConfigData>) => {
-    await updateConfigs(patch);
-    await patchClashConfig(patch);
-  };
-
-  // get clash core version
-  const clashVer = versionData?.premium
-    ? `${versionData.version} Premium`
-    : versionData?.version || "-";
 
   return (
     <SettingList title={t("Clash Setting")}>
@@ -74,7 +59,7 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ "allow-lan": e })}
-          onGuard={(e) => onUpdateData({ "allow-lan": e })}
+          onGuard={(e) => patchClash({ "allow-lan": e })}
         >
           <Switch edge="end" />
         </GuardState>
@@ -87,7 +72,7 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ ipv6: e })}
-          onGuard={(e) => onUpdateData({ ipv6: e })}
+          onGuard={(e) => patchClash({ ipv6: e })}
         >
           <Switch edge="end" />
         </GuardState>
@@ -100,7 +85,7 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ "log-level": e })}
-          onGuard={(e) => onUpdateData({ "log-level": e })}
+          onGuard={(e) => patchClash({ "log-level": e })}
         >
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="debug">Debug</MenuItem>
@@ -159,7 +144,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem label={t("Clash Core")} extra={<CoreSwitch />}>
-        <Typography sx={{ py: "7px" }}>{clashVer}</Typography>
+        <Typography sx={{ py: "7px", pr: 1 }}>{version}</Typography>
       </SettingItem>
     </SettingList>
   );

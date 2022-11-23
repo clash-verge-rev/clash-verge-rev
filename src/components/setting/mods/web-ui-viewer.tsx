@@ -1,22 +1,21 @@
-import useSWR from "swr";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Button, Box, Typography } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { getClashInfo, openWebUrl } from "@/services/cmds";
+import { openWebUrl } from "@/services/cmds";
 import { BaseDialog, BaseEmpty, DialogRef, Notice } from "@/components/base";
+import { useClashInfo } from "@/hooks/use-clash";
 import { WebUIItem } from "./web-ui-item";
 
 export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
+  const { clashInfo } = useClashInfo();
   const { verge, patchVerge, mutateVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
-
-  const { data: clashInfo } = useSWR("getClashInfo", getClashInfo);
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -53,9 +52,7 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
       if (url.includes("%port") || url.includes("%secret")) {
         if (!clashInfo) throw new Error("failed to get clash info");
         if (!clashInfo.server?.includes(":")) {
-          throw new Error(
-            `failed to parse server with status ${clashInfo.status}`
-          );
+          throw new Error(`failed to parse the server "${clashInfo.server}"`);
         }
 
         const port = clashInfo.server

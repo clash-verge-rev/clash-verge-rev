@@ -1,17 +1,16 @@
-import useSWR from "swr";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
-import { getClashInfo, patchClashConfig } from "@/services/cmds";
-import { getAxios } from "@/services/api";
+import { useClashInfo } from "@/hooks/use-clash";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
 export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
-  const { data: clashInfo, mutate } = useSWR("getClashInfo", getClashInfo);
+  const { clashInfo, patchInfo } = useClashInfo();
+
   const [controller, setController] = useState(clashInfo?.server || "");
   const [secret, setSecret] = useState(clashInfo?.secret || "");
 
@@ -26,14 +25,11 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     try {
-      await patchClashConfig({ "external-controller": controller, secret });
-      mutate();
-      // 刷新接口
-      getAxios(true);
+      await patchInfo({ "external-controller": controller, secret });
       Notice.success("Change Clash Config successfully!", 1000);
       setOpen(false);
-    } catch (err) {
-      console.log(err);
+    } catch (err: any) {
+      Notice.error(err.message || err.toString(), 4000);
     }
   });
 

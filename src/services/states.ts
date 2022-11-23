@@ -5,11 +5,6 @@ export const atomThemeMode = atom<"light" | "dark">({
   default: "light",
 });
 
-export const atomClashPort = atom<number>({
-  key: "atomClashPort",
-  default: 0,
-});
-
 export const atomLogData = atom<ILogItem[]>({
   key: "atomLogData",
   default: [],
