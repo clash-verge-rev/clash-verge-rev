@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Notice } from "@/components/base";
 
@@ -10,7 +11,8 @@ export async function getClashLogs() {
     .map((log) => {
       const result = log.match(regex);
       if (result) {
-        const [_, time, type, payload] = result;
+        const [_, _time, type, payload] = result;
+        const time = dayjs(_time).format("MM-DD HH:mm:ss");
         return { time, type, payload };
       }
 
