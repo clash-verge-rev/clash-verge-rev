@@ -77,11 +77,16 @@ jobs:
           releaseDraft: false
           includeDebug: ${{ github.event.inputs.debug }}
           prerelease: true
+          args: -f default-meta
 
       - name: Portable Bundle
         if: matrix.os == 'windows-latest'
         run: |
+          yarn build -f default-meta
           yarn run portable
         env:
           TAG_NAME: alpha
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          VITE_WIN_PORTABLE: 1
