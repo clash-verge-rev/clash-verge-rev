@@ -86,7 +86,7 @@ export const InfoViewer = (props: Props) => {
     <Dialog open={open} onClose={onClose}>
       <DialogTitle sx={{ pb: 0.5 }}>{t("Edit Info")}</DialogTitle>
 
-      <DialogContent sx={{ width: 336, pb: 1 }}>
+      <DialogContent sx={{ width: 336, pb: 1, userSelect: "text" }}>
         <TextField
           {...textFieldProps}
           disabled
