@@ -52,7 +52,7 @@ windows-sys = { version = "0.36", features = ["Win32_System_LibraryLoader", "Win
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 verge-dev = []
-debug-yml = []
+default-meta = []
 
 [profile.release]
 panic = "abort"
