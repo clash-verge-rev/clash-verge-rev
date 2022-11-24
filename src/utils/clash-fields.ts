@@ -26,6 +26,7 @@ export const OTHERS_FIELDS = [
   "script",
   "profile",
   "payload",
+  "tunnels", // clash dev
   "auto-redir",
   "experimental",
   "interface-name",
@@ -40,4 +41,5 @@ export const OTHERS_FIELDS = [
   "sub-rules", // meta
   "geodata-mode", // meta
   "tcp-concurrent", // meta
+  "enable-process", // meta
 ] as const;
