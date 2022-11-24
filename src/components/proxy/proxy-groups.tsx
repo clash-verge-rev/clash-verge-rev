@@ -12,6 +12,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { useRenderList } from "./use-render-list";
 import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
+import { BaseEmpty } from "../base";
 
 interface Props {
   mode: string;
@@ -102,6 +103,10 @@ export const ProxyGroups = (props: Props) => {
       });
     }
   };
+
+  if (mode === "direct") {
+    return <BaseEmpty text="Direct Mode" />;
+  }
 
   return (
     <Virtuoso
