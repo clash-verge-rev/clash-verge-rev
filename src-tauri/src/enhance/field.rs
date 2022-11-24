@@ -20,7 +20,7 @@ pub const DEFAULT_FIELDS: [&str; 5] = [
     "rule-providers",
 ];
 
-pub const OTHERS_FIELDS: [&str; 21] = [
+pub const OTHERS_FIELDS: [&str; 23] = [
     "tun",
     "dns",
     "ebpf",
@@ -28,6 +28,7 @@ pub const OTHERS_FIELDS: [&str; 21] = [
     "script",
     "profile",
     "payload",
+    "tunnels", // clash dev
     "auto-redir",
     "experimental",
     "interface-name",
@@ -42,6 +43,7 @@ pub const OTHERS_FIELDS: [&str; 21] = [
     "sub-rules",      // meta
     "geodata-mode",   // meta
     "tcp-concurrent", // meta
+    "enable-process", // meta
 ];
 
 pub fn use_clash_fields() -> Vec<String> {
