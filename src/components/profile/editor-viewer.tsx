@@ -77,7 +77,7 @@ export const EditorViewer = (props: Props) => {
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>{t("Edit File")}</DialogTitle>
 
-      <DialogContent sx={{ width: 520, pb: 1 }}>
+      <DialogContent sx={{ width: 520, pb: 1, userSelect: "text" }}>
         <div style={{ width: "100%", height: "420px" }} ref={editorRef} />
       </DialogContent>
 
