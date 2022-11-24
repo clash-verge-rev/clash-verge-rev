@@ -183,6 +183,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             log_err!(handle::Handle::update_systray_part());
         }
 
+        Config::runtime().latest().patch_config(patch);
+
         <Result<()>>::Ok(())
     } {
         Ok(()) => {
