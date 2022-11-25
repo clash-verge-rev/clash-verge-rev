@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { getClashLogs } from "@/services/cmds";
 import { useClashInfo } from "@/hooks/use-clash";
@@ -13,6 +13,8 @@ export const useLogSetup = () => {
 
   const enableLog = useRecoilValue(atomEnableLog);
   const setLogData = useSetRecoilState(atomLogData);
+
+  const [refresh, setRefresh] = useState({});
 
   useEffect(() => {
     if (!enableLog || !clashInfo) return;
@@ -31,6 +33,10 @@ export const useLogSetup = () => {
       });
     });
 
+    ws.addEventListener("error", () => {
+      setTimeout(() => setRefresh({}), 1000);
+    });
+
     return () => ws?.close();
-  }, [clashInfo, enableLog]);
+  }, [clashInfo, enableLog, refresh]);
 };
