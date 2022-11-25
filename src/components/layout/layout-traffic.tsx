@@ -21,6 +21,8 @@ const LayoutTraffic = () => {
   // setup log ws during layout
   useLogSetup();
 
+  const [refresh, setRefresh] = useState({});
+
   useEffect(() => {
     if (!clashInfo) return;
 
@@ -33,8 +35,12 @@ const LayoutTraffic = () => {
       setTraffic(data);
     });
 
+    ws.addEventListener("error", () => {
+      setTimeout(() => setRefresh({}), 1000);
+    });
+
     return () => ws?.close();
-  }, [clashInfo]);
+  }, [clashInfo, refresh]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
