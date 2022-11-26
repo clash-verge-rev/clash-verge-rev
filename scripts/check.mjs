@@ -17,7 +17,7 @@ const SIDECAR_HOST = execSync("rustc -vV")
 /* ======= clash ======= */
 const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
-const CLASH_LATEST_DATE = "2022.08.26";
+const CLASH_LATEST_DATE = "2022.11.25";
 
 const CLASH_MAP = {
   "win32-x64": "clash-windows-amd64",
