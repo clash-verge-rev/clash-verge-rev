@@ -6,17 +6,20 @@ import {
 } from "@/services/cmds";
 
 export const useProfiles = () => {
-  const { data: profiles, mutate } = useSWR("getProfiles", getProfiles);
+  const { data: profiles, mutate: mutateProfiles } = useSWR(
+    "getProfiles",
+    getProfiles
+  );
 
   const patchProfiles = async (value: Partial<IProfilesConfig>) => {
     await patchProfilesConfig(value);
-    mutate();
+    mutateProfiles();
   };
 
   const patchCurrent = async (value: Partial<IProfileItem>) => {
     if (profiles?.current) {
       await patchProfile(profiles.current, value);
-      mutate();
+      mutateProfiles();
     }
   };
 
@@ -25,5 +28,6 @@ export const useProfiles = () => {
     current: profiles?.items?.find((p) => p.uid === profiles.current),
     patchProfiles,
     patchCurrent,
+    mutateProfiles,
   };
 };

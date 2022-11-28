@@ -14,7 +14,6 @@ import {
 import { FeaturedPlayListRounded } from "@mui/icons-material";
 import { viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
-import { InfoViewer } from "./info-viewer";
 import { EditorViewer } from "./editor-viewer";
 import { ProfileBox } from "./profile-box";
 import { LogViewer } from "./log-viewer";
@@ -29,6 +28,7 @@ interface Props {
   onMoveTop: () => void;
   onMoveEnd: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }
 
 // profile enhanced item
@@ -43,19 +43,19 @@ export const ProfileMore = (props: Props) => {
     onMoveTop,
     onMoveEnd,
     onDelete,
+    onEdit,
   } = props;
 
   const { uid, type } = itemData;
   const { t, i18n } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
-  const [editOpen, setEditOpen] = useState(false);
   const [fileOpen, setFileOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
 
   const onEditInfo = () => {
     setAnchorEl(null);
-    setEditOpen(true);
+    onEdit();
   };
 
   const onEditFile = () => {
@@ -218,12 +218,6 @@ export const ProfileMore = (props: Props) => {
             </MenuItem>
           ))}
       </Menu>
-
-      <InfoViewer
-        open={editOpen}
-        itemData={itemData}
-        onClose={() => setEditOpen(false)}
-      />
 
       <EditorViewer
         uid={uid}

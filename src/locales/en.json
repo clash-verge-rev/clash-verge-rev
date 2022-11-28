@@ -50,7 +50,7 @@
   "Name": "Name",
   "Descriptions": "Descriptions",
   "Subscription URL": "Subscription URL",
-  "Update Interval(mins)": "Update Interval(mins)",
+  "Update Interval": "Update Interval",
 
   "Settings": "Settings",
   "Clash Setting": "Clash Setting",
