@@ -91,8 +91,6 @@ interface IConnections {
  * Some interface for command
  */
 
-type IProfileType = "local" | "remote" | "merge" | "script";
-
 interface IClashInfo {
   // status: string;
   port?: number; // clash mixed port
@@ -102,7 +100,7 @@ interface IClashInfo {
 
 interface IProfileItem {
   uid: string;
-  type?: IProfileType | string;
+  type?: "local" | "remote" | "merge" | "script";
   name?: string;
   desc?: string;
   file?: string;

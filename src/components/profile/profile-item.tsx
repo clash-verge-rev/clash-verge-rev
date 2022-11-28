@@ -17,7 +17,6 @@ import { RefreshRounded } from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
-import { InfoViewer } from "./info-viewer";
 import { EditorViewer } from "./editor-viewer";
 import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
@@ -31,10 +30,11 @@ interface Props {
   selected: boolean;
   itemData: IProfileItem;
   onSelect: (force: boolean) => void;
+  onEdit: () => void;
 }
 
 export const ProfileItem = (props: Props) => {
-  const { selected, itemData, onSelect } = props;
+  const { selected, itemData, onSelect, onEdit } = props;
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -55,7 +55,7 @@ export const ProfileItem = (props: Props) => {
 
   const loading = loadingCache[itemData.uid] ?? false;
 
-  // interval update from now field
+  // interval update fromNow field
   const [, setRefresh] = useState({});
   useEffect(() => {
     if (!hasUrl) return;
@@ -83,12 +83,11 @@ export const ProfileItem = (props: Props) => {
     };
   }, [hasUrl, updated]);
 
-  const [editOpen, setEditOpen] = useState(false);
   const [fileOpen, setFileOpen] = useState(false);
 
   const onEditInfo = () => {
     setAnchorEl(null);
-    setEditOpen(true);
+    onEdit();
   };
 
   const onEditFile = () => {
@@ -297,12 +296,6 @@ export const ProfileItem = (props: Props) => {
           </MenuItem>
         ))}
       </Menu>
-
-      <InfoViewer
-        open={editOpen}
-        itemData={itemData}
-        onClose={() => setEditOpen(false)}
-      />
 
       <EditorViewer
         uid={uid}

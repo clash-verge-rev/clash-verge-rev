@@ -50,7 +50,9 @@
   "Name": "名称",
   "Descriptions": "描述",
   "Subscription URL": "订阅链接",
-  "Update Interval(mins)": "更新间隔(分钟)",
+  "Update Interval": "更新间隔",
+  "Use System Proxy": "使用系统代理更新",
+  "Use Clash Proxy": "使用Clash代理更新",
 
   "Settings": "设置",
   "Clash Setting": "Clash 设置",
