@@ -20,6 +20,7 @@
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@juggle/resize-observer": "^3.4.0",
     "@mui/icons-material": "^5.10.9",
     "@mui/material": "^5.10.13",
     "@mui/x-data-grid": "^5.17.11",
