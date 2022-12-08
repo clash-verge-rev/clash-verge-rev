@@ -2,6 +2,11 @@
 /// <reference types="vite-plugin-svgr/client" />
 import "./assets/styles/index.scss";
 
+import { ResizeObserver } from "@juggle/resize-observer";
+if (!window.ResizeObserver) {
+  window.ResizeObserver = ResizeObserver;
+}
+
 import React from "react";
 import ReactDOM from "react-dom";
 import { RecoilRoot } from "recoil";
