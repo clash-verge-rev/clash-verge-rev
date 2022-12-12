@@ -7,7 +7,7 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import { openAppDir, openLogsDir, patchVergeConfig } from "@/services/cmds";
+import { openAppDir, openCoreDir, openLogsDir } from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
@@ -94,7 +94,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ traffic_graph: e })}
-          onGuard={(e) => patchVergeConfig({ traffic_graph: e })}
+          onGuard={(e) => patchVerge({ traffic_graph: e })}
         >
           <Switch edge="end" />
         </GuardState>
@@ -150,6 +150,17 @@ const SettingVerge = ({ onError }: Props) => {
           size="small"
           sx={{ my: "2px" }}
           onClick={openAppDir}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
+
+      <SettingItem label={t("Open Core Dir")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={openCoreDir}
         >
           <ArrowForward />
         </IconButton>

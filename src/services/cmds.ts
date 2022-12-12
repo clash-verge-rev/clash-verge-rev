@@ -133,6 +133,12 @@ export async function openAppDir() {
   );
 }
 
+export async function openCoreDir() {
+  return invoke<void>("open_core_dir").catch((err) =>
+    Notice.error(err?.message || err.toString(), 1500)
+  );
+}
+
 export async function openLogsDir() {
   return invoke<void>("open_logs_dir").catch((err) =>
     Notice.error(err?.message || err.toString(), 1500)
