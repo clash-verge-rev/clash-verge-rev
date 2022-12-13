@@ -67,7 +67,7 @@ jobs:
       - name: Delete current release assets
         uses: mknejp/delete-release-assets@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag: alpha
           assets: |
             *.zip
