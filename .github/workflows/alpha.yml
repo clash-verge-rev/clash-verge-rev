@@ -68,10 +68,15 @@ jobs:
         uses: mknejp/delete-release-assets@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: alpha
+          tag: alpha
           assets: |
             *.zip
             *.gz
+            *.AppImage
+            *.deb
+            *.dmg
+            *.msi
+            *.sig
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
