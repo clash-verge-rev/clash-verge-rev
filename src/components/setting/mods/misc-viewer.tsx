@@ -1,7 +1,15 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import { List, ListItem, ListItemText, Switch, TextField } from "@mui/material";
+import {
+  List,
+  ListItem,
+  ListItemText,
+  MenuItem,
+  Select,
+  Switch,
+  TextField,
+} from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 
@@ -12,6 +20,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
     autoCloseConnection: false,
+    enableBuiltinEnhanced: true,
+    proxyLayoutColumn: 1,
     defaultLatencyTest: "",
   });
 
@@ -19,7 +29,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     open: () => {
       setOpen(true);
       setValues({
-        autoCloseConnection: verge?.auto_close_connection || false,
+        autoCloseConnection: verge?.auto_close_connection ?? false,
+        enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
+        proxyLayoutColumn: verge?.proxy_layout_column || 1,
         defaultLatencyTest: verge?.default_latency_test || "",
       });
     },
@@ -30,6 +42,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       await patchVerge({
         auto_close_connection: values.autoCloseConnection,
+        enable_builtin_enhanced: values.enableBuiltinEnhanced,
+        proxy_layout_column: values.proxyLayoutColumn,
         default_latency_test: values.defaultLatencyTest,
       });
       setOpen(false);
@@ -42,7 +56,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("Miscellaneous")}
-      contentSx={{ width: 420 }}
+      contentSx={{ width: 450 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
@@ -62,6 +76,38 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="Enable Builtin Enhanced" />
+          <Switch
+            edge="end"
+            checked={values.enableBuiltinEnhanced}
+            onChange={(_, c) =>
+              setValues((v) => ({ ...v, enableBuiltinEnhanced: c }))
+            }
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="Proxy Layout Column" />
+          <Select
+            size="small"
+            sx={{ width: 100, "> div": { py: "7.5px" } }}
+            value={values.proxyLayoutColumn}
+            onChange={(e) => {
+              setValues((v) => ({
+                ...v,
+                proxyLayoutColumn: e.target.value as number,
+              }));
+            }}
+          >
+            {[1, 2, 3, 4, 5].map((i) => (
+              <MenuItem value={i} key={i}>
+                {i}
+              </MenuItem>
+            ))}
+          </Select>
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary="Default Latency Test" />
           <TextField
             size="small"
@@ -69,7 +115,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck="false"
-            sx={{ width: 200 }}
+            sx={{ width: 250 }}
             value={values.defaultLatencyTest}
             placeholder="http://www.gstatic.com/generate_204"
             onChange={(e) =>

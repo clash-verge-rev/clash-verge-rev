@@ -163,6 +163,8 @@ interface IVergeConfig {
   };
   auto_close_connection?: boolean;
   default_latency_test?: string;
+  enable_builtin_enhanced?: boolean;
+  proxy_layout_column?: number;
 }
 
 type IClashConfigValue = any;

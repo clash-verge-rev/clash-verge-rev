@@ -1,6 +1,7 @@
 import useSWR from "swr";
-import { getProxies } from "@/services/api";
 import { useEffect, useMemo } from "react";
+import { getProxies } from "@/services/api";
+import { useVerge } from "@/hooks/use-verge";
 import { filterSort } from "./use-filter-sort";
 import {
   useHeadStateNew,
@@ -9,10 +10,13 @@ import {
 } from "./use-head-state";
 
 export interface IRenderItem {
-  type: 0 | 1 | 2 | 3; // 组 ｜ head ｜ item ｜ empty
+  // 组 ｜ head ｜ item ｜ empty | item col
+  type: 0 | 1 | 2 | 3 | 4;
   key: string;
   group: IProxyGroupItem;
   proxy?: IProxyItem;
+  col?: number;
+  proxyCol?: IProxyItem[];
   headState?: HeadState;
 }
 
@@ -22,6 +26,9 @@ export const useRenderList = (mode: string) => {
     getProxies,
     { refreshInterval: 45000 }
   );
+
+  const { verge } = useVerge();
+  const col = verge?.proxy_layout_column || 1;
 
   const [headStates, setHeadState] = useHeadStateNew();
 
@@ -62,10 +69,24 @@ export const useRenderList = (mode: string) => {
           headState.sortType
         );
 
-        ret.push({ type: 1, key: `head${group.name}`, group, headState });
+        ret.push({ type: 1, key: `head-${group.name}`, group, headState });
 
         if (!proxies.length) {
-          ret.push({ type: 3, key: `empty${group.name}`, group, headState });
+          ret.push({ type: 3, key: `empty-${group.name}`, group, headState });
+        }
+
+        // 支持多列布局
+        if (col > 1) {
+          return ret.concat(
+            groupList(proxies, col).map((proxyCol) => ({
+              type: 4,
+              key: `col-${group.name}`,
+              group,
+              headState,
+              col,
+              proxyCol,
+            }))
+          );
         }
 
         return ret.concat(
@@ -83,7 +104,7 @@ export const useRenderList = (mode: string) => {
 
     if (!useRule) return retList.slice(1);
     return retList;
-  }, [headStates, proxiesData, mode]);
+  }, [headStates, proxiesData, mode, col]);
 
   return {
     renderList,
@@ -91,3 +112,18 @@ export const useRenderList = (mode: string) => {
     onHeadState: setHeadState,
   };
 };
+
+function groupList<T = any>(list: T[], size: number): T[][] {
+  return list.reduce((p, n) => {
+    if (!p.length) return [[n]];
+
+    const i = p.length - 1;
+    if (p[i].length < size) {
+      p[i].push(n);
+      return p;
+    }
+
+    p.push([n]);
+    return p;
+  }, [] as T[][]);
+}

@@ -68,6 +68,9 @@ pub struct IVerge {
 
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
+
+    /// proxy 页面布局 列数
+    pub proxy_layout_column: Option<i32>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -117,6 +120,7 @@ impl IVerge {
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             enable_builtin_enhanced: Some(true),
+            proxy_layout_column: Some(1),
             ..Self::default()
         }
     }
@@ -159,6 +163,7 @@ impl IVerge {
         patch!(auto_close_connection);
         patch!(default_latency_test);
         patch!(enable_builtin_enhanced);
+        patch!(proxy_layout_column);
     }
 
     /// 在初始化前尝试拿到单例端口的值

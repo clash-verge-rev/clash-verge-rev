@@ -14,6 +14,7 @@ import {
 import { HeadState } from "./use-head-state";
 import { ProxyHead } from "./proxy-head";
 import { ProxyItem } from "./proxy-item";
+import { ProxyItemMini } from "./proxy-item-mini";
 import type { IRenderItem } from "./use-render-list";
 
 interface RenderProps {
@@ -28,7 +29,7 @@ interface RenderProps {
 export const ProxyRender = (props: RenderProps) => {
   const { indent, item, onLocation, onCheckAll, onHeadState, onChangeProxy } =
     props;
-  const { type, group, headState, proxy } = item;
+  const { type, group, headState, proxy, proxyCol } = item;
 
   if (type === 0) {
     return (
@@ -101,6 +102,32 @@ export const ProxyRender = (props: RenderProps) => {
       >
         <InboxRounded sx={{ fontSize: "2.5em", color: "inherit" }} />
         <Typography sx={{ color: "inherit" }}>No Proxies</Typography>
+      </Box>
+    );
+  }
+
+  if (type === 4) {
+    return (
+      <Box
+        sx={{
+          display: "grid",
+          gap: 1,
+          pl: indent ? 4 : 2,
+          pr: 2,
+          pb: 1,
+          gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
+        }}
+      >
+        {proxyCol?.map((proxy) => (
+          <ProxyItemMini
+            key={item.key + proxy.name}
+            groupName={group.name}
+            proxy={proxy!}
+            selected={group.now === proxy?.name}
+            showType={headState?.showType}
+            onClick={() => onChangeProxy(group, proxy!)}
+          />
+        ))}
       </Box>
     );
   }
