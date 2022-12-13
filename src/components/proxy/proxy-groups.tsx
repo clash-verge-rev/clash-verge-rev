@@ -68,8 +68,10 @@ export const ProxyGroups = (props: Props) => {
   // 测全部延迟
   const handleCheckAll = useLockFn(async (groupName: string) => {
     const proxies = renderList
-      .filter((e) => e.type === 2 && e.group?.name === groupName)
-      .map((e) => e.proxy!)
+      .filter(
+        (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4)
+      )
+      .flatMap((e) => e.proxyCol || e.proxy!)
       .filter(Boolean);
 
     const providers = new Set(proxies.map((p) => p!.provider!).filter(Boolean));
@@ -92,7 +94,10 @@ export const ProxyGroups = (props: Props) => {
     const { name, now } = group;
 
     const index = renderList.findIndex(
-      (e) => e.type === 2 && e.group?.name === name && e.proxy?.name === now
+      (e) =>
+        e.group?.name === name &&
+        ((e.type === 2 && e.proxy?.name === now) ||
+          (e.type === 4 && e.proxyCol?.some((p) => p.name === now)))
     );
 
     if (index >= 0) {
