@@ -45,7 +45,14 @@ export const ProxyItemMini = (props: Props) => {
       selected={selected}
       onClick={() => onClick?.(proxy.name)}
       sx={[
-        { height: 56, borderRadius: 1, pl: 1.5, pr: 1 },
+        {
+          height: 56,
+          borderRadius: 1,
+          pl: 1.5,
+          pr: 1,
+          justifyContent: "space-between",
+          alignItems: "center",
+        },
         ({ palette: { mode, primary } }) => {
           const bgcolor =
             mode === "light"
@@ -95,7 +102,7 @@ export const ProxyItemMini = (props: Props) => {
         )}
       </Box>
 
-      <Box sx={{ ml: 0.5, justifyContent: "flex-end", color: "primary.main" }}>
+      <Box sx={{ ml: 0.5, color: "primary.main" }}>
         {delay === -2 && (
           <Widget>
             <BaseLoading />
@@ -151,7 +158,7 @@ export const ProxyItemMini = (props: Props) => {
           // 展示已选择的icon
           <CheckCircleOutlineRounded
             className="the-icon"
-            sx={{ fontSize: 16 }}
+            sx={{ fontSize: 16, mr: 0.5, display: "block" }}
           />
         )}
       </Box>
