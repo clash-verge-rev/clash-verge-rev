@@ -21,7 +21,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const [values, setValues] = useState({
     autoCloseConnection: false,
     enableBuiltinEnhanced: true,
-    proxyLayoutColumn: 1,
+    proxyLayoutColumn: 6,
     defaultLatencyTest: "",
   });
 
@@ -31,7 +31,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       setValues({
         autoCloseConnection: verge?.auto_close_connection ?? false,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
-        proxyLayoutColumn: verge?.proxy_layout_column || 1,
+        proxyLayoutColumn: verge?.proxy_layout_column || 6,
         defaultLatencyTest: verge?.default_latency_test || "",
       });
     },
