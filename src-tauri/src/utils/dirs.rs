@@ -20,7 +20,7 @@ static mut RESOURCE_DIR: Option<PathBuf> = None;
 #[allow(unused)]
 static mut PORTABLE_FLAG: bool = false;
 
-pub static mut APP_VERSION: &str = "v1.1.2";
+pub static mut APP_VERSION: &str = "v1.2.0";
 
 /// initialize portable flag
 #[cfg(target_os = "windows")]
