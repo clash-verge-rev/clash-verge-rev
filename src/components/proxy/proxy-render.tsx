@@ -1,8 +1,8 @@
 import {
   alpha,
   Box,
-  ListItem,
   ListItemText,
+  ListItemButton,
   Typography,
   styled,
 } from "@mui/material";
@@ -33,8 +33,7 @@ export const ProxyRender = (props: RenderProps) => {
 
   if (type === 0) {
     return (
-      <ListItem
-        button
+      <ListItemButton
         dense
         onClick={() => onHeadState(group.name, { open: !headState?.open })}
       >
@@ -58,7 +57,7 @@ export const ProxyRender = (props: RenderProps) => {
           }}
         />
         {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
-      </ListItem>
+      </ListItemButton>
     );
   }
 
