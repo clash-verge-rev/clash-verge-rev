@@ -99,6 +99,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
               }));
             }}
           >
+            <MenuItem value={6} key={6}>
+              Auto
+            </MenuItem>
             {[1, 2, 3, 4, 5].map((i) => (
               <MenuItem value={i} key={i}>
                 {i}

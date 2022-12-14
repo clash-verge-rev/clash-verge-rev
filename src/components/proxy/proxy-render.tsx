@@ -110,6 +110,7 @@ export const ProxyRender = (props: RenderProps) => {
     return (
       <Box
         sx={{
+          height: 56,
           display: "grid",
           gap: 1,
           pl: indent ? 4 : 2,
@@ -123,7 +124,7 @@ export const ProxyRender = (props: RenderProps) => {
             key={item.key + proxy.name}
             groupName={group.name}
             proxy={proxy!}
-            selected={group.now === proxy?.name}
+            selected={group.now === proxy.name}
             showType={headState?.showType}
             onClick={() => onChangeProxy(group, proxy!)}
           />

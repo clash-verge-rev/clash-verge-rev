@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import { CheckCircleOutlineRounded } from "@mui/icons-material";
-import {
-  alpha,
-  Box,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  styled,
-} from "@mui/material";
+import { alpha, Box, ListItemButton, styled, Typography } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import delayManager from "@/services/delay";
 
@@ -52,7 +45,7 @@ export const ProxyItemMini = (props: Props) => {
       selected={selected}
       onClick={() => onClick?.(proxy.name)}
       sx={[
-        { borderRadius: 1, pl: 1.5, pr: 1 },
+        { height: 56, borderRadius: 1, pl: 1.5, pr: 1 },
         ({ palette: { mode, primary } }) => {
           const bgcolor =
             mode === "light"
@@ -61,45 +54,48 @@ export const ProxyItemMini = (props: Props) => {
           const color = mode === "light" ? primary.main : primary.light;
           const showDelay = delay > 0;
 
+          const shadowColor =
+            mode === "light" ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.08)";
+
           return {
             "&:hover .the-check": { display: !showDelay ? "block" : "none" },
             "&:hover .the-delay": { display: showDelay ? "block" : "none" },
             "&:hover .the-icon": { display: "none" },
-            "&.Mui-selected": { bgcolor },
+            "&.Mui-selected": { bgcolor, boxShadow: `0 0 0 1px ${bgcolor}` },
             "&.Mui-selected .MuiListItemText-secondary": { color },
+            boxShadow: `0 0 0 1px ${shadowColor}`,
           };
         },
       ]}
     >
-      <ListItemText
-        title={proxy.name}
-        secondary={
-          <div>
-            <div
-              style={{
-                textOverflow: "ellipsis",
-                wordBreak: "break-all",
-                overflow: "hidden",
-                whiteSpace: showType ? "nowrap" : "inherit",
-              }}
-            >
-              {proxy.name}
-            </div>
+      <Box title={proxy.name} sx={{ overflow: "hidden" }}>
+        <Typography
+          variant="body2"
+          component="div"
+          color="text.secondary"
+          sx={{
+            display: "block",
+            textOverflow: "ellipsis",
+            wordBreak: "break-all",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {proxy.name}
+        </Typography>
 
-            {showType && (
-              <>
-                {!!proxy.provider && (
-                  <TypeBox component="span">{proxy.provider}</TypeBox>
-                )}
-                <TypeBox component="span">{proxy.type}</TypeBox>
-                {proxy.udp && <TypeBox component="span">UDP</TypeBox>}
-              </>
+        {showType && (
+          <Box sx={{ display: "flex", flexWrap: "nowrap", flex: "none" }}>
+            {!!proxy.provider && (
+              <TypeBox component="span">{proxy.provider}</TypeBox>
             )}
-          </div>
-        }
-      />
+            <TypeBox component="span">{proxy.type}</TypeBox>
+            {proxy.udp && <TypeBox component="span">UDP</TypeBox>}
+          </Box>
+        )}
+      </Box>
 
-      <ListItemIcon sx={{ justifyContent: "flex-end", color: "primary.main" }}>
+      <Box sx={{ ml: 0.5, justifyContent: "flex-end", color: "primary.main" }}>
         {delay === -2 && (
           <Widget>
             <BaseLoading />
@@ -158,7 +154,7 @@ export const ProxyItemMini = (props: Props) => {
             sx={{ fontSize: 16 }}
           />
         )}
-      </ListItemIcon>
+      </Box>
     </ListItemButton>
   );
 };
