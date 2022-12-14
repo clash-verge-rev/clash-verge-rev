@@ -3,6 +3,7 @@ import { useEffect, useMemo } from "react";
 import { getProxies } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import { filterSort } from "./use-filter-sort";
+import { useWindowWidth } from "./use-window-width";
 import {
   useHeadStateNew,
   DEFAULT_STATE,
@@ -28,7 +29,18 @@ export const useRenderList = (mode: string) => {
   );
 
   const { verge } = useVerge();
-  const col = verge?.proxy_layout_column || 1;
+  const { width } = useWindowWidth();
+
+  let col = verge?.proxy_layout_column || 1;
+
+  // 自适应
+  if (col === 6) {
+    if (width > 1450) col = 5;
+    else if (width > 1024) col = 4;
+    else if (width > 900) col = 3;
+    else if (width >= 600) col = 2;
+    else col = 1;
+  }
 
   const [headStates, setHeadState] = useHeadStateNew();
 
@@ -80,7 +92,7 @@ export const useRenderList = (mode: string) => {
           return ret.concat(
             groupList(proxies, col).map((proxyCol) => ({
               type: 4,
-              key: `col-${group.name}`,
+              key: `col-${group.name}-${proxyCol[0].name}`,
               group,
               headState,
               col,

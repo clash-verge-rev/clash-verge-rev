@@ -118,6 +118,7 @@ export const ProxyGroups = (props: Props) => {
       ref={virtuosoRef}
       style={{ height: "100%" }}
       totalCount={renderList.length}
+      increaseViewportBy={256}
       itemContent={(index) => (
         <ProxyRender
           key={renderList[index].key}
