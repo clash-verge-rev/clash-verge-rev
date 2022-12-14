@@ -91,8 +91,9 @@ const LogPage = () => {
             sx={{ width: 120, mr: 1, '[role="button"]': { py: 0.65 } }}
           >
             <MenuItem value="all">ALL</MenuItem>
-            <MenuItem value="info">INFO</MenuItem>
+            <MenuItem value="inf">INFO</MenuItem>
             <MenuItem value="warn">WARN</MenuItem>
+            <MenuItem value="err">ERROR</MenuItem>
           </Select>
 
           <TextField
