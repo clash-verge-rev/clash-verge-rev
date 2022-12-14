@@ -9,11 +9,9 @@ const Item = styled(Box)(({ theme }) => ({
 const COLOR = [
   "primary",
   "secondary",
-  "info",
-  "warning",
-  "error",
-  "success",
-  "text",
+  "info.main",
+  "warning.main",
+  "success.main",
 ];
 
 interface Props {
@@ -22,6 +20,9 @@ interface Props {
 }
 
 const parseColor = (text: string) => {
+  if (text === "REJECT") return "error.main";
+  if (text === "DIRECT") return "text.primary";
+
   let sum = 0;
   for (let i = 0; i < text.length; i++) {
     sum += text.charCodeAt(i);
@@ -42,7 +43,7 @@ const RuleItem = (props: Props) => {
         {index}
       </Typography>
 
-      <Box>
+      <Box sx={{ userSelect: "text" }}>
         <Typography component="h6" variant="subtitle1" color="text.primary">
           {value.payload || "-"}
         </Typography>
