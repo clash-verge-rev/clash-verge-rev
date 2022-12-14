@@ -120,7 +120,6 @@ impl IVerge {
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             enable_builtin_enhanced: Some(true),
-            proxy_layout_column: Some(1),
             ..Self::default()
         }
     }
