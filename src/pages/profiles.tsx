@@ -83,27 +83,20 @@ const ProfilePage = () => {
 
       let hasChange = false;
 
+      const newSelected: typeof selected = [];
       const { global, groups } = proxiesData;
-      [global, ...groups].forEach((group) => {
-        const { type, name, now } = group;
 
-        if (type !== "Selector" && type !== "Fallback") return;
-        if (!now || selectedMap[name] === now) return;
-        if (selectedMap[name] == null) {
-          selectedMap[name] = now!;
-        } else {
+      [global, ...groups].forEach(({ type, name, now }) => {
+        if (!now || (type !== "Selector" && type !== "Fallback")) return;
+        if (selectedMap[name] != null && selectedMap[name] !== now) {
           hasChange = true;
           updateProxy(name, selectedMap[name]);
         }
+        newSelected.push({ name, now });
       });
 
       // update profile selected list
-      profile.selected = Object.entries(selectedMap).map(([name, now]) => ({
-        name,
-        now,
-      }));
-
-      patchProfile(current!, { selected: profile.selected });
+      patchProfile(current!, { selected: newSelected });
       // update proxies cache
       if (hasChange) mutate("getProxies", getProxies());
     }, 100);
@@ -122,11 +115,9 @@ const ProfilePage = () => {
         mutate("getProfiles", newProfiles);
 
         const remoteItem = newProfiles.items?.find((e) => e.type === "remote");
-
         if (!newProfiles.current && remoteItem) {
           const current = remoteItem.uid;
           patchProfiles({ current });
-          mutateProfiles();
           mutateLogs();
         }
       });
