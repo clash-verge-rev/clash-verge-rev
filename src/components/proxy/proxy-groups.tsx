@@ -9,10 +9,10 @@ import {
 } from "@/services/api";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
+import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
 import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
-import { BaseEmpty } from "../base";
 
 interface Props {
   mode: string;
@@ -83,7 +83,7 @@ export const ProxyGroups = (props: Props) => {
     }
 
     const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
-    await delayManager.checkListDelay(names, groupName, 24);
+    await delayManager.checkListDelay(names, groupName);
 
     onProxies();
   });

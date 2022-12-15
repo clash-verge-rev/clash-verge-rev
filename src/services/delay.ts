@@ -84,35 +84,26 @@ class DelayManager {
     return delay;
   }
 
-  async checkListDelay(
-    nameList: readonly string[],
-    groupName: string,
-    concurrency: number
-  ) {
-    const names = [...nameList];
+  async checkListDelay(nameList: string[], group: string, concurrency = 6) {
+    const names = nameList.filter(Boolean);
+    // 设置正在延迟测试中
+    names.forEach((name) => this.setDelay(name, group, -2));
 
     let total = names.length;
     let current = 0;
 
-    // 设置正在延迟测试中
-    names.forEach((name) => this.setDelay(name, groupName, -2));
-
     return new Promise((resolve) => {
       const help = async (): Promise<void> => {
         if (current >= concurrency) return;
-
         const task = names.shift();
         if (!task) return;
-
         current += 1;
-        await this.checkDelay(task, groupName);
+        await this.checkDelay(task, group);
         current -= 1;
         total -= 1;
-
         if (total <= 0) resolve(null);
         else return help();
       };
-
       for (let i = 0; i < concurrency; ++i) help();
     });
   }
