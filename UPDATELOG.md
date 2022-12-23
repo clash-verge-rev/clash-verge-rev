@@ -1,3 +1,19 @@
+## v1.2.1
+
+### Features
+
+- update clash version
+- proxy groups support multi columns
+- optimize ui
+
+### Bug Fixes
+
+- fix ui websocket connection
+- adjust delay check concurrency
+- avoid setting login item repeatedly(macOS)
+
+---
+
 ## v1.2.0
 
 ### Features
