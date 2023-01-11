@@ -55,10 +55,13 @@ fn clash_client_info() -> Result<(String, HeaderMap)> {
 
 /// 缩短clash的日志
 pub fn parse_log(log: String) -> String {
-    if log.starts_with("time=") {
+    if log.starts_with("time=") && log.len() > 33 {
         return (&log[33..]).to_owned();
     }
-    (&log[9..]).to_owned()
+    if log.len() > 9 {
+        return (&log[9..]).to_owned();
+    }
+    return log;
 }
 
 /// 缩短clash -t的错误输出
