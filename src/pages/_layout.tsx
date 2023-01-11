@@ -130,7 +130,7 @@ const Layout = () => {
           </div>
 
           <div className="layout__right" data-windrag>
-            {OS !== "macos" && (
+            {OS === "windows" && (
               <div className="the-bar">
                 <LayoutControl />
               </div>
