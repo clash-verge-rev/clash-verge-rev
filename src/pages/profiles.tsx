@@ -230,7 +230,7 @@ const ProfilePage = () => {
         <Button
           variant="contained"
           size="small"
-          onClick={viewerRef.current?.create}
+          onClick={() => viewerRef.current?.create()}
         >
           {t("New")}
         </Button>
