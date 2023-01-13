@@ -107,6 +107,7 @@ pub fn profiles_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
 }
 
+#[allow(unused)]
 pub fn app_res_dir() -> Result<PathBuf> {
     unsafe {
         Ok(RESOURCE_DIR
