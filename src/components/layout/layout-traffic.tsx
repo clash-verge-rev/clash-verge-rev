@@ -18,10 +18,11 @@ const LayoutTraffic = () => {
   const trafficRef = useRef<TrafficRef>(null);
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
 
+  const wsRef = useRef<WebSocket | null>(null);
+  const [refresh, setRefresh] = useState({});
+
   // setup log ws during layout
   useLogSetup();
-
-  const [refresh, setRefresh] = useState({});
 
   useEffect(() => {
     if (!clashInfo) return;
@@ -36,11 +37,48 @@ const LayoutTraffic = () => {
     });
 
     ws.addEventListener("error", () => {
-      setTimeout(() => setRefresh({}), 1000);
+      setTimeout(() => {
+        if (document.visibilityState === "visible") {
+          setRefresh({});
+        }
+      }, 1000);
     });
 
-    return () => ws?.close();
+    ws.addEventListener("close", () => {
+      setTimeout(() => {
+        if (document.visibilityState === "visible") {
+          setRefresh({});
+        }
+      }, 1000);
+    });
+
+    wsRef.current = ws;
+
+    return () => {
+      ws?.close();
+      wsRef.current = null;
+    };
   }, [clashInfo, refresh]);
+
+  useEffect(() => {
+    const handleVisibleChange = () => {
+      if (document.visibilityState === "visible") {
+        // reconnect websocket
+        if (
+          wsRef.current &&
+          wsRef.current.readyState !== WebSocket.CONNECTING
+        ) {
+          setRefresh({});
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibleChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibleChange);
+    };
+  }, []);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
@@ -56,7 +94,7 @@ const LayoutTraffic = () => {
     color: "grey.500",
     fontSize: "12px",
     textAlign: "right",
-    sx: { flex: "0 1 28px", userSelect: "none" },
+    sx: { flex: "0 1 27px", userSelect: "none" },
   };
 
   return (
@@ -73,7 +111,7 @@ const LayoutTraffic = () => {
 
       <Box mb={1.5} display="flex" alignItems="center" whiteSpace="nowrap">
         <ArrowUpward
-          fontSize="small"
+          sx={{ mr: 0.75, fontSize: 18 }}
           color={+up > 0 ? "primary" : "disabled"}
         />
         <Typography {...valStyle}>{up}</Typography>
@@ -82,7 +120,7 @@ const LayoutTraffic = () => {
 
       <Box display="flex" alignItems="center" whiteSpace="nowrap">
         <ArrowDownward
-          fontSize="small"
+          sx={{ mr: 0.75, fontSize: 18 }}
           color={+down > 0 ? "primary" : "disabled"}
         />
         <Typography {...valStyle}>{down}</Typography>
