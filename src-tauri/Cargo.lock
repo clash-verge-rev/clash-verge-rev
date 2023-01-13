@@ -3847,9 +3847,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.26.8"
+version = "0.27.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29ddf41e393a9133c81d5f0974195366bd57082deac6e0eb02ed39b8341c2bb6"
+checksum = "fcd303550875ba33b137a7c93318cfdeb54c95e63ff7a0982d28425d3f87552c"
 dependencies = [
  "cfg-if 1.0.0",
  "core-foundation-sys",
@@ -3862,12 +3862,13 @@ dependencies = [
 
 [[package]]
 name = "sysproxy"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46fd97e02a884d8009c43ef592ddea3d01bca955fe25f44ac7e63f169350a372"
+checksum = "58c9e02068d2fd8c0bbfc70ca394b369f59eb9f478b23b9269da47fa7150f006"
 dependencies = [
  "interfaces",
  "thiserror",
+ "winapi",
  "winreg",
 ]
 
