@@ -24,10 +24,6 @@ import useCustomTheme from "@/components/layout/use-custom-theme";
 import getSystem from "@/utils/get-system";
 import "dayjs/locale/zh-cn";
 
-declare global {
-  const WIN_PORTABLE: boolean;
-}
-
 dayjs.extend(relativeTime);
 
 const OS = getSystem();
