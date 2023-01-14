@@ -1,9 +1,9 @@
 export const HANDLE_FIELDS = [
+  "mode",
   "port",
   "socks-port",
   "mixed-port",
   "allow-lan",
-  "mode",
   "log-level",
   "ipv6",
   "secret",
@@ -11,22 +11,22 @@ export const HANDLE_FIELDS = [
 ];
 
 export const DEFAULT_FIELDS = [
-  "rules",
   "proxies",
   "proxy-groups",
   "proxy-providers",
+  "rules",
   "rule-providers",
 ] as const;
 
 export const OTHERS_FIELDS = [
-  "tun",
   "dns",
+  "tun",
   "ebpf",
   "hosts",
   "script",
   "profile",
   "payload",
-  "tunnels", // clash dev
+  "tunnels",
   "auto-redir",
   "experimental",
   "interface-name",

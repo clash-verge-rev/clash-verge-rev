@@ -13,17 +13,8 @@ import { BaseDialog, DialogRef } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
 import { Notice } from "@/components/base";
 
-const fieldSorter = (a: string, b: string) => {
-  if (a.includes("-") === a.includes("-")) {
-    if (a.length === b.length) return a.localeCompare(b);
-    return a.length - b.length;
-  } else if (a.includes("-")) return 1;
-  else if (b.includes("-")) return -1;
-  return 0;
-};
-
-const otherFields = [...OTHERS_FIELDS].sort(fieldSorter);
-const handleFields = [...HANDLE_FIELDS, ...DEFAULT_FIELDS].sort(fieldSorter);
+const otherFields = [...OTHERS_FIELDS];
+const handleFields = [...HANDLE_FIELDS, ...DEFAULT_FIELDS];
 
 export const ClashFieldViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
