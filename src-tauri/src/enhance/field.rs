@@ -1,34 +1,34 @@
 use serde_yaml::{Mapping, Value};
 
 pub const HANDLE_FIELDS: [&str; 9] = [
+    "mode",
     "port",
     "socks-port",
     "mixed-port",
-    "mode",
-    "ipv6",
-    "log-level",
     "allow-lan",
-    "external-controller",
+    "log-level",
+    "ipv6",
     "secret",
+    "external-controller",
 ];
 
 pub const DEFAULT_FIELDS: [&str; 5] = [
     "proxies",
     "proxy-groups",
-    "rules",
     "proxy-providers",
+    "rules",
     "rule-providers",
 ];
 
 pub const OTHERS_FIELDS: [&str; 25] = [
-    "tun",
     "dns",
+    "tun",
     "ebpf",
     "hosts",
     "script",
     "profile",
     "payload",
-    "tunnels", // clash dev
+    "tunnels",
     "auto-redir",
     "experimental",
     "interface-name",
