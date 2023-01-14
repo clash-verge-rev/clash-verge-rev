@@ -161,6 +161,7 @@ impl CoreManager {
 
         let mut sidecar = self.sidecar.lock();
         *sidecar = Some(cmd_child);
+        drop(sidecar);
 
         tauri::async_runtime::spawn(async move {
             while let Some(event) = rx.recv().await {
@@ -181,9 +182,41 @@ impl CoreManager {
                     }
                     CommandEvent::Terminated(_) => {
                         log::info!(target: "app", "clash core terminated");
+                        let _ = CoreManager::global().recover_core();
                         break;
                     }
                     _ => {}
+                }
+            }
+        });
+
+        Ok(())
+    }
+
+    /// 重启内核
+    pub fn recover_core(&'static self) -> Result<()> {
+        // 服务模式不管
+        #[cfg(target_os = "windows")]
+        if *self.use_service_mode.lock() {
+            return Ok(());
+        }
+
+        // 清空原来的sidecar值
+        if let Some(sidecar) = self.sidecar.lock().take() {
+            let _ = sidecar.kill();
+        }
+
+        tauri::async_runtime::spawn(async move {
+            // 6秒之后再查看服务是否正常 (时间随便搞的)
+            // terminated 可能是切换内核 (切换内核已经有500ms的延迟)
+            sleep(Duration::from_millis(6666)).await;
+
+            if self.sidecar.lock().is_none() {
+                log::info!(target: "app", "recover clash core");
+
+                // 重新启动app
+                if let Err(_) = self.run_core().await {
+                    let _ = self.recover_core();
                 }
             }
         });
