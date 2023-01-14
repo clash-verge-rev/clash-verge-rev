@@ -4,7 +4,7 @@ on: workflow_dispatch
 
 jobs:
   release-update:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     if: startsWith(github.repository, 'zzzgydi')
     steps:
       - name: Checkout repository
