@@ -1,3 +1,19 @@
+## v1.2.2
+
+### Features
+
+- update clash meta
+- recover clash core after panic
+- use system window decorations(Linux)
+
+### Bug Fixes
+
+- flush system proxy settings(Windows)
+- fix parse log panic
+- fix ui bug
+
+---
+
 ## v1.2.1
 
 ### Features
