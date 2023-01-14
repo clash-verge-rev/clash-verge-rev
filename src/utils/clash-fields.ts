@@ -37,7 +37,9 @@ export const OTHERS_FIELDS = [
   "external-ui",
   "bind-address",
   "authentication",
+  "tls", // meta
   "sniffer", // meta
+  "listeners", // meta
   "sub-rules", // meta
   "geodata-mode", // meta
   "tcp-concurrent", // meta
