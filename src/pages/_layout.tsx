@@ -3,7 +3,6 @@ import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
 import { useEffect } from "react";
-import { useSetRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
 import { Route, Routes } from "react-router-dom";
 import { alpha, List, Paper, ThemeProvider } from "@mui/material";
@@ -11,8 +10,6 @@ import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
-import { atomCurrentProfile } from "@/services/states";
-import { getProfiles } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { ReactComponent as LogoSvg } from "@/assets/image/logo.svg";
 import { BaseErrorBoundary, Notice } from "@/components/base";
@@ -35,8 +32,6 @@ const Layout = () => {
 
   const { verge } = useVerge();
   const { theme_blur, language } = verge || {};
-
-  const setCurrentProfile = useSetRecoilState(atomCurrentProfile);
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
@@ -71,9 +66,6 @@ const Layout = () => {
           break;
       }
     });
-
-    // set current profile uid
-    getProfiles().then((data) => setCurrentProfile(data.current ?? ""));
   }, []);
 
   useEffect(() => {

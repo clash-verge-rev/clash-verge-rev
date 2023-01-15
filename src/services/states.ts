@@ -71,9 +71,3 @@ export const atomUpdateState = atom<boolean>({
   key: "atomUpdateState",
   default: false,
 });
-
-// current profile uid
-export const atomCurrentProfile = atom<string>({
-  key: "atomCurrentProfile",
-  default: "",
-});
