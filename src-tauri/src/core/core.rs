@@ -172,8 +172,8 @@ impl CoreManager {
                         Logger::global().set_log(line);
                     }
                     CommandEvent::Stderr(err) => {
-                        let stdout = clash_api::parse_log(err.clone());
-                        log::error!(target: "app", "[clash]: {stdout}");
+                        // let stdout = clash_api::parse_log(err.clone());
+                        log::error!(target: "app", "[clash]: {err}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Error(err) => {
@@ -215,7 +215,10 @@ impl CoreManager {
                 log::info!(target: "app", "recover clash core");
 
                 // 重新启动app
-                if let Err(_) = self.run_core().await {
+                if let Err(err) = self.run_core().await {
+                    log::error!(target: "app", "failed to recover clash core");
+                    log::error!(target: "app", "{err}");
+
                     let _ = self.recover_core();
                 }
             }
