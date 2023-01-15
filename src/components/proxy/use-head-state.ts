@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useRecoilValue } from "recoil";
-import { atomCurrentProfile } from "@/services/states";
 import { ProxySortType } from "./use-filter-sort";
+import { useProfiles } from "@/hooks/use-profiles";
 
 export interface HeadState {
   open?: boolean;
@@ -25,7 +24,8 @@ export const DEFAULT_STATE: HeadState = {
 };
 
 export function useHeadStateNew() {
-  const current = useRecoilValue(atomCurrentProfile);
+  const { profiles } = useProfiles();
+  const current = profiles?.current || "";
 
   const [state, setState] = useState<Record<string, HeadState>>({});
 

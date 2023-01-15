@@ -1,20 +1,17 @@
 import useSWR, { mutate } from "swr";
 import { useLockFn } from "ahooks";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSetRecoilState } from "recoil";
+import { useMemo, useRef, useState } from "react";
 import { Box, Button, Grid, IconButton, Stack, TextField } from "@mui/material";
 import { CachedRounded } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
   getProfiles,
-  patchProfile,
   importProfile,
   enhanceProfiles,
   getRuntimeLogs,
   deleteProfile,
 } from "@/services/cmds";
-import { closeAllConnections, getProxies, updateProxy } from "@/services/api";
-import { atomCurrentProfile } from "@/services/states";
+import { closeAllConnections } from "@/services/api";
 import { BasePage, Notice } from "@/components/base";
 import {
   ProfileViewer,
@@ -30,9 +27,12 @@ const ProfilePage = () => {
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
 
-  const setCurrentProfile = useSetRecoilState(atomCurrentProfile);
-
-  const { profiles = {}, patchProfiles, mutateProfiles } = useProfiles();
+  const {
+    profiles = {},
+    activateSelected,
+    patchProfiles,
+    mutateProfiles,
+  } = useProfiles();
 
   const { data: chainLogs = {}, mutate: mutateLogs } = useSWR(
     "getRuntimeLogs",
@@ -60,48 +60,6 @@ const ProfilePage = () => {
     return { regularItems, enhanceItems };
   }, [profiles]);
 
-  // sync selected proxy
-  useEffect(() => {
-    if (profiles.current == null) return;
-
-    const current = profiles.current;
-    const profile = regularItems.find((p) => p.uid === current);
-
-    setCurrentProfile(current);
-
-    if (!profile) return;
-
-    setTimeout(async () => {
-      const proxiesData = await getProxies();
-      mutate("getProxies", proxiesData);
-
-      // init selected array
-      const { selected = [] } = profile;
-      const selectedMap = Object.fromEntries(
-        selected.map((each) => [each.name!, each.now!])
-      );
-
-      let hasChange = false;
-
-      const newSelected: typeof selected = [];
-      const { global, groups } = proxiesData;
-
-      [global, ...groups].forEach(({ type, name, now }) => {
-        if (!now || (type !== "Selector" && type !== "Fallback")) return;
-        if (selectedMap[name] != null && selectedMap[name] !== now) {
-          hasChange = true;
-          updateProxy(name, selectedMap[name]);
-        }
-        newSelected.push({ name, now });
-      });
-
-      // update profile selected list
-      patchProfile(current!, { selected: newSelected });
-      // update proxies cache
-      if (hasChange) mutate("getProxies", getProxies());
-    }, 100);
-  }, [profiles, regularItems]);
-
   const onImport = async () => {
     if (!url) return;
     setUrl("");
@@ -119,6 +77,7 @@ const ProfilePage = () => {
           const current = remoteItem.uid;
           patchProfiles({ current });
           mutateLogs();
+          setTimeout(() => activateSelected(), 2000);
         }
       });
     } catch (err: any) {
@@ -132,9 +91,9 @@ const ProfilePage = () => {
     if (!force && current === profiles.current) return;
     try {
       await patchProfiles({ current });
-      setCurrentProfile(current);
       mutateLogs();
       closeAllConnections();
+      setTimeout(() => activateSelected(), 2000);
       Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString(), 4000);
