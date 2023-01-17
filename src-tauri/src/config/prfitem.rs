@@ -282,8 +282,11 @@ impl PrfItem {
         let name = name.unwrap_or(filename.unwrap_or("Remote File".into()));
         let data = resp.text_with_charset("utf-8").await?;
 
+        // process the charset "UTF-8 with BOM"
+        let data = data.trim_start_matches('\u{feff}');
+
         // check the data whether the valid yaml format
-        let yaml = serde_yaml::from_str::<Mapping>(&data) //
+        let yaml = serde_yaml::from_str::<Mapping>(data)
             .context("the remote profile data is invalid yaml")?;
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
@@ -301,7 +304,7 @@ impl PrfItem {
             extra,
             option,
             updated: Some(chrono::Local::now().timestamp() as usize),
-            file_data: Some(data),
+            file_data: Some(data.into()),
         })
     }
 
