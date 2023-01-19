@@ -43,8 +43,8 @@ jobs:
       - name: Install Dependencies (ubuntu only)
         if: startsWith(matrix.os, 'ubuntu-')
         run: |
-          sudo apt update
-          sudo apt install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf openssl
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf openssl
 
       - name: Get yarn cache dir path
         id: yarn-cache-dir-path
