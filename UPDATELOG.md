@@ -1,3 +1,18 @@
+## v1.2.3
+
+### Features
+
+- update clash
+- adjust macOS window style
+- profile supports UTF8 with BOM
+
+### Bug Fixes
+
+- fix selected proxy
+- fix error log
+
+---
+
 ## v1.2.2
 
 ### Features
