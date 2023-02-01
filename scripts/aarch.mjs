@@ -1,11 +1,18 @@
 /**
- * Build and upload assets for macOS(aarch)
+ * Build and upload assets
+ * for macOS(aarch)
  */
 import fs from "fs-extra";
 import path from "path";
 import { exit } from "process";
+import { execSync } from "child_process";
 import { createRequire } from "module";
 import { getOctokit, context } from "@actions/github";
+
+// to `meta` tag
+const META = process.argv.includes("--meta");
+// to `alpha` tag
+const ALPHA = process.argv.includes("--alpha");
 
 const require = createRequire(import.meta.url);
 
@@ -24,6 +31,14 @@ async function resolve() {
   }
 
   const { version } = require("../package.json");
+
+  const tag = META ? "meta" : ALPHA ? "alpha" : `v${version}`;
+  const buildCmd = META ? `yarn build -f default-meta` : `yarn build`;
+
+  console.log(`[INFO]: Upload to tag "${tag}"`);
+  console.log(`[INFO]: Building app. "${buildCmd}"`);
+
+  execSync(buildCmd);
 
   const cwd = process.cwd();
   const bundlePath = path.join(cwd, "src-tauri/target/release/bundle");
@@ -48,7 +63,7 @@ async function resolve() {
 
   const { data: release } = await github.rest.repos.getReleaseByTag({
     ...options,
-    tag: `v${version}`,
+    tag,
   });
 
   if (!release.id) throw new Error("failed to find the release");
