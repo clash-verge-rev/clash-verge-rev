@@ -32,7 +32,7 @@
       "shortDescription": "A Clash GUI based on tauri.",
       "longDescription": "A Clash GUI based on tauri.",
       "deb": {
-        "depends": []
+        "depends": ["openssl"]
       },
       "macOS": {
         "frameworks": [],
