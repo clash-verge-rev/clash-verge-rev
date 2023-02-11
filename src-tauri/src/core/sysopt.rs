@@ -174,7 +174,7 @@ impl Sysopt {
         // fix #403
         #[cfg(target_os = "linux")]
         let app_path = {
-            use core::handle::Handle;
+            use crate::core::handle::Handle;
             use tauri::Manager;
 
             let handle = Handle::global();
