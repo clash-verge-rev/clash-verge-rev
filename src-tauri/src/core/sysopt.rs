@@ -171,6 +171,26 @@ impl Sysopt {
         })()
         .unwrap_or(app_path);
 
+        // fix #403
+        #[cfg(target_os = "linux")]
+        let app_path = {
+            use core::handle::Handle;
+            use tauri::Manager;
+
+            let handle = Handle::global();
+            handle
+                .app_handle
+                .lock()
+                .map(|app_handle| {
+                    app_handle
+                        .env()
+                        .appimage
+                        .and_then(|p| p.to_str().map(|s| s.to_string()))
+                })
+                .unwrap_or(Some(app_path))
+                .unwrap()
+        };
+
         let auto = AutoLaunchBuilder::new()
             .set_app_name(app_name)
             .set_app_path(&app_path)
