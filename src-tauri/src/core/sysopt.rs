@@ -181,6 +181,7 @@ impl Sysopt {
             handle
                 .app_handle
                 .lock()
+                .as_ref()
                 .map(|app_handle| {
                     app_handle
                         .env()
