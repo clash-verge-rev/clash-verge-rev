@@ -1,4 +1,4 @@
-use crate::{config::Config, feat, utils::resolve};
+use crate::{cmds, config::Config, feat, utils::resolve};
 use anyhow::Result;
 use tauri::{
     api, AppHandle, CustomMenuItem, Manager, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
@@ -25,6 +25,13 @@ impl Tray {
                 .add_item(CustomMenuItem::new("system_proxy", "系统代理"))
                 .add_item(CustomMenuItem::new("tun_mode", "TUN 模式"))
                 .add_submenu(SystemTraySubmenu::new(
+                    "打开目录",
+                    SystemTrayMenu::new()
+                        .add_item(CustomMenuItem::new("open_app_dir", "应用目录"))
+                        .add_item(CustomMenuItem::new("open_core_dir", "内核目录"))
+                        .add_item(CustomMenuItem::new("open_logs_dir", "日志目录")),
+                ))
+                .add_submenu(SystemTraySubmenu::new(
                     "更多",
                     SystemTrayMenu::new()
                         .add_item(CustomMenuItem::new("restart_clash", "重启 Clash"))
@@ -47,6 +54,13 @@ impl Tray {
                 .add_native_item(SystemTrayMenuItem::Separator)
                 .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
                 .add_item(CustomMenuItem::new("tun_mode", "Tun Mode"))
+                .add_submenu(SystemTraySubmenu::new(
+                    "Open Dir",
+                    SystemTrayMenu::new()
+                        .add_item(CustomMenuItem::new("open_app_dir", "App Dir"))
+                        .add_item(CustomMenuItem::new("open_core_dir", "Core Dir"))
+                        .add_item(CustomMenuItem::new("open_logs_dir", "Logs Dir")),
+                ))
                 .add_submenu(SystemTraySubmenu::new(
                     "More",
                     SystemTrayMenu::new()
@@ -110,6 +124,9 @@ impl Tray {
                 "open_window" => resolve::create_window(app_handle),
                 "system_proxy" => feat::toggle_system_proxy(),
                 "tun_mode" => feat::toggle_tun_mode(),
+                "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
+                "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
+                "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
                 "restart_clash" => feat::restart_clash_core(),
                 "restart_app" => api::process::restart(&app_handle.env()),
                 "quit" => {
