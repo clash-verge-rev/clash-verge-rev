@@ -64,7 +64,7 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
           {t("Runtime Config")} <Chip label={t("ReadOnly")} size="small" />
         </>
       }
-      contentSx={{ width: 520, pb: 1 }}
+      contentSx={{ width: 520, pb: 1, userSelect: "text" }}
       cancelBtn={t("Back")}
       disableOk
       onClose={() => setOpen(false)}
