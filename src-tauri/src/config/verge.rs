@@ -66,6 +66,9 @@ pub struct IVerge {
     /// 默认的延迟测试连接
     pub default_latency_test: Option<String>,
 
+    /// 支持关闭字段过滤，避免meta的新字段都被过滤掉，默认为真
+    pub enable_clash_fields: Option<bool>,
+
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
@@ -120,6 +123,7 @@ impl IVerge {
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             enable_builtin_enhanced: Some(true),
+            enable_clash_fields: Some(true),
             ..Self::default()
         }
     }
@@ -163,6 +167,7 @@ impl IVerge {
         patch!(default_latency_test);
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
+        patch!(enable_clash_fields);
     }
 
     /// 在初始化前尝试拿到单例端口的值
