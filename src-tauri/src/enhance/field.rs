@@ -68,7 +68,11 @@ pub fn use_valid_fields(mut valid: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-pub fn use_filter(config: Mapping, filter: &Vec<String>) -> Mapping {
+pub fn use_filter(config: Mapping, filter: &Vec<String>, enable: bool) -> Mapping {
+    if !enable {
+        return config;
+    }
+
     let mut ret = Mapping::new();
 
     for (key, value) in config.into_iter() {

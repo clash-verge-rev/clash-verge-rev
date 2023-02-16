@@ -1,7 +1,6 @@
 use super::{use_filter, use_lowercase};
 use serde_yaml::{self, Mapping, Sequence, Value};
 
-#[allow(unused)]
 const MERGE_FIELDS: [&str; 6] = [
     "prepend-rules",
     "append-rules",
@@ -20,7 +19,7 @@ pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
         });
 
     let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
-    let merge = use_filter(merge, &merge_list.collect());
+    let merge = use_filter(merge, &merge_list.collect(), true);
 
     ["rules", "proxies", "proxy-groups"]
         .iter()

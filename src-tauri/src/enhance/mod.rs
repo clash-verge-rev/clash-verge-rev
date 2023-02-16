@@ -23,13 +23,14 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // config.yaml 的配置
     let clash_config = { Config::clash().latest().0.clone() };
 
-    let (clash_core, tun_mode, enable_builtin) = {
+    let (clash_core, enable_tun, enable_builtin, enable_filter) = {
         let verge = Config::verge();
         let verge = verge.latest();
         (
             verge.clash_core.clone(),
-            verge.enable_tun_mode.clone(),
-            verge.enable_builtin_enhanced.clone(),
+            verge.enable_tun_mode.clone().unwrap_or(false),
+            verge.enable_builtin_enhanced.clone().unwrap_or(true),
+            verge.enable_clash_fields.clone().unwrap_or(true),
         )
     };
 
@@ -58,14 +59,14 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     let mut exists_keys = use_keys(&config); // 保存出现过的keys
 
     let valid = use_valid_fields(valid);
-    config = use_filter(config, &valid);
+    config = use_filter(config, &valid, enable_filter);
 
     // 处理用户的profile
     chain.into_iter().for_each(|item| match item.data {
         ChainType::Merge(merge) => {
             exists_keys.extend(use_keys(&merge));
             config = use_merge(merge, config.to_owned());
-            config = use_filter(config.to_owned(), &valid);
+            config = use_filter(config.to_owned(), &valid, enable_filter);
         }
         ChainType::Script(script) => {
             let mut logs = vec![];
@@ -73,7 +74,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             match use_script(script, config.to_owned()) {
                 Ok((res_config, res_logs)) => {
                     exists_keys.extend(use_keys(&res_config));
-                    config = use_filter(res_config, &valid);
+                    config = use_filter(res_config, &valid, enable_filter);
                     logs.extend(res_logs);
                 }
                 Err(err) => logs.push(("exception".into(), err.to_string())),
@@ -91,7 +92,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     let clash_fields = use_clash_fields();
 
     // 内建脚本最后跑
-    if enable_builtin.unwrap_or(true) {
+    if enable_builtin {
         ChainItem::builtin()
             .into_iter()
             .filter(|(s, _)| s.is_support(clash_core.as_ref()))
@@ -102,7 +103,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 match item.data {
                     ChainType::Script(script) => match use_script(script, config.to_owned()) {
                         Ok((res_config, _)) => {
-                            config = use_filter(res_config, &clash_fields);
+                            config = use_filter(res_config, &clash_fields, enable_filter);
                         }
                         Err(err) => {
                             log::error!(target: "app", "builtin script error `{err}`");
@@ -113,8 +114,8 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             });
     }
 
-    config = use_filter(config, &clash_fields);
-    config = use_tun(config, tun_mode.unwrap_or(false));
+    config = use_filter(config, &clash_fields, enable_filter);
+    config = use_tun(config, enable_tun);
     config = use_sort(config);
 
     let mut exists_set = HashSet::new();
