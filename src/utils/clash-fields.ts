@@ -39,9 +39,13 @@ export const OTHERS_FIELDS = [
   "authentication",
   "tls", // meta
   "sniffer", // meta
+  "geox-url", // meta
   "listeners", // meta
   "sub-rules", // meta
   "geodata-mode", // meta
   "tcp-concurrent", // meta
   "enable-process", // meta
+  "find-process-mode", // meta
+  "external-controller-tls", // meta
+  "global-client-fingerprint", // meta
 ] as const;

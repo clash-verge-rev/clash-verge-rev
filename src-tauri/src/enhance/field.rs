@@ -20,7 +20,7 @@ pub const DEFAULT_FIELDS: [&str; 5] = [
     "rule-providers",
 ];
 
-pub const OTHERS_FIELDS: [&str; 25] = [
+pub const OTHERS_FIELDS: [&str; 29] = [
     "dns",
     "tun",
     "ebpf",
@@ -39,13 +39,17 @@ pub const OTHERS_FIELDS: [&str; 25] = [
     "external-ui",
     "bind-address",
     "authentication",
-    "tls",            // meta
-    "sniffer",        // meta
-    "listeners",      // meta
-    "sub-rules",      // meta
-    "geodata-mode",   // meta
-    "tcp-concurrent", // meta
-    "enable-process", // meta
+    "tls",                       // meta
+    "sniffer",                   // meta
+    "geox-url",                  // meta
+    "listeners",                 // meta
+    "sub-rules",                 // meta
+    "geodata-mode",              // meta
+    "tcp-concurrent",            // meta
+    "enable-process",            // meta
+    "find-process-mode",         // meta
+    "external-controller-tls",   // meta
+    "global-client-fingerprint", // meta
 ];
 
 pub fn use_clash_fields() -> Vec<String> {
