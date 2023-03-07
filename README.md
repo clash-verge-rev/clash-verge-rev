@@ -27,7 +27,7 @@ Notes: If you could not start the app on Windows, please check that you have [We
 
 ## Development
 
-You should install Rust and Nodejs, see [here](https://tauri.studio/docs/getting-started/prerequisites) for more details. Then install Nodejs packages.
+You should install Rust and Nodejs, see [here](https://tauri.app/v1/guides/getting-started/prerequisites) for more details. Then install Nodejs packages.
 
 ```shell
 yarn install
