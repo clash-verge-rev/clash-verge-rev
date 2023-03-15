@@ -20,6 +20,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
     autoCloseConnection: false,
+    enableClashFields: true,
     enableBuiltinEnhanced: true,
     proxyLayoutColumn: 6,
     defaultLatencyTest: "",
@@ -30,6 +31,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setValues({
         autoCloseConnection: verge?.auto_close_connection ?? false,
+        enableClashFields: verge?.enable_clash_fields ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
         proxyLayoutColumn: verge?.proxy_layout_column || 6,
         defaultLatencyTest: verge?.default_latency_test || "",
@@ -42,6 +44,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       await patchVerge({
         auto_close_connection: values.autoCloseConnection,
+        enable_clash_fields: values.enableClashFields,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
         default_latency_test: values.defaultLatencyTest,
@@ -71,6 +74,17 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             checked={values.autoCloseConnection}
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoCloseConnection: c }))
+            }
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="Clash Fields Filter" />
+          <Switch
+            edge="end"
+            checked={values.enableClashFields}
+            onChange={(_, c) =>
+              setValues((v) => ({ ...v, enableClashFields: c }))
             }
           />
         </ListItem>
