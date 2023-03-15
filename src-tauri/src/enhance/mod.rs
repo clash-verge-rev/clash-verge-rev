@@ -116,7 +116,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
     config = use_filter(config, &clash_fields, enable_filter);
     config = use_tun(config, enable_tun);
-    config = use_sort(config);
+    config = use_sort(config, enable_filter);
 
     let mut exists_set = HashSet::new();
     exists_set.extend(exists_keys.into_iter().filter(|s| clash_fields.contains(s)));
