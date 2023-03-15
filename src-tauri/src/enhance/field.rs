@@ -1,4 +1,5 @@
 use serde_yaml::{Mapping, Value};
+use std::collections::HashSet;
 
 pub const HANDLE_FIELDS: [&str; 9] = [
     "mode",
@@ -102,7 +103,7 @@ pub fn use_lowercase(config: Mapping) -> Mapping {
     ret
 }
 
-pub fn use_sort(config: Mapping) -> Mapping {
+pub fn use_sort(config: Mapping, enable_filter: bool) -> Mapping {
     let mut ret = Mapping::new();
 
     HANDLE_FIELDS
@@ -115,6 +116,28 @@ pub fn use_sort(config: Mapping) -> Mapping {
                 ret.insert(key, value.clone());
             });
         });
+
+    if !enable_filter {
+        let supported_keys: HashSet<&str> = HANDLE_FIELDS
+            .into_iter()
+            .chain(OTHERS_FIELDS)
+            .chain(DEFAULT_FIELDS)
+            .collect();
+
+        let config_keys: HashSet<&str> = config
+            .keys()
+            .filter_map(|e| e.as_str())
+            .into_iter()
+            .collect();
+
+        config_keys.difference(&supported_keys).for_each(|&key| {
+            let key = Value::from(key);
+            config.get(&key).map(|value| {
+                ret.insert(key, value.clone());
+            });
+        });
+    }
+
     ret
 }
 
