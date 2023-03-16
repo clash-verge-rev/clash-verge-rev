@@ -1,8 +1,13 @@
 import useSWR, { mutate } from "swr";
-import { useLockFn } from "ahooks";
 import { useMemo, useRef, useState } from "react";
+import { useLockFn } from "ahooks";
+import { useSetRecoilState } from "recoil";
 import { Box, Button, Grid, IconButton, Stack, TextField } from "@mui/material";
-import { CachedRounded } from "@mui/icons-material";
+import {
+  LocalFireDepartmentRounded,
+  RefreshRounded,
+  TextSnippetOutlined,
+} from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
   getProfiles,
@@ -10,9 +15,11 @@ import {
   enhanceProfiles,
   getRuntimeLogs,
   deleteProfile,
+  updateProfile,
 } from "@/services/cmds";
+import { atomLoadingCache } from "@/services/states";
 import { closeAllConnections } from "@/services/api";
-import { BasePage, Notice } from "@/components/base";
+import { BasePage, DialogRef, Notice } from "@/components/base";
 import {
   ProfileViewer,
   ProfileViewerRef,
@@ -20,6 +27,8 @@ import {
 import { ProfileItem } from "@/components/profile/profile-item";
 import { ProfileMore } from "@/components/profile/profile-more";
 import { useProfiles } from "@/hooks/use-profiles";
+import { ConfigViewer } from "@/components/setting/mods/config-viewer";
+import { throttle } from "lodash-es";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -41,6 +50,7 @@ const ProfilePage = () => {
 
   const chain = profiles.chain || [];
   const viewerRef = useRef<ProfileViewerRef>(null);
+  const configRef = useRef<DialogRef>(null);
 
   // distinguish type
   const { regularItems, enhanceItems } = useMemo(() => {
@@ -149,18 +159,65 @@ const ProfilePage = () => {
     mutateLogs();
   });
 
+  // 更新所有配置
+  const setLoadingCache = useSetRecoilState(atomLoadingCache);
+  const onUpdateAll = useLockFn(async () => {
+    const throttleMutate = throttle(mutateProfiles, 2000, {
+      trailing: true,
+    });
+    const updateOne = async (uid: string) => {
+      try {
+        await updateProfile(uid);
+        throttleMutate();
+      } finally {
+        setLoadingCache((cache) => ({ ...cache, [uid]: false }));
+      }
+    };
+
+    return new Promise((resolve) => {
+      setLoadingCache((cache) => {
+        // 获取没有正在更新的配置
+        const items = regularItems.filter(
+          (e) => e.type === "remote" && !cache[e.uid]
+        );
+        const change = Object.fromEntries(items.map((e) => [e.uid, true]));
+
+        Promise.allSettled(items.map((e) => updateOne(e.uid))).then(resolve);
+        return { ...cache, ...change };
+      });
+    });
+  });
+
   return (
     <BasePage
       title={t("Profiles")}
       header={
-        <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
+        <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton
             size="small"
             color="inherit"
-            title={t("Refresh profiles")}
+            title={t("Update All Profiles")}
+            onClick={onUpdateAll}
+          >
+            <RefreshRounded />
+          </IconButton>
+
+          <IconButton
+            size="small"
+            color="inherit"
+            title={t("View Runtime Config")}
+            onClick={() => configRef.current?.open()}
+          >
+            <TextSnippetOutlined />
+          </IconButton>
+
+          <IconButton
+            size="small"
+            color="primary"
+            title={t("Reactivate Profiles")}
             onClick={onEnhance}
           >
-            <CachedRounded />
+            <LocalFireDepartmentRounded />
           </IconButton>
         </Box>
       }
@@ -232,6 +289,7 @@ const ProfilePage = () => {
       )}
 
       <ProfileViewer ref={viewerRef} onChange={() => mutateProfiles()} />
+      <ConfigViewer ref={configRef} />
     </BasePage>
   );
 };
