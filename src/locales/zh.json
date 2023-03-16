@@ -15,6 +15,7 @@
   "global": "全局",
   "direct": "直连",
   "script": "脚本",
+
   "Profiles": "配置",
   "Profile URL": "配置文件链接",
   "Import": "导入",
@@ -34,6 +35,9 @@
   "Refresh": "刷新",
   "To Top": "移到最前",
   "To End": "移到末尾",
+  "Update All Profiles": "更新所有配置",
+  "View Runtime Config": "查看运行时配置",
+  "Reactivate Profiles": "重新激活配置",
 
   "Location": "当前节点",
   "Delay check": "延迟测试",
