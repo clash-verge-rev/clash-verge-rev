@@ -110,11 +110,10 @@ const ConnectionsPage = () => {
       title={t("Connections")}
       contentStyle={{ height: "100%" }}
       header={
-        <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
+        <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
             color="inherit"
             size="small"
-            sx={{ mr: 2 }}
             onClick={() =>
               setSetting((o) =>
                 o.layout === "list"
