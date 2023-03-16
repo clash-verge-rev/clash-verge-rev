@@ -5,8 +5,15 @@ import { useTranslation } from "react-i18next";
 import { useVerge } from "@/hooks/use-verge";
 import { useLockFn } from "ahooks";
 import { Lock } from "@mui/icons-material";
-import { IconButton, List, ListItemButton, ListItemText } from "@mui/material";
-import { changeClashCore } from "@/services/cmds";
+import {
+  Box,
+  Button,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
+import { changeClashCore, restartSidecar } from "@/services/cmds";
 import { closeAllConnections } from "@/services/api";
 import { grantPermission } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
@@ -58,10 +65,27 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
     }
   });
 
+  const onRestart = useLockFn(async () => {
+    try {
+      await restartSidecar();
+      Notice.success(`Successfully restart core`, 1000);
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
+  });
+
   return (
     <BaseDialog
       open={open}
-      title={t("Clash Core")}
+      title={
+        <Box display="flex" justifyContent="space-between">
+          {t("Clash Core")}
+
+          <Button variant="contained" size="small" onClick={onRestart}>
+            {t("Restart")}
+          </Button>
+        </Box>
+      }
       contentSx={{
         pb: 0,
         width: 320,
