@@ -127,6 +127,10 @@ export async function restartSidecar() {
   return invoke<void>("restart_sidecar");
 }
 
+export async function grantPermission(core: string) {
+  return invoke<void>("grant_permission", { core });
+}
+
 export async function openAppDir() {
   return invoke<void>("open_app_dir").catch((err) =>
     Notice.error(err?.message || err.toString(), 1500)
