@@ -92,14 +92,13 @@ jobs:
           releaseName: "Clash Verge Alpha"
           releaseBody: "Alpha Version (include debug)"
           releaseDraft: false
-          includeDebug: ${{ github.event.inputs.debug }}
           prerelease: true
-          args: -f default-meta
+          includeDebug: ${{ github.event.inputs.debug }}
 
       - name: Portable Bundle
         if: matrix.os == 'windows-latest'
         run: |
-          yarn build -f default-meta
+          yarn build
           yarn run portable
         env:
           TAG_NAME: alpha
