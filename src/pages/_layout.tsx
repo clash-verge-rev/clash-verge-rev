@@ -76,7 +76,7 @@ const Layout = () => {
   }, [language]);
 
   return (
-    <SWRConfig value={{}}>
+    <SWRConfig value={{ errorRetryCount: 3 }}>
       <ThemeProvider theme={theme}>
         <Paper
           square
