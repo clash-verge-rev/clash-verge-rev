@@ -41,11 +41,10 @@ const LogPage = () => {
       title={t("Logs")}
       contentStyle={{ height: "100%" }}
       header={
-        <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
+        <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
             size="small"
             color="inherit"
-            sx={{ mr: 2 }}
             onClick={() => setEnableLog((e) => !e)}
           >
             {enableLog ? (
