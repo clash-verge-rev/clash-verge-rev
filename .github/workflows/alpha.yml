@@ -65,6 +65,7 @@ jobs:
           yarn run check
 
       - name: Delete current release assets
+        if: matrix.os == 'ubuntu-latest'
         uses: mknejp/delete-release-assets@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
