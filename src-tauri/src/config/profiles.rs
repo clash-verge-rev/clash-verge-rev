@@ -138,9 +138,9 @@ impl IProfiles {
             let path = dirs::app_profiles_dir()?.join(&file);
 
             fs::File::create(path)
-                .context(format!("failed to create file \"{}\"", file))?
+                .with_context(|| format!("failed to create file \"{}\"", file))?
                 .write(file_data.as_bytes())
-                .context(format!("failed to write to file \"{}\"", file))?;
+                .with_context(|| format!("failed to write to file \"{}\"", file))?;
         }
 
         if self.items.is_none() {
@@ -207,9 +207,9 @@ impl IProfiles {
                         let path = dirs::app_profiles_dir()?.join(&file);
 
                         fs::File::create(path)
-                            .context(format!("failed to create file \"{}\"", file))?
+                            .with_context(|| format!("failed to create file \"{}\"", file))?
                             .write(file_data.as_bytes())
-                            .context(format!("failed to write to file \"{}\"", file))?;
+                            .with_context(|| format!("failed to write to file \"{}\"", file))?;
                     }
 
                     break;
