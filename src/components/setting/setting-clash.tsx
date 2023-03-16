@@ -8,16 +8,16 @@ import {
   Typography,
   IconButton,
 } from "@mui/material";
-import { ArrowForward } from "@mui/icons-material";
+import { ArrowForward, Settings } from "@mui/icons-material";
 import { DialogRef } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
-import { CoreSwitch } from "./mods/core-switch";
 import { WebUIViewer } from "./mods/web-ui-viewer";
 import { ClashFieldViewer } from "./mods/clash-field-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
 import { ControllerViewer } from "./mods/controller-viewer";
 import { SettingList, SettingItem } from "./mods/setting-comp";
+import { ClashCoreViewer } from "./mods/clash-core-viewer";
 
 interface Props {
   onError: (err: Error) => void;
@@ -39,6 +39,7 @@ const SettingClash = ({ onError }: Props) => {
   const fieldRef = useRef<DialogRef>(null);
   const portRef = useRef<DialogRef>(null);
   const ctrlRef = useRef<DialogRef>(null);
+  const coreRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -51,6 +52,7 @@ const SettingClash = ({ onError }: Props) => {
       <ClashFieldViewer ref={fieldRef} />
       <ClashPortViewer ref={portRef} />
       <ControllerViewer ref={ctrlRef} />
+      <ClashCoreViewer ref={coreRef} />
 
       <SettingItem label={t("Allow Lan")}>
         <GuardState
@@ -143,7 +145,21 @@ const SettingClash = ({ onError }: Props) => {
         </IconButton>
       </SettingItem>
 
-      <SettingItem label={t("Clash Core")} extra={<CoreSwitch />}>
+      <SettingItem
+        label={t("Clash Core")}
+        extra={
+          <IconButton
+            color="inherit"
+            size="small"
+            onClick={() => coreRef.current?.open()}
+          >
+            <Settings
+              fontSize="inherit"
+              style={{ cursor: "pointer", opacity: 0.75 }}
+            />
+          </IconButton>
+        }
+      >
         <Typography sx={{ py: "7px", pr: 1 }}>{version}</Typography>
       </SettingItem>
     </SettingList>
