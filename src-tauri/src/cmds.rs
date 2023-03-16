@@ -181,7 +181,7 @@ pub fn grant_permission(core: String) -> CmdResult {
     return wrap_err!(manager::grant_permission(core));
 
     #[cfg(not(target_os = "macos"))]
-    return Err("Unsupported target");
+    return Err("Unsupported target".into());
 }
 
 /// get the system proxy
