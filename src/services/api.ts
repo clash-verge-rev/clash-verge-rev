@@ -27,6 +27,7 @@ export const getAxios = async (force: boolean = false) => {
   axiosIns = axios.create({
     baseURL: `http://${server}`,
     headers: secret ? { Authorization: `Bearer ${secret}` } : {},
+    timeout: 15000,
   });
   axiosIns.interceptors.response.use((r) => r.data);
   return axiosIns;
