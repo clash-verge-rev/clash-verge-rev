@@ -59,6 +59,8 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
   const onGrant = useLockFn(async (core: string) => {
     try {
       await grantPermission(core);
+      // 自动重启
+      if (core === clash_core) await restartSidecar();
       Notice.success(`Successfully grant permission to ${core}`, 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
