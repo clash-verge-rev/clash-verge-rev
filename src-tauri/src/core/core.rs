@@ -136,6 +136,7 @@ impl CoreManager {
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let clash_core = clash_core.unwrap_or("clash".into());
+        let is_clash = clash_core == "clash";
 
         let config_path = dirs::path_to_str(&config_path)?;
 
@@ -167,8 +168,12 @@ impl CoreManager {
             while let Some(event) = rx.recv().await {
                 match event {
                     CommandEvent::Stdout(line) => {
-                        let stdout = clash_api::parse_log(line.clone());
-                        log::info!(target: "app", "[clash]: {stdout}");
+                        if is_clash {
+                            let stdout = clash_api::parse_log(line.clone());
+                            log::info!(target: "app", "[clash]: {stdout}");
+                        } else {
+                            log::info!(target: "app", "[clash]: {line}");
+                        };
                         Logger::global().set_log(line);
                     }
                     CommandEvent::Stderr(err) => {
