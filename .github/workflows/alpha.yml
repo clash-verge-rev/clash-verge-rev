@@ -40,6 +40,23 @@ jobs:
         with:
           node-version: 16
 
+      - name: Delete current release assets
+        if: matrix.os == 'ubuntu-latest'
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: alpha
+          fail-if-no-assets: false
+          fail-if-no-release: false
+          assets: |
+            *.zip
+            *.gz
+            *.AppImage
+            *.deb
+            *.dmg
+            *.msi
+            *.sig
+
       - name: Install Dependencies (ubuntu only)
         if: startsWith(matrix.os, 'ubuntu-')
         run: |
@@ -63,23 +80,6 @@ jobs:
         run: |
           yarn install --network-timeout 1000000
           yarn run check
-
-      - name: Delete current release assets
-        if: matrix.os == 'ubuntu-latest'
-        uses: mknejp/delete-release-assets@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: alpha
-          fail-if-no-assets: false
-          fail-if-no-release: false
-          assets: |
-            *.zip
-            *.gz
-            *.AppImage
-            *.deb
-            *.dmg
-            *.msi
-            *.sig
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
