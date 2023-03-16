@@ -178,18 +178,15 @@ impl Sysopt {
             use tauri::Manager;
 
             let handle = Handle::global();
-            handle
-                .app_handle
-                .lock()
-                .as_ref()
-                .map(|app_handle| {
-                    app_handle
-                        .env()
-                        .appimage
+            match handle.app_handle.lock().as_ref() {
+                Some(app_handle) => {
+                    let appimage = app_handle.env().appimage;
+                    appimage
                         .and_then(|p| p.to_str().map(|s| s.to_string()))
-                })
-                .unwrap_or(Some(app_path))
-                .unwrap()
+                        .unwrap_or(app_path)
+                }
+                None => app_path,
+            }
         };
 
         let auto = AutoLaunchBuilder::new()
