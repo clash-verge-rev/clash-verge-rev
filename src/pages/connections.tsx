@@ -17,6 +17,7 @@ import { closeAllConnections } from "@/services/api";
 import { atomConnectionSetting } from "@/services/states";
 import { useClashInfo } from "@/hooks/use-clash";
 import { BaseEmpty, BasePage } from "@/components/base";
+import { useWebsocket } from "@/hooks/use-websocket";
 import ConnectionItem from "@/components/connection/connection-item";
 import ConnectionTable from "@/components/connection/connection-table";
 
@@ -53,15 +54,9 @@ const ConnectionsPage = () => {
     return connections;
   }, [connData, filterText, curOrderOpt]);
 
-  useEffect(() => {
-    if (!clashInfo) return;
-
-    const { server = "", secret = "" } = clashInfo;
-    const ws = new WebSocket(`ws://${server}/connections?token=${secret}`);
-
-    ws.addEventListener("message", (event) => {
+  const { connect, disconnect } = useWebsocket(
+    (event) => {
       const data = JSON.parse(event.data) as IConnections;
-
       // 尽量与前一次connections的展示顺序保持一致
       setConnData((old) => {
         const oldConn = old.connections;
@@ -93,9 +88,19 @@ const ConnectionsPage = () => {
 
         return { ...data, connections };
       });
-    });
+    },
+    { errorCount: 3, retryInterval: 1000 }
+  );
 
-    return () => ws?.close();
+  useEffect(() => {
+    if (!clashInfo) return;
+
+    const { server = "", secret = "" } = clashInfo;
+    connect(`ws://${server}/connections?token=${secret}`);
+
+    return () => {
+      disconnect();
+    };
   }, [clashInfo]);
 
   const onCloseAll = useLockFn(closeAllConnections);
