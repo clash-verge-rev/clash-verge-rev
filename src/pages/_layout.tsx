@@ -35,9 +35,9 @@ const Layout = () => {
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        if (OS === "macos") appWindow.hide();
-        else appWindow.close();
+      // macOS有cmd+w
+      if (e.key === "Escape" && OS !== "macos") {
+        appWindow.close();
       }
     });
 
