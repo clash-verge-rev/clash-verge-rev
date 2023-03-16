@@ -1,3 +1,23 @@
+## v1.3.0
+
+### Features
+
+- update clash and clash meta
+- support opening dir on tray
+- support updating all profiles with one click
+- support granting root permission to clash core(Linux, macOS)
+- support enable/disable clash fields filter, feel free to experience the latest features of Clash Meta
+
+### Bug Fixes
+
+- deb add openssl depend(Linux)
+- fix the AppImage auto launch path(Linux)
+- fix get the default network service(macOS)
+- remove the esc key listener in macOS, cmd+w instead(macOS)
+- fix infinite retry when websocket error
+
+---
+
 ## v1.2.3
 
 ### Features
