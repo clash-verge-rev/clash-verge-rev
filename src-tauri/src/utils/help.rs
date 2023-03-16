@@ -11,19 +11,21 @@ pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
     }
 
     let yaml_str = fs::read_to_string(&path)
-        .context(format!("failed to read the file \"{}\"", path.display()))?;
+        .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
 
-    serde_yaml::from_str::<T>(&yaml_str).context(format!(
-        "failed to read the file with yaml format \"{}\"",
-        path.display()
-    ))
+    serde_yaml::from_str::<T>(&yaml_str).with_context(|| {
+        format!(
+            "failed to read the file with yaml format \"{}\"",
+            path.display()
+        )
+    })
 }
 
 /// read mapping from yaml fix #165
 pub fn read_merge_mapping(path: &PathBuf) -> Result<Mapping> {
     let mut val: Value = read_yaml(path)?;
     val.apply_merge()
-        .context(format!("failed to apply merge \"{}\"", path.display()))?;
+        .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
 
     Ok(val
         .as_mapping()
@@ -45,7 +47,8 @@ pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -
     };
 
     let path_str = path.as_os_str().to_string_lossy().to_string();
-    fs::write(path, yaml_str.as_bytes()).context(format!("failed to save file \"{path_str}\""))
+    fs::write(path, yaml_str.as_bytes())
+        .with_context(|| format!("failed to save file \"{path_str}\""))
 }
 
 const ALPHABET: [char; 62] = [
