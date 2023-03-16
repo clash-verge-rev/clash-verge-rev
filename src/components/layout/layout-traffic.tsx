@@ -5,6 +5,7 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 import { useLogSetup } from "./use-log-setup";
+import { useWebsocket } from "@/hooks/use-websocket";
 import parseTraffic from "@/utils/parse-traffic";
 
 // setup the traffic
@@ -18,58 +19,36 @@ const LayoutTraffic = () => {
   const trafficRef = useRef<TrafficRef>(null);
   const [traffic, setTraffic] = useState({ up: 0, down: 0 });
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const [refresh, setRefresh] = useState({});
-
   // setup log ws during layout
   useLogSetup();
+
+  const { connect, disconnect } = useWebsocket((event) => {
+    const data = JSON.parse(event.data) as ITrafficItem;
+    trafficRef.current?.appendData(data);
+    setTraffic(data);
+  });
 
   useEffect(() => {
     if (!clashInfo) return;
 
     const { server = "", secret = "" } = clashInfo;
-    const ws = new WebSocket(`ws://${server}/traffic?token=${secret}`);
-
-    ws.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data) as ITrafficItem;
-      trafficRef.current?.appendData(data);
-      setTraffic(data);
-    });
-
-    ws.addEventListener("error", () => {
-      setTimeout(() => {
-        if (document.visibilityState === "visible") {
-          setRefresh({});
-        }
-      }, 1000);
-    });
-
-    ws.addEventListener("close", () => {
-      setTimeout(() => {
-        if (document.visibilityState === "visible") {
-          setRefresh({});
-        }
-      }, 1000);
-    });
-
-    wsRef.current = ws;
+    connect(`ws://${server}/traffic?token=${secret}`);
 
     return () => {
-      ws?.close();
-      wsRef.current = null;
+      disconnect();
     };
-  }, [clashInfo, refresh]);
+  }, [clashInfo]);
 
   useEffect(() => {
+    // 页面隐藏时去掉请求
     const handleVisibleChange = () => {
+      if (!clashInfo) return;
       if (document.visibilityState === "visible") {
         // reconnect websocket
-        if (
-          wsRef.current &&
-          wsRef.current.readyState !== WebSocket.CONNECTING
-        ) {
-          setRefresh({});
-        }
+        const { server = "", secret = "" } = clashInfo;
+        connect(`ws://${server}/traffic?token=${secret}`);
+      } else {
+        disconnect();
       }
     };
 

@@ -1,9 +1,10 @@
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { getClashLogs } from "@/services/cmds";
 import { useClashInfo } from "@/hooks/use-clash";
 import { atomEnableLog, atomLogData } from "@/services/states";
+import { useWebsocket } from "@/hooks/use-websocket";
 
 const MAX_LOG_NUM = 1000;
 
@@ -14,7 +15,14 @@ export const useLogSetup = () => {
   const enableLog = useRecoilValue(atomEnableLog);
   const setLogData = useSetRecoilState(atomLogData);
 
-  const [refresh, setRefresh] = useState({});
+  const { connect, disconnect } = useWebsocket((event) => {
+    const data = JSON.parse(event.data) as ILogItem;
+    const time = dayjs().format("MM-DD HH:mm:ss");
+    setLogData((l) => {
+      if (l.length >= MAX_LOG_NUM) l.shift();
+      return [...l, { ...data, time }];
+    });
+  });
 
   useEffect(() => {
     if (!enableLog || !clashInfo) return;
@@ -22,21 +30,10 @@ export const useLogSetup = () => {
     getClashLogs().then(setLogData);
 
     const { server = "", secret = "" } = clashInfo;
-    const ws = new WebSocket(`ws://${server}/logs?token=${secret}`);
+    connect(`ws://${server}/logs?token=${secret}`);
 
-    ws.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data) as ILogItem;
-      const time = dayjs().format("MM-DD HH:mm:ss");
-      setLogData((l) => {
-        if (l.length >= MAX_LOG_NUM) l.shift();
-        return [...l, { ...data, time }];
-      });
-    });
-
-    ws.addEventListener("error", () => {
-      setTimeout(() => setRefresh({}), 1000);
-    });
-
-    return () => ws?.close();
-  }, [clashInfo, enableLog, refresh]);
+    return () => {
+      disconnect();
+    };
+  }, [clashInfo, enableLog]);
 };
