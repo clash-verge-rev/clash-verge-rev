@@ -3911,9 +3911,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.27.8"
+version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a902e9050fca0a5d6877550b769abd2bd1ce8c04634b941dbe2809735e1a1e33"
+checksum = "d3e847e2de7a137c8c2cede5095872dbb00f4f9bf34d061347e36b43322acd56"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
@@ -3926,9 +3926,9 @@ dependencies = [
 
 [[package]]
 name = "sysproxy"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58c9e02068d2fd8c0bbfc70ca394b369f59eb9f478b23b9269da47fa7150f006"
+checksum = "9707a79d3b95683aa5a9521e698ffd878b8fb289727c25a69157fb85d529ffff"
 dependencies = [
  "interfaces",
  "thiserror",
