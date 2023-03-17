@@ -15,7 +15,8 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
     let output = {
         // the path of clash /Applications/Clash Verge.app/Contents/MacOS/clash
         // https://apple.stackexchange.com/questions/82967/problem-with-empty-spaces-when-executing-shell-commands-in-applescript
-        let path = escape(&path);
+        // let path = escape(&path);
+        let path = path.replace(' ', "\\\\ ");
         let shell = format!("chown root:admin {path}\nchmod +sx {path}");
         let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
         Command::new("osascript")
@@ -42,6 +43,7 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
     }
 }
 
+#[allow(unused)]
 pub fn escape<'a>(text: &'a str) -> Cow<'a, str> {
     let bytes = text.as_bytes();
 
