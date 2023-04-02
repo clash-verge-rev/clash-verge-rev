@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::{Mapping, Value};
-use std::{fs, path::PathBuf, process::Command, str::FromStr};
+use std::{fs, path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
@@ -82,29 +82,18 @@ pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
 /// open file
 /// use vscode by default
 pub fn open_file(path: PathBuf) -> Result<()> {
+    #[cfg(target_os = "macos")]
+    let code = "Visual Studio Code";
+    #[cfg(not(target_os = "macos"))]
+    let code = "code";
+
     // use vscode first
-    if let Ok(code) = which::which("code") {
-        let mut command = Command::new(&code);
-
-        #[cfg(target_os = "windows")]
-        {
-            use std::os::windows::process::CommandExt;
-            if let Err(err) = command.creation_flags(0x08000000).arg(&path).spawn() {
-                log::error!(target: "app", "failed to open with VScode `{err}`");
-                open::that(path)?;
-            }
-        }
-
-        #[cfg(not(target_os = "windows"))]
-        if let Err(err) = command.arg(&path).spawn() {
-            log::error!(target: "app", "failed to open with VScode `{err}`");
-            open::that(path)?;
-        }
-
-        return Ok(());
+    if let Err(err) = open::with(&path, code) {
+        log::error!(target: "app", "failed to open file with VScode `{err}`");
+        // default open
+        open::that(path)?;
     }
 
-    open::that(path)?;
     Ok(())
 }
 
