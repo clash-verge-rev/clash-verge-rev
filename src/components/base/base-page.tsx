@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { Typography } from "@mui/material";
 import { BaseErrorBoundary } from "./base-error-boundary";
 
@@ -6,6 +6,7 @@ interface Props {
   title?: React.ReactNode; // the page title
   header?: React.ReactNode; // something behind title
   contentStyle?: React.CSSProperties;
+  children?: ReactNode;
 }
 
 export const BasePage: React.FC<Props> = (props) => {
