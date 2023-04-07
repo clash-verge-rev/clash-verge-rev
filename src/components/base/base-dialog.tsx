@@ -1,4 +1,4 @@
-import { forwardRef, ReactNode, useImperativeHandle, useState } from "react";
+import { ReactNode } from "react";
 import {
   Button,
   Dialog,
@@ -18,6 +18,7 @@ interface Props {
   disableCancel?: boolean;
   disableFooter?: boolean;
   contentSx?: SxProps<Theme>;
+  children?: ReactNode;
   onOk?: () => void;
   onCancel?: () => void;
   onClose?: () => void;

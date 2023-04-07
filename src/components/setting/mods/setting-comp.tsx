@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import {
   Box,
   List,
@@ -8,8 +8,9 @@ import {
 } from "@mui/material";
 
 interface ItemProps {
-  label: React.ReactNode;
-  extra?: React.ReactNode;
+  label: ReactNode;
+  extra?: ReactNode;
+  children?: ReactNode;
 }
 
 export const SettingItem: React.FC<ItemProps> = (props) => {
@@ -32,7 +33,10 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
   );
 };
 
-export const SettingList: React.FC<{ title: string }> = (props) => (
+export const SettingList: React.FC<{
+  title: string;
+  children: ReactNode;
+}> = (props) => (
   <List>
     <ListSubheader sx={{ background: "transparent" }} disableSticky>
       {props.title}

@@ -1,4 +1,4 @@
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { ReactNode, useState } from "react";
 import { Box, IconButton, Slide, Snackbar, Typography } from "@mui/material";
 import { Close, CheckCircleRounded, ErrorRounded } from "@mui/icons-material";
@@ -77,13 +77,14 @@ export const Notice: NoticeInstance = (props) => {
 
   const container = document.createElement("div");
   parent.appendChild(container);
+  const root = createRoot(container);
 
   const onUnmount = () => {
-    const result = ReactDOM.unmountComponentAtNode(container);
-    if (result && parent) setTimeout(() => parent.removeChild(container), 500);
+    root.unmount();
+    if (parent) setTimeout(() => parent.removeChild(container), 500);
   };
 
-  ReactDOM.render(<NoticeInner {...props} onClose={onUnmount} />, container);
+  root.render(<NoticeInner {...props} onClose={onUnmount} />);
 };
 
 (["info", "error", "success"] as const).forEach((type) => {
