@@ -25,7 +25,7 @@ pub struct Sysopt {
 #[cfg(target_os = "windows")]
 static DEFAULT_BYPASS: &str = "localhost;127.*;192.168.*;<local>";
 #[cfg(target_os = "linux")]
-static DEFAULT_BYPASS: &str = "localhost,127.0.0.1/8,::1";
+static DEFAULT_BYPASS: &str = "localhost,127.0.0.1,::1";
 #[cfg(target_os = "macos")]
 static DEFAULT_BYPASS: &str = "127.0.0.1,localhost,<local>";
 
