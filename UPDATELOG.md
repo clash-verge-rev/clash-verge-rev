@@ -1,3 +1,18 @@
+## v1.3.1
+
+### Features
+
+- update clash and clash meta core
+
+### Bug Fixes
+
+- fix open url issue
+- fix appimage path panic
+- fix grant root permission in macOS
+- fix linux system proxy default bypass
+
+---
+
 ## v1.3.0
 
 ### Features
