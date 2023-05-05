@@ -17,7 +17,7 @@ const SIDECAR_HOST = execSync("rustc -vV")
 /* ======= clash ======= */
 const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
-const CLASH_LATEST_DATE = "2023.03.18";
+const CLASH_LATEST_DATE = "2023.04.16";
 
 const CLASH_MAP = {
   "win32-x64": "clash-windows-amd64",
@@ -29,7 +29,7 @@ const CLASH_MAP = {
 
 /* ======= clash meta ======= */
 const META_URL_PREFIX = `https://github.com/MetaCubeX/Clash.Meta/releases/download/`;
-const META_VERSION = "v1.14.3";
+const META_VERSION = "v1.14.4";
 
 const META_MAP = {
   "win32-x64": "Clash.Meta-windows-amd64-compatible",
