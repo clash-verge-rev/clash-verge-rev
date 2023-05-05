@@ -190,7 +190,7 @@ impl PrfItem {
         let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
         let user_agent = opt_ref.map_or(None, |o| o.user_agent.clone());
 
-        let mut builder = reqwest::ClientBuilder::new().no_proxy();
+        let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
         // 使用软件自己的代理
         if self_proxy {
