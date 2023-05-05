@@ -36,7 +36,7 @@ delay_timer = "0.11.1"
 parking_lot = "0.12.0"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json","rustls-tls"] }
 tauri = { version = "1.1.1", features = ["global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all"] }
 tauri-runtime-wry = { version = "0.12" }
 window-vibrancy = { version = "0.3.0" }
