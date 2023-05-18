@@ -32,7 +32,7 @@ export const useProfiles = () => {
     if (!profileData || !proxiesData) return;
 
     const current = profileData.items?.find(
-      (e) => e.uid === profileData.current
+      (e) => e && e.uid === profileData.current
     );
 
     if (!current) return;
@@ -70,7 +70,7 @@ export const useProfiles = () => {
 
   return {
     profiles,
-    current: profiles?.items?.find((p) => p.uid === profiles.current),
+    current: profiles?.items?.find((p) => p && p.uid === profiles.current),
     activateSelected,
     patchProfiles,
     patchCurrent,
