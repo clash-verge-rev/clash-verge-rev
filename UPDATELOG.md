@@ -1,3 +1,16 @@
+## v1.3.2
+
+### Features
+
+- update clash and clash meta core
+
+### Bug Fixes
+
+- fix import url issue
+- fix profile undefined issue
+
+---
+
 ## v1.3.1
 
 ### Features
