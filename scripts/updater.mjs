@@ -117,10 +117,7 @@ async function resolveUpdater() {
 
   Object.entries(updateDataNew.platforms).forEach(([key, value]) => {
     if (value.url) {
-      updateDataNew.platforms[key].url = value.url.replace(
-        "https://github.com/",
-        "https://hub.fastgit.xyz/"
-      );
+      updateDataNew.platforms[key].url = "https://ghproxy.com/" + value.url;
     } else {
       console.log(`[Error]: updateDataNew.platforms.${key} is null`);
     }
