@@ -115,7 +115,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           fileDataRef.current = null;
           props.onChange();
         } catch (err: any) {
-          Notice.error(err.message);
+          Notice.error(err.message || err.toString());
         }
       })
     );
