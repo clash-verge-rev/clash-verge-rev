@@ -4,7 +4,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
 use tauri::{AppHandle, GlobalShortcutManager};
-use tauri_runtime_wry::wry::application::accelerator::Accelerator;
+use wry::application::accelerator::Accelerator;
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
