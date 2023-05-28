@@ -68,6 +68,10 @@ impl CoreManager {
 
         if !output.status.success() {
             let error = clash_api::parse_check_output(output.stdout.clone());
+            let error = match error.len() > 0 {
+                true => error,
+                false => output.stdout.clone(),
+            };
             Logger::global().set_log(output.stdout);
             bail!("{error}");
         }
