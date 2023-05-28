@@ -107,6 +107,14 @@ impl Tray {
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
+        let indication_icon = if *system_proxy {
+            include_bytes!("../../icons/tray-icon-activated.png").to_vec()
+        } else {
+            include_bytes!("../../icons/tray-icon.png").to_vec()
+        };
+
+        tray.set_icon(tauri::Icon::Raw(indication_icon))?;
+
         let _ = tray.get_item("system_proxy").set_selected(*system_proxy);
         let _ = tray.get_item("tun_mode").set_selected(*tun_mode);
 
