@@ -107,7 +107,7 @@ impl Tray {
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(target_os = "windows")]
         {
             let indication_icon = if *system_proxy {
                 include_bytes!("../../icons/tray-icon-activated.png").to_vec()

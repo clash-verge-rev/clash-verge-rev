@@ -53,7 +53,7 @@ windows-sys = { version = "0.48", features = ["Win32_System_LibraryLoader", "Win
 features = ["global-shortcut-all", "icon-png", "process-all", "shell-all", "system-tray", "updater", "window-all"]
 
 [target.'cfg(linux)'.dependencies.tauri]
-features = ["global-shortcut-all", "icon-png", "process-all", "shell-all", "system-tray", "updater", "window-all", "native-tls-vendored", "reqwest-native-tls-vendored"]
+features = ["global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "native-tls-vendored", "reqwest-native-tls-vendored"]
 
 
 [features]
