@@ -3,7 +3,11 @@ import { useEffect, useMemo } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup, Paper } from "@mui/material";
-import { getClashConfig, updateConfigs } from "@/services/api";
+import {
+  closeAllConnections,
+  getClashConfig,
+  updateConfigs,
+} from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { BasePage } from "@/components/base";
@@ -29,6 +33,10 @@ const ProxyPage = () => {
   const curMode = clashConfig?.mode.toLowerCase();
 
   const onChangeMode = useLockFn(async (mode: string) => {
+    // 断开连接
+    if (mode !== curMode && verge?.auto_close_connection) {
+      closeAllConnections();
+    }
     await updateConfigs({ mode });
     await patchClashConfig({ mode });
     mutateClash();
