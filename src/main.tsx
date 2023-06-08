@@ -11,6 +11,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { RecoilRoot } from "recoil";
 import { BrowserRouter } from "react-router-dom";
+import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
 import "./services/i18n";
 
@@ -26,9 +27,11 @@ if (!container) {
 createRoot(container).render(
   <React.StrictMode>
     <RecoilRoot>
-      <BrowserRouter>
-        <Layout />
-      </BrowserRouter>
+      <BaseErrorBoundary>
+        <BrowserRouter>
+          <Layout />
+        </BrowserRouter>
+      </BaseErrorBoundary>
     </RecoilRoot>
   </React.StrictMode>
 );
