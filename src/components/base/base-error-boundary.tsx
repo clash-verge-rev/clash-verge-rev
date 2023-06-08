@@ -3,18 +3,24 @@ import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 
 function ErrorFallback({ error }: FallbackProps) {
   return (
-    <div role="alert">
-      <p>Something went wrong:(</p>
+    <div role="alert" style={{ padding: 16 }}>
+      <h4>Something went wrong:(</h4>
+
       <pre>{error.message}</pre>
+
+      <details title="Error Stack">
+        <summary>Error Stack</summary>
+        <pre>{error.stack}</pre>
+      </details>
     </div>
   );
 }
 
-interface BaseErrorBoundaryProps {
+interface Props {
   children?: ReactNode;
 }
 
-export const BaseErrorBoundary: React.FC<BaseErrorBoundaryProps> = (props) => {
+export const BaseErrorBoundary = (props: Props) => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       {props.children}
