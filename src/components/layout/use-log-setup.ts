@@ -30,7 +30,7 @@ export const useLogSetup = () => {
     getClashLogs().then(setLogData);
 
     const { server = "", secret = "" } = clashInfo;
-    connect(`ws://${server}/logs?token=${secret}`);
+    connect(`ws://${server}/logs?token=${encodeURIComponent(secret)}`);
 
     return () => {
       disconnect();
