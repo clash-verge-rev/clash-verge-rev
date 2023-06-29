@@ -46,7 +46,7 @@ const LayoutTraffic = () => {
       if (document.visibilityState === "visible") {
         // reconnect websocket
         const { server = "", secret = "" } = clashInfo;
-        connect(`ws://${server}/traffic?token=${secret}`);
+        connect(`ws://${server}/traffic?token=${encodeURIComponent(secret)}`);
       } else {
         disconnect();
       }
