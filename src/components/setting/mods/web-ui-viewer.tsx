@@ -60,7 +60,10 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
           .trim();
 
         url = url.replaceAll("%port", port || "9090");
-        url = url.replaceAll("%secret", clashInfo.secret || "");
+        url = url.replaceAll(
+          "%secret",
+          encodeURIComponent(clashInfo.secret || "")
+        );
       }
 
       await openWebUrl(url);

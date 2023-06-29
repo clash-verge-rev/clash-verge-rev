@@ -96,7 +96,7 @@ const ConnectionsPage = () => {
     if (!clashInfo) return;
 
     const { server = "", secret = "" } = clashInfo;
-    connect(`ws://${server}/connections?token=${secret}`);
+    connect(`ws://${server}/connections?token=${encodeURIComponent(secret)}`);
 
     return () => {
       disconnect();
