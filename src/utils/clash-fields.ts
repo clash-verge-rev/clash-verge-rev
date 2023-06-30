@@ -43,6 +43,7 @@ export const OTHERS_FIELDS = [
   "listeners", // meta
   "sub-rules", // meta
   "geodata-mode", // meta
+  "unified-delay", // meta
   "tcp-concurrent", // meta
   "enable-process", // meta
   "find-process-mode", // meta
