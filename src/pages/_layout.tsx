@@ -125,13 +125,19 @@ const Layout = () => {
             )}
 
             <div className="the-content">
-              <BaseErrorBoundary>
-                <Routes>
-                  {routers.map(({ label, link, ele: Ele }) => (
-                    <Route key={label} path={link} element={<Ele />} />
-                  ))}
-                </Routes>
-              </BaseErrorBoundary>
+              <Routes>
+                {routers.map(({ label, link, ele: Ele }) => (
+                  <Route
+                    key={label}
+                    path={link}
+                    element={
+                      <BaseErrorBoundary key={label}>
+                        <Ele />
+                      </BaseErrorBoundary>
+                    }
+                  />
+                ))}
+              </Routes>
             </div>
           </div>
         </Paper>
