@@ -1,3 +1,18 @@
+## v1.3.3
+
+### Features
+
+- update clash and clash meta core
+- show tray icon variants in different system proxy status (Windows)
+- close all connections when mode changed
+
+### Bug Fixes
+
+- encode controller secret into uri
+- error boundary for each page
+
+---
+
 ## v1.3.2
 
 ### Features
