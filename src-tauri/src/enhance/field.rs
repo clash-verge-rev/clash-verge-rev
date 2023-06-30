@@ -21,7 +21,7 @@ pub const DEFAULT_FIELDS: [&str; 5] = [
     "rule-providers",
 ];
 
-pub const OTHERS_FIELDS: [&str; 29] = [
+pub const OTHERS_FIELDS: [&str; 30] = [
     "dns",
     "tun",
     "ebpf",
@@ -46,6 +46,7 @@ pub const OTHERS_FIELDS: [&str; 29] = [
     "listeners",                 // meta
     "sub-rules",                 // meta
     "geodata-mode",              // meta
+    "unified-delay",             // meta
     "tcp-concurrent",            // meta
     "enable-process",            // meta
     "find-process-mode",         // meta
