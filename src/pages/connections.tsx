@@ -56,15 +56,16 @@ const ConnectionsPage = () => {
 
   const { connect, disconnect } = useWebsocket(
     (event) => {
+      // meta v1.15.0 出现data.connections为null的情况
       const data = JSON.parse(event.data) as IConnections;
       // 尽量与前一次connections的展示顺序保持一致
       setConnData((old) => {
         const oldConn = old.connections;
-        const maxLen = data.connections.length;
+        const maxLen = data.connections?.length;
 
         const connections: typeof oldConn = [];
 
-        const rest = data.connections.filter((each) => {
+        const rest = data.connections?.filter((each) => {
           const index = oldConn.findIndex((o) => o.id === each.id);
 
           if (index >= 0 && index < maxLen) {
