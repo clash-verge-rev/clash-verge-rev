@@ -5,6 +5,7 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 import { useLogSetup } from "./use-log-setup";
+import { useVisibility } from "@/hooks/use-visibility";
 import { useWebsocket } from "@/hooks/use-websocket";
 import parseTraffic from "@/utils/parse-traffic";
 
@@ -28,8 +29,10 @@ const LayoutTraffic = () => {
     setTraffic(data);
   });
 
+  const pageVisible = useVisibility();
+
   useEffect(() => {
-    if (!clashInfo) return;
+    if (!clashInfo || !pageVisible) return;
 
     const { server = "", secret = "" } = clashInfo;
     connect(`ws://${server}/traffic?token=${encodeURIComponent(secret)}`);
@@ -37,27 +40,7 @@ const LayoutTraffic = () => {
     return () => {
       disconnect();
     };
-  }, [clashInfo]);
-
-  useEffect(() => {
-    // 页面隐藏时去掉请求
-    const handleVisibleChange = () => {
-      if (!clashInfo) return;
-      if (document.visibilityState === "visible") {
-        // reconnect websocket
-        const { server = "", secret = "" } = clashInfo;
-        connect(`ws://${server}/traffic?token=${encodeURIComponent(secret)}`);
-      } else {
-        disconnect();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibleChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibleChange);
-    };
-  }, []);
+  }, [clashInfo, pageVisible]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
@@ -82,7 +65,7 @@ const LayoutTraffic = () => {
       position="relative"
       onClick={trafficRef.current?.toggleStyle}
     >
-      {trafficGraph && (
+      {trafficGraph && pageVisible && (
         <div style={{ width: "100%", height: 60, marginBottom: 6 }}>
           <TrafficGraph ref={trafficRef} />
         </div>
