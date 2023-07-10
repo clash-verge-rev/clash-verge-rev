@@ -49,15 +49,10 @@ export const useProfiles = () => {
     const { global, groups } = proxiesData;
 
     [global, ...groups].forEach(({ type, name, now }) => {
-      if (!now || (type !== "Selector" && type !== "Fallback")) return;
+      if (!now || type !== "Selector") return;
       if (selectedMap[name] != null && selectedMap[name] !== now) {
         hasChange = true;
         updateProxy(name, selectedMap[name]);
-        console.log({
-          name,
-          now,
-          select: selectedMap[name],
-        });
       }
       newSelected.push({ name, now: selectedMap[name] });
     });
