@@ -15,6 +15,7 @@ const SIDECAR_HOST = execSync("rustc -vV")
   .match(/(?<=host: ).+(?=\s*)/g)[0];
 
 /* ======= clash ======= */
+const CLASH_STORAGE_PREFIX = "https://release.dreamacro.workers.dev/";
 const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
 const CLASH_LATEST_DATE = "2023.06.30";
@@ -32,11 +33,11 @@ const META_URL_PREFIX = `https://github.com/MetaCubeX/Clash.Meta/releases/downlo
 const META_VERSION = "v1.15.0";
 
 const META_MAP = {
-  "win32-x64": "Clash.Meta-windows-amd64-compatible",
-  "darwin-x64": "Clash.Meta-darwin-amd64",
-  "darwin-arm64": "Clash.Meta-darwin-arm64",
-  "linux-x64": "Clash.Meta-linux-amd64-compatible",
-  "linux-arm64": "Clash.Meta-linux-arm64",
+  "win32-x64": "clash.meta-windows-amd64-compatible",
+  "darwin-x64": "clash.meta-darwin-amd64",
+  "darwin-arm64": "clash.meta-darwin-arm64",
+  "linux-x64": "clash.meta-linux-amd64-compatible",
+  "linux-arm64": "clash.meta-linux-arm64",
 };
 
 /**
@@ -57,6 +58,24 @@ function clash() {
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
   const downloadURL = `${CLASH_URL_PREFIX}${name}-${CLASH_LATEST_DATE}.${urlExt}`;
+  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const zipFile = `${name}.${urlExt}`;
+
+  return {
+    name: "clash",
+    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    exeFile,
+    zipFile,
+    downloadURL,
+  };
+}
+
+function clashS3() {
+  const name = CLASH_MAP[`${platform}-${arch}`];
+
+  const isWin = platform === "win32";
+  const urlExt = isWin ? "zip" : "gz";
+  const downloadURL = `${CLASH_STORAGE_PREFIX}${CLASH_LATEST_DATE}/${name}-${CLASH_LATEST_DATE}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
   const zipFile = `${name}.${urlExt}`;
 
@@ -103,36 +122,58 @@ async function resolveSidecar(binInfo) {
   const tempExe = path.join(tempDir, exeFile);
 
   await fs.mkdirp(tempDir);
-  if (!(await fs.pathExists(tempZip))) await downloadFile(downloadURL, tempZip);
+  try {
+    if (!(await fs.pathExists(tempZip)))
+      await downloadFile(downloadURL, tempZip);
 
-  if (zipFile.endsWith(".zip")) {
-    const zip = new AdmZip(tempZip);
-    zip.getEntries().forEach((entry) => {
-      console.log(`[DEBUG]: ${name} entry name`, entry.entryName);
-    });
-    zip.extractAllTo(tempDir, true);
-    await fs.rename(tempExe, sidecarPath);
-    console.log(`[INFO]: ${name} unzip finished`);
-  } else {
-    // gz
-    const readStream = fs.createReadStream(tempZip);
-    const writeStream = fs.createWriteStream(sidecarPath);
-    readStream
-      .pipe(zlib.createGunzip())
-      .pipe(writeStream)
-      .on("finish", () => {
-        console.log(`[INFO]: ${name} gunzip finished`);
-        execSync(`chmod 755 ${sidecarPath}`);
-        console.log(`[INFO]: ${name} chmod binary finished`);
-      })
-      .on("error", (error) => {
-        console.error(`[ERROR]: ${name} gz failed`, error.message);
-        throw error;
+    if (zipFile.endsWith(".zip")) {
+      const zip = new AdmZip(tempZip);
+      zip.getEntries().forEach((entry) => {
+        console.log(`[DEBUG]: "${name}" entry name`, entry.entryName);
       });
+      zip.extractAllTo(tempDir, true);
+      await fs.rename(tempExe, sidecarPath);
+      console.log(`[INFO]: "${name}" unzip finished`);
+    } else {
+      // gz
+      const readStream = fs.createReadStream(tempZip);
+      const writeStream = fs.createWriteStream(sidecarPath);
+      await new Promise((resolve, reject) => {
+        const onError = (error) => {
+          console.error(`[ERROR]: "${name}" gz failed`, error.message);
+          reject(error);
+        };
+        readStream
+          .pipe(zlib.createGunzip().on("error", onError))
+          .pipe(writeStream)
+          .on("finish", () => {
+            console.log(`[INFO]: "${name}" gunzip finished`);
+            execSync(`chmod 755 ${sidecarPath}`);
+            console.log(`[INFO]: "${name}" chmod binary finished`);
+            resolve();
+          })
+          .on("error", onError);
+      });
+    }
+  } catch (err) {
+    throw err;
+  } finally {
+    // delete temp dir
+    await fs.remove(tempDir);
   }
+}
 
-  // delete temp dir
-  await fs.remove(tempDir);
+/**
+ * prepare clash core
+ * if the core version is not updated in time, use S3 storage as a backup.
+ */
+async function resolveClash() {
+  try {
+    return await resolveSidecar(clash());
+  } catch {
+    console.log(`[WARN]: clash core needs to be updated`);
+    return await resolveSidecar(clashS3());
+  }
 }
 
 /**
@@ -256,7 +297,7 @@ const resolveGeoIP = () =>
   });
 
 const tasks = [
-  { name: "clash", func: () => resolveSidecar(clash()), retry: 5 },
+  { name: "clash", func: resolveClash, retry: 5 },
   { name: "clash-meta", func: () => resolveSidecar(clashMeta()), retry: 5 },
   { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
   { name: "service", func: resolveService, retry: 5, winOnly: true },
