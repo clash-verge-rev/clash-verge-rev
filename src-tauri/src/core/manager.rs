@@ -28,7 +28,7 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
     let output = {
         let path = path.replace(' ', "\\ "); // 避免路径中有空格
         let shell = format!("setcap cap_net_bind_service,cap_net_admin=+ep {path}");
-        Command::new("sudo")
+        Command::new("pkexec")
             .arg("sh")
             .arg("-c")
             .arg(shell)
