@@ -18,6 +18,9 @@ fn init_log() -> Result<()> {
     }
 
     let log_level = Config::verge().data().get_log_level();
+    if log_level == LevelFilter::Off {
+        return Ok(());
+    }
 
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{}.log", local_time);

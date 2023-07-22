@@ -83,9 +83,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
               }));
             }}
           >
-            {["trace", "debug", "info", "warn", "error"].map((i) => (
+            {["trace", "debug", "info", "warn", "error", "silent"].map((i) => (
               <MenuItem value={i} key={i}>
-                {i}
+                {i[0].toUpperCase() + i.slice(1).toLowerCase()}
               </MenuItem>
             ))}
           </Select>
