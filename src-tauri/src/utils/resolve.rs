@@ -127,7 +127,7 @@ pub fn create_window(app_handle: &AppHandle) {
 }
 
 /// save window size and position
-pub fn save_window_size_position(app_handle: &AppHandle) -> Result<()> {
+pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> Result<()> {
     let win = app_handle
         .get_window("main")
         .ok_or(anyhow::anyhow!("failed to get window"))?;
@@ -141,7 +141,10 @@ pub fn save_window_size_position(app_handle: &AppHandle) -> Result<()> {
     let verge = Config::verge();
     let mut verge = verge.latest();
     verge.window_size_position = Some(vec![size.width, size.height, pos.x, pos.y]);
-    verge.save_file()?;
+
+    if save_to_file {
+        verge.save_file()?;
+    }
 
     Ok(())
 }
