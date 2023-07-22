@@ -19,6 +19,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
+    appLogLevel: "info",
     autoCloseConnection: false,
     enableClashFields: true,
     enableBuiltinEnhanced: true,
@@ -30,6 +31,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     open: () => {
       setOpen(true);
       setValues({
+        appLogLevel: verge?.app_log_level ?? "info",
         autoCloseConnection: verge?.auto_close_connection ?? false,
         enableClashFields: verge?.enable_clash_fields ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
@@ -43,6 +45,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const onSave = useLockFn(async () => {
     try {
       await patchVerge({
+        app_log_level: values.appLogLevel,
         auto_close_connection: values.autoCloseConnection,
         enable_clash_fields: values.enableClashFields,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
@@ -67,6 +70,27 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       onOk={onSave}
     >
       <List>
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="App Log Level" />
+          <Select
+            size="small"
+            sx={{ width: 100, "> div": { py: "7.5px" } }}
+            value={values.appLogLevel}
+            onChange={(e) => {
+              setValues((v) => ({
+                ...v,
+                appLogLevel: e.target.value as string,
+              }));
+            }}
+          >
+            {["trace", "debug", "info", "warn", "error"].map((i) => (
+              <MenuItem value={i} key={i}>
+                {i}
+              </MenuItem>
+            ))}
+          </Select>
+        </ListItem>
+
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary="Auto Close Connections" />
           <Switch
