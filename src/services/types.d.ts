@@ -153,6 +153,7 @@ interface IProfilesConfig {
 }
 
 interface IVergeConfig {
+  app_log_level?: "trace" | "debug" | "info" | "warn" | "error" | string;
   language?: string;
   clash_core?: string;
   theme_mode?: "light" | "dark" | "system";

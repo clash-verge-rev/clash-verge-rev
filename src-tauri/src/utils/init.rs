@@ -5,7 +5,7 @@ use chrono::Local;
 use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Config, Logger, Root};
+use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::fs;
 use tauri::PackageInfo;
@@ -17,35 +17,49 @@ fn init_log() -> Result<()> {
         let _ = fs::create_dir_all(&log_dir);
     }
 
+    let log_level = Config::verge().data().get_log_level();
+
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{}.log", local_time);
     let log_file = log_dir.join(log_file);
 
-    #[cfg(feature = "verge-dev")]
-    let time_format = "{d(%Y-%m-%d %H:%M:%S)} {l} - {M} {m}{n}";
-    #[cfg(not(feature = "verge-dev"))]
-    let time_format = "{d(%Y-%m-%d %H:%M:%S)} {l} - {m}{n}";
+    let log_pattern = match log_level {
+        LevelFilter::Trace => "{d(%Y-%m-%d %H:%M:%S)} {l} [{M}] - {m}{n}",
+        _ => "{d(%Y-%m-%d %H:%M:%S)} {l} - {m}{n}",
+    };
 
-    let encode = Box::new(PatternEncoder::new(time_format));
+    let encode = Box::new(PatternEncoder::new(log_pattern));
 
     let stdout = ConsoleAppender::builder().encoder(encode.clone()).build();
     let tofile = FileAppender::builder().encoder(encode).build(log_file)?;
 
-    #[cfg(feature = "verge-dev")]
-    let level = LevelFilter::Debug;
-    #[cfg(not(feature = "verge-dev"))]
-    let level = LevelFilter::Info;
+    let mut logger_builder = Logger::builder();
+    let mut root_builder = Root::builder();
 
-    let config = Config::builder()
+    let log_more = log_level == LevelFilter::Trace || log_level == LevelFilter::Debug;
+
+    #[cfg(feature = "verge-dev")]
+    {
+        logger_builder = logger_builder.appenders(["file", "stdout"]);
+        if log_more {
+            root_builder = root_builder.appenders(["file", "stdout"]);
+        } else {
+            root_builder = root_builder.appenders(["stdout"]);
+        }
+    }
+    #[cfg(not(feature = "verge-dev"))]
+    {
+        logger_builder = logger_builder.appenders(["file"]);
+        if log_more {
+            root_builder = root_builder.appenders(["file"]);
+        }
+    }
+
+    let (config, _) = log4rs::config::Config::builder()
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
         .appender(Appender::builder().build("file", Box::new(tofile)))
-        .logger(
-            Logger::builder()
-                .appenders(["file", "stdout"])
-                .additive(false)
-                .build("app", level),
-        )
-        .build(Root::builder().appender("stdout").build(LevelFilter::Info))?;
+        .logger(logger_builder.additive(false).build("app", log_level))
+        .build_lossy(root_builder.build(log_level));
 
     log4rs::init_config(config)?;
 

@@ -1,5 +1,6 @@
 use crate::utils::{dirs, help};
 use anyhow::Result;
+use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 
 /// ### `verge.yaml` schema
@@ -7,6 +8,10 @@ use serde::{Deserialize, Serialize};
 pub struct IVerge {
     /// app listening port for app singleton
     pub app_singleton_port: Option<u16>,
+
+    /// app log level
+    /// `trace` `debug` `info` `warn` `error`
+    pub app_log_level: Option<String>,
 
     // i18n
     pub language: Option<String>,
@@ -144,6 +149,7 @@ impl IVerge {
             };
         }
 
+        patch!(app_log_level);
         patch!(language);
         patch!(theme_mode);
         patch!(theme_blur);
@@ -180,6 +186,22 @@ impl IVerge {
         match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
             Ok(config) => config.app_singleton_port.unwrap_or(SERVER_PORT),
             Err(_) => SERVER_PORT, // 这里就不log错误了
+        }
+    }
+
+    /// 获取日志等级
+    pub fn get_log_level(&self) -> LevelFilter {
+        if let Some(level) = self.app_log_level.as_ref() {
+            match level.to_lowercase().as_str() {
+                "trace" => LevelFilter::Trace,
+                "debug" => LevelFilter::Debug,
+                "info" => LevelFilter::Info,
+                "warn" => LevelFilter::Warn,
+                "error" => LevelFilter::Error,
+                _ => LevelFilter::Info,
+            }
+        } else {
+            LevelFilter::Info
         }
     }
 }
