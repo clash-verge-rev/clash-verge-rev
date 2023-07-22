@@ -141,7 +141,7 @@ impl Tray {
                 "restart_clash" => feat::restart_clash_core(),
                 "restart_app" => api::process::restart(&app_handle.env()),
                 "quit" => {
-                    let _ = resolve::save_window_size_position(app_handle);
+                    let _ = resolve::save_window_size_position(app_handle, true);
 
                     resolve::resolve_reset();
                     api::process::kill_children();
