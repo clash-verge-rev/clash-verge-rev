@@ -79,6 +79,10 @@ pub struct IVerge {
 
     /// proxy 页面布局 列数
     pub proxy_layout_column: Option<i32>,
+
+    /// window size and position
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub window_size_position: Option<Vec<f64>>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -174,6 +178,8 @@ impl IVerge {
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(enable_clash_fields);
+
+        patch!(window_size_position);
     }
 
     /// 在初始化前尝试拿到单例端口的值
