@@ -13,67 +13,81 @@ impl Tray {
 
         let version = app_handle.package_info().version.to_string();
 
-        if zh {
-            SystemTrayMenu::new()
-                .add_item(CustomMenuItem::new("open_window", "打开面板"))
-                .add_native_item(SystemTrayMenuItem::Separator)
-                .add_item(CustomMenuItem::new("rule_mode", "规则模式"))
-                .add_item(CustomMenuItem::new("global_mode", "全局模式"))
-                .add_item(CustomMenuItem::new("direct_mode", "直连模式"))
-                .add_item(CustomMenuItem::new("script_mode", "脚本模式"))
-                .add_native_item(SystemTrayMenuItem::Separator)
-                .add_item(CustomMenuItem::new("system_proxy", "系统代理"))
-                .add_item(CustomMenuItem::new("tun_mode", "TUN 模式"))
-                .add_submenu(SystemTraySubmenu::new(
-                    "打开目录",
-                    SystemTrayMenu::new()
-                        .add_item(CustomMenuItem::new("open_app_dir", "应用目录"))
-                        .add_item(CustomMenuItem::new("open_core_dir", "内核目录"))
-                        .add_item(CustomMenuItem::new("open_logs_dir", "日志目录")),
-                ))
-                .add_submenu(SystemTraySubmenu::new(
-                    "更多",
-                    SystemTrayMenu::new()
-                        .add_item(CustomMenuItem::new("restart_clash", "重启 Clash"))
-                        .add_item(CustomMenuItem::new("restart_app", "重启应用"))
-                        .add_item(
-                            CustomMenuItem::new("app_version", format!("Version {version}"))
-                                .disabled(),
-                        ),
-                ))
-                .add_native_item(SystemTrayMenuItem::Separator)
-                .add_item(CustomMenuItem::new("quit", "退出").accelerator("CmdOrControl+Q"))
-        } else {
-            SystemTrayMenu::new()
-                .add_item(CustomMenuItem::new("open_window", "Dashboard"))
-                .add_native_item(SystemTrayMenuItem::Separator)
-                .add_item(CustomMenuItem::new("rule_mode", "Rule Mode"))
-                .add_item(CustomMenuItem::new("global_mode", "Global Mode"))
-                .add_item(CustomMenuItem::new("direct_mode", "Direct Mode"))
-                .add_item(CustomMenuItem::new("script_mode", "Script Mode"))
-                .add_native_item(SystemTrayMenuItem::Separator)
-                .add_item(CustomMenuItem::new("system_proxy", "System Proxy"))
-                .add_item(CustomMenuItem::new("tun_mode", "Tun Mode"))
-                .add_submenu(SystemTraySubmenu::new(
-                    "Open Dir",
-                    SystemTrayMenu::new()
-                        .add_item(CustomMenuItem::new("open_app_dir", "App Dir"))
-                        .add_item(CustomMenuItem::new("open_core_dir", "Core Dir"))
-                        .add_item(CustomMenuItem::new("open_logs_dir", "Logs Dir")),
-                ))
-                .add_submenu(SystemTraySubmenu::new(
-                    "More",
-                    SystemTrayMenu::new()
-                        .add_item(CustomMenuItem::new("restart_clash", "Restart Clash"))
-                        .add_item(CustomMenuItem::new("restart_app", "Restart App"))
-                        .add_item(
-                            CustomMenuItem::new("app_version", format!("Version {version}"))
-                                .disabled(),
-                        ),
-                ))
-                .add_native_item(SystemTrayMenuItem::Separator)
-                .add_item(CustomMenuItem::new("quit", "Quit").accelerator("CmdOrControl+Q"))
+        macro_rules! t {
+            ($en: expr, $zh: expr) => {
+                if zh {
+                    $zh
+                } else {
+                    $en
+                }
+            };
         }
+
+        SystemTrayMenu::new()
+            .add_item(CustomMenuItem::new(
+                "open_window",
+                t!("Dashboard", "打开面板"),
+            ))
+            .add_native_item(SystemTrayMenuItem::Separator)
+            .add_item(CustomMenuItem::new(
+                "rule_mode",
+                t!("Rule Mode", "规则模式"),
+            ))
+            .add_item(CustomMenuItem::new(
+                "global_mode",
+                t!("Global Mode", "全局模式"),
+            ))
+            .add_item(CustomMenuItem::new(
+                "direct_mode",
+                t!("Direct Mode", "直连模式"),
+            ))
+            .add_item(CustomMenuItem::new(
+                "script_mode",
+                t!("Script Mode", "脚本模式"),
+            ))
+            .add_native_item(SystemTrayMenuItem::Separator)
+            .add_item(CustomMenuItem::new(
+                "system_proxy",
+                t!("System Proxy", "系统代理"),
+            ))
+            .add_item(CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式")))
+            .add_item(CustomMenuItem::new(
+                "copy_env",
+                t!("Copy Env", "复制环境变量"),
+            ))
+            .add_submenu(SystemTraySubmenu::new(
+                t!("Open Dir", "打开目录"),
+                SystemTrayMenu::new()
+                    .add_item(CustomMenuItem::new(
+                        "open_app_dir",
+                        t!("App Dir", "应用目录"),
+                    ))
+                    .add_item(CustomMenuItem::new(
+                        "open_core_dir",
+                        t!("Core Dir", "内核目录"),
+                    ))
+                    .add_item(CustomMenuItem::new(
+                        "open_logs_dir",
+                        t!("Logs Dir", "日志目录"),
+                    )),
+            ))
+            .add_submenu(SystemTraySubmenu::new(
+                t!("More", "更多"),
+                SystemTrayMenu::new()
+                    .add_item(CustomMenuItem::new(
+                        "restart_clash",
+                        t!("Restart Clash", "重启 Clash"),
+                    ))
+                    .add_item(CustomMenuItem::new(
+                        "restart_app",
+                        t!("Restart App", "重启应用"),
+                    ))
+                    .add_item(
+                        CustomMenuItem::new("app_version", format!("Version {version}")).disabled(),
+                    ),
+            ))
+            .add_native_item(SystemTrayMenuItem::Separator)
+            .add_item(CustomMenuItem::new("quit", t!("Quit", "退出")).accelerator("CmdOrControl+Q"))
     }
 
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
@@ -135,6 +149,7 @@ impl Tray {
                 "open_window" => resolve::create_window(app_handle),
                 "system_proxy" => feat::toggle_system_proxy(),
                 "tun_mode" => feat::toggle_tun_mode(),
+                "copy_env" => feat::copy_clash_env(),
                 "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
                 "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
                 "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
