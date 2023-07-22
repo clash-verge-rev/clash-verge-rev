@@ -1,3 +1,22 @@
+## v1.3.4
+
+### Features
+
+- update clash and clash meta core
+- optimize traffic graph high CPU usage when window hidden
+- use polkit to elevate permission (Linux)
+- support app log level setting
+- support copy environment variable
+- overwrite resource file according to file modified
+- save window size and position
+
+### Bug Fixes
+
+- remove fallback group select status
+- enable context menu on editable element (Windows)
+
+---
+
 ## v1.3.3
 
 ### Features
