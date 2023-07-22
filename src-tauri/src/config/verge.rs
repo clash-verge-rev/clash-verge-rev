@@ -10,7 +10,7 @@ pub struct IVerge {
     pub app_singleton_port: Option<u16>,
 
     /// app log level
-    /// `trace` `debug` `info` `warn` `error`
+    /// silent | error | warn | info | debug | trace
     pub app_log_level: Option<String>,
 
     // i18n
@@ -193,11 +193,12 @@ impl IVerge {
     pub fn get_log_level(&self) -> LevelFilter {
         if let Some(level) = self.app_log_level.as_ref() {
             match level.to_lowercase().as_str() {
-                "trace" => LevelFilter::Trace,
-                "debug" => LevelFilter::Debug,
-                "info" => LevelFilter::Info,
-                "warn" => LevelFilter::Warn,
+                "silent" => LevelFilter::Off,
                 "error" => LevelFilter::Error,
+                "warn" => LevelFilter::Warn,
+                "info" => LevelFilter::Info,
+                "debug" => LevelFilter::Debug,
+                "trace" => LevelFilter::Trace,
                 _ => LevelFilter::Info,
             }
         } else {
