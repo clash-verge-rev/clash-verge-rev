@@ -9,6 +9,7 @@ use crate::core::*;
 use crate::log_err;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
+use wry::application::clipboard::Clipboard;
 
 // 重启clash
 pub fn restart_clash_core() {
@@ -318,4 +319,13 @@ async fn update_core_config() -> Result<()> {
             Err(err)
         }
     }
+}
+
+/// copy env variable
+pub fn copy_clash_env() {
+    let port = { Config::clash().data().get_client_info().port };
+    let text = format!("export https_proxy=http://127.0.0.1:{port} http_proxy=http://127.0.0.1:{port} all_proxy=socks5://127.0.0.1:{port}");
+
+    let mut cliboard = Clipboard::new();
+    cliboard.write_text(text);
 }
