@@ -124,9 +124,9 @@ impl Tray {
         #[cfg(target_os = "windows")]
         {
             let indication_icon = if *system_proxy {
-                include_bytes!("../../icons/tray-icon-activated.png").to_vec()
+                include_bytes!("../../icons/win-tray-icon-activated.png").to_vec()
             } else {
-                include_bytes!("../../icons/tray-icon.png").to_vec()
+                include_bytes!("../../icons/win-tray-icon.png").to_vec()
             };
 
             let _ = tray.set_icon(tauri::Icon::Raw(indication_icon));
