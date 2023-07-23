@@ -123,8 +123,9 @@ async function resolveSidecar(binInfo) {
 
   await fs.mkdirp(tempDir);
   try {
-    if (!(await fs.pathExists(tempZip)))
+    if (!(await fs.pathExists(tempZip))) {
       await downloadFile(downloadURL, tempZip);
+    }
 
     if (zipFile.endsWith(".zip")) {
       const zip = new AdmZip(tempZip);
@@ -140,7 +141,7 @@ async function resolveSidecar(binInfo) {
       const writeStream = fs.createWriteStream(sidecarPath);
       await new Promise((resolve, reject) => {
         const onError = (error) => {
-          console.error(`[ERROR]: "${name}" gz failed`, error.message);
+          console.error(`[ERROR]: "${name}" gz failed:`, error.message);
           reject(error);
         };
         readStream
@@ -156,6 +157,8 @@ async function resolveSidecar(binInfo) {
       });
     }
   } catch (err) {
+    // 需要删除文件
+    await fs.remove(sidecarPath);
     throw err;
   } finally {
     // delete temp dir
@@ -318,7 +321,8 @@ async function runTask() {
       await task.func();
       break;
     } catch (err) {
-      console.error(`[ERROR]: task::${task.name} try ${i} == `, err.message);
+      console.error(`[ERROR]: task::${task.name} try ${i} ==`, err.message);
+      if (i === task.retry - 1) throw err;
     }
   }
   return runTask();
