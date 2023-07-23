@@ -1,3 +1,17 @@
+## v1.3.5
+
+### Features
+
+- update clash core
+
+### Bug Fixes
+
+- fix blurry system tray icon (Windows)
+- fix v1.3.4 wintun.dll not found (Windows)
+- fix v1.3.4 clash core not found (macOS, Linux)
+
+---
+
 ## v1.3.4
 
 ### Features
