@@ -18,7 +18,7 @@ const SIDECAR_HOST = execSync("rustc -vV")
 const CLASH_STORAGE_PREFIX = "https://release.dreamacro.workers.dev/";
 const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
-const CLASH_LATEST_DATE = "2023.06.30";
+const CLASH_LATEST_DATE = "2023.07.22";
 
 const CLASH_MAP = {
   "win32-x64": "clash-windows-amd64",
