@@ -94,24 +94,42 @@ pub fn create_window(app_handle: &AppHandle) {
             .visible(false)
             .build()
         {
-            Ok(_) => {
-                let app_handle = app_handle.clone();
+            Ok(win) => {
+                let center = (|| -> Result<bool> {
+                    let mut center = false;
+                    let monitor = win.current_monitor()?.ok_or(anyhow::anyhow!(""))?;
+                    let size = monitor.size();
+                    let pos = win.outer_position()?;
 
-                if let Some(window) = app_handle.get_window("main") {
-                    let _ = set_shadow(&window, true);
+                    if pos.x < -400
+                        || pos.x > (size.width - 200).try_into()?
+                        || pos.y < -200
+                        || pos.y > (size.height - 200).try_into()?
+                    {
+                        center = true;
+                    }
+                    Ok(center)
+                })();
+
+                if center.unwrap_or(true) {
+                    let _ = win.center();
                 }
 
+                let app_handle = app_handle.clone();
+
+                // 加点延迟避免界面闪一下
                 tauri::async_runtime::spawn(async move {
-                    sleep(Duration::from_secs(1)).await;
+                    sleep(Duration::from_millis(888)).await;
 
                     if let Some(window) = app_handle.get_window("main") {
+                        let _ = set_shadow(&window, true);
                         let _ = window.show();
                         let _ = window.unminimize();
                         let _ = window.set_focus();
                     }
                 });
             }
-            Err(err) => log::error!(target: "app", "{err}"),
+            Err(err) => log::error!(target: "app", "create window, {err}"),
         }
     }
 
