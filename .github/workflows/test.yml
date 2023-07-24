@@ -35,7 +35,7 @@ jobs:
           echo ${{ github.event.inputs.os }}
 
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -46,9 +46,10 @@ jobs:
           workspaces: src-tauri
 
       - name: Install Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: "16"
+          cache: "yarn"
 
       - name: Install Dependencies (ubuntu only)
         if: startsWith(github.event.inputs.os, 'ubuntu-')
@@ -56,29 +57,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: Get yarn cache dir path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - name: Yarn Cache
-        uses: actions/cache@v2
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
       - name: Yarn install and check
         run: |
-          yarn install --network-timeout 1000000
+          yarn install --network-timeout 1000000 --frozen-lockfile
           yarn run check
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
-          tagName: alpha
-          includeUpdaterJson: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          tagName: alpha
+          includeUpdaterJson: false
