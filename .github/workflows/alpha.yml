@@ -16,19 +16,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-20.04, macos-latest]
     runs-on: ${{ matrix.os }}
     if: startsWith(github.repository, 'zzzgydi')
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -36,12 +32,13 @@ jobs:
           workspaces: src-tauri
 
       - name: Install Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: "16"
+          cache: "yarn"
 
       - name: Delete current release assets
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'ubuntu-')
         uses: mknejp/delete-release-assets@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -63,22 +60,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf openssl
 
-      - name: Get yarn cache dir path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - name: Yarn Cache
-        uses: actions/cache@v2
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
       - name: Yarn install and check
         run: |
-          yarn install --network-timeout 1000000
+          yarn install --network-timeout 1000000 --frozen-lockfile
           yarn run check
 
       - name: Tauri build
@@ -96,7 +80,7 @@ jobs:
           includeDebug: ${{ github.event.inputs.debug }}
 
       - name: Portable Bundle
-        if: matrix.os == 'windows-latest'
+        if: startsWith(matrix.os, 'windows-')
         run: |
           yarn build
           yarn run portable
