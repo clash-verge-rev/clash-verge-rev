@@ -30,7 +30,7 @@ const ProxyPage = () => {
     return ["rule", "global", "direct", "script"];
   }, [verge?.clash_core]);
 
-  const curMode = clashConfig?.mode.toLowerCase();
+  const curMode = clashConfig?.mode?.toLowerCase();
 
   const onChangeMode = useLockFn(async (mode: string) => {
     // 断开连接
