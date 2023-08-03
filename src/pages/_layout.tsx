@@ -19,6 +19,7 @@ import LayoutTraffic from "@/components/layout/layout-traffic";
 import UpdateButton from "@/components/layout/update-button";
 import useCustomTheme from "@/components/layout/use-custom-theme";
 import getSystem from "@/utils/get-system";
+import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 
 dayjs.extend(relativeTime);
