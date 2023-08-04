@@ -1,5 +1,5 @@
-use crate::log_err;
 use crate::{config::Config, core::*, utils::init, utils::server};
+use crate::{log_err, trace_err};
 use anyhow::Result;
 use tauri::{App, AppHandle, Manager};
 
@@ -13,12 +13,17 @@ pub fn resolve_setup(app: &mut App) {
     log_err!(init::init_resources(app.package_info()));
 
     // 启动核心
+    log::trace!("init config");
     log_err!(Config::init_config());
+
+    log::trace!("launch core");
     log_err!(CoreManager::global().init());
 
     // setup a simple http server for singleton
+    log::trace!("launch embed server");
     server::embed_server(app.app_handle());
 
+    log::trace!("init system tray");
     log_err!(tray::Tray::update_systray(&app.app_handle()));
 
     let silent_start = { Config::verge().data().enable_silent_start.clone() };
@@ -43,9 +48,9 @@ pub fn resolve_reset() {
 /// create main window
 pub fn create_window(app_handle: &AppHandle) {
     if let Some(window) = app_handle.get_window("main") {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
+        trace_err!(window.unminimize(), "set win unminimize");
+        trace_err!(window.show(), "set win visible");
+        trace_err!(window.set_focus(), "set win focus");
         return;
     }
 
@@ -95,6 +100,7 @@ pub fn create_window(app_handle: &AppHandle) {
             .build()
         {
             Ok(win) => {
+                log::trace!("try to calculate the monitor size");
                 let center = (|| -> Result<bool> {
                     let mut center = false;
                     let monitor = win.current_monitor()?.ok_or(anyhow::anyhow!(""))?;
@@ -112,9 +118,10 @@ pub fn create_window(app_handle: &AppHandle) {
                 })();
 
                 if center.unwrap_or(true) {
-                    let _ = win.center();
+                    trace_err!(win.center(), "set win center");
                 }
 
+                log::trace!("try to create window");
                 let app_handle = app_handle.clone();
 
                 // 加点延迟避免界面闪一下
@@ -122,14 +129,16 @@ pub fn create_window(app_handle: &AppHandle) {
                     sleep(Duration::from_millis(888)).await;
 
                     if let Some(window) = app_handle.get_window("main") {
-                        let _ = set_shadow(&window, true);
-                        let _ = window.show();
-                        let _ = window.unminimize();
-                        let _ = window.set_focus();
+                        trace_err!(set_shadow(&window, true), "set win shadow");
+                        trace_err!(window.show(), "set win visible");
+                        trace_err!(window.unminimize(), "set win unminimize");
+                        trace_err!(window.set_focus(), "set win focus");
+                    } else {
+                        log::error!(target: "app", "failed to create window, get_window is None")
                     }
                 });
             }
-            Err(err) => log::error!(target: "app", "create window, {err}"),
+            Err(err) => log::error!(target: "app", "failed to create window, {err}"),
         }
     }
 
