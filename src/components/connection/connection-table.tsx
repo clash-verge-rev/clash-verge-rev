@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Snackbar } from "@mui/material";
 import parseTraffic from "@/utils/parse-traffic";
 
 interface Props {
@@ -9,6 +10,10 @@ interface Props {
 
 const ConnectionTable = (props: Props) => {
   const { connections } = props;
+
+  const [openedDetail, setOpenedDetail] = useState<IConnectionsItem | null>(
+    null
+  );
 
   const columns: GridColDef[] = [
     {
@@ -72,7 +77,7 @@ const ConnectionTable = (props: Props) => {
     {
       field: "process",
       headerName: "Process",
-      width: 120,
+      width: 480,
       disableColumnMenu: true,
     },
     {
@@ -121,24 +126,117 @@ const ConnectionTable = (props: Props) => {
         ulSpeed: each.curUpload,
         chains,
         rule,
-        process: metadata.process || metadata.processPath,
+        process: truncateStr(
+          metadata.process || metadata.processPath || "",
+          16,
+          56
+        ),
         time: each.start,
         source: `${metadata.sourceIP}:${metadata.sourcePort}`,
         destinationIP: metadata.destinationIP,
         type: `${metadata.type}(${metadata.network})`,
+
+        connectionData: each,
       };
     });
   }, [connections]);
 
   return (
-    <DataGrid
-      rows={connRows}
-      columns={columns}
-      density="compact"
-      sx={{ border: "none", "div:focus": { outline: "none !important" } }}
-      hideFooter
-    />
+    <>
+      <DataGrid
+        rows={connRows}
+        columns={columns}
+        onRowClick={(e) => setOpenedDetail(e.row.connectionData)}
+        density="compact"
+        sx={{ border: "none", "div:focus": { outline: "none !important" } }}
+        hideFooter
+      />
+      <Snackbar
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        open={Boolean(openedDetail)}
+        onClose={() => setOpenedDetail(null)}
+        message={
+          openedDetail ? <SingleConnectionDetail data={openedDetail} /> : null
+        }
+      />
+    </>
   );
 };
 
 export default ConnectionTable;
+
+const truncateStr = (str: string, prefixLen: number, maxLen: number) => {
+  if (str.length <= maxLen) return str;
+  return (
+    str.slice(0, prefixLen) + " ... " + str.slice(-(maxLen - prefixLen - 5))
+  );
+};
+
+const SingleConnectionDetail = ({ data }: { data: IConnectionsItem }) => {
+  const { metadata, rulePayload } = data;
+  const chains = [...data.chains].reverse().join(" / ");
+  const rule = rulePayload ? `${data.rule}(${rulePayload})` : data.rule;
+  const host = metadata.host
+    ? `${metadata.host}:${metadata.destinationPort}`
+    : `${metadata.destinationIP}:${metadata.destinationPort}`;
+
+  return (
+    <div>
+      <div>
+        {" "}
+        <b>Host</b>: <span>{host}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Download</b>: <span>{parseTraffic(data.download).join(" ")}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Upload</b>: <span>{parseTraffic(data.upload).join(" ")}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>DL Speed</b>:{" "}
+        <span>{parseTraffic(data.curDownload ?? -1).join(" ") + "/s"}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>UL Speed</b>:{" "}
+        <span>{parseTraffic(data.curUpload ?? -1).join(" ") + "/s"}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Chains</b>: <span>{chains}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Rule</b>: <span>{rule}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Process</b>: <span>{metadata.process}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>ProcessPath</b>: <span>{metadata.processPath}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Time</b>: <span>{dayjs(data.start).fromNow()}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Source</b>:{" "}
+        <span>{`${metadata.sourceIP}:${metadata.sourcePort}`}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Destination IP</b>: <span>{metadata.destinationIP}</span>{" "}
+      </div>
+      <div>
+        {" "}
+        <b>Type</b>: <span>{`${metadata.type}(${metadata.network})`}</span>{" "}
+      </div>
+    </div>
+  );
+};
