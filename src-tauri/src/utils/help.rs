@@ -119,6 +119,15 @@ macro_rules! log_err {
     };
 }
 
+#[macro_export]
+macro_rules! trace_err {
+    ($result: expr, $err_str: expr) => {
+        if let Err(err) = $result {
+            log::trace!(target: "app", "{}, err {}", $err_str, err);
+        }
+    }
+}
+
 /// wrap the anyhow error
 /// transform the error to String
 #[macro_export]
