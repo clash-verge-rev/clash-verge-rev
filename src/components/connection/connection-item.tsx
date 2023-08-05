@@ -24,10 +24,11 @@ const Tag = styled("span")(({ theme }) => ({
 
 interface Props {
   value: IConnectionsItem;
+  onShowDetail?: () => void;
 }
 
-const ConnectionItem = (props: Props) => {
-  const { value } = props;
+export const ConnectionItem = (props: Props) => {
+  const { value, onShowDetail } = props;
 
   const { id, metadata, chains, start, curUpload, curDownload } = value;
 
@@ -44,8 +45,9 @@ const ConnectionItem = (props: Props) => {
       }
     >
       <ListItemText
-        sx={{ userSelect: "text" }}
+        sx={{ userSelect: "text", cursor: "pointer" }}
         primary={metadata.host || metadata.destinationIP}
+        onClick={onShowDetail}
         secondary={
           <Box sx={{ display: "flex", flexWrap: "wrap" }}>
             <Tag sx={{ textTransform: "uppercase", color: "success" }}>
@@ -71,5 +73,3 @@ const ConnectionItem = (props: Props) => {
     </ListItem>
   );
 };
-
-export default ConnectionItem;

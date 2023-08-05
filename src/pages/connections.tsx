@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import {
   Box,
@@ -18,8 +18,12 @@ import { atomConnectionSetting } from "@/services/states";
 import { useClashInfo } from "@/hooks/use-clash";
 import { BaseEmpty, BasePage } from "@/components/base";
 import { useWebsocket } from "@/hooks/use-websocket";
-import ConnectionItem from "@/components/connection/connection-item";
-import ConnectionTable from "@/components/connection/connection-table";
+import { ConnectionItem } from "@/components/connection/connection-item";
+import { ConnectionTable } from "@/components/connection/connection-table";
+import {
+  ConnectionDetail,
+  ConnectionDetailRef,
+} from "@/components/connection/connection-detail";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -106,6 +110,8 @@ const ConnectionsPage = () => {
 
   const onCloseAll = useLockFn(closeAllConnections);
 
+  const detailRef = useRef<ConnectionDetailRef>(null!);
+
   return (
     <BasePage
       title={t("Connections")}
@@ -186,14 +192,24 @@ const ConnectionsPage = () => {
           {filterConn.length === 0 ? (
             <BaseEmpty text="No Connections" />
           ) : isTableLayout ? (
-            <ConnectionTable connections={filterConn} />
+            <ConnectionTable
+              connections={filterConn}
+              onShowDetail={(detail) => detailRef.current?.open(detail)}
+            />
           ) : (
             <Virtuoso
               data={filterConn}
-              itemContent={(index, item) => <ConnectionItem value={item} />}
+              itemContent={(index, item) => (
+                <ConnectionItem
+                  value={item}
+                  onShowDetail={() => detailRef.current?.open(item)}
+                />
+              )}
             />
           )}
         </Box>
+
+        <ConnectionDetail ref={detailRef} />
       </Paper>
     </BasePage>
   );
