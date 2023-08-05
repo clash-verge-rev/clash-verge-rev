@@ -2,12 +2,12 @@ import { useRef } from "react";
 
 export type WsMsgFn = (event: MessageEvent<any>) => void;
 
-interface Options {
+export interface WsOptions {
   errorCount?: number; // default is 5
   retryInterval?: number; // default is 2500
 }
 
-export const useWebsocket = (onMessage: WsMsgFn, options?: Options) => {
+export const useWebsocket = (onMessage: WsMsgFn, options?: WsOptions) => {
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef<any>(null);
 
