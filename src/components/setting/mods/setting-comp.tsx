@@ -11,10 +11,11 @@ interface ItemProps {
   label: ReactNode;
   extra?: ReactNode;
   children?: ReactNode;
+  secondary?: ReactNode;
 }
 
 export const SettingItem: React.FC<ItemProps> = (props) => {
-  const { label, extra, children } = props;
+  const { label, extra, children, secondary } = props;
 
   const primary = !extra ? (
     label
@@ -27,7 +28,7 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
 
   return (
     <ListItem sx={{ pt: "5px", pb: "5px" }}>
-      <ListItemText primary={primary} />
+      <ListItemText primary={primary} secondary={secondary} />
       {children}
     </ListItem>
   );

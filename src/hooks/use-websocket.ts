@@ -5,6 +5,7 @@ export type WsMsgFn = (event: MessageEvent<any>) => void;
 export interface WsOptions {
   errorCount?: number; // default is 5
   retryInterval?: number; // default is 2500
+  onError?: () => void;
 }
 
 export const useWebsocket = (onMessage: WsMsgFn, options?: WsOptions) => {
@@ -38,6 +39,9 @@ export const useWebsocket = (onMessage: WsMsgFn, options?: WsOptions) => {
 
         if (errorCount >= 0) {
           timerRef.current = setTimeout(connectHelper, 2500);
+        } else {
+          disconnect();
+          options?.onError?.();
         }
       });
     };

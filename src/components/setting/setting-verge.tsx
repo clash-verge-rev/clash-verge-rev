@@ -1,12 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  IconButton,
-  MenuItem,
-  Select,
-  Switch,
-  Typography,
-} from "@mui/material";
+import { IconButton, MenuItem, Select, Typography } from "@mui/material";
 import { openAppDir, openCoreDir, openLogsDir } from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
@@ -19,6 +13,7 @@ import { HotkeyViewer } from "./mods/hotkey-viewer";
 import { MiscViewer } from "./mods/misc-viewer";
 import { ThemeViewer } from "./mods/theme-viewer";
 import { GuardState } from "./mods/guard-state";
+import { LayoutViewer } from "./mods/layout-viewer";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -35,6 +30,7 @@ const SettingVerge = ({ onError }: Props) => {
   const hotkeyRef = useRef<DialogRef>(null);
   const miscRef = useRef<DialogRef>(null);
   const themeRef = useRef<DialogRef>(null);
+  const layoutRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
@@ -47,6 +43,7 @@ const SettingVerge = ({ onError }: Props) => {
       <ConfigViewer ref={configRef} />
       <HotkeyViewer ref={hotkeyRef} />
       <MiscViewer ref={miscRef} />
+      <LayoutViewer ref={layoutRef} />
 
       <SettingItem label={t("Language")}>
         <GuardState
@@ -75,30 +72,26 @@ const SettingVerge = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Theme Blur")}>
-        <GuardState
-          value={theme_blur ?? false}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ theme_blur: e })}
-          onGuard={(e) => patchVerge({ theme_blur: e })}
+      <SettingItem label={t("Theme Setting")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => themeRef.current?.open()}
         >
-          <Switch edge="end" />
-        </GuardState>
+          <ArrowForward />
+        </IconButton>
       </SettingItem>
 
-      <SettingItem label={t("Traffic Graph")}>
-        <GuardState
-          value={traffic_graph ?? true}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ traffic_graph: e })}
-          onGuard={(e) => patchVerge({ traffic_graph: e })}
+      <SettingItem label={t("Layout Setting")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => layoutRef.current?.open()}
         >
-          <Switch edge="end" />
-        </GuardState>
+          <ArrowForward />
+        </IconButton>
       </SettingItem>
 
       <SettingItem label={t("Miscellaneous")}>
@@ -107,17 +100,6 @@ const SettingVerge = ({ onError }: Props) => {
           size="small"
           sx={{ my: "2px" }}
           onClick={() => miscRef.current?.open()}
-        >
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
-
-      <SettingItem label={t("Theme Setting")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => themeRef.current?.open()}
         >
           <ArrowForward />
         </IconButton>

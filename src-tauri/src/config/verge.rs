@@ -26,6 +26,9 @@ pub struct IVerge {
     /// enable traffic graph default is true
     pub traffic_graph: Option<bool>,
 
+    /// show memory info (only for Clash Meta)
+    pub enable_memory_usage: Option<bool>,
+
     /// clash tun mode
     pub enable_tun_mode: Option<bool>,
 
@@ -125,6 +128,7 @@ impl IVerge {
             theme_mode: Some("system".into()),
             theme_blur: Some(false),
             traffic_graph: Some(true),
+            enable_memory_usage: Some(true),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_system_proxy: Some(false),
@@ -158,6 +162,7 @@ impl IVerge {
         patch!(theme_mode);
         patch!(theme_blur);
         patch!(traffic_graph);
+        patch!(enable_memory_usage);
 
         patch!(enable_tun_mode);
         patch!(enable_service_mode);
