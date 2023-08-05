@@ -12,6 +12,7 @@ import {
   keyframes,
   MenuItem,
   Menu,
+  CircularProgress,
 } from "@mui/material";
 import { RefreshRounded } from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
@@ -28,13 +29,14 @@ const round = keyframes`
 
 interface Props {
   selected: boolean;
+  activating: boolean;
   itemData: IProfileItem;
   onSelect: (force: boolean) => void;
   onEdit: () => void;
 }
 
 export const ProfileItem = (props: Props) => {
-  const { selected, itemData, onSelect, onEdit } = props;
+  const { selected, activating, itemData, onSelect, onEdit } = props;
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -192,6 +194,25 @@ export const ProfileItem = (props: Props) => {
           event.preventDefault();
         }}
       >
+        {activating && (
+          <Box
+            sx={{
+              position: "absolute",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              top: 10,
+              left: 10,
+              right: 10,
+              bottom: 2,
+              zIndex: 10,
+              backdropFilter: "blur(2px)",
+            }}
+          >
+            <CircularProgress size={20} />
+          </Box>
+        )}
+
         <Box position="relative">
           <Typography
             width="calc(100% - 36px)"
