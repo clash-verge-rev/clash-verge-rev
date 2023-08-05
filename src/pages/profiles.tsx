@@ -35,6 +35,7 @@ const ProfilePage = () => {
 
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
+  const [activating, setActivating] = useState("");
 
   const {
     profiles = {},
@@ -99,6 +100,8 @@ const ProfilePage = () => {
 
   const onSelect = useLockFn(async (current: string, force: boolean) => {
     if (!force && current === profiles.current) return;
+    // 避免大多数情况下loading态闪烁
+    const reset = setTimeout(() => setActivating(current), 100);
     try {
       await patchProfiles({ current });
       mutateLogs();
@@ -107,6 +110,9 @@ const ProfilePage = () => {
       Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString(), 4000);
+    } finally {
+      clearTimeout(reset);
+      setActivating("");
     }
   });
 
@@ -258,6 +264,7 @@ const ProfilePage = () => {
             <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
               <ProfileItem
                 selected={profiles.current === item.uid}
+                activating={activating === item.uid}
                 itemData={item}
                 onSelect={(f) => onSelect(item.uid, f)}
                 onEdit={() => viewerRef.current?.edit(item)}
