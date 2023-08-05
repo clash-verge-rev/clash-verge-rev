@@ -58,14 +58,14 @@ export const ProviderButton = () => {
                 <ListItemText
                   primary={key}
                   secondary={
-                    <div>
+                    <>
                       <span style={{ marginRight: "4em" }}>
                         Type: {item.vehicleType}
                       </span>
                       <span title={time.format("YYYY-MM-DD HH:mm:ss")}>
                         Updated: {time.fromNow()}
                       </span>
-                    </div>
+                    </>
                   }
                 />
                 <IconButton
