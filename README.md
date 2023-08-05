@@ -42,9 +42,24 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 Download from [release](https://github.com/zzzgydi/clash-verge/releases). Supports Windows x64, Linux x86_64 and macOS 11+
 
+- [Windows x64](https://github.com/zzzgydi/clash-verge/releases/download/latest/Clash.Verge_1.3.5_x64_en-US.msi)
+- [macOS intel](https://github.com/zzzgydi/clash-verge/releases/download/latest/Clash.Verge_1.3.5_x64.dmg)
+- [macOS arm](https://github.com/zzzgydi/clash-verge/releases/download/latest/Clash.Verge_1.3.5_aarch64.dmg)
+- [Linux AppImage](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.5/clash-verge_1.3.5_amd64.AppImage)
+- [Linux deb](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.5/clash-verge_1.3.5_amd64.deb)
+
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
 Notes: If you could not start the app on Windows, please check that you have [Webview2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section) installed.
+
+<details>
+<summary open>FAQ</summary>
+
+#### 1. **macOS** "Clash Verge" is damaged and can't be opened
+
+open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Verge.app`
+
+</details>
 
 ## Development
 
@@ -57,6 +72,9 @@ yarn install
 Then download the clash binary... Or you can download it from [clash premium release](https://github.com/Dreamacro/clash/releases/tag/premium) and rename it according to [tauri config](https://tauri.studio/docs/api/config/#tauri.bundle.externalBin).
 
 ```shell
+# force update to latest version
+# yarn run check --force
+
 yarn run check
 ```
 
@@ -64,6 +82,9 @@ Then run
 
 ```shell
 yarn dev
+
+# run it in another way if app instance exists
+yarn dev:diff
 ```
 
 Or you can build it
