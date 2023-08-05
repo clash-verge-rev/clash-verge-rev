@@ -52,14 +52,11 @@ Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
 Notes: If you could not start the app on Windows, please check that you have [Webview2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section) installed.
 
-<details>
-<summary open>FAQ</summary>
+### FAQ
 
 #### 1. **macOS** "Clash Verge" is damaged and can't be opened
 
 open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Verge.app`
-
-</details>
 
 ## Development
 
