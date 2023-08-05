@@ -169,6 +169,11 @@ export const providerHealthCheck = async (name: string) => {
   );
 };
 
+export const providerUpdate = async (name: string) => {
+  const instance = await getAxios();
+  return instance.put(`/providers/proxies/${encodeURIComponent(name)}`);
+};
+
 export const getConnections = async () => {
   const instance = await getAxios();
   const result = await instance.get("/connections");
