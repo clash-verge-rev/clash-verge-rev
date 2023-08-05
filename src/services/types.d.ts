@@ -159,6 +159,7 @@ interface IVergeConfig {
   theme_mode?: "light" | "dark" | "system";
   theme_blur?: boolean;
   traffic_graph?: boolean;
+  enable_memory_usage?: boolean;
   enable_tun_mode?: boolean;
   enable_auto_launch?: boolean;
   enable_service_mode?: boolean;
