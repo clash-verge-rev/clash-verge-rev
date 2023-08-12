@@ -84,9 +84,7 @@ export const ConnectionTable = (props: Props) => {
         ulSpeed: parseTraffic(each.curUpload).join(" ") + "/s",
         chains,
         rule,
-        process: truncateStr(metadata.process || metadata.processPath)?.repeat(
-          10
-        ),
+        process: truncateStr(metadata.process || metadata.processPath),
         time: dayjs(each.start).fromNow(),
         source: `${metadata.sourceIP}:${metadata.sourcePort}`,
         destinationIP: metadata.destinationIP,
