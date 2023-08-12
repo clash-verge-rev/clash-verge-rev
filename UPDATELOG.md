@@ -1,3 +1,26 @@
+## v1.3.6
+
+### Features
+
+- add russian translation
+- support to show connection detail
+- support clash meta memory usage display
+- support proxy provider update ui
+- update geo data file from meta repo
+- adjust setting page
+
+### Bug Fixes
+
+- center the window when it is out of screen
+- use `sudo` when `pkexec` not found (Linux)
+- reconnect websocket when window focus
+
+### Notes
+
+- The current version of the Linux installation package is built by Ubuntu 20.04 (Github Action).
+
+---
+
 ## v1.3.5
 
 ### Features
