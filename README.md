@@ -42,11 +42,11 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 Download from [release](https://github.com/zzzgydi/clash-verge/releases). Supports Windows x64, Linux x86_64 and macOS 11+
 
-- [Windows x64](https://github.com/zzzgydi/clash-verge/releases/download/latest/Clash.Verge_1.3.5_x64_en-US.msi)
-- [macOS intel](https://github.com/zzzgydi/clash-verge/releases/download/latest/Clash.Verge_1.3.5_x64.dmg)
-- [macOS arm](https://github.com/zzzgydi/clash-verge/releases/download/latest/Clash.Verge_1.3.5_aarch64.dmg)
-- [Linux AppImage](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.5/clash-verge_1.3.5_amd64.AppImage)
-- [Linux deb](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.5/clash-verge_1.3.5_amd64.deb)
+- [Windows x64](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/Clash.Verge_1.3.6_x64_en-US.msi)
+- [macOS intel](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/Clash.Verge_1.3.6_x64.dmg)
+- [macOS arm](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/Clash.Verge_1.3.6_aarch64.dmg)
+- [Linux AppImage](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/clash-verge_1.3.6_amd64.AppImage)
+- [Linux deb](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/clash-verge_1.3.6_amd64.deb)
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
