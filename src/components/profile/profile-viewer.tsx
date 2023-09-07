@@ -188,7 +188,12 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               name="url"
               control={control}
               render={({ field }) => (
-                <TextField {...text} {...field} label={t("Subscription URL")} />
+                <TextField
+                  {...text}
+                  {...field}
+                  multiline
+                  label={t("Subscription URL")}
+                />
               )}
             />
 
