@@ -4,6 +4,8 @@ import { useLockFn } from "ahooks";
 import { useSetRecoilState } from "recoil";
 import { Box, Button, Grid, IconButton, Stack, TextField } from "@mui/material";
 import {
+  ClearRounded,
+  ContentCopyRounded,
   LocalFireDepartmentRounded,
   RefreshRounded,
   TextSnippetOutlined,
@@ -194,6 +196,11 @@ const ProfilePage = () => {
     });
   });
 
+  const onCopyLink = async () => {
+    const text = await navigator.clipboard.readText();
+    if (text) setUrl(text);
+  };
+
   return (
     <BasePage
       title={t("Profiles")}
@@ -240,6 +247,28 @@ const ProfilePage = () => {
           onChange={(e) => setUrl(e.target.value)}
           sx={{ input: { py: 0.65, px: 1.25 } }}
           placeholder={t("Profile URL")}
+          InputProps={{
+            sx: { pr: 1 },
+            endAdornment: !url ? (
+              <IconButton
+                size="small"
+                sx={{ p: 0.5 }}
+                title={t("Paste")}
+                onClick={onCopyLink}
+              >
+                <ContentCopyRounded fontSize="inherit" />
+              </IconButton>
+            ) : (
+              <IconButton
+                size="small"
+                sx={{ p: 0.5 }}
+                title={t("Clear")}
+                onClick={() => setUrl("")}
+              >
+                <ClearRounded fontSize="inherit" />
+              </IconButton>
+            ),
+          }}
         />
         <Button
           disabled={!url || disabled}
