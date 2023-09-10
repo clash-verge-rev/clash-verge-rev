@@ -1,3 +1,20 @@
+## v1.3.7
+
+### Features
+
+- update clash and clash meta core
+- profiles page add paste button
+- subscriptions url textfield use multi lines
+- set min window size
+- add check for updates buttons
+- add open dashboard to the hotkey list
+
+### Bug Fixes
+
+- fix profiles page undefined exception
+
+---
+
 ## v1.3.6
 
 ### Features
