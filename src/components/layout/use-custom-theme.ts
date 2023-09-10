@@ -9,7 +9,7 @@ import { useVerge } from "@/hooks/use-verge";
 /**
  * custom theme
  */
-export default function useCustomTheme() {
+export const useCustomTheme = () => {
   const { verge } = useVerge();
   const { theme_mode, theme_setting } = verge ?? {};
   const [mode, setMode] = useRecoilState(atomThemeMode);
@@ -121,4 +121,4 @@ export default function useCustomTheme() {
   }, [mode, theme_setting]);
 
   return { theme };
-}
+};

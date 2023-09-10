@@ -1,17 +1,19 @@
 import useSWR from "swr";
-import { useState } from "react";
+import { useRef } from "react";
 import { Button } from "@mui/material";
 import { checkUpdate } from "@tauri-apps/api/updater";
-import UpdateDialog from "./update-dialog";
+import { UpdateViewer } from "../setting/mods/update-viewer";
+import { DialogRef } from "../base";
 
 interface Props {
   className?: string;
 }
 
-const UpdateButton = (props: Props) => {
+export const UpdateButton = (props: Props) => {
   const { className } = props;
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const viewerRef = useRef<DialogRef>(null);
+
   const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
     errorRetryCount: 2,
     revalidateIfStale: false,
@@ -22,21 +24,17 @@ const UpdateButton = (props: Props) => {
 
   return (
     <>
+      <UpdateViewer ref={viewerRef} />
+
       <Button
         color="error"
         variant="contained"
         size="small"
         className={className}
-        onClick={() => setDialogOpen(true)}
+        onClick={() => viewerRef.current?.open()}
       >
         New
       </Button>
-
-      {dialogOpen && (
-        <UpdateDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
-      )}
     </>
   );
 };
-
-export default UpdateButton;

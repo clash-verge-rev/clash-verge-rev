@@ -6,7 +6,7 @@ import {
   HorizontalRuleRounded,
 } from "@mui/icons-material";
 
-const LayoutControl = () => {
+export const LayoutControl = () => {
   const minWidth = 40;
 
   return (
@@ -37,5 +37,3 @@ const LayoutControl = () => {
     </>
   );
 };
-
-export default LayoutControl;

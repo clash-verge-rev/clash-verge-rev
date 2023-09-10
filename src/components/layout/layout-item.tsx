@@ -2,7 +2,7 @@ import { alpha, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
 import type { LinkProps } from "react-router-dom";
 
-const LayoutItem = (props: LinkProps) => {
+export const LayoutItem = (props: LinkProps) => {
   const { to, children } = props;
 
   const resolved = useResolvedPath(to);
@@ -40,5 +40,3 @@ const LayoutItem = (props: LinkProps) => {
     </ListItem>
   );
 };
-
-export default LayoutItem;
