@@ -108,6 +108,7 @@
   "Download Speed": "Download Speed",
   "Upload Speed": "Upload Speed",
 
+  "open_dashboard": "Open Dashboard",
   "clash_mode_rule": "Rule Mode",
   "clash_mode_global": "Global Mode",
   "clash_mode_direct": "Direct Mode",

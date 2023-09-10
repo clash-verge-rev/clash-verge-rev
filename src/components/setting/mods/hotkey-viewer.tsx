@@ -14,6 +14,7 @@ const ItemWrapper = styled("div")`
 `;
 
 const HOTKEY_FUNC = [
+  "open_dashboard",
   "clash_mode_rule",
   "clash_mode_global",
   "clash_mode_direct",
