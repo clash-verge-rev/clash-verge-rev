@@ -7,9 +7,19 @@
 use crate::config::*;
 use crate::core::*;
 use crate::log_err;
+use crate::utils::resolve;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
 use wry::application::clipboard::Clipboard;
+
+// 打开面板
+pub fn open_dashboard() {
+    let handle = handle::Handle::global();
+    let app_handle = handle.app_handle.lock();
+    if let Some(app_handle) = app_handle.as_ref() {
+        resolve::create_window(app_handle);
+    }
+}
 
 // 重启clash
 pub fn restart_clash_core() {
