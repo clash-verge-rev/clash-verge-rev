@@ -118,5 +118,12 @@
   "disable_system_proxy": "Disable System Proxy",
   "toggle_tun_mode": "Toggle Tun Mode",
   "enable_tun_mode": "Enable Tun Mode",
-  "disable_tun_mode": "Disable Tun Mode"
+  "disable_tun_mode": "Disable Tun Mode",
+
+  "App Log Level": "App Log Level",
+  "Auto Close Connections": "Auto Close Connections",
+  "Enable Clash Fields Filter": "Enable Clash Fields Filter",
+  "Enable Builtin Enhanced": "Enable Builtin Enhanced",
+  "Proxy Layout Column": "Proxy Layout Column",
+  "Default Latency Test": "Default Latency Test"
 }

@@ -71,7 +71,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="App Log Level" />
+          <ListItemText primary={t("App Log Level")} />
           <Select
             size="small"
             sx={{ width: 100, "> div": { py: "7.5px" } }}
@@ -92,7 +92,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Auto Close Connections" />
+          <ListItemText primary={t("Auto Close Connections")} />
           <Switch
             edge="end"
             checked={values.autoCloseConnection}
@@ -103,7 +103,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Clash Fields Filter" />
+          <ListItemText primary={t("Enable Clash Fields Filter")} />
           <Switch
             edge="end"
             checked={values.enableClashFields}
@@ -114,7 +114,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Enable Builtin Enhanced" />
+          <ListItemText primary={t("Enable Builtin Enhanced")} />
           <Switch
             edge="end"
             checked={values.enableBuiltinEnhanced}
@@ -125,7 +125,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Proxy Layout Column" />
+          <ListItemText primary={t("Proxy Layout Column")} />
           <Select
             size="small"
             sx={{ width: 100, "> div": { py: "7.5px" } }}
@@ -149,7 +149,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Default Latency Test" />
+          <ListItemText primary={t("Default Latency Test")} />
           <TextField
             size="small"
             autoComplete="off"
