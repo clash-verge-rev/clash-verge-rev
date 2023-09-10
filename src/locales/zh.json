@@ -118,5 +118,12 @@
   "disable_system_proxy": "关闭系统代理",
   "toggle_tun_mode": "切换Tun模式",
   "enable_tun_mode": "开启Tun模式",
-  "disable_tun_mode": "关闭Tun模式"
+  "disable_tun_mode": "关闭Tun模式",
+
+  "App Log Level": "App日志等级",
+  "Auto Close Connections": "自动关闭连接",
+  "Enable Clash Fields Filter": "开启Clash字段过滤",
+  "Enable Builtin Enhanced": "开启内建增强功能",
+  "Proxy Layout Column": "代理页布局列数",
+  "Default Latency Test": "默认测试链接"
 }
