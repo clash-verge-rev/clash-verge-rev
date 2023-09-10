@@ -14,7 +14,7 @@ import { useWebsocket } from "@/hooks/use-websocket";
 import parseTraffic from "@/utils/parse-traffic";
 
 // setup the traffic
-const LayoutTraffic = () => {
+export const LayoutTraffic = () => {
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
 
@@ -134,5 +134,3 @@ const LayoutTraffic = () => {
     </Box>
   );
 };
-
-export default LayoutTraffic;
