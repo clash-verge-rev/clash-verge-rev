@@ -63,11 +63,12 @@ const ProfilePage = () => {
     const type1 = ["local", "remote"];
     const type2 = ["merge", "script"];
 
-    const regularItems = items.filter((i) => type1.includes(i.type!));
-    const restItems = items.filter((i) => type2.includes(i.type!));
+    const regularItems = items.filter((i) => i && type1.includes(i.type!));
+    const restItems = items.filter((i) => i && type2.includes(i.type!));
     const restMap = Object.fromEntries(restItems.map((i) => [i.uid, i]));
     const enhanceItems = chain
       .map((i) => restMap[i]!)
+      .filter(Boolean)
       .concat(restItems.filter((i) => !chain.includes(i.uid)));
 
     return { regularItems, enhanceItems };
