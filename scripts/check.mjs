@@ -25,7 +25,7 @@ const CLASH_MAP = {
   "darwin-x64": "clash-darwin-amd64",
   "darwin-arm64": "clash-darwin-arm64",
   "linux-x64": "clash-linux-amd64",
-  "linux-arm64": "clash-linux-armv8",
+  "linux-arm64": "clash-linux-arm64",
 };
 
 /* ======= clash meta ======= */
