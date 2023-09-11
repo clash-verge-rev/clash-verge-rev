@@ -23,11 +23,11 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 - High-performance overseas VPN, free trial, discounted packages, unlock streaming media, the world's first to support Hysteria protocol.
 - 高性能海外机场，免费试用，优惠套餐，解锁流媒体，全球首家支持 Hysteria 协议。
+- 使用 Clash Verge 专属邀请链接注册送 15 天，每天 1G 流量免费试用：https://panel.dg1.top/#/register?code=sFCDayZf
 
 <details>
 <summary>Promotion Detail</summary>
 
-- 使用 Clash Verge 专属邀请链接注册送 15 天，每天 1G 流量免费试用：https://panel.dg1.top/#/register?code=sFCDayZf
 - Clash Verge 专属 8 折优惠码: verge20 (仅有 500 份)
 - 优惠套餐每月仅需 15.8 元，160G 流量，年付 8 折
 - 海外团队，无跑路风险，高达 50% 返佣
@@ -42,11 +42,11 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 Download from [release](https://github.com/zzzgydi/clash-verge/releases). Supports Windows x64, Linux x86_64 and macOS 11+
 
-- [Windows x64](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/Clash.Verge_1.3.6_x64_en-US.msi)
-- [macOS intel](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/Clash.Verge_1.3.6_x64.dmg)
-- [macOS arm](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/Clash.Verge_1.3.6_aarch64.dmg)
-- [Linux AppImage](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/clash-verge_1.3.6_amd64.AppImage)
-- [Linux deb](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.6/clash-verge_1.3.6_amd64.deb)
+- [Windows x64](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/Clash.Verge_1.3.7_x64_en-US.msi)
+- [macOS intel](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/Clash.Verge_1.3.7_x64.dmg)
+- [macOS arm](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/Clash.Verge_1.3.7_aarch64.dmg)
+- [Linux AppImage](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/clash-verge_1.3.7_amd64.AppImage)
+- [Linux deb](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/clash-verge_1.3.7_amd64.deb)
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
