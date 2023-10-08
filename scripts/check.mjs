@@ -30,7 +30,7 @@ const CLASH_MAP = {
 
 /* ======= clash meta ======= */
 const META_URL_PREFIX = `https://github.com/MetaCubeX/Clash.Meta/releases/download/`;
-const META_VERSION = "v1.15.1";
+const META_VERSION = "v1.16.0";
 
 const META_MAP = {
   "win32-x64": "clash.meta-windows-amd64-compatible",
