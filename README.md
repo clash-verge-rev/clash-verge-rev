@@ -40,7 +40,7 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 <br />
 
-[EEVPN —— 海外运营机场※支持 ChatGPT](https://www.eejsq.net/#/register?code=yRr6qBO3)
+[EEVPN —— 海外运营机场 ※ 支持 ChatGPT](https://www.eejsq.net/#/register?code=yRr6qBO3)
 
 - 年付低至 9.99 元，价格低，速度不减
 
