@@ -143,7 +143,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
       <BaseDialog
         open={open}
         title={openType === "new" ? t("Create Profile") : t("Edit Profile")}
-        contentSx={{ width: 375, pb: 0, maxHeight: 320 }}
+        contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
         okBtn={t("Save")}
         cancelBtn={t("Cancel")}
         onClose={handleClose}
