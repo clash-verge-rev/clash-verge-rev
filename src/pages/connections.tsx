@@ -3,16 +3,24 @@ import { useLockFn } from "ahooks";
 import {
   Box,
   Button,
+  Grid,
   IconButton,
   MenuItem,
   Paper,
   Select,
   TextField,
+  Typography,
 } from "@mui/material";
 import { useRecoilState } from "recoil";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
-import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
+import {
+  ArrowDownward,
+  ArrowUpward,
+  Link,
+  TableChartRounded,
+  TableRowsRounded,
+} from "@mui/icons-material";
 import { closeAllConnections } from "@/services/api";
 import { atomConnectionSetting } from "@/services/states";
 import { useClashInfo } from "@/hooks/use-clash";
@@ -24,6 +32,7 @@ import {
   ConnectionDetail,
   ConnectionDetailRef,
 } from "@/components/connection/connection-detail";
+import parseTraffic from "@/utils/parse-traffic";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -47,6 +56,10 @@ const ConnectionsPage = () => {
     "Download Speed": (list) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   };
+
+  const uploadTotal = connData.uploadTotal;
+
+  const downloadTotal = connData.downloadTotal;
 
   const filterConn = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
@@ -112,6 +125,24 @@ const ConnectionsPage = () => {
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
 
+  const connectionItems = [
+    {
+      icon: <ArrowUpward />,
+      label: t("Upload Total"),
+      value: parseTraffic(uploadTotal).join(" "),
+    },
+    {
+      icon: <ArrowDownward />,
+      label: t("Download Total"),
+      value: parseTraffic(downloadTotal).join(" "),
+    },
+    {
+      icon: <Link />,
+      label: t("Active Connections"),
+      value: filterConn.length,
+    },
+  ];
+
   return (
     <BasePage
       title={t("Connections")}
@@ -142,7 +173,21 @@ const ConnectionsPage = () => {
         </Box>
       }
     >
-      <Paper sx={{ boxShadow: 2, height: "100%" }}>
+      <Paper sx={{ padding: 2, mb: 2 }}>
+        <Grid container>
+          {connectionItems.map((item, index) => (
+            <Grid item xs={4} key={index}>
+              <Box display="flex" alignItems="center" whiteSpace="nowrap">
+                {item.icon}
+                <Typography sx={{ ml: 1, mr: 1 }}>{item.label}</Typography>
+                <Typography>{item.value}</Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Paper>
+
+      <Paper sx={{ boxShadow: 2, height: "calc(100% - 56px - 16px)" }}>
         <Box
           sx={{
             pt: 1,

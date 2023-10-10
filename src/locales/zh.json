@@ -7,6 +7,9 @@
   "Label-Settings": "设 置",
 
   "Connections": "连接",
+  "Upload Total": "上传总量",
+  "Download Total": "下载总量",
+  "Active Connections": "活动连接",
   "Logs": "日志",
   "Clear": "清除",
   "Proxies": "代理",
