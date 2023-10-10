@@ -38,6 +38,24 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 </details>
 
+---
+
+[EEVPN —— 海外运营机场※支持 ChatGPT](https://www.eejsq.net/#/register?code=yRr6qBO3)
+
+- 年付低至 9.99 元，价格低，速度不减
+
+<details>
+<summary>Promotion Detail</summary>
+
+- 中国大陆 BGP 网络接入
+- IEPL 专线网络
+- 最高 2500Mbps 速率可用
+- 不限制在线客户端
+- 解锁流媒体及 ChatGPT
+- 海外运营 数据安全
+
+</details>
+
 ## Install
 
 Download from [release](https://github.com/zzzgydi/clash-verge/releases). Supports Windows x64, Linux x86_64 and macOS 11+
