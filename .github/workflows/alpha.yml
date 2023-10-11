@@ -53,6 +53,7 @@ jobs:
             *.dmg
             *.msi
             *.sig
+            *.exe
 
       - name: Install Dependencies (ubuntu only)
         if: startsWith(matrix.os, 'ubuntu-')
