@@ -53,11 +53,11 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://ghproxy.com/https://github.com/zzzgydi/clash-verge/releases/download/updater/update-proxy.json",
-        "https://github.com/zzzgydi/clash-verge/releases/download/updater/update.json"
+        "https://ghproxy.com/https://github.com/keiko233/clash-verge/releases/download/updater/update-proxy.json",
+        "https://github.com/keiko233/clash-verge/releases/download/updater/update.json"
       ],
       "dialog": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDExNUFBNTBBN0FDNEFBRTUKUldUbHFzUjZDcVZhRVRJM25NS3NkSFlFVElxUkNZMzZ6bHUwRVJjb2F3alJXVzRaeDdSaTA2YWYK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlBMUM0NjMxREZCNDRGMjYKUldRbVQ3VGZNVVljbW43N0FlWjA4UkNrbTgxSWxSSXJQcExXNkZjUTlTQkIyYkJzL0tsSWF2d0cK"
     },
     "allowlist": {
       "shell": {
