@@ -12,20 +12,20 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 ## Features
 
 - Full `clash` config supported, Partial `clash premium` config supported.
-- Profiles management and enhancement (by yaml and Javascript). [Doc](https://github.com/zzzgydi/clash-verge/wiki/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97)
+- Profiles management and enhancement (by yaml and Javascript). [Doc](https://github.com/keiko233/clash-nyanpasu/wiki/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97)
 - Simple UI and supports custom theme color.
 - Built-in support [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) core.
 - System proxy setting and guard.
 
 ## Install
 
-Download from [release](https://github.com/zzzgydi/clash-verge/releases). Supports Windows x64, Linux x86_64 and macOS 11+
+Download from [release](https://github.com/keiko233/clash-nyanpasu/releases). Supports Windows x64, Linux x86_64 and macOS 11+
 
-- [Windows x64](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/Clash.Verge_1.3.7_x64_en-US.msi)
-- [macOS intel](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/Clash.Verge_1.3.7_x64.dmg)
-- [macOS arm](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/Clash.Verge_1.3.7_aarch64.dmg)
-- [Linux AppImage](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/clash-verge_1.3.7_amd64.AppImage)
-- [Linux deb](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/clash-verge_1.3.7_amd64.deb)
+- [Windows x64](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/Clash.Verge_1.3.7_x64_en-US.msi)
+- [macOS intel](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/Clash.Verge_1.3.7_x64.dmg)
+- [macOS arm](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/Clash.Verge_1.3.7_aarch64.dmg)
+- [Linux AppImage](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/clash-verge_1.3.7_amd64.AppImage)
+- [Linux deb](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/clash-verge_1.3.7_amd64.deb)
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
