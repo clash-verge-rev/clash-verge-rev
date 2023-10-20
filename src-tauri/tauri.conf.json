@@ -1,6 +1,6 @@
 {
   "package": {
-    "productName": "Clash Verge",
+    "productName": "Clash Nyanpasu",
     "version": "1.3.7"
   },
   "build": {
@@ -17,7 +17,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "top.gydi.clashverge",
+      "identifier": "moe.elaina.clash.nyanpasu",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
