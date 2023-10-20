@@ -84,10 +84,12 @@ export const useCustomTheme = () => {
     }
 
     // css
+    const backgroundColor = mode === "light" ? "#ffffff" : "#121212";
     const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
     const scrollColor = mode === "light" ? "#90939980" : "#54545480";
 
     const rootEle = document.documentElement;
+    rootEle.style.setProperty("--background-color", backgroundColor);
     rootEle.style.setProperty("--selection-color", selectColor);
     rootEle.style.setProperty("--scroller-color", scrollColor);
     rootEle.style.setProperty("--primary-main", theme.palette.primary.main);
