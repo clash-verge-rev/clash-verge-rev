@@ -50,7 +50,7 @@
     "@types/lodash": "^4.14.180",
     "@types/lodash-es": "^4.17.7",
     "@types/react-dom": "^18.0.11",
-    "@vitejs/plugin-react": "^2.0.1",
+    "@vitejs/plugin-react": "^4.1.0",
     "adm-zip": "^0.5.9",
     "cross-env": "^7.0.3",
     "fs-extra": "^10.0.0",
@@ -61,9 +61,9 @@
     "pretty-quick": "^3.1.3",
     "sass": "^1.54.0",
     "typescript": "^4.7.4",
-    "vite": "^3.2.5",
+    "vite": "^4.5.0",
     "vite-plugin-monaco-editor": "^1.1.0",
-    "vite-plugin-svgr": "^2.2.1"
+    "vite-plugin-svgr": "^4.1.0"
   },
   "prettier": {
     "tabWidth": 2,
