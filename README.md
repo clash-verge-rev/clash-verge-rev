@@ -1,7 +1,7 @@
 <h1 align="center">
   <img src="./src/assets/image/logo.png" alt="Clash" width="128" />
   <br>
-  Clash Verge
+  Clash Nyanpasu
   <br>
 </h1>
 
@@ -21,21 +21,15 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 
 Download from [release](https://github.com/keiko233/clash-nyanpasu/releases). Supports Windows x64, Linux x86_64 and macOS 11+
 
-- [Windows x64](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/Clash.Verge_1.3.7_x64_en-US.msi)
-- [macOS intel](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/Clash.Verge_1.3.7_x64.dmg)
-- [macOS arm](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/Clash.Verge_1.3.7_aarch64.dmg)
-- [Linux AppImage](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/clash-verge_1.3.7_amd64.AppImage)
-- [Linux deb](https://github.com/keiko233/clash-nyanpasu/releases/download/v1.3.7/clash-verge_1.3.7_amd64.deb)
-
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
 Notes: If you could not start the app on Windows, please check that you have [Webview2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section) installed.
 
 ### FAQ
 
-#### 1. **macOS** "Clash Verge" is damaged and can't be opened
+#### 1. **macOS** "Clash Nyanpasu" is damaged and can't be opened
 
-open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Verge.app`
+open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Nyanpasu.app`
 
 ## Development
 
@@ -73,28 +67,6 @@ yarn build
 
 > This keng is a little big...
 
-## Screenshots
-
-<div align="center">
-  <img src="./docs/demo1.png" alt="demo1" width="32%" />
-  <img src="./docs/demo2.png" alt="demo2" width="32%" />
-  <img src="./docs/demo3.png" alt="demo3" width="32%" />
-  <img src="./docs/demo4.png" alt="demo4" width="32%" />
-  <img src="./docs/demo5.png" alt="demo5" width="32%" />
-  <img src="./docs/demo6.png" alt="demo6" width="32%" />
-</div>
-
-### Custom Theme
-
-<div align="center">
-  <img src="./docs/color1.png" alt="demo1" width="16%" />
-  <img src="./docs/color2.png" alt="demo2" width="16%" />
-  <img src="./docs/color3.png" alt="demo3" width="16%" />
-  <img src="./docs/color4.png" alt="demo4" width="16%" />
-  <img src="./docs/color5.png" alt="demo5" width="16%" />
-  <img src="./docs/color6.png" alt="demo6" width="16%" />
-</div>
-
 ## Disclaimer
 
 This is a learning project for Rust practice.
@@ -105,8 +77,9 @@ Issue and PR welcome!
 
 ## Acknowledgement
 
-Clash Verge was based on or inspired by these projects and so on:
+Clash Nyanpasu was based on or inspired by these projects and so on:
 
+- [zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): A Clash GUI based on tauri. Supports Windows, macOS and Linux.
 - [tauri-apps/tauri](https://github.com/tauri-apps/tauri): Build smaller, faster, and more secure desktop applications with a web frontend.
 - [Dreamacro/clash](https://github.com/Dreamacro/clash): A rule-based tunnel in Go.
 - [MetaCubeX/Clash.Meta](https://github.com/MetaCubeX/Clash.Meta): A rule-based tunnel in Go.
