@@ -11,7 +11,7 @@ import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
-import { ReactComponent as LogoSvg } from "@/assets/image/logo.svg";
+import LogoSvg from "@/assets/image/logo.svg?react";
 import { BaseErrorBoundary, Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
