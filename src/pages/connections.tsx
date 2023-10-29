@@ -69,7 +69,7 @@ const ConnectionsPage = () => {
 
         const connections: typeof oldConn = [];
 
-        const rest = data.connections?.filter((each) => {
+        const rest = (data.connections || []).filter((each) => {
           const index = oldConn.findIndex((o) => o.id === each.id);
 
           if (index >= 0 && index < maxLen) {
