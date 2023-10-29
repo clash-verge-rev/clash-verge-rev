@@ -145,20 +145,14 @@ export const ProxyItem = (props: Props) => {
                 e.stopPropagation();
                 onDelay();
               }}
-              color={
-                delay > 500
-                  ? "error.main"
-                  : delay < 100
-                  ? "success.main"
-                  : "text.secondary"
-              }
+              color={delayManager.formatDelayColor(delay)}
               sx={({ palette }) =>
                 !proxy.provider
                   ? { ":hover": { bgcolor: alpha(palette.primary.main, 0.15) } }
                   : {}
               }
             >
-              {delay > 1e5 ? "Error" : delay > 3000 ? "Timeout" : `${delay}ms`}
+              {delayManager.formatDelay(delay)}
             </Widget>
           )}
 
