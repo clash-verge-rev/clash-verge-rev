@@ -1,3 +1,17 @@
+## v1.3.8
+
+### Features
+
+- update clash meta core
+- add default valid keys
+- adjust the delay display interval and color
+
+### Bug Fixes
+
+- fix connections page undefined exception
+
+---
+
 ## v1.3.7
 
 ### Features
