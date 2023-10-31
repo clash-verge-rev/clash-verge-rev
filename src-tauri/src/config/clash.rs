@@ -24,11 +24,23 @@ impl IClashTemp {
     pub fn template() -> Self {
         let mut map = Mapping::new();
 
-        map.insert("mixed-port".into(), 7890.into());
+        map.insert(
+            "mixed-port".into(),
+            match cfg!(feature = "default-meta") {
+                false => 7890.into(),
+                true => 7898.into(),
+            },
+        );
         map.insert("log-level".into(), "info".into());
         map.insert("allow-lan".into(), false.into());
         map.insert("mode".into(), "rule".into());
-        map.insert("external-controller".into(), "127.0.0.1:9090".into());
+        map.insert(
+            "external-controller".into(),
+            match cfg!(feature = "default-meta") {
+                false => "127.0.0.1:9090".into(),
+                true => "127.0.0.1:9098".into(),
+            },
+        );
         map.insert("secret".into(), "".into());
 
         Self(map)
