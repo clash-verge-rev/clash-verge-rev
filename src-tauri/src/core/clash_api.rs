@@ -47,7 +47,11 @@ pub struct DelayRes {
 pub async fn get_proxy_delay(name: String, test_url: Option<String>) -> Result<DelayRes> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/proxies/{name}/delay");
-    let test_url = test_url.unwrap_or("http://www.gstatic.com/generate_204".into());
+
+    let default_url = "http://www.gstatic.com/generate_204";
+    let test_url = test_url
+        .map(|s| if s.is_empty() { default_url.into() } else { s })
+        .unwrap_or(default_url.into());
 
     let client = reqwest::ClientBuilder::new().no_proxy().build()?;
     let builder = client
