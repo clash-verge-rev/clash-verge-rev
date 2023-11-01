@@ -229,6 +229,17 @@ pub fn open_web_url(url: String) -> CmdResult<()> {
     wrap_err!(open::that(url))
 }
 
+#[tauri::command]
+pub async fn clash_api_get_proxy_delay(
+    name: String,
+    url: Option<String>,
+) -> CmdResult<clash_api::DelayRes> {
+    match clash_api::get_proxy_delay(name, url).await {
+        Ok(res) => Ok(res),
+        Err(err) => Err(format!("{}", err.to_string())),
+    }
+}
+
 #[cfg(windows)]
 pub mod service {
     use super::*;

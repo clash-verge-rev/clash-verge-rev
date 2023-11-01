@@ -153,6 +153,11 @@ export async function openWebUrl(url: string) {
   return invoke<void>("open_web_url", { url });
 }
 
+export async function cmdGetProxyDelay(name: string, url?: string) {
+  name = encodeURIComponent(name);
+  return invoke<{ delay: number }>("clash_api_get_proxy_delay", { name, url });
+}
+
 /// service mode
 
 export async function checkService() {
