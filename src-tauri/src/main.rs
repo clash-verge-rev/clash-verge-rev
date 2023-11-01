@@ -66,6 +66,8 @@ fn main() -> std::io::Result<()> {
             cmds::service::check_service,
             cmds::service::install_service,
             cmds::service::uninstall_service,
+            // clash api
+            cmds::clash_api_get_proxy_delay
         ]);
 
     #[cfg(target_os = "macos")]

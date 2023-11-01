@@ -1,4 +1,4 @@
-import { getProxyDelay } from "./api";
+import { cmdGetProxyDelay } from "./cmds";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
@@ -74,7 +74,7 @@ class DelayManager {
 
     try {
       const url = this.getUrl(group);
-      const result = await getProxyDelay(name, url);
+      const result = await cmdGetProxyDelay(name, url);
       delay = result.delay;
     } catch {
       delay = 1e6; // error
@@ -84,7 +84,7 @@ class DelayManager {
     return delay;
   }
 
-  async checkListDelay(nameList: string[], group: string, concurrency = 6) {
+  async checkListDelay(nameList: string[], group: string, concurrency = 36) {
     const names = nameList.filter(Boolean);
     // 设置正在延迟测试中
     names.forEach((name) => this.setDelay(name, group, -2));
