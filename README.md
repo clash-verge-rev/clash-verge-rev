@@ -65,6 +65,7 @@ Download from [release](https://github.com/zzzgydi/clash-verge/releases). Suppor
 - [macOS arm](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/Clash.Verge_1.3.7_aarch64.dmg)
 - [Linux AppImage](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/clash-verge_1.3.7_amd64.AppImage)
 - [Linux deb](https://github.com/zzzgydi/clash-verge/releases/download/v1.3.7/clash-verge_1.3.7_amd64.deb)
+- [Fedora Linux](https://github.com/zzzgydi/clash-verge/issues/352)
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
