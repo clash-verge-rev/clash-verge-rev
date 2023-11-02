@@ -19,7 +19,7 @@ jobs:
     if: startsWith(github.repository, 'zzzgydi')
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -30,7 +30,7 @@ jobs:
           workspaces: src-tauri
 
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "16"
           cache: "yarn"
@@ -81,10 +81,10 @@ jobs:
       startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "16"
           cache: "yarn"
