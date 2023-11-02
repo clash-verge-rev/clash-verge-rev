@@ -83,6 +83,10 @@ pub struct IVerge {
     /// proxy 页面布局 列数
     pub proxy_layout_column: Option<i32>,
 
+    /// 日志清理
+    /// 0: 不清理; 1: 7天; 2: 30天; 3: 90天
+    pub auto_log_clean: Option<i32>,
+
     /// window size and position
     #[serde(skip_serializing_if = "Option::is_none")]
     pub window_size_position: Option<Vec<f64>>,
@@ -137,6 +141,7 @@ impl IVerge {
             auto_close_connection: Some(true),
             enable_builtin_enhanced: Some(true),
             enable_clash_fields: Some(true),
+            auto_log_clean: Some(3),
             ..Self::default()
         }
     }
@@ -183,7 +188,7 @@ impl IVerge {
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(enable_clash_fields);
-
+        patch!(auto_log_clean);
         patch!(window_size_position);
     }
 

@@ -186,6 +186,7 @@ interface IVergeConfig {
   default_latency_test?: string;
   enable_clash_fields?: boolean;
   enable_builtin_enhanced?: boolean;
+  auto_log_clean?: 0 | 1 | 2 | 3;
   proxy_layout_column?: number;
 }
 

@@ -125,5 +125,11 @@
   "Enable Clash Fields Filter": "Enable Clash Fields Filter",
   "Enable Builtin Enhanced": "Enable Builtin Enhanced",
   "Proxy Layout Column": "Proxy Layout Column",
-  "Default Latency Test": "Default Latency Test"
+  "Default Latency Test": "Default Latency Test",
+
+  "Auto Log Clean": "Auto Log Clean",
+  "Never Clean": "Never Clean",
+  "Retain 7 Days": "Retain 7 Days",
+  "Retain 30 Days": "Retain 30 Days",
+  "Retain 90 Days": "Retain 90 Days"
 }
