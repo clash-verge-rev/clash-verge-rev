@@ -25,6 +25,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     enableBuiltinEnhanced: true,
     proxyLayoutColumn: 6,
     defaultLatencyTest: "",
+    autoLogClean: 0,
   });
 
   useImperativeHandle(ref, () => ({
@@ -37,6 +38,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
         proxyLayoutColumn: verge?.proxy_layout_column || 6,
         defaultLatencyTest: verge?.default_latency_test || "",
+        autoLogClean: verge?.auto_log_clean || 0,
       });
     },
     close: () => setOpen(false),
@@ -51,6 +53,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
         default_latency_test: values.defaultLatencyTest,
+        auto_log_clean: values.autoLogClean as any,
       });
       setOpen(false);
     } catch (err: any) {
@@ -128,7 +131,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <ListItemText primary={t("Proxy Layout Column")} />
           <Select
             size="small"
-            sx={{ width: 100, "> div": { py: "7.5px" } }}
+            sx={{ width: 135, "> div": { py: "7.5px" } }}
             value={values.proxyLayoutColumn}
             onChange={(e) => {
               setValues((v) => ({
@@ -143,6 +146,32 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             {[1, 2, 3, 4, 5].map((i) => (
               <MenuItem value={i} key={i}>
                 {i}
+              </MenuItem>
+            ))}
+          </Select>
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Auto Log Clean")} />
+          <Select
+            size="small"
+            sx={{ width: 135, "> div": { py: "7.5px" } }}
+            value={values.autoLogClean}
+            onChange={(e) => {
+              setValues((v) => ({
+                ...v,
+                autoLogClean: e.target.value as number,
+              }));
+            }}
+          >
+            {[
+              { key: "Never Clean", value: 0 },
+              { key: "Retain 7 Days", value: 1 },
+              { key: "Retain 30 Days", value: 2 },
+              { key: "Retain 90 Days", value: 3 },
+            ].map((i) => (
+              <MenuItem key={i.value} value={i.value}>
+                {t(i.key)}
               </MenuItem>
             ))}
           </Select>

@@ -125,5 +125,11 @@
   "Enable Clash Fields Filter": "开启Clash字段过滤",
   "Enable Builtin Enhanced": "开启内建增强功能",
   "Proxy Layout Column": "代理页布局列数",
-  "Default Latency Test": "默认测试链接"
+  "Default Latency Test": "默认测试链接",
+
+  "Auto Log Clean": "自动清理日志",
+  "Never Clean": "不清理",
+  "Retain 7 Days": "保留7天",
+  "Retain 30 Days": "保留30天",
+  "Retain 90 Days": "保留90天"
 }
