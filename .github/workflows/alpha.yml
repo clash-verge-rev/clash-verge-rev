@@ -64,7 +64,7 @@ jobs:
       - name: Yarn install and check
         run: |
           yarn install --network-timeout 1000000 --frozen-lockfile
-          yarn run check
+          yarn run check --force
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
