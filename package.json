@@ -3,10 +3,10 @@
   "version": "1.3.7",
   "license": "GPL-3.0",
   "scripts": {
-    "dev": "tauri dev",
+    "dev": "tauri dev -f default-meta",
     "dev:diff": "tauri dev -f verge-dev",
-    "build": "tauri build",
-    "tauri": "tauri",
+    "build": "tauri build -f default-meta",
+    "tauri": "tauri -f default-meta",
     "web:dev": "vite",
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
