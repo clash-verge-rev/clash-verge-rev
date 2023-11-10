@@ -6,7 +6,7 @@
     "dev": "tauri dev -f default-meta",
     "dev:diff": "tauri dev -f verge-dev",
     "build": "tauri build -f default-meta",
-    "tauri": "tauri -f default-meta",
+    "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
