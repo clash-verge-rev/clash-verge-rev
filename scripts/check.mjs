@@ -20,6 +20,13 @@ const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
 const CLASH_LATEST_DATE = "2023.08.17";
 
+const CLASH_BACKUP_URL_PREFIX =
+  "https://github.com/zhongfly/Clash-premium-backup/releases/download/";
+const CLASH_BACKUP_LATEST_DATE = "2023-09-05-gdcc8d87";
+
+//https://github.com/zhongfly/Clash-premium-backup/releases/download/2023-09-05-gdcc8d87/clash-windows-amd64-2023-09-05-gdcc8d87.zip
+//https://github.com/zhongfly/Clash-premium-backup/releases/download/2023-09-05-gdcc8d87/clash-windows-amd64-n2023-09-05-gdcc8d87.zip
+
 const CLASH_MAP = {
   "win32-x64": "clash-windows-amd64",
   "darwin-x64": "clash-darwin-amd64",
@@ -58,6 +65,24 @@ function clash() {
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
   const downloadURL = `${CLASH_URL_PREFIX}${name}-${CLASH_LATEST_DATE}.${urlExt}`;
+  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const zipFile = `${name}.${urlExt}`;
+
+  return {
+    name: "clash",
+    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    exeFile,
+    zipFile,
+    downloadURL,
+  };
+}
+
+function clashBackup() {
+  const name = CLASH_MAP[`${platform}-${arch}`];
+
+  const isWin = platform === "win32";
+  const urlExt = isWin ? "zip" : "gz";
+  const downloadURL = `${CLASH_BACKUP_URL_PREFIX}${CLASH_BACKUP_LATEST_DATE}/${name}-n${CLASH_BACKUP_LATEST_DATE}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
   const zipFile = `${name}.${urlExt}`;
 
@@ -300,7 +325,7 @@ const resolveGeoIP = () =>
   });
 
 const tasks = [
-  { name: "clash", func: resolveClash, retry: 5 },
+  { name: "clash", func: () => resolveSidecar(clashBackup()), retry: 5 },
   { name: "clash-meta", func: () => resolveSidecar(clashMeta()), retry: 5 },
   { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
   { name: "service", func: resolveService, retry: 5, winOnly: true },
