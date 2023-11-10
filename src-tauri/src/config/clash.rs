@@ -30,6 +30,10 @@ impl IClashTemp {
         map.insert("mode".into(), "rule".into());
         map.insert("external-controller".into(), "127.0.0.1:9090".into());
         map.insert("secret".into(), "".into());
+        #[cfg(feature = "default-meta")]
+        map.insert("unified-delay".into(), true.into());
+        #[cfg(feature = "default-meta")]
+        map.insert("tcp-concurrent".into(), true.into());
 
         Self(map)
     }
