@@ -1,0 +1,92 @@
+name: Dev Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+
+env:
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+    if: startsWith(github.repository, 'keiko233')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install Dependencies (Ubuntu Only)
+        if: startsWith(matrix.os, 'ubuntu-')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf openssl
+
+      - name: Yarn install and check
+        run: |
+          yarn install --network-timeout 1000000 --frozen-lockfile
+          yarn run check
+
+      - name: Tauri build
+        uses: tauri-apps/tauri-action@v0
+        # enable cache even though failed
+        # continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          tagName: dev
+          releaseName: "Clash Nyanpasu Dev"
+          releaseBody: "More new features are now supported."
+          releaseDraft: false
+          prerelease: false
+          args: -f default-meta
+
+      - name: Upload artifact (Windows nsis)
+        if: startsWith(matrix.os, 'windows-')
+        uses: actions/upload-artifact@v3
+        with:
+          name: nyanpasu-dev-nsis-${{ github.sha }}
+          path: src-tauri/target/release/bundle/**/*.exe
+
+      - name: Upload artifact (macOS DMG)
+        if: startsWith(matrix.os, 'macos-')
+        uses: actions/upload-artifact@v3
+        with:
+          name: nyanpasu-dev-dmg-${{ github.sha }}
+          path: src-tauri/target/release/bundle/**/*.dmg
+
+      - name: Upload artifact (Ubuntu AppImage)
+        if: startsWith(matrix.os, 'ubuntu-')
+        uses: actions/upload-artifact@v3
+        with:
+          name: nyanpasu-dev-appimage-${{ github.sha }}
+          path: src-tauri/target/release/bundle/**/*.AppImage
+
+      - name: Upload artifact (Ubuntu deb)
+        if: startsWith(matrix.os, 'ubuntu-')
+        uses: actions/upload-artifact@v3
+        with:
+          name: nyanpasu-dev-deb-${{ github.sha }}
+          path: src-tauri/target/release/bundle/**/*.deb
