@@ -18,6 +18,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
     overflow: hidden;
+    background-color: var(--background-color-alpha);
 
     $maxLogo: 100px;
 
@@ -71,6 +72,7 @@
     position: relative;
     flex: 1 1 75%;
     height: 100%;
+    background-color: var(--background-color-alpha);
 
     .the-bar {
       position: absolute;
@@ -87,8 +89,8 @@
       position: absolute;
       top: 0;
       left: 0;
-      right: 2px;
-      bottom: 10px;
+      right: 28px;
+      bottom: 28px;
     }
   }
 }
