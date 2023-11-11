@@ -36,6 +36,23 @@ jobs:
           node-version: "20"
           cache: "yarn"
 
+      - name: Delete current release assets
+        if: startsWith(matrix.os, 'ubuntu-')
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: alpha
+          fail-if-no-assets: false
+          fail-if-no-release: false
+          assets: |
+            *.zip
+            *.gz
+            *.AppImage
+            *.deb
+            *.dmg
+            *.msi
+            *.sig
+
       - name: Install Dependencies (Ubuntu Only)
         if: startsWith(matrix.os, 'ubuntu-')
         run: |
