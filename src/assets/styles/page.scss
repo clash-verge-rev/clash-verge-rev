@@ -36,6 +36,19 @@
         width: 90%;
         // max-width: 850px;
         margin: 0 auto;
+        animation: baseContentIn 0.3s normal 1 forwards;
+
+        @keyframes baseContentIn {
+          0% {
+            opacity: 0;
+            transform: translateY(50%) scale(0.9);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
       }
     }
   }
