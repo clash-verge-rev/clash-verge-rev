@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useRecoilState } from "recoil";
-import { createTheme, Theme } from "@mui/material";
+import { alpha, createTheme, Theme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
 import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
@@ -93,6 +93,10 @@ export const useCustomTheme = () => {
     rootEle.style.setProperty("--selection-color", selectColor);
     rootEle.style.setProperty("--scroller-color", scrollColor);
     rootEle.style.setProperty("--primary-main", theme.palette.primary.main);
+    rootEle.style.setProperty(
+      "--background-color-alpha",
+      alpha(theme.palette.primary.main, 0.1)
+    );
 
     // inject css
     let style = document.querySelector("style#verge-theme");

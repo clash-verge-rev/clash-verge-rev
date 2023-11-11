@@ -6,7 +6,7 @@
 
   > header {
     flex: 0 0 58px;
-    width: 90%;
+    width: 100%;
     // max-width: 850px;
     margin: 0 auto;
     padding-right: 4px;
@@ -16,20 +16,27 @@
     justify-content: space-between;
   }
 
-  > section {
-    position: relative;
-    flex: 1 1 100%;
-    width: 100%;
+  .base-container {
     height: 100%;
-    overflow: auto;
-    padding: 8px 0;
-    box-sizing: border-box;
-    scrollbar-gutter: stable;
+    overflow: hidden;
+    border-radius: var(--border-radius);
 
-    .base-content {
-      width: 90%;
-      // max-width: 850px;
-      margin: 0 auto;
+    > section {
+      position: relative;
+      flex: 1 1 100%;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      padding: 28px 0;
+      box-sizing: border-box;
+      scrollbar-gutter: stable;
+      background-color: var(--background-color);
+
+      .base-content {
+        width: 90%;
+        // max-width: 850px;
+        margin: 0 auto;
+      }
     }
   }
 }
