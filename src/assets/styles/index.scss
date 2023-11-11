@@ -34,6 +34,10 @@ body {
   background-color: var(--scroller-color);
 }
 
+body {
+  overflow: hidden;
+}
+
 @import "./layout.scss";
 @import "./page.scss";
 
