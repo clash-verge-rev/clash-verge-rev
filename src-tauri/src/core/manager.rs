@@ -13,7 +13,7 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
 
     #[cfg(target_os = "macos")]
     let output = {
-        // the path of clash /Applications/Clash Verge.app/Contents/MacOS/clash
+        // the path of clash /Applications/Clash Nyanpasu.app/Contents/MacOS/clash
         // https://apple.stackexchange.com/questions/82967/problem-with-empty-spaces-when-executing-shell-commands-in-applescript
         // let path = escape(&path);
         let path = path.replace(' ', "\\\\ ");

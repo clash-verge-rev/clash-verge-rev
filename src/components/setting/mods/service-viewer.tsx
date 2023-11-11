@@ -90,7 +90,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
 
       {(state === "unknown" || state === "uninstall") && (
         <Typography>
-          Information: Please make sure that the Clash Verge Service is
+          Information: Please make sure that the Clash Nyanpasu Service is
           installed and enabled
         </Typography>
       )}

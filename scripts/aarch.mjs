@@ -45,8 +45,8 @@ async function resolve() {
   const join = (p) => path.join(bundlePath, p);
 
   const appPathList = [
-    join("macos/Clash Verge.aarch64.app.tar.gz"),
-    join("macos/Clash Verge.aarch64.app.tar.gz.sig"),
+    join("macos/Clash Nyanpasu.aarch64.app.tar.gz"),
+    join("macos/Clash Nyanpasu.aarch64.app.tar.gz.sig"),
   ];
 
   for (const appPath of appPathList) {
@@ -55,8 +55,8 @@ async function resolve() {
     }
   }
 
-  fs.copyFileSync(join("macos/Clash Verge.app.tar.gz"), appPathList[0]);
-  fs.copyFileSync(join("macos/Clash Verge.app.tar.gz.sig"), appPathList[1]);
+  fs.copyFileSync(join("macos/Clash Nyanpasu.app.tar.gz"), appPathList[0]);
+  fs.copyFileSync(join("macos/Clash Nyanpasu.app.tar.gz.sig"), appPathList[1]);
 
   const options = { owner: context.repo.owner, repo: context.repo.repo };
   const github = getOctokit(process.env.GITHUB_TOKEN);
@@ -69,7 +69,7 @@ async function resolve() {
   if (!release.id) throw new Error("failed to find the release");
 
   await uploadAssets(release.id, [
-    join(`dmg/Clash Verge_${version}_aarch64.dmg`),
+    join(`dmg/Clash Nyanpasu_${version}_aarch64.dmg`),
     ...appPathList,
   ]);
 }

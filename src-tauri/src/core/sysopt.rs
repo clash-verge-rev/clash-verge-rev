@@ -158,7 +158,7 @@ impl Sysopt {
         #[cfg(target_os = "windows")]
         let app_path = format!("\"{app_path}\"");
 
-        // use the /Applications/Clash Verge.app path
+        // use the /Applications/Clash Nyanpasu.app path
         #[cfg(target_os = "macos")]
         let app_path = (|| -> Option<String> {
             let path = std::path::PathBuf::from(&app_path);
