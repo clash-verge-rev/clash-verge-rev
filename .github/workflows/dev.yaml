@@ -49,8 +49,6 @@ jobs:
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
-        # enable cache even though failed
-        # continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -60,33 +58,17 @@ jobs:
           releaseName: "Clash Nyanpasu Dev"
           releaseBody: "More new features are now supported."
           releaseDraft: false
-          prerelease: false
+          prerelease: true
           args: -f default-meta
 
-      - name: Upload artifact (Windows nsis)
-        if: startsWith(matrix.os, 'windows-')
-        uses: actions/upload-artifact@v3
-        with:
-          name: nyanpasu-dev-nsis-${{ github.sha }}
-          path: src-tauri/target/release/bundle/**/*.exe
-
-      - name: Upload artifact (macOS DMG)
-        if: startsWith(matrix.os, 'macos-')
-        uses: actions/upload-artifact@v3
-        with:
-          name: nyanpasu-dev-dmg-${{ github.sha }}
-          path: src-tauri/target/release/bundle/**/*.dmg
-
-      - name: Upload artifact (Ubuntu AppImage)
-        if: startsWith(matrix.os, 'ubuntu-')
-        uses: actions/upload-artifact@v3
-        with:
-          name: nyanpasu-dev-appimage-${{ github.sha }}
-          path: src-tauri/target/release/bundle/**/*.AppImage
-
-      - name: Upload artifact (Ubuntu deb)
-        if: startsWith(matrix.os, 'ubuntu-')
-        uses: actions/upload-artifact@v3
-        with:
-          name: nyanpasu-dev-deb-${{ github.sha }}
-          path: src-tauri/target/release/bundle/**/*.deb
+      - name: Portable Bundle
+        if: matrix.os == 'windows-latest'
+        run: |
+          yarn build -f default-meta
+          yarn run portable
+        env:
+          TAG_NAME: dev
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          VITE_WIN_PORTABLE: 1
