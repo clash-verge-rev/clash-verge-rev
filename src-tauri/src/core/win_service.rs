@@ -30,7 +30,7 @@ pub struct JsonResponse {
     pub data: Option<ResponseBody>,
 }
 
-/// Install the Clash Verge Service
+/// Install the Clash Nyanpasu Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 pub async fn install_service() -> Result<()> {
     let binary_path = dirs::service_path()?;
@@ -60,7 +60,7 @@ pub async fn install_service() -> Result<()> {
     Ok(())
 }
 
-/// Uninstall the Clash Verge Service
+/// Uninstall the Clash Nyanpasu Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 pub async fn uninstall_service() -> Result<()> {
     let binary_path = dirs::service_path()?;
@@ -99,10 +99,10 @@ pub async fn check_service() -> Result<JsonResponse> {
         .get(url)
         .send()
         .await
-        .context("failed to connect to the Clash Verge Service")?
+        .context("failed to connect to the Clash Nyanpasu Service")?
         .json::<JsonResponse>()
         .await
-        .context("failed to parse the Clash Verge Service response")?;
+        .context("failed to parse the Clash Nyanpasu Service response")?;
 
     Ok(response)
 }
@@ -148,7 +148,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
         .await?
         .json::<JsonResponse>()
         .await
-        .context("failed to connect to the Clash Verge Service")?;
+        .context("failed to connect to the Clash Nyanpasu Service")?;
 
     if res.code != 0 {
         bail!(res.msg);
@@ -168,7 +168,7 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
         .await?
         .json::<JsonResponse>()
         .await
-        .context("failed to connect to the Clash Verge Service")?;
+        .context("failed to connect to the Clash Nyanpasu Service")?;
 
     if res.code != 0 {
         bail!(res.msg);

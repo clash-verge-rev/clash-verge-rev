@@ -100,7 +100,7 @@ export const ClashFieldViewer = forwardRef<DialogRef>((props, ref) => {
 
       <Divider sx={{ my: 1 }}>
         <Typography color="text.secondary" fontSize={14}>
-          Clash Verge Control Fields
+          Clash Nyanpasu Control Fields
         </Typography>
       </Divider>
 
