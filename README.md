@@ -36,31 +36,31 @@ open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/C
 You should install Rust and Nodejs, see [here](https://tauri.app/v1/guides/getting-started/prerequisites) for more details. Then install Nodejs packages.
 
 ```shell
-yarn install
+pnpm i
 ```
 
 Then download the clash binary... Or you can download it from [clash premium release](https://github.com/Dreamacro/clash/releases/tag/premium) and rename it according to [tauri config](https://tauri.studio/docs/api/config/#tauri.bundle.externalBin).
 
 ```shell
 # force update to latest version
-# yarn run check --force
+# pnpm run check --force
 
-yarn run check
+pnpm run check
 ```
 
 Then run
 
 ```shell
-yarn dev
+pnpm dev
 
 # run it in another way if app instance exists
-yarn dev:diff
+pnpm dev:diff
 ```
 
 Or you can build it
 
 ```shell
-yarn build
+pnpm build
 ```
 
 ## Todos
