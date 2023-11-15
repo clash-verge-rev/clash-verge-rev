@@ -1,3 +1,26 @@
+## v1.4.0
+
+### Features
+
+- Default use Meta Core.
+- Support copy PowerShell, CMD and sh env command.
+- Add Upload Traffic, Download Traffic and Active Connections to ConnectionsPage.
+- SettingPage use Grid layout.
+- Import LoadingButton & use when Download Profile.
+- New default theme color.
+- Add Nyanpasu Element. (Logo designer [@ReallySnow](https://github.com/ReallySnow))
+- Default enable unified-delay & tcp-concurrent.
+- Use Meta Country.mmdb.
+- Disable IPv6 by default.
+- Add Material You element.
+- Add Router switch transition.
+
+### Bug Fixes
+
+- Fix touchpad scrolling causes blank area to appear.
+
+---
+
 ## v1.3.7
 
 ### Features
