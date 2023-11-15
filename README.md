@@ -17,6 +17,10 @@ A <a href="https://github.com/Dreamacro/clash">Clash</a> GUI based on <a href="h
 - Built-in support [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) core.
 - System proxy setting and guard.
 
+## Preview
+
+![preview](./docs/preview.gif)
+
 ## Install
 
 Download from [release](https://github.com/keiko233/clash-nyanpasu/releases). Supports Windows x64, Linux x86_64 and macOS 11+
