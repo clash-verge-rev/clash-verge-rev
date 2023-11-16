@@ -46,7 +46,6 @@ async function resolveUpdater() {
       "darwin-x86_64": { signature: "", url: "" },
       "linux-x86_64": { signature: "", url: "" },
       "windows-x86_64": { signature: "", url: "" },
-      "windows-i686": { signature: "", url: "" }, // no supported
     },
   };
 
