@@ -4,14 +4,15 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { alpha, List, Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
-import { ReactComponent as LogoSvg } from "@/assets/image/logo.svg";
+import LogoSvg from "@/assets/image/logo.svg?react";
 import { BaseErrorBoundary, Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
@@ -33,6 +34,8 @@ const Layout = () => {
 
   const { verge } = useVerge();
   const { theme_blur, language } = verge || {};
+
+  const location = useLocation();
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
@@ -136,21 +139,27 @@ const Layout = () => {
               </div>
             )}
 
-            <div className="the-content">
-              <Routes>
-                {routers.map(({ label, link, ele: Ele }) => (
-                  <Route
-                    key={label}
-                    path={link}
-                    element={
-                      <BaseErrorBoundary key={label}>
-                        <Ele />
-                      </BaseErrorBoundary>
-                    }
-                  />
-                ))}
-              </Routes>
-            </div>
+            <TransitionGroup className="the-content">
+              <CSSTransition
+                key={location.pathname}
+                timeout={300}
+                classNames="page"
+              >
+                <Routes>
+                  {routers.map(({ label, link, ele: Ele }) => (
+                    <Route
+                      key={label}
+                      path={link}
+                      element={
+                        <BaseErrorBoundary key={label}>
+                          <Ele />
+                        </BaseErrorBoundary>
+                      }
+                    />
+                  ))}
+                </Routes>
+              </CSSTransition>
+            </TransitionGroup>
           </div>
         </Paper>
       </ThemeProvider>

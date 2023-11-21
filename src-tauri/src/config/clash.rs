@@ -42,6 +42,11 @@ impl IClashTemp {
             },
         );
         map.insert("secret".into(), "".into());
+        #[cfg(feature = "default-meta")]
+        map.insert("unified-delay".into(), true.into());
+        #[cfg(feature = "default-meta")]
+        map.insert("tcp-concurrent".into(), true.into());
+        map.insert("ipv6".into(), false.into());
 
         Self(map)
     }

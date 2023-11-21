@@ -15,7 +15,7 @@ export const LayoutItem = (props: LinkProps) => {
         selected={!!match}
         sx={[
           {
-            borderRadius: 2,
+            borderRadius: 8,
             textAlign: "center",
             "& .MuiListItemText-primary": { color: "text.secondary" },
           },

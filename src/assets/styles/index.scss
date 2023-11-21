@@ -16,6 +16,9 @@ body {
   --text-primary: #637381;
   --selection-color: #f5f5f5;
   --scroller-color: #90939980;
+  --background-color: #ffffff;
+  --background-color-alpha: rgba(24, 103, 192, 0.1);
+  --border-radius: 12px;
 }
 
 ::selection {
@@ -33,8 +36,13 @@ body {
   background-color: var(--scroller-color);
 }
 
+body {
+  overflow: hidden;
+}
+
 @import "./layout.scss";
 @import "./page.scss";
+@import "./anime.scss";
 
 @media (prefers-color-scheme: dark) {
   :root {

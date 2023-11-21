@@ -176,9 +176,9 @@ pub async fn restart_sidecar() -> CmdResult {
 }
 
 #[tauri::command]
-pub fn grant_permission(core: String) -> CmdResult {
+pub fn grant_permission(_core: String) -> CmdResult {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
-    return wrap_err!(manager::grant_permission(core));
+    return wrap_err!(manager::grant_permission(_core));
 
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
     return Err("Unsupported target".into());

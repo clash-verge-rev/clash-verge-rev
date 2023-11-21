@@ -1,9 +1,9 @@
 // default theme setting
 export const defaultTheme = {
-  primary_color: "#5b5c9d",
-  secondary_color: "#9c27b0",
-  primary_text: "#637381",
-  secondary_text: "#909399",
+  primary_color: "#1867c0",
+  secondary_color: "#3a88bb",
+  primary_text: "#1d1d1f",
+  secondary_text: "#424245",
   info_color: "#0288d1",
   error_color: "#d32f2f",
   warning_color: "#ed6c02",
@@ -14,6 +14,6 @@ export const defaultTheme = {
 // dark mode
 export const defaultDarkTheme = {
   ...defaultTheme,
-  primary_text: "#757575",
-  secondary_text: "#637381",
+  primary_text: "#E8E8ED",
+  secondary_text: "#bbbbbb",
 };

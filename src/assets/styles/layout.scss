@@ -10,7 +10,8 @@
     height: 100%;
     max-width: 225px;
     min-width: 125px;
-    padding: 16px 0 8px;
+    padding: 36px 0 28px;
+    position: relative;
     flex-direction: column;
     box-sizing: border-box;
     user-select: none;
@@ -18,6 +19,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
     overflow: hidden;
+    background-color: var(--background-color-alpha);
 
     $maxLogo: 100px;
 
@@ -37,6 +39,11 @@
         width: 100%;
         height: 100%;
         pointer-events: none;
+        fill: var(--primary-main);
+
+        #bg {
+          fill: var(--background-color);
+        }
       }
 
       .the-newbtn {
@@ -66,6 +73,7 @@
     position: relative;
     flex: 1 1 75%;
     height: 100%;
+    background-color: var(--background-color-alpha);
 
     .the-bar {
       position: absolute;
@@ -82,8 +90,8 @@
       position: absolute;
       top: 0;
       left: 0;
-      right: 2px;
-      bottom: 10px;
+      right: 28px;
+      bottom: 28px;
     }
   }
 }

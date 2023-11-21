@@ -332,10 +332,21 @@ async fn update_core_config() -> Result<()> {
 }
 
 /// copy env variable
-pub fn copy_clash_env() {
+pub fn copy_clash_env(option: &str) {
     let port = { Config::clash().data().get_client_info().port };
-    let text = format!("export https_proxy=http://127.0.0.1:{port} http_proxy=http://127.0.0.1:{port} all_proxy=socks5://127.0.0.1:{port}");
+    let http_proxy = format!("http://127.0.0.1:{}", port);
+    let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
+    
+    let sh = format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
+    let cmd: String = format!("set http_proxy={http_proxy} \n set https_proxy={http_proxy}");
+    let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
 
     let mut cliboard = Clipboard::new();
-    cliboard.write_text(text);
+
+    match option {
+        "sh" => cliboard.write_text(sh),
+        "cmd" => cliboard.write_text(cmd),
+        "ps" => cliboard.write_text(ps),
+        _ => log::error!(target: "app", "copy_clash_env: Invalid option! {option}"),
+    }
 }

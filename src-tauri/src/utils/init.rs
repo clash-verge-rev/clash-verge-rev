@@ -161,7 +161,7 @@ pub fn init_config() -> Result<()> {
 
     crate::log_err!(dirs::clash_path().map(|path| {
         if !path.exists() {
-            help::save_yaml(&path, &IClashTemp::template().0, Some("# Clash Verge"))?;
+            help::save_yaml(&path, &IClashTemp::template().0, Some("# Clash Vergeasu"))?;
         }
         <Result<()>>::Ok(())
     }));
