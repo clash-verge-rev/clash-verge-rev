@@ -17,7 +17,9 @@ A 接盘 Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">t
 - Built-in support [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) core.
 - System proxy setting and guard.
 
-## Preview
+#### TG Group: [@clash_verge_rev](https://t.me/clash_verge_rev)
+
+## Promotion
 
 [狗狗加速 —— 技术流机场 Doggygo VPN](https://狗狗加速.com)
 
@@ -31,15 +33,19 @@ A 接盘 Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">t
 - 解锁流媒体及 ChatGPT
 - 官网：https://狗狗加速.com
 
+## Preview
+
+![preview](./docs/preview.gif)
+
 ## Install
 
 Download from [release](https://github.com/wonfen/clash-verge-rev/releases). Supports Windows x64, Linux x86_64 and macOS 11+
 
-- [Windows x64](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.3.9_x64_en-US.msi)
-- [macOS intel](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.3.9_x64.dmg)
-- [macOS arm](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.3.9_aarch64.dmg)
-- [Linux AppImage](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/clash-verge_1.3.9_amd64.AppImage)
-- [Linux deb](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/clash-verge_1.3.9_amd64.deb)
+- [Windows x64](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.4.0_x64_zh-CN.msi)
+- [macOS intel](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.4.0_x64.dmg)
+- [macOS arm](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.4.0_aarch64.dmg)
+- [Linux AppImage](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/clash-verge_1.4.0_amd64.AppImage)
+- [Linux deb](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/clash-verge_1.4.0_amd64.deb)
 - [Fedora Linux](https://github.com/wonfen/clash-verge-rev/issues/352)
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
@@ -98,7 +104,7 @@ Issue and PR welcome!
 
 ## Acknowledgement
 
-Clash Verge was based on or inspired by these projects and so on:
+Clash Verge rev was based on or inspired by these projects and so on:
 
 - [keiko233/clash-nyanpasu](https://github.com/keiko233/clash-nyanpasu): A Clash Verge.
 - [zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): A Clash GUI based on tauri. Supports Windows, macOS and Linux.
