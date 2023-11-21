@@ -28,7 +28,7 @@ env:
 jobs:
   release:
     runs-on: ${{ github.event.inputs.os }}
-    if: startsWith(github.repository, 'zzzgydi')
+    if: startsWith(github.repository, 'wonfen')
     steps:
       - name: System Version
         run: |

@@ -14,7 +14,7 @@ const SIDECAR_HOST = execSync("rustc -vV")
   .toString()
   .match(/(?<=host: ).+(?=\s*)/g)[0];
 
-/* ======= clash ======= */
+/* ======= clash ======= 
 const CLASH_STORAGE_PREFIX = "https://release.dreamacro.workers.dev/";
 const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
@@ -27,31 +27,33 @@ const CLASH_MAP = {
   "linux-x64": "clash-linux-amd64",
   "linux-arm64": "clash-linux-arm64",
 };
-
+*/
 /* ======= clash meta ======= */
-const META_URL_PREFIX = `https://github.com/MetaCubeX/Clash.Meta/releases/download/`;
-const META_VERSION = "v1.16.0";
+const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/`;
+const META_VERSION = "2023.11.22";
 
 const META_MAP = {
-  "win32-x64": "clash.meta-windows-amd64-compatible",
+  "win32-x64": "clash.meta-windows-amd64",
   "darwin-x64": "clash.meta-darwin-amd64",
   "darwin-arm64": "clash.meta-darwin-arm64",
-  "linux-x64": "clash.meta-linux-amd64-compatible",
+  "linux-x64": "clash.meta-linux-amd64",
   "linux-arm64": "clash.meta-linux-arm64",
 };
 
-/**
+/*
  * check available
  */
 
 const { platform, arch } = process;
+/*
 if (!CLASH_MAP[`${platform}-${arch}`]) {
   throw new Error(`clash unsupported platform "${platform}-${arch}"`);
 }
+*/
 if (!META_MAP[`${platform}-${arch}`]) {
   throw new Error(`clash meta unsupported platform "${platform}-${arch}"`);
 }
-
+/*
 function clash() {
   const name = CLASH_MAP[`${platform}-${arch}`];
 
@@ -87,7 +89,7 @@ function clashS3() {
     downloadURL,
   };
 }
-
+*/
 function clashMeta() {
   const name = META_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
@@ -182,7 +184,7 @@ async function resolveClash() {
 /**
  * only Windows
  * get the wintun.dll (not required)
- */
+
 async function resolveWintun() {
   const { platform } = process;
 
@@ -217,7 +219,7 @@ async function resolveWintun() {
 
   console.log(`[INFO]: resolve wintun.dll finished`);
 }
-
+*/
 /**
  * download the file to the resources dir
  */
@@ -286,7 +288,7 @@ const resolveUninstall = () =>
 const resolveMmdb = () =>
   resolveResource({
     file: "Country.mmdb",
-    downloadURL: `https://github.com/Dreamacro/maxmind-geoip/releases/download/20230812/Country.mmdb`,
+    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb`,
   });
 const resolveGeosite = () =>
   resolveResource({
@@ -300,9 +302,9 @@ const resolveGeoIP = () =>
   });
 
 const tasks = [
-  { name: "clash", func: () => resolveSidecar(clashS3()), retry: 5 },
+  // { name: "clash", func: resolveClash, retry: 5 },
   { name: "clash-meta", func: () => resolveSidecar(clashMeta()), retry: 5 },
-  { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
+  // { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
   { name: "service", func: resolveService, retry: 5, winOnly: true },
   { name: "install", func: resolveInstall, retry: 5, winOnly: true },
   { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },

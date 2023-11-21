@@ -45,7 +45,7 @@ impl Config {
         Self::global().runtime_config.clone()
     }
 
-    /// 初始化配置
+    /// 初始化订阅
     pub fn init_config() -> Result<()> {
         crate::log_err!(Self::generate());
         if let Err(err) = Self::generate_file(ConfigType::Run) {
@@ -64,7 +64,7 @@ impl Config {
         Ok(())
     }
 
-    /// 将配置丢到对应的文件中
+    /// 将订阅丢到对应的文件中
     pub fn generate_file(typ: ConfigType) -> Result<PathBuf> {
         let path = match typ {
             ConfigType::Run => dirs::app_home_dir()?.join(RUNTIME_CONFIG),
@@ -82,7 +82,7 @@ impl Config {
         Ok(path)
     }
 
-    /// 生成配置存好
+    /// 生成订阅存好
     pub fn generate() -> Result<()> {
         let (config, exists_keys, logs) = enhance::enhance();
 

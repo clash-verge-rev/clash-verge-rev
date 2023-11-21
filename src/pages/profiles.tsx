@@ -168,7 +168,7 @@ const ProfilePage = () => {
     mutateLogs();
   });
 
-  // 更新所有配置
+  // 更新所有订阅
   const setLoadingCache = useSetRecoilState(atomLoadingCache);
   const onUpdateAll = useLockFn(async () => {
     const throttleMutate = throttle(mutateProfiles, 2000, {
@@ -185,7 +185,7 @@ const ProfilePage = () => {
 
     return new Promise((resolve) => {
       setLoadingCache((cache) => {
-        // 获取没有正在更新的配置
+        // 获取没有正在更新的订阅
         const items = regularItems.filter(
           (e) => e.type === "remote" && !cache[e.uid]
         );

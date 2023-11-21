@@ -48,7 +48,7 @@ pub async fn get_proxy_delay(name: String, test_url: Option<String>) -> Result<D
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/proxies/{name}/delay");
 
-    let default_url = "http://www.gstatic.com/generate_204";
+    let default_url = "http://1.1.1.1";
     let test_url = test_url
         .map(|s| if s.is_empty() { default_url.into() } else { s })
         .unwrap_or(default_url.into());

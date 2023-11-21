@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "license": "GPL-3.0",
   "scripts": {
     "dev": "tauri dev",

@@ -197,7 +197,7 @@ pub fn init_resources(package_info: &PackageInfo) -> Result<()> {
     }
 
     #[cfg(target_os = "windows")]
-    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat", "wintun.dll"];
+    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
     #[cfg(not(target_os = "windows"))]
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
 

@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "Clash Verge",
-    "version": "1.3.8"
+    "version": "1.3.9"
   },
   "build": {
     "distDir": "../dist",
@@ -26,7 +26,7 @@
         "icons/icon.ico"
       ],
       "resources": ["resources"],
-      "externalBin": ["sidecar/clash", "sidecar/clash-meta"],
+      "externalBin": ["sidecar/clash-meta"],
       "copyright": "© 2022 zzzgydi All Rights Reserved",
       "category": "DeveloperTool",
       "shortDescription": "A Clash GUI based on tauri.",
@@ -53,11 +53,11 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://ghproxy.com/https://github.com/zzzgydi/clash-verge/releases/download/updater/update-proxy.json",
-        "https://github.com/zzzgydi/clash-verge/releases/download/updater/update.json"
+        "https://mirror.ghproxy.com/https://github.com/wonfen/clash-verge-rev/releases/download/updater/update-proxy.json",
+        "https://github.com/wonfen/clash-verge-rev/releases/download/updater/update.json"
       ],
       "dialog": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDExNUFBNTBBN0FDNEFBRTUKUldUbHFzUjZDcVZhRVRJM25NS3NkSFlFVElxUkNZMzZ6bHUwRVJjb2F3alJXVzRaeDdSaTA2YWYK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK"
     },
     "allowlist": {
       "shell": {

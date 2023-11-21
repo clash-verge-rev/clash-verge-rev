@@ -112,8 +112,8 @@ export const ProfileItem = (props: Props) => {
   });
 
   /// 0 不使用任何代理
-  /// 1 使用配置好的代理
-  /// 2 至少使用一个代理，根据配置，如果没配置，默认使用系统代理
+  /// 1 使用订阅好的代理
+  /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
   const onUpdate = useLockFn(async (type: 0 | 1 | 2) => {
     setAnchorEl(null);
     setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }));
