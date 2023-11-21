@@ -261,7 +261,7 @@ impl IProfiles {
         Ok(current == uid)
     }
 
-    /// 获取current指向的配置内容
+    /// 获取current指向的订阅内容
     pub fn current_mapping(&self) -> Result<Mapping> {
         match (self.current.as_ref(), self.items.as_ref()) {
             (Some(current), Some(items)) => {

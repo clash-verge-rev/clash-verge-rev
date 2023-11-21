@@ -8,7 +8,7 @@ export const defaultTheme = {
   error_color: "#d32f2f",
   warning_color: "#ed6c02",
   success_color: "#2e7d32",
-  font_family: `"Roboto", "Helvetica", "Arial", sans-serif`,
+  font_family: `"Roboto", "Helvetica", "Arial", sans-serif, "twemoji mozilla"`,
 };
 
 // dark mode

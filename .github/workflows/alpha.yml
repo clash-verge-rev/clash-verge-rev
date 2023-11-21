@@ -18,7 +18,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-20.04, macos-latest]
     runs-on: ${{ matrix.os }}
-    if: startsWith(github.repository, 'zzzgydi')
+    if: startsWith(github.repository, 'wonfen')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

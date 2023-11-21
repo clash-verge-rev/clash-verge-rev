@@ -18,9 +18,9 @@ use std::collections::HashSet;
 type ResultLog = Vec<(String, String)>;
 
 /// Enhance mode
-/// 返回最终配置、该配置包含的键、和script执行的结果
+/// 返回最终订阅、该订阅包含的键、和script执行的结果
 pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
-    // config.yaml 的配置
+    // config.yaml 的订阅
     let clash_config = { Config::clash().latest().0.clone() };
 
     let (clash_core, enable_tun, enable_builtin, enable_filter) = {

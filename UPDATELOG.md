@@ -1,3 +1,13 @@
+## v1.3.9
+
+### Features
+
+- update clash meta core to newest 虚空终端
+- delete clash core, no longer maintain
+- small changes here and there
+
+---
+
 ## v1.3.8
 
 ### Features

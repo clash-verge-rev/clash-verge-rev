@@ -51,7 +51,7 @@ impl CoreManager {
         Ok(())
     }
 
-    /// 检查配置是否正确
+    /// 检查订阅是否正确
     pub fn check_config(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Check)?;
         let config_path = dirs::path_to_str(&config_path)?;
@@ -267,7 +267,7 @@ impl CoreManager {
 
         Config::verge().draft().clash_core = Some(clash_core);
 
-        // 更新配置
+        // 更新订阅
         Config::generate()?;
 
         self.check_config()?;
@@ -295,13 +295,13 @@ impl CoreManager {
     pub async fn update_config(&self) -> Result<()> {
         log::debug!(target: "app", "try to update clash config");
 
-        // 更新配置
+        // 更新订阅
         Config::generate()?;
 
-        // 检查配置是否正常
+        // 检查订阅是否正常
         self.check_config()?;
 
-        // 更新运行时配置
+        // 更新运行时订阅
         let path = Config::generate_file(ConfigType::Run)?;
         let path = dirs::path_to_str(&path)?;
 

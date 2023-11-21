@@ -1,6 +1,6 @@
 {
   "Label-Proxies": "代 理",
-  "Label-Profiles": "配 置",
+  "Label-Profiles": "订 阅",
   "Label-Connections": "连 接",
   "Label-Logs": "日 志",
   "Label-Rules": "规 则",
@@ -16,11 +16,11 @@
   "direct": "直连",
   "script": "脚本",
 
-  "Profiles": "配置",
-  "Profile URL": "配置文件链接",
+  "Profiles": "订阅",
+  "Profile URL": "订阅文件链接",
   "Import": "导入",
   "New": "新建",
-  "Create Profile": "新建配置",
+  "Create Profile": "新建订阅",
   "Choose File": "选择文件",
   "Close All": "关闭全部",
   "Select": "使用",
@@ -35,9 +35,9 @@
   "Refresh": "刷新",
   "To Top": "移到最前",
   "To End": "移到末尾",
-  "Update All Profiles": "更新所有配置",
-  "View Runtime Config": "查看运行时配置",
-  "Reactivate Profiles": "重新激活配置",
+  "Update All Profiles": "更新所有订阅",
+  "View Runtime Config": "查看运行时订阅",
+  "Reactivate Profiles": "重新激活订阅",
 
   "Location": "当前节点",
   "Delay check": "延迟测试",
@@ -48,7 +48,7 @@
   "Proxy detail": "展示节点细节",
   "Filter": "过滤节点",
   "Filter conditions": "过滤条件",
-  "Refresh profiles": "刷新配置",
+  "Refresh profiles": "刷新订阅",
 
   "Type": "类型",
   "Name": "名称",
@@ -96,7 +96,7 @@
   "theme.dark": "深色",
   "theme.system": "系统",
   "Clash Field": "Clash 字段",
-  "Runtime Config": "运行配置",
+  "Runtime Config": "运行订阅",
   "ReadOnly": "只读",
   "Restart": "重启内核",
 

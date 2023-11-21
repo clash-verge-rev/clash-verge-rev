@@ -47,7 +47,7 @@ pub fn change_clash_mode(mode: String) {
 
         match clash_api::patch_configs(&mapping).await {
             Ok(_) => {
-                // 更新配置
+                // 更新订阅
                 Config::clash().data().patch_config(mapping);
 
                 if Config::clash().data().save_config().is_ok() {
@@ -156,7 +156,7 @@ pub fn disable_tun_mode() {
     });
 }
 
-/// 修改clash的配置
+/// 修改clash的订阅
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
     Config::clash().draft().patch_config(patch.clone());
 
@@ -175,7 +175,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             }
         };
 
-        // 激活配置
+        // 激活订阅
         if mixed_port.is_some()
             || patch.get("secret").is_some()
             || patch.get("external-controller").is_some()
@@ -210,7 +210,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     }
 }
 
-/// 修改verge的配置
+/// 修改verge的订阅
 /// 一般都是一个个的修改
 pub async fn patch_verge(patch: IVerge) -> Result<()> {
     Config::verge().draft().patch_config(patch.clone());
@@ -278,7 +278,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
 }
 
 /// 更新某个profile
-/// 如果更新当前配置就激活配置
+/// 如果更新当前订阅就激活订阅
 pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()> {
     let url_opt = {
         let profiles = Config::profiles();
@@ -316,7 +316,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
     Ok(())
 }
 
-/// 更新配置
+/// 更新订阅
 async fn update_core_config() -> Result<()> {
     match CoreManager::global().update_config().await {
         Ok(_) => {

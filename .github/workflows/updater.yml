@@ -5,7 +5,7 @@ on: workflow_dispatch
 jobs:
   release-update:
     runs-on: ubuntu-latest
-    if: startsWith(github.repository, 'zzzgydi')
+    if: startsWith(github.repository, 'wonfen')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
