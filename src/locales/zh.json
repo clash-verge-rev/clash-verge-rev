@@ -7,6 +7,9 @@
   "Label-Settings": "设 置",
 
   "Connections": "连接",
+  "Upload Total": "上传总量",
+  "Download Total": "下载总量",
+  "Active Connections": "活动连接",
   "Logs": "日志",
   "Clear": "清除",
   "Proxies": "代理",
@@ -91,7 +94,7 @@
   "Open Core Dir": "内核目录",
   "Open Logs Dir": "日志目录",
   "Check for Updates": "检查更新",
-  "Verge Version": "应用版本",
+  "Verge Version": "Verge 版本",
   "theme.light": "浅色",
   "theme.dark": "深色",
   "theme.system": "系统",

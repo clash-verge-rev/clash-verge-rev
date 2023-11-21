@@ -20,6 +20,13 @@ const CLASH_URL_PREFIX =
   "https://github.com/Dreamacro/clash/releases/download/premium/";
 const CLASH_LATEST_DATE = "latest";
 
+const CLASH_BACKUP_URL_PREFIX =
+  "https://github.com/zhongfly/Clash-premium-backup/releases/download/";
+const CLASH_BACKUP_LATEST_DATE = "2023-09-05-gdcc8d87";
+
+//https://github.com/zhongfly/Clash-premium-backup/releases/download/2023-09-05-gdcc8d87/clash-windows-amd64-2023-09-05-gdcc8d87.zip
+//https://github.com/zhongfly/Clash-premium-backup/releases/download/2023-09-05-gdcc8d87/clash-windows-amd64-n2023-09-05-gdcc8d87.zip
+
 const CLASH_MAP = {
   "win32-x64": "clash-windows-amd64",
   "darwin-x64": "clash-darwin-amd64",
@@ -30,10 +37,10 @@ const CLASH_MAP = {
 */
 /* ======= clash meta ======= */
 const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/`;
-const META_VERSION = "2023.11.22";
+const META_VERSION = "2023.11.21";
 
 const META_MAP = {
-  "win32-x64": "clash.meta-windows-amd64",
+  "win32-x64": "clash.meta-win-amd64",
   "darwin-x64": "clash.meta-darwin-amd64",
   "darwin-arm64": "clash.meta-darwin-arm64",
   "linux-x64": "clash.meta-linux-amd64",
@@ -60,6 +67,24 @@ function clash() {
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
   const downloadURL = `${CLASH_URL_PREFIX}${name}-${CLASH_LATEST_DATE}.${urlExt}`;
+  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const zipFile = `${name}.${urlExt}`;
+
+  return {
+    name: "clash",
+    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    exeFile,
+    zipFile,
+    downloadURL,
+  };
+}
+
+function clashBackup() {
+  const name = CLASH_MAP[`${platform}-${arch}`];
+
+  const isWin = platform === "win32";
+  const urlExt = isWin ? "zip" : "gz";
+  const downloadURL = `${CLASH_BACKUP_URL_PREFIX}${CLASH_BACKUP_LATEST_DATE}/${name}-n${CLASH_BACKUP_LATEST_DATE}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
   const zipFile = `${name}.${urlExt}`;
 

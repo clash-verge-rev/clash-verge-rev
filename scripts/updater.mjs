@@ -41,12 +41,10 @@ async function resolveUpdater() {
       win64: { signature: "", url: "" }, // compatible with older formats
       linux: { signature: "", url: "" }, // compatible with older formats
       darwin: { signature: "", url: "" }, // compatible with older formats
-      "darwin-aarch64": { signature: "", url: "" },
       "darwin-intel": { signature: "", url: "" },
       "darwin-x86_64": { signature: "", url: "" },
       "linux-x86_64": { signature: "", url: "" },
       "windows-x86_64": { signature: "", url: "" },
-      "windows-i686": { signature: "", url: "" }, // no supported
     },
   };
 
@@ -77,16 +75,6 @@ async function resolveUpdater() {
       updateData.platforms.darwin.signature = sig;
       updateData.platforms["darwin-intel"].signature = sig;
       updateData.platforms["darwin-x86_64"].signature = sig;
-    }
-
-    // darwin url (aarch)
-    if (name.endsWith("aarch64.app.tar.gz")) {
-      updateData.platforms["darwin-aarch64"].url = browser_download_url;
-    }
-    // darwin signature (aarch)
-    if (name.endsWith("aarch64.app.tar.gz.sig")) {
-      const sig = await getSignature(browser_download_url);
-      updateData.platforms["darwin-aarch64"].signature = sig;
     }
 
     // linux url

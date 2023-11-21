@@ -1,9 +1,13 @@
-## v1.3.9
+## v1.4.0
 
 ### Features
 
 - update clash meta core to newest 虚空终端
 - delete clash core, no longer maintain
+- merge Clash nyanpasu changes
+- remove delay display different color
+- use Meta Country.mmdb
+- update dependencies
 - small changes here and there
 
 ---

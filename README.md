@@ -17,7 +17,7 @@ A 接盘 Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">t
 - Built-in support [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) core.
 - System proxy setting and guard.
 
-## Promotion
+## Preview
 
 [狗狗加速 —— 技术流机场 Doggygo VPN](https://狗狗加速.com)
 
@@ -50,65 +50,43 @@ Notes: If you could not start the app on Windows, please check that you have [We
 
 #### 1. **macOS** "Clash Verge" is damaged and can't be opened
 
-open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Verge.app`
+open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Nyanpasu.app`
 
 ## Development
 
 You should install Rust and Nodejs, see [here](https://tauri.app/v1/guides/getting-started/prerequisites) for more details. Then install Nodejs packages.
 
 ```shell
-yarn install
+pnpm i
 ```
 
 Then download the clash binary... Or you can download it from [clash meta release](https://github.com/MetaCubeX/Clash.Meta/releases) and rename it according to [tauri config](https://tauri.studio/docs/api/config/#tauri.bundle.externalBin).
 
 ```shell
 # force update to latest version
-# yarn run check --force
+# pnpm run check --force
 
-yarn run check
+pnpm run check
 ```
 
 Then run
 
 ```shell
-yarn dev
+pnpm dev
 
 # run it in another way if app instance exists
-yarn dev:diff
+pnpm dev:diff
 ```
 
 Or you can build it
 
 ```shell
-yarn build
+pnpm build
 ```
 
 ## Todos
 
 > This keng is a little big...
-
-## Screenshots
-
-<div align="center">
-  <img src="./docs/demo1.png" alt="demo1" width="32%" />
-  <img src="./docs/demo2.png" alt="demo2" width="32%" />
-  <img src="./docs/demo3.png" alt="demo3" width="32%" />
-  <img src="./docs/demo4.png" alt="demo4" width="32%" />
-  <img src="./docs/demo5.png" alt="demo5" width="32%" />
-  <img src="./docs/demo6.png" alt="demo6" width="32%" />
-</div>
-
-### Custom Theme
-
-<div align="center">
-  <img src="./docs/color1.png" alt="demo1" width="16%" />
-  <img src="./docs/color2.png" alt="demo2" width="16%" />
-  <img src="./docs/color3.png" alt="demo3" width="16%" />
-  <img src="./docs/color4.png" alt="demo4" width="16%" />
-  <img src="./docs/color5.png" alt="demo5" width="16%" />
-  <img src="./docs/color6.png" alt="demo6" width="16%" />
-</div>
 
 ## Disclaimer
 
@@ -122,6 +100,8 @@ Issue and PR welcome!
 
 Clash Verge was based on or inspired by these projects and so on:
 
+- [keiko233/clash-nyanpasu](https://github.com/keiko233/clash-nyanpasu): A Clash Verge.
+- [zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): A Clash GUI based on tauri. Supports Windows, macOS and Linux.
 - [tauri-apps/tauri](https://github.com/tauri-apps/tauri): Build smaller, faster, and more secure desktop applications with a web frontend.
 - [Dreamacro/clash](https://github.com/Dreamacro/clash): A rule-based tunnel in Go.
 - [MetaCubeX/Clash.Meta](https://github.com/MetaCubeX/Clash.Meta): A rule-based tunnel in Go.

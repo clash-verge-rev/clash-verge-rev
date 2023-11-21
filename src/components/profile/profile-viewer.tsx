@@ -40,6 +40,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const [openType, setOpenType] = useState<"new" | "edit">("new");
+    const [loading, setLoading] = useState(false);
 
     // file input
     const fileDataRef = useRef<string | null>(null);
@@ -87,6 +88,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
 
     const handleOk = useLockFn(
       formIns.handleSubmit(async (form) => {
+        setLoading(true);
         try {
           if (!form.type) throw new Error("`Type` should not be null");
           if (form.type === "remote" && !form.url) {
@@ -111,11 +113,13 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
             await patchProfile(form.uid, item);
           }
           setOpen(false);
+          setLoading(false);
           setTimeout(() => formIns.reset(), 500);
           fileDataRef.current = null;
           props.onChange();
         } catch (err: any) {
           Notice.error(err.message || err.toString());
+          setLoading(false);
         }
       })
     );
@@ -149,6 +153,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         onClose={handleClose}
         onCancel={handleClose}
         onOk={handleOk}
+        loading={loading}
       >
         <Controller
           name="type"

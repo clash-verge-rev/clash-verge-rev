@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useSetRecoilState } from "recoil";
 import { Box, Button, Grid, IconButton, Stack, TextField } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
 import {
   ClearRounded,
   ContentCopyRounded,
@@ -38,6 +39,7 @@ const ProfilePage = () => {
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
   const [activating, setActivating] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const {
     profiles = {},
@@ -76,12 +78,13 @@ const ProfilePage = () => {
 
   const onImport = async () => {
     if (!url) return;
-    setUrl("");
-    setDisabled(true);
+    setLoading(true);
 
     try {
       await importProfile(url);
       Notice.success("Successfully import profile.");
+      setUrl("");
+      setLoading(false);
 
       getProfiles().then((newProfiles) => {
         mutate("getProfiles", newProfiles);
@@ -96,8 +99,10 @@ const ProfilePage = () => {
       });
     } catch (err: any) {
       Notice.error(err.message || err.toString());
+      setLoading(false);
     } finally {
       setDisabled(false);
+      setLoading(false);
     }
   };
 
@@ -271,14 +276,15 @@ const ProfilePage = () => {
             ),
           }}
         />
-        <Button
+        <LoadingButton
           disabled={!url || disabled}
+          loading={loading}
           variant="contained"
           size="small"
           onClick={onImport}
         >
           {t("Import")}
-        </Button>
+        </LoadingButton>
         <Button
           variant="contained"
           size="small"

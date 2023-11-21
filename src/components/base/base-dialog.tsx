@@ -8,6 +8,7 @@ import {
   type SxProps,
   type Theme,
 } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
 
 interface Props {
   title: ReactNode;
@@ -19,6 +20,7 @@ interface Props {
   disableFooter?: boolean;
   contentSx?: SxProps<Theme>;
   children?: ReactNode;
+  loading?: boolean;
   onOk?: () => void;
   onCancel?: () => void;
   onClose?: () => void;
@@ -40,6 +42,7 @@ export const BaseDialog: React.FC<Props> = (props) => {
     disableCancel,
     disableOk,
     disableFooter,
+    loading,
   } = props;
 
   return (
@@ -56,9 +59,13 @@ export const BaseDialog: React.FC<Props> = (props) => {
             </Button>
           )}
           {!disableOk && (
-            <Button variant="contained" onClick={props.onOk}>
+            <LoadingButton
+              loading={loading}
+              variant="contained"
+              onClick={props.onOk}
+            >
               {okBtn}
-            </Button>
+            </LoadingButton>
           )}
         </DialogActions>
       )}
