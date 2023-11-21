@@ -6,7 +6,7 @@ jobs:
   release-update:
     runs-on: ubuntu-latest
     if: |
-      startsWith(github.repository, 'keiko233')
+      startsWith(github.repository, 'wonfen')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
