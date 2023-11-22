@@ -18,6 +18,10 @@ import { ClashPortViewer } from "./mods/clash-port-viewer";
 import { ControllerViewer } from "./mods/controller-viewer";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
+import { invoke_uwp_tool } from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+
+const isWIN = getSystem() === "windows";
 
 interface Props {
   onError: (err: Error) => void;
@@ -162,6 +166,19 @@ const SettingClash = ({ onError }: Props) => {
       >
         <Typography sx={{ py: "7px", pr: 1 }}>{version}</Typography>
       </SettingItem>
+
+      {isWIN && (
+        <SettingItem label={t("Open UWP tool")}>
+          <IconButton
+            color="inherit"
+            size="small"
+            sx={{ my: "2px" }}
+            onClick={invoke_uwp_tool}
+          >
+            <ArrowForward />
+          </IconButton>
+        </SettingItem>
+      )}
     </SettingList>
   );
 };
