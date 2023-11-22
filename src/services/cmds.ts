@@ -178,3 +178,9 @@ export async function installService() {
 export async function uninstallService() {
   return invoke<void>("uninstall_service");
 }
+
+export async function invoke_uwp_tool() {
+  return invoke<void>("invoke_uwp_tool").catch((err) =>
+    Notice.error(err?.message || err.toString(), 1500)
+  );
+}
