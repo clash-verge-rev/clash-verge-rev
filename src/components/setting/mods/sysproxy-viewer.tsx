@@ -142,19 +142,19 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         </Typography>
 
         <FlexBox>
-          <Typography className="label">Enable:</Typography>
+          <Typography className="label">{t("Enable status")}</Typography>
           <Typography className="value">
             {(!!sysproxy?.enable).toString()}
           </Typography>
         </FlexBox>
 
         <FlexBox>
-          <Typography className="label">Server:</Typography>
+          <Typography className="label">{t("Server Addr")}</Typography>
           <Typography className="value">{sysproxy?.server || "-"}</Typography>
         </FlexBox>
 
         <FlexBox>
-          <Typography className="label">Bypass:</Typography>
+          <Typography className="label">{t("Bypass")}</Typography>
           <Typography className="value">{sysproxy?.bypass || "-"}</Typography>
         </FlexBox>
       </Box>

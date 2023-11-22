@@ -75,7 +75,7 @@ const ProxyPage = () => {
       <Paper
         sx={{
           borderRadius: 1,
-          boxShadow: 2,
+          boxShadow: 0,
           height: "100%",
           boxSizing: "border-box",
           py: 1,

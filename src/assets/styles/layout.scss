@@ -10,7 +10,7 @@
     height: 100%;
     max-width: 225px;
     min-width: 125px;
-    padding: 36px 0 28px;
+    padding: 16px 0 8px;
     position: relative;
     flex-direction: column;
     box-sizing: border-box;
@@ -90,8 +90,8 @@
       position: absolute;
       top: 0;
       left: 0;
-      right: 28px;
-      bottom: 28px;
+      right: 2px;
+      bottom: 10px;
     }
   }
 }

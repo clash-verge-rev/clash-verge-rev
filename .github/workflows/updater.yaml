@@ -28,4 +28,4 @@ jobs:
       - name: Release updater file
         run: pnpm updater
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

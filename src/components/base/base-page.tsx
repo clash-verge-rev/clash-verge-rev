@@ -23,13 +23,11 @@ export const BasePage: React.FC<Props> = (props) => {
           {header}
         </header>
 
-        <div className="base-container">
-          <section>
-            <div className="base-content" style={contentStyle} data-windrag>
-              {children}
-            </div>
-          </section>
-        </div>
+        <section>
+          <div className="base-content" style={contentStyle} data-windrag>
+            {children}
+          </div>
+        </section>
       </div>
     </BaseErrorBoundary>
   );
