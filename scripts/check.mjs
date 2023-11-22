@@ -325,6 +325,11 @@ const resolveGeoIP = () =>
     file: "geoip.dat",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat`,
   });
+const resolveEnableLoopback = () =>
+  resolveResource({
+    file: "enableLoopback.exe",
+    downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`,
+  });
 
 const tasks = [
   // { name: "clash", func: resolveClash, retry: 5 },
@@ -336,6 +341,12 @@ const tasks = [
   { name: "mmdb", func: resolveMmdb, retry: 5 },
   { name: "geosite", func: resolveGeosite, retry: 5 },
   { name: "geoip", func: resolveGeoIP, retry: 5 },
+  {
+    name: "enableLoopback",
+    func: resolveEnableLoopback,
+    retry: 5,
+    winOnly: true,
+  },
 ];
 
 async function runTask() {

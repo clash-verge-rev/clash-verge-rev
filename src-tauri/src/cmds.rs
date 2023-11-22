@@ -229,6 +229,18 @@ pub fn open_web_url(url: String) -> CmdResult<()> {
     wrap_err!(open::that(url))
 }
 
+
+#[cfg(windows)]
+pub mod uwp {
+    use super::*;
+    use crate::core::win_uwp;
+
+    #[tauri::command]
+    pub async fn invoke_uwp_tool() -> CmdResult {
+        wrap_err!(win_uwp::invoke_uwptools().await)
+    }
+}
+
 #[tauri::command]
 pub async fn clash_api_get_proxy_delay(
     name: String,
@@ -275,6 +287,16 @@ pub mod service {
     }
     #[tauri::command]
     pub async fn uninstall_service() -> CmdResult {
+        Ok(())
+    }
+}
+
+#[cfg(not(windows))]
+pub mod uwp {
+    use super::*;
+
+    #[tauri::command]
+    pub async fn invoke_uwp_tool() -> CmdResult {
         Ok(())
     }
 }
