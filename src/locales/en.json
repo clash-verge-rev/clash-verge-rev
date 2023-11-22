@@ -7,9 +7,6 @@
   "Label-Settings": "Settings",
 
   "Connections": "Connections",
-  "Upload Total": "Upload Total",
-  "Download Total": "Download Total",
-  "Active Connections": "Active Connections",
   "Logs": "Logs",
   "Clear": "Clear",
   "Proxies": "Proxies",
@@ -52,6 +49,7 @@
   "Filter": "Filter",
   "Filter conditions": "Filter conditions",
   "Refresh profiles": "Refresh profiles",
+  "Rules": "Rules",
 
   "Type": "Type",
   "Name": "Name",
@@ -80,6 +78,9 @@
   "Proxy Guard": "Proxy Guard",
   "Guard Duration": "Guard Duration",
   "Proxy Bypass": "Proxy Bypass",
+  "Enable status": "Enable status",
+  "Server Addr": "Server Addr",
+  "Bypass": "Bypass",
   "Current System Proxy": "Current System Proxy",
   "Theme Mode": "Theme Mode",
   "Theme Blur": "Theme Blur",

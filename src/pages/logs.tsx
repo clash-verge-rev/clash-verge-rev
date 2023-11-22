@@ -67,7 +67,7 @@ const LogPage = () => {
       <Paper
         sx={{
           boxSizing: "border-box",
-          boxShadow: 2,
+          boxShadow: 0,
           height: "100%",
           userSelect: "text",
         }}

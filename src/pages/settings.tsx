@@ -35,17 +35,13 @@ const SettingPage = () => {
     >
       <Grid container spacing={{ xs: 2, lg: 3 }}>
         <Grid item xs={12} md={6}>
+          <Paper sx={{ borderRadius: 1, boxShadow: 2, marginBottom: 2 }}>
+            <SettingSystem onError={onError} />
+          </Paper>
           <Paper sx={{ borderRadius: 1, boxShadow: 2 }}>
             <SettingClash onError={onError} />
           </Paper>
         </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ borderRadius: 1, boxShadow: 2 }}>
-            <SettingSystem onError={onError} />
-          </Paper>
-        </Grid>
-
         <Grid item xs={12} md={6}>
           <Paper sx={{ borderRadius: 1, boxShadow: 2 }}>
             <SettingVerge onError={onError} />

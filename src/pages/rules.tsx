@@ -19,7 +19,7 @@ const RulesPage = () => {
 
   return (
     <BasePage title={t("Rules")} contentStyle={{ height: "100%" }}>
-      <Paper sx={{ boxSizing: "border-box", boxShadow: 2, height: "100%" }}>
+      <Paper sx={{ boxSizing: "border-box", boxShadow: 0, height: "100%" }}>
         <Box
           sx={{
             pt: 1,
