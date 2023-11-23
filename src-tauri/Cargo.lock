@@ -3700,14 +3700,12 @@ checksum = "e60ef3b82994702bbe4e134d98aadca4b49ed04440148985678d415c68127666"
 
 [[package]]
 name = "runas"
-version = "1.1.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49535b7c73aec5596ae2c44a6d8a7a8f8592e5744564c327fd4846750413d921"
+checksum = "ed87390fefd18965ff20baae5aeb9913bcf82d2b59dc04c0f6d8f17f7be56ff2"
 dependencies = [
- "libc",
- "security-framework-sys",
+ "cc",
  "which",
- "windows-sys 0.48.0",
 ]
 
 [[package]]
