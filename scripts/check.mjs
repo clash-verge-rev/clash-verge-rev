@@ -37,7 +37,7 @@ const CLASH_MAP = {
 */
 /* ======= clash meta ======= */
 const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/`;
-const META_VERSION = "2023.11.21";
+const META_VERSION = "2023.11.23";
 
 const META_MAP = {
   "win32-x64": "clash.meta-win-amd64",
