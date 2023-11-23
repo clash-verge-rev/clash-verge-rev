@@ -69,9 +69,8 @@ jobs:
           args: -f default-meta
 
       - name: Portable Bundle
-        if: matrix.portable == true
+        if: matrix.os == 'windows-latest'
         run: |
-          pnpm build
           pnpm portable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
