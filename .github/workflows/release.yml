@@ -15,15 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-latest
-            portable: false
-          - os: windows-latest
-            portable: true
-          - os: ubuntu-latest
-            portable: false
-          - os: macos-latest
-            portable: false
+        os: [windows-latest, ubuntu-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
     if: startsWith(github.repository, 'wonfen')
@@ -63,9 +55,6 @@ jobs:
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
-        # enable cache even though failed
-        # continue-on-error: true
-        if: matrix.portable == false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -82,6 +71,7 @@ jobs:
       - name: Portable Bundle
         if: matrix.portable == true
         run: |
+          pnpm build
           pnpm portable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
