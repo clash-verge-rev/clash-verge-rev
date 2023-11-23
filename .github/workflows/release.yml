@@ -3,8 +3,8 @@ name: Release Build
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    tags:
+      - v**
 
 env:
   CARGO_INCREMENTAL: 0

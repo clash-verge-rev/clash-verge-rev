@@ -41,12 +41,11 @@ A 接盘 Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">t
 
 Download from [release](https://github.com/wonfen/clash-verge-rev/releases). Supports Windows x64, Linux x86_64 and macOS 11+
 
-- [Windows x64](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.4.0_x64_zh-CN.msi)
-- [macOS intel](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.4.0_x64.dmg)
-- [macOS arm](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/Clash.Verge_1.4.0_aarch64.dmg)
-- [Linux AppImage](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/clash-verge_1.4.0_amd64.AppImage)
-- [Linux deb](https://github.com/wonfen/clash-verge-rev/releases/download/v1.3.9/clash-verge_1.4.0_amd64.deb)
-- [Fedora Linux](https://github.com/wonfen/clash-verge-rev/issues/352)
+- [Windows x64](https://github.com/wonfen/clash-verge-rev/releases/download/v1.4.0/Clash.Verge_1.4.0_x64_zh-CN.msi)
+- [macOS intel](https://github.com/wonfen/clash-verge-rev/releases/download/v1.4.0/Clash.Verge_1.4.0_x64.dmg)
+- [macOS arm](https://github.com/wonfen/clash-verge-rev/releases/download/v1.4.0/Clash.Verge_1.4.0_aarch64.dmg)
+- [Linux AppImage](https://github.com/wonfen/clash-verge-rev/releases/download/v1.4.0/clash-verge_1.4.0_amd64.AppImage)
+- [Linux deb](https://github.com/wonfen/clash-verge-rev/releases/download/v1.4.0/clash-verge_1.4.0_amd64.deb)
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
@@ -56,7 +55,7 @@ Notes: If you could not start the app on Windows, please check that you have [We
 
 #### 1. **macOS** "Clash Verge" is damaged and can't be opened
 
-open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Nyanpasu.app`
+open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Verge.app`
 
 ## Development
 
@@ -106,7 +105,7 @@ Issue and PR welcome!
 
 Clash Verge rev was based on or inspired by these projects and so on:
 
-- [keiko233/clash-nyanpasu](https://github.com/keiko233/clash-nyanpasu): A Clash Verge.
+- [keiko233/clash-nyanpasu](https://github.com/keiko233/clash-nyanpasu): A Clash Verge variant.
 - [zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): A Clash GUI based on tauri. Supports Windows, macOS and Linux.
 - [tauri-apps/tauri](https://github.com/tauri-apps/tauri): Build smaller, faster, and more secure desktop applications with a web frontend.
 - [Dreamacro/clash](https://github.com/Dreamacro/clash): A rule-based tunnel in Go.
