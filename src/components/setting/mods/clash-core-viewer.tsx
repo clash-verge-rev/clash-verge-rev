@@ -18,10 +18,7 @@ import { closeAllConnections } from "@/services/api";
 import { grantPermission } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 
-const VALID_CORE = [
-  { name: "Clash", core: "clash" },
-  { name: "Clash Meta", core: "clash-meta" },
-];
+const VALID_CORE = [{ name: "Clash Meta", core: "clash-meta" }];
 
 const OS = getSystem();
 
