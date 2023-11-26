@@ -4,7 +4,7 @@ import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
 import proxyAgent from "https-proxy-agent";
-import { execSync } from "child_process";
+import { exec, execSync } from "child_process";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
@@ -14,28 +14,6 @@ const SIDECAR_HOST = execSync("rustc -vV")
   .toString()
   .match(/(?<=host: ).+(?=\s*)/g)[0];
 
-/* ======= clash ======= 
-const CLASH_STORAGE_PREFIX = "https://release.dreamacro.workers.dev/";
-const CLASH_URL_PREFIX =
-  "https://github.com/Dreamacro/clash/releases/download/premium/";
-const CLASH_LATEST_DATE = "latest";
-
-const CLASH_BACKUP_URL_PREFIX =
-  "https://github.com/zhongfly/Clash-premium-backup/releases/download/";
-const CLASH_BACKUP_LATEST_DATE = "2023-09-05-gdcc8d87";
-
-//https://github.com/zhongfly/Clash-premium-backup/releases/download/2023-09-05-gdcc8d87/clash-windows-amd64-2023-09-05-gdcc8d87.zip
-//https://github.com/zhongfly/Clash-premium-backup/releases/download/2023-09-05-gdcc8d87/clash-windows-amd64-n2023-09-05-gdcc8d87.zip
-
-const CLASH_MAP = {
-  "win32-x64": "clash-windows-amd64",
-  "darwin-x64": "clash-darwin-amd64",
-  "darwin-arm64": "clash-darwin-arm64",
-  "linux-x64": "clash-linux-amd64",
-  "linux-arm64": "clash-linux-arm64",
-};
-*/
-/* ======= clash meta ======= */
 const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/`;
 const META_VERSION = "2023.11.23";
 
@@ -47,74 +25,6 @@ const META_MAP = {
   "linux-arm64": "clash.meta-linux-arm64",
 };
 
-/*
- * check available
- */
-
-const { platform, arch } = process;
-/*
-if (!CLASH_MAP[`${platform}-${arch}`]) {
-  throw new Error(`clash unsupported platform "${platform}-${arch}"`);
-}
-*/
-if (!META_MAP[`${platform}-${arch}`]) {
-  throw new Error(`clash meta unsupported platform "${platform}-${arch}"`);
-}
-/*
-function clash() {
-  const name = CLASH_MAP[`${platform}-${arch}`];
-
-  const isWin = platform === "win32";
-  const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${CLASH_URL_PREFIX}${name}-${CLASH_LATEST_DATE}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}.${urlExt}`;
-
-  return {
-    name: "clash",
-    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
-    exeFile,
-    zipFile,
-    downloadURL,
-  };
-}
-
-function clashBackup() {
-  const name = CLASH_MAP[`${platform}-${arch}`];
-
-  const isWin = platform === "win32";
-  const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${CLASH_BACKUP_URL_PREFIX}${CLASH_BACKUP_LATEST_DATE}/${name}-n${CLASH_BACKUP_LATEST_DATE}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}.${urlExt}`;
-
-  return {
-    name: "clash",
-    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
-    exeFile,
-    zipFile,
-    downloadURL,
-  };
-}
-
-function clashS3() {
-  const name = CLASH_MAP[`${platform}-${arch}`];
-
-  const isWin = platform === "win32";
-  const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${CLASH_STORAGE_PREFIX}${CLASH_LATEST_DATE}/${name}-${CLASH_LATEST_DATE}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}.${urlExt}`;
-
-  return {
-    name: "clash",
-    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
-    exeFile,
-    zipFile,
-    downloadURL,
-  };
-}
-*/
 function clashMeta() {
   const name = META_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
@@ -132,9 +42,35 @@ function clashMeta() {
   };
 }
 
-/**
- * download sidecar and rename
- */
+async function downloadFile(url, path) {
+  const options = {};
+
+  const httpProxy =
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy;
+
+  if (httpProxy) {
+    options.agent = proxyAgent(httpProxy);
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    method: "GET",
+    headers: { "Content-Type": "application/octet-stream" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Download failed for "${url}" with status ${response.status}`);
+  }
+
+  const buffer = await response.arrayBuffer();
+  await fs.writeFile(path, new Uint8Array(buffer));
+
+  console.log(`[INFO]: download finished "${url}"`);
+}
+
 async function resolveSidecar(binInfo) {
   const { name, targetFile, zipFile, exeFile, downloadURL } = binInfo;
 
@@ -149,6 +85,7 @@ async function resolveSidecar(binInfo) {
   const tempExe = path.join(tempDir, exeFile);
 
   await fs.mkdirp(tempDir);
+
   try {
     if (!(await fs.pathExists(tempZip))) {
       await downloadFile(downloadURL, tempZip);
@@ -166,37 +103,39 @@ async function resolveSidecar(binInfo) {
       // gz
       const readStream = fs.createReadStream(tempZip);
       const writeStream = fs.createWriteStream(sidecarPath);
+
       await new Promise((resolve, reject) => {
         const onError = (error) => {
           console.error(`[ERROR]: "${name}" gz failed:`, error.message);
           reject(error);
         };
+
         readStream
           .pipe(zlib.createGunzip().on("error", onError))
           .pipe(writeStream)
           .on("finish", () => {
             console.log(`[INFO]: "${name}" gunzip finished`);
-            execSync(`chmod 755 ${sidecarPath}`);
-            console.log(`[INFO]: "${name}" chmod binary finished`);
-            resolve();
+            exec(`chmod 755 ${sidecarPath}`, (err) => {
+              if (err) {
+                console.error(`[ERROR]: "${name}" chmod binary failed:`, err);
+                reject(err);
+              } else {
+                console.log(`[INFO]: "${name}" chmod binary finished`);
+                resolve();
+              }
+            });
           })
           .on("error", onError);
       });
     }
   } catch (err) {
-    // 需要删除文件
     await fs.remove(sidecarPath);
     throw err;
   } finally {
-    // delete temp dir
     await fs.remove(tempDir);
   }
 }
 
-/**
- * prepare clash core
- * if the core version is not updated in time, use S3 storage as a backup.
- */
 async function resolveClash() {
   try {
     return await resolveSidecar(clash());
@@ -205,10 +144,6 @@ async function resolveClash() {
     return await resolveSidecar(clashS3());
   }
 }
-
-/**
- * only Windows
- * get the wintun.dll (not required)
 
 async function resolveWintun() {
   const { platform } = process;
@@ -244,7 +179,7 @@ async function resolveWintun() {
 
   console.log(`[INFO]: resolve wintun.dll finished`);
 }
-*/
+
 /**
  * download the file to the resources dir
  */
@@ -262,36 +197,6 @@ async function resolveResource(binInfo) {
   console.log(`[INFO]: ${file} finished`);
 }
 
-/**
- * download file and save to `path`
- */
-async function downloadFile(url, path) {
-  const options = {};
-
-  const httpProxy =
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy;
-
-  if (httpProxy) {
-    options.agent = proxyAgent(httpProxy);
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    method: "GET",
-    headers: { "Content-Type": "application/octet-stream" },
-  });
-  const buffer = await response.arrayBuffer();
-  await fs.writeFile(path, new Uint8Array(buffer));
-
-  console.log(`[INFO]: download finished "${url}"`);
-}
-
-/**
- * main
- */
 const SERVICE_URL =
   "https://github.com/zzzgydi/clash-verge-service/releases/download/latest";
 
@@ -332,9 +237,9 @@ const resolveEnableLoopback = () =>
   });
 
 const tasks = [
-  // { name: "clash", func: resolveClash, retry: 5 },
+  { name: "clash", func: resolveClash, retry: 5 },
   { name: "clash-meta", func: () => resolveSidecar(clashMeta()), retry: 5 },
-  // { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
+  { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
   { name: "service", func: resolveService, retry: 5, winOnly: true },
   { name: "install", func: resolveInstall, retry: 5, winOnly: true },
   { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
