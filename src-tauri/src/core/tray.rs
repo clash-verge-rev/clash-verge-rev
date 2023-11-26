@@ -145,9 +145,20 @@ impl Tray {
 
         Ok(())
     }
-
+    pub fn on_left_click(app_handle: &AppHandle) {
+        let tray_event = { Config::verge().latest().tray_event.clone() };
+        let tray_event = tray_event.unwrap_or("main_window".into());
+        println!("{tray_event}");
+        match tray_event.as_str() {
+            "system_proxy" => feat::toggle_system_proxy(),
+            "tun_mode" => feat::toggle_tun_mode(),
+            _ => resolve::create_window(app_handle),
+        }
+    }
     pub fn on_system_tray_event(app_handle: &AppHandle, event: SystemTrayEvent) {
         match event {
+            #[cfg(not(target_os = "linux"))]
+            SystemTrayEvent::LeftClick { .. } => Tray::on_left_click(app_handle),
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 mode @ ("rule_mode" | "global_mode" | "direct_mode" | "script_mode") => {
                     let mode = &mode[0..mode.len() - 5];
@@ -177,10 +188,6 @@ impl Tray {
                 }
                 _ => {}
             },
-            #[cfg(target_os = "windows")]
-            SystemTrayEvent::LeftClick { .. } => {
-                resolve::create_window(app_handle);
-            }
             _ => {}
         }
     }
