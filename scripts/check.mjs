@@ -4,7 +4,7 @@ import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
 import proxyAgent from "https-proxy-agent";
-import { exec, execSync } from "child_process";
+import { exec } from "child_process";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
@@ -25,22 +25,18 @@ const META_MAP = {
   "linux-arm64": "clash.meta-linux-arm64",
 };
 
-function clashMeta() {
+const { platform, arch } = process;
+
+if (!META_MAP[`${platform}-${arch}`]) {
+  throw new Error(`clash meta unsupported platform "${platform}-${arch}"`);
+}
+
+const META_URL = (platform, arch) => {
   const name = META_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${META_URL_PREFIX}${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}-${META_VERSION}.${urlExt}`;
-
-  return {
-    name: "clash-meta",
-    targetFile: `clash-meta-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
-    exeFile,
-    zipFile,
-    downloadURL,
-  };
-}
+  return `${META_URL_PREFIX}${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
+};
 
 async function downloadFile(url, path) {
   const options = {};
@@ -60,11 +56,6 @@ async function downloadFile(url, path) {
     method: "GET",
     headers: { "Content-Type": "application/octet-stream" },
   });
-
-  if (!response.ok) {
-    throw new Error(`Download failed for "${url}" with status ${response.status}`);
-  }
-
   const buffer = await response.arrayBuffer();
   await fs.writeFile(path, new Uint8Array(buffer));
 
@@ -100,30 +91,21 @@ async function resolveSidecar(binInfo) {
       await fs.rename(tempExe, sidecarPath);
       console.log(`[INFO]: "${name}" unzip finished`);
     } else {
-      // gz
       const readStream = fs.createReadStream(tempZip);
       const writeStream = fs.createWriteStream(sidecarPath);
-
       await new Promise((resolve, reject) => {
         const onError = (error) => {
           console.error(`[ERROR]: "${name}" gz failed:`, error.message);
           reject(error);
         };
-
         readStream
           .pipe(zlib.createGunzip().on("error", onError))
           .pipe(writeStream)
           .on("finish", () => {
             console.log(`[INFO]: "${name}" gunzip finished`);
-            exec(`chmod 755 ${sidecarPath}`, (err) => {
-              if (err) {
-                console.error(`[ERROR]: "${name}" chmod binary failed:`, err);
-                reject(err);
-              } else {
-                console.log(`[INFO]: "${name}" chmod binary finished`);
-                resolve();
-              }
-            });
+            execSync(`chmod 755 ${sidecarPath}`);
+            console.log(`[INFO]: "${name}" chmod binary finished`);
+            resolve();
           })
           .on("error", onError);
       });
@@ -145,44 +127,6 @@ async function resolveClash() {
   }
 }
 
-async function resolveWintun() {
-  const { platform } = process;
-
-  if (platform !== "win32") return;
-
-  const url = "https://www.wintun.net/builds/wintun-0.14.1.zip";
-
-  const tempDir = path.join(TEMP_DIR, "wintun");
-  const tempZip = path.join(tempDir, "wintun.zip");
-
-  const wintunPath = path.join(tempDir, "wintun/bin/amd64/wintun.dll");
-  const targetPath = path.join(cwd, "src-tauri/resources", "wintun.dll");
-
-  if (!FORCE && (await fs.pathExists(targetPath))) return;
-
-  await fs.mkdirp(tempDir);
-
-  if (!(await fs.pathExists(tempZip))) {
-    await downloadFile(url, tempZip);
-  }
-
-  // unzip
-  const zip = new AdmZip(tempZip);
-  zip.extractAllTo(tempDir, true);
-
-  if (!(await fs.pathExists(wintunPath))) {
-    throw new Error(`path not found "${wintunPath}"`);
-  }
-
-  await fs.rename(wintunPath, targetPath);
-  await fs.remove(tempDir);
-
-  console.log(`[INFO]: resolve wintun.dll finished`);
-}
-
-/**
- * download the file to the resources dir
- */
 async function resolveResource(binInfo) {
   const { file, downloadURL } = binInfo;
 
@@ -197,79 +141,44 @@ async function resolveResource(binInfo) {
   console.log(`[INFO]: ${file} finished`);
 }
 
-const SERVICE_URL =
-  "https://github.com/zzzgydi/clash-verge-service/releases/download/latest";
+const clashMeta = () => {
+  const name = META_MAP[`${platform}-${arch}`];
+  const isWin = platform === "win32";
+  const urlExt = isWin ? "zip" : "gz";
+  const downloadURL = META_URL(platform, arch);
+  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const zipFile = `${name}-${META_VERSION}.${urlExt}`;
 
-const resolveService = () =>
-  resolveResource({
-    file: "clash-verge-service.exe",
-    downloadURL: `${SERVICE_URL}/clash-verge-service.exe`,
-  });
-const resolveInstall = () =>
-  resolveResource({
-    file: "install-service.exe",
-    downloadURL: `${SERVICE_URL}/install-service.exe`,
-  });
-const resolveUninstall = () =>
-  resolveResource({
-    file: "uninstall-service.exe",
-    downloadURL: `${SERVICE_URL}/uninstall-service.exe`,
-  });
-const resolveMmdb = () =>
-  resolveResource({
-    file: "Country.mmdb",
-    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb`,
-  });
-const resolveGeosite = () =>
-  resolveResource({
-    file: "geosite.dat",
-    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat`,
-  });
-const resolveGeoIP = () =>
-  resolveResource({
-    file: "geoip.dat",
-    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat`,
-  });
-const resolveEnableLoopback = () =>
-  resolveResource({
-    file: "enableLoopback.exe",
-    downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`,
-  });
+  return {
+    name: "clash-meta",
+    targetFile: `clash-meta-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    exeFile,
+    zipFile,
+    downloadURL,
+  };
+};
 
 const tasks = [
-  { name: "clash", func: resolveClash, retry: 5 },
   { name: "clash-meta", func: () => resolveSidecar(clashMeta()), retry: 5 },
-  { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
-  { name: "service", func: resolveService, retry: 5, winOnly: true },
-  { name: "install", func: resolveInstall, retry: 5, winOnly: true },
-  { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
-  { name: "mmdb", func: resolveMmdb, retry: 5 },
-  { name: "geosite", func: resolveGeosite, retry: 5 },
-  { name: "geoip", func: resolveGeoIP, retry: 5 },
-  {
-    name: "enableLoopback",
-    func: resolveEnableLoopback,
-    retry: 5,
-    winOnly: true,
-  },
+  // Add other tasks as needed
 ];
 
-async function runTask() {
-  const task = tasks.shift();
-  if (!task) return;
-  if (task.winOnly && process.platform !== "win32") return runTask();
+async function runTasks() {
+  const promises = tasks.map(async (task) => {
+    if (task.winOnly && process.platform !== "win32") return;
 
-  for (let i = 0; i < task.retry; i++) {
-    try {
-      await task.func();
-      break;
-    } catch (err) {
-      console.error(`[ERROR]: task::${task.name} try ${i} ==`, err.message);
-      if (i === task.retry - 1) throw err;
+    for (let i = 0; i < task.retry; i++) {
+      try {
+        await task.func();
+        break;
+      } catch (err) {
+        console.error(`[ERROR]: task::${task.name} try ${i} ==`, err.message);
+        if (i === task.retry - 1) throw err;
+      }
     }
-  }
-  return runTask();
+  });
+
+  await Promise.all(promises);
 }
 
-runTask();
-runTask();
+runTasks();
