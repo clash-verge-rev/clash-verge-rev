@@ -4,7 +4,7 @@ import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
 import proxyAgent from "https-proxy-agent";
-import { exec } from "child_process";
+import { execSync } from "child_process";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
@@ -14,6 +14,7 @@ const SIDECAR_HOST = execSync("rustc -vV")
   .toString()
   .match(/(?<=host: ).+(?=\s*)/g)[0];
 
+/* ======= clash meta ======= */
 const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/`;
 const META_VERSION = "2023.11.23";
 
@@ -31,37 +32,36 @@ if (!META_MAP[`${platform}-${arch}`]) {
   throw new Error(`clash meta unsupported platform "${platform}-${arch}"`);
 }
 
-const META_URL = (platform, arch) => {
-  const name = META_MAP[`${platform}-${arch}`];
+function getDownloadInfo(map, platform, arch, urlPrefix, latestDate) {
+  const name = map[`${platform}-${arch}`];
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
-  return `${META_URL_PREFIX}${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
-};
+  const downloadURL = `${urlPrefix}${latestDate}/${name}-${latestDate}.${urlExt}`;
+  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const zipFile = `${name}-${latestDate}.${urlExt}`;
 
-async function downloadFile(url, path) {
-  const options = {};
-
-  const httpProxy =
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy;
-
-  if (httpProxy) {
-    options.agent = proxyAgent(httpProxy);
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    method: "GET",
-    headers: { "Content-Type": "application/octet-stream" },
-  });
-  const buffer = await response.arrayBuffer();
-  await fs.writeFile(path, new Uint8Array(buffer));
-
-  console.log(`[INFO]: download finished "${url}"`);
+  return {
+    name,
+    targetFile: `${name}-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    exeFile,
+    zipFile,
+    downloadURL,
+  };
 }
 
+function clashMeta() {
+  return getDownloadInfo(
+    META_MAP,
+    platform,
+    arch,
+    META_URL_PREFIX,
+    META_VERSION
+  );
+}
+
+/**
+ * download sidecar and rename
+ */
 async function resolveSidecar(binInfo) {
   const { name, targetFile, zipFile, exeFile, downloadURL } = binInfo;
 
@@ -76,7 +76,6 @@ async function resolveSidecar(binInfo) {
   const tempExe = path.join(tempDir, exeFile);
 
   await fs.mkdirp(tempDir);
-
   try {
     if (!(await fs.pathExists(tempZip))) {
       await downloadFile(downloadURL, tempZip);
@@ -84,11 +83,8 @@ async function resolveSidecar(binInfo) {
 
     if (zipFile.endsWith(".zip")) {
       const zip = new AdmZip(tempZip);
-      zip.getEntries().forEach((entry) => {
-        console.log(`[DEBUG]: "${name}" entry name`, entry.entryName);
-      });
       zip.extractAllTo(tempDir, true);
-      await fs.rename(tempExe, sidecarPath);
+      await fs.rename(path.join(tempDir, exeFile), sidecarPath);
       console.log(`[INFO]: "${name}" unzip finished`);
     } else {
       const readStream = fs.createReadStream(tempZip);
@@ -118,67 +114,54 @@ async function resolveSidecar(binInfo) {
   }
 }
 
-async function resolveClash() {
-  try {
-    return await resolveSidecar(clash());
-  } catch {
-    console.log(`[WARN]: clash core needs to be updated`);
-    return await resolveSidecar(clashS3());
+/**
+ * download file and save to `path`
+ */
+async function downloadFile(url, filePath) {
+  const options = {};
+
+  const httpProxy =
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy;
+
+  if (httpProxy) {
+    options.agent = proxyAgent(httpProxy);
   }
+
+  const response = await fetch(url, {
+    ...options,
+    method: "GET",
+    headers: { "Content-Type": "application/octet-stream" },
+  });
+  const buffer = await response.arrayBuffer();
+  await fs.writeFile(filePath, new Uint8Array(buffer));
+
+  console.log(`[INFO]: download finished "${url}"`);
 }
 
-async function resolveResource(binInfo) {
-  const { file, downloadURL } = binInfo;
-
-  const resDir = path.join(cwd, "src-tauri/resources");
-  const targetPath = path.join(resDir, file);
-
-  if (!FORCE && (await fs.pathExists(targetPath))) return;
-
-  await fs.mkdirp(resDir);
-  await downloadFile(downloadURL, targetPath);
-
-  console.log(`[INFO]: ${file} finished`);
-}
-
-const clashMeta = () => {
-  const name = META_MAP[`${platform}-${arch}`];
-  const isWin = platform === "win32";
-  const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = META_URL(platform, arch);
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}-${META_VERSION}.${urlExt}`;
-
-  return {
-    name: "clash-meta",
-    targetFile: `clash-meta-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
-    exeFile,
-    zipFile,
-    downloadURL,
-  };
-};
+const SERVICE_URL =
+  "https://github.com/zzzgydi/clash-verge-service/releases/download/latest";
 
 const tasks = [
   { name: "clash-meta", func: () => resolveSidecar(clashMeta()), retry: 5 },
-  // Add other tasks as needed
 ];
 
-async function runTasks() {
-  const promises = tasks.map(async (task) => {
-    if (task.winOnly && process.platform !== "win32") return;
+async function runTask() {
+  const task = tasks.shift();
+  if (!task) return;
 
-    for (let i = 0; i < task.retry; i++) {
-      try {
-        await task.func();
-        break;
-      } catch (err) {
-        console.error(`[ERROR]: task::${task.name} try ${i} ==`, err.message);
-        if (i === task.retry - 1) throw err;
-      }
+  for (let i = 0; i < task.retry; i++) {
+    try {
+      await task.func();
+      break;
+    } catch (err) {
+      console.error(`[ERROR]: task::${task.name} try ${i} ==`, err.message);
+      if (i === task.retry - 1) throw err;
     }
-  });
-
-  await Promise.all(promises);
+  }
+  return runTask();
 }
 
-runTasks();
+runTask();
