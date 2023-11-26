@@ -2,97 +2,98 @@
  * Build and upload assets
  * for macOS(aarch)
  */
-import fs from "fs-extra";
+import fs from "fs/promises";
 import path from "path";
 import { exit } from "process";
-import { execSync } from "child_process";
+import { exec } from "child_process";
 import { createRequire } from "module";
 import { getOctokit, context } from "@actions/github";
 
-// to `meta` tag
-const META = process.argv.includes("--meta");
-// to `alpha` tag
-const ALPHA = process.argv.includes("--alpha");
-
 const require = createRequire(import.meta.url);
 
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
 async function resolve() {
-  if (!process.env.GITHUB_TOKEN) {
-    throw new Error("GITHUB_TOKEN is required");
-  }
-  if (!process.env.GITHUB_REPOSITORY) {
-    throw new Error("GITHUB_REPOSITORY is required");
-  }
-  if (!process.env.TAURI_PRIVATE_KEY) {
-    throw new Error("TAURI_PRIVATE_KEY is required");
-  }
-  if (!process.env.TAURI_KEY_PASSWORD) {
-    throw new Error("TAURI_KEY_PASSWORD is required");
-  }
+  try {
+    const {
+      GITHUB_REPOSITORY,
+      TAURI_PRIVATE_KEY,
+      TAURI_KEY_PASSWORD,
+    } = process.env;
 
-  const { version } = require("../package.json");
-
-  const tag = META ? "meta" : ALPHA ? "alpha" : `v${version}`;
-  const buildCmd = META ? `pnpm build -f default-meta` : `pnpm build`;
-
-  console.log(`[INFO]: Upload to tag "${tag}"`);
-  console.log(`[INFO]: Building app. "${buildCmd}"`);
-
-  execSync(buildCmd);
-
-  const cwd = process.cwd();
-  const bundlePath = path.join(cwd, "src-tauri/target/release/bundle");
-  const join = (p) => path.join(bundlePath, p);
-
-  const appPathList = [
-    join("macos/Clash Verge.aarch64.app.tar.gz"),
-    join("macos/Clash Verge.aarch64.app.tar.gz.sig"),
-  ];
-
-  for (const appPath of appPathList) {
-    if (fs.pathExistsSync(appPath)) {
-      fs.removeSync(appPath);
+    if (!GITHUB_TOKEN || !GITHUB_REPOSITORY || !TAURI_PRIVATE_KEY || !TAURI_KEY_PASSWORD) {
+      throw new Error("Environment variables are not set properly");
     }
+
+    const { version } = require("../package.json");
+    const tag = process.argv.includes("--meta") ? "meta" : process.argv.includes("--alpha") ? "alpha" : `v${version}`;
+    const buildCmd = process.argv.includes("--meta") ? "pnpm build -f default-meta" : "pnpm build";
+
+    console.log(`[INFO]: Upload to tag "${tag}"`);
+    console.log(`[INFO]: Building app. "${buildCmd}"`);
+
+    await execAsync(buildCmd);
+
+    const bundlePath = path.resolve("src-tauri/target/release/bundle");
+
+    const appPathList = [
+      path.resolve(bundlePath, "macos/Clash Verge.aarch64.app.tar.gz"),
+      path.resolve(bundlePath, "macos/Clash Verge.aarch64.app.tar.gz.sig"),
+    ];
+
+    for (const appPath of appPathList) {
+      await fs.unlink(appPath).catch(() => {}); // 删除文件，如果存在的话
+    }
+
+    await fs.copyFile(path.resolve(bundlePath, "macos/Clash Verge.app.tar.gz"), appPathList[0]);
+    await fs.copyFile(path.resolve(bundlePath, "macos/Clash Verge.app.tar.gz.sig"), appPathList[1]);
+
+    const options = { owner: context.repo.owner, repo: context.repo.repo };
+    const github = getOctokit(GITHUB_TOKEN);
+
+    const { data: release } = await github.rest.repos.getReleaseByTag({
+      ...options,
+      tag,
+    });
+
+    if (!release.id) throw new Error("Failed to find the release");
+
+    await uploadAssets(release.id, [
+      path.resolve(bundlePath, `dmg/Clash Verge_${version}_aarch64.dmg`),
+      ...appPathList,
+    ]);
+  } catch (error) {
+    console.error(`[ERROR]: ${error.message}`);
+    exit(1);
   }
-
-  fs.copyFileSync(join("macos/Clash Verge.app.tar.gz"), appPathList[0]);
-  fs.copyFileSync(join("macos/Clash Verge.app.tar.gz.sig"), appPathList[1]);
-
-  const options = { owner: context.repo.owner, repo: context.repo.repo };
-  const github = getOctokit(process.env.GITHUB_TOKEN);
-
-  const { data: release } = await github.rest.repos.getReleaseByTag({
-    ...options,
-    tag,
-  });
-
-  if (!release.id) throw new Error("failed to find the release");
-
-  await uploadAssets(release.id, [
-    join(`dmg/Clash Verge_${version}_aarch64.dmg`),
-    ...appPathList,
-  ]);
 }
 
-// From tauri-apps/tauri-action
-// https://github.com/tauri-apps/tauri-action/blob/dev/packages/action/src/upload-release-assets.ts
-async function uploadAssets(releaseId, assets) {
-  const github = getOctokit(process.env.GITHUB_TOKEN);
+async function execAsync(command) {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error(`Command failed: ${command}\n${stderr || stdout}`));
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
 
-  // Determine content-length for header to upload asset
-  const contentLength = (filePath) => fs.statSync(filePath).size;
+async function uploadAssets(releaseId, assets) {
+  const github = getOctokit(GITHUB_TOKEN);
 
   for (const assetPath of assets) {
     const headers = {
       "content-type": "application/zip",
-      "content-length": contentLength(assetPath),
+      "content-length": (await fs.stat(assetPath)).size,
     };
 
     const ext = path.extname(assetPath);
-    const filename = path.basename(assetPath).replace(ext, "");
-    const assetName = path.dirname(assetPath).includes(`target${path.sep}debug`)
-      ? `${filename}-debug${ext}`
-      : `${filename}${ext}`;
+    const filename = path.basename(assetPath, ext);
+    const assetName = path.dirname(assetPath).includes(`target${path.sep}debug`) ?
+      `${filename}-debug${ext}` :
+      `${filename}${ext}`;
 
     console.log(`[INFO]: Uploading ${assetName}...`);
 
@@ -100,13 +101,13 @@ async function uploadAssets(releaseId, assets) {
       await github.rest.repos.uploadReleaseAsset({
         headers,
         name: assetName,
-        data: fs.readFileSync(assetPath),
+        data: await fs.readFile(assetPath),
         owner: context.repo.owner,
         repo: context.repo.repo,
         release_id: releaseId,
       });
     } catch (error) {
-      console.log(error.message);
+      console.error(`[ERROR]: ${error.message}`);
     }
   }
 }
@@ -114,6 +115,6 @@ async function uploadAssets(releaseId, assets) {
 if (process.platform === "darwin" && process.arch === "arm64") {
   resolve();
 } else {
-  console.error("invalid");
+  console.error("Invalid platform");
   exit(1);
 }
