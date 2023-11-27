@@ -107,6 +107,20 @@ impl Tray {
     }
 
     pub fn update_part(app_handle: &AppHandle) -> Result<()> {
+        let zh = { Config::verge().latest().language == Some("zh".into()) };
+
+        let version = app_handle.package_info().version.to_string();
+
+        macro_rules! t {
+            ($en: expr, $zh: expr) => {
+                if zh {
+                    $zh
+                } else {
+                    $en
+                }
+            };
+        }
+
         let mode = {
             Config::clash()
                 .latest()
@@ -145,10 +159,9 @@ impl Tray {
 
         #[cfg(not(target_os = "linux"))]
         let _ = tray.set_tooltip(&format!(
-            "Clash Verge {}\nSystem Proxy: {}\nTun Mode: {}",
-            app_handle.package_info().version,
-            system_proxy,
-            tun_mode
+            "Clash Verge {version}\n{}: {system_proxy}\n{}: {tun_mode}",
+            t!("System Proxy", "系统代理"),
+            t!("TUN Mode", "Tun 模式")
         ));
 
         Ok(())
