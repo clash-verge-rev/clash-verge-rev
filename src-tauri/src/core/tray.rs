@@ -143,6 +143,14 @@ impl Tray {
         let _ = tray.get_item("system_proxy").set_selected(*system_proxy);
         let _ = tray.get_item("tun_mode").set_selected(*tun_mode);
 
+        #[cfg(not(target_os = "linux"))]
+        let _ = tray.set_tooltip(&format!(
+            "Clash Verge {}\nSystem Proxy: {}\nTun Mode: {}",
+            app_handle.package_info().version,
+            system_proxy,
+            tun_mode
+        ));
+
         Ok(())
     }
 
