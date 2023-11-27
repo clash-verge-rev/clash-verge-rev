@@ -23,6 +23,9 @@ pub struct IVerge {
     /// maybe be able to set the alpha
     pub theme_blur: Option<bool>,
 
+    /// tray click event
+    pub tray_event: Option<String>,
+
     /// enable traffic graph default is true
     pub traffic_graph: Option<bool>,
 
@@ -166,6 +169,7 @@ impl IVerge {
         patch!(language);
         patch!(theme_mode);
         patch!(theme_blur);
+        patch!(tray_event);
         patch!(traffic_graph);
         patch!(enable_memory_usage);
 
