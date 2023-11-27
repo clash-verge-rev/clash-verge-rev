@@ -107,6 +107,20 @@ impl Tray {
     }
 
     pub fn update_part(app_handle: &AppHandle) -> Result<()> {
+        let zh = { Config::verge().latest().language == Some("zh".into()) };
+
+        let version = app_handle.package_info().version.to_string();
+
+        macro_rules! t {
+            ($en: expr, $zh: expr) => {
+                if zh {
+                    $zh
+                } else {
+                    $en
+                }
+            };
+        }
+
         let mode = {
             Config::clash()
                 .latest()
@@ -142,6 +156,22 @@ impl Tray {
 
         let _ = tray.get_item("system_proxy").set_selected(*system_proxy);
         let _ = tray.get_item("tun_mode").set_selected(*tun_mode);
+
+        let switch_map = {
+            let mut map = std::collections::HashMap::new();
+            map.insert(true, "on");
+            map.insert(false, "off");
+            map
+        };
+
+        #[cfg(not(target_os = "linux"))]
+        let _ = tray.set_tooltip(&format!(
+            "Clash Verge {version}\n{}: {}\n{}: {}",
+            t!("System Proxy", "系统代理"),
+            switch_map[system_proxy],
+            t!("TUN Mode", "Tun 模式"),
+            switch_map[tun_mode]
+        ));
 
         Ok(())
     }
