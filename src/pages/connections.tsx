@@ -142,7 +142,7 @@ const ConnectionsPage = () => {
         </Box>
       }
     >
-      <Paper sx={{ boxShadow: 0, height: "100%" }}>
+      <Box sx={{ boxShadow: 0, height: "100%" }}>
         <Box
           sx={{
             pt: 1,
@@ -210,7 +210,7 @@ const ConnectionsPage = () => {
         </Box>
 
         <ConnectionDetail ref={detailRef} />
-      </Paper>
+      </Box>
     </BasePage>
   );
 };

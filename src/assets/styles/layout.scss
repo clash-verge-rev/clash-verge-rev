@@ -5,7 +5,7 @@
   overflow: hidden;
 
   &__left {
-    flex: 1 0 25%;
+    flex: 1 0 15%;
     display: flex;
     height: 100%;
     max-width: 225px;
@@ -91,7 +91,7 @@
       top: 0;
       left: 0;
       right: 2px;
-      bottom: 10px;
+      bottom: 0px;
     }
   }
 }

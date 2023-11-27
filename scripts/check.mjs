@@ -1,5 +1,6 @@
 import fs from "fs-extra";
 import zlib from "zlib";
+import tar from "tar";
 import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
@@ -36,8 +37,8 @@ const CLASH_MAP = {
 };
 */
 /* ======= clash meta ======= */
-const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/`;
-const META_VERSION = "2023.11.23";
+const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/latest`;
+// const META_VERSION = "2023.11.23";
 
 const META_MAP = {
   "win32-x64": "clash.meta-win-amd64",
@@ -118,10 +119,14 @@ function clashS3() {
 function clashMeta() {
   const name = META_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
-  const urlExt = isWin ? "zip" : "gz";
+  /*   const urlExt = isWin ? "zip" : "gz";
   const downloadURL = `${META_URL_PREFIX}${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}-${META_VERSION}.${urlExt}`;
+  const zipFile = `${name}-${META_VERSION}.${urlExt}`; */
+  const urlExt = isWin ? "zip" : "tgz";
+  const downloadURL = `${META_URL_PREFIX}/${name}.${urlExt}`;
+  const exeFile = isWin ? "虚空终端-win-amd64.exe" : name;
+  const zipFile = `${name}.${urlExt}`;
 
   return {
     name: "clash-meta",
@@ -162,6 +167,26 @@ async function resolveSidecar(binInfo) {
       zip.extractAllTo(tempDir, true);
       await fs.rename(tempExe, sidecarPath);
       console.log(`[INFO]: "${name}" unzip finished`);
+    } else if (zipFile.endsWith(".tgz")) {
+      // tgz
+      await fs.mkdirp(tempDir);
+      await tar.extract({
+        cwd: tempDir,
+        file: tempZip,
+        //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
+      });
+      const files = await fs.readdir(tempDir);
+      console.log(`[DEBUG]: "${name}" files in tempDir:`, files);
+      const extractedFile = files.find((file) => file.startsWith("虚空终端-"));
+      if (extractedFile) {
+        const extractedFilePath = path.join(tempDir, extractedFile);
+        await fs.rename(extractedFilePath, sidecarPath);
+        console.log(`[INFO]: "${name}" file renamed to "${sidecarPath}"`);
+        execSync(`chmod 755 ${sidecarPath}`);
+        console.log(`[INFO]: "${name}" chmod binary finished`);
+      } else {
+        throw new Error(`Expected file not found in ${tempDir}`);
+      }
     } else {
       // gz
       const readStream = fs.createReadStream(tempZip);

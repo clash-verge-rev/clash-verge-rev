@@ -80,6 +80,9 @@ dependencies:
   swr:
     specifier: ^1.3.0
     version: 1.3.0(react@18.2.0)
+  tar:
+    specifier: ^6.2.0
+    version: 6.2.0
 
 devDependencies:
   "@actions/github":
@@ -2180,6 +2183,14 @@ packages:
       fsevents: 2.3.2
     dev: true
 
+  /chownr@2.0.0:
+    resolution:
+      {
+        integrity: sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==,
+      }
+    engines: { node: ">=10" }
+    dev: false
+
   /clsx@2.0.0:
     resolution:
       {
@@ -2577,6 +2588,16 @@ packages:
       jsonfile: 6.1.0
       universalify: 2.0.0
     dev: true
+
+  /fs-minipass@2.1.0:
+    resolution:
+      {
+        integrity: sha512-V/JgOLFCS+R6Vcq0slCuaeWEdNC3ouDlJMNIsacH2VtALiu9mV4LPrHc5cDl8k5aw6J8jwgWWpiTo5RYhmIzvg==,
+      }
+    engines: { node: ">= 8" }
+    dependencies:
+      minipass: 3.3.6
+    dev: false
 
   /fsevents@2.3.2:
     resolution:
@@ -2991,6 +3012,44 @@ packages:
     dependencies:
       brace-expansion: 1.1.11
     dev: true
+
+  /minipass@3.3.6:
+    resolution:
+      {
+        integrity: sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw==,
+      }
+    engines: { node: ">=8" }
+    dependencies:
+      yallist: 4.0.0
+    dev: false
+
+  /minipass@5.0.0:
+    resolution:
+      {
+        integrity: sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ==,
+      }
+    engines: { node: ">=8" }
+    dev: false
+
+  /minizlib@2.1.2:
+    resolution:
+      {
+        integrity: sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==,
+      }
+    engines: { node: ">= 8" }
+    dependencies:
+      minipass: 3.3.6
+      yallist: 4.0.0
+    dev: false
+
+  /mkdirp@1.0.4:
+    resolution:
+      {
+        integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==,
+      }
+    engines: { node: ">=10" }
+    hasBin: true
+    dev: false
 
   /monaco-editor@0.34.1:
     resolution:
@@ -3694,6 +3753,21 @@ packages:
       react: 18.2.0
     dev: false
 
+  /tar@6.2.0:
+    resolution:
+      {
+        integrity: sha512-/Wo7DcT0u5HUV486xg675HtjNd3BXZ6xDbzsCUZPt5iw8bTQ63bP0Raut3mvro9u+CUyq7YQd8Cx55fsZXxqLQ==,
+      }
+    engines: { node: ">=10" }
+    dependencies:
+      chownr: 2.0.0
+      fs-minipass: 2.1.0
+      minipass: 5.0.0
+      minizlib: 2.1.2
+      mkdirp: 1.0.4
+      yallist: 4.0.0
+    dev: false
+
   /to-fast-properties@2.0.0:
     resolution:
       {
@@ -3896,6 +3970,13 @@ packages:
         integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==,
       }
     dev: true
+
+  /yallist@4.0.0:
+    resolution:
+      {
+        integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==,
+      }
+    dev: false
 
   /yaml@1.10.2:
     resolution:

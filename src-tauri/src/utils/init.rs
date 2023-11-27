@@ -1,7 +1,7 @@
 use crate::config::*;
 use crate::utils::{dirs, help};
 use anyhow::Result;
-use chrono::{DateTime, Local};
+use chrono::{Local, TimeZone};
 use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
@@ -116,7 +116,7 @@ pub fn delete_log() -> Result<()> {
         if file_name.ends_with(".log") {
             let now = Local::now();
             let created_time = parse_time_str(&file_name[0..file_name.len() - 4])?;
-            let file_time = DateTime::<Local>::from_local(created_time, now.offset().clone());
+            let file_time = Local.from_local_datetime(&created_time).single().ok_or(anyhow::anyhow!("invalid local datetime"))?;
 
             let duration = now.signed_duration_since(file_time);
             if duration.num_days() > day {
