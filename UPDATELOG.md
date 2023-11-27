@@ -1,3 +1,14 @@
+## v1.4.1
+
+### Features
+
+- update clash meta core to newest 虚空终端(2023.11.23)
+- delete clash core UI
+- improve UI
+- change Logo to original
+
+---
+
 ## v1.4.0
 
 ### Features

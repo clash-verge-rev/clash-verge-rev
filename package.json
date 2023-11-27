@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "license": "GPL-3.0",
   "scripts": {
     "dev": "tauri dev -f default-meta",
@@ -42,6 +42,7 @@
     "react-virtuoso": "^3.1.3",
     "recoil": "^0.7.6",
     "snarkdown": "^2.0.0",
+    "tar": "^6.2.0",
     "swr": "^1.3.0"
   },
   "devDependencies": {

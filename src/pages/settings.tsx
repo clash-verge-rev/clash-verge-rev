@@ -1,4 +1,4 @@
-import { Grid, IconButton, Paper } from "@mui/material";
+import { Box, Grid, IconButton, Paper } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { BasePage, Notice } from "@/components/base";
@@ -33,19 +33,19 @@ const SettingPage = () => {
         </IconButton>
       }
     >
-      <Grid container spacing={{ xs: 2, lg: 3 }}>
+      <Grid container spacing={{ xs: 1, lg: 1 }}>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ borderRadius: 1, boxShadow: 2, marginBottom: 2 }}>
+          <Box sx={{ borderRadius: 1, boxShadow: 2, marginBottom: 1 }}>
             <SettingSystem onError={onError} />
-          </Paper>
-          <Paper sx={{ borderRadius: 1, boxShadow: 2 }}>
+          </Box>
+          <Box sx={{ borderRadius: 1, boxShadow: 2 }}>
             <SettingClash onError={onError} />
-          </Paper>
+          </Box>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ borderRadius: 1, boxShadow: 2 }}>
+          <Box sx={{ borderRadius: 1, boxShadow: 2 }}>
             <SettingVerge onError={onError} />
-          </Paper>
+          </Box>
         </Grid>
       </Grid>
     </BasePage>

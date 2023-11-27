@@ -18,10 +18,11 @@ import { closeAllConnections } from "@/services/api";
 import { grantPermission } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 
-const VALID_CORE = [
+/* const VALID_CORE = [
   { name: "Clash", core: "clash" },
   { name: "Clash Meta", core: "clash-meta" },
-];
+]; */
+const VALID_CORE = [{ name: "Clash Meta", core: "clash-meta" }];
 
 const OS = getSystem();
 
@@ -91,7 +92,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       contentSx={{
         pb: 0,
         width: 320,
-        height: 200,
+        height: 90,
         overflowY: "auto",
         userSelect: "text",
         marginTop: "-8px",
@@ -111,7 +112,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
 
             {(OS === "macos" || OS === "linux") && (
-              <IconButton
+              /*               <IconButton
                 color="inherit"
                 size="small"
                 edge="end"
@@ -122,7 +123,19 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
                 }}
               >
                 <Lock fontSize="inherit" />
-              </IconButton>
+              </IconButton> */
+              <Button
+                variant="outlined"
+                size="small"
+                title={t("Tun mode requires")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onGrant(each.core);
+                }}
+              >
+                {t("Grant")}
+              </Button>
             )}
           </ListItemButton>
         ))}

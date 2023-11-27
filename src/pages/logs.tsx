@@ -64,7 +64,7 @@ const LogPage = () => {
         </Box>
       }
     >
-      <Paper
+      <Box
         sx={{
           boxSizing: "border-box",
           boxShadow: 0,
@@ -121,7 +121,7 @@ const LogPage = () => {
             <BaseEmpty text="No Logs" />
           )}
         </Box>
-      </Paper>
+      </Box>
     </BasePage>
   );
 };

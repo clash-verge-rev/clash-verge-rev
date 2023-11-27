@@ -295,7 +295,7 @@ const ProfilePage = () => {
       </Stack>
 
       <Box sx={{ mb: 4.5 }}>
-        <Grid container spacing={{ xs: 2, lg: 3 }}>
+        <Grid container spacing={{ xs: 1, lg: 1 }}>
           {regularItems.map((item) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
               <ProfileItem
@@ -311,7 +311,7 @@ const ProfilePage = () => {
       </Box>
 
       {enhanceItems.length > 0 && (
-        <Grid container spacing={{ xs: 2, lg: 3 }}>
+        <Grid container spacing={{ xs: 2, lg: 2 }}>
           {enhanceItems.map((item) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
               <ProfileMore
