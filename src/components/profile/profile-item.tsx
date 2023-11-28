@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Box,
   Typography,
@@ -14,7 +16,7 @@ import {
   Menu,
   CircularProgress,
 } from "@mui/material";
-import { RefreshRounded } from "@mui/icons-material";
+import { RefreshRounded, DragIndicator } from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
@@ -28,6 +30,7 @@ const round = keyframes`
 `;
 
 interface Props {
+  id: string;
   selected: boolean;
   activating: boolean;
   itemData: IProfileItem;
@@ -37,6 +40,8 @@ interface Props {
 
 export const ProfileItem = (props: Props) => {
   const { selected, activating, itemData, onSelect, onEdit } = props;
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: props.id });
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -183,7 +188,12 @@ export const ProfileItem = (props: Props) => {
   };
 
   return (
-    <>
+    <Box
+      sx={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+    >
       <ProfileBox
         aria-selected={selected}
         onClick={() => onSelect(false)}
@@ -212,17 +222,33 @@ export const ProfileItem = (props: Props) => {
             <CircularProgress size={20} />
           </Box>
         )}
-
         <Box position="relative">
-          <Typography
-            width="calc(100% - 36px)"
-            variant="h6"
-            component="h2"
-            noWrap
-            title={name}
-          >
-            {name}
-          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "start" }}>
+            <Box
+              ref={setNodeRef}
+              sx={{ display: "flex", margin: "auto 0" }}
+              {...attributes}
+              {...listeners}
+            >
+              <DragIndicator
+                sx={{
+                  marginTop: "auto",
+                  marginBottom: "auto",
+                  cursor: "grab",
+                }}
+              />
+            </Box>
+
+            <Typography
+              width="calc(100% - 36px)"
+              variant="h6"
+              component="h2"
+              noWrap
+              title={name}
+            >
+              {name}
+            </Typography>
+          </Box>
 
           {/* only if has url can it be updated */}
           {hasUrl && (
@@ -246,7 +272,6 @@ export const ProfileItem = (props: Props) => {
             </IconButton>
           )}
         </Box>
-
         {/* the second line show url's info or description */}
         <Box sx={boxStyle}>
           {hasUrl ? (
@@ -271,7 +296,6 @@ export const ProfileItem = (props: Props) => {
             </Typography>
           )}
         </Box>
-
         {/* the third line show extra info or last updated time */}
         {hasExtra ? (
           <Box sx={{ ...boxStyle, fontSize: 14 }}>
@@ -285,7 +309,6 @@ export const ProfileItem = (props: Props) => {
             <span title="Updated Time">{parseExpire(updated)}</span>
           </Box>
         )}
-
         <LinearProgress
           variant="determinate"
           value={progress}
@@ -324,7 +347,7 @@ export const ProfileItem = (props: Props) => {
         mode="yaml"
         onClose={() => setFileOpen(false)}
       />
-    </>
+    </Box>
   );
 };
 

@@ -55,7 +55,12 @@ impl IProfiles {
 
     pub fn template() -> Self {
         Self {
-            valid: Some(vec!["dns".into(), "sub-rules".into(), "unified-delay".into(), "tcp-concurrent".into()]),
+            valid: Some(vec![
+                "dns".into(),
+                "sub-rules".into(),
+                "unified-delay".into(),
+                "tcp-concurrent".into(),
+            ]),
             items: Some(vec![]),
             ..Self::default()
         }
@@ -148,6 +153,30 @@ impl IProfiles {
         }
 
         self.items.as_mut().map(|items| items.push(item));
+        self.save_file()
+    }
+
+    /// reorder items
+    pub fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
+        let mut items = self.items.take().unwrap_or(vec![]);
+        let mut old_index = None;
+        let mut new_index = None;
+
+        for i in 0..items.len() {
+            if items[i].uid == Some(active_id.clone()) {
+                old_index = Some(i);
+            }
+            if items[i].uid == Some(over_id.clone()) {
+                new_index = Some(i);
+            }
+        }
+
+        if old_index.is_none() || new_index.is_none() {
+            return Ok(());
+        }
+        let item = items.remove(old_index.unwrap());
+        items.insert(new_index.unwrap(), item);
+        self.items = Some(items);
         self.save_file()
     }
 
