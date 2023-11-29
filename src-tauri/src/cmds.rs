@@ -31,6 +31,11 @@ pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult
 }
 
 #[tauri::command]
+pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
+    wrap_err!(Config::profiles().data().reorder(active_id, over_id))
+}
+
+#[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
     let item = wrap_err!(PrfItem::from(item, file_data).await)?;
     wrap_err!(Config::profiles().data().append_item(item))
@@ -228,7 +233,6 @@ pub fn open_logs_dir() -> CmdResult<()> {
 pub fn open_web_url(url: String) -> CmdResult<()> {
     wrap_err!(open::that(url))
 }
-
 
 #[cfg(windows)]
 pub mod uwp {

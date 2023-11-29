@@ -59,6 +59,7 @@ fn main() -> std::io::Result<()> {
             cmds::patch_profile,
             cmds::create_profile,
             cmds::import_profile,
+            cmds::reorder_profile,
             cmds::update_profile,
             cmds::delete_profile,
             cmds::read_profile_file,
