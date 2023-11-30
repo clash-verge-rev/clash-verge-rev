@@ -103,6 +103,7 @@ const SettingVerge = ({ onError }: Props) => {
               <MenuItem value="main_window">{t("Show Main Window")}</MenuItem>
               <MenuItem value="system_proxy">{t("System Proxy")}</MenuItem>
               <MenuItem value="tun_mode">{t("Tun Mode")}</MenuItem>
+              <MenuItem value="disable">{t("Disable")}</MenuItem>
             </Select>
           </GuardState>
         </SettingItem>
