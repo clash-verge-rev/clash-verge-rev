@@ -37,14 +37,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Switch Rust Toolchain
-        if: startsWith(matrix.os, 'windows') || startsWith(matrix.os, 'ubuntu')
-        run: |
-          rustup target add ${{ matrix.target }}
-          rustup toolchain install --force-non-host stable-${{ matrix.target }}
-
-      - name: Switch Rust Toolchain
-        if: startsWith(matrix.os, 'macos')
+      - name: Add Rust Target
         run: |
           rustup target add ${{ matrix.target }}
 
