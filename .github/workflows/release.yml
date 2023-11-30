@@ -45,7 +45,7 @@ jobs:
       - name: Switch Rust Toolchain
         run: |
           rustup target add ${{ matrix.target }}
-          rustup toolchain install --force-non-host stable=${{ matrix.target }}
+          rustup toolchain install --force-non-host stable-${{ matrix.target }}
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
