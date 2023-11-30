@@ -62,6 +62,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libayatana-appindicator3-dev librsvg2-dev patchelf openssl
+
       - name: Install Dependencies (Ubuntu Only)
         if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'aarch64')
         run: |
@@ -73,11 +74,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libncurses6:arm64 libtinfo6:arm64 linux-libc-dev:arm64 libncursesw6:arm64 libssl3:arm64 libcups2:arm64
           sudo apt-get install -y --no-install-recommends g++-aarch64-linux-gnu libc6-dev-arm64-cross libssl-dev:arm64 libwebkit2gtk-4.0-dev:arm64 libgtk-3-dev:arm64 patchelf:arm64 librsvg2-dev:arm64 libayatana-appindicator3-dev:arm64
-          export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
-          export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
-          export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
-          export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
-          export PKG_CONFIG_ALLOW_CROSS=1
 
       - name: Pnpm install and check
         run: |
@@ -85,6 +81,7 @@ jobs:
           pnpm check ${{ matrix.target }}
 
       - name: Tauri build
+        if: startsWith(matrix.os, 'windows') || startsWith(matrix.os,'macos') || startsWith(matrix.target,'x86_64')
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -97,7 +94,28 @@ jobs:
           releaseDraft: true
           prerelease: false
           tauriScript: pnpm
-          args: -f default-meta --target ${{ matrix.target }} -b msi,deb,dmg
+          args: -f default-meta --target ${{ matrix.target }} -b msi,deb,dmg,appimage
+
+      - name: Tauri build (Ubuntu Arm64)
+        if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'aarch64')
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+          CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
+          PKG_CONFIG_PATH: /usr/lib/aarch64-linux-gnu/pkgconfig
+          PKG_CONFIG_ALLOW_CROSS: 1
+        with:
+          tagName: v__VERSION__
+          releaseName: "Clash Verge v__VERSION__"
+          releaseBody: "More new features are now supported."
+          releaseDraft: true
+          prerelease: false
+          tauriScript: pnpm
+          args: -f default-meta --target ${{ matrix.target }} -b deb
 
       # - name: Portable Bundle
       #   if: matrix.os == 'windows-latest'
