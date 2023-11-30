@@ -15,7 +15,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
