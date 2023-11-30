@@ -81,23 +81,11 @@ jobs:
           export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
           export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
           export PKG_CONFIG_ALLOW_CROSS=1
-      - name: Install Dependencies (Ubuntu Only)
-        if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'armv7')
-        run: |
-          sudo dpkg --add-architecture armhf
-          sudo apt-get update
-          sudo apt-get install -y libncurses6:armhf libtinfo6:armhf linux-libc-dev:armhf libncursesw6:armhf libssl3:armhf libcups2:armhf
-          sudo apt-get install -y --no-install-recommends g++-arm-linux-gnueabihf libc6-dev-armhf-cross libssl-dev:armhf libwebkit2gtk-4.0-dev:armhf libgtk-3-dev:armhf patchelf:armhf librsvg2-dev:armhf libxdo-dev:armhf libxcb1:armhf libxrandr2:armhf libdbus-1-3:armhf libayatana-appindicator3-dev:armhf
-          export CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc
-          export CC_armv7_unknown_linux_gnueabihf=arm-linux-gnueabihf-gcc
-          export CXX_armv7_unknown_linux_gnueabihf=arm-linux-gnueabihf-g++
-          export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
-          export PKG_CONFIG_ALLOW_CROSS=1
 
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm check -- ${{ matrix.target }}
+          pnpm check ${{ matrix.target }}
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
