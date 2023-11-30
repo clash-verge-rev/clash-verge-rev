@@ -186,7 +186,8 @@ impl Tray {
         match tray_event.as_str() {
             "system_proxy" => feat::toggle_system_proxy(),
             "tun_mode" => feat::toggle_tun_mode(),
-            _ => resolve::create_window(app_handle),
+            "main_window" => resolve::create_window(app_handle),
+            _ => {}
         }
     }
 
