@@ -42,6 +42,7 @@ const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/
 
 const META_MAP = {
   "win32-x64": "clash.meta-win-amd64",
+  "win32-arm64": "clash.meta-win-arm64",
   "darwin-x64": "clash.meta-darwin-amd64",
   "darwin-arm64": "clash.meta-darwin-arm64",
   "linux-x64": "clash.meta-linux-amd64",
@@ -51,8 +52,28 @@ const META_MAP = {
 /*
  * check available
  */
+const PLATFORM_MAP = {
+  "x86_64-pc-windows-msvc": "win32",
+  "aarch64-pc-windows-msvc": "win32",
+  "x86_64-apple-darwin": "darwin",
+  "aarch64-apple-darwin": "darwin",
+  "x86_64-unknown-linux-gnu": "linux",
+  "aarch64-unknown-linux-gnu": "linux",
+};
+const ARCH_MAP = {
+  "x86_64-pc-windows-msvc": "x64",
+  "aarch64-pc-windows-msvc": "arm64",
+  "x86_64-apple-darwin": "x64",
+  "aarch64-apple-darwin": "arm64",
+  "x86_64-unknown-linux-gnu": "x64",
+  "aarch64-unknown-linux-gnu": "arm64",
+};
 
-const { platform, arch } = process;
+const target = process.argv.slice(2)[0];
+const { platform, arch } = target
+  ? { platform: PLATFORM_MAP[target], arch: ARCH_MAP[target] }
+  : process;
+
 /*
 if (!CLASH_MAP[`${platform}-${arch}`]) {
   throw new Error(`clash unsupported platform "${platform}-${arch}"`);

@@ -19,8 +19,6 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
           # - os: windows-latest
-          #   target: i686-pc-windows-msvc
-          # - os: windows-latest
           #   target: aarch64-pc-windows-msvc
           - os: macos-latest
             target: aarch64-apple-darwin
@@ -29,11 +27,8 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
-            target: i686-unknown-linux-gnu
-          - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
+
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
@@ -43,9 +38,15 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Switch Rust Toolchain
+        if: startsWith(matrix.os, 'windows') || startsWith(matrix.os, 'ubuntu')
         run: |
           rustup target add ${{ matrix.target }}
           rustup toolchain install --force-non-host stable-${{ matrix.target }}
+
+      - name: Switch Rust Toolchain
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -69,18 +70,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libayatana-appindicator3-dev librsvg2-dev patchelf openssl
       - name: Install Dependencies (Ubuntu Only)
-        if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'i686')
-        run: |
-          sudo dpkg --add-architecture i386
-          sudo apt-get update
-          sudo apt-get install -y libstdc++6:i386 libgdk-pixbuf2.0-dev:i386 libatomic1:i386 gcc-multilib g++-multilib libwebkit2gtk-4.0-dev:i386 libssl-dev:i386 libgtk-3-dev:i386 librsvg2-dev:i386 patchelf:i386 libayatana-appindicator3-dev:i386
-          export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig/:$PKG_CONFIG_PATH
-          export PKG_CONFIG_SYSROOT_DIR=/
-      - name: Install Dependencies (Ubuntu Only)
         if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'aarch64')
         run: |
-          sudo sed 's/http:\/\/\(.*\).ubuntu.com\/ubuntu\//[arch-=amd64,i386] http:\/\/ports.ubuntu.com\/ubuntu-ports\//g' /etc/apt/sources.list | tee /etc/apt/sources.list.d/ports.list
-          sudo sed -i 's/http:\/\/\(.*\).ubuntu.com\/ubuntu\//[arch=amd64,i386] http:\/\/\1.archive.ubuntu.com\/ubuntu\//g' /etc/apt/sources.list
           sudo dpkg --add-architecture arm64
           sudo apt-get update
           sudo apt-get install -y libncurses6:arm64 libtinfo6:arm64 linux-libc-dev:arm64 libncursesw6:arm64 libssl3:arm64 libcups2:arm64
@@ -93,8 +84,6 @@ jobs:
       - name: Install Dependencies (Ubuntu Only)
         if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'armv7')
         run: |
-          sudo sed 's/http:\/\/\(.*\).ubuntu.com\/ubuntu\//[arch-=amd64,i386] http:\/\/ports.ubuntu.com\/ubuntu-ports\//g' /etc/apt/sources.list | tee /etc/apt/sources.list.d/ports.list
-          sudo sed -i 's/http:\/\/\(.*\).ubuntu.com\/ubuntu\//[arch=amd64,i386] http:\/\/\1.archive.ubuntu.com\/ubuntu\//g' /etc/apt/sources.list
           sudo dpkg --add-architecture armhf
           sudo apt-get update
           sudo apt-get install -y libncurses6:armhf libtinfo6:armhf linux-libc-dev:armhf libncursesw6:armhf libssl3:armhf libcups2:armhf
@@ -108,7 +97,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm check
+          pnpm check -- ${{ matrix.target }}
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
@@ -123,17 +112,17 @@ jobs:
           releaseDraft: true
           prerelease: false
           tauriScript: pnpm
-          args: -f default-meta --target ${{ matrix.target }}
+          args: -f default-meta --target ${{ matrix.target }} -b msi,deb,dmg
 
-      - name: Portable Bundle
-        if: matrix.os == 'windows-latest'
-        run: |
-          pnpm portable
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-          VITE_WIN_PORTABLE: 1
+      # - name: Portable Bundle
+      #   if: matrix.os == 'windows-latest'
+      #   run: |
+      #     pnpm portable
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+      #     TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+      #     VITE_WIN_PORTABLE: 1
 
   release-update:
     needs: [release]
