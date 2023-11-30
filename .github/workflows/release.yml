@@ -3,8 +3,8 @@ name: Release Build
 on:
   workflow_dispatch:
   push:
-    # tags:
-    #   - v**
+    tags:
+      - v**
 
 env:
   CARGO_INCREMENTAL: 0
@@ -30,6 +30,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
 
     runs-on: ${{ matrix.os }}
+    if: startsWith(github.repository, 'wonfen')
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -91,10 +92,10 @@ jobs:
           tagName: v__VERSION__
           releaseName: "Clash Verge v__VERSION__"
           releaseBody: "More new features are now supported."
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           tauriScript: pnpm
-          args: -f default-meta --target ${{ matrix.target }} -b msi,deb,dmg,appimage
+          args: -f default-meta --target ${{ matrix.target }}
 
       - name: Tauri build (Ubuntu Arm64)
         if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'aarch64')
@@ -112,20 +113,20 @@ jobs:
           tagName: v__VERSION__
           releaseName: "Clash Verge v__VERSION__"
           releaseBody: "More new features are now supported."
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           tauriScript: pnpm
-          args: -f default-meta --target ${{ matrix.target }} -b deb
+          args: -f default-meta --target ${{ matrix.target }} -b deb,updater
 
-      # - name: Portable Bundle
-      #   if: matrix.os == 'windows-latest'
-      #   run: |
-      #     pnpm portable
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-      #     TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-      #     VITE_WIN_PORTABLE: 1
+      - name: Portable Bundle
+        if: matrix.os == 'windows-latest'
+        run: |
+          pnpm portable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          VITE_WIN_PORTABLE: 1
 
   release-update:
     needs: [release]

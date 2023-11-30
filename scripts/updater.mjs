@@ -45,6 +45,7 @@ async function resolveUpdater() {
       "darwin-intel": { signature: "", url: "" },
       "darwin-x86_64": { signature: "", url: "" },
       "linux-x86_64": { signature: "", url: "" },
+      "linux-aarch64": { signature: "", url: "" },
       "windows-x86_64": { signature: "", url: "" },
     },
   };
