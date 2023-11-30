@@ -33,16 +33,18 @@ const CLASH_MAP = {
 };
 */
 /* ======= clash meta ======= */
-const META_URL_PREFIX = `https://github.com/wonfen/Clash.Meta/releases/download/latest`;
-// const META_VERSION = "2023.11.23";
+const VERSION_URL =
+  "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt";
+const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`;
+let META_VERSION;
 
 const META_MAP = {
-  "win32-x64": "clash.meta-win-amd64",
-  "win32-arm64": "clash.meta-win-arm64",
-  "darwin-x64": "clash.meta-darwin-amd64",
-  "darwin-arm64": "clash.meta-darwin-arm64",
-  "linux-x64": "clash.meta-linux-amd64",
-  "linux-arm64": "clash.meta-linux-arm64",
+  "win32-x64": "mihomo-windows-amd64",
+  "win32-arm64": "mihomo-windows-arm64",
+  "darwin-x64": "mihomo-darwin-amd64",
+  "darwin-arm64": "mihomo-darwin-arm64",
+  "linux-x64": "mihomo-linux-amd64",
+  "linux-arm64": "mihomo-linux-arm64",
 };
 
 /*
@@ -64,6 +66,21 @@ const ARCH_MAP = {
   "x86_64-unknown-linux-gnu": "x64",
   "aarch64-unknown-linux-gnu": "arm64",
 };
+
+/**
+ * Fetch the latest release version from the version.txt file
+ */
+async function getLatestVersion() {
+  try {
+    const response = await fetch(VERSION_URL, { method: "GET" });
+    let v = await response.text();
+    META_VERSION = v.trim(); // Trim to remove extra whitespaces
+    console.log(`Latest release version: ${META_VERSION}`);
+  } catch (error) {
+    console.error("Error fetching latest release version:", error.message);
+    process.exit(1);
+  }
+}
 
 const target = process.argv.slice(2)[0];
 const { platform, arch } = target
@@ -141,14 +158,10 @@ function clashS3() {
 function clashMeta() {
   const name = META_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
-  /*   const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${META_URL_PREFIX}${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
+  const urlExt = isWin ? "zip" : "gz";
+  const downloadURL = `${META_URL_PREFIX}/${name}-${META_VERSION}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}-${META_VERSION}.${urlExt}`; */
-  const urlExt = isWin ? "zip" : "tgz";
-  const downloadURL = `${META_URL_PREFIX}/${name}.${urlExt}`;
-  const exeFile = isWin ? "虚空终端-win-amd64.exe" : name;
-  const zipFile = `${name}.${urlExt}`;
+  const zipFile = `${name}-${META_VERSION}.${urlExt}`;
 
   return {
     name: "clash-meta",
@@ -380,7 +393,11 @@ const resolveEnableLoopback = () =>
 
 const tasks = [
   // { name: "clash", func: resolveClash, retry: 5 },
-  { name: "clash-meta", func: () => resolveSidecar(clashMeta()), retry: 5 },
+  {
+    name: "clash-meta",
+    func: () => getLatestVersion().then(() => resolveSidecar(clashMeta())),
+    retry: 5,
+  },
   // { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
   { name: "service", func: resolveService, retry: 5, winOnly: true },
   { name: "install", func: resolveInstall, retry: 5, winOnly: true },
