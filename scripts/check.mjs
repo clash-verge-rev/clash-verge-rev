@@ -11,10 +11,6 @@ const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 const FORCE = process.argv.includes("--force");
 
-const SIDECAR_HOST = execSync("rustc -vV")
-  .toString()
-  .match(/(?<=host: ).+(?=\s*)/g)[0];
-
 /* ======= clash ======= 
 const CLASH_STORAGE_PREFIX = "https://release.dreamacro.workers.dev/";
 const CLASH_URL_PREFIX =
@@ -74,6 +70,11 @@ const { platform, arch } = target
   ? { platform: PLATFORM_MAP[target], arch: ARCH_MAP[target] }
   : process;
 
+const SIDECAR_HOST = target
+  ? target
+  : execSync("rustc -vV")
+      .toString()
+      .match(/(?<=host: ).+(?=\s*)/g)[0];
 /*
 if (!CLASH_MAP[`${platform}-${arch}`]) {
   throw new Error(`clash unsupported platform "${platform}-${arch}"`);

@@ -72,6 +72,8 @@ jobs:
       - name: Install Dependencies (Ubuntu Only)
         if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'aarch64')
         run: |
+          sed 's/http:\/\/\(.*\).ubuntu.com\/ubuntu\//[arch-=amd64,i386] http:\/\/ports.ubuntu.com\/ubuntu-ports\//g' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
+          sudo sed -i 's/http:\/\/\(.*\).ubuntu.com\/ubuntu\//[arch=amd64,i386] http:\/\/\1.archive.ubuntu.com\/ubuntu\//g' /etc/apt/sources.list
           sudo dpkg --add-architecture arm64
           sudo apt-get update
           sudo apt-get install -y libncurses6:arm64 libtinfo6:arm64 linux-libc-dev:arm64 libncursesw6:arm64 libssl3:arm64 libcups2:arm64
