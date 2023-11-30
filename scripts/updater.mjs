@@ -45,6 +45,7 @@ async function resolveUpdater() {
       "darwin-intel": { signature: "", url: "" },
       "darwin-x86_64": { signature: "", url: "" },
       "linux-x86_64": { signature: "", url: "" },
+      "linux-aarch64": { signature: "", url: "" },
       "windows-x86_64": { signature: "", url: "" },
     },
   };
@@ -92,12 +93,16 @@ async function resolveUpdater() {
     if (name.endsWith(".AppImage.tar.gz")) {
       updateData.platforms.linux.url = browser_download_url;
       updateData.platforms["linux-x86_64"].url = browser_download_url;
+      // 暂时使用x64版本的url和sig，使得可以检查更新，但aarch64版本还不支持构建appimage
+      updateData.platforms["linux-aarch64"].url = browser_download_url;
     }
     // linux signature
     if (name.endsWith(".AppImage.tar.gz.sig")) {
       const sig = await getSignature(browser_download_url);
       updateData.platforms.linux.signature = sig;
       updateData.platforms["linux-x86_64"].signature = sig;
+      // 暂时使用x64版本的url和sig，使得可以检查更新，但aarch64版本还不支持构建appimage
+      updateData.platforms["linux-aarch64"].url = browser_download_url;
     }
   });
 
