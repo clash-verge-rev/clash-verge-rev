@@ -18,6 +18,8 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: i686-pc-windows-msvc
           # - os: windows-latest
           #   target: aarch64-pc-windows-msvc
           - os: macos-latest
@@ -28,6 +30,8 @@ jobs:
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
+          # - os: ubuntu-latest
+          #   target: armv7-unknown-linux-gnueabihf
 
     runs-on: ${{ matrix.os }}
     if: startsWith(github.repository, 'wonfen')
@@ -67,14 +71,26 @@ jobs:
       - name: Install Dependencies (Ubuntu Only)
         if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'aarch64')
         run: |
-          sed 's/mirror+file:\/etc\/apt\/apt-mirrors.txt/[arch-=amd64,i386] http:\/\/ports.ubuntu.com\/ubuntu-ports\//g' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
-          sudo sed -i 's/mirror+file/[arch=amd64,i386] mirror+file/g' /etc/apt/sources.list
+          sed 's/mirror+file:\/etc\/apt\/apt-mirrors.txt/[arch-=amd64] http:\/\/ports.ubuntu.com\/ubuntu-ports\//g' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
+          sudo sed -i 's/mirror+file/[arch=amd64] mirror+file/g' /etc/apt/sources.list
           cat /etc/apt/sources.list
           cat /etc/apt/sources.list.d/ports.list
           sudo dpkg --add-architecture arm64
           sudo apt-get update
           sudo apt-get install -y libncurses6:arm64 libtinfo6:arm64 linux-libc-dev:arm64 libncursesw6:arm64 libssl3:arm64 libcups2:arm64
           sudo apt-get install -y --no-install-recommends g++-aarch64-linux-gnu libc6-dev-arm64-cross libssl-dev:arm64 libwebkit2gtk-4.0-dev:arm64 libgtk-3-dev:arm64 patchelf:arm64 librsvg2-dev:arm64 libayatana-appindicator3-dev:arm64
+
+      - name: Install Dependencies (Ubuntu Only)
+        if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'armv7')
+        run: |
+          sed 's/mirror+file:\/etc\/apt\/apt-mirrors.txt/[arch-=amd64] http:\/\/ports.ubuntu.com\/ubuntu-ports\//g' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list
+          sudo sed -i 's/mirror+file/[arch=amd64] mirror+file/g' /etc/apt/sources.list
+          cat /etc/apt/sources.list
+          cat /etc/apt/sources.list.d/ports.list
+          sudo dpkg --add-architecture armhf
+          sudo apt-get update
+          sudo apt-get install -y libncurses6:armhf libtinfo6:armhf linux-libc-dev:armhf libncursesw6:armhf libssl3:armhf libcups2:armhf
+          sudo apt-get install -y --no-install-recommends g++-arm-linux-gnueabihf libc6-dev-armhf-cross libssl-dev:armhf libwebkit2gtk-4.0-dev:armhf libgtk-3-dev:armhf patchelf:armhf librsvg2-dev:armhf libayatana-appindicator3-dev:armhf
 
       - name: Pnpm install and check
         run: |
@@ -108,6 +124,27 @@ jobs:
           CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
           CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
           PKG_CONFIG_PATH: /usr/lib/aarch64-linux-gnu/pkgconfig
+          PKG_CONFIG_ALLOW_CROSS: 1
+        with:
+          tagName: v__VERSION__
+          releaseName: "Clash Verge v__VERSION__"
+          releaseBody: "More new features are now supported."
+          releaseDraft: false
+          prerelease: false
+          tauriScript: pnpm
+          args: -f default-meta --target ${{ matrix.target }} -b deb,updater
+
+      - name: Tauri build (Ubuntu Armv7)
+        if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'armv7')
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER: arm-linux-gnueabihf-gcc
+          CC_armv7_unknown_linux_gnueabihf: arm-linux-gnueabihf-gcc
+          CXX_armv7_unknown_linux_gnueabihf: arm-linux-gnueabihf-g++
+          PKG_CONFIG_PATH: /usr/lib/arm-linux-gnueabihf/pkgconfig
           PKG_CONFIG_ALLOW_CROSS: 1
         with:
           tagName: v__VERSION__
