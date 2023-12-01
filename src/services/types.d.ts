@@ -166,6 +166,8 @@ interface IVergeConfig {
   enable_service_mode?: boolean;
   enable_silent_start?: boolean;
   enable_system_proxy?: boolean;
+  enable_random_port?: boolean;
+  verge_mixed_port?: number;
   enable_proxy_guard?: boolean;
   proxy_guard_duration?: number;
   system_proxy_bypass?: string;
