@@ -204,11 +204,11 @@ impl Tray {
                 "open_window" => resolve::create_window(app_handle),
                 "system_proxy" => feat::toggle_system_proxy(),
                 "tun_mode" => feat::toggle_tun_mode(),
-                "copy_env_sh" => feat::copy_clash_env("sh"),
+                "copy_env_sh" => feat::copy_clash_env(app_handle, "sh"),
                 #[cfg(target_os = "windows")]
-                "copy_env_cmd" => feat::copy_clash_env("cmd"),
+                "copy_env_cmd" => feat::copy_clash_env(app_handle, "cmd"),
                 #[cfg(target_os = "windows")]
-                "copy_env_ps" => feat::copy_clash_env("ps"),
+                "copy_env_ps" => feat::copy_clash_env(app_handle, "ps"),
                 "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
                 "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
                 "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),

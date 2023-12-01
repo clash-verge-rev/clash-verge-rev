@@ -10,7 +10,7 @@ use crate::log_err;
 use crate::utils::resolve;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
-use wry::application::clipboard::Clipboard;
+use tauri::{AppHandle, ClipboardManager};
 
 // 打开面板
 pub fn open_dashboard() {
@@ -337,7 +337,7 @@ async fn update_core_config() -> Result<()> {
 }
 
 /// copy env variable
-pub fn copy_clash_env(option: &str) {
+pub fn copy_clash_env(app_handle: &AppHandle, option: &str) {
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7890) };
     let http_proxy = format!("http://127.0.0.1:{}", port);
     let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
@@ -346,13 +346,12 @@ pub fn copy_clash_env(option: &str) {
         format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
     let cmd: String = format!("set http_proxy={http_proxy} \n set https_proxy={http_proxy}");
     let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
-
-    let mut cliboard = Clipboard::new();
+    let mut cliboard = app_handle.clipboard_manager();
 
     match option {
-        "sh" => cliboard.write_text(sh),
-        "cmd" => cliboard.write_text(cmd),
-        "ps" => cliboard.write_text(ps),
+        "sh" => cliboard.write_text(sh).unwrap_or_default(),
+        "cmd" => cliboard.write_text(cmd).unwrap_or_default(),
+        "ps" => cliboard.write_text(ps).unwrap_or_default(),
         _ => log::error!(target: "app", "copy_clash_env: Invalid option! {option}"),
-    }
+    };
 }

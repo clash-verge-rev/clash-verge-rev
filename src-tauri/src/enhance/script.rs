@@ -3,7 +3,7 @@ use anyhow::Result;
 use serde_yaml::Mapping;
 
 pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(String, String)>)> {
-    use rquickjs::{Context, Func, Runtime};
+    use rquickjs::{function::Func, Context, Runtime};
     use std::sync::{Arc, Mutex};
 
     let runtime = Runtime::new().unwrap();

@@ -14,10 +14,10 @@ tauri-build = { version = "1", features = [] }
 
 [dependencies]
 warp = "0.3"
-which = "4.2.2"
+which = "5.0.0"
 anyhow = "1.0"
 dirs = "5.0.0"
-open = "4.0.1"
+open = "5.0.1"
 log = "0.4.14"
 ctrlc = "3.2.3"
 dunce = "1.0.2"
@@ -26,7 +26,7 @@ nanoid = "0.4.0"
 chrono = "0.4.19"
 sysinfo = "0.29"
 sysproxy = "0.3"
-rquickjs = "0.1.7"
+rquickjs = "0.3.1"
 serde_json = "1.0"
 serde_yaml = "0.9"
 auto-launch = "0.5"
@@ -37,17 +37,16 @@ parking_lot = "0.12.0"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
-tauri = { version = "1.2.4", features = ["global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all"] }
-window-vibrancy = { version = "0.3.0" }
+tauri = { version = "1.5", features = [ "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all"] }
+window-vibrancy = { version = "0.4.3" }
 window-shadows = { version = "0.2.0" }
-wry = { version = "0.24.3" }
 
 
 [target.'cfg(windows)'.dependencies]
-runas = "=1.0.0"
+runas = "=1.1.0"
 deelevate = "0.2.0"
-winreg = { version = "0.50", features = ["transactions"] }
-windows-sys = { version = "0.48", features = ["Win32_System_LibraryLoader", "Win32_System_SystemInformation"] }
+winreg = { version = "0.52", features = ["transactions"] }
+windows-sys = { version = "0.52", features = ["Win32_System_LibraryLoader", "Win32_System_SystemInformation"] }
 
 [target.'cfg(windows)'.dependencies.tauri]
 features = ["global-shortcut-all", "icon-png", "process-all", "shell-all", "system-tray", "updater", "window-all"]

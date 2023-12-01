@@ -4,7 +4,6 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
 use tauri::{AppHandle, GlobalShortcutManager};
-use wry::application::accelerator::Accelerator;
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
@@ -35,7 +34,7 @@ impl Hotkey {
 
                 match (key, func) {
                     (Some(key), Some(func)) => {
-                        log_err!(Self::check_key(key).and_then(|_| self.register(key, func)));
+                        log_err!(self.register(key, func));
                     }
                     _ => {
                         let key = key.unwrap_or("None");
@@ -47,16 +46,6 @@ impl Hotkey {
             *self.current.lock() = hotkeys.clone();
         }
 
-        Ok(())
-    }
-
-    /// 检查一个键是否合法
-    fn check_key(hotkey: &str) -> Result<()> {
-        // fix #287
-        // tauri的这几个方法全部有Result expect，会panic，先检测一遍避免挂了
-        if hotkey.parse::<Accelerator>().is_err() {
-            bail!("invalid hotkey `{hotkey}`");
-        }
         Ok(())
     }
 
@@ -108,11 +97,6 @@ impl Hotkey {
         let new_map = Self::get_map_from_vec(&new_hotkeys);
 
         let (del, add) = Self::get_diff(old_map, new_map);
-
-        // 先检查一遍所有新的热键是不是可以用的
-        for (hotkey, _) in add.iter() {
-            Self::check_key(hotkey)?;
-        }
 
         del.iter().for_each(|key| {
             let _ = self.unregister(key);
