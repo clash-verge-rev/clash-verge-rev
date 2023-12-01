@@ -79,7 +79,6 @@ async function resolveUpdater() {
       name.includes("en-US") &&
       name.includes("x86")
     ) {
-      updateData.platforms.win64.url = browser_download_url;
       updateData.platforms["windows-i686"].url = browser_download_url;
     }
     // win32 signature
@@ -89,7 +88,6 @@ async function resolveUpdater() {
       name.includes("x86")
     ) {
       const sig = await getSignature(browser_download_url);
-      updateData.platforms.win64.signature = sig;
       updateData.platforms["windows-i686"].signature = sig;
     }
 
