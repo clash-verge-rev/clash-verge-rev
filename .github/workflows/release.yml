@@ -34,7 +34,6 @@ jobs:
           #   target: armv7-unknown-linux-gnueabihf
 
     runs-on: ${{ matrix.os }}
-    if: startsWith(github.repository, 'wonfen')
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -168,9 +167,7 @@ jobs:
   release-update:
     needs: [release]
     runs-on: ubuntu-latest
-    if: |
-      startsWith(github.repository, 'wonfen') &&
-      startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
