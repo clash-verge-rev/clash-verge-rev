@@ -7,9 +7,10 @@ import {
   MenuItem,
   Typography,
   IconButton,
+  Tooltip,
 } from "@mui/material";
-import { ArrowForward, Settings } from "@mui/icons-material";
-import { DialogRef } from "@/components/base";
+import { ArrowForward, Settings, Shuffle } from "@mui/icons-material";
+import { DialogRef, Notice } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
 import { WebUIViewer } from "./mods/web-ui-viewer";
@@ -20,6 +21,7 @@ import { SettingList, SettingItem } from "./mods/setting-comp";
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { invoke_uwp_tool } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
+import { useVerge } from "@/hooks/use-verge";
 
 const isWIN = getSystem() === "windows";
 
@@ -32,12 +34,11 @@ const SettingClash = ({ onError }: Props) => {
 
   const { clash, version, mutateClash, patchClash } = useClash();
 
-  const {
-    ipv6,
-    "allow-lan": allowLan,
-    "log-level": logLevel,
-    "mixed-port": mixedPort,
-  } = clash ?? {};
+  const { verge, mutateVerge, patchVerge } = useVerge();
+
+  const { ipv6, "allow-lan": allowLan, "log-level": logLevel } = clash ?? {};
+
+  const { enable_random_port = false, verge_mixed_port } = verge ?? {};
 
   const webRef = useRef<DialogRef>(null);
   const fieldRef = useRef<DialogRef>(null);
@@ -49,7 +50,9 @@ const SettingClash = ({ onError }: Props) => {
   const onChangeData = (patch: Partial<IConfigData>) => {
     mutateClash((old) => ({ ...(old! || {}), ...patch }), false);
   };
-
+  const onChangeVerge = (patch: Partial<IVergeConfig>) => {
+    mutateVerge({ ...verge, ...patch }, false);
+  };
   return (
     <SettingList title={t("Clash Setting")}>
       <WebUIViewer ref={webRef} />
@@ -103,11 +106,32 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Mixed Port")}>
+      <SettingItem
+        label={t("Mixed Port")}
+        extra={
+          <Tooltip title={t("Random Port")}>
+            <IconButton
+              color={enable_random_port ? "success" : "inherit"}
+              size="medium"
+              onClick={() => {
+                Notice.success(t("After restart to take effect"), 1000);
+                onChangeVerge({ enable_random_port: !enable_random_port });
+                patchVerge({ enable_random_port: !enable_random_port });
+              }}
+            >
+              <Shuffle
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </Tooltip>
+        }
+      >
         <TextField
+          disabled={enable_random_port}
           autoComplete="off"
           size="small"
-          value={mixedPort ?? 0}
+          value={verge_mixed_port ?? 7890}
           sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}
           onClick={(e) => {
             portRef.current?.open();

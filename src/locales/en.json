@@ -67,6 +67,8 @@
   "IPv6": "IPv6",
   "Log Level": "Log Level",
   "Mixed Port": "Mixed Port",
+  "Random Port": "Random Port",
+  "After restart to take effect": "After restart to take effect",
   "External": "External",
   "Clash Core": "Clash Core",
   "Grant": "Grant",

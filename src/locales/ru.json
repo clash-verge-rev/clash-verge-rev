@@ -64,6 +64,8 @@
   "IPv6": "IPv6",
   "Log Level": "Уровень логов",
   "Mixed Port": "Смешанный порт",
+  "Random Port": "Случайный порт",
+  "After restart to take effect": "Чтобы изменения вступили в силу, необходимо перезапустить приложение",
   "Clash Core": "Ядро Clash",
   "Tun Mode": "Режим туннеля",
   "Service Mode": "Режим сервиса",

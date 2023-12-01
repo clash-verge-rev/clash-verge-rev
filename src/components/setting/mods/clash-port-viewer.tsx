@@ -4,30 +4,35 @@ import { useLockFn } from "ahooks";
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
 import { useClashInfo } from "@/hooks/use-clash";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
 
 export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const { clashInfo, patchInfo } = useClashInfo();
+  const { verge, patchVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
-  const [port, setPort] = useState(clashInfo?.port ?? 7890);
+  const [port, setPort] = useState(
+    verge?.verge_mixed_port ?? clashInfo?.port ?? 7890
+  );
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      if (clashInfo?.port) setPort(clashInfo?.port);
+      if (verge?.verge_mixed_port) setPort(verge?.verge_mixed_port);
       setOpen(true);
     },
     close: () => setOpen(false),
   }));
 
   const onSave = useLockFn(async () => {
-    if (port === clashInfo?.port) {
+    if (port === verge?.verge_mixed_port) {
       setOpen(false);
       return;
     }
     try {
       await patchInfo({ "mixed-port": port });
+      await patchVerge({ verge_mixed_port: port });
       setOpen(false);
       Notice.success("Change Clash port successfully!", 1000);
     } catch (err: any) {

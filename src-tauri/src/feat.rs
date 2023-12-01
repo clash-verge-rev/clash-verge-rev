@@ -162,8 +162,13 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
     match {
         let mixed_port = patch.get("mixed-port");
-        if mixed_port.is_some() {
-            let changed = mixed_port != Config::clash().data().0.get("mixed-port");
+        let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
+        if mixed_port.is_some() && !enable_random_port {
+            let changed = mixed_port.clone().unwrap()
+                != Config::verge()
+                    .latest()
+                    .verge_mixed_port
+                    .unwrap_or(Config::clash().data().get_mixed_port());
             // 检查端口占用
             if changed {
                 if let Some(port) = mixed_port.clone().unwrap().as_u64() {
@@ -333,11 +338,12 @@ async fn update_core_config() -> Result<()> {
 
 /// copy env variable
 pub fn copy_clash_env(option: &str) {
-    let port = { Config::clash().data().get_client_info().port };
+    let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7890) };
     let http_proxy = format!("http://127.0.0.1:{}", port);
     let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
-    
-    let sh = format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
+
+    let sh =
+        format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
     let cmd: String = format!("set http_proxy={http_proxy} \n set https_proxy={http_proxy}");
     let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
 

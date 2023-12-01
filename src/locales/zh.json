@@ -67,6 +67,8 @@
   "IPv6": "IPv6",
   "Log Level": "日志等级",
   "Mixed Port": "端口设置",
+  "Random Port": "随机端口",
+  "After restart to take effect": "重启后生效",
   "External": "外部控制",
   "Clash Core": "Clash 内核",
   "Grant": "授权",
