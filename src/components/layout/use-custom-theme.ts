@@ -55,6 +55,9 @@ export const useCustomTheme = () => {
             primary: setting.primary_text || dt.primary_text,
             secondary: setting.secondary_text || dt.secondary_text,
           },
+          background: {
+            paper: dt.background_color,
+          },
         },
         typography: {
           // todo
