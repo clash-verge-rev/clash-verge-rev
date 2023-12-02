@@ -21,6 +21,7 @@ pub enum ChainType {
 pub enum ChainSupport {
     Clash,
     ClashMeta,
+    ClashMetaAlpha,
     All,
 }
 
@@ -60,9 +61,19 @@ impl ChainItem {
         let hy_alpn =
             ChainItem::to_script("verge_hy_alpn", include_str!("./builtin/meta_hy_alpn.js"));
 
+        // meta 的一些处理
+        let meta_guard_alpha =
+            ChainItem::to_script("verge_meta_guard", include_str!("./builtin/meta_guard.js"));
+
+        // meta 1.13.2 alpn string 转 数组
+        let hy_alpn_alpha =
+            ChainItem::to_script("verge_hy_alpn", include_str!("./builtin/meta_hy_alpn.js"));
+
         vec![
             (ChainSupport::ClashMeta, hy_alpn),
             (ChainSupport::ClashMeta, meta_guard),
+            (ChainSupport::ClashMetaAlpha, hy_alpn_alpha),
+            (ChainSupport::ClashMetaAlpha, meta_guard_alpha),
         ]
     }
 
@@ -81,6 +92,7 @@ impl ChainSupport {
                 (ChainSupport::All, _) => true,
                 (ChainSupport::Clash, "clash") => true,
                 (ChainSupport::ClashMeta, "clash-meta") => true,
+                (ChainSupport::ClashMetaAlpha, "clash-meta-alpha") => true,
                 _ => false,
             },
             None => true,
