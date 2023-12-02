@@ -47,6 +47,7 @@ export const OTHERS_FIELDS = [
   "tcp-concurrent", // meta
   "enable-process", // meta
   "find-process-mode", // meta
+  "skip-auth-prefixes", // meta
   "external-controller-tls", // meta
   "global-client-fingerprint", // meta
 ] as const;
