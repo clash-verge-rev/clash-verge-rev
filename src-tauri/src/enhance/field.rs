@@ -21,7 +21,7 @@ pub const DEFAULT_FIELDS: [&str; 5] = [
     "rule-providers",
 ];
 
-pub const OTHERS_FIELDS: [&str; 30] = [
+pub const OTHERS_FIELDS: [&str; 31] = [
     "dns",
     "tun",
     "ebpf",
@@ -50,6 +50,7 @@ pub const OTHERS_FIELDS: [&str; 30] = [
     "tcp-concurrent",            // meta
     "enable-process",            // meta
     "find-process-mode",         // meta
+    "skip-auth-prefixes",        // meta
     "external-controller-tls",   // meta
     "global-client-fingerprint", // meta
 ];
