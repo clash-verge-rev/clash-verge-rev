@@ -8,6 +8,7 @@ export const defaultTheme = {
   error_color: "#d32f2f",
   warning_color: "#ed6c02",
   success_color: "#2e7d32",
+  background_color: "#ffffff",
   font_family: `"Roboto", "Helvetica", "Arial", sans-serif, "twemoji mozilla"`,
 };
 
@@ -15,5 +16,6 @@ export const defaultTheme = {
 export const defaultDarkTheme = {
   ...defaultTheme,
   primary_text: "#E8E8ED",
+  background_color: "#181818",
   secondary_text: "#bbbbbb",
 };
