@@ -230,7 +230,7 @@ export const ProfileItem = (props: Props) => {
               {...attributes}
               {...listeners}
             >
-              <DragIndicator sx={{ cursor: "grab" }} />
+              <DragIndicator sx={{ cursor: "move", marginLeft: "-5px" }} />
             </Box>
 
             <Typography
