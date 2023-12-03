@@ -1,7 +1,7 @@
 name: Updater CI
 
 on: workflow_dispatch
-
+permissions: write-all
 jobs:
   release-update:
     runs-on: ubuntu-latest

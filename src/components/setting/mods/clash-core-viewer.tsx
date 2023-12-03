@@ -18,11 +18,10 @@ import { closeAllConnections } from "@/services/api";
 import { grantPermission } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 
-/* const VALID_CORE = [
-  { name: "Clash", core: "clash" },
+const VALID_CORE = [
   { name: "Clash Meta", core: "clash-meta" },
-]; */
-const VALID_CORE = [{ name: "Clash Meta", core: "clash-meta" }];
+  { name: "Clash Meta Alpha", core: "clash-meta-alpha" },
+];
 
 const OS = getSystem();
 
@@ -38,7 +37,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  const { clash_core = "clash" } = verge ?? {};
+  const { clash_core = "clash-meta" } = verge ?? {};
 
   const onCoreChange = useLockFn(async (core: string) => {
     if (core === clash_core) return;
@@ -92,7 +91,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       contentSx={{
         pb: 0,
         width: 320,
-        height: 90,
+        height: 180,
         overflowY: "auto",
         userSelect: "text",
         marginTop: "-8px",
@@ -112,18 +111,6 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
 
             {(OS === "macos" || OS === "linux") && (
-              /*               <IconButton
-                color="inherit"
-                size="small"
-                edge="end"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onGrant(each.core);
-                }}
-              >
-                <Lock fontSize="inherit" />
-              </IconButton> */
               <Tooltip title={t("Tun mode requires")}>
                 <Button
                   variant="outlined"
