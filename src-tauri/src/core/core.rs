@@ -261,7 +261,7 @@ impl CoreManager {
         let clash_core = clash_core.ok_or(anyhow::anyhow!("clash core is null"))?;
         const CLASH_CORES: [&str; 3] = ["clash", "clash-meta", "clash-meta-alpha"];
 
-        if CLASH_CORES.contains(&clash_core.as_str()) {
+        if !CLASH_CORES.contains(&clash_core.as_str()) {
             bail!("invalid clash core name \"{clash_core}\"");
         }
 
