@@ -4,12 +4,19 @@ import AdmZip from "adm-zip";
 import { createRequire } from "module";
 import { getOctokit, context } from "@actions/github";
 
+const target = process.argv.slice(2)[0];
+
+const ARCH_MAP = {
+  "i686-pc-windows-msvc": "x86",
+  "x86_64-pc-windows-msvc": "x64",
+};
+
 /// Script for ci
 /// 打包绿色版/便携版 (only Windows)
 async function resolvePortable() {
   if (process.platform !== "win32") return;
 
-  const releaseDir = "./src-tauri/target/release";
+  const releaseDir = `./src-tauri/target/${target}/release`;
 
   if (!(await fs.pathExists(releaseDir))) {
     throw new Error("could not found the release dir");
@@ -20,13 +27,14 @@ async function resolvePortable() {
   zip.addLocalFile(path.join(releaseDir, "Clash Verge.exe"));
   // zip.addLocalFile(path.join(releaseDir, "clash.exe"));
   zip.addLocalFile(path.join(releaseDir, "clash-meta.exe"));
+  zip.addLocalFile(path.join(releaseDir, "clash-meta-alpha.exe"));
   zip.addLocalFolder(path.join(releaseDir, "resources"), "resources");
 
   const require = createRequire(import.meta.url);
   const packageJson = require("../package.json");
   const { version } = packageJson;
 
-  const zipFile = `Clash.Verge_${version}_x64_portable.zip`;
+  const zipFile = `Clash.Verge_${version}_${ARCH_MAP[target]}_portable.zip`;
   zip.writeZip(zipFile);
 
   console.log("[INFO]: create portable zip successfully");
