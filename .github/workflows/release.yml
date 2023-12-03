@@ -157,7 +157,7 @@ jobs:
       - name: Portable Bundle
         if: matrix.os == 'windows-latest'
         run: |
-          pnpm portable
+          pnpm portable ${{ matrix.target }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
