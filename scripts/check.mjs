@@ -52,7 +52,7 @@ const META_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/down
 let META_ALPHA_VERSION;
 
 const META_ALPHA_MAP = {
-  "win32-x64": "mihomo-windows-amd64",
+  "win32-x64": "mihomo-windows-amd64-compatible",
   "win32-ia32": "mihomo-windows-386",
   "win32-arm64": "mihomo-windows-arm64",
   "darwin-x64": "mihomo-darwin-amd64",
@@ -80,7 +80,7 @@ const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
 let META_VERSION = "v1.17.0";
 
 const META_MAP = {
-  "win32-x64": "mihomo-windows-amd64",
+  "win32-x64": "mihomo-windows-amd64-compatible",
   "win32-ia32": "mihomo-windows-386",
   "win32-arm64": "mihomo-windows-arm64",
   "darwin-x64": "mihomo-darwin-amd64",
