@@ -87,7 +87,7 @@ export const useCustomTheme = () => {
     }
 
     // css
-    const backgroundColor = mode === "light" ? "#ffffff" : "#0E1621";
+    const backgroundColor = mode === "light" ? "#ffffff" : "#0B121C";
     const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
     const scrollColor = mode === "light" ? "#90939980" : "#54545480";
 
