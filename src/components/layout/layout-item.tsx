@@ -10,24 +10,22 @@ export const LayoutItem = (props: LinkProps) => {
   const navigate = useNavigate();
 
   return (
-    <ListItem
-      sx={{ py: 0.5, maxWidth: 250, mx: "auto", padding: "4px 0px 4px 2px" }}
-    >
+    <ListItem sx={{ py: 0.5, maxWidth: 250, mx: "auto", padding: "1px 0px" }}>
       <ListItemButton
         selected={!!match}
         sx={[
           {
-            borderTopLeftRadius: 18,
-            borderBottomLeftRadius: 18,
+            borderRadius: 3,
+            marginLeft: 1,
+            marginRight: 1,
             textAlign: "center",
             "& .MuiListItemText-primary": { color: "text.secondary" },
           },
           ({ palette: { mode, primary } }) => {
-            /*             const bgcolor =
+            const bgcolor =
               mode === "light"
                 ? alpha(primary.main, 0.15)
-                : alpha(primary.main, 0.35); */
-            const bgcolor = mode === "light" ? "#ffffff" : "#0E1621";
+                : alpha(primary.main, 0.35);
             const color = mode === "light" ? primary.main : primary.light;
 
             return {

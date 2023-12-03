@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "Clash Verge",
-    "version": "1.4.1"
+    "version": "1.4.2"
   },
   "build": {
     "distDir": "../dist",
@@ -53,8 +53,8 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://mirror.ghproxy.com/https://github.com/wonfen/clash-verge-rev/releases/download/updater/update-proxy.json",
-        "https://github.com/wonfen/clash-verge-rev/releases/download/updater/update.json"
+        "https://mirror.ghproxy.com/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
+        "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json"
       ],
       "dialog": false,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK"

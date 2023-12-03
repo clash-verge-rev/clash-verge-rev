@@ -1,3 +1,21 @@
+## v1.4.2
+
+### Features
+
+- update clash meta core to mihomo 1.17.0
+- fixed the problem of not being able to set the system proxy when there is a dial-up link on windows system [#833](https://github.com/zzzgydi/clash-verge/issues/833)
+- support new clash field
+- support random mixed port
+- add windows x86 and linux armv7 support
+- support disable tray click event
+- add download progress for updater
+- support drag to reorder the profile
+- embed emoji fonts
+- update depends
+- improve UI style
+
+---
+
 ## v1.4.1
 
 ### Features

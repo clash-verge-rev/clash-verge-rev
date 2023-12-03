@@ -4,7 +4,15 @@ import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useVerge } from "@/hooks/use-verge";
 import { useLockFn } from "ahooks";
-import { Box, Button, List, ListItemButton, ListItemText } from "@mui/material";
+import { Lock } from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  Tooltip,
+  List,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
 import { changeClashCore, restartSidecar } from "@/services/cmds";
 import { closeAllConnections } from "@/services/api";
 import { grantPermission } from "@/services/cmds";
@@ -103,18 +111,19 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
 
             {(OS === "macos" || OS === "linux") && (
-              <Button
-                variant="outlined"
-                size="small"
-                title={t("Tun mode requires")}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onGrant(each.core);
-                }}
-              >
-                {t("Grant")}
-              </Button>
+              <Tooltip title={t("Tun mode requires")}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onGrant(each.core);
+                  }}
+                >
+                  {t("Grant")}
+                </Button>
+              </Tooltip>
             )}
           </ListItemButton>
         ))}
