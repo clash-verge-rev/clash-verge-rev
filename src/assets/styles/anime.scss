@@ -1,21 +1,21 @@
 .page-enter {
   opacity: 0;
-  transform: scale(0.9);
+  clip-path: inset(0 100% 0 0); /* 完全隐藏内容 */
 }
 
 .page-enter-active {
   opacity: 1;
-  transform: scale(1);
-  transition: opacity 300ms, transform 300ms;
+  clip-path: inset(0 0 0 0); /* 逐渐显示整个内容 */
+  transition: opacity 300ms, clip-path 300ms ease-in-out;
 }
 
 .page-exit {
   opacity: 1;
-  transform: scale(0);
+  clip-path: inset(0 0 0 0); /* 完全显示内容 */
 }
 
 .page-exit-active {
   opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 300ms, transform 300ms;
+  clip-path: inset(0 100% 0 0); /* 逐渐隐藏内容 */
+  transition: opacity 300ms, clip-path 300ms ease-in-out;
 }

@@ -8,7 +8,7 @@ import { Lock } from "@mui/icons-material";
 import {
   Box,
   Button,
-  IconButton,
+  Tooltip,
   List,
   ListItemButton,
   ListItemText,
@@ -124,18 +124,19 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
               >
                 <Lock fontSize="inherit" />
               </IconButton> */
-              <Button
-                variant="outlined"
-                size="small"
-                title={t("Tun mode requires")}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onGrant(each.core);
-                }}
-              >
-                {t("Grant")}
-              </Button>
+              <Tooltip title={t("Tun mode requires")}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onGrant(each.core);
+                  }}
+                >
+                  {t("Grant")}
+                </Button>
+              </Tooltip>
             )}
           </ListItemButton>
         ))}

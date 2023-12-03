@@ -34,8 +34,8 @@ const CLASH_MAP = {
 */
 /* ======= clash meta ======= */
 const VERSION_URL =
-  "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt";
-const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`;
+  "https://github.com/MetaCubeX/mihomo/releases/download/v1.17.0/version.txt";
+const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/v1.17.0`;
 let META_VERSION;
 
 const META_MAP = {
