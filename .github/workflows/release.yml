@@ -5,7 +5,7 @@ on:
   push:
     tags:
       - v**
-
+permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short

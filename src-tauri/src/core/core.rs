@@ -147,6 +147,7 @@ impl CoreManager {
         // fix #212
         let args = match clash_core.as_str() {
             "clash-meta" => vec!["-m", "-d", app_dir, "-f", config_path],
+            "clash-meta-alpha" => vec!["-m", "-d", app_dir, "-f", config_path],
             _ => vec!["-d", app_dir, "-f", config_path],
         };
 
@@ -258,8 +259,9 @@ impl CoreManager {
     /// 切换核心
     pub async fn change_core(&self, clash_core: Option<String>) -> Result<()> {
         let clash_core = clash_core.ok_or(anyhow::anyhow!("clash core is null"))?;
+        const CLASH_CORES: [&str; 3] = ["clash", "clash-meta", "clash-meta-alpha"];
 
-        if &clash_core != "clash" && &clash_core != "clash-meta" {
+        if !CLASH_CORES.contains(&clash_core.as_str()) {
             bail!("invalid clash core name \"{clash_core}\"");
         }
 

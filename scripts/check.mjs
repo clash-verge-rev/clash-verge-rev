@@ -11,47 +11,6 @@ const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 const FORCE = process.argv.includes("--force");
 
-/* ======= clash ======= 
-const CLASH_STORAGE_PREFIX = "https://release.dreamacro.workers.dev/";
-const CLASH_URL_PREFIX =
-  "https://github.com/Dreamacro/clash/releases/download/premium/";
-const CLASH_LATEST_DATE = "latest";
-
-const CLASH_BACKUP_URL_PREFIX =
-  "https://github.com/zhongfly/Clash-premium-backup/releases/download/";
-const CLASH_BACKUP_LATEST_DATE = "2023-09-05-gdcc8d87";
-
-//https://github.com/zhongfly/Clash-premium-backup/releases/download/2023-09-05-gdcc8d87/clash-windows-amd64-2023-09-05-gdcc8d87.zip
-//https://github.com/zhongfly/Clash-premium-backup/releases/download/2023-09-05-gdcc8d87/clash-windows-amd64-n2023-09-05-gdcc8d87.zip
-
-const CLASH_MAP = {
-  "win32-x64": "clash-windows-amd64",
-  "darwin-x64": "clash-darwin-amd64",
-  "darwin-arm64": "clash-darwin-arm64",
-  "linux-x64": "clash-linux-amd64",
-  "linux-arm64": "clash-linux-arm64",
-};
-*/
-/* ======= clash meta ======= */
-const VERSION_URL =
-  "https://github.com/MetaCubeX/mihomo/releases/download/v1.17.0/version.txt";
-const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/v1.17.0`;
-let META_VERSION;
-
-const META_MAP = {
-  "win32-x64": "mihomo-windows-amd64",
-  "win32-ia32": "mihomo-windows-386",
-  "win32-arm64": "mihomo-windows-arm64",
-  "darwin-x64": "mihomo-darwin-amd64",
-  "darwin-arm64": "mihomo-darwin-arm64",
-  "linux-x64": "mihomo-linux-amd64",
-  "linux-arm64": "mihomo-linux-arm64",
-  "linux-arm": "mihomo-linux-armv7",
-};
-
-/*
- * check available
- */
 const PLATFORM_MAP = {
   "x86_64-pc-windows-msvc": "win32",
   "i686-pc-windows-msvc": "win32",
@@ -73,22 +32,9 @@ const ARCH_MAP = {
   "armv7-unknown-linux-gnueabihf": "arm",
 };
 
-/**
- * Fetch the latest release version from the version.txt file
- */
-async function getLatestVersion() {
-  try {
-    const response = await fetch(VERSION_URL, { method: "GET" });
-    let v = await response.text();
-    META_VERSION = v.trim(); // Trim to remove extra whitespaces
-    console.log(`Latest release version: ${META_VERSION}`);
-  } catch (error) {
-    console.error("Error fetching latest release version:", error.message);
-    process.exit(1);
-  }
-}
-
-const target = process.argv.slice(2)[0];
+const arg1 = process.argv.slice(2)[0];
+const arg2 = process.argv.slice(2)[1];
+const target = arg1 === "--force" ? arg2 : arg1;
 const { platform, arch } = target
   ? { platform: PLATFORM_MAP[target], arch: ARCH_MAP[target] }
   : process;
@@ -98,74 +44,92 @@ const SIDECAR_HOST = target
   : execSync("rustc -vV")
       .toString()
       .match(/(?<=host: ).+(?=\s*)/g)[0];
-/*
-if (!CLASH_MAP[`${platform}-${arch}`]) {
-  throw new Error(`clash unsupported platform "${platform}-${arch}"`);
+
+/* ======= clash meta alpha======= */
+const VERSION_URL =
+  "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt";
+const META_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`;
+let META_ALPHA_VERSION;
+
+const META_ALPHA_MAP = {
+  "win32-x64": "mihomo-windows-amd64",
+  "win32-ia32": "mihomo-windows-386",
+  "win32-arm64": "mihomo-windows-arm64",
+  "darwin-x64": "mihomo-darwin-amd64",
+  "darwin-arm64": "mihomo-darwin-arm64",
+  "linux-x64": "mihomo-linux-amd64",
+  "linux-arm64": "mihomo-linux-arm64",
+  "linux-arm": "mihomo-linux-armv7",
+};
+
+// Fetch the latest release version from the version.txt file
+async function getLatestVersion() {
+  try {
+    const response = await fetch(VERSION_URL, { method: "GET" });
+    let v = await response.text();
+    META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
+    console.log(`Latest release version: ${META_ALPHA_VERSION}`);
+  } catch (error) {
+    console.error("Error fetching latest release version:", error.message);
+    process.exit(1);
+  }
 }
-*/
+
+/* ======= clash meta stable ======= */
+const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
+let META_VERSION = "v1.17.0";
+
+const META_MAP = {
+  "win32-x64": "mihomo-windows-amd64",
+  "win32-ia32": "mihomo-windows-386",
+  "win32-arm64": "mihomo-windows-arm64",
+  "darwin-x64": "mihomo-darwin-amd64",
+  "darwin-arm64": "mihomo-darwin-arm64",
+  "linux-x64": "mihomo-linux-amd64",
+  "linux-arm64": "mihomo-linux-arm64",
+  "linux-arm": "mihomo-linux-armv7",
+};
+
+/*
+ * check available
+ */
 if (!META_MAP[`${platform}-${arch}`]) {
-  throw new Error(`clash meta unsupported platform "${platform}-${arch}"`);
+  throw new Error(
+    `clash meta alpha unsupported platform "${platform}-${arch}"`
+  );
 }
-/*
-function clash() {
-  const name = CLASH_MAP[`${platform}-${arch}`];
 
+if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
+  throw new Error(
+    `clash meta alpha unsupported platform "${platform}-${arch}"`
+  );
+}
+
+/**
+ * core info
+ */
+function clashMetaAlpha() {
+  const name = META_ALPHA_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${CLASH_URL_PREFIX}${name}-${CLASH_LATEST_DATE}.${urlExt}`;
+  const downloadURL = `${META_ALPHA_URL_PREFIX}/${name}-${META_ALPHA_VERSION}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}.${urlExt}`;
+  const zipFile = `${name}-${META_ALPHA_VERSION}.${urlExt}`;
 
   return {
-    name: "clash",
-    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "clash-meta-alpha",
+    targetFile: `clash-meta-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     downloadURL,
   };
 }
 
-function clashBackup() {
-  const name = CLASH_MAP[`${platform}-${arch}`];
-
-  const isWin = platform === "win32";
-  const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${CLASH_BACKUP_URL_PREFIX}${CLASH_BACKUP_LATEST_DATE}/${name}-n${CLASH_BACKUP_LATEST_DATE}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}.${urlExt}`;
-
-  return {
-    name: "clash",
-    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
-    exeFile,
-    zipFile,
-    downloadURL,
-  };
-}
-
-function clashS3() {
-  const name = CLASH_MAP[`${platform}-${arch}`];
-
-  const isWin = platform === "win32";
-  const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${CLASH_STORAGE_PREFIX}${CLASH_LATEST_DATE}/${name}-${CLASH_LATEST_DATE}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}.${urlExt}`;
-
-  return {
-    name: "clash",
-    targetFile: `clash-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
-    exeFile,
-    zipFile,
-    downloadURL,
-  };
-}
-*/
 function clashMeta() {
   const name = META_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${META_URL_PREFIX}/${name}-${META_VERSION}.${urlExt}`;
+  const downloadURL = `${META_URL_PREFIX}/${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
   const zipFile = `${name}-${META_VERSION}.${urlExt}`;
 
@@ -177,7 +141,6 @@ function clashMeta() {
     downloadURL,
   };
 }
-
 /**
  * download sidecar and rename
  */
@@ -259,58 +222,6 @@ async function resolveSidecar(binInfo) {
   }
 }
 
-/**
- * prepare clash core
- * if the core version is not updated in time, use S3 storage as a backup.
- */
-async function resolveClash() {
-  try {
-    return await resolveSidecar(clash());
-  } catch {
-    console.log(`[WARN]: clash core needs to be updated`);
-    return await resolveSidecar(clashS3());
-  }
-}
-
-/**
- * only Windows
- * get the wintun.dll (not required)
-
-async function resolveWintun() {
-  const { platform } = process;
-
-  if (platform !== "win32") return;
-
-  const url = "https://www.wintun.net/builds/wintun-0.14.1.zip";
-
-  const tempDir = path.join(TEMP_DIR, "wintun");
-  const tempZip = path.join(tempDir, "wintun.zip");
-
-  const wintunPath = path.join(tempDir, "wintun/bin/amd64/wintun.dll");
-  const targetPath = path.join(cwd, "src-tauri/resources", "wintun.dll");
-
-  if (!FORCE && (await fs.pathExists(targetPath))) return;
-
-  await fs.mkdirp(tempDir);
-
-  if (!(await fs.pathExists(tempZip))) {
-    await downloadFile(url, tempZip);
-  }
-
-  // unzip
-  const zip = new AdmZip(tempZip);
-  zip.extractAllTo(tempDir, true);
-
-  if (!(await fs.pathExists(wintunPath))) {
-    throw new Error(`path not found "${wintunPath}"`);
-  }
-
-  await fs.rename(wintunPath, targetPath);
-  await fs.remove(tempDir);
-
-  console.log(`[INFO]: resolve wintun.dll finished`);
-}
-*/
 /**
  * download the file to the resources dir
  */
@@ -400,8 +311,13 @@ const resolveEnableLoopback = () =>
 const tasks = [
   // { name: "clash", func: resolveClash, retry: 5 },
   {
+    name: "clash-meta-alpha",
+    func: () => getLatestVersion().then(() => resolveSidecar(clashMetaAlpha())),
+    retry: 5,
+  },
+  {
     name: "clash-meta",
-    func: () => getLatestVersion().then(() => resolveSidecar(clashMeta())),
+    func: () => resolveSidecar(clashMeta()),
     retry: 5,
   },
   // { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
