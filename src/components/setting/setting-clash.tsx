@@ -112,7 +112,7 @@ const SettingClash = ({ onError }: Props) => {
           <Tooltip title={t("Random Port")}>
             <IconButton
               color={enable_random_port ? "success" : "inherit"}
-              size="medium"
+              size="small"
               onClick={() => {
                 Notice.success(t("After restart to take effect"), 1000);
                 onChangeVerge({ enable_random_port: !enable_random_port });
