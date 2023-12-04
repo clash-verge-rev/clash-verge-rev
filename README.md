@@ -41,8 +41,8 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">tauri</a
 
 Download from [release](https://github.com/clash-verge-rev/clash-verge-rev/releases). Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
-- [Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.2/Clash.Verge_1.4.2_x64_zh-CN.msi)
-- [Windows x86](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.2/Clash.Verge_1.4.2_x86_zh-CN.msi)
+- [Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.2/Clash.Verge_1.4.2_x64-setup.exe)
+- [Windows x86](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.2/Clash.Verge_1.4.2_x86-setup.exe)
 
 - [macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.2/Clash.Verge_1.4.2_x64.dmg)
 - [macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.2/Clash.Verge_1.4.2_aarch64.dmg)
