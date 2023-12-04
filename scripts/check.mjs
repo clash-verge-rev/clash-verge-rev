@@ -57,7 +57,7 @@ const META_ALPHA_MAP = {
   "win32-arm64": "mihomo-windows-arm64",
   "darwin-x64": "mihomo-darwin-amd64",
   "darwin-arm64": "mihomo-darwin-arm64",
-  "linux-x64": "mihomo-linux-amd64",
+  "linux-x64": "mihomo-linux-amd64-compatible",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
 };
@@ -85,7 +85,7 @@ const META_MAP = {
   "win32-arm64": "mihomo-windows-arm64",
   "darwin-x64": "mihomo-darwin-amd64",
   "darwin-arm64": "mihomo-darwin-arm64",
-  "linux-x64": "mihomo-linux-amd64",
+  "linux-x64": "mihomo-linux-amd64-compatible",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
 };
