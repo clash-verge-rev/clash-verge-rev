@@ -38,7 +38,11 @@ const SettingClash = ({ onError }: Props) => {
 
   const { ipv6, "allow-lan": allowLan, "log-level": logLevel } = clash ?? {};
 
-  const { enable_random_port = false, verge_mixed_port } = verge ?? {};
+  const {
+    enable_random_port = false,
+    verge_mixed_port,
+    enable_clash_fields = false,
+  } = verge ?? {};
 
   const webRef = useRef<DialogRef>(null);
   const fieldRef = useRef<DialogRef>(null);
@@ -162,16 +166,18 @@ const SettingClash = ({ onError }: Props) => {
         </IconButton>
       </SettingItem>
 
-      <SettingItem label={t("Clash Field")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => fieldRef.current?.open()}
-        >
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      {enable_clash_fields && (
+        <SettingItem label={t("Clash Field")}>
+          <IconButton
+            color="inherit"
+            size="small"
+            sx={{ my: "2px" }}
+            onClick={() => fieldRef.current?.open()}
+          >
+            <ArrowForward />
+          </IconButton>
+        </SettingItem>
+      )}
 
       <SettingItem
         label={t("Clash Core")}
