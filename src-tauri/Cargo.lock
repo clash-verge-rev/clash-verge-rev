@@ -575,6 +575,7 @@ dependencies = [
  "once_cell",
  "open 5.0.1",
  "parking_lot",
+ "percent-encoding",
  "port_scanner",
  "reqwest",
  "rquickjs",
