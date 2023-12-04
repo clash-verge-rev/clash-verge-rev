@@ -47,6 +47,7 @@ async function resolveUpdater() {
       "linux-x86_64": { signature: "", url: "" },
       "linux-aarch64": { signature: "", url: "" },
       "windows-x86_64": { signature: "", url: "" },
+      "windows-i686": { signature: "", url: "" },
     },
   };
 
