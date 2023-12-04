@@ -16,7 +16,7 @@
     },
     "bundle": {
       "active": true,
-      "targets": "all",
+      "targets": ["deb", "appimage", "nsis", "app", "dmg", "updater"],
       "identifier": "moe.elaina.clash.verge",
       "icon": [
         "icons/32x32.png",
@@ -29,8 +29,8 @@
       "externalBin": ["sidecar/clash-meta", "sidecar/clash-meta-alpha"],
       "copyright": "© 2022 zzzgydi All Rights Reserved",
       "category": "DeveloperTool",
-      "shortDescription": "A Clash GUI based on tauri.",
-      "longDescription": "A Clash GUI based on tauri.",
+      "shortDescription": "A Clash Meta GUI based on tauri.",
+      "longDescription": "A Clash Meta GUI based on tauri.",
       "deb": {
         "depends": ["openssl"]
       },
@@ -45,8 +45,15 @@
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": "",
-        "wix": {
-          "language": ["zh-CN", "en-US", "ru-RU"]
+        "webviewInstallMode": {
+          "type": "embedBootstrapper",
+          "silent": true
+        },
+        "nsis": {
+          "displayLanguageSelector": true,
+          "installerIcon": "icons/icon.ico",
+          "languages": ["SimpChinese", "English"],
+          "license": "../LICENSE"
         }
       }
     },
