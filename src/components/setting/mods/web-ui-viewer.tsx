@@ -59,7 +59,7 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
           .slice(clashInfo.server.indexOf(":") + 1)
           .trim();
 
-        url = url.replaceAll("%port", port || "9090");
+        url = url.replaceAll("%port", port || "9097");
         url = url.replaceAll(
           "%secret",
           encodeURIComponent(clashInfo.secret || "")
