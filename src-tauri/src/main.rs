@@ -105,6 +105,10 @@ fn main() -> std::io::Result<()> {
             api::process::kill_children();
             app_handle.exit(0);
         }
+        tauri::RunEvent::Updater(tauri::UpdaterEvent::Downloaded) => {
+            resolve::resolve_reset();
+            api::process::kill_children();
+        }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             use tauri::Manager;

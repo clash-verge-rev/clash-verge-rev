@@ -75,14 +75,17 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={`New Version v${updateInfo?.manifest?.version}`}
-      contentSx={{ minWidth: 360, maxWidth: 400, maxHeight: "50vh" }}
+      contentSx={{ minWidth: 360, maxWidth: 400, height: "50vh" }}
       okBtn={t("Update")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onUpdate}
     >
-      <UpdateLog dangerouslySetInnerHTML={{ __html: parseContent }} />
+      <UpdateLog
+        dangerouslySetInnerHTML={{ __html: parseContent }}
+        sx={{ height: "calc(100% - 10px)", overflow: "auto" }}
+      />
       {updateState && (
         <LinearProgress
           variant="buffer"
