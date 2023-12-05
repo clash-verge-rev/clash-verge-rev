@@ -6,9 +6,9 @@ use tauri::{
 };
 
 #[cfg(not(feature = "verge-dev"))]
-static APP_ID: &str = "io.github.clash_verge_rev.clash_verge_rev";
+static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
 #[cfg(feature = "verge-dev")]
-static APP_ID: &str = "io.github.clash_verge_rev.clash_verge_rev.dev";
+static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev.dev";
 
 static CLASH_CONFIG: &str = "config.yaml";
 static VERGE_CONFIG: &str = "verge.yaml";
