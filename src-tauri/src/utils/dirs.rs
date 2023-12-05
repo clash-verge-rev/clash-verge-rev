@@ -1,14 +1,14 @@
 use anyhow::Result;
 use std::path::PathBuf;
 use tauri::{
-    api::path::{home_dir, resource_dir},
+    api::path::{data_dir, resource_dir},
     Env, PackageInfo,
 };
 
 #[cfg(not(feature = "verge-dev"))]
-static APP_DIR: &str = "clash-verge";
+static APP_ID: &str = "io.github.clash_verge_rev.clash_verge_rev";
 #[cfg(feature = "verge-dev")]
-static APP_DIR: &str = "clash-verge-dev";
+static APP_ID: &str = "io.github.clash_verge_rev.clash_verge_rev.dev";
 
 static CLASH_CONFIG: &str = "config.yaml";
 static VERGE_CONFIG: &str = "verge.yaml";
@@ -47,25 +47,23 @@ pub fn app_home_dir() -> Result<PathBuf> {
         use tauri::utils::platform::current_exe;
 
         if !PORTABLE_FLAG {
-            Ok(home_dir()
+            Ok(data_dir()
                 .ok_or(anyhow::anyhow!("failed to get app home dir"))?
-                .join(".config")
-                .join(APP_DIR))
+                .join(APP_ID))
         } else {
             let app_exe = current_exe()?;
             let app_exe = dunce::canonicalize(app_exe)?;
             let app_dir = app_exe
                 .parent()
                 .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
-            Ok(PathBuf::from(app_dir).join(".config").join(APP_DIR))
+            Ok(PathBuf::from(app_dir).join(".config").join(APP_ID))
         }
     }
 
     #[cfg(not(target_os = "windows"))]
-    Ok(home_dir()
+    Ok(data_dir()
         .ok_or(anyhow::anyhow!("failed to get the app home dir"))?
-        .join(".config")
-        .join(APP_DIR))
+        .join("io.github.clash_verge_rev.clash_verge_rev"))
 }
 
 /// get the resources dir

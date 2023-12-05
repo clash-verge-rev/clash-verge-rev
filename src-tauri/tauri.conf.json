@@ -17,7 +17,7 @@
     "bundle": {
       "active": true,
       "targets": ["deb", "appimage", "nsis", "app", "dmg", "updater"],
-      "identifier": "moe.elaina.clash.verge",
+      "identifier": "io.github.clash_verge_rev.clash_verge_rev",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
