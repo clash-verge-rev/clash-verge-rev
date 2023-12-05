@@ -16,11 +16,17 @@ const ARCH_MAP = {
 async function resolvePortable() {
   if (process.platform !== "win32") return;
 
-  const releaseDir = `./src-tauri/target/${target}/release`;
+  const releaseDir = target
+    ? `./src-tauri/target/${target}/release`
+    : `./src-tauri/target/release`;
+  const configDir = path.join(releaseDir, ".config");
 
   if (!(await fs.pathExists(releaseDir))) {
     throw new Error("could not found the release dir");
   }
+
+  await fs.mkdir(configDir);
+  await fs.createFile(path.join(configDir, "PORTABLE"));
 
   const zip = new AdmZip();
 
@@ -29,6 +35,7 @@ async function resolvePortable() {
   zip.addLocalFile(path.join(releaseDir, "clash-meta.exe"));
   zip.addLocalFile(path.join(releaseDir, "clash-meta-alpha.exe"));
   zip.addLocalFolder(path.join(releaseDir, "resources"), "resources");
+  zip.addLocalFolder(configDir, ".config");
 
   const require = createRequire(import.meta.url);
   const packageJson = require("../package.json");
