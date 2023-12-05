@@ -135,7 +135,7 @@ const SettingClash = ({ onError }: Props) => {
           disabled={enable_random_port}
           autoComplete="off"
           size="small"
-          value={verge_mixed_port ?? 7890}
+          value={verge_mixed_port ?? 7897}
           sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}
           onClick={(e) => {
             portRef.current?.open();
