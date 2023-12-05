@@ -1,12 +1,12 @@
 <h1 align="center">
   <img src="./src/assets/image/logo.png" alt="Clash" width="128" />
   <br>
-  Continuation of Clash Verge
+  Continuation of <a href="https://github.com/zzzgydi/clash-verge">Clash Verge</a>
   <br>
 </h1>
 
 <h3 align="center">
-A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">tauri</a>.
+A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a>.
 </h3>
 
 ## Features
