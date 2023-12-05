@@ -44,7 +44,7 @@ percent-encoding = "2.3.1"
 
 
 [target.'cfg(windows)'.dependencies]
-runas = "=1.1.0"
+runas = "=1.0.0"
 deelevate = "0.2.0"
 winreg = { version = "0.52", features = ["transactions"] }
 windows-sys = { version = "0.52", features = ["Win32_System_LibraryLoader", "Win32_System_SystemInformation"] }
