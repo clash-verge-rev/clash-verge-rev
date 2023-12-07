@@ -130,14 +130,8 @@ impl IVerge {
 
     pub fn template() -> Self {
         Self {
-            clash_core: match cfg!(feature = "default-meta") {
-                false => Some("clash".into()),
-                true => Some("clash-meta".into()),
-            },
-            language: match cfg!(feature = "default-meta") {
-                false => Some("en".into()),
-                true => Some("zh".into()),
-            },
+            clash_core: Some("clash-meta".into()),
+            language: Some("zh".into()),
             theme_mode: Some("system".into()),
             theme_blur: Some(false),
             traffic_graph: Some(true),

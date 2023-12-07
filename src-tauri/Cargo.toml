@@ -59,8 +59,6 @@ features = ["global-shortcut-all", "process-all", "shell-all", "system-tray", "u
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = []
-default-meta = []
 
 [profile.release]
 panic = "abort"

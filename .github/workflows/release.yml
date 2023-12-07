@@ -110,7 +110,7 @@ jobs:
           releaseDraft: false
           prerelease: false
           tauriScript: pnpm
-          args: -f default-meta --target ${{ matrix.target }}
+          args: --target ${{ matrix.target }}
 
       - name: Tauri build (Ubuntu Arm64)
         if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'aarch64')
@@ -131,7 +131,7 @@ jobs:
           releaseDraft: false
           prerelease: false
           tauriScript: pnpm
-          args: -f default-meta --target ${{ matrix.target }} -b deb,updater
+          args: --target ${{ matrix.target }} -b deb,updater
 
       - name: Tauri build (Ubuntu Armv7)
         if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.target,'armv7')
@@ -152,7 +152,7 @@ jobs:
           releaseDraft: false
           prerelease: false
           tauriScript: pnpm
-          args: -f default-meta --target ${{ matrix.target }} -b deb,updater
+          args: --target ${{ matrix.target }} -b deb,updater
 
       - name: Portable Bundle
         if: matrix.os == 'windows-latest'
