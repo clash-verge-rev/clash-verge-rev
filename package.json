@@ -4,6 +4,7 @@
   "license": "GPL-3.0",
   "scripts": {
     "dev": "tauri dev",
+    "dev:diff": "tauri dev -f verge-dev",
     "build": "tauri build",
     "tauri": "tauri",
     "web:dev": "vite",
