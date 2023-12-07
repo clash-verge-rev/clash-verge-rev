@@ -49,6 +49,7 @@ Download from [release](https://github.com/clash-verge-rev/clash-verge-rev/relea
 
 - [Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.3/clash-verge_1.4.3_amd64.AppImage)
 - [Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.3/clash-verge_1.4.3_amd64.deb)
+- [Linux x86 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.3/clash-verge_1.4.3_i386.AppImage)
 - [Linux x86 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.3/clash-verge_1.4.3_i386.deb)
 - [Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.3/clash-verge_1.4.3_arm64.deb)
 
