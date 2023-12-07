@@ -146,7 +146,7 @@ impl IVerge {
             enable_silent_start: Some(false),
             enable_system_proxy: Some(false),
             enable_random_port: Some(false),
-            verge_mixed_port: Some(7897),
+            verge_mixed_port: Some(7890),
             enable_proxy_guard: Some(false),
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),

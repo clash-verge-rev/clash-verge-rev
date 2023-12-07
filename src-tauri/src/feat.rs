@@ -338,7 +338,7 @@ async fn update_core_config() -> Result<()> {
 
 /// copy env variable
 pub fn copy_clash_env(app_handle: &AppHandle, option: &str) {
-    let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
+    let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7890) };
     let http_proxy = format!("http://127.0.0.1:{}", port);
     let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
 
