@@ -117,7 +117,7 @@ jobs:
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
       - name: Upload Release
-        if: startsWith(matrix.target, 'x86_64')
+        if: startsWith(matrix.target, 'x86_64') || startsWith(matrix.target, 'i686')
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{env.VERSION}}
