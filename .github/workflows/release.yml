@@ -115,7 +115,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install jq
-          echo "VERSION=$(cat package.json | jq '.version')" >> $GITHUB_ENV
+          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
       - name: Upload Release
         if: startsWith(matrix.target, 'x86_64')
         uses: softprops/action-gh-release@v1

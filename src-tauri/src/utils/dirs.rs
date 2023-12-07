@@ -62,8 +62,8 @@ pub fn app_home_dir() -> Result<PathBuf> {
 
     #[cfg(not(target_os = "windows"))]
     Ok(data_dir()
-        .ok_or(anyhow::anyhow!("failed to get the app home dir"))?
-        .join("io.github.clash_verge_rev.clash_verge_rev"))
+        .ok_or(anyhow::anyhow!("failed to get app home dir"))?
+        .join(APP_ID))
 }
 
 /// get the resources dir
