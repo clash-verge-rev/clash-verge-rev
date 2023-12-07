@@ -18,6 +18,7 @@ const PLATFORM_MAP = {
   "x86_64-apple-darwin": "darwin",
   "aarch64-apple-darwin": "darwin",
   "x86_64-unknown-linux-gnu": "linux",
+  "i686-unknown-linux-gnu": "linux",
   "aarch64-unknown-linux-gnu": "linux",
   "armv7-unknown-linux-gnueabihf": "linux",
 };
@@ -28,6 +29,7 @@ const ARCH_MAP = {
   "x86_64-apple-darwin": "x64",
   "aarch64-apple-darwin": "arm64",
   "x86_64-unknown-linux-gnu": "x64",
+  "i686-unknown-linux-gnu": "ia32",
   "aarch64-unknown-linux-gnu": "arm64",
   "armv7-unknown-linux-gnueabihf": "arm",
 };
