@@ -337,7 +337,7 @@ async fn update_core_config() -> Result<()> {
 }
 
 /// copy env variable
-pub fn copy_clash_env(app_handle: &AppHandle, option: &str) {
+pub fn copy_clash_env(app_handle: &AppHandle) {
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
     let http_proxy = format!("http://127.0.0.1:{}", port);
     let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
@@ -346,12 +346,25 @@ pub fn copy_clash_env(app_handle: &AppHandle, option: &str) {
         format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
     let cmd: String = format!("set http_proxy={http_proxy} \n set https_proxy={http_proxy}");
     let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
+
     let mut cliboard = app_handle.clipboard_manager();
 
-    match option {
-        "sh" => cliboard.write_text(sh).unwrap_or_default(),
+    let env_type = { Config::verge().latest().env_type.clone() };
+    let env_type = match env_type {
+        Some(env_type) => env_type,
+        None => {
+            #[cfg(not(target_os = "windows"))]
+            let default = "bash";
+            #[cfg(target_os = "windows")]
+            let default = "powershell";
+
+            default.to_string()
+        }
+    };
+    match env_type.as_str() {
+        "bash" => cliboard.write_text(sh).unwrap_or_default(),
         "cmd" => cliboard.write_text(cmd).unwrap_or_default(),
-        "ps" => cliboard.write_text(ps).unwrap_or_default(),
-        _ => log::error!(target: "app", "copy_clash_env: Invalid option! {option}"),
+        "powershell" => cliboard.write_text(ps).unwrap_or_default(),
+        _ => log::error!(target: "app", "copy_clash_env: Invalid env type! {env_type}"),
     };
 }

@@ -156,6 +156,7 @@ interface IVergeConfig {
   app_log_level?: "trace" | "debug" | "info" | "warn" | "error" | string;
   language?: string;
   tray_event?: "main_window" | "system_proxy" | "tun_mode" | string;
+  env_type?: "bash" | "cmd" | "powershell" | string;
   clash_core?: string;
   theme_mode?: "light" | "dark" | "system";
   theme_blur?: boolean;

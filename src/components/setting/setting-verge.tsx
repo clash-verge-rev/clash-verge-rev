@@ -29,7 +29,7 @@ const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { verge, patchVerge, mutateVerge } = useVerge();
-  const { theme_mode, language, tray_event } = verge ?? {};
+  const { theme_mode, language, tray_event, env_type } = verge ?? {};
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
   const miscRef = useRef<DialogRef>(null);
@@ -108,6 +108,22 @@ const SettingVerge = ({ onError }: Props) => {
           </GuardState>
         </SettingItem>
       )}
+
+      <SettingItem label={t("Copy Env Type")}>
+        <GuardState
+          value={env_type ?? OS === "windows" ? "powershell" : "bash"}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ env_type: e })}
+          onGuard={(e) => patchVerge({ env_type: e })}
+        >
+          <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
+            <MenuItem value="bash">Bash</MenuItem>
+            <MenuItem value="cmd">CMD</MenuItem>
+            <MenuItem value="powershell">PowerShell</MenuItem>
+          </Select>
+        </GuardState>
+      </SettingItem>
 
       <SettingItem label={t("Theme Setting")}>
         <IconButton
