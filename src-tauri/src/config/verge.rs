@@ -26,6 +26,9 @@ pub struct IVerge {
     /// tray click event
     pub tray_event: Option<String>,
 
+    /// copy env type
+    pub env_type: Option<String>,
+
     /// enable traffic graph default is true
     pub traffic_graph: Option<bool>,
 
@@ -133,6 +136,10 @@ impl IVerge {
             clash_core: Some("clash-meta".into()),
             language: Some("zh".into()),
             theme_mode: Some("system".into()),
+            #[cfg(not(target_os = "windows"))]
+            env_type: Some("bash".into()),
+            #[cfg(target_os = "windows")]
+            env_type: Some("powershell".into()),
             theme_blur: Some(false),
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
@@ -172,6 +179,7 @@ impl IVerge {
         patch!(theme_mode);
         patch!(theme_blur);
         patch!(tray_event);
+        patch!(env_type);
         patch!(traffic_graph);
         patch!(enable_memory_usage);
 
