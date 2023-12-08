@@ -71,6 +71,11 @@ const Layout = () => {
           break;
       }
     });
+    setTimeout(() => {
+      void appWindow.unminimize();
+      void appWindow.show();
+      void appWindow.setFocus();
+    }, 50);
   }, []);
 
   useEffect(() => {
