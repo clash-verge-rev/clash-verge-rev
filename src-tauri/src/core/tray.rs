@@ -135,20 +135,17 @@ impl Tray {
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
-        #[cfg(target_os = "windows")]
-        {
-            let mut indication_icon = if *system_proxy {
-                include_bytes!("../../icons/win-tray-icon-activated.png").to_vec()
-            } else {
-                include_bytes!("../../icons/win-tray-icon.png").to_vec()
-            };
+        let mut indication_icon = if *system_proxy {
+            include_bytes!("../../icons/tray-icon-activated.png").to_vec()
+        } else {
+            include_bytes!("../../icons/tray-icon.png").to_vec()
+        };
 
-            if *tun_mode {
-                indication_icon = include_bytes!("../../icons/win-tray-icon-tun.png").to_vec();
-            }
-
-            let _ = tray.set_icon(tauri::Icon::Raw(indication_icon));
+        if *tun_mode {
+            indication_icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
         }
+
+        let _ = tray.set_icon(tauri::Icon::Raw(indication_icon));
 
         let _ = tray.get_item("system_proxy").set_selected(*system_proxy);
         let _ = tray.get_item("tun_mode").set_selected(*tun_mode);
@@ -160,7 +157,6 @@ impl Tray {
             map
         };
 
-        #[cfg(not(target_os = "linux"))]
         let _ = tray.set_tooltip(&format!(
             "Clash Verge {version}\n{}: {}\n{}: {}",
             t!("System Proxy", "系统代理"),
@@ -185,7 +181,6 @@ impl Tray {
 
     pub fn on_system_tray_event(app_handle: &AppHandle, event: SystemTrayEvent) {
         match event {
-            #[cfg(not(target_os = "linux"))]
             SystemTrayEvent::LeftClick { .. } => Tray::on_left_click(app_handle),
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 mode @ ("rule_mode" | "global_mode" | "direct_mode" | "script_mode") => {

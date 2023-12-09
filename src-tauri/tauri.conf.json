@@ -10,13 +10,8 @@
     "beforeBuildCommand": "pnpm run web:build"
   },
   "tauri": {
-    "systemTray": {
-      "iconPath": "icons/tray-icon.ico",
-      "iconAsTemplate": true
-    },
     "bundle": {
       "active": true,
-      "targets": ["deb", "appimage", "nsis", "app", "dmg", "updater"],
       "identifier": "io.github.clash-verge-rev.clash-verge-rev",
       "icon": [
         "icons/32x32.png",
@@ -30,32 +25,7 @@
       "copyright": "© 2022 zzzgydi All Rights Reserved",
       "category": "DeveloperTool",
       "shortDescription": "A Clash Meta GUI based on tauri.",
-      "longDescription": "A Clash Meta GUI based on tauri.",
-      "deb": {
-        "depends": ["openssl"]
-      },
-      "macOS": {
-        "frameworks": [],
-        "minimumSystemVersion": "",
-        "exceptionDomain": "",
-        "signingIdentity": null,
-        "entitlements": null
-      },
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": "",
-        "webviewInstallMode": {
-          "type": "embedBootstrapper",
-          "silent": true
-        },
-        "nsis": {
-          "displayLanguageSelector": true,
-          "installerIcon": "icons/icon.ico",
-          "languages": ["SimpChinese", "English"],
-          "license": "../LICENSE"
-        }
-      }
+      "longDescription": "A Clash Meta GUI based on tauri."
     },
     "updater": {
       "active": true,

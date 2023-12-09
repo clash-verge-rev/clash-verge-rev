@@ -1,0 +1,18 @@
+{
+  "tauri": {
+    "systemTray": {
+      "iconPath": "icons/tray-icon.ico",
+      "iconAsTemplate": true
+    },
+    "bundle": {
+      "targets": ["app", "dmg", "updater"],
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": "",
+        "exceptionDomain": "",
+        "signingIdentity": null,
+        "entitlements": null
+      }
+    }
+  }
+}
