@@ -1,0 +1,45 @@
+name: Bug report
+description: Create a report to help us improve
+title: "[BUG]"
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior.
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Platform
+      options:
+        - Windows
+        - Linux
+        - MacOS
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: System Version
+      placeholder: "e.g. macOS 10.15.7"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Software Version
+      placeholder: "e.g. 1.4.3"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Log
+      description: "Log file content or screenshot"
+  - type: textarea
+    attributes:
+      label: Additional Information
