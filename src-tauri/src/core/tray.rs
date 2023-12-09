@@ -41,10 +41,6 @@ impl Tray {
                 "direct_mode",
                 t!("Direct Mode", "直连模式"),
             ))
-            .add_item(CustomMenuItem::new(
-                "script_mode",
-                t!("Script Mode", "脚本模式"),
-            ))
             .add_native_item(SystemTrayMenuItem::Separator)
             .add_item(CustomMenuItem::new(
                 "system_proxy",
@@ -128,7 +124,6 @@ impl Tray {
         let _ = tray.get_item("rule_mode").set_selected(mode == "rule");
         let _ = tray.get_item("global_mode").set_selected(mode == "global");
         let _ = tray.get_item("direct_mode").set_selected(mode == "direct");
-        let _ = tray.get_item("script_mode").set_selected(mode == "script");
 
         let verge = Config::verge();
         let verge = verge.latest();
@@ -142,7 +137,11 @@ impl Tray {
             let icon = include_bytes!("../../icons/mac-tray-icon-sys.png").to_vec();
             icon
         } else {
-            include_bytes!("../../icons/tray-icon.png").to_vec()
+            #[cfg(not(target_os = "macos"))]
+            let icon = include_bytes!("../../icons/tray-icon.png").to_vec();
+            #[cfg(target_os = "macos")]
+            let icon = include_bytes!("../../icons/icon.png").to_vec();
+            icon
         };
 
         if *tun_mode {
@@ -191,11 +190,10 @@ impl Tray {
         match event {
             SystemTrayEvent::LeftClick { .. } => Tray::on_left_click(app_handle),
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-                mode @ ("rule_mode" | "global_mode" | "direct_mode" | "script_mode") => {
+                mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
                     let mode = &mode[0..mode.len() - 5];
                     feat::change_clash_mode(mode.into());
                 }
-
                 "open_window" => resolve::create_window(app_handle),
                 "system_proxy" => feat::toggle_system_proxy(),
                 "tun_mode" => feat::toggle_tun_mode(),
