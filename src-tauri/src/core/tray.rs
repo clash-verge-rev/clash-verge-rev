@@ -136,13 +136,21 @@ impl Tray {
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
         let mut indication_icon = if *system_proxy {
-            include_bytes!("../../icons/tray-icon-activated.png").to_vec()
+            #[cfg(not(target_os = "macos"))]
+            let icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
+            #[cfg(target_os = "macos")]
+            let icon = include_bytes!("../../icons/mac-tray-icon-sys.png").to_vec();
+            icon
         } else {
             include_bytes!("../../icons/tray-icon.png").to_vec()
         };
 
         if *tun_mode {
-            indication_icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
+            #[cfg(not(target_os = "macos"))]
+            let icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
+            #[cfg(target_os = "macos")]
+            let icon = include_bytes!("../../icons/mac-tray-icon-tun.png").to_vec();
+            indication_icon = icon
         }
 
         let _ = tray.set_icon(tauri::Icon::Raw(indication_icon));
