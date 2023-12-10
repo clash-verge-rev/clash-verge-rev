@@ -19,20 +19,6 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 
 #### TG Group: [@clash_verge_rev](https://t.me/clash_verge_rev)
 
-## Promotion
-
-[狗狗加速 —— 技术流机场 Doggygo VPN](https://狗狗加速.com)
-
-- 高性能海外机场，免费试用，优惠套餐，解锁流媒体，全球首家支持 Hysteria 协议。
-- 使用 Clash Verge 专属邀请链接注册送 3 天，每天 1G 流量免费试用：https://verge.狗狗加速.com/#/register?code=oaxsAGo6
-- Clash Verge 专属 8 折优惠码: verge20 (仅有 500 份)
-- 优惠套餐每月仅需 15.8 元，160G 流量，年付 8 折
-- 海外团队，无跑路风险，高达 50% 返佣
-- 集群负载均衡设计，高速专线(兼容老客户端)，极低延迟，无视晚高峰，4K 秒开
-- 全球首家 Hysteria 协议机场，现已上线更快的 `Hysteria2` 协议(Clash Verge 客户端最佳搭配)
-- 解锁流媒体及 ChatGPT
-- 官网：https://狗狗加速.com
-
 ## Preview
 
 ![preview](./docs/preview.gif)
@@ -67,6 +53,37 @@ open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/C
 ## Development
 
 You should install Rust and Nodejs, see [here](https://tauri.app/v1/guides/getting-started/prerequisites) for more details. Then install Nodejs packages.
+
+If you are building on Windows, please generate the public and private keys first：
+
+```shell
+tauri signer generate -w  ./tauri.key
+```
+
+Then add the public and private keys to the environment variables，for example：
+
+mac 和 linux：
+
+```shell
+export TAURI_PRIVATE_KEY="content of the generated key"
+export TAURI_KEY_PASSWORD="key password"
+```
+
+windows：
+
+```shell
+set TAURI_PRIVATE_KEY="content of the generated key"
+set TAURI_KEY_PASSWORD="key password"
+```
+
+powershell:
+
+```shell
+$env:TAURI_PRIVATE_KEY="content of the generated key"
+$env:TAURI_KEY_PASSWORD="key password"
+```
+
+And add Git to the system path, for example: `C:\Program Files\Git\usr\bin` (or where ever Git is installed on your computer) to your path. The rquickjs component in the project needs to use the patch tool. Of course, the patch of any tool can be used, including MinGW.
 
 ```shell
 pnpm i
