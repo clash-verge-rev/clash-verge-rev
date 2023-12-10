@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useLockFn } from "ahooks";
 import {
   TextField,
   Switch,
@@ -22,6 +23,7 @@ import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { invoke_uwp_tool } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import { useVerge } from "@/hooks/use-verge";
+import { updateGeoData } from "@/services/api";
 
 const isWIN = getSystem() === "windows";
 
@@ -33,7 +35,6 @@ const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { clash, version, mutateClash, patchClash } = useClash();
-
   const { verge, mutateVerge, patchVerge } = useVerge();
 
   const { ipv6, "allow-lan": allowLan, "log-level": logLevel } = clash ?? {};
@@ -57,6 +58,19 @@ const SettingClash = ({ onError }: Props) => {
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
+  const onUpdateGeo = useLockFn(async () => {
+    try {
+      await updateGeoData();
+      Notice.success("Start update geodata");
+    } catch (err: any) {
+      if (err.response.status === 400) {
+        Notice.success("Updating geodata...");
+      } else {
+        Notice.error(err.message || err.toString());
+      }
+    }
+  });
+
   return (
     <SettingList title={t("Clash Setting")}>
       <WebUIViewer ref={webRef} />
@@ -209,6 +223,17 @@ const SettingClash = ({ onError }: Props) => {
           </IconButton>
         </SettingItem>
       )}
+
+      <SettingItem label={t("Update GeoData")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={onUpdateGeo}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
     </SettingList>
   );
 };

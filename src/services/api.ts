@@ -55,6 +55,12 @@ export const updateConfigs = async (config: Partial<IConfigData>) => {
   return instance.patch("/configs", config);
 };
 
+/// Update geo data
+export const updateGeoData = async () => {
+  const instance = await getAxios();
+  return instance.post("/configs/geo");
+};
+
 /// Get current rules
 export const getRules = async () => {
   const instance = await getAxios();
