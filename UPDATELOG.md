@@ -1,3 +1,24 @@
+## v1.4.4
+
+### Features
+
+- 支持 Windows aarch64(arm64) 版本
+- 支持一键更新 GeoData
+- 支持一键更新 Alpha 内核
+- MacOS 支持在系统代理时显示不同的托盘图标
+- Linux 支持在系统代理时显示不同的托盘图标
+- 优化复制环境变量逻辑
+
+### Bugs Fixes
+
+- 修改 PID 文件的路径
+
+### Performance
+
+- 优化创建窗口的速度
+
+---
+
 ## v1.4.3
 
 ### Break Changes
