@@ -16,7 +16,6 @@
         "nsis": {
           "displayLanguageSelector": true,
           "installerIcon": "icons/icon.ico",
-          "installMode": "both",
           "languages": ["SimpChinese", "English"],
           "license": "../LICENSE"
         }
