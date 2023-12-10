@@ -29,7 +29,7 @@ index 4c6dde5..5fd9ad8 100644
  nanoid = "0.4"
  chrono = "0.4"
  sysinfo = "0.29"
--rquickjs = "0.4"
+-rquickjs = "0.3"
  serde_json = "1.0"
  serde_yaml = "0.9"
  auto-launch = "0.5"
