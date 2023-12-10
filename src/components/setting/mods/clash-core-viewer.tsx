@@ -14,7 +14,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { changeClashCore, restartSidecar } from "@/services/cmds";
-import { closeAllConnections } from "@/services/api";
+import { closeAllConnections, upgradeCore } from "@/services/api";
 import { grantPermission } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 
@@ -76,16 +76,36 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
     }
   });
 
+  const onUpgrade = useLockFn(async () => {
+    try {
+      await upgradeCore();
+      Notice.success(`Successfully upgrade core`, 1000);
+    } catch (err: any) {
+      Notice.error(err?.response.data.message || err.toString());
+    }
+  });
+
   return (
     <BaseDialog
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
           {t("Clash Core")}
-
-          <Button variant="contained" size="small" onClick={onRestart}>
-            {t("Restart")}
-          </Button>
+          <Box>
+            {clash_core !== "clash-meta" && (
+              <Button
+                variant="contained"
+                size="small"
+                sx={{ marginRight: "8px" }}
+                onClick={onUpgrade}
+              >
+                {t("Upgrade")}
+              </Button>
+            )}
+            <Button variant="contained" size="small" onClick={onRestart}>
+              {t("Restart")}
+            </Button>
+          </Box>
         </Box>
       }
       contentSx={{
