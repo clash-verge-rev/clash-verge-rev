@@ -1,8 +1,8 @@
 [package]
 name = "clash-verge"
-version = "1.4.3"
+version = "1.4.4"
 description = "clash verge"
-authors = ["zzzgydi"]
+authors = ["zzzgydi", "wonfen", "MystiPanda"]
 license = "GPL-3.0"
 repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
@@ -25,7 +25,7 @@ log4rs = "1"
 nanoid = "0.4"
 chrono = "0.4"
 sysinfo = "0.29"
-rquickjs = "0.3"
+rquickjs = "0.3" # 高版本不支持 Linux aarch64
 serde_json = "1.0"
 serde_yaml = "0.9"
 auto-launch = "0.5"
@@ -42,7 +42,7 @@ sysproxy = { git="https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
 tauri = { version = "1.5", features = ["icon-png", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all"] }
 
 [target.'cfg(windows)'.dependencies]
-runas = "=1.0.0"
+runas = "=1.0.0" # 高版本会返回错误 Status
 deelevate = "0.2.0"
 winreg = { version = "0.52", features = ["transactions"] }
 windows-sys = { version = "0.52", features = ["Win32_System_LibraryLoader", "Win32_System_SystemInformation"] }
