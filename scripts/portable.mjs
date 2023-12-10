@@ -9,6 +9,7 @@ const target = process.argv.slice(2)[0];
 const ARCH_MAP = {
   "i686-pc-windows-msvc": "x86",
   "x86_64-pc-windows-msvc": "x64",
+  "aarch64-pc-windows-msvc": "arm64",
 };
 
 /// Script for ci
@@ -31,7 +32,6 @@ async function resolvePortable() {
   const zip = new AdmZip();
 
   zip.addLocalFile(path.join(releaseDir, "Clash Verge.exe"));
-  // zip.addLocalFile(path.join(releaseDir, "clash.exe"));
   zip.addLocalFile(path.join(releaseDir, "clash-meta.exe"));
   zip.addLocalFile(path.join(releaseDir, "clash-meta-alpha.exe"));
   zip.addLocalFolder(path.join(releaseDir, "resources"), "resources");
