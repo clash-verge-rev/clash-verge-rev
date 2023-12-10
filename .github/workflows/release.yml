@@ -33,11 +33,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Apply Patch
-        if: matrix.target == aarch64-pc-windows-msvc
+        if: matrix.target == 'aarch64-pc-windows-msvc'
         run: git am patches/support-windows-aarch64.patch
 
       - name: Init Submodule
-        if: matrix.target == aarch64-pc-windows-msvc
+        if: matrix.target == 'aarch64-pc-windows-msvc'
         run: git submodule update --init --recursive
 
       - name: Install Rust Stable
