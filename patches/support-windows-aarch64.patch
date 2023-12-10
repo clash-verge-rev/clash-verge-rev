@@ -20,7 +20,7 @@ index 0000000..2eda7e4
 @@ -0,0 +1,3 @@
 +[submodule "src-tauri/quick-rs"]
 +	path = src-tauri/quick-rs
-+	url = https://github.com/clash-verge-rev/quick-rs.git
++	url = https://github.com/Monster-Release/quick-rs.git
 diff --git a/src-tauri/Cargo.toml b/src-tauri/Cargo.toml
 index 4c6dde5..5fd9ad8 100644
 --- a/src-tauri/Cargo.toml
