@@ -111,7 +111,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem label={t("Copy Env Type")}>
         <GuardState
-          value={env_type ?? OS === "windows" ? "powershell" : "bash"}
+          value={env_type ?? (OS === "windows" ? "powershell" : "bash")}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ env_type: e })}
