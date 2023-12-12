@@ -15,7 +15,6 @@ static VERGE_CONFIG: &str = "verge.yaml";
 static PROFILE_YAML: &str = "profiles.yaml";
 
 static mut RESOURCE_DIR: Option<PathBuf> = None;
-static mut APP_HOME_DIR: Option<PathBuf> = None;
 
 /// portable flag
 #[allow(unused)]
@@ -43,27 +42,28 @@ pub unsafe fn init_portable_flag() -> Result<()> {
 
 /// get the verge app home dir
 pub fn app_home_dir() -> Result<PathBuf> {
-    use tauri::utils::platform::current_exe;
-    let app_exe = current_exe()?;
-    let app_exe = dunce::canonicalize(app_exe)?;
-    let app_dir = app_exe
-        .parent()
-        .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
-
-    let portable_home_dir = PathBuf::from(app_dir).join(".config").join(APP_ID);
-    let home_dir = data_dir()
-        .ok_or(anyhow::anyhow!("failed to get app home dir"))?
-        .join(APP_ID);
-
+    #[cfg(target_os = "windows")]
     unsafe {
-        if PORTABLE_FLAG {
-            APP_HOME_DIR = Some(portable_home_dir.clone());
-            Ok(portable_home_dir)
+        use tauri::utils::platform::current_exe;
+
+        if !PORTABLE_FLAG {
+            Ok(data_dir()
+                .ok_or(anyhow::anyhow!("failed to get app home dir"))?
+                .join(APP_ID))
         } else {
-            APP_HOME_DIR = Some(home_dir.clone());
-            Ok(home_dir)
+            let app_exe = current_exe()?;
+            let app_exe = dunce::canonicalize(app_exe)?;
+            let app_dir = app_exe
+                .parent()
+                .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
+            Ok(PathBuf::from(app_dir).join(".config").join(APP_ID))
         }
     }
+
+    #[cfg(not(target_os = "windows"))]
+    Ok(data_dir()
+        .ok_or(anyhow::anyhow!("failed to get app home dir"))?
+        .join(APP_ID))
 }
 
 /// get the resources dir
@@ -116,9 +116,9 @@ pub fn app_res_dir() -> Result<PathBuf> {
 
 pub fn clash_pid_path() -> Result<PathBuf> {
     unsafe {
-        Ok(APP_HOME_DIR
+        Ok(RESOURCE_DIR
             .clone()
-            .ok_or(anyhow::anyhow!("failed to get the app home dir"))?
+            .ok_or(anyhow::anyhow!("failed to get the resource dir"))?
             .join("clash.pid"))
     }
 }
