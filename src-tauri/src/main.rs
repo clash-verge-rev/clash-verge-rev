@@ -131,6 +131,9 @@ fn main() -> std::io::Result<()> {
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
                 match event {
+                    tauri::WindowEvent::Destroyed => {
+                        let _ = resolve::save_window_size_position(&app_handle, true);
+                    }
                     tauri::WindowEvent::CloseRequested { .. } => {
                         let _ = resolve::save_window_size_position(&app_handle, true);
                     }
