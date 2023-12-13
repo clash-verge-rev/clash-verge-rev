@@ -18,7 +18,7 @@ export const BasePage: React.FC<Props> = (props) => {
 
   return (
     <BaseErrorBoundary>
-      <div className="base-page" data-windrag>
+      <div className="base-page">
         <header data-windrag style={{ userSelect: "none" }}>
           <Typography variant="h4" component="h1" data-windrag>
             {title}
@@ -38,7 +38,7 @@ export const BasePage: React.FC<Props> = (props) => {
                 : "",
             }}
           >
-            <div className="base-content" style={contentStyle} data-windrag>
+            <div className="base-content" style={contentStyle}>
               {children}
             </div>
           </section>
