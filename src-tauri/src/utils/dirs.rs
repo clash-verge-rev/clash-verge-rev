@@ -115,22 +115,12 @@ pub fn app_res_dir() -> Result<PathBuf> {
 }
 
 pub fn clash_pid_path() -> Result<PathBuf> {
-    unsafe {
-        Ok(RESOURCE_DIR
-            .clone()
-            .ok_or(anyhow::anyhow!("failed to get the resource dir"))?
-            .join("clash.pid"))
-    }
+    Ok(app_home_dir()?.join("clash.pid"))
 }
 
 #[cfg(windows)]
 pub fn service_path() -> Result<PathBuf> {
-    unsafe {
-        let res_dir = RESOURCE_DIR
-            .clone()
-            .ok_or(anyhow::anyhow!("failed to get the resource dir"))?;
-        Ok(res_dir.join("clash-verge-service.exe"))
-    }
+    Ok(app_home_dir()?.join("clash-verge-service.exe"))
 }
 
 #[cfg(windows)]

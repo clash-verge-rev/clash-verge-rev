@@ -116,7 +116,10 @@ pub fn delete_log() -> Result<()> {
         if file_name.ends_with(".log") {
             let now = Local::now();
             let created_time = parse_time_str(&file_name[0..file_name.len() - 4])?;
-            let file_time = Local.from_local_datetime(&created_time).single().ok_or(anyhow::anyhow!("invalid local datetime"))?;
+            let file_time = Local
+                .from_local_datetime(&created_time)
+                .single()
+                .ok_or(anyhow::anyhow!("invalid local datetime"))?;
 
             let duration = now.signed_duration_since(file_time);
             if duration.num_days() > day {
@@ -197,7 +200,14 @@ pub fn init_resources(package_info: &PackageInfo) -> Result<()> {
     }
 
     #[cfg(target_os = "windows")]
-    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
+    let file_list = [
+        "Country.mmdb",
+        "geoip.dat",
+        "geosite.dat",
+        "clash-verge-service.exe",
+        "install-service.exe",
+        "uninstall-service.exe",
+    ];
     #[cfg(not(target_os = "windows"))]
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
 
