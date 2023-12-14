@@ -41,18 +41,18 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 
 Download from [release](https://github.com/clash-verge-rev/clash-verge-rev/releases). Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
-- [Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/Clash.Verge_1.4.4_x64-setup.exe)
-- [Windows x86](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/Clash.Verge_1.4.4_x86-setup.exe)
-- [Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/Clash.Verge_1.4.4_arm64-setup.exe)
+- [Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/Clash.Verge_1.4.5_x64-setup.exe)
+- [Windows x86](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/Clash.Verge_1.4.5_x86-setup.exe)
+- [Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/Clash.Verge_1.4.5_arm64-setup.exe)
 
-- [macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/Clash.Verge_1.4.4_x64.dmg)
-- [macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/Clash.Verge_1.4.4_aarch64.dmg)
+- [macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/Clash.Verge_1.4.5_x64.dmg)
+- [macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/Clash.Verge_1.4.5_aarch64.dmg)
 
-- [Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/clash-verge_1.4.4_amd64.AppImage)
-- [Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/clash-verge_1.4.4_amd64.deb)
-- [Linux x86 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/clash-verge_1.4.4_i386.AppImage)
-- [Linux x86 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/clash-verge_1.4.4_i386.deb)
-- [Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.4/clash-verge_1.4.4_arm64.deb)
+- [Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/clash-verge_1.4.5_amd64.AppImage)
+- [Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/clash-verge_1.4.5_amd64.deb)
+- [Linux x86 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/clash-verge_1.4.5_i386.AppImage)
+- [Linux x86 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/clash-verge_1.4.5_i386.deb)
+- [Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.5/clash-verge_1.4.5_arm64.deb)
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
@@ -112,11 +112,10 @@ Issue and PR welcome!
 
 Clash Verge rev was based on or inspired by these projects and so on:
 
-- [keiko233/clash-nyanpasu](https://github.com/keiko233/clash-nyanpasu): A Clash Verge variant.
 - [zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): A Clash GUI based on tauri. Supports Windows, macOS and Linux.
 - [tauri-apps/tauri](https://github.com/tauri-apps/tauri): Build smaller, faster, and more secure desktop applications with a web frontend.
 - [Dreamacro/clash](https://github.com/Dreamacro/clash): A rule-based tunnel in Go.
-- [MetaCubeX/Clash.Meta](https://github.com/MetaCubeX/Clash.Meta): A rule-based tunnel in Go.
+- [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo): A rule-based tunnel in Go.
 - [Fndroid/clash_for_windows_pkg](https://github.com/Fndroid/clash_for_windows_pkg): A Windows/macOS GUI based on Clash.
 - [vitejs/vite](https://github.com/vitejs/vite): Next generation frontend tooling. It's fast!
 
