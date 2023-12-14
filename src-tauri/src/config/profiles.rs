@@ -55,7 +55,12 @@ impl IProfiles {
 
     pub fn template() -> Self {
         Self {
-            valid: Some(vec!["dns".into()]),
+            valid: Some(vec![
+                "dns".into(),
+                "sub-rules".into(),
+                "unified-delay".into(),
+                "tcp-concurrent".into(),
+            ]),
             items: Some(vec![]),
             ..Self::default()
         }

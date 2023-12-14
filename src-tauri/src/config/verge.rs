@@ -152,7 +152,7 @@ impl IVerge {
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             enable_builtin_enhanced: Some(true),
-            enable_clash_fields: Some(false),
+            enable_clash_fields: Some(true),
             auto_log_clean: Some(3),
             ..Self::default()
         }
