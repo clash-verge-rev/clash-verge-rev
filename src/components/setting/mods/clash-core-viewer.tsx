@@ -4,7 +4,8 @@ import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useVerge } from "@/hooks/use-verge";
 import { useLockFn } from "ahooks";
-import { Lock } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
+import { SwitchAccessShortcut, RestartAlt } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -31,6 +32,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, mutateVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -78,9 +80,12 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onUpgrade = useLockFn(async () => {
     try {
+      setUpgrading(true);
       await upgradeCore();
+      setUpgrading(false);
       Notice.success(`Successfully upgrade core`, 1000);
     } catch (err: any) {
+      setUpgrading(false);
       Notice.error(err?.response.data.message || err.toString());
     }
   });
@@ -93,16 +98,24 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
           {t("Clash Core")}
           <Box>
             {clash_core !== "clash-meta" && (
-              <Button
+              <LoadingButton
                 variant="contained"
                 size="small"
+                startIcon={<SwitchAccessShortcut />}
+                loadingPosition="start"
+                loading={upgrading}
                 sx={{ marginRight: "8px" }}
                 onClick={onUpgrade}
               >
                 {t("Upgrade")}
-              </Button>
+              </LoadingButton>
             )}
-            <Button variant="contained" size="small" onClick={onRestart}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={onRestart}
+              startIcon={<RestartAlt />}
+            >
               {t("Restart")}
             </Button>
           </Box>
@@ -110,7 +123,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       }
       contentSx={{
         pb: 0,
-        width: 320,
+        width: 400,
         height: 180,
         overflowY: "auto",
         userSelect: "text",
