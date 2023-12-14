@@ -1,8 +1,9 @@
+use crate::core::handle;
 use anyhow::Result;
 use std::path::PathBuf;
 use tauri::{
     api::path::{data_dir, resource_dir},
-    Env, PackageInfo,
+    Env,
 };
 
 #[cfg(not(feature = "verge-dev"))]
@@ -14,73 +15,38 @@ static CLASH_CONFIG: &str = "config.yaml";
 static VERGE_CONFIG: &str = "verge.yaml";
 static PROFILE_YAML: &str = "profiles.yaml";
 
-static mut RESOURCE_DIR: Option<PathBuf> = None;
-
-/// portable flag
-#[allow(unused)]
-static mut PORTABLE_FLAG: bool = false;
-
-pub static mut APP_VERSION: &str = "v1.2.0";
-
-/// initialize portable flag
-#[cfg(target_os = "windows")]
-pub unsafe fn init_portable_flag() -> Result<()> {
+/// get the verge app home dir
+pub fn app_home_dir() -> Result<PathBuf> {
     use tauri::utils::platform::current_exe;
 
-    let exe = current_exe()?;
-
-    if let Some(dir) = exe.parent() {
+    let app_exe = current_exe()?;
+    if let Some(dir) = app_exe.parent() {
         let dir = PathBuf::from(dir).join(".config/PORTABLE");
 
         if dir.exists() {
-            PORTABLE_FLAG = true;
-        }
-    }
-
-    Ok(())
-}
-
-/// get the verge app home dir
-pub fn app_home_dir() -> Result<PathBuf> {
-    #[cfg(target_os = "windows")]
-    unsafe {
-        use tauri::utils::platform::current_exe;
-
-        if !PORTABLE_FLAG {
-            Ok(data_dir()
-                .ok_or(anyhow::anyhow!("failed to get app home dir"))?
-                .join(APP_ID))
-        } else {
-            let app_exe = current_exe()?;
             let app_exe = dunce::canonicalize(app_exe)?;
             let app_dir = app_exe
                 .parent()
                 .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
-            Ok(PathBuf::from(app_dir).join(".config").join(APP_ID))
+            return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
         }
     }
-
-    #[cfg(not(target_os = "windows"))]
     Ok(data_dir()
         .ok_or(anyhow::anyhow!("failed to get app home dir"))?
         .join(APP_ID))
 }
 
 /// get the resources dir
-pub fn app_resources_dir(package_info: &PackageInfo) -> Result<PathBuf> {
-    let res_dir = resource_dir(package_info, &Env::default())
-        .ok_or(anyhow::anyhow!("failed to get the resource dir"))?
-        .join("resources");
-
-    unsafe {
-        RESOURCE_DIR = Some(res_dir.clone());
-
-        let ver = package_info.version.to_string();
-        let ver_str = format!("v{ver}");
-        APP_VERSION = Box::leak(Box::new(ver_str));
-    }
-
-    Ok(res_dir)
+pub fn app_resources_dir() -> Result<PathBuf> {
+    let handle = handle::Handle::global();
+    let app_handle = handle.app_handle.lock();
+    if let Some(app_handle) = app_handle.as_ref() {
+        let res_dir = resource_dir(app_handle.package_info(), &Env::default())
+            .ok_or(anyhow::anyhow!("failed to get the resource dir"))?
+            .join("resources");
+        return Ok(res_dir);
+    };
+    Err(anyhow::anyhow!("failed to get the resource dir"))
 }
 
 /// profiles dir
@@ -105,22 +71,18 @@ pub fn profiles_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
 }
 
-#[allow(unused)]
-pub fn app_res_dir() -> Result<PathBuf> {
-    unsafe {
-        Ok(RESOURCE_DIR
-            .clone()
-            .ok_or(anyhow::anyhow!("failed to get the resource dir"))?)
-    }
-}
-
 pub fn clash_pid_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("clash.pid"))
 }
 
 #[cfg(windows)]
+pub fn service_dir() -> Result<PathBuf> {
+    Ok(app_home_dir()?.join("service"))
+}
+
+#[cfg(windows)]
 pub fn service_path() -> Result<PathBuf> {
-    Ok(app_home_dir()?.join("clash-verge-service.exe"))
+    Ok(service_dir()?.join("clash-verge-service.exe"))
 }
 
 #[cfg(windows)]

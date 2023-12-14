@@ -9,7 +9,6 @@ use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::fs::{self, DirEntry};
 use std::str::FromStr;
-use tauri::PackageInfo;
 
 /// initialize this instance's log file
 fn init_log() -> Result<()> {
@@ -142,11 +141,6 @@ pub fn delete_log() -> Result<()> {
 /// Initialize all the config files
 /// before tauri setup
 pub fn init_config() -> Result<()> {
-    #[cfg(target_os = "windows")]
-    unsafe {
-        let _ = dirs::init_portable_flag();
-    }
-
     let _ = init_log();
     let _ = delete_log();
 
@@ -188,9 +182,9 @@ pub fn init_config() -> Result<()> {
 
 /// initialize app resources
 /// after tauri setup
-pub fn init_resources(package_info: &PackageInfo) -> Result<()> {
+pub fn init_resources() -> Result<()> {
     let app_dir = dirs::app_home_dir()?;
-    let res_dir = dirs::app_resources_dir(package_info)?;
+    let res_dir = dirs::app_resources_dir()?;
 
     if !app_dir.exists() {
         let _ = fs::create_dir_all(&app_dir);
@@ -200,14 +194,7 @@ pub fn init_resources(package_info: &PackageInfo) -> Result<()> {
     }
 
     #[cfg(target_os = "windows")]
-    let file_list = [
-        "Country.mmdb",
-        "geoip.dat",
-        "geosite.dat",
-        "clash-verge-service.exe",
-        "install-service.exe",
-        "uninstall-service.exe",
-    ];
+    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
     #[cfg(not(target_os = "windows"))]
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
 
@@ -216,6 +203,67 @@ pub fn init_resources(package_info: &PackageInfo) -> Result<()> {
     for file in file_list.iter() {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
+
+        let handle_copy = || {
+            match fs::copy(&src_path, &dest_path) {
+                Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
+                Err(err) => {
+                    log::error!(target: "app", "failed to copy resources '{file}', {err}")
+                }
+            };
+        };
+
+        if src_path.exists() && !dest_path.exists() {
+            handle_copy();
+            continue;
+        }
+
+        let src_modified = fs::metadata(&src_path).and_then(|m| m.modified());
+        let dest_modified = fs::metadata(&dest_path).and_then(|m| m.modified());
+
+        match (src_modified, dest_modified) {
+            (Ok(src_modified), Ok(dest_modified)) => {
+                if src_modified > dest_modified {
+                    handle_copy();
+                } else {
+                    log::debug!(target: "app", "skipping resource copy '{file}'");
+                }
+            }
+            _ => {
+                log::debug!(target: "app", "failed to get modified '{file}'");
+                handle_copy();
+            }
+        };
+    }
+
+    Ok(())
+}
+
+/// initialize service resources
+/// after tauri setup
+#[cfg(target_os = "windows")]
+pub fn init_service() -> Result<()> {
+    let service_dir = dirs::service_dir()?;
+    let res_dir = dirs::app_resources_dir()?;
+
+    if !service_dir.exists() {
+        let _ = fs::create_dir_all(&service_dir);
+    }
+    if !res_dir.exists() {
+        let _ = fs::create_dir_all(&res_dir);
+    }
+
+    let file_list = [
+        "clash-verge-service.exe",
+        "install-service.exe",
+        "uninstall-service.exe",
+    ];
+
+    // copy the resource file
+    // if the source file is newer than the destination file, copy it over
+    for file in file_list.iter() {
+        let src_path = res_dir.join(file);
+        let dest_path = service_dir.join(file);
 
         let handle_copy = || {
             match fs::copy(&src_path, &dest_path) {
