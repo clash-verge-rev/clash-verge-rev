@@ -140,7 +140,7 @@ impl Tray {
             #[cfg(not(target_os = "macos"))]
             let icon = include_bytes!("../../icons/tray-icon.png").to_vec();
             #[cfg(target_os = "macos")]
-            let icon = include_bytes!("../../icons/icon.png").to_vec();
+            let icon = include_bytes!("../../icons/mac-tray-icon.png").to_vec();
             icon
         };
 
