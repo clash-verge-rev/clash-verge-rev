@@ -2,9 +2,12 @@ use crate::config::IVerge;
 use crate::{config::Config, core::*, utils::init, utils::server};
 use crate::{log_err, trace_err};
 use anyhow::Result;
+use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::{App, AppHandle, Manager};
+
+pub static VERSION: OnceCell<String> = OnceCell::new();
 
 pub fn find_unused_port() -> Result<u16> {
     match TcpListener::bind("127.0.0.1:0") {
@@ -27,8 +30,9 @@ pub fn find_unused_port() -> Result<u16> {
 pub fn resolve_setup(app: &mut App) {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-
+    let version = app.package_info().version.to_string();
     handle::Handle::global().init(app.app_handle());
+    VERSION.get_or_init(|| version.clone());
 
     log_err!(init::init_resources());
     #[cfg(target_os = "windows")]

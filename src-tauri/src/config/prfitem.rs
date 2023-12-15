@@ -1,4 +1,4 @@
-use crate::utils::{dirs, help, tmpl};
+use crate::utils::{dirs, help, resolve::VERSION, tmpl};
 use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -231,7 +231,11 @@ impl PrfItem {
             };
         }
 
-        let version = format!("clash-verge-rev");
+        let version = match VERSION.get() {
+            Some(v) => format!("clash-verge/v{}", v),
+            None => format!("clash-verge/unknown"),
+        };
+
         builder = builder.user_agent(user_agent.unwrap_or(version));
 
         let resp = builder.build()?.get(url).send().await?;
