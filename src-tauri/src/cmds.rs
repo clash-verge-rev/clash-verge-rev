@@ -256,6 +256,11 @@ pub async fn clash_api_get_proxy_delay(
     }
 }
 
+#[tauri::command]
+pub fn get_portable_flag() -> CmdResult<bool> {
+    Ok(*dirs::PORTABLE_FLAG.get().unwrap_or(&false))
+}
+
 #[cfg(windows)]
 pub mod service {
     use super::*;

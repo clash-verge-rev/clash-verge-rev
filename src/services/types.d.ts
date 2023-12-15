@@ -14,7 +14,6 @@ type Platform =
 /**
  * defines in `vite.config.ts`
  */
-declare const WIN_PORTABLE: boolean;
 declare const OS_PLATFORM: Platform;
 
 /**

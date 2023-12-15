@@ -1,5 +1,6 @@
 use crate::core::handle;
 use anyhow::Result;
+use once_cell::sync::OnceCell;
 use std::path::PathBuf;
 use tauri::{
     api::path::{data_dir, resource_dir},
@@ -11,12 +12,14 @@ static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
 #[cfg(feature = "verge-dev")]
 static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev.dev";
 
+pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
+
 static CLASH_CONFIG: &str = "config.yaml";
 static VERGE_CONFIG: &str = "verge.yaml";
 static PROFILE_YAML: &str = "profiles.yaml";
 
-/// get the verge app home dir
-pub fn app_home_dir() -> Result<PathBuf> {
+/// init portable flag
+pub fn init_portable_flag() -> Result<()> {
     use tauri::utils::platform::current_exe;
 
     let app_exe = current_exe()?;
@@ -24,13 +27,27 @@ pub fn app_home_dir() -> Result<PathBuf> {
         let dir = PathBuf::from(dir).join(".config/PORTABLE");
 
         if dir.exists() {
-            let app_exe = dunce::canonicalize(app_exe)?;
-            let app_dir = app_exe
-                .parent()
-                .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
-            return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
+            PORTABLE_FLAG.get_or_init(|| true);
         }
     }
+    PORTABLE_FLAG.get_or_init(|| false);
+    Ok(())
+}
+
+/// get the verge app home dir
+pub fn app_home_dir() -> Result<PathBuf> {
+    use tauri::utils::platform::current_exe;
+
+    let flag = PORTABLE_FLAG.get().unwrap_or(&false);
+    if *flag {
+        let app_exe = current_exe()?;
+        let app_exe = dunce::canonicalize(app_exe)?;
+        let app_dir = app_exe
+            .parent()
+            .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
+        return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
+    }
+
     Ok(data_dir()
         .ok_or(anyhow::anyhow!("failed to get app home dir"))?
         .join(APP_ID))

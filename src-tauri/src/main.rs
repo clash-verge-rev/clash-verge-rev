@@ -34,6 +34,7 @@ fn main() -> std::io::Result<()> {
             cmds::open_logs_dir,
             cmds::open_web_url,
             cmds::open_core_dir,
+            cmds::get_portable_flag,
             // cmds::kill_sidecar,
             cmds::restart_sidecar,
             cmds::grant_permission,

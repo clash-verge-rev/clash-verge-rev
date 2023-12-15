@@ -141,6 +141,7 @@ pub fn delete_log() -> Result<()> {
 /// Initialize all the config files
 /// before tauri setup
 pub fn init_config() -> Result<()> {
+    let _ = dirs::init_portable_flag();
     let _ = init_log();
     let _ = delete_log();
 
