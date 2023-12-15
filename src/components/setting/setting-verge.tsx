@@ -18,6 +18,7 @@ import { GuardState } from "./mods/guard-state";
 import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
+import { portableFlag } from "@/pages/_layout";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -213,7 +214,7 @@ const SettingVerge = ({ onError }: Props) => {
         </IconButton>
       </SettingItem>
 
-      {!(OS === "windows" && WIN_PORTABLE) && (
+      {!portableFlag && (
         <SettingItem label={t("Check for Updates")}>
           <IconButton
             color="inherit"

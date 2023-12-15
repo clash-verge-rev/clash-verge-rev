@@ -191,3 +191,7 @@ export async function invoke_uwp_tool() {
     Notice.error(err?.message || err.toString(), 1500)
   );
 }
+
+export async function getPortableFlag() {
+  return invoke<boolean>("get_portable_flag");
+}

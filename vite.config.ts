@@ -25,6 +25,5 @@ export default defineConfig({
   },
   define: {
     OS_PLATFORM: `"${process.platform}"`,
-    WIN_PORTABLE: !!process.env.VITE_WIN_PORTABLE,
   },
 });
