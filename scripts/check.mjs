@@ -67,8 +67,19 @@ const META_ALPHA_MAP = {
 
 // Fetch the latest release version from the version.txt file
 async function getLatestVersion() {
+  const options = {};
+
+  const httpProxy =
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy;
+
+  if (httpProxy) {
+    options.agent = proxyAgent(httpProxy);
+  }
   try {
-    const response = await fetch(VERSION_URL, { method: "GET" });
+    const response = await fetch(VERSION_URL, { ...options, method: "GET" });
     let v = await response.text();
     META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
     console.log(`Latest release version: ${META_ALPHA_VERSION}`);
@@ -273,8 +284,8 @@ async function downloadFile(url, path) {
 /**
  * main
  */
-const SERVICE_URL =
-  "https://github.com/zzzgydi/clash-verge-service/releases/download/latest";
+
+const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () =>
   resolveResource({
