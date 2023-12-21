@@ -96,7 +96,7 @@ impl PrfOption {
                 a.update_interval = b.update_interval.or(a.update_interval);
                 Some(a)
             }
-            t @ _ => t.0.or(t.1),
+            t => t.0.or(t.1),
         }
     }
 }
@@ -152,7 +152,7 @@ impl PrfItem {
                 let desc = item.desc.unwrap_or("".into());
                 PrfItem::from_script(name, desc)
             }
-            typ @ _ => bail!("invalid profile item type \"{typ}\""),
+            typ => bail!("invalid profile item type \"{typ}\""),
         }
     }
 

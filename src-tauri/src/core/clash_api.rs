@@ -20,7 +20,7 @@ pub async fn put_configs(path: &str) -> Result<()> {
 
     match response.status().as_u16() {
         204 => Ok(()),
-        status @ _ => {
+        status => {
             bail!("failed to put configs with status \"{status}\"")
         }
     }
