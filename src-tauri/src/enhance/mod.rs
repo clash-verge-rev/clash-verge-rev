@@ -4,9 +4,8 @@ mod merge;
 mod script;
 mod tun;
 
-pub(self) use self::field::*;
-
 use self::chain::*;
+use self::field::*;
 use self::merge::*;
 use self::script::*;
 use self::tun::*;

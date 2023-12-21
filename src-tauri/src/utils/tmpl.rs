@@ -1,4 +1,4 @@
-///! Some config file template
+//! Some config file template
 
 /// template for new a profile item
 pub const ITEM_LOCAL: &str = "# Profile Template for clash verge
