@@ -48,7 +48,7 @@ const SIDECAR_HOST = target
       .match(/(?<=host: ).+(?=\s*)/g)[0];
 
 /* ======= clash meta alpha======= */
-const VERSION_URL =
+const META_ALPHA_VERSION_URL =
   "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt";
 const META_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`;
 let META_ALPHA_VERSION;
@@ -57,7 +57,7 @@ const META_ALPHA_MAP = {
   "win32-x64": "mihomo-windows-amd64-compatible",
   "win32-ia32": "mihomo-windows-386",
   "win32-arm64": "mihomo-windows-arm64",
-  "darwin-x64": "mihomo-darwin-amd64",
+  "darwin-x64": "mihomo-darwin-amd64-cgo",
   "darwin-arm64": "mihomo-darwin-arm64",
   "linux-x64": "mihomo-linux-amd64-compatible",
   "linux-ia32": "mihomo-linux-386",
@@ -65,8 +65,8 @@ const META_ALPHA_MAP = {
   "linux-arm": "mihomo-linux-armv7",
 };
 
-// Fetch the latest release version from the version.txt file
-async function getLatestVersion() {
+// Fetch the latest alpha release version from the version.txt file
+async function getLatestAlphaVersion() {
   const options = {};
 
   const httpProxy =
@@ -79,31 +79,63 @@ async function getLatestVersion() {
     options.agent = proxyAgent(httpProxy);
   }
   try {
-    const response = await fetch(VERSION_URL, { ...options, method: "GET" });
+    const response = await fetch(META_ALPHA_VERSION_URL, {
+      ...options,
+      method: "GET",
+    });
     let v = await response.text();
     META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
-    console.log(`Latest release version: ${META_ALPHA_VERSION}`);
+    console.log(`Latest alpha version: ${META_ALPHA_VERSION}`);
   } catch (error) {
-    console.error("Error fetching latest release version:", error.message);
+    console.error("Error fetching latest alpha version:", error.message);
     process.exit(1);
   }
 }
 
 /* ======= clash meta stable ======= */
+const META_VERSION_URL =
+  "https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt";
 const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
-let META_VERSION = "v1.17.0";
+let META_VERSION;
 
 const META_MAP = {
   "win32-x64": "mihomo-windows-amd64-compatible",
   "win32-ia32": "mihomo-windows-386",
   "win32-arm64": "mihomo-windows-arm64",
-  "darwin-x64": "mihomo-darwin-amd64",
+  "darwin-x64": "mihomo-darwin-amd64-cgo",
   "darwin-arm64": "mihomo-darwin-arm64",
   "linux-x64": "mihomo-linux-amd64-compatible",
   "linux-ia32": "mihomo-linux-386",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
 };
+
+// Fetch the latest release version from the version.txt file
+async function getLatestReleaseVersion() {
+  const options = {};
+
+  const httpProxy =
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy;
+
+  if (httpProxy) {
+    options.agent = proxyAgent(httpProxy);
+  }
+  try {
+    const response = await fetch(META_VERSION_URL, {
+      ...options,
+      method: "GET",
+    });
+    let v = await response.text();
+    META_VERSION = v.trim(); // Trim to remove extra whitespaces
+    console.log(`Latest release version: ${META_VERSION}`);
+  } catch (error) {
+    console.error("Error fetching latest release version:", error.message);
+    process.exit(1);
+  }
+}
 
 /*
  * check available
@@ -327,15 +359,16 @@ const tasks = [
   // { name: "clash", func: resolveClash, retry: 5 },
   {
     name: "clash-meta-alpha",
-    func: () => getLatestVersion().then(() => resolveSidecar(clashMetaAlpha())),
+    func: () =>
+      getLatestAlphaVersion().then(() => resolveSidecar(clashMetaAlpha())),
     retry: 5,
   },
   {
     name: "clash-meta",
-    func: () => resolveSidecar(clashMeta()),
+    func: () =>
+      getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
     retry: 5,
   },
-  // { name: "wintun", func: resolveWintun, retry: 5, winOnly: true },
   { name: "service", func: resolveService, retry: 5, winOnly: true },
   { name: "install", func: resolveInstall, retry: 5, winOnly: true },
   { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
