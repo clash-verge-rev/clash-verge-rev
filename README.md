@@ -12,7 +12,7 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 ## Features
 
 - Since the clash core has been removed. The project no longer maintains the clash core, but only the Clash Meta core.
-- Profiles management and enhancement (by yaml and Javascript). [Doc](https://github.com/clash-verge-rev/clash-verge-rev/wiki/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97)
+- Profiles management and enhancement (by yaml and Javascript). [Doc](https://clash-verge-rev.github.io)
 - Simple UI and supports custom theme color.
 - Built-in support [Clash.Meta(mihomo)](https://github.com/MetaCubeX/mihomo) core.
 - System proxy setting and guard.

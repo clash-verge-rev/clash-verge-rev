@@ -168,6 +168,6 @@ const FlexBox = styled("div")`
 
   .label {
     flex: none;
-    width: 80px;
+    width: 85px;
   }
 `;
