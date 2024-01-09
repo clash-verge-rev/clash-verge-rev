@@ -931,9 +931,9 @@ dependencies = [
 
 [[package]]
 name = "delay_timer"
-version = "0.11.4"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46e3040b73d9397711697558109c983a2dc6fc63e98785ffbefd3ece57b46b67"
+checksum = "d70c0d5d2addc05d1e0cf7e60b3a5bf08415f03136a773d7c66b4e4a3b892cef"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4363,9 +4363,9 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.29.11"
+version = "0.30.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd727fc423c2060f6c92d9534cef765c65a6ed3f428a03d7def74a8c4348e666"
+checksum = "1fb4f3438c8f6389c864e61221cbc97e9bca98b4daf39a5beb7bea660f528bb2"
 dependencies = [
  "cfg-if",
  "core-foundation-sys",
@@ -4373,7 +4373,7 @@ dependencies = [
  "ntapi",
  "once_cell",
  "rayon",
- "winapi",
+ "windows 0.52.0",
 ]
 
 [[package]]
