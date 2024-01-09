@@ -39,13 +39,12 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
 sysproxy = { git="https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
-tauri = { version = "1.5", features = ["icon-png", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all"] }
+tauri = { version = "1.5", features = [ "notification-all", "icon-png", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all"] }
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.0.0" # 高版本会返回错误 Status
 deelevate = "0.2.0"
-winreg = { version = "0.52", features = ["transactions"] }
-windows-sys = { version = "0.52", features = ["Win32_System_LibraryLoader", "Win32_System_SystemInformation"] }
+winreg = "0.52.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 #openssl

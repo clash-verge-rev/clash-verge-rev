@@ -300,3 +300,34 @@ pub fn init_service() -> Result<()> {
 
     Ok(())
 }
+
+/// initialize url scheme
+#[cfg(target_os = "windows")]
+pub fn init_scheme() -> Result<()> {
+    use tauri::utils::platform::current_exe;
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let app_exe = current_exe()?;
+    let app_exe = dunce::canonicalize(app_exe)?;
+    let app_exe = app_exe.to_string_lossy().to_owned();
+
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let (clash, _) = hkcu.create_subkey("Software\\Classes\\Clash")?;
+    clash.set_value("", &"Clash Verge")?;
+    clash.set_value("URL Protocol", &"Clash Verge URL Scheme Protocol")?;
+    let (default_icon, _) = hkcu.create_subkey("Software\\Classes\\Clash\\DefaultIcon")?;
+    default_icon.set_value("", &format!("{app_exe}"))?;
+    let (command, _) = hkcu.create_subkey("Software\\Classes\\Clash\\Shell\\Open\\Command")?;
+    command.set_value("", &format!("{app_exe} \"%1\""))?;
+
+    Ok(())
+}
+#[cfg(target_os = "linux")]
+pub fn init_scheme() -> Result<()> {
+    Ok(())
+}
+#[cfg(target_os = "macos")]
+pub fn init_scheme() -> Result<()> {
+    Ok(())
+}
