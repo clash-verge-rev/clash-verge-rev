@@ -8,10 +8,11 @@ interface Props {
   header?: React.ReactNode; // something behind title
   contentStyle?: React.CSSProperties;
   children?: ReactNode;
+  full?: boolean;
 }
 
 export const BasePage: React.FC<Props> = (props) => {
-  const { title, header, contentStyle, children } = props;
+  const { title, header, contentStyle, full, children } = props;
   const { theme } = useCustomTheme();
 
   const isDark = theme.palette.mode === "dark";
@@ -28,7 +29,7 @@ export const BasePage: React.FC<Props> = (props) => {
         </header>
 
         <div
-          className="base-container"
+          className={full ? "base-container no-padding" : "base-container"}
           style={{ backgroundColor: isDark ? "#090909" : "#ffffff" }}
         >
           <section

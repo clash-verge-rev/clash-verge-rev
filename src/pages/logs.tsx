@@ -38,6 +38,7 @@ const LogPage = () => {
 
   return (
     <BasePage
+      full
       title={t("Logs")}
       contentStyle={{ height: "100%" }}
       header={
@@ -66,61 +67,52 @@ const LogPage = () => {
     >
       <Box
         sx={{
-          boxSizing: "border-box",
-          boxShadow: 0,
-          height: "100%",
-          userSelect: "text",
+          pt: 1,
+          mb: 0.5,
+          mx: "10px",
+          height: "36px",
+          display: "flex",
+          alignItems: "center",
         }}
       >
-        <Box
-          sx={{
-            pt: 1,
-            mb: 0.5,
-            mx: "12px",
-            height: "36px",
-            display: "flex",
-            alignItems: "center",
-          }}
+        <Select
+          size="small"
+          autoComplete="off"
+          value={logState}
+          onChange={(e) => setLogState(e.target.value)}
+          sx={{ width: 120, mr: 1, '[role="button"]': { py: 0.65 } }}
         >
-          <Select
-            size="small"
-            autoComplete="off"
-            value={logState}
-            onChange={(e) => setLogState(e.target.value)}
-            sx={{ width: 120, mr: 1, '[role="button"]': { py: 0.65 } }}
-          >
-            <MenuItem value="all">ALL</MenuItem>
-            <MenuItem value="inf">INFO</MenuItem>
-            <MenuItem value="warn">WARN</MenuItem>
-            <MenuItem value="err">ERROR</MenuItem>
-          </Select>
+          <MenuItem value="all">ALL</MenuItem>
+          <MenuItem value="inf">INFO</MenuItem>
+          <MenuItem value="warn">WARN</MenuItem>
+          <MenuItem value="err">ERROR</MenuItem>
+        </Select>
 
-          <TextField
-            hiddenLabel
-            fullWidth
-            size="small"
-            autoComplete="off"
-            spellCheck="false"
-            variant="outlined"
-            placeholder={t("Filter conditions")}
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            sx={{ input: { py: 0.65, px: 1.25 } }}
+        <TextField
+          hiddenLabel
+          fullWidth
+          size="small"
+          autoComplete="off"
+          spellCheck="false"
+          variant="outlined"
+          placeholder={t("Filter conditions")}
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          sx={{ input: { py: 0.65, px: 1.25 } }}
+        />
+      </Box>
+
+      <Box height="calc(100% - 50px)">
+        {filterLogs.length > 0 ? (
+          <Virtuoso
+            initialTopMostItemIndex={999}
+            data={filterLogs}
+            itemContent={(index, item) => <LogItem value={item} />}
+            followOutput={"smooth"}
           />
-        </Box>
-
-        <Box height="calc(100% - 50px)">
-          {filterLogs.length > 0 ? (
-            <Virtuoso
-              initialTopMostItemIndex={999}
-              data={filterLogs}
-              itemContent={(index, item) => <LogItem value={item} />}
-              followOutput={"smooth"}
-            />
-          ) : (
-            <BaseEmpty text="No Logs" />
-          )}
-        </Box>
+        ) : (
+          <BaseEmpty text="No Logs" />
+        )}
       </Box>
     </BasePage>
   );

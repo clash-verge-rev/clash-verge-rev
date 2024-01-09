@@ -1,3 +1,12 @@
+## v1.4.6
+
+### Features
+
+- 更新 Clash Meta(mihomo) Core to v1.18.0
+- UI 优化调整
+
+---
+
 ## v1.4.5
 
 ### Features

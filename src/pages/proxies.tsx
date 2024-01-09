@@ -51,6 +51,7 @@ const ProxyPage = () => {
 
   return (
     <BasePage
+      full
       contentStyle={{ height: "100%" }}
       title={t("Proxy Groups")}
       header={
@@ -72,16 +73,7 @@ const ProxyPage = () => {
         </Box>
       }
     >
-      <Box
-        sx={{
-          borderRadius: 1,
-          boxShadow: 0,
-          height: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        <ProxyGroups mode={curMode!} />
-      </Box>
+      <ProxyGroups mode={curMode!} />
     </BasePage>
   );
 };
