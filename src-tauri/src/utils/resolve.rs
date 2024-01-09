@@ -1,10 +1,16 @@
-use crate::config::IVerge;
-use crate::{config::Config, core::*, utils::init, utils::server};
+use crate::config::{IVerge, PrfOption};
+use crate::{
+    config::{Config, PrfItem},
+    core::*,
+    utils::init,
+    utils::server,
+};
 use crate::{log_err, trace_err};
 use anyhow::Result;
 use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
+use tauri::api::notification;
 use tauri::{App, AppHandle, Manager};
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
@@ -37,6 +43,8 @@ pub fn resolve_setup(app: &mut App) {
     log_err!(init::init_resources());
     #[cfg(target_os = "windows")]
     log_err!(init::init_service());
+    log_err!(init::init_scheme());
+
     // 处理随机端口
     let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
 
@@ -89,6 +97,13 @@ pub fn resolve_setup(app: &mut App) {
     log_err!(handle::Handle::update_systray_part());
     log_err!(hotkey::Hotkey::global().init(app.app_handle()));
     log_err!(timer::Timer::global().init());
+
+    let argvs: Vec<String> = std::env::args().collect();
+    if argvs.len() > 1 {
+        tauri::async_runtime::block_on(async {
+            resolve_scheme(argvs[1].to_owned()).await;
+        });
+    }
 }
 
 /// reset system proxy
@@ -222,4 +237,30 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
     }
 
     Ok(())
+}
+
+pub async fn resolve_scheme(param: String) {
+    let url = param.trim_start_matches("clash://install-config/?url=");
+    let option = PrfOption {
+        user_agent: None,
+        with_proxy: Some(true),
+        self_proxy: None,
+        update_interval: None,
+    };
+    if let Ok(item) = PrfItem::from_url(&url, None, None, Some(option)).await {
+        if let Ok(_) = Config::profiles().data().append_item(item) {
+            notification::Notification::new(crate::utils::dirs::APP_ID)
+                .title("Clash Verge")
+                .body("Import profile success")
+                .show()
+                .unwrap();
+        };
+    } else {
+        notification::Notification::new(crate::utils::dirs::APP_ID)
+            .title("Clash Verge")
+            .body("Import profile failed")
+            .show()
+            .unwrap();
+        log::error!("failed to parse url: {}", url);
+    }
 }
