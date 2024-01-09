@@ -2,8 +2,16 @@
 
 ### Features
 
-- 更新 Clash Meta(mihomo) Core to v1.18.0
+- 更新 Clash Meta(mihomo) 内核到 v1.18.0
+- 支持 URL Scheme(暂时仅支持 Windows)
+- 添加窗口置顶按钮
 - UI 优化调整
+
+### Bugs Fixes
+
+- 修复一些编译错误
+- 获取订阅名称错误
+- 订阅信息解析错误
 
 ---
 
