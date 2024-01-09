@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Button, ButtonGroup } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
 import {
   CloseRounded,
@@ -20,7 +20,16 @@ export const LayoutControl = () => {
   });
 
   return (
-    <>
+    <ButtonGroup
+      variant="text"
+      sx={{
+        height: "100%",
+        ".MuiButtonGroup-grouped": {
+          borderRadius: "0px",
+          borderRight: "0px",
+        },
+      }}
+    >
       <Button
         size="small"
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
@@ -66,11 +75,15 @@ export const LayoutControl = () => {
 
       <Button
         size="small"
-        sx={{ minWidth, svg: { transform: "scale(1.05)" } }}
+        sx={{
+          minWidth,
+          svg: { transform: "scale(1.05)" },
+          ":hover": { bgcolor: "#ff000090" },
+        }}
         onClick={() => appWindow.close()}
       >
         <CloseRounded fontSize="small" />
       </Button>
-    </>
+    </ButtonGroup>
   );
 };
