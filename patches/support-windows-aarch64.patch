@@ -28,13 +28,13 @@ index 4c6dde5..5fd9ad8 100644
 @@ -25,7 +25,6 @@ log4rs = "1"
  nanoid = "0.4"
  chrono = "0.4"
- sysinfo = "0.29"
+ sysinfo = "0.30"
 -rquickjs = "0.3" # 高版本不支持 Linux aarch64
  serde_json = "1.0"
  serde_yaml = "0.9"
  auto-launch = "0.5"
 @@ -34,6 +33,7 @@ port_scanner = "0.1.5"
- delay_timer = "0.11"
+ delay_timer = "0.11.5"
  parking_lot = "0.12"
  percent-encoding = "2.3.1"
 +quick-rs = { path = "quick-rs" }
