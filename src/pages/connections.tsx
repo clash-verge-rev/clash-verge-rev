@@ -114,6 +114,7 @@ const ConnectionsPage = () => {
 
   return (
     <BasePage
+      full
       title={t("Connections")}
       contentStyle={{ height: "100%" }}
       header={
@@ -142,75 +143,72 @@ const ConnectionsPage = () => {
         </Box>
       }
     >
-      <Box sx={{ boxShadow: 0, height: "100%" }}>
-        <Box
-          sx={{
-            pt: 1,
-            mb: 0.5,
-            mx: "12px",
-            height: "36px",
-            display: "flex",
-            alignItems: "center",
-            userSelect: "text",
-          }}
-        >
-          {!isTableLayout && (
-            <Select
-              size="small"
-              autoComplete="off"
-              value={curOrderOpt}
-              onChange={(e) => setOrderOpt(e.target.value)}
-              sx={{
-                mr: 1,
-                width: i18n.language === "en" ? 190 : 120,
-                '[role="button"]': { py: 0.65 },
-              }}
-            >
-              {Object.keys(orderOpts).map((opt) => (
-                <MenuItem key={opt} value={opt}>
-                  <span style={{ fontSize: 14 }}>{t(opt)}</span>
-                </MenuItem>
-              ))}
-            </Select>
-          )}
-
-          <TextField
-            hiddenLabel
-            fullWidth
+      <Box
+        sx={{
+          pt: 1,
+          mb: 0.5,
+          mx: "10px",
+          height: "36px",
+          display: "flex",
+          alignItems: "center",
+          userSelect: "text",
+        }}
+      >
+        {!isTableLayout && (
+          <Select
             size="small"
             autoComplete="off"
-            spellCheck="false"
-            variant="outlined"
-            placeholder={t("Filter conditions")}
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            sx={{ input: { py: 0.65, px: 1.25 } }}
-          />
-        </Box>
+            value={curOrderOpt}
+            onChange={(e) => setOrderOpt(e.target.value)}
+            sx={{
+              mr: 1,
+              width: i18n.language === "en" ? 190 : 120,
+              '[role="button"]': { py: 0.65 },
+            }}
+          >
+            {Object.keys(orderOpts).map((opt) => (
+              <MenuItem key={opt} value={opt}>
+                <span style={{ fontSize: 14 }}>{t(opt)}</span>
+              </MenuItem>
+            ))}
+          </Select>
+        )}
 
-        <Box height="calc(100% - 50px)" sx={{ userSelect: "text" }}>
-          {filterConn.length === 0 ? (
-            <BaseEmpty text="No Connections" />
-          ) : isTableLayout ? (
-            <ConnectionTable
-              connections={filterConn}
-              onShowDetail={(detail) => detailRef.current?.open(detail)}
-            />
-          ) : (
-            <Virtuoso
-              data={filterConn}
-              itemContent={(index, item) => (
-                <ConnectionItem
-                  value={item}
-                  onShowDetail={() => detailRef.current?.open(item)}
-                />
-              )}
-            />
-          )}
-        </Box>
-
-        <ConnectionDetail ref={detailRef} />
+        <TextField
+          hiddenLabel
+          fullWidth
+          size="small"
+          autoComplete="off"
+          spellCheck="false"
+          variant="outlined"
+          placeholder={t("Filter conditions")}
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          sx={{ input: { py: 0.65, px: 1.25 } }}
+        />
       </Box>
+
+      <Box height="calc(100% - 50px)" sx={{ userSelect: "text" }}>
+        {filterConn.length === 0 ? (
+          <BaseEmpty text="No Connections" />
+        ) : isTableLayout ? (
+          <ConnectionTable
+            connections={filterConn}
+            onShowDetail={(detail) => detailRef.current?.open(detail)}
+          />
+        ) : (
+          <Virtuoso
+            data={filterConn}
+            itemContent={(index, item) => (
+              <ConnectionItem
+                value={item}
+                onShowDetail={() => detailRef.current?.open(item)}
+              />
+            )}
+          />
+        )}
+      </Box>
+      <ConnectionDetail ref={detailRef} />
     </BasePage>
   );
 };

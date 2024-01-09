@@ -27,14 +27,24 @@
       width: 100%;
       height: 100%;
       overflow: auto;
-      padding: 5px 5px;
+      padding: 10px 0;
       box-sizing: border-box;
       scrollbar-gutter: stable;
 
       .base-content {
-        width: 100%;
-        // max-width: 850px;
+        width: calc(100% - 10px * 2);
         margin: 0 auto;
+      }
+    }
+
+    &.no-padding {
+      > section {
+        padding: 0;
+        overflow: visible;
+
+        .base-content {
+          width: 100%;
+        }
       }
     }
   }
