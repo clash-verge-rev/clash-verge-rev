@@ -325,20 +325,9 @@ pub fn init_scheme() -> Result<()> {
 }
 #[cfg(target_os = "linux")]
 pub fn init_scheme() -> Result<()> {
-    use std::io::Write;
-
-    let desktop_file_content = include_str!("./desktop/clash-verge-scheme.desktop");
-    let desktop_dir = dirs::local_applications_dir()?;
-    if !desktop_dir.exists() {
-        let _ = std::fs::create_dir_all(&desktop_dir);
-    }
-    let mut desktop_file =
-        std::fs::File::create(dirs::local_applications_dir()?.join("clash-verge-scheme.desktop"))?;
-    desktop_file.write_all(desktop_file_content.as_bytes())?;
-
     let output = std::process::Command::new("xdg-mime")
         .arg("default")
-        .arg("clash-verge-scheme.desktop")
+        .arg("clash-verge.desktop")
         .arg("x-scheme-handler/clash")
         .output()?;
     if !output.status.success() {

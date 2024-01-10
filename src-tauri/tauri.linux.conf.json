@@ -6,7 +6,8 @@
     "bundle": {
       "targets": ["deb", "appimage", "updater"],
       "deb": {
-        "depends": ["openssl"]
+        "depends": ["openssl"],
+        "desktopTemplate": "./clash-verge.desktop"
       }
     }
   }

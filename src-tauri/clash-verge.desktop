@@ -1,0 +1,9 @@
+[Desktop Entry]
+Categories={{{categories}}}
+Comment={{{comment}}}
+Exec={{{exec}}} %u
+Icon={{{icon}}}
+Name={{{name}}}
+Terminal=false
+Type=Application
+MimeType=x-scheme-handler/clash;
