@@ -65,8 +65,8 @@ impl IClashTemp {
         let config = &self.0;
 
         ClashInfo {
-            port: Self::guard_mixed_port(&config),
-            server: Self::guard_client_ctrl(&config),
+            port: Self::guard_mixed_port(config),
+            server: Self::guard_client_ctrl(config),
             secret: config.get("secret").and_then(|value| match value {
                 Value::String(val_str) => Some(val_str.clone()),
                 Value::Bool(val_bool) => Some(val_bool.to_string()),
@@ -98,7 +98,7 @@ impl IClashTemp {
                 Some(val_str) => {
                     let val_str = val_str.trim();
 
-                    let val = match val_str.starts_with(":") {
+                    let val = match val_str.starts_with(':') {
                         true => format!("127.0.0.1{val_str}"),
                         false => val_str.to_owned(),
                     };

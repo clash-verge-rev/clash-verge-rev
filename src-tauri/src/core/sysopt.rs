@@ -53,7 +53,7 @@ impl Sysopt {
             let verge = Config::verge();
             let verge = verge.latest();
             (
-                verge.enable_system_proxy.clone().unwrap_or(false),
+                verge.enable_system_proxy.unwrap_or(false),
                 verge.system_proxy_bypass.clone(),
             )
         };
@@ -66,7 +66,7 @@ impl Sysopt {
         };
 
         if enable {
-            let old = Sysproxy::get_system_proxy().map_or(None, |p| Some(p));
+            let old = Sysproxy::get_system_proxy().ok();
             current.set_system_proxy()?;
 
             *self.old_sysproxy.lock() = old;
@@ -93,7 +93,7 @@ impl Sysopt {
             let verge = Config::verge();
             let verge = verge.latest();
             (
-                verge.enable_system_proxy.clone().unwrap_or(false),
+                verge.enable_system_proxy.unwrap_or(false),
                 verge.system_proxy_bypass.clone(),
             )
         };
@@ -142,7 +142,7 @@ impl Sysopt {
 
     /// init the auto launch
     pub fn init_launch(&self) -> Result<()> {
-        let enable = { Config::verge().latest().enable_auto_launch.clone() };
+        let enable = { Config::verge().latest().enable_auto_launch };
         let enable = enable.unwrap_or(false);
 
         let app_exe = current_exe()?;
@@ -233,7 +233,7 @@ impl Sysopt {
             drop(auto_launch);
             return self.init_launch();
         }
-        let enable = { Config::verge().latest().enable_auto_launch.clone() };
+        let enable = { Config::verge().latest().enable_auto_launch };
         let enable = enable.unwrap_or(false);
         let auto_launch = auto_launch.as_ref().unwrap();
 
@@ -271,9 +271,9 @@ impl Sysopt {
                     let verge = Config::verge();
                     let verge = verge.latest();
                     (
-                        verge.enable_system_proxy.clone().unwrap_or(false),
-                        verge.enable_proxy_guard.clone().unwrap_or(false),
-                        verge.proxy_guard_duration.clone().unwrap_or(10),
+                        verge.enable_system_proxy.unwrap_or(false),
+                        verge.enable_proxy_guard.unwrap_or(false),
+                        verge.proxy_guard_duration.unwrap_or(10),
                         verge.system_proxy_bypass.clone(),
                     )
                 };

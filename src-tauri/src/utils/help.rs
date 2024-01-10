@@ -14,7 +14,7 @@ pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
         bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = fs::read_to_string(&path)
+    let yaml_str = fs::read_to_string(path)
         .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
 
     serde_yaml::from_str::<T>(&yaml_str).with_context(|| {
@@ -89,11 +89,11 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
     let code = "code";
 
     let _ = match Program::from_str(code) {
-        Ok(code) => open(&app.shell_scope(), &path.to_string_lossy(), Some(code)),
+        Ok(code) => open(&app.shell_scope(), path.to_string_lossy(), Some(code)),
         Err(err) => {
             log::error!(target: "app", "Can't find VScode `{err}`");
             // default open
-            open(&app.shell_scope(), &path.to_string_lossy(), None)
+            open(&app.shell_scope(), path.to_string_lossy(), None)
         }
     };
 

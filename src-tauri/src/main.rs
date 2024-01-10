@@ -25,7 +25,10 @@ fn main() -> std::io::Result<()> {
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
         .system_tray(SystemTray::new())
-        .setup(|app| Ok(resolve::resolve_setup(app)))
+        .setup(|app| {
+            resolve::resolve_setup(app);
+            Ok(())
+        })
         .on_system_tray_event(core::tray::Tray::on_system_tray_event)
         .invoke_handler(tauri::generate_handler![
             // common
@@ -133,13 +136,13 @@ fn main() -> std::io::Result<()> {
             if label == "main" {
                 match event {
                     tauri::WindowEvent::Destroyed => {
-                        let _ = resolve::save_window_size_position(&app_handle, true);
+                        let _ = resolve::save_window_size_position(app_handle, true);
                     }
                     tauri::WindowEvent::CloseRequested { .. } => {
-                        let _ = resolve::save_window_size_position(&app_handle, true);
+                        let _ = resolve::save_window_size_position(app_handle, true);
                     }
                     tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
-                        let _ = resolve::save_window_size_position(&app_handle, false);
+                        let _ = resolve::save_window_size_position(app_handle, false);
                     }
                     _ => {}
                 }

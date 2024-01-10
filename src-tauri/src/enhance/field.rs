@@ -114,9 +114,9 @@ pub fn use_sort(config: Mapping, enable_filter: bool) -> Mapping {
         .chain(DEFAULT_FIELDS)
         .for_each(|key| {
             let key = Value::from(key);
-            config.get(&key).map(|value| {
+            if let Some(value) = config.get(&key) {
                 ret.insert(key, value.clone());
-            });
+            }
         });
 
     if !enable_filter {
@@ -134,9 +134,9 @@ pub fn use_sort(config: Mapping, enable_filter: bool) -> Mapping {
 
         config_keys.difference(&supported_keys).for_each(|&key| {
             let key = Value::from(key);
-            config.get(&key).map(|value| {
+            if let Some(value) = config.get(&key) {
                 ret.insert(key, value.clone());
-            });
+            }
         });
     }
 
@@ -150,7 +150,7 @@ pub fn use_keys(config: &Mapping) -> Vec<String> {
         .map(|s| {
             let mut s = s.to_string();
             s.make_ascii_lowercase();
-            return s;
+            s
         })
         .collect()
 }

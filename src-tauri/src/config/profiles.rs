@@ -37,13 +37,13 @@ impl IProfiles {
                     profiles.items = Some(vec![]);
                 }
                 // compatible with the old old old version
-                profiles.items.as_mut().map(|items| {
+                if let Some(items) = profiles.items.as_mut() {
                     for item in items.iter_mut() {
                         if item.uid.is_none() {
                             item.uid = Some(help::get_uid("d"));
                         }
                     }
-                });
+                }
                 profiles
             }
             Err(err) => {
@@ -152,17 +152,19 @@ impl IProfiles {
             self.items = Some(vec![]);
         }
 
-        self.items.as_mut().map(|items| items.push(item));
+        if let Some(items) = self.items.as_mut() {
+            items.push(item)
+        }
         self.save_file()
     }
 
     /// reorder items
     pub fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
-        let mut items = self.items.take().unwrap_or(vec![]);
+        let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
         let mut new_index = None;
 
-        for i in 0..items.len() {
+        for (i, _) in items.iter().enumerate() {
             if items[i].uid == Some(active_id.clone()) {
                 old_index = Some(i);
             }
@@ -182,7 +184,7 @@ impl IProfiles {
 
     /// update the item value
     pub fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
-        let mut items = self.items.take().unwrap_or(vec![]);
+        let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
             if each.uid == Some(uid.clone()) {
@@ -255,11 +257,11 @@ impl IProfiles {
         let current = self.current.as_ref().unwrap_or(&uid);
         let current = current.clone();
 
-        let mut items = self.items.take().unwrap_or(vec![]);
+        let mut items = self.items.take().unwrap_or_default();
         let mut index = None;
 
         // get the index
-        for i in 0..items.len() {
+        for (i, _) in items.iter().enumerate() {
             if items[i].uid == Some(uid.clone()) {
                 index = Some(i);
                 break;
@@ -267,19 +269,19 @@ impl IProfiles {
         }
 
         if let Some(index) = index {
-            items.remove(index).file.map(|file| {
+            if let Some(file) = items.remove(index).file {
                 let _ = dirs::app_profiles_dir().map(|path| {
                     let path = path.join(file);
                     if path.exists() {
                         let _ = fs::remove_file(path);
                     }
                 });
-            });
+            }
         }
 
         // delete the original uid
         if current == uid {
-            self.current = match items.len() > 0 {
+            self.current = match !items.is_empty() {
                 true => items[0].uid.clone(),
                 false => None,
             };
@@ -299,7 +301,7 @@ impl IProfiles {
                         Some(file) => dirs::app_profiles_dir()?.join(file),
                         None => bail!("failed to get the file field"),
                     };
-                    return Ok(help::read_merge_mapping(&file_path)?);
+                    return help::read_merge_mapping(&file_path);
                 }
                 bail!("failed to find the current profile \"uid:{current}\"");
             }

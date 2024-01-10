@@ -83,12 +83,12 @@ fn clash_client_info() -> Result<(String, HeaderMap)> {
 /// 缩短clash的日志
 pub fn parse_log(log: String) -> String {
     if log.starts_with("time=") && log.len() > 33 {
-        return (&log[33..]).to_owned();
+        return (log[33..]).to_owned();
     }
     if log.len() > 9 {
-        return (&log[9..]).to_owned();
+        return (log[9..]).to_owned();
     }
-    return log;
+    log
 }
 
 /// 缩短clash -t的错误输出
@@ -105,7 +105,7 @@ pub fn parse_check_output(log: String) -> String {
         };
 
         if mr > m {
-            return (&log[e..mr]).to_owned();
+            return (log[e..mr]).to_owned();
         }
     }
 
@@ -113,7 +113,7 @@ pub fn parse_check_output(log: String) -> String {
     let r = log.find("path=").or(Some(log.len()));
 
     if let (Some(l), Some(r)) = (l, r) {
-        return (&log[(l + 6)..(r - 1)]).to_owned();
+        return (log[(l + 6)..(r - 1)]).to_owned();
     }
 
     log
