@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Clash Verge Scheme Handler
+Exec=clash-verge %u
+StartupNotify=false
+MimeType=x-scheme-handler/clash;
