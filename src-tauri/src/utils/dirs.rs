@@ -92,6 +92,14 @@ pub fn clash_pid_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("clash.pid"))
 }
 
+#[cfg(linux)]
+pub fn local_applications_dir() -> Result<PathBuf> {
+    use tauri::api::path::home_dir;
+    Ok(home_dir()
+        .ok_or(anyhow::anyhow!("failed to get home dir"))?
+        .join(".local/share/applications"))
+}
+
 #[cfg(windows)]
 pub fn service_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("service"))
