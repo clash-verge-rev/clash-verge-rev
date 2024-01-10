@@ -79,7 +79,7 @@ pub fn delete_log() -> Result<()> {
     let auto_log_clean = {
         let verge = Config::verge();
         let verge = verge.data();
-        verge.auto_log_clean.clone().unwrap_or(0)
+        verge.auto_log_clean.unwrap_or(0)
     };
 
     let day = match auto_log_clean {
@@ -130,10 +130,8 @@ pub fn delete_log() -> Result<()> {
         Ok(())
     };
 
-    for file in fs::read_dir(&log_dir)? {
-        if let Ok(file) = file {
-            let _ = process_file(file);
-        }
+    for file in fs::read_dir(&log_dir)?.flatten() {
+        let _ = process_file(file);
     }
     Ok(())
 }
@@ -310,14 +308,14 @@ pub fn init_scheme() -> Result<()> {
 
     let app_exe = current_exe()?;
     let app_exe = dunce::canonicalize(app_exe)?;
-    let app_exe = app_exe.to_string_lossy().to_owned();
+    let app_exe = app_exe.to_string_lossy().into_owned();
 
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let (clash, _) = hkcu.create_subkey("Software\\Classes\\Clash")?;
     clash.set_value("", &"Clash Verge")?;
     clash.set_value("URL Protocol", &"Clash Verge URL Scheme Protocol")?;
     let (default_icon, _) = hkcu.create_subkey("Software\\Classes\\Clash\\DefaultIcon")?;
-    default_icon.set_value("", &format!("{app_exe}"))?;
+    default_icon.set_value("", &app_exe)?;
     let (command, _) = hkcu.create_subkey("Software\\Classes\\Clash\\Shell\\Open\\Command")?;
     command.set_value("", &format!("{app_exe} \"%1\""))?;
 

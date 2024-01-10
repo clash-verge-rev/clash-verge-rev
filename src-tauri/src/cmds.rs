@@ -219,7 +219,7 @@ pub fn open_app_dir() -> CmdResult<()> {
 #[tauri::command]
 pub fn open_core_dir() -> CmdResult<()> {
     let core_dir = wrap_err!(tauri::utils::platform::current_exe())?;
-    let core_dir = core_dir.parent().ok_or(format!("failed to get core dir"))?;
+    let core_dir = core_dir.parent().ok_or("failed to get core dir")?;
     wrap_err!(open::that(core_dir))
 }
 
@@ -252,7 +252,7 @@ pub async fn clash_api_get_proxy_delay(
 ) -> CmdResult<clash_api::DelayRes> {
     match clash_api::get_proxy_delay(name, url).await {
         Ok(res) => Ok(res),
-        Err(err) => Err(format!("{}", err.to_string())),
+        Err(err) => Err(err.to_string()),
     }
 }
 

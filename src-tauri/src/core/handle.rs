@@ -28,7 +28,7 @@ impl Handle {
         self.app_handle
             .lock()
             .as_ref()
-            .map_or(None, |a| a.get_window("main"))
+            .and_then(|a| a.get_window("main"))
     }
 
     pub fn refresh_clash() {

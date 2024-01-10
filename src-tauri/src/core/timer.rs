@@ -40,7 +40,7 @@ impl Timer {
         let timer_map = self.timer_map.lock();
         let delay_timer = self.delay_timer.lock();
 
-        Config::profiles().latest().get_items().map(|items| {
+        if let Some(items) = Config::profiles().latest().get_items() {
             items
                 .iter()
                 .filter_map(|item| {
@@ -61,7 +61,7 @@ impl Timer {
                         }
                     }
                 })
-        });
+        }
 
         Ok(())
     }

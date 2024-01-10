@@ -47,7 +47,7 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
         if result == "\"\"" {
             anyhow::bail!("main function should return object");
         }
-        return Ok(serde_json::from_str::<Mapping>(result.as_str())?);
+        Ok(serde_json::from_str::<Mapping>(result.as_str())?)
     });
 
     let mut out = outputs.lock().unwrap();

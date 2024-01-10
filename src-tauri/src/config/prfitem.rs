@@ -8,7 +8,7 @@ use sysproxy::Sysproxy;
 
 use super::Config;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
     pub uid: Option<String>,
 
@@ -101,24 +101,6 @@ impl PrfOption {
     }
 }
 
-impl Default for PrfItem {
-    fn default() -> Self {
-        PrfItem {
-            uid: None,
-            itype: None,
-            name: None,
-            desc: None,
-            file: None,
-            url: None,
-            selected: None,
-            extra: None,
-            updated: None,
-            option: None,
-            file_data: None,
-        }
-    }
-}
-
 impl PrfItem {
     /// From partial item
     /// must contain `itype`
@@ -188,7 +170,7 @@ impl PrfItem {
         let opt_ref = option.as_ref();
         let with_proxy = opt_ref.map_or(false, |o| o.with_proxy.unwrap_or(false));
         let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
-        let user_agent = opt_ref.map_or(None, |o| o.user_agent.clone());
+        let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
 
         let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
@@ -213,27 +195,24 @@ impl PrfItem {
         }
         // 使用系统代理
         else if with_proxy {
-            match Sysproxy::get_system_proxy() {
-                Ok(p @ Sysproxy { enable: true, .. }) => {
-                    let proxy_scheme = format!("http://{}:{}", p.host, p.port);
+            if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
+                let proxy_scheme = format!("http://{}:{}", p.host, p.port);
 
-                    if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
-                        builder = builder.proxy(proxy);
-                    }
-                    if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
-                        builder = builder.proxy(proxy);
-                    }
-                    if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
-                        builder = builder.proxy(proxy);
-                    }
+                if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
+                    builder = builder.proxy(proxy);
                 }
-                _ => {}
-            };
+                if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
+                    builder = builder.proxy(proxy);
+                }
+                if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
+                    builder = builder.proxy(proxy);
+                }
+            }
         }
 
         let version = match VERSION.get() {
             Some(v) => format!("clash-verge/v{}", v),
-            None => format!("clash-verge/unknown"),
+            None => "clash-verge/unknown".to_string(),
         };
 
         builder = builder.user_agent(user_agent.unwrap_or(version));
