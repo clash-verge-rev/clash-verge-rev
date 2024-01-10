@@ -92,7 +92,7 @@ pub fn clash_pid_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("clash.pid"))
 }
 
-#[cfg(linux)]
+#[cfg(target_os = "linux")]
 pub fn local_applications_dir() -> Result<PathBuf> {
     use tauri::api::path::home_dir;
     Ok(home_dir()
