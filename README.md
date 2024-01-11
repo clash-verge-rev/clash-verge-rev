@@ -72,7 +72,7 @@ You should install Rust and Nodejs, see [here](https://tauri.app/v1/guides/getti
 pnpm i
 ```
 
-Then download the clash binary... Or you can download it from [clash meta release](https://github.com/MetaCubeX/Clash.Meta/releases) and rename it according to [tauri config](https://tauri.studio/docs/api/config/#tauri.bundle.externalBin).
+Then download the clash binary... Or you can download it from [clash meta release](https://github.com/MetaCubeX/Clash.Meta/releases) and rename it according to [tauri config](https://tauri.app/v1/api/config#bundleconfig.externalbin).
 
 ```shell
 # force update to latest version
