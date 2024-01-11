@@ -1,3 +1,13 @@
+## v1.4.7
+
+### Features
+
+- Windows 便携版禁用应用内更新
+- 支持代理组 Hidden 选项
+- 支持 URL Scheme(MacOS & Linux)
+
+---
+
 ## v1.4.6
 
 ### Features
