@@ -119,7 +119,14 @@ export const getProxies = async () => {
   const generateItem = (name: string) => {
     if (proxyRecord[name]) return proxyRecord[name];
     if (providerMap[name]) return providerMap[name];
-    return { name, type: "unknown", udp: false, history: [] };
+    return {
+      name,
+      type: "unknown",
+      udp: false,
+      xudp: false,
+      tfo: false,
+      history: [],
+    };
   };
 
   const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
