@@ -145,5 +145,7 @@
   "Never Clean": "不清理",
   "Retain 7 Days": "保留7天",
   "Retain 30 Days": "保留30天",
-  "Retain 90 Days": "保留90天"
+  "Retain 90 Days": "保留90天",
+
+  "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换"
 }

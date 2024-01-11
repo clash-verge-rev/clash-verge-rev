@@ -145,5 +145,7 @@
   "Never Clean": "Never Clean",
   "Retain 7 Days": "Retain 7 Days",
   "Retain 30 Days": "Retain 30 Days",
-  "Retain 90 Days": "Retain 90 Days"
+  "Retain 90 Days": "Retain 90 Days",
+
+  "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it"
 }
