@@ -98,6 +98,8 @@ export const ProxyItemMini = (props: Props) => {
             )}
             <TypeBox component="span">{proxy.type}</TypeBox>
             {proxy.udp && <TypeBox component="span">UDP</TypeBox>}
+            {proxy.xudp && <TypeBox component="span">XUDP</TypeBox>}
+            {proxy.tfo && <TypeBox component="span">TFO</TypeBox>}
           </Box>
         )}
       </Box>

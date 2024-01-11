@@ -104,6 +104,10 @@ export const ProxyItem = (props: Props) => {
               )}
               {showType && <TypeBox component="span">{proxy.type}</TypeBox>}
               {showType && proxy.udp && <TypeBox component="span">UDP</TypeBox>}
+              {showType && proxy.xudp && (
+                <TypeBox component="span">XUDP</TypeBox>
+              )}
+              {showType && proxy.tfo && <TypeBox component="span">TFO</TypeBox>}
             </>
           }
         />

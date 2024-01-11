@@ -44,12 +44,15 @@ interface IProxyItem {
   name: string;
   type: string;
   udp: boolean;
+  xudp: boolean;
+  tfo: boolean;
   history: {
     time: string;
     delay: number;
   }[];
   all?: string[];
   now?: string;
+  hidden?: boolean;
   provider?: string; // 记录是否来自provider
 }
 

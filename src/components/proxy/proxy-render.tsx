@@ -31,7 +31,7 @@ export const ProxyRender = (props: RenderProps) => {
     props;
   const { type, group, headState, proxy, proxyCol } = item;
 
-  if (type === 0) {
+  if (type === 0 && !group.hidden) {
     return (
       <ListItemButton
         dense
@@ -61,7 +61,7 @@ export const ProxyRender = (props: RenderProps) => {
     );
   }
 
-  if (type === 1) {
+  if (type === 1 && !group.hidden) {
     return (
       <ProxyHead
         sx={{ pl: indent ? 4.5 : 2.5, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
@@ -74,7 +74,7 @@ export const ProxyRender = (props: RenderProps) => {
     );
   }
 
-  if (type === 2) {
+  if (type === 2 && !group.hidden) {
     return (
       <ProxyItem
         groupName={group.name}
@@ -87,7 +87,7 @@ export const ProxyRender = (props: RenderProps) => {
     );
   }
 
-  if (type === 3) {
+  if (type === 3 && !group.hidden) {
     return (
       <Box
         sx={{
@@ -105,7 +105,7 @@ export const ProxyRender = (props: RenderProps) => {
     );
   }
 
-  if (type === 4) {
+  if (type === 4 && !group.hidden) {
     return (
       <Box
         sx={{
