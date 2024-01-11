@@ -123,7 +123,7 @@ index 6c207d9..d47dc33 100644
 -        if result == "\"\"" {
 -            anyhow::bail!("main function should return object");
 -        }
--        return Ok(serde_json::from_str::<Mapping>(result.as_str())?);
+-        Ok(serde_json::from_str::<Mapping>(result.as_str())?)
 -    });
 -
 -    let mut out = outputs.lock().unwrap();
