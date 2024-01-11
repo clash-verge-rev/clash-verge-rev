@@ -10,6 +10,7 @@ import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { atomUpdateState } from "@/services/states";
 import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
+import { portableFlag } from "@/pages/_layout";
 
 const UpdateLog = styled(Box)(() => ({
   "h1,h2,h3,ul,ol,p": { margin: "0.5em 0", color: "inherit" },
@@ -46,6 +47,10 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   }, [updateInfo]);
 
   const onUpdate = useLockFn(async () => {
+    if (portableFlag) {
+      Notice.error(t("Portable Updater Error"));
+      return;
+    }
     if (updateState) return;
     setUpdateState(true);
     if (eventListener !== null) {
