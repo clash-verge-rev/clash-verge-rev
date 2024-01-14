@@ -1,22 +1,30 @@
-import axios, { AxiosInstance } from "axios";
 import { getClashInfo } from "./cmds";
+import {
+  fetch as tauriFetch,
+  HttpVerb,
+  Body,
+  Response,
+} from "@tauri-apps/api/http";
+let clashInfo: IClashInfo | null;
 
-let axiosIns: AxiosInstance = null!;
+export const refreshClashInfo = async () => {
+  clashInfo = await getClashInfo();
+  return clashInfo;
+};
 
-/// initialize some information
-/// enable force update axiosIns
-export const getAxios = async (force: boolean = false) => {
-  if (axiosIns && !force) return axiosIns;
-
+export const fetch = async (
+  path: string,
+  method: HttpVerb,
+  body?: any
+): Promise<Response<any>> => {
   let server = "";
   let secret = "";
 
   try {
-    const info = await getClashInfo();
+    const info = clashInfo ?? (await refreshClashInfo());
 
     if (info?.server) {
       server = info.server;
-
       // compatible width `external-controller`
       if (server.startsWith(":")) server = `127.0.0.1${server}`;
       else if (/^\d+$/.test(server)) server = `127.0.0.1:${server}`;
@@ -24,19 +32,18 @@ export const getAxios = async (force: boolean = false) => {
     if (info?.secret) secret = info?.secret;
   } catch {}
 
-  axiosIns = axios.create({
-    baseURL: `http://${server}`,
+  return tauriFetch(`http://${server}${path}`, {
+    method,
     headers: secret ? { Authorization: `Bearer ${secret}` } : {},
     timeout: 15000,
+    body: body ? Body.json(body) : undefined,
   });
-  axiosIns.interceptors.response.use((r) => r.data);
-  return axiosIns;
 };
 
 /// Get Version
 export const getVersion = async () => {
-  const instance = await getAxios();
-  return instance.get("/version") as Promise<{
+  const res = await fetch("/version", "GET");
+  return res.data as Promise<{
     premium: boolean;
     meta?: boolean;
     version: string;
@@ -45,33 +52,32 @@ export const getVersion = async () => {
 
 /// Get current base configs
 export const getClashConfig = async () => {
-  const instance = await getAxios();
-  return instance.get("/configs") as Promise<IConfigData>;
+  const res = await fetch("/configs", "GET");
+  return res.data as Promise<IConfigData>;
 };
 
 /// Update current configs
 export const updateConfigs = async (config: Partial<IConfigData>) => {
-  const instance = await getAxios();
-  return instance.patch("/configs", config);
+  const res = await fetch("/configs", "PATCH", config);
+  return res;
 };
 
 /// Update geo data
 export const updateGeoData = async () => {
-  const instance = await getAxios();
-  return instance.post("/configs/geo");
+  const res = await fetch("/configs/geo", "POST");
+  return res;
 };
 
 /// Upgrade clash core
 export const upgradeCore = async () => {
-  const instance = await getAxios();
-  return instance.post("/upgrade");
+  const res = await fetch("/upgrade", "POST");
+  return res;
 };
 
 /// Get current rules
 export const getRules = async () => {
-  const instance = await getAxios();
-  const response = await instance.get<any, any>("/rules");
-  return response?.rules as IRuleItem[];
+  const res = await fetch("/rules", "GET");
+  return res?.data?.rules as IRuleItem[];
 };
 
 /// Get Proxy delay
@@ -80,25 +86,26 @@ export const getProxyDelay = async (name: string, url?: string) => {
     timeout: 10000,
     url: url || "http://1.1.1.1",
   };
-  const instance = await getAxios();
-  const result = await instance.get(
+  const result = await fetch(
     `/proxies/${encodeURIComponent(name)}/delay`,
+    "GET",
     { params }
   );
-  return result as any as { delay: number };
+  return result.data as any as { delay: number };
 };
 
 /// Update the Proxy Choose
 export const updateProxy = async (group: string, proxy: string) => {
-  const instance = await getAxios();
-  return instance.put(`/proxies/${encodeURIComponent(group)}`, { name: proxy });
+  const res = await fetch(`/proxies/${encodeURIComponent(group)}`, "PUT", {
+    name: proxy,
+  });
+  return res;
 };
 
 // get proxy
 export const getProxiesInner = async () => {
-  const instance = await getAxios();
-  const response = await instance.get<any, any>("/proxies");
-  return (response?.proxies || {}) as Record<string, IProxyItem>;
+  const res = await fetch("/proxies", "GET");
+  return (res?.data?.proxies || {}) as Record<string, IProxyItem>;
 };
 
 /// Get the Proxy information
@@ -167,10 +174,8 @@ export const getProxies = async () => {
 
 // get proxy providers
 export const getProviders = async () => {
-  const instance = await getAxios();
-  const response = await instance.get<any, any>("/providers/proxies");
-
-  const providers = (response.providers || {}) as Record<string, IProviderItem>;
+  const res = await fetch("/providers/proxies", "GET");
+  const providers = (res.data.providers || {}) as Record<string, IProviderItem>;
 
   return Object.fromEntries(
     Object.entries(providers).filter(([key, item]) => {
@@ -182,31 +187,34 @@ export const getProviders = async () => {
 
 // proxy providers health check
 export const providerHealthCheck = async (name: string) => {
-  const instance = await getAxios();
-  return instance.get(
-    `/providers/proxies/${encodeURIComponent(name)}/healthcheck`
+  const res = await fetch(
+    `/providers/proxies/${encodeURIComponent(name)}/healthcheck`,
+    "GET"
   );
+  return res;
 };
 
 export const providerUpdate = async (name: string) => {
-  const instance = await getAxios();
-  return instance.put(`/providers/proxies/${encodeURIComponent(name)}`);
+  const res = await fetch(
+    `/providers/proxies/${encodeURIComponent(name)}`,
+    "PUT"
+  );
+  return res;
 };
 
 export const getConnections = async () => {
-  const instance = await getAxios();
-  const result = await instance.get("/connections");
-  return result as any as IConnections;
+  const res = await fetch("/connections", "GET");
+  return res.data as any as IConnections;
 };
 
 // Close specific connection
 export const deleteConnection = async (id: string) => {
-  const instance = await getAxios();
-  await instance.delete<any, any>(`/connections/${encodeURIComponent(id)}`);
+  const res = await fetch(`/connections/${encodeURIComponent(id)}`, "DELETE");
+  return res;
 };
 
 // Close all connections
 export const closeAllConnections = async () => {
-  const instance = await getAxios();
-  await instance.delete<any, any>(`/connections`);
+  const res = await fetch("/connections", "DELETE");
+  return res;
 };
