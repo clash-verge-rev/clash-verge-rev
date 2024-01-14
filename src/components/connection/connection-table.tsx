@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
+import { sortWithUnit, sortStringTime } from "@/utils/custom-comparator";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -24,6 +25,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
+      sortComparator: sortWithUnit,
     },
     {
       field: "upload",
@@ -31,6 +33,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
+      sortComparator: sortWithUnit,
     },
     {
       field: "dlSpeed",
@@ -38,6 +41,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
+      sortComparator: sortWithUnit,
     },
     {
       field: "ulSpeed",
@@ -45,6 +49,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
+      sortComparator: sortWithUnit,
     },
     { field: "chains", headerName: "Chains", flex: 360, minWidth: 360 },
     { field: "rule", headerName: "Rule", flex: 300, minWidth: 250 },
@@ -56,6 +61,7 @@ export const ConnectionTable = (props: Props) => {
       minWidth: 100,
       align: "right",
       headerAlign: "right",
+      sortComparator: sortStringTime,
     },
     { field: "source", headerName: "Source", flex: 200, minWidth: 130 },
     {
@@ -72,7 +78,6 @@ export const ConnectionTable = (props: Props) => {
       const { metadata, rulePayload } = each;
       const chains = [...each.chains].reverse().join(" / ");
       const rule = rulePayload ? `${each.rule}(${rulePayload})` : each.rule;
-
       return {
         id: each.id,
         host: metadata.host

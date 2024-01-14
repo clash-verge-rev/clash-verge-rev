@@ -24,6 +24,7 @@ import {
   ConnectionDetail,
   ConnectionDetailRef,
 } from "@/components/connection/connection-detail";
+import parseTraffic from "@/utils/parse-traffic";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -48,14 +49,20 @@ const ConnectionsPage = () => {
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   };
 
-  const filterConn = useMemo(() => {
+  const [filterConn, download, upload] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
-    const connections = connData.connections.filter((conn) =>
+    let connections = connData.connections.filter((conn) =>
       (conn.metadata.host || conn.metadata.destinationIP)?.includes(filterText)
     );
 
-    if (orderFunc) return orderFunc(connections);
-    return connections;
+    if (orderFunc) connections = orderFunc(connections);
+    let download = 0;
+    let upload = 0;
+    connections.forEach((x) => {
+      download += x.download;
+      upload += x.upload;
+    });
+    return [connections, download, upload];
   }, [connData, filterText, curOrderOpt]);
 
   const { connect, disconnect } = useWebsocket(
@@ -119,6 +126,8 @@ const ConnectionsPage = () => {
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 2 }}>
+          <Box sx={{ mx: 1 }}>Download: {parseTraffic(download)}</Box>
+          <Box sx={{ mx: 1 }}>Upload: {parseTraffic(upload)}</Box>
           <IconButton
             color="inherit"
             size="small"
@@ -184,7 +193,6 @@ const ConnectionsPage = () => {
           placeholder={t("Filter conditions")}
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          sx={{ input: { py: 0.65, px: 1.25 } }}
         />
       </Box>
 
