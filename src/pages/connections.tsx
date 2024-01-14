@@ -61,7 +61,7 @@ const ConnectionsPage = () => {
   const { connect, disconnect } = useWebsocket(
     (event) => {
       // meta v1.15.0 出现data.connections为null的情况
-      const data = JSON.parse(event.data) as IConnections;
+      const data = JSON.parse(event) as IConnections;
       // 尽量与前一次connections的展示顺序保持一致
       setConnData((old) => {
         const oldConn = old.connections;
@@ -94,7 +94,7 @@ const ConnectionsPage = () => {
         return { ...data, connections };
       });
     },
-    { errorCount: 3, retryInterval: 1000 }
+    { errorCount: 3 }
   );
 
   useEffect(() => {

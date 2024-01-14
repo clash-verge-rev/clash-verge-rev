@@ -30,7 +30,7 @@ export const LayoutTraffic = () => {
   useLogSetup();
 
   const { connect, disconnect } = useWebsocket((event) => {
-    const data = JSON.parse(event.data) as ITrafficItem;
+    const data = JSON.parse(event) as ITrafficItem;
     trafficRef.current?.appendData(data);
     setTraffic(data);
   });
@@ -52,7 +52,7 @@ export const LayoutTraffic = () => {
 
   const memoryWs = useWebsocket(
     (event) => {
-      setMemory(JSON.parse(event.data));
+      setMemory(JSON.parse(event));
     },
     { onError: () => setMemory({ inuse: 0 }) }
   );
@@ -63,7 +63,9 @@ export const LayoutTraffic = () => {
     memoryWs.connect(
       `ws://${server}/memory?token=${encodeURIComponent(secret)}`
     );
-    return () => memoryWs.disconnect();
+    return () => {
+      memoryWs.disconnect();
+    };
   }, [clashInfo, pageVisible, displayMemory]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
