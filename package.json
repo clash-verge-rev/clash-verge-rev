@@ -44,7 +44,8 @@
     "recoil": "^0.7.7",
     "snarkdown": "^2.0.0",
     "swr": "^1.3.0",
-    "tar": "^6.2.0"
+    "tar": "^6.2.0",
+    "tauri-plugin-websocket-api": "github:tauri-apps/tauri-plugin-websocket#v1"
   },
   "devDependencies": {
     "@actions/github": "^5.1.1",

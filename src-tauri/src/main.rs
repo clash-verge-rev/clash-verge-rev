@@ -24,6 +24,7 @@ fn main() -> std::io::Result<()> {
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_websocket::init())
         .system_tray(SystemTray::new())
         .setup(|app| {
             resolve::resolve_setup(app);
