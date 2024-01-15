@@ -10,7 +10,7 @@ import { alpha, List, Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
-import { refreshClashInfo } from "@/services/api";
+import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import { BaseErrorBoundary, Notice } from "@/components/base";
@@ -50,7 +50,7 @@ const Layout = () => {
 
     listen("verge://refresh-clash-config", async () => {
       // the clash info may be updated
-      await refreshClashInfo();
+      await getAxios(true);
       mutate("getProxies");
       mutate("getVersion");
       mutate("getClashConfig");
