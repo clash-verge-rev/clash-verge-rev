@@ -19,10 +19,6 @@ pub struct IVerge {
     /// `light` or `dark` or `system`
     pub theme_mode: Option<String>,
 
-    /// enable blur mode
-    /// maybe be able to set the alpha
-    pub theme_blur: Option<bool>,
-
     /// tray click event
     pub tray_event: Option<String>,
 
@@ -140,7 +136,6 @@ impl IVerge {
             env_type: Some("bash".into()),
             #[cfg(target_os = "windows")]
             env_type: Some("powershell".into()),
-            theme_blur: Some(false),
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_auto_launch: Some(false),
@@ -177,7 +172,6 @@ impl IVerge {
         patch!(app_log_level);
         patch!(language);
         patch!(theme_mode);
-        patch!(theme_blur);
         patch!(tray_event);
         patch!(env_type);
         patch!(traffic_graph);

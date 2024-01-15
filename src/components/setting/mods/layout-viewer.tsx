@@ -36,19 +36,6 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
     >
       <List>
-        <SettingItem label={t("Theme Blur")}>
-          <GuardState
-            value={verge?.theme_blur ?? false}
-            valueProps="checked"
-            onCatch={onError}
-            onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ theme_blur: e })}
-            onGuard={(e) => patchVerge({ theme_blur: e })}
-          >
-            <Switch edge="end" />
-          </GuardState>
-        </SettingItem>
-
         <SettingItem label={t("Traffic Graph")}>
           <GuardState
             value={verge?.traffic_graph ?? true}

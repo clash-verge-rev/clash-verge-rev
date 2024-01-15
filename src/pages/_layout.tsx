@@ -36,7 +36,7 @@ const Layout = () => {
   const { theme } = useCustomTheme();
 
   const { verge } = useVerge();
-  const { theme_blur, language } = verge || {};
+  const { language } = verge || {};
 
   const location = useLocation();
 
@@ -116,7 +116,7 @@ const Layout = () => {
           }}
           sx={[
             ({ palette }) => ({
-              bgcolor: alpha(palette.background.paper, theme_blur ? 0.8 : 1),
+              bgcolor: palette.background.paper,
             }),
           ]}
         >
