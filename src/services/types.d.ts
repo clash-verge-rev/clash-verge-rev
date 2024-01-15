@@ -161,7 +161,6 @@ interface IVergeConfig {
   env_type?: "bash" | "cmd" | "powershell" | string;
   clash_core?: string;
   theme_mode?: "light" | "dark" | "system";
-  theme_blur?: boolean;
   traffic_graph?: boolean;
   enable_memory_usage?: boolean;
   enable_tun_mode?: boolean;
