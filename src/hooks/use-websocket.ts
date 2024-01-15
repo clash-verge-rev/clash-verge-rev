@@ -1,19 +1,20 @@
 import { useRef } from "react";
-import WebSocket from "tauri-plugin-websocket-api";
-export type WsMsgFn = (event: string) => void;
+
+export type WsMsgFn = (event: MessageEvent<any>) => void;
 
 export interface WsOptions {
   errorCount?: number; // default is 5
-  onError?: (e: any) => void;
+  retryInterval?: number; // default is 2500
+  onError?: () => void;
 }
 
 export const useWebsocket = (onMessage: WsMsgFn, options?: WsOptions) => {
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef<any>(null);
 
-  const disconnect = async () => {
+  const disconnect = () => {
     if (wsRef.current) {
-      await wsRef.current.disconnect();
+      wsRef.current.close();
       wsRef.current = null;
     }
     if (timerRef.current) {
@@ -21,37 +22,31 @@ export const useWebsocket = (onMessage: WsMsgFn, options?: WsOptions) => {
     }
   };
 
-  const connect = async (url: string) => {
+  const connect = (url: string) => {
     let errorCount = options?.errorCount ?? 5;
-    if (!url) return;
-    const connectHelper = async () => {
-      await disconnect();
-      const ws = await WebSocket.connect(url);
 
-      ws.addListener((event) => {
-        switch (event.type) {
-          case "Text": {
-            onMessage(event.data);
-            break;
-          }
-          default: {
-            break;
-          }
+    if (!url) return;
+
+    const connectHelper = () => {
+      disconnect();
+
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.addEventListener("message", onMessage);
+      ws.addEventListener("error", () => {
+        errorCount -= 1;
+
+        if (errorCount >= 0) {
+          timerRef.current = setTimeout(connectHelper, 2500);
+        } else {
+          disconnect();
+          options?.onError?.();
         }
       });
-      wsRef.current = ws;
     };
-    try {
-      await connectHelper();
-    } catch (e) {
-      errorCount -= 1;
-      if (errorCount >= 0) {
-        timerRef.current = setTimeout(connectHelper, 2500);
-      } else {
-        await disconnect();
-        options?.onError?.(e);
-      }
-    }
+
+    connectHelper();
   };
 
   return { connect, disconnect };

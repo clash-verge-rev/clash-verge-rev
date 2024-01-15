@@ -16,7 +16,7 @@ export const useLogSetup = () => {
   const setLogData = useSetRecoilState(atomLogData);
 
   const { connect, disconnect } = useWebsocket((event) => {
-    const data = JSON.parse(event) as ILogItem;
+    const data = JSON.parse(event.data) as ILogItem;
     const time = dayjs().format("MM-DD HH:mm:ss");
     setLogData((l) => {
       if (l.length >= MAX_LOG_NUM) l.shift();
