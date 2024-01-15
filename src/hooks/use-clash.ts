@@ -1,7 +1,7 @@
 import useSWR, { mutate } from "swr";
 import { useLockFn } from "ahooks";
 import {
-  refreshClashInfo,
+  getAxios,
   getClashConfig,
   getVersion,
   updateConfigs,
@@ -72,7 +72,7 @@ export const useClashInfo = () => {
     mutateInfo();
     mutate("getClashConfig");
     // 刷新接口
-    await refreshClashInfo();
+    getAxios(true);
   };
 
   return {
