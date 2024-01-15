@@ -595,7 +595,6 @@ dependencies = [
  "sysproxy",
  "tauri",
  "tauri-build",
- "tauri-plugin-websocket",
  "tokio",
  "warp",
  "which 5.0.0",
@@ -1787,7 +1786,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "futures-util",
- "http 0.2.11",
+ "http",
  "indexmap 2.1.0",
  "slab",
  "tokio",
@@ -1834,7 +1833,7 @@ dependencies = [
  "base64 0.21.5",
  "bytes",
  "headers-core",
- "http 0.2.11",
+ "http",
  "httpdate",
  "mime",
  "sha1",
@@ -1846,7 +1845,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7f66481bfee273957b1f20485a4ff3362987f85b2c236580d81b4eb7a326429"
 dependencies = [
- "http 0.2.11",
+ "http",
 ]
 
 [[package]]
@@ -1925,24 +1924,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "http"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b32afd38673a8016f7c9ae69e5af41a58f81b1d31689040f2f1959594ce194ea"
-dependencies = [
- "bytes",
- "fnv",
- "itoa 1.0.9",
-]
-
-[[package]]
 name = "http-body"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5f38f16d184e36f2408a55281cd658ecbd3ca05cce6d6510a176eca393e26d1"
 dependencies = [
  "bytes",
- "http 0.2.11",
+ "http",
  "pin-project-lite",
 ]
 
@@ -1981,7 +1969,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http 0.2.11",
+ "http",
  "http-body",
  "httparse",
  "httpdate",
@@ -2001,7 +1989,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec3efd23720e2049821a693cbc7e65ea87c72f1c58ff2f9522ff332b1491e590"
 dependencies = [
  "futures-util",
- "http 0.2.11",
+ "http",
  "hyper",
  "rustls",
  "tokio",
@@ -2643,7 +2631,7 @@ dependencies = [
  "bytes",
  "encoding_rs",
  "futures-util",
- "http 0.2.11",
+ "http",
  "httparse",
  "log 0.4.20",
  "memchr",
@@ -3708,7 +3696,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http 0.2.11",
+ "http",
  "http-body",
  "hyper",
  "hyper-rustls",
@@ -4632,7 +4620,7 @@ dependencies = [
  "glob",
  "gtk",
  "heck 0.4.1",
- "http 0.2.11",
+ "http",
  "ignore",
  "infer 0.9.0",
  "minisign-verify",
@@ -4732,30 +4720,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-plugin-websocket"
-version = "0.0.0"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#0cdbde386fd7225810a5a57b039d551d08995b29"
-dependencies = [
- "futures-util",
- "http 1.0.0",
- "log 0.4.20",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "tauri",
- "thiserror",
- "tokio",
- "tokio-tungstenite 0.21.0",
-]
-
-[[package]]
 name = "tauri-runtime"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07f8e9e53e00e9f41212c115749e87d5cd2a9eebccafca77a19722eeecd56d43"
 dependencies = [
  "gtk",
- "http 0.2.11",
+ "http",
  "http-range",
  "rand 0.8.5",
  "raw-window-handle",
@@ -5086,21 +5057,7 @@ dependencies = [
  "futures-util",
  "log 0.4.20",
  "tokio",
- "tungstenite 0.20.1",
-]
-
-[[package]]
-name = "tokio-tungstenite"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c83b561d025642014097b66e6c1bb422783339e0909e4429cde4749d1990bc38"
-dependencies = [
- "futures-util",
- "log 0.4.20",
- "native-tls",
- "tokio",
- "tokio-native-tls",
- "tungstenite 0.21.0",
+ "tungstenite",
 ]
 
 [[package]]
@@ -5277,29 +5234,9 @@ dependencies = [
  "byteorder",
  "bytes",
  "data-encoding",
- "http 0.2.11",
+ "http",
  "httparse",
  "log 0.4.20",
- "rand 0.8.5",
- "sha1",
- "thiserror",
- "url",
- "utf-8",
-]
-
-[[package]]
-name = "tungstenite"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ef1a641ea34f399a848dea702823bbecfb4c486f911735368f1f137cb8257e1"
-dependencies = [
- "byteorder",
- "bytes",
- "data-encoding",
- "http 1.0.0",
- "httparse",
- "log 0.4.20",
- "native-tls",
  "rand 0.8.5",
  "sha1",
  "thiserror",
@@ -5535,7 +5472,7 @@ dependencies = [
  "futures-channel",
  "futures-util",
  "headers",
- "http 0.2.11",
+ "http",
  "hyper",
  "log 0.4.20",
  "mime",
@@ -5550,7 +5487,7 @@ dependencies = [
  "serde_urlencoded",
  "tokio",
  "tokio-stream",
- "tokio-tungstenite 0.20.1",
+ "tokio-tungstenite",
  "tokio-util",
  "tower-service",
  "tracing",
@@ -6245,7 +6182,7 @@ dependencies = [
  "glib",
  "gtk",
  "html5ever 0.25.2",
- "http 0.2.11",
+ "http",
  "kuchiki",
  "libc",
  "log 0.4.20",
