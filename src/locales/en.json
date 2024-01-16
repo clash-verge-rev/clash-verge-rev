@@ -84,6 +84,7 @@
   "Proxy Guard": "Proxy Guard",
   "Guard Duration": "Guard Duration",
   "Proxy Bypass": "Proxy Bypass",
+  "Use Registry": "Use Registry",
   "Enable status": "Enable status",
   "Server Addr": "Server Addr",
   "Bypass": "Bypass",
@@ -146,5 +147,7 @@
   "Retain 30 Days": "Retain 30 Days",
   "Retain 90 Days": "Retain 90 Days",
 
-  "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it"
+  "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
+  "Please disable the system proxy": "Please disable the system proxy",
+  "Using the registry instead of Windows API": "Using the registry instead of Windows API"
 }

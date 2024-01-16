@@ -58,6 +58,12 @@ impl Sysopt {
             )
         };
 
+        let registry_mode = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            verge.system_proxy_registry_mode.unwrap_or(false)
+        };
+
         let current = Sysproxy {
             enable,
             host: String::from("127.0.0.1"),
@@ -67,7 +73,15 @@ impl Sysopt {
 
         if enable {
             let old = Sysproxy::get_system_proxy().ok();
-            current.set_system_proxy()?;
+
+            if registry_mode {
+                #[cfg(windows)]
+                current.set_system_proxy_with_registry()?;
+                #[cfg(not(windows))]
+                current.set_system_proxy()?;
+            } else {
+                current.set_system_proxy()?;
+            }
 
             *self.old_sysproxy.lock() = old;
             *self.cur_sysproxy.lock() = Some(current);
@@ -97,12 +111,26 @@ impl Sysopt {
                 verge.system_proxy_bypass.clone(),
             )
         };
+
+        let registry_mode = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            verge.system_proxy_registry_mode.unwrap_or(false)
+        };
+
         let mut sysproxy = cur_sysproxy.take().unwrap();
 
         sysproxy.enable = enable;
         sysproxy.bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
 
-        sysproxy.set_system_proxy()?;
+        if registry_mode {
+            #[cfg(windows)]
+            sysproxy.set_system_proxy_with_registry()?;
+            #[cfg(not(windows))]
+            sysproxy.set_system_proxy()?;
+        } else {
+            sysproxy.set_system_proxy()?;
+        }
         *cur_sysproxy = Some(sysproxy);
 
         Ok(())
@@ -112,7 +140,11 @@ impl Sysopt {
     pub fn reset_sysproxy(&self) -> Result<()> {
         let mut cur_sysproxy = self.cur_sysproxy.lock();
         let mut old_sysproxy = self.old_sysproxy.lock();
-
+        let registry_mode = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            verge.system_proxy_registry_mode.unwrap_or(false)
+        };
         let cur_sysproxy = cur_sysproxy.take();
 
         if let Some(mut old) = old_sysproxy.take() {
@@ -127,12 +159,26 @@ impl Sysopt {
                 log::info!(target: "app", "reset proxy to the original proxy");
             }
 
-            old.set_system_proxy()?;
+            if registry_mode {
+                #[cfg(windows)]
+                old.set_system_proxy_with_registry()?;
+                #[cfg(not(windows))]
+                old.set_system_proxy()?;
+            } else {
+                old.set_system_proxy()?;
+            }
         } else if let Some(mut cur @ Sysproxy { enable: true, .. }) = cur_sysproxy {
             // 没有原代理，就按现在的代理设置disable即可
             log::info!(target: "app", "reset proxy by disabling the current proxy");
             cur.enable = false;
-            cur.set_system_proxy()?;
+            if registry_mode {
+                #[cfg(windows)]
+                cur.set_system_proxy_with_registry()?;
+                #[cfg(not(windows))]
+                cur.set_system_proxy()?;
+            } else {
+                cur.set_system_proxy()?;
+            }
         } else {
             log::info!(target: "app", "reset proxy with no action");
         }
@@ -251,7 +297,11 @@ impl Sysopt {
         use tokio::time::{sleep, Duration};
 
         let guard_state = self.guard_state.clone();
-
+        let registry_mode = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            verge.system_proxy_registry_mode.unwrap_or(false)
+        };
         tauri::async_runtime::spawn(async move {
             // if it is running, exit
             let mut state = guard_state.lock().await;
@@ -301,8 +351,14 @@ impl Sysopt {
                     port,
                     bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
                 };
-
-                log_err!(sysproxy.set_system_proxy());
+                if registry_mode {
+                    #[cfg(windows)]
+                    log_err!(sysproxy.set_system_proxy_with_registry());
+                    #[cfg(not(windows))]
+                    log_err!(sysproxy.set_system_proxy());
+                } else {
+                    log_err!(sysproxy.set_system_proxy());
+                }
             }
 
             let mut state = guard_state.lock().await;
