@@ -171,6 +171,7 @@ impl PrfItem {
         let with_proxy = opt_ref.map_or(false, |o| o.with_proxy.unwrap_or(false));
         let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
+        let update_interval = opt_ref.and_then(|o| o.update_interval);
 
         let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
@@ -262,17 +263,21 @@ impl PrfItem {
             }
             None => None,
         };
-
-        // parse the profile-update-interval
-        let option = match header.get("profile-update-interval") {
-            Some(value) => match value.to_str().unwrap_or("").parse::<u64>() {
-                Ok(val) => Some(PrfOption {
-                    update_interval: Some(val * 60), // hour -> min
-                    ..PrfOption::default()
-                }),
-                Err(_) => None,
+        let option = match update_interval {
+            Some(val) => Some(PrfOption {
+                update_interval: Some(val),
+                ..PrfOption::default()
+            }),
+            None => match header.get("profile-update-interval") {
+                Some(value) => match value.to_str().unwrap_or("").parse::<u64>() {
+                    Ok(val) => Some(PrfOption {
+                        update_interval: Some(val * 60), // hour -> min
+                        ..PrfOption::default()
+                    }),
+                    Err(_) => None,
+                },
+                None => None,
             },
-            None => None,
         };
 
         let uid = help::get_uid("r");
