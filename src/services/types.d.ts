@@ -173,6 +173,7 @@ interface IVergeConfig {
   enable_proxy_guard?: boolean;
   proxy_guard_duration?: number;
   system_proxy_bypass?: string;
+  system_proxy_registry_mode?: boolean;
   web_ui_list?: string[];
   hotkeys?: string[];
   theme_setting?: {

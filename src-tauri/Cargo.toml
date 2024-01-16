@@ -14,7 +14,6 @@ tauri-build = { version = "1", features = [] }
 
 [dependencies]
 warp = "0.3"
-sysproxy = "0.3.0"
 which = "5.0.0"
 anyhow = "1.0"
 dirs = "5.0"
@@ -39,6 +38,7 @@ window-shadows = { version = "0.2" }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+sysproxy = { git="https://github.com/clash-verge-rev/sysproxy-rs", branch = "main" }
 tauri = { version = "1.5", features = [ "notification-all", "icon-png", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all"] }
 
 [target.'cfg(windows)'.dependencies]
