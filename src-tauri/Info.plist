@@ -6,7 +6,7 @@
 <array>
     <dict>
         <key>CFBundleURLName</key>
-        <string>io.github.clash-verge-rev.clash-verge-rev</string>
+        <string>Clash Verge</string>
         <key>CFBundleURLSchemes</key>
         <array>
             <string>clash</string>
