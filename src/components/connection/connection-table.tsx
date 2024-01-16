@@ -53,7 +53,7 @@ export const ConnectionTable = (props: Props) => {
     },
     { field: "chains", headerName: "Chains", flex: 360, minWidth: 360 },
     { field: "rule", headerName: "Rule", flex: 300, minWidth: 250 },
-    { field: "process", headerName: "Process", flex: 480, minWidth: 480 },
+    { field: "process", headerName: "Process", flex: 240, minWidth: 120 },
     {
       field: "time",
       headerName: "Time",
