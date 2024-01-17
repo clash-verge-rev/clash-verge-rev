@@ -56,6 +56,9 @@ dependencies:
   monaco-editor:
     specifier: ^0.34.1
     version: 0.34.1
+  nanoid:
+    specifier: ^5.0.4
+    version: 5.0.4
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -3192,6 +3195,15 @@ packages:
     engines: { node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1 }
     hasBin: true
     dev: true
+
+  /nanoid@5.0.4:
+    resolution:
+      {
+        integrity: sha512-vAjmBf13gsmhXSgBrtIclinISzFFy22WwCYoyilZlsrRXNIHSwgFQ1bEdjRwMT3aoadeIF6HMuDRlOxzfXV8ig==,
+      }
+    engines: { node: ^18 || >=20 }
+    hasBin: true
+    dev: false
 
   /no-case@3.0.4:
     resolution:
