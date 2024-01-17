@@ -123,6 +123,12 @@ impl Sysopt {
         sysproxy.enable = enable;
         sysproxy.bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
 
+        let port = Config::verge()
+            .latest()
+            .verge_mixed_port
+            .unwrap_or(Config::clash().data().get_mixed_port());
+        sysproxy.port = port;
+
         if registry_mode {
             #[cfg(windows)]
             sysproxy.set_system_proxy_with_registry()?;
