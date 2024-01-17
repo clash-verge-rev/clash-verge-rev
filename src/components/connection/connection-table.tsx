@@ -1,9 +1,12 @@
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridValueFormatterParams,
+} from "@mui/x-data-grid";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
-import { sortWithUnit, sortStringTime } from "@/utils/custom-comparator";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -25,7 +28,8 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
-      sortComparator: sortWithUnit,
+      valueFormatter: (params: GridValueFormatterParams<number>) =>
+        parseTraffic(params.value).join(" "),
     },
     {
       field: "upload",
@@ -33,7 +37,8 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
-      sortComparator: sortWithUnit,
+      valueFormatter: (params: GridValueFormatterParams<number>) =>
+        parseTraffic(params.value).join(" "),
     },
     {
       field: "dlSpeed",
@@ -41,7 +46,8 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
-      sortComparator: sortWithUnit,
+      valueFormatter: (params: GridValueFormatterParams<number>) =>
+        parseTraffic(params.value).join(" ") + "/s",
     },
     {
       field: "ulSpeed",
@@ -49,7 +55,8 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
-      sortComparator: sortWithUnit,
+      valueFormatter: (params: GridValueFormatterParams<number>) =>
+        parseTraffic(params.value).join(" ") + "/s",
     },
     { field: "chains", headerName: "Chains", flex: 360, minWidth: 360 },
     { field: "rule", headerName: "Rule", flex: 300, minWidth: 250 },
@@ -61,7 +68,11 @@ export const ConnectionTable = (props: Props) => {
       minWidth: 100,
       align: "right",
       headerAlign: "right",
-      sortComparator: sortStringTime,
+      sortComparator: (v1, v2) => {
+        return new Date(v2).getTime() - new Date(v1).getTime();
+      },
+      valueFormatter: (params: GridValueFormatterParams<string>) =>
+        dayjs(params.value).fromNow(),
     },
     { field: "source", headerName: "Source", flex: 200, minWidth: 130 },
     {
@@ -83,14 +94,14 @@ export const ConnectionTable = (props: Props) => {
         host: metadata.host
           ? `${metadata.host}:${metadata.destinationPort}`
           : `${metadata.destinationIP}:${metadata.destinationPort}`,
-        download: parseTraffic(each.download).join(" "),
-        upload: parseTraffic(each.upload).join(" "),
-        dlSpeed: parseTraffic(each.curDownload).join(" ") + "/s",
-        ulSpeed: parseTraffic(each.curUpload).join(" ") + "/s",
+        download: each.download,
+        upload: each.upload,
+        dlSpeed: each.curDownload,
+        ulSpeed: each.curUpload,
         chains,
         rule,
         process: truncateStr(metadata.process || metadata.processPath),
-        time: dayjs(each.start).fromNow(),
+        time: each.start,
         source: `${metadata.sourceIP}:${metadata.sourcePort}`,
         destinationIP: metadata.destinationIP,
         type: `${metadata.type}(${metadata.network})`,
