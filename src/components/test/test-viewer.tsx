@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { TextField } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, Notice } from "@/components/base";
+import { nanoid } from "nanoid";
 
 interface Props {
   onChange: (uid: string, patch?: Partial<IVergeTestItem>) => void;
@@ -67,7 +68,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         let uid;
 
         if (openType === "new") {
-          uid = crypto.randomUUID();
+          uid = nanoid();
           const item = { ...form, uid };
           newList = [...testList, item];
           await patchVerge({ test_list: newList });
