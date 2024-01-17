@@ -102,11 +102,15 @@ export const TestItem = (props: Props) => {
           {...attributes}
           {...listeners}
         >
-          {icon ? (
+          {icon && icon.trim() !== "" ? (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
-              {icon?.trim().startsWith("http") ? (
-                <img src={icon} height="40px" />
-              ) : (
+              {icon.trim().startsWith("http") && (
+                <img src={icon} height="40px" style={{ marginRight: "8px" }} />
+              )}
+              {icon.trim().startsWith("data") && (
+                <img src={icon} height="40px" style={{ marginRight: "8px" }} />
+              )}
+              {icon.trim().startsWith("<svg") && (
                 <img
                   src={`data:image/svg+xml;base64,${btoa(icon)}`}
                   height="40px"
