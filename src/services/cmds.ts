@@ -165,6 +165,10 @@ export async function cmdGetProxyDelay(name: string, url?: string) {
   return invoke<{ delay: number }>("clash_api_get_proxy_delay", { name, url });
 }
 
+export async function cmdTestDelay(url: string) {
+  return invoke<number>("test_delay", { url });
+}
+
 /// service mode
 
 export async function checkService() {

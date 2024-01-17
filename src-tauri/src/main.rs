@@ -54,6 +54,7 @@ fn main() -> std::io::Result<()> {
             // verge
             cmds::get_verge_config,
             cmds::patch_verge_config,
+            cmds::test_delay,
             // cmds::update_hotkeys,
             // profile
             cmds::get_profiles,

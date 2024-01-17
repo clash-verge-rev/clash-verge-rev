@@ -1,5 +1,6 @@
 {
   "Label-Proxies": "代 理",
+  "Label-Test": "测 试",
   "Label-Profiles": "订 阅",
   "Label-Connections": "连 接",
   "Label-Logs": "日 志",
@@ -11,10 +12,16 @@
   "Clear": "清除",
   "Proxies": "代理",
   "Proxy Groups": "代理组",
+  "Test": "测试",
   "rule": "规则",
   "global": "全局",
   "direct": "直连",
   "script": "脚本",
+
+  "Edit": "编辑",
+  "Icon": "图标",
+  "Test URL": "测试地址",
+  "Test All": "测试全部",
 
   "Profiles": "订阅",
   "Profile URL": "订阅文件链接",
