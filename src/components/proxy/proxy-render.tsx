@@ -37,6 +37,18 @@ export const ProxyRender = (props: RenderProps) => {
         dense
         onClick={() => onHeadState(group.name, { open: !headState?.open })}
       >
+        {group.icon && group.icon.trim().startsWith("http") && (
+          <img src={group.icon} height="40px" style={{ marginRight: "8px" }} />
+        )}
+        {group.icon && group.icon.trim().startsWith("data") && (
+          <img src={group.icon} height="40px" style={{ marginRight: "8px" }} />
+        )}
+        {group.icon && group.icon.trim().startsWith("<svg") && (
+          <img
+            src={`data:image/svg+xml;base64,${btoa(group.icon)}`}
+            height="40px"
+          />
+        )}
         <ListItemText
           primary={group.name}
           secondary={

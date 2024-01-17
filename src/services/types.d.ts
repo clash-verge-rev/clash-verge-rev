@@ -53,6 +53,7 @@ interface IProxyItem {
   all?: string[];
   now?: string;
   hidden?: boolean;
+  icon?: string;
   provider?: string; // 记录是否来自provider
 }
 
