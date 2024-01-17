@@ -66,34 +66,14 @@ open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/C
 
 ## Development
 
-You should install Rust and Nodejs, see [here](https://tauri.app/v1/guides/getting-started/prerequisites) for more details. Then install Nodejs packages.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
+
+To run the development server, execute the following commands after all prerequisites for **Tauri** are installed:
 
 ```shell
 pnpm i
-```
-
-Then download the clash binary... Or you can download it from [clash meta release](https://github.com/MetaCubeX/Clash.Meta/releases) and rename it according to [tauri config](https://tauri.app/v1/api/config#bundleconfig.externalbin).
-
-```shell
-# force update to latest version
-# pnpm run check --force
-
 pnpm run check
-```
-
-Then run
-
-```shell
 pnpm dev
-
-# run it in another way if app instance exists
-pnpm dev:diff
-```
-
-Or you can build it
-
-```shell
-pnpm build
 ```
 
 ## Todos
