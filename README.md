@@ -41,18 +41,18 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 
 Download from [release](https://github.com/clash-verge-rev/clash-verge-rev/releases). Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
-- [Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/Clash.Verge_1.4.8_x64-setup.exe)
-- [Windows x86](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/Clash.Verge_1.4.8_x86-setup.exe)
-- [Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/Clash.Verge_1.4.8_arm64-setup.exe)
+- [Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/Clash.Verge_1.4.9_x64-setup.exe)
+- [Windows x86](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/Clash.Verge_1.4.9_x86-setup.exe)
+- [Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/Clash.Verge_1.4.9_arm64-setup.exe)
 
-- [macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/Clash.Verge_1.4.8_x64.dmg)
-- [macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/Clash.Verge_1.4.8_aarch64.dmg)
+- [macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/Clash.Verge_1.4.9_x64.dmg)
+- [macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/Clash.Verge_1.4.9_aarch64.dmg)
 
-- [Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/clash-verge_1.4.8_amd64.AppImage)
-- [Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/clash-verge_1.4.8_amd64.deb)
-- [Linux x86 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/clash-verge_1.4.8_i386.AppImage)
-- [Linux x86 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/clash-verge_1.4.8_i386.deb)
-- [Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.8/clash-verge_1.4.8_arm64.deb)
+- [Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/clash-verge_1.4.9_amd64.AppImage)
+- [Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/clash-verge_1.4.9_amd64.deb)
+- [Linux x86 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/clash-verge_1.4.9_i386.AppImage)
+- [Linux x86 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/clash-verge_1.4.9_i386.deb)
+- [Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.9/clash-verge_1.4.9_arm64.deb)
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
