@@ -1,5 +1,6 @@
 {
   "Label-Proxies": "Proxies",
+  "Label-Test": "Test",
   "Label-Profiles": "Profiles",
   "Label-Connections": "Connections",
   "Label-Logs": "Logs",
@@ -11,10 +12,16 @@
   "Clear": "Clear",
   "Proxies": "Proxies",
   "Proxy Groups": "Proxy Groups",
+  "Test": "Test",
   "rule": "rule",
   "global": "global",
   "direct": "direct",
   "script": "script",
+
+  "Edit": "Edit",
+  "Icon": "Icon",
+  "Test URL": "Test URL",
+  "Test All": "Test All",
 
   "Profiles": "Profiles",
   "Profile URL": "Profile URL",

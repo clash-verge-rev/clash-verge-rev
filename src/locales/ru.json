@@ -1,5 +1,6 @@
 {
   "Label-Proxies": "Прокси",
+  "Label-Test": "Тест",
   "Label-Profiles": "Профили",
   "Label-Connections": "Соединения",
   "Label-Logs": "Логи",
@@ -10,11 +11,17 @@
   "Logs": "Логи",
   "Clear": "Очистить",
   "Proxies": "Прокси",
+  "Test": "Тест",
   "Proxy Groups": "Группы прокси",
   "rule": "правила",
   "global": "глобальный",
   "direct": "прямой",
   "script": "скриптовый",
+
+  "Edit": "Редактировать",
+  "Icon": "Икона",
+  "Test URL": "Тестовый URL",
+  "Test All": "Тест Все",
 
   "Profiles": "Профили",
   "Profile URL": "URL профиля",
