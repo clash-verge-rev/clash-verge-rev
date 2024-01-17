@@ -54,6 +54,10 @@
       },
       "notification": {
         "all": true
+      },
+      "dialog": {
+        "all": false,
+        "open": true
       }
     },
     "windows": [],
