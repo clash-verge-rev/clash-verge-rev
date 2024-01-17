@@ -21,6 +21,7 @@ const PLATFORM_MAP = {
   "i686-unknown-linux-gnu": "linux",
   "aarch64-unknown-linux-gnu": "linux",
   "armv7-unknown-linux-gnueabihf": "linux",
+  "loongarch64-unknown-linux-gnu": "linux",
 };
 const ARCH_MAP = {
   "x86_64-pc-windows-msvc": "x64",
@@ -32,6 +33,7 @@ const ARCH_MAP = {
   "i686-unknown-linux-gnu": "ia32",
   "aarch64-unknown-linux-gnu": "arm64",
   "armv7-unknown-linux-gnueabihf": "arm",
+  "loongarch64-unknown-linux-gnu": "loong64",
 };
 
 const arg1 = process.argv.slice(2)[0];
@@ -63,6 +65,7 @@ const META_ALPHA_MAP = {
   "linux-ia32": "mihomo-linux-386",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
+  "linux-loong64": "mihomo-linux-loong64",
 };
 
 // Fetch the latest alpha release version from the version.txt file
@@ -108,6 +111,7 @@ const META_MAP = {
   "linux-ia32": "mihomo-linux-386",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
+  "linux-loong64": "mihomo-linux-loong64",
 };
 
 // Fetch the latest release version from the version.txt file
