@@ -154,6 +154,13 @@ interface IProfilesConfig {
   items?: IProfileItem[];
 }
 
+interface IVergeTestItem {
+  uid: string;
+  name?: string;
+  icon?: string;
+  url: string;
+}
+
 interface IVergeConfig {
   app_log_level?: "trace" | "debug" | "info" | "warn" | "error" | string;
   language?: string;
@@ -194,6 +201,7 @@ interface IVergeConfig {
   enable_builtin_enhanced?: boolean;
   auto_log_clean?: 0 | 1 | 2 | 3;
   proxy_layout_column?: number;
+  test_list?: IVergeTestItem[];
 }
 
 type IClashConfigValue = any;

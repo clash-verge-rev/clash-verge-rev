@@ -88,6 +88,9 @@ pub struct IVerge {
     /// proxy 页面布局 列数
     pub proxy_layout_column: Option<i32>,
 
+    /// 测试网站列表
+    pub test_list: Option<Vec<IVergeTestItem>>,
+
     /// 日志清理
     /// 0: 不清理; 1: 7天; 2: 30天; 3: 90天
     pub auto_log_clean: Option<i32>,
@@ -101,6 +104,14 @@ pub struct IVerge {
 
     /// verge mixed port 用于覆盖 clash 的 mixed port
     pub verge_mixed_port: Option<u16>,
+}
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+pub struct IVergeTestItem {
+    pub uid: Option<String>,
+    pub name: Option<String>,
+    pub icon: Option<String>,
+    pub url: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -202,6 +213,7 @@ impl IVerge {
         patch!(default_latency_test);
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
+        patch!(test_list);
         patch!(enable_clash_fields);
         patch!(auto_log_clean);
         patch!(window_size_position);

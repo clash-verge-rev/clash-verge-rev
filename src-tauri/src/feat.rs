@@ -368,3 +368,39 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
         _ => log::error!(target: "app", "copy_clash_env: Invalid env type! {env_type}"),
     };
 }
+
+pub async fn test_delay(url: String) -> Result<u32> {
+    use tokio::time::{Duration, Instant};
+    let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
+
+    let port = Config::verge()
+        .latest()
+        .verge_mixed_port
+        .unwrap_or(Config::clash().data().get_mixed_port());
+
+    let proxy_scheme = format!("http://127.0.0.1:{port}");
+
+    if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
+        builder = builder.proxy(proxy);
+    }
+    if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
+        builder = builder.proxy(proxy);
+    }
+    if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
+        builder = builder.proxy(proxy);
+    }
+
+    let request = builder
+        .timeout(Duration::from_millis(10000))
+        .build()?
+        .get(url);
+    let start = Instant::now();
+
+    let response = request.send().await?;
+    if response.status().is_success() {
+        let delay = start.elapsed().as_millis() as u32;
+        Ok(delay)
+    } else {
+        Ok(10000u32)
+    }
+}

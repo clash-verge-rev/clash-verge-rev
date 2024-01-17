@@ -261,6 +261,11 @@ pub fn get_portable_flag() -> CmdResult<bool> {
     Ok(*dirs::PORTABLE_FLAG.get().unwrap_or(&false))
 }
 
+#[tauri::command]
+pub async fn test_delay(url: String) -> CmdResult<u32> {
+    Ok(feat::test_delay(url).await.unwrap_or(10000u32))
+}
+
 #[cfg(windows)]
 pub mod service {
     use super::*;
