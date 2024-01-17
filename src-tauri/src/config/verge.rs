@@ -25,6 +25,9 @@ pub struct IVerge {
     /// copy env type
     pub env_type: Option<String>,
 
+    /// startup script path
+    pub startup_script: Option<String>,
+
     /// enable traffic graph default is true
     pub traffic_graph: Option<bool>,
 
@@ -189,6 +192,7 @@ impl IVerge {
         patch!(theme_mode);
         patch!(tray_event);
         patch!(env_type);
+        patch!(startup_script);
         patch!(traffic_graph);
         patch!(enable_memory_usage);
 

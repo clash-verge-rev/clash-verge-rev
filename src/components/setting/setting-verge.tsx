@@ -1,7 +1,15 @@
 import { useRef } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import { IconButton, MenuItem, Select, Typography } from "@mui/material";
+import { open } from "@tauri-apps/api/dialog";
+import {
+  Button,
+  IconButton,
+  MenuItem,
+  Select,
+  Input,
+  Typography,
+} from "@mui/material";
 import { openAppDir, openCoreDir, openLogsDir } from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
 import { checkUpdate } from "@tauri-apps/api/updater";
@@ -30,7 +38,8 @@ const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { verge, patchVerge, mutateVerge } = useVerge();
-  const { theme_mode, language, tray_event, env_type } = verge ?? {};
+  const { theme_mode, language, tray_event, env_type, startup_script } =
+    verge ?? {};
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
   const miscRef = useRef<DialogRef>(null);
@@ -125,7 +134,54 @@ const SettingVerge = ({ onError }: Props) => {
           </Select>
         </GuardState>
       </SettingItem>
-
+      <SettingItem label={t("Startup Script")}>
+        <GuardState
+          value={startup_script ?? ""}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ startup_script: e })}
+          onGuard={(e) => patchVerge({ startup_script: e })}
+        >
+          <Input
+            value={startup_script}
+            disabled
+            endAdornment={
+              <>
+                <Button
+                  onClick={async () => {
+                    const path = await open({
+                      directory: false,
+                      multiple: false,
+                      filters: [
+                        {
+                          name: "Shell Script",
+                          extensions: ["sh", "bat", "ps1"],
+                        },
+                      ],
+                    });
+                    if (path?.length) {
+                      onChangeData({ startup_script: `${path}` });
+                      patchVerge({ startup_script: `${path}` });
+                    }
+                  }}
+                >
+                  {t("Browse")}
+                </Button>
+                {startup_script && (
+                  <Button
+                    onClick={async () => {
+                      onChangeData({ startup_script: "" });
+                      patchVerge({ startup_script: "" });
+                    }}
+                  >
+                    {t("Clear")}
+                  </Button>
+                )}
+              </>
+            }
+          ></Input>
+        </GuardState>
+      </SettingItem>
       <SettingItem label={t("Theme Setting")}>
         <IconButton
           color="inherit"
