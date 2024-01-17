@@ -377,23 +377,26 @@ pub async fn test_delay(url: String) -> Result<u32> {
         .latest()
         .verge_mixed_port
         .unwrap_or(Config::clash().data().get_mixed_port());
+    let tun_mode = Config::verge().latest().enable_tun_mode.unwrap_or(false);
 
     let proxy_scheme = format!("http://127.0.0.1:{port}");
 
-    if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
-        builder = builder.proxy(proxy);
-    }
-    if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
-        builder = builder.proxy(proxy);
-    }
-    if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
-        builder = builder.proxy(proxy);
+    if !tun_mode {
+        if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
+            builder = builder.proxy(proxy);
+        }
+        if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
+            builder = builder.proxy(proxy);
+        }
+        if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
+            builder = builder.proxy(proxy);
+        }
     }
 
     let request = builder
         .timeout(Duration::from_millis(10000))
         .build()?
-        .get(url);
+        .get(url).header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
     let start = Instant::now();
 
     let response = request.send().await?;
