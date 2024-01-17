@@ -54,7 +54,7 @@ const Layout = () => {
       mutate("getProxies");
       mutate("getVersion");
       mutate("getClashConfig");
-      mutate("getProviders");
+      mutate("getProxyProviders");
     });
 
     // update the verge config

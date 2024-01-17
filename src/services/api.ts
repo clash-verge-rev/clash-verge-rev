@@ -105,7 +105,7 @@ export const getProxiesInner = async () => {
 export const getProxies = async () => {
   const [proxyRecord, providerRecord] = await Promise.all([
     getProxiesInner(),
-    getProviders(),
+    getProxyProviders(),
   ]);
 
   // provider name map
@@ -166,11 +166,31 @@ export const getProxies = async () => {
 };
 
 // get proxy providers
-export const getProviders = async () => {
+export const getProxyProviders = async () => {
   const instance = await getAxios();
   const response = await instance.get<any, any>("/providers/proxies");
 
-  const providers = (response.providers || {}) as Record<string, IProviderItem>;
+  const providers = (response.providers || {}) as Record<
+    string,
+    IProxyProviderItem
+  >;
+
+  return Object.fromEntries(
+    Object.entries(providers).filter(([key, item]) => {
+      const type = item.vehicleType.toLowerCase();
+      return type === "http" || type === "file";
+    })
+  );
+};
+
+export const getRuleProviders = async () => {
+  const instance = await getAxios();
+  const response = await instance.get<any, any>("/providers/rules");
+
+  const providers = (response.providers || {}) as Record<
+    string,
+    IRuleProviderItem
+  >;
 
   return Object.fromEntries(
     Object.entries(providers).filter(([key, item]) => {
@@ -188,9 +208,14 @@ export const providerHealthCheck = async (name: string) => {
   );
 };
 
-export const providerUpdate = async (name: string) => {
+export const proxyProviderUpdate = async (name: string) => {
   const instance = await getAxios();
   return instance.put(`/providers/proxies/${encodeURIComponent(name)}`);
+};
+
+export const ruleProviderUpdate = async (name: string) => {
+  const instance = await getAxios();
+  return instance.put(`/providers/rules/${encodeURIComponent(name)}`);
 };
 
 export const getConnections = async () => {

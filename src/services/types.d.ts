@@ -61,10 +61,20 @@ type IProxyGroupItem = Omit<IProxyItem, "all"> & {
   all: IProxyItem[];
 };
 
-interface IProviderItem {
+interface IProxyProviderItem {
   name: string;
   type: string;
   proxies: IProxyItem[];
+  updatedAt: string;
+  vehicleType: string;
+}
+
+interface IRuleProviderItem {
+  name: string;
+  behavior: string;
+  format: string;
+  ruleCount: number;
+  type: string;
   updatedAt: string;
   vehicleType: string;
 }

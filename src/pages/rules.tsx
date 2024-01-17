@@ -2,10 +2,11 @@ import useSWR from "swr";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
-import { Box, Paper, TextField } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import { getRules } from "@/services/api";
 import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
+import { ProviderButton } from "@/components/rule/provider-button";
 
 const RulesPage = () => {
   const { t } = useTranslation();
@@ -18,7 +19,16 @@ const RulesPage = () => {
   }, [data, filterText]);
 
   return (
-    <BasePage full title={t("Rules")} contentStyle={{ height: "100%" }}>
+    <BasePage
+      full
+      title={t("Rules")}
+      contentStyle={{ height: "100%" }}
+      header={
+        <Box display="flex" alignItems="center" gap={1}>
+          <ProviderButton />
+        </Box>
+      }
+    >
       <Box
         sx={{
           pt: 1,
