@@ -225,6 +225,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let system_proxy = patch.enable_system_proxy;
     let proxy_bypass = patch.system_proxy_bypass;
     let language = patch.language;
+    let port = patch.verge_mixed_port;
 
     match {
         #[cfg(target_os = "windows")]
@@ -249,7 +250,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if auto_launch.is_some() {
             sysopt::Sysopt::global().update_launch()?;
         }
-        if system_proxy.is_some() || proxy_bypass.is_some() {
+        if system_proxy.is_some() || proxy_bypass.is_some() || port.is_some() {
             sysopt::Sysopt::global().update_sysproxy()?;
             sysopt::Sysopt::global().guard_proxy();
         }
