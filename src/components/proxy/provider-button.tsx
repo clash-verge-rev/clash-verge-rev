@@ -12,12 +12,14 @@ import {
   alpha,
   Typography,
   Divider,
+  LinearProgress,
 } from "@mui/material";
 import { RefreshRounded } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { getProxyProviders, proxyProviderUpdate } from "@/services/api";
 import { BaseDialog } from "../base";
+import parseTraffic from "@/utils/parse-traffic";
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
@@ -74,10 +76,28 @@ export const ProviderButton = () => {
         <List sx={{ py: 0, minHeight: 250 }}>
           {Object.entries(data || {}).map(([key, item]) => {
             const time = dayjs(item.updatedAt);
+            const sub = item.subscriptionInfo;
+            const hasSubInfo = !!sub;
+            const upload = sub?.Upload || 0;
+            const download = sub?.Download || 0;
+            const total = sub?.Total || 0;
+            const expire = sub?.Expire || 0;
+            const progress = Math.round(
+              ((download + upload) * 100) / (total + 0.1)
+            );
             return (
               <>
-                <ListItem sx={{ p: 0 }} key={key}>
+                <ListItem
+                  sx={(theme) => ({
+                    p: 0,
+                    borderRadius: "10px",
+                    boxShadow: theme.shadows[2],
+                    mb: 1,
+                  })}
+                  key={key}
+                >
                   <ListItemText
+                    sx={{ px: 1 }}
                     primary={
                       <>
                         <Typography
@@ -98,9 +118,29 @@ export const ProviderButton = () => {
                         <StyledTypeBox component="span">
                           {t("Update At")} {time.fromNow()}
                         </StyledTypeBox>
+                        {hasSubInfo && (
+                          <>
+                            <Box sx={{ ...boxStyle, fontSize: 14 }}>
+                              <span title="Used / Total">
+                                {parseTraffic(upload + download)} /{" "}
+                                {parseTraffic(total)}
+                              </span>
+                              <span title="Expire Time">
+                                {parseExpire(expire)}
+                              </span>
+                            </Box>
+
+                            <LinearProgress
+                              variant="determinate"
+                              value={progress}
+                              color="inherit"
+                            />
+                          </>
+                        )}
                       </>
                     }
                   />
+                  <Divider orientation="vertical" flexItem />
                   <IconButton
                     size="small"
                     color="inherit"
@@ -110,7 +150,6 @@ export const ProviderButton = () => {
                     <RefreshRounded />
                   </IconButton>
                 </ListItem>
-                <Divider />
               </>
             );
           })}
@@ -131,3 +170,15 @@ const StyledTypeBox = styled(Box)(({ theme }) => ({
   padding: "0 2px",
   lineHeight: 1.25,
 }));
+
+const boxStyle = {
+  height: 26,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+};
+
+function parseExpire(expire?: number) {
+  if (!expire) return "-";
+  return dayjs(expire * 1000).format("YYYY-MM-DD");
+}
