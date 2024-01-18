@@ -102,24 +102,42 @@ export const TestItem = (props: Props) => {
           {...attributes}
           {...listeners}
         >
-          {icon && icon.trim() !== "" ? (
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              {icon.trim().startsWith("http") && (
-                <img src={icon} height="40px" style={{ marginRight: "8px" }} />
-              )}
-              {icon.trim().startsWith("data") && (
-                <img src={icon} height="40px" style={{ marginRight: "8px" }} />
-              )}
-              {icon.trim().startsWith("<svg") && (
-                <img
-                  src={`data:image/svg+xml;base64,${btoa(icon)}`}
-                  height="40px"
-                />
-              )}
-            </Box>
+          {icon ? (
+            icon.trim() !== "" ? (
+              <Box sx={{ display: "flex", justifyContent: "center" }}>
+                {icon.trim().startsWith("http") && (
+                  <img
+                    src={icon}
+                    height="40px"
+                    style={{ marginRight: "8px" }}
+                  />
+                )}
+                {icon.trim().startsWith("data") && (
+                  <img
+                    src={icon}
+                    height="40px"
+                    style={{ marginRight: "8px" }}
+                  />
+                )}
+                {icon.trim().startsWith("<svg") && (
+                  <img
+                    src={`data:image/svg+xml;base64,${btoa(icon)}`}
+                    height="40px"
+                  />
+                )}
+              </Box>
+            ) : (
+              <Box sx={{ display: "flex", justifyContent: "center" }}>
+                <LanguageTwoTone sx={{ height: "40px" }} fontSize="large" />
+              </Box>
+            )
           ) : (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <LanguageTwoTone sx={{ height: "40px" }} fontSize="large" />
+              <img
+                height="40px"
+                style={{ marginRight: "8px" }}
+                src={itemData.url + "/favicon.ico"}
+              />
             </Box>
           )}
 
