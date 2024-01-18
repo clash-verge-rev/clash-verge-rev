@@ -13,6 +13,7 @@ import {
 import { openAppDir, openCoreDir, openLogsDir } from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
 import { checkUpdate } from "@tauri-apps/api/updater";
+import { exit } from "@tauri-apps/api/process";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
 import { DialogRef, Notice } from "@/components/base";
@@ -26,7 +27,6 @@ import { GuardState } from "./mods/guard-state";
 import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
-import { portableFlag } from "@/pages/_layout";
 import { routers } from "@/pages/_routers";
 interface Props {
   onError?: (err: Error) => void;
@@ -293,18 +293,29 @@ const SettingVerge = ({ onError }: Props) => {
         </IconButton>
       </SettingItem>
 
-      {!portableFlag && (
-        <SettingItem label={t("Check for Updates")}>
-          <IconButton
-            color="inherit"
-            size="small"
-            sx={{ my: "2px" }}
-            onClick={onCheckUpdate}
-          >
-            <ArrowForward />
-          </IconButton>
-        </SettingItem>
-      )}
+      <SettingItem label={t("Check for Updates")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={onCheckUpdate}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
+
+      <SettingItem label={t("Exit")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={() => {
+            exit(0);
+          }}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
 
       <SettingItem label={t("Verge Version")}>
         <Typography sx={{ py: "7px", pr: 1 }}>v{version}</Typography>
