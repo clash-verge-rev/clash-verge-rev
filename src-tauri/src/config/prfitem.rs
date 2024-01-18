@@ -261,7 +261,9 @@ impl PrfItem {
                     },
                 }
             }
-            None => None,
+            None => Some(
+                crate::utils::help::get_last_part_and_decode(url).unwrap_or("Remote File".into()),
+            ),
         };
         let option = match update_interval {
             Some(val) => Some(PrfOption {
