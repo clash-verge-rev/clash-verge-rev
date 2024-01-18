@@ -27,7 +27,7 @@ import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
 import { portableFlag } from "@/pages/_layout";
-
+import { routers } from "@/pages/_routers";
 interface Props {
   onError?: (err: Error) => void;
 }
@@ -38,8 +38,14 @@ const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { verge, patchVerge, mutateVerge } = useVerge();
-  const { theme_mode, language, tray_event, env_type, startup_script } =
-    verge ?? {};
+  const {
+    theme_mode,
+    language,
+    tray_event,
+    env_type,
+    startup_script,
+    start_page,
+  } = verge ?? {};
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
   const miscRef = useRef<DialogRef>(null);
@@ -134,6 +140,23 @@ const SettingVerge = ({ onError }: Props) => {
           </Select>
         </GuardState>
       </SettingItem>
+
+      <SettingItem label={t("Start Page")}>
+        <GuardState
+          value={start_page ?? "/"}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ start_page: e })}
+          onGuard={(e) => patchVerge({ start_page: e })}
+        >
+          <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
+            {routers.map((page: { label: string; link: string }) => {
+              return <MenuItem value={page.link}>{t(page.label)}</MenuItem>;
+            })}
+          </Select>
+        </GuardState>
+      </SettingItem>
+
       <SettingItem label={t("Startup Script")}>
         <GuardState
           value={startup_script ?? ""}

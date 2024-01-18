@@ -184,6 +184,7 @@ interface IVergeConfig {
   tray_event?: "main_window" | "system_proxy" | "tun_mode" | string;
   env_type?: "bash" | "cmd" | "powershell" | string;
   startup_script?: string;
+  start_page?: string;
   clash_core?: string;
   theme_mode?: "light" | "dark" | "system";
   traffic_graph?: boolean;
