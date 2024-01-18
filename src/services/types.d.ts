@@ -67,6 +67,12 @@ interface IProxyProviderItem {
   proxies: IProxyItem[];
   updatedAt: string;
   vehicleType: string;
+  subscriptionInfo?: {
+    Upload: number;
+    Download: number;
+    Total: number;
+    Expire: number;
+  };
 }
 
 interface IRuleProviderItem {

@@ -76,8 +76,17 @@ export const ProviderButton = () => {
             const time = dayjs(item.updatedAt);
             return (
               <>
-                <ListItem sx={{ p: 0 }} key={key}>
+                <ListItem
+                  sx={(theme) => ({
+                    p: 0,
+                    borderRadius: "10px",
+                    boxShadow: theme.shadows[2],
+                    mb: 1,
+                  })}
+                  key={key}
+                >
                   <ListItemText
+                    sx={{ px: 1 }}
                     primary={
                       <>
                         <Typography
@@ -107,6 +116,7 @@ export const ProviderButton = () => {
                       </>
                     }
                   />
+                  <Divider orientation="vertical" flexItem />
                   <IconButton
                     size="small"
                     color="inherit"
@@ -116,7 +126,6 @@ export const ProviderButton = () => {
                     <RefreshRounded />
                   </IconButton>
                 </ListItem>
-                <Divider />
               </>
             );
           })}
