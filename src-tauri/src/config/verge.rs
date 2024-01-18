@@ -25,6 +25,8 @@ pub struct IVerge {
     /// copy env type
     pub env_type: Option<String>,
 
+    /// start page
+    pub start_page: Option<String>,
     /// startup script path
     pub startup_script: Option<String>,
 
@@ -153,6 +155,7 @@ impl IVerge {
             env_type: Some("bash".into()),
             #[cfg(target_os = "windows")]
             env_type: Some("powershell".into()),
+            start_page: Some("/".into()),
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_auto_launch: Some(false),
@@ -192,6 +195,7 @@ impl IVerge {
         patch!(theme_mode);
         patch!(tray_event);
         patch!(env_type);
+        patch!(start_page);
         patch!(startup_script);
         patch!(traffic_graph);
         patch!(enable_memory_usage);

@@ -23,7 +23,7 @@ import getSystem from "@/utils/get-system";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import { getPortableFlag } from "@/services/cmds";
-
+import { useNavigate } from "react-router-dom";
 export let portableFlag = false;
 
 dayjs.extend(relativeTime);
@@ -36,8 +36,8 @@ const Layout = () => {
   const { theme } = useCustomTheme();
 
   const { verge } = useVerge();
-  const { language } = verge || {};
-
+  const { language, start_page } = verge || {};
+  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -88,7 +88,10 @@ const Layout = () => {
       dayjs.locale(language === "zh" ? "zh-cn" : language);
       i18next.changeLanguage(language);
     }
-  }, [language]);
+    if (start_page) {
+      navigate(start_page);
+    }
+  }, [language, start_page]);
 
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
