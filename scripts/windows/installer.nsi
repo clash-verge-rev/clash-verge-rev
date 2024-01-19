@@ -148,6 +148,8 @@ Function PageReinstall
   ; however, this should be fine since the user will have to confirm the uninstallation
   ; and they can chose to abort it if doesn't make sense.
   StrCpy $0 0
+  !insertmacro CheckAllVergeProcesses
+
   wix_loop:
     EnumRegKey $1 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" $0
     StrCmp $1 "" wix_done ; Exit loop if there is no more keys to loop on
@@ -417,6 +419,55 @@ Function .onInit
   !endif
 FunctionEnd
 
+!macro CheckAllVergeProcesses
+    ; Check if Clash Verge.exe is running
+    nsis_tauri_utils::FindProcess "Clash Verge.exe"
+    ${If} $R0 != 0
+        ; Kill the process
+        !if "${INSTALLMODE}" == "currentUser"
+            nsis_tauri_utils::KillProcessCurrentUser "Clash Verge.exe"
+        !else
+            nsis_tauri_utils::KillProcess "Clash Verge.exe"
+        !endif
+    ${EndIf}
+
+    
+    ; Check if clash-verge-service.exe is running
+    nsis_tauri_utils::FindProcess "clash-verge-service.exe"
+    ${If} $R0 != 0
+        ; Kill the process
+        !if "${INSTALLMODE}" == "currentUser"
+            nsis_tauri_utils::KillProcessCurrentUser "clash-verge-service.exe"
+        !else
+            nsis_tauri_utils::KillProcess "clash-verge-service.exe"
+    ${EndIf}
+
+       
+    ; Check if clash-meta-alpha.exe is running
+    nsis_tauri_utils::FindProcess "clash-meta-alpha.exe"
+    ${If} $R0 != 0
+        ; Kill the process
+        !if "${INSTALLMODE}" == "currentUser"
+            nsis_tauri_utils::KillProcessCurrentUser "clash-meta-alpha.exe"
+        !else
+            nsis_tauri_utils::KillProcess "clash-meta-alpha.exe"
+    ${EndIf}
+
+    ; Check if clash-meta.exe is running
+    nsis_tauri_utils::FindProcess "clash-meta.exe"
+    ${If} $R0 != 0
+        ; Kill the process
+        !if "${INSTALLMODE}" == "currentUser"
+            nsis_tauri_utils::KillProcessCurrentUser "clash-meta.exe"
+        !else
+            nsis_tauri_utils::KillProcess "clash-meta.exe"
+    ${EndIf}
+!macroend
+
+Section
+  !insertmacro CheckAllVergeProcesses
+SectionEnd
+
 Section EarlyChecks
   ; Abort silent installer if downgrades is disabled
   !if "${ALLOWDOWNGRADES}" == "false"
@@ -495,38 +546,6 @@ Section WebView2
   webview2_done:
 SectionEnd
 
-!macro CheckAllVergeProcesses
-  ; Check if Clash Verge.exe is running
-  nsis_tauri_utils::FindProcess "Clash Verge.exe"
-  ${If} $R0 != 0
-      ; Kill the process
-      nsis_tauri_utils::KillProcess "Clash Verge.exe"
-  ${EndIf}
-
-  
-  ; Check if clash-verge-service.exe is running
-  nsis_tauri_utils::FindProcess "clash-verge-service.exe"
-  ${If} $R0 != 0
-      ; Kill the process
-      nsis_tauri_utils::KillProcess "clash-verge-service.exe"
-  ${EndIf}
-
-      
-  ; Check if clash-meta-alpha.exe is running
-  nsis_tauri_utils::FindProcess "clash-meta-alpha.exe"
-  ${If} $R0 != 0
-      ; Kill the process
-      nsis_tauri_utils::KillProcess "clash-meta-alpha.exe"
-  ${EndIf}
-
-  ; Check if clash-meta.exe is running
-  nsis_tauri_utils::FindProcess "clash-meta.exe"
-  ${If} $R0 != 0
-      ; Kill the process
-      nsis_tauri_utils::KillProcess "clash-meta.exe"
-  ${EndIf}
-!macroend
-
 !macro CheckIfAppIsRunning
   !if "${INSTALLMODE}" == "currentUser"
     nsis_tauri_utils::FindProcessCurrentUser "${MAINBINARYNAME}.exe"
@@ -569,7 +588,6 @@ SectionEnd
 Section Install
   SetOutPath $INSTDIR
 
-  !insertmacro CheckAllVergeProcesses
   !insertmacro CheckIfAppIsRunning
 
   ; Copy main executable
