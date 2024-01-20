@@ -88,7 +88,6 @@
   "Proxy Guard": "Защита прокси",
   "Guard Duration": "Период защиты",
   "Proxy Bypass": "Игнорирование прокси",
-  "Use Registry": "Использование реестра",
   "Current System Proxy": "Текущий системный прокси",
   "Theme Mode": "Режим темы",
   "Tray Click Event": "Событие щелчка в лотке",
@@ -131,7 +130,5 @@
   "enable_tun_mode": "Включить режим туннеля",
   "disable_tun_mode": "Отключить режим туннеля",
 
-  "Portable Updater Error": "Портативная версия не поддерживает обновление внутри приложения, пожалуйста, скачайте и замените вручную",
-  "Please disable the system proxy": "Пожалуйста, отключите системный прокси",
-  "Using the registry instead of Windows API": "Использование реестра вместо Windows API"
+  "Portable Updater Error": "Портативная версия не поддерживает обновление внутри приложения, пожалуйста, скачайте и замените вручную"
 }

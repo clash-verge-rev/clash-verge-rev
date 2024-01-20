@@ -58,9 +58,6 @@ pub struct IVerge {
     /// set system proxy bypass
     pub system_proxy_bypass: Option<String>,
 
-    /// set system proxy method
-    pub system_proxy_registry_mode: Option<bool>,
-
     /// proxy guard duration
     pub proxy_guard_duration: Option<u64>,
 
@@ -161,7 +158,6 @@ impl IVerge {
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_system_proxy: Some(false),
-            system_proxy_registry_mode: Some(false),
             enable_random_port: Some(false),
             verge_mixed_port: Some(7897),
             enable_proxy_guard: Some(false),
@@ -209,7 +205,6 @@ impl IVerge {
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
         patch!(system_proxy_bypass);
-        patch!(system_proxy_registry_mode);
         patch!(proxy_guard_duration);
 
         patch!(theme_setting);
