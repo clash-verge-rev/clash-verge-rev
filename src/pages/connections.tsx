@@ -172,6 +172,7 @@ const ConnectionsPage = () => {
             sx={{
               mr: 1,
               width: i18n.language === "en" ? 190 : 120,
+              height: 33.375,
               '[role="button"]': { py: 0.65 },
             }}
           >
@@ -193,6 +194,7 @@ const ConnectionsPage = () => {
           placeholder={t("Filter conditions")}
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
+          sx={{ input: { py: 0.65, px: 1.25 } }}
         />
       </Box>
 
