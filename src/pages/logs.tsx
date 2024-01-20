@@ -80,7 +80,12 @@ const LogPage = () => {
           autoComplete="off"
           value={logState}
           onChange={(e) => setLogState(e.target.value)}
-          sx={{ width: 120, mr: 1, '[role="button"]': { py: 0.65 } }}
+          sx={{
+            width: 120,
+            height: 33.375,
+            mr: 1,
+            '[role="button"]': { py: 0.65 },
+          }}
         >
           <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="inf">INFO</MenuItem>
