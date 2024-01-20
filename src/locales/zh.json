@@ -93,7 +93,6 @@
   "Proxy Guard": "系统代理守卫",
   "Guard Duration": "代理守卫间隔",
   "Proxy Bypass": "代理绕过",
-  "Use Registry": "使用注册表",
   "Current System Proxy": "当前系统代理",
   "Enable status": "开启状态：",
   "Server Addr": "服务地址：",
@@ -160,7 +159,5 @@
   "Retain 30 Days": "保留30天",
   "Retain 90 Days": "保留90天",
 
-  "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换",
-  "Please disable the system proxy": "请先关闭系统代理",
-  "Using the registry instead of Windows API": "使用注册表替代Windows API"
+  "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换"
 }
