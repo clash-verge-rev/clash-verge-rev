@@ -13,11 +13,6 @@ export const routers = [
     ele: ProxiesPage,
   },
   {
-    label: "Label-Test",
-    link: "/test",
-    ele: TestPage,
-  },
-  {
     label: "Label-Profiles",
     link: "/profile",
     ele: ProfilesPage,
@@ -31,6 +26,11 @@ export const routers = [
     label: "Label-Rules",
     link: "/rules",
     ele: RulesPage,
+  },
+  {
+    label: "Label-Test",
+    link: "/test",
+    ele: TestPage,
   },
   {
     label: "Label-Logs",
