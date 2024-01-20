@@ -17,7 +17,9 @@
           "displayLanguageSelector": true,
           "installerIcon": "icons/icon.ico",
           "languages": ["SimpChinese", "English"],
-          "license": "../LICENSE"
+          "license": "../LICENSE",
+          "installMode": "perMachine",
+          "template": "../scripts/windows/installer.nsi"
         }
       }
     }
