@@ -75,7 +75,6 @@ export const TestItem = (props: Props) => {
   };
 
   useEffect(() => {
-    onDelay();
     listenTsetEvent();
   }, []);
 
@@ -176,7 +175,7 @@ export const TestItem = (props: Props) => {
                 },
               })}
             >
-              {delayManager.formatDelay(delay)}
+              {`${delayManager.formatDelay(delay)} ms`}
             </Widget>
           )}
         </Box>

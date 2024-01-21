@@ -28,14 +28,14 @@ export const routers = [
     ele: RulesPage,
   },
   {
-    label: "Label-Test",
-    link: "/test",
-    ele: TestPage,
-  },
-  {
     label: "Label-Logs",
     link: "/logs",
     ele: LogsPage,
+  },
+  {
+    label: "Label-Test",
+    link: "/test",
+    ele: TestPage,
   },
   {
     label: "Label-Settings",
