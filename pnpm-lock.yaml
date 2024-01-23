@@ -109,9 +109,6 @@ devDependencies:
   "@types/js-cookie":
     specifier: ^3.0.6
     version: 3.0.6
-  "@types/lodash":
-    specifier: ^4.14.202
-    version: 4.14.202
   "@types/lodash-es":
     specifier: ^4.17.12
     version: 4.17.12
