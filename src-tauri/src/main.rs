@@ -114,25 +114,6 @@ fn main() -> std::io::Result<()> {
             resolve::resolve_reset();
             api::process::kill_children();
         }
-        #[cfg(target_os = "macos")]
-        tauri::RunEvent::WindowEvent { label, event, .. } => {
-            use tauri::Manager;
-
-            if label == "main" {
-                match event {
-                    tauri::WindowEvent::CloseRequested { api, .. } => {
-                        api.prevent_close();
-                        let _ = resolve::save_window_size_position(&app_handle, true);
-
-                        app_handle.get_window("main").map(|win| {
-                            let _ = win.hide();
-                        });
-                    }
-                    _ => {}
-                }
-            }
-        }
-        #[cfg(not(target_os = "macos"))]
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
                 match event {
