@@ -148,7 +148,6 @@ Function PageReinstall
   ; however, this should be fine since the user will have to confirm the uninstallation
   ; and they can chose to abort it if doesn't make sense.
   StrCpy $0 0
-  !insertmacro CheckAllVergeProcesses
 
   wix_loop:
     EnumRegKey $1 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" $0
@@ -440,6 +439,7 @@ FunctionEnd
             nsis_tauri_utils::KillProcessCurrentUser "clash-verge-service.exe"
         !else
             nsis_tauri_utils::KillProcess "clash-verge-service.exe"
+        !endif
     ${EndIf}
 
        
@@ -451,6 +451,7 @@ FunctionEnd
             nsis_tauri_utils::KillProcessCurrentUser "clash-meta-alpha.exe"
         !else
             nsis_tauri_utils::KillProcess "clash-meta-alpha.exe"
+        !endif
     ${EndIf}
 
     ; Check if clash-meta.exe is running
@@ -461,6 +462,7 @@ FunctionEnd
             nsis_tauri_utils::KillProcessCurrentUser "clash-meta.exe"
         !else
             nsis_tauri_utils::KillProcess "clash-meta.exe"
+        !endif
     ${EndIf}
 !macroend
 
@@ -589,7 +591,7 @@ Section Install
   SetOutPath $INSTDIR
 
   !insertmacro CheckIfAppIsRunning
-
+  !insertmacro CheckAllVergeProcesses
   ; Copy main executable
   File "${MAINBINARYSRCPATH}"
 
@@ -676,7 +678,7 @@ FunctionEnd
 
 Section Uninstall
   !insertmacro CheckIfAppIsRunning
-
+  !insertmacro CheckAllVergeProcesses
   ; Delete the app directory and its content from disk
   ; Copy main executable
   Delete "$INSTDIR\${MAINBINARYNAME}.exe"

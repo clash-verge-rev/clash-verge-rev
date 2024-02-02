@@ -7,7 +7,7 @@
       "targets": ["deb", "appimage", "updater"],
       "deb": {
         "depends": ["openssl"],
-        "desktopTemplate": "./clash-verge.desktop"
+        "desktopTemplate": "./template/clash-verge.desktop"
       }
     }
   }
