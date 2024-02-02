@@ -2,14 +2,14 @@ use crate::{
     config::*,
     core::*,
     feat,
-    utils::{dirs, help},
+    utils::{dirs, help, resolve},
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
 use sysproxy::Sysproxy;
-
+use tauri::api;
 type CmdResult<T = ()> = Result<T, String>;
 
 #[tauri::command]
@@ -264,6 +264,15 @@ pub fn get_portable_flag() -> CmdResult<bool> {
 #[tauri::command]
 pub async fn test_delay(url: String) -> CmdResult<u32> {
     Ok(feat::test_delay(url).await.unwrap_or(10000u32))
+}
+
+#[tauri::command]
+pub fn exit_app(app_handle: tauri::AppHandle) {
+    let _ = resolve::save_window_size_position(&app_handle, true);
+    resolve::resolve_reset();
+    api::process::kill_children();
+    app_handle.exit(0);
+    std::process::exit(0);
 }
 
 #[cfg(windows)]

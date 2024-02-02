@@ -203,14 +203,8 @@ impl Tray {
                 "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
                 "restart_clash" => feat::restart_clash_core(),
                 "restart_app" => api::process::restart(&app_handle.env()),
-                "quit" => {
-                    let _ = resolve::save_window_size_position(app_handle, true);
+                "quit" => cmds::exit_app(app_handle.clone()),
 
-                    resolve::resolve_reset();
-                    api::process::kill_children();
-                    app_handle.exit(0);
-                    std::process::exit(0);
-                }
                 _ => {}
             },
             _ => {}
