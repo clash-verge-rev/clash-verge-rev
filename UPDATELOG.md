@@ -4,7 +4,7 @@
 
 - 此版本更改了 Windows 安装包安装模式，需要卸载后手动安装，否则无法安装到正确位置
 
-### Bugs fixed:
+### Bugs Fixes
 
 - 更新时文件占用问题
 - 系统代理开启失败
@@ -20,7 +20,7 @@
 - 在 Proxy Provider 页面展示订阅信息
 - 优化 Provider 支持
 
-### Bugs fixed:
+### Bugs Fixes
 
 - 更改端口时立即重设系统代理
 - 网站测试超时错误
