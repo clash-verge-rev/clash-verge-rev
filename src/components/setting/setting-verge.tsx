@@ -10,10 +10,9 @@ import {
   Input,
   Typography,
 } from "@mui/material";
-import { openAppDir, openCoreDir, openLogsDir } from "@/services/cmds";
+import { exitApp, openAppDir, openCoreDir, openLogsDir } from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
 import { checkUpdate } from "@tauri-apps/api/updater";
-import { exit } from "@tauri-apps/api/process";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
 import { DialogRef, Notice } from "@/components/base";
@@ -314,7 +313,7 @@ const SettingVerge = ({ onError }: Props) => {
           size="small"
           sx={{ my: "2px" }}
           onClick={() => {
-            exit(0);
+            exitApp();
           }}
         >
           <ArrowForward />

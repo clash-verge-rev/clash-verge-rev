@@ -55,6 +55,7 @@ fn main() -> std::io::Result<()> {
             cmds::get_verge_config,
             cmds::patch_verge_config,
             cmds::test_delay,
+            cmds::exit_app,
             // cmds::update_hotkeys,
             // profile
             cmds::get_profiles,
@@ -102,14 +103,6 @@ fn main() -> std::io::Result<()> {
         .expect("error while running tauri application");
 
     app.run(|app_handle, e| match e {
-        tauri::RunEvent::ExitRequested { api, .. } => {
-            api.prevent_exit();
-        }
-        tauri::RunEvent::Exit => {
-            resolve::resolve_reset();
-            api::process::kill_children();
-            app_handle.exit(0);
-        }
         tauri::RunEvent::Updater(tauri::UpdaterEvent::Downloaded) => {
             resolve::resolve_reset();
             api::process::kill_children();
