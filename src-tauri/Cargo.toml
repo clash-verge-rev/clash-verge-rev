@@ -1,9 +1,9 @@
 [package]
 name = "clash-verge"
-version = "1.4.10"
+version = "1.4.11"
 description = "clash verge"
 authors = ["zzzgydi", "wonfen", "MystiPanda"]
-license = "GPL-3.0"
+license = "GPL-3.0-only"
 repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
 edition = "2021"
@@ -14,7 +14,7 @@ tauri-build = { version = "1", features = [] }
 
 [dependencies]
 warp = "0.3"
-which = "5.0.0"
+which = "6.0.0"
 anyhow = "1.0"
 dirs = "5.0"
 open = "5.0"

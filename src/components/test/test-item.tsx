@@ -175,7 +175,7 @@ export const TestItem = (props: Props) => {
                 },
               })}
             >
-              {`${delayManager.formatDelay(delay)} ms`}
+              {delayManager.formatDelay(delay)}
             </Widget>
           )}
         </Box>
