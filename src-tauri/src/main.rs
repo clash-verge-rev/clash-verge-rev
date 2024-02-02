@@ -103,6 +103,9 @@ fn main() -> std::io::Result<()> {
         .expect("error while running tauri application");
 
     app.run(|app_handle, e| match e {
+        tauri::RunEvent::ExitRequested { api, .. } => {
+            api.prevent_exit();
+        }
         tauri::RunEvent::Updater(tauri::UpdaterEvent::Downloaded) => {
             resolve::resolve_reset();
             api::process::kill_children();
