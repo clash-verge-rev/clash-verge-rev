@@ -47,10 +47,29 @@ impl Tray {
                 t!("System Proxy", "系统代理"),
             ))
             .add_item(CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式")))
+            /* 
             .add_item(CustomMenuItem::new(
                 "copy_env",
                 t!("Copy Env", "复制环境变量"),
             ))
+            */
+            //修改为可选择复制不同类型环境变量的子菜单
+            .add_submenu(SystemTraySubmenu::new(
+                t!("Copy Env","复制环境变量"),
+                SystemTrayMenu::new()
+                    .add_item(item!(
+                        "copy_bash_env",
+                        t!("Copy Bash Env", "复制Bash环境变量")
+                    ))
+                    .add_item(item!(
+                        "copy_powershell_env",
+                        t!("Copy Powershell Env", "复制Powershell环境变量")
+                    ))
+                    .add_item(item!(
+                        "copy_cmd_env",
+                        t!("Copy Cmd Env", "复制Cmd环境变量")
+                    ))
+                ))
             .add_submenu(SystemTraySubmenu::new(
                 t!("Open Dir", "打开目录"),
                 SystemTrayMenu::new()
