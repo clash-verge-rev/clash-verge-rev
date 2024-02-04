@@ -60,6 +60,7 @@ impl IProfiles {
                 "sub-rules".into(),
                 "unified-delay".into(),
                 "tcp-concurrent".into(),
+                "global-client-fingerprint".into(),
             ]),
             items: Some(vec![]),
             ..Self::default()
