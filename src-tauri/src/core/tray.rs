@@ -57,15 +57,15 @@ impl Tray {
             .add_submenu(SystemTraySubmenu::new(
                 t!("Copy Env","复制环境变量"),
                 SystemTrayMenu::new()
-                    .add_item(item!(
+                    .add_item(CustomMenuItem::new(
                         "copy_bash_env",
                         t!("Copy Bash Env", "复制Bash环境变量")
                     ))
-                    .add_item(item!(
+                    .add_item(CustomMenuItem::new(
                         "copy_powershell_env",
                         t!("Copy Powershell Env", "复制Powershell环境变量")
                     ))
-                    .add_item(item!(
+                    .add_item(CustomMenuItem::new(
                         "copy_cmd_env",
                         t!("Copy Cmd Env", "复制Cmd环境变量")
                     ))
@@ -216,7 +216,7 @@ impl Tray {
                 "open_window" => resolve::create_window(app_handle),
                 "system_proxy" => feat::toggle_system_proxy(),
                 "tun_mode" => feat::toggle_tun_mode(),
-                "copy_env" => feat::copy_clash_env(app_handle),
+                "copy_env" => feat::copy_clash_env(app_handle), //TODO: 修改为可选择复制不同类型环境变量的子菜单
                 "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
                 "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
                 "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
