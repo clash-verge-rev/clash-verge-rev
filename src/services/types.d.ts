@@ -131,7 +131,9 @@ interface IConnections {
 
 interface IClashInfo {
   // status: string;
-  port?: number; // clash mixed port
+  mixed_port?: number; // clash mixed port
+  socks_port?: number; // clash socks port
+  port?: number; // clash http port
   server?: string; // external-controller
   secret?: string;
 }
@@ -196,6 +198,8 @@ interface IVergeConfig {
   enable_system_proxy?: boolean;
   enable_random_port?: boolean;
   verge_mixed_port?: number;
+  verge_socks_port?: number;
+  verge_port?: number;
   enable_proxy_guard?: boolean;
   proxy_guard_duration?: number;
   system_proxy_bypass?: string;
@@ -215,7 +219,6 @@ interface IVergeConfig {
   };
   auto_close_connection?: boolean;
   default_latency_test?: string;
-  enable_clash_fields?: boolean;
   enable_builtin_enhanced?: boolean;
   auto_log_clean?: 0 | 1 | 2 | 3;
   proxy_layout_column?: number;

@@ -25,6 +25,8 @@ impl IClashTemp {
         let mut map = Mapping::new();
 
         map.insert("mixed-port".into(), 7897.into());
+        map.insert("socks-port".into(), 7898.into());
+        map.insert("port".into(), 7899.into());
         map.insert("log-level".into(), "info".into());
         map.insert("allow-lan".into(), false.into());
         map.insert("mode".into(), "rule".into());
@@ -35,10 +37,14 @@ impl IClashTemp {
     }
 
     fn guard(mut config: Mapping) -> Mapping {
-        let port = Self::guard_mixed_port(&config);
+        let mixed_port = Self::guard_mixed_port(&config);
+        let socks_port = Self::guard_socks_port(&config);
+        let port = Self::guard_port(&config);
         let ctrl = Self::guard_server_ctrl(&config);
 
-        config.insert("mixed-port".into(), port.into());
+        config.insert("mixed-port".into(), mixed_port.into());
+        config.insert("socks-port".into(), socks_port.into());
+        config.insert("port".into(), port.into());
         config.insert("external-controller".into(), ctrl.into());
         config
     }
@@ -61,11 +67,23 @@ impl IClashTemp {
         Self::guard_mixed_port(&self.0)
     }
 
+    #[allow(unused)]
+    pub fn get_socks_port(&self) -> u16 {
+        Self::guard_socks_port(&self.0)
+    }
+
+    #[allow(unused)]
+    pub fn get_port(&self) -> u16 {
+        Self::guard_port(&self.0)
+    }
+
     pub fn get_client_info(&self) -> ClashInfo {
         let config = &self.0;
 
         ClashInfo {
-            port: Self::guard_mixed_port(config),
+            mixed_port: Self::guard_mixed_port(config),
+            socks_port: Self::guard_socks_port(config),
+            port: Self::guard_port(config),
             server: Self::guard_client_ctrl(config),
             secret: config.get("secret").and_then(|value| match value {
                 Value::String(val_str) => Some(val_str.clone()),
@@ -87,6 +105,36 @@ impl IClashTemp {
             .unwrap_or(7897);
         if port == 0 {
             port = 7897;
+        }
+        port
+    }
+
+    pub fn guard_socks_port(config: &Mapping) -> u16 {
+        let mut port = config
+            .get("socks-port")
+            .and_then(|value| match value {
+                Value::String(val_str) => val_str.parse().ok(),
+                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
+                _ => None,
+            })
+            .unwrap_or(7898);
+        if port == 0 {
+            port = 7898;
+        }
+        port
+    }
+
+    pub fn guard_port(config: &Mapping) -> u16 {
+        let mut port = config
+            .get("port")
+            .and_then(|value| match value {
+                Value::String(val_str) => val_str.parse().ok(),
+                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
+                _ => None,
+            })
+            .unwrap_or(7899);
+        if port == 0 {
+            port = 7899;
         }
         port
     }
@@ -129,6 +177,8 @@ impl IClashTemp {
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct ClashInfo {
     /// clash core port
+    pub mixed_port: u16,
+    pub socks_port: u16,
     pub port: u16,
     /// same as `external-controller`
     pub server: String,
@@ -148,7 +198,9 @@ fn test_clash_info() {
 
     fn get_result<S: Into<String>>(port: u16, server: S) -> ClashInfo {
         ClashInfo {
-            port,
+            mixed_port: port,
+            socks_port: 7898,
+            port: 7899,
             server: server.into(),
             secret: None,
         }

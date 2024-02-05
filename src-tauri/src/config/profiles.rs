@@ -14,9 +14,6 @@ pub struct IProfiles {
     /// same as PrfConfig.chain
     pub chain: Option<Vec<String>>,
 
-    /// record valid fields for clash
-    pub valid: Option<Vec<String>>,
-
     /// profile list
     pub items: Option<Vec<PrfItem>>,
 }
@@ -55,13 +52,6 @@ impl IProfiles {
 
     pub fn template() -> Self {
         Self {
-            valid: Some(vec![
-                "dns".into(),
-                "sub-rules".into(),
-                "unified-delay".into(),
-                "tcp-concurrent".into(),
-                "global-client-fingerprint".into(),
-            ]),
             items: Some(vec![]),
             ..Self::default()
         }
@@ -92,10 +82,6 @@ impl IProfiles {
 
         if let Some(chain) = patch.chain {
             self.chain = Some(chain);
-        }
-
-        if let Some(valid) = patch.valid {
-            self.valid = Some(valid);
         }
 
         Ok(())
