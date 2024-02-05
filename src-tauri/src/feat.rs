@@ -370,6 +370,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     };
 }
 
+/// copy specific env variable
 pub fn copy_specific_env(app_handle: &AppHandle, env_type: String ) {
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
     let http_proxy = format!("http://127.0.0.1:{}", port);
