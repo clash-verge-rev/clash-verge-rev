@@ -8,7 +8,7 @@
       "targets": ["app", "dmg", "updater"],
       "macOS": {
         "frameworks": [],
-        "minimumSystemVersion": "",
+        "minimumSystemVersion": "10.15",
         "exceptionDomain": "",
         "signingIdentity": null,
         "entitlements": null
