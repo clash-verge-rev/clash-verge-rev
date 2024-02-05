@@ -370,6 +370,24 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     };
 }
 
+pub fn copy_specific_env(app_handle: &AppHandle, env_type: String ) {
+    let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
+    let http_proxy = format!("http://127.0.0.1:{}", port);
+    let socks5_proxy = format!("socks5://127.0.0.1:{}", port); 
+    let sh: String = format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={http_proxy}");
+    let cmd: String = format!("set http_proxy={http_proxy} \n set https_proxy={http_proxy}");
+    let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
+
+    let mut cliboard = app_handle.clipboard_manager();
+
+    match env_type.as_str() {
+        "bash" => cliboard.write_text(sh).unwrap_or_default(),
+        "cmd" => cliboard.write_text(cmd).unwrap_or_default(),
+        "powershell" => cliboard.write_text(ps).unwrap_or_default(),
+        _ => log::error!(target: "app", "copy_specific_env: Invalid env type! {env_type}"),
+    };
+}
+
 pub async fn test_delay(url: String) -> Result<u32> {
     use tokio::time::{Duration, Instant};
     let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
