@@ -81,9 +81,6 @@ pub struct IVerge {
     /// 默认的延迟测试连接
     pub default_latency_test: Option<String>,
 
-    /// 支持关闭字段过滤，避免meta的新字段都被过滤掉，默认为关闭
-    pub enable_clash_fields: Option<bool>,
-
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
@@ -106,6 +103,10 @@ pub struct IVerge {
 
     /// verge mixed port 用于覆盖 clash 的 mixed port
     pub verge_mixed_port: Option<u16>,
+
+    pub verge_socks_port: Option<u16>,
+
+    pub verge_port: Option<u16>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -160,11 +161,12 @@ impl IVerge {
             enable_system_proxy: Some(false),
             enable_random_port: Some(false),
             verge_mixed_port: Some(7897),
+            verge_socks_port: Some(7898),
+            verge_port: Some(7899),
             enable_proxy_guard: Some(false),
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             enable_builtin_enhanced: Some(true),
-            enable_clash_fields: Some(true),
             auto_log_clean: Some(3),
             ..Self::default()
         }
@@ -202,6 +204,8 @@ impl IVerge {
         patch!(enable_silent_start);
         patch!(enable_random_port);
         patch!(verge_mixed_port);
+        patch!(verge_socks_port);
+        patch!(verge_port);
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
         patch!(system_proxy_bypass);
@@ -217,7 +221,6 @@ impl IVerge {
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(test_list);
-        patch!(enable_clash_fields);
         patch!(auto_log_clean);
         patch!(window_size_position);
     }

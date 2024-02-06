@@ -13,26 +13,42 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, patchVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
+  const [mixedPort, setMixedPort] = useState(
+    verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897
+  );
+  const [socksPort, setSocksPort] = useState(
+    verge?.verge_socks_port ?? clashInfo?.socks_port ?? 7898
+  );
   const [port, setPort] = useState(
-    verge?.verge_mixed_port ?? clashInfo?.port ?? 7897
+    verge?.verge_port ?? clashInfo?.port ?? 7899
   );
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      if (verge?.verge_mixed_port) setPort(verge?.verge_mixed_port);
+      if (verge?.verge_mixed_port) setMixedPort(verge?.verge_mixed_port);
+      if (verge?.verge_socks_port) setSocksPort(verge?.verge_socks_port);
+      if (verge?.verge_port) setPort(verge?.verge_port);
       setOpen(true);
     },
     close: () => setOpen(false),
   }));
 
   const onSave = useLockFn(async () => {
-    if (port === verge?.verge_mixed_port) {
+    if (
+      mixedPort === verge?.verge_mixed_port &&
+      socksPort === verge?.verge_socks_port &&
+      port === verge?.verge_port
+    ) {
       setOpen(false);
       return;
     }
     try {
-      await patchInfo({ "mixed-port": port });
-      await patchVerge({ verge_mixed_port: port });
+      await patchInfo({ "mixed-port": mixedPort });
+      await patchInfo({ "socks-port": socksPort });
+      await patchInfo({ port });
+      await patchVerge({ verge_mixed_port: mixedPort });
+      await patchVerge({ verge_socks_port: socksPort });
+      await patchVerge({ verge_port: port });
       setOpen(false);
       Notice.success("Change Clash port successfully!", 1000);
     } catch (err: any) {
@@ -54,6 +70,30 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary="Mixed Port" />
+          <TextField
+            size="small"
+            autoComplete="off"
+            sx={{ width: 135 }}
+            value={mixedPort}
+            onChange={(e) =>
+              setMixedPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
+            }
+          />
+        </ListItem>
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="Socks Port" />
+          <TextField
+            size="small"
+            autoComplete="off"
+            sx={{ width: 135 }}
+            value={socksPort}
+            onChange={(e) =>
+              setSocksPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
+            }
+          />
+        </ListItem>
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary="Http Port" />
           <TextField
             size="small"
             autoComplete="off"

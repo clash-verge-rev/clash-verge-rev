@@ -59,10 +59,10 @@ pub struct PrfSelected {
 
 #[derive(Default, Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct PrfExtra {
-    pub upload: usize,
-    pub download: usize,
-    pub total: usize,
-    pub expire: usize,
+    pub upload: u64,
+    pub download: u64,
+    pub total: u64,
+    pub expire: u64,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]

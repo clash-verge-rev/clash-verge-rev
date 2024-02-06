@@ -48,11 +48,16 @@ export const useClashInfo = () => {
 
   const patchInfo = async (
     patch: Partial<
-      Pick<IConfigData, "mixed-port" | "external-controller" | "secret">
+      Pick<
+        IConfigData,
+        "port" | "socks-port" | "mixed-port" | "external-controller" | "secret"
+      >
     >
   ) => {
     const hasInfo =
       patch["mixed-port"] != null ||
+      patch["socks-port"] != null ||
+      patch["port"] != null ||
       patch["external-controller"] != null ||
       patch.secret != null;
 
@@ -60,6 +65,26 @@ export const useClashInfo = () => {
 
     if (patch["mixed-port"]) {
       const port = patch["mixed-port"];
+      if (port < 1000) {
+        throw new Error("The port should not < 1000");
+      }
+      if (port > 65536) {
+        throw new Error("The port should not > 65536");
+      }
+    }
+
+    if (patch["socks-port"]) {
+      const port = patch["socks-port"];
+      if (port < 1000) {
+        throw new Error("The port should not < 1000");
+      }
+      if (port > 65536) {
+        throw new Error("The port should not > 65536");
+      }
+    }
+
+    if (patch["port"]) {
+      const port = patch["port"];
       if (port < 1000) {
         throw new Error("The port should not < 1000");
       }

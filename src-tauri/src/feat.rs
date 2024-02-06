@@ -162,6 +162,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
     match {
         let mixed_port = patch.get("mixed-port");
+        let socks_port = patch.get("socks-port");
+        let port = patch.get("port");
         let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
         if mixed_port.is_some() && !enable_random_port {
             let changed = mixed_port.unwrap()
@@ -182,6 +184,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
         // 激活订阅
         if mixed_port.is_some()
+            || socks_port.is_some()
+            || port.is_some()
             || patch.get("secret").is_some()
             || patch.get("external-controller").is_some()
         {
