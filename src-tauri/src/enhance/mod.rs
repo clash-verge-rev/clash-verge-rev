@@ -66,6 +66,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             match use_script(script, config.to_owned()) {
                 Ok((res_config, res_logs)) => {
                     exists_keys.extend(use_keys(&res_config));
+                    config = res_config;
                     logs.extend(res_logs);
                 }
                 Err(err) => logs.push(("exception".into(), err.to_string())),
