@@ -73,7 +73,7 @@
   "Allow Lan": "Разрешить локальную сеть",
   "IPv6": "IPv6",
   "Log Level": "Уровень логов",
-  "Mixed Port": "Смешанный порт",
+  "Port Config": "Настройка порта",
   "Random Port": "Случайный порт",
   "After restart to take effect": "Чтобы изменения вступили в силу, необходимо перезапустить приложение",
   "Clash Core": "Ядро Clash",

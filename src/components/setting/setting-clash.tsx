@@ -115,7 +115,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("Mixed Port")}
+        label={t("Port Config")}
         extra={
           <Tooltip title={t("Random Port")}>
             <IconButton
