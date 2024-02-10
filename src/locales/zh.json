@@ -75,7 +75,7 @@
   "Allow Lan": "局域网连接",
   "IPv6": "IPv6",
   "Log Level": "日志等级",
-  "Mixed Port": "端口设置",
+  "Port Config": "端口设置",
   "Random Port": "随机端口",
   "After restart to take effect": "重启后生效",
   "External": "外部控制",

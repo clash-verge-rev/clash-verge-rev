@@ -12,6 +12,7 @@ use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::api::notification;
 use tauri::{App, AppHandle, Manager};
+use window_shadows::set_shadow;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
 
@@ -156,61 +157,58 @@ pub fn create_window(app_handle: &AppHandle) {
             }
         }
     };
-
     #[cfg(target_os = "windows")]
-    {
-        use window_shadows::set_shadow;
-
-        match builder
-            .decorations(false)
-            .transparent(true)
-            .visible(false)
-            .build()
-        {
-            Ok(win) => {
-                log::trace!("try to calculate the monitor size");
-                let center = (|| -> Result<bool> {
-                    let mut center = false;
-                    let monitor = win.current_monitor()?.ok_or(anyhow::anyhow!(""))?;
-                    let size = monitor.size();
-                    let pos = win.outer_position()?;
-
-                    if pos.x < -400
-                        || pos.x > (size.width - 200).try_into()?
-                        || pos.y < -200
-                        || pos.y > (size.height - 200).try_into()?
-                    {
-                        center = true;
-                    }
-                    Ok(center)
-                })();
-
-                if center.unwrap_or(true) {
-                    trace_err!(win.center(), "set win center");
-                }
-
-                log::trace!("try to create window");
-                let app_handle = app_handle.clone();
-
-                if let Some(window) = app_handle.get_window("main") {
-                    trace_err!(set_shadow(&window, true), "set win shadow");
-                } else {
-                    log::error!(target: "app", "failed to create window, get_window is None")
-                }
-            }
-            Err(err) => log::error!(target: "app", "failed to create window, {err}"),
-        }
-    }
-
+    let window = builder
+        .decorations(false)
+        .transparent(true)
+        .visible(false)
+        .build();
     #[cfg(target_os = "macos")]
-    crate::log_err!(builder
+    let window = builder
         .decorations(true)
         .hidden_title(true)
         .title_bar_style(tauri::TitleBarStyle::Overlay)
-        .build());
-
+        .build();
     #[cfg(target_os = "linux")]
-    crate::log_err!(builder.decorations(true).transparent(false).build());
+    let window = builder.decorations(true).transparent(false).build();
+
+    match window {
+        Ok(win) => {
+            let is_maximized = Config::verge()
+                .latest()
+                .window_is_maximized
+                .unwrap_or(false);
+            log::trace!("try to calculate the monitor size");
+            let center = (|| -> Result<bool> {
+                let mut center = false;
+                let monitor = win.current_monitor()?.ok_or(anyhow::anyhow!(""))?;
+                let size = monitor.size();
+                let pos = win.outer_position()?;
+
+                if pos.x < -400
+                    || pos.x > (size.width - 200).try_into()?
+                    || pos.y < -200
+                    || pos.y > (size.height - 200).try_into()?
+                {
+                    center = true;
+                }
+                Ok(center)
+            })();
+
+            if center.unwrap_or(true) {
+                trace_err!(win.center(), "set win center");
+            }
+
+            trace_err!(set_shadow(&win, true), "set win shadow");
+            if is_maximized {
+                trace_err!(win.maximize(), "set win maximize");
+            }
+        }
+        Err(_) => {
+            log::error!("failed to create window");
+            return;
+        }
+    }
 }
 
 /// save window size and position
@@ -231,11 +229,11 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
     let size = size.to_logical::<f64>(scale);
     let pos = win.outer_position()?;
     let pos = pos.to_logical::<f64>(scale);
-
-    if size.width >= 600.0 && size.height >= 520.0 {
+    let is_maximized = win.is_maximized()?;
+    verge.window_is_maximized = Some(is_maximized);
+    if !is_maximized && size.width >= 600.0 && size.height >= 520.0 {
         verge.window_size_position = Some(vec![size.width, size.height, pos.x, pos.y]);
     }
-
     Ok(())
 }
 
