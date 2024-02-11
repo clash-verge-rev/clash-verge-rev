@@ -186,9 +186,9 @@ pub fn create_window(app_handle: &AppHandle) {
                 let pos = win.outer_position()?;
 
                 if pos.x < -400
-                    || pos.x > (size.width - 200).try_into()?
+                    || pos.x > (size.width - 200) as i32
                     || pos.y < -200
-                    || pos.y > (size.height - 200).try_into()?
+                    || pos.y > (size.height - 200) as i32
                 {
                     center = true;
                 }
