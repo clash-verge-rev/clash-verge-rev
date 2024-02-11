@@ -1,3 +1,17 @@
+## v1.5.1
+
+### Features
+
+- 保存窗口最大化状态
+- Proxy Provider 显示数量
+
+### Bugs Fixes
+
+- 优化设置项名称
+- 自定义 GLOBAL 代理组时代理组显示错误的问题
+
+---
+
 ## v1.5.0
 
 ### Features
