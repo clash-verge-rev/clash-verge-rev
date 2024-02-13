@@ -47,13 +47,14 @@ impl Tray {
                 t!("System Proxy", "系统代理"),
             ))
             .add_item(CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式")))
-            /* 
+            
             .add_item(CustomMenuItem::new(
                 "copy_env",
                 t!("Copy Env", "复制环境变量"),
             ))
-            */
+            
             //修改为可选择复制不同类型环境变量的子菜单
+            /* 
             .add_submenu(SystemTraySubmenu::new(
                 t!("Copy Env","复制环境变量"),
                 SystemTrayMenu::new()
@@ -70,6 +71,7 @@ impl Tray {
                         t!("Copy Cmd Env", "复制Cmd环境变量")
                     ))
                 ))
+            */
             .add_submenu(SystemTraySubmenu::new(
                 t!("Open Dir", "打开目录"),
                 SystemTrayMenu::new()
@@ -216,10 +218,12 @@ impl Tray {
                 "open_window" => resolve::create_window(app_handle),
                 "system_proxy" => feat::toggle_system_proxy(),
                 "tun_mode" => feat::toggle_tun_mode(),
-                //"copy_env" => feat::copy_clash_env(app_handle), 
+                "copy_env" => feat::copy_clash_env(app_handle), 
+                /* 
                 "copy_bash_env" => feat::copy_specific_env(app_handle, "bash".to_string()),
                 "copy_powershell_env" => feat::copy_specific_env(app_handle, "powershell".to_string()),
                 "copy_cmd_env" => feat::copy_specific_env(app_handle, "cmd".to_string()),
+                */
                 "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
                 "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
                 "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),

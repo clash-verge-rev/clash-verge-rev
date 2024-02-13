@@ -374,7 +374,8 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     };
 }
 
-/// copy specific env variable
+// copy specific env variable
+/* 
 pub fn copy_specific_env(app_handle: &AppHandle, env_type: String ) {
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
     let http_proxy = format!("http://127.0.0.1:{}", port);
@@ -392,6 +393,7 @@ pub fn copy_specific_env(app_handle: &AppHandle, env_type: String ) {
         _ => log::error!(target: "app", "copy_specific_env: Invalid env type! {env_type}"),
     };
 }
+*/
 
 pub async fn test_delay(url: String) -> Result<u32> {
     use tokio::time::{Duration, Instant};
