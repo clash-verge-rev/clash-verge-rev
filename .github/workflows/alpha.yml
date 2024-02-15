@@ -3,6 +3,8 @@ name: Alpha Build
 on:
   workflow_dispatch:
   push:
+    branches: [main]
+    tags-ignore: [updater,alpha]
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
