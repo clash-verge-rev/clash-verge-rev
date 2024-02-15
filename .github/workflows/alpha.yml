@@ -158,3 +158,12 @@ jobs:
           ## Clash Verge Rev Alpha
           Created at  ${{ env.BUILDTIME }}.
           EOF
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
+          body_path: release.txt
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
