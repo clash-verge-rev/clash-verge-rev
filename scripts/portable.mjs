@@ -7,7 +7,6 @@ import { getOctokit, context } from "@actions/github";
 const target = process.argv.slice(2)[0];
 
 const ARCH_MAP = {
-  "i686-pc-windows-msvc": "x86",
   "x86_64-pc-windows-msvc": "x64",
   "aarch64-pc-windows-msvc": "arm64",
 };
