@@ -2,9 +2,6 @@ name: Release Build
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - v**
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -134,30 +131,3 @@ jobs:
           body: "More new features are now supported."
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-
-  release-update:
-    needs: [release]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 8
-          run_install: false
-
-      - name: Pnpm install
-        run: pnpm i
-
-      - name: Release updater file
-        run: pnpm updater
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
