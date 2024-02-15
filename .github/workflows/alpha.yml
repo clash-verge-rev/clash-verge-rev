@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags-ignore: [updater,alpha]
+    tags-ignore: [updater, alpha]
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -136,3 +136,25 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+  update_tag:
+    name: Update tag
+    runs-on: ubuntu-latest
+    needs: [alpha, alpha-for-linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set Env
+        run: |
+          echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
+        shell: bash
+      - name: Update Tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: alpha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          cat > release.txt << 'EOF'
+          ## Clash Verge Rev Alpha
+          Created at  ${{ env.BUILDTIME }}.
+          EOF
