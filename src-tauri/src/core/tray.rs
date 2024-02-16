@@ -24,10 +24,10 @@ impl Tray {
         }
 
         SystemTrayMenu::new()
-            .add_item(CustomMenuItem::new(
-                "open_window",
-                t!("Dashboard", "打开面板"),
-            ))
+            .add_item(
+                CustomMenuItem::new("open_window", t!("Dashboard", "打开面板"))
+                    .accelerator("CmdOrControl+D"),
+            )
             .add_native_item(SystemTrayMenuItem::Separator)
             .add_item(CustomMenuItem::new(
                 "rule_mode",
@@ -42,11 +42,14 @@ impl Tray {
                 t!("Direct Mode", "直连模式"),
             ))
             .add_native_item(SystemTrayMenuItem::Separator)
-            .add_item(CustomMenuItem::new(
-                "system_proxy",
-                t!("System Proxy", "系统代理"),
-            ))
-            .add_item(CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式")))
+            .add_item(
+                CustomMenuItem::new("system_proxy", t!("System Proxy", "系统代理"))
+                    .accelerator("CmdOrControl+S"),
+            )
+            .add_item(
+                CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式"))
+                    .accelerator("CmdOrControl+E"),
+            )
             .add_item(CustomMenuItem::new(
                 "copy_env",
                 t!("Copy Env", "复制环境变量"),
