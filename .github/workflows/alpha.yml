@@ -37,6 +37,23 @@ jobs:
           git config --global user.name "clash-verge-rev"
           git am patches/support-windows-aarch64.patch
 
+      - name: Download NSIS Plugin
+        if: matrix.os == 'windows-latest'
+        run: |
+          powershell -c "invoke-webrequest -uri https://nsis.sourceforge.io/mediawiki/images/e/ef/NSIS_Simple_Service_Plugin_Unicode_1.30.zip -outfile NSIS_Simple_Service_Plugin_Unicode_1.30.zip"
+
+      - name: extract-7z-action
+        uses: DuckSoft/extract-7z-action@v1.0
+        with:
+          pathSource: NSIS_Simple_Service_Plugin_Unicode_1.30.zip
+          pathTarget: dll
+
+      - name: Install NSIS Plugin
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir -p $env:LOCALAPPDATA/tauri/NSIS/Plugins/x86-unicode -Force
+          Move-Item -Path dll/SimpleSC.dll -Destination $env:LOCALAPPDATA/tauri/NSIS/Plugins/x86-unicode/SimpleSC.dll
+
       - name: Init Submodule
         if: matrix.target == 'aarch64-pc-windows-msvc'
         run: git submodule update --init --recursive
