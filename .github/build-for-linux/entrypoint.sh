@@ -10,12 +10,6 @@ rustup target add "$INPUT_TARGET"
 if [ "$INPUT_TARGET" = "x86_64-unknown-linux-gnu" ]; then
     apt-get update
     apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev patchelf
-elif [ "$INPUT_TARGET" = "i686-unknown-linux-gnu" ]; then
-    dpkg --add-architecture i386
-    apt-get update
-    apt-get install -y libstdc++6:i386 libgdk-pixbuf2.0-dev:i386 libatomic1:i386 gcc-multilib g++-multilib libwebkit2gtk-4.0-dev:i386 libssl-dev:i386 libgtk-3-dev:i386 librsvg2-dev:i386 patchelf:i386 libayatana-appindicator3-dev:i386
-    export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig/:$PKG_CONFIG_PATH
-    export PKG_CONFIG_SYSROOT_DIR=/
 elif [ "$INPUT_TARGET" = "aarch64-unknown-linux-gnu" ]; then
     dpkg --add-architecture arm64
     apt-get update
