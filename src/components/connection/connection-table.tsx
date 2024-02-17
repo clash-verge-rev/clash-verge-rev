@@ -1,9 +1,12 @@
 import dayjs from "dayjs";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DataGrid,
   GridColDef,
   GridValueFormatterParams,
+  useGridApiRef,
+  gridExpandedRowCountSelector,
+  gridVisibleColumnDefinitionsSelector,
 } from "@mui/x-data-grid";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
@@ -15,6 +18,8 @@ interface Props {
 
 export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
+
+  const apiRef = useGridApiRef();
 
   const [columnVisible, setColumnVisible] = useState<
     Partial<Record<keyof IConnectionsItem, boolean>>
@@ -111,6 +116,14 @@ export const ConnectionTable = (props: Props) => {
     });
   }, [connections]);
 
+  useEffect(() => {
+    setTimeout(() => {
+      const maxRowIndex = gridExpandedRowCountSelector(apiRef) - 1;
+      const coordinates = { rowIndex: maxRowIndex, colIndex: 1 };
+      apiRef.current.scrollToIndexes(coordinates);
+    }, 0);
+  }, [apiRef]);
+
   return (
     <DataGrid
       hideFooter
@@ -121,6 +134,7 @@ export const ConnectionTable = (props: Props) => {
       sx={{ border: "none", "div:focus": { outline: "none !important" } }}
       columnVisibilityModel={columnVisible}
       onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
+      apiRef={apiRef}
     />
   );
 };
