@@ -14,6 +14,7 @@ pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
     // 直接覆盖原字段
     use_lowercase(merge.clone())
         .into_iter()
+        .filter(|(key, _)| !MERGE_FIELDS.contains(&key.as_str().unwrap_or_default()))
         .for_each(|(key, value)| {
             config.insert(key, value);
         });
