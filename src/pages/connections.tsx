@@ -208,6 +208,7 @@ const ConnectionsPage = () => {
           />
         ) : (
           <Virtuoso
+            initialTopMostItemIndex={999}
             data={filterConn}
             itemContent={(index, item) => (
               <ConnectionItem
@@ -215,6 +216,7 @@ const ConnectionsPage = () => {
                 onShowDetail={() => detailRef.current?.open(item)}
               />
             )}
+            followOutput={"smooth"}
           />
         )}
       </Box>
