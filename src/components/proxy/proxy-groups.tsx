@@ -25,6 +25,7 @@ export const ProxyGroups = (props: Props) => {
 
   const { verge } = useVerge();
   const { current, patchCurrent } = useProfiles();
+  const timeout = verge?.default_latency_timeout || 10000;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
@@ -83,7 +84,7 @@ export const ProxyGroups = (props: Props) => {
     }
 
     const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
-    await delayManager.checkListDelay(names, groupName);
+    await delayManager.checkListDelay(names, groupName, timeout);
 
     onProxies();
   });

@@ -42,8 +42,6 @@ pub fn resolve_setup(app: &mut App) {
     VERSION.get_or_init(|| version.clone());
 
     log_err!(init::init_resources());
-    #[cfg(target_os = "windows")]
-    log_err!(init::init_service());
     log_err!(init::init_scheme());
     log_err!(init::startup_script());
     // 处理随机端口

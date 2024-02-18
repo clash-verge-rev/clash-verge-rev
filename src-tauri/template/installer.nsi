@@ -15,6 +15,7 @@ Unicode true
 !include WordFunc.nsh
 !include "LogicLib.nsh"
 !include "StrFunc.nsh"
+!addplugindir "$%AppData%\Local\NSIS\"
 ${StrCase}
 ${StrLoc}
 
