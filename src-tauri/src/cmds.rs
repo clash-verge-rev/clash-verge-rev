@@ -249,8 +249,9 @@ pub mod uwp {
 pub async fn clash_api_get_proxy_delay(
     name: String,
     url: Option<String>,
+    timeout: i32,
 ) -> CmdResult<clash_api::DelayRes> {
-    match clash_api::get_proxy_delay(name, url).await {
+    match clash_api::get_proxy_delay(name, url, timeout).await {
         Ok(res) => Ok(res),
         Err(err) => Err(err.to_string()),
     }
