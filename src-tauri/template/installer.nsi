@@ -131,6 +131,7 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
   !insertmacro MULTIUSER_PAGE_INSTALLMODE
 !endif
 
+
 ; 4. Custom page to ask user if he wants to reinstall/uninstall
 ;    only if a previous installtion was detected
 Var ReinstallPageCheck
