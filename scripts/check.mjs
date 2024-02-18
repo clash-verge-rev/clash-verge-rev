@@ -310,7 +310,7 @@ async function downloadFile(url, path) {
 }
 
 // SimpleSC.dll
-const resolvePlugins = async () => {
+const resolvePlugin = async () => {
   const url =
     "https://nsis.sourceforge.io/mediawiki/images/e/ef/NSIS_Simple_Service_Plugin_Unicode_1.30.zip";
 
@@ -397,7 +397,7 @@ const tasks = [
       getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
     retry: 5,
   },
-  { name: "plugins", func: resolvePlugins, retry: 5, winOnly: true },
+  { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
   { name: "service", func: resolveService, retry: 5, winOnly: true },
   { name: "install", func: resolveInstall, retry: 5, winOnly: true },
   { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
