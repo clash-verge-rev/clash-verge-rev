@@ -309,6 +309,38 @@ async function downloadFile(url, path) {
   console.log(`[INFO]: download finished "${url}"`);
 }
 
+// SimpleSC.dll
+const resolvePlugin = async () => {
+  const url =
+    "https://nsis.sourceforge.io/mediawiki/images/e/ef/NSIS_Simple_Service_Plugin_Unicode_1.30.zip";
+
+  const tempDir = path.join(TEMP_DIR, "SimpleSC");
+  const tempZip = path.join(
+    tempDir,
+    "NSIS_Simple_Service_Plugin_Unicode_1.30.zip"
+  );
+  const tempDll = path.join(tempDir, "SimpleSC.dll");
+  const pluginDir = path.join(process.env.APPDATA, "Local/NSIS");
+  const pluginPath = path.join(pluginDir, "SimpleSC.dll");
+  await fs.mkdirp(pluginDir);
+  await fs.mkdirp(tempDir);
+  if (!FORCE && (await fs.pathExists(pluginPath))) return;
+  try {
+    if (!(await fs.pathExists(tempZip))) {
+      await downloadFile(url, tempZip);
+    }
+    const zip = new AdmZip(tempZip);
+    zip.getEntries().forEach((entry) => {
+      console.log(`[DEBUG]: "SimpleSC" entry name`, entry.entryName);
+    });
+    zip.extractAllTo(tempDir, true);
+    await fs.copyFile(tempDll, pluginPath);
+    console.log(`[INFO]: "SimpleSC" unzip finished`);
+  } finally {
+    await fs.remove(tempDir);
+  }
+};
+
 /**
  * main
  */
@@ -365,6 +397,7 @@ const tasks = [
       getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
     retry: 5,
   },
+  { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
   { name: "service", func: resolveService, retry: 5, winOnly: true },
   { name: "install", func: resolveInstall, retry: 5, winOnly: true },
   { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
