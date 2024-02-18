@@ -93,13 +93,8 @@ pub fn clash_pid_path() -> Result<PathBuf> {
 }
 
 #[cfg(windows)]
-pub fn service_dir() -> Result<PathBuf> {
-    Ok(app_home_dir()?.join("service"))
-}
-
-#[cfg(windows)]
 pub fn service_path() -> Result<PathBuf> {
-    Ok(service_dir()?.join("clash-verge-service.exe"))
+    Ok(app_resources_dir()?.join("clash-verge-service.exe"))
 }
 
 #[cfg(windows)]
