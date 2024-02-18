@@ -219,6 +219,7 @@ interface IVergeConfig {
   };
   auto_close_connection?: boolean;
   default_latency_test?: string;
+  default_latency_timeout?: number;
   enable_builtin_enhanced?: boolean;
   auto_log_clean?: 0 | 1 | 2 | 3;
   proxy_layout_column?: number;

@@ -160,9 +160,17 @@ export async function openWebUrl(url: string) {
   return invoke<void>("open_web_url", { url });
 }
 
-export async function cmdGetProxyDelay(name: string, url?: string) {
+export async function cmdGetProxyDelay(
+  name: string,
+  timeout: number,
+  url?: string
+) {
   name = encodeURIComponent(name);
-  return invoke<{ delay: number }>("clash_api_get_proxy_delay", { name, url });
+  return invoke<{ delay: number }>("clash_api_get_proxy_delay", {
+    name,
+    url,
+    timeout,
+  });
 }
 
 export async function cmdTestDelay(url: string) {

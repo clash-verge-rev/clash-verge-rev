@@ -81,6 +81,9 @@ pub struct IVerge {
     /// 默认的延迟测试连接
     pub default_latency_test: Option<String>,
 
+    /// 默认的延迟测试超时时间
+    pub default_latency_timeout: Option<i32>,
+
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
@@ -222,6 +225,7 @@ impl IVerge {
 
         patch!(auto_close_connection);
         patch!(default_latency_test);
+        patch!(default_latency_timeout);
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(test_list);

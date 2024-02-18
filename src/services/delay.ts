@@ -69,12 +69,12 @@ class DelayManager {
     return -1;
   }
 
-  async checkDelay(name: string, group: string) {
+  async checkDelay(name: string, group: string, timeout: number) {
     let delay = -1;
 
     try {
       const url = this.getUrl(group);
-      const result = await cmdGetProxyDelay(name, url);
+      const result = await cmdGetProxyDelay(name, timeout, url);
       delay = result.delay;
     } catch {
       delay = 1e6; // error
@@ -84,7 +84,12 @@ class DelayManager {
     return delay;
   }
 
-  async checkListDelay(nameList: string[], group: string, concurrency = 36) {
+  async checkListDelay(
+    nameList: string[],
+    group: string,
+    timeout: number,
+    concurrency = 36
+  ) {
     const names = nameList.filter(Boolean);
     // 设置正在延迟测试中
     names.forEach((name) => this.setDelay(name, group, -2));
@@ -98,7 +103,7 @@ class DelayManager {
         const task = names.shift();
         if (!task) return;
         current += 1;
-        await this.checkDelay(task, group);
+        await this.checkDelay(task, group, timeout);
         current -= 1;
         total -= 1;
         if (total <= 0) resolve(null);
@@ -108,15 +113,15 @@ class DelayManager {
     });
   }
 
-  formatDelay(delay: number) {
+  formatDelay(delay: number, timeout = 10000) {
     if (delay <= 0) return "Error";
     if (delay > 1e5) return "Error";
-    if (delay >= 10000) return "Timeout"; // 10s
+    if (delay >= timeout) return "Timeout"; // 10s
     return `${delay}`;
   }
 
-  formatDelayColor(delay: number) {
-    if (delay >= 10000) return "error.main";
+  formatDelayColor(delay: number, timeout = 10000) {
+    if (delay >= timeout) return "error.main";
     if (delay <= 0) return "error.main";
     if (delay > 500) return "warning.main";
     return "success.main";

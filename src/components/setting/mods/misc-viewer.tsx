@@ -25,6 +25,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     proxyLayoutColumn: 6,
     defaultLatencyTest: "",
     autoLogClean: 0,
+    defaultLatencyTimeout: 10000,
   });
 
   useImperativeHandle(ref, () => ({
@@ -37,6 +38,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         proxyLayoutColumn: verge?.proxy_layout_column || 6,
         defaultLatencyTest: verge?.default_latency_test || "",
         autoLogClean: verge?.auto_log_clean || 0,
+        defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
       });
     },
     close: () => setOpen(false),
@@ -50,6 +52,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
         default_latency_test: values.defaultLatencyTest,
+        default_latency_timeout: values.defaultLatencyTimeout,
         auto_log_clean: values.autoLogClean as any,
       });
       setOpen(false);
@@ -176,6 +179,27 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             placeholder="http://1.1.1.1"
             onChange={(e) =>
               setValues((v) => ({ ...v, defaultLatencyTest: e.target.value }))
+            }
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Default Latency Timeout")} />
+          <TextField
+            size="small"
+            type="number"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            sx={{ width: 250 }}
+            value={values.defaultLatencyTimeout}
+            placeholder="http://1.1.1.1"
+            onChange={(e) =>
+              setValues((v) => ({
+                ...v,
+                defaultLatencyTimeout: parseInt(e.target.value),
+              }))
             }
           />
         </ListItem>
