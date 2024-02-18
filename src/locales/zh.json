@@ -152,6 +152,7 @@
   "Enable Builtin Enhanced": "开启内建增强功能",
   "Proxy Layout Column": "代理页布局列数",
   "Default Latency Test": "默认测试链接",
+  "Default Latency Timeout": "测试超时时间",
 
   "Auto Log Clean": "自动清理日志",
   "Never Clean": "不清理",

@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import delayManager from "@/services/delay";
+import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
   groupName: string;
@@ -48,7 +49,8 @@ export const ProxyItem = (props: Props) => {
   // -1/<=0 为 不显示
   // -2 为 loading
   const [delay, setDelay] = useState(-1);
-
+  const { verge } = useVerge();
+  const timeout = verge?.default_latency_timeout || 10000;
   useEffect(() => {
     delayManager.setListener(proxy.name, groupName, setDelay);
 
@@ -64,7 +66,7 @@ export const ProxyItem = (props: Props) => {
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);
-    setDelay(await delayManager.checkDelay(proxy.name, groupName));
+    setDelay(await delayManager.checkDelay(proxy.name, groupName, timeout));
   });
 
   return (
@@ -149,14 +151,14 @@ export const ProxyItem = (props: Props) => {
                 e.stopPropagation();
                 onDelay();
               }}
-              color={delayManager.formatDelayColor(delay)}
+              color={delayManager.formatDelayColor(delay, timeout)}
               sx={({ palette }) =>
                 !proxy.provider
                   ? { ":hover": { bgcolor: alpha(palette.primary.main, 0.15) } }
                   : {}
               }
             >
-              {delayManager.formatDelay(delay)}
+              {delayManager.formatDelay(delay, timeout)}
             </Widget>
           )}
 
