@@ -374,7 +374,6 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     };
 }
 
-
 pub async fn test_delay(url: String) -> Result<u32> {
     use tokio::time::{Duration, Instant};
     let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();

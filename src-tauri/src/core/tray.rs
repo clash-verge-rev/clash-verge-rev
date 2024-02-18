@@ -47,7 +47,6 @@ impl Tray {
                 t!("System Proxy", "系统代理"),
             ))
             .add_item(CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式")))
-            
             .add_item(CustomMenuItem::new(
                 "copy_env",
                 t!("Copy Env", "复制环境变量"),
