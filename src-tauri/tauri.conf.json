@@ -1,68 +1,42 @@
 {
-  "package": {
-    "productName": "Clash Verge",
-    "version": "1.5.1"
+  "app": {
+    "security": {
+      "csp": "script-src 'unsafe-eval' 'self'; default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'; img-src http: https: data: 'self';; connect-src ipc: http://ipc.localhost"
+    },
+    "windows": []
   },
   "build": {
-    "distDir": "../dist",
-    "devPath": "http://localhost:3000/",
+    "beforeBuildCommand": "pnpm run web:build",
     "beforeDevCommand": "pnpm run web:dev",
-    "beforeBuildCommand": "pnpm run web:build"
+    "devUrl": "http://localhost:3000/",
+    "frontendDist": "../dist"
   },
-  "tauri": {
-    "bundle": {
-      "active": true,
-      "identifier": "io.github.clash-verge-rev.clash-verge-rev",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon-new.icns",
-        "icons/icon.ico"
-      ],
-      "resources": ["resources"],
-      "externalBin": ["sidecar/clash-meta", "sidecar/clash-meta-alpha"],
-      "copyright": "© 2022 zzzgydi All Rights Reserved",
-      "category": "DeveloperTool",
-      "shortDescription": "A Clash Meta GUI based on tauri.",
-      "longDescription": "A Clash Meta GUI based on tauri."
-    },
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "copyright": "© 2022 zzzgydi All Rights Reserved",
+    "externalBin": ["sidecar/clash-meta", "sidecar/clash-meta-alpha"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon-new.icns",
+      "icons/icon.ico"
+    ],
+    "longDescription": "A Clash Meta GUI based on tauri.",
+    "resources": ["resources"],
+    "shortDescription": "A Clash Meta GUI based on tauri."
+  },
+  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+  "plugins": {
     "updater": {
-      "active": true,
       "endpoints": [
         "https://mirror.ghproxy.com/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
         "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json"
       ],
-      "dialog": false,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK"
-    },
-    "allowlist": {
-      "shell": {
-        "all": true
-      },
-      "window": {
-        "all": true
-      },
-      "process": {
-        "all": true
-      },
-      "globalShortcut": {
-        "all": true
-      },
-      "clipboard": {
-        "all": true
-      },
-      "notification": {
-        "all": true
-      },
-      "dialog": {
-        "all": false,
-        "open": true
-      }
-    },
-    "windows": [],
-    "security": {
-      "csp": "script-src 'unsafe-eval' 'self'; default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'; img-src http: https: data: 'self';"
     }
-  }
+  },
+  "productName": "Clash Verge",
+  "version": "1.5.1"
 }

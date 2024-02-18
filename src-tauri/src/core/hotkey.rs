@@ -3,7 +3,8 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
-use tauri::{AppHandle, GlobalShortcutManager};
+use tauri::{AppHandle, Manager};
+use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
@@ -49,16 +50,20 @@ impl Hotkey {
         Ok(())
     }
 
-    fn get_manager(&self) -> Result<impl GlobalShortcutManager> {
+    // fn get_manager(&self) -> Result<impl GlobalShortcutManager> {
+    //     let app_handle = self.app_handle.lock();
+    //     if app_handle.is_none() {
+    //         bail!("failed to get the hotkey manager");
+    //     }
+    //     Ok(app_handle.as_ref().unwrap().global_shortcut_manager())
+    // }
+
+    fn register(&self, hotkey: &str, func: &str) -> Result<()> {
         let app_handle = self.app_handle.lock();
         if app_handle.is_none() {
             bail!("failed to get the hotkey manager");
         }
-        Ok(app_handle.as_ref().unwrap().global_shortcut_manager())
-    }
-
-    fn register(&self, hotkey: &str, func: &str) -> Result<()> {
-        let mut manager = self.get_manager()?;
+        let manager = app_handle.as_ref().unwrap().global_shortcut();
 
         if manager.is_registered(hotkey)? {
             manager.unregister(hotkey)?;
@@ -80,7 +85,7 @@ impl Hotkey {
             _ => bail!("invalid function \"{func}\""),
         };
 
-        manager.register(hotkey, f)?;
+        let a = manager.register(hotkey)?;
         log::info!(target: "app", "register hotkey {hotkey} {func}");
         Ok(())
     }

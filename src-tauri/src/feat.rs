@@ -10,7 +10,8 @@ use crate::log_err;
 use crate::utils::resolve;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
-use tauri::{AppHandle, ClipboardManager};
+use tauri::AppHandle;
+use tauri_plugin_clipboard_manager::{ClipKind, ClipboardExt};
 
 // 打开面板
 pub fn open_dashboard() {
@@ -351,8 +352,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
         format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
     let cmd: String = format!("set http_proxy={http_proxy} \n set https_proxy={http_proxy}");
     let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
-
-    let mut cliboard = app_handle.clipboard_manager();
+    let clipboard = app_handle.clipboard();
 
     let env_type = { Config::verge().latest().env_type.clone() };
     let env_type = match env_type {
@@ -367,9 +367,24 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
         }
     };
     match env_type.as_str() {
-        "bash" => cliboard.write_text(sh).unwrap_or_default(),
-        "cmd" => cliboard.write_text(cmd).unwrap_or_default(),
-        "powershell" => cliboard.write_text(ps).unwrap_or_default(),
+        "bash" => clipboard
+            .write(ClipKind::PlainText {
+                label: None,
+                text: sh.into(),
+            })
+            .unwrap_or_default(),
+        "cmd" => clipboard
+            .write(ClipKind::PlainText {
+                label: None,
+                text: cmd.into(),
+            })
+            .unwrap_or_default(),
+        "powershell" => clipboard
+            .write(ClipKind::PlainText {
+                label: None,
+                text: ps.into(),
+            })
+            .unwrap_or_default(),
         _ => log::error!(target: "app", "copy_clash_env: Invalid env type! {env_type}"),
     };
 }

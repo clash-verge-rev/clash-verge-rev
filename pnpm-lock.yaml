@@ -34,10 +34,31 @@ dependencies:
     version: 5.15.5(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0)
   "@mui/x-data-grid":
     specifier: ^6.18.7
-    version: 6.18.7(@mui/material@5.15.5)(@mui/system@5.15.5)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0)
+    version: 6.18.7(@mui/material@5.15.5)(@mui/system@5.15.9)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0)
   "@tauri-apps/api":
-    specifier: ^1.5.3
-    version: 1.5.3
+    specifier: 2.0.0-beta.0
+    version: 2.0.0-beta.0
+  "@tauri-apps/plugin-clipboard-manager":
+    specifier: 2.0.0-beta.0
+    version: 2.0.0-beta.0
+  "@tauri-apps/plugin-dialog":
+    specifier: 2.0.0-beta.0
+    version: 2.0.0-beta.0
+  "@tauri-apps/plugin-global-shortcut":
+    specifier: 2.0.0-beta.0
+    version: 2.0.0-beta.0
+  "@tauri-apps/plugin-notification":
+    specifier: 2.0.0-beta.0
+    version: 2.0.0-beta.0
+  "@tauri-apps/plugin-process":
+    specifier: 2.0.0-beta.0
+    version: 2.0.0-beta.0
+  "@tauri-apps/plugin-shell":
+    specifier: 2.0.0-beta.0
+    version: 2.0.0-beta.0
+  "@tauri-apps/plugin-updater":
+    specifier: 2.0.0-beta.0
+    version: 2.0.0-beta.0
   ahooks:
     specifier: ^3.7.8
     version: 3.7.8(react@18.2.0)
@@ -101,8 +122,8 @@ devDependencies:
     specifier: ^5.1.1
     version: 5.1.1
   "@tauri-apps/cli":
-    specifier: ^1.5.9
-    version: 1.5.9
+    specifier: 2.0.0-beta.1
+    version: 2.0.0-beta.1
   "@types/fs-extra":
     specifier: ^9.0.13
     version: 9.0.13
@@ -442,6 +463,16 @@ packages:
     resolution:
       {
         integrity: sha512-Y7KbAP984rn1VGMbGqKmBLio9V7y5Je9GvU4rQPCPinCyNfUcToxIXl06d59URp/F3LwinvODxab5N/G6qggkw==,
+      }
+    engines: { node: ">=6.9.0" }
+    dependencies:
+      regenerator-runtime: 0.14.1
+    dev: false
+
+  /@babel/runtime@7.23.9:
+    resolution:
+      {
+        integrity: sha512-0CX6F+BI2s9dkUqr08KFrAIZgNFj75rdBU/DjCyYLIaV/quFjkk6T+EJ2LkZHyZTbEV4L5p97mNkUsHl2wLFAw==,
       }
     engines: { node: ">=6.9.0" }
     dependencies:
@@ -1253,6 +1284,26 @@ packages:
       react: 18.2.0
     dev: false
 
+  /@mui/private-theming@5.15.9(@types/react@18.2.48)(react@18.2.0):
+    resolution:
+      {
+        integrity: sha512-/aMJlDOxOTAXyp4F2rIukW1O0anodAMCkv1DfBh/z9vaKHY3bd5fFf42wmP+0GRmwMinC5aWPpNfHXOED1fEtg==,
+      }
+    engines: { node: ">=12.0.0" }
+    peerDependencies:
+      "@types/react": ^17.0.0 || ^18.0.0
+      react: ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
+    dependencies:
+      "@babel/runtime": 7.23.9
+      "@mui/utils": 5.15.9(@types/react@18.2.48)(react@18.2.0)
+      "@types/react": 18.2.48
+      prop-types: 15.8.1
+      react: 18.2.0
+    dev: false
+
   /@mui/styled-engine@5.15.5(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(react@18.2.0):
     resolution:
       {
@@ -1270,6 +1321,31 @@ packages:
         optional: true
     dependencies:
       "@babel/runtime": 7.23.8
+      "@emotion/cache": 11.11.0
+      "@emotion/react": 11.11.3(@types/react@18.2.48)(react@18.2.0)
+      "@emotion/styled": 11.11.0(@emotion/react@11.11.3)(@types/react@18.2.48)(react@18.2.0)
+      csstype: 3.1.3
+      prop-types: 15.8.1
+      react: 18.2.0
+    dev: false
+
+  /@mui/styled-engine@5.15.9(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(react@18.2.0):
+    resolution:
+      {
+        integrity: sha512-NRKtYkL5PZDH7dEmaLEIiipd3mxNnQSO+Yo8rFNBNptY8wzQnQ+VjayTq39qH7Sast5cwHKYFusUrQyD+SS4Og==,
+      }
+    engines: { node: ">=12.0.0" }
+    peerDependencies:
+      "@emotion/react": ^11.4.1
+      "@emotion/styled": ^11.3.0
+      react: ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      "@emotion/react":
+        optional: true
+      "@emotion/styled":
+        optional: true
+    dependencies:
+      "@babel/runtime": 7.23.9
       "@emotion/cache": 11.11.0
       "@emotion/react": 11.11.3(@types/react@18.2.48)(react@18.2.0)
       "@emotion/styled": 11.11.0(@emotion/react@11.11.3)(@types/react@18.2.48)(react@18.2.0)
@@ -1304,6 +1380,39 @@ packages:
       "@mui/styled-engine": 5.15.5(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(react@18.2.0)
       "@mui/types": 7.2.13(@types/react@18.2.48)
       "@mui/utils": 5.15.5(@types/react@18.2.48)(react@18.2.0)
+      "@types/react": 18.2.48
+      clsx: 2.1.0
+      csstype: 3.1.3
+      prop-types: 15.8.1
+      react: 18.2.0
+    dev: false
+
+  /@mui/system@5.15.9(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(@types/react@18.2.48)(react@18.2.0):
+    resolution:
+      {
+        integrity: sha512-SxkaaZ8jsnIJ77bBXttfG//LUf6nTfOcaOuIgItqfHv60ZCQy/Hu7moaob35kBb+guxVJnoSZ+7vQJrA/E7pKg==,
+      }
+    engines: { node: ">=12.0.0" }
+    peerDependencies:
+      "@emotion/react": ^11.5.0
+      "@emotion/styled": ^11.3.0
+      "@types/react": ^17.0.0 || ^18.0.0
+      react: ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      "@emotion/react":
+        optional: true
+      "@emotion/styled":
+        optional: true
+      "@types/react":
+        optional: true
+    dependencies:
+      "@babel/runtime": 7.23.9
+      "@emotion/react": 11.11.3(@types/react@18.2.48)(react@18.2.0)
+      "@emotion/styled": 11.11.0(@emotion/react@11.11.3)(@types/react@18.2.48)(react@18.2.0)
+      "@mui/private-theming": 5.15.9(@types/react@18.2.48)(react@18.2.0)
+      "@mui/styled-engine": 5.15.9(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(react@18.2.0)
+      "@mui/types": 7.2.13(@types/react@18.2.48)
+      "@mui/utils": 5.15.9(@types/react@18.2.48)(react@18.2.0)
       "@types/react": 18.2.48
       clsx: 2.1.0
       csstype: 3.1.3
@@ -1346,7 +1455,28 @@ packages:
       react-is: 18.2.0
     dev: false
 
-  /@mui/x-data-grid@6.18.7(@mui/material@5.15.5)(@mui/system@5.15.5)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0):
+  /@mui/utils@5.15.9(@types/react@18.2.48)(react@18.2.0):
+    resolution:
+      {
+        integrity: sha512-yDYfr61bCYUz1QtwvpqYy/3687Z8/nS4zv7lv/ih/6ZFGMl1iolEvxRmR84v2lOYxlds+kq1IVYbXxDKh8Z9sg==,
+      }
+    engines: { node: ">=12.0.0" }
+    peerDependencies:
+      "@types/react": ^17.0.0 || ^18.0.0
+      react: ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
+    dependencies:
+      "@babel/runtime": 7.23.9
+      "@types/prop-types": 15.7.11
+      "@types/react": 18.2.48
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-is: 18.2.0
+    dev: false
+
+  /@mui/x-data-grid@6.18.7(@mui/material@5.15.5)(@mui/system@5.15.9)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0):
     resolution:
       {
         integrity: sha512-K1A3pMUPxI4/Mt5A4vrK45fBBQK5rZvBVqRMrB5n8zX++Bj+WLWKvLTtfCmlriUtzuadr/Hl7Z+FDRXUJAx6qg==,
@@ -1360,7 +1490,7 @@ packages:
     dependencies:
       "@babel/runtime": 7.23.8
       "@mui/material": 5.15.5(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(@types/react@18.2.48)(react-dom@18.2.0)(react@18.2.0)
-      "@mui/system": 5.15.5(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(@types/react@18.2.48)(react@18.2.0)
+      "@mui/system": 5.15.9(@emotion/react@11.11.3)(@emotion/styled@11.11.0)(@types/react@18.2.48)(react@18.2.0)
       "@mui/utils": 5.15.5(@types/react@18.2.48)(react@18.2.0)
       clsx: 2.1.0
       prop-types: 15.8.1
@@ -1863,18 +1993,18 @@ packages:
       - supports-color
     dev: true
 
-  /@tauri-apps/api@1.5.3:
+  /@tauri-apps/api@2.0.0-beta.0:
     resolution:
       {
-        integrity: sha512-zxnDjHHKjOsrIzZm6nO5Xapb/BxqUq1tc7cGkFXsFkGTsSWgCPH1D8mm0XS9weJY2OaR73I3k3S+b7eSzJDfqA==,
+        integrity: sha512-WLoh/Vk8cgY7XrJV7Vpb6PssReBZWQCATfYBb1aCRDk+sp0NyPwumx6fZ2ECAKzAcs3OeanluwZcajruIW4CPQ==,
       }
-    engines: { node: ">= 14.6.0", npm: ">= 6.6.0", yarn: ">= 1.19.1" }
+    engines: { node: ">= 18", npm: ">= 6.6.0", yarn: ">= 1.19.1" }
     dev: false
 
-  /@tauri-apps/cli-darwin-arm64@1.5.9:
+  /@tauri-apps/cli-darwin-arm64@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-7C2Jf8f0gzv778mLYb7Eszqqv1bm9Wzews81MRTqKrUIcC+eZEtDXLex+JaEkEzFEUrgIafdOvMBVEavF030IA==,
+        integrity: sha512-d71utEr9H3fXAI6nKPaPuINpnvMQn+UIscOTzTMcrmIDqptOO0ix8z6C3HSvNxV0OjtlxzNJGWwOb24U0OYrgw==,
       }
     engines: { node: ">= 10" }
     cpu: [arm64]
@@ -1883,10 +2013,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-darwin-x64@1.5.9:
+  /@tauri-apps/cli-darwin-x64@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-LHKytpkofPYgH8RShWvwDa3hD1ws131x7g7zNasJPfOiCWLqYVQFUuQVmjEUt8+dpHe/P/err5h4z+YZru2d0A==,
+        integrity: sha512-bzsWZjQt5NG1uhbDTGw8Hmvm+J1d+9J7HXMMMwQc4E3kBns95sr4bIoXvgIq3cZYS4uyZOvdhEdjkSGg1c65Lg==,
       }
     engines: { node: ">= 10" }
     cpu: [x64]
@@ -1895,10 +2025,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-linux-arm-gnueabihf@1.5.9:
+  /@tauri-apps/cli-linux-arm-gnueabihf@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-teGK20IYKx+dVn8wFq/Lg57Q9ce7foq1KHSfyHi464LVt1T0V1rsmULSgZpQPPj/NYPF5BG78PcWYv64yH86jw==,
+        integrity: sha512-FMnZpk4a5D9QgZKkT00P3f4CHEZFpn/b+pWfZJ7vxCdir+Cc1eKOHiqhvmMBEeLlYlQFBaYeAK0EaZWnN82ZJA==,
       }
     engines: { node: ">= 10" }
     cpu: [arm]
@@ -1907,10 +2037,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-linux-arm64-gnu@1.5.9:
+  /@tauri-apps/cli-linux-arm64-gnu@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-onJ/DW5Crw38qVx+wquY4uBbfCxVhzhdJmlCYqnYyXsZZmSiPUfSyhV58y+5TYB0q1hG8eYdB5x8VAwzByhGzw==,
+        integrity: sha512-0kE65P+6ppeAOFsJV6av5VhkjDv1dcHkObErpjJHpwYowuC3aqaCCnH3biR9gNvcoVUXsCwmMA/BkxUpq9W9/g==,
       }
     engines: { node: ">= 10" }
     cpu: [arm64]
@@ -1920,10 +2050,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-linux-arm64-musl@1.5.9:
+  /@tauri-apps/cli-linux-arm64-musl@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-23AYoLD3acakLp9NtheKQDJl8F66eTOflxoPzdJNRy13hUSxb+W9qpz4rRA+CIzkjICFvO2i3UWjeV9QwDVpsQ==,
+        integrity: sha512-Wsj1eSrrAVeuFQWJq1gVIA78I8JM50fEsxbrMAOf89ZXpCYxJTNCJkyRQyLB+yHhv9nmhA3a1Mmr5ubhRETy1Q==,
       }
     engines: { node: ">= 10" }
     cpu: [arm64]
@@ -1933,10 +2063,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-linux-x64-gnu@1.5.9:
+  /@tauri-apps/cli-linux-x64-gnu@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-9PQA1rE7gh41W2ylyKd5qOGOds55ymaYPml9KOpM0g+cxmCXa+8Wf9K5NKvACnJldJJ6cekWzIyB4eN6o5T+yQ==,
+        integrity: sha512-LkzLJWg+ud2gWuq8yAWJ3Sahrp79Vbd2Cotbm/RbfMi7RbRV8TQYj4zfUhyFJVnk4nF89kTnwfNxLdTw67CAOw==,
       }
     engines: { node: ">= 10" }
     cpu: [x64]
@@ -1946,10 +2076,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-linux-x64-musl@1.5.9:
+  /@tauri-apps/cli-linux-x64-musl@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-5hdbNFeDsrJ/pXZ4cSQV4bJwUXPPxXxN3/pAtNUqIph7q+vLcBXOXIMoS64iuyaluJC59lhEwlWZFz+EPv0Hqg==,
+        integrity: sha512-Ro3PuLSNEZAw9/Rc2CP3k9P7LaUQ2TOFXJeW6G4aCXrd0MlJwlGhhjdZuLbmgzD1rda4dSpZGJPhbYvu8YD7eQ==,
       }
     engines: { node: ">= 10" }
     cpu: [x64]
@@ -1959,10 +2089,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-win32-arm64-msvc@1.5.9:
+  /@tauri-apps/cli-win32-arm64-msvc@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-O18JufjSB3hSJYu5WWByONouGeX7DraLAtXLErsG1r/VS3zHd/zyuzycrVUaObNXk5bfGlIP0Ypt+RvZJILN2w==,
+        integrity: sha512-SWNF+5B+lBbW/Kq1wTMVG9x97PqJUOo8eWAr/nlMm3J0lYbTWAa8/ScibaPjq82HiPhv8WCJXlcO6FEqWCoJ2A==,
       }
     engines: { node: ">= 10" }
     cpu: [arm64]
@@ -1971,10 +2101,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-win32-ia32-msvc@1.5.9:
+  /@tauri-apps/cli-win32-ia32-msvc@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-FQxtxTZu0JVBihfd/lmpxo7jyMOesjWQehfyVUqtgMfm5+Pvvw0Y+ZioeDi1TZkFVrT3QDYy8R4LqDLSZVMQRA==,
+        integrity: sha512-NvfP16fSlfq6GLHJH+gAxEsJn+Jvz3HoxMTLxAg7Ra0ycMODFu4xbNn6Hp7Djn297qTHHLYDva4Np6Whw5DUlQ==,
       }
     engines: { node: ">= 10" }
     cpu: [ia32]
@@ -1983,10 +2113,10 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli-win32-x64-msvc@1.5.9:
+  /@tauri-apps/cli-win32-x64-msvc@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-EeI1+L518cIBLKw0qUFwnLIySBeSmPQjPLIlNwSukHSro4tAQPHycEVGgKrdToiCWgaZJBA0e5aRSds0Du2TWg==,
+        integrity: sha512-9TKbDQyVHW0p1a7aXQEKg+MhCyFMpzD26puLKOxbTPiTcRUR4lUFq5Bhf1VR5ihoqnZNhJEtuR1mA16ZrIkuKQ==,
       }
     engines: { node: ">= 10" }
     cpu: [x64]
@@ -1995,25 +2125,88 @@ packages:
     dev: true
     optional: true
 
-  /@tauri-apps/cli@1.5.9:
+  /@tauri-apps/cli@2.0.0-beta.1:
     resolution:
       {
-        integrity: sha512-knSt/9AvCTeyfC6wkyeouF9hBW/0Mzuw+5vBKEvzaGPQsfFJo1ZCp5FkdiZpGBBfnm09BhugasGRTGofzatfqQ==,
+        integrity: sha512-u3AcZPdHsg9qT3e9PSD0H2IVZetQvWuBOyF81CN7/sY+AJGOli7i2d38Bj4wJs50tuMotoseiMcxuyxTlAdBnw==,
       }
     engines: { node: ">= 10" }
     hasBin: true
     optionalDependencies:
-      "@tauri-apps/cli-darwin-arm64": 1.5.9
-      "@tauri-apps/cli-darwin-x64": 1.5.9
-      "@tauri-apps/cli-linux-arm-gnueabihf": 1.5.9
-      "@tauri-apps/cli-linux-arm64-gnu": 1.5.9
-      "@tauri-apps/cli-linux-arm64-musl": 1.5.9
-      "@tauri-apps/cli-linux-x64-gnu": 1.5.9
-      "@tauri-apps/cli-linux-x64-musl": 1.5.9
-      "@tauri-apps/cli-win32-arm64-msvc": 1.5.9
-      "@tauri-apps/cli-win32-ia32-msvc": 1.5.9
-      "@tauri-apps/cli-win32-x64-msvc": 1.5.9
+      "@tauri-apps/cli-darwin-arm64": 2.0.0-beta.1
+      "@tauri-apps/cli-darwin-x64": 2.0.0-beta.1
+      "@tauri-apps/cli-linux-arm-gnueabihf": 2.0.0-beta.1
+      "@tauri-apps/cli-linux-arm64-gnu": 2.0.0-beta.1
+      "@tauri-apps/cli-linux-arm64-musl": 2.0.0-beta.1
+      "@tauri-apps/cli-linux-x64-gnu": 2.0.0-beta.1
+      "@tauri-apps/cli-linux-x64-musl": 2.0.0-beta.1
+      "@tauri-apps/cli-win32-arm64-msvc": 2.0.0-beta.1
+      "@tauri-apps/cli-win32-ia32-msvc": 2.0.0-beta.1
+      "@tauri-apps/cli-win32-x64-msvc": 2.0.0-beta.1
     dev: true
+
+  /@tauri-apps/plugin-clipboard-manager@2.0.0-beta.0:
+    resolution:
+      {
+        integrity: sha512-r/qxqpVGKl2G09+EBD83qi/GMNiCXHYYDfATU+tEykMHLEmC0zX7knJX6RMp6TPKwyJH0CG9zuo/waD6UBUt9A==,
+      }
+    dependencies:
+      "@tauri-apps/api": 2.0.0-beta.0
+    dev: false
+
+  /@tauri-apps/plugin-dialog@2.0.0-beta.0:
+    resolution:
+      {
+        integrity: sha512-cNxiBwGB6Xgnwy5GyAabwPyvm1iaC7MmrgzcUwB1JaydLjp/Yu3Z0TmkmmEClFrrvIQA+sMcq0C8wwv6i4aedw==,
+      }
+    dependencies:
+      "@tauri-apps/api": 2.0.0-beta.0
+    dev: false
+
+  /@tauri-apps/plugin-global-shortcut@2.0.0-beta.0:
+    resolution:
+      {
+        integrity: sha512-lKO4bIG61wL3yyq3Brc550YzRtaiTVYlKkQNh+gpAepLl5PCZpOvK9ngmsYfvmyZvE8AES2KNIdfMDdCgZv27A==,
+      }
+    dependencies:
+      "@tauri-apps/api": 2.0.0-beta.0
+    dev: false
+
+  /@tauri-apps/plugin-notification@2.0.0-beta.0:
+    resolution:
+      {
+        integrity: sha512-yYlsm18t1wfZ9Zxg/8WBEgrgJLaapvEysa2gS6YAVB1D/ob8qMSeVgFY1NdJbIM7UpgB8w/xp0DTR+5RQyLNhg==,
+      }
+    dependencies:
+      "@tauri-apps/api": 2.0.0-beta.0
+    dev: false
+
+  /@tauri-apps/plugin-process@2.0.0-beta.0:
+    resolution:
+      {
+        integrity: sha512-tKWua399alYVYSLhAGArrEOpGEC1v2FJlUku0oWROzDnEYNdAekP4SMzVPVUUdVH7r6zoaTorWUgXBfspyCGxw==,
+      }
+    dependencies:
+      "@tauri-apps/api": 2.0.0-beta.0
+    dev: false
+
+  /@tauri-apps/plugin-shell@2.0.0-beta.0:
+    resolution:
+      {
+        integrity: sha512-AADGPuGP+YM5Ar48XfA8o9k9jtlSBpEVcsbOEwWdifi0oAiVOBXgiy9C1Icsub/tlD3YjK7oT8vDcOXLGYBhUg==,
+      }
+    dependencies:
+      "@tauri-apps/api": 2.0.0-beta.0
+    dev: false
+
+  /@tauri-apps/plugin-updater@2.0.0-beta.0:
+    resolution:
+      {
+        integrity: sha512-TkKzngrgg8dQOr869OcObLdN10yXNiT/ERQp7sRYvV0vMpRJhYSIwTkpF+UkZGuEXtSqqE0FJEnb+4WuCelMdw==,
+      }
+    dependencies:
+      "@tauri-apps/api": 2.0.0-beta.0
+    dev: false
 
   /@types/babel__core@7.20.5:
     resolution:

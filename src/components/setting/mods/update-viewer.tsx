@@ -5,8 +5,8 @@ import { useLockFn } from "ahooks";
 import { Box, LinearProgress, styled } from "@mui/material";
 import { useRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
-import { relaunch } from "@tauri-apps/api/process";
-import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { check } from "@tauri-apps/plugin-updater";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { atomUpdateState } from "@/services/states";
 import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
@@ -23,7 +23,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [updateState, setUpdateState] = useRecoilState(atomUpdateState);
 
-  const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
+  const { data: updateInfo } = useSWR("checkUpdate", check, {
     errorRetryCount: 2,
     revalidateIfStale: false,
     focusThrottleInterval: 36e5, // 1 hour
@@ -40,10 +40,10 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
 
   // markdown parser
   const parseContent = useMemo(() => {
-    if (!updateInfo?.manifest?.body) {
+    if (!updateInfo?.body) {
       return "New Version is available";
     }
-    return snarkdown(updateInfo?.manifest?.body);
+    return snarkdown(updateInfo?.body);
   }, [updateInfo]);
 
   const onUpdate = useLockFn(async () => {
@@ -67,7 +67,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       }
     );
     try {
-      await installUpdate();
+      await updateInfo?.downloadAndInstall();
       await relaunch();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
@@ -79,7 +79,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={`New Version v${updateInfo?.manifest?.version}`}
+      title={`New Version v${updateInfo?.version}`}
       contentSx={{ minWidth: 360, maxWidth: 400, height: "50vh" }}
       okBtn={t("Update")}
       cancelBtn={t("Cancel")}

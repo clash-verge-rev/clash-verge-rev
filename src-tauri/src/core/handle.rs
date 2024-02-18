@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::sync::Arc;
-use tauri::{AppHandle, Manager, Window};
+use tauri::{AppHandle, Manager, WebviewWindow};
 
 #[derive(Debug, Default, Clone)]
 pub struct Handle {
@@ -24,11 +24,11 @@ impl Handle {
         *self.app_handle.lock() = Some(app_handle);
     }
 
-    pub fn get_window(&self) -> Option<Window> {
+    pub fn get_window(&self) -> Option<WebviewWindow> {
         self.app_handle
             .lock()
             .as_ref()
-            .and_then(|a| a.get_window("main"))
+            .and_then(|a| a.get_webview_window("main"))
     }
 
     pub fn refresh_clash() {

@@ -53,14 +53,14 @@ pub fn check_singleton() -> Result<()> {
 
 /// The embed server only be used to implement singleton process
 /// maybe it can be used as pac server later
-pub fn embed_server(app_handle: AppHandle) {
+pub fn embed_server(app_handle: &AppHandle) {
     let port = IVerge::get_singleton_port();
 
     tauri::async_runtime::spawn(async move {
         let ping = warp::path!("commands" / "ping").map(move || "ok");
 
         let visible = warp::path!("commands" / "visible").map(move || {
-            resolve::create_window(&app_handle);
+            resolve::create_window(app_handle);
             "ok"
         });
 

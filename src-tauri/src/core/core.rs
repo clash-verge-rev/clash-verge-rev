@@ -6,11 +6,15 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{fs, io::Write, sync::Arc, time::Duration};
 use sysinfo::{Pid, System};
-use tauri::api::process::{Command, CommandChild, CommandEvent};
+use tauri::AppHandle;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
 
 #[derive(Debug)]
 pub struct CoreManager {
+    app_handle: Arc<Mutex<Option<AppHandle>>>,
+
     sidecar: Arc<Mutex<Option<CommandChild>>>,
 
     #[allow(unused)]
@@ -22,12 +26,14 @@ impl CoreManager {
         static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
 
         CORE_MANAGER.get_or_init(|| CoreManager {
+            app_handle: Arc::new(Mutex::new(None)),
             sidecar: Arc::new(Mutex::new(None)),
             use_service_mode: Arc::new(Mutex::new(false)),
         })
     }
 
-    pub fn init(&self) -> Result<()> {
+    pub fn init(&self, app_handle: AppHandle) -> Result<()> {
+        *self.app_handle.lock() = Some(app_handle);
         // kill old clash process
         let _ = dirs::clash_pid_path()
             .and_then(|path| fs::read(path).map(|p| p.to_vec()).context(""))
@@ -52,7 +58,7 @@ impl CoreManager {
     }
 
     /// 检查订阅是否正确
-    pub fn check_config(&self) -> Result<()> {
+    pub async fn check_config(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Check)?;
         let config_path = dirs::path_to_str(&config_path)?;
 
@@ -61,19 +67,24 @@ impl CoreManager {
 
         let app_dir = dirs::app_home_dir()?;
         let app_dir = dirs::path_to_str(&app_dir)?;
-
-        let output = Command::new_sidecar(clash_core)?
-            .args(["-t", "-d", app_dir, "-f", config_path])
-            .output()?;
-
-        if !output.status.success() {
-            let error = clash_api::parse_check_output(output.stdout.clone());
-            let error = match !error.is_empty() {
-                true => error,
-                false => output.stdout.clone(),
-            };
-            Logger::global().set_log(output.stdout);
-            bail!("{error}");
+        let app_handle = self.app_handle.lock();
+        if let Some(app_handle) = app_handle.as_ref() {
+            let output = app_handle
+                .shell()
+                .sidecar(clash_core)?
+                .args(["-t", "-d", app_dir, "-f", config_path])
+                .output()
+                .await?;
+            if !output.status.success() {
+                let stdout = String::from_utf8(output.stdout).unwrap_or_default();
+                let error = clash_api::parse_check_output(stdout.clone());
+                let error = match !error.is_empty() {
+                    true => error,
+                    false => stdout.clone(),
+                };
+                Logger::global().set_log(stdout.clone());
+                bail!("{error}");
+            }
         }
 
         Ok(())
@@ -150,55 +161,59 @@ impl CoreManager {
             "clash-meta-alpha" => vec!["-m", "-d", app_dir, "-f", config_path],
             _ => vec!["-d", app_dir, "-f", config_path],
         };
+        let app_handle = self.app_handle.lock();
+        if let Some(app_handle) = app_handle.as_ref() {
+            let cmd = app_handle.shell().sidecar(clash_core)?;
+            let (mut rx, cmd_child) = cmd.args(args).spawn()?;
 
-        let cmd = Command::new_sidecar(clash_core)?;
-        let (mut rx, cmd_child) = cmd.args(args).spawn()?;
+            // 将pid写入文件中
+            crate::log_err!((|| {
+                let pid = cmd_child.pid();
+                let path = dirs::clash_pid_path()?;
+                fs::File::create(path)
+                    .context("failed to create the pid file")?
+                    .write(format!("{pid}").as_bytes())
+                    .context("failed to write pid to the file")?;
+                <Result<()>>::Ok(())
+            })());
 
-        // 将pid写入文件中
-        crate::log_err!((|| {
-            let pid = cmd_child.pid();
-            let path = dirs::clash_pid_path()?;
-            fs::File::create(path)
-                .context("failed to create the pid file")?
-                .write(format!("{pid}").as_bytes())
-                .context("failed to write pid to the file")?;
-            <Result<()>>::Ok(())
-        })());
+            let mut sidecar = self.sidecar.lock();
+            *sidecar = Some(cmd_child);
+            drop(sidecar);
 
-        let mut sidecar = self.sidecar.lock();
-        *sidecar = Some(cmd_child);
-        drop(sidecar);
-
-        tauri::async_runtime::spawn(async move {
-            while let Some(event) = rx.recv().await {
-                match event {
-                    CommandEvent::Stdout(line) => {
-                        if is_clash {
-                            let stdout = clash_api::parse_log(line.clone());
-                            log::info!(target: "app", "[clash]: {stdout}");
-                        } else {
-                            log::info!(target: "app", "[clash]: {line}");
-                        };
-                        Logger::global().set_log(line);
+            tauri::async_runtime::spawn(async move {
+                while let Some(event) = rx.recv().await {
+                    match event {
+                        CommandEvent::Stdout(line) => {
+                            let line = String::from_utf8(line).unwrap_or_default();
+                            if is_clash {
+                                let stdout = clash_api::parse_log(line.clone());
+                                log::info!(target: "app", "[clash]: {stdout}");
+                            } else {
+                                log::info!(target: "app", "[clash]: {line}");
+                            };
+                            Logger::global().set_log(line);
+                        }
+                        CommandEvent::Stderr(err) => {
+                            let err = String::from_utf8(err).unwrap_or_default();
+                            // let stdout = clash_api::parse_log(err.clone());
+                            log::error!(target: "app", "[clash]: {err}");
+                            Logger::global().set_log(err);
+                        }
+                        CommandEvent::Error(err) => {
+                            log::error!(target: "app", "[clash]: {err}");
+                            Logger::global().set_log(err);
+                        }
+                        CommandEvent::Terminated(_) => {
+                            log::info!(target: "app", "clash core terminated");
+                            let _ = CoreManager::global().recover_core();
+                            break;
+                        }
+                        _ => {}
                     }
-                    CommandEvent::Stderr(err) => {
-                        // let stdout = clash_api::parse_log(err.clone());
-                        log::error!(target: "app", "[clash]: {err}");
-                        Logger::global().set_log(err);
-                    }
-                    CommandEvent::Error(err) => {
-                        log::error!(target: "app", "[clash]: {err}");
-                        Logger::global().set_log(err);
-                    }
-                    CommandEvent::Terminated(_) => {
-                        log::info!(target: "app", "clash core terminated");
-                        let _ = CoreManager::global().recover_core();
-                        break;
-                    }
-                    _ => {}
                 }
-            }
-        });
+            });
+        }
 
         Ok(())
     }
@@ -272,7 +287,7 @@ impl CoreManager {
         // 更新订阅
         Config::generate()?;
 
-        self.check_config()?;
+        self.check_config().await?;
 
         // 清掉旧日志
         Logger::global().clear_log();
@@ -301,7 +316,7 @@ impl CoreManager {
         Config::generate()?;
 
         // 检查订阅是否正常
-        self.check_config()?;
+        self.check_config().await?;
 
         // 更新运行时订阅
         let path = Config::generate_file(ConfigType::Run)?;

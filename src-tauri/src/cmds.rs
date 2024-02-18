@@ -9,7 +9,7 @@ use anyhow::{Context, Result};
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
 use sysproxy::Sysproxy;
-use tauri::api;
+use tauri_plugin_shell::ShellExt;
 type CmdResult<T = ()> = Result<T, String>;
 
 #[tauri::command]
@@ -271,7 +271,7 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
 pub fn exit_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, true);
     resolve::resolve_reset();
-    api::process::kill_children();
+    // api::process::kill_children();
     app_handle.exit(0);
     std::process::exit(0);
 }

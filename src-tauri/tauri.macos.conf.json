@@ -1,18 +1,18 @@
 {
-  "tauri": {
-    "systemTray": {
+  "app": {
+    "trayIcon": {
       "iconPath": "icons/mac-tray-icon.png",
       "iconAsTemplate": true
-    },
-    "bundle": {
-      "targets": ["app", "dmg", "updater"],
-      "macOS": {
-        "frameworks": [],
-        "minimumSystemVersion": "10.15",
-        "exceptionDomain": "",
-        "signingIdentity": null,
-        "entitlements": null
-      }
+    }
+  },
+  "bundle": {
+    "targets": ["app", "dmg", "updater"],
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "entitlements": null
     }
   }
 }

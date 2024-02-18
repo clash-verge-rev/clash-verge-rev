@@ -10,8 +10,8 @@ use anyhow::Result;
 use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
-use tauri::api::notification;
 use tauri::{App, AppHandle, Manager};
+use tauri_plugin_notification::{NotificationExt, PermissionState};
 use window_shadows::set_shadow;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
@@ -38,12 +38,12 @@ pub fn resolve_setup(app: &mut App) {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
     let version = app.package_info().version.to_string();
-    handle::Handle::global().init(app.app_handle());
+    handle::Handle::global().init(app.app_handle().clone());
     VERSION.get_or_init(|| version.clone());
 
     log_err!(init::init_resources());
     log_err!(init::init_scheme());
-    log_err!(init::startup_script());
+    log_err!(init::startup_script(app.app_handle()));
     // 处理随机端口
     let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
 
@@ -76,7 +76,7 @@ pub fn resolve_setup(app: &mut App) {
     log_err!(Config::init_config());
 
     log::trace!("launch core");
-    log_err!(CoreManager::global().init());
+    log_err!(CoreManager::global().init(app.app_handle().clone()));
 
     // setup a simple http server for singleton
     log::trace!("launch embed server");
@@ -94,7 +94,7 @@ pub fn resolve_setup(app: &mut App) {
     log_err!(sysopt::Sysopt::global().init_sysproxy());
 
     log_err!(handle::Handle::update_systray_part());
-    log_err!(hotkey::Hotkey::global().init(app.app_handle()));
+    log_err!(hotkey::Hotkey::global().init(app.app_handle().clone()));
     log_err!(timer::Timer::global().init());
 
     let argvs: Vec<String> = std::env::args().collect();
@@ -113,17 +113,17 @@ pub fn resolve_reset() {
 
 /// create main window
 pub fn create_window(app_handle: &AppHandle) {
-    if let Some(window) = app_handle.get_window("main") {
+    if let Some(window) = app_handle.get_webview_window("main") {
         trace_err!(window.unminimize(), "set win unminimize");
         trace_err!(window.show(), "set win visible");
         trace_err!(window.set_focus(), "set win focus");
         return;
     }
 
-    let mut builder = tauri::window::WindowBuilder::new(
+    let mut builder = tauri::WebviewWindowBuilder::new(
         app_handle,
         "main".to_string(),
-        tauri::WindowUrl::App("index.html".into()),
+        tauri::WebviewUrl::App("index.html".into()),
     )
     .title("Clash Verge")
     .visible(false)
@@ -179,16 +179,17 @@ pub fn create_window(app_handle: &AppHandle) {
             log::trace!("try to calculate the monitor size");
             let center = (|| -> Result<bool> {
                 let mut center = false;
-                let monitor = win.current_monitor()?.ok_or(anyhow::anyhow!(""))?;
-                let size = monitor.size();
-                let pos = win.outer_position()?;
-
-                if pos.x < -400
-                    || pos.x > (size.width - 200) as i32
-                    || pos.y < -200
-                    || pos.y > (size.height - 200) as i32
-                {
-                    center = true;
+                if let Ok(Some(monitor)) = win.current_monitor() {
+                    let size = monitor.size();
+                    if let Ok(pos) = win.outer_position() {
+                        if pos.x < -400
+                            || pos.x > (size.width - 200) as i32
+                            || pos.y < -200
+                            || pos.y > (size.height - 200) as i32
+                        {
+                            center = true;
+                        }
+                    }
                 }
                 Ok(center)
             })();
@@ -204,13 +205,15 @@ pub fn create_window(app_handle: &AppHandle) {
         }
         Err(_) => {
             log::error!("failed to create window");
-            return;
         }
     }
 }
 
 /// save window size and position
-pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> Result<()> {
+pub fn save_window_size_position(
+    app_handle: &AppHandle,
+    save_to_file: bool,
+) -> Result<(), tauri::Error> {
     let verge = Config::verge();
     let mut verge = verge.latest();
 
@@ -219,7 +222,7 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
     }
 
     let win = app_handle
-        .get_window("main")
+        .get_webview_window("main")
         .ok_or(anyhow::anyhow!("failed to get window"))?;
 
     let scale = win.scale_factor()?;
@@ -245,20 +248,40 @@ pub async fn resolve_scheme(param: String) {
         self_proxy: None,
         update_interval: None,
     };
-    if let Ok(item) = PrfItem::from_url(url, None, None, Some(option)).await {
-        if Config::profiles().data().append_item(item).is_ok() {
-            notification::Notification::new(crate::utils::dirs::APP_ID)
-                .title("Clash Verge")
-                .body("Import profile success")
-                .show()
-                .unwrap();
-        };
-    } else {
-        notification::Notification::new(crate::utils::dirs::APP_ID)
-            .title("Clash Verge")
-            .body("Import profile failed")
-            .show()
-            .unwrap();
-        log::error!("failed to parse url: {}", url);
+    let handle = handle::Handle::global();
+    let app_handle = handle.app_handle.lock();
+    if let Some(app_handle) = app_handle.as_ref() {
+        if let Ok(item) = PrfItem::from_url(url, None, None, Some(option)).await {
+            if Config::profiles().data().append_item(item).is_ok() {
+                if let Ok(state) = app_handle.notification().permission_state() {
+                    if state == PermissionState::Unknown {
+                        let _ = app_handle.notification().request_permission();
+                    }
+                    if state == PermissionState::Granted {
+                        let _ = app_handle
+                            .notification()
+                            .builder()
+                            .title("Clash Verge Rev")
+                            .body("Import profile success")
+                            .show();
+                    }
+                }
+            };
+        } else {
+            if let Ok(state) = app_handle.notification().permission_state() {
+                if state == PermissionState::Unknown {
+                    let _ = app_handle.notification().request_permission();
+                }
+                if state == PermissionState::Granted {
+                    let _ = app_handle
+                        .notification()
+                        .builder()
+                        .title("Clash Verge Rev")
+                        .body("Import profile failed")
+                        .show();
+                }
+            }
+            log::error!("failed to parse url: {}", url);
+        }
     }
 }

@@ -10,7 +10,7 @@ use log4rs::encode::pattern::PatternEncoder;
 use std::fs::{self, DirEntry};
 use std::path::PathBuf;
 use std::str::FromStr;
-use tauri::api::process::Command;
+use tauri_plugin_shell::ShellExt;
 
 /// initialize this instance's log file
 fn init_log() -> Result<()> {
@@ -282,7 +282,7 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 
-pub fn startup_script() -> Result<()> {
+pub fn startup_script(app_handle: &tauri::AppHandle) -> Result<()> {
     let path = {
         let verge = Config::verge();
         let verge = verge.latest();
@@ -310,13 +310,15 @@ pub fn startup_script() -> Result<()> {
         let current_dir = current_dir.parent();
         match current_dir {
             Some(dir) => {
-                let _ = Command::new(shell)
+                let _ = app_handle
+                    .shell()
+                    .command(shell)
                     .current_dir(dir.to_path_buf())
                     .args(&[path])
                     .output()?;
             }
             None => {
-                let _ = Command::new(shell).args(&[path]).output()?;
+                let _ = app_handle.shell().command(shell).args(&[path]).output()?;
             }
         }
     }

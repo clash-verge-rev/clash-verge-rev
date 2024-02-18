@@ -1,26 +1,25 @@
 {
-  "tauri": {
-    "systemTray": {
+  "app": {
+    "trayIcon": {
       "iconPath": "icons/tray-icon.png"
-    },
-    "bundle": {
-      "targets": ["nsis", "updater"],
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": "",
-        "webviewInstallMode": {
-          "type": "embedBootstrapper",
-          "silent": true
-        },
-        "nsis": {
-          "displayLanguageSelector": true,
-          "installerIcon": "icons/icon.ico",
-          "languages": ["SimpChinese", "English"],
-          "license": "../LICENSE",
-          "installMode": "perMachine",
-          "template": "./template/installer.nsi"
-        }
+    }
+  },
+  "bundle": {
+    "targets": ["nsis", "updater"],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "displayLanguageSelector": true,
+        "installerIcon": "icons/icon.ico",
+        "languages": ["SimpChinese", "English"],
+        "installMode": "perMachine",
+        "template": "./template/installer.nsi"
       }
     }
   }

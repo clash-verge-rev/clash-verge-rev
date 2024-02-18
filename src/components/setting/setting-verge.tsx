@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import { open } from "@tauri-apps/api/dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import {
   Button,
   IconButton,
@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { exitApp, openAppDir, openCoreDir, openLogsDir } from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
-import { checkUpdate } from "@tauri-apps/api/updater";
+import { check } from "@tauri-apps/plugin-updater";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
 import { DialogRef, Notice } from "@/components/base";
@@ -58,8 +58,8 @@ const SettingVerge = ({ onError }: Props) => {
 
   const onCheckUpdate = useLockFn(async () => {
     try {
-      const info = await checkUpdate();
-      if (!info?.shouldUpdate) {
+      const info = await check();
+      if (!info) {
         Notice.success("No Updates Available");
       } else {
         updateRef.current?.open();
@@ -181,7 +181,7 @@ const SettingVerge = ({ onError }: Props) => {
                         },
                       ],
                     });
-                    if (path?.length) {
+                    if (path) {
                       onChangeData({ startup_script: `${path}` });
                       patchVerge({ startup_script: `${path}` });
                     }
