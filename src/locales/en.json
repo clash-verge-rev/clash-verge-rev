@@ -160,5 +160,7 @@
   "Retain 30 Days": "Retain 30 Days",
   "Retain 90 Days": "Retain 90 Days",
 
-  "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it"
+  "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
+  "Tun Mode Info Windows": "The Tun mode requires granting core-related permissions. Please enable service mode before using it",
+  "Tun Mode Info Unix": "The Tun mode requires granting core-related permissions. Before using it, please authorize the core in the core settings"
 }

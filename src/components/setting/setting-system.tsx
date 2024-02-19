@@ -1,8 +1,8 @@
 import useSWR from "swr";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { IconButton, Switch } from "@mui/material";
-import { ArrowForward, PrivacyTipRounded, Settings } from "@mui/icons-material";
+import { IconButton, Switch, Tooltip } from "@mui/material";
+import { PrivacyTipRounded, Settings, InfoRounded } from "@mui/icons-material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { DialogRef } from "@/components/base";
@@ -57,7 +57,22 @@ const SettingSystem = ({ onError }: Props) => {
         <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
       )}
 
-      <SettingItem label={t("Tun Mode")}>
+      <SettingItem
+        label={t("Tun Mode")}
+        extra={
+          <Tooltip
+            title={isWIN ? t("Tun Mode Info Windows") : t("Tun Mode Info Unix")}
+            placement="top"
+          >
+            <IconButton color="inherit" size="small">
+              <InfoRounded
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </Tooltip>
+        }
+      >
         <GuardState
           value={enable_tun_mode ?? false}
           valueProps="checked"
