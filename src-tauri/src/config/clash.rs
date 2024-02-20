@@ -12,11 +12,19 @@ pub struct IClashTemp(pub Mapping);
 
 impl IClashTemp {
     pub fn new() -> Self {
+        let template = Self::template();
         match dirs::clash_path().and_then(|path| help::read_merge_mapping(&path)) {
-            Ok(map) => Self(Self::guard(map)),
+            Ok(mut map) => {
+                template.0.keys().for_each(|key| {
+                    if !map.contains_key(key) {
+                        map.insert(key.clone(), template.0.get(key).unwrap().clone());
+                    }
+                });
+                Self(Self::guard(map))
+            }
             Err(err) => {
                 log::error!(target: "app", "{err}");
-                Self::template()
+                template
             }
         }
     }
