@@ -25,7 +25,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     autoRoute: true,
     autoDetectInterface: true,
     dnsHijack: ["any:53", "tcp://any:53"],
-    strictRoute: false,
+    strictRoute: true,
     mtu: 9000,
   });
 
@@ -38,7 +38,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         autoRoute: clash?.tun["auto-route"] ?? true,
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
         dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53", "tcp://any:53"],
-        strictRoute: clash?.tun["strict-route"] ?? false,
+        strictRoute: clash?.tun["strict-route"] ?? true,
         mtu: clash?.tun.mtu ?? 9000,
       });
     },
@@ -133,7 +133,6 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
           <ListItemText primary={t("Strict Route")} />
           <Switch
             edge="end"
-            disabled
             checked={values.strictRoute}
             onChange={(_, c) => setValues((v) => ({ ...v, strictRoute: c }))}
           />
