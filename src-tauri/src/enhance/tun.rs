@@ -30,12 +30,6 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     });
 
     revise!(tun_val, "enable", enable);
-    if enable {
-        append!(tun_val, "stack", "gvisor");
-        append!(tun_val, "dns-hijack", vec!["any:53"]);
-        append!(tun_val, "auto-route", true);
-        append!(tun_val, "auto-detect-interface", true);
-    }
 
     revise!(config, "tun", tun_val);
 

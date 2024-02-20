@@ -32,6 +32,15 @@ interface IConfigData {
   "tproxy-port": number;
   "external-controller": string;
   secret: string;
+  tun: {
+    stack: string;
+    device: string;
+    "auto-route": boolean;
+    "auto-detect-interface": boolean;
+    "dns-hijack": string[];
+    "strict-route": boolean;
+    mtu: number;
+  };
 }
 
 interface IRuleItem {
