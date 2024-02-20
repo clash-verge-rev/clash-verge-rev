@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "Clash Verge",
-    "version": "1.5.1"
+    "version": "1.5.2"
   },
   "build": {
     "distDir": "../dist",
