@@ -41,7 +41,6 @@ const SettingClash = ({ onError }: Props) => {
   const { enable_random_port = false, verge_mixed_port } = verge ?? {};
 
   const webRef = useRef<DialogRef>(null);
-  const fieldRef = useRef<DialogRef>(null);
   const portRef = useRef<DialogRef>(null);
   const ctrlRef = useRef<DialogRef>(null);
   const coreRef = useRef<DialogRef>(null);
