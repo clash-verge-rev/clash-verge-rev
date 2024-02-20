@@ -23,6 +23,14 @@ impl IClashTemp {
 
     pub fn template() -> Self {
         let mut map = Mapping::new();
+        let mut tun = Mapping::new();
+        tun.insert("stack".into(), "gVisor".into());
+        tun.insert("device".into(), "Meta".into());
+        tun.insert("auto-route".into(), true.into());
+        tun.insert("strict-route".into(), true.into());
+        tun.insert("auto-detect-interface".into(), true.into());
+        tun.insert("dns-hijack".into(), vec!["any:53", "tcp://any:53"].into());
+        tun.insert("mtu".into(), 9000.into());
 
         map.insert("mixed-port".into(), 7897.into());
         map.insert("socks-port".into(), 7898.into());
@@ -32,6 +40,7 @@ impl IClashTemp {
         map.insert("mode".into(), "rule".into());
         map.insert("external-controller".into(), "127.0.0.1:9097".into());
         map.insert("secret".into(), "".into());
+        map.insert("tun".into(), tun.into());
 
         Self(map)
     }
