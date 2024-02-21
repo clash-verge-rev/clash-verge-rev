@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useClash } from "@/hooks/use-clash";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { StackModeSwitch } from "./stack-mode-switch";
 
 export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -84,23 +85,15 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Stack")} />
-          <Select
-            size="small"
-            sx={{ width: 100, "> div": { py: "7.5px" } }}
+          <StackModeSwitch
             value={values.stack}
-            onChange={(e) => {
+            onChange={(value) => {
               setValues((v) => ({
                 ...v,
-                stack: e.target.value as string,
+                stack: value,
               }));
             }}
-          >
-            {["System", "gVisor", "Mixed"].map((i) => (
-              <MenuItem value={i} key={i}>
-                {i}
-              </MenuItem>
-            ))}
-          </Select>
+          />
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
