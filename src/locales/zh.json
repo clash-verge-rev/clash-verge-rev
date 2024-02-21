@@ -160,7 +160,16 @@
   "Retain 30 Days": "保留30天",
   "Retain 90 Days": "保留90天",
 
+  "Stack": "Tun 模式堆栈",
+  "Device": "Tun 网卡名称",
+  "Auto Route": "自动设置全局路由",
+  "Strict Route": "严格路由",
+  "Auto Detect Interface": "自动选择流量出口接口",
+  "DNS Hijack": "DNS 劫持",
+  "MTU": "最大传输单元",
+
   "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换",
   "Tun Mode Info Windows": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",
-  "Tun Mode Info Unix": "Tun模式需要授予内核相关权限，使用前请先在内核设置中给内核授权"
+  "Tun Mode Info Unix": "Tun模式需要授予内核相关权限，使用前请先在内核设置中给内核授权",
+  "System and Mixed Can Only be Used in Service Mode": "System和Mixed只能在服务模式下使用"
 }
