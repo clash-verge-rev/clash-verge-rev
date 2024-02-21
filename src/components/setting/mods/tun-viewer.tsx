@@ -25,7 +25,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     device: "Mihomo",
     autoRoute: true,
     autoDetectInterface: true,
-    dnsHijack: ["any:53", "tcp://any:53"],
+    dnsHijack: ["any:53"],
     strictRoute: false,
     mtu: 9000,
   });
@@ -38,7 +38,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         device: clash?.tun.device ?? "Mihomo",
         autoRoute: clash?.tun["auto-route"] ?? true,
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
-        dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53", "tcp://any:53"],
+        dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53"],
         strictRoute: clash?.tun["strict-route"] ?? false,
         mtu: clash?.tun.mtu ?? 9000,
       });
