@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup, Tooltip } from "@mui/material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
@@ -25,11 +26,13 @@ export const StackModeSwitch = (props: Props) => {
     }
   );
 
+  const { t } = useTranslation();
+
   return (
     <Tooltip
       title={
         isWIN && (serviceStatus !== "active" || !enable_service_mode)
-          ? "System and Mixed modes must be used in service mode"
+          ? t("System and Mixed Can Only be Used in Service Mode")
           : ""
       }
     >
