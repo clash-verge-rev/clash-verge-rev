@@ -32,7 +32,7 @@ impl IClashTemp {
     pub fn template() -> Self {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
-        tun.insert("stack".into(), "gVisor".into());
+        tun.insert("stack".into(), "gvisor".into());
         tun.insert("device".into(), "Meta".into());
         tun.insert("auto-route".into(), true.into());
         tun.insert("strict-route".into(), false.into());

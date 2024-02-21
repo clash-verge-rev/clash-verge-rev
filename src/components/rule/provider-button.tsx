@@ -53,6 +53,7 @@ export const ProviderButton = () => {
             <Typography variant="h6">{t("Rule Provider")}</Typography>
             <Button
               variant="contained"
+              size="small"
               onClick={async () => {
                 Object.entries(data || {}).forEach(async ([key, item]) => {
                   await ruleProviderUpdate(key);

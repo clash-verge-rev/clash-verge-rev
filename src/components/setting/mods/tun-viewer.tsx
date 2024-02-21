@@ -5,8 +5,9 @@ import {
   List,
   ListItem,
   ListItemText,
-  MenuItem,
-  Select,
+  Box,
+  Typography,
+  Button,
   Switch,
   TextField,
 } from "@mui/material";
@@ -21,8 +22,8 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
-    stack: "gVisor",
-    device: "Mihomo",
+    stack: "gvisor",
+    device: "Meta",
     autoRoute: true,
     autoDetectInterface: true,
     dnsHijack: ["any:53"],
@@ -34,8 +35,8 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     open: () => {
       setOpen(true);
       setValues({
-        stack: clash?.tun.stack ?? "gVisor",
-        device: clash?.tun.device ?? "Mihomo",
+        stack: clash?.tun.stack ?? "gvisor",
+        device: clash?.tun.device ?? "Meta",
         autoRoute: clash?.tun["auto-route"] ?? true,
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
         dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53"],
@@ -74,7 +75,45 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Tun Mode")}
+      title={
+        <Box display="flex" justifyContent="space-between" gap={1}>
+          <Typography variant="h6">{t("Tun Mode")}</Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={async () => {
+              let tun = {
+                stack: "gvisor",
+                device: "Meta",
+                "auto-route": true,
+                "auto-detect-interface": true,
+                "dns-hijack": ["any:53"],
+                "strict-route": false,
+                mtu: 9000,
+              };
+              setValues({
+                stack: "gvisor",
+                device: "Meta",
+                autoRoute: true,
+                autoDetectInterface: true,
+                dnsHijack: ["any:53"],
+                strictRoute: false,
+                mtu: 9000,
+              });
+              await patchClash({ tun });
+              await mutateClash(
+                (old) => ({
+                  ...(old! || {}),
+                  tun,
+                }),
+                false
+              );
+            }}
+          >
+            {t("Reset to Default")}
+          </Button>
+        </Box>
+      }
       contentSx={{ width: 450 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
