@@ -204,28 +204,6 @@ impl Sysopt {
             .set_app_path(&app_path)
             .build()?;
 
-        // 避免在开发时将自启动关了
-        #[cfg(feature = "verge-dev")]
-        if !enable {
-            return Ok(());
-        }
-
-        #[cfg(target_os = "macos")]
-        {
-            if enable && !auto.is_enabled().unwrap_or(false) {
-                // 避免重复设置登录项
-                let _ = auto.disable();
-                auto.enable()?;
-            } else if !enable {
-                let _ = auto.disable();
-            }
-        }
-
-        #[cfg(not(target_os = "macos"))]
-        if enable {
-            auto.enable()?;
-        }
-
         *self.auto_launch.lock() = Some(auto);
 
         Ok(())
