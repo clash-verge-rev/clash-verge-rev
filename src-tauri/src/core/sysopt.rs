@@ -148,9 +148,6 @@ impl Sysopt {
 
     /// init the auto launch
     pub fn init_launch(&self) -> Result<()> {
-        let enable = { Config::verge().latest().enable_auto_launch };
-        let enable = enable.unwrap_or(false);
-
         let app_exe = current_exe()?;
         let app_exe = dunce::canonicalize(app_exe)?;
         let app_name = app_exe

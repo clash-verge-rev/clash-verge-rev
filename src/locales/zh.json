@@ -167,6 +167,7 @@
   "Auto Detect Interface": "自动选择流量出口接口",
   "DNS Hijack": "DNS 劫持",
   "MTU": "最大传输单元",
+  "Reset to Default": "重置为默认值",
 
   "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换",
   "Tun Mode Info Windows": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",

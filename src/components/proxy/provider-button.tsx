@@ -55,6 +55,7 @@ export const ProviderButton = () => {
             <Typography variant="h6">{t("Proxy Provider")}</Typography>
             <Button
               variant="contained"
+              size="small"
               onClick={async () => {
                 Object.entries(data || {}).forEach(async ([key, item]) => {
                   await proxyProviderUpdate(key);
