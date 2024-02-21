@@ -113,7 +113,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             spellCheck="false"
             sx={{ width: 250 }}
             value={values.device}
-            placeholder="Mihomo"
+            placeholder="Meta"
             onChange={(e) =>
               setValues((v) => ({ ...v, device: e.target.value }))
             }
