@@ -90,8 +90,9 @@ export async function getClashInfo() {
   return invoke<IClashInfo | null>("get_clash_info");
 }
 
+// Get runtime config which controlled by verge
 export async function getRuntimeConfig() {
-  return invoke<any | null>("get_runtime_config");
+  return invoke<IConfigData | null>("get_runtime_config");
 }
 
 export async function getRuntimeYaml() {
