@@ -194,7 +194,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             spellCheck="false"
             sx={{ width: 250 }}
             value={values.defaultLatencyTimeout}
-            placeholder="http://1.1.1.1"
+            placeholder="10000"
             onChange={(e) =>
               setValues((v) => ({
                 ...v,
