@@ -36,6 +36,13 @@ pub struct IVerge {
     /// show memory info (only for Clash Meta)
     pub enable_memory_usage: Option<bool>,
 
+    /// common tray icon
+    pub common_tray_icon: Option<String>,
+
+    pub sysproxy_tray_icon: Option<String>,
+
+    pub tun_tray_icon: Option<String>,
+
     /// clash tun mode
     pub enable_tun_mode: Option<bool>,
 
@@ -204,6 +211,9 @@ impl IVerge {
         patch!(startup_script);
         patch!(traffic_graph);
         patch!(enable_memory_usage);
+        patch!(common_tray_icon);
+        patch!(sysproxy_tray_icon);
+        patch!(tun_tray_icon);
 
         patch!(enable_tun_mode);
         patch!(enable_service_mode);

@@ -129,26 +129,47 @@ impl Tray {
         let verge = verge.latest();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        let common_tray_icon = verge.common_tray_icon.clone().unwrap_or("".to_string());
+        let sysproxy_tray_icon = verge.sysproxy_tray_icon.clone().unwrap_or("".to_string());
+        let tun_tray_icon = verge.tun_tray_icon.clone().unwrap_or("".to_string());
 
         let mut indication_icon = if *system_proxy {
             #[cfg(not(target_os = "macos"))]
-            let icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
+            let mut icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
             #[cfg(target_os = "macos")]
-            let icon = include_bytes!("../../icons/mac-tray-icon-sys.png").to_vec();
+            let mut icon = include_bytes!("../../icons/mac-tray-icon-sys.png").to_vec();
+            if !sysproxy_tray_icon.is_empty() {
+                let path = std::path::Path::new(&sysproxy_tray_icon);
+                if path.exists() {
+                    icon = std::fs::read(path).unwrap();
+                }
+            }
             icon
         } else {
             #[cfg(not(target_os = "macos"))]
-            let icon = include_bytes!("../../icons/tray-icon.png").to_vec();
+            let mut icon = include_bytes!("../../icons/tray-icon.png").to_vec();
             #[cfg(target_os = "macos")]
-            let icon = include_bytes!("../../icons/mac-tray-icon.png").to_vec();
+            let mut icon = include_bytes!("../../icons/mac-tray-icon.png").to_vec();
+            if !common_tray_icon.is_empty() {
+                let path = std::path::Path::new(&common_tray_icon);
+                if path.exists() {
+                    icon = std::fs::read(path).unwrap();
+                }
+            }
             icon
         };
 
         if *tun_mode {
             #[cfg(not(target_os = "macos"))]
-            let icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
+            let mut icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
             #[cfg(target_os = "macos")]
-            let icon = include_bytes!("../../icons/mac-tray-icon-tun.png").to_vec();
+            let mut icon = include_bytes!("../../icons/mac-tray-icon-tun.png").to_vec();
+            if !tun_tray_icon.is_empty() {
+                let path = std::path::Path::new(&tun_tray_icon);
+                if path.exists() {
+                    icon = std::fs::read(path).unwrap();
+                }
+            }
             indication_icon = icon
         }
 
