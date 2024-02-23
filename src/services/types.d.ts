@@ -200,6 +200,9 @@ interface IVergeConfig {
   theme_mode?: "light" | "dark" | "system";
   traffic_graph?: boolean;
   enable_memory_usage?: boolean;
+  common_tray_icon?: string;
+  sysproxy_tray_icon?: string;
+  tun_tray_icon?: string;
   enable_tun_mode?: boolean;
   enable_auto_launch?: boolean;
   enable_service_mode?: boolean;

@@ -230,6 +230,9 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let proxy_bypass = patch.system_proxy_bypass;
     let language = patch.language;
     let port = patch.verge_mixed_port;
+    let common_tray_icon = patch.common_tray_icon;
+    let sysproxy_tray_icon = patch.sysproxy_tray_icon;
+    let tun_tray_icon = patch.tun_tray_icon;
 
     match {
         #[cfg(target_os = "windows")]
@@ -269,7 +272,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
 
         if language.is_some() {
             handle::Handle::update_systray()?;
-        } else if system_proxy.or(tun_mode).is_some() {
+        } else if system_proxy.is_some()
+            || tun_mode.is_some()
+            || common_tray_icon.is_some()
+            || sysproxy_tray_icon.is_some()
+            || tun_tray_icon.is_some()
+        {
             handle::Handle::update_systray_part()?;
         }
 
