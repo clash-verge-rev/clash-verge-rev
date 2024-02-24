@@ -99,10 +99,10 @@ export const ProxyItem = (props: Props) => {
           title={proxy.name}
           secondary={
             <>
-              <span style={{ marginRight: 4 }}>{proxy.name}</span>
-              {showType && proxy.now && (
-                <TypeBox component="span">{proxy.now}</TypeBox>
-              )}
+              <span style={{ marginRight: 4 }}>
+                {proxy.name}
+                {showType && proxy.now && ` - ${proxy.now}`}
+              </span>
               {showType && !!proxy.provider && (
                 <TypeBox component="span">{proxy.provider}</TypeBox>
               )}
