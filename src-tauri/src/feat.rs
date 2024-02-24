@@ -10,13 +10,19 @@ use crate::log_err;
 use crate::utils::resolve;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
-use tauri::{AppHandle, ClipboardManager};
+use tauri::{AppHandle, ClipboardManager, Manager};
 
 // 打开面板
-pub fn open_dashboard() {
+pub fn open_or_close_dashboard() {
     let handle = handle::Handle::global();
     let app_handle = handle.app_handle.lock();
     if let Some(app_handle) = app_handle.as_ref() {
+        if let Some(window) = app_handle.get_window("main") {
+            if let Ok(true) = window.is_focused() {
+                let _ = window.close();
+                return;
+            }
+        }
         resolve::create_window(app_handle);
     }
 }
