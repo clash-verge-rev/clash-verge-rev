@@ -219,15 +219,12 @@ impl PrfItem {
             }
         }
 
-        if accept_invalid_certs {
-            builder = builder.danger_accept_invalid_certs(accept_invalid_certs);
-        }
-
         let version = match VERSION.get() {
             Some(v) => format!("clash-verge/v{}", v),
             None => "clash-verge/unknown".to_string(),
         };
 
+        builder = builder.danger_accept_invalid_certs(accept_invalid_certs);
         builder = builder.user_agent(user_agent.unwrap_or(version));
 
         let resp = builder.build()?.get(url).send().await?;
