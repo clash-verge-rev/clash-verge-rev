@@ -13,15 +13,15 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 
 Click on the corresponding link below to download the installation package. Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
-[[Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.3/Clash.Verge_1.5.3_x64-setup.exe)]
-[[Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.3/Clash.Verge_1.5.3_arm64-setup.exe)]
+[[Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/Clash.Verge_1.5.4_x64-setup.exe)]
+[[Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/Clash.Verge_1.5.4_arm64-setup.exe)]
 
-[[macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.3/Clash.Verge_1.5.3_x64.dmg)]
-[[macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.3/Clash.Verge_1.5.3_aarch64.dmg)]
+[[macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/Clash.Verge_1.5.4_x64.dmg)]
+[[macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/Clash.Verge_1.5.4_aarch64.dmg)]
 
-[[Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.3/clash-verge_1.5.3_amd64.AppImage)]
-[[Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.3/clash-verge_1.5.3_amd64.deb)]
-[[Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.3/clash-verge_1.5.3_arm64.deb)]
+[[Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/clash-verge_1.5.4_amd64.AppImage)]
+[[Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/clash-verge_1.5.4_amd64.deb)]
+[[Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/clash-verge_1.5.4_arm64.deb)]
 
 Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
 
