@@ -36,6 +36,9 @@ pub struct IVerge {
     /// show memory info (only for Clash Meta)
     pub enable_memory_usage: Option<bool>,
 
+    /// enable group icon
+    pub enable_group_icon: Option<bool>,
+
     /// common tray icon
     pub common_tray_icon: Option<bool>,
 
@@ -172,6 +175,10 @@ impl IVerge {
             start_page: Some("/".into()),
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
+            enable_group_icon: Some(true),
+            common_tray_icon: Some(false),
+            sysproxy_tray_icon: Some(false),
+            tun_tray_icon: Some(false),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_system_proxy: Some(false),
@@ -213,6 +220,7 @@ impl IVerge {
         patch!(startup_script);
         patch!(traffic_graph);
         patch!(enable_memory_usage);
+        patch!(enable_group_icon);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);

@@ -84,6 +84,19 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           </GuardState>
         </SettingItem>
 
+        <SettingItem label={t("Proxy Group Icon")}>
+          <GuardState
+            value={verge?.enable_group_icon ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_group_icon: e })}
+            onGuard={(e) => patchVerge({ enable_group_icon: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </SettingItem>
+
         <SettingItem label={t("Common Tray Icon")}>
           <GuardState
             value={verge?.common_tray_icon}
