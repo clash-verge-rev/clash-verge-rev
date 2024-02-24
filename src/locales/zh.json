@@ -67,6 +67,7 @@
   "Update Interval": "更新间隔",
   "Use System Proxy": "使用系统代理更新",
   "Use Clash Proxy": "使用Clash代理更新",
+  "Accept Invalid Certs (Danger)": "订阅链接允许无效证书 (危险)",
 
   "Settings": "设置",
   "Clash Setting": "Clash 设置",
