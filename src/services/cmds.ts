@@ -139,6 +139,10 @@ export async function grantPermission(core: string) {
   return invoke<void>("grant_permission", { core });
 }
 
+export async function getAppDir() {
+  return invoke<string>("get_app_dir");
+}
+
 export async function openAppDir() {
   return invoke<void>("open_app_dir").catch((err) =>
     Notice.error(err?.message || err.toString(), 1500)
@@ -211,4 +215,11 @@ export async function getPortableFlag() {
 
 export async function exitApp() {
   return invoke("exit_app");
+}
+
+export async function copyIconFile(
+  path: string,
+  name: "common.png" | "sysproxy.png" | "tun.png"
+) {
+  return invoke<void>("copy_icon_file", { path, name });
 }

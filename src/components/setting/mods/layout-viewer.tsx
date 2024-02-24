@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { List, Switch, Button } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
@@ -7,12 +7,32 @@ import { SettingItem } from "./setting-comp";
 import { GuardState } from "./guard-state";
 import { open as openDialog } from "@tauri-apps/api/dialog";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { copyIconFile, getAppDir } from "@/services/cmds";
+import { join } from "@tauri-apps/api/path";
 
 export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const { verge, patchVerge, mutateVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
+  const [commonIcon, setCommonIcon] = useState("");
+  const [sysproxyIcon, setSysproxyIcon] = useState("");
+  const [tunIcon, setTunIcon] = useState("");
+
+  useEffect(() => {
+    initIconPath();
+  }, []);
+
+  async function initIconPath() {
+    const appDir = await getAppDir();
+    const icon_dir = await join(appDir, "icons");
+    const common_icon = await join(icon_dir, "common.png");
+    const sysproxy_icon = await join(icon_dir, "sysproxy.png");
+    const tun_icon = await join(icon_dir, "tun.png");
+    setCommonIcon(common_icon);
+    setSysproxyIcon(sysproxy_icon);
+    setTunIcon(tun_icon);
+  }
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -75,17 +95,15 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               variant="outlined"
               size="small"
               startIcon={
-                verge?.common_tray_icon && (
-                  <img
-                    height="20px"
-                    src={convertFileSrc(verge?.common_tray_icon)}
-                  />
+                verge?.common_tray_icon &&
+                commonIcon && (
+                  <img height="20px" src={convertFileSrc(commonIcon)} />
                 )
               }
               onClick={async () => {
                 if (verge?.common_tray_icon) {
-                  onChangeData({ common_tray_icon: "" });
-                  patchVerge({ common_tray_icon: "" });
+                  onChangeData({ common_tray_icon: false });
+                  patchVerge({ common_tray_icon: false });
                 } else {
                   const path = await openDialog({
                     directory: false,
@@ -98,8 +116,9 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     ],
                   });
                   if (path?.length) {
-                    onChangeData({ common_tray_icon: `${path}` });
-                    patchVerge({ common_tray_icon: `${path}` });
+                    await copyIconFile(`${path}`, "common.png");
+                    onChangeData({ common_tray_icon: true });
+                    patchVerge({ common_tray_icon: true });
                   }
                 }
               }}
@@ -120,17 +139,15 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               variant="outlined"
               size="small"
               startIcon={
-                verge?.sysproxy_tray_icon && (
-                  <img
-                    height="20px"
-                    src={convertFileSrc(verge?.sysproxy_tray_icon)}
-                  />
+                verge?.sysproxy_tray_icon &&
+                sysproxyIcon && (
+                  <img height="20px" src={convertFileSrc(sysproxyIcon)} />
                 )
               }
               onClick={async () => {
                 if (verge?.sysproxy_tray_icon) {
-                  onChangeData({ sysproxy_tray_icon: "" });
-                  patchVerge({ sysproxy_tray_icon: "" });
+                  onChangeData({ sysproxy_tray_icon: false });
+                  patchVerge({ sysproxy_tray_icon: false });
                 } else {
                   const path = await openDialog({
                     directory: false,
@@ -143,8 +160,9 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     ],
                   });
                   if (path?.length) {
-                    onChangeData({ sysproxy_tray_icon: `${path}` });
-                    patchVerge({ sysproxy_tray_icon: `${path}` });
+                    await copyIconFile(`${path}`, "sysproxy.png");
+                    onChangeData({ sysproxy_tray_icon: true });
+                    patchVerge({ sysproxy_tray_icon: true });
                   }
                 }
               }}
@@ -165,17 +183,13 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               variant="outlined"
               size="small"
               startIcon={
-                verge?.tun_tray_icon && (
-                  <img
-                    height="20px"
-                    src={convertFileSrc(verge?.tun_tray_icon)}
-                  />
-                )
+                verge?.tun_tray_icon &&
+                tunIcon && <img height="20px" src={convertFileSrc(tunIcon)} />
               }
               onClick={async () => {
                 if (verge?.tun_tray_icon) {
-                  onChangeData({ tun_tray_icon: "" });
-                  patchVerge({ tun_tray_icon: "" });
+                  onChangeData({ tun_tray_icon: false });
+                  patchVerge({ tun_tray_icon: false });
                 } else {
                   const path = await openDialog({
                     directory: false,
@@ -188,8 +202,9 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     ],
                   });
                   if (path?.length) {
-                    onChangeData({ tun_tray_icon: `${path}` });
-                    patchVerge({ tun_tray_icon: `${path}` });
+                    await copyIconFile(`${path}`, "tun.png");
+                    onChangeData({ tun_tray_icon: true });
+                    patchVerge({ tun_tray_icon: true });
                   }
                 }
               }}
