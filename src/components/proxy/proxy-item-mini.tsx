@@ -95,7 +95,32 @@ export const ProxyItemMini = (props: Props) => {
         </Typography>
 
         {showType && (
-          <Box sx={{ display: "flex", flexWrap: "nowrap", flex: "none" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "nowrap",
+              flex: "none",
+              marginTop: "4px",
+            }}
+          >
+            {proxy.now && (
+              <Typography
+                variant="body2"
+                component="div"
+                color="text.secondary"
+                sx={{
+                  display: "block",
+                  textOverflow: "ellipsis",
+                  wordBreak: "break-all",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  fontSize: "0.75rem",
+                  marginRight: "8px",
+                }}
+              >
+                {proxy.now}
+              </Typography>
+            )}
             {!!proxy.provider && (
               <TypeBox component="span">{proxy.provider}</TypeBox>
             )}
@@ -178,6 +203,16 @@ const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
   borderColor: alpha(palette.text.secondary, 0.36),
   color: alpha(palette.text.secondary, 0.42),
   borderRadius: 4,
+  fontSize: 10,
+  fontFamily: typography.fontFamily,
+  marginRight: "4px",
+  marginTop: "auto",
+  padding: "0 2px",
+  lineHeight: 1.25,
+}));
+
+const TypeTypo = styled(Box)(({ theme: { palette, typography } }) => ({
+  display: "inline-block",
   fontSize: 10,
   fontFamily: typography.fontFamily,
   marginRight: "4px",
