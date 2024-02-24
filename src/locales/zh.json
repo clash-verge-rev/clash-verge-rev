@@ -138,7 +138,7 @@
   "Download Speed": "下载速度",
   "Upload Speed": "上传速度",
 
-  "open_dashboard": "打开面板",
+  "open_or_close_dashboard": "打开/关闭面板",
   "clash_mode_rule": "规则模式",
   "clash_mode_global": "全局模式",
   "clash_mode_direct": "直连模式",
