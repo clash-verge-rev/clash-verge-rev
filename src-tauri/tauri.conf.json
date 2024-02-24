@@ -62,6 +62,9 @@
       "protocol": {
         "asset": true,
         "assetScope": ["**"]
+      },
+      "path": {
+        "all": true
       }
     },
     "windows": [],

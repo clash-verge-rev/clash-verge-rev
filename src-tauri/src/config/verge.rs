@@ -37,11 +37,13 @@ pub struct IVerge {
     pub enable_memory_usage: Option<bool>,
 
     /// common tray icon
-    pub common_tray_icon: Option<String>,
+    pub common_tray_icon: Option<bool>,
 
-    pub sysproxy_tray_icon: Option<String>,
+    /// sysproxy tray icon
+    pub sysproxy_tray_icon: Option<bool>,
 
-    pub tun_tray_icon: Option<String>,
+    /// tun tray icon
+    pub tun_tray_icon: Option<bool>,
 
     /// clash tun mode
     pub enable_tun_mode: Option<bool>,

@@ -268,6 +268,33 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
 }
 
 #[tauri::command]
+pub fn get_app_dir() -> CmdResult<String> {
+    let app_home_dir = wrap_err!(dirs::app_home_dir())?
+        .to_string_lossy()
+        .to_string();
+    Ok(app_home_dir)
+}
+
+#[tauri::command]
+pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
+    let file_path = std::path::Path::new(&path);
+    let icon_dir = wrap_err!(dirs::app_home_dir())?.join("icons");
+    if !icon_dir.exists() {
+        let _ = std::fs::create_dir_all(&icon_dir);
+    }
+    let dest_path = icon_dir.join(name);
+
+    if file_path.exists() {
+        match std::fs::copy(file_path, &dest_path) {
+            Ok(_) => Ok(dest_path.to_string_lossy().to_string()),
+            Err(err) => Err(err.to_string()),
+        }
+    } else {
+        return Err("file not found".to_string());
+    }
+}
+
+#[tauri::command]
 pub fn exit_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, true);
     resolve::resolve_reset();
