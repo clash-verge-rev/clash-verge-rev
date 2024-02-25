@@ -243,6 +243,7 @@ pub async fn resolve_scheme(param: String) {
         user_agent: None,
         with_proxy: Some(true),
         self_proxy: None,
+        danger_accept_invalid_certs: None,
         update_interval: None,
     };
     if let Ok(item) = PrfItem::from_url(url, None, None, Some(option)).await {
