@@ -67,6 +67,7 @@
   "Update Interval": "Update Interval",
   "Use System Proxy": "Use System Proxy",
   "Use Clash Proxy": "Use Clash Proxy",
+  "Accept Invalid Certs (Danger)": "Allows Invalid Certificates (Danger)",
 
   "Settings": "Settings",
   "Clash Setting": "Clash Setting",

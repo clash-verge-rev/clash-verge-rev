@@ -65,6 +65,9 @@
   "Descriptions": "Описания",
   "Subscription URL": "URL подписки",
   "Update Interval": "Интервал обновления",
+  "Use System Proxy": "Использовать системный прокси для обновления",
+  "Use Clash Proxy": "Использовать прокси Clash для обновления",
+  "Accept Invalid Certs (Danger)": "Принимать недействительные сертификаты (Опасно)",
 
   "Settings": "Настройки",
   "Clash Setting": "Настройки Clash",

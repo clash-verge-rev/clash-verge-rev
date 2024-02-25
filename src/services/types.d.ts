@@ -173,6 +173,7 @@ interface IProfileOption {
   with_proxy?: boolean;
   self_proxy?: boolean;
   update_interval?: number;
+  danger_accept_invalid_certs?: boolean;
 }
 
 interface IProfilesConfig {
