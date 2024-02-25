@@ -2,6 +2,7 @@ use crate::core::handle;
 use anyhow::Result;
 use once_cell::sync::OnceCell;
 use std::path::PathBuf;
+use tauri::Manager;
 
 #[cfg(not(feature = "verge-dev"))]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
