@@ -1,5 +1,5 @@
 import { Button, ButtonGroup } from "@mui/material";
-import { appWindow } from "@tauri-apps/api/window";
+import { Window } from "@tauri-apps/api/window";
 import {
   CloseRounded,
   CropSquareRounded,
@@ -15,9 +15,11 @@ export const LayoutControl = () => {
 
   const [isMaximized, setIsMaximized] = useState(false);
   const [isPined, setIsPined] = useState(false);
-  appWindow.isMaximized().then((isMaximized) => {
-    setIsMaximized(() => isMaximized);
-  });
+  Window.getCurrent()
+    .isMaximized()
+    .then((isMaximized) => {
+      setIsMaximized(() => isMaximized);
+    });
 
   return (
     <ButtonGroup
@@ -34,7 +36,7 @@ export const LayoutControl = () => {
         size="small"
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
         onClick={() => {
-          appWindow.setAlwaysOnTop(!isPined);
+          Window.getCurrent().setAlwaysOnTop(!isPined);
           setIsPined((isPined) => !isPined);
         }}
       >
@@ -48,7 +50,7 @@ export const LayoutControl = () => {
       <Button
         size="small"
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
-        onClick={() => appWindow.minimize()}
+        onClick={() => Window.getCurrent().minimize()}
       >
         <HorizontalRuleRounded fontSize="small" />
       </Button>
@@ -58,7 +60,7 @@ export const LayoutControl = () => {
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
         onClick={() => {
           setIsMaximized((isMaximized) => !isMaximized);
-          appWindow.toggleMaximize();
+          Window.getCurrent().toggleMaximize();
         }}
       >
         {isMaximized ? (
@@ -80,7 +82,7 @@ export const LayoutControl = () => {
           svg: { transform: "scale(1.05)" },
           ":hover": { bgcolor: "#ff000090" },
         }}
-        onClick={() => appWindow.close()}
+        onClick={() => Window.getCurrent().close()}
       >
         <CloseRounded fontSize="small" />
       </Button>

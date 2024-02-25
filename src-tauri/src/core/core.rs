@@ -2,6 +2,7 @@ use super::{clash_api, logger::Logger};
 use crate::log_err;
 use crate::{config::*, utils::dirs};
 use anyhow::{bail, Context, Result};
+
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{fs, io::Write, sync::Arc, time::Duration};
@@ -67,26 +68,31 @@ impl CoreManager {
 
         let app_dir = dirs::app_home_dir()?;
         let app_dir = dirs::path_to_str(&app_dir)?;
-        let app_handle = self.app_handle.lock();
-        if let Some(app_handle) = app_handle.as_ref() {
-            let output = app_handle
-                .shell()
-                .sidecar(clash_core)?
-                .args(["-t", "-d", app_dir, "-f", config_path])
-                .output()
-                .await?;
-            if !output.status.success() {
-                let stdout = String::from_utf8(output.stdout).unwrap_or_default();
-                let error = clash_api::parse_check_output(stdout.clone());
-                let error = match !error.is_empty() {
-                    true => error,
-                    false => stdout.clone(),
-                };
-                Logger::global().set_log(stdout.clone());
-                bail!("{error}");
+        let output;
+        {
+            let app_handle = self.app_handle.lock();
+            if let Some(app_handle) = app_handle.as_ref() {
+                output = app_handle
+                    .shell()
+                    .sidecar(clash_core)?
+                    .args(["-t", "-d", app_dir, "-f", config_path])
+                    .output();
+            } else {
+                panic!("app_handle is None")
             }
         }
-
+        // if let Some(app_handle) = app_handle.lock() {
+        let output = output.await?;
+        if !output.status.success() {
+            let stdout = String::from_utf8(output.stdout).unwrap_or_default();
+            let error = clash_api::parse_check_output(stdout.clone());
+            let error = match !error.is_empty() {
+                true => error,
+                false => stdout.clone(),
+            };
+            Logger::global().set_log(stdout.clone());
+            bail!("{error}");
+        }
         Ok(())
     }
 

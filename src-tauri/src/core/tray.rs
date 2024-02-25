@@ -1,7 +1,5 @@
 use crate::{cmds, config::Config, feat, utils::resolve};
 use anyhow::Result;
-use std::error::Error;
-use std::marker::Sync;
 use tauri::menu::{MenuBuilder, MenuEvent, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
 use tauri::tray::{ClickType, TrayIconBuilder};
 use tauri::{AppHandle, Manager};
@@ -24,42 +22,58 @@ impl Tray {
         }
 
         let open_window = MenuItemBuilder::with_id("open_window", t!("Dashboard", "打开面板"))
-            .build(app_handle)?;
-        let rule_mode =
-            MenuItemBuilder::with_id("rule_mode", t!("Rule Mode", "规则模式")).build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
+        let rule_mode = MenuItemBuilder::with_id("rule_mode", t!("Rule Mode", "规则模式"))
+            .build(app_handle)
+            .unwrap();
         let global_mode = MenuItemBuilder::with_id("global_mode", t!("Global Mode", "全局模式"))
-            .build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
         let direct_mode = MenuItemBuilder::with_id("direct_mode", t!("Direct Mode", "直连模式"))
-            .build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
         let system_proxy = MenuItemBuilder::with_id("system_proxy", t!("System Proxy", "系统代理"))
-            .build(app_handle)?;
-        let tun_mode =
-            MenuItemBuilder::with_id("tun_mode", t!("TUN Mode", "Tun 模式")).build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
+        let tun_mode = MenuItemBuilder::with_id("tun_mode", t!("TUN Mode", "Tun 模式"))
+            .build(app_handle)
+            .unwrap();
         let copy_env = MenuItemBuilder::with_id("copy_env", t!("Copy Env", "复制环境变量"))
-            .build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
         let open_app_dir = MenuItemBuilder::with_id("open_app_dir", t!("App Dir", "应用目录"))
-            .build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
         let open_core_dir = MenuItemBuilder::with_id("open_core_dir", t!("Core Dir", "内核目录"))
-            .build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
         let open_logs_dir = MenuItemBuilder::with_id("open_logs_dir", t!("Logs Dir", "日志目录"))
-            .build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
         let open_dir = SubmenuBuilder::with_id(app_handle, "open_dir", t!("Open Dir", "打开目录"))
             .items(&[&open_app_dir, &open_core_dir, &open_logs_dir])
-            .build()?;
+            .build()
+            .unwrap();
         let restart_clash =
             MenuItemBuilder::with_id("restart_clash", t!("Restart Clash", "重启 Clash"))
-                .build(app_handle)?;
+                .build(app_handle)
+                .unwrap();
         let restart_app = MenuItemBuilder::with_id("restart_app", t!("Restart App", "重启应用"))
-            .build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
         let app_version = MenuItemBuilder::with_id("app_version", format!("Version {version}"))
-            .build(app_handle)?;
+            .build(app_handle)
+            .unwrap();
         let more = SubmenuBuilder::with_id(app_handle, "more", t!("More", "更多"))
             .items(&[&restart_clash, &restart_app, &app_version])
-            .build()?;
+            .build()
+            .unwrap();
         let quit = MenuItemBuilder::with_id("quit", t!("Quit", "退出"))
             .accelerator("CmdOrControl+Q")
-            .build(app_handle)?;
-        let separator = PredefinedMenuItem::separator(app_handle)?;
+            .build(app_handle)
+            .unwrap();
+        let separator = PredefinedMenuItem::separator(app_handle).unwrap();
         let menu = MenuBuilder::new(app_handle)
             .items(&[
                 &open_window,
@@ -76,7 +90,8 @@ impl Tray {
                 &separator,
                 &quit,
             ])
-            .build()?;
+            .build()
+            .unwrap();
         let tray = TrayIconBuilder::new()
             .menu(&menu)
             .on_menu_event(Self::on_menu_event)

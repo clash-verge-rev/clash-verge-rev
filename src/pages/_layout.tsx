@@ -8,7 +8,7 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { alpha, List, Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
-import { appWindow } from "@tauri-apps/api/window";
+import { Window } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
@@ -44,7 +44,7 @@ const Layout = () => {
     window.addEventListener("keydown", (e) => {
       // macOS有cmd+w
       if (e.key === "Escape" && OS !== "macos") {
-        appWindow.close();
+        Window.getCurrent().close();
       }
     });
 
@@ -77,9 +77,9 @@ const Layout = () => {
 
     setTimeout(async () => {
       portableFlag = await getPortableFlag();
-      await appWindow.unminimize();
-      await appWindow.show();
-      await appWindow.setFocus();
+      await Window.getCurrent().unminimize();
+      await Window.getCurrent().show();
+      await Window.getCurrent().setFocus();
     }, 50);
   }, []);
 
@@ -101,7 +101,7 @@ const Layout = () => {
           elevation={0}
           className={`${OS} layout`}
           onPointerDown={(e: any) => {
-            if (e.target?.dataset?.windrag) appWindow.startDragging();
+            if (e.target?.dataset?.windrag) Window.getCurrent().startDragging();
           }}
           onContextMenu={(e) => {
             // only prevent it on Windows

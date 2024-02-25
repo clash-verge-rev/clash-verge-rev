@@ -315,10 +315,10 @@ pub fn startup_script(app_handle: &tauri::AppHandle) -> Result<()> {
                     .command(shell)
                     .current_dir(dir.to_path_buf())
                     .args(&[path])
-                    .output()?;
+                    .output();
             }
             None => {
-                let _ = app_handle.shell().command(shell).args(&[path]).output()?;
+                let _ = app_handle.shell().command(shell).args(&[path]).output();
             }
         }
     }

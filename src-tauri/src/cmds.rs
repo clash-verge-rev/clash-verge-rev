@@ -9,7 +9,7 @@ use anyhow::{Context, Result};
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
 use sysproxy::Sysproxy;
-use tauri_plugin_shell::ShellExt;
+
 type CmdResult<T = ()> = Result<T, String>;
 
 #[tauri::command]

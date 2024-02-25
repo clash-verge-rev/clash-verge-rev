@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useRecoilState } from "recoil";
 import { alpha, createTheme, Theme } from "@mui/material";
-import { appWindow } from "@tauri-apps/api/window";
+import { Window } from "@tauri-apps/api/window";
 import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
@@ -24,8 +24,12 @@ export const useCustomTheme = () => {
       return;
     }
 
-    appWindow.theme().then((m) => m && setMode(m));
-    const unlisten = appWindow.onThemeChanged((e) => setMode(e.payload));
+    Window.getCurrent()
+      .theme()
+      .then((m) => m && setMode(m));
+    const unlisten = Window.getCurrent().onThemeChanged((e) =>
+      setMode(e.payload)
+    );
 
     return () => {
       unlisten.then((fn) => fn());

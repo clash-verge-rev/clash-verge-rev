@@ -2,9 +2,9 @@ use crate::{config::Config, feat, log_err};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
-use std::{collections::HashMap, sync::Arc};
-use tauri::{AppHandle, Manager};
-use tauri_plugin_global_shortcut::GlobalShortcutExt;
+use std::{borrow::Borrow, collections::HashMap, sync::Arc};
+use tauri::{AppHandle, Wry};
+use tauri_plugin_global_shortcut::{GlobalShortcut, GlobalShortcutExt};
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
@@ -50,14 +50,6 @@ impl Hotkey {
         Ok(())
     }
 
-    // fn get_manager(&self) -> Result<impl GlobalShortcutManager> {
-    //     let app_handle = self.app_handle.lock();
-    //     if app_handle.is_none() {
-    //         bail!("failed to get the hotkey manager");
-    //     }
-    //     Ok(app_handle.as_ref().unwrap().global_shortcut_manager())
-    // }
-
     fn register(&self, hotkey: &str, func: &str) -> Result<()> {
         let app_handle = self.app_handle.lock();
         if app_handle.is_none() {
@@ -65,7 +57,7 @@ impl Hotkey {
         }
         let manager = app_handle.as_ref().unwrap().global_shortcut();
 
-        if manager.is_registered(hotkey)? {
+        if manager.is_registered(hotkey) {
             manager.unregister(hotkey)?;
         }
 
@@ -91,7 +83,9 @@ impl Hotkey {
     }
 
     fn unregister(&self, hotkey: &str) -> Result<()> {
-        self.get_manager()?.unregister(hotkey)?;
+        let binding = self.app_handle.lock();
+        let app_handle = binding.as_ref();
+        app_handle.unwrap().global_shortcut().unregister(hotkey)?;
         log::info!(target: "app", "unregister hotkey {hotkey}");
         Ok(())
     }
@@ -163,8 +157,10 @@ impl Hotkey {
 
 impl Drop for Hotkey {
     fn drop(&mut self) {
-        if let Ok(mut manager) = self.get_manager() {
-            let _ = manager.unregister_all();
-        }
+        let hotkeys = self.current.lock();
+        let hotkeys: Vec<&str> = hotkeys.iter().map(|s| &**s).collect();
+        let binding = self.app_handle.lock();
+        let app_handle = binding.as_ref();
+        let _ = app_handle.unwrap().global_shortcut().unregister_all(hotkeys);
     }
 }

@@ -6,3 +6,5 @@ dist-ssr
 update.json
 scripts/_env.sh
 .vscode
+src-tauri/gen
+bun.lockb

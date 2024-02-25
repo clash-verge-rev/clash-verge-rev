@@ -48,8 +48,9 @@ tauri-plugin-updater = "2.0.0-beta"
 tauri-plugin-process = "2.0.0-beta"
 tauri-plugin-dialog = "2.0.0-beta"
 tauri-plugin-shell = "2.0.0-beta"
-tauri-plugin-clipboard-manager = "2.0.0-beta.0"
-tauri-plugin-notification = "2.0.0-beta.0"
+tauri-plugin-clipboard-manager = "2.0.0-beta"
+tauri-plugin-global-shortcut = "2.0.0-beta"
+tauri-plugin-notification = "2.0.0-beta"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.0.0" # 高版本会返回错误 Status

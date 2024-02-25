@@ -3,7 +3,6 @@ use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf, str::FromStr};
-use tauri::Manager;
 use tauri_plugin_shell::ShellExt;
 
 /// read data from yaml as struct T
@@ -94,8 +93,9 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 /// open file
 /// use vscode by default
 pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
-    app.shell().open(path, None);
-
+    if let Some(path_str) = path.to_str() {
+        app.shell().open(path_str, None);
+    }
     Ok(())
 }
 
