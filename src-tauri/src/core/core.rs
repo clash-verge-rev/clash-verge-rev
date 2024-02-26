@@ -144,10 +144,9 @@ impl CoreManager {
 
         let config_path = dirs::path_to_str(&config_path)?;
 
-        // fix #212
         let args = match clash_core.as_str() {
-            "clash-meta" => vec!["-m", "-d", app_dir, "-f", config_path],
-            "clash-meta-alpha" => vec!["-m", "-d", app_dir, "-f", config_path],
+            "clash-meta" => vec!["-d", app_dir, "-f", config_path],
+            "clash-meta-alpha" => vec!["-d", app_dir, "-f", config_path],
             _ => vec!["-d", app_dir, "-f", config_path],
         };
 

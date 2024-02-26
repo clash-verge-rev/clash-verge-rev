@@ -148,9 +148,6 @@ impl Sysopt {
 
     /// init the auto launch
     pub fn init_launch(&self) -> Result<()> {
-        let enable = { Config::verge().latest().enable_auto_launch };
-        let enable = enable.unwrap_or(false);
-
         let app_exe = current_exe()?;
         let app_exe = dunce::canonicalize(app_exe)?;
         let app_name = app_exe
@@ -203,28 +200,6 @@ impl Sysopt {
             .set_app_name(app_name)
             .set_app_path(&app_path)
             .build()?;
-
-        // 避免在开发时将自启动关了
-        #[cfg(feature = "verge-dev")]
-        if !enable {
-            return Ok(());
-        }
-
-        #[cfg(target_os = "macos")]
-        {
-            if enable && !auto.is_enabled().unwrap_or(false) {
-                // 避免重复设置登录项
-                let _ = auto.disable();
-                auto.enable()?;
-            } else if !enable {
-                let _ = auto.disable();
-            }
-        }
-
-        #[cfg(not(target_os = "macos"))]
-        if enable {
-            auto.enable()?;
-        }
 
         *self.auto_launch.lock() = Some(auto);
 

@@ -5,9 +5,9 @@ import { createRequire } from "module";
 import { getOctokit, context } from "@actions/github";
 
 const target = process.argv.slice(2)[0];
+const alpha = process.argv.slice(2)[1];
 
 const ARCH_MAP = {
-  "i686-pc-windows-msvc": "x86",
   "x86_64-pc-windows-msvc": "x64",
   "aarch64-pc-windows-msvc": "arm64",
 };
@@ -53,13 +53,24 @@ async function resolvePortable() {
 
   const options = { owner: context.repo.owner, repo: context.repo.repo };
   const github = getOctokit(process.env.GITHUB_TOKEN);
-
-  console.log("[INFO]: upload to ", process.env.TAG_NAME || `v${version}`);
+  const tag = alpha ? "alpha" : process.env.TAG_NAME || `v${version}`;
+  console.log("[INFO]: upload to ", tag);
 
   const { data: release } = await github.rest.repos.getReleaseByTag({
     ...options,
-    tag: process.env.TAG_NAME || `v${version}`,
+    tag,
   });
+
+  let assets = release.assets.filter((x) => {
+    return x.name === zipFile;
+  });
+  if (assets.length > 0) {
+    let id = assets[0].id;
+    await github.rest.repos.deleteReleaseAsset({
+      ...options,
+      asset_id: id,
+    });
+  }
 
   console.log(release.name);
 

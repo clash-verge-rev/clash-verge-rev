@@ -107,7 +107,6 @@ export const getProxies = async () => {
     getProxiesInner(),
     getProxyProviders(),
   ]);
-
   // provider name map
   const providerMap = Object.fromEntries(
     Object.entries(providerRecord).flatMap(([provider, item]) =>
@@ -131,24 +130,27 @@ export const getProxies = async () => {
 
   const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
 
-  let groups: IProxyGroupItem[] = [];
+  let groups = Object.values(proxyRecord)
+    .filter((each) => each.name !== "GLOBAL" && each.all)
+    .map((each) => ({
+      ...each,
+      all: each.all!.map((item) => generateItem(item)),
+    }));
 
   if (global?.all) {
-    groups = global.all
+    let globalGroups = global.all
       .filter((name) => proxyRecord[name]?.all)
       .map((name) => proxyRecord[name])
       .map((each) => ({
         ...each,
         all: each.all!.map((item) => generateItem(item)),
       }));
-  } else {
-    groups = Object.values(proxyRecord)
-      .filter((each) => each.name !== "GLOBAL" && each.all)
-      .map((each) => ({
-        ...each,
-        all: each.all!.map((item) => generateItem(item)),
-      }))
-      .sort((a, b) => b.name.localeCompare(a.name));
+    let globalNames = globalGroups.map((each) => each.name);
+    groups = groups
+      .filter((group) => {
+        return !globalNames.includes(group.name);
+      })
+      .concat(globalGroups);
   }
 
   const proxies = [direct, reject].concat(

@@ -32,6 +32,15 @@ interface IConfigData {
   "tproxy-port": number;
   "external-controller": string;
   secret: string;
+  tun: {
+    stack: string;
+    device: string;
+    "auto-route": boolean;
+    "auto-detect-interface": boolean;
+    "dns-hijack": string[];
+    "strict-route": boolean;
+    mtu: number;
+  };
 }
 
 interface IRuleItem {
@@ -131,7 +140,9 @@ interface IConnections {
 
 interface IClashInfo {
   // status: string;
-  port?: number; // clash mixed port
+  mixed_port?: number; // clash mixed port
+  socks_port?: number; // clash socks port
+  port?: number; // clash http port
   server?: string; // external-controller
   secret?: string;
 }
@@ -162,6 +173,7 @@ interface IProfileOption {
   with_proxy?: boolean;
   self_proxy?: boolean;
   update_interval?: number;
+  danger_accept_invalid_certs?: boolean;
 }
 
 interface IProfilesConfig {
@@ -189,6 +201,10 @@ interface IVergeConfig {
   theme_mode?: "light" | "dark" | "system";
   traffic_graph?: boolean;
   enable_memory_usage?: boolean;
+  enable_group_icon?: boolean;
+  common_tray_icon?: boolean;
+  sysproxy_tray_icon?: boolean;
+  tun_tray_icon?: boolean;
   enable_tun_mode?: boolean;
   enable_auto_launch?: boolean;
   enable_service_mode?: boolean;
@@ -196,6 +212,8 @@ interface IVergeConfig {
   enable_system_proxy?: boolean;
   enable_random_port?: boolean;
   verge_mixed_port?: number;
+  verge_socks_port?: number;
+  verge_port?: number;
   enable_proxy_guard?: boolean;
   proxy_guard_duration?: number;
   system_proxy_bypass?: string;
@@ -215,7 +233,7 @@ interface IVergeConfig {
   };
   auto_close_connection?: boolean;
   default_latency_test?: string;
-  enable_clash_fields?: boolean;
+  default_latency_timeout?: number;
   enable_builtin_enhanced?: boolean;
   auto_log_clean?: 0 | 1 | 2 | 3;
   proxy_layout_column?: number;

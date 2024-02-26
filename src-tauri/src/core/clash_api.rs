@@ -44,7 +44,11 @@ pub struct DelayRes {
 
 /// GET /proxies/{name}/delay
 /// 获取代理延迟
-pub async fn get_proxy_delay(name: String, test_url: Option<String>) -> Result<DelayRes> {
+pub async fn get_proxy_delay(
+    name: String,
+    test_url: Option<String>,
+    timeout: i32,
+) -> Result<DelayRes> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/proxies/{name}/delay");
 
@@ -57,7 +61,7 @@ pub async fn get_proxy_delay(name: String, test_url: Option<String>) -> Result<D
     let builder = client
         .get(&url)
         .headers(headers)
-        .query(&[("timeout", "10000"), ("url", &test_url)]);
+        .query(&[("timeout", &format!("{timeout}")), ("url", &test_url)]);
     let response = builder.send().await?;
 
     Ok(response.json::<DelayRes>().await?)

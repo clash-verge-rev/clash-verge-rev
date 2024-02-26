@@ -21,11 +21,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const [values, setValues] = useState({
     appLogLevel: "info",
     autoCloseConnection: true,
-    enableClashFields: true,
     enableBuiltinEnhanced: true,
     proxyLayoutColumn: 6,
     defaultLatencyTest: "",
     autoLogClean: 0,
+    defaultLatencyTimeout: 10000,
   });
 
   useImperativeHandle(ref, () => ({
@@ -34,11 +34,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       setValues({
         appLogLevel: verge?.app_log_level ?? "info",
         autoCloseConnection: verge?.auto_close_connection ?? true,
-        enableClashFields: verge?.enable_clash_fields ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
         proxyLayoutColumn: verge?.proxy_layout_column || 6,
         defaultLatencyTest: verge?.default_latency_test || "",
         autoLogClean: verge?.auto_log_clean || 0,
+        defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
       });
     },
     close: () => setOpen(false),
@@ -49,10 +49,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       await patchVerge({
         app_log_level: values.appLogLevel,
         auto_close_connection: values.autoCloseConnection,
-        enable_clash_fields: values.enableClashFields,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
         default_latency_test: values.defaultLatencyTest,
+        default_latency_timeout: values.defaultLatencyTimeout,
         auto_log_clean: values.autoLogClean as any,
       });
       setOpen(false);
@@ -101,17 +101,6 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             checked={values.autoCloseConnection}
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoCloseConnection: c }))
-            }
-          />
-        </ListItem>
-
-        <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Enable Clash Fields Filter")} />
-          <Switch
-            edge="end"
-            checked={values.enableClashFields}
-            onChange={(_, c) =>
-              setValues((v) => ({ ...v, enableClashFields: c }))
             }
           />
         </ListItem>
@@ -190,6 +179,27 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             placeholder="http://1.1.1.1"
             onChange={(e) =>
               setValues((v) => ({ ...v, defaultLatencyTest: e.target.value }))
+            }
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Default Latency Timeout")} />
+          <TextField
+            size="small"
+            type="number"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            sx={{ width: 250 }}
+            value={values.defaultLatencyTimeout}
+            placeholder="10000"
+            onChange={(e) =>
+              setValues((v) => ({
+                ...v,
+                defaultLatencyTimeout: parseInt(e.target.value),
+              }))
             }
           />
         </ListItem>

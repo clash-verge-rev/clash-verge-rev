@@ -65,6 +65,9 @@
   "Descriptions": "Описания",
   "Subscription URL": "URL подписки",
   "Update Interval": "Интервал обновления",
+  "Use System Proxy": "Использовать системный прокси для обновления",
+  "Use Clash Proxy": "Использовать прокси Clash для обновления",
+  "Accept Invalid Certs (Danger)": "Принимать недействительные сертификаты (Опасно)",
 
   "Settings": "Настройки",
   "Clash Setting": "Настройки Clash",
@@ -73,7 +76,7 @@
   "Allow Lan": "Разрешить локальную сеть",
   "IPv6": "IPv6",
   "Log Level": "Уровень логов",
-  "Mixed Port": "Смешанный порт",
+  "Port Config": "Настройка порта",
   "Random Port": "Случайный порт",
   "After restart to take effect": "Чтобы изменения вступили в силу, необходимо перезапустить приложение",
   "Clash Core": "Ядро Clash",
@@ -118,7 +121,7 @@
   "Cancel": "Отмена",
   "Exit": "Выход",
 
-  "open_dashboard": "Open Dashboard",
+  "open_or_close_dashboard": "Open/Close Dashboard",
   "clash_mode_rule": "Режим правил",
   "clash_mode_global": "Глобальный режим",
   "clash_mode_direct": "Прямой режим",

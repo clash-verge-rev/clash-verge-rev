@@ -269,6 +269,17 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                 </StyledBox>
               )}
             />
+
+            <Controller
+              name="option.danger_accept_invalid_certs"
+              control={control}
+              render={({ field }) => (
+                <StyledBox>
+                  <InputLabel>{t("Accept Invalid Certs (Danger)")}</InputLabel>
+                  <Switch checked={field.value} {...field} color="primary" />
+                </StyledBox>
+              )}
+            />
           </>
         )}
       </BaseDialog>

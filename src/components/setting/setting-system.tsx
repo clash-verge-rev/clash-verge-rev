@@ -1,8 +1,8 @@
 import useSWR from "swr";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { IconButton, Switch } from "@mui/material";
-import { ArrowForward, PrivacyTipRounded, Settings } from "@mui/icons-material";
+import { IconButton, Switch, Tooltip } from "@mui/material";
+import { PrivacyTipRounded, Settings, InfoRounded } from "@mui/icons-material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { DialogRef } from "@/components/base";
@@ -10,6 +10,7 @@ import { SettingList, SettingItem } from "./mods/setting-comp";
 import { GuardState } from "./mods/guard-state";
 import { ServiceViewer } from "./mods/service-viewer";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
+import { TunViewer } from "./mods/tun-viewer";
 import getSystem from "@/utils/get-system";
 
 interface Props {
@@ -36,6 +37,7 @@ const SettingSystem = ({ onError }: Props) => {
 
   const serviceRef = useRef<DialogRef>(null);
   const sysproxyRef = useRef<DialogRef>(null);
+  const tunRef = useRef<DialogRef>(null);
 
   const {
     enable_tun_mode,
@@ -53,11 +55,41 @@ const SettingSystem = ({ onError }: Props) => {
   return (
     <SettingList title={t("System Setting")}>
       <SysproxyViewer ref={sysproxyRef} />
+      <TunViewer ref={tunRef} />
       {isWIN && (
         <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
       )}
 
-      <SettingItem label={t("Tun Mode")}>
+      <SettingItem
+        label={t("Tun Mode")}
+        extra={
+          <>
+            <Tooltip
+              title={
+                isWIN ? t("Tun Mode Info Windows") : t("Tun Mode Info Unix")
+              }
+              placement="top"
+            >
+              <IconButton color="inherit" size="small">
+                <InfoRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+            </Tooltip>
+            <IconButton
+              color="inherit"
+              size="small"
+              onClick={() => tunRef.current?.open()}
+            >
+              <Settings
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </>
+        }
+      >
         <GuardState
           value={enable_tun_mode ?? false}
           valueProps="checked"

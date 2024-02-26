@@ -90,8 +90,9 @@ export async function getClashInfo() {
   return invoke<IClashInfo | null>("get_clash_info");
 }
 
+// Get runtime config which controlled by verge
 export async function getRuntimeConfig() {
-  return invoke<any | null>("get_runtime_config");
+  return invoke<IConfigData | null>("get_runtime_config");
 }
 
 export async function getRuntimeYaml() {
@@ -138,6 +139,10 @@ export async function grantPermission(core: string) {
   return invoke<void>("grant_permission", { core });
 }
 
+export async function getAppDir() {
+  return invoke<string>("get_app_dir");
+}
+
 export async function openAppDir() {
   return invoke<void>("open_app_dir").catch((err) =>
     Notice.error(err?.message || err.toString(), 1500)
@@ -160,9 +165,17 @@ export async function openWebUrl(url: string) {
   return invoke<void>("open_web_url", { url });
 }
 
-export async function cmdGetProxyDelay(name: string, url?: string) {
+export async function cmdGetProxyDelay(
+  name: string,
+  timeout: number,
+  url?: string
+) {
   name = encodeURIComponent(name);
-  return invoke<{ delay: number }>("clash_api_get_proxy_delay", { name, url });
+  return invoke<{ delay: number }>("clash_api_get_proxy_delay", {
+    name,
+    url,
+    timeout,
+  });
 }
 
 export async function cmdTestDelay(url: string) {
@@ -198,4 +211,15 @@ export async function invoke_uwp_tool() {
 
 export async function getPortableFlag() {
   return invoke<boolean>("get_portable_flag");
+}
+
+export async function exitApp() {
+  return invoke("exit_app");
+}
+
+export async function copyIconFile(
+  path: string,
+  name: "common.png" | "sysproxy.png" | "tun.png"
+) {
+  return invoke<void>("copy_icon_file", { path, name });
 }

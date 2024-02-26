@@ -14,12 +14,13 @@ pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
     // 直接覆盖原字段
     use_lowercase(merge.clone())
         .into_iter()
+        .filter(|(key, _)| !MERGE_FIELDS.contains(&key.as_str().unwrap_or_default()))
         .for_each(|(key, value)| {
             config.insert(key, value);
         });
 
     let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
-    let merge = use_filter(merge, &merge_list.collect(), true);
+    let merge = use_filter(merge, &merge_list.collect());
 
     ["rules", "proxies", "proxy-groups"]
         .iter()

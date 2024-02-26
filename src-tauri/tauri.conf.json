@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "Clash Verge",
-    "version": "1.4.10"
+    "version": "1.5.4"
   },
   "build": {
     "distDir": "../dist",
@@ -58,11 +58,18 @@
       "dialog": {
         "all": false,
         "open": true
+      },
+      "protocol": {
+        "asset": true,
+        "assetScope": ["$APPDATA/**", "$RESOURCE/../**"]
+      },
+      "path": {
+        "all": true
       }
     },
     "windows": [],
     "security": {
-      "csp": "script-src 'unsafe-eval' 'self'; default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'; img-src http: https: data: 'self';"
+      "csp": "script-src 'unsafe-eval' 'self'; default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'; img-src asset: http: https: data: 'self';"
     }
   }
 }

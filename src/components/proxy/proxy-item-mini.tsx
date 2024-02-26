@@ -4,6 +4,7 @@ import { CheckCircleOutlineRounded } from "@mui/icons-material";
 import { alpha, Box, ListItemButton, styled, Typography } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import delayManager from "@/services/delay";
+import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
   groupName: string;
@@ -20,6 +21,8 @@ export const ProxyItemMini = (props: Props) => {
   // -1/<=0 为 不显示
   // -2 为 loading
   const [delay, setDelay] = useState(-1);
+  const { verge } = useVerge();
+  const timeout = verge?.default_latency_timeout || 10000;
 
   useEffect(() => {
     delayManager.setListener(proxy.name, groupName, setDelay);
@@ -36,7 +39,7 @@ export const ProxyItemMini = (props: Props) => {
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);
-    setDelay(await delayManager.checkDelay(proxy.name, groupName));
+    setDelay(await delayManager.checkDelay(proxy.name, groupName, timeout));
   });
 
   return (
@@ -92,7 +95,32 @@ export const ProxyItemMini = (props: Props) => {
         </Typography>
 
         {showType && (
-          <Box sx={{ display: "flex", flexWrap: "nowrap", flex: "none" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "nowrap",
+              flex: "none",
+              marginTop: "4px",
+            }}
+          >
+            {proxy.now && (
+              <Typography
+                variant="body2"
+                component="div"
+                color="text.secondary"
+                sx={{
+                  display: "block",
+                  textOverflow: "ellipsis",
+                  wordBreak: "break-all",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  fontSize: "0.75rem",
+                  marginRight: "8px",
+                }}
+              >
+                {proxy.now}
+              </Typography>
+            )}
             {!!proxy.provider && (
               <TypeBox component="span">{proxy.provider}</TypeBox>
             )}
@@ -139,14 +167,14 @@ export const ProxyItemMini = (props: Props) => {
               e.stopPropagation();
               onDelay();
             }}
-            color={delayManager.formatDelayColor(delay)}
+            color={delayManager.formatDelayColor(delay, timeout)}
             sx={({ palette }) =>
               !proxy.provider
                 ? { ":hover": { bgcolor: alpha(palette.primary.main, 0.15) } }
                 : {}
             }
           >
-            {delayManager.formatDelay(delay)}
+            {delayManager.formatDelay(delay, timeout)}
           </Widget>
         )}
 
@@ -175,6 +203,16 @@ const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
   borderColor: alpha(palette.text.secondary, 0.36),
   color: alpha(palette.text.secondary, 0.42),
   borderRadius: 4,
+  fontSize: 10,
+  fontFamily: typography.fontFamily,
+  marginRight: "4px",
+  marginTop: "auto",
+  padding: "0 2px",
+  lineHeight: 1.25,
+}));
+
+const TypeTypo = styled(Box)(({ theme: { palette, typography } }) => ({
+  display: "inline-block",
   fontSize: 10,
   fontFamily: typography.fontFamily,
   marginRight: "4px",

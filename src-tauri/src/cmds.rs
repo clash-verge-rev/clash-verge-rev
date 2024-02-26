@@ -2,14 +2,14 @@ use crate::{
     config::*,
     core::*,
     feat,
-    utils::{dirs, help},
+    utils::{dirs, help, resolve},
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
 use sysproxy::Sysproxy;
-
+use tauri::api;
 type CmdResult<T = ()> = Result<T, String>;
 
 #[tauri::command]
@@ -249,8 +249,9 @@ pub mod uwp {
 pub async fn clash_api_get_proxy_delay(
     name: String,
     url: Option<String>,
+    timeout: i32,
 ) -> CmdResult<clash_api::DelayRes> {
-    match clash_api::get_proxy_delay(name, url).await {
+    match clash_api::get_proxy_delay(name, url, timeout).await {
         Ok(res) => Ok(res),
         Err(err) => Err(err.to_string()),
     }
@@ -264,6 +265,42 @@ pub fn get_portable_flag() -> CmdResult<bool> {
 #[tauri::command]
 pub async fn test_delay(url: String) -> CmdResult<u32> {
     Ok(feat::test_delay(url).await.unwrap_or(10000u32))
+}
+
+#[tauri::command]
+pub fn get_app_dir() -> CmdResult<String> {
+    let app_home_dir = wrap_err!(dirs::app_home_dir())?
+        .to_string_lossy()
+        .to_string();
+    Ok(app_home_dir)
+}
+
+#[tauri::command]
+pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
+    let file_path = std::path::Path::new(&path);
+    let icon_dir = wrap_err!(dirs::app_home_dir())?.join("icons");
+    if !icon_dir.exists() {
+        let _ = std::fs::create_dir_all(&icon_dir);
+    }
+    let dest_path = icon_dir.join(name);
+
+    if file_path.exists() {
+        match std::fs::copy(file_path, &dest_path) {
+            Ok(_) => Ok(dest_path.to_string_lossy().to_string()),
+            Err(err) => Err(err.to_string()),
+        }
+    } else {
+        return Err("file not found".to_string());
+    }
+}
+
+#[tauri::command]
+pub fn exit_app(app_handle: tauri::AppHandle) {
+    let _ = resolve::save_window_size_position(&app_handle, true);
+    resolve::resolve_reset();
+    api::process::kill_children();
+    app_handle.exit(0);
+    std::process::exit(0);
 }
 
 #[cfg(windows)]

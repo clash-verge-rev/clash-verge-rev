@@ -9,6 +9,24 @@
 A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a>.
 </h3>
 
+## Install
+
+Click on the corresponding link below to download the installation package. Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
+
+[[Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/Clash.Verge_1.5.4_x64-setup.exe)]
+[[Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/Clash.Verge_1.5.4_arm64-setup.exe)]
+
+[[macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/Clash.Verge_1.5.4_x64.dmg)]
+[[macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/Clash.Verge_1.5.4_aarch64.dmg)]
+
+[[Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/clash-verge_1.5.4_amd64.AppImage)]
+[[Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/clash-verge_1.5.4_amd64.deb)]
+[[Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.4/clash-verge_1.5.4_arm64.deb)]
+
+Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
+
+Notes: If you could not start the app on Windows, please check that you have [Webview2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section) installed.
+
 ## Features
 
 - Since the clash core has been removed. The project no longer maintains the clash core, but only the Clash Meta core.
@@ -36,27 +54,6 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 ## Preview
 
 ![preview](./docs/preview.gif)
-
-## Install
-
-Download from [release](https://github.com/clash-verge-rev/clash-verge-rev/releases). Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
-
-- [Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/Clash.Verge_1.4.10_x64-setup.exe)
-- [Windows x86](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/Clash.Verge_1.4.10_x86-setup.exe)
-- [Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/Clash.Verge_1.4.10_arm64-setup.exe)
-
-- [macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/Clash.Verge_1.4.10_x64.dmg)
-- [macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/Clash.Verge_1.4.10_aarch64.dmg)
-
-- [Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/clash-verge_1.4.10_amd64.AppImage)
-- [Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/clash-verge_1.4.10_amd64.deb)
-- [Linux x86 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/clash-verge_1.4.10_i386.AppImage)
-- [Linux x86 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/clash-verge_1.4.10_i386.deb)
-- [Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.4.10/clash-verge_1.4.10_arm64.deb)
-
-Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
-
-Notes: If you could not start the app on Windows, please check that you have [Webview2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section) installed.
 
 ### FAQ
 

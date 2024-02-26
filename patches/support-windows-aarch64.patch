@@ -1,4 +1,4 @@
-From 8b085aea2f11e64f433244eda092c178a2bb50bc Mon Sep 17 00:00:00 2001
+From 871c9a6d1ed014c93da2436a437df03734e9f76c Mon Sep 17 00:00:00 2001
 From: MystiPanda <mystipanda@proton.me>
 Date: Sun, 10 Dec 2023 19:47:45 +0800
 Subject: [PATCH] feat: Support windows aarch64
@@ -22,7 +22,7 @@ index 0000000..2eda7e4
 +	path = src-tauri/quick-rs
 +	url = https://github.com/clash-verge-rev/quick-rs.git
 diff --git a/src-tauri/Cargo.toml b/src-tauri/Cargo.toml
-index 4c6dde5..5fd9ad8 100644
+index 2f1a3be..d67f6ed 100644
 --- a/src-tauri/Cargo.toml
 +++ b/src-tauri/Cargo.toml
 @@ -25,7 +25,6 @@ log4rs = "1"
@@ -32,8 +32,8 @@ index 4c6dde5..5fd9ad8 100644
 -rquickjs = "0.3" # 高版本不支持 Linux aarch64
  serde_json = "1.0"
  serde_yaml = "0.9"
- auto-launch = "0.5"
-@@ -34,6 +33,7 @@ port_scanner = "0.1.5"
+ once_cell = "1.18"
+@@ -33,6 +32,7 @@ port_scanner = "0.1.5"
  delay_timer = "0.11.5"
  parking_lot = "0.12"
  percent-encoding = "2.3.1"
@@ -49,7 +49,7 @@ index 0000000..78277c4
 @@ -0,0 +1 @@
 +Subproject commit 78277c4509c64f18c0fc5c9f2b84671de7c83343
 diff --git a/src-tauri/src/enhance/script.rs b/src-tauri/src/enhance/script.rs
-index 6c207d9..d47dc33 100644
+index 30a922f..d47dc33 100644
 --- a/src-tauri/src/enhance/script.rs
 +++ b/src-tauri/src/enhance/script.rs
 @@ -3,61 +3,83 @@ use anyhow::Result;

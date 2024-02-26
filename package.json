@@ -1,7 +1,7 @@
 {
   "name": "clash-verge",
-  "version": "1.4.10",
-  "license": "GPL-3.0",
+  "version": "1.5.4",
+  "license": "GPL-3.0-only",
   "scripts": {
     "dev": "tauri dev",
     "dev:diff": "tauri dev -f verge-dev",

@@ -19,7 +19,7 @@
           "languages": ["SimpChinese", "English"],
           "license": "../LICENSE",
           "installMode": "perMachine",
-          "template": "../scripts/windows/installer.nsi"
+          "template": "./template/installer.nsi"
         }
       }
     }

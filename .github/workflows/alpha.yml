@@ -1,20 +1,27 @@
-name: Release Build
+name: Alpha Build
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    tags-ignore: [updater, alpha]
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
 
 jobs:
-  release:
+  alpha:
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
           - os: macos-latest
             target: x86_64-apple-darwin
 
@@ -68,29 +75,31 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tagName: v__VERSION__
-          releaseName: "Clash Verge Rev v__VERSION__"
+          tagName: alpha
+          releaseName: "Clash Verge Rev Alpha"
           releaseBody: "More new features are now supported."
           releaseDraft: false
-          prerelease: false
+          prerelease: true
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
       - name: Portable Bundle
         if: matrix.os == 'windows-latest'
-        run: pnpm portable ${{ matrix.target }}
+        run: pnpm portable ${{ matrix.target }} --alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
-  release-for-linux:
+  alpha-for-linux:
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
@@ -112,42 +121,49 @@ jobs:
         if: startsWith(matrix.target, 'x86_64')
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
           body: "More new features are now supported."
+          prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
           body: "More new features are now supported."
+          prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-
-  release-update:
+  update_tag:
+    name: Update tag
     runs-on: ubuntu-latest
-    needs: [release, release-for-linux]
+    needs: [alpha, alpha-for-linux]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - name: Set Env
+        run: |
+          echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
+        shell: bash
+      - name: Update Tag
+        uses: richardsimko/update-tag@v1
         with:
-          node-version: "20"
-
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 8
-          run_install: false
-
-      - name: Pnpm install
-        run: pnpm i
-
-      - name: Release updater file
-        run: pnpm updater
+          tag_name: alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          cat > release.txt << 'EOF'
+          ## Clash Verge Rev Alpha
+          Created at  ${{ env.BUILDTIME }}.
+          EOF
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
+          body_path: release.txt
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true

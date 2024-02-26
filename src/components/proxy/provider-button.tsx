@@ -55,6 +55,7 @@ export const ProviderButton = () => {
             <Typography variant="h6">{t("Proxy Provider")}</Typography>
             <Button
               variant="contained"
+              size="small"
               onClick={async () => {
                 Object.entries(data || {}).forEach(async ([key, item]) => {
                   await proxyProviderUpdate(key);
@@ -108,6 +109,9 @@ export const ProviderButton = () => {
                         >
                           {key}
                         </Typography>
+                        <TypeBox component="span" sx={{ marginLeft: "8px" }}>
+                          {item.proxies.length}
+                        </TypeBox>
                       </>
                     }
                     secondary={
@@ -158,6 +162,17 @@ export const ProviderButton = () => {
     </>
   );
 };
+const TypeBox = styled(Box)(({ theme }) => ({
+  display: "inline-block",
+  border: "1px solid #ccc",
+  borderColor: alpha(theme.palette.secondary.main, 0.5),
+  color: alpha(theme.palette.secondary.main, 0.8),
+  borderRadius: 4,
+  fontSize: 10,
+  marginRight: "4px",
+  padding: "0 2px",
+  lineHeight: 1.25,
+}));
 
 const StyledTypeBox = styled(Box)(({ theme }) => ({
   display: "inline-block",

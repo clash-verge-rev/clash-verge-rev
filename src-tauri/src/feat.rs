@@ -10,13 +10,19 @@ use crate::log_err;
 use crate::utils::resolve;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
-use tauri::{AppHandle, ClipboardManager};
+use tauri::{AppHandle, ClipboardManager, Manager};
 
 // 打开面板
-pub fn open_dashboard() {
+pub fn open_or_close_dashboard() {
     let handle = handle::Handle::global();
     let app_handle = handle.app_handle.lock();
     if let Some(app_handle) = app_handle.as_ref() {
+        if let Some(window) = app_handle.get_window("main") {
+            if let Ok(true) = window.is_focused() {
+                let _ = window.close();
+                return;
+            }
+        }
         resolve::create_window(app_handle);
     }
 }
@@ -162,6 +168,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
     match {
         let mixed_port = patch.get("mixed-port");
+        let socks_port = patch.get("socks-port");
+        let port = patch.get("port");
         let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
         if mixed_port.is_some() && !enable_random_port {
             let changed = mixed_port.unwrap()
@@ -182,6 +190,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
         // 激活订阅
         if mixed_port.is_some()
+            || socks_port.is_some()
+            || port.is_some()
             || patch.get("secret").is_some()
             || patch.get("external-controller").is_some()
         {
@@ -226,6 +236,9 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let proxy_bypass = patch.system_proxy_bypass;
     let language = patch.language;
     let port = patch.verge_mixed_port;
+    let common_tray_icon = patch.common_tray_icon;
+    let sysproxy_tray_icon = patch.sysproxy_tray_icon;
+    let tun_tray_icon = patch.tun_tray_icon;
 
     match {
         #[cfg(target_os = "windows")]
@@ -265,7 +278,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
 
         if language.is_some() {
             handle::Handle::update_systray()?;
-        } else if system_proxy.or(tun_mode).is_some() {
+        } else if system_proxy.is_some()
+            || tun_mode.is_some()
+            || common_tray_icon.is_some()
+            || sysproxy_tray_icon.is_some()
+            || tun_tray_icon.is_some()
+        {
             handle::Handle::update_systray_part()?;
         }
 

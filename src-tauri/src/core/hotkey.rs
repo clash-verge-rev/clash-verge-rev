@@ -65,7 +65,7 @@ impl Hotkey {
         }
 
         let f = match func.trim() {
-            "open_dashboard" => feat::open_dashboard,
+            "open_or_close_dashboard" => feat::open_or_close_dashboard,
             "clash_mode_rule" => || feat::change_clash_mode("rule".into()),
             "clash_mode_global" => || feat::change_clash_mode("global".into()),
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
