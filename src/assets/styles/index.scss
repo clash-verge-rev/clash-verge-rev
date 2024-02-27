@@ -56,3 +56,7 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
 }
+
+[data-windrag] {
+  app-region: drag;
+}
