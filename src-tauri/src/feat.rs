@@ -84,36 +84,6 @@ pub fn toggle_system_proxy() {
     });
 }
 
-// 打开系统代理
-pub fn enable_system_proxy() {
-    tauri::async_runtime::spawn(async {
-        match patch_verge(IVerge {
-            enable_system_proxy: Some(true),
-            ..IVerge::default()
-        })
-        .await
-        {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
-        }
-    });
-}
-
-// 关闭系统代理
-pub fn disable_system_proxy() {
-    tauri::async_runtime::spawn(async {
-        match patch_verge(IVerge {
-            enable_system_proxy: Some(false),
-            ..IVerge::default()
-        })
-        .await
-        {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
-        }
-    });
-}
-
 // 切换tun模式
 pub fn toggle_tun_mode() {
     let enable = Config::verge().data().enable_tun_mode;
@@ -122,36 +92,6 @@ pub fn toggle_tun_mode() {
     tauri::async_runtime::spawn(async move {
         match patch_verge(IVerge {
             enable_tun_mode: Some(!enable),
-            ..IVerge::default()
-        })
-        .await
-        {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
-        }
-    });
-}
-
-// 打开tun模式
-pub fn enable_tun_mode() {
-    tauri::async_runtime::spawn(async {
-        match patch_verge(IVerge {
-            enable_tun_mode: Some(true),
-            ..IVerge::default()
-        })
-        .await
-        {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
-        }
-    });
-}
-
-// 关闭tun模式
-pub fn disable_tun_mode() {
-    tauri::async_runtime::spawn(async {
-        match patch_verge(IVerge {
-            enable_tun_mode: Some(false),
             ..IVerge::default()
         })
         .await
