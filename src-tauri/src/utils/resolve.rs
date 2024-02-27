@@ -141,7 +141,10 @@ pub fn create_window(app_handle: &AppHandle) {
         _ => {
             #[cfg(target_os = "windows")]
             {
-                builder = builder.inner_size(800.0, 636.0).center();
+                builder = builder
+                    .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions")
+                    .inner_size(800.0, 636.0)
+                    .center();
             }
 
             #[cfg(target_os = "macos")]
