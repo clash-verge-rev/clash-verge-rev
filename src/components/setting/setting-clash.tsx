@@ -118,7 +118,7 @@ const SettingClash = ({ onError }: Props) => {
         extra={
           <Tooltip title={t("Random Port")}>
             <IconButton
-              color={enable_random_port ? "success" : "inherit"}
+              color={enable_random_port ? "primary" : "inherit"}
               size="small"
               onClick={() => {
                 Notice.success(t("After restart to take effect"), 1000);
