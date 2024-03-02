@@ -36,7 +36,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Clash Port")}
+      title={t("External Controller")}
       contentSx={{ width: 400 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
