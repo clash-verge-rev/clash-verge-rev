@@ -12,12 +12,17 @@ import {
   Box,
   alpha,
   Divider,
+  keyframes,
 } from "@mui/material";
 import { RefreshRounded } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import { useLockFn } from "ahooks";
 import { getRuleProviders, ruleProviderUpdate } from "@/services/api";
 import { BaseDialog } from "../base";
+
+const round = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
@@ -26,12 +31,31 @@ export const ProviderButton = () => {
   const [open, setOpen] = useState(false);
 
   const hasProvider = Object.keys(data || {}).length > 0;
+  const [updating, setUpdating] = useState(
+    Object.keys(data || {}).map(() => false)
+  );
 
-  const handleUpdate = useLockFn(async (key: string) => {
-    await ruleProviderUpdate(key);
-    await mutate("getRules");
-    await mutate("getRuleProviders");
-  });
+  const setUpdatingAt = (status: boolean, index: number) => {
+    setUpdating((prev) => {
+      const next = [...prev];
+      next[index] = status;
+      return next;
+    });
+  };
+  const handleUpdate = async (key: string, index: number) => {
+    setUpdatingAt(true, index);
+    ruleProviderUpdate(key)
+      .then(async () => {
+        setUpdatingAt(false, index);
+        await mutate("getRules");
+        await mutate("getRuleProviders");
+      })
+      .catch(async () => {
+        setUpdatingAt(false, index);
+        await mutate("getRules");
+        await mutate("getRuleProviders");
+      });
+  };
 
   if (!hasProvider) return null;
 
@@ -55,11 +79,11 @@ export const ProviderButton = () => {
               variant="contained"
               size="small"
               onClick={async () => {
-                Object.entries(data || {}).forEach(async ([key, item]) => {
-                  await ruleProviderUpdate(key);
-                  await mutate("getRules");
-                  await mutate("getRuleProviders");
-                });
+                Object.entries(data || {}).forEach(
+                  async ([key, item], index) => {
+                    await handleUpdate(key, index);
+                  }
+                );
               }}
             >
               {t("Update All")}
@@ -73,7 +97,7 @@ export const ProviderButton = () => {
         onCancel={() => setOpen(false)}
       >
         <List sx={{ py: 0, minHeight: 250 }}>
-          {Object.entries(data || {}).map(([key, item]) => {
+          {Object.entries(data || {}).map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
             return (
               <>
@@ -122,7 +146,12 @@ export const ProviderButton = () => {
                     size="small"
                     color="inherit"
                     title="Update Provider"
-                    onClick={() => handleUpdate(key)}
+                    onClick={() => handleUpdate(key, index)}
+                    sx={{
+                      animation: updating[index]
+                        ? `1s linear infinite ${round}`
+                        : "none",
+                    }}
                   >
                     <RefreshRounded />
                   </IconButton>
