@@ -53,7 +53,9 @@ pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
                 }
             }
 
-            config.insert(key_val, Value::from(list));
+            if !list.is_empty() {
+                config.insert(key_val, Value::from(list));
+            }
         });
     config
 }
