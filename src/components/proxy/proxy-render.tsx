@@ -38,6 +38,11 @@ export const ProxyRender = (props: RenderProps) => {
     return (
       <ListItemButton
         dense
+        style={{
+          background: "#ffffff",
+          margin: "8px 16px",
+          borderRadius: "8px",
+        }}
         onClick={() => onHeadState(group.name, { open: !headState?.open })}
       >
         {enable_group_icon &&
