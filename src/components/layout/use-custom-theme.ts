@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useRecoilState } from "recoil";
-import { alpha, createTheme, Theme } from "@mui/material";
+import { alpha, createTheme, Shadows, Theme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
 import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
@@ -59,6 +59,7 @@ export const useCustomTheme = () => {
             paper: dt.background_color,
           },
         },
+        shadows: Array(25).fill("none") as Shadows,
         typography: {
           // todo
           fontFamily: setting.font_family
