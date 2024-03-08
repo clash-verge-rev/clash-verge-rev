@@ -16,13 +16,21 @@ pub const ITEM_MERGE: &str = "# Merge Template for clash verge
 
 prepend-rules:
 
+prepend-rule-providers:
+
 prepend-proxies:
+
+prepend-proxy-providers:
 
 prepend-proxy-groups:
 
 append-rules:
 
+append-rule-providers:
+
 append-proxies:
+
+append-proxy-providers:
 
 append-proxy-groups:
 ";
