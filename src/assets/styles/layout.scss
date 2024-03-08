@@ -21,7 +21,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
     overflow: hidden;
-    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    border-right: 1px solid var(--divider-color);
     // background-color: var(--background-color-alpha);
 
     // $maxLogo: 100px;
@@ -37,7 +37,7 @@
       justify-content: center;
       align-items: flex-start;
       align-self: stretch;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      border-bottom: 1px solid var(--divider-color);
       // max-width: $maxLogo + 32px;
       // max-height: $maxLogo;
       // margin: 0 auto;

@@ -90,8 +90,11 @@ export const useCustomTheme = () => {
     const backgroundColor = mode === "light" ? "#f5f5f5" : "#282a36";
     const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
     const scrollColor = mode === "light" ? "#90939980" : "#54545480";
+    const dividerColor =
+      mode === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)";
 
     const rootEle = document.documentElement;
+    rootEle.style.setProperty("--divider-color", dividerColor);
     rootEle.style.setProperty("--background-color", backgroundColor);
     rootEle.style.setProperty("--selection-color", selectColor);
     rootEle.style.setProperty("--scroller-color", scrollColor);

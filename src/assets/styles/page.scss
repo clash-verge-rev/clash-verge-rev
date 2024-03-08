@@ -3,7 +3,6 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-
   > header {
     flex: 0 0 58px;
     width: 100%;
@@ -14,7 +13,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid var(--divider-color);
   }
 
   .base-container {
