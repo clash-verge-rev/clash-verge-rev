@@ -48,7 +48,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     const { control, watch, register, ...formIns } = useForm<IProfileItem>({
       defaultValues: {
         type: "remote",
-        name: "Remote File",
+        name: "",
         desc: "",
         url: "",
         option: {
