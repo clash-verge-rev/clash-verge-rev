@@ -3,15 +3,15 @@ const OS = getSystem();
 
 // default theme setting
 export const defaultTheme = {
-  primary_color: "#1867c0",
+  primary_color: "#0066cc",
   secondary_color: "#3a88bb",
-  primary_text: "#1d1d1f",
+  primary_text: "#1f1f1f",
   secondary_text: "#424245",
   info_color: "#0288d1",
   error_color: "#d32f2f",
   warning_color: "#ed6c02",
   success_color: "#2e7d32",
-  background_color: "#ffffff",
+  background_color: "#f5f5f5",
   font_family: `"Roboto", "Helvetica", "Arial", sans-serif, ${
     OS === "windows" ? "twemoji mozilla" : ""
   }`,
@@ -20,7 +20,7 @@ export const defaultTheme = {
 // dark mode
 export const defaultDarkTheme = {
   ...defaultTheme,
-  primary_text: "#E8E8ED",
-  background_color: "#181818",
-  secondary_text: "#bbbbbb",
+  primary_text: "#ffffff",
+  background_color: "#282a36",
+  secondary_text: "#ffffff",
 };

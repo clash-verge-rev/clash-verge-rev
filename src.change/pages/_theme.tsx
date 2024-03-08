@@ -20,7 +20,7 @@ export const defaultTheme = {
 // dark mode
 export const defaultDarkTheme = {
   ...defaultTheme,
-  primary_text: "#E8E8ED",
+  primary_text: "#ffffff",
   background_color: "#181818",
   secondary_text: "#bbbbbb",
 };
