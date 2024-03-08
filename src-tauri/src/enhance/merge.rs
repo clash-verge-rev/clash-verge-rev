@@ -4,8 +4,12 @@ use serde_yaml::{self, Mapping, Sequence, Value};
 const MERGE_FIELDS: [&str; 6] = [
     "prepend-rules",
     "append-rules",
+    "prepend-rule-providers",
+    "append-rule-providers",
     "prepend-proxies",
     "append-proxies",
+    "prepend-proxy-providers",
+    "append-proxy-providers",
     "prepend-proxy-groups",
     "append-proxy-groups",
 ];
@@ -22,7 +26,7 @@ pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
     let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
     let merge = use_filter(merge, &merge_list.collect());
 
-    ["rules", "proxies", "proxy-groups"]
+    ["rules", "rule-providers", "proxies", "proxy-providers", "proxy-groups"]
         .iter()
         .for_each(|key_str| {
             let key_val = Value::from(key_str.to_string());
