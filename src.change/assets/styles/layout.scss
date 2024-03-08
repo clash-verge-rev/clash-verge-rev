@@ -5,43 +5,34 @@
   overflow: hidden;
 
   &__left {
-    // flex: 1 0 0;
+    flex: 1 0 15%;
     display: flex;
     height: 100%;
-    width: 225px;
-    // max-width: 225px;
-    // min-width: 225px;
+    max-width: 248px;
+    min-width: 188px;
     padding: 16px 0 8px;
-    // position: relative;
+    position: relative;
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
     flex-direction: column;
-    flex-shrink: 0;
-    align-self: stretch;
     box-sizing: border-box;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     overflow: hidden;
-    // background-color: var(--background-color-alpha);
+    background-color: var(--background-color-second);
 
-    $maxLogo: 100px;
+    $maxLogo: 156px;
 
     .the-logo {
-      // position: relative;
-      // flex: 0 1 $maxLogo;
-      // width: 100%;
-      display: flex;
-      height: 58px;
-      padding: 0px 20px;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      align-self: stretch;
-      // max-width: $maxLogo + 32px;
-      // max-height: $maxLogo;
-      // margin: 0 auto;
-      // padding: 0 auto;
-      // text-align: center;
+      position: relative;
+      flex: 0 1 $maxLogo + 32px;
+      width: 100%;
+      max-width: $maxLogo;
+      max-height: 40px;
+      margin: 0 auto;
+      padding: 6px 0;
+      text-align: center;
       box-sizing: border-box;
 
       img,
@@ -49,11 +40,10 @@
         width: 100%;
         height: 100%;
         pointer-events: none;
-        // fill: var(--primary-main);
-
-        // #bg {
-        //   fill: var(--background-color);
-        // }
+        fill: var(--primary-main);
+        #bg {
+          fill: var(--background-color);
+        }
       }
 
       .the-newbtn {
@@ -83,7 +73,7 @@
     position: relative;
     flex: 1 1 75%;
     height: 100%;
-    // background-color: var(--background-color-alpha);
+    background-color: var(--background-color-second);
 
     .the-bar {
       position: absolute;
@@ -110,11 +100,11 @@
 .windows,
 .unknown {
   &.layout {
-    $maxLogo: 115px;
+    $maxLogo: 156px;
     .layout__left .the-logo {
       flex: 0 1 $maxLogo;
       max-width: $maxLogo + 32px;
-      max-height: $maxLogo;
+      max-height: 40px;
     }
 
     .layout__right .the-content {
@@ -126,10 +116,10 @@
 .macos {
   &.layout {
     .layout__left {
-      padding-top: 24px;
+      padding-top: 32px;
     }
     .layout__right .the-content {
-      top: 24px;
+      top: 20px;
     }
   }
 }

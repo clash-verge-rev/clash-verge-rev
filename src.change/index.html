@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="shortcut icon"
+      href="./assets/image/logo.ico"
+      type="image/x-icon"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clash Verge</title>
+    <script>
+      (function () {
+        var _matchMedia = window.matchMedia;
+        window.matchMedia = function () {
+          var v = _matchMedia.apply(null, arguments);
+          if (!v.addEventListener) {
+            v.addEventListener = function () {
+              if (arguments.length < 2 || arguments[0] !== "change") {
+                console.error("Cannot proxy addEventListener:", arguments);
+                return;
+              }
+              if (arguments.length > 2) {
+                console.warn("Proxy addEventListener:", arguments);
+              }
+              v.addListener(arguments[1]);
+            };
+          }
+          return v;
+        };
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>
