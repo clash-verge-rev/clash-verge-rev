@@ -26,7 +26,40 @@ pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
     let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
     let merge = use_filter(merge, &merge_list.collect());
 
-    ["rules", "rule-providers", "proxies", "proxy-providers", "proxy-groups"]
+    ["rule-providers", "proxy-providers"]
+        .iter()
+        .for_each(|key_str| {
+            let key_val = Value::from(key_str.to_string());
+
+            let mut map = Mapping::default();
+
+            map = config.get(&key_val).map_or(map.clone(), |val| {
+                val.as_mapping().map_or(map, |v| v.clone())
+            });
+
+            let pre_key = Value::from(format!("prepend-{key_str}"));
+            let post_key = Value::from(format!("append-{key_str}"));
+
+            if let Some(pre_val) = merge.get(&pre_key) {
+                if pre_val.is_mapping() {
+                    let mut pre_val = pre_val.as_mapping().unwrap().clone();
+                    pre_val.extend(map);
+                    map = pre_val;
+                }
+            }
+
+            if let Some(post_val) = merge.get(&post_key) {
+                if post_val.is_mapping() {
+                    map.extend(post_val.as_mapping().unwrap().clone());
+                }
+            }
+
+            if !map.is_empty() {
+                config.insert(key_val, Value::from(map));
+            }
+        });
+
+    ["rules", "proxies", "proxy-groups"]
         .iter()
         .for_each(|key_str| {
             let key_val = Value::from(key_str.to_string());
