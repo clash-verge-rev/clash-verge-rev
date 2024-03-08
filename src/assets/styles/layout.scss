@@ -91,7 +91,7 @@
       position: absolute;
       top: 0px;
       right: 0px;
-      height: 36px;
+      height: 24px;
       display: flex;
       align-items: center;
       box-sizing: border-box;
@@ -112,15 +112,16 @@
 .windows,
 .unknown {
   &.layout {
-    // $maxLogo: 115px;
+    .layout__left {
+      padding-top: 24px;
+    }
+
     .layout__left .the-logo {
       flex: 1 0 58px;
-      // max-width: $maxLogo + 32px;
-      // max-height: $maxLogo;
     }
 
     .layout__right .the-content {
-      top: 30px;
+      top: 24px;
     }
   }
 }
