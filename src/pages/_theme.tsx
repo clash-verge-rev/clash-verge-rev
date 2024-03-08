@@ -21,6 +21,6 @@ export const defaultTheme = {
 export const defaultDarkTheme = {
   ...defaultTheme,
   primary_text: "#ffffff",
-  background_color: "#282a36",
+  background_color: "#2e303d",
   secondary_text: "#ffffff",
 };
