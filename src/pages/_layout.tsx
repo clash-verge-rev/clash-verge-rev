@@ -38,7 +38,6 @@ const Layout = () => {
   console.log(mode);
   const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
-
   const { theme } = useCustomTheme();
 
   const { verge } = useVerge();

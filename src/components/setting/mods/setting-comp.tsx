@@ -39,7 +39,10 @@ export const SettingList: React.FC<{
   children: ReactNode;
 }> = (props) => (
   <List>
-    <ListSubheader sx={{ background: "transparent" }} disableSticky>
+    <ListSubheader
+      sx={{ background: "transparent", fontSize: "16px", fontWeight: "700" }}
+      disableSticky
+    >
       {props.title}
     </ListSubheader>
 
