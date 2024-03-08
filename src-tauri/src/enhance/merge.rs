@@ -1,7 +1,7 @@
 use super::{use_filter, use_lowercase};
 use serde_yaml::{self, Mapping, Sequence, Value};
 
-const MERGE_FIELDS: [&str; 8] = [
+const MERGE_FIELDS: [&str; 10] = [
     "prepend-rules",
     "append-rules",
     "prepend-rule-providers",
