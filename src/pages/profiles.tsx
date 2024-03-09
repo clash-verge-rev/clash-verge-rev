@@ -19,7 +19,7 @@ import {
 import { LoadingButton } from "@mui/lab";
 import {
   ClearRounded,
-  ContentCopyRounded,
+  ContentPasteRounded,
   LocalFireDepartmentRounded,
   RefreshRounded,
   TextSnippetOutlined,
@@ -291,7 +291,7 @@ const ProfilePage = () => {
                 title={t("Paste")}
                 onClick={onCopyLink}
               >
-                <ContentCopyRounded fontSize="inherit" />
+                <ContentPasteRounded fontSize="inherit" />
               </IconButton>
             ) : (
               <IconButton
