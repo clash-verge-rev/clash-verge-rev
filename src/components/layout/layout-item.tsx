@@ -4,7 +4,6 @@ import {
   ListItemButton,
   ListItemText,
   ListItemIcon,
-  Avatar,
 } from "@mui/material";
 import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
 
@@ -28,7 +27,7 @@ export const LayoutItem = (props: Props) => {
           {
             borderRadius: 2,
             marginLeft: 1.5,
-            paddingLeft: 1,
+            paddingLeft: 1.5,
             paddingRight: 1,
             marginRight: 1.5,
             textAlign: "left",
@@ -53,8 +52,11 @@ export const LayoutItem = (props: Props) => {
         ]}
         onClick={() => navigate(to)}
       >
-        <ListItemIcon sx={{ marginRight: -0.5 }}>{icon}</ListItemIcon>
-        <ListItemText sx={{ textAlign: "center" }} primary={children} />
+        <ListItemIcon>{icon}</ListItemIcon>
+        <ListItemText
+          sx={{ textAlign: "center", marginLeft: "-20px" }}
+          primary={children}
+        />
       </ListItemButton>
     </ListItem>
   );
