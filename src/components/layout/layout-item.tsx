@@ -7,7 +7,6 @@ import {
   Avatar,
 } from "@mui/material";
 import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
-import type { LinkProps } from "react-router-dom";
 
 interface Props {
   to: string;
