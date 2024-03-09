@@ -66,19 +66,15 @@ export const ProxyItemMini = (props: Props) => {
             "&:hover .the-check": { display: !showDelay ? "block" : "none" },
             "&:hover .the-delay": { display: showDelay ? "block" : "none" },
             "&:hover .the-icon": { display: "none" },
-            "&:hover ": {
+            "&.Mui-selected": {
+              width: `calc(100% + 3px)`,
+              marginLeft: `-3px`,
+              borderLeft: `3px solid ${selectColor}`,
               bgcolor:
                 mode === "light"
                   ? alpha(primary.main, 0.15)
                   : alpha(primary.main, 0.35),
             },
-            "&.Mui-selected": {
-              width: `calc(100% + 3px)`,
-              marginLeft: `-3px`,
-              borderLeft: `3px solid ${selectColor}`,
-              bgcolor,
-            },
-            // "&.Mui-selected .MuiListItemText-secondary": { color },
             backgroundColor: bgcolor,
           };
         },
@@ -95,8 +91,6 @@ export const ProxyItemMini = (props: Props) => {
             wordBreak: "break-all",
             overflow: "hidden",
             whiteSpace: "nowrap",
-            fontSize: "13px",
-            fontWeight: "700",
           }}
         >
           {proxy.name}
@@ -122,8 +116,6 @@ export const ProxyItemMini = (props: Props) => {
                   wordBreak: "break-all",
                   overflow: "hidden",
                   whiteSpace: "nowrap",
-                  fontSize: "11px",
-                  fontWeight: "700",
                   marginRight: "8px",
                 }}
               >
@@ -218,13 +210,4 @@ const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
   marginTop: "auto",
   padding: "0 4px",
   lineHeight: 1.5,
-}));
-
-const TypeTypo = styled(Box)(({ theme: { palette, typography } }) => ({
-  display: "inline-block",
-  fontSize: 10,
-  fontFamily: typography.fontFamily,
-  marginRight: "4px",
-  padding: "0 2px",
-  lineHeight: 1.25,
 }));

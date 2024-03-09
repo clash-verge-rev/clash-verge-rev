@@ -87,17 +87,13 @@ export const ProxyItem = (props: Props) => {
               "&:hover .the-check": { display: !showDelay ? "block" : "none" },
               "&:hover .the-delay": { display: showDelay ? "block" : "none" },
               "&:hover .the-icon": { display: "none" },
-              "&:hover ": {
+              "&.Mui-selected": {
+                borderLeft: `3px solid ${selectColor}`,
                 bgcolor:
                   mode === "light"
                     ? alpha(primary.main, 0.15)
                     : alpha(primary.main, 0.35),
               },
-              "&.Mui-selected": {
-                borderLeft: `3px solid ${selectColor}`,
-                bgcolor,
-              },
-              // "&.Mui-selected .MuiListItemText-secondary": { bgcolor },
               backgroundColor: bgcolor,
               marginBottom: "8px",
               height: "40px",
