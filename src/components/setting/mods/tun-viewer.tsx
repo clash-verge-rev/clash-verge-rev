@@ -8,11 +8,10 @@ import {
   Box,
   Typography,
   Button,
-  Switch,
   TextField,
 } from "@mui/material";
 import { useClash } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { StackModeSwitch } from "./stack-mode-switch";
 
 export const TunViewer = forwardRef<DialogRef>((props, ref) => {

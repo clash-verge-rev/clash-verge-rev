@@ -7,11 +7,10 @@ import {
   ListItemText,
   MenuItem,
   Select,
-  Switch,
   TextField,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

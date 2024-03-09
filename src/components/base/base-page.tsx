@@ -21,7 +21,10 @@ export const BasePage: React.FC<Props> = (props) => {
     <BaseErrorBoundary>
       <div className="base-page">
         <header data-windrag style={{ userSelect: "none" }}>
-          <Typography variant="h4" component="h1" data-windrag>
+          <Typography
+            sx={{ fontSize: "20px", fontWeight: "700 " }}
+            data-windrag
+          >
             {title}
           </Typography>
 
@@ -30,13 +33,11 @@ export const BasePage: React.FC<Props> = (props) => {
 
         <div
           className={full ? "base-container no-padding" : "base-container"}
-          style={{ backgroundColor: isDark ? "#090909" : "#ffffff" }}
+          style={{ backgroundColor: isDark ? "#1e1f27" : "#ffffff" }}
         >
           <section
             style={{
-              backgroundColor: isDark
-                ? alpha(theme.palette.primary.main, 0.1)
-                : "",
+              backgroundColor: isDark ? "#1e1f27" : "var(--background-color)",
             }}
           >
             <div className="base-content" style={contentStyle}>

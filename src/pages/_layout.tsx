@@ -13,6 +13,9 @@ import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
+import LogoSvg_dark from "@/assets/image/logo_dark.svg?react";
+import { atomThemeMode } from "@/services/states";
+import { useRecoilState } from "recoil";
 import { BaseErrorBoundary, Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
@@ -31,8 +34,10 @@ dayjs.extend(relativeTime);
 const OS = getSystem();
 
 const Layout = () => {
+  const [mode] = useRecoilState(atomThemeMode);
+  console.log(mode);
+  const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
-
   const { theme } = useCustomTheme();
 
   const { verge } = useVerge();
@@ -125,14 +130,17 @@ const Layout = () => {
         >
           <div className="layout__left" data-windrag>
             <div className="the-logo" data-windrag>
-              <LogoSvg />
-
+              {!isDark ? <LogoSvg /> : <LogoSvg_dark />}
               {!portableFlag && <UpdateButton className="the-newbtn" />}
             </div>
 
             <List className="the-menu">
               {routers.map((router) => (
-                <LayoutItem key={router.label} to={router.link}>
+                <LayoutItem
+                  key={router.label}
+                  to={router.link}
+                  img={router.img}
+                >
                   {t(router.label)}
                 </LayoutItem>
               ))}

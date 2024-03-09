@@ -113,12 +113,12 @@ export const ProviderButton = () => {
             return (
               <>
                 <ListItem
-                  sx={(theme) => ({
+                  sx={{
                     p: 0,
                     borderRadius: "10px",
-                    boxShadow: theme.shadows[2],
+                    border: "solid 2px var(--divider-color)",
                     mb: 1,
-                  })}
+                  }}
                   key={key}
                 >
                   <ListItemText
@@ -161,7 +161,6 @@ export const ProviderButton = () => {
                             <LinearProgress
                               variant="determinate"
                               value={progress}
-                              color="inherit"
                             />
                           </>
                         )}

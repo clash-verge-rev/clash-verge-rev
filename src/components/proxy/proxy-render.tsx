@@ -17,6 +17,8 @@ import { ProxyItem } from "./proxy-item";
 import { ProxyItemMini } from "./proxy-item-mini";
 import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
+import { useRecoilState } from "recoil";
+import { atomThemeMode } from "@/services/states";
 
 interface RenderProps {
   item: IRenderItem;
@@ -33,11 +35,21 @@ export const ProxyRender = (props: RenderProps) => {
   const { type, group, headState, proxy, proxyCol } = item;
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;
+  const [mode] = useRecoilState(atomThemeMode);
+  console.log(mode);
+  const isDark = mode === "light" ? false : true;
+  const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
 
   if (type === 0 && !group.hidden) {
     return (
       <ListItemButton
         dense
+        style={{
+          background: itembackgroundcolor,
+          height: "64px",
+          margin: "8px 16px",
+          borderRadius: "8px",
+        }}
         onClick={() => onHeadState(group.name, { open: !headState?.open })}
       >
         {enable_group_icon &&
@@ -45,8 +57,8 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith("http") && (
             <img
               src={group.icon}
-              height="40px"
-              style={{ marginRight: "8px" }}
+              height="32px"
+              style={{ marginRight: "12px", borderRadius: "6px" }}
             />
           )}
         {enable_group_icon &&
@@ -54,8 +66,8 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith("data") && (
             <img
               src={group.icon}
-              height="40px"
-              style={{ marginRight: "8px" }}
+              height="32px"
+              style={{ marginRight: "12px", borderRadius: "6px" }}
             />
           )}
         {enable_group_icon &&
@@ -63,13 +75,14 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith("<svg") && (
             <img
               src={`data:image/svg+xml;base64,${btoa(group.icon)}`}
-              height="40px"
+              height="32px"
             />
           )}
         <ListItemText
-          primary={group.name}
+          primary={<StyledPrimary>{group.name}</StyledPrimary>}
           secondary={
             <ListItemTextChild
+              color="text.secondary"
               sx={{
                 overflow: "hidden",
                 display: "flex",
@@ -78,11 +91,18 @@ export const ProxyRender = (props: RenderProps) => {
               }}
             >
               <StyledTypeBox>{group.type}</StyledTypeBox>
-              <StyledSubtitle>{group.now}</StyledSubtitle>
+              <StyledSubtitle
+                sx={{
+                  color: isDark ? "#ffffff" : "#8c8c8c",
+                  fontWeight: "600",
+                }}
+              >
+                {group.now}
+              </StyledSubtitle>
             </ListItemTextChild>
           }
           secondaryTypographyProps={{
-            sx: { display: "flex", alignItems: "center" },
+            sx: { display: "flex", alignItems: "center", color: "#ccc" },
           }}
         />
         {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
@@ -164,8 +184,16 @@ export const ProxyRender = (props: RenderProps) => {
   return null;
 };
 
+const StyledPrimary = styled("span")`
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
 const StyledSubtitle = styled("span")`
-  font-size: 0.8rem;
+  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -182,7 +210,7 @@ const StyledTypeBox = styled(ListItemTextChild)(({ theme }) => ({
   color: alpha(theme.palette.primary.main, 0.8),
   borderRadius: 4,
   fontSize: 10,
-  padding: "0 2px",
-  lineHeight: 1.25,
-  marginRight: "4px",
+  padding: "0 4px",
+  lineHeight: 1.5,
+  marginRight: "8px",
 }));

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useRecoilState } from "recoil";
-import { alpha, createTheme, Theme } from "@mui/material";
+import { alpha, createTheme, Shadows, Theme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
 import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
@@ -59,6 +59,7 @@ export const useCustomTheme = () => {
             paper: dt.background_color,
           },
         },
+        shadows: Array(25).fill("none") as Shadows,
         typography: {
           // todo
           fontFamily: setting.font_family
@@ -87,11 +88,14 @@ export const useCustomTheme = () => {
     }
 
     // css
-    const backgroundColor = mode === "light" ? "#ffffff" : "#0B121C";
+    const backgroundColor = mode === "light" ? "#f0f0f0" : "#2e303d";
     const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
     const scrollColor = mode === "light" ? "#90939980" : "#54545480";
+    const dividerColor =
+      mode === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)";
 
     const rootEle = document.documentElement;
+    rootEle.style.setProperty("--divider-color", dividerColor);
     rootEle.style.setProperty("--background-color", backgroundColor);
     rootEle.style.setProperty("--selection-color", selectColor);
     rootEle.style.setProperty("--scroller-color", scrollColor);

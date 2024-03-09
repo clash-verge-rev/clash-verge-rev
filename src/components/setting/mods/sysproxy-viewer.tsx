@@ -8,13 +8,12 @@ import {
   ListItem,
   ListItemText,
   styled,
-  Switch,
   TextField,
   Typography,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { getSystemProxy } from "@/services/cmds";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
