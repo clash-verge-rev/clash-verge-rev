@@ -73,6 +73,8 @@ export const ProxyItemMini = (props: Props) => {
                   : alpha(primary.main, 0.35),
             },
             "&.Mui-selected": {
+              width: `calc(100% + 3px)`,
+              marginLeft: `-3px`,
               borderLeft: `3px solid ${selectColor}`,
               bgcolor,
             },
