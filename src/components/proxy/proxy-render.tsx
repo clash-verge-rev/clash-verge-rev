@@ -38,7 +38,7 @@ export const ProxyRender = (props: RenderProps) => {
   const [mode] = useRecoilState(atomThemeMode);
   console.log(mode);
   const isDark = mode === "light" ? false : true;
-  const itembackgroundcolor = isDark ? "#191a21" : "#ffffff";
+  const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
 
   if (type === 0 && !group.hidden) {
     return (

@@ -12,7 +12,8 @@ export const ProfileBox = styled(Box)(
       "light-false": text.secondary,
       "dark-true": alpha(text.secondary, 0.65),
       "dark-false": alpha(text.secondary, 0.65),
-    }[key]!;
+
+
 
     const h2color = {
       "light-true": primary.main,
@@ -34,12 +35,10 @@ export const ProfileBox = styled(Box)(
       display: "block",
       cursor: "pointer",
       textAlign: "left",
-      borderLeft,
-      borderRadius: theme.shape.borderRadius,
-      boxShadow: theme.shadows[2],
       padding: "8px 16px",
       boxSizing: "border-box",
       backgroundColor,
+      borderRadius: "8px",
       color,
       "& h2": { color: h2color },
     };
