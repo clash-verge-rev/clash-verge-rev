@@ -12,7 +12,7 @@ import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
 import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
 import TestSvg from "@/assets/image/itemicon/test.svg?react";
-import Settings from "@/assets/image/itemicon/settings.svg?react";
+import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 
 export const routers = [
   {
@@ -54,7 +54,7 @@ export const routers = [
   {
     label: "Label-Settings",
     link: "/settings",
-    icon: Settings,
+    icon: SettingsSvg,
     ele: SettingsPage,
   },
 ];
