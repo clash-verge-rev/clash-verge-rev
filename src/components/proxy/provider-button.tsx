@@ -161,7 +161,6 @@ export const ProviderButton = () => {
                             <LinearProgress
                               variant="determinate"
                               value={progress}
-                              color="inherit"
                             />
                           </>
                         )}
