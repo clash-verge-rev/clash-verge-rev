@@ -202,15 +202,15 @@ const Widget = styled(Box)(({ theme: { typography } }) => ({
 const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
-  borderColor: alpha(palette.text.secondary, 0.36),
-  color: alpha(palette.text.secondary, 0.42),
+  borderColor: "light" ? "#d9d9d9" : "#424242",
+  color: "light" ? "#8c8c8c" : "#ffffff",
   borderRadius: 4,
   fontSize: 10,
   fontFamily: typography.fontFamily,
   marginRight: "4px",
   marginTop: "auto",
-  padding: "0 2px",
-  lineHeight: 1.25,
+  padding: "0 4px",
+  lineHeight: 1.5,
 }));
 
 const TypeTypo = styled(Box)(({ theme: { palette, typography } }) => ({
