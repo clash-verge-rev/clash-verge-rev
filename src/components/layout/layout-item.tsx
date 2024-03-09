@@ -14,7 +14,7 @@ interface Props {
   icon: React.ReactNode;
 }
 export const LayoutItem = (props: Props) => {
-  const { to, children, icon: Icon } = props;
+  const { to, children, icon } = props;
 
   const resolved = useResolvedPath(to);
   const match = useMatch({ path: resolved.pathname, end: true });
@@ -53,10 +53,8 @@ export const LayoutItem = (props: Props) => {
         ]}
         onClick={() => navigate(to)}
       >
-        <ListItemIcon sx={{ marginRight: -0.5 }}>
-          <Icon />
-        </ListItemIcon>
-        <ListItemText primary={children} />
+        <ListItemIcon sx={{ marginRight: -0.5 }}>{icon}</ListItemIcon>
+        <ListItemText sx={{ textAlign: "center" }} primary={children} />
       </ListItemButton>
     </ListItem>
   );
