@@ -3,14 +3,14 @@ const OS = getSystem();
 
 // default theme setting
 export const defaultTheme = {
-  primary_color: "#0066cc",
-  secondary_color: "#3a88bb",
+  primary_color: "#1890ff",
+  secondary_color: "#f5222d",
   primary_text: "#1f1f1f",
   secondary_text: "#8c8c8c",
-  info_color: "#0288d1",
-  error_color: "#d32f2f",
-  warning_color: "#ed6c02",
-  success_color: "#2e7d32",
+  info_color: "#1677ff",
+  error_color: "#f5222d",
+  warning_color: "#faad14",
+  success_color: "#52c41a",
   background_color: "#f5f5f5",
   font_family: `"Roboto", "Helvetica", "Arial", sans-serif, ${
     OS === "windows" ? "twemoji mozilla" : ""
