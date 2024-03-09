@@ -89,7 +89,7 @@ export const LayoutTraffic = () => {
 
   return (
     <Box
-      width="188px"
+      width="150px"
       position="relative"
       onClick={trafficRef.current?.toggleStyle}
     >

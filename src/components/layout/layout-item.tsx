@@ -26,10 +26,10 @@ export const LayoutItem = (props: Props) => {
         sx={[
           {
             borderRadius: 2,
-            marginLeft: 1.5,
+            marginLeft: 1.25,
             paddingLeft: 1.5,
             paddingRight: 1,
-            marginRight: 1.5,
+            marginRight: 1.25,
             textAlign: "left",
             "& .MuiListItemText-primary": {
               color: "text.primary",
@@ -54,7 +54,7 @@ export const LayoutItem = (props: Props) => {
       >
         <ListItemIcon>{icon}</ListItemIcon>
         <ListItemText
-          sx={{ textAlign: "center", marginLeft: "-20px" }}
+          sx={{ textAlign: "center", marginLeft: "-35px" }}
           primary={children}
         />
       </ListItemButton>
