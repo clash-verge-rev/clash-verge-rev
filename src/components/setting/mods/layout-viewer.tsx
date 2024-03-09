@@ -1,8 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { List, Switch, Button } from "@mui/material";
+import { List, Button } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { SettingItem } from "./setting-comp";
 import { GuardState } from "./guard-state";
 import { open as openDialog } from "@tauri-apps/api/dialog";

@@ -7,6 +7,9 @@ import { openWebUrl } from "@/services/cmds";
 import SettingVerge from "@/components/setting/setting-verge";
 import SettingClash from "@/components/setting/setting-clash";
 import SettingSystem from "@/components/setting/setting-system";
+import { atomThemeMode } from "@/services/states";
+import { useRecoilState } from "recoil";
+import { useCustomTheme } from "@/components/layout/use-custom-theme";
 
 const SettingPage = () => {
   const { t } = useTranslation();
@@ -19,12 +22,17 @@ const SettingPage = () => {
     return openWebUrl("https://github.com/clash-verge-rev/clash-verge-rev");
   });
 
+  const [mode] = useRecoilState(atomThemeMode);
+  console.log(mode);
+  const isDark = mode === "light" ? false : true;
+  const { theme } = useCustomTheme();
+
   return (
     <BasePage
       title={t("Settings")}
       header={
         <IconButton
-          size="small"
+          size="medium"
           color="inherit"
           title="@clash-verge-rev/clash-verge-rev"
           onClick={toGithubRepo}
@@ -33,17 +41,34 @@ const SettingPage = () => {
         </IconButton>
       }
     >
-      <Grid container spacing={{ xs: 1, lg: 1 }}>
+      <Grid container spacing={{ xs: 1.5, lg: 1.5 }}>
         <Grid item xs={12} md={6}>
-          <Box sx={{ borderRadius: 1, boxShadow: 2, marginBottom: 1 }}>
+          <Box
+            sx={{
+              borderRadius: 2,
+              marginBottom: 1.5,
+              backgroundColor: isDark ? "#282a36" : "#ffffff",
+            }}
+          >
             <SettingSystem onError={onError} />
           </Box>
-          <Box sx={{ borderRadius: 1, boxShadow: 2 }}>
+          <Box
+            sx={{
+              borderRadius: 2,
+              backgroundColor: isDark ? "#282a36" : "#ffffff",
+            }}
+          >
             <SettingClash onError={onError} />
           </Box>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Box sx={{ borderRadius: 1, boxShadow: 2 }}>
+          <Box
+            sx={{
+              borderRadius: 2,
+              marginBottom: 1.5,
+              backgroundColor: isDark ? "#282a36" : "#ffffff",
+            }}
+          >
             <SettingVerge onError={onError} />
           </Box>
         </Grid>

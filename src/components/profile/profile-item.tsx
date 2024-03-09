@@ -230,7 +230,14 @@ export const ProfileItem = (props: Props) => {
               {...attributes}
               {...listeners}
             >
-              <DragIndicator sx={{ cursor: "move", marginLeft: "-6px" }} />
+              <DragIndicator
+                sx={[
+                  { cursor: "move", marginLeft: "-6px" },
+                  ({ palette: { text } }) => {
+                    return { color: text.primary };
+                  },
+                ]}
+              />
             </Box>
 
             <Typography
@@ -303,11 +310,7 @@ export const ProfileItem = (props: Props) => {
             <span title="Updated Time">{parseExpire(updated)}</span>
           </Box>
         )}
-        <LinearProgress
-          variant="determinate"
-          value={progress}
-          color="inherit"
-        />
+        <LinearProgress variant="determinate" value={progress} />
       </ProfileBox>
 
       <Menu
