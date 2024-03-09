@@ -57,16 +57,16 @@ export const ProxyItemMini = (props: Props) => {
           alignItems: "center",
         },
         ({ palette: { mode, primary } }) => {
-          const bgcolor = mode === "light" ? "#ffffff" : "#ffffff";
+          const bgcolor = mode === "light" ? "#ffffff" : "#24252f";
           const color = mode === "light" ? primary.main : primary.light;
           const showDelay = delay > 0;
-
           const selectColor = mode === "light" ? primary.main : primary.light;
 
           return {
             "&:hover .the-check": { display: !showDelay ? "block" : "none" },
             "&:hover .the-delay": { display: showDelay ? "block" : "none" },
             "&:hover .the-icon": { display: "none" },
+            "&:hover ": { bgcolor },
             "&.Mui-selected": {
               borderLeft: `3px solid ${selectColor}`,
               bgcolor,
