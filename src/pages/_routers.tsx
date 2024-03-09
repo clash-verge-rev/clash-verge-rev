@@ -5,48 +5,55 @@ import ProfilesPage from "./profiles";
 import SettingsPage from "./settings";
 import ConnectionsPage from "./connections";
 import RulesPage from "./rules";
+import ProxiesSVG from "@/assets/image/itemicon/proxies.svg";
+import ProfilesSVG from "@/assets/image/itemicon/profiles.svg";
+import ConnectionsSVG from "@/assets/image/itemicon/connections.svg";
+import RulesSVG from "@/assets/image/itemicon/rules.svg";
+import LogsSVG from "@/assets/image/itemicon/logs.svg";
+import TestSVG from "@/assets/image/itemicon/test.svg";
+import SettingsSVG from "@/assets/image/itemicon/settings.svg";
 
 export const routers = [
   {
     label: "Label-Proxies",
     link: "/",
-    img: "../../assets/image/itemicon/proxies.svg",
+    img: ProxiesSVG,
     ele: ProxiesPage,
   },
   {
     label: "Label-Profiles",
     link: "/profile",
-    img: "../../assets/image/itemicon/profiles.svg",
+    img: ProfilesSVG,
     ele: ProfilesPage,
   },
   {
     label: "Label-Connections",
     link: "/connections",
-    img: "../../assets/image/itemicon/connections.svg",
+    img: ConnectionsSVG,
     ele: ConnectionsPage,
   },
   {
     label: "Label-Rules",
     link: "/rules",
-    img: "../../assets/image/itemicon/rules.svg",
+    img: RulesSVG,
     ele: RulesPage,
   },
   {
     label: "Label-Logs",
     link: "/logs",
-    img: "../../assets/image/itemicon/logs.svg",
+    img: LogsSVG,
     ele: LogsPage,
   },
   {
     label: "Label-Test",
     link: "/test",
-    img: "../../assets/image/itemicon/test.svg",
+    img: TestSVG,
     ele: TestPage,
   },
   {
     label: "Label-Settings",
     link: "/settings",
-    img: "../../assets/image/itemicon/settings.svg",
+    img: SettingsSVG,
     ele: SettingsPage,
   },
 ];
