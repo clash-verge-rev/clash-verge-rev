@@ -1,3 +1,19 @@
+## v1.5.5
+
+### Features
+
+- 全新 UI 界面 (by @Amnesiash)
+- 提供允许无效证书的开关
+- 删除不必要的快捷键
+- Provider 更新添加动画
+- Merge 支持 Provider
+
+### Bugs Fixes
+
+- Linux 下图片显示错误
+
+---
+
 ## v1.5.4
 
 ### Features

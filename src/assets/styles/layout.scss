@@ -27,7 +27,7 @@
     // $maxLogo: 100px;
 
     .the-logo {
-      // position: relative;
+      position: relative;
       flex: 1 0 58px;
       // width: 100%;
       display: flex;
@@ -60,7 +60,9 @@
       .the-newbtn {
         position: absolute;
         right: 10px;
-        bottom: 0px;
+        top: 0px;
+        border-radius: 8px;
+        padding: 2px 4px;
         transform: scale(0.8);
       }
     }
