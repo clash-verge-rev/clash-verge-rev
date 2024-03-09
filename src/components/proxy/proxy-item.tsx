@@ -103,24 +103,19 @@ export const ProxyItem = (props: Props) => {
         <ListItemText
           title={proxy.name}
           secondary={
-            <Typography
-              variant="body2"
-              component="div"
-              color="text.primary"
-              sx={{
-                display: "block",
-                textOverflow: "ellipsis",
-                wordBreak: "break-all",
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-                fontSize: "13px",
-                fontWeight: "700",
-              }}
-            >
-              {proxy.name}
-              {/* {showType && proxy.now && ` - ${proxy.now}`} */}
-            </Typography>
-            /* {showType && !!proxy.provider && (
+            <>
+              <span
+                style={{
+                  marginRight: "8px",
+                  fontSize: "13px",
+                  color: "text.primary",
+                  fontWeight: "700",
+                }}
+              >
+                {proxy.name}
+                {showType && proxy.now && ` - ${proxy.now}`}
+              </span>
+              {showType && !!proxy.provider && (
                 <TypeBox component="span">{proxy.provider}</TypeBox>
               )}
               {showType && <TypeBox component="span">{proxy.type}</TypeBox>}
@@ -128,7 +123,8 @@ export const ProxyItem = (props: Props) => {
               {showType && proxy.xudp && (
                 <TypeBox component="span">XUDP</TypeBox>
               )}
-              {showType && proxy.tfo && <TypeBox component="span">TFO</TypeBox>} */
+              {showType && proxy.tfo && <TypeBox component="span">TFO</TypeBox>}
+            </>
           }
         />
 
