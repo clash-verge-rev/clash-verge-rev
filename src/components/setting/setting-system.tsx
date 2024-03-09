@@ -1,11 +1,11 @@
 import useSWR from "swr";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { IconButton, Switch, Tooltip } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import { PrivacyTipRounded, Settings, InfoRounded } from "@mui/icons-material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
-import { DialogRef } from "@/components/base";
+import { DialogRef, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { GuardState } from "./mods/guard-state";
 import { ServiceViewer } from "./mods/service-viewer";
