@@ -66,7 +66,12 @@ export const ProxyItemMini = (props: Props) => {
             "&:hover .the-check": { display: !showDelay ? "block" : "none" },
             "&:hover .the-delay": { display: showDelay ? "block" : "none" },
             "&:hover .the-icon": { display: "none" },
-            "&:hover ": { bgcolor },
+            "&:hover ": {
+              bgcolor:
+                mode === "light"
+                  ? alpha(primary.main, 0.15)
+                  : alpha(primary.main, 0.35),
+            },
             "&.Mui-selected": {
               borderLeft: `3px solid ${selectColor}`,
               bgcolor,
