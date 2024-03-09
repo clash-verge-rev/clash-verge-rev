@@ -202,8 +202,8 @@ const Widget = styled(Box)(({ theme: { typography } }) => ({
 const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
-  borderColor: "light" ? "#d9d9d9" : "#424242",
-  color: "light" ? "#8c8c8c" : "#ffffff",
+  borderColor: palette.mode === "light" ? "#d9d9d9" : "#424242",
+  color: palette.mode === "light" ? "#8c8c8c" : "#ffffff",
   borderRadius: 4,
   fontSize: 10,
   fontFamily: typography.fontFamily,
