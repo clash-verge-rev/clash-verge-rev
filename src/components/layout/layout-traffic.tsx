@@ -103,7 +103,7 @@ export const LayoutTraffic = () => {
         <Box display="flex" alignItems="center" whiteSpace="nowrap">
           <ArrowUpward
             {...iconStyle}
-            color={+up > 0 ? "primary" : "disabled"}
+            color={+up > 0 ? "secondary" : "disabled"}
           />
           <Typography {...valStyle}>{up}</Typography>
           <Typography {...unitStyle}>{upUnit}/s</Typography>
