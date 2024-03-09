@@ -303,11 +303,7 @@ export const ProfileItem = (props: Props) => {
             <span title="Updated Time">{parseExpire(updated)}</span>
           </Box>
         )}
-        <LinearProgress
-          variant="determinate"
-          value={progress}
-          color="inherit"
-        />
+        <LinearProgress variant="determinate" value={progress} />
       </ProfileBox>
 
       <Menu
