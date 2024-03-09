@@ -3,7 +3,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  ListItemAvatar,
+  ListItemIcon,
   Avatar,
 } from "@mui/material";
 import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
@@ -11,10 +11,10 @@ import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
 interface Props {
   to: string;
   children: string;
-  img: string;
+  icon: React.ReactNode;
 }
 export const LayoutItem = (props: Props) => {
-  const { to, children, img } = props;
+  const { to, children, icon: Icon } = props;
 
   const resolved = useResolvedPath(to);
   const match = useMatch({ path: resolved.pathname, end: true });
@@ -53,9 +53,9 @@ export const LayoutItem = (props: Props) => {
         ]}
         onClick={() => navigate(to)}
       >
-        <ListItemAvatar sx={{ marginRight: -0.5 }}>
-          <Avatar src={img}></Avatar>
-        </ListItemAvatar>
+        <ListItemIcon sx={{ marginRight: -0.5 }}>
+          <Icon />
+        </ListItemIcon>
         <ListItemText primary={children} />
       </ListItemButton>
     </ListItem>
