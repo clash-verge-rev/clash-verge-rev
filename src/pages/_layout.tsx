@@ -139,7 +139,7 @@ const Layout = () => {
                 <LayoutItem
                   key={router.label}
                   to={router.link}
-                  img={router.img}
+                  icon={router.icon}
                 >
                   {t(router.label)}
                 </LayoutItem>

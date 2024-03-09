@@ -5,55 +5,56 @@ import ProfilesPage from "./profiles";
 import SettingsPage from "./settings";
 import ConnectionsPage from "./connections";
 import RulesPage from "./rules";
-import ProxiesSVG from "@/assets/image/itemicon/proxies.svg";
-import ProfilesSVG from "@/assets/image/itemicon/profiles.svg";
-import ConnectionsSVG from "@/assets/image/itemicon/connections.svg";
-import RulesSVG from "@/assets/image/itemicon/rules.svg";
-import LogsSVG from "@/assets/image/itemicon/logs.svg";
-import TestSVG from "@/assets/image/itemicon/test.svg";
-import SettingsSVG from "@/assets/image/itemicon/settings.svg";
+
+import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
+import ProfilesSvg from "@/assets/image/itemicon/profiles.svg?react";
+import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
+import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
+import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
+import TestSvg from "@/assets/image/itemicon/test.svg?react";
+import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 
 export const routers = [
   {
     label: "Label-Proxies",
     link: "/",
-    img: ProxiesSVG,
+    icon: ProxiesSvg,
     ele: ProxiesPage,
   },
   {
     label: "Label-Profiles",
     link: "/profile",
-    img: ProfilesSVG,
+    icon: ProfilesSvg,
     ele: ProfilesPage,
   },
   {
     label: "Label-Connections",
     link: "/connections",
-    img: ConnectionsSVG,
+    icon: ConnectionsSvg,
     ele: ConnectionsPage,
   },
   {
     label: "Label-Rules",
     link: "/rules",
-    img: RulesSVG,
+    icon: RulesSvg,
     ele: RulesPage,
   },
   {
     label: "Label-Logs",
     link: "/logs",
-    img: LogsSVG,
+    icon: LogsSvg,
     ele: LogsPage,
   },
   {
     label: "Label-Test",
     link: "/test",
-    img: TestSVG,
+    icon: TestSvg,
     ele: TestPage,
   },
   {
     label: "Label-Settings",
     link: "/settings",
-    img: SettingsSVG,
+    icon: SettingsSvg,
     ele: SettingsPage,
   },
 ];
