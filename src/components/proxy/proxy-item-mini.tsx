@@ -71,7 +71,7 @@ export const ProxyItemMini = (props: Props) => {
               borderLeft: `3px solid ${selectColor}`,
               bgcolor,
             },
-            "&.Mui-selected .MuiListItemText-secondary": { color },
+            // "&.Mui-selected .MuiListItemText-secondary": { color },
             backgroundColor: bgcolor,
           };
         },
