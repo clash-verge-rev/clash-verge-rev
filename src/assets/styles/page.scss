@@ -13,12 +13,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--divider-color);
+    // border-bottom: 1px solid var(--divider-color);
   }
 
   .base-container {
     height: 100%;
     overflow: hidden;
+    border-radius: 10px;
     // border-top-left-radius: var(--border-radius);
 
     > section {
@@ -27,11 +28,11 @@
       width: 100%;
       height: 100%;
       overflow: auto;
-      padding: 16px 0;
+      padding: 10px 0;
       box-sizing: border-box;
       scrollbar-gutter: stable;
       .base-content {
-        width: calc(100% - 16px * 2);
+        width: calc(100% - 10px * 2);
         margin: 0 auto;
       }
     }

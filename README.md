@@ -11,31 +11,15 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 
 ## Install
 
-Click on the corresponding link below to download the installation package. Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
+请到发布页面下载对应的安装包：[Release page](https://github.com/clash-verge-rev/clash-verge-rev/releases)<br>
+Go to the [release page](https://github.com/clash-verge-rev/clash-verge-rev/releases) to download the corresponding installation package<br>
+Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
-[[Windows x64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.5/Clash.Verge_1.5.5_x64-setup.exe)]
-[[Windows arm64](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.5/Clash.Verge_1.5.5_arm64-setup.exe)]
+### 安装说明和常见问题，请到[文档页](https://clash-verge-rev.github.io/)查看：[Doc](https://clash-verge-rev.github.io/)
 
-[[macOS intel](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.5/Clash.Verge_1.5.5_x64.dmg)]
-[[macOS apple](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.5/Clash.Verge_1.5.5_aarch64.dmg)]
+---
 
-[[Linux x64 AppImage](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.5/clash-verge_1.5.5_amd64.AppImage)]
-[[Linux x64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.5/clash-verge_1.5.5_amd64.deb)]
-[[Linux arm64 deb](https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v1.5.5/clash-verge_1.5.5_arm64.deb)]
-
-Or you can build it yourself. Supports Windows, Linux and macOS 10.15+
-
-Notes: If you could not start the app on Windows, please check that you have [Webview2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section) installed.
-
-## Features
-
-- Since the clash core has been removed. The project no longer maintains the clash core, but only the Clash Meta core.
-- Profiles management and enhancement (by yaml and Javascript). [Doc](https://clash-verge-rev.github.io)
-- Simple UI and supports custom theme color.
-- Built-in support [Clash.Meta(mihomo)](https://github.com/MetaCubeX/mihomo) core.
-- System proxy setting and guard.
-
-#### TG Group: [@clash_verge_rev](https://t.me/clash_verge_rev)
+### TG Group: [@clash_verge_rev](https://t.me/clash_verge_rev)
 
 ## Promotion
 
@@ -51,15 +35,21 @@ Notes: If you could not start the app on Windows, please check that you have [We
 - 解锁流媒体及 ChatGPT
 - 官网：https://狗狗加速.com
 
+## Features
+
+- Since the clash core has been removed. The project no longer maintains the clash core, but only the Clash Meta core.
+- Profiles management and enhancement (by yaml and Javascript). [Doc](https://clash-verge-rev.github.io)
+- Improved UI and supports custom theme color.
+- Built-in support [Clash.Meta(mihomo)](https://github.com/MetaCubeX/mihomo) core.
+- System proxy setting and guard.
+
 ## Preview
 
 ![preview](./docs/preview.gif)
 
 ### FAQ
 
-#### 1. **macOS** "Clash Verge" is damaged and can't be opened
-
-open the terminal and run `sudo xattr -r -d com.apple.quarantine /Applications/Clash\ Verge.app`
+Refer to [Doc FAQ Page](https://clash-verge-rev.github.io/faq.html)
 
 ## Development
 
@@ -72,14 +62,6 @@ pnpm i
 pnpm run check
 pnpm dev
 ```
-
-## Todos
-
-> This keng is a little big...
-
-## Disclaimer
-
-This is a learning project for Rust practice.
 
 ## Contributions
 
