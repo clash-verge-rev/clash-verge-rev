@@ -11,6 +11,7 @@ import {
   styled,
   SxProps,
   Theme,
+  Typography,
 } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import delayManager from "@/services/delay";
@@ -78,19 +79,23 @@ export const ProxyItem = (props: Props) => {
         sx={[
           { borderRadius: 1 },
           ({ palette: { mode, primary } }) => {
-            const bgcolor =
-              mode === "light"
-                ? alpha(primary.main, 0.15)
-                : alpha(primary.main, 0.35);
-            const color = mode === "light" ? primary.main : primary.light;
+            const bgcolor = mode === "light" ? "#ffffff" : "#24252f";
+            const selectColor = mode === "light" ? primary.main : primary.light;
             const showDelay = delay > 0;
 
             return {
               "&:hover .the-check": { display: !showDelay ? "block" : "none" },
               "&:hover .the-delay": { display: showDelay ? "block" : "none" },
               "&:hover .the-icon": { display: "none" },
-              "&.Mui-selected": { bgcolor },
-              "&.Mui-selected .MuiListItemText-secondary": { color },
+              "&:hover ": { bgcolor },
+              "&.Mui-selected": {
+                borderLeft: `3px solid ${selectColor}`,
+                bgcolor,
+              },
+              // "&.Mui-selected .MuiListItemText-secondary": { bgcolor },
+              backgroundColor: bgcolor,
+              marginBottom: "8px",
+              height: "40px",
             };
           },
         ]}
@@ -98,12 +103,24 @@ export const ProxyItem = (props: Props) => {
         <ListItemText
           title={proxy.name}
           secondary={
-            <>
-              <span style={{ marginRight: 4 }}>
-                {proxy.name}
-                {showType && proxy.now && ` - ${proxy.now}`}
-              </span>
-              {showType && !!proxy.provider && (
+            <Typography
+              variant="body2"
+              component="div"
+              color="text.primary"
+              sx={{
+                display: "block",
+                textOverflow: "ellipsis",
+                wordBreak: "break-all",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                fontSize: "13px",
+                fontWeight: "700",
+              }}
+            >
+              {proxy.name}
+              {/* {showType && proxy.now && ` - ${proxy.now}`} */}
+            </Typography>
+            /* {showType && !!proxy.provider && (
                 <TypeBox component="span">{proxy.provider}</TypeBox>
               )}
               {showType && <TypeBox component="span">{proxy.type}</TypeBox>}
@@ -111,8 +128,7 @@ export const ProxyItem = (props: Props) => {
               {showType && proxy.xudp && (
                 <TypeBox component="span">XUDP</TypeBox>
               )}
-              {showType && proxy.tfo && <TypeBox component="span">TFO</TypeBox>}
-            </>
+              {showType && proxy.tfo && <TypeBox component="span">TFO</TypeBox>} */
           }
         />
 
