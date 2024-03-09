@@ -5,7 +5,7 @@ import { IconButton, Tooltip } from "@mui/material";
 import { PrivacyTipRounded, Settings, InfoRounded } from "@mui/icons-material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
-import { DialogRef, FlatSwitch } from "@/components/base";
+import { DialogRef, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { GuardState } from "./mods/guard-state";
 import { ServiceViewer } from "./mods/service-viewer";
@@ -98,7 +98,7 @@ const SettingSystem = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ enable_tun_mode: e })}
           onGuard={(e) => patchVerge({ enable_tun_mode: e })}
         >
-          <FlatSwitch edge="end" />
+          <Switch edge="end" />
         </GuardState>
       </SettingItem>
 
@@ -126,7 +126,7 @@ const SettingSystem = ({ onError }: Props) => {
             onChange={(e) => onChangeData({ enable_service_mode: e })}
             onGuard={(e) => patchVerge({ enable_service_mode: e })}
           >
-            <FlatSwitch
+            <Switch
               edge="end"
               disabled={
                 serviceStatus !== "active" && serviceStatus !== "installed"
@@ -159,7 +159,7 @@ const SettingSystem = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ enable_system_proxy: e })}
           onGuard={(e) => patchVerge({ enable_system_proxy: e })}
         >
-          <FlatSwitch edge="end" />
+          <Switch edge="end" />
         </GuardState>
       </SettingItem>
 
@@ -172,7 +172,7 @@ const SettingSystem = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ enable_auto_launch: e })}
           onGuard={(e) => patchVerge({ enable_auto_launch: e })}
         >
-          <FlatSwitch edge="end" />
+          <Switch edge="end" />
         </GuardState>
       </SettingItem>
 
@@ -185,7 +185,7 @@ const SettingSystem = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ enable_silent_start: e })}
           onGuard={(e) => patchVerge({ enable_silent_start: e })}
         >
-          <FlatSwitch edge="end" />
+          <Switch edge="end" />
         </GuardState>
       </SettingItem>
     </SettingList>

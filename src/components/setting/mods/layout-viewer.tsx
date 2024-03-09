@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { List, Button } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice, FlatSwitch } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { SettingItem } from "./setting-comp";
 import { GuardState } from "./guard-state";
 import { open as openDialog } from "@tauri-apps/api/dialog";
@@ -67,7 +67,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(e) => onChangeData({ traffic_graph: e })}
             onGuard={(e) => patchVerge({ traffic_graph: e })}
           >
-            <FlatSwitch edge="end" />
+            <Switch edge="end" />
           </GuardState>
         </SettingItem>
 
@@ -80,7 +80,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(e) => onChangeData({ enable_memory_usage: e })}
             onGuard={(e) => patchVerge({ enable_memory_usage: e })}
           >
-            <FlatSwitch edge="end" />
+            <Switch edge="end" />
           </GuardState>
         </SettingItem>
 
@@ -93,7 +93,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(e) => onChangeData({ enable_group_icon: e })}
             onGuard={(e) => patchVerge({ enable_group_icon: e })}
           >
-            <FlatSwitch edge="end" />
+            <Switch edge="end" />
           </GuardState>
         </SettingItem>
 
