@@ -20,7 +20,7 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
   const primary = !extra ? (
     label
   ) : (
-    <Box sx={{ display: "flex", alignItems: "center" }}>
+    <Box sx={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
       <span>{label}</span>
       {extra}
     </Box>
@@ -40,7 +40,14 @@ export const SettingList: React.FC<{
 }> = (props) => (
   <List>
     <ListSubheader
-      sx={{ background: "transparent", fontSize: "16px", fontWeight: "700" }}
+      sx={[
+        { background: "transparent", fontSize: "16px", fontWeight: "700" },
+        ({ palette }) => {
+          return {
+            color: palette.text.primary,
+          };
+        },
+      ]}
       disableSticky
     >
       {props.title}
