@@ -7,11 +7,10 @@ import {
   ListItemText,
   MenuItem,
   Select,
-  Switch,
   TextField,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, FlatSwitch } from "@/components/base";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -96,7 +95,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Auto Close Connections")} />
-          <Switch
+          <FlatSwitch
             edge="end"
             checked={values.autoCloseConnection}
             onChange={(_, c) =>
@@ -107,7 +106,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Enable Builtin Enhanced")} />
-          <Switch
+          <FlatSwitch
             edge="end"
             checked={values.enableBuiltinEnhanced}
             onChange={(_, c) =>

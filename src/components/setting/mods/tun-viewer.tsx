@@ -8,11 +8,10 @@ import {
   Box,
   Typography,
   Button,
-  Switch,
   TextField,
 } from "@mui/material";
 import { useClash } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, FlatSwitch } from "@/components/base";
 import { StackModeSwitch } from "./stack-mode-switch";
 
 export const TunViewer = forwardRef<DialogRef>((props, ref) => {
@@ -154,7 +153,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Auto Route")} />
-          <Switch
+          <FlatSwitch
             edge="end"
             checked={values.autoRoute}
             onChange={(_, c) => setValues((v) => ({ ...v, autoRoute: c }))}
@@ -163,7 +162,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Strict Route")} />
-          <Switch
+          <FlatSwitch
             edge="end"
             checked={values.strictRoute}
             onChange={(_, c) => setValues((v) => ({ ...v, strictRoute: c }))}
@@ -172,7 +171,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Auto Detect Interface")} />
-          <Switch
+          <FlatSwitch
             edge="end"
             checked={values.autoDetectInterface}
             onChange={(_, c) =>

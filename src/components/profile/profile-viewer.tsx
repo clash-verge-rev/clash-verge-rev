@@ -15,12 +15,11 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Switch,
   styled,
   TextField,
 } from "@mui/material";
 import { createProfile, patchProfile } from "@/services/cmds";
-import { BaseDialog, Notice } from "@/components/base";
+import { BaseDialog, Notice, FlatSwitch } from "@/components/base";
 import { version } from "@root/package.json";
 import { FileInput } from "./file-input";
 
@@ -254,7 +253,11 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               render={({ field }) => (
                 <StyledBox>
                   <InputLabel>{t("Use System Proxy")}</InputLabel>
-                  <Switch checked={field.value} {...field} color="primary" />
+                  <FlatSwitch
+                    checked={field.value}
+                    {...field}
+                    color="primary"
+                  />
                 </StyledBox>
               )}
             />
@@ -265,7 +268,11 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               render={({ field }) => (
                 <StyledBox>
                   <InputLabel>{t("Use Clash Proxy")}</InputLabel>
-                  <Switch checked={field.value} {...field} color="primary" />
+                  <FlatSwitch
+                    checked={field.value}
+                    {...field}
+                    color="primary"
+                  />
                 </StyledBox>
               )}
             />
@@ -276,7 +283,11 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               render={({ field }) => (
                 <StyledBox>
                   <InputLabel>{t("Accept Invalid Certs (Danger)")}</InputLabel>
-                  <Switch checked={field.value} {...field} color="primary" />
+                  <FlatSwitch
+                    checked={field.value}
+                    {...field}
+                    color="primary"
+                  />
                 </StyledBox>
               )}
             />
