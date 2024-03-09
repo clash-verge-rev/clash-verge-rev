@@ -4,14 +4,13 @@ import {
   ListItemButton,
   ListItemText,
   ListItemIcon,
-  Avatar,
 } from "@mui/material";
 import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
 
 interface Props {
   to: string;
   children: string;
-  icon: React.ReactNode;
+  icon: () => JSX.Element;
 }
 export const LayoutItem = (props: Props) => {
   const { to, children, icon: Icon } = props;
