@@ -75,7 +75,7 @@ export const LayoutTraffic = () => {
   };
   const valStyle: any = {
     component: "span",
-    color: "primary",
+    // color: "primary",
     textAlign: "center",
     sx: { flex: "1 1 56px", userSelect: "none" },
   };
@@ -89,7 +89,7 @@ export const LayoutTraffic = () => {
 
   return (
     <Box
-      width="188px"
+      width="150px"
       position="relative"
       onClick={trafficRef.current?.toggleStyle}
     >
@@ -103,9 +103,11 @@ export const LayoutTraffic = () => {
         <Box display="flex" alignItems="center" whiteSpace="nowrap">
           <ArrowUpward
             {...iconStyle}
-            color={+up > 0 ? "primary" : "disabled"}
+            color={+up > 0 ? "secondary" : "disabled"}
           />
-          <Typography {...valStyle}>{up}</Typography>
+          <Typography {...valStyle} color="secondary">
+            {up}
+          </Typography>
           <Typography {...unitStyle}>{upUnit}/s</Typography>
         </Box>
 
@@ -114,7 +116,9 @@ export const LayoutTraffic = () => {
             {...iconStyle}
             color={+down > 0 ? "primary" : "disabled"}
           />
-          <Typography {...valStyle}>{down}</Typography>
+          <Typography {...valStyle} color="primary">
+            {down}
+          </Typography>
           <Typography {...unitStyle}>{downUnit}/s</Typography>
         </Box>
 
