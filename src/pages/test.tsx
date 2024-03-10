@@ -111,6 +111,7 @@ const TestPage = () => {
 
   return (
     <BasePage
+      full
       title={t("Test")}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -131,32 +132,40 @@ const TestPage = () => {
         </Box>
       }
     >
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={onDragEnd}
+      <Box
+        sx={{
+          pt: 1,
+          mb: 0.5,
+          px: "10px",
+        }}
       >
-        <Box sx={{ mb: 4.5 }}>
-          <Grid container spacing={{ xs: 1, lg: 1 }}>
-            <SortableContext
-              items={testList.map((x) => {
-                return x.uid;
-              })}
-            >
-              {testList.map((item) => (
-                <Grid item xs={6} sm={4} md={3} lg={2} key={item.uid}>
-                  <TestItem
-                    id={item.uid}
-                    itemData={item}
-                    onEdit={() => viewerRef.current?.edit(item)}
-                    onDelete={onDeleteTestListItem}
-                  />
-                </Grid>
-              ))}
-            </SortableContext>
-          </Grid>
-        </Box>
-      </DndContext>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
+          <Box sx={{ mb: 4.5 }}>
+            <Grid container spacing={{ xs: 1, lg: 1 }}>
+              <SortableContext
+                items={testList.map((x) => {
+                  return x.uid;
+                })}
+              >
+                {testList.map((item) => (
+                  <Grid item xs={6} sm={4} md={3} lg={2} key={item.uid}>
+                    <TestItem
+                      id={item.uid}
+                      itemData={item}
+                      onEdit={() => viewerRef.current?.edit(item)}
+                      onDelete={onDeleteTestListItem}
+                    />
+                  </Grid>
+                ))}
+              </SortableContext>
+            </Grid>
+          </Box>
+        </DndContext>
+      </Box>
       <TestViewer ref={viewerRef} onChange={onTestListItemChange} />
     </BasePage>
   );
