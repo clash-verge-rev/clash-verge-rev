@@ -129,7 +129,7 @@ export const ProxyRender = (props: RenderProps) => {
         proxy={proxy!}
         selected={group.now === proxy?.name}
         showType={headState?.showType}
-        sx={{ py: 0, pl: 1 }}
+        sx={{ py: 0, pl: 2 }}
         onClick={() => onChangeProxy(group, proxy!)}
       />
     );
