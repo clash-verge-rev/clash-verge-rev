@@ -10,7 +10,7 @@ export const defaultTheme = {
   info_color: "#007AFF",
   error_color: "#FF3B30",
   warning_color: "#FF9500",
-  success_color: "#34C759",
+  success_color: "#06943D",
   background_color: "#f5f5f5",
   font_family: `-apple-system, BlinkMacSystemFont,"Microsoft YaHei UI", "Microsoft YaHei", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", ${
     OS === "windows" ? "twemoji mozilla" : ""
