@@ -104,10 +104,10 @@ export const TestItem = (props: Props) => {
           {icon && icon.trim() !== "" ? (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
               {icon.trim().startsWith("http") && (
-                <img src={icon} height="40px" style={{ marginRight: "8px" }} />
+                <img src={icon} height="40px" />
               )}
               {icon.trim().startsWith("data") && (
-                <img src={icon} height="40px" style={{ marginRight: "8px" }} />
+                <img src={icon} height="40px" />
               )}
               {icon.trim().startsWith("<svg") && (
                 <img
