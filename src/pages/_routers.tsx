@@ -18,7 +18,6 @@ import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
 import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
-import DvrRoundedIcon from "@mui/icons-material/DvrRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
