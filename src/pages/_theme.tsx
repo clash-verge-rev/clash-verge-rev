@@ -12,7 +12,7 @@ export const defaultTheme = {
   warning_color: "#FF9500",
   success_color: "#34C759",
   background_color: "#f5f5f5",
-  font_family: `"Roboto", "Helvetica", "Arial", sans-serif, ${
+  font_family: `-apple-system, BlinkMacSystemFont,"Microsoft YaHei UI", "Microsoft YaHei", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", ${
     OS === "windows" ? "twemoji mozilla" : ""
   }`,
 };
