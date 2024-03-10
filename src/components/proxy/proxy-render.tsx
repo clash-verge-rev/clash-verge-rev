@@ -36,7 +36,6 @@ export const ProxyRender = (props: RenderProps) => {
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;
   const [mode] = useRecoilState(atomThemeMode);
-  console.log(mode);
   const isDark = mode === "light" ? false : true;
   const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
 
