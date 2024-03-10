@@ -90,14 +90,7 @@ export const ProxyRender = (props: RenderProps) => {
               }}
             >
               <StyledTypeBox>{group.type}</StyledTypeBox>
-              <StyledSubtitle
-                sx={{
-                  color: isDark ? "#ffffff" : "#8c8c8c",
-                  fontWeight: "600",
-                }}
-              >
-                {group.now}
-              </StyledSubtitle>
+              <StyledSubtitle>{group.now}</StyledSubtitle>
             </ListItemTextChild>
           }
           secondaryTypographyProps={{
@@ -194,6 +187,7 @@ const StyledPrimary = styled("span")`
 const StyledSubtitle = styled("span")`
   font-size: 12px;
   overflow: hidden;
+  color: text.secondary;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
