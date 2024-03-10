@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { List, Button } from "@mui/material";
+import { List, Button, Select, MenuItem } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { SettingItem } from "./setting-comp";
@@ -19,6 +19,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const [sysproxyIcon, setSysproxyIcon] = useState("");
   const [tunIcon, setTunIcon] = useState("");
 
+  // const { menu_icon } = verge ?? {};
   useEffect(() => {
     initIconPath();
   }, []);
@@ -94,6 +95,22 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onGuard={(e) => patchVerge({ enable_group_icon: e })}
           >
             <Switch edge="end" />
+          </GuardState>
+        </SettingItem>
+
+        <SettingItem label={t("Menu Icon")}>
+          <GuardState
+            value={verge?.menu_icon ?? "monochrome"}
+            onCatch={onError}
+            onFormat={(e: any) => e.target.value}
+            onChange={(e) => onChangeData({ menu_icon: e })}
+            onGuard={(e) => patchVerge({ menu_icon: e })}
+          >
+            <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
+              <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>
+              <MenuItem value="colorful">{t("Colorful")}</MenuItem>
+              <MenuItem value="disable">{t("Disable")}</MenuItem>
+            </Select>
           </GuardState>
         </SettingItem>
 

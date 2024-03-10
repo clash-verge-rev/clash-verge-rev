@@ -202,6 +202,7 @@ interface IVergeConfig {
   traffic_graph?: boolean;
   enable_memory_usage?: boolean;
   enable_group_icon?: boolean;
+  menu_icon?: "monochrome" | "colorful" | "disable";
   common_tray_icon?: boolean;
   sysproxy_tray_icon?: boolean;
   tun_tray_icon?: boolean;
