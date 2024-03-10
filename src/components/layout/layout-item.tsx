@@ -6,15 +6,16 @@ import {
   ListItemIcon,
 } from "@mui/material";
 import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
-
+import { useVerge } from "@/hooks/use-verge";
 interface Props {
   to: string;
   children: string;
-  icon: React.ReactNode;
+  icon: React.ReactNode[];
 }
 export const LayoutItem = (props: Props) => {
   const { to, children, icon } = props;
-
+  const { verge } = useVerge();
+  const { menu_icon } = verge ?? {};
   const resolved = useResolvedPath(to);
   const match = useMatch({ path: resolved.pathname, end: true });
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export const LayoutItem = (props: Props) => {
           {
             borderRadius: 2,
             marginLeft: 1.25,
-            paddingLeft: 1.5,
+            paddingLeft: 1,
             paddingRight: 1,
             marginRight: 1.25,
             "& .MuiListItemText-primary": {
@@ -51,9 +52,13 @@ export const LayoutItem = (props: Props) => {
         ]}
         onClick={() => navigate(to)}
       >
-        <ListItemIcon>{icon}</ListItemIcon>
+        {menu_icon === "monochrome" && <ListItemIcon>{icon[0]}</ListItemIcon>}
+        {menu_icon === "colorful" && <ListItemIcon>{icon[1]}</ListItemIcon>}
         <ListItemText
-          sx={{ textAlign: "center", marginLeft: "-35px" }}
+          sx={{
+            textAlign: "center",
+            marginLeft: menu_icon === "disable" ? "" : "-35px",
+          }}
           primary={children}
         />
       </ListItemButton>
