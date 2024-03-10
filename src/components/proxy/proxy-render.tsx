@@ -113,7 +113,7 @@ export const ProxyRender = (props: RenderProps) => {
   if (type === 1 && !group.hidden) {
     return (
       <ProxyHead
-        sx={{ pl: indent ? 4.5 : 2.5, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
+        sx={{ pl: 2, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
         groupName={group.name}
         headState={headState!}
         onLocation={() => onLocation(group)}
@@ -130,7 +130,7 @@ export const ProxyRender = (props: RenderProps) => {
         proxy={proxy!}
         selected={group.now === proxy?.name}
         showType={headState?.showType}
-        sx={{ py: 0, pl: indent ? 4 : 2 }}
+        sx={{ py: 0, pl: 1 }}
         onClick={() => onChangeProxy(group, proxy!)}
       />
     );
@@ -141,7 +141,7 @@ export const ProxyRender = (props: RenderProps) => {
       <Box
         sx={{
           py: 2,
-          pl: indent ? 4.5 : 0,
+          pl: 0,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -161,7 +161,7 @@ export const ProxyRender = (props: RenderProps) => {
           height: 56,
           display: "grid",
           gap: 1,
-          pl: indent ? 4 : 2,
+          pl: 2,
           pr: 2,
           pb: 1,
           gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,

@@ -21,23 +21,34 @@ export const ProfileBox = styled(Box)(
       "dark-false": text.primary,
     }[key]!;
 
-    const borderLeft = {
-      "light-true": `3px solid ${primary.main}`,
-      "light-false": "none",
-      "dark-true": `3px solid ${primary.main}`,
-      "dark-false": "none",
+    const borderSelect = {
+      "light-true": {
+        borderLeft: `3px solid ${primary.main}`,
+        width: `calc(100% + 3px)`,
+        marginLeft: `-3px`,
+      },
+      "light-false": {
+        width: "100%",
+      },
+      "dark-true": {
+        borderLeft: `3px solid ${primary.main}`,
+        width: `calc(100% + 3px)`,
+        marginLeft: `-3px`,
+      },
+      "dark-false": {
+        width: "100%",
+      },
     }[key];
 
     return {
       position: "relative",
-      width: "100%",
       display: "block",
       cursor: "pointer",
       textAlign: "left",
       padding: "8px 16px",
       boxSizing: "border-box",
       backgroundColor,
-      borderLeft,
+      ...borderSelect,
       borderRadius: "8px",
       color,
       "& h2": { color: h2color },
