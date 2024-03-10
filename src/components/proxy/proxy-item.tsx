@@ -11,7 +11,6 @@ import {
   styled,
   SxProps,
   Theme,
-  Typography,
 } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import delayManager from "@/services/delay";
@@ -88,6 +87,8 @@ export const ProxyItem = (props: Props) => {
               "&:hover .the-delay": { display: showDelay ? "block" : "none" },
               "&:hover .the-icon": { display: "none" },
               "&.Mui-selected": {
+                width: `calc(100% + 3px)`,
+                marginLeft: `-3px`,
                 borderLeft: `3px solid ${selectColor}`,
                 bgcolor:
                   mode === "light"
@@ -105,17 +106,17 @@ export const ProxyItem = (props: Props) => {
           title={proxy.name}
           secondary={
             <>
-              <span
-                style={{
+              <Box
+                sx={{
+                  display: "inline-block",
                   marginRight: "8px",
-                  fontSize: "13px",
+                  fontSize: "14px",
                   color: "text.primary",
-                  fontWeight: "700",
                 }}
               >
                 {proxy.name}
                 {showType && proxy.now && ` - ${proxy.now}`}
-              </span>
+              </Box>
               {showType && !!proxy.provider && (
                 <TypeBox component="span">{proxy.provider}</TypeBox>
               )}
