@@ -23,7 +23,6 @@ const SettingPage = () => {
   });
 
   const [mode] = useRecoilState(atomThemeMode);
-  console.log(mode);
   const isDark = mode === "light" ? false : true;
   const { theme } = useCustomTheme();
 
