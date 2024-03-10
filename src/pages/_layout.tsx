@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
@@ -13,9 +13,6 @@ import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
-import LogoSvg_dark from "@/assets/image/logo_dark.svg?react";
-import { atomThemeMode } from "@/services/states";
-import { useRecoilState } from "recoil";
 import { BaseErrorBoundary, Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
@@ -34,15 +31,18 @@ dayjs.extend(relativeTime);
 const OS = getSystem();
 
 const Layout = () => {
-  const [mode] = useRecoilState(atomThemeMode);
-  const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
+
   const { theme } = useCustomTheme();
 
   const { verge } = useVerge();
   const { language, start_page } = verge || {};
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [portableFlagState, setPortableFlagState] = useState<boolean | null>(
+    null
+  );
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
@@ -80,7 +80,9 @@ const Layout = () => {
     });
 
     setTimeout(async () => {
-      portableFlag = await getPortableFlag();
+      const flag = await getPortableFlag();
+      portableFlag = flag;
+      setPortableFlagState(flag); // 更新 portableFlagState 的值
       await appWindow.unminimize();
       await appWindow.show();
       await appWindow.setFocus();
@@ -129,17 +131,16 @@ const Layout = () => {
         >
           <div className="layout__left" data-windrag>
             <div className="the-logo" data-windrag>
-              {!isDark ? <LogoSvg /> : <LogoSvg_dark />}
-              {!portableFlag && <UpdateButton className="the-newbtn" />}
+              <LogoSvg />
+
+              {portableFlagState === false && (
+                <UpdateButton className="the-newbtn" />
+              )}
             </div>
 
             <List className="the-menu">
               {routers.map((router) => (
-                <LayoutItem
-                  key={router.label}
-                  to={router.link}
-                  icon={router.icon}
-                >
+                <LayoutItem key={router.label} to={router.link}>
                   {t(router.label)}
                 </LayoutItem>
               ))}
