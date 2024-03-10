@@ -15,7 +15,7 @@ interface Props {
 export const LayoutItem = (props: Props) => {
   const { to, children, icon } = props;
   const { verge } = useVerge();
-  const { menu_icon } = verge ?? {};
+  const { menu_icon = "monochrome" } = verge ?? {};
   const resolved = useResolvedPath(to);
   const match = useMatch({ path: resolved.pathname, end: true });
   const navigate = useNavigate();
