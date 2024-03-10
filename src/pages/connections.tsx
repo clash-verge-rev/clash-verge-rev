@@ -25,6 +25,7 @@ import {
   ConnectionDetailRef,
 } from "@/components/connection/connection-detail";
 import parseTraffic from "@/utils/parse-traffic";
+import { useCustomTheme } from "@/components/layout/use-custom-theme";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -33,7 +34,8 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ConnectionsPage = () => {
   const { t, i18n } = useTranslation();
   const { clashInfo } = useClashInfo();
-
+  const { theme } = useCustomTheme();
+  const isDark = theme.palette.mode === "dark";
   const [filterText, setFilterText] = useState("");
   const [curOrderOpt, setOrderOpt] = useState("Default");
   const [connData, setConnData] = useState<IConnections>(initConn);
@@ -106,7 +108,6 @@ const ConnectionsPage = () => {
 
   useEffect(() => {
     if (!clashInfo) return;
-
     const { server = "", secret = "" } = clashInfo;
     connect(`ws://${server}/connections?token=${encodeURIComponent(secret)}`);
 
@@ -198,7 +199,15 @@ const ConnectionsPage = () => {
         />
       </Box>
 
-      <Box height="calc(100% - 50px)" sx={{ userSelect: "text" }}>
+      <Box
+        height="calc(100% - 70px)"
+        sx={{
+          userSelect: "text",
+          margin: "12px",
+          borderRadius: "8px",
+          bgcolor: isDark ? "#282a36" : "#ffffff",
+        }}
+      >
         {filterConn.length === 0 ? (
           <BaseEmpty text="No Connections" />
         ) : isTableLayout ? (

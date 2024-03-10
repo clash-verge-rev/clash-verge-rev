@@ -38,6 +38,7 @@ export const ConnectionItem = (props: Props) => {
   return (
     <ListItem
       dense
+      sx={{ borderBottom: "1px solid var(--divider-color)" }}
       secondaryAction={
         <IconButton edge="end" color="inherit" onClick={onDelete}>
           <CloseRounded />

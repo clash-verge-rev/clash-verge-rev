@@ -45,7 +45,7 @@ export const ProxyRender = (props: RenderProps) => {
         dense
         style={{
           background: itembackgroundcolor,
-          height: "64px",
+          height: "100%",
           margin: "8px 8px",
           borderRadius: "8px",
         }}
@@ -81,7 +81,6 @@ export const ProxyRender = (props: RenderProps) => {
           primary={<StyledPrimary>{group.name}</StyledPrimary>}
           secondary={
             <ListItemTextChild
-              color="text.secondary"
               sx={{
                 overflow: "hidden",
                 display: "flex",
@@ -89,15 +88,12 @@ export const ProxyRender = (props: RenderProps) => {
                 pt: "2px",
               }}
             >
-              <StyledTypeBox>{group.type}</StyledTypeBox>
-              <StyledSubtitle
-                sx={{
-                  color: isDark ? "#ffffff" : "#8c8c8c",
-                  fontWeight: "600",
-                }}
-              >
-                {group.now}
-              </StyledSubtitle>
+              <Box sx={{ marginTop: "2px" }}>
+                <StyledTypeBox>{group.type}</StyledTypeBox>
+                <StyledSubtitle sx={{ color: "text.secondary" }}>
+                  {group.now}
+                </StyledSubtitle>
+              </Box>
             </ListItemTextChild>
           }
           secondaryTypographyProps={{
@@ -184,7 +180,7 @@ export const ProxyRender = (props: RenderProps) => {
 };
 
 const StyledPrimary = styled("span")`
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.5;
   overflow: hidden;
@@ -192,8 +188,9 @@ const StyledPrimary = styled("span")`
   white-space: nowrap;
 `;
 const StyledSubtitle = styled("span")`
-  font-size: 12px;
+  font-size: 13px;
   overflow: hidden;
+  color: text.secondary;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;

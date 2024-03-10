@@ -58,7 +58,6 @@ export const ProxyItemMini = (props: Props) => {
         },
         ({ palette: { mode, primary } }) => {
           const bgcolor = mode === "light" ? "#ffffff" : "#24252f";
-          const color = mode === "light" ? primary.main : primary.light;
           const showDelay = delay > 0;
           const selectColor = mode === "light" ? primary.main : primary.light;
 
@@ -123,12 +122,28 @@ export const ProxyItemMini = (props: Props) => {
               </Typography>
             )}
             {!!proxy.provider && (
-              <TypeBox component="span">{proxy.provider}</TypeBox>
+              <TypeBox color="text.secondary" component="span">
+                {proxy.provider}
+              </TypeBox>
             )}
-            <TypeBox component="span">{proxy.type}</TypeBox>
-            {proxy.udp && <TypeBox component="span">UDP</TypeBox>}
-            {proxy.xudp && <TypeBox component="span">XUDP</TypeBox>}
-            {proxy.tfo && <TypeBox component="span">TFO</TypeBox>}
+            <TypeBox color="text.secondary" component="span">
+              {proxy.type}
+            </TypeBox>
+            {proxy.udp && (
+              <TypeBox color="text.secondary" component="span">
+                UDP
+              </TypeBox>
+            )}
+            {proxy.xudp && (
+              <TypeBox color="text.secondary" component="span">
+                XUDP
+              </TypeBox>
+            )}
+            {proxy.tfo && (
+              <TypeBox color="text.secondary" component="span">
+                TFO
+              </TypeBox>
+            )}
           </Box>
         )}
       </Box>
@@ -201,8 +216,8 @@ const Widget = styled(Box)(({ theme: { typography } }) => ({
 const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
-  borderColor: palette.mode === "light" ? "#d9d9d9" : "#424242",
-  color: palette.mode === "light" ? "#8c8c8c" : "#ffffff",
+  borderColor: "text.secondary",
+  color: "text.secondary",
   borderRadius: 4,
   fontSize: 10,
   fontFamily: typography.fontFamily,

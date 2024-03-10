@@ -7,11 +7,13 @@ import { getRules } from "@/services/api";
 import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
+import { useCustomTheme } from "@/components/layout/use-custom-theme";
 
 const RulesPage = () => {
   const { t } = useTranslation();
   const { data = [] } = useSWR("getRules", getRules);
-
+  const { theme } = useCustomTheme();
+  const isDark = theme.palette.mode === "dark";
   const [filterText, setFilterText] = useState("");
 
   const rules = useMemo(() => {
@@ -53,7 +55,14 @@ const RulesPage = () => {
         />
       </Box>
 
-      <Box height="calc(100% - 50px)">
+      <Box
+        height="calc(100% - 70px)"
+        sx={{
+          margin: "12px",
+          borderRadius: "8px",
+          bgcolor: isDark ? "#282a36" : "#ffffff",
+        }}
+      >
         {rules.length > 0 ? (
           <Virtuoso
             data={rules}

@@ -35,6 +35,9 @@ body {
   border-radius: 6px;
   background-color: var(--scroller-color);
 }
+*::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
 
 body {
   overflow: hidden;

@@ -7,6 +7,7 @@ import {
   updateProxy,
   deleteConnection,
 } from "@/services/api";
+import { Box } from "@mui/material";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseEmpty } from "../base";
@@ -117,7 +118,7 @@ export const ProxyGroups = (props: Props) => {
   return (
     <Virtuoso
       ref={virtuosoRef}
-      style={{ height: "100%" }}
+      style={{ height: "calc(100% - 12px)" }}
       totalCount={renderList.length}
       increaseViewportBy={256}
       itemContent={(index) => (

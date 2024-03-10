@@ -238,7 +238,9 @@ const ProfilePage = () => {
 
   return (
     <BasePage
+      full
       title={t("Profiles")}
+      contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton
@@ -270,7 +272,18 @@ const ProfilePage = () => {
         </Box>
       }
     >
-      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          pt: 1,
+          mb: 0.5,
+          mx: "10px",
+          height: "36px",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
         <TextField
           hiddenLabel
           fullWidth
@@ -322,55 +335,66 @@ const ProfilePage = () => {
           {t("New")}
         </Button>
       </Stack>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={onDragEnd}
+      <Box
+        sx={{
+          pt: 1,
+          mb: 0.5,
+          pl: "10px",
+          mr: "10px",
+          height: "calc(100% - 20px)",
+          overflowY: "auto",
+        }}
       >
-        <Box sx={{ mb: 4.5 }}>
-          <Grid container spacing={{ xs: 1, lg: 1 }}>
-            <SortableContext
-              items={regularItems.map((x) => {
-                return x.uid;
-              })}
-            >
-              {regularItems.map((item) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
-                  <ProfileItem
-                    id={item.uid}
-                    selected={profiles.current === item.uid}
-                    activating={activating === item.uid}
-                    itemData={item}
-                    onSelect={(f) => onSelect(item.uid, f)}
-                    onEdit={() => viewerRef.current?.edit(item)}
-                  />
-                </Grid>
-              ))}
-            </SortableContext>
-          </Grid>
-        </Box>
-      </DndContext>
-
-      {enhanceItems.length > 0 && (
-        <Grid container spacing={{ xs: 2, lg: 2 }}>
-          {enhanceItems.map((item) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
-              <ProfileMore
-                selected={!!chain.includes(item.uid)}
-                itemData={item}
-                enableNum={chain.length || 0}
-                logInfo={chainLogs[item.uid]}
-                onEnable={() => onEnable(item.uid)}
-                onDisable={() => onDisable(item.uid)}
-                onDelete={() => onDelete(item.uid)}
-                onMoveTop={() => onMoveTop(item.uid)}
-                onMoveEnd={() => onMoveEnd(item.uid)}
-                onEdit={() => viewerRef.current?.edit(item)}
-              />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
+          <Box sx={{ mb: 4.5 }}>
+            <Grid container spacing={{ xs: 1, lg: 1 }}>
+              <SortableContext
+                items={regularItems.map((x) => {
+                  return x.uid;
+                })}
+              >
+                {regularItems.map((item) => (
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
+                    <ProfileItem
+                      id={item.uid}
+                      selected={profiles.current === item.uid}
+                      activating={activating === item.uid}
+                      itemData={item}
+                      onSelect={(f) => onSelect(item.uid, f)}
+                      onEdit={() => viewerRef.current?.edit(item)}
+                    />
+                  </Grid>
+                ))}
+              </SortableContext>
             </Grid>
-          ))}
-        </Grid>
-      )}
+          </Box>
+        </DndContext>
+
+        {enhanceItems.length > 0 && (
+          <Grid container spacing={{ xs: 2, lg: 2 }}>
+            {enhanceItems.map((item) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
+                <ProfileMore
+                  selected={!!chain.includes(item.uid)}
+                  itemData={item}
+                  enableNum={chain.length || 0}
+                  logInfo={chainLogs[item.uid]}
+                  onEnable={() => onEnable(item.uid)}
+                  onDisable={() => onDisable(item.uid)}
+                  onDelete={() => onDelete(item.uid)}
+                  onMoveTop={() => onMoveTop(item.uid)}
+                  onMoveEnd={() => onMoveEnd(item.uid)}
+                  onEdit={() => viewerRef.current?.edit(item)}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Box>
       <ProfileViewer ref={viewerRef} onChange={() => mutateProfiles()} />
       <ConfigViewer ref={configRef} />
     </BasePage>

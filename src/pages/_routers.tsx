@@ -14,47 +14,55 @@ import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
 import TestSvg from "@/assets/image/itemicon/test.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 
+import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
+import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
+import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
+import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
+import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
+import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+
 export const routers = [
   {
     label: "Label-Proxies",
     link: "/",
-    icon: <ProxiesSvg />,
+    icon: [<WifiRoundedIcon />, <ProxiesSvg />],
     ele: ProxiesPage,
   },
   {
     label: "Label-Profiles",
     link: "/profile",
-    icon: <ProfilesSvg />,
+    icon: [<DnsRoundedIcon />, <ProfilesSvg />],
     ele: ProfilesPage,
   },
   {
     label: "Label-Connections",
     link: "/connections",
-    icon: <ConnectionsSvg />,
+    icon: [<LanguageRoundedIcon />, <ConnectionsSvg />],
     ele: ConnectionsPage,
   },
   {
     label: "Label-Rules",
     link: "/rules",
-    icon: <RulesSvg />,
+    icon: [<ForkRightRoundedIcon />, <RulesSvg />],
     ele: RulesPage,
   },
   {
     label: "Label-Logs",
     link: "/logs",
-    icon: <LogsSvg />,
+    icon: [<SubjectRoundedIcon />, <LogsSvg />],
     ele: LogsPage,
   },
   {
     label: "Label-Test",
     link: "/test",
-    icon: <TestSvg />,
+    icon: [<WifiTetheringRoundedIcon />, <TestSvg />],
     ele: TestPage,
   },
   {
     label: "Label-Settings",
     link: "/settings",
-    icon: <SettingsSvg />,
+    icon: [<SettingsRoundedIcon />, <SettingsSvg />],
     ele: SettingsPage,
   },
 ];
