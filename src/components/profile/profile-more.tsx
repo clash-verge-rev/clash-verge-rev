@@ -178,17 +178,6 @@ export const ProfileMore = (props: Props) => {
               {itemData.desc}
             </Typography>
           )}
-
-          <Typography
-            noWrap
-            component="span"
-            title={`Updated Time: ${parseExpire(itemData.updated)}`}
-            style={{ fontSize: 14 }}
-          >
-            {!!itemData.updated
-              ? dayjs(itemData.updated! * 1000).fromNow()
-              : ""}
-          </Typography>
         </Box>
       </ProfileBox>
 
