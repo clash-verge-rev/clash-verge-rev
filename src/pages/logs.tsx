@@ -18,12 +18,14 @@ import {
 import { atomEnableLog, atomLogData } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
+import { useCustomTheme } from "@/components/layout/use-custom-theme";
 
 const LogPage = () => {
   const { t } = useTranslation();
   const [logData, setLogData] = useRecoilState(atomLogData);
   const [enableLog, setEnableLog] = useRecoilState(atomEnableLog);
-
+  const { theme } = useCustomTheme();
+  const isDark = theme.palette.mode === "dark";
   const [logState, setLogState] = useState("all");
   const [filterText, setFilterText] = useState("");
 
@@ -107,7 +109,14 @@ const LogPage = () => {
         />
       </Box>
 
-      <Box height="calc(100% - 50px)">
+      <Box
+        height="calc(100% - 70px)"
+        sx={{
+          margin: "12px",
+          borderRadius: "8px",
+          bgcolor: isDark ? "#282a36" : "#ffffff",
+        }}
+      >
         {filterLogs.length > 0 ? (
           <Virtuoso
             initialTopMostItemIndex={999}

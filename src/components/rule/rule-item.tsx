@@ -34,7 +34,7 @@ const RuleItem = (props: Props) => {
   const { index, value } = props;
 
   return (
-    <Item>
+    <Item sx={{ borderBottom: "1px solid var(--divider-color)" }}>
       <Typography
         color="text.secondary"
         variant="body2"
