@@ -22,10 +22,13 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  const webUIList = verge?.web_ui_list || [];
+  const webUIList = verge?.web_ui_list || [
+    "https://d.metacubex.one/#?hostname=%host&port=%port&secret=%secret",
+    "https://yacd.metacubex.one/?host=%host&port=%port&secret=%secret",
+  ];
 
   const handleAdd = useLockFn(async (value: string) => {
-    const newList = [value, ...webUIList];
+    const newList = [...webUIList, value];
     mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false);
     await patchVerge({ web_ui_list: newList });
   });
@@ -100,18 +103,6 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
-      {editing && (
-        <WebUIItem
-          value=""
-          onlyEdit
-          onChange={(v) => {
-            setEditing(false);
-            handleAdd(v || "");
-          }}
-          onCancel={() => setEditing(false)}
-        />
-      )}
-
       {!editing && webUIList.length === 0 && (
         <BaseEmpty
           text="Empty List"
@@ -132,6 +123,17 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
           onOpenUrl={handleOpenUrl}
         />
       ))}
+      {editing && (
+        <WebUIItem
+          value=""
+          onlyEdit
+          onChange={(v) => {
+            setEditing(false);
+            handleAdd(v || "");
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      )}
     </BaseDialog>
   );
 });

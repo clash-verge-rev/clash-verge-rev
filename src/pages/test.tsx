@@ -113,7 +113,7 @@ const TestPage = () => {
     <BasePage
       title={t("Test")}
       header={
-        <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
             variant="contained"
             size="small"

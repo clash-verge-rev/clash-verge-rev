@@ -125,7 +125,7 @@ const ConnectionsPage = () => {
       title={t("Connections")}
       contentStyle={{ height: "100%" }}
       header={
-        <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ mx: 1 }}>Download: {parseTraffic(download)}</Box>
           <Box sx={{ mx: 1 }}>Upload: {parseTraffic(upload)}</Box>
           <IconButton
