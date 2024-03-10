@@ -193,7 +193,7 @@ export const ProxyItemMini = (props: Props) => {
 
 const Widget = styled(Box)(({ theme: { typography } }) => ({
   padding: "2px 4px",
-  fontSize: 12,
+  fontSize: 14,
   fontFamily: typography.fontFamily,
   borderRadius: "4px",
 }));
