@@ -112,7 +112,7 @@ impl CoreManager {
             log::debug!(target: "app", "try to set system dns");
             if enable_tun {
                 let resource_dir = dirs::app_resources_dir()?;
-                let script = resource_dir.join("unset_dns.sh");
+                let script = resource_dir.join("set_dns.sh");
                 let script = script.to_string_lossy();
                 match (|| Command::new("bash").args([script]).output())() {
                     Ok(_) => return Ok(()),
