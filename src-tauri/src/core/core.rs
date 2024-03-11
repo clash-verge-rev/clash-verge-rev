@@ -111,8 +111,10 @@ impl CoreManager {
             let enable_tun = enable_tun.unwrap_or(false);
             log::debug!(target: "app", "try to set system dns");
             if enable_tun {
-                let script = include_str!("./script/set_dns.sh");
-                match (|| async { Command::new("bash").args([script]).output() })().await {
+                let resource_dir = dirs::app_resources_dir()?;
+                let script = resource_dir.join("unset_dns.sh");
+                let script = script.to_string_lossy();
+                match (|| Command::new("bash").args([script]).output())() {
                     Ok(_) => return Ok(()),
                     Err(err) => {
                         log::error!(target: "app", "{err}");
@@ -262,14 +264,15 @@ impl CoreManager {
             });
             return Ok(());
         }
-
         #[cfg(target_os = "macos")]
         {
             let enable_tun = Config::verge().latest().enable_tun_mode.clone();
             let enable_tun = enable_tun.unwrap_or(false);
             log::debug!(target: "app", "try to unset system dns");
             if enable_tun {
-                let script = include_str!("./script/unset_dns.sh");
+                let resource_dir = dirs::app_resources_dir()?;
+                let script = resource_dir.join("unset_dns.sh");
+                let script = script.to_string_lossy();
                 match (|| Command::new("bash").args([script]).output())() {
                     Ok(_) => return Ok(()),
                     Err(err) => {

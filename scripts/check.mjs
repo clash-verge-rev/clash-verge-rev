@@ -370,6 +370,16 @@ const resolveUninstall = () =>
     file: "uninstall-service.exe",
     downloadURL: `${SERVICE_URL}/uninstall-service.exe`,
   });
+const resolveSetDnsScript = () =>
+  resolveResource({
+    file: "set_dns.sh",
+    downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/set_dns.sh`,
+  });
+const resolveUnSetDnsScript = () =>
+  resolveResource({
+    file: "unset_dns.sh",
+    downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/unset_dns.sh`,
+  });
 const resolveMmdb = () =>
   resolveResource({
     file: "Country.mmdb",
@@ -409,6 +419,8 @@ const tasks = [
   { name: "service", func: resolveService, retry: 5, winOnly: true },
   { name: "install", func: resolveInstall, retry: 5, winOnly: true },
   { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
+  { name: "set_dns_script", fun: resolveSetDnsScript, retry: 5 },
+  { name: "unset_dns_script", fun: resolveUnSetDnsScript, retry: 5 },
   { name: "mmdb", func: resolveMmdb, retry: 5 },
   { name: "geosite", func: resolveGeosite, retry: 5 },
   { name: "geoip", func: resolveGeoIP, retry: 5 },
