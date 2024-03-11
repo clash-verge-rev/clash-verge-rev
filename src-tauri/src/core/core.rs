@@ -105,6 +105,22 @@ impl CoreManager {
             sleep(Duration::from_millis(500)).await;
         }
 
+        #[cfg(target_os = "macos")]
+        {
+            let enable_tun = Config::verge().latest().enable_tun_mode.clone();
+            let enable_tun = enable_tun.unwrap_or(false);
+            log::debug!(target: "app", "try to set system dns");
+            if enable_tun {
+                let script = include_str!("./script/set_dns.sh");
+                match (|| async { Command::new("bash").args([script]).output() })().await {
+                    Ok(_) => return Ok(()),
+                    Err(err) => {
+                        log::error!(target: "app", "{err}");
+                    }
+                }
+            }
+        }
+
         #[cfg(target_os = "windows")]
         {
             use super::win_service;
@@ -245,6 +261,22 @@ impl CoreManager {
                 log_err!(super::win_service::stop_core_by_service().await);
             });
             return Ok(());
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let enable_tun = Config::verge().latest().enable_tun_mode.clone();
+            let enable_tun = enable_tun.unwrap_or(false);
+            log::debug!(target: "app", "try to unset system dns");
+            if enable_tun {
+                let script = include_str!("./script/unset_dns.sh");
+                match (|| async { Command::new("bash").args([script]).output() })().await {
+                    Ok(_) => return Ok(()),
+                    Err(err) => {
+                        log::error!(target: "app", "{err}");
+                    }
+                }
+            }
         }
 
         let mut sidecar = self.sidecar.lock();
