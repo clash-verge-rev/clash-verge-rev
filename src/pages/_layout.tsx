@@ -104,9 +104,6 @@ const Layout = () => {
           square
           elevation={0}
           className={`${OS} layout`}
-          onPointerDown={(e: any) => {
-            if (e.target?.dataset?.windrag) appWindow.startDragging();
-          }}
           onContextMenu={(e) => {
             // only prevent it on Windows
             const validList = ["input", "textarea"];
@@ -127,10 +124,10 @@ const Layout = () => {
             }),
           ]}
         >
-          <div className="layout__left" data-windrag>
-            <div className="the-logo" data-windrag>
+          <div className="layout__left" data-tauri-drag-region="true">
+            <div className="the-logo" data-tauri-drag-region="true">
               {!isDark ? <LogoSvg /> : <LogoSvg_dark />}
-              {!portableFlag && <UpdateButton className="the-newbtn" />}
+              {<UpdateButton className="the-newbtn" />}
             </div>
 
             <List className="the-menu">
@@ -145,14 +142,14 @@ const Layout = () => {
               ))}
             </List>
 
-            <div className="the-traffic" data-windrag>
+            <div className="the-traffic">
               <LayoutTraffic />
             </div>
           </div>
 
-          <div className="layout__right" data-windrag>
+          <div className="layout__right">
             {OS === "windows" && (
-              <div className="the-bar">
+              <div className="the-bar" data-tauri-drag-region="true">
                 <LayoutControl />
               </div>
             )}

@@ -91,12 +91,13 @@
     // background-color: var(--background-color-alpha);
 
     .the-bar {
-      position: absolute;
-      top: 0px;
-      right: 0px;
+      // position: absolute;
+      // top: 0px;
+      // right: 0px;
       height: 24px;
       display: flex;
-      align-items: center;
+      // align-items: center;
+      justify-content: end;
       box-sizing: border-box;
       z-index: 2;
     }
