@@ -10,7 +10,13 @@ import {
   Input,
   Typography,
 } from "@mui/material";
-import { exitApp, openAppDir, openCoreDir, openLogsDir } from "@/services/cmds";
+import {
+  exitApp,
+  openAppDir,
+  openCoreDir,
+  openLogsDir,
+  openDevTools,
+} from "@/services/cmds";
 import { ArrowForward } from "@mui/icons-material";
 import { checkUpdate } from "@tauri-apps/api/updater";
 import { useVerge } from "@/hooks/use-verge";
@@ -27,6 +33,7 @@ import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
+import { appWindow } from "@tauri-apps/api/window";
 interface Props {
   onError?: (err: Error) => void;
 }
@@ -299,6 +306,17 @@ const SettingVerge = ({ onError }: Props) => {
           size="small"
           sx={{ my: "2px" }}
           onClick={onCheckUpdate}
+        >
+          <ArrowForward />
+        </IconButton>
+      </SettingItem>
+
+      <SettingItem label={t("Open Dev Tools")}>
+        <IconButton
+          color="inherit"
+          size="small"
+          sx={{ my: "2px" }}
+          onClick={openDevTools}
         >
           <ArrowForward />
         </IconButton>
