@@ -270,7 +270,7 @@ impl CoreManager {
             log::debug!(target: "app", "try to unset system dns");
             if enable_tun {
                 let script = include_str!("./script/unset_dns.sh");
-                match (|| async { Command::new("bash").args([script]).output() })().await {
+                match (|| Command::new("bash").args([script]).output())() {
                     Ok(_) => return Ok(()),
                     Err(err) => {
                         log::error!(target: "app", "{err}");
