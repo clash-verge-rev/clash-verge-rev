@@ -151,7 +151,7 @@
 
   "App Log Level": "App日志等级",
   "Auto Close Connections": "自动关闭连接",
-  "Enable Clash Fields Filter": "开启Clash字段过滤",
+  "Auto Check Update": "自动检查更新",
   "Enable Builtin Enhanced": "开启内建增强功能",
   "Proxy Layout Column": "代理页布局列数",
   "Default Latency Test": "默认测试链接",
