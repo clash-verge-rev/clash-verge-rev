@@ -9,6 +9,10 @@
 A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a>.
 </h3>
 
+## Preview
+
+![preview](./docs/preview.png)
+
 ## Install
 
 请到发布页面下载对应的安装包：[Release page](https://github.com/clash-verge-rev/clash-verge-rev/releases)<br>
@@ -42,10 +46,6 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 - Improved UI and supports custom theme color.
 - Built-in support [Clash.Meta(mihomo)](https://github.com/MetaCubeX/mihomo) core.
 - System proxy setting and guard.
-
-## Preview
-
-![preview](./docs/preview.gif)
 
 ### FAQ
 
