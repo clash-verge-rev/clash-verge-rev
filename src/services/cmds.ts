@@ -213,6 +213,10 @@ export async function getPortableFlag() {
   return invoke<boolean>("get_portable_flag");
 }
 
+export async function openDevTools() {
+  return invoke("open_devtools");
+}
+
 export async function exitApp() {
   return invoke("exit_app");
 }

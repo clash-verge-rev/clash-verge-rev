@@ -9,7 +9,7 @@ use anyhow::{Context, Result};
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
 use sysproxy::Sysproxy;
-use tauri::api;
+use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
 
 #[tauri::command]
@@ -291,6 +291,17 @@ pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
         }
     } else {
         return Err("file not found".to_string());
+    }
+}
+
+#[tauri::command]
+pub fn open_devtools(app_handle: tauri::AppHandle) {
+    if let Some(window) = app_handle.get_window("main") {
+        if !window.is_devtools_open() {
+            window.open_devtools();
+        } else {
+            window.close_devtools();
+        }
     }
 }
 
