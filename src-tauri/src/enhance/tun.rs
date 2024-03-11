@@ -34,8 +34,38 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     revise!(config, "tun", tun_val);
 
     if enable {
+        #[cfg(target_os = "macos")]
+        {
+            use crate::utils::dirs;
+            use tauri::api::process::Command;
+            log::info!(target: "app", "try to set system dns");
+            let resource_dir = dirs::app_resources_dir().unwrap();
+            let script = resource_dir.join("set_dns.sh");
+            let script = script.to_string_lossy();
+            match Command::new("bash").args([script]).output() {
+                Ok(_) => log::info!(target: "app", "set system dns successfully"),
+                Err(err) => {
+                    log::error!(target: "app", "set system dns failed: {err}");
+                }
+            }
+        }
         use_dns_for_tun(config)
     } else {
+        #[cfg(target_os = "macos")]
+        {
+            use crate::utils::dirs;
+            use tauri::api::process::Command;
+            log::info!(target: "app", "try to unset system dns");
+            let resource_dir = dirs::app_resources_dir().unwrap();
+            let script = resource_dir.join("unset_dns.sh");
+            let script = script.to_string_lossy();
+            match Command::new("bash").args([script]).output() {
+                Ok(_) => log::info!(target: "app", "unset system dns successfully"),
+                Err(err) => {
+                    log::error!(target: "app", "unset system dns failed: {err}");
+                }
+            }
+        }
         config
     }
 }
