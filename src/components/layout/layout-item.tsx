@@ -52,12 +52,9 @@ export const LayoutItem = (props: Props) => {
         ]}
         onClick={() => navigate(to)}
       >
-        {menu_icon === "monochrome" ||
-          (!menu_icon && (
-            <ListItemIcon sx={{ color: "text.primary" }}>
-              {icon[0]}
-            </ListItemIcon>
-          ))}
+        {(menu_icon === "monochrome" || !menu_icon) && (
+          <ListItemIcon sx={{ color: "text.primary" }}>{icon[0]}</ListItemIcon>
+        )}
         {menu_icon === "colorful" && <ListItemIcon>{icon[1]}</ListItemIcon>}
         <ListItemText
           sx={{
