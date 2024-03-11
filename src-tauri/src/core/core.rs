@@ -105,24 +105,6 @@ impl CoreManager {
             sleep(Duration::from_millis(500)).await;
         }
 
-        #[cfg(target_os = "macos")]
-        {
-            let enable_tun = Config::verge().latest().enable_tun_mode.clone();
-            let enable_tun = enable_tun.unwrap_or(false);
-            log::debug!(target: "app", "try to set system dns");
-            if enable_tun {
-                let resource_dir = dirs::app_resources_dir()?;
-                let script = resource_dir.join("set_dns.sh");
-                let script = script.to_string_lossy();
-                match (|| Command::new("bash").args([script]).output())() {
-                    Ok(_) => return Ok(()),
-                    Err(err) => {
-                        log::error!(target: "app", "{err}");
-                    }
-                }
-            }
-        }
-
         #[cfg(target_os = "windows")]
         {
             use super::win_service;
@@ -263,23 +245,6 @@ impl CoreManager {
                 log_err!(super::win_service::stop_core_by_service().await);
             });
             return Ok(());
-        }
-        #[cfg(target_os = "macos")]
-        {
-            let enable_tun = Config::verge().latest().enable_tun_mode.clone();
-            let enable_tun = enable_tun.unwrap_or(false);
-            log::debug!(target: "app", "try to unset system dns");
-            if enable_tun {
-                let resource_dir = dirs::app_resources_dir()?;
-                let script = resource_dir.join("unset_dns.sh");
-                let script = script.to_string_lossy();
-                match (|| Command::new("bash").args([script]).output())() {
-                    Ok(_) => return Ok(()),
-                    Err(err) => {
-                        log::error!(target: "app", "{err}");
-                    }
-                }
-            }
         }
 
         let mut sidecar = self.sidecar.lock();
