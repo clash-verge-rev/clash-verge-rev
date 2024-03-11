@@ -15,7 +15,7 @@ interface Props {
 export const LayoutItem = (props: Props) => {
   const { to, children, icon } = props;
   const { verge } = useVerge();
-  const { menu_icon = "monochrome" } = verge ?? {};
+  const { menu_icon } = verge ?? {};
   const resolved = useResolvedPath(to);
   const match = useMatch({ path: resolved.pathname, end: true });
   const navigate = useNavigate();
@@ -52,9 +52,12 @@ export const LayoutItem = (props: Props) => {
         ]}
         onClick={() => navigate(to)}
       >
-        {menu_icon === "monochrome" && (
-          <ListItemIcon sx={{ color: "text.primary" }}>{icon[0]}</ListItemIcon>
-        )}
+        {menu_icon === "monochrome" ||
+          (!menu_icon && (
+            <ListItemIcon sx={{ color: "text.primary" }}>
+              {icon[0]}
+            </ListItemIcon>
+          ))}
         {menu_icon === "colorful" && <ListItemIcon>{icon[1]}</ListItemIcon>}
         <ListItemText
           sx={{
