@@ -243,6 +243,7 @@ export const ProfileItem = (props: Props) => {
 
             <Typography
               width="calc(100% - 36px)"
+              sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
               variant="h6"
               component="h2"
               noWrap
@@ -279,7 +280,11 @@ export const ProfileItem = (props: Props) => {
           {
             <>
               {description ? (
-                <Typography noWrap title={description}>
+                <Typography
+                  noWrap
+                  title={description}
+                  sx={{ fontSize: "14px" }}
+                >
                   {description}
                 </Typography>
               ) : (
@@ -312,7 +317,7 @@ export const ProfileItem = (props: Props) => {
             <span title="Expire Time">{expire}</span>
           </Box>
         ) : (
-          <Box sx={{ ...boxStyle, fontSize: 14, justifyContent: "flex-end" }}>
+          <Box sx={{ ...boxStyle, fontSize: 12, justifyContent: "flex-end" }}>
             <span title="Updated Time">{parseExpire(updated)}</span>
           </Box>
         )}
