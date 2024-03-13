@@ -47,11 +47,11 @@ body {
 @import "./page.scss";
 @import "./font.scss";
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    background-color: rgba(18, 18, 18, 1);
-  }
-}
+// @media (prefers-color-scheme: dark) {
+//   :root {
+//     background-color: rgba(18, 18, 18, 1);
+//   }
+// }
 
 .user-none {
   user-select: none;

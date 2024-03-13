@@ -6,3 +6,4 @@ dist-ssr
 update.json
 scripts/_env.sh
 .vscode
+.tool-version
