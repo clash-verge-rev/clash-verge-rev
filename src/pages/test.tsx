@@ -134,7 +134,7 @@ const TestPage = () => {
     >
       <Box
         sx={{
-          pt: 1,
+          pt: 1.25,
           mb: 0.5,
           px: "10px",
         }}
