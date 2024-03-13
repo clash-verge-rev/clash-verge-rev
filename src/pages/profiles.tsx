@@ -358,7 +358,7 @@ const ProfilePage = () => {
           mb: 0.5,
           pl: "10px",
           mr: "10px",
-          height: "calc(100% - 20px)",
+          height: "calc(100% - 68px)",
           overflowY: "auto",
         }}
       >

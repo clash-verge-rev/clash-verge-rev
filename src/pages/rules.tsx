@@ -56,9 +56,9 @@ const RulesPage = () => {
       </Box>
 
       <Box
-        height="calc(100% - 70px)"
+        height="calc(100% - 65px)"
         sx={{
-          margin: "12px",
+          margin: "10px",
           borderRadius: "8px",
           bgcolor: isDark ? "#282a36" : "#ffffff",
         }}
