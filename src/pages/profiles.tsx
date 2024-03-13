@@ -2,7 +2,15 @@ import useSWR, { mutate } from "swr";
 import { useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useSetRecoilState } from "recoil";
-import { Box, Button, Grid, IconButton, Stack, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Grid,
+  IconButton,
+  Stack,
+  TextField,
+  Divider,
+} from "@mui/material";
 import {
   DndContext,
   closestCenter,
@@ -46,6 +54,8 @@ import { ProfileMore } from "@/components/profile/profile-more";
 import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { throttle } from "lodash-es";
+import { useRecoilState } from "recoil";
+import { atomThemeMode } from "@/services/states";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -235,6 +245,11 @@ const ProfilePage = () => {
     const text = await navigator.clipboard.readText();
     if (text) setUrl(text);
   };
+  const [mode] = useRecoilState(atomThemeMode);
+  const islight = mode === "light" ? true : false;
+  const dividercolor = islight
+    ? "rgba(0, 0, 0, 0.06)"
+    : "rgba(255, 255, 255, 0.06)";
 
   return (
     <BasePage
@@ -323,6 +338,7 @@ const ProfilePage = () => {
           loading={loading}
           variant="contained"
           size="small"
+          sx={{ borderRadius: "6px" }}
           onClick={onImport}
         >
           {t("Import")}
@@ -330,6 +346,7 @@ const ProfilePage = () => {
         <Button
           variant="contained"
           size="small"
+          sx={{ borderRadius: "6px" }}
           onClick={() => viewerRef.current?.create()}
         >
           {t("New")}
@@ -350,7 +367,7 @@ const ProfilePage = () => {
           collisionDetection={closestCenter}
           onDragEnd={onDragEnd}
         >
-          <Box sx={{ mb: 4.5 }}>
+          <Box sx={{ mb: 1.5 }}>
             <Grid container spacing={{ xs: 1, lg: 1 }}>
               <SortableContext
                 items={regularItems.map((x) => {
@@ -375,24 +392,34 @@ const ProfilePage = () => {
         </DndContext>
 
         {enhanceItems.length > 0 && (
-          <Grid container spacing={{ xs: 2, lg: 2 }}>
-            {enhanceItems.map((item) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
-                <ProfileMore
-                  selected={!!chain.includes(item.uid)}
-                  itemData={item}
-                  enableNum={chain.length || 0}
-                  logInfo={chainLogs[item.uid]}
-                  onEnable={() => onEnable(item.uid)}
-                  onDisable={() => onDisable(item.uid)}
-                  onDelete={() => onDelete(item.uid)}
-                  onMoveTop={() => onMoveTop(item.uid)}
-                  onMoveEnd={() => onMoveEnd(item.uid)}
-                  onEdit={() => viewerRef.current?.edit(item)}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          <Divider
+            variant="middle"
+            flexItem
+            sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
+          ></Divider>
+        )}
+
+        {enhanceItems.length > 0 && (
+          <Box sx={{ mt: 1.5 }}>
+            <Grid container spacing={{ xs: 1, lg: 1 }}>
+              {enhanceItems.map((item) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
+                  <ProfileMore
+                    selected={!!chain.includes(item.uid)}
+                    itemData={item}
+                    enableNum={chain.length || 0}
+                    logInfo={chainLogs[item.uid]}
+                    onEnable={() => onEnable(item.uid)}
+                    onDisable={() => onDisable(item.uid)}
+                    onDelete={() => onDelete(item.uid)}
+                    onMoveTop={() => onMoveTop(item.uid)}
+                    onMoveEnd={() => onMoveEnd(item.uid)}
+                    onEdit={() => viewerRef.current?.edit(item)}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
         )}
       </Box>
       <ProfileViewer ref={viewerRef} onChange={() => mutateProfiles()} />
