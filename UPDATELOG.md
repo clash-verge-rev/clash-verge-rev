@@ -1,3 +1,17 @@
+## v1.5.8
+
+### Features
+
+- 优化 UI 细节
+- Linux 绘制窗口圆角
+- 开放 DevTools
+
+### Bugs Fixes
+
+- 修复 MacOS 下开启 Tun 内核崩溃的问题
+
+---
+
 ## v1.5.7
 
 ### Features
