@@ -20,7 +20,7 @@ interface Props {
 }
 
 const parseColor = (text: string) => {
-  if (text === "REJECT") return "error.main";
+  if (text === "REJECT" || text === "REJECT-DROP") return "error.main";
   if (text === "DIRECT") return "text.primary";
 
   let sum = 0;
