@@ -51,7 +51,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         desc: "",
         url: "",
         option: {
-          // user_agent: "",
           with_proxy: false,
           self_proxy: false,
         },
@@ -98,6 +97,9 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           }
           if (form.option?.update_interval) {
             form.option.update_interval = +form.option.update_interval;
+          }
+          if (form.option?.user_agent === "") {
+            delete form.option.user_agent;
           }
           const name = form.name || `${form.type} file`;
           const item = { ...form, name };
