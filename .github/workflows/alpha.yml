@@ -91,8 +91,6 @@ jobs:
             target: aarch64-unknown-linux-gnu
           - os: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
-          - os: ubuntu-latest
-            target: riscv64gc-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
@@ -152,7 +150,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           cat > release.txt << 'EOF'
-          ## Clash Verge Rev Alpha
+          ### 我应该下载哪个版本？
+
+          - Windows x86_64架构: x64-setup.exe (不支持win7)
+          - Windows arm64架构: arm64-setup.exe
+          - MacOS intel芯片: x64.dmg
+          - MacOS apple M芯片: aarch64.dmg (提示文件损坏看下面FAQ)
+          - Linux x64架构: amd64.AppImage/amd64.deb
+          - Linux arm64架构: arm64.deb
+          - Linux armv7架构: armhf.deb
+          - Windows便携板 x86_64架构: x64_portable.zip (不推荐使用，无法自动更新)
+          - MacOS便携板 arm64架构: arm64_portable.zip (不推荐使用，无法自动更新)
+
+          ### FAQ
+
+          - [https://clash-verge-rev.github.io/faq.html](https://clash-verge-rev.github.io/faq.html)
+
           Created at  ${{ env.BUILDTIME }}.
           EOF
       - name: Upload Release
