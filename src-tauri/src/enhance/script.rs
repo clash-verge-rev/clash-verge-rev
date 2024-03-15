@@ -12,7 +12,7 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
     let copy_outputs = outputs.clone();
     unsafe {
         let _ = context.register_global_builtin_callable(
-            "__verge_log__",
+            "__verge_log__".into(),
             2,
             NativeFunction::from_closure(
                 move |_: &JsValue, args: &[JsValue], context: &mut Context| {

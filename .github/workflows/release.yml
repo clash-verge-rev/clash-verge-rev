@@ -86,6 +86,8 @@ jobs:
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
@@ -98,11 +100,13 @@ jobs:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           target: ${{ matrix.target }}
+
       - name: Get Version
         run: |
           sudo apt-get update
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
+
       - name: Upload Release
         if: startsWith(matrix.target, 'x86_64')
         uses: softprops/action-gh-release@v1
@@ -112,6 +116,7 @@ jobs:
           body: "More new features are now supported."
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
+
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
