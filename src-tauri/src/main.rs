@@ -57,6 +57,7 @@ fn main() -> std::io::Result<()> {
             cmds::test_delay,
             cmds::get_app_dir,
             cmds::copy_icon_file,
+            cmds::download_icon_cache,
             cmds::open_devtools,
             cmds::exit_app,
             // cmds::update_hotkeys,

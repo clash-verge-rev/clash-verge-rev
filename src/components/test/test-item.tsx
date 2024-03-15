@@ -17,8 +17,9 @@ import { LanguageTwoTone } from "@mui/icons-material";
 import { Notice } from "@/components/base";
 import { TestBox } from "./test-box";
 import delayManager from "@/services/delay";
-import { cmdTestDelay } from "@/services/cmds";
+import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 
 interface Props {
   id: string;
@@ -39,6 +40,23 @@ export const TestItem = (props: Props) => {
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [delay, setDelay] = useState(-1);
   const { uid, name, icon, url } = itemData;
+  const [iconCachePath, setIconCachePath] = useState("");
+
+  useEffect(() => {
+    initIconCachePath();
+  }, [icon]);
+
+  async function initIconCachePath() {
+    if (icon && icon.trim().startsWith("http")) {
+      const fileName = getFileName(icon);
+      const iconPath = await downloadIconCache(icon, fileName);
+      setIconCachePath(convertFileSrc(iconPath));
+    }
+  }
+
+  function getFileName(url: string) {
+    return url.substring(url.lastIndexOf("/") + 1);
+  }
 
   const onDelay = async () => {
     setDelay(-2);
@@ -104,7 +122,10 @@ export const TestItem = (props: Props) => {
           {icon && icon.trim() !== "" ? (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
               {icon.trim().startsWith("http") && (
-                <img src={icon} height="40px" />
+                <img
+                  src={iconCachePath === "" ? icon : iconCachePath}
+                  height="40px"
+                />
               )}
               {icon.trim().startsWith("data") && (
                 <img src={icon} height="40px" />
