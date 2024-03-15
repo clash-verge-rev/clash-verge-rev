@@ -227,3 +227,7 @@ export async function copyIconFile(
 ) {
   return invoke<void>("copy_icon_file", { path, name });
 }
+
+export async function downloadIconCache(url: string, name: string) {
+  return invoke<string>("download_icon_cache", { url, name });
+}

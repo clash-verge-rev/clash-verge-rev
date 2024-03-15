@@ -19,6 +19,9 @@ import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
 import { useRecoilState } from "recoil";
 import { atomThemeMode } from "@/services/states";
+import { useEffect, useState } from "react";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { downloadIconCache } from "@/services/cmds";
 
 interface RenderProps {
   item: IRenderItem;
@@ -38,6 +41,23 @@ export const ProxyRender = (props: RenderProps) => {
   const [mode] = useRecoilState(atomThemeMode);
   const isDark = mode === "light" ? false : true;
   const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
+  const [iconCachePath, setIconCachePath] = useState("");
+
+  useEffect(() => {
+    initIconCachePath();
+  }, [group]);
+
+  async function initIconCachePath() {
+    if (group.icon && group.icon.trim().startsWith("http")) {
+      const fileName = getFileName(group.icon);
+      const iconPath = await downloadIconCache(group.icon, fileName);
+      setIconCachePath(convertFileSrc(iconPath));
+    }
+  }
+
+  function getFileName(url: string) {
+    return url.substring(url.lastIndexOf("/") + 1);
+  }
 
   if (type === 0 && !group.hidden) {
     return (
@@ -55,7 +75,7 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon &&
           group.icon.trim().startsWith("http") && (
             <img
-              src={group.icon}
+              src={iconCachePath === "" ? group.icon : iconCachePath}
               height="32px"
               style={{ marginRight: "12px", borderRadius: "6px" }}
             />

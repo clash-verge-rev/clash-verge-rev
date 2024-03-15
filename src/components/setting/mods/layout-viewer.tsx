@@ -19,7 +19,6 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const [sysproxyIcon, setSysproxyIcon] = useState("");
   const [tunIcon, setTunIcon] = useState("");
 
-  // const { menu_icon } = verge ?? {};
   useEffect(() => {
     initIconPath();
   }, []);
