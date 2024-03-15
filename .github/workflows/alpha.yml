@@ -109,45 +109,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
-
-      - name: Upload Release
-        if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
-          body: "More new features are now supported."
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
-          body: "More new features are now supported."
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-
-  update_tag:
-    name: Update tag
-    runs-on: ubuntu-latest
-    needs: [alpha, alpha-for-linux]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set Env
-        run: |
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
-        shell: bash
-      - name: Update Tag
-        uses: richardsimko/update-tag@v1
-        with:
-          tag_name: alpha
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - run: |
           cat > release.txt << 'EOF'
           ### 我应该下载哪个版本？
@@ -159,8 +122,8 @@ jobs:
           - Linux x64架构: amd64.AppImage/amd64.deb
           - Linux arm64架构: arm64.deb
           - Linux armv7架构: armhf.deb
-          - Windows便携板 x86_64架构: x64_portable.zip (不推荐使用，无法自动更新)
-          - MacOS便携板 arm64架构: arm64_portable.zip (不推荐使用，无法自动更新)
+          - Windows 便携板 x86_64架构: x64_portable.zip (不推荐使用，无法自动更新)
+          - Windows 便携板 arm64架构: arm64_portable.zip (不推荐使用，无法自动更新)
 
           ### FAQ
 
@@ -168,6 +131,69 @@ jobs:
 
           Created at  ${{ env.BUILDTIME }}.
           EOF
+
+      - name: Upload Release
+        if: startsWith(matrix.target, 'x86_64')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
+          body_path: release.txt
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
+          body_path: release.txt
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+
+  update_tag:
+    name: Update tag
+    runs-on: ubuntu-latest
+    needs: [alpha, alpha-for-linux]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Env
+        run: |
+          echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Update Tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: alpha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: |
+          cat > release.txt << 'EOF'
+          ### 我应该下载哪个版本？
+
+          - Windows x86_64架构: x64-setup.exe (不支持win7)
+          - Windows arm64架构: arm64-setup.exe
+          - MacOS intel芯片: x64.dmg
+          - MacOS apple M芯片: aarch64.dmg (提示文件损坏看下面FAQ)
+          - Linux x64架构: amd64.AppImage/amd64.deb
+          - Linux arm64架构: arm64.deb
+          - Linux armv7架构: armhf.deb
+          - Windows 便携板 x86_64架构: x64_portable.zip (不推荐使用，无法自动更新)
+          - Windows 便携板 arm64架构: arm64_portable.zip (不推荐使用，无法自动更新)
+
+          ### FAQ
+
+          - [https://clash-verge-rev.github.io/faq.html](https://clash-verge-rev.github.io/faq.html)
+
+          Created at  ${{ env.BUILDTIME }}.
+          EOF
+
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
