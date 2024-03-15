@@ -21,6 +21,7 @@ const PLATFORM_MAP = {
   "i686-unknown-linux-gnu": "linux",
   "aarch64-unknown-linux-gnu": "linux",
   "armv7-unknown-linux-gnueabihf": "linux",
+  "riscv64gc-unknown-linux-gnu": "linux",
   "loongarch64-unknown-linux-gnu": "linux",
 };
 const ARCH_MAP = {
@@ -33,6 +34,7 @@ const ARCH_MAP = {
   "i686-unknown-linux-gnu": "ia32",
   "aarch64-unknown-linux-gnu": "arm64",
   "armv7-unknown-linux-gnueabihf": "arm",
+  "riscv64gc-unknown-linux-gnu": "riscv64",
   "loongarch64-unknown-linux-gnu": "loong64",
 };
 
@@ -65,6 +67,7 @@ const META_ALPHA_MAP = {
   "linux-ia32": "mihomo-linux-386",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
+  "linux-riscv64": "mihomo-linux-riscv64",
   "linux-loong64": "mihomo-linux-loong64",
 };
 
@@ -111,6 +114,7 @@ const META_MAP = {
   "linux-ia32": "mihomo-linux-386",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
+  "linux-riscv64": "mihomo-linux-riscv64",
   "linux-loong64": "mihomo-linux-loong64",
 };
 
