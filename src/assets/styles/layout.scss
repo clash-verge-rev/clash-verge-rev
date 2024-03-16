@@ -28,6 +28,7 @@
     // $maxLogo: 100px;
 
     .the-logo {
+      app-region: drag;
       position: relative;
       flex: 1 0 58px;
       // width: 100%;
@@ -101,6 +102,9 @@
       justify-content: end;
       box-sizing: border-box;
       z-index: 2;
+      .the-dragbar {
+        app-region: drag;
+      }
     }
 
     .the-content {
