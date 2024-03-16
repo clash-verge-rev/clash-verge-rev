@@ -11,7 +11,8 @@
     width: 100%;
     // max-width: 225px;
     // min-width: 225px;
-    padding: 16px 0 8px;
+    // padding: 16px 0 8px;
+    padding: 0px 0px 8px;
     // position: relative;
     flex-direction: column;
     align-self: stretch;
@@ -117,11 +118,13 @@
 .unknown {
   &.layout {
     .layout__left {
-      padding-top: 24px;
+      // padding-top: 24px;
     }
 
     .layout__left .the-logo {
       flex: 1 0 58px;
+      padding-top: 40px;
+      padding-bottom: 16px;
     }
 
     .layout__right .the-content {

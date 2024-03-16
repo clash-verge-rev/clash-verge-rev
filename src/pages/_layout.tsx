@@ -132,7 +132,7 @@ const Layout = () => {
               : {},
           ]}
         >
-          <div className="layout__left" data-tauri-drag-region="true">
+          <div className="layout__left">
             <div className="the-logo" data-tauri-drag-region="true">
               {!isDark ? <LogoSvg /> : <LogoSvg_dark />}
               {<UpdateButton className="the-newbtn" />}
