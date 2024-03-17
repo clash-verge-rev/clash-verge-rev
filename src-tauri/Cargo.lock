@@ -749,7 +749,7 @@ dependencies = [
 
 [[package]]
 name = "clash-verge"
-version = "1.5.8"
+version = "1.5.9"
 dependencies = [
  "anyhow",
  "auto-launch",

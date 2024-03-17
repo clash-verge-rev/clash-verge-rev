@@ -1,3 +1,22 @@
+## v1.5.9
+
+### Features
+
+- 缓存代理组图标
+- 使用`boa_engine` 代替 `rquickjs`
+- 支持 Linux armv7
+
+### Bugs Fixes
+
+- Windows 首次安装无法点击
+- Windows 触摸屏无法拖动
+- 规则列表 `REJECT-DROP` 颜色
+- MacOS Dock 栏不显示图标
+- MacOS 自定义字体无效
+- 避免使用空 UA 拉取订阅
+
+---
+
 ## v1.5.8
 
 ### Features
