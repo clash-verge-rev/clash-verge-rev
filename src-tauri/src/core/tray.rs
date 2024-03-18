@@ -130,6 +130,44 @@ impl Tray {
         let _ = tray.get_item("global_mode").set_selected(mode == "global");
         let _ = tray.get_item("direct_mode").set_selected(mode == "direct");
 
+        #[cfg(target_os = "linux")]
+        match mode.as_str() {
+            "rule" => {
+                let _ = tray
+                    .get_item("rule_mode")
+                    .set_title(t!("Rule Mode  ✔", "规则模式  ✔"));
+                let _ = tray
+                    .get_item("global_mode")
+                    .set_title(t!("Global Mode", "全局模式"));
+                let _ = tray
+                    .get_item("direct_mode")
+                    .set_title(t!("Direct Mode", "直连模式"));
+            }
+            "global" => {
+                let _ = tray
+                    .get_item("rule_mode")
+                    .set_title(t!("Rule Mode", "规则模式"));
+                let _ = tray
+                    .get_item("global_mode")
+                    .set_title(t!("Global Mode  ✔", "全局模式  ✔"));
+                let _ = tray
+                    .get_item("direct_mode")
+                    .set_title(t!("Direct Mode", "直连模式"));
+            }
+            "direct" => {
+                let _ = tray
+                    .get_item("rule_mode")
+                    .set_title(t!("Rule Mode", "规则模式"));
+                let _ = tray
+                    .get_item("global_mode")
+                    .set_title(t!("Global Mode", "全局模式"));
+                let _ = tray
+                    .get_item("direct_mode")
+                    .set_title(t!("Direct Mode  ✔", "直连模式  ✔"));
+            }
+            _ => {}
+        }
+
         let verge = Config::verge();
         let verge = verge.latest();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -182,6 +220,27 @@ impl Tray {
 
         let _ = tray.get_item("system_proxy").set_selected(*system_proxy);
         let _ = tray.get_item("tun_mode").set_selected(*tun_mode);
+        #[cfg(target_os = "linux")]
+        {
+            if *system_proxy {
+                let _ = tray
+                    .get_item("system_proxy")
+                    .set_title(t!("System Proxy  ✔", "系统代理  ✔"));
+            } else {
+                let _ = tray
+                    .get_item("system_proxy")
+                    .set_title(t!("System Proxy", "系统代理"));
+            }
+            if *tun_mode {
+                let _ = tray
+                    .get_item("tun_mode")
+                    .set_title(t!("TUN Mode  ✔", "Tun 模式  ✔"));
+            } else {
+                let _ = tray
+                    .get_item("tun_mode")
+                    .set_title(t!("TUN Mode", "Tun 模式"));
+            }
+        }
 
         let switch_map = {
             let mut map = std::collections::HashMap::new();
