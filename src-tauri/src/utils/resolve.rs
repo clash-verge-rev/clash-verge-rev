@@ -35,6 +35,8 @@ pub fn find_unused_port() -> Result<u16> {
 
 /// handle something when start app
 pub fn resolve_setup(app: &mut App) {
+    #[cfg(target_os = "macos")]
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
     let version = app.package_info().version.to_string();
     handle::Handle::global().init(app.app_handle());
     VERSION.get_or_init(|| version.clone());
