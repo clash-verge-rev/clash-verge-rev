@@ -198,6 +198,8 @@ Function PageReinstall
     StrCpy $R3 "$(dontUninstall)"
     !insertmacro MUI_HEADER_TEXT "$(alreadyInstalled)" "$(choowHowToInstall)"
     StrCpy $R5 "1"
+  ; Delete the desktop shortcut.
+  Delete "$DESKTOP\${MAINBINARYNAME}.lnk"
   ; Downgrading
   ${ElseIf} $R0 == -1
     StrCpy $R1 "$(newerVersionInstalled)"
