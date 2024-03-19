@@ -9,6 +9,7 @@ import { open as openDialog } from "@tauri-apps/api/dialog";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { join } from "@tauri-apps/api/path";
+import { ThemeModeSwitch } from "@/components/setting/mods/theme-mode-switch";
 
 export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -243,6 +244,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           </GuardState>
         </SettingItem>
       </List>
+      <ThemeModeSwitch />
     </BaseDialog>
   );
 });
