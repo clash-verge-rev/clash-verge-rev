@@ -2,7 +2,7 @@ import useSWR from "swr";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton, Tooltip } from "@mui/material";
-import { PrivacyTipRounded, Settings, InfoRounded } from "@mui/icons-material";
+import { PrivacyTipRounded, Settings, InfoRounded,CatchingPokemonRounded } from "@mui/icons-material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { DialogRef, Switch } from "@/components/base";
@@ -51,7 +51,8 @@ const SettingSystem = ({ onError }: Props) => {
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
-
+  //如果启用服务模式，则图标为红色，否则为默认颜色
+  const iconColor = enable_service_mode ? 'red' : 'inherit';
   return (
     <SettingList title={t("System Setting")}>
       <SysproxyViewer ref={sysproxyRef} />
@@ -106,16 +107,19 @@ const SettingSystem = ({ onError }: Props) => {
         <SettingItem
           label={t("Service Mode")}
           extra={
-            <IconButton
-              color="inherit"
-              size="small"
-              onClick={() => serviceRef.current?.open()}
-            >
-              <PrivacyTipRounded
-                fontSize="inherit"
-                style={{ cursor: "pointer", opacity: 0.75 }}
-              />
-            </IconButton>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton
+                color="inherit"
+                size="small"
+                onClick={() => serviceRef.current?.open()}
+              >
+                <PrivacyTipRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+              <CatchingPokemonRounded style={{ fontSize: '20px', color: iconColor }}/>
+            </div>
           }
         >
           <GuardState
