@@ -107,6 +107,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     Config::clash().draft().patch_config(patch.clone());
 
     match {
+        let redir_port = patch.get("redir-port");
+        let tproxy_port = patch.get("tproxy-port");
         let mixed_port = patch.get("mixed-port");
         let socks_port = patch.get("socks-port");
         let port = patch.get("port");
@@ -129,7 +131,9 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         };
 
         // 激活订阅
-        if mixed_port.is_some()
+        if redir_port.is_some()
+            || tproxy_port.is_some()
+            || mixed_port.is_some()
             || socks_port.is_some()
             || port.is_some()
             || patch.get("secret").is_some()

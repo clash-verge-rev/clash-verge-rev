@@ -49,11 +49,19 @@ export const useClashInfo = () => {
     patch: Partial<
       Pick<
         IConfigData,
-        "port" | "socks-port" | "mixed-port" | "external-controller" | "secret"
+        | "port"
+        | "socks-port"
+        | "mixed-port"
+        | "redir-port"
+        | "tproxy-port"
+        | "external-controller"
+        | "secret"
       >
     >
   ) => {
     const hasInfo =
+      patch["redir-port"] != null ||
+      patch["tproxy-port"] != null ||
       patch["mixed-port"] != null ||
       patch["socks-port"] != null ||
       patch["port"] != null ||
@@ -61,6 +69,26 @@ export const useClashInfo = () => {
       patch.secret != null;
 
     if (!hasInfo) return;
+
+    if (patch["redir-port"]) {
+      const port = patch["redir-port"];
+      if (port < 1000) {
+        throw new Error("The port should not < 1000");
+      }
+      if (port > 65536) {
+        throw new Error("The port should not > 65536");
+      }
+    }
+
+    if (patch["tproxy-port"]) {
+      const port = patch["tproxy-port"];
+      if (port < 1000) {
+        throw new Error("The port should not < 1000");
+      }
+      if (port > 65536) {
+        throw new Error("The port should not > 65536");
+      }
+    }
 
     if (patch["mixed-port"]) {
       const port = patch["mixed-port"];

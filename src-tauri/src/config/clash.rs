@@ -39,7 +39,10 @@ impl IClashTemp {
         tun.insert("auto-detect-interface".into(), true.into());
         tun.insert("dns-hijack".into(), vec!["any:53"].into());
         tun.insert("mtu".into(), 9000.into());
-
+        #[cfg(not(target_os = "windows"))]
+        map.insert("redir-port".into(), 7895.into());
+        #[cfg(target_os = "linux")]
+        map.insert("tproxy-port".into(), 7896.into());
         map.insert("mixed-port".into(), 7897.into());
         map.insert("socks-port".into(), 7898.into());
         map.insert("port".into(), 7899.into());
@@ -54,11 +57,18 @@ impl IClashTemp {
     }
 
     fn guard(mut config: Mapping) -> Mapping {
+        #[cfg(not(target_os = "windows"))]
+        let redir_port = Self::guard_redir_port(&config);
+        #[cfg(target_os = "linux")]
+        let tproxy_port = Self::guard_tproxy_port(&config);
         let mixed_port = Self::guard_mixed_port(&config);
         let socks_port = Self::guard_socks_port(&config);
         let port = Self::guard_port(&config);
         let ctrl = Self::guard_server_ctrl(&config);
-
+        #[cfg(not(target_os = "windows"))]
+        config.insert("redir-port".into(), redir_port.into());
+        #[cfg(target_os = "linux")]
+        config.insert("tproxy-port".into(), tproxy_port.into());
         config.insert("mixed-port".into(), mixed_port.into());
         config.insert("socks-port".into(), socks_port.into());
         config.insert("port".into(), port.into());
@@ -109,6 +119,37 @@ impl IClashTemp {
                 _ => None,
             }),
         }
+    }
+    #[cfg(not(target_os = "windows"))]
+    pub fn guard_redir_port(config: &Mapping) -> u16 {
+        let mut port = config
+            .get("redir-port")
+            .and_then(|value| match value {
+                Value::String(val_str) => val_str.parse().ok(),
+                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
+                _ => None,
+            })
+            .unwrap_or(7895);
+        if port == 0 {
+            port = 7895;
+        }
+        port
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn guard_tproxy_port(config: &Mapping) -> u16 {
+        let mut port = config
+            .get("tproxy-port")
+            .and_then(|value| match value {
+                Value::String(val_str) => val_str.parse().ok(),
+                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
+                _ => None,
+            })
+            .unwrap_or(7896);
+        if port == 0 {
+            port = 7896;
+        }
+        port
     }
 
     pub fn guard_mixed_port(config: &Mapping) -> u16 {
