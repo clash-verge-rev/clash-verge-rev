@@ -42,6 +42,10 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(false);
       return;
     }
+    if (mixedPort === socksPort || mixedPort === port || socksPort === port) {
+      Notice.error("Port conflict!", 4000);
+      return;
+    }
     try {
       await patchInfo({ "mixed-port": mixedPort });
       await patchInfo({ "socks-port": socksPort });
