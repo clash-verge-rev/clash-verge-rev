@@ -1,23 +1,41 @@
-name: Bug report
-description: Create a report to help us improve
-title: "[BUG]"
+name: 问题反馈 / Bug report
+title: "[BUG] "
+description: 反馈你遇到的问题 / Report the issue you are experiencing
 labels: ["bug"]
+
 body:
-  - type: textarea
+  - type: markdown
     attributes:
-      label: Describe the bug
-      description: A clear and concise description of what the bug is.
+      value: |
+        ## 在提交问题之前，请确认以下事项：
+        1. 请 **确保** 您已经查阅了 [Clash Verge Rev 官方文档](https://clash-verge-rev.github.io/guide.html)  以及 [常见问题](https://clash-verge-rev.github.io/faq.html)
+        2. 请 **确保** [已有的问题](https://github.com/clash-verge-rev/clash-verge-rev/issues?q=is%3Aissue) 中没有人提交过相似issue，否则请在已有的issue下进行讨论
+        3. 请 **务必** 给issue填写一个简洁明了的标题，以便他人快速检索
+        4. 请 **务必** 先下载 [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha) 版本测试，确保问题依然存在
+        5. 请 **务必** 按照模板规范详细描述问题，否则issue将会被关闭
+        ## Before submitting the issue, please make sure of the following checklist:
+        1. Please make sure you have read the [Clash Verge Rev official documentation](https://clash-verge-rev.github.io/guide.html) and [FAQ](https://clash-verge-rev.github.io/faq.html)
+        2. Please make sure there is no similar issue in the [existing issues](https://github.com/clash-verge-rev/clash-verge-rev/issues?q=is%3Aissue), otherwise please discuss under the existing issue
+        3. Please be sure to fill in a concise and clear title for the issue so that others can quickly search
+        4. Please be sure to download the [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha) version for testing to ensure that the problem still exists
+        5. Please describe the problem in detail according to the template specification, otherwise the issue will be closed
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述 / Describe the bug
+      description: 详细清晰地描述你遇到的问题 / A clear and concise description of what the bug is
     validations:
       required: true
   - type: textarea
     attributes:
-      label: To Reproduce
-      description: Steps to reproduce the behavior.
+      label: 复现步骤 / To Reproduce
+      description: 请提供复现问题的步骤 / Steps to reproduce the behavior
     validations:
       required: true
   - type: dropdown
     attributes:
-      label: Platform
+      label: 操作系统 / OS
       options:
         - Windows
         - Linux
@@ -26,20 +44,13 @@ body:
       required: true
   - type: input
     attributes:
-      label: System Version
-      placeholder: "e.g. macOS 10.15.7"
-    validations:
-      required: true
-  - type: input
-    attributes:
-      label: Software Version
-      placeholder: "e.g. 1.4.3"
+      label: 操作系统版本 / OS Version
+      description: 请提供你的操作系统版本，Linux请额外提供桌面环境及窗口系统 / Please provide your OS version, for Linux, please also provide the desktop environment and window system
     validations:
       required: true
   - type: textarea
     attributes:
-      label: Log
-      description: "Log file content or screenshot"
-  - type: textarea
-    attributes:
-      label: Additional Information
+      label: 日志 / Log
+      description: 请提供完整或相关部分的Debug日志 / Please provide the complete or relevant part of the Debug log
+    validations:
+      required: true
