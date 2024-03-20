@@ -142,6 +142,8 @@ interface IClashInfo {
   // status: string;
   mixed_port?: number; // clash mixed port
   socks_port?: number; // clash socks port
+  redir_port?: number; // clash redir port
+  tproxy_port?: number; // clash tproxy port
   port?: number; // clash http port
   server?: string; // external-controller
   secret?: string;
@@ -214,6 +216,8 @@ interface IVergeConfig {
   enable_random_port?: boolean;
   verge_mixed_port?: number;
   verge_socks_port?: number;
+  verge_redir_port?: number;
+  verge_tproxy_port?: number;
   verge_port?: number;
   enable_proxy_guard?: boolean;
   proxy_guard_duration?: number;

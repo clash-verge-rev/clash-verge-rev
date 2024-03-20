@@ -126,7 +126,13 @@ pub struct IVerge {
     /// 是否启用随机端口
     pub enable_random_port: Option<bool>,
 
-    /// verge mixed port 用于覆盖 clash 的 mixed port
+    /// verge 的各种 port 用于覆盖 clash 的各种 port
+    #[cfg(not(target_os = "windows"))]
+    pub verge_redir_port: Option<u16>,
+
+    #[cfg(target_os = "linux")]
+    pub verge_tproxy_port: Option<u16>,
+
     pub verge_mixed_port: Option<u16>,
 
     pub verge_socks_port: Option<u16>,
@@ -190,6 +196,10 @@ impl IVerge {
             enable_silent_start: Some(false),
             enable_system_proxy: Some(false),
             enable_random_port: Some(false),
+            #[cfg(not(target_os = "windows"))]
+            verge_redir_port: Some(7895),
+            #[cfg(target_os = "linux")]
+            verge_tproxy_port: Some(7896),
             verge_mixed_port: Some(7897),
             verge_socks_port: Some(7898),
             verge_port: Some(7899),
@@ -239,6 +249,10 @@ impl IVerge {
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_random_port);
+        #[cfg(not(target_os = "windows"))]
+        patch!(verge_redir_port);
+        #[cfg(target_os = "linux")]
+        patch!(verge_tproxy_port);
         patch!(verge_mixed_port);
         patch!(verge_socks_port);
         patch!(verge_port);

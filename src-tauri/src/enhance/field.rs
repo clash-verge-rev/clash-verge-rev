@@ -1,8 +1,10 @@
 use serde_yaml::{Mapping, Value};
 use std::collections::HashSet;
 
-pub const HANDLE_FIELDS: [&str; 9] = [
+pub const HANDLE_FIELDS: [&str; 11] = [
     "mode",
+    "redir-port",
+    "tproxy-port",
     "mixed-port",
     "socks-port",
     "port",
