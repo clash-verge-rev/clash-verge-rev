@@ -76,7 +76,7 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith("http") && (
             <img
               src={iconCachePath === "" ? group.icon : iconCachePath}
-              height="32px"
+              width="32px"
               style={{ marginRight: "12px", borderRadius: "6px" }}
             />
           )}
@@ -85,7 +85,7 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith("data") && (
             <img
               src={group.icon}
-              height="32px"
+              width="32px"
               style={{ marginRight: "12px", borderRadius: "6px" }}
             />
           )}
@@ -94,7 +94,7 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith("<svg") && (
             <img
               src={`data:image/svg+xml;base64,${btoa(group.icon)}`}
-              height="32px"
+              width="32px"
             />
           )}
         <ListItemText
