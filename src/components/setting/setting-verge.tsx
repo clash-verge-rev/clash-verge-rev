@@ -33,7 +33,7 @@ import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
-import { appWindow } from "@tauri-apps/api/window";
+
 interface Props {
   onError?: (err: Error) => void;
 }
@@ -97,6 +97,7 @@ const SettingVerge = ({ onError }: Props) => {
             <MenuItem value="zh">中文</MenuItem>
             <MenuItem value="en">English</MenuItem>
             <MenuItem value="ru">Русский</MenuItem>
+            <MenuItem value="fa">فارسی</MenuItem>
           </Select>
         </GuardState>
       </SettingItem>
