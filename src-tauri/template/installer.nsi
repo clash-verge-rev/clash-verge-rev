@@ -743,6 +743,30 @@ Function un.onInit
 
   !insertmacro MUI_UNGETLANGUAGE
 FunctionEnd
+ 
+Function un.isDirectoryEmpty
+  Exch $0
+  Push $1
+  Push $2
+  StrCpy $2 0
+  FindFirst $1 $2 "$0\*.*"
+  loop:
+    StrCmp $2 "" done
+    StrCmp $2 "." next
+    StrCmp $2 ".." next
+    StrCpy $0 0
+    goto done
+  next:
+    FindNext $1 $2
+    goto loop
+  done:
+    FindClose $1
+    StrCmp $2 "" 0 +2
+      StrCpy $0 1
+    Pop $2
+    Pop $1
+    Exch $0
+FunctionEnd
 
 Section Uninstall
   !insertmacro CheckIfAppIsRunning
@@ -756,7 +780,7 @@ Section Uninstall
   {{#each resources}}
     Delete "$INSTDIR\\{{this.[1]}}"
   {{/each}}
-
+  Delete "$INSTDIR\resources"
   ; Delete external binaries
   {{#each binaries}}
     Delete "$INSTDIR\\{{this}}"
@@ -765,13 +789,14 @@ Section Uninstall
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"
 
-  ${If} $DeleteAppDataCheckboxState == 1
+  ; Remove InstallDir
+  Push "$INSTDIR"
+  Call un.isDirectoryEmpty
+  Pop $0
+  ${If} $0 == 1
     RMDir /R /REBOOTOK "$INSTDIR"
   ${Else}
-    {{#each resources_ancestors}}
-    RMDir /REBOOTOK "$INSTDIR\\{{this}}"
-    {{/each}}
-    RMDir "$INSTDIR"
+    MessageBox MB_OK "Install Directory is not Empty, Please remove it manually."
   ${EndIf}
 
   ; Remove start menu shortcut
