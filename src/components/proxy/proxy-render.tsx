@@ -49,7 +49,8 @@ export const ProxyRender = (props: RenderProps) => {
 
   async function initIconCachePath() {
     if (group.icon && group.icon.trim().startsWith("http")) {
-      const fileName = getFileName(group.icon);
+      const fileName =
+        group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
       const iconPath = await downloadIconCache(group.icon, fileName);
       setIconCachePath(convertFileSrc(iconPath));
     }
