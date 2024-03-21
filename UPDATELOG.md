@@ -1,3 +1,19 @@
+## 1.5.10
+
+### Features
+
+- 优化 Linux 托盘菜单显示
+- 添加透明代理端口设置
+- 删除订阅前确认
+
+### Bugs Fixes
+
+- 删除 MacOS 程序坞图标
+- Windows 下 service 日志没有清理
+- MacOS 无法开启系统代理
+
+---
+
 ## v1.5.9
 
 ### Features
