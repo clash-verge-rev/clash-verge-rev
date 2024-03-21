@@ -56,8 +56,20 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
     }
 
     if (
+      OS === "linux" &&
       new Set([redirPort, tproxyPort, mixedPort, socksPort, port]).size !== 5
     ) {
+      Notice.error("Port conflict!", 4000);
+      return;
+    }
+    if (
+      OS === "macos" &&
+      new Set([redirPort, mixedPort, socksPort, port]).size !== 4
+    ) {
+      Notice.error("Port conflict!", 4000);
+      return;
+    }
+    if (OS === "windows" && new Set([mixedPort, socksPort, port]).size !== 3) {
       Notice.error("Port conflict!", 4000);
       return;
     }
