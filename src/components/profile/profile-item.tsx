@@ -23,6 +23,7 @@ import { Notice } from "@/components/base";
 import { EditorViewer } from "./editor-viewer";
 import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
+import { ConfirmViewer } from "./confirm-viewer";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -92,6 +93,7 @@ export const ProfileItem = (props: Props) => {
   }, [hasUrl, updated]);
 
   const [fileOpen, setFileOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const onEditInfo = () => {
     setAnchorEl(null);
@@ -171,14 +173,24 @@ export const ProfileItem = (props: Props) => {
     { label: "Open File", handler: onOpenFile },
     { label: "Update", handler: () => onUpdate(0) },
     { label: "Update(Proxy)", handler: () => onUpdate(2) },
-    { label: "Delete", handler: onDelete },
+    {
+      label: "Delete",
+      handler: () => {
+        setConfirmOpen(true);
+      },
+    },
   ];
   const fileModeMenu = [
     { label: "Select", handler: onForceSelect },
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
-    { label: "Delete", handler: onDelete },
+    {
+      label: "Delete",
+      handler: () => {
+        setConfirmOpen(true);
+      },
+    },
   ];
 
   const boxStyle = {
@@ -341,7 +353,19 @@ export const ProfileItem = (props: Props) => {
           <MenuItem
             key={item.label}
             onClick={item.handler}
-            sx={{ minWidth: 120 }}
+            sx={[
+              {
+                minWidth: 120,
+              },
+              (theme) => {
+                return {
+                  color:
+                    item.label === "Delete"
+                      ? theme.palette.error.main
+                      : undefined,
+                };
+              },
+            ]}
             dense
           >
             {t(item.label)}
@@ -354,6 +378,16 @@ export const ProfileItem = (props: Props) => {
         open={fileOpen}
         mode="yaml"
         onClose={() => setFileOpen(false)}
+      />
+      <ConfirmViewer
+        title="Confirm deletion"
+        message="This operation is not reversible"
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          onDelete();
+          setConfirmOpen(false);
+        }}
       />
     </Box>
   );

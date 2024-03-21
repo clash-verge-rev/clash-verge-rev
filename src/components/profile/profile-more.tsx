@@ -17,6 +17,7 @@ import { Notice } from "@/components/base";
 import { EditorViewer } from "./editor-viewer";
 import { ProfileBox } from "./profile-box";
 import { LogViewer } from "./log-viewer";
+import { ConfirmViewer } from "./confirm-viewer";
 
 interface Props {
   selected: boolean;
@@ -51,6 +52,7 @@ export const ProfileMore = (props: Props) => {
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [fileOpen, setFileOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
 
   const onEditInfo = () => {
@@ -87,7 +89,12 @@ export const ProfileMore = (props: Props) => {
     { label: "Open File", handler: onOpenFile },
     { label: "To Top", show: showMove, handler: fnWrapper(onMoveTop) },
     { label: "To End", show: showMove, handler: fnWrapper(onMoveEnd) },
-    { label: "Delete", handler: fnWrapper(onDelete) },
+    {
+      label: "Delete",
+      handler: () => {
+        setConfirmOpen(true);
+      },
+    },
   ];
 
   const disableMenu = [
@@ -95,7 +102,12 @@ export const ProfileMore = (props: Props) => {
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
-    { label: "Delete", handler: fnWrapper(onDelete) },
+    {
+      label: "Delete",
+      handler: () => {
+        setConfirmOpen(true);
+      },
+    },
   ];
 
   const boxStyle = {
@@ -200,7 +212,17 @@ export const ProfileMore = (props: Props) => {
             <MenuItem
               key={item.label}
               onClick={item.handler}
-              sx={{ minWidth: 120 }}
+              sx={[
+                { minWidth: 120 },
+                (theme) => {
+                  return {
+                    color:
+                      item.label === "Delete"
+                        ? theme.palette.error.main
+                        : undefined,
+                  };
+                },
+              ]}
               dense
             >
               {t(item.label)}
@@ -214,7 +236,16 @@ export const ProfileMore = (props: Props) => {
         mode={type === "merge" ? "yaml" : "javascript"}
         onClose={() => setFileOpen(false)}
       />
-
+      <ConfirmViewer
+        title="Confirm deletion"
+        message="This operation is not reversible"
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          onDelete();
+          setConfirmOpen(false);
+        }}
+      />
       {selected && (
         <LogViewer
           open={logOpen}

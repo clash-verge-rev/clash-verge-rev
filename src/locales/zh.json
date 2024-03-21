@@ -45,6 +45,8 @@
   "Update All Profiles": "更新所有订阅",
   "View Runtime Config": "查看运行时订阅",
   "Reactivate Profiles": "重新激活订阅",
+  "Confirm deletion": "确认删除",
+  "This operation is not reversible": "此操作不可逆",
 
   "Location": "当前节点",
   "Delay check": "延迟测试",
@@ -138,6 +140,7 @@
   "Save": "保存",
   "Cancel": "取消",
   "Exit": "退出",
+  "Confirm": "确认",
 
   "Default": "默认",
   "Download Speed": "下载速度",
