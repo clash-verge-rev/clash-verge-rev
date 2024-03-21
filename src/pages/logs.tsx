@@ -7,6 +7,7 @@ import {
   MenuItem,
   Select,
   SelectProps,
+  styled,
 } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
@@ -20,7 +21,7 @@ import LogItem from "@/components/log/log-item";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 
-const StyledSelect = (props: SelectProps<string>) => {
+const StyledSelect = styled((props: SelectProps<string>) => {
   return (
     <Select
       size="small"
@@ -34,7 +35,9 @@ const StyledSelect = (props: SelectProps<string>) => {
       {...props}
     />
   );
-};
+})(({ theme }) => ({
+  background: theme.palette.mode === "light" ? "#fff" : undefined,
+}));
 
 const LogPage = () => {
   const { t } = useTranslation();
