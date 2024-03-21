@@ -92,6 +92,7 @@ export const ProfileMore = (props: Props) => {
     {
       label: "Delete",
       handler: () => {
+        setAnchorEl(null);
         setConfirmOpen(true);
       },
     },
@@ -105,6 +106,7 @@ export const ProfileMore = (props: Props) => {
     {
       label: "Delete",
       handler: () => {
+        setAnchorEl(null);
         setConfirmOpen(true);
       },
     },
