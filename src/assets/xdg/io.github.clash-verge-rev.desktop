@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Exec=clash-verge
+Icon=clash-verge
+Categories=Network;
+StartupNotify=true
+StartupWMClass=clash-verge
+Keywords=clash;verge;proxy
+Keywords[zh_CN]=clash;verge;proxy;小猫咪;代理;xiaomaomi;daili
+Name=Clash Verge
+GenericName=Rule-based proxy manager
+GenericName[zh_CN]=代理服务规则管理器
+Comment=A graphical rule-based proxy manager
+Comment[zh_CN]=图形化代理服务规则管理器
