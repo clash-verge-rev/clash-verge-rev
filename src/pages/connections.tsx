@@ -37,7 +37,7 @@ const ConnectionsPage = () => {
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
   const [filterText, setFilterText] = useState("");
-  const [curOrderOpt, setOrderOpt] = useState("Default");
+  const [curOrderOpt, setOrderOpt] = useState("time");
   const [connData, setConnData] = useState<IConnections>(initConn);
 
   const [setting, setSetting] = useRecoilState(atomConnectionSetting);
