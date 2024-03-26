@@ -28,7 +28,7 @@
       "longDescription": "A Clash Meta GUI based on tauri."
     },
     "updater": {
-      "active": true,
+      "active": false,
       "endpoints": [
         "https://mirror.ghproxy.com/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
         "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json"
