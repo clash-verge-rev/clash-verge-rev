@@ -37,7 +37,7 @@ const ConnectionsPage = () => {
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
   const [filterText, setFilterText] = useState("");
-  const [curOrderOpt, setOrderOpt] = useState("time");
+  const [curOrderOpt, setOrderOpt] = useState("Timestamp");
   const [connData, setConnData] = useState<IConnections>(initConn);
 
   const [setting, setSetting] = useRecoilState(atomConnectionSetting);
@@ -46,6 +46,7 @@ const ConnectionsPage = () => {
 
   const orderOpts: Record<string, OrderFunc> = {
     Default: (list) => list,
+    Timestamp: (list) => list.sort((a,b) => a.timestamp! - b.timestamp!),
     "Upload Speed": (list) => list.sort((a, b) => b.curUpload! - a.curUpload!),
     "Download Speed": (list) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
