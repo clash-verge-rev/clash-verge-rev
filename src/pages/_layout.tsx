@@ -170,28 +170,6 @@ const Layout = () => {
             }
 
             {React.cloneElement(routersEles, { key: location.pathname })}
-
-            {/* <TransitionGroup className="the-content">
-              <CSSTransition
-                key={location.pathname}
-                timeout={300}
-                classNames="page"
-              >
-                <Routes>
-                  {routers.map(({ label, link, ele: Ele }) => (
-                    <Route
-                      key={label}
-                      path={link}
-                      element={
-                        <BaseErrorBoundary key={label}>
-                          <Ele />
-                        </BaseErrorBoundary>
-                      }
-                    />
-                  ))}
-                </Routes>
-              </CSSTransition>
-            </TransitionGroup> */}
           </div>
         </Paper>
       </ThemeProvider>
