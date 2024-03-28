@@ -5,9 +5,9 @@ import {
   Button,
   IconButton,
   MenuItem,
-  Paper,
   Select,
-  TextField,
+  SelectProps,
+  styled,
 } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
@@ -19,6 +19,25 @@ import { atomEnableLog, atomLogData } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+
+const StyledSelect = styled((props: SelectProps<string>) => {
+  return (
+    <Select
+      size="small"
+      autoComplete="off"
+      sx={{
+        width: 120,
+        height: 33.375,
+        mr: 1,
+        '[role="button"]': { py: 0.65 },
+      }}
+      {...props}
+    />
+  );
+})(({ theme }) => ({
+  background: theme.palette.mode === "light" ? "#fff" : undefined,
+}));
 
 const LogPage = () => {
   const { t } = useTranslation();
@@ -77,35 +96,19 @@ const LogPage = () => {
           alignItems: "center",
         }}
       >
-        <Select
-          size="small"
-          autoComplete="off"
+        <StyledSelect
           value={logState}
           onChange={(e) => setLogState(e.target.value)}
-          sx={{
-            width: 120,
-            height: 33.375,
-            mr: 1,
-            '[role="button"]': { py: 0.65 },
-          }}
         >
           <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="inf">INFO</MenuItem>
           <MenuItem value="warn">WARN</MenuItem>
           <MenuItem value="err">ERROR</MenuItem>
-        </Select>
+        </StyledSelect>
 
-        <TextField
-          hiddenLabel
-          fullWidth
-          size="small"
-          autoComplete="off"
-          spellCheck="false"
-          variant="outlined"
-          placeholder={t("Filter conditions")}
+        <BaseStyledTextField
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          sx={{ input: { py: 0.65, px: 1.25 } }}
         />
       </Box>
 

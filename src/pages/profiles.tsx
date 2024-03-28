@@ -2,15 +2,7 @@ import useSWR, { mutate } from "swr";
 import { useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useSetRecoilState } from "recoil";
-import {
-  Box,
-  Button,
-  Grid,
-  IconButton,
-  Stack,
-  TextField,
-  Divider,
-} from "@mui/material";
+import { Box, Button, Grid, IconButton, Stack, Divider } from "@mui/material";
 import {
   DndContext,
   closestCenter,
@@ -56,6 +48,7 @@ import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { throttle } from "lodash-es";
 import { useRecoilState } from "recoil";
 import { atomThemeMode } from "@/services/states";
+import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -299,16 +292,10 @@ const ProfilePage = () => {
           alignItems: "center",
         }}
       >
-        <TextField
-          hiddenLabel
-          fullWidth
-          size="small"
+        <BaseStyledTextField
           value={url}
           variant="outlined"
-          autoComplete="off"
-          spellCheck="false"
           onChange={(e) => setUrl(e.target.value)}
-          sx={{ input: { py: 0.65, px: 1.25 } }}
           placeholder={t("Profile URL")}
           InputProps={{
             sx: { pr: 1 },

@@ -2,12 +2,13 @@ import useSWR from "swr";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
-import { Box, TextField } from "@mui/material";
+import { Box } from "@mui/material";
 import { getRules } from "@/services/api";
 import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 
 const RulesPage = () => {
   const { t } = useTranslation();
@@ -41,17 +42,9 @@ const RulesPage = () => {
           alignItems: "center",
         }}
       >
-        <TextField
-          hiddenLabel
-          fullWidth
-          size="small"
-          autoComplete="off"
-          variant="outlined"
-          spellCheck="false"
-          placeholder={t("Filter conditions")}
+        <BaseStyledTextField
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          sx={{ input: { py: 0.65, px: 1.25 } }}
         />
       </Box>
 
