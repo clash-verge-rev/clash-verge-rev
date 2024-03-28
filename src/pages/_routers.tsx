@@ -5,6 +5,7 @@ import ProfilesPage from "./profiles";
 import SettingsPage from "./settings";
 import ConnectionsPage from "./connections";
 import RulesPage from "./rules";
+import { BaseErrorBoundary } from "@/components/base";
 
 import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
 import ProfilesSvg from "@/assets/image/itemicon/profiles.svg?react";
@@ -25,44 +26,49 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 export const routers = [
   {
     label: "Label-Proxies",
-    link: "/",
+    path: "/",
     icon: [<WifiRoundedIcon />, <ProxiesSvg />],
-    ele: ProxiesPage,
+    element: <ProxiesPage />,
   },
   {
     label: "Label-Profiles",
-    link: "/profile",
+    path: "/profile",
     icon: [<DnsRoundedIcon />, <ProfilesSvg />],
-    ele: ProfilesPage,
+    element: <ProfilesPage />,
   },
   {
     label: "Label-Connections",
-    link: "/connections",
+    path: "/connections",
     icon: [<LanguageRoundedIcon />, <ConnectionsSvg />],
-    ele: ConnectionsPage,
+    element: <ConnectionsPage />,
   },
   {
     label: "Label-Rules",
-    link: "/rules",
+    path: "/rules",
     icon: [<ForkRightRoundedIcon />, <RulesSvg />],
-    ele: RulesPage,
+    element: <RulesPage />,
   },
   {
     label: "Label-Logs",
-    link: "/logs",
+    path: "/logs",
     icon: [<SubjectRoundedIcon />, <LogsSvg />],
-    ele: LogsPage,
+    element: <LogsPage />,
   },
   {
     label: "Label-Test",
-    link: "/test",
+    path: "/test",
     icon: [<WifiTetheringRoundedIcon />, <TestSvg />],
-    ele: TestPage,
+    element: <TestPage />,
   },
   {
     label: "Label-Settings",
-    link: "/settings",
+    path: "/settings",
     icon: [<SettingsRoundedIcon />, <SettingsSvg />],
-    ele: SettingsPage,
+    element: <SettingsPage />,
   },
-];
+].map((router) => ({
+  ...router,
+  element: (
+    <BaseErrorBoundary key={router.label}>{router.element}</BaseErrorBoundary>
+  ),
+}));
