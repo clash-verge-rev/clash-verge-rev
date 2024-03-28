@@ -27,6 +27,7 @@ import "dayjs/locale/zh-cn";
 import { getPortableFlag } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import React from "react";
+import { TransitionGroup, CSSTransition } from "react-transition-group";
 export let portableFlag = false;
 
 dayjs.extend(relativeTime);
@@ -169,7 +170,15 @@ const Layout = () => {
               </div>
             }
 
-            {React.cloneElement(routersEles, { key: location.pathname })}
+            <TransitionGroup className="the-content">
+              <CSSTransition
+                key={location.pathname}
+                timeout={300}
+                classNames="page"
+              >
+                {React.cloneElement(routersEles, { key: location.pathname })}
+              </CSSTransition>
+            </TransitionGroup>
           </div>
         </Paper>
       </ThemeProvider>
