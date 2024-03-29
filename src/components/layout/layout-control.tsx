@@ -15,8 +15,10 @@ export const LayoutControl = () => {
 
   const [isMaximized, setIsMaximized] = useState(false);
   const [isPined, setIsPined] = useState(false);
-  appWindow.isMaximized().then((isMaximized) => {
-    setIsMaximized(() => isMaximized);
+  appWindow.onResized(() => {
+    appWindow.isMaximized().then((isMaximized) => {
+      setIsMaximized(() => isMaximized);
+    });
   });
 
   return (
