@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import {
-  Box,
-  Button,
-  IconButton,
-  MenuItem,
-  Paper,
-  Select,
-  TextField,
-} from "@mui/material";
+import { Box, Button, IconButton, MenuItem, Select } from "@mui/material";
 import { useRecoilState } from "recoil";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
@@ -26,6 +18,7 @@ import {
 } from "@/components/connection/connection-detail";
 import parseTraffic from "@/utils/parse-traffic";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -185,17 +178,9 @@ const ConnectionsPage = () => {
           </Select>
         )}
 
-        <TextField
-          hiddenLabel
-          fullWidth
-          size="small"
-          autoComplete="off"
-          spellCheck="false"
-          variant="outlined"
-          placeholder={t("Filter conditions")}
+        <BaseStyledTextField
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          sx={{ input: { py: 0.65, px: 1.25 } }}
         />
       </Box>
 
