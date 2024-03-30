@@ -73,13 +73,11 @@ pub async fn install_service() -> Result<()> {
     let binary_path = dirs::service_path()?;
     let installer_path = binary_path.with_file_name("install-service");
 
-
     if !installer_path.exists() {
         bail!("installer not found");
     }
 
     let elevator = crate::utils::unix_helper::linux_elevator();
-    // 2. spawn an elevated process to put that in appropirate location.
     let status = match get_effective_uid() {
         0 => StdCommand::new(installer_path).status()?,
         _ => StdCommand::new(elevator).arg("sh").arg("-c").arg(installer_path).status()?,
@@ -93,7 +91,6 @@ pub async fn install_service() -> Result<()> {
     }
 
     Ok(())
-    // 3. Start the service.
 }
 
 /// Uninstall the Clash Verge Service
@@ -139,13 +136,11 @@ pub async fn uninstall_service() -> Result<()> {
     let binary_path = dirs::service_path()?;
     let uninstaller_path = binary_path.with_file_name("uninstall-service");
 
-
     if !uninstaller_path.exists() {
         bail!("uninstaller not found");
     }
 
     let elevator = crate::utils::unix_helper::linux_elevator();
-    // 2. spawn an elevated process to put that in appropirate location.
     let status = match get_effective_uid() {
         0 => StdCommand::new(uninstaller_path).status()?,
         _ => StdCommand::new(elevator).arg("sh").arg("-c").arg(uninstaller_path).status()?,
@@ -159,7 +154,6 @@ pub async fn uninstall_service() -> Result<()> {
     }
 
     Ok(())
-    // 3. Start the service.
 }
 
 /// check the windows service status
