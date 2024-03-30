@@ -33,6 +33,7 @@
       // width: 100%;
       display: flex;
       height: 100%;
+      padding: 0px 20px;
       flex-direction: column;
       justify-content: center;
       align-items: flex-start;
@@ -79,7 +80,7 @@
 
       > div {
         margin: 0 auto;
-        padding: 0px 10px;
+        padding: 0px 20px;
       }
     }
   }
@@ -120,9 +121,9 @@
 .windows,
 .unknown {
   &.layout {
-    .layout__left {
-      // padding-top: 24px;
-    }
+    //.layout__left {
+    //  padding-top: 24px;
+    //}
 
     .layout__left .the-logo {
       flex: 1 0 58px;
