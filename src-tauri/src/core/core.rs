@@ -93,10 +93,10 @@ impl CoreManager {
             None => false,
         };
 
-        #[cfg(target_os = "windows")]
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
-            log_err!(super::win_service::stop_core_by_service().await);
+            log_err!(super::service::stop_core_by_service().await);
             should_kill = true;
         }
 
@@ -105,9 +105,9 @@ impl CoreManager {
             sleep(Duration::from_millis(500)).await;
         }
 
-        #[cfg(target_os = "windows")]
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
         {
-            use super::win_service;
+            use super::service;
 
             // 服务模式
             let enable = { Config::verge().latest().enable_service_mode };
@@ -120,8 +120,8 @@ impl CoreManager {
                 log::debug!(target: "app", "try to run core in service mode");
 
                 match (|| async {
-                    win_service::check_service().await?;
-                    win_service::run_core_by_service(&config_path).await
+                    service::check_service().await?;
+                    service::run_core_by_service(&config_path).await
                 })()
                 .await
                 {
@@ -205,7 +205,7 @@ impl CoreManager {
     /// 重启内核
     pub fn recover_core(&'static self) -> Result<()> {
         // 服务模式不管
-        #[cfg(target_os = "windows")]
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
         if *self.use_service_mode.lock() {
             return Ok(());
         }
@@ -238,11 +238,11 @@ impl CoreManager {
 
     /// 停止核心运行
     pub fn stop_core(&self) -> Result<()> {
-        #[cfg(target_os = "windows")]
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
             tauri::async_runtime::block_on(async move {
-                log_err!(super::win_service::stop_core_by_service().await);
+                log_err!(super::service::stop_core_by_service().await);
             });
             return Ok(());
         }

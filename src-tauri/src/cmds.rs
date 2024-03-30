@@ -334,28 +334,35 @@ pub fn exit_app(app_handle: tauri::AppHandle) {
 #[cfg(windows)]
 pub mod service {
     use super::*;
-    use crate::core::win_service;
+    use crate::core::service;
 
     #[tauri::command]
-    pub async fn check_service() -> CmdResult<win_service::JsonResponse> {
-        wrap_err!(win_service::check_service().await)
+    pub async fn check_service() -> CmdResult<service::JsonResponse> {
+        wrap_err!(service::check_service().await)
     }
 
     #[tauri::command]
     pub async fn install_service() -> CmdResult {
-        wrap_err!(win_service::install_service().await)
+        wrap_err!(service::install_service().await)
     }
 
     #[tauri::command]
     pub async fn uninstall_service() -> CmdResult {
-        wrap_err!(win_service::uninstall_service().await)
+        wrap_err!(service::uninstall_service().await)
     }
 }
 
 #[cfg(not(windows))]
 pub mod service {
     use super::*;
+    use crate::core::service;
 
+    #[cfg(target_os = "linux")]
+    #[tauri::command]
+    pub async fn check_service() -> CmdResult<service::JsonResponse> {
+        wrap_err!(service::check_service().await)
+    }
+    #[cfg(not(target_os = "linux"))]
     #[tauri::command]
     pub async fn check_service() -> CmdResult {
         Ok(())

@@ -92,12 +92,17 @@ pub fn clash_pid_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("clash.pid"))
 }
 
+#[cfg(target_os = "linux")]
+pub fn service_path() -> Result<PathBuf> {
+    Ok(app_resources_dir()?.join("clash-verge-service"))
+} 
+
 #[cfg(windows)]
 pub fn service_path() -> Result<PathBuf> {
     Ok(app_resources_dir()?.join("clash-verge-service.exe"))
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 pub fn service_log_file() -> Result<PathBuf> {
     use chrono::Local;
 

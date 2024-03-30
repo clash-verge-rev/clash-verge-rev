@@ -185,7 +185,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let tun_tray_icon = patch.tun_tray_icon;
 
     match {
-        #[cfg(target_os = "windows")]
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
         {
             let service_mode = patch.enable_service_mode;
 
