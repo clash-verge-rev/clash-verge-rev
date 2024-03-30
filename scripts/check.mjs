@@ -353,6 +353,23 @@ const resolvePlugin = async () => {
   }
 };
 
+// Linux service chmod
+const resolveLinuxServicePermission = async () => {
+  const serviceExecutables = [
+    "clash-verge-service",
+    "install-service",
+    "uninstall-service",
+  ];
+  const resDir = path.join(cwd, "src-tauri/resources");
+  serviceExecutables.forEach(async (f) => {
+    const targetPath = path.join(resDir, f);
+    if (await fs.pathExists(targetPath)) {
+      execSync(`chmod 755 ${targetPath}`);
+      console.log(`[INFO]: "${targetPath}" chmod finished`);
+    }
+  });
+};
+
 /**
  * main
  */
@@ -467,6 +484,12 @@ const tasks = [
     func: resolveEnableLoopback,
     retry: 5,
     winOnly: true,
+  },
+  {
+    name: "linux_service_chmod",
+    func: resolveLinuxServicePermission,
+    retry: 1,
+    linuxOnly: true,
   },
 ];
 

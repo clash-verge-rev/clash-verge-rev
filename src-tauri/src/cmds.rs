@@ -331,7 +331,7 @@ pub fn exit_app(app_handle: tauri::AppHandle) {
     std::process::exit(0);
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 pub mod service {
     use super::*;
     use crate::core::service;
@@ -352,17 +352,10 @@ pub mod service {
     }
 }
 
-#[cfg(not(windows))]
+#[cfg(not(any(windows, target_os = "linux")))]
 pub mod service {
     use super::*;
-    use crate::core::service;
 
-    #[cfg(target_os = "linux")]
-    #[tauri::command]
-    pub async fn check_service() -> CmdResult<service::JsonResponse> {
-        wrap_err!(service::check_service().await)
-    }
-    #[cfg(not(target_os = "linux"))]
     #[tauri::command]
     pub async fn check_service() -> CmdResult {
         Ok(())
