@@ -185,22 +185,14 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let tun_tray_icon = patch.tun_tray_icon;
 
     match {
-        #[cfg(any(target_os = "windows", target_os = "linux"))]
-        {
-            let service_mode = patch.enable_service_mode;
+        let service_mode = patch.enable_service_mode;
 
-            if service_mode.is_some() {
-                log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
+        if service_mode.is_some() {
+            log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
 
-                Config::generate()?;
-                CoreManager::global().run_core().await?;
-            } else if tun_mode.is_some() {
-                update_core_config().await?;
-            }
-        }
-
-        #[cfg(not(target_os = "windows"))]
-        if tun_mode.is_some() {
+            Config::generate()?;
+            CoreManager::global().run_core().await?;
+        } else if tun_mode.is_some() {
             update_core_config().await?;
         }
 

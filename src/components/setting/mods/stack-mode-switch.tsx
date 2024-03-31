@@ -2,10 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup, Tooltip } from "@mui/material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
-import getSystem from "@/utils/get-system";
 import useSWR from "swr";
-
-const isWIN = getSystem() === "windows";
 
 interface Props {
   value?: string;
@@ -17,21 +14,17 @@ export const StackModeSwitch = (props: Props) => {
   const { verge } = useVerge();
   const { enable_service_mode } = verge ?? {};
   // service mode
-  const { data: serviceStatus } = useSWR(
-    isWIN ? "checkService" : null,
-    checkService,
-    {
-      revalidateIfStale: false,
-      shouldRetryOnError: false,
-    }
-  );
+  const { data: serviceStatus } = useSWR("checkService", checkService, {
+    revalidateIfStale: false,
+    shouldRetryOnError: false,
+  });
 
   const { t } = useTranslation();
 
   return (
     <Tooltip
       title={
-        isWIN && (serviceStatus !== "active" || !enable_service_mode)
+        serviceStatus !== "active" || !enable_service_mode
           ? t("System and Mixed Can Only be Used in Service Mode")
           : ""
       }
@@ -40,9 +33,7 @@ export const StackModeSwitch = (props: Props) => {
         <Button
           variant={value?.toLowerCase() === "system" ? "contained" : "outlined"}
           onClick={() => onChange?.("system")}
-          disabled={
-            isWIN && (serviceStatus !== "active" || !enable_service_mode)
-          }
+          disabled={serviceStatus !== "active" || !enable_service_mode}
           sx={{ textTransform: "capitalize" }}
         >
           System
@@ -58,9 +49,7 @@ export const StackModeSwitch = (props: Props) => {
         <Button
           variant={value?.toLowerCase() === "mixed" ? "contained" : "outlined"}
           onClick={() => onChange?.("mixed")}
-          disabled={
-            isWIN && (serviceStatus !== "active" || !enable_service_mode)
-          }
+          disabled={serviceStatus !== "active" || !enable_service_mode}
           sx={{ textTransform: "capitalize" }}
         >
           Mixed
