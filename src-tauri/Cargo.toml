@@ -45,6 +45,7 @@ deelevate = "0.2.0"
 winreg = "0.52.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
+users = "0.11.0"
 #openssl
 
 [features]

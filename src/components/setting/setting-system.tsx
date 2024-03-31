@@ -17,7 +17,8 @@ interface Props {
   onError?: (err: Error) => void;
 }
 
-const isWIN = getSystem() === "windows";
+const isServiceModeAvailable =
+  getSystem() === "windows" || getSystem() === "linux";
 
 const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ const SettingSystem = ({ onError }: Props) => {
 
   // service mode
   const { data: serviceStatus } = useSWR(
-    isWIN ? "checkService" : null,
+    isServiceModeAvailable ? "checkService" : null,
     checkService,
     {
       revalidateIfStale: false,
@@ -56,7 +57,7 @@ const SettingSystem = ({ onError }: Props) => {
     <SettingList title={t("System Setting")}>
       <SysproxyViewer ref={sysproxyRef} />
       <TunViewer ref={tunRef} />
-      {isWIN && (
+      {isServiceModeAvailable && (
         <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
       )}
 
@@ -66,7 +67,9 @@ const SettingSystem = ({ onError }: Props) => {
           <>
             <Tooltip
               title={
-                isWIN ? t("Tun Mode Info Windows") : t("Tun Mode Info Unix")
+                isServiceModeAvailable
+                  ? t("Tun Mode Info Windows")
+                  : t("Tun Mode Info Unix")
               }
               placement="top"
             >
@@ -102,7 +105,7 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      {isWIN && (
+      {isServiceModeAvailable && (
         <SettingItem
           label={t("Service Mode")}
           extra={
