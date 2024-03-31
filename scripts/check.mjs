@@ -361,7 +361,7 @@ const resolveLinuxServicePermission = async () => {
     "uninstall-service",
   ];
   const resDir = path.join(cwd, "src-tauri/resources");
-  for (f of serviceExecutables) {
+  for (let f of serviceExecutables) {
     const targetPath = path.join(resDir, f);
     if (await fs.pathExists(targetPath)) {
       execSync(`chmod 755 ${targetPath}`);
