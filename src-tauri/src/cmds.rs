@@ -331,7 +331,6 @@ pub fn exit_app(app_handle: tauri::AppHandle) {
     std::process::exit(0);
 }
 
-#[cfg(any(windows, target_os = "linux"))]
 pub mod service {
     use super::*;
     use crate::core::service;
@@ -349,24 +348,6 @@ pub mod service {
     #[tauri::command]
     pub async fn uninstall_service() -> CmdResult {
         wrap_err!(service::uninstall_service().await)
-    }
-}
-
-#[cfg(not(any(windows, target_os = "linux")))]
-pub mod service {
-    use super::*;
-
-    #[tauri::command]
-    pub async fn check_service() -> CmdResult {
-        Ok(())
-    }
-    #[tauri::command]
-    pub async fn install_service() -> CmdResult {
-        Ok(())
-    }
-    #[tauri::command]
-    pub async fn uninstall_service() -> CmdResult {
-        Ok(())
     }
 }
 

@@ -169,7 +169,6 @@
   "MTU": "Max Transmission Unit",
 
   "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
-  "Tun Mode Info Windows": "The Tun mode requires granting core-related permissions. Please enable service mode before using it",
-  "Tun Mode Info Unix": "The Tun mode requires granting core-related permissions. Before using it, please authorize the core in the core settings",
+  "Tun Mode Info": "The Tun mode requires granting core-related permissions. Please enable service mode before using it",
   "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode"
 }
