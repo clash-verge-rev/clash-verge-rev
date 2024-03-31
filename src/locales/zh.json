@@ -177,7 +177,6 @@
   "Reset to Default": "重置为默认值",
 
   "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换",
-  "Tun Mode Info Windows": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",
-  "Tun Mode Info Unix": "Tun模式需要授予内核相关权限，使用前请先在内核设置中给内核授权",
+  "Tun Mode Info": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",
   "System and Mixed Can Only be Used in Service Mode": "System和Mixed只能在服务模式下使用"
 }

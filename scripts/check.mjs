@@ -353,8 +353,8 @@ const resolvePlugin = async () => {
   }
 };
 
-// Linux service chmod
-const resolveLinuxServicePermission = async () => {
+// service chmod
+const resolveServicePermission = async () => {
   const serviceExecutables = [
     "clash-verge-service",
     "install-service",
@@ -376,37 +376,30 @@ const resolveLinuxServicePermission = async () => {
 
 const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
 
-const resolveService = () =>
+const resolveService = () => {
+  let ext = platform === "win32" ? ".exe" : "";
   resolveResource({
-    file: "clash-verge-service.exe",
-    downloadURL: `${SERVICE_URL}/clash-verge-service.exe`,
-  });
-const resolveLinuxService = () => {
-  resolveResource({
-    file: "clash-verge-service",
-    downloadURL: `${SERVICE_URL}/clash-verge-service`,
+    file: "clash-verge-service" + ext,
+    downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
   });
 };
-const resolveInstall = () =>
+
+const resolveInstall = () => {
+  let ext = platform === "win32" ? ".exe" : "";
   resolveResource({
-    file: "install-service.exe",
-    downloadURL: `${SERVICE_URL}/install-service.exe`,
+    file: "install-service" + ext,
+    downloadURL: `${SERVICE_URL}/install-service.exe${ext}`,
   });
-const resolveLinuxInstall = () =>
+};
+
+const resolveUninstall = () => {
+  let ext = platform === "win32" ? ".exe" : "";
   resolveResource({
-    file: "install-service",
-    downloadURL: `${SERVICE_URL}/install-service`,
+    file: "uninstall-service" + ext,
+    downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
   });
-const resolveUninstall = () =>
-  resolveResource({
-    file: "uninstall-service.exe",
-    downloadURL: `${SERVICE_URL}/uninstall-service.exe`,
-  });
-const resolveLinuxUninstall = () =>
-  resolveResource({
-    file: "uninstall-service",
-    downloadURL: `${SERVICE_URL}/uninstall-service`,
-  });
+};
+
 const resolveSetDnsScript = () =>
   resolveResource({
     file: "set_dns.sh",
@@ -453,27 +446,9 @@ const tasks = [
     retry: 5,
   },
   { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
-  { name: "service", func: resolveService, retry: 5, winOnly: true },
-  {
-    name: "linux_service",
-    func: resolveLinuxService,
-    retry: 5,
-    linuxOnly: true,
-  },
-  { name: "install", func: resolveInstall, retry: 5, winOnly: true },
-  {
-    name: "linux_install",
-    func: resolveLinuxInstall,
-    retry: 5,
-    linuxOnly: true,
-  },
-  { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
-  {
-    name: "linux_uninstall",
-    func: resolveLinuxUninstall,
-    retry: 5,
-    linuxOnly: true,
-  },
+  { name: "service", func: resolveService, retry: 5 },
+  { name: "install", func: resolveInstall, retry: 5 },
+  { name: "uninstall", func: resolveUninstall, retry: 5 },
   { name: "set_dns_script", func: resolveSetDnsScript, retry: 5 },
   { name: "unset_dns_script", func: resolveUnSetDnsScript, retry: 5 },
   { name: "mmdb", func: resolveMmdb, retry: 5 },
@@ -486,18 +461,19 @@ const tasks = [
     winOnly: true,
   },
   {
-    name: "linux_service_chmod",
-    func: resolveLinuxServicePermission,
+    name: "service_chmod",
+    func: resolveServicePermission,
     retry: 1,
-    linuxOnly: true,
+    unixOnly: true,
   },
 ];
 
 async function runTask() {
   const task = tasks.shift();
   if (!task) return;
-  if (task.winOnly && process.platform !== "win32") return runTask();
-  if (task.linuxOnly && process.platform !== "linux") return runTask();
+  if (task.winOnly && platform !== "win32") return runTask();
+  if (task.linuxOnly && platform !== "linux") return runTask();
+  if (task.unixOnly && platform === "win32") return runTask();
 
   for (let i = 0; i < task.retry; i++) {
     try {

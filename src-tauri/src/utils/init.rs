@@ -135,13 +135,12 @@ pub fn delete_log() -> Result<()> {
     for file in fs::read_dir(&log_dir)?.flatten() {
         let _ = process_file(file);
     }
-    #[cfg(target_os = "windows")]
-    {
-        let service_log_dir = log_dir.join("service");
-        for file in fs::read_dir(&service_log_dir)?.flatten() {
-            let _ = process_file(file);
-        }
+
+    let service_log_dir = log_dir.join("service");
+    for file in fs::read_dir(&service_log_dir)?.flatten() {
+        let _ = process_file(file);
     }
+
     Ok(())
 }
 
