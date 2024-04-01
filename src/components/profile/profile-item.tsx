@@ -55,6 +55,7 @@ export const ProfileItem = (props: Props) => {
   // remote file mode
   const hasUrl = !!itemData.url;
   const hasExtra = !!extra; // only subscription url has extra info
+  const hasHome = !!itemData.home; // only subscription url has home page
 
   const { upload = 0, download = 0, total = 0 } = extra ?? {};
   const from = parseUrl(itemData.url);
@@ -94,6 +95,11 @@ export const ProfileItem = (props: Props) => {
 
   const [fileOpen, setFileOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const onOpenHome = () => {
+    setAnchorEl(null);
+    window.open(itemData.home); // use built-in browser
+  };
 
   const onEditInfo = () => {
     setAnchorEl(null);
@@ -166,7 +172,9 @@ export const ProfileItem = (props: Props) => {
     }
   });
 
-  const urlModeMenu = [
+  const urlModeMenu = (
+    hasHome ? [{ label: "Home", handler: onOpenHome }] : []
+  ).concat([
     { label: "Select", handler: onForceSelect },
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
@@ -180,7 +188,7 @@ export const ProfileItem = (props: Props) => {
         setConfirmOpen(true);
       },
     },
-  ];
+  ]);
   const fileModeMenu = [
     { label: "Select", handler: onForceSelect },
     { label: "Edit Info", handler: onEditInfo },

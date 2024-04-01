@@ -168,6 +168,7 @@ interface IProfileItem {
     expire: number;
   };
   option?: IProfileOption;
+  home?: string;
 }
 
 interface IProfileOption {
