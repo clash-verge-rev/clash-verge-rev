@@ -29,7 +29,7 @@ export const ConfirmViewer = (props: Props) => {
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>{t(title)}</DialogTitle>
 
-      <DialogContent sx={{ width: "95%", pb: 1, userSelect: "text" }}>
+      <DialogContent sx={{ pb: 1, userSelect: "text" }}>
         {t(message)}
       </DialogContent>
 
