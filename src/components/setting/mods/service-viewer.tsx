@@ -86,12 +86,22 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       disableFooter
       onClose={() => setOpen(false)}
     >
-      <Typography>Current State: {state}</Typography>
+      <Typography
+        sx={{
+          "& span": {
+            color: state === "active" ? "primary.main" : "text.primary",
+          },
+        }}
+      >
+        {t("Current State")}: <span>{t(state)}</span>
+      </Typography>
 
       {(state === "unknown" || state === "uninstall") && (
         <Typography>
-          Information: Please make sure that the Clash Verge Service is
-          installed and enabled
+          {t("Information")}:{" "}
+          {t(
+            "Please make sure that the Clash Verge Service is installed and enabled"
+          )}
         </Typography>
       )}
 
@@ -102,19 +112,19 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       >
         {state === "uninstall" && enable && (
           <Button variant="contained" onClick={onDisable}>
-            Disable Service Mode
+            {t("Disable Service Mode")}
           </Button>
         )}
 
         {state === "uninstall" && (
           <Button variant="contained" onClick={onInstall}>
-            Install
+            {t("Install")}
           </Button>
         )}
 
         {(state === "active" || state === "installed") && (
           <Button variant="outlined" onClick={onUninstall}>
-            Uninstall
+            {t("Uninstall")}
           </Button>
         )}
       </Stack>
