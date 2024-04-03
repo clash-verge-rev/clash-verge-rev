@@ -388,7 +388,7 @@ const resolveInstall = () => {
   let ext = platform === "win32" ? ".exe" : "";
   resolveResource({
     file: "install-service" + ext,
-    downloadURL: `${SERVICE_URL}/install-service.exe${ext}`,
+    downloadURL: `${SERVICE_URL}/install-service${ext}`,
   });
 };
 
