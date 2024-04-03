@@ -16,6 +16,7 @@ import { Notice } from "@/components/base";
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js";
 import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js";
+import "monaco-editor/esm/vs/editor/contrib/comment/browser/comment.js";
 import { editor } from "monaco-editor/esm/vs/editor/editor.api";
 
 interface Props {
