@@ -90,6 +90,8 @@ export const WebUIItem = (props: Props) => {
           title={value}
           color={value ? "text.primary" : "text.secondary"}
           sx={({ palette }) => ({
+            overflow: "hidden",
+            textOverflow: "ellipsis",
             "> span": {
               color: palette.primary.main,
             },
