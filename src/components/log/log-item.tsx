@@ -4,16 +4,16 @@ const Item = styled(Box)(({ theme: { palette, typography } }) => ({
   padding: "8px 0",
   margin: "0 12px",
   lineHeight: 1.35,
-  borderBottom: `1px solid ${palette.divider}`,
+  // borderBottom: `1px solid ${palette.divider}`,
   fontSize: "0.875rem",
   fontFamily: typography.fontFamily,
   userSelect: "text",
   "& .time": {
     color: palette.text.secondary,
+    marginLeft: 8,
   },
   "& .type": {
     display: "inline-block",
-    marginLeft: 8,
     textAlign: "center",
     borderRadius: 2,
     textTransform: "uppercase",
@@ -43,10 +43,10 @@ const LogItem = (props: Props) => {
   return (
     <Item>
       <div>
-        <span className="time">{value.time}</span>
         <span className="type" data-type={value.type.toLowerCase()}>
           {value.type}
         </span>
+        <span className="time">{value.time}</span>
       </div>
       <div>
         <span className="data">{value.payload}</span>
