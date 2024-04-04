@@ -120,8 +120,12 @@ const ConnectionsPage = () => {
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ mx: 1 }}>Download: {parseTraffic(download)}</Box>
-          <Box sx={{ mx: 1 }}>Upload: {parseTraffic(upload)}</Box>
+          <Box sx={{ mx: 1 }}>
+            {t("Download")}: {parseTraffic(download)}
+          </Box>
+          <Box sx={{ mx: 1 }}>
+            {t("Upload")}: {parseTraffic(upload)}
+          </Box>
           <IconButton
             color="inherit"
             size="small"
@@ -194,7 +198,7 @@ const ConnectionsPage = () => {
         }}
       >
         {filterConn.length === 0 ? (
-          <BaseEmpty text="No Connections" />
+          <BaseEmpty text={t("No Connections")} />
         ) : isTableLayout ? (
           <ConnectionTable
             connections={filterConn}
