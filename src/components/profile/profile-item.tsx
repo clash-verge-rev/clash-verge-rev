@@ -24,7 +24,7 @@ import { EditorViewer } from "./editor-viewer";
 import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
 import { ConfirmViewer } from "./confirm-viewer";
-
+import { open } from "@tauri-apps/api/shell";
 const round = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -98,7 +98,7 @@ export const ProfileItem = (props: Props) => {
 
   const onOpenHome = () => {
     setAnchorEl(null);
-    window.open(itemData.home); // use built-in browser
+    open(itemData.home ?? "");
   };
 
   const onEditInfo = () => {
