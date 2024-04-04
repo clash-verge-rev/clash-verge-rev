@@ -120,7 +120,10 @@ export const ProxyHead = (props: Props) => {
         color="inherit"
         title={t("Filter")}
         onClick={() =>
-          onHeadState({ textState: textState === "filter" ? null : "filter" })
+          onHeadState({
+            textState: textState === "filter" ? null : "filter",
+            filterText: "",
+          })
         }
       >
         {textState === "filter" ? (
