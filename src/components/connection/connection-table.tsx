@@ -1,13 +1,18 @@
+import React from "react";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import {
   DataGrid,
   GridColDef,
+  GridToolbarColumnsButton,
+  GridToolbarFilterButton,
   GridValueFormatterParams,
+  zhCN,
 } from "@mui/x-data-grid";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
+import { createTheme, ThemeProvider, useTheme } from "@mui/material/styles";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -17,6 +22,19 @@ interface Props {
 export const ConnectionTable = (props: Props) => {
   const { t } = useTranslation();
   const { connections, onShowDetail } = props;
+
+  const theme = useTheme();
+  const themeWithLocale = React.useMemo(
+    () => createTheme(theme, zhCN),
+    [theme]
+  );
+
+  const Toolbar = () => (
+    <div>
+      <GridToolbarColumnsButton />
+      <GridToolbarFilterButton />
+    </div>
+  );
 
   const [columnVisible, setColumnVisible] = useState<
     Partial<Record<keyof IConnectionsItem, boolean>>
@@ -28,8 +46,8 @@ export const ConnectionTable = (props: Props) => {
       field: "upload",
       headerName: `${t("Upload")}`,
       width: 88,
-      align: "right",
-      headerAlign: "right",
+      align: "center",
+      headerAlign: "center",
       valueFormatter: (params: GridValueFormatterParams<number>) =>
         parseTraffic(params.value).join(" "),
     },
@@ -37,26 +55,26 @@ export const ConnectionTable = (props: Props) => {
       field: "download",
       headerName: `${t("Download")}`,
       width: 88,
-      align: "right",
-      headerAlign: "right",
+      align: "center",
+      headerAlign: "center",
       valueFormatter: (params: GridValueFormatterParams<number>) =>
         parseTraffic(params.value).join(" "),
     },
     {
       field: "ulSpeed",
       headerName: `${t("UL Speed")}`,
-      width: 100,
-      align: "right",
-      headerAlign: "right",
+      width: 120,
+      align: "center",
+      headerAlign: "center",
       valueFormatter: (params: GridValueFormatterParams<number>) =>
         parseTraffic(params.value).join(" ") + "/s",
     },
     {
       field: "dlSpeed",
       headerName: `${t("DL Speed")}`,
-      width: 100,
-      align: "right",
-      headerAlign: "right",
+      width: 120,
+      align: "center",
+      headerAlign: "center",
       valueFormatter: (params: GridValueFormatterParams<number>) =>
         parseTraffic(params.value).join(" ") + "/s",
     },
@@ -119,15 +137,20 @@ export const ConnectionTable = (props: Props) => {
   }, [connections]);
 
   return (
-    <DataGrid
-      hideFooter
-      rows={connRows}
-      columns={columns}
-      onRowClick={(e) => onShowDetail(e.row.connectionData)}
-      density="compact"
-      sx={{ border: "none", "div:focus": { outline: "none !important" } }}
-      columnVisibilityModel={columnVisible}
-      onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
-    />
+    <ThemeProvider theme={themeWithLocale}>
+      <DataGrid
+        hideFooter
+        disableDensitySelector
+        disableColumnMenu
+        rows={connRows}
+        columns={columns}
+        slots={{ toolbar: Toolbar }}
+        onRowClick={(e) => onShowDetail(e.row.connectionData)}
+        density="compact"
+        sx={{ border: "none", "div:focus": { outline: "none !important" } }}
+        columnVisibilityModel={columnVisible}
+        onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
+      />
+    </ThemeProvider>
   );
 };
