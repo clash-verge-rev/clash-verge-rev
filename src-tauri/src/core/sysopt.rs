@@ -100,7 +100,19 @@ impl Sysopt {
         let mut sysproxy = cur_sysproxy.take().unwrap();
 
         sysproxy.enable = enable;
-        sysproxy.bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
+        match bypass {
+            Some(bypass) => {
+                if bypass.trim().is_empty() {
+                sysproxy.bypass = DEFAULT_BYPASS.into();
+                } else {
+                sysproxy.bypass = bypass;
+                }
+            }
+            None => {
+                sysproxy.bypass = DEFAULT_BYPASS.into();
+            }
+        }
+        // sysproxy.bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
 
         let port = Config::verge()
             .latest()
