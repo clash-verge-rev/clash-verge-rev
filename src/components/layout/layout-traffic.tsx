@@ -29,11 +29,14 @@ export const LayoutTraffic = () => {
   // setup log ws during layout
   useLogSetup();
 
-  const { connect, disconnect } = useWebsocket((event) => {
-    const data = JSON.parse(event.data) as ITrafficItem;
-    trafficRef.current?.appendData(data);
-    setTraffic(data);
-  });
+  const { connect, disconnect } = useWebsocket(
+    (event) => {
+      const data = JSON.parse(event.data) as ITrafficItem;
+      trafficRef.current?.appendData(data);
+      setTraffic(data);
+    },
+    { keepConnect: true }
+  );
 
   useEffect(() => {
     if (!clashInfo || !pageVisible) return;
@@ -54,7 +57,7 @@ export const LayoutTraffic = () => {
     (event) => {
       setMemory(JSON.parse(event.data));
     },
-    { onError: () => setMemory({ inuse: 0 }) }
+    { keepConnect: true, onError: () => setMemory({ inuse: 0 }) }
   );
 
   useEffect(() => {

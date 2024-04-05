@@ -15,14 +15,17 @@ export const useLogSetup = () => {
   const enableLog = useRecoilValue(atomEnableLog);
   const setLogData = useSetRecoilState(atomLogData);
 
-  const { connect, disconnect } = useWebsocket((event) => {
-    const data = JSON.parse(event.data) as ILogItem;
-    const time = dayjs().format("MM-DD HH:mm:ss");
-    setLogData((l) => {
-      if (l.length >= MAX_LOG_NUM) l.shift();
-      return [...l, { ...data, time }];
-    });
-  });
+  const { connect, disconnect } = useWebsocket(
+    (event) => {
+      const data = JSON.parse(event.data) as ILogItem;
+      const time = dayjs().format("MM-DD HH:mm:ss");
+      setLogData((l) => {
+        if (l.length >= MAX_LOG_NUM) l.shift();
+        return [...l, { ...data, time }];
+      });
+    },
+    { keepConnect: true }
+  );
 
   useEffect(() => {
     if (!enableLog || !clashInfo) return;
