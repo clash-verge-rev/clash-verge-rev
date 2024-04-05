@@ -103,9 +103,9 @@ impl Sysopt {
         match bypass {
             Some(bypass) => {
                 if bypass.trim().is_empty() {
-                sysproxy.bypass = DEFAULT_BYPASS.into();
+                    sysproxy.bypass = DEFAULT_BYPASS.into();
                 } else {
-                sysproxy.bypass = bypass;
+                    sysproxy.bypass = bypass;
                 }
             }
             None => {
