@@ -109,20 +109,22 @@ jobs:
 
       - name: Upload Release
         if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
           name: "Clash Verge Rev v${{env.VERSION}}"
-          body: "More new features are now supported."
+          # body: "More new features are now supported."
+          body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
           name: "Clash Verge Rev v${{env.VERSION}}"
-          body: "More new features are now supported."
+          # body: "More new features are now supported."
+          body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
 

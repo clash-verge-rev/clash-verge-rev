@@ -3,7 +3,7 @@ name: Alpha Build
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [dev]
     tags-ignore: [updater, alpha]
 permissions: write-all
 env:
@@ -134,21 +134,21 @@ jobs:
 
       - name: Upload Release
         if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
-          body_path: release.txt
+          body_path: ${{ github.workspace }}/CHANGELOG.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
-          body_path: release.txt
+          body_path: ${{ github.workspace }}/CHANGELOG.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -195,11 +195,11 @@ jobs:
           EOF
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
-          body_path: release.txt
+          body_path: ${{ github.workspace }}/CHANGELOG.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
