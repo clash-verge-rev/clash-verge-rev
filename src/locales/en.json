@@ -171,5 +171,30 @@
 
   "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
   "Tun Mode Info": "The Tun mode requires granting core-related permissions. Please enable service mode before using it",
-  "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode"
+  "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode",
+
+  "Current State": "Current State",
+  "active": "active",
+  "installed": "installed",
+  "uninstall": "uninstall",
+  "Disable Service Mode": "Disable Service Mode",
+  "Information": "Information",
+  "Service Mode Error": "Please make sure that the Clash Verge Service is installed and enabled",
+  "Install": "Install",
+  "Uninstall": "Uninstall",
+
+  "Host": "Host",
+  "Download": "Download",
+  "Upload": "Upload",
+  "DL Speed": "DL Speed",
+  "UL Speed": "UL Speed",
+  "Chains": "Chains",
+  "Rule": "Rule",
+  "Process": "Process",
+  "Time": "Time",
+  "Source": "Source",
+  "Destination IP": "Destination IP",
+  "No Connections": "No Connections",
+  "Close": "Close",
+  "Close Connection": "Close Connection"
 }

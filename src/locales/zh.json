@@ -187,7 +187,7 @@
   "uninstall": "未安装",
   "Disable Service Mode": "禁用服务模式",
   "Information": "信息",
-  "Please make sure that the Clash Verge Service is installed and enabled": "请确保 Clash Verge 服务已安装并启用",
+  "Service Mode Error": "请确保 Clash Verge 服务已安装并启用",
   "Install": "安装",
   "Uninstall": "卸载",
 
