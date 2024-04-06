@@ -10,7 +10,7 @@
     "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsc && vite build",
-    "web:serve": "vite preview",
+    "web:server": "vite preview",
     "check": "node scripts/check.mjs",
     "updater": "node scripts/updater.mjs",
     "portable": "node scripts/portable.mjs",

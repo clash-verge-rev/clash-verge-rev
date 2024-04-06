@@ -200,7 +200,7 @@ pub fn get_sys_proxy() -> CmdResult<Mapping> {
         "server".into(),
         format!("{}:{}", current.host, current.port).into(),
     );
-    map.insert("bypass".into(), current.bypass.into());
+    map.insert("bypass".into(), current.bypass.replace("@as [", "").into());
 
     Ok(map)
 }
