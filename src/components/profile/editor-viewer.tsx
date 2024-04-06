@@ -13,10 +13,12 @@ import { atomThemeMode } from "@/services/states";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice } from "@/components/base";
 
-import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
-import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js";
-import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js";
-import "monaco-editor/esm/vs/editor/contrib/comment/browser/comment.js";
+import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution";
+import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution";
+import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding";
+import "monaco-editor/esm/vs/editor/contrib/comment/browser/comment";
+import "monaco-editor/esm/vs/editor/contrib/find/browser/findController";
+import "monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css";
 import { editor } from "monaco-editor/esm/vs/editor/editor.api";
 
 interface Props {
@@ -48,7 +50,7 @@ export const EditorViewer = (props: Props) => {
         value: data,
         language: mode,
         theme: themeMode === "light" ? "vs" : "vs-dark",
-        minimap: { enabled: false },
+        minimap: { enabled: true },
       });
     });
 
