@@ -130,6 +130,12 @@ pub fn create_window(app_handle: &AppHandle) {
     .fullscreen(false)
     .min_inner_size(600.0, 520.0);
 
+    #[cfg(not(target_os = "macos"))]
+    {
+        let decoration = Config::verge().latest().enable_system_title.unwrap_or(false);
+        builder = builder.decorations(decoration);
+    }
+
     match Config::verge().latest().window_size_position.clone() {
         Some(size_pos) if size_pos.len() == 4 => {
             let size = (size_pos[0], size_pos[1]);
@@ -157,7 +163,6 @@ pub fn create_window(app_handle: &AppHandle) {
     };
     #[cfg(target_os = "windows")]
     let window = builder
-        .decorations(false)
         .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
         .transparent(true)
         .visible(false)
@@ -169,7 +174,7 @@ pub fn create_window(app_handle: &AppHandle) {
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .build();
     #[cfg(target_os = "linux")]
-    let window = builder.decorations(false).transparent(true).build();
+    let window = builder.transparent(true).build();
 
     match window {
         Ok(win) => {

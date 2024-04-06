@@ -204,5 +204,10 @@
   "Destination IP": "目标IP",
   "No Connections": "没有连接",
   "Close": "关闭",
-  "Close Connection": "关闭连接"
+  "Close Connection": "关闭连接",
+
+  "System Title": "系统标题栏",
+  "App Title Info": "重新启动应用程序以应用此更改",
+  "Confirm restart": "重启应用",
+  "Restart App Message": "更改应用标题栏需要重启应用，是否立即重启应用"
 }

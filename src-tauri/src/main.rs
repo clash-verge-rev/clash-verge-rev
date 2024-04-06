@@ -59,6 +59,7 @@ fn main() -> std::io::Result<()> {
             cmds::copy_icon_file,
             cmds::download_icon_cache,
             cmds::open_devtools,
+            cmds::restart_app,
             cmds::exit_app,
             // cmds::update_hotkeys,
             // profile

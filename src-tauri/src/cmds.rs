@@ -323,6 +323,12 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
+pub fn restart_app(app_handle: tauri::AppHandle) {
+    let _ = resolve::save_window_size_position(&app_handle, true);
+    api::process::restart(&app_handle.env());
+}
+
+#[tauri::command]
 pub fn exit_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, true);
     resolve::resolve_reset();

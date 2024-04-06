@@ -1,9 +1,9 @@
 import useSWR from "swr";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton, Tooltip } from "@mui/material";
 import { PrivacyTipRounded, Settings, InfoRounded } from "@mui/icons-material";
-import { checkService } from "@/services/cmds";
+import { checkService, restartApp } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { DialogRef, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
@@ -12,12 +12,16 @@ import { ServiceViewer } from "./mods/service-viewer";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import { TunViewer } from "./mods/tun-viewer";
 import getSystem from "@/utils/get-system";
+import { ConfirmViewer } from "@/components/profile/confirm-viewer";
 
 interface Props {
   onError?: (err: Error) => void;
 }
 
 const SettingSystem = ({ onError }: Props) => {
+  const systemOS = getSystem();
+  const show_title_setting = systemOS === "linux" || systemOS === "windows";
+
   const { t } = useTranslation();
 
   const { verge, mutateVerge, patchVerge } = useVerge();
@@ -32,14 +36,21 @@ const SettingSystem = ({ onError }: Props) => {
   const serviceRef = useRef<DialogRef>(null);
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const {
     enable_tun_mode,
     enable_auto_launch,
+    enable_system_title,
     enable_service_mode,
     enable_silent_start,
     enable_system_proxy,
   } = verge ?? {};
+
+  const [enableSystemTitle, setEnableSystemTitle] = useState(
+    enable_system_title ?? false
+  );
+  // setEnableSystemTitle(enable_system_title ?? false);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
@@ -160,6 +171,48 @@ const SettingSystem = ({ onError }: Props) => {
           <Switch edge="end" />
         </GuardState>
       </SettingItem>
+
+      {show_title_setting && (
+        <SettingItem
+          label={t("System Title")}
+          extra={
+            <Tooltip title={t("App Title Info")} placement="top">
+              <IconButton color="inherit" size="small">
+                <InfoRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+            </Tooltip>
+          }
+        >
+          <GuardState
+            value={enable_system_title ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => {
+              setConfirmOpen(true);
+              setEnableSystemTitle(e);
+            }}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </SettingItem>
+      )}
+
+      <ConfirmViewer
+        title="Confirm restart"
+        message="Restart App Message"
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          onChangeData({ enable_system_title: enableSystemTitle });
+          patchVerge({ enable_system_title: enableSystemTitle });
+          setConfirmOpen(false);
+          restartApp();
+        }}
+      />
 
       <SettingItem label={t("Silent Start")}>
         <GuardState

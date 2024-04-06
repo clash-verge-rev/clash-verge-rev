@@ -196,5 +196,10 @@
   "Destination IP": "Destination IP",
   "No Connections": "No Connections",
   "Close": "Close",
-  "Close Connection": "Close Connection"
+  "Close Connection": "Close Connection",
+
+  "System Title": "System Title Bar",
+  "App Title Info": "Restart the app to apply this change",
+  "Confirm restart": "Restart App",
+  "Restart App Message": "To change the title bar of this app, you need to restart the app, whether to restart the app immediately"
 }

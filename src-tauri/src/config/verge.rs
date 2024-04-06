@@ -61,6 +61,9 @@ pub struct IVerge {
     /// can the app auto startup
     pub enable_auto_launch: Option<bool>,
 
+    /// 是否启用系统标题栏
+    pub enable_system_title: Option<bool>,
+
     /// not show the window on launch
     pub enable_silent_start: Option<bool>,
 
@@ -194,6 +197,7 @@ impl IVerge {
             tun_tray_icon: Some(false),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
+            enable_system_title: Some(false),
             enable_system_proxy: Some(false),
             enable_random_port: Some(false),
             #[cfg(not(target_os = "windows"))]
@@ -248,6 +252,7 @@ impl IVerge {
         patch!(enable_service_mode);
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
+        patch!(enable_system_title);
         patch!(enable_random_port);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);

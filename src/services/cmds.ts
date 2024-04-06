@@ -221,6 +221,10 @@ export async function exitApp() {
   return invoke("exit_app");
 }
 
+export async function restartApp() {
+  return invoke("restart_app");
+}
+
 export async function copyIconFile(
   path: string,
   name: "common.png" | "sysproxy.png" | "tun.png"
