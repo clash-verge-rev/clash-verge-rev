@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes } from "react-router-dom";
 import { List, Paper, ThemeProvider } from "@mui/material";
@@ -35,13 +35,21 @@ dayjs.extend(relativeTime);
 const OS = getSystem();
 
 const Layout = () => {
+  const [isMaximized, setIsMaximized] = useState(false);
+  appWindow.onResized(() => {
+    appWindow.isMaximized().then((value) => {
+      if (isMaximized !== value) {
+        setIsMaximized(value);
+      }
+    });
+  });
   const [mode] = useRecoilState(atomThemeMode);
   const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
 
   const { verge } = useVerge();
-  const { language, start_page } = verge || {};
+  const { language, start_page, enable_system_title } = verge || {};
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
@@ -125,9 +133,9 @@ const Layout = () => {
             ({ palette }) => ({
               bgcolor: palette.background.paper,
             }),
-            OS === "linux"
+            OS === "linux" && !enable_system_title
               ? {
-                  borderRadius: "8px",
+                  borderRadius: `${isMaximized ? 0 : "8px"}`,
                   border: "2px solid var(--divider-color)",
                   width: "calc(100vw - 4px)",
                   height: "calc(100vh - 4px)",
@@ -159,16 +167,16 @@ const Layout = () => {
           </div>
 
           <div className="layout__right">
-            {
+            {!enable_system_title && (
               <div className="the-bar">
                 <div
                   className="the-dragbar"
                   data-tauri-drag-region="true"
                   style={{ width: "100%" }}
                 ></div>
-                {OS !== "macos" && <LayoutControl />}
+                {OS !== "macos" && <LayoutControl isMaximized={isMaximized} />}
               </div>
-            }
+            )}
 
             <TransitionGroup className="the-content">
               <CSSTransition

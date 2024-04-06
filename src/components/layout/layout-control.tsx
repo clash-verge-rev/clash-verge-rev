@@ -10,16 +10,14 @@ import {
 } from "@mui/icons-material";
 import { useState } from "react";
 
-export const LayoutControl = () => {
+interface Props {
+  isMaximized: boolean;
+}
+
+export const LayoutControl = ({ isMaximized }: Props) => {
   const minWidth = 40;
 
-  const [isMaximized, setIsMaximized] = useState(false);
   const [isPined, setIsPined] = useState(false);
-  appWindow.onResized(() => {
-    appWindow.isMaximized().then((isMaximized) => {
-      setIsMaximized(() => isMaximized);
-    });
-  });
 
   return (
     <ButtonGroup
@@ -59,7 +57,6 @@ export const LayoutControl = () => {
         size="small"
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
         onClick={() => {
-          setIsMaximized((isMaximized) => !isMaximized);
           appWindow.toggleMaximize();
         }}
       >
