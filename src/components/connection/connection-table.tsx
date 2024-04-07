@@ -8,11 +8,11 @@ import {
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
-import { zhCN, enUS } from "@mui/x-data-grid/locales";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { zhCN, enUS } from "@mui/x-data-grid/locales";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 
 interface Props {
@@ -25,6 +25,7 @@ export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
 
   const { theme } = useCustomTheme();
+  const isDark = theme.palette.mode === "dark";
   const themeWithLocale = React.useMemo(() => {
     switch (i18n.language) {
       case "zh":
@@ -35,7 +36,7 @@ export const ConnectionTable = (props: Props) => {
   }, [theme]);
 
   const Toolbar = () => (
-    <div>
+    <div style={{ margin: "5px" }}>
       <GridToolbarColumnsButton />
       <GridToolbarFilterButton />
     </div>
@@ -147,7 +148,13 @@ export const ConnectionTable = (props: Props) => {
         slots={{ toolbar: Toolbar }}
         onRowClick={(e) => onShowDetail(e.row.connectionData)}
         density="compact"
-        sx={{ border: "none", "div:focus": { outline: "none !important" } }}
+        sx={{
+          border: "none",
+          "div:focus": { outline: "none !important" },
+          "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
+            backgroundColor: isDark ? "#282a36" : "#ffffff",
+          },
+        }}
         columnVisibilityModel={columnVisible}
         onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
       />
