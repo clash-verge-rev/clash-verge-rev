@@ -66,7 +66,6 @@
     "node-fetch": "^3.3.2",
     "prettier": "^2.8.8",
     "pretty-quick": "^3.3.1",
-    "rollup-plugin-visualizer": "^5.12.0",
     "sass": "^1.74.1",
     "typescript": "^5.4.4",
     "vite": "^5.2.8",

@@ -3,7 +3,6 @@ import path from "path";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react";
 import monacoEditorPluginModule from "vite-plugin-monaco-editor";
-// import { visualizer } from "rollup-plugin-visualizer";
 
 const isObjectWithDefaultFunction = (
   module: unknown
@@ -27,24 +26,10 @@ export default defineConfig({
     monacoEditorPlugin({
       languageWorkers: ["editorWorkerService", "typescript"],
     }),
-    // visualizer(),
   ],
   build: {
     outDir: "../dist",
     emptyOutDir: true,
-    // 在这里配置打包时的rollup配置
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          if (id.includes("node_modules")) {
-            if (id.includes("monaco-editor")) {
-              return "monaco";
-            }
-            return "vendor";
-          }
-        },
-      },
-    },
   },
   resolve: {
     alias: {
