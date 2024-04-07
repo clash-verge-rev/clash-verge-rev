@@ -86,7 +86,13 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       Notice.success(`Successfully upgrade core`, 1000);
     } catch (err: any) {
       setUpgrading(false);
-      Notice.error(err?.response.data.message || err.toString());
+      if (
+        err?.response?.data?.message.includes("already using latest version")
+      ) {
+        Notice.success(`Already using latest version`, 1000);
+      } else {
+        Notice.error(err?.response.data.message || err.toString());
+      }
     }
   });
 
