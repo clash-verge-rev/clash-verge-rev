@@ -115,6 +115,7 @@ const LogPage = () => {
       <Box
         height="calc(100% - 65px)"
         sx={{
+          pt: 1,
           margin: "10px",
           borderRadius: "8px",
           bgcolor: isDark ? "#282a36" : "#ffffff",
