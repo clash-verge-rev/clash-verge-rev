@@ -8,11 +8,13 @@ import {
   GridToolbarFilterButton,
   GridValueFormatterParams,
   zhCN,
+  enUS,
 } from "@mui/x-data-grid";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
-import { createTheme, ThemeProvider, useTheme } from "@mui/material/styles";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { useCustomTheme } from "@/components/layout/use-custom-theme";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -20,14 +22,18 @@ interface Props {
 }
 
 export const ConnectionTable = (props: Props) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { connections, onShowDetail } = props;
 
-  const theme = useTheme();
-  const themeWithLocale = React.useMemo(
-    () => createTheme(theme, zhCN),
-    [theme]
-  );
+  const { theme } = useCustomTheme();
+  const themeWithLocale = React.useMemo(() => {
+    switch (i18n.language) {
+      case "zh":
+        return createTheme(theme, zhCN);
+      default:
+        return createTheme(theme, enUS);
+    }
+  }, [theme]);
 
   const Toolbar = () => (
     <div>
