@@ -4,15 +4,16 @@ import { useMemo, useState } from "react";
 import {
   DataGrid,
   GridColDef,
+  GridToolbar,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
+import { zhCN, enUS } from "@mui/x-data-grid/locales";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { zhCN, enUS } from "@mui/material/locale";
 
 interface Props {
   connections: IConnectionsItem[];
