@@ -6,15 +6,13 @@ import {
   GridColDef,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
-  GridValueFormatterParams,
-  zhCN,
-  enUS,
 } from "@mui/x-data-grid";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { zhCN, enUS } from "@mui/material/locale";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -54,8 +52,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "center",
       headerAlign: "center",
-      valueFormatter: (params: GridValueFormatterParams<number>) =>
-        parseTraffic(params.value).join(" "),
+      valueFormatter: (value) => parseTraffic(value).join(" "),
     },
     {
       field: "download",
@@ -63,8 +60,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "center",
       headerAlign: "center",
-      valueFormatter: (params: GridValueFormatterParams<number>) =>
-        parseTraffic(params.value).join(" "),
+      valueFormatter: (value) => parseTraffic(value).join(" "),
     },
     {
       field: "ulSpeed",
@@ -72,8 +68,7 @@ export const ConnectionTable = (props: Props) => {
       width: 120,
       align: "center",
       headerAlign: "center",
-      valueFormatter: (params: GridValueFormatterParams<number>) =>
-        parseTraffic(params.value).join(" ") + "/s",
+      valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
     },
     {
       field: "dlSpeed",
@@ -81,8 +76,7 @@ export const ConnectionTable = (props: Props) => {
       width: 120,
       align: "center",
       headerAlign: "center",
-      valueFormatter: (params: GridValueFormatterParams<number>) =>
-        parseTraffic(params.value).join(" ") + "/s",
+      valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
     },
     { field: "chains", headerName: `${t("Chains")}`, flex: 360, minWidth: 360 },
     { field: "rule", headerName: `${t("Rule")}`, flex: 300, minWidth: 250 },
@@ -102,8 +96,7 @@ export const ConnectionTable = (props: Props) => {
       sortComparator: (v1, v2) => {
         return new Date(v2).getTime() - new Date(v1).getTime();
       },
-      valueFormatter: (params: GridValueFormatterParams<string>) =>
-        dayjs(params.value).fromNow(),
+      valueFormatter: (value) => dayjs(value).fromNow(),
     },
     { field: "source", headerName: `${t("Source")}`, flex: 200, minWidth: 130 },
     {
