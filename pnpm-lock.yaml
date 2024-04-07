@@ -45,8 +45,8 @@ dependencies:
     specifier: ^1.6.8
     version: 1.6.8
   dayjs:
-    specifier: 1.11.5
-    version: 1.11.5
+    specifier: 1.11.10
+    version: 1.11.10
   i18next:
     specifier: ^23.10.1
     version: 23.10.1
@@ -90,8 +90,8 @@ dependencies:
     specifier: ^2.0.0
     version: 2.0.0
   swr:
-    specifier: ^1.3.0
-    version: 1.3.0(react@18.2.0)
+    specifier: ^2.2.5
+    version: 2.2.5(react@18.2.0)
   tar:
     specifier: ^6.2.1
     version: 6.2.1
@@ -2220,7 +2220,7 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
       "@babel/runtime": 7.24.4
-      dayjs: 1.11.5
+      dayjs: 1.11.10
       intersection-observer: 0.12.2
       js-cookie: 2.2.1
       lodash: 4.17.21
@@ -2406,6 +2406,13 @@ packages:
     engines: { node: ">=10" }
     dev: false
 
+  /client-only@0.0.1:
+    resolution:
+      {
+        integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==,
+      }
+    dev: false
+
   /cliui@8.0.1:
     resolution:
       {
@@ -2551,10 +2558,10 @@ packages:
     engines: { node: ">= 12" }
     dev: true
 
-  /dayjs@1.11.5:
+  /dayjs@1.11.10:
     resolution:
       {
-        integrity: sha512-CAdX5Q3YW3Gclyo5Vpqkgpj8fSdLQcRuzfX6mC6Phy0nfJ0eGYOeS7m4mt2plDWLAtA4TqTakvbboHvUxfe4iA==,
+        integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==,
       }
     dev: false
 
@@ -4071,15 +4078,17 @@ packages:
       }
     dev: true
 
-  /swr@1.3.0(react@18.2.0):
+  /swr@2.2.5(react@18.2.0):
     resolution:
       {
-        integrity: sha512-dkghQrOl2ORX9HYrMDtPa7LTVHJjCTeZoB1dqTbnnEDlSvN8JEKpYIYurDfvbQFUUS8Cg8PceFVZNkW0KNNYPw==,
+        integrity: sha512-QtxqyclFeAsxEUeZIYmsaQ0UjimSq1RZ9Un7I68/0ClKK/U3LoyQunwkQfJZr2fc22DfIXLNDc2wFyTEikCUpg==,
       }
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0
     dependencies:
+      client-only: 0.0.1
       react: 18.2.0
+      use-sync-external-store: 1.2.0(react@18.2.0)
     dev: false
 
   /tar@6.2.1:
@@ -4189,6 +4198,17 @@ packages:
       escalade: 3.1.2
       picocolors: 1.0.0
     dev: true
+
+  /use-sync-external-store@1.2.0(react@18.2.0):
+    resolution:
+      {
+        integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==,
+      }
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      react: 18.2.0
+    dev: false
 
   /vite-plugin-monaco-editor@1.1.0(monaco-editor@0.47.0):
     resolution:
