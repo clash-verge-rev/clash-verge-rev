@@ -33,7 +33,7 @@ export const ProxyGroups = (props: Props) => {
   // 切换分组的节点代理
   const handleChangeProxy = useLockFn(
     async (group: IProxyGroupItem, proxy: IProxyItem) => {
-      if (group.type !== "Selector" && group.type !== "Fallback") return;
+      if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
 
       const { name, now } = group;
       await updateProxy(name, proxy.name);
