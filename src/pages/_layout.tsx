@@ -143,7 +143,11 @@ const Layout = () => {
               : {},
           ]}
         >
-          <div className="layout__left">
+          <div
+            className={`layout__left ${
+              enable_system_title ? "system-title" : ""
+            }`}
+          >
             <div className="the-logo" data-tauri-drag-region="true">
               {!isDark ? <LogoSvg /> : <LogoSvg_dark />}
               {<UpdateButton className="the-newbtn" />}
@@ -166,7 +170,11 @@ const Layout = () => {
             </div>
           </div>
 
-          <div className="layout__right">
+          <div
+            className={`layout__right ${
+              enable_system_title ? "system-title" : ""
+            }`}
+          >
             {!enable_system_title && (
               <div className="the-bar">
                 <div

@@ -135,8 +135,16 @@
       padding-bottom: 16px;
     }
 
+    .layout__left.system-title .the-logo {
+      margin-top: 0px !important;
+      padding-top: 16px !important;
+    }
+
     .layout__right .the-content {
       top: 24px;
+    }
+    .layout__right.system-title .the-content {
+      top: 0px !important;
     }
   }
 }
