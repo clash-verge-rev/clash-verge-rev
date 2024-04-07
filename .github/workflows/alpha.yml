@@ -112,7 +112,7 @@ jobs:
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
       - run: |
-          cat > ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
+          cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
           ### 我应该下载哪个版本？
 
           - Windows x86_64架构: x64-setup.exe (不支持win7)
@@ -174,7 +174,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
-          cat > ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
+          cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
           ### 我应该下载哪个版本？
 
           - Windows x86_64架构: x64-setup.exe (不支持win7)
