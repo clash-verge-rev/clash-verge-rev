@@ -6,6 +6,7 @@ import {
   providerHealthCheck,
   updateProxy,
   deleteConnection,
+  getGroupProxyDelays,
 } from "@/services/api";
 import { Box } from "@mui/material";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -85,7 +86,11 @@ export const ProxyGroups = (props: Props) => {
     }
 
     const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
-    await delayManager.checkListDelay(names, groupName, timeout);
+
+    await Promise.race([
+      delayManager.checkListDelay(names, groupName, timeout),
+      getGroupProxyDelays(groupName, undefined, timeout), // 查询group delays 将清除fixed(不关注调用结果)
+    ]);
 
     onProxies();
   });
