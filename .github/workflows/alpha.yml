@@ -11,6 +11,15 @@ env:
   RUST_BACKTRACE: short
 
 jobs:
+  delete_alpha_prelease:
+    name: Delete old Prerelease-alpha
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dev-drprasad/delete-tag-and-release@v1.1
+        with:
+          tag_name: alpha
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          delete_release: true
   alpha:
     strategy:
       fail-fast: false
@@ -142,13 +151,6 @@ jobs:
         run: |
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
         shell: bash
-
-      # Delete old Prerelease-alpha
-      - uses: dev-drprasad/delete-tag-and-release@v1.1
-        with:
-          tag_name: alpha
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          delete_release: true
 
       - name: Update Tag
         uses: richardsimko/update-tag@v1
