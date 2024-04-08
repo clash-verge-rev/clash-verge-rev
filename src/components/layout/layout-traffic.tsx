@@ -29,21 +29,23 @@ export const LayoutTraffic = () => {
   // setup log ws during layout
   useLogSetup();
 
-  const { connect, disconnect } = useWebsocket((event) => {
-    const data = JSON.parse(event.data) as ITrafficItem;
-    trafficRef.current?.appendData(data);
-    setTraffic(data);
-  });
+  const trafficWs = useWebsocket(
+    (event) => {
+      const data = JSON.parse(event.data) as ITrafficItem;
+      trafficRef.current?.appendData(data);
+      setTraffic(data);
+    },
+    { onError: () => setTraffic({ up: 0, down: 0 }), errorCount: 10 }
+  );
 
   useEffect(() => {
     if (!clashInfo || !pageVisible) return;
 
     const { server = "", secret = "" } = clashInfo;
-    connect(`ws://${server}/traffic?token=${encodeURIComponent(secret)}`);
-
-    return () => {
-      disconnect();
-    };
+    trafficWs.connect(
+      `ws://${server}/traffic?token=${encodeURIComponent(secret)}`
+    );
+    return () => trafficWs.disconnect();
   }, [clashInfo, pageVisible]);
 
   /* --------- meta memory information --------- */
@@ -54,7 +56,7 @@ export const LayoutTraffic = () => {
     (event) => {
       setMemory(JSON.parse(event.data));
     },
-    { onError: () => setMemory({ inuse: 0 }) }
+    { onError: () => setMemory({ inuse: 0 }), errorCount: 10 }
   );
 
   useEffect(() => {
