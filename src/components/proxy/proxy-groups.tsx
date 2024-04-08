@@ -89,7 +89,7 @@ export const ProxyGroups = (props: Props) => {
 
     await Promise.race([
       delayManager.checkListDelay(names, groupName, timeout),
-      getGroupProxyDelays(groupName, undefined, timeout), // 查询group delays 将清除fixed(不关注调用结果)
+      getGroupProxyDelays(groupName, delayManager.getUrl(groupName), timeout), // 查询group delays 将清除fixed(不关注调用结果)
     ]);
 
     onProxies();
