@@ -11,7 +11,7 @@ env:
   RUST_BACKTRACE: short
 
 jobs:
-  delete_alpha_prelease:
+  delete-pre-release:
     name: Delete old Prerelease-alpha
     runs-on: ubuntu-latest
     steps:
@@ -21,6 +21,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           delete_release: true
   alpha:
+    needs: [delete-pre-release]
     strategy:
       fail-fast: false
       matrix:
@@ -90,6 +91,7 @@ jobs:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
   alpha-for-linux:
+    needs: [delete-pre-release]
     strategy:
       fail-fast: false
       matrix:
