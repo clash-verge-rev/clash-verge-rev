@@ -58,11 +58,17 @@ impl Sysopt {
             )
         };
 
+        let mut bypass_value = DEFAULT_BYPASS.into();
+        if let Some(value) = bypass {
+                if !value.trim().is_empty() {
+                    bypass_value = value;
+                }
+        }
         let current = Sysproxy {
             enable,
             host: String::from("127.0.0.1"),
             port,
-            bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+            bypass: bypass_value,
         };
 
         if enable {
@@ -100,19 +106,12 @@ impl Sysopt {
         let mut sysproxy = cur_sysproxy.take().unwrap();
 
         sysproxy.enable = enable;
-        match bypass {
-            Some(bypass) => {
-                if bypass.trim().is_empty() {
-                    sysproxy.bypass = DEFAULT_BYPASS.into();
-                } else {
-                    sysproxy.bypass = bypass;
-                }
-            }
-            None => {
-                sysproxy.bypass = DEFAULT_BYPASS.into();
+        sysproxy.bypass = DEFAULT_BYPASS.into();
+        if let Some(value) = bypass {
+            if !value.trim().is_empty() {
+                sysproxy.bypass = value;
             }
         }
-        // sysproxy.bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
 
         let port = Config::verge()
             .latest()
