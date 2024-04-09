@@ -48,7 +48,7 @@ const SettingSystem = ({ onError }: Props) => {
   } = verge ?? {};
 
   const [enableSystemTitle, setEnableSystemTitle] = useState(
-    enable_system_title ?? false
+    enable_system_title ?? false,
   );
   // setEnableSystemTitle(enable_system_title ?? false);
 
@@ -172,6 +172,19 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
+      <SettingItem label={t("Silent Start")}>
+        <GuardState
+          value={enable_silent_start ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ enable_silent_start: e })}
+          onGuard={(e) => patchVerge({ enable_silent_start: e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
       {show_title_setting && (
         <SettingItem
           label={t("System Title")}
@@ -206,26 +219,13 @@ const SettingSystem = ({ onError }: Props) => {
         message="Restart App Message"
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
           onChangeData({ enable_system_title: enableSystemTitle });
-          patchVerge({ enable_system_title: enableSystemTitle });
+          await patchVerge({ enable_system_title: enableSystemTitle });
           setConfirmOpen(false);
           restartApp();
         }}
       />
-
-      <SettingItem label={t("Silent Start")}>
-        <GuardState
-          value={enable_silent_start ?? false}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_silent_start: e })}
-          onGuard={(e) => patchVerge({ enable_silent_start: e })}
-        >
-          <Switch edge="end" />
-        </GuardState>
-      </SettingItem>
     </SettingList>
   );
 };
