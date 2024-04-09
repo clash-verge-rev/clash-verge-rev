@@ -142,7 +142,7 @@ export const ProxyRender = (props: RenderProps) => {
   if (type === 2 && !group.hidden) {
     return (
       <ProxyItem
-        groupName={group.name}
+        group={group}
         proxy={proxy!}
         selected={group.now === proxy?.name}
         showType={headState?.showType}
@@ -186,7 +186,7 @@ export const ProxyRender = (props: RenderProps) => {
         {proxyCol?.map((proxy) => (
           <ProxyItemMini
             key={item.key + proxy.name}
-            groupName={group.name}
+            group={group}
             proxy={proxy!}
             selected={group.now === proxy.name}
             showType={headState?.showType}

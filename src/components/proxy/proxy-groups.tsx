@@ -6,6 +6,7 @@ import {
   providerHealthCheck,
   updateProxy,
   deleteConnection,
+  getGroupProxyDelays,
 } from "@/services/api";
 import { Box } from "@mui/material";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -33,7 +34,7 @@ export const ProxyGroups = (props: Props) => {
   // 切换分组的节点代理
   const handleChangeProxy = useLockFn(
     async (group: IProxyGroupItem, proxy: IProxyItem) => {
-      if (group.type !== "Selector" && group.type !== "Fallback") return;
+      if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
 
       const { name, now } = group;
       await updateProxy(name, proxy.name);
@@ -55,7 +56,7 @@ export const ProxyGroups = (props: Props) => {
       if (!current.selected) current.selected = [];
 
       const index = current.selected.findIndex(
-        (item) => item.name === group.name
+        (item) => item.name === group.name,
       );
 
       if (index < 0) {
@@ -64,14 +65,14 @@ export const ProxyGroups = (props: Props) => {
         current.selected[index] = { name, now: proxy.name };
       }
       await patchCurrent({ selected: current.selected });
-    }
+    },
   );
 
   // 测全部延迟
   const handleCheckAll = useLockFn(async (groupName: string) => {
     const proxies = renderList
       .filter(
-        (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4)
+        (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4),
       )
       .flatMap((e) => e.proxyCol || e.proxy!)
       .filter(Boolean);
@@ -80,12 +81,16 @@ export const ProxyGroups = (props: Props) => {
 
     if (providers.size) {
       Promise.allSettled(
-        [...providers].map((p) => providerHealthCheck(p))
+        [...providers].map((p) => providerHealthCheck(p)),
       ).then(() => onProxies());
     }
 
     const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
-    await delayManager.checkListDelay(names, groupName, timeout);
+
+    await Promise.race([
+      delayManager.checkListDelay(names, groupName, timeout),
+      getGroupProxyDelays(groupName, delayManager.getUrl(groupName), timeout), // 查询group delays 将清除fixed(不关注调用结果)
+    ]);
 
     onProxies();
   });
@@ -99,7 +104,7 @@ export const ProxyGroups = (props: Props) => {
       (e) =>
         e.group?.name === name &&
         ((e.type === 2 && e.proxy?.name === now) ||
-          (e.type === 4 && e.proxyCol?.some((p) => p.name === now)))
+          (e.type === 4 && e.proxyCol?.some((p) => p.name === now))),
     );
 
     if (index >= 0) {

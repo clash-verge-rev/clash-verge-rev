@@ -75,15 +75,19 @@ export const getRules = async () => {
 };
 
 /// Get Proxy delay
-export const getProxyDelay = async (name: string, url?: string) => {
+export const getProxyDelay = async (
+  name: string,
+  url?: string,
+  timeout?: number,
+) => {
   const params = {
-    timeout: 10000,
+    timeout: timeout || 10000,
     url: url || "http://1.1.1.1",
   };
   const instance = await getAxios();
   const result = await instance.get(
     `/proxies/${encodeURIComponent(name)}/delay`,
-    { params }
+    { params },
   );
   return result as any as { delay: number };
 };
@@ -110,8 +114,8 @@ export const getProxies = async () => {
   // provider name map
   const providerMap = Object.fromEntries(
     Object.entries(providerRecord).flatMap(([provider, item]) =>
-      item.proxies.map((p) => [p.name, { ...p, provider }])
-    )
+      item.proxies.map((p) => [p.name, { ...p, provider }]),
+    ),
   );
 
   // compatible with proxy-providers
@@ -155,8 +159,8 @@ export const getProxies = async () => {
 
   const proxies = [direct, reject].concat(
     Object.values(proxyRecord).filter(
-      (p) => !p.all?.length && p.name !== "DIRECT" && p.name !== "REJECT"
-    )
+      (p) => !p.all?.length && p.name !== "DIRECT" && p.name !== "REJECT",
+    ),
   );
 
   const _global: IProxyGroupItem = {
@@ -181,7 +185,7 @@ export const getProxyProviders = async () => {
     Object.entries(providers).filter(([key, item]) => {
       const type = item.vehicleType.toLowerCase();
       return type === "http" || type === "file";
-    })
+    }),
   );
 };
 
@@ -198,7 +202,7 @@ export const getRuleProviders = async () => {
     Object.entries(providers).filter(([key, item]) => {
       const type = item.vehicleType.toLowerCase();
       return type === "http" || type === "file";
-    })
+    }),
   );
 };
 
@@ -206,7 +210,7 @@ export const getRuleProviders = async () => {
 export const providerHealthCheck = async (name: string) => {
   const instance = await getAxios();
   return instance.get(
-    `/providers/proxies/${encodeURIComponent(name)}/healthcheck`
+    `/providers/proxies/${encodeURIComponent(name)}/healthcheck`,
   );
 };
 
@@ -236,4 +240,22 @@ export const deleteConnection = async (id: string) => {
 export const closeAllConnections = async () => {
   const instance = await getAxios();
   await instance.delete<any, any>(`/connections`);
+};
+
+// Get Group Proxy Delays
+export const getGroupProxyDelays = async (
+  groupName: string,
+  url?: string,
+  timeout?: number,
+) => {
+  const params = {
+    timeout: timeout || 10000,
+    url: url || "http://1.1.1.1",
+  };
+  const instance = await getAxios();
+  const result = await instance.get(
+    `/group/${encodeURIComponent(groupName)}/delay`,
+    { params },
+  );
+  return result as any as Record<string, number>;
 };

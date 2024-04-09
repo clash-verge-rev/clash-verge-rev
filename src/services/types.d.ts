@@ -64,6 +64,7 @@ interface IProxyItem {
   hidden?: boolean;
   icon?: string;
   provider?: string; // 记录是否来自provider
+  fixed?: string; // 记录固定(优先)的节点
 }
 
 type IProxyGroupItem = Omit<IProxyItem, "all"> & {

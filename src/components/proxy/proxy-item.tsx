@@ -17,7 +17,7 @@ import delayManager from "@/services/delay";
 import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
-  groupName: string;
+  group: IProxyGroupItem;
   proxy: IProxyItem;
   selected: boolean;
   showType?: boolean;
@@ -44,7 +44,7 @@ const TypeBox = styled(Box)(({ theme }) => ({
 }));
 
 export const ProxyItem = (props: Props) => {
-  const { groupName, proxy, selected, showType = true, sx, onClick } = props;
+  const { group, proxy, selected, showType = true, sx, onClick } = props;
 
   // -1/<=0 为 不显示
   // -2 为 loading
@@ -52,21 +52,21 @@ export const ProxyItem = (props: Props) => {
   const { verge } = useVerge();
   const timeout = verge?.default_latency_timeout || 10000;
   useEffect(() => {
-    delayManager.setListener(proxy.name, groupName, setDelay);
+    delayManager.setListener(proxy.name, group.name, setDelay);
 
     return () => {
-      delayManager.removeListener(proxy.name, groupName);
+      delayManager.removeListener(proxy.name, group.name);
     };
-  }, [proxy.name, groupName]);
+  }, [proxy.name, group.name]);
 
   useEffect(() => {
     if (!proxy) return;
-    setDelay(delayManager.getDelayFix(proxy, groupName));
+    setDelay(delayManager.getDelayFix(proxy, group.name));
   }, [proxy]);
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);
-    setDelay(await delayManager.checkDelay(proxy.name, groupName, timeout));
+    setDelay(await delayManager.checkDelay(proxy.name, group.name, timeout));
   });
 
   return (

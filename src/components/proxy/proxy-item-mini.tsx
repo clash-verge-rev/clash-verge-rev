@@ -7,7 +7,7 @@ import delayManager from "@/services/delay";
 import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
-  groupName: string;
+  group: IProxyGroupItem;
   proxy: IProxyItem;
   selected: boolean;
   showType?: boolean;
@@ -16,7 +16,7 @@ interface Props {
 
 // 多列布局
 export const ProxyItemMini = (props: Props) => {
-  const { groupName, proxy, selected, showType = true, onClick } = props;
+  const { group, proxy, selected, showType = true, onClick } = props;
 
   // -1/<=0 为 不显示
   // -2 为 loading
@@ -25,21 +25,21 @@ export const ProxyItemMini = (props: Props) => {
   const timeout = verge?.default_latency_timeout || 10000;
 
   useEffect(() => {
-    delayManager.setListener(proxy.name, groupName, setDelay);
+    delayManager.setListener(proxy.name, group.name, setDelay);
 
     return () => {
-      delayManager.removeListener(proxy.name, groupName);
+      delayManager.removeListener(proxy.name, group.name);
     };
-  }, [proxy.name, groupName]);
+  }, [proxy.name, group.name]);
 
   useEffect(() => {
     if (!proxy) return;
-    setDelay(delayManager.getDelayFix(proxy, groupName));
+    setDelay(delayManager.getDelayFix(proxy, group.name));
   }, [proxy]);
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);
-    setDelay(await delayManager.checkDelay(proxy.name, groupName, timeout));
+    setDelay(await delayManager.checkDelay(proxy.name, group.name, timeout));
   });
 
   return (
@@ -65,6 +65,12 @@ export const ProxyItemMini = (props: Props) => {
             "&:hover .the-check": { display: !showDelay ? "block" : "none" },
             "&:hover .the-delay": { display: showDelay ? "block" : "none" },
             "&:hover .the-icon": { display: "none" },
+            "& .the-pin, & .the-unpin": {
+              position: "absolute",
+              top: "-8px",
+              right: "-8px",
+            },
+            "& .the-unpin": { filter: "grayscale(1)" },
             "&.Mui-selected": {
               width: `calc(100% + 3px)`,
               marginLeft: `-3px`,
@@ -147,14 +153,12 @@ export const ProxyItemMini = (props: Props) => {
           </Box>
         )}
       </Box>
-
       <Box sx={{ ml: 0.5, color: "primary.main" }}>
         {delay === -2 && (
           <Widget>
             <BaseLoading />
           </Widget>
         )}
-
         {!proxy.provider && delay !== -2 && (
           // provider的节点不支持检测
           <Widget
@@ -193,7 +197,6 @@ export const ProxyItemMini = (props: Props) => {
             {delayManager.formatDelay(delay, timeout)}
           </Widget>
         )}
-
         {delay !== -2 && delay <= 0 && selected && (
           // 展示已选择的icon
           <CheckCircleOutlineRounded
@@ -202,6 +205,13 @@ export const ProxyItemMini = (props: Props) => {
           />
         )}
       </Box>
+
+      {group.fixed && group.fixed === proxy.name && (
+        // 展示fixed状态
+        <span className={proxy.name === group.now ? "the-pin" : "the-unpin"}>
+          📌
+        </span>
+      )}
     </ListItemButton>
   );
 };
