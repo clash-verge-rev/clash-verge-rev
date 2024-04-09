@@ -6,6 +6,7 @@ import {
   providerHealthCheck,
   updateProxy,
   deleteConnection,
+  getGroupProxyDelays,
 } from "@/services/api";
 import { Box } from "@mui/material";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -33,7 +34,7 @@ export const ProxyGroups = (props: Props) => {
   // 切换分组的节点代理
   const handleChangeProxy = useLockFn(
     async (group: IProxyGroupItem, proxy: IProxyItem) => {
-      if (group.type !== "Selector" && group.type !== "Fallback") return;
+      if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
 
       const { name, now } = group;
       await updateProxy(name, proxy.name);
@@ -85,7 +86,11 @@ export const ProxyGroups = (props: Props) => {
     }
 
     const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
-    await delayManager.checkListDelay(names, groupName, timeout);
+
+    await Promise.race([
+      delayManager.checkListDelay(names, groupName, timeout),
+      getGroupProxyDelays(groupName, delayManager.getUrl(groupName), timeout), // 查询group delays 将清除fixed(不关注调用结果)
+    ]);
 
     onProxies();
   });
