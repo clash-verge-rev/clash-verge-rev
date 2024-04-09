@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 import monacoEditorPluginModule from "vite-plugin-monaco-editor";
 
 const isObjectWithDefaultFunction = (
-  module: unknown
+  module: unknown,
 ): module is { default: typeof monacoEditorPluginModule } =>
   module != null &&
   typeof module === "object" &&
@@ -30,6 +30,18 @@ export default defineConfig({
   build: {
     outDir: "../dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes("node_modules")) {
+            if (id.includes("monaco-editor")) {
+              return "monaco-editor";
+            }
+            return "vendor";
+          }
+        },
+      },
+    },
   },
   resolve: {
     alias: {
