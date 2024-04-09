@@ -75,9 +75,13 @@ export const getRules = async () => {
 };
 
 /// Get Proxy delay
-export const getProxyDelay = async (name: string, url?: string) => {
+export const getProxyDelay = async (
+  name: string,
+  url?: string,
+  timeout?: number
+) => {
   const params = {
-    timeout: 10000,
+    timeout: timeout || 10000,
     url: url || "http://1.1.1.1",
   };
   const instance = await getAxios();
@@ -236,4 +240,22 @@ export const deleteConnection = async (id: string) => {
 export const closeAllConnections = async () => {
   const instance = await getAxios();
   await instance.delete<any, any>(`/connections`);
+};
+
+// Get Group Proxy Delays
+export const getGroupProxyDelays = async (
+  groupName: string,
+  url?: string,
+  timeout?: number
+) => {
+  const params = {
+    timeout: timeout || 10000,
+    url: url || "http://1.1.1.1",
+  };
+  const instance = await getAxios();
+  const result = await instance.get(
+    `/group/${encodeURIComponent(groupName)}/delay`,
+    { params }
+  );
+  return result as any as Record<string, number>;
 };
