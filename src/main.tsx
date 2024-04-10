@@ -20,9 +20,14 @@ const container = document.getElementById(mainElementId);
 
 if (!container) {
   throw new Error(
-    `No container '${mainElementId}' found to render application`
+    `No container '${mainElementId}' found to render application`,
   );
 }
+
+// disable context menu
+document.addEventListener("contextmenu", function (event) {
+  event.preventDefault();
+});
 
 createRoot(container).render(
   <React.StrictMode>
@@ -33,5 +38,5 @@ createRoot(container).render(
         </BrowserRouter>
       </BaseErrorBoundary>
     </RecoilRoot>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
