@@ -11,7 +11,7 @@ use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::api::notification;
-use tauri::{App, AppHandle, Manager};
+use tauri::{App, AppHandle, CloseRequestApi, Manager};
 use window_shadows::set_shadow;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
@@ -268,4 +268,15 @@ pub async fn resolve_scheme(param: String) {
             .unwrap();
         log::error!("failed to parse url: {}", url);
     }
+}
+
+pub fn handle_window_close(api: CloseRequestApi, app_handle: &AppHandle) {
+  let verge = Config::verge();
+  let verge = verge.latest();
+
+  let keep_ui_active = verge.enable_keep_ui_active.unwrap_or(false);
+  if keep_ui_active {
+    app_handle.get_window("main").unwrap().hide().unwrap();
+    api.prevent_close();
+  }
 }

@@ -42,6 +42,7 @@ const SettingSystem = ({ onError }: Props) => {
     enable_tun_mode,
     enable_auto_launch,
     enable_system_title,
+    enable_keep_ui_active,
     enable_service_mode,
     enable_silent_start,
     enable_system_proxy,
@@ -226,6 +227,31 @@ const SettingSystem = ({ onError }: Props) => {
           restartApp();
         }}
       />
+
+      <SettingItem
+        label={t("Keep UI Active")}
+        extra={
+          <Tooltip title={t("Keep UI Active Info")} placement="top">
+            <IconButton color="inherit" size="small">
+              <InfoRounded
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </Tooltip>
+        }
+      >
+        <GuardState
+          value={enable_keep_ui_active ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ enable_keep_ui_active: e })}
+          onGuard={(e) => patchVerge({ enable_keep_ui_active: e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
     </SettingList>
   );
 };

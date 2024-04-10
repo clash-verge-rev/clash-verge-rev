@@ -209,5 +209,8 @@
   "System Title": "系统标题栏",
   "App Title Info": "重新启动应用程序以应用此更改",
   "Confirm restart": "重启应用",
-  "Restart App Message": "更改应用标题栏需要重启应用，是否立即重启应用"
+  "Restart App Message": "更改应用标题栏需要重启应用，是否立即重启应用",
+
+  "Keep UI Active": "保持UI界面活动",
+  "Keep UI Active Info": "保持UI界面活动，再次打开无需重新渲染界面"
 }

@@ -121,8 +121,9 @@ fn main() -> std::io::Result<()> {
                     tauri::WindowEvent::Destroyed => {
                         let _ = resolve::save_window_size_position(app_handle, true);
                     }
-                    tauri::WindowEvent::CloseRequested { .. } => {
+                    tauri::WindowEvent::CloseRequested { api, .. } => {
                         let _ = resolve::save_window_size_position(app_handle, true);
+                        resolve::handle_window_close(api, app_handle)
                     }
                     tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
                         let _ = resolve::save_window_size_position(app_handle, false);
