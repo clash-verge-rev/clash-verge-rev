@@ -29,25 +29,22 @@ export const LayoutTraffic = () => {
   // setup log ws during layout
   useLogSetup();
 
-  const { connect, disconnect } = useWebsocket(
-    (event) => {
-      const data = JSON.parse(event.data) as ITrafficItem;
-      trafficRef.current?.appendData(data);
-      setTraffic(data);
-    },
-    { keepConnect: true }
-  );
+  const { connect, disconnect } = useWebsocket((event) => {
+    const data = JSON.parse(event.data) as ITrafficItem;
+    trafficRef.current?.appendData(data);
+    setTraffic(data);
+  });
 
   useEffect(() => {
-    if (!clashInfo || !pageVisible) return;
+    if (!clashInfo) return;
 
     const { server = "", secret = "" } = clashInfo;
-    connect(`ws://${server}/traffic?token=${encodeURIComponent(secret)}`);
+    connect(`ws://${server}/traffic?token=${encodeURIComponent(secret)}`, true);
 
     return () => {
-      disconnect();
+      disconnect(true);
     };
-  }, [clashInfo, pageVisible]);
+  }, [clashInfo]);
 
   /* --------- meta memory information --------- */
   const isMetaCore = verge?.clash_core?.includes("clash-meta");
@@ -57,17 +54,18 @@ export const LayoutTraffic = () => {
     (event) => {
       setMemory(JSON.parse(event.data));
     },
-    { keepConnect: true, onError: () => setMemory({ inuse: 0 }) }
+    { onError: () => setMemory({ inuse: 0 }) },
   );
 
   useEffect(() => {
-    if (!clashInfo || !pageVisible || !displayMemory) return;
+    if (!clashInfo || !displayMemory) return;
     const { server = "", secret = "" } = clashInfo;
     memoryWs.connect(
-      `ws://${server}/memory?token=${encodeURIComponent(secret)}`
+      `ws://${server}/memory?token=${encodeURIComponent(secret)}`,
+      displayMemory,
     );
-    return () => memoryWs.disconnect();
-  }, [clashInfo, pageVisible, displayMemory]);
+    return () => memoryWs.disconnect(displayMemory);
+  }, [clashInfo, displayMemory]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);

@@ -15,17 +15,14 @@ export const useLogSetup = () => {
   const enableLog = useRecoilValue(atomEnableLog);
   const setLogData = useSetRecoilState(atomLogData);
 
-  const { connect, disconnect } = useWebsocket(
-    (event) => {
-      const data = JSON.parse(event.data) as ILogItem;
-      const time = dayjs().format("MM-DD HH:mm:ss");
-      setLogData((l) => {
-        if (l.length >= MAX_LOG_NUM) l.shift();
-        return [...l, { ...data, time }];
-      });
-    },
-    { keepConnect: true }
-  );
+  const { connect, disconnect } = useWebsocket((event) => {
+    const data = JSON.parse(event.data) as ILogItem;
+    const time = dayjs().format("MM-DD HH:mm:ss");
+    setLogData((l) => {
+      if (l.length >= MAX_LOG_NUM) l.shift();
+      return [...l, { ...data, time }];
+    });
+  });
 
   useEffect(() => {
     if (!enableLog || !clashInfo) return;
@@ -33,10 +30,10 @@ export const useLogSetup = () => {
     getClashLogs().then(setLogData);
 
     const { server = "", secret = "" } = clashInfo;
-    connect(`ws://${server}/logs?token=${encodeURIComponent(secret)}`);
+    connect(`ws://${server}/logs?token=${encodeURIComponent(secret)}`, true);
 
     return () => {
-      disconnect();
+      disconnect(true);
     };
   }, [clashInfo, enableLog]);
 };
