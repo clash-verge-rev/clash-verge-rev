@@ -48,8 +48,8 @@ dependencies:
     specifier: 1.11.10
     version: 1.11.10
   i18next:
-    specifier: ^23.11.0
-    version: 23.11.0
+    specifier: ^23.11.1
+    version: 23.11.1
   lodash-es:
     specifier: ^4.17.21
     version: 4.17.21
@@ -73,7 +73,7 @@ dependencies:
     version: 7.51.2(react@18.2.0)
   react-i18next:
     specifier: ^14.1.0
-    version: 14.1.0(i18next@23.11.0)(react-dom@18.2.0)(react@18.2.0)
+    version: 14.1.0(i18next@23.11.1)(react-dom@18.2.0)(react@18.2.0)
   react-router-dom:
     specifier: ^6.22.3
     version: 6.22.3(react-dom@18.2.0)(react@18.2.0)
@@ -152,8 +152,8 @@ devDependencies:
     specifier: ^1.74.1
     version: 1.74.1
   typescript:
-    specifier: ^5.4.4
-    version: 5.4.4
+    specifier: ^5.4.5
+    version: 5.4.5
   vite:
     specifier: ^5.2.8
     version: 5.2.8(sass@1.74.1)
@@ -162,7 +162,7 @@ devDependencies:
     version: 1.1.0(monaco-editor@0.47.0)
   vite-plugin-svgr:
     specifier: ^4.2.0
-    version: 4.2.0(typescript@5.4.4)(vite@5.2.8)
+    version: 4.2.0(typescript@5.4.5)(vite@5.2.8)
 
 packages:
   /@actions/github@6.0.0:
@@ -1361,9 +1361,9 @@ packages:
     dependencies:
       "@octokit/auth-token": 4.0.0
       "@octokit/graphql": 7.1.0
-      "@octokit/request": 8.3.1
+      "@octokit/request": 8.4.0
       "@octokit/request-error": 5.1.0
-      "@octokit/types": 13.2.0
+      "@octokit/types": 13.4.0
       before-after-hook: 2.2.3
       universal-user-agent: 6.0.1
     dev: true
@@ -1375,7 +1375,7 @@ packages:
       }
     engines: { node: ">= 18" }
     dependencies:
-      "@octokit/types": 13.2.0
+      "@octokit/types": 13.4.0
       universal-user-agent: 6.0.1
     dev: true
 
@@ -1386,8 +1386,8 @@ packages:
       }
     engines: { node: ">= 18" }
     dependencies:
-      "@octokit/request": 8.3.1
-      "@octokit/types": 13.2.0
+      "@octokit/request": 8.4.0
+      "@octokit/types": 13.4.0
       universal-user-agent: 6.0.1
     dev: true
 
@@ -1398,10 +1398,10 @@ packages:
       }
     dev: true
 
-  /@octokit/openapi-types@22.0.0:
+  /@octokit/openapi-types@22.0.1:
     resolution:
       {
-        integrity: sha512-kWzSxSIBjCtwrT8/O/A/nrSjmHvR5I9GGTHPyBU19VuEae+QZfaPnnfLwXgV56n51xHN3U2dYy8zh/kO9/39ig==,
+        integrity: sha512-1yN5m1IMNXthoBDUXFF97N1gHop04B3H8ws7wtOr8GgRyDO1gKALjwMHARNBoMBiB/2vEe/vxstrApcJZzQbnQ==,
       }
     dev: true
 
@@ -1438,21 +1438,21 @@ packages:
       }
     engines: { node: ">= 18" }
     dependencies:
-      "@octokit/types": 13.2.0
+      "@octokit/types": 13.4.0
       deprecation: 2.3.1
       once: 1.4.0
     dev: true
 
-  /@octokit/request@8.3.1:
+  /@octokit/request@8.4.0:
     resolution:
       {
-        integrity: sha512-fin4cl5eHN5Ybmb/gtn7YZ+ycyUlcyqqkg5lfxeSChqj7sUt6TNaJPehREi+0PABKLREYL8pfaUhH3TicEWNoA==,
+        integrity: sha512-9Bb014e+m2TgBeEJGEbdplMVWwPmL1FPtggHQRkV+WVsMggPtEkLKPlcVYm/o8xKLkpJ7B+6N8WfQMtDLX2Dpw==,
       }
     engines: { node: ">= 18" }
     dependencies:
       "@octokit/endpoint": 9.0.5
       "@octokit/request-error": 5.1.0
-      "@octokit/types": 13.2.0
+      "@octokit/types": 13.4.0
       universal-user-agent: 6.0.1
     dev: true
 
@@ -1465,13 +1465,13 @@ packages:
       "@octokit/openapi-types": 20.0.0
     dev: true
 
-  /@octokit/types@13.2.0:
+  /@octokit/types@13.4.0:
     resolution:
       {
-        integrity: sha512-K4rpfbIQLe4UimS/PWZAcImhZUC80lhe2f1NpAaaTulPJXv54QIAFFCQEEbdQdqTV/745QDmdvp8NI49LaI00A==,
+        integrity: sha512-WlMegy3lPXYWASe3k9Jslc5a0anrYAYMWtsFrxBTdQjS70hvLH6C+PGvHbOsgy3RA3LouGJoU/vAt4KarecQLQ==,
       }
     dependencies:
-      "@octokit/openapi-types": 22.0.0
+      "@octokit/openapi-types": 22.0.1
     dev: true
 
   /@popperjs/core@2.11.8:
@@ -1794,7 +1794,7 @@ packages:
       "@svgr/babel-plugin-transform-svg-component": 8.0.0(@babel/core@7.24.4)
     dev: true
 
-  /@svgr/core@8.1.0(typescript@5.4.4):
+  /@svgr/core@8.1.0(typescript@5.4.5):
     resolution:
       {
         integrity: sha512-8QqtOQT5ACVlmsvKOJNEaWmRPmcojMOzCz4Hs2BGG/toAp/K38LcsMRyLp349glq5AzJbCEeimEoxaX6v/fLrA==,
@@ -1804,7 +1804,7 @@ packages:
       "@babel/core": 7.24.4
       "@svgr/babel-preset": 8.1.0(@babel/core@7.24.4)
       camelcase: 6.3.0
-      cosmiconfig: 8.3.6(typescript@5.4.4)
+      cosmiconfig: 8.3.6(typescript@5.4.5)
       snake-case: 3.0.4
     transitivePeerDependencies:
       - supports-color
@@ -1833,7 +1833,7 @@ packages:
     dependencies:
       "@babel/core": 7.24.4
       "@svgr/babel-preset": 8.1.0(@babel/core@7.24.4)
-      "@svgr/core": 8.1.0(typescript@5.4.4)
+      "@svgr/core": 8.1.0(typescript@5.4.5)
       "@svgr/hast-util-to-babel-ast": 8.0.0
       svg-parser: 2.0.4
     transitivePeerDependencies:
@@ -2047,7 +2047,7 @@ packages:
       }
     dependencies:
       "@types/jsonfile": 6.1.4
-      "@types/node": 20.12.6
+      "@types/node": 20.12.7
     dev: true
 
   /@types/js-cookie@3.0.6:
@@ -2063,7 +2063,7 @@ packages:
         integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==,
       }
     dependencies:
-      "@types/node": 20.12.6
+      "@types/node": 20.12.7
     dev: true
 
   /@types/lodash-es@4.17.12:
@@ -2082,10 +2082,10 @@ packages:
       }
     dev: true
 
-  /@types/node@20.12.6:
+  /@types/node@20.12.7:
     resolution:
       {
-        integrity: sha512-3KurE8taB8GCvZBPngVbp0lk5CKi8M9f9k1rsADh0Evdz5SzJ+Q+Hx9uHoFGsLnLnd1xmkDQr2hVhlA0Mn0lKQ==,
+        integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==,
       }
     dependencies:
       undici-types: 5.26.5
@@ -2282,8 +2282,8 @@ packages:
     engines: { node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7 }
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001607
-      electron-to-chromium: 1.4.730
+      caniuse-lite: 1.0.30001608
+      electron-to-chromium: 1.4.733
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.23.0)
     dev: true
@@ -2303,10 +2303,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  /caniuse-lite@1.0.30001607:
+  /caniuse-lite@1.0.30001608:
     resolution:
       {
-        integrity: sha512-WcvhVRjXLKFB/kmOFVwELtMxyhq3iM/MvmXcyCe2PNf166c39mptscOc/45TTS96n2gpNV2z7+NakArTWZCQ3w==,
+        integrity: sha512-cjUJTQkk9fQlJR2s4HMuPMvTiRggl0rAVMtthQuyOlDWuqHXqN8azLq+pi8B2TjwKJ32diHjUqRIKeFX4z1FoA==,
       }
     dev: true
 
@@ -2414,7 +2414,7 @@ packages:
       yaml: 1.10.2
     dev: false
 
-  /cosmiconfig@8.3.6(typescript@5.4.4):
+  /cosmiconfig@8.3.6(typescript@5.4.5):
     resolution:
       {
         integrity: sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA==,
@@ -2430,7 +2430,7 @@ packages:
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
-      typescript: 5.4.4
+      typescript: 5.4.5
     dev: true
 
   /cross-env@7.0.3:
@@ -2527,10 +2527,10 @@ packages:
       tslib: 2.6.2
     dev: true
 
-  /electron-to-chromium@1.4.730:
+  /electron-to-chromium@1.4.733:
     resolution:
       {
-        integrity: sha512-oJRPo82XEqtQAobHpJIR3zW5YO3sSRRkPz2an4yxi1UvqhsGm54vR/wzTFV74a3soDOJ8CKW7ajOOX5ESzddwg==,
+        integrity: sha512-gUI9nhI2iBGF0OaYYLKOaOtliFMl+Bt1rY7VmEjwxOxqoYLub/D9xmduPEhbw2imE6gYkJKhIE5it+KE2ulVxQ==,
       }
     dev: true
 
@@ -2859,10 +2859,10 @@ packages:
     hasBin: true
     dev: true
 
-  /i18next@23.11.0:
+  /i18next@23.11.1:
     resolution:
       {
-        integrity: sha512-VwFtlgy2LDbY0Qs6VfekIm6mv5/JmSJrtBf4aszl7Vby8+GcBlri0/7dkMZXmzTfiBMPUPBOmYCdQK7K4emkGQ==,
+        integrity: sha512-mXw4A24BiPZKRsbb9ewgSvjYd6fxFCNwJyfK6nYfSTIAX2GkCWcb598m3DFkDZmqADatvuASrKo6qwORz3VwTQ==,
       }
     dependencies:
       "@babel/runtime": 7.24.4
@@ -3470,7 +3470,7 @@ packages:
       react: 18.2.0
     dev: false
 
-  /react-i18next@14.1.0(i18next@23.11.0)(react-dom@18.2.0)(react@18.2.0):
+  /react-i18next@14.1.0(i18next@23.11.1)(react-dom@18.2.0)(react@18.2.0):
     resolution:
       {
         integrity: sha512-3KwX6LHpbvGQ+sBEntjV4sYW3Zovjjl3fpoHbUwSgFHf0uRBcbeCBLR5al6ikncI5+W0EFb71QXZmfop+J6NrQ==,
@@ -3488,7 +3488,7 @@ packages:
     dependencies:
       "@babel/runtime": 7.24.4
       html-parse-stringify: 3.0.1
-      i18next: 23.11.0
+      i18next: 23.11.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
@@ -3877,10 +3877,10 @@ packages:
     engines: { node: ">=0.6.11 <=0.7.0 || >=0.7.3" }
     dev: true
 
-  /typescript@5.4.4:
+  /typescript@5.4.5:
     resolution:
       {
-        integrity: sha512-dGE2Vv8cpVvw28v8HCPqyb08EzbBURxDpuhJvTrusShUfGnhHBafDsLdS1EhhxyL6BJQE+2cT3dDPAv+MQ6oLw==,
+        integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==,
       }
     engines: { node: ">=14.17" }
     hasBin: true
@@ -3954,7 +3954,7 @@ packages:
       monaco-editor: 0.47.0
     dev: true
 
-  /vite-plugin-svgr@4.2.0(typescript@5.4.4)(vite@5.2.8):
+  /vite-plugin-svgr@4.2.0(typescript@5.4.5)(vite@5.2.8):
     resolution:
       {
         integrity: sha512-SC7+FfVtNQk7So0XMjrrtLAbEC8qjFPifyD7+fs/E6aaNdVde6umlVVh0QuwDLdOMu7vp5RiGFsB70nj5yo0XA==,
@@ -3963,7 +3963,7 @@ packages:
       vite: ^2.6.0 || 3 || 4 || 5
     dependencies:
       "@rollup/pluginutils": 5.1.0
-      "@svgr/core": 8.1.0(typescript@5.4.4)
+      "@svgr/core": 8.1.0(typescript@5.4.5)
       "@svgr/plugin-jsx": 8.1.0(@svgr/core@8.1.0)
       vite: 5.2.8(sass@1.74.1)
     transitivePeerDependencies:

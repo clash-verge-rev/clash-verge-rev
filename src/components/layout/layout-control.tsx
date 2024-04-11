@@ -9,6 +9,7 @@ import {
   PushPinRounded,
 } from "@mui/icons-material";
 import { useState } from "react";
+import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
   isMaximized: boolean;
@@ -16,6 +17,8 @@ interface Props {
 
 export const LayoutControl = ({ isMaximized }: Props) => {
   const minWidth = 40;
+  const { verge } = useVerge();
+  const { enable_keep_ui_active } = verge ?? {};
 
   const [isPined, setIsPined] = useState(false);
 
@@ -79,7 +82,13 @@ export const LayoutControl = ({ isMaximized }: Props) => {
           svg: { transform: "scale(1.05)" },
           ":hover": { bgcolor: "#ff000090" },
         }}
-        onClick={() => appWindow.close()}
+        onClick={() => {
+          if (enable_keep_ui_active) {
+            appWindow.hide();
+          } else {
+            appWindow.close();
+          }
+        }}
       >
         <CloseRounded fontSize="small" />
       </Button>

@@ -31,7 +31,7 @@
     "ahooks": "^3.7.11",
     "axios": "^1.6.8",
     "dayjs": "1.11.10",
-    "i18next": "^23.11.0",
+    "i18next": "^23.11.1",
     "lodash-es": "^4.17.21",
     "monaco-editor": "^0.47.0",
     "nanoid": "^5.0.7",
@@ -67,7 +67,7 @@
     "prettier": "^3.2.5",
     "pretty-quick": "^4.0.0",
     "sass": "^1.74.1",
-    "typescript": "^5.4.4",
+    "typescript": "^5.4.5",
     "vite": "^5.2.8",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.2.0"
