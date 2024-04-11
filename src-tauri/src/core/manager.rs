@@ -22,7 +22,7 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
     #[cfg(target_os = "linux")]
     let output = {
         let path = path.replace(' ', "\\ "); // 避免路径中有空格
-        let shell = format!("setcap cap_net_bind_service,cap_net_admin=+ep {path}");
+        let shell = format!("setcap cap_net_bind_service,cap_net_admin,cap_dac_override=+ep {path}");
 
         let sudo = match Command::new("which").arg("pkexec").output() {
             Ok(output) => {
