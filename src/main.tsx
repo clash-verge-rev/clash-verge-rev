@@ -24,10 +24,12 @@ if (!container) {
   );
 }
 
-// disable context menu
-document.addEventListener("contextmenu", function (event) {
-  event.preventDefault();
-});
+if (process.env.NODE_ENV !== "development") {
+  // disable context menu
+  document.addEventListener("contextmenu", function (event) {
+    event.preventDefault();
+  });
+}
 
 createRoot(container).render(
   <React.StrictMode>
