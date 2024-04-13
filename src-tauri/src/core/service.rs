@@ -193,7 +193,7 @@ pub async fn uninstall_service() -> Result<()> {
         bail!("uninstaller not found");
     }
 
-    let shell = uninstaller_path.to_string_lossy();
+    let shell = uninstaller_path.to_string_lossy().replace(" ", "\\\\ ");
     let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
 
     let status = StdCommand::new("osascript")
