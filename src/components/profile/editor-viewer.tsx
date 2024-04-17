@@ -18,6 +18,10 @@ import * as monaco from "monaco-editor";
 import { editor } from "monaco-editor/esm/vs/editor/editor.api";
 import { configureMonacoYaml } from "monaco-yaml";
 
+import { type JSONSchema7 } from "json-schema";
+import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
+import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
+
 interface Props {
   uid: string;
   open: boolean;
@@ -33,12 +37,14 @@ configureMonacoYaml(monaco, {
   enableSchemaRequest: true,
   schemas: [
     {
-      uri: "https://fastly.jsdelivr.net/gh/dongchengjie/meta-json-schema@main/schemas/meta-json-schema.json",
+      uri: "http://example.com/meta-json-schema.json",
       fileMatch: ["**/*.clash.yaml"],
+      schema: metaSchema as JSONSchema7,
     },
     {
-      uri: "https://fastly.jsdelivr.net/gh/dongchengjie/meta-json-schema@main/schemas/clash-verge-merge-json-schema.json",
+      uri: "http://example.com/clash-verge-merge-json-schema.json",
       fileMatch: ["**/*.merge.yaml"],
+      schema: mergeSchema as JSONSchema7,
     },
   ],
 });
