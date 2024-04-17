@@ -15,7 +15,6 @@ import { Notice } from "@/components/base";
 import { nanoid } from "nanoid";
 
 import * as monaco from "monaco-editor";
-import { loader } from "@monaco-editor/react";
 import { editor } from "monaco-editor/esm/vs/editor/editor.api";
 import { configureMonacoYaml } from "monaco-yaml";
 
@@ -28,20 +27,20 @@ interface Props {
   onChange?: () => void;
 }
 
-// official worker
-loader.config({ monaco });
-loader.init().then(async (monaco) => {
-  // yaml worker
-  configureMonacoYaml(monaco, {
-    validate: true,
-    enableSchemaRequest: true,
-    schemas: [
-      {
-        uri: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/dongchengjie/airport/main/meta-json-schema.json",
-        fileMatch: ["**/*.clash.yaml"],
-      },
-    ],
-  });
+// yaml worker
+configureMonacoYaml(monaco, {
+  validate: true,
+  enableSchemaRequest: true,
+  schemas: [
+    {
+      uri: "https://fastly.jsdelivr.net/gh/dongchengjie/meta-json-schema@main/schemas/meta-json-schema.json",
+      fileMatch: ["**/*.clash.yaml"],
+    },
+    {
+      uri: "https://fastly.jsdelivr.net/gh/dongchengjie/meta-json-schema@main/schemas/clash-verge-merge-json-schema.json",
+      fileMatch: ["**/*.merge.yaml"],
+    },
+  ],
 });
 
 export const EditorViewer = (props: Props) => {
