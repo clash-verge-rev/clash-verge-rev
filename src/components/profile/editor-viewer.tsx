@@ -23,27 +23,22 @@ interface Props {
   uid: string;
   open: boolean;
   language: "yaml" | "javascript";
-  schema?: string;
+  schema?: "clash" | "merge";
   onClose: () => void;
   onChange?: () => void;
 }
 
+// official worker
 loader.config({ monaco });
 loader.init().then(async (monaco) => {
-  // 配置yaml格式相关schema
+  // yaml worker
   configureMonacoYaml(monaco, {
     validate: true,
     enableSchemaRequest: true,
     schemas: [
       {
-        // clash配置文件(待施工)
-        uri: "https://raw.githubusercontent.com/dongchengjie/airport/main/schema.json",
+        uri: "https://mirror.ghproxy.com/https://raw.githubusercontent.com/dongchengjie/airport/main/meta-json-schema.json",
         fileMatch: ["**/*.clash.yaml"],
-      },
-      {
-        // merge类型profile文件(待施工)
-        uri: "https://raw.githubusercontent.com/dongchengjie/airport/main/schema.json",
-        fileMatch: ["**/*.merge.yaml"],
       },
     ],
   });
@@ -51,7 +46,6 @@ loader.init().then(async (monaco) => {
 
 export const EditorViewer = (props: Props) => {
   const { uid, open, language, schema, onClose, onChange } = props;
-
   const { t } = useTranslation();
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -73,7 +67,12 @@ export const EditorViewer = (props: Props) => {
         model: model,
         language: language,
         theme: themeMode === "light" ? "vs" : "vs-dark",
-        minimap: { enabled: dom.clientWidth >= 1000 },
+        minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
+        quickSuggestions: {
+          strings: true, // 字符串类型的建议
+          comments: true, // 注释类型的建议
+          other: true, // 其他类型的建议
+        },
       });
     });
 

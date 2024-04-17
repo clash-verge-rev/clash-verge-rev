@@ -236,7 +236,7 @@ export const ProfileMore = (props: Props) => {
         uid={uid}
         open={fileOpen}
         language={type === "merge" ? "yaml" : "javascript"}
-        schema={type === "merge" ? "merge" : ""}
+        schema={type === "merge" ? "merge" : undefined}
         onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer
