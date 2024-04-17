@@ -3,8 +3,8 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Box, Button, Snackbar } from "@mui/material";
 import { deleteConnection } from "@/services/api";
-import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
+import { t } from "i18next";
 
 export interface ConnectionDetailRef {
   open: (detail: IConnectionsItem) => void;
@@ -69,7 +69,9 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     { label: "Rule", value: rule },
     {
       label: "Process",
-      value: truncateStr(metadata.process || metadata.processPath),
+      value: `${metadata.process}${
+        metadata.processPath ? `(${metadata.processPath})` : ""
+      }`,
     },
     { label: "Time", value: dayjs(data.start).fromNow() },
     { label: "Source", value: `${metadata.sourceIP}:${metadata.sourcePort}` },
@@ -96,7 +98,7 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
             onClose?.();
           }}
         >
-          Close
+          {t("Close")}
         </Button>
       </Box>
     </Box>

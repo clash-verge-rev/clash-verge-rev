@@ -386,7 +386,8 @@ export const ProfileItem = (props: Props) => {
       <EditorViewer
         uid={uid}
         open={fileOpen}
-        mode="yaml"
+        language="yaml"
+        schema="clash"
         onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer

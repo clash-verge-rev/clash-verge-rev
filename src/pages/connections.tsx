@@ -38,7 +38,12 @@ const ConnectionsPage = () => {
   const isTableLayout = setting.layout === "table";
 
   const orderOpts: Record<string, OrderFunc> = {
-    Default: (list) => list,
+    Default: (list) =>
+      list.sort(
+        (a, b) =>
+          new Date(b.start || "0").getTime()! -
+          new Date(a.start || "0").getTime()!
+      ),
     "Upload Speed": (list) => list.sort((a, b) => b.curUpload! - a.curUpload!),
     "Download Speed": (list) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
