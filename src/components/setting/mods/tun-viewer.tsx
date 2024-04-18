@@ -27,7 +27,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     autoDetectInterface: true,
     dnsHijack: ["any:53"],
     strictRoute: false,
-    mtu: 9000,
+    mtu: 1500,
   });
 
   useImperativeHandle(ref, () => ({
@@ -40,7 +40,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
         dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53"],
         strictRoute: clash?.tun["strict-route"] ?? false,
-        mtu: clash?.tun.mtu ?? 9000,
+        mtu: clash?.tun.mtu ?? 1500,
       });
     },
     close: () => setOpen(false),
@@ -88,7 +88,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
                 "auto-detect-interface": true,
                 "dns-hijack": ["any:53"],
                 "strict-route": false,
-                mtu: 9000,
+                mtu: 1500,
               };
               setValues({
                 stack: "gvisor",
@@ -97,7 +97,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
                 autoDetectInterface: true,
                 dnsHijack: ["any:53"],
                 strictRoute: false,
-                mtu: 9000,
+                mtu: 1500,
               });
               await patchClash({ tun });
               await mutateClash(
@@ -208,7 +208,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             spellCheck="false"
             sx={{ width: 250 }}
             value={values.mtu}
-            placeholder="9000"
+            placeholder="1500"
             onChange={(e) =>
               setValues((v) => ({
                 ...v,
