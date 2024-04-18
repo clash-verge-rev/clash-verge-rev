@@ -71,8 +71,10 @@ export const EditorViewer = (props: Props) => {
       instanceRef.current = editor.create(editorRef.current, {
         model: model,
         language: language,
+        tabSize: ["yaml", "javascript"].includes(language) ? 2 : 4, // 根据语言类型设置缩进
         theme: themeMode === "light" ? "vs" : "vs-dark",
         minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
+        mouseWheelZoom: true, // Ctrl+滚轮调节缩放
         quickSuggestions: {
           strings: true, // 字符串类型的建议
           comments: true, // 注释类型的建议
@@ -108,7 +110,7 @@ export const EditorViewer = (props: Props) => {
       <DialogTitle>{t("Edit File")}</DialogTitle>
 
       <DialogContent
-        sx={{ width: "95%", height: "100vh", pb: 1, userSelect: "text" }}
+        sx={{ width: "94%", height: "100vh", pb: 1, userSelect: "text" }}
       >
         <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
       </DialogContent>

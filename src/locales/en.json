@@ -129,6 +129,7 @@
   "Clash Field": "Clash Field",
   "Runtime Config": "Runtime Config",
   "ReadOnly": "ReadOnly",
+  "ReadOnlyMessage": "Cannot edit in read-only editor",
   "Restart": "Restart",
   "Upgrade": "Upgrade",
 
