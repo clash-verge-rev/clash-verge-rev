@@ -109,7 +109,7 @@ export const ProxyHead = (props: Props) => {
       <IconButton
         size="small"
         color="inherit"
-        title={t("Proxy detail")}
+        title={showType ? t("Proxy basic") : t("Proxy detail")}
         onClick={() => onHeadState({ showType: !showType })}
       >
         {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}

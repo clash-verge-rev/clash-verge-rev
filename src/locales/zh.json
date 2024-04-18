@@ -56,6 +56,7 @@
   "Sort by delay": "按延迟排序",
   "Sort by name": "按名称排序",
   "Delay check URL": "延迟测试链接",
+  "Proxy basic": "隐藏节点细节",
   "Proxy detail": "展示节点细节",
   "Filter": "过滤节点",
   "Filter conditions": "过滤条件",
