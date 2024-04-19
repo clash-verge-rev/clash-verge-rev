@@ -1112,6 +1112,7 @@ packages:
       }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-arm64-musl@4.14.3":
     resolution:
@@ -1120,6 +1121,7 @@ packages:
       }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-linux-powerpc64le-gnu@4.14.3":
     resolution:
@@ -1128,6 +1130,7 @@ packages:
       }
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-riscv64-gnu@4.14.3":
     resolution:
@@ -1136,6 +1139,7 @@ packages:
       }
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-s390x-gnu@4.14.3":
     resolution:
@@ -1144,6 +1148,7 @@ packages:
       }
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-x64-gnu@4.14.3":
     resolution:
@@ -1152,6 +1157,7 @@ packages:
       }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-x64-musl@4.14.3":
     resolution:
@@ -1160,6 +1166,7 @@ packages:
       }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-win32-arm64-msvc@4.14.3":
     resolution:
@@ -1331,6 +1338,7 @@ packages:
     engines: { node: ">= 10" }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@tauri-apps/cli-linux-arm64-musl@1.5.11":
     resolution:
@@ -1340,6 +1348,7 @@ packages:
     engines: { node: ">= 10" }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@tauri-apps/cli-linux-x64-gnu@1.5.11":
     resolution:
@@ -1349,6 +1358,7 @@ packages:
     engines: { node: ">= 10" }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@tauri-apps/cli-linux-x64-musl@1.5.11":
     resolution:
@@ -1358,6 +1368,7 @@ packages:
     engines: { node: ">= 10" }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@tauri-apps/cli-win32-arm64-msvc@1.5.11":
     resolution:
