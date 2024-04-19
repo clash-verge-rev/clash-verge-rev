@@ -1,4 +1,4 @@
-import { styled, Box } from "@mui/material";
+import { styled, Box, Typography } from "@mui/material";
 
 const Item = styled(Box)(({ theme: { palette, typography } }) => ({
   padding: "8px 0",
@@ -39,6 +39,14 @@ interface Props {
 
 const LogItem = (props: Props) => {
   const { value } = props;
+  let msg = value.payload;
+
+  msg = msg.replaceAll("-->", " ⇢ ");
+  if (value.type.toLowerCase() === "info") {
+    msg = msg.replaceAll(" using ", " ⇢ ");
+    msg = msg.replaceAll(" match ", " ⇢ ");
+  }
+  msg = msg.replaceAll(" error: ", " ⇢ [error] ");
 
   return (
     <Item>
@@ -49,7 +57,7 @@ const LogItem = (props: Props) => {
         <span className="time">{value.time}</span>
       </div>
       <div>
-        <span className="data">{value.payload}</span>
+        <span className="data">{msg}</span>
       </div>
     </Item>
   );
