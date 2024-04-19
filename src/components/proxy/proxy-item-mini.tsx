@@ -67,8 +67,9 @@ export const ProxyItemMini = (props: Props) => {
             "&:hover .the-icon": { display: "none" },
             "& .the-pin, & .the-unpin": {
               position: "absolute",
-              top: "-8px",
-              right: "-8px",
+              fontSize: "12px",
+              top: "-5px",
+              right: "-5px",
             },
             "& .the-unpin": { filter: "grayscale(1)" },
             "&.Mui-selected": {

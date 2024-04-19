@@ -54,6 +54,7 @@
   "Sort by delay": "Sort by delay",
   "Sort by name": "Sort by name",
   "Delay check URL": "Delay check URL",
+  "Proxy basic": "Proxy basic",
   "Proxy detail": "Proxy detail",
   "Filter": "Filter",
   "Filter conditions": "Filter conditions",
@@ -129,6 +130,7 @@
   "Clash Field": "Clash Field",
   "Runtime Config": "Runtime Config",
   "ReadOnly": "ReadOnly",
+  "ReadOnlyMessage": "Cannot edit in read-only editor",
   "Restart": "Restart",
   "Upgrade": "Upgrade",
 
