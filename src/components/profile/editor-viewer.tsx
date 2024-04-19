@@ -20,6 +20,7 @@ import { configureMonacoYaml } from "monaco-yaml";
 import { type JSONSchema7 } from "json-schema";
 import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
+import { useWindowSize } from "@/components/proxy/use-window-width";
 
 interface Props {
   uid: string;
@@ -54,6 +55,7 @@ export const EditorViewer = (props: Props) => {
   const editorRef = useRef<any>();
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useRecoilValue(atomThemeMode);
+  const { height } = useWindowSize();
 
   useEffect(() => {
     if (!open) return;
@@ -109,7 +111,12 @@ export const EditorViewer = (props: Props) => {
       <DialogTitle>{t("Edit File")}</DialogTitle>
 
       <DialogContent
-        sx={{ width: "94%", height: "100vh", pb: 1, userSelect: "text" }}
+        sx={{
+          width: "94%",
+          height: `${height - 200}px`,
+          pb: 1,
+          userSelect: "text",
+        }}
       >
         <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
       </DialogContent>

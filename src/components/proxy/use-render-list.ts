@@ -3,7 +3,7 @@ import { useEffect, useMemo } from "react";
 import { getProxies } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import { filterSort } from "./use-filter-sort";
-import { useWindowWidth } from "./use-window-width";
+import { useWindowSize } from "./use-window-width";
 import {
   useHeadStateNew,
   DEFAULT_STATE,
@@ -25,11 +25,11 @@ export const useRenderList = (mode: string) => {
   const { data: proxiesData, mutate: mutateProxies } = useSWR(
     "getProxies",
     getProxies,
-    { refreshInterval: 45000 }
+    { refreshInterval: 45000 },
   );
 
   const { verge } = useVerge();
-  const { width } = useWindowWidth();
+  const { width } = useWindowSize();
 
   let col = Math.floor(verge?.proxy_layout_column || 6);
 
@@ -78,7 +78,7 @@ export const useRenderList = (mode: string) => {
           group.all,
           group.name,
           headState.filterText,
-          headState.sortType
+          headState.sortType,
         );
 
         ret.push({ type: 1, key: `head-${group.name}`, group, headState });
@@ -97,7 +97,7 @@ export const useRenderList = (mode: string) => {
               headState,
               col,
               proxyCol,
-            }))
+            })),
           );
         }
 
@@ -108,7 +108,7 @@ export const useRenderList = (mode: string) => {
             group,
             proxy,
             headState,
-          }))
+          })),
         );
       }
       return ret;

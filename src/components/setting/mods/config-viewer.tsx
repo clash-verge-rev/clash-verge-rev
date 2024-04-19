@@ -23,6 +23,7 @@ import { editor } from "monaco-editor/esm/vs/editor/editor.api";
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js";
 import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js";
+import { useWindowSize } from "@/components/proxy/use-window-width";
 
 export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -31,6 +32,7 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useRecoilValue(atomThemeMode);
+  const { height } = useWindowSize();
 
   useEffect(() => {
     return () => {
@@ -56,6 +58,7 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
           language: "yaml",
           tabSize: 2,
           theme: themeMode === "light" ? "vs" : "vs-dark",
+          contextmenu: false,
           minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
           mouseWheelZoom: true, // Ctrl+滚轮调节缩放
           readOnly: true, // 只读
@@ -73,7 +76,12 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
       </DialogTitle>
 
       <DialogContent
-        sx={{ width: "94%", height: "100vh", pb: 1, userSelect: "text" }}
+        sx={{
+          width: "94%",
+          height: `${height - 200}px`,
+          pb: 1,
+          userSelect: "text",
+        }}
       >
         <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
       </DialogContent>
