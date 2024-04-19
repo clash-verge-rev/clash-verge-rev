@@ -40,6 +40,9 @@ importers:
       "@tauri-apps/api":
         specifier: ^1.5.3
         version: 1.5.3
+      "@types/json-schema":
+        specifier: ^7.0.15
+        version: 7.0.15
       ahooks:
         specifier: ^3.7.8
         version: 3.7.11(react@18.2.0)
