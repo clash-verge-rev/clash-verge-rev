@@ -12,29 +12,47 @@ import {
 import { atomThemeMode } from "@/services/states";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice } from "@/components/base";
+import { nanoid } from "nanoid";
 
-import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution";
-import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution";
-import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding";
-import "monaco-editor/esm/vs/editor/contrib/comment/browser/comment";
-import "monaco-editor/esm/vs/editor/contrib/find/browser/findController";
-import "monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css";
-import { editor } from "monaco-editor/esm/vs/editor/editor.api";
+import * as monaco from "monaco-editor";
+import { configureMonacoYaml } from "monaco-yaml";
+
+import { type JSONSchema7 } from "json-schema";
+import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
+import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
 
 interface Props {
   uid: string;
   open: boolean;
-  mode: "yaml" | "javascript";
+  language: "yaml" | "javascript";
+  schema?: "clash" | "merge";
   onClose: () => void;
   onChange?: () => void;
 }
 
-export const EditorViewer = (props: Props) => {
-  const { uid, open, mode, onClose, onChange } = props;
+// yaml worker
+configureMonacoYaml(monaco, {
+  validate: true,
+  enableSchemaRequest: true,
+  schemas: [
+    {
+      uri: "http://example.com/meta-json-schema.json",
+      fileMatch: ["**/*.clash.yaml"],
+      schema: metaSchema as JSONSchema7,
+    },
+    {
+      uri: "http://example.com/clash-verge-merge-json-schema.json",
+      fileMatch: ["**/*.merge.yaml"],
+      schema: mergeSchema as JSONSchema7,
+    },
+  ],
+});
 
+export const EditorViewer = (props: Props) => {
+  const { uid, open, language, schema, onClose, onChange } = props;
   const { t } = useTranslation();
   const editorRef = useRef<any>();
-  const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useRecoilValue(atomThemeMode);
 
   useEffect(() => {
@@ -44,13 +62,23 @@ export const EditorViewer = (props: Props) => {
       const dom = editorRef.current;
 
       if (!dom) return;
+
       if (instanceRef.current) instanceRef.current.dispose();
 
-      instanceRef.current = editor.create(editorRef.current, {
-        value: data,
-        language: mode,
+      const uri = monaco.Uri.parse(`${nanoid()}.${schema}.${language}`);
+      const model = monaco.editor.createModel(data, language, uri);
+      instanceRef.current = monaco.editor.create(editorRef.current, {
+        model: model,
+        language: language,
+        tabSize: ["yaml", "javascript"].includes(language) ? 2 : 4, // 根据语言类型设置缩进
         theme: themeMode === "light" ? "vs" : "vs-dark",
-        minimap: { enabled: true },
+        minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
+        mouseWheelZoom: true, // Ctrl+滚轮调节缩放
+        quickSuggestions: {
+          strings: true, // 字符串类型的建议
+          comments: true, // 注释类型的建议
+          other: true, // 其他类型的建议
+        },
       });
     });
 
@@ -80,8 +108,10 @@ export const EditorViewer = (props: Props) => {
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
       <DialogTitle>{t("Edit File")}</DialogTitle>
 
-      <DialogContent sx={{ width: "95%", pb: 1, userSelect: "text" }}>
-        <div style={{ width: "100%", height: "500px" }} ref={editorRef} />
+      <DialogContent
+        sx={{ width: "94%", height: "100vh", pb: 1, userSelect: "text" }}
+      >
+        <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
       </DialogContent>
 
       <DialogActions>

@@ -25,6 +25,12 @@ export default defineConfig({
     react(),
     monacoEditorPlugin({
       languageWorkers: ["editorWorkerService", "typescript"],
+      customWorkers: [
+        {
+          label: "yaml",
+          entry: "monaco-yaml/yaml.worker",
+        },
+      ],
     }),
   ],
   build: {

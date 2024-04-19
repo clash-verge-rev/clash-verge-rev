@@ -155,7 +155,7 @@ export const ProfileItem = (props: Props) => {
     } catch (err: any) {
       const errmsg = err?.message || err.toString();
       Notice.error(
-        errmsg.replace(/error sending request for url (\S+?): /, "")
+        errmsg.replace(/error sending request for url (\S+?): /, ""),
       );
     } finally {
       setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }));
@@ -386,7 +386,8 @@ export const ProfileItem = (props: Props) => {
       <EditorViewer
         uid={uid}
         open={fileOpen}
-        mode="yaml"
+        language="yaml"
+        schema="clash"
         onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer

@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, Paper, Snackbar } from "@mui/material";
+import { Box, Button, Snackbar } from "@mui/material";
 import { deleteConnection } from "@/services/api";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
@@ -39,7 +39,7 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
         }
       />
     );
-  }
+  },
 );
 
 interface InnerProps {

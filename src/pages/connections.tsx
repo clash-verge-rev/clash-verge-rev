@@ -38,7 +38,12 @@ const ConnectionsPage = () => {
   const isTableLayout = setting.layout === "table";
 
   const orderOpts: Record<string, OrderFunc> = {
-    Default: (list) => list,
+    Default: (list) =>
+      list.sort(
+        (a, b) =>
+          new Date(b.start || "0").getTime()! -
+          new Date(a.start || "0").getTime()!,
+      ),
     "Upload Speed": (list) => list.sort((a, b) => b.curUpload! - a.curUpload!),
     "Download Speed": (list) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
@@ -47,7 +52,7 @@ const ConnectionsPage = () => {
   const [filterConn, download, upload] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
     let connections = connData.connections.filter((conn) =>
-      (conn.metadata.host || conn.metadata.destinationIP)?.includes(filterText)
+      (conn.metadata.host || conn.metadata.destinationIP)?.includes(filterText),
     );
 
     if (orderFunc) connections = orderFunc(connections);
@@ -96,7 +101,7 @@ const ConnectionsPage = () => {
         return { ...data, connections };
       });
     },
-    { errorCount: 3, retryInterval: 1000 }
+    { errorCount: 3, retryInterval: 1000 },
   );
 
   useEffect(() => {
@@ -133,7 +138,7 @@ const ConnectionsPage = () => {
               setSetting((o) =>
                 o.layout === "list"
                   ? { ...o, layout: "table" }
-                  : { ...o, layout: "list" }
+                  : { ...o, layout: "list" },
               )
             }
           >

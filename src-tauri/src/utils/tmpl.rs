@@ -14,25 +14,25 @@ rules:
 pub const ITEM_MERGE: &str = "# Merge Template for clash verge
 # The `Merge` format used to enhance profile
 
-prepend-rules:
+prepend-rules: []
 
-prepend-rule-providers:
+prepend-rule-providers: {}
 
-prepend-proxies:
+prepend-proxies: []
 
-prepend-proxy-providers:
+prepend-proxy-providers: {}
 
-prepend-proxy-groups:
+prepend-proxy-groups: []
 
-append-rules:
+append-rules: []
 
-append-rule-providers:
+append-rule-providers: {}
 
-append-proxies:
+append-proxies: []
 
-append-proxy-providers:
+append-proxy-providers: {}
 
-append-proxy-groups:
+append-proxy-groups: []
 ";
 
 /// enhanced profile
