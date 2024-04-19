@@ -3,9 +3,10 @@ use anyhow::{anyhow, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
+use std::env::current_exe;
 use std::sync::Arc;
 use sysproxy::Sysproxy;
-use tauri::{async_runtime::Mutex as TokioMutex, utils::platform::current_exe};
+use tauri::async_runtime::Mutex as TokioMutex;
 
 pub struct Sysopt {
     /// current system proxy setting
@@ -149,7 +150,7 @@ impl Sysopt {
     /// init the auto launch
     pub fn init_launch(&self) -> Result<()> {
         let app_exe = current_exe()?;
-        let app_exe = dunce::canonicalize(app_exe)?;
+        // let app_exe = dunce::canonicalize(app_exe)?;
         let app_name = app_exe
             .file_stem()
             .and_then(|f| f.to_str())
