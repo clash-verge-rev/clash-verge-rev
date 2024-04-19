@@ -1,10 +1,12 @@
 {
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "tauri": {
     "systemTray": {
       "iconPath": "icons/mac-tray-icon.png",
       "iconAsTemplate": true
     },
     "bundle": {
+      "identifier": "io.github.clash-verge-rev.clash-verge-rev",
       "targets": ["app", "dmg", "updater"],
       "macOS": {
         "frameworks": [],
