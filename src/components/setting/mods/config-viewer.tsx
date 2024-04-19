@@ -63,6 +63,7 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
           mouseWheelZoom: true, // Ctrl+滚轮调节缩放
           readOnly: true, // 只读
           readOnlyMessage: { value: t("ReadOnlyMessage") },
+          automaticLayout: true,
         });
       });
     },

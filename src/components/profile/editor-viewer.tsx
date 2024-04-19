@@ -81,6 +81,7 @@ export const EditorViewer = (props: Props) => {
           comments: true, // 注释类型的建议
           other: true, // 其他类型的建议
         },
+        automaticLayout: true,
       });
     });
 
