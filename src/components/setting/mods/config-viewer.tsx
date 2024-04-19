@@ -7,10 +7,17 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useRecoilValue } from "recoil";
-import { Chip } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Chip,
+} from "@mui/material";
 import { atomThemeMode } from "@/services/states";
 import { getRuntimeYaml } from "@/services/cmds";
-import { BaseDialog, DialogRef } from "@/components/base";
+import { DialogRef } from "@/components/base";
 import { editor } from "monaco-editor/esm/vs/editor/editor.api";
 
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
@@ -47,9 +54,12 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
         instanceRef.current = editor.create(editorRef.current, {
           value: data ?? "# Error\n",
           language: "yaml",
+          tabSize: 2,
           theme: themeMode === "light" ? "vs" : "vs-dark",
-          minimap: { enabled: false },
-          readOnly: true,
+          minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
+          mouseWheelZoom: true, // Ctrl+滚轮调节缩放
+          readOnly: true, // 只读
+          readOnlyMessage: { value: t("ReadOnlyMessage") },
         });
       });
     },
@@ -57,20 +67,22 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
   }));
 
   return (
-    <BaseDialog
-      open={open}
-      title={
-        <>
-          {t("Runtime Config")} <Chip label={t("ReadOnly")} size="small" />
-        </>
-      }
-      contentSx={{ width: 520, pb: 1, userSelect: "text" }}
-      cancelBtn={t("Back")}
-      disableOk
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
-    >
-      <div style={{ width: "100%", height: "420px" }} ref={editorRef} />
-    </BaseDialog>
+    <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xl" fullWidth>
+      <DialogTitle>
+        {t("Runtime Config")} <Chip label={t("ReadOnly")} size="small" />
+      </DialogTitle>
+
+      <DialogContent
+        sx={{ width: "94%", height: "100vh", pb: 1, userSelect: "text" }}
+      >
+        <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={() => setOpen(false)} variant="outlined">
+          {t("Back")}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 });
