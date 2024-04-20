@@ -128,6 +128,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             rows={3}
             sx={{ width: 280 }}
             value={value.bypass}
+            placeholder={sysproxy?.bypass || `-`}
             onChange={(e) =>
               setValue((v) => ({ ...v, bypass: e.target.value }))
             }
