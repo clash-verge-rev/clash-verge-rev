@@ -1,10 +1,11 @@
 name: Alpha Build
 
 on:
-  workflow_dispatch:
   push:
     branches: [dev]
     tags-ignore: [updater, alpha]
+  workflow_dispatch:
+
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -173,6 +174,7 @@ jobs:
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
+        if: ${{ github.ref_name == 'dev' }}
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
