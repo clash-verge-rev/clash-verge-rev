@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import zlib from "zlib";
-import tar from "tar";
+import * as tar from "tar";
 import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
@@ -150,13 +150,13 @@ async function getLatestReleaseVersion() {
  */
 if (!META_MAP[`${platform}-${arch}`]) {
   throw new Error(
-    `clash meta alpha unsupported platform "${platform}-${arch}"`
+    `clash meta alpha unsupported platform "${platform}-${arch}"`,
   );
 }
 
 if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
   throw new Error(
-    `clash meta alpha unsupported platform "${platform}-${arch}"`
+    `clash meta alpha unsupported platform "${platform}-${arch}"`,
   );
 }
 
@@ -329,7 +329,7 @@ const resolvePlugin = async () => {
   const tempDir = path.join(TEMP_DIR, "SimpleSC");
   const tempZip = path.join(
     tempDir,
-    "NSIS_Simple_Service_Plugin_Unicode_1.30.zip"
+    "NSIS_Simple_Service_Plugin_Unicode_1.30.zip",
   );
   const tempDll = path.join(tempDir, "SimpleSC.dll");
   const pluginDir = path.join(process.env.APPDATA, "Local/NSIS");
