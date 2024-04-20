@@ -2,6 +2,8 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import {
+  Button,
+  Input,
   List,
   ListItem,
   ListItemText,
@@ -12,6 +14,7 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { CSSEditorViewer } from "@/components/setting/mods/css-editor-viewer";
 
 export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -20,6 +23,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, patchVerge } = useVerge();
   const { theme_setting } = verge ?? {};
   const [theme, setTheme] = useState(theme_setting || {});
+  const [cssEditorOpen, setCssEditorOpen] = useState(false);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -37,6 +41,10 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
 
   const handleChange = (field: keyof typeof theme) => (e: any) => {
     setTheme((t) => ({ ...t, [field]: e.target.value }));
+  };
+
+  const handleCSSInjection = (css: string) => {
+    setTheme((t) => ({ ...t, css_injection: css }));
   };
 
   const onSave = useLockFn(async () => {
@@ -77,7 +85,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       title={t("Theme Setting")}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
-      contentSx={{ width: 400, maxHeight: 300, overflow: "auto", pb: 0 }}
+      contentSx={{ width: 400, maxHeight: 600, overflow: "auto", pb: 0 }}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
@@ -111,13 +119,27 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
 
         <Item>
           <ListItemText primary="CSS Injection" />
-          <TextField
-            {...textProps}
+          <Input
             value={theme.css_injection ?? ""}
-            onChange={handleChange("css_injection")}
-            onKeyDown={(e) => e.key === "Enter" && onSave()}
-          />
+            disabled
+            sx={{ width: 230 }}
+            endAdornment={
+              <Button
+                onClick={() => {
+                  setCssEditorOpen(true);
+                }}
+              >
+                {t("Edit")}
+              </Button>
+            }
+          ></Input>
         </Item>
+        <CSSEditorViewer
+          open={cssEditorOpen}
+          data={theme.css_injection ?? ""}
+          onSave={(css) => handleCSSInjection(css)}
+          onClose={() => setCssEditorOpen(false)}
+        />
       </List>
     </BaseDialog>
   );

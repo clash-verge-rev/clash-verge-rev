@@ -24,7 +24,7 @@ export default defineConfig({
     svgr(),
     react(),
     monacoEditorPlugin({
-      languageWorkers: ["editorWorkerService", "typescript"],
+      languageWorkers: ["editorWorkerService", "css", "typescript"],
       customWorkers: [
         {
           label: "yaml",

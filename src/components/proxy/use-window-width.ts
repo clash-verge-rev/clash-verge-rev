@@ -1,4 +1,4 @@
-import { debounce } from "@mui/material";
+import { debounce } from "lodash-es";
 import { useEffect, useState } from "react";
 
 export const useWindowSize = () => {
