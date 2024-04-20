@@ -8,7 +8,6 @@ import {
   deleteConnection,
   getGroupProxyDelays,
 } from "@/services/api";
-import { Box } from "@mui/material";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseEmpty } from "../base";

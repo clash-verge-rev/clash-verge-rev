@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 export type WsMsgFn = (event: MessageEvent<any>) => void;
 

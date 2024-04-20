@@ -1,4 +1,4 @@
-import { Box, Grid, IconButton, Paper } from "@mui/material";
+import { Box, Grid, IconButton } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { BasePage, Notice } from "@/components/base";
