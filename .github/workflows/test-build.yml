@@ -28,11 +28,10 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Use Node.js
+      - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "pnpm"
+          node-version: "20"
 
       - name: Install pnpm + deps
         uses: pnpm/action-setup@v2
