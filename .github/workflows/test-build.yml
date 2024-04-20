@@ -17,13 +17,16 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Install pnpm + deps
-        uses: pnpm/action-setup@v2
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
         with:
-          version: 8
-          run_install: true
+          workspaces: src-tauri
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -31,8 +34,16 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
-      - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install pnpm + deps
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: Pnpm install and check
+        run: |
+          pnpm i
+          pnpm check
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-latest'
@@ -42,3 +53,6 @@ jobs:
 
       - name: Build Tauri
         run: pnpm build
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
