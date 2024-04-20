@@ -32,7 +32,7 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useRecoilValue(atomThemeMode);
-  const { height } = useWindowSize();
+  const { width, height } = useWindowSize();
 
   useEffect(() => {
     return () => {
@@ -59,9 +59,8 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
           tabSize: 2,
           theme: themeMode === "light" ? "vs" : "vs-dark",
           contextmenu: false,
-          minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
-          mouseWheelZoom: true, // Ctrl+滚轮调节缩放
-          readOnly: true, // 只读
+          mouseWheelZoom: true,
+          readOnly: true,
           readOnlyMessage: { value: t("ReadOnlyMessage") },
           automaticLayout: true,
         });
@@ -69,6 +68,10 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
     },
     close: () => setOpen(false),
   }));
+
+  instanceRef.current?.updateOptions({
+    minimap: { enabled: width >= 1000 },
+  });
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xl" fullWidth>

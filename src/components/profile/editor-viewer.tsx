@@ -55,7 +55,7 @@ export const EditorViewer = (props: Props) => {
   const editorRef = useRef<any>();
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useRecoilValue(atomThemeMode);
-  const { height } = useWindowSize();
+  const { width, height } = useWindowSize();
 
   useEffect(() => {
     if (!open) return;
@@ -74,12 +74,11 @@ export const EditorViewer = (props: Props) => {
         language: language,
         tabSize: ["yaml", "javascript"].includes(language) ? 2 : 4, // 根据语言类型设置缩进
         theme: themeMode === "light" ? "vs" : "vs-dark",
-        minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
-        mouseWheelZoom: true, // Ctrl+滚轮调节缩放
+        mouseWheelZoom: true,
         quickSuggestions: {
-          strings: true, // 字符串类型的建议
-          comments: true, // 注释类型的建议
-          other: true, // 其他类型的建议
+          strings: true,
+          comments: true,
+          other: true,
         },
         automaticLayout: true,
       });
@@ -92,6 +91,10 @@ export const EditorViewer = (props: Props) => {
       }
     };
   }, [open]);
+
+  instanceRef.current?.updateOptions({
+    minimap: { enabled: width >= 1000 },
+  });
 
   const onSave = useLockFn(async () => {
     const value = instanceRef.current?.getValue();
