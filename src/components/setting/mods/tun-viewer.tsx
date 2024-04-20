@@ -50,12 +50,12 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       let tun = {
         stack: values.stack,
-        device: values.device,
+        device: values.device === "" ? "Meta" : values.device,
         "auto-route": values.autoRoute,
         "auto-detect-interface": values.autoDetectInterface,
-        "dns-hijack": values.dnsHijack,
+        "dns-hijack": values.dnsHijack[0] === "" ? [] : values.dnsHijack,
         "strict-route": values.strictRoute,
-        mtu: values.mtu,
+        mtu: values.mtu ?? 1500,
       };
       await patchClash({ tun });
       await mutateClash(
