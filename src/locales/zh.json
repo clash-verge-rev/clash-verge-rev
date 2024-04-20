@@ -18,6 +18,8 @@
   "direct": "直连",
   "script": "脚本",
 
+  "Create Test": "新建测试",
+  "Edit Test": "编辑测试",
   "Edit": "编辑",
   "Icon": "图标",
   "Test URL": "测试地址",

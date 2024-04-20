@@ -18,6 +18,8 @@
   "direct": "direct",
   "script": "script",
 
+  "Create Test": "Create Test",
+  "Edit Test": "Edit Test",
   "Edit": "Edit",
   "Icon": "Icon",
   "Test URL": "Test URL",

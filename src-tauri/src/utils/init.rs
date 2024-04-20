@@ -304,7 +304,7 @@ pub fn startup_script() -> Result<()> {
             shell = "powershell";
         }
         if path.ends_with(".bat") {
-            shell = "cmd";
+            shell = "powershell";
         }
         if shell.is_empty() {
             return Err(anyhow::anyhow!("unsupported script: {path}"));
