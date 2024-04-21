@@ -133,7 +133,7 @@ jobs:
     needs: [release, release-for-linux]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node
         uses: actions/setup-node@v4
