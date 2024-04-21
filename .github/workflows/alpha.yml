@@ -29,7 +29,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
@@ -38,12 +38,12 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2
         with:
           workspaces: src-tauri
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
           node-version: "20"
 
@@ -59,7 +59,7 @@ jobs:
           pnpm check ${{ matrix.target }}
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@d3b2759c553ebe71be2c4072209be6da0aa6808b # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -95,7 +95,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Build for Linux
         uses: ./.github/build-for-linux
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload Release
         if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
@@ -123,7 +123,7 @@ jobs:
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
@@ -137,7 +137,7 @@ jobs:
     needs: [alpha, alpha-for-linux]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Set Env
         run: |
@@ -145,7 +145,7 @@ jobs:
         shell: bash
 
       - name: Update Tag
-        uses: richardsimko/update-tag@v1
+        uses: richardsimko/update-tag@e173a8ef8f54ab526a91dad6139a25efed62424c # v1
         with:
           tag_name: alpha
         env:
@@ -173,7 +173,7 @@ jobs:
           EOF
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"

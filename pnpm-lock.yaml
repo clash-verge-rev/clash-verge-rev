@@ -109,19 +109,19 @@ importers:
         version: 7.0.1
     devDependencies:
       '@actions/github':
-        specifier: ^6.0.0
+        specifier: 6.0.0
         version: 6.0.0
       '@tauri-apps/cli':
-        specifier: ^1.5.11
+        specifier: 1.5.11
         version: 1.5.11
       '@types/fs-extra':
-        specifier: ^11.0.4
+        specifier: 11.0.4
         version: 11.0.4
       '@types/js-cookie':
-        specifier: ^3.0.6
+        specifier: 3.0.6
         version: 3.0.6
       '@types/lodash-es':
-        specifier: ^4.17.12
+        specifier: 4.17.12
         version: 4.17.12
       '@types/react':
         specifier: ^18.2.79
@@ -130,49 +130,49 @@ importers:
         specifier: ^18.2.25
         version: 18.2.25
       '@types/react-transition-group':
-        specifier: ^4.4.10
+        specifier: 4.4.10
         version: 4.4.10
       '@vitejs/plugin-react':
-        specifier: ^4.2.1
+        specifier: 4.2.1
         version: 4.2.1(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0))
       adm-zip:
-        specifier: ^0.5.12
+        specifier: 0.5.12
         version: 0.5.12
       cross-env:
-        specifier: ^7.0.3
+        specifier: 7.0.3
         version: 7.0.3
       fs-extra:
-        specifier: ^11.2.0
+        specifier: 11.2.0
         version: 11.2.0
       https-proxy-agent:
-        specifier: ^7.0.4
+        specifier: 7.0.4
         version: 7.0.4
       husky:
-        specifier: ^9.0.11
+        specifier: 9.0.11
         version: 9.0.11
       node-fetch:
-        specifier: ^3.3.2
+        specifier: 3.3.2
         version: 3.3.2
       prettier:
-        specifier: ^3.2.5
+        specifier: 3.2.5
         version: 3.2.5
       pretty-quick:
-        specifier: ^4.0.0
+        specifier: 4.0.0
         version: 4.0.0(prettier@3.2.5)
       sass:
-        specifier: ^1.75.0
+        specifier: 1.75.0
         version: 1.75.0
       typescript:
-        specifier: ^5.4.5
+        specifier: 5.4.5
         version: 5.4.5
       vite:
-        specifier: ^5.2.9
+        specifier: 5.2.10
         version: 5.2.10(@types/node@20.12.7)(sass@1.75.0)
       vite-plugin-monaco-editor:
-        specifier: ^1.1.0
+        specifier: 1.1.0
         version: 1.1.0(monaco-editor@0.47.0)
       vite-plugin-svgr:
-        specifier: ^4.2.0
+        specifier: 4.2.0
         version: 4.2.0(rollup@4.15.0)(typescript@5.4.5)(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0))
 
 packages:
@@ -924,28 +924,24 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@tauri-apps/cli-linux-arm64-musl@1.5.11':
     resolution: {integrity: sha512-PN6/dl+OfYQ/qrAy4HRAfksJ2AyWQYn2IA/2Wwpaa7SDRz2+hzwTQkvajuvy0sQ5L2WCG7ymFYRYMbpC6Hk9Pg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@tauri-apps/cli-linux-x64-gnu@1.5.11':
     resolution: {integrity: sha512-MTVXLi89Nj7Apcvjezw92m7ZqIDKT5SFKZtVPCg6RoLUBTzko/BQoXYIRWmdoz2pgkHDUHgO2OMJ8oKzzddXbw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@tauri-apps/cli-linux-x64-musl@1.5.11':
     resolution: {integrity: sha512-kwzAjqFpz7rvTs7WGZLy/a5nS5t15QKr3E9FG95MNF0exTl3d29YoAUAe1Mn0mOSrTJ9Z+vYYAcI/QdcsGBP+w==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@tauri-apps/cli-win32-arm64-msvc@1.5.11':
     resolution: {integrity: sha512-L+5NZ/rHrSUrMxjj6YpFYCXp6wHnq8c8SfDTBOX8dO8x+5283/vftb4vvuGIsLS4UwUFXFnLt3XQr44n84E67Q==}
