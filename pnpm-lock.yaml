@@ -124,10 +124,10 @@ importers:
         specifier: 4.17.12
         version: 4.17.12
       '@types/react':
-        specifier: ^18.2.79
+        specifier: 18.2.79
         version: 18.2.79
       '@types/react-dom':
-        specifier: ^18.2.25
+        specifier: 18.2.25
         version: 18.2.25
       '@types/react-transition-group':
         specifier: 4.4.10
