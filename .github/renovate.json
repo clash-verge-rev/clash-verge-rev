@@ -1,12 +1,20 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
+  "extends": ["config:best-practices", ":pinDevDependencies"],
   "baseBranches": ["dev"],
-  "labels": ["Dependency"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true
+  },
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchDepTypes": ["devDependencies", "dependencies", "action"],
       "automerge": true
+    },
+    {
+      "matchDepTypes": ["action"],
+      "semanticCommitType": "ci",
+      "semanticCommitScope": "action"
     }
   ]
 }
