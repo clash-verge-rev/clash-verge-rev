@@ -405,6 +405,7 @@ const ProfilePage = () => {
                   flexGrow: "1",
                   margin: "0 5px",
                   width: "260px",
+                  height: "0",
                 }}
               ></i>
             );
@@ -457,6 +458,7 @@ const ProfilePage = () => {
                       flexGrow: "1",
                       margin: "0 5px",
                       width: "260px",
+                      height: "0",
                     }}
                   ></i>
                 );

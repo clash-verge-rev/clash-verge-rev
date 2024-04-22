@@ -160,6 +160,7 @@ const TestPage = () => {
                   flexGrow: "1",
                   margin: "0 5px",
                   width: "180px",
+                  height: "0",
                 }}
               ></i>
             );
