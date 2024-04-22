@@ -9,6 +9,7 @@ import { open as openDialog } from "@tauri-apps/api/dialog";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { join } from "@tauri-apps/api/path";
+import { exists } from "@tauri-apps/api/fs";
 
 export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -26,12 +27,27 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   async function initIconPath() {
     const appDir = await getAppDir();
     const icon_dir = await join(appDir, "icons");
-    const common_icon = await join(icon_dir, "common.png");
-    const sysproxy_icon = await join(icon_dir, "sysproxy.png");
-    const tun_icon = await join(icon_dir, "tun.png");
-    setCommonIcon(common_icon);
-    setSysproxyIcon(sysproxy_icon);
-    setTunIcon(tun_icon);
+    const common_icon_png = await join(icon_dir, "common.png");
+    const common_icon_ico = await join(icon_dir, "common.ico");
+    const sysproxy_icon_png = await join(icon_dir, "sysproxy.png");
+    const sysproxy_icon_ico = await join(icon_dir, "sysproxy.ico");
+    const tun_icon_png = await join(icon_dir, "tun.png");
+    const tun_icon_ico = await join(icon_dir, "tun.ico");
+    if (await exists(common_icon_ico)) {
+      setCommonIcon(common_icon_ico);
+    } else {
+      setCommonIcon(common_icon_png);
+    }
+    if (await exists(sysproxy_icon_ico)) {
+      setSysproxyIcon(sysproxy_icon_ico);
+    } else {
+      setSysproxyIcon(sysproxy_icon_png);
+    }
+    if (await exists(tun_icon_ico)) {
+      setTunIcon(tun_icon_ico);
+    } else {
+      setTunIcon(tun_icon_png);
+    }
   }
 
   useImperativeHandle(ref, () => ({
@@ -140,12 +156,13 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     filters: [
                       {
                         name: "Tray Icon Image",
-                        extensions: ["png"],
+                        extensions: ["png", "ico"],
                       },
                     ],
                   });
                   if (path?.length) {
-                    await copyIconFile(`${path}`, "common.png");
+                    await copyIconFile(`${path}`, "common");
+                    await initIconPath();
                     onChangeData({ common_tray_icon: true });
                     patchVerge({ common_tray_icon: true });
                   }
@@ -184,12 +201,13 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     filters: [
                       {
                         name: "Tray Icon Image",
-                        extensions: ["png"],
+                        extensions: ["png", "ico"],
                       },
                     ],
                   });
                   if (path?.length) {
-                    await copyIconFile(`${path}`, "sysproxy.png");
+                    await copyIconFile(`${path}`, "sysproxy");
+                    await initIconPath();
                     onChangeData({ sysproxy_tray_icon: true });
                     patchVerge({ sysproxy_tray_icon: true });
                   }
@@ -226,12 +244,13 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     filters: [
                       {
                         name: "Tray Icon Image",
-                        extensions: ["png"],
+                        extensions: ["png", "ico"],
                       },
                     ],
                   });
                   if (path?.length) {
-                    await copyIconFile(`${path}`, "tun.png");
+                    await copyIconFile(`${path}`, "tun");
+                    await initIconPath();
                     onChangeData({ tun_tray_icon: true });
                     patchVerge({ tun_tray_icon: true });
                   }

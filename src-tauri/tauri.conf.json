@@ -66,6 +66,10 @@
       },
       "path": {
         "all": true
+      },
+      "fs": {
+        "exists": true,
+        "scope": ["$APPDATA/**", "$RESOURCE/../**"]
       }
     },
     "windows": [],
