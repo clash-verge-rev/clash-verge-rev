@@ -4,10 +4,6 @@
   "dependencyDashboard": true,
   "baseBranches": ["dev"],
   "labels": ["dependency"],
-  "lockFileMaintenance": {
-    "enabled": true,
-    "automerge": true
-  },
   "packageRules": [
     {
       "matchDepTypes": ["devDependencies", "dependencies", "action"],
