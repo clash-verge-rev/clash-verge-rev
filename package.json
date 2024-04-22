@@ -17,9 +17,6 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.1.0",
-    "@dnd-kit/sortable": "^8.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@juggle/resize-observer": "^3.4.0",
@@ -44,12 +41,14 @@
     "react-hook-form": "^7.51.3",
     "react-i18next": "^14.1.0",
     "react-router-dom": "^6.22.3",
+    "react-sortablejs": "^6.1.4",
     "react-transition-group": "^4.4.5",
-    "react-virtuoso": "^4.7.9",
+    "react-virtuoso": "^4.7.10",
     "recoil": "^0.7.7",
     "snarkdown": "^2.0.0",
+    "sortablejs": "^1.15.2",
     "swr": "^2.2.5",
-    "tar": "^7.0.0"
+    "tar": "^7.0.1"
   },
   "devDependencies": {
     "@actions/github": "6.0.0",
@@ -60,6 +59,7 @@
     "@types/react": "18.2.79",
     "@types/react-dom": "18.2.25",
     "@types/react-transition-group": "4.4.10",
+    "@types/sortablejs": "^1.15.8",
     "@vitejs/plugin-react": "4.2.1",
     "adm-zip": "0.5.12",
     "cross-env": "7.0.3",

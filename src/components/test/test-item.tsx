@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
   Box,
   Typography,
@@ -32,8 +30,6 @@ let eventListener: UnlistenFn | null = null;
 
 export const TestItem = (props: Props) => {
   const { itemData, onEdit, onDelete: onDeleteItem } = props;
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.id });
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -99,8 +95,10 @@ export const TestItem = (props: Props) => {
   return (
     <Box
       sx={{
-        transform: CSS.Transform.toString(transform),
-        transition,
+        display: "flex",
+        flexGrow: "1",
+        margin: "5px",
+        width: "180px",
       }}
     >
       <TestBox
@@ -111,13 +109,7 @@ export const TestItem = (props: Props) => {
           event.preventDefault();
         }}
       >
-        <Box
-          position="relative"
-          sx={{ cursor: "move" }}
-          ref={setNodeRef}
-          {...attributes}
-          {...listeners}
-        >
+        <Box position="relative" sx={{ cursor: "move" }}>
           {icon && icon.trim() !== "" ? (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
               {icon.trim().startsWith("http") && (

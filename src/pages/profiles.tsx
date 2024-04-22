@@ -2,20 +2,7 @@ import useSWR, { mutate } from "swr";
 import { useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useSetRecoilState } from "recoil";
-import { Box, Button, Grid, IconButton, Stack, Divider } from "@mui/material";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
+import { Box, Button, IconButton, Stack, Divider } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import {
   ClearRounded,
@@ -41,7 +28,6 @@ import {
   ProfileViewer,
   ProfileViewerRef,
 } from "@/components/profile/profile-viewer";
-import { ProfileItem } from "@/components/profile/profile-item";
 import { ProfileMore } from "@/components/profile/profile-more";
 import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
@@ -49,6 +35,13 @@ import { throttle } from "lodash-es";
 import { useRecoilState } from "recoil";
 import { atomThemeMode } from "@/services/states";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+import { ReactSortable, SortableEvent } from "react-sortablejs";
+import { ProfileItem } from "@/components/profile/profile-item";
+
+interface ISortableItem {
+  id: string;
+  profileItem: IProfileItem;
+}
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -57,12 +50,6 @@ const ProfilePage = () => {
   const [disabled, setDisabled] = useState(false);
   const [activating, setActivating] = useState("");
   const [loading, setLoading] = useState(false);
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
   const {
     profiles = {},
     activateSelected,
@@ -72,30 +59,74 @@ const ProfilePage = () => {
 
   const { data: chainLogs = {}, mutate: mutateLogs } = useSWR(
     "getRuntimeLogs",
-    getRuntimeLogs
+    getRuntimeLogs,
   );
 
   const chain = profiles.chain || [];
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
+  const [sortableProfileList, setSortableProfileList] = useState<
+    ISortableItem[]
+  >([]);
+
+  const [sortableChainList, setSortableChainList] = useState<ISortableItem[]>(
+    [],
+  );
+
+  const handleProfileDragEnd = async (event: SortableEvent) => {
+    const activeId = sortableProfileList[event.oldIndex!].id;
+    const overId = sortableProfileList[event.newIndex!].id;
+    if (activeId !== overId) {
+      await reorderProfile(activeId.toString(), overId.toString());
+      mutateProfiles();
+    }
+  };
+
+  const handleChainDragEnd = async (event: SortableEvent) => {
+    const activeId = sortableChainList[event.oldIndex!].id;
+    const overId = sortableChainList[event.newIndex!].id;
+    if (activeId !== overId) {
+      await reorderProfile(activeId.toString(), overId.toString());
+      mutateProfiles();
+    }
+  };
 
   // distinguish type
-  const { regularItems, enhanceItems } = useMemo(() => {
+  const { regularItems } = useMemo(() => {
     const items = profiles.items || [];
     const chain = profiles.chain || [];
 
     const type1 = ["local", "remote"];
     const type2 = ["merge", "script"];
 
-    const regularItems = items.filter((i) => i && type1.includes(i.type!));
-    const restItems = items.filter((i) => i && type2.includes(i.type!));
-    const restMap = Object.fromEntries(restItems.map((i) => [i.uid, i]));
+    const regularItems = items
+      .filter((i) => i && type1.includes(i.type!))
+      .map((i) => {
+        const item: ISortableItem = {
+          id: i.uid,
+          profileItem: i,
+        };
+        return item;
+      });
+    const restItems = items
+      .filter((i) => i && type2.includes(i.type!))
+      .map((i) => {
+        const item: ISortableItem = {
+          id: i.uid,
+          profileItem: i,
+        };
+        return item;
+      });
+    const restMap = Object.fromEntries(
+      restItems.map((i) => [i.profileItem.uid, i]),
+    );
     const enhanceItems = chain
       .map((i) => restMap[i]!)
       .filter(Boolean)
-      .concat(restItems.filter((i) => !chain.includes(i.uid)));
-
-    return { regularItems, enhanceItems };
+      .concat(restItems.filter((i) => !chain.includes(i.profileItem.uid)));
+    setSortableProfileList(regularItems);
+    setSortableChainList(enhanceItems);
+    return { regularItems };
   }, [profiles]);
 
   const onImport = async () => {
@@ -125,16 +156,6 @@ const ProfilePage = () => {
     } finally {
       setDisabled(false);
       setLoading(false);
-    }
-  };
-
-  const onDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over) {
-      if (active.id !== over.id) {
-        await reorderProfile(active.id.toString(), over.id.toString());
-        mutateProfiles();
-      }
     }
   };
 
@@ -224,11 +245,15 @@ const ProfilePage = () => {
       setLoadingCache((cache) => {
         // 获取没有正在更新的订阅
         const items = regularItems.filter(
-          (e) => e.type === "remote" && !cache[e.uid]
+          (e) => e.profileItem.type === "remote" && !cache[e.profileItem.uid],
         );
-        const change = Object.fromEntries(items.map((e) => [e.uid, true]));
+        const change = Object.fromEntries(
+          items.map((e) => [e.profileItem.uid, true]),
+        );
 
-        Promise.allSettled(items.map((e) => updateOne(e.uid))).then(resolve);
+        Promise.allSettled(items.map((e) => updateOne(e.profileItem.uid))).then(
+          resolve,
+        );
         return { ...cache, ...change };
       });
     });
@@ -349,36 +374,44 @@ const ProfilePage = () => {
           overflowY: "auto",
         }}
       >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onDragEnd}
+        <ReactSortable
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+          }}
+          animation={200}
+          dragClass="sortable-drag"
+          list={sortableProfileList}
+          setList={(newList: ISortableItem[]) =>
+            setSortableProfileList(newList)
+          }
+          onEnd={handleProfileDragEnd}
         >
-          <Box sx={{ mb: 1.5 }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
-              <SortableContext
-                items={regularItems.map((x) => {
-                  return x.uid;
-                })}
-              >
-                {regularItems.map((item) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
-                    <ProfileItem
-                      id={item.uid}
-                      selected={profiles.current === item.uid}
-                      activating={activating === item.uid}
-                      itemData={item}
-                      onSelect={(f) => onSelect(item.uid, f)}
-                      onEdit={() => viewerRef.current?.edit(item)}
-                    />
-                  </Grid>
-                ))}
-              </SortableContext>
-            </Grid>
-          </Box>
-        </DndContext>
+          {sortableProfileList.map((item) => (
+            <ProfileItem
+              id={item.profileItem.uid}
+              selected={profiles.current === item.profileItem.uid}
+              activating={activating === item.profileItem.uid}
+              itemData={item.profileItem}
+              onSelect={(f) => onSelect(item.profileItem.uid, f)}
+              onEdit={() => viewerRef.current?.edit(item.profileItem)}
+            />
+          ))}
+          {[...new Array(20)].map((_) => {
+            return (
+              <i
+                style={{
+                  display: "flex",
+                  flexGrow: "1",
+                  margin: "0 5px",
+                  width: "260px",
+                }}
+              ></i>
+            );
+          })}
+        </ReactSortable>
 
-        {enhanceItems.length > 0 && (
+        {sortableChainList.length > 0 && (
           <Divider
             variant="middle"
             flexItem
@@ -386,26 +419,49 @@ const ProfilePage = () => {
           ></Divider>
         )}
 
-        {enhanceItems.length > 0 && (
+        {sortableChainList.length > 0 && (
           <Box sx={{ mt: 1.5 }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
-              {enhanceItems.map((item) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
-                  <ProfileMore
-                    selected={!!chain.includes(item.uid)}
-                    itemData={item}
-                    enableNum={chain.length || 0}
-                    logInfo={chainLogs[item.uid]}
-                    onEnable={() => onEnable(item.uid)}
-                    onDisable={() => onDisable(item.uid)}
-                    onDelete={() => onDelete(item.uid)}
-                    onMoveTop={() => onMoveTop(item.uid)}
-                    onMoveEnd={() => onMoveEnd(item.uid)}
-                    onEdit={() => viewerRef.current?.edit(item)}
-                  />
-                </Grid>
+            <ReactSortable
+              disabled
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+              }}
+              animation={200}
+              dragClass="sortable-drag"
+              list={sortableChainList}
+              setList={(newList: ISortableItem[]) =>
+                setSortableChainList(newList)
+              }
+              onEnd={handleChainDragEnd}
+            >
+              {sortableChainList.map((item) => (
+                <ProfileMore
+                  selected={!!chain.includes(item.profileItem.uid)}
+                  itemData={item.profileItem}
+                  enableNum={chain.length || 0}
+                  logInfo={chainLogs[item.profileItem.uid]}
+                  onEnable={() => onEnable(item.profileItem.uid)}
+                  onDisable={() => onDisable(item.profileItem.uid)}
+                  onDelete={() => onDelete(item.profileItem.uid)}
+                  onMoveTop={() => onMoveTop(item.profileItem.uid)}
+                  onMoveEnd={() => onMoveEnd(item.profileItem.uid)}
+                  onEdit={() => viewerRef.current?.edit(item.profileItem)}
+                />
               ))}
-            </Grid>
+              {[...new Array(20)].map((_) => {
+                return (
+                  <i
+                    style={{
+                      display: "flex",
+                      flexGrow: "1",
+                      margin: "0 5px",
+                      width: "260px",
+                    }}
+                  ></i>
+                );
+              })}
+            </ReactSortable>
           </Box>
         )}
       </Box>

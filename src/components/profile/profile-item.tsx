@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
   Box,
   Typography,
@@ -16,7 +14,7 @@ import {
   Menu,
   CircularProgress,
 } from "@mui/material";
-import { RefreshRounded, DragIndicator } from "@mui/icons-material";
+import { RefreshRounded } from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
@@ -41,8 +39,6 @@ interface Props {
 
 export const ProfileItem = (props: Props) => {
   const { selected, activating, itemData, onSelect, onEdit } = props;
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.id });
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -213,8 +209,10 @@ export const ProfileItem = (props: Props) => {
   return (
     <Box
       sx={{
-        transform: CSS.Transform.toString(transform),
-        transition,
+        display: "flex",
+        flexGrow: "1",
+        margin: "5px",
+        width: "260px",
       }}
     >
       <ProfileBox
@@ -247,22 +245,6 @@ export const ProfileItem = (props: Props) => {
         )}
         <Box position="relative">
           <Box sx={{ display: "flex", justifyContent: "start" }}>
-            <Box
-              ref={setNodeRef}
-              sx={{ display: "flex", margin: "auto 0" }}
-              {...attributes}
-              {...listeners}
-            >
-              <DragIndicator
-                sx={[
-                  { cursor: "move", marginLeft: "-6px" },
-                  ({ palette: { text } }) => {
-                    return { color: text.primary };
-                  },
-                ]}
-              />
-            </Box>
-
             <Typography
               width="calc(100% - 36px)"
               sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}

@@ -121,7 +121,14 @@ export const ProfileMore = (props: Props) => {
   };
 
   return (
-    <>
+    <Box
+      sx={{
+        display: "flex",
+        flexGrow: "1",
+        margin: "5px",
+        width: "260px",
+      }}
+    >
       <ProfileBox
         aria-selected={selected}
         onDoubleClick={onEditFile}
@@ -256,7 +263,7 @@ export const ProfileMore = (props: Props) => {
           onClose={() => setLogOpen(false)}
         />
       )}
-    </>
+    </Box>
   );
 };
 
