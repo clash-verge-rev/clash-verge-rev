@@ -46,7 +46,7 @@ const LogItem = (props: Props) => {
     msg = msg.replaceAll(" using ", " ⇢ ");
     msg = msg.replaceAll(" match ", " ⇢ ");
   }
-  msg = msg.replaceAll(" error: ", " ⇢ [error] ");
+  msg = msg.replaceAll(" error: ", " [error] ⇢ ");
 
   return (
     <Item>
