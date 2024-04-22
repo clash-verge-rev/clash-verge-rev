@@ -59,7 +59,7 @@
     "@types/react": "18.2.79",
     "@types/react-dom": "18.2.25",
     "@types/react-transition-group": "4.4.10",
-    "@types/sortablejs": "^1.15.8",
+    "@types/sortablejs": "1.15.8",
     "@vitejs/plugin-react": "4.2.1",
     "adm-zip": "0.5.12",
     "cross-env": "7.0.3",
