@@ -32,7 +32,7 @@
     "i18next": "^23.11.2",
     "lodash-es": "^4.17.21",
     "meta-json-schema": "1.18.3-beta",
-    "monaco-editor": "^0.47.0",
+    "monaco-editor": "^0.48.0",
     "monaco-yaml": "^5.1.1",
     "nanoid": "^5.0.7",
     "react": "^18.2.0",
