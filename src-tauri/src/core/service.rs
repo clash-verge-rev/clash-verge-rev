@@ -1,17 +1,14 @@
-#![cfg(target_os = "windows")]
-
 use crate::config::Config;
 use crate::utils::dirs;
 use anyhow::{bail, Context, Result};
-use deelevate::{PrivilegeLevel, Token};
-use runas::Command as RunasCommand;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::time::Duration;
 use std::{env::current_exe, process::Command as StdCommand};
 use tokio::time::sleep;
+
+// Windows only
 
 const SERVICE_URL: &str = "http://127.0.0.1:33211";
 
@@ -32,7 +29,13 @@ pub struct JsonResponse {
 
 /// Install the Clash Verge Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
+///
+#[cfg(target_os = "windows")]
 pub async fn install_service() -> Result<()> {
+    use deelevate::{PrivilegeLevel, Token};
+    use runas::Command as RunasCommand;
+    use std::os::windows::process::CommandExt;
+
     let binary_path = dirs::service_path()?;
     let install_path = binary_path.with_file_name("install-service.exe");
 
@@ -60,9 +63,69 @@ pub async fn install_service() -> Result<()> {
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
+pub async fn install_service() -> Result<()> {
+    use users::get_effective_uid;
+
+    let binary_path = dirs::service_path()?;
+    let installer_path = binary_path.with_file_name("install-service");
+
+    if !installer_path.exists() {
+        bail!("installer not found");
+    }
+
+    let elevator = crate::utils::unix_helper::linux_elevator();
+    let status = match get_effective_uid() {
+        0 => StdCommand::new(installer_path).status()?,
+        _ => StdCommand::new(elevator)
+            .arg("sh")
+            .arg("-c")
+            .arg(installer_path)
+            .status()?,
+    };
+
+    if !status.success() {
+        bail!(
+            "failed to install service with status {}",
+            status.code().unwrap()
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub async fn install_service() -> Result<()> {
+    let binary_path = dirs::service_path()?;
+    let installer_path = binary_path.with_file_name("install-service");
+
+    if !installer_path.exists() {
+        bail!("installer not found");
+    }
+    let shell = installer_path.to_string_lossy();
+    let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
+
+    let status = StdCommand::new("osascript")
+        .args(vec!["-e", &command])
+        .status()?;
+
+    if !status.success() {
+        bail!(
+            "failed to install service with status {}",
+            status.code().unwrap()
+        );
+    }
+
+    Ok(())
+}
 /// Uninstall the Clash Verge Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
+#[cfg(target_os = "windows")]
 pub async fn uninstall_service() -> Result<()> {
+    use deelevate::{PrivilegeLevel, Token};
+    use runas::Command as RunasCommand;
+    use std::os::windows::process::CommandExt;
+
     let binary_path = dirs::service_path()?;
     let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
 
@@ -83,6 +146,63 @@ pub async fn uninstall_service() -> Result<()> {
     if !status.success() {
         bail!(
             "failed to uninstall service with status {}",
+            status.code().unwrap()
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+pub async fn uninstall_service() -> Result<()> {
+    use users::get_effective_uid;
+
+    let binary_path = dirs::service_path()?;
+    let uninstaller_path = binary_path.with_file_name("uninstall-service");
+
+    if !uninstaller_path.exists() {
+        bail!("uninstaller not found");
+    }
+
+    let elevator = crate::utils::unix_helper::linux_elevator();
+    let status = match get_effective_uid() {
+        0 => StdCommand::new(uninstaller_path).status()?,
+        _ => StdCommand::new(elevator)
+            .arg("sh")
+            .arg("-c")
+            .arg(uninstaller_path)
+            .status()?,
+    };
+
+    if !status.success() {
+        bail!(
+            "failed to install service with status {}",
+            status.code().unwrap()
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub async fn uninstall_service() -> Result<()> {
+    let binary_path = dirs::service_path()?;
+    let uninstaller_path = binary_path.with_file_name("uninstall-service");
+
+    if !uninstaller_path.exists() {
+        bail!("uninstaller not found");
+    }
+
+    let shell = uninstaller_path.to_string_lossy().replace(" ", "\\\\ ");
+    let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
+
+    let status = StdCommand::new("osascript")
+        .args(vec!["-e", &command])
+        .status()?;
+
+    if !status.success() {
+        bail!(
+            "failed to install service with status {}",
             status.code().unwrap()
         );
     }
@@ -119,7 +239,8 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     let clash_core = { Config::verge().latest().clash_core.clone() };
     let clash_core = clash_core.unwrap_or("clash".into());
 
-    let clash_bin = format!("{clash_core}.exe");
+    let bin_ext = if cfg!(windows) { ".exe" } else { "" };
+    let clash_bin = format!("{clash_core}{bin_ext}");
     let bin_path = current_exe()?.with_file_name(clash_bin);
     let bin_path = dirs::path_to_str(&bin_path)?;
 

@@ -299,9 +299,17 @@ pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
     if !icon_dir.exists() {
         let _ = std::fs::create_dir_all(&icon_dir);
     }
-    let dest_path = icon_dir.join(name);
+    let ext = match file_path.extension() {
+        Some(e) => e.to_string_lossy().to_string(),
+        None => "ico".to_string(),
+    };
 
+    let png_dest_path = icon_dir.join(format!("{name}.png"));
+    let ico_dest_path = icon_dir.join(format!("{name}.ico"));
+    let dest_path = icon_dir.join(format!("{name}.{ext}"));
     if file_path.exists() {
+        std::fs::remove_file(png_dest_path).unwrap_or_default();
+        std::fs::remove_file(ico_dest_path).unwrap_or_default();
         match std::fs::copy(file_path, &dest_path) {
             Ok(_) => Ok(dest_path.to_string_lossy().to_string()),
             Err(err) => Err(err.to_string()),
@@ -331,42 +339,23 @@ pub fn exit_app(app_handle: tauri::AppHandle) {
     std::process::exit(0);
 }
 
-#[cfg(windows)]
 pub mod service {
     use super::*;
-    use crate::core::win_service;
+    use crate::core::service;
 
     #[tauri::command]
-    pub async fn check_service() -> CmdResult<win_service::JsonResponse> {
-        wrap_err!(win_service::check_service().await)
+    pub async fn check_service() -> CmdResult<service::JsonResponse> {
+        wrap_err!(service::check_service().await)
     }
 
     #[tauri::command]
     pub async fn install_service() -> CmdResult {
-        wrap_err!(win_service::install_service().await)
+        wrap_err!(service::install_service().await)
     }
 
     #[tauri::command]
     pub async fn uninstall_service() -> CmdResult {
-        wrap_err!(win_service::uninstall_service().await)
-    }
-}
-
-#[cfg(not(windows))]
-pub mod service {
-    use super::*;
-
-    #[tauri::command]
-    pub async fn check_service() -> CmdResult {
-        Ok(())
-    }
-    #[tauri::command]
-    pub async fn install_service() -> CmdResult {
-        Ok(())
-    }
-    #[tauri::command]
-    pub async fn uninstall_service() -> CmdResult {
-        Ok(())
+        wrap_err!(service::uninstall_service().await)
     }
 }
 

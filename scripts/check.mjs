@@ -100,7 +100,7 @@ async function getLatestAlphaVersion() {
 
 /* ======= clash meta stable ======= */
 const META_VERSION_URL =
-  "https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt";
+  "https://github.com/MetaCubeX/mihomo/releases/download/v1.18.1/version.txt";
 const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
 let META_VERSION;
 
@@ -353,27 +353,53 @@ const resolvePlugin = async () => {
   }
 };
 
+// service chmod
+const resolveServicePermission = async () => {
+  const serviceExecutables = [
+    "clash-verge-service",
+    "install-service",
+    "uninstall-service",
+  ];
+  const resDir = path.join(cwd, "src-tauri/resources");
+  for (let f of serviceExecutables) {
+    const targetPath = path.join(resDir, f);
+    if (await fs.pathExists(targetPath)) {
+      execSync(`chmod 755 ${targetPath}`);
+      console.log(`[INFO]: "${targetPath}" chmod finished`);
+    }
+  }
+};
+
 /**
  * main
  */
 
 const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
 
-const resolveService = () =>
+const resolveService = () => {
+  let ext = platform === "win32" ? ".exe" : "";
   resolveResource({
-    file: "clash-verge-service.exe",
-    downloadURL: `${SERVICE_URL}/clash-verge-service.exe`,
+    file: "clash-verge-service" + ext,
+    downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
   });
-const resolveInstall = () =>
+};
+
+const resolveInstall = () => {
+  let ext = platform === "win32" ? ".exe" : "";
   resolveResource({
-    file: "install-service.exe",
-    downloadURL: `${SERVICE_URL}/install-service.exe`,
+    file: "install-service" + ext,
+    downloadURL: `${SERVICE_URL}/install-service${ext}`,
   });
-const resolveUninstall = () =>
+};
+
+const resolveUninstall = () => {
+  let ext = platform === "win32" ? ".exe" : "";
   resolveResource({
-    file: "uninstall-service.exe",
-    downloadURL: `${SERVICE_URL}/uninstall-service.exe`,
+    file: "uninstall-service" + ext,
+    downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
   });
+};
+
 const resolveSetDnsScript = () =>
   resolveResource({
     file: "set_dns.sh",
@@ -420,9 +446,9 @@ const tasks = [
     retry: 5,
   },
   { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
-  { name: "service", func: resolveService, retry: 5, winOnly: true },
-  { name: "install", func: resolveInstall, retry: 5, winOnly: true },
-  { name: "uninstall", func: resolveUninstall, retry: 5, winOnly: true },
+  { name: "service", func: resolveService, retry: 5 },
+  { name: "install", func: resolveInstall, retry: 5 },
+  { name: "uninstall", func: resolveUninstall, retry: 5 },
   { name: "set_dns_script", func: resolveSetDnsScript, retry: 5 },
   { name: "unset_dns_script", func: resolveUnSetDnsScript, retry: 5 },
   { name: "mmdb", func: resolveMmdb, retry: 5 },
@@ -434,12 +460,20 @@ const tasks = [
     retry: 5,
     winOnly: true,
   },
+  {
+    name: "service_chmod",
+    func: resolveServicePermission,
+    retry: 1,
+    unixOnly: true,
+  },
 ];
 
 async function runTask() {
   const task = tasks.shift();
   if (!task) return;
-  if (task.winOnly && process.platform !== "win32") return runTask();
+  if (task.winOnly && platform !== "win32") return runTask();
+  if (task.linuxOnly && platform !== "linux") return runTask();
+  if (task.unixOnly && platform === "win32") return runTask();
 
   for (let i = 0; i < task.retry; i++) {
     try {

@@ -17,23 +17,17 @@ interface Props {
   onError?: (err: Error) => void;
 }
 
-const isWIN = getSystem() === "windows";
-
 const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { verge, mutateVerge, patchVerge } = useVerge();
 
   // service mode
-  const { data: serviceStatus } = useSWR(
-    isWIN ? "checkService" : null,
-    checkService,
-    {
-      revalidateIfStale: false,
-      shouldRetryOnError: false,
-      focusThrottleInterval: 36e5, // 1 hour
-    }
-  );
+  const { data: serviceStatus } = useSWR("checkService", checkService, {
+    revalidateIfStale: false,
+    shouldRetryOnError: false,
+    focusThrottleInterval: 36e5, // 1 hour
+  });
 
   const serviceRef = useRef<DialogRef>(null);
   const sysproxyRef = useRef<DialogRef>(null);
@@ -56,20 +50,13 @@ const SettingSystem = ({ onError }: Props) => {
     <SettingList title={t("System Setting")}>
       <SysproxyViewer ref={sysproxyRef} />
       <TunViewer ref={tunRef} />
-      {isWIN && (
-        <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
-      )}
+      <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
 
       <SettingItem
         label={t("Tun Mode")}
         extra={
           <>
-            <Tooltip
-              title={
-                isWIN ? t("Tun Mode Info Windows") : t("Tun Mode Info Unix")
-              }
-              placement="top"
-            >
+            <Tooltip title={t("Tun Mode Info")} placement="top">
               <IconButton color="inherit" size="small">
                 <InfoRounded
                   fontSize="inherit"
@@ -102,39 +89,37 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      {isWIN && (
-        <SettingItem
-          label={t("Service Mode")}
-          extra={
-            <IconButton
-              color="inherit"
-              size="small"
-              onClick={() => serviceRef.current?.open()}
-            >
-              <PrivacyTipRounded
-                fontSize="inherit"
-                style={{ cursor: "pointer", opacity: 0.75 }}
-              />
-            </IconButton>
-          }
-        >
-          <GuardState
-            value={enable_service_mode ?? false}
-            valueProps="checked"
-            onCatch={onError}
-            onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ enable_service_mode: e })}
-            onGuard={(e) => patchVerge({ enable_service_mode: e })}
+      <SettingItem
+        label={t("Service Mode")}
+        extra={
+          <IconButton
+            color="inherit"
+            size="small"
+            onClick={() => serviceRef.current?.open()}
           >
-            <Switch
-              edge="end"
-              disabled={
-                serviceStatus !== "active" && serviceStatus !== "installed"
-              }
+            <PrivacyTipRounded
+              fontSize="inherit"
+              style={{ cursor: "pointer", opacity: 0.75 }}
             />
-          </GuardState>
-        </SettingItem>
-      )}
+          </IconButton>
+        }
+      >
+        <GuardState
+          value={enable_service_mode ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ enable_service_mode: e })}
+          onGuard={(e) => patchVerge({ enable_service_mode: e })}
+        >
+          <Switch
+            edge="end"
+            disabled={
+              serviceStatus !== "active" && serviceStatus !== "installed"
+            }
+          />
+        </GuardState>
+      </SettingItem>
 
       <SettingItem
         label={t("System Proxy")}

@@ -1,4 +1,5 @@
 node_modules
+.pnpm-store
 .DS_Store
 dist
 dist-ssr
@@ -6,4 +7,4 @@ dist-ssr
 update.json
 scripts/_env.sh
 .vscode
-.tool-version
+.tool-versions

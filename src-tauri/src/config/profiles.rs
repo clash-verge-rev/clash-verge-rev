@@ -211,7 +211,7 @@ impl IProfiles {
                 if each.uid == some_uid {
                     each.extra = item.extra;
                     each.updated = item.updated;
-
+                    each.home = item.home;
                     // save the file data
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {

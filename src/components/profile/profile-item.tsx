@@ -24,7 +24,7 @@ import { EditorViewer } from "./editor-viewer";
 import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
 import { ConfirmViewer } from "./confirm-viewer";
-
+import { open } from "@tauri-apps/api/shell";
 const round = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -55,6 +55,7 @@ export const ProfileItem = (props: Props) => {
   // remote file mode
   const hasUrl = !!itemData.url;
   const hasExtra = !!extra; // only subscription url has extra info
+  const hasHome = !!itemData.home; // only subscription url has home page
 
   const { upload = 0, download = 0, total = 0 } = extra ?? {};
   const from = parseUrl(itemData.url);
@@ -94,6 +95,11 @@ export const ProfileItem = (props: Props) => {
 
   const [fileOpen, setFileOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const onOpenHome = () => {
+    setAnchorEl(null);
+    open(itemData.home ?? "");
+  };
 
   const onEditInfo = () => {
     setAnchorEl(null);
@@ -166,7 +172,9 @@ export const ProfileItem = (props: Props) => {
     }
   });
 
-  const urlModeMenu = [
+  const urlModeMenu = (
+    hasHome ? [{ label: "Home", handler: onOpenHome }] : []
+  ).concat([
     { label: "Select", handler: onForceSelect },
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
@@ -180,7 +188,7 @@ export const ProfileItem = (props: Props) => {
         setConfirmOpen(true);
       },
     },
-  ];
+  ]);
   const fileModeMenu = [
     { label: "Select", handler: onForceSelect },
     { label: "Edit Info", handler: onEditInfo },
@@ -378,7 +386,8 @@ export const ProfileItem = (props: Props) => {
       <EditorViewer
         uid={uid}
         open={fileOpen}
-        mode="yaml"
+        language="yaml"
+        schema="clash"
         onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer

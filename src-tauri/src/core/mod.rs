@@ -7,7 +7,7 @@ pub mod manager;
 pub mod sysopt;
 pub mod timer;
 pub mod tray;
-pub mod win_service;
+pub mod service;
 pub mod win_uwp;
 
 pub use self::core::*;

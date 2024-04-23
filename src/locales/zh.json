@@ -18,6 +18,8 @@
   "direct": "直连",
   "script": "脚本",
 
+  "Create Test": "新建测试",
+  "Edit Test": "编辑测试",
   "Edit": "编辑",
   "Icon": "图标",
   "Test URL": "测试地址",
@@ -29,7 +31,9 @@
   "New": "新建",
   "Create Profile": "新建订阅",
   "Choose File": "选择文件",
+  "Close": "关闭",
   "Close All": "关闭全部",
+  "Home": "首页",
   "Select": "使用",
   "Edit Info": "编辑信息",
   "Edit File": "编辑文件",
@@ -54,6 +58,7 @@
   "Sort by delay": "按延迟排序",
   "Sort by name": "按名称排序",
   "Delay check URL": "延迟测试链接",
+  "Proxy basic": "隐藏节点细节",
   "Proxy detail": "展示节点细节",
   "Filter": "过滤节点",
   "Filter conditions": "过滤条件",
@@ -82,6 +87,9 @@
   "Random Port": "随机端口",
   "After restart to take effect": "重启后生效",
   "External": "外部控制",
+  "External Controller": "外部控制器监听地址",
+  "Core Secret": "API访问密钥",
+  "Recommended": "建议设置",
   "Clash Core": "Clash 内核",
   "Grant": "授权",
   "Tun mode requires": "如需启用TUN模式需要授权",
@@ -133,6 +141,7 @@
   "Clash Field": "Clash 字段",
   "Runtime Config": "当前配置",
   "ReadOnly": "只读",
+  "ReadOnlyMessage": "无法在只读模式下编辑",
   "Restart": "重启内核",
   "Upgrade": "升级内核",
 
@@ -177,7 +186,6 @@
   "Reset to Default": "重置为默认值",
 
   "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换",
-  "Tun Mode Info Windows": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",
-  "Tun Mode Info Unix": "Tun模式需要授予内核相关权限，使用前请先在内核设置中给内核授权",
+  "Tun Mode Info": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",
   "System and Mixed Can Only be Used in Service Mode": "System和Mixed只能在服务模式下使用"
 }

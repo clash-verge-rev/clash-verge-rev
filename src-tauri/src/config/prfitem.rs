@@ -46,6 +46,10 @@ pub struct PrfItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub option: Option<PrfOption>,
 
+    /// profile web page url
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub home: Option<String>,
+
     /// the file data
     #[serde(skip)]
     pub file_data: Option<String>,
@@ -161,6 +165,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
+            home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
         })
@@ -291,6 +296,14 @@ impl PrfItem {
             },
         };
 
+        let home = match header.get("profile-web-page-url") {
+            Some(value) => {
+                let str_value = value.to_str().unwrap_or("");
+                Some(str_value.to_string())
+            },
+            None => None,
+        };
+
         let uid = help::get_uid("r");
         let file = format!("{uid}.yaml");
         let name = name.unwrap_or(filename.unwrap_or("Remote File".into()));
@@ -317,6 +330,7 @@ impl PrfItem {
             selected: None,
             extra,
             option,
+            home,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(data.into()),
         })
@@ -338,6 +352,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
+            home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_MERGE.into()),
         })
@@ -356,6 +371,7 @@ impl PrfItem {
             desc: Some(desc),
             file: Some(file),
             url: None,
+            home: None,
             selected: None,
             extra: None,
             option: None,

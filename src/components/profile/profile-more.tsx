@@ -235,7 +235,8 @@ export const ProfileMore = (props: Props) => {
       <EditorViewer
         uid={uid}
         open={fileOpen}
-        mode={type === "merge" ? "yaml" : "javascript"}
+        language={type === "merge" ? "yaml" : "javascript"}
+        schema={type === "merge" ? "merge" : undefined}
         onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer

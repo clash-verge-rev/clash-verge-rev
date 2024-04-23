@@ -104,7 +104,6 @@ export const TestItem = (props: Props) => {
       }}
     >
       <TestBox
-        onClick={onEditTest}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });
