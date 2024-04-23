@@ -250,10 +250,12 @@ impl Tray {
         };
 
         let _ = tray.set_tooltip(&format!(
-            "Clash Verge {version}\n{}: {}\n{}: {}",
+            "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
             t!("System Proxy", "系统代理"),
             switch_map[system_proxy],
             t!("TUN Mode", "Tun 模式"),
+            switch_map[tun_mode],
+            t!("Using", "当前使用"),
             switch_map[tun_mode]
         ));
 
