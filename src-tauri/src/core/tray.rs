@@ -182,9 +182,13 @@ impl Tray {
             #[cfg(target_os = "macos")]
             let mut icon = include_bytes!("../../icons/mac-tray-icon-sys.png").to_vec();
             if *sysproxy_tray_icon {
-                let path = dirs::app_home_dir()?.join("icons").join("sysproxy.png");
-                if path.exists() {
-                    icon = std::fs::read(path).unwrap();
+                let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                let png_path = icon_dir_path.join("sysproxy.png");
+                let ico_path = icon_dir_path.join("sysproxy.ico");
+                if ico_path.exists() {
+                    icon = std::fs::read(ico_path).unwrap();
+                } else if png_path.exists() {
+                    icon = std::fs::read(png_path).unwrap();
                 }
             }
             icon
@@ -194,9 +198,13 @@ impl Tray {
             #[cfg(target_os = "macos")]
             let mut icon = include_bytes!("../../icons/mac-tray-icon.png").to_vec();
             if *common_tray_icon {
-                let path = dirs::app_home_dir()?.join("icons").join("common.png");
-                if path.exists() {
-                    icon = std::fs::read(path).unwrap();
+                let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                let png_path = icon_dir_path.join("common.png");
+                let ico_path = icon_dir_path.join("common.ico");
+                if ico_path.exists() {
+                    icon = std::fs::read(ico_path).unwrap();
+                } else if png_path.exists() {
+                    icon = std::fs::read(png_path).unwrap();
                 }
             }
             icon
@@ -208,9 +216,13 @@ impl Tray {
             #[cfg(target_os = "macos")]
             let mut icon = include_bytes!("../../icons/mac-tray-icon-tun.png").to_vec();
             if *tun_tray_icon {
-                let path = dirs::app_home_dir()?.join("icons").join("tun.png");
-                if path.exists() {
-                    icon = std::fs::read(path).unwrap();
+                let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                let png_path = icon_dir_path.join("tun.png");
+                let ico_path = icon_dir_path.join("tun.ico");
+                if ico_path.exists() {
+                    icon = std::fs::read(ico_path).unwrap();
+                } else if png_path.exists() {
+                    icon = std::fs::read(png_path).unwrap();
                 }
             }
             indication_icon = icon

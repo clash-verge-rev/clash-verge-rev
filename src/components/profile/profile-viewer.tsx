@@ -97,6 +97,8 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           }
           if (form.option?.update_interval) {
             form.option.update_interval = +form.option.update_interval;
+          } else {
+            delete form.option?.update_interval;
           }
           if (form.option?.user_agent === "") {
             delete form.option.user_agent;
@@ -122,7 +124,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           Notice.error(err.message || err.toString());
           setLoading(false);
         }
-      })
+      }),
     );
 
     const handleClose = () => {
@@ -285,7 +287,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         )}
       </BaseDialog>
     );
-  }
+  },
 );
 
 const StyledBox = styled(Box)(() => ({
