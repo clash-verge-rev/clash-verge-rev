@@ -97,6 +97,8 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           }
           if (form.option?.update_interval) {
             form.option.update_interval = +form.option.update_interval;
+          } else {
+            delete form.option?.update_interval;
           }
           if (form.option?.user_agent === "") {
             delete form.option.user_agent;

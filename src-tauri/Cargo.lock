@@ -749,7 +749,7 @@ dependencies = [
 
 [[package]]
 name = "clash-verge"
-version = "1.5.11"
+version = "1.6.0"
 dependencies = [
  "anyhow",
  "auto-launch",
@@ -2409,6 +2409,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "ico"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "031530fe562d8c8d71c0635013d6d155bbfe8ba0aa4b4d2d24ce8af6b71047bd"
+dependencies = [
+ "byteorder",
+ "png",
 ]
 
 [[package]]
@@ -5248,6 +5258,7 @@ dependencies = [
  "gtk",
  "heck 0.4.1",
  "http 0.2.11",
+ "ico 0.2.0",
  "ignore",
  "indexmap 1.9.3",
  "infer 0.9.0",
@@ -5316,7 +5327,7 @@ checksum = "a1554c5857f65dbc377cefb6b97c8ac77b1cb2a90d30d3448114d5d6b48a77fc"
 dependencies = [
  "base64 0.21.7",
  "brotli",
- "ico",
+ "ico 0.3.0",
  "json-patch",
  "plist",
  "png",

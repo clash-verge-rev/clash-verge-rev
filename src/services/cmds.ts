@@ -223,7 +223,7 @@ export async function exitApp() {
 
 export async function copyIconFile(
   path: string,
-  name: "common.png" | "sysproxy.png" | "tun.png"
+  name: "common" | "sysproxy" | "tun"
 ) {
   return invoke<void>("copy_icon_file", { path, name });
 }
