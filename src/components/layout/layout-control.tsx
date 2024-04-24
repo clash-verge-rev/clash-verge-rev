@@ -8,18 +8,29 @@ import {
   PushPinOutlined,
   PushPinRounded,
 } from "@mui/icons-material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const LayoutControl = () => {
   const minWidth = 40;
 
   const [isMaximized, setIsMaximized] = useState(false);
   const [isPined, setIsPined] = useState(false);
-  appWindow.onResized(() => {
-    appWindow.isMaximized().then((isMaximized) => {
-      setIsMaximized(() => isMaximized);
+
+  useEffect(() => {
+    const unlistenResized = appWindow.onResized(() => {
+      appWindow.isMaximized().then((maximized) => {
+        setIsMaximized(() => maximized);
+      });
     });
-  });
+
+    appWindow.isMaximized().then((maximized) => {
+      setIsMaximized(() => maximized);
+    });
+
+    return () => {
+      unlistenResized.then((fn) => fn());
+    };
+  }, []);
 
   return (
     <ButtonGroup
