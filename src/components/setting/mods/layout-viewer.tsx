@@ -1,15 +1,25 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { List, Button, Select, MenuItem } from "@mui/material";
+import {
+  List,
+  Button,
+  Select,
+  MenuItem,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
-import { SettingItem } from "./setting-comp";
-import { GuardState } from "./guard-state";
 import { open as openDialog } from "@tauri-apps/api/dialog";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { copyIconFile, getAppDir } from "@/services/cmds";
+import { copyIconFile, getAppDir, restartApp } from "@/services/cmds";
 import { join } from "@tauri-apps/api/path";
 import { exists } from "@tauri-apps/api/fs";
+import { ConfirmViewer } from "@/components/profile/confirm-viewer";
+import { InfoRounded } from "@mui/icons-material";
+import getSystem from "@/utils/get-system";
+import { SettingItem } from "@/components/setting/mods/setting-comp";
+import { GuardState } from "@/components/setting/mods/guard-state";
 
 export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -19,7 +29,13 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const [commonIcon, setCommonIcon] = useState("");
   const [sysproxyIcon, setSysproxyIcon] = useState("");
   const [tunIcon, setTunIcon] = useState("");
-
+  const { enable_system_title, enable_keep_ui_active } = verge || {};
+  const systemOS = getSystem();
+  const show_title_setting = systemOS === "linux" || systemOS === "windows";
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [enableSystemTitle, setEnableSystemTitle] = useState(
+    enable_system_title ?? false,
+  );
   useEffect(() => {
     initIconPath();
   }, []);
@@ -71,9 +87,70 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
       disableOk
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
-    >
+      onCancel={() => setOpen(false)}>
       <List>
+        {show_title_setting && (
+          <SettingItem
+            label={t("System Title")}
+            extra={
+              <Tooltip title={t("App Title Info")} placement="top">
+                <IconButton color="inherit" size="small">
+                  <InfoRounded
+                    fontSize="inherit"
+                    style={{ cursor: "pointer", opacity: 0.75 }}
+                  />
+                </IconButton>
+              </Tooltip>
+            }>
+            <GuardState
+              value={enable_system_title ?? false}
+              valueProps="checked"
+              onCatch={onError}
+              onFormat={onSwitchFormat}
+              onChange={(e) => {
+                setConfirmOpen(true);
+                setEnableSystemTitle(e);
+              }}>
+              <Switch edge="end" />
+            </GuardState>
+          </SettingItem>
+        )}
+
+        <ConfirmViewer
+          title="Confirm restart"
+          message="Restart App Message"
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={async () => {
+            onChangeData({ enable_system_title: enableSystemTitle });
+            await patchVerge({ enable_system_title: enableSystemTitle });
+            setConfirmOpen(false);
+            restartApp();
+          }}
+        />
+
+        <SettingItem
+          label={t("Keep UI Active")}
+          extra={
+            <Tooltip title={t("Keep UI Active Info")} placement="top">
+              <IconButton color="inherit" size="small">
+                <InfoRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+            </Tooltip>
+          }>
+          <GuardState
+            value={enable_keep_ui_active ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_keep_ui_active: e })}
+            onGuard={(e) => patchVerge({ enable_keep_ui_active: e })}>
+            <Switch edge="end" />
+          </GuardState>
+        </SettingItem>
         <SettingItem label={t("Traffic Graph")}>
           <GuardState
             value={verge?.traffic_graph ?? true}
@@ -81,8 +158,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onCatch={onError}
             onFormat={onSwitchFormat}
             onChange={(e) => onChangeData({ traffic_graph: e })}
-            onGuard={(e) => patchVerge({ traffic_graph: e })}
-          >
+            onGuard={(e) => patchVerge({ traffic_graph: e })}>
             <Switch edge="end" />
           </GuardState>
         </SettingItem>
@@ -94,8 +170,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onCatch={onError}
             onFormat={onSwitchFormat}
             onChange={(e) => onChangeData({ enable_memory_usage: e })}
-            onGuard={(e) => patchVerge({ enable_memory_usage: e })}
-          >
+            onGuard={(e) => patchVerge({ enable_memory_usage: e })}>
             <Switch edge="end" />
           </GuardState>
         </SettingItem>
@@ -107,8 +182,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onCatch={onError}
             onFormat={onSwitchFormat}
             onChange={(e) => onChangeData({ enable_group_icon: e })}
-            onGuard={(e) => patchVerge({ enable_group_icon: e })}
-          >
+            onGuard={(e) => patchVerge({ enable_group_icon: e })}>
             <Switch edge="end" />
           </GuardState>
         </SettingItem>
@@ -119,8 +193,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
             onChange={(e) => onChangeData({ menu_icon: e })}
-            onGuard={(e) => patchVerge({ menu_icon: e })}
-          >
+            onGuard={(e) => patchVerge({ menu_icon: e })}>
             <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
               <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>
               <MenuItem value="colorful">{t("Colorful")}</MenuItem>
@@ -134,8 +207,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             value={verge?.common_tray_icon}
             onCatch={onError}
             onChange={(e) => onChangeData({ common_tray_icon: e })}
-            onGuard={(e) => patchVerge({ common_tray_icon: e })}
-          >
+            onGuard={(e) => patchVerge({ common_tray_icon: e })}>
             <Button
               variant="outlined"
               size="small"
@@ -167,8 +239,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     patchVerge({ common_tray_icon: true });
                   }
                 }
-              }}
-            >
+              }}>
               {verge?.common_tray_icon ? t("Clear") : t("Browse")}
             </Button>
           </GuardState>
@@ -179,8 +250,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             value={verge?.sysproxy_tray_icon}
             onCatch={onError}
             onChange={(e) => onChangeData({ sysproxy_tray_icon: e })}
-            onGuard={(e) => patchVerge({ sysproxy_tray_icon: e })}
-          >
+            onGuard={(e) => patchVerge({ sysproxy_tray_icon: e })}>
             <Button
               variant="outlined"
               size="small"
@@ -212,8 +282,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     patchVerge({ sysproxy_tray_icon: true });
                   }
                 }
-              }}
-            >
+              }}>
               {verge?.sysproxy_tray_icon ? t("Clear") : t("Browse")}
             </Button>
           </GuardState>
@@ -224,8 +293,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             value={verge?.tun_tray_icon}
             onCatch={onError}
             onChange={(e) => onChangeData({ tun_tray_icon: e })}
-            onGuard={(e) => patchVerge({ tun_tray_icon: e })}
-          >
+            onGuard={(e) => patchVerge({ tun_tray_icon: e })}>
             <Button
               variant="outlined"
               size="small"
@@ -255,8 +323,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                     patchVerge({ tun_tray_icon: true });
                   }
                 }
-              }}
-            >
+              }}>
               {verge?.tun_tray_icon ? t("Clear") : t("Browse")}
             </Button>
           </GuardState>
