@@ -59,7 +59,7 @@ jobs:
           pnpm check ${{ matrix.target }}
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@d3b2759c553ebe71be2c4072209be6da0aa6808b # v0
+        uses: tauri-apps/tauri-action@efcf29f3275be7c39922887eede87441f012b79b # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
