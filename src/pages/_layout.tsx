@@ -28,38 +28,57 @@ import { getPortableFlag } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
+
 export let portableFlag = false;
 
 dayjs.extend(relativeTime);
 
 const OS = getSystem();
+let keepUIActive = false;
 
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
-  appWindow.onResized(() => {
-    appWindow.isMaximized().then((value) => {
-      if (isMaximized !== value) {
-        setIsMaximized(value);
-      }
-    });
-  });
   const [mode] = useRecoilState(atomThemeMode);
   const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
 
   const { verge } = useVerge();
-  const { language, start_page, enable_system_title } = verge || {};
+  const { language, start_page, enable_system_title, enable_keep_ui_active } =
+    verge || {};
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
   if (!routersEles) return null;
 
+  const handleClose = (keepUIActive: boolean) => {
+    if (keepUIActive) {
+      appWindow.hide();
+    } else {
+      appWindow.close();
+    }
+  };
+
   useEffect(() => {
+    if (enable_keep_ui_active === undefined) return;
+    keepUIActive = enable_keep_ui_active;
+  }, [enable_keep_ui_active]);
+
+  useEffect(() => {
+    appWindow.isMaximized().then((maximized) => {
+      setIsMaximized(maximized);
+    });
+    const unlistenResize = appWindow.onResized(() => {
+      appWindow.isMaximized().then((value) => {
+        if (isMaximized !== value) {
+          setIsMaximized(value);
+        }
+      });
+    });
+
     window.addEventListener("keydown", (e) => {
-      // macOS有cmd+w
       if (e.key === "Escape" && OS !== "macos") {
-        appWindow.close();
+        handleClose(keepUIActive);
       }
     });
 
@@ -96,6 +115,10 @@ const Layout = () => {
       await appWindow.show();
       await appWindow.setFocus();
     }, 50);
+
+    return () => {
+      unlistenResize.then();
+    };
   }, []);
 
   useEffect(() => {
@@ -141,13 +164,11 @@ const Layout = () => {
                   height: "calc(100vh - 4px)",
                 }
               : {},
-          ]}
-        >
+          ]}>
           <div
             className={`layout__left ${
               enable_system_title ? "system-title" : ""
-            }`}
-          >
+            }`}>
             <div className="the-logo" data-tauri-drag-region="true">
               {!isDark ? <LogoSvg /> : <LogoSvg_dark />}
               {<UpdateButton className="the-newbtn" />}
@@ -158,8 +179,7 @@ const Layout = () => {
                 <LayoutItem
                   key={router.label}
                   to={router.path}
-                  icon={router.icon}
-                >
+                  icon={router.icon}>
                   {t(router.label)}
                 </LayoutItem>
               ))}
@@ -173,16 +193,19 @@ const Layout = () => {
           <div
             className={`layout__right ${
               enable_system_title ? "system-title" : ""
-            }`}
-          >
+            }`}>
             {!enable_system_title && (
               <div className="the-bar">
                 <div
                   className="the-dragbar"
                   data-tauri-drag-region="true"
-                  style={{ width: "100%" }}
-                ></div>
-                {OS !== "macos" && <LayoutControl isMaximized={isMaximized} />}
+                  style={{ width: "100%" }}></div>
+                {OS !== "macos" && (
+                  <LayoutControl
+                    maximized={isMaximized}
+                    onClose={() => handleClose(keepUIActive)}
+                  />
+                )}
               </div>
             )}
 
@@ -190,8 +213,7 @@ const Layout = () => {
               <CSSTransition
                 key={location.pathname}
                 timeout={300}
-                classNames="page"
-              >
+                classNames="page">
                 {React.cloneElement(routersEles, { key: location.pathname })}
               </CSSTransition>
             </TransitionGroup>

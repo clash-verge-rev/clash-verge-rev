@@ -9,17 +9,14 @@ import {
   PushPinRounded,
 } from "@mui/icons-material";
 import { useState } from "react";
-import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
-  isMaximized: boolean;
+  maximized: boolean;
+  onClose: () => void;
 }
 
-export const LayoutControl = ({ isMaximized }: Props) => {
+export const LayoutControl = ({ maximized, onClose }: Props) => {
   const minWidth = 40;
-  const { verge } = useVerge();
-  const { enable_keep_ui_active } = verge ?? {};
-
   const [isPined, setIsPined] = useState(false);
 
   return (
@@ -31,16 +28,14 @@ export const LayoutControl = ({ isMaximized }: Props) => {
           borderRadius: "0px",
           borderRight: "0px",
         },
-      }}
-    >
+      }}>
       <Button
         size="small"
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
         onClick={() => {
           appWindow.setAlwaysOnTop(!isPined);
           setIsPined((isPined) => !isPined);
-        }}
-      >
+        }}>
         {isPined ? (
           <PushPinRounded fontSize="small" />
         ) : (
@@ -51,8 +46,7 @@ export const LayoutControl = ({ isMaximized }: Props) => {
       <Button
         size="small"
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
-        onClick={() => appWindow.minimize()}
-      >
+        onClick={() => appWindow.minimize()}>
         <HorizontalRuleRounded fontSize="small" />
       </Button>
 
@@ -61,9 +55,8 @@ export const LayoutControl = ({ isMaximized }: Props) => {
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
         onClick={() => {
           appWindow.toggleMaximize();
-        }}
-      >
-        {isMaximized ? (
+        }}>
+        {maximized ? (
           <FilterNoneRounded
             fontSize="small"
             style={{
@@ -82,14 +75,7 @@ export const LayoutControl = ({ isMaximized }: Props) => {
           svg: { transform: "scale(1.05)" },
           ":hover": { bgcolor: "#ff000090" },
         }}
-        onClick={() => {
-          if (enable_keep_ui_active) {
-            appWindow.hide();
-          } else {
-            appWindow.close();
-          }
-        }}
-      >
+        onClick={onClose}>
         <CloseRounded fontSize="small" />
       </Button>
     </ButtonGroup>
