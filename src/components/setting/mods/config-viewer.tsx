@@ -24,6 +24,7 @@ import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js";
 import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js";
 import { useWindowSize } from "@/components/proxy/use-window-width";
+import { size } from "lodash-es";
 
 export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -32,7 +33,7 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useRecoilValue(atomThemeMode);
-  const { width, height } = useWindowSize();
+  const { size } = useWindowSize();
 
   useEffect(() => {
     return () => {
@@ -70,7 +71,7 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
   }));
 
   instanceRef.current?.updateOptions({
-    minimap: { enabled: width >= 1000 },
+    minimap: { enabled: size.width >= 1000 },
   });
 
   return (
@@ -82,11 +83,10 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
       <DialogContent
         sx={{
           width: "94%",
-          height: `${height - 200}px`,
+          height: `${size.height - 200}px`,
           pb: 1,
           userSelect: "text",
-        }}
-      >
+        }}>
         <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
       </DialogContent>
 

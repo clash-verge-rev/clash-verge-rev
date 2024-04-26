@@ -29,16 +29,16 @@ export const useRenderList = (mode: string) => {
   );
 
   const { verge } = useVerge();
-  const { width } = useWindowSize();
+  const { size } = useWindowSize();
 
   let col = Math.floor(verge?.proxy_layout_column || 6);
 
   // 自适应
   if (col >= 6 || col <= 0) {
-    if (width > 1450) col = 4;
-    else if (width > 1024) col = 3;
-    else if (width > 900) col = 2;
-    else if (width >= 600) col = 2;
+    if (size.width > 1450) col = 4;
+    else if (size.width > 1024) col = 3;
+    else if (size.width > 900) col = 2;
+    else if (size.width >= 600) col = 2;
     else col = 1;
   }
 

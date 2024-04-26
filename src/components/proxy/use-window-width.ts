@@ -2,13 +2,17 @@ import { debounce } from "lodash-es";
 import { useEffect, useState } from "react";
 
 export const useWindowSize = () => {
-  const [width, setWidth] = useState(() => document.body.clientWidth);
-  const [height, setHeight] = useState(() => document.body.clientHeight);
+  const [size, setSize] = useState({
+    width: document.body.clientWidth,
+    height: document.body.clientHeight,
+  });
 
   useEffect(() => {
     const handleResize = () => {
-      setWidth(document.body.clientWidth);
-      setHeight(document.body.clientHeight);
+      setSize({
+        width: document.body.clientWidth,
+        height: document.body.clientHeight,
+      });
     };
 
     window.addEventListener("resize", debounce(handleResize, 150));
@@ -17,5 +21,5 @@ export const useWindowSize = () => {
     };
   }, []);
 
-  return { width, height };
+  return { size };
 };

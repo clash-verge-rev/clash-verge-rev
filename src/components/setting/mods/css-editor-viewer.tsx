@@ -28,7 +28,7 @@ export const CSSEditorViewer = (props: Props) => {
   const editorRef = useRef<any>();
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useRecoilValue(atomThemeMode);
-  const { width, height } = useWindowSize();
+  const { size } = useWindowSize();
 
   useEffect(() => {
     if (!open) return;
@@ -62,7 +62,7 @@ export const CSSEditorViewer = (props: Props) => {
   }, [open]);
 
   instanceRef.current?.updateOptions({
-    minimap: { enabled: width >= 1000 },
+    minimap: { enabled: size.width >= 1000 },
   });
 
   const saveCSS = useLockFn(async () => {
@@ -85,11 +85,10 @@ export const CSSEditorViewer = (props: Props) => {
       <DialogContent
         sx={{
           width: "94%",
-          height: `${height - 200}px`,
+          height: `${size.height - 200}px`,
           pb: 1,
           userSelect: "text",
-        }}
-      >
+        }}>
         <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
       </DialogContent>
 
