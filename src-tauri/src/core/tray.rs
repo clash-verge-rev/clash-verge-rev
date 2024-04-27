@@ -260,13 +260,25 @@ impl Tray {
             map.insert(false, "off");
             map
         };
-
+        
+        let mut current_profile_name = "None".to_string();
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
+        if let Some(current_profile_uid) = profiles.get_current() {
+            let current_profile = profiles.get_item(&current_profile_uid);
+            current_profile_name = match &current_profile.unwrap().name {
+                Some(profile_name) => profile_name.to_string(),
+                None => current_profile_name,
+            };
+        };
         let _ = tray.set_tooltip(&format!(
-            "Clash Verge {version}\n{}: {}\n{}: {}",
+            "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
             t!("System Proxy", "系统代理"),
             switch_map[system_proxy],
             t!("TUN Mode", "Tun 模式"),
-            switch_map[tun_mode]
+            switch_map[tun_mode],
+            t!("Curent Profile", "当前订阅"),
+            current_profile_name
         ));
 
         Ok(())
