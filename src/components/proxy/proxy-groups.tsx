@@ -145,6 +145,10 @@ export const ProxyGroups = (props: Props) => {
         .filter((item) => item.type === 0)
         .flatMap((item) => item.key.length),
     ) ?? 8;
+  const sidebarIconRight =
+    maxGroupNameLength * 14 > 190 ? 190 : maxGroupNameLength * 14;
+  const sidebarWidth =
+    maxGroupNameLength * 15 > 200 ? 200 : maxGroupNameLength * 15;
   const [groupWidth, setGroupWidth] = useState(0);
   const [open, setOpen] = useState(false);
 
@@ -153,7 +157,7 @@ export const ProxyGroups = (props: Props) => {
       <Box flexGrow={1} height={"100%"}>
         <Virtuoso
           ref={virtuosoRef}
-          style={{ height: "100%" }}
+          style={{ height: "calc(100% - 16px)" }}
           totalCount={renderList.length}
           increaseViewportBy={256}
           itemContent={(index) => (
@@ -207,11 +211,7 @@ export const ProxyGroups = (props: Props) => {
           size="small"
           sx={{
             position: "absolute",
-            right: open
-              ? maxGroupNameLength * 14 > 200
-                ? 200
-                : maxGroupNameLength * 14
-              : -8,
+            right: open ? sidebarIconRight : -8,
             top: "50%",
             zIndex: 999,
             opacity: open ? 1 : 0.6,
@@ -221,9 +221,7 @@ export const ProxyGroups = (props: Props) => {
           onClick={() => {
             const nextOpen = !open;
             setOpen(nextOpen);
-            const maxWidth =
-              maxGroupNameLength * 15 > 200 ? 200 : maxGroupNameLength * 15;
-            setGroupWidth(nextOpen ? maxWidth : 0);
+            setGroupWidth(nextOpen ? sidebarWidth : 0);
           }}>
           {open ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>
