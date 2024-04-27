@@ -17,6 +17,9 @@
   "global": "global",
   "direct": "direct",
   "script": "script",
+  "merge": "merge",
+  "remote": "remote",
+  "local": "local",
 
   "Create Test": "Create Test",
   "Edit Test": "Edit Test",

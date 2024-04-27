@@ -17,6 +17,9 @@
   "global": "全局",
   "direct": "直连",
   "script": "脚本",
+  "merge": "合并",
+  "remote": "远端",
+  "local": "本地",
 
   "Create Test": "新建测试",
   "Edit Test": "编辑测试",

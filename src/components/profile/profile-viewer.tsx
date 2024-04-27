@@ -10,18 +10,17 @@ import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import {
   Box,
-  FormControl,
+  Button,
+  ButtonGroup,
   InputAdornment,
   InputLabel,
-  MenuItem,
-  Select,
   styled,
   TextField,
 } from "@mui/material";
 import { createProfile, patchProfile } from "@/services/cmds";
 import { BaseDialog, Notice, Switch } from "@/components/base";
 import { version } from "@root/package.json";
-import { FileInput } from "./file-input";
+import { FileInput } from "@/components/profile/file-input";
 
 interface Props {
   onChange: () => void;
@@ -156,21 +155,24 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         onClose={handleClose}
         onCancel={handleClose}
         onOk={handleOk}
-        loading={loading}
-      >
+        loading={loading}>
         <Controller
           name="type"
           control={control}
           render={({ field }) => (
-            <FormControl size="small" fullWidth sx={{ mt: 1, mb: 1 }}>
-              <InputLabel>{t("Type")}</InputLabel>
-              <Select {...field} autoFocus label={t("Type")}>
-                <MenuItem value="remote">Remote</MenuItem>
-                <MenuItem value="local">Local</MenuItem>
-                <MenuItem value="script">Script</MenuItem>
-                <MenuItem value="merge">Merge</MenuItem>
-              </Select>
-            </FormControl>
+            <ButtonGroup
+              size="small"
+              fullWidth
+              aria-label="profile type button group">
+              {["remote", "local", "script", "merge"].map((type) => (
+                <Button
+                  key={type}
+                  variant={formType === type ? "contained" : "outlined"}
+                  onClick={() => field.onChange(type)}>
+                  {t(type)}
+                </Button>
+              ))}
+            </ButtonGroup>
           )}
         />
 
