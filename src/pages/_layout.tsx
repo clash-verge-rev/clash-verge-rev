@@ -49,7 +49,6 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
-  if (!routersEles) return null;
 
   const handleClose = (keepUIActive: boolean) => {
     if (keepUIActive) {
@@ -214,7 +213,7 @@ const Layout = () => {
                 key={location.pathname}
                 timeout={300}
                 classNames="page">
-                {React.cloneElement(routersEles, { key: location.pathname })}
+                {React.cloneElement(routersEles!, { key: location.pathname })}
               </CSSTransition>
             </TransitionGroup>
           </div>

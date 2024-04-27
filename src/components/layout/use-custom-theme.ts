@@ -6,6 +6,8 @@ import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
 
+let locaThemeMode: IVergeConfig["theme_mode"] = "system";
+let locaThemeSetting: IVergeConfig["theme_setting"] = {};
 /**
  * custom theme
  */
@@ -14,9 +16,35 @@ export const useCustomTheme = () => {
   const { theme_mode, theme_setting } = verge ?? {};
   const [mode, setMode] = useRecoilState(atomThemeMode);
 
+  if (theme_mode === undefined || theme_setting === undefined) {
+    switch (localStorage.getItem("theme_mode")) {
+      case "light":
+        locaThemeMode = "light";
+        break;
+      case "dark":
+        locaThemeMode = "dark";
+        break;
+      default:
+        locaThemeMode = "system";
+        break;
+    }
+    locaThemeSetting = JSON.parse(
+      localStorage.getItem("theme_setting") || "{}",
+    );
+  } else {
+    locaThemeMode = theme_mode;
+    locaThemeSetting = theme_setting;
+  }
+
   useEffect(() => {
-    const themeMode = ["light", "dark", "system"].includes(theme_mode!)
-      ? theme_mode!
+    if (theme_mode === undefined || theme_setting === undefined) return;
+    localStorage.setItem("theme_mode", theme_mode);
+    localStorage.setItem("theme_setting", JSON.stringify(theme_setting));
+  }, [theme_mode, theme_setting]);
+
+  useEffect(() => {
+    const themeMode = ["light", "dark", "system"].includes(locaThemeMode!)
+      ? locaThemeMode!
       : "light";
 
     if (themeMode !== "system") {
@@ -33,7 +61,7 @@ export const useCustomTheme = () => {
   }, [theme_mode]);
 
   const theme = useMemo(() => {
-    const setting = theme_setting || {};
+    const setting = locaThemeSetting || {};
     const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
 
     let theme: Theme;
@@ -102,7 +130,7 @@ export const useCustomTheme = () => {
     rootEle.style.setProperty("--primary-main", theme.palette.primary.main);
     rootEle.style.setProperty(
       "--background-color-alpha",
-      alpha(theme.palette.primary.main, 0.1)
+      alpha(theme.palette.primary.main, 0.1),
     );
 
     // inject css
