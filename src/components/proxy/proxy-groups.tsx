@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import {
@@ -14,6 +14,9 @@ import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
 import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
+import { Box, IconButton, Link, List, ListItem } from "@mui/material";
+import { max } from "lodash-es";
+import { ChevronRight, ChevronLeft } from "@mui/icons-material";
 
 interface Props {
   mode: string;
@@ -95,6 +98,23 @@ export const ProxyGroups = (props: Props) => {
   });
 
   // 滚到对应的节点
+  const handleGroupLocation = (groupName: string) => {
+    if (!groupName) return;
+
+    const index = renderList.findIndex(
+      (e) => e.type === 0 && e.key === groupName,
+    );
+
+    if (index >= 0) {
+      virtuosoRef.current?.scrollToIndex?.({
+        index,
+        align: "start",
+        behavior: "auto",
+      });
+    }
+  };
+
+  // 滚到对应的节点
   const handleLocation = (group: IProxyGroupItem) => {
     if (!group) return;
     const { name, now } = group;
@@ -119,23 +139,95 @@ export const ProxyGroups = (props: Props) => {
     return <BaseEmpty text="Direct Mode" />;
   }
 
+  const maxGroupNameLength =
+    max(
+      renderList
+        .filter((item) => item.type === 0)
+        .flatMap((item) => item.key.length),
+    ) ?? 8;
+  const [groupWidth, setGroupWidth] = useState(0);
+  const [open, setOpen] = useState(false);
+
   return (
-    <Virtuoso
-      ref={virtuosoRef}
-      style={{ height: "calc(100% - 12px)" }}
-      totalCount={renderList.length}
-      increaseViewportBy={256}
-      itemContent={(index) => (
-        <ProxyRender
-          key={renderList[index].key}
-          item={renderList[index]}
-          indent={mode === "rule" || mode === "script"}
-          onLocation={handleLocation}
-          onCheckAll={handleCheckAll}
-          onHeadState={onHeadState}
-          onChangeProxy={handleChangeProxy}
+    <Box display={"flex"} flexDirection={"row"} width={"100%"} height={"100%"}>
+      <Box flexGrow={1} height={"100%"}>
+        <Virtuoso
+          ref={virtuosoRef}
+          style={{ height: "100%" }}
+          totalCount={renderList.length}
+          increaseViewportBy={256}
+          itemContent={(index) => (
+            <ProxyRender
+              key={renderList[index].key}
+              item={renderList[index]}
+              indent={mode === "rule" || mode === "script"}
+              onLocation={handleLocation}
+              onCheckAll={handleCheckAll}
+              onHeadState={onHeadState}
+              onChangeProxy={handleChangeProxy}
+            />
+          )}
         />
-      )}
-    />
+      </Box>
+
+      <Box position={"relative"}>
+        <List
+          dense
+          sx={[
+            ({ palette }) => ({
+              bgcolor: palette.background.paper,
+            }),
+            {
+              width: `${groupWidth}px`,
+              height: "calc(100% - 20px)",
+              marginLeft: open ? "5px" : 0,
+              overflow: "auto",
+              cursor: "pointer",
+              transition: "all 0.3s",
+              "&::-webkit-scrollbar": {
+                width: "3px",
+              },
+            },
+          ]}>
+          {renderList
+            .filter((item) => item.type === 0)
+            .map((group) => (
+              <ListItem
+                key={group.key}
+                sx={{ textAlign: "center", fontSize: "14px" }}>
+                <Link
+                  underline="hover"
+                  onClick={() => handleGroupLocation(group.key)}>
+                  {group.group.name}
+                </Link>
+              </ListItem>
+            ))}
+        </List>
+        <IconButton
+          size="small"
+          sx={{
+            position: "absolute",
+            right: open
+              ? maxGroupNameLength * 14 > 200
+                ? 200
+                : maxGroupNameLength * 14
+              : -8,
+            top: "50%",
+            zIndex: 999,
+            opacity: open ? 1 : 0.6,
+            bgcolor: "primary.main",
+            transition: "all 0.3s",
+          }}
+          onClick={() => {
+            const nextOpen = !open;
+            setOpen(nextOpen);
+            const maxWidth =
+              maxGroupNameLength * 15 > 200 ? 200 : maxGroupNameLength * 15;
+            setGroupWidth(nextOpen ? maxWidth : 0);
+          }}>
+          {open ? <ChevronRight /> : <ChevronLeft />}
+        </IconButton>
+      </Box>
+    </Box>
   );
 };
