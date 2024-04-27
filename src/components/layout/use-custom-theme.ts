@@ -6,8 +6,8 @@ import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
 
-let locaThemeMode: IVergeConfig["theme_mode"] = "system";
-let locaThemeSetting: IVergeConfig["theme_setting"] = {};
+let localThemeMode: IVergeConfig["theme_mode"] = "light";
+let localThemeSetting: IVergeConfig["theme_setting"] = {};
 /**
  * custom theme
  */
@@ -17,23 +17,15 @@ export const useCustomTheme = () => {
   const [mode, setMode] = useRecoilState(atomThemeMode);
 
   if (theme_mode === undefined || theme_setting === undefined) {
-    switch (localStorage.getItem("theme_mode")) {
-      case "light":
-        locaThemeMode = "light";
-        break;
-      case "dark":
-        locaThemeMode = "dark";
-        break;
-      default:
-        locaThemeMode = "system";
-        break;
-    }
-    locaThemeSetting = JSON.parse(
+    localThemeMode = localStorage.getItem(
+      "theme_mode",
+    ) as IVergeConfig["theme_mode"];
+    localThemeSetting = JSON.parse(
       localStorage.getItem("theme_setting") || "{}",
     );
   } else {
-    locaThemeMode = theme_mode;
-    locaThemeSetting = theme_setting;
+    localThemeMode = theme_mode;
+    localThemeSetting = theme_setting;
   }
 
   useEffect(() => {
@@ -43,8 +35,8 @@ export const useCustomTheme = () => {
   }, [theme_mode, theme_setting]);
 
   useEffect(() => {
-    const themeMode = ["light", "dark", "system"].includes(locaThemeMode!)
-      ? locaThemeMode!
+    const themeMode = ["light", "dark", "system"].includes(localThemeMode!)
+      ? localThemeMode!
       : "light";
 
     if (themeMode !== "system") {
@@ -61,8 +53,8 @@ export const useCustomTheme = () => {
   }, [theme_mode]);
 
   const theme = useMemo(() => {
-    const setting = locaThemeSetting || {};
-    const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
+    const setting = localThemeSetting || {};
+    const dt = localThemeMode === "light" ? defaultTheme : defaultDarkTheme;
 
     let theme: Theme;
 
