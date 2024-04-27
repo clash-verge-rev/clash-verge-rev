@@ -6,6 +6,10 @@ on:
     tags-ignore: [updater, alpha]
   workflow_dispatch:
 
+concurrency:
+  group: alpha-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
