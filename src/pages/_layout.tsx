@@ -50,6 +50,17 @@ const Layout = () => {
   const location = useLocation();
   const routersEles = useRoutes(routers);
 
+  appWindow.isMaximized().then((maximized) => {
+    setIsMaximized(maximized);
+  });
+  const unlistenResize = appWindow.onResized(() => {
+    appWindow.isMaximized().then((value) => {
+      if (isMaximized !== value) {
+        setIsMaximized(value);
+      }
+    });
+  });
+
   const handleClose = (keepUIActive: boolean) => {
     if (keepUIActive) {
       appWindow.hide();
@@ -64,17 +75,6 @@ const Layout = () => {
   }, [enable_keep_ui_active]);
 
   useEffect(() => {
-    appWindow.isMaximized().then((maximized) => {
-      setIsMaximized(maximized);
-    });
-    const unlistenResize = appWindow.onResized(() => {
-      appWindow.isMaximized().then((value) => {
-        if (isMaximized !== value) {
-          setIsMaximized(value);
-        }
-      });
-    });
-
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && OS !== "macos") {
         handleClose(keepUIActive);
