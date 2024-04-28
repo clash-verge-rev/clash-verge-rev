@@ -42,8 +42,8 @@ importers:
         specifier: ^1.6.8
         version: 1.6.8
       dayjs:
-        specifier: 1.11.10
-        version: 1.11.10
+        specifier: 1.11.11
+        version: 1.11.11
       i18next:
         specifier: ^23.11.2
         version: 23.11.2
@@ -1173,8 +1173,8 @@ packages:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
     engines: {node: '>= 12'}
 
-  dayjs@1.11.10:
-    resolution: {integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==}
+  dayjs@1.11.11:
+    resolution: {integrity: sha512-okzr3f11N6WuqYtZSvm+F776mB41wRZMhKP+hc34YdW+KmtYYK9iqvHSwo2k9FEH3fhGXvOPV6yz2IcSrfRUDg==}
 
   debug@4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
@@ -2812,7 +2812,7 @@ snapshots:
   ahooks@3.7.11(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.24.4
-      dayjs: 1.11.10
+      dayjs: 1.11.11
       intersection-observer: 0.12.2
       js-cookie: 2.2.1
       lodash: 4.17.21
@@ -2965,7 +2965,7 @@ snapshots:
 
   data-uri-to-buffer@4.0.1: {}
 
-  dayjs@1.11.10: {}
+  dayjs@1.11.11: {}
 
   debug@4.3.4:
     dependencies:

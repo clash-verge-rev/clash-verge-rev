@@ -28,7 +28,7 @@
     "@types/json-schema": "^7.0.15",
     "ahooks": "^3.7.11",
     "axios": "^1.6.8",
-    "dayjs": "1.11.10",
+    "dayjs": "1.11.11",
     "i18next": "^23.11.2",
     "lodash-es": "^4.17.21",
     "meta-json-schema": "1.18.3-beta",
