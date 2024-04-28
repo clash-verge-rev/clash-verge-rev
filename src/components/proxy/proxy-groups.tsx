@@ -25,6 +25,10 @@ interface Props {
 export const ProxyGroups = (props: Props) => {
   const { mode } = props;
 
+  if (mode === "direct") {
+    return <BaseEmpty text="Direct Mode" />;
+  }
+
   const { renderList, onProxies, onHeadState } = useRenderList(mode);
 
   const { verge } = useVerge();
@@ -134,10 +138,6 @@ export const ProxyGroups = (props: Props) => {
       });
     }
   };
-
-  if (mode === "direct") {
-    return <BaseEmpty text="Direct Mode" />;
-  }
 
   const maxGroupNameLength =
     max(
