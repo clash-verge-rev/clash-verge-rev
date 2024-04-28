@@ -40,6 +40,7 @@
     "react-error-boundary": "^4.0.13",
     "react-hook-form": "^7.51.3",
     "react-i18next": "^14.1.0",
+    "react-markdown": "^9.0.1",
     "react-router-dom": "^6.22.3",
     "react-sortablejs": "^6.1.4",
     "react-transition-group": "^4.4.5",
