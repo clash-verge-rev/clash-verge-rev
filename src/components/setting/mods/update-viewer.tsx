@@ -1,8 +1,7 @@
 import useSWR from "swr";
-import snarkdown from "snarkdown";
 import { forwardRef, useImperativeHandle, useState, useMemo } from "react";
 import { useLockFn } from "ahooks";
-import { Box, LinearProgress, styled } from "@mui/material";
+import { Box, LinearProgress } from "@mui/material";
 import { useRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
 import { relaunch } from "@tauri-apps/api/process";
@@ -11,10 +10,8 @@ import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { atomUpdateState } from "@/services/states";
 import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
 import { portableFlag } from "@/pages/_layout";
+import ReactMarkdown from "react-markdown";
 
-const UpdateLog = styled(Box)(() => ({
-  "h1,h2,h3,ul,ol,p": { margin: "0.5em 0", color: "inherit" },
-}));
 let eventListener: UnlistenFn | null = null;
 
 export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
@@ -38,12 +35,11 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  // markdown parser
-  const parseContent = useMemo(() => {
+  const markdownContent = useMemo(() => {
     if (!updateInfo?.manifest?.body) {
       return "New Version is available";
     }
-    return snarkdown(updateInfo?.manifest?.body);
+    return updateInfo?.manifest?.body;
   }, [updateInfo]);
 
   const onUpdate = useLockFn(async () => {
@@ -87,10 +83,22 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
       onOk={onUpdate}
     >
-      <UpdateLog
-        dangerouslySetInnerHTML={{ __html: parseContent }}
-        sx={{ height: "calc(100% - 10px)", overflow: "auto" }}
-      />
+      <Box sx={{ height: "calc(100% - 10px)", overflow: "auto" }}>
+        <ReactMarkdown
+          components={{
+            a: ({ node, ...props }) => {
+              const { children } = props;
+              return (
+                <a {...props} target="_blank">
+                  {children}
+                </a>
+              );
+            },
+          }}
+        >
+          {markdownContent}
+        </ReactMarkdown>
+      </Box>
       {updateState && (
         <LinearProgress
           variant="buffer"
