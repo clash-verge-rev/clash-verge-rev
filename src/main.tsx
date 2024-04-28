@@ -31,6 +31,11 @@ if (process.env.NODE_ENV !== "development") {
   });
 }
 
+document.addEventListener("keydown", (event) => {
+  // Disable WebView keyboard shortcuts
+  event.preventDefault();
+});
+
 createRoot(container).render(
   <React.StrictMode>
     <RecoilRoot>
