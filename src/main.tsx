@@ -26,7 +26,15 @@ if (!container) {
 
 document.addEventListener("keydown", (event) => {
   // Disable WebView keyboard shortcuts
-  event.preventDefault();
+  if (["F5", "F7"].includes(event.key)) {
+    event.preventDefault();
+  }
+  if (
+    (event.ctrlKey || event.metaKey) &&
+    ["F", "H", "P", "R", "U"].includes(event.key.toUpperCase())
+  ) {
+    event.preventDefault();
+  }
 });
 
 createRoot(container).render(
