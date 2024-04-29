@@ -210,13 +210,20 @@ export const ProxyGroups = (props: Props) => {
         <IconButton
           size="small"
           sx={{
+            width: "20px",
+            height: "35px",
+            borderRadius: "0",
             position: "absolute",
-            right: open ? sidebarIconRight : -8,
+            right: open ? sidebarIconRight : 0,
             top: "50%",
             zIndex: 999,
-            opacity: open ? 1 : 0.6,
+            opacity: open ? 1 : 0.5,
             bgcolor: "primary.main",
             transition: "all 0.3s",
+            "&:hover": {
+              bgcolor: "primary.main",
+              opacity: 1,
+            },
           }}
           onClick={() => {
             const nextOpen = !open;

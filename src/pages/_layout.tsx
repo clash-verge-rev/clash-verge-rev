@@ -46,9 +46,10 @@ const Layout = () => {
   const { verge } = useVerge();
   const { language, start_page, enable_system_title, enable_keep_ui_active } =
     verge || {};
+  keepUIActive = enable_keep_ui_active ?? false;
   const navigate = useNavigate();
   const location = useLocation();
-  const routersEles = useRoutes(routers);
+  const routersEles = useRoutes(routers)!;
 
   appWindow.isMaximized().then((maximized) => {
     setIsMaximized(maximized);
@@ -68,11 +69,6 @@ const Layout = () => {
       appWindow.close();
     }
   };
-
-  useEffect(() => {
-    if (enable_keep_ui_active === undefined) return;
-    keepUIActive = enable_keep_ui_active;
-  }, [enable_keep_ui_active]);
 
   useEffect(() => {
     window.addEventListener("keydown", (e) => {
@@ -213,7 +209,7 @@ const Layout = () => {
                 key={location.pathname}
                 timeout={300}
                 classNames="page">
-                {React.cloneElement(routersEles!, { key: location.pathname })}
+                {React.cloneElement(routersEles, { key: location.pathname })}
               </CSSTransition>
             </TransitionGroup>
           </div>
