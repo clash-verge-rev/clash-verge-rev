@@ -46,7 +46,7 @@ importers:
         version: 1.11.11
       i18next:
         specifier: ^23.11.2
-        version: 23.11.2
+        version: 23.11.3
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -76,7 +76,7 @@ importers:
         version: 7.51.3(react@18.3.1)
       react-i18next:
         specifier: ^14.1.0
-        version: 14.1.1(i18next@23.11.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 14.1.1(i18next@23.11.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom:
         specifier: ^6.22.3
         version: 6.23.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1343,8 +1343,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  i18next@23.11.2:
-    resolution: {integrity: sha512-qMBm7+qT8jdpmmDw/kQD16VpmkL9BdL+XNAK5MNbNFaf1iQQq35ZbPrSlqmnNPOSUY4m342+c0t0evinF5l7sA==}
+  i18next@23.11.3:
+    resolution: {integrity: sha512-Pq/aSKowir7JM0rj+Wa23Kb6KKDUGno/HjG+wRQu0PxoTbpQ4N89MAT0rFGvXmLkRLNMb1BbBOKGozl01dabzg==}
 
   ignore@5.3.1:
     resolution: {integrity: sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==}
@@ -3136,7 +3136,7 @@ snapshots:
 
   husky@9.0.11: {}
 
-  i18next@23.11.2:
+  i18next@23.11.3:
     dependencies:
       '@babel/runtime': 7.24.4
 
@@ -3413,11 +3413,11 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  react-i18next@14.1.1(i18next@23.11.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-i18next@14.1.1(i18next@23.11.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.24.4
       html-parse-stringify: 3.0.1
-      i18next: 23.11.2
+      i18next: 23.11.3
       react: 18.3.1
     optionalDependencies:
       react-dom: 18.3.1(react@18.3.1)
