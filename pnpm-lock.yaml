@@ -50,8 +50,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       meta-json-schema:
-        specifier: 1.18.3-beta
-        version: 1.18.3-beta
+        specifier: 1.18.4-beta2
+        version: 1.18.4-beta2
       monaco-editor:
         specifier: ^0.48.0
         version: 0.48.0
@@ -2527,10 +2527,10 @@ packages:
         integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==,
       }
 
-  meta-json-schema@1.18.3-beta:
+  meta-json-schema@1.18.4-beta2:
     resolution:
       {
-        integrity: sha512-7RQvPJVSi0FEg697xUPIM9uTyBIWkcYLnE0CvXChqLQRdLDq0p719ht9TcvDEVMWjwFrFSLVaDsX6IskDxAy0w==,
+        integrity: sha512-ob3I6wVfkxVursh5TtZfZwYiHLjdWA8fs9H+cp253JTYNYC780qwttQT6qGG9ujUrV9iLYq9Lr/4HlkN+rr5Zg==,
       }
 
   micromark-core-commonmark@2.0.1:
@@ -5110,7 +5110,7 @@ snapshots:
 
   merge-stream@2.0.0: {}
 
-  meta-json-schema@1.18.3-beta: {}
+  meta-json-schema@1.18.4-beta2: {}
 
   micromark-core-commonmark@2.0.1:
     dependencies:
