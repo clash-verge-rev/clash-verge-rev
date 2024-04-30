@@ -187,5 +187,7 @@
 
   "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
   "Tun Mode Info": "The Tun mode requires granting core-related permissions. Please enable service mode before using it",
-  "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode"
+  "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode",
+
+  "Use Regular Expression": "Use Regular Expression"
 }
