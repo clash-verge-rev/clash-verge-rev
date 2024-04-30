@@ -260,7 +260,7 @@ impl Tray {
             map.insert(false, "off");
             map
         };
-        
+
         let mut current_profile_name = "None".to_string();
         let profiles = Config::profiles();
         let profiles = profiles.latest();
@@ -284,7 +284,7 @@ impl Tray {
         Ok(())
     }
 
-    pub fn on_left_click(app_handle: &AppHandle) {
+    pub fn on_click(app_handle: &AppHandle) {
         let tray_event = { Config::verge().latest().tray_event.clone() };
         let tray_event = tray_event.unwrap_or("main_window".into());
         match tray_event.as_str() {
@@ -297,7 +297,10 @@ impl Tray {
 
     pub fn on_system_tray_event(app_handle: &AppHandle, event: SystemTrayEvent) {
         match event {
-            SystemTrayEvent::LeftClick { .. } => Tray::on_left_click(app_handle),
+            #[cfg(not(target_os = "macos"))]
+            SystemTrayEvent::LeftClick { .. } => Tray::on_click(app_handle),
+            #[cfg(target_os = "macos")]
+            SystemTrayEvent::RightClick { .. } => Tray::on_click(app_handle),
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
                     let mode = &mode[0..mode.len() - 5];
