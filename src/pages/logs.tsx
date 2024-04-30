@@ -110,7 +110,7 @@ const LogPage = () => {
           pt: 1,
           mb: 0.5,
           mx: "10px",
-          height: "48px",
+          height: "36px",
           display: "flex",
           alignItems: "center",
         }}
@@ -135,16 +135,9 @@ const LogPage = () => {
             sx: { pr: 1 },
             endAdornment: (
               <IconButton
-                sx={{ p: 0.5 }}
+                sx={{ fontWeight: "800", height: "100%", padding: "0" }}
+                color={useRegexSearch ? "primary" : "default"}
                 title={t("Use Regular Expression")}
-                style={{
-                  backgroundColor: useRegexSearch
-                    ? "rgba(20, 20, 20, 0.2)"
-                    : "rgba(30, 0, 0, 0.0)",
-                  fontSize: "150%",
-                  fontWeight: "800",
-                  borderRadius: "10%",
-                }}
                 onClick={() => setUseRegexSearch(!useRegexSearch)}
               >
                 .*
