@@ -9,7 +9,6 @@ import SettingClash from "@/components/setting/setting-clash";
 import SettingSystem from "@/components/setting/setting-system";
 import { atomThemeMode } from "@/services/states";
 import { useRecoilState } from "recoil";
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
 
 const SettingPage = () => {
   const { t } = useTranslation();
@@ -19,12 +18,11 @@ const SettingPage = () => {
   };
 
   const toGithubRepo = useLockFn(() => {
-    return openWebUrl("https://github.com/JokingAboutLife/clash-verge-rev");
+    return openWebUrl("https://github.com/oomeow/clash-verge-rev");
   });
 
   const [mode] = useRecoilState(atomThemeMode);
   const isDark = mode === "light" ? false : true;
-  const { theme } = useCustomTheme();
 
   return (
     <BasePage
@@ -33,13 +31,11 @@ const SettingPage = () => {
         <IconButton
           size="medium"
           color="inherit"
-          title="@JokingAoutLife/clash-verge-rev"
-          onClick={toGithubRepo}
-        >
+          title="@oomeow/clash-verge-rev"
+          onClick={toGithubRepo}>
           <GitHub fontSize="inherit" />
         </IconButton>
-      }
-    >
+      }>
       <Grid container spacing={{ xs: 1.5, lg: 1.5 }}>
         <Grid item xs={12} md={6}>
           <Box
@@ -47,16 +43,14 @@ const SettingPage = () => {
               borderRadius: 2,
               marginBottom: 1.5,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
-            }}
-          >
+            }}>
             <SettingSystem onError={onError} />
           </Box>
           <Box
             sx={{
               borderRadius: 2,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
-            }}
-          >
+            }}>
             <SettingClash onError={onError} />
           </Box>
         </Grid>
@@ -65,8 +59,7 @@ const SettingPage = () => {
             sx={{
               borderRadius: 2,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
-            }}
-          >
+            }}>
             <SettingVerge onError={onError} />
           </Box>
         </Grid>
