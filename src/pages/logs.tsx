@@ -47,8 +47,27 @@ const LogPage = () => {
   const isDark = theme.palette.mode === "dark";
   const [logState, setLogState] = useState("all");
   const [filterText, setFilterText] = useState("");
-
+  const [useRegexSearch, setUseRegexSearch] = useState(true);
+  const [hasInputError, setInputError] = useState(false);
+  const [inputHelperText, setInputHelperText] = useState("");
   const filterLogs = useMemo(() => {
+    setInputHelperText("");
+    setInputError(false);
+    if (useRegexSearch) {
+      try {
+        const regex = new RegExp(filterText);
+        return logData.filter((data) => {
+          return (
+            regex.test(data.payload) &&
+            (logState === "all" ? true : data.type.includes(logState))
+          );
+        });
+      } catch (err: any) {
+        setInputHelperText(err.message.substring(0, 60));
+        setInputError(true);
+        return logData;
+      }
+    }
     return logData.filter((data) => {
       return (
         data.payload.includes(filterText) &&
@@ -67,8 +86,7 @@ const LogPage = () => {
           <IconButton
             size="small"
             color="inherit"
-            onClick={() => setEnableLog((e) => !e)}
-          >
+            onClick={() => setEnableLog((e) => !e)}>
             {enableLog ? (
               <PauseCircleOutlineRounded />
             ) : (
@@ -79,27 +97,23 @@ const LogPage = () => {
           <Button
             size="small"
             variant="contained"
-            onClick={() => setLogData([])}
-          >
+            onClick={() => setLogData([])}>
             {t("Clear")}
           </Button>
         </Box>
-      }
-    >
+      }>
       <Box
         sx={{
           pt: 1,
           mb: 0.5,
           mx: "10px",
-          height: "36px",
+          height: "48px",
           display: "flex",
           alignItems: "center",
-        }}
-      >
+        }}>
         <StyledSelect
           value={logState}
-          onChange={(e) => setLogState(e.target.value)}
-        >
+          onChange={(e) => setLogState(e.target.value)}>
           <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="inf">INFO</MenuItem>
           <MenuItem value="warn">WARN</MenuItem>
@@ -107,8 +121,30 @@ const LogPage = () => {
         </StyledSelect>
 
         <BaseStyledTextField
+          error={hasInputError}
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
+          helperText={inputHelperText}
+          placeholder={t("Filter conditions")}
+          InputProps={{
+            sx: { pr: 1 },
+            endAdornment: (
+              <IconButton
+                sx={{ p: 0.5 }}
+                title={t("Use Regular Expression")}
+                style={{
+                  backgroundColor: useRegexSearch
+                    ? "rgba(20, 20, 20, 0.2)"
+                    : "rgba(30, 0, 0, 0.0)",
+                  fontSize: "150%",
+                  fontWeight: "800",
+                  borderRadius: "10%",
+                }}
+                onClick={() => setUseRegexSearch(!useRegexSearch)}>
+                .*
+              </IconButton>
+            ),
+          }}
         />
       </Box>
 
@@ -119,8 +155,7 @@ const LogPage = () => {
           margin: "10px",
           borderRadius: "8px",
           bgcolor: isDark ? "#282a36" : "#ffffff",
-        }}
-      >
+        }}>
         {filterLogs.length > 0 ? (
           <Virtuoso
             initialTopMostItemIndex={999}

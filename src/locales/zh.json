@@ -191,6 +191,8 @@
   "Tun Mode Info": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",
   "System and Mixed Can Only be Used in Service Mode": "System和Mixed只能在服务模式下使用",
 
+  "Use Regular Expression": "使用正则表达式",
+
   "Current State": "当前状态",
   "active": "已激活",
   "installed": "已安装",

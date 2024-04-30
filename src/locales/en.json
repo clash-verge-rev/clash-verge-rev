@@ -191,6 +191,8 @@
   "Tun Mode Info": "The Tun mode requires granting core-related permissions. Please enable service mode before using it",
   "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode",
 
+  "Use Regular Expression": "Use Regular Expression",
+
   "Current State": "Current State",
   "active": "active",
   "installed": "installed",
