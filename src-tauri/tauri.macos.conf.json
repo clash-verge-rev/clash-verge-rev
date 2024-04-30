@@ -3,8 +3,7 @@
   "tauri": {
     "systemTray": {
       "iconPath": "icons/mac-tray-icon.png",
-      "iconAsTemplate": true,
-      "menuOnLeftClick": false
+      "iconAsTemplate": true
     },
     "bundle": {
       "identifier": "io.github.clash-verge-rev.clash-verge-rev",
