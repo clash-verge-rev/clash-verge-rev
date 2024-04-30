@@ -53,6 +53,11 @@ export const useCustomTheme = () => {
   }, [theme_mode]);
 
   const theme = useMemo(() => {
+    // mode is system theme changed, not manual change theme in app,
+    //   change `localThemeMode` variable to current system theme mode and save to local storage
+    localThemeMode = mode;
+    localStorage.setItem("theme_mode", mode);
+
     const setting = localThemeSetting || {};
     const dt = localThemeMode === "light" ? defaultTheme : defaultDarkTheme;
 
