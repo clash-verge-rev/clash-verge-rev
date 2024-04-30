@@ -1,3 +1,20 @@
+## v1.6.1
+
+### Features
+
+- 鼠标悬浮显示当前订阅的名称 [#938](https://github.com/clash-verge-rev/clash-verge-rev/pull/938)
+- 日志过滤支持正则表达式 [#959](https://github.com/clash-verge-rev/clash-verge-rev/pull/959)
+- 更新 Clash 内核到 1.18.4
+
+### Bugs Fixes
+
+- 修复 Linux KDE 环境下系统代理无法开启的问题
+- 窗口最大化图标调整 [#924](https://github.com/clash-verge-rev/clash-verge-rev/pull/924)
+- 修改 MacOS 托盘点击行为(左键菜单，右键点击事件)
+- 修复 MacOS 服务模式安装失败的问题
+
+---
+
 ## v1.6.0
 
 ### Features
