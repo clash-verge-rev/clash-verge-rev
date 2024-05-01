@@ -124,7 +124,7 @@ const LogPage = () => {
           error={hasInputError}
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          helperText={inputHelperText}
+          label={inputHelperText}
           placeholder={t("Filter conditions")}
           InputProps={{
             sx: { pr: 1 },
