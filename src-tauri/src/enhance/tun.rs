@@ -42,8 +42,19 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             let resource_dir = dirs::app_resources_dir().unwrap();
             let script = resource_dir.join("set_dns.sh");
             let script = script.to_string_lossy();
-            match Command::new("bash").args([script]).output() {
-                Ok(_) => log::info!(target: "app", "set system dns successfully"),
+            match Command::new("bash")
+                .args([script])
+                .current_dir(resource_dir)
+                .status()
+            {
+                Ok(status) => {
+                    if status.success() {
+                        log::info!(target: "app", "set system dns successfully");
+                    } else {
+                        let code = status.code().unwrap_or(-1);
+                        log::error!(target: "app", "set system dns failed: {code}");
+                    }
+                }
                 Err(err) => {
                     log::error!(target: "app", "set system dns failed: {err}");
                 }
@@ -59,8 +70,19 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             let resource_dir = dirs::app_resources_dir().unwrap();
             let script = resource_dir.join("unset_dns.sh");
             let script = script.to_string_lossy();
-            match Command::new("bash").args([script]).output() {
-                Ok(_) => log::info!(target: "app", "unset system dns successfully"),
+            match Command::new("bash")
+                .args([script])
+                .current_dir(resource_dir)
+                .status()
+            {
+                Ok(status) => {
+                    if status.success() {
+                        log::info!(target: "app", "unset system dns successfully");
+                    } else {
+                        let code = status.code().unwrap_or(-1);
+                        log::error!(target: "app", "unset system dns failed: {code}");
+                    }
+                }
                 Err(err) => {
                     log::error!(target: "app", "unset system dns failed: {err}");
                 }
