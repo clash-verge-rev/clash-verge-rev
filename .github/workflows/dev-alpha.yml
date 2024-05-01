@@ -135,10 +135,41 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
 
+  pkgbuild:
+    name: PKGBUILD for ArchLinux
+    needs: [alpha-for-linux]
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Makepkg Build and Check
+        id: makepkg
+        uses: edlanglois/pkgbuild-action@v1
+        with:
+          pkgdir: ${{ github.workspace }}/archbuild/alpha
+
+      - name: Print Package Files
+        run: |
+          echo "Successfully created the following package archive"
+          echo "Package: ${{ steps.makepkg.outputs}}"
+          echo "Package: ${{ steps.makepkg.outputs.pkgfile0 }}"
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
+        with:
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.makepkg.outputs.pkgfile0 }}
+
   update_tag:
     name: Update tag
     runs-on: ubuntu-latest
-    needs: [alpha, alpha-for-linux]
+    needs: [alpha, pkgbuild]
     steps:
       - name: Checkout repository
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4

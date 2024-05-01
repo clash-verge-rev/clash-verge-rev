@@ -1,0 +1,23 @@
+# Maintainer: oomeow <oomeow@outlook.com>
+
+pkgname=clash-verge-rev-patch-bin
+_pkgname=clash-verge-rev
+pkgver=1.6.1
+pkgrel=1
+pkgdesc="Continuation of Clash Verge | A Clash Meta GUI based on Tauri"
+arch=('x86_64' 'aarch64')
+url="https://github.com/oomeow/clash-verge-rev"
+license=('GPL3')
+depends=('webkit2gtk' 'gtk3' 'libayatana-appindicator')
+conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "$_pkgname-patch-bin" "$_pkgname-patch-alpha-bin" "clash-verge" "clash-verge-bin" "clash-nyanpasu" "clash-nyanpasu-bin" "clash-nyanpasu-git" "clash-meta")
+
+source_x86_64=("${_pkgname}-${pkgver}-x86_64.deb::${url}/releases/download/v${pkgver}-patch/clash-verge_${pkgver}-patch_amd64.deb")
+source_aarch64=("${_pkgname}-${pkgver}-aarch64.deb::${url}/releases/download/v${pkgver}-patch/clash-verge_${pkgver}-patch_arm64.deb")
+
+sha512sums_x86_64=('SKIP')
+sha512sums_aarch64=('SKIP')
+
+package() {
+	tar xpf data.tar.gz -C ${pkgdir}
+	chown -R root:root ${pkgdir}
+}

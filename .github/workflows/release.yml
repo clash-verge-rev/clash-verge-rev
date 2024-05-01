@@ -128,9 +128,44 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
 
+  pkgbuild:
+    name: PKGBUILD for ArchLinux
+    needs: [release-for-linux]
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get Version
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
+          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
+
+      - name: Makepkg Build and Check
+        id: makepkg
+        uses: edlanglois/pkgbuild-action@v1
+        with:
+          pkgdir: ${{ github.workspace }}/archbuild/release
+
+      - name: Print Package Files
+        run: |
+          echo "Successfully created the following package archive"
+          echo "Package: ${{ steps.makepkg.outputs.pkgfile0 }}"
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
+        with:
+          tag_name: v${{env.VERSION}}
+          name: "Clash Verge Rev v${{env.VERSION}}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.makepkg.outputs.pkgfile0 }}
+
   release-update:
     runs-on: ubuntu-latest
-    needs: [release, release-for-linux]
+    needs: [release, pkgbuild]
     steps:
       - name: Checkout repository
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
