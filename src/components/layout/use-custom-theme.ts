@@ -6,8 +6,8 @@ import { atomThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
 
-let localThemeMode: IVergeConfig["theme_mode"] = "light";
 let localThemeSetting: IVergeConfig["theme_setting"] = {};
+
 /**
  * custom theme
  */
@@ -17,26 +17,18 @@ export const useCustomTheme = () => {
   const [mode, setMode] = useRecoilState(atomThemeMode);
 
   if (theme_mode === undefined || theme_setting === undefined) {
-    localThemeMode = localStorage.getItem(
-      "theme_mode",
-    ) as IVergeConfig["theme_mode"];
     localThemeSetting = JSON.parse(
       localStorage.getItem("theme_setting") || "{}",
     );
   } else {
-    localThemeMode = theme_mode;
     localThemeSetting = theme_setting;
   }
 
   useEffect(() => {
-    if (theme_mode === undefined || theme_setting === undefined) return;
-    localStorage.setItem("theme_mode", theme_mode);
+    if (theme_setting === undefined) return;
     localStorage.setItem("theme_setting", JSON.stringify(theme_setting));
-  }, [theme_mode, theme_setting]);
-
-  useEffect(() => {
-    const themeMode = ["light", "dark", "system"].includes(localThemeMode!)
-      ? localThemeMode!
+    const themeMode = ["light", "dark", "system"].includes(theme_mode!)
+      ? theme_mode!
       : "light";
 
     if (themeMode !== "system") {
@@ -53,13 +45,8 @@ export const useCustomTheme = () => {
   }, [theme_mode]);
 
   const theme = useMemo(() => {
-    // mode is system theme changed, not manual change theme in app,
-    //   change `localThemeMode` variable to current system theme mode and save to local storage
-    localThemeMode = mode;
-    localStorage.setItem("theme_mode", mode);
-
     const setting = localThemeSetting || {};
-    const dt = localThemeMode === "light" ? defaultTheme : defaultDarkTheme;
+    const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
 
     let theme: Theme;
 
