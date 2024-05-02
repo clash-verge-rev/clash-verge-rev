@@ -72,7 +72,7 @@
     "pretty-quick": "4.0.0",
     "sass": "1.75.0",
     "typescript": "5.4.5",
-    "vite": "5.2.10",
+    "vite": "5.2.11",
     "vite-plugin-monaco-editor": "1.1.0",
     "vite-plugin-svgr": "4.2.0"
   },
