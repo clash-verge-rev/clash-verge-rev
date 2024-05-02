@@ -189,6 +189,8 @@
   "pending": "等待中",
   "installed": "已安装",
   "uninstall": "未安装",
+  "active": "已激活",
+  "unknown": "未知",
   "Disable Service Mode": "禁用服务模式",
   "Install": "安装",
   "Uninstall": "卸载",
