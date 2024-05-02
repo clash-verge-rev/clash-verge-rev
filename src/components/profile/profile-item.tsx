@@ -14,7 +14,10 @@ import {
   Menu,
   CircularProgress,
 } from "@mui/material";
-import { RefreshRounded } from "@mui/icons-material";
+import {
+  LocalFireDepartmentRounded,
+  RefreshRounded,
+} from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
@@ -35,10 +38,12 @@ interface Props {
   itemData: IProfileItem;
   onSelect: (force: boolean) => void;
   onEdit: () => void;
+  onReactive: () => void;
 }
 
 export const ProfileItem = (props: Props) => {
-  const { selected, activating, itemData, onSelect, onEdit } = props;
+  const { selected, activating, itemData, onSelect, onEdit, onReactive } =
+    props;
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -206,6 +211,8 @@ export const ProfileItem = (props: Props) => {
     justifyContent: "space-between",
   };
 
+  const [sideBtnShow, setSideBtnShow] = useState(false);
+
   return (
     <Box
       sx={{
@@ -213,18 +220,65 @@ export const ProfileItem = (props: Props) => {
         flexGrow: "1",
         margin: "5px",
         width: "260px",
-      }}
-    >
+      }}>
       <ProfileBox
         aria-selected={selected}
+        onMouseEnter={() => {
+          setSideBtnShow(true);
+        }}
+        onMouseLeave={() => {
+          setSideBtnShow(false);
+        }}
         onClick={() => onSelect(false)}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });
           setAnchorEl(event.currentTarget);
           event.preventDefault();
-        }}
-      >
+        }}>
+        {selected && (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              position: "absolute",
+              width: `${sideBtnShow ? "40" : "0"}px`,
+              opacity: sideBtnShow ? 1 : 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              zIndex: sideBtnShow ? 10 : -10,
+              bgcolor: "primary.main",
+              transition: "all .3s",
+              borderRadius: "0 8px 8px 0",
+            }}>
+            {hasUrl && (
+              <IconButton
+                title={t("Update Profile")}
+                sx={{
+                  animation: loading ? `1s linear infinite ${round}` : "none",
+                }}
+                onClick={(e) => {
+                  onUpdate(1);
+                  e.stopPropagation();
+                }}>
+                <RefreshRounded />
+              </IconButton>
+            )}
+            {selected && (
+              <IconButton
+                title={t("Reactivate Profiles")}
+                onClick={(e) => {
+                  onReactive();
+                  e.stopPropagation();
+                }}>
+                <LocalFireDepartmentRounded />
+              </IconButton>
+            )}
+          </Box>
+        )}
         {activating && (
           <Box
             sx={{
@@ -238,8 +292,7 @@ export const ProfileItem = (props: Props) => {
               bottom: 2,
               zIndex: 10,
               backdropFilter: "blur(2px)",
-            }}
-          >
+            }}>
             <CircularProgress size={20} />
           </Box>
         )}
@@ -251,8 +304,7 @@ export const ProfileItem = (props: Props) => {
               variant="h6"
               component="h2"
               noWrap
-              title={name}
-            >
+              title={name}>
               {name}
             </Typography>
           </Box>
@@ -273,8 +325,7 @@ export const ProfileItem = (props: Props) => {
               onClick={(e) => {
                 e.stopPropagation();
                 onUpdate(1);
-              }}
-            >
+              }}>
               <RefreshRounded color="inherit" />
             </IconButton>
           )}
@@ -287,8 +338,7 @@ export const ProfileItem = (props: Props) => {
                 <Typography
                   noWrap
                   title={description}
-                  sx={{ fontSize: "14px" }}
-                >
+                  sx={{ fontSize: "14px" }}>
                   {description}
                 </Typography>
               ) : (
@@ -304,8 +354,7 @@ export const ProfileItem = (props: Props) => {
                   flex="1 0 auto"
                   fontSize={14}
                   textAlign="right"
-                  title={`Updated Time: ${parseExpire(updated)}`}
-                >
+                  title={`Updated Time: ${parseExpire(updated)}`}>
                   {updated > 0 ? dayjs(updated * 1000).fromNow() : ""}
                 </Typography>
               )}
@@ -339,8 +388,7 @@ export const ProfileItem = (props: Props) => {
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
-        }}
-      >
+        }}>
         {(hasUrl ? urlModeMenu : fileModeMenu).map((item) => (
           <MenuItem
             key={item.label}
@@ -358,8 +406,7 @@ export const ProfileItem = (props: Props) => {
                 };
               },
             ]}
-            dense
-          >
+            dense>
             {t(item.label)}
           </MenuItem>
         ))}
@@ -371,6 +418,7 @@ export const ProfileItem = (props: Props) => {
         language="yaml"
         schema="clash"
         onClose={() => setFileOpen(false)}
+        onChange={onReactive}
       />
       <ConfirmViewer
         title="Confirm deletion"

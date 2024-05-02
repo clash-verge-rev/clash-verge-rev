@@ -68,10 +68,10 @@ const ProfilePage = () => {
   const [sortableProfileList, setSortableProfileList] = useState<
     ISortableItem[]
   >([]);
-
   const [sortableChainList, setSortableChainList] = useState<ISortableItem[]>(
     [],
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleProfileDragEnd = async (event: SortableEvent) => {
     const activeId = sortableProfileList[event.oldIndex!].id;
@@ -179,12 +179,14 @@ const ProfilePage = () => {
 
   const onEnhance = useLockFn(async () => {
     try {
+      setIsRefreshing(true);
       await enhanceProfiles();
       mutateLogs();
       Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
     }
+    setIsRefreshing(false);
   });
 
   const onEnable = useLockFn(async (uid: string) => {
@@ -280,8 +282,7 @@ const ProfilePage = () => {
             size="small"
             color="inherit"
             title={t("Update All Profiles")}
-            onClick={onUpdateAll}
-          >
+            onClick={onUpdateAll}>
             <RefreshRounded />
           </IconButton>
 
@@ -289,22 +290,30 @@ const ProfilePage = () => {
             size="small"
             color="inherit"
             title={t("View Runtime Config")}
-            onClick={() => configRef.current?.open()}
-          >
+            onClick={() => configRef.current?.open()}>
             <TextSnippetOutlined />
           </IconButton>
 
-          <IconButton
+          <LoadingButton
+            loading={isRefreshing}
+            loadingPosition="end"
+            variant="contained"
+            color="primary"
+            endIcon={<LocalFireDepartmentRounded />}
+            title={t("Reactivate Profiles")}
+            onClick={onEnhance}>
+            <span>{t("Reactivate Profiles")}</span>
+          </LoadingButton>
+
+          {/* <IconButton
             size="small"
             color="primary"
             title={t("Reactivate Profiles")}
-            onClick={onEnhance}
-          >
+            onClick={onEnhance}>
             <LocalFireDepartmentRounded />
-          </IconButton>
+          </IconButton> */}
         </Box>
-      }
-    >
+      }>
       <Stack
         direction="row"
         spacing={1}
@@ -315,8 +324,7 @@ const ProfilePage = () => {
           height: "36px",
           display: "flex",
           alignItems: "center",
-        }}
-      >
+        }}>
         <BaseStyledTextField
           value={url}
           variant="outlined"
@@ -329,8 +337,7 @@ const ProfilePage = () => {
                 size="small"
                 sx={{ p: 0.5 }}
                 title={t("Paste")}
-                onClick={onCopyLink}
-              >
+                onClick={onCopyLink}>
                 <ContentPasteRounded fontSize="inherit" />
               </IconButton>
             ) : (
@@ -338,8 +345,7 @@ const ProfilePage = () => {
                 size="small"
                 sx={{ p: 0.5 }}
                 title={t("Clear")}
-                onClick={() => setUrl("")}
-              >
+                onClick={() => setUrl("")}>
                 <ClearRounded fontSize="inherit" />
               </IconButton>
             ),
@@ -351,16 +357,14 @@ const ProfilePage = () => {
           variant="contained"
           size="small"
           sx={{ borderRadius: "6px" }}
-          onClick={onImport}
-        >
+          onClick={onImport}>
           {t("Import")}
         </LoadingButton>
         <Button
           variant="contained"
           size="small"
           sx={{ borderRadius: "6px" }}
-          onClick={() => viewerRef.current?.create()}
-        >
+          onClick={() => viewerRef.current?.create()}>
           {t("New")}
         </Button>
       </Stack>
@@ -372,8 +376,7 @@ const ProfilePage = () => {
           mr: "10px",
           height: "calc(100% - 68px)",
           overflowY: "auto",
-        }}
-      >
+        }}>
         <ReactSortable
           style={{
             display: "flex",
@@ -385,16 +388,19 @@ const ProfilePage = () => {
           setList={(newList: ISortableItem[]) =>
             setSortableProfileList(newList)
           }
-          onEnd={handleProfileDragEnd}
-        >
+          onEnd={handleProfileDragEnd}>
           {sortableProfileList.map((item) => (
             <ProfileItem
               id={item.profileItem.uid}
               selected={profiles.current === item.profileItem.uid}
-              activating={activating === item.profileItem.uid}
+              activating={
+                activating === item.profileItem.uid ||
+                (profiles.current === item.profileItem.uid && isRefreshing)
+              }
               itemData={item.profileItem}
               onSelect={(f) => onSelect(item.profileItem.uid, f)}
               onEdit={() => viewerRef.current?.edit(item.profileItem)}
+              onReactive={onEnhance}
             />
           ))}
           {[...new Array(20)].map((_) => {
@@ -406,8 +412,7 @@ const ProfilePage = () => {
                   margin: "0 5px",
                   width: "260px",
                   height: "0",
-                }}
-              ></i>
+                }}></i>
             );
           })}
         </ReactSortable>
@@ -416,8 +421,10 @@ const ProfilePage = () => {
           <Divider
             variant="middle"
             flexItem
-            sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
-          ></Divider>
+            sx={{
+              width: `calc(100% - 32px)`,
+              borderColor: dividercolor,
+            }}></Divider>
         )}
 
         {sortableChainList.length > 0 && (
@@ -434,8 +441,7 @@ const ProfilePage = () => {
               setList={(newList: ISortableItem[]) =>
                 setSortableChainList(newList)
               }
-              onEnd={handleChainDragEnd}
-            >
+              onEnd={handleChainDragEnd}>
               {sortableChainList.map((item) => (
                 <ProfileMore
                   selected={!!chain.includes(item.profileItem.uid)}
@@ -459,8 +465,7 @@ const ProfilePage = () => {
                       margin: "0 5px",
                       width: "260px",
                       height: "0",
-                    }}
-                  ></i>
+                    }}></i>
                 );
               })}
             </ReactSortable>
