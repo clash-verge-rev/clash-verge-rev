@@ -189,6 +189,8 @@
   "pending": "pending",
   "installed": "installed",
   "uninstall": "uninstalled",
+  "active": "active",
+  "unknown": "unknown",
   "Disable Service Mode": "Disable Service Mode",
   "Install": "Install",
   "Uninstall": "Uninstall",
