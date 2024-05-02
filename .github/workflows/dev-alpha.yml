@@ -155,10 +155,6 @@ jobs:
         run: |
           echo "Successfully created the following package archive"
           echo "Package: ${{ steps.makepkg.outputs.pkgfile0 }}"
-          echo "Package: ${{ steps.makepkg.outputs.pkgfile1 }}"
-          echo "Package: ${{ steps.makepkg.outputs.pkgfile2 }}"
-          echo "Package: ${{ steps.makepkg.outputs.pkgfile3 }}"
-          echo "Package: ${{ steps.makepkg.outputs.pkgfile4 }}"
 
       - name: Upload Release
         uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
