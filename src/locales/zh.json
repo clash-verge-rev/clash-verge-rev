@@ -185,9 +185,18 @@
   "MTU": "最大传输单元",
   "Reset to Default": "重置为默认值",
 
+  "Current State": "当前状态",
+  "pending": "等待中",
+  "installed": "已安装",
+  "uninstall": "未安装",
+  "Disable Service Mode": "禁用服务模式",
+  "Install": "安装",
+  "Uninstall": "卸载",
+
   "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换",
   "Tun Mode Info": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",
   "System and Mixed Can Only be Used in Service Mode": "System和Mixed只能在服务模式下使用",
+  "Information: Please make sure that the Clash Verge Service is installed and enabled": "提示信息: 请确保Clash Verge Service已安装并启用",
 
   "Use Regular Expression": "使用正则表达式"
 }
