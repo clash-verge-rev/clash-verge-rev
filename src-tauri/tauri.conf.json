@@ -69,7 +69,8 @@
       },
       "fs": {
         "exists": true,
-        "scope": ["$APPDATA/**", "$RESOURCE/../**"]
+        "readFile": true,
+        "scope": ["$APPDATA/**", "$RESOURCE/../**", "**"]
       }
     },
     "windows": [],
