@@ -1,5 +1,5 @@
 import useSWR, { mutate } from "swr";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useSetRecoilState } from "recoil";
 import { Box, Button, IconButton, Stack, Divider } from "@mui/material";
@@ -20,6 +20,7 @@ import {
   deleteProfile,
   updateProfile,
   reorderProfile,
+  createProfile,
 } from "@/services/cmds";
 import { atomLoadingCache } from "@/services/states";
 import { closeAllConnections } from "@/services/api";
@@ -37,6 +38,8 @@ import { atomThemeMode } from "@/services/states";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { ReactSortable, SortableEvent } from "react-sortablejs";
 import { ProfileItem } from "@/components/profile/profile-item";
+import { listen } from "@tauri-apps/api/event";
+import { readTextFile } from "@tauri-apps/api/fs";
 
 interface ISortableItem {
   id: string;
@@ -72,24 +75,6 @@ const ProfilePage = () => {
     [],
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleProfileDragEnd = async (event: SortableEvent) => {
-    const activeId = sortableProfileList[event.oldIndex!].id;
-    const overId = sortableProfileList[event.newIndex!].id;
-    if (activeId !== overId) {
-      await reorderProfile(activeId.toString(), overId.toString());
-      mutateProfiles();
-    }
-  };
-
-  const handleChainDragEnd = async (event: SortableEvent) => {
-    const activeId = sortableChainList[event.oldIndex!].id;
-    const overId = sortableChainList[event.newIndex!].id;
-    if (activeId !== overId) {
-      await reorderProfile(activeId.toString(), overId.toString());
-      mutateProfiles();
-    }
-  };
 
   // distinguish type
   const { regularItems } = useMemo(() => {
@@ -128,6 +113,52 @@ const ProfilePage = () => {
     setSortableChainList(enhanceItems);
     return { regularItems };
   }, [profiles]);
+
+  useEffect(() => {
+    const unlisten = listen("tauri://file-drop", async (event) => {
+      const fileList = event.payload as string[];
+      for (let file of fileList) {
+        if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
+          Notice.error("Only support YAML files.");
+          continue;
+        }
+        const item = {
+          type: "local",
+          name: file.split(/\/|\\/).pop() ?? "New Profile",
+          desc: "",
+          url: "",
+          option: {
+            with_proxy: false,
+            self_proxy: false,
+          },
+        } as IProfileItem;
+        let data = await readTextFile(file);
+        await createProfile(item, data);
+        await mutateProfiles();
+      }
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
+  const handleProfileDragEnd = async (event: SortableEvent) => {
+    const activeId = sortableProfileList[event.oldIndex!].id;
+    const overId = sortableProfileList[event.newIndex!].id;
+    if (activeId !== overId) {
+      await reorderProfile(activeId.toString(), overId.toString());
+      mutateProfiles();
+    }
+  };
+
+  const handleChainDragEnd = async (event: SortableEvent) => {
+    const activeId = sortableChainList[event.oldIndex!].id;
+    const overId = sortableChainList[event.newIndex!].id;
+    if (activeId !== overId) {
+      await reorderProfile(activeId.toString(), overId.toString());
+      mutateProfiles();
+    }
+  };
 
   const onImport = async () => {
     if (!url) return;
