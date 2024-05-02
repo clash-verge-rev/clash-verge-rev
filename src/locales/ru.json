@@ -185,9 +185,18 @@
   "MTU": "Максимальная единица передачи",
   "Reset to Default": "Сбросить настройки по умолчанию",
 
+  "Current State": "Текущее состояние",
+  "pending": "Ожидающий",
+  "installed": "Установленный",
+  "uninstall": "Не установленный",
+  "Disable Service Mode": "Отключить режим обслуживания",
+  "Install": "Установить",
+  "Uninstall": "Удалить",
+
   "Portable Updater Error": "Портативная версия не поддерживает обновление внутри приложения, пожалуйста, скачайте и замените вручную",
   "Tun Mode Info": "Режим туннеля требует предоставления разрешений, связанных с ядром. Пожалуйста, включите сервисный режим перед его использованием",
   "System and Mixed Can Only be Used in Service Mode": "Система и смешанные могут использоваться только в сервисном режиме",
+  "Information: Please make sure that the Clash Verge Service is installed and enabled": "Информация: Пожалуйста, убедитесь, что сервис Clash Verge Service установлен и включен",
 
   "Use Regular Expression": "Использование регулярных выражений"
 }

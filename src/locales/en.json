@@ -185,9 +185,18 @@
   "MTU": "Max Transmission Unit",
   "Reset to Default": "Reset to Default",
 
+  "Current State": "Current State",
+  "pending": "pending",
+  "installed": "installed",
+  "uninstall": "uninstalled",
+  "Disable Service Mode": "Disable Service Mode",
+  "Install": "Install",
+  "Uninstall": "Uninstall",
+
   "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
   "Tun Mode Info": "The Tun mode requires granting core-related permissions. Please enable service mode before using it",
   "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode",
+  "Information: Please make sure that the Clash Verge Service is installed and enabled": "Information: Please make sure that the Clash Verge Service is installed and enabled",
 
   "Use Regular Expression": "Use Regular Expression"
 }
