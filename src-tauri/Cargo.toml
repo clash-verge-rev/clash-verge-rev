@@ -29,7 +29,7 @@ serde_yaml = "0.9"
 once_cell = "1.19"
 port_scanner = "0.1.5"
 delay_timer = "0.11.5"
-parking_lot = "0.12"
+parking_lot = "0.12.2"
 percent-encoding = "2.3.1"
 window-shadows = { version = "0.2" }
 tokio = { version = "1", features = ["full"] }
