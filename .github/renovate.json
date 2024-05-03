@@ -3,15 +3,20 @@
   "extends": ["config:best-practices", ":pinDevDependencies"],
   "dependencyDashboard": true,
   "baseBranches": ["dev"],
-  "labels": ["dependency"],
+  "labels": ["dependencies"],
   "packageRules": [
     {
-      "matchDepTypes": ["devDependencies", "dependencies", "action"],
+      "matchDepTypes": [
+        "devDependencies",
+        "build-dependencies",
+        "dependencies",
+        "action"
+      ],
       "automerge": true
     },
     {
       "matchDepTypes": ["action"],
-      "labels": ["action"],
+      "labels": ["github-actions"],
       "semanticCommitType": "ci",
       "semanticCommitScope": "action"
     }
