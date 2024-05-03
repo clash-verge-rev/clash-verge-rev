@@ -20,6 +20,9 @@ fn main() -> std::io::Result<()> {
         return Ok(());
     }
 
+    #[cfg(target_os = "linux")]
+    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+
     crate::log_err!(init::init_config());
 
     #[allow(unused_mut)]
