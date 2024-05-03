@@ -196,6 +196,8 @@
 
   "Current State": "Current State",
   "active": "active",
+  "pending": "pending",
+  "unknown": "unknown",
   "installed": "installed",
   "uninstall": "uninstall",
   "Disable Service Mode": "Disable Service Mode",
