@@ -10,7 +10,7 @@ edition = "2021"
 build = "build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1", features = [] }
+tauri-build = { version = "1.5.1", features = [] }
 
 [dependencies]
 warp = "0.3.7"
@@ -37,7 +37,7 @@ serde = { version = "1.0.200", features = ["derive"] }
 reqwest = { version = "0.12.4", features = ["json", "rustls-tls"] }
 sysproxy = { git="https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
 auto-launch = { git="https://github.com/zzzgydi/auto-launch", branch = "main" }
-tauri = { version = "1.6", features = [ "fs-exists", "path-all", "protocol-asset", "dialog-open", "notification-all", "icon-png", "icon-ico", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "devtools"] }
+tauri = { version = "1.6.2", features = [ "fs-exists", "path-all", "protocol-asset", "dialog-open", "notification-all", "icon-png", "icon-ico", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "devtools"] }
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
