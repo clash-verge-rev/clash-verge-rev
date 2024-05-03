@@ -40,6 +40,7 @@ import { ReactSortable, SortableEvent } from "react-sortablejs";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/api/fs";
+import { readText } from "@tauri-apps/api/clipboard";
 
 interface ISortableItem {
   id: string;
@@ -293,7 +294,7 @@ const ProfilePage = () => {
   });
 
   const onCopyLink = async () => {
-    const text = await navigator.clipboard.readText();
+    const text = await readText();
     if (text) setUrl(text);
   };
   const [mode] = useRecoilState(atomThemeMode);
