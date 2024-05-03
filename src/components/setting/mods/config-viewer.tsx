@@ -19,12 +19,11 @@ import { atomThemeMode } from "@/services/states";
 import { getRuntimeYaml } from "@/services/cmds";
 import { DialogRef } from "@/components/base";
 import { editor } from "monaco-editor/esm/vs/editor/editor.api";
+import { useWindowSize } from "@/hooks/use-window-size";
 
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js";
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js";
 import "monaco-editor/esm/vs/editor/contrib/folding/browser/folding.js";
-import { useWindowSize } from "@/components/proxy/use-window-width";
-import { size } from "lodash-es";
 
 export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

@@ -20,7 +20,7 @@ import { configureMonacoYaml } from "monaco-yaml";
 import { type JSONSchema7 } from "json-schema";
 import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
-import { useWindowSize } from "@/components/proxy/use-window-width";
+import { useWindowSize } from "@/hooks/use-window-size";
 
 interface Props {
   uid: string;

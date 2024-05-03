@@ -11,7 +11,7 @@ import {
 import { atomThemeMode } from "@/services/states";
 
 import * as monaco from "monaco-editor";
-import { useWindowSize } from "@/components/proxy/use-window-width";
+import { useWindowSize } from "@/hooks/use-window-size";
 import { Notice } from "@/components/base";
 import { useLockFn } from "ahooks";
 

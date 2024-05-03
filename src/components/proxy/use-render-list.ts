@@ -3,7 +3,7 @@ import { useEffect, useMemo } from "react";
 import { getProxies } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import { filterSort } from "./use-filter-sort";
-import { useWindowSize } from "./use-window-width";
+import { useWindowSize } from "@/hooks/use-window-size";
 import {
   useHeadStateNew,
   DEFAULT_STATE,

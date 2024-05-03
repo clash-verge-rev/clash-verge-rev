@@ -30,8 +30,9 @@ interface Props {
   onDisable: () => Promise<void>;
   onMoveTop: () => void;
   onMoveEnd: () => void;
-  onDelete: () => void;
+  onDelete: () => Promise<void>;
   onEdit: () => void;
+  onSave: () => void;
 }
 
 // profile enhanced item
@@ -48,6 +49,7 @@ export const ProfileMore = (props: Props) => {
     onMoveEnd,
     onDelete,
     onEdit,
+    onSave,
   } = props;
 
   const { uid, type } = itemData;
@@ -104,7 +106,9 @@ export const ProfileMore = (props: Props) => {
       label: "Delete",
       handler: () => {
         setAnchorEl(null);
+        setToggling(true);
         setConfirmOpen(true);
+        setToggling(false);
       },
     },
   ];
@@ -271,15 +275,18 @@ export const ProfileMore = (props: Props) => {
         language={type === "merge" ? "yaml" : "javascript"}
         schema={type === "merge" ? "merge" : undefined}
         onClose={() => setFileOpen(false)}
+        onChange={onSave}
       />
       <ConfirmViewer
         title={t("Confirm deletion")}
         message={t("This operation is not reversible")}
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
-          onDelete();
+        onConfirm={async () => {
           setConfirmOpen(false);
+          setToggling(true);
+          await onDelete();
+          setToggling(false);
         }}
       />
       {selected && (

@@ -488,6 +488,7 @@ const ProfilePage = () => {
                   onMoveTop={() => onMoveTop(item.profileItem.uid)}
                   onMoveEnd={() => onMoveEnd(item.profileItem.uid)}
                   onEdit={() => viewerRef.current?.edit(item.profileItem)}
+                  onSave={onEnhance}
                 />
               ))}
               {[...new Array(20)].map((_) => {
