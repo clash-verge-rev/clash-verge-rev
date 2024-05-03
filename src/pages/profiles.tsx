@@ -326,6 +326,7 @@ const ProfilePage = () => {
           </IconButton>
 
           <LoadingButton
+            size="small"
             loading={reactivating}
             loadingPosition="end"
             variant="contained"
