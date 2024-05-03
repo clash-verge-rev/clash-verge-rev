@@ -204,7 +204,7 @@ export const ProfileMore = (props: Props) => {
                   size="small"
                   edge="start"
                   color="error"
-                  title="Console"
+                  title={t("Console")}
                   onClick={() => setLogOpen(true)}>
                   <FeaturedPlayListRounded fontSize="inherit" />
                 </IconButton>
@@ -214,7 +214,7 @@ export const ProfileMore = (props: Props) => {
                 size="small"
                 edge="start"
                 color="inherit"
-                title="Console"
+                title={t("Console")}
                 onClick={() => setLogOpen(true)}>
                 <FeaturedPlayListRounded fontSize="inherit" />
               </IconButton>
@@ -273,8 +273,8 @@ export const ProfileMore = (props: Props) => {
         onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer
-        title="Confirm deletion"
-        message="This operation is not reversible"
+        title={t("Confirm deletion")}
+        message={t("This operation is not reversible")}
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={() => {

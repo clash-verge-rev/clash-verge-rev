@@ -227,5 +227,11 @@
   "Restart App Message": "To change the title bar of this app, you need to restart the app, whether to change and restart the app immediately",
 
   "Keep UI Active": "Keep UI Active",
-  "Keep UI Active Info": "Keep the UI active and open it again without re-rendering the interface"
+  "Keep UI Active Info": "Keep the UI active and open it again without re-rendering the interface",
+
+  "From": "From",
+  "Updated Time": "Updated Time",
+  "Expire Time": "Expire Time",
+  "Used / Total": "Used / Total",
+  "Console": "Console"
 }

@@ -117,8 +117,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
         )}
 
         <ConfirmViewer
-          title="Confirm restart"
-          message="Restart App Message"
+          title={t("Confirm restart")}
+          message={t("Restart App Message")}
           open={confirmOpen}
           onClose={() => setConfirmOpen(false)}
           onConfirm={async () => {

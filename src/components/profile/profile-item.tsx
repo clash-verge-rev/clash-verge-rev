@@ -343,7 +343,7 @@ export const ProfileItem = (props: Props) => {
                 </Typography>
               ) : (
                 hasUrl && (
-                  <Typography noWrap title={`From ${from}`}>
+                  <Typography noWrap title={`${t("From")} ${from}`}>
                     {from}
                   </Typography>
                 )
@@ -354,7 +354,7 @@ export const ProfileItem = (props: Props) => {
                   flex="1 0 auto"
                   fontSize={14}
                   textAlign="right"
-                  title={`Updated Time: ${parseExpire(updated)}`}>
+                  title={`${t("Updated Time")}: ${parseExpire(updated)}`}>
                   {updated > 0 ? dayjs(updated * 1000).fromNow() : ""}
                 </Typography>
               )}
@@ -364,14 +364,14 @@ export const ProfileItem = (props: Props) => {
         {/* the third line show extra info or last updated time */}
         {hasExtra ? (
           <Box sx={{ ...boxStyle, fontSize: 14 }}>
-            <span title="Used / Total">
+            <span title={t("Used / Total")}>
               {parseTraffic(upload + download)} / {parseTraffic(total)}
             </span>
-            <span title="Expire Time">{expire}</span>
+            <span title={t("Expire Time")}>{expire}</span>
           </Box>
         ) : (
           <Box sx={{ ...boxStyle, fontSize: 12, justifyContent: "flex-end" }}>
-            <span title="Updated Time">{parseExpire(updated)}</span>
+            <span title={t("Updated Time")}>{parseExpire(updated)}</span>
           </Box>
         )}
         <LinearProgress variant="determinate" value={progress} />
@@ -421,8 +421,8 @@ export const ProfileItem = (props: Props) => {
         onChange={onReactivate}
       />
       <ConfirmViewer
-        title="Confirm deletion"
-        message="This operation is not reversible"
+        title={t("Confirm deletion")}
+        message={t("This operation is not reversible")}
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={() => {

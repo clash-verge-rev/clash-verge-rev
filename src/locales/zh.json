@@ -227,5 +227,11 @@
   "Restart App Message": "更改应用标题栏需要重启应用，是否立即更改并重启应用",
 
   "Keep UI Active": "保持UI界面活动",
-  "Keep UI Active Info": "保持UI界面活动，再次打开无需重新渲染界面"
+  "Keep UI Active Info": "保持UI界面活动，再次打开无需重新渲染界面",
+
+  "From": "来自",
+  "Updated Time": "更新时间",
+  "Expire Time": "过期时间",
+  "Used / Total": "已使用 / 总共",
+  "Console": "控制台"
 }
