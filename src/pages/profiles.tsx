@@ -74,7 +74,7 @@ const ProfilePage = () => {
   const [sortableChainList, setSortableChainList] = useState<ISortableItem[]>(
     [],
   );
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
 
   // distinguish type
   const { regularItems } = useMemo(() => {
@@ -210,14 +210,14 @@ const ProfilePage = () => {
 
   const onEnhance = useLockFn(async () => {
     try {
-      setIsRefreshing(true);
+      setReactivating(true);
       await enhanceProfiles();
       mutateLogs();
       Notice.success("Refresh clash config", 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
     }
-    setIsRefreshing(false);
+    setReactivating(false);
   });
 
   const onEnable = useLockFn(async (uid: string) => {
@@ -326,7 +326,7 @@ const ProfilePage = () => {
           </IconButton>
 
           <LoadingButton
-            loading={isRefreshing}
+            loading={reactivating}
             loadingPosition="end"
             variant="contained"
             color="primary"
@@ -426,7 +426,7 @@ const ProfilePage = () => {
               selected={profiles.current === item.profileItem.uid}
               activating={
                 activating === item.profileItem.uid ||
-                (profiles.current === item.profileItem.uid && isRefreshing)
+                (profiles.current === item.profileItem.uid && reactivating)
               }
               itemData={item.profileItem}
               onSelect={(f) => onSelect(item.profileItem.uid, f)}
@@ -479,6 +479,7 @@ const ProfilePage = () => {
                   itemData={item.profileItem}
                   enableNum={chain.length || 0}
                   logInfo={chainLogs[item.profileItem.uid]}
+                  reactivating={reactivating}
                   onEnable={() => onEnable(item.profileItem.uid)}
                   onDisable={() => onDisable(item.profileItem.uid)}
                   onDelete={() => onDelete(item.profileItem.uid)}

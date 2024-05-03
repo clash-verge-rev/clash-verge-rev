@@ -10,6 +10,7 @@ import {
   MenuItem,
   Menu,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { FeaturedPlayListRounded } from "@mui/icons-material";
 import { viewProfile } from "@/services/cmds";
@@ -24,8 +25,9 @@ interface Props {
   itemData: IProfileItem;
   enableNum: number;
   logInfo?: [string, string][];
-  onEnable: () => void;
-  onDisable: () => void;
+  reactivating: boolean;
+  onEnable: () => Promise<void>;
+  onDisable: () => Promise<void>;
   onMoveTop: () => void;
   onMoveEnd: () => void;
   onDelete: () => void;
@@ -39,6 +41,7 @@ export const ProfileMore = (props: Props) => {
     itemData,
     enableNum,
     logInfo = [],
+    reactivating,
     onEnable,
     onDisable,
     onMoveTop,
@@ -54,6 +57,7 @@ export const ProfileMore = (props: Props) => {
   const [fileOpen, setFileOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   const onEditInfo = () => {
     setAnchorEl(null);
@@ -83,7 +87,14 @@ export const ProfileMore = (props: Props) => {
   const showMove = enableNum > 1 && !hasError;
 
   const enableMenu = [
-    { label: "Disable", handler: fnWrapper(onDisable) },
+    {
+      label: "Disable",
+      handler: fnWrapper(async () => {
+        setToggling(true);
+        await onDisable();
+        setToggling(false);
+      }),
+    },
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
@@ -99,7 +110,14 @@ export const ProfileMore = (props: Props) => {
   ];
 
   const disableMenu = [
-    { label: "Enable", handler: fnWrapper(onEnable) },
+    {
+      label: "Enable",
+      handler: fnWrapper(async () => {
+        setToggling(true);
+        await onEnable();
+        setToggling(false);
+      }),
+    },
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
@@ -127,8 +145,7 @@ export const ProfileMore = (props: Props) => {
         flexGrow: "1",
         margin: "5px",
         width: "260px",
-      }}
-    >
+      }}>
       <ProfileBox
         aria-selected={selected}
         onDoubleClick={onEditFile}
@@ -138,21 +155,35 @@ export const ProfileMore = (props: Props) => {
           setPosition({ top: clientY, left: clientX });
           setAnchorEl(event.currentTarget);
           event.preventDefault();
-        }}
-      >
+        }}>
+        {(reactivating || toggling) && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              backdropFilter: "blur(2px)",
+              borderRadius: "8px",
+            }}>
+            <CircularProgress size={20} />
+          </Box>
+        )}
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="center"
-          mb={0.5}
-        >
+          mb={0.5}>
           <Typography
             width="calc(100% - 52px)"
             variant="h6"
             component="h2"
             noWrap
-            title={itemData.name}
-          >
+            title={itemData.name}>
             {itemData.name}
           </Typography>
 
@@ -174,8 +205,7 @@ export const ProfileMore = (props: Props) => {
                   edge="start"
                   color="error"
                   title="Console"
-                  onClick={() => setLogOpen(true)}
-                >
+                  onClick={() => setLogOpen(true)}>
                   <FeaturedPlayListRounded fontSize="inherit" />
                 </IconButton>
               </Badge>
@@ -185,8 +215,7 @@ export const ProfileMore = (props: Props) => {
                 edge="start"
                 color="inherit"
                 title="Console"
-                onClick={() => setLogOpen(true)}
-              >
+                onClick={() => setLogOpen(true)}>
                 <FeaturedPlayListRounded fontSize="inherit" />
               </IconButton>
             )
@@ -194,8 +223,7 @@ export const ProfileMore = (props: Props) => {
             <Typography
               noWrap
               title={itemData.desc}
-              sx={i18n.language === "zh" ? { width: "calc(100% - 75px)" } : {}}
-            >
+              sx={i18n.language === "zh" ? { width: "calc(100% - 75px)" } : {}}>
               {itemData.desc}
             </Typography>
           )}
@@ -213,8 +241,7 @@ export const ProfileMore = (props: Props) => {
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
-        }}
-      >
+        }}>
         {(selected ? enableMenu : disableMenu)
           .filter((item: any) => item.show !== false)
           .map((item) => (
@@ -232,8 +259,7 @@ export const ProfileMore = (props: Props) => {
                   };
                 },
               ]}
-              dense
-            >
+              dense>
               {t(item.label)}
             </MenuItem>
           ))}
