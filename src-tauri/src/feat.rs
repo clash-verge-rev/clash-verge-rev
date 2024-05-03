@@ -299,7 +299,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
 
     let sh =
         format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
-    let cmd: String = format!("set http_proxy={http_proxy} \n set https_proxy={http_proxy}");
+    let cmd: String = format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}");
     let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
 
     let mut cliboard = app_handle.clipboard_manager();
