@@ -38,17 +38,18 @@ interface Props {
   itemData: IProfileItem;
   onSelect: (force: boolean) => void;
   onEdit: () => void;
-  onReactive: () => void;
+  onReactivate: () => void;
 }
 
 export const ProfileItem = (props: Props) => {
-  const { selected, activating, itemData, onSelect, onEdit, onReactive } =
+  const { selected, activating, itemData, onSelect, onEdit, onReactivate } =
     props;
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [loadingCache, setLoadingCache] = useRecoilState(atomLoadingCache);
+  const [sideBtnShow, setSideBtnShow] = useState(false);
 
   const { uid, name = "Profile", extra, updated = 0 } = itemData;
 
@@ -211,8 +212,6 @@ export const ProfileItem = (props: Props) => {
     justifyContent: "space-between",
   };
 
-  const [sideBtnShow, setSideBtnShow] = useState(false);
-
   return (
     <Box
       sx={{
@@ -271,7 +270,7 @@ export const ProfileItem = (props: Props) => {
               <IconButton
                 title={t("Reactivate Profiles")}
                 onClick={(e) => {
-                  onReactive();
+                  onReactivate();
                   e.stopPropagation();
                 }}>
                 <LocalFireDepartmentRounded />
@@ -418,7 +417,7 @@ export const ProfileItem = (props: Props) => {
         language="yaml"
         schema="clash"
         onClose={() => setFileOpen(false)}
-        onChange={onReactive}
+        onChange={onReactivate}
       />
       <ConfirmViewer
         title="Confirm deletion"
