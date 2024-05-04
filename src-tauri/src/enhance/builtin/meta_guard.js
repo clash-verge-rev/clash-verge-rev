@@ -1,6 +1,6 @@
-function main(params) {
-  if (params.mode === "script") {
-    params.mode = "rule";
+function main(config) {
+  if (config.mode === "script") {
+    config.mode = "rule";
   }
-  return params;
+  return config;
 }
