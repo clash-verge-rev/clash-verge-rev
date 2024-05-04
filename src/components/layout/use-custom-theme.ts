@@ -15,8 +15,9 @@ export const useCustomTheme = () => {
   const [mode, setMode] = useRecoilState(atomThemeMode);
 
   useEffect(() => {
-    if (theme_setting === undefined) return;
-    localStorage.setItem("theme_setting", JSON.stringify(theme_setting));
+    if (theme_setting) {
+      localStorage.setItem("theme_setting", JSON.stringify(theme_setting));
+    }
   }, [theme_setting]);
 
   useEffect(() => {
