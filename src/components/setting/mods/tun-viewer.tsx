@@ -13,6 +13,7 @@ import {
 import { useClash } from "@/hooks/use-clash";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { StackModeSwitch } from "./stack-mode-switch";
+import { enhanceProfiles } from "@/services/cmds";
 
 export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -65,6 +66,12 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         }),
         false
       );
+      try {
+        await enhanceProfiles();
+        Notice.success("Refresh clash config", 1000);
+      } catch (err: any) {
+        Notice.error(err.message || err.toString(), 3000);
+      }
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
