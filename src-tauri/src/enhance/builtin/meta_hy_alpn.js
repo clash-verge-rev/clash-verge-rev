@@ -1,10 +1,10 @@
-function main(params) {
-  if (Array.isArray(params.proxies)) {
-    params.proxies.forEach((p, i) => {
+function main(config) {
+  if (Array.isArray(config.proxies)) {
+    config.proxies.forEach((p, i) => {
       if (p.type === "hysteria" && typeof p.alpn === "string") {
-        params.proxies[i].alpn = [p.alpn];
+        config.proxies[i].alpn = [p.alpn];
       }
     });
   }
-  return params;
+  return config;
 }
