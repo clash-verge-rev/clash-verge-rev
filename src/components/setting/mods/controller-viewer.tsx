@@ -65,7 +65,9 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
             sx={{ width: 175 }}
             value={secret}
             placeholder={t("Recommended")}
-            onChange={(e) => setSecret(e.target.value)}
+            onChange={(e) =>
+              setSecret(e.target.value?.replace(/[^\x00-\x7F]/g, ""))
+            }
           />
         </ListItem>
       </List>
