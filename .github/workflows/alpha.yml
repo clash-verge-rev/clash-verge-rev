@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload Release
         if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
@@ -211,7 +211,27 @@ jobs:
           body: "More new features are now supported."
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.exe
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
+          body: "More new features are now supported."
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.nsis.zip
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
+          body: "More new features are now supported."
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.nsis.zip.sig
 
   update_tag:
     name: Update tag

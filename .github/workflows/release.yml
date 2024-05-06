@@ -113,7 +113,7 @@ jobs:
 
       - name: Upload Release
         if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
           name: "Clash Verge Rev v${{env.VERSION}}"
@@ -122,7 +122,7 @@ jobs:
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
           name: "Clash Verge Rev v${{env.VERSION}}"
@@ -198,13 +198,33 @@ jobs:
           Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip.sig' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip.sig'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
           name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
           body: "More new features are now supported."
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.exe
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{steps.build.outputs.appVersion}}
+          name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
+          body: "More new features are now supported."
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.nsis.zip
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{steps.build.outputs.appVersion}}
+          name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
+          body: "More new features are now supported."
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.nsis.zip.sig
 
   release-update:
     runs-on: ubuntu-latest
