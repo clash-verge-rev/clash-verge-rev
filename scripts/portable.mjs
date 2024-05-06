@@ -9,6 +9,7 @@ const alpha = process.argv.slice(2)[1];
 
 const ARCH_MAP = {
   "x86_64-pc-windows-msvc": "x64",
+  "i686-pc-windows-msvc": "x86",
   "aarch64-pc-windows-msvc": "arm64",
 };
 
