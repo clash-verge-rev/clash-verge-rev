@@ -23,7 +23,7 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 
 ### FAQ
 
-Refer to [Doc FAQ Page](https://clash-verge-rev.github.io/faq.html)
+Refer to [Doc FAQ Page](https://clash-verge-rev.github.io/faq/install.html)
 
 ## Development
 
