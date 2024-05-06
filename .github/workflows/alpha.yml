@@ -252,7 +252,7 @@ jobs:
 
           ### FAQ
 
-          - [FAQ](https://clash-verge-rev.github.io/faq/install/)
+          - [FAQ](https://clash-verge-rev.github.io/faq/install.html)
 
           Created at  ${{ env.BUILDTIME }}.
           EOF
