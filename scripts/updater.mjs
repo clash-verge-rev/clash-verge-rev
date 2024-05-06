@@ -45,10 +45,12 @@ async function resolveUpdater() {
       "darwin-intel": { signature: "", url: "" },
       "darwin-x86_64": { signature: "", url: "" },
       "linux-x86_64": { signature: "", url: "" },
+      "linux-x86": { signature: "", url: "" },
       "linux-aarch64": { signature: "", url: "" },
       "linux-armv7": { signature: "", url: "" },
       "windows-x86_64": { signature: "", url: "" },
       "windows-aarch64": { signature: "", url: "" },
+      "windows-x86": { signature: "", url: "" },
     },
   };
 
@@ -65,6 +67,16 @@ async function resolveUpdater() {
       const sig = await getSignature(browser_download_url);
       updateData.platforms.win64.signature = sig;
       updateData.platforms["windows-x86_64"].signature = sig;
+    }
+
+    // win32 url
+    if (name.endsWith("x64-setup.nsis.zip")) {
+      updateData.platforms["windows-x86"].url = browser_download_url;
+    }
+    // win32 signature
+    if (name.endsWith("x64-setup.nsis.zip.sig")) {
+      const sig = await getSignature(browser_download_url);
+      updateData.platforms["windows-x86"].signature = sig;
     }
 
     // win arm url
@@ -105,6 +117,7 @@ async function resolveUpdater() {
     if (name.endsWith("amd64.AppImage.tar.gz")) {
       updateData.platforms.linux.url = browser_download_url;
       updateData.platforms["linux-x86_64"].url = browser_download_url;
+      updateData.platforms["linux-x86"].url = browser_download_url;
       // 暂时使用x64版本的url和sig，使得可以检查更新，但aarch64版本还不支持构建appimage
       updateData.platforms["linux-aarch64"].url = browser_download_url;
       updateData.platforms["linux-armv7"].url = browser_download_url;
@@ -114,6 +127,7 @@ async function resolveUpdater() {
       const sig = await getSignature(browser_download_url);
       updateData.platforms.linux.signature = sig;
       updateData.platforms["linux-x86_64"].signature = sig;
+      updateData.platforms["linux-x86"].url = browser_download_url;
       // 暂时使用x64版本的url和sig，使得可以检查更新，但aarch64版本还不支持构建appimage
       updateData.platforms["linux-aarch64"].signature = sig;
       updateData.platforms["linux-armv7"].signature = sig;
