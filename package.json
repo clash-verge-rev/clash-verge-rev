@@ -13,6 +13,7 @@
     "web:server": "vite preview",
     "check": "node scripts/check.mjs",
     "updater": "node scripts/updater.mjs",
+    "updater-fixed-webview2": "node scripts/updater-fixed-webview2.mjs",
     "portable": "node scripts/portable.mjs",
     "prepare": "husky install"
   },
