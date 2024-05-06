@@ -10,14 +10,14 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Pnpm install
@@ -25,5 +25,30 @@ jobs:
 
       - name: Release updater file
         run: pnpm updater
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-update-for-fixed-webview2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+
+      - name: Pnpm install
+        run: pnpm i
+
+      - name: Release updater file
+        run: pnpm updater-fixed-webview2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

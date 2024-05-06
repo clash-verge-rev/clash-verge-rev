@@ -1,0 +1,38 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "tauri": {
+    "systemTray": {
+      "iconPath": "icons/tray-icon.png"
+    },
+    "bundle": {
+      "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+      "targets": ["nsis", "updater"],
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": "",
+        "webviewInstallMode": {
+          "type": "fixedRuntime",
+          "path": "./Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.x86/"
+        },
+        "nsis": {
+          "displayLanguageSelector": true,
+          "installerIcon": "icons/icon.ico",
+          "languages": ["SimpChinese", "English"],
+          "license": "../LICENSE",
+          "installMode": "perMachine",
+          "template": "./template/installer.nsi"
+        }
+      }
+    },
+    "updater": {
+      "active": true,
+      "dialog": false,
+      "endpoints": [
+        "https://mirror.ghproxy.com/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-fixed-webview2-proxy.json",
+        "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-fixed-webview2.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK"
+    }
+  }
+}
