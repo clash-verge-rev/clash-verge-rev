@@ -76,8 +76,6 @@ jobs:
         run: pnpm portable ${{ matrix.target }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
   release-for-linux:
     strategy:
@@ -200,33 +198,19 @@ jobs:
           Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip.sig' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip.sig'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{steps.build.outputs.appVersion}}
-          name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
-          body: "More new features are now supported."
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.exe
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v2
+        uses: MystiPanda/action-gh-release@master
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
           name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
           body: "More new features are now supported."
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.nsis.zip
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
-      - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{steps.build.outputs.appVersion}}
-          name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
-          body: "More new features are now supported."
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.nsis.zip.sig
+      - name: Portable Bundle
+        run: pnpm portable-fixed-webview2 ${{ matrix.target }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   pkgbuild:
     name: PKGBUILD for ArchLinux
