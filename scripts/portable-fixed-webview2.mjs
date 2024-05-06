@@ -27,6 +27,7 @@ async function resolvePortable() {
   const releaseDir = target
     ? `./src-tauri/target/${target}/release`
     : `./src-tauri/target/release`;
+
   const configDir = path.join(releaseDir, ".config");
 
   if (!(await fs.pathExists(releaseDir))) {
@@ -42,13 +43,20 @@ async function resolvePortable() {
   zip.addLocalFile(path.join(releaseDir, "clash-meta.exe"));
   zip.addLocalFile(path.join(releaseDir, "clash-meta-alpha.exe"));
   zip.addLocalFolder(path.join(releaseDir, "resources"), "resources");
+  zip.addLocalFolder(
+    path.join(
+      releaseDir,
+      `Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${arch}`
+    ),
+    `Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${arch}`
+  );
   zip.addLocalFolder(configDir, ".config");
 
   const require = createRequire(import.meta.url);
   const packageJson = require("../package.json");
   const { version } = packageJson;
 
-  const zipFile = `Clash.Verge_${version}_${arch}_portable.zip`;
+  const zipFile = `Clash.Verge_${version}_${arch}_fixed_webview2_portable.zip`;
   zip.writeZip(zipFile);
 
   console.log("[INFO]: create portable zip successfully");

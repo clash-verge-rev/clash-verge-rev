@@ -79,8 +79,6 @@ jobs:
         run: pnpm portable ${{ matrix.target }} --alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
   alpha-for-linux:
     strategy:
@@ -212,6 +210,11 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
+
+      - name: Portable Bundle
+        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --alpha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   update_tag:
     name: Update tag
