@@ -207,34 +207,14 @@ jobs:
           Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip.sig' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip.sig'
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
+        uses: MystiPanda/action-gh-release@master
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
           body: "More new features are now supported."
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.exe
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
-          body: "More new features are now supported."
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.nsis.zip
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
-          body: "More new features are now supported."
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup.nsis.zip.sig
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
   pkgbuild:
     name: PKGBUILD for ArchLinux
