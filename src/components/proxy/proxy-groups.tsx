@@ -217,8 +217,7 @@ export const ProxyGroups = (props: Props) => {
             right: open ? sidebarIconRight : 0,
             top: "50%",
             zIndex: 999,
-            opacity: open ? 1 : 0.5,
-            bgcolor: "primary.main",
+            opacity: open ? 1 : 0.8,
             transition: "all 0.3s",
             "&:hover": {
               bgcolor: "primary.main",
