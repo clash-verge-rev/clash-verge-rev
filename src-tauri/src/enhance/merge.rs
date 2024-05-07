@@ -14,15 +14,26 @@ const MERGE_FIELDS: [&str; 10] = [
     "append-proxy-groups",
 ];
 
-pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
-    // 直接覆盖原字段
-    use_lowercase(merge.clone())
-        .into_iter()
-        .filter(|(key, _)| !MERGE_FIELDS.contains(&key.as_str().unwrap_or_default()))
-        .for_each(|(key, value)| {
-            config.insert(key, value);
-        });
+fn deep_merge(a: &mut Value, b: &Value) {
+    match (a, b) {
+        (&mut Value::Mapping(ref mut a), &Value::Mapping(ref b)) => {
+            for (k, v) in b {
+                deep_merge(a.entry(k.clone()).or_insert(Value::Null), v);
+            }
+        }
+        (a, b) => *a = b.clone(),
+    }
+}
 
+pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
+    let mut config = Value::from(config);
+    let mut merge_without_append = use_lowercase(merge.clone());
+    for key in MERGE_FIELDS {
+        merge_without_append.remove(key).unwrap_or_default();
+    }
+    deep_merge(&mut config, &Value::from(merge_without_append));
+
+    let mut config = config.as_mapping().unwrap().clone();
     let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
     let merge = use_filter(merge, &merge_list.collect());
 
