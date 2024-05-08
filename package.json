@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "@actions/github": "6.0.0",
-    "@tauri-apps/cli": "1.5.12",
+    "@tauri-apps/cli": "1.5.13",
     "@types/fs-extra": "11.0.4",
     "@types/js-cookie": "3.0.6",
     "@types/lodash-es": "4.17.12",
