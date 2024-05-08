@@ -1,3 +1,21 @@
+## v1.6.2
+
+### Features
+
+- 支持本地文件拖拽导入
+- 重新支持 32 位 CPU
+- 新增内置 Webview2 版本
+- 优化 Merge 逻辑，支持深度合并
+- 删除 Merge 配置中的 append/prepend-provider 字段
+- 支持更新稳定版内核
+
+### Bugs Fixes
+
+- MacOS DNS 还原失败
+- CMD 环境变量格式错误
+- Linux 下与 N 卡的兼容性问题
+- 修改 Tun 设置不立即生效
+
 ## v1.6.1
 
 ### Features
