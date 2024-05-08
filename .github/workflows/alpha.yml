@@ -202,7 +202,7 @@ jobs:
           Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip.sig' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip.sig'
 
       - name: Upload Release
-        uses: MystiPanda/action-gh-release@master
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
@@ -238,23 +238,31 @@ jobs:
 
       - run: |
           cat > release.txt << 'EOF'
-          ### 我应该下载哪个版本？
+          ## 我应该下载哪个版本？
 
-          - Windows 64位: x64-setup.exe (不支持win7)
-          - Windows 32位: x86-setup.exe (不支持win7)
-          - Windows arm64架构: arm64-setup.exe
+          ### MacOS (提示文件损坏或开发者无法验证请查看下面FAQ)
           - MacOS intel芯片: x64.dmg
-          - MacOS apple M芯片: aarch64.dmg (提示文件损坏看下面FAQ)
+          - MacOS apple M芯片: aarch64.dmg
+
+          ### Linux
           - Linux 64位: amd64.AppImage/amd64.deb
           - Linux 32位: i386.deb
           - Linux arm64架构: arm64.deb
           - Linux armv7架构: armhf.deb
-          - Windows 便携版 64位: x64_portable.zip (不推荐使用，无法自动更新)
-          - Windows 便携版 32位: x86_portable.zip (不推荐使用，无法自动更新)
-          - Windows 便携版 arm64架构: arm64_portable.zip (不推荐使用，无法自动更新)
-          - Windows 内置Webview2版 64位: x64_fixed_webview2-setup.exe (体积较大，仅在无法安装webview2时使用)
-          - Windows 内置Webview2版 32位: x86_fixed_webview2-setup.exe (体积较大，仅在无法安装webview2时使用)
-          - Windows 内置Webview2版 arm64架构: arm64_fixed_webview2-setup.exe (体积较大，仅在无法安装webview2时使用)
+
+          ### Windows (Win7 用户请查看下面FAQ手动替换内核使用)
+          #### 正常版本(推荐)
+          - 64位: x64-setup.exe
+          - 32位: x86-setup.exe
+          - arm64架构: arm64-setup.exe
+          #### 便携版(不推荐使用，无法自动更新)
+          - 64位: x64_portable.zip
+          - 32位: x86_portable.zip
+          - arm64架构: arm64_portable.zip
+          #### 内置Webview2版(体积较大，仅在企业版系统或Win7无法安装webview2时使用)
+          - 64位: x64_fixed_webview2-setup.exe
+          - 32位: x86_fixed_webview2-setup.exe
+          - arm64架构: arm64_fixed_webview2-setup.exe
 
           ### FAQ
 
