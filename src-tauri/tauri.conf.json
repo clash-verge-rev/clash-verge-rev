@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "package": {
     "productName": "Clash Verge",
-    "version": "1.6.1-patch"
+    "version": "1.6.2-patch"
   },
   "build": {
     "distDir": "../dist",
