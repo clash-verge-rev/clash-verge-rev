@@ -107,13 +107,45 @@ jobs:
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
 
+      - run: |
+          cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
+          ### 我应该下载哪个版本？
+
+          ### MacOS (提示文件损坏或开发者无法验证请查看下面FAQ)
+          - MacOS intel芯片: x64.dmg
+          - MacOS apple M芯片: aarch64.dmg
+
+          ### Linux
+          - Linux 64位: amd64.AppImage/amd64.deb
+          - Linux 32位: i386.deb
+          - Linux arm64架构: arm64.deb
+          - Linux armv7架构: armhf.deb
+
+          ### Windows (Win7 用户请查看下面FAQ手动替换内核使用)
+          #### 正常版本(推荐)
+          - 64位: x64-setup.exe
+          - 32位: x86-setup.exe
+          - arm64架构: arm64-setup.exe
+          #### 便携版(不推荐使用，无法自动更新)
+          - 64位: x64_portable.zip
+          - 32位: x86_portable.zip
+          - arm64架构: arm64_portable.zip
+          #### 内置Webview2版(体积较大，仅在企业版系统或Win7无法安装webview2时使用)
+          - 64位: x64_fixed_webview2-setup.exe
+          - 32位: x86_fixed_webview2-setup.exe
+          - arm64架构: arm64_fixed_webview2-setup.exe
+
+          ### FAQ
+
+          - [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
+          EOF
+
       - name: Upload Release
         if: startsWith(matrix.target, 'x86_64')
         uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
         with:
           tag_name: v${{env.VERSION}}
           name: "Clash Verge Rev v${{env.VERSION}}"
-          # body: "More new features are now supported."
           body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
@@ -123,7 +155,6 @@ jobs:
         with:
           tag_name: v${{env.VERSION}}
           name: "Clash Verge Rev v${{env.VERSION}}"
-          # body: "More new features are now supported."
           body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -200,7 +231,6 @@ jobs:
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
           name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
-          body: "More new features are now supported."
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
