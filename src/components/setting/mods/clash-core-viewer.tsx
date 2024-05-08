@@ -97,19 +97,17 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
         <Box display="flex" justifyContent="space-between">
           {t("Clash Core")}
           <Box>
-            {clash_core !== "clash-meta" && (
-              <LoadingButton
-                variant="contained"
-                size="small"
-                startIcon={<SwitchAccessShortcut />}
-                loadingPosition="start"
-                loading={upgrading}
-                sx={{ marginRight: "8px" }}
-                onClick={onUpgrade}
-              >
-                {t("Upgrade")}
-              </LoadingButton>
-            )}
+            <LoadingButton
+              variant="contained"
+              size="small"
+              startIcon={<SwitchAccessShortcut />}
+              loadingPosition="start"
+              loading={upgrading}
+              sx={{ marginRight: "8px" }}
+              onClick={onUpgrade}
+            >
+              {t("Upgrade")}
+            </LoadingButton>
             <Button
               variant="contained"
               size="small"
