@@ -66,8 +66,6 @@ jobs:
           tagName: v__VERSION__
           releaseName: "Clash Verge Rev v__VERSION__"
           releaseBody: "More new features are now supported."
-          releaseDraft: false
-          prerelease: false
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
@@ -201,7 +199,6 @@ jobs:
           tag_name: v${{steps.build.outputs.appVersion}}
           name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
           body: "More new features are now supported."
-          prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
