@@ -147,6 +147,10 @@ export const TrafficGraph = forwardRef<TrafficRef>((props, ref) => {
 
       const now = Date.now();
       const diff = now - lastTime;
+      if (diff < 33) {
+        raf = requestAnimationFrame(() => drawGraph(lastTime));
+        return;
+      }
       const temp = Math.min((diff / 1000) * dx + countRef.current, dx);
       const offset = countRef.current === 0 ? 0 : temp;
       countRef.current = temp;
