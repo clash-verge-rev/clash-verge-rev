@@ -5,16 +5,21 @@ import {
   patchProfilesConfig,
 } from "@/services/cmds";
 import { getProxies, updateProxy } from "@/services/api";
+import { Notice } from "@/components/base";
 
 export const useProfiles = () => {
   const { data: profiles, mutate: mutateProfiles } = useSWR(
     "getProfiles",
-    getProfiles
+    getProfiles,
   );
 
   const patchProfiles = async (value: Partial<IProfilesConfig>) => {
-    await patchProfilesConfig(value);
-    mutateProfiles();
+    try {
+      await patchProfilesConfig(value);
+      mutateProfiles();
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
   };
 
   const patchCurrent = async (value: Partial<IProfileItem>) => {
@@ -32,7 +37,7 @@ export const useProfiles = () => {
     if (!profileData || !proxiesData) return;
 
     const current = profileData.items?.find(
-      (e) => e && e.uid === profileData.current
+      (e) => e && e.uid === profileData.current,
     );
 
     if (!current) return;
@@ -40,7 +45,7 @@ export const useProfiles = () => {
     // init selected array
     const { selected = [] } = current;
     const selectedMap = Object.fromEntries(
-      selected.map((each) => [each.name!, each.now!])
+      selected.map((each) => [each.name!, each.now!]),
     );
 
     let hasChange = false;
