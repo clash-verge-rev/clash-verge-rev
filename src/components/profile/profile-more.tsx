@@ -32,7 +32,7 @@ interface Props {
   onMoveEnd: () => void;
   onDelete: () => Promise<void>;
   onEdit: () => void;
-  onSave: () => void;
+  onActivatedSave: () => void;
 }
 
 // profile enhanced item
@@ -49,7 +49,7 @@ export const ProfileMore = (props: Props) => {
     onMoveEnd,
     onDelete,
     onEdit,
-    onSave,
+    onActivatedSave,
   } = props;
 
   const { uid, type } = itemData;
@@ -275,7 +275,11 @@ export const ProfileMore = (props: Props) => {
         language={type === "merge" ? "yaml" : "javascript"}
         schema={type === "merge" ? "merge" : undefined}
         onClose={() => setFileOpen(false)}
-        onChange={onSave}
+        onChange={() => {
+          if (selected) {
+            onActivatedSave();
+          }
+        }}
       />
       <ConfirmViewer
         title={t("Confirm deletion")}

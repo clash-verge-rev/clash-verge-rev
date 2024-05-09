@@ -112,38 +112,33 @@ const TestPage = () => {
           <Button
             variant="contained"
             size="small"
-            onClick={() => emit("verge://test-all")}
-          >
+            onClick={() => emit("verge://test-all")}>
             {t("Test All")}
           </Button>
           <Button
             variant="contained"
             size="small"
-            onClick={() => viewerRef.current?.create()}
-          >
+            onClick={() => viewerRef.current?.create()}>
             {t("New")}
           </Button>
         </Box>
-      }
-    >
+      }>
       <Box
         sx={{
           pt: 1.25,
           mb: 0.5,
           px: "10px",
-        }}
-      >
+        }}>
         <ReactSortable
           style={{
             display: "flex",
             flexWrap: "wrap",
           }}
-          animation={200}
+          animation={150}
           dragClass="sortable-drag"
           list={sortableTestList}
           setList={(newList: ISortableItem[]) => setSortableTestList(newList)}
-          onEnd={handleDragEnd}
-        >
+          onEnd={handleDragEnd}>
           {sortableTestList.map((item) => (
             <TestItem
               id={item.itemData.uid}
@@ -161,8 +156,7 @@ const TestPage = () => {
                   margin: "0 5px",
                   width: "180px",
                   height: "0",
-                }}
-              ></i>
+                }}></i>
             );
           })}
         </ReactSortable>

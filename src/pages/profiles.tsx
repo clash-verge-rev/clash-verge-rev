@@ -415,7 +415,7 @@ const ProfilePage = () => {
             display: "flex",
             flexWrap: "wrap",
           }}
-          animation={200}
+          animation={150}
           dragClass="sortable-drag"
           list={sortableProfileList}
           setList={(newList: ISortableItem[]) =>
@@ -468,7 +468,7 @@ const ProfilePage = () => {
                 display: "flex",
                 flexWrap: "wrap",
               }}
-              animation={200}
+              animation={150}
               dragClass="sortable-drag"
               list={sortableChainList}
               setList={(newList: ISortableItem[]) =>
@@ -488,7 +488,7 @@ const ProfilePage = () => {
                   onMoveTop={() => onMoveTop(item.profileItem.uid)}
                   onMoveEnd={() => onMoveEnd(item.profileItem.uid)}
                   onEdit={() => viewerRef.current?.edit(item.profileItem)}
-                  onSave={onEnhance}
+                  onActivatedSave={onEnhance}
                 />
               ))}
               {[...new Array(20)].map((_) => {
