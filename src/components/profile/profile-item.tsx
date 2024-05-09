@@ -418,7 +418,11 @@ export const ProfileItem = (props: Props) => {
         language="yaml"
         schema="clash"
         onClose={() => setFileOpen(false)}
-        onChange={onReactivate}
+        onChange={() => {
+          if (selected) {
+            onReactivate();
+          }
+        }}
       />
       <ConfirmViewer
         title={t("Confirm deletion")}
