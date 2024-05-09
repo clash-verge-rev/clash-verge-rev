@@ -183,7 +183,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let common_tray_icon = patch.common_tray_icon;
     let sysproxy_tray_icon = patch.sysproxy_tray_icon;
     let tun_tray_icon = patch.tun_tray_icon;
-
+    #[cfg(not(target_os = "windows"))]
+    let redir_enabled = patch.verge_redir_enabled;
+    #[cfg(target_os = "linux")]
+    let tproxy_enabled = patch.verge_tproxy_enabled;
+    let socks_enabled = patch.verge_socks_enabled;
+    let http_enabled = patch.verge_http_enabled;
     match {
         let service_mode = patch.enable_service_mode;
 
@@ -195,7 +200,20 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         } else if tun_mode.is_some() {
             update_core_config().await?;
         }
-
+        #[cfg(not(target_os = "windows"))]
+        if redir_enabled.is_some() {
+            Config::generate()?;
+            CoreManager::global().run_core().await?;
+        }
+        #[cfg(target_os = "linux")]
+        if tproxy_enabled.is_some() {
+            Config::generate()?;
+            CoreManager::global().run_core().await?;
+        }
+        if socks_enabled.is_some() || http_enabled.is_some() {
+            Config::generate()?;
+            CoreManager::global().run_core().await?;
+        }
         if auto_launch.is_some() {
             sysopt::Sysopt::global().update_launch()?;
         }

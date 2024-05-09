@@ -221,6 +221,10 @@ interface IVergeConfig {
   verge_redir_port?: number;
   verge_tproxy_port?: number;
   verge_port?: number;
+  verge_redir_enabled?: boolean;
+  verge_tproxy_enabled?: boolean;
+  verge_socks_enabled?: boolean;
+  verge_http_enabled?: boolean;
   enable_proxy_guard?: boolean;
   proxy_guard_duration?: number;
   system_proxy_bypass?: string;
