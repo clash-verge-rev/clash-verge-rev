@@ -1,7 +1,4 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# refresh alpha tag
-git tag --delete alpha
-git pull
 pnpm pretty-quick --staged
