@@ -82,7 +82,7 @@ importers:
         version: 9.0.1(@types/react@18.3.1)(react@18.3.1)
       react-router-dom:
         specifier: ^6.22.3
-        version: 6.23.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-sortablejs:
         specifier: ^6.1.4
         version: 6.1.4(@types/sortablejs@1.15.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sortablejs@1.15.2)
@@ -721,8 +721,8 @@ packages:
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
 
-  '@remix-run/router@1.16.0':
-    resolution: {integrity: sha512-Quz1KOffeEf/zwkCBM3kBtH4ZoZ+pT3xIXBG4PPW/XFtDP7EGhtTiC2+gpL9GnR7+Qdet5Oa6cYSvwKYg6kN9Q==}
+  '@remix-run/router@1.16.1':
+    resolution: {integrity: sha512-es2g3dq6Nb07iFxGk5GuHN20RwBZOsuDQN7izWIisUcv9r+d2C5jQxqmgkdebXgReWfiyUabcki6Fg77mSNrig==}
     engines: {node: '>=14.0.0'}
 
   '@rollup/pluginutils@5.1.0':
@@ -1869,15 +1869,15 @@ packages:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
     engines: {node: '>=0.10.0'}
 
-  react-router-dom@6.23.0:
-    resolution: {integrity: sha512-Q9YaSYvubwgbal2c9DJKfx6hTNoBp3iJDsl+Duva/DwxoJH+OTXkxGpql4iUK2sla/8z4RpjAm6EWx1qUDuopQ==}
+  react-router-dom@6.23.1:
+    resolution: {integrity: sha512-utP+K+aSTtEdbWpC+4gxhdlPFwuEfDKq8ZrPFU65bbRJY+l706qjR7yaidBpo3MSeA/fzwbXWbKBI6ftOnP3OQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'
 
-  react-router@6.23.0:
-    resolution: {integrity: sha512-wPMZ8S2TuPadH0sF5irFGjkNLIcRvOSaEe7v+JER8508dyJumm6XZB1u5kztlX0RVq6AzRVndzqcUh6sFIauzA==}
+  react-router@6.23.1:
+    resolution: {integrity: sha512-fzcOaRF69uvqbbM7OhvQyBTFDVrrGlsFdS3AL+1KfIBtGETibHzi3FkoTRyiDJnWNc2VxrfvR+657ROHjaNjqQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
@@ -2791,7 +2791,7 @@ snapshots:
 
   '@popperjs/core@2.11.8': {}
 
-  '@remix-run/router@1.16.0': {}
+  '@remix-run/router@1.16.1': {}
 
   '@rollup/pluginutils@5.1.0(rollup@4.16.1)':
     dependencies:
@@ -4012,16 +4012,16 @@ snapshots:
 
   react-refresh@0.14.0: {}
 
-  react-router-dom@6.23.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-router-dom@6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@remix-run/router': 1.16.0
+      '@remix-run/router': 1.16.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      react-router: 6.23.0(react@18.3.1)
+      react-router: 6.23.1(react@18.3.1)
 
-  react-router@6.23.0(react@18.3.1):
+  react-router@6.23.1(react@18.3.1):
     dependencies:
-      '@remix-run/router': 1.16.0
+      '@remix-run/router': 1.16.1
       react: 18.3.1
 
   react-sortablejs@6.1.4(@types/sortablejs@1.15.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sortablejs@1.15.2):
