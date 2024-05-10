@@ -44,20 +44,27 @@ export const LayoutItem = (props: Props) => {
             const color = mode === "light" ? "#1f1f1f" : "#ffffff";
 
             return {
+              "&.MuiListItemButton-root .MuiListItemText-primary": {
+                color: alpha(color, 0.6),
+              },
+              "&.MuiListItemButton-root .MuiListItemIcon-root": {
+                color: alpha(color, 0.6),
+              },
+              // 涟漪效果颜色
+              "& .MuiTouchRipple-root .MuiTouchRipple-rippleVisible": {
+                color: primary.main,
+              },
               "&.Mui-selected": { bgcolor },
+              "&.Mui-focusVisible": { bgcolor },
               "&.Mui-selected:hover": { bgcolor },
               "&.Mui-selected .MuiListItemText-primary": { color },
+              "&.Mui-selected .MuiListItemIcon-root": { color },
             };
           },
         ]}
-        onClick={() => navigate(to)}
-      >
+        onClick={() => navigate(to)}>
         {(menu_icon === "monochrome" || !menu_icon) && (
-          <ListItemIcon
-            sx={{ color: `${match ? "" : "text.primary"}`, marginLeft: "6px" }}
-          >
-            {icon[0]}
-          </ListItemIcon>
+          <ListItemIcon sx={{ marginLeft: "6px" }}>{icon[0]}</ListItemIcon>
         )}
         {menu_icon === "colorful" && <ListItemIcon>{icon[1]}</ListItemIcon>}
         <ListItemText

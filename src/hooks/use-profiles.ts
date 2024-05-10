@@ -5,7 +5,6 @@ import {
   patchProfilesConfig,
 } from "@/services/cmds";
 import { getProxies, updateProxy } from "@/services/api";
-import { Notice } from "@/components/base";
 
 export const useProfiles = () => {
   const { data: profiles, mutate: mutateProfiles } = useSWR(
@@ -14,12 +13,8 @@ export const useProfiles = () => {
   );
 
   const patchProfiles = async (value: Partial<IProfilesConfig>) => {
-    try {
-      await patchProfilesConfig(value);
-      mutateProfiles();
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString());
-    }
+    await patchProfilesConfig(value);
+    mutateProfiles();
   };
 
   const patchCurrent = async (value: Partial<IProfileItem>) => {

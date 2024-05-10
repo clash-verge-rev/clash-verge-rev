@@ -209,6 +209,34 @@ const ProfilePage = () => {
     }
   });
 
+  const setList = async (newList: ISortableItem[]) => {
+    setSortableChainList(newList);
+    const newChain = newList
+      .filter((item) => chain.includes(item.profileItem.uid))
+      .map((item) => item.profileItem.uid);
+    let needUpdate = false;
+    for (let index = 0; index < chain.length; index++) {
+      const chainId = chain[index];
+      const newChainId = newChain[index];
+      if (chainId !== newChainId) {
+        needUpdate = true;
+        break;
+      }
+    }
+    if (needUpdate) {
+      try {
+        setReactivating(true);
+        await patchProfiles({ chain: newChain });
+        mutateLogs();
+        Notice.success("Refresh clash config", 1000);
+      } catch (err: any) {
+        Notice.error(err.message || err.toString());
+      } finally {
+        setReactivating(false);
+      }
+    }
+  };
+
   const onEnhance = useLockFn(async () => {
     try {
       setReactivating(true);
@@ -223,16 +251,24 @@ const ProfilePage = () => {
 
   const onEnable = useLockFn(async (uid: string) => {
     if (chain.includes(uid)) return;
-    const newChain = [...chain, uid];
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
+    try {
+      const newChain = [...chain, uid];
+      await patchProfiles({ chain: newChain });
+      mutateLogs();
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
   });
 
   const onDisable = useLockFn(async (uid: string) => {
     if (!chain.includes(uid)) return;
-    const newChain = chain.filter((i) => i !== uid);
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
+    try {
+      const newChain = chain.filter((i) => i !== uid);
+      await patchProfiles({ chain: newChain });
+      mutateLogs();
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
   });
 
   const onDelete = useLockFn(async (uid: string) => {
@@ -406,9 +442,7 @@ const ProfilePage = () => {
           scrollSpeed={10}
           swapThreshold={0.8}
           list={sortableProfileList}
-          setList={(newList: ISortableItem[]) =>
-            setSortableProfileList(newList)
-          }
+          setList={setSortableProfileList}
           onEnd={handleProfileDragEnd}>
           {sortableProfileList.map((item) => (
             <ProfileItem
@@ -424,18 +458,16 @@ const ProfilePage = () => {
               onReactivate={onEnhance}
             />
           ))}
-          {[...new Array(20)].map((_) => {
-            return (
-              <i
-                style={{
-                  display: "flex",
-                  flexGrow: "1",
-                  margin: "0 5px",
-                  width: "260px",
-                  height: "0",
-                }}></i>
-            );
-          })}
+          {[...new Array(20)].map((_) => (
+            <i
+              style={{
+                display: "flex",
+                flexGrow: "1",
+                margin: "0 5px",
+                width: "260px",
+                height: "0",
+              }}></i>
+          ))}
         </ReactSortable>
 
         {sortableChainList.length > 0 && (
@@ -470,27 +502,7 @@ const ProfilePage = () => {
                 return true;
               }}
               list={sortableChainList}
-              setList={async (newList: ISortableItem[]) => {
-                setSortableChainList(newList);
-                const newChain = newList
-                  .filter((item) => chain.includes(item.profileItem.uid))
-                  .map((item) => item.profileItem.uid);
-                let needToUpdate = false;
-                for (let index = 0; index < chain.length; index++) {
-                  const chainId = chain[index];
-                  const newChainId = newChain[index];
-                  if (chainId !== newChainId) {
-                    needToUpdate = true;
-                    break;
-                  }
-                }
-                if (needToUpdate) {
-                  setReactivating(true);
-                  await patchProfiles({ chain: newChain });
-                  mutateLogs();
-                  setReactivating(false);
-                }
-              }}>
+              setList={setList}>
               {sortableChainList.map((item) => (
                 <ProfileMore
                   selected={!!chain.includes(item.profileItem.uid)}
@@ -507,18 +519,16 @@ const ProfilePage = () => {
                   onActivatedSave={onEnhance}
                 />
               ))}
-              {[...new Array(20)].map((_) => {
-                return (
-                  <i
-                    style={{
-                      display: "flex",
-                      flexGrow: "1",
-                      margin: "0 5px",
-                      width: "260px",
-                      height: "0",
-                    }}></i>
-                );
-              })}
+              {[...new Array(20)].map((_) => (
+                <i
+                  style={{
+                    display: "flex",
+                    flexGrow: "1",
+                    margin: "0 5px",
+                    width: "260px",
+                    height: "0",
+                  }}></i>
+              ))}
             </ReactSortable>
           </Box>
         )}

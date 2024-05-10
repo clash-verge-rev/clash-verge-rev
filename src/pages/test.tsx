@@ -147,18 +147,16 @@ const TestPage = () => {
               onDelete={onDeleteTestListItem}
             />
           ))}
-          {[...new Array(20)].map((_) => {
-            return (
-              <i
-                style={{
-                  display: "flex",
-                  flexGrow: "1",
-                  margin: "0 5px",
-                  width: "180px",
-                  height: "0",
-                }}></i>
-            );
-          })}
+          {[...new Array(20)].map((_) => (
+            <i
+              style={{
+                display: "flex",
+                flexGrow: "1",
+                margin: "0 5px",
+                width: "180px",
+                height: "0",
+              }}></i>
+          ))}
         </ReactSortable>
       </Box>
       <TestViewer ref={viewerRef} onChange={onTestListItemChange} />
