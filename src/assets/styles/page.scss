@@ -52,4 +52,7 @@
   .sortable-drag {
     opacity: 0.8;
   }
+  .sortable-ghost > .MuiBox-root {
+    background-color: var(--background-color-alpha) !important;
+  }
 }

@@ -28,8 +28,6 @@ interface Props {
   reactivating: boolean;
   onEnable: () => Promise<void>;
   onDisable: () => Promise<void>;
-  onMoveTop: () => void;
-  onMoveEnd: () => void;
   onDelete: () => Promise<void>;
   onEdit: () => void;
   onActivatedSave: () => void;
@@ -45,8 +43,6 @@ export const ProfileMore = (props: Props) => {
     reactivating,
     onEnable,
     onDisable,
-    onMoveTop,
-    onMoveEnd,
     onDelete,
     onEdit,
     onActivatedSave,
@@ -100,8 +96,6 @@ export const ProfileMore = (props: Props) => {
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
-    { label: "To Top", show: showMove, handler: fnWrapper(onMoveTop) },
-    { label: "To End", show: showMove, handler: fnWrapper(onMoveEnd) },
     {
       label: "Delete",
       handler: () => {
@@ -144,6 +138,7 @@ export const ProfileMore = (props: Props) => {
 
   return (
     <Box
+      className={selected ? "" : "ignore-sort"}
       sx={{
         display: "flex",
         flexGrow: "1",

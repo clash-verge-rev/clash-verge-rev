@@ -80,7 +80,7 @@ const ProfilePage = () => {
   // distinguish type
   const { regularItems } = useMemo(() => {
     const items = profiles.items || [];
-    const chain = profiles.chain || [];
+    const chainIds = profiles.chain || [];
 
     const type1 = ["local", "remote"];
     const type2 = ["merge", "script"];
@@ -106,10 +106,10 @@ const ProfilePage = () => {
     const restMap = Object.fromEntries(
       restItems.map((i) => [i.profileItem.uid, i]),
     );
-    const enhanceItems = chain
+    const enhanceItems = chainIds
       .map((i) => restMap[i]!)
       .filter(Boolean)
-      .concat(restItems.filter((i) => !chain.includes(i.profileItem.uid)));
+      .concat(restItems.filter((i) => !chainIds.includes(i.profileItem.uid)));
     setSortableProfileList(regularItems);
     setSortableChainList(enhanceItems);
     return { regularItems };
@@ -244,20 +244,6 @@ const ProfilePage = () => {
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
-  });
-
-  const onMoveTop = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-    const newChain = [uid].concat(chain.filter((i) => i !== uid));
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
-  });
-
-  const onMoveEnd = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-    const newChain = chain.filter((i) => i !== uid).concat([uid]);
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
   });
 
   // 更新所有订阅
@@ -416,7 +402,9 @@ const ProfilePage = () => {
             flexWrap: "wrap",
           }}
           animation={150}
-          dragClass="sortable-drag"
+          scrollSensitivity={60}
+          scrollSpeed={10}
+          swapThreshold={0.8}
           list={sortableProfileList}
           setList={(newList: ISortableItem[]) =>
             setSortableProfileList(newList)
@@ -463,30 +451,58 @@ const ProfilePage = () => {
         {sortableChainList.length > 0 && (
           <Box sx={{ mt: 1.5 }}>
             <ReactSortable
-              disabled
               style={{
                 display: "flex",
                 flexWrap: "wrap",
               }}
               animation={150}
-              dragClass="sortable-drag"
+              scrollSensitivity={60}
+              scrollSpeed={10}
+              swapThreshold={0.8}
+              filter=".ignore-sort"
+              onMove={(moveEvt) => {
+                if (
+                  moveEvt.related &&
+                  moveEvt.related.classList.contains("ignore-sort")
+                ) {
+                  return false;
+                }
+                return true;
+              }}
               list={sortableChainList}
-              setList={(newList: ISortableItem[]) =>
-                setSortableChainList(newList)
-              }
-              onEnd={handleChainDragEnd}>
+              setList={async (newList: ISortableItem[]) => {
+                setSortableChainList(newList);
+                const newChain = newList
+                  .filter((item) => chain.includes(item.profileItem.uid))
+                  .map((item) => item.profileItem.uid);
+                let needToUpdate = false;
+                for (let index = 0; index < chain.length; index++) {
+                  const chainId = chain[index];
+                  const newChainId = newChain[index];
+                  if (chainId !== newChainId) {
+                    needToUpdate = true;
+                    break;
+                  }
+                }
+                if (needToUpdate) {
+                  setReactivating(true);
+                  await patchProfiles({ chain: newChain });
+                  mutateLogs();
+                  setReactivating(false);
+                }
+              }}>
               {sortableChainList.map((item) => (
                 <ProfileMore
                   selected={!!chain.includes(item.profileItem.uid)}
                   itemData={item.profileItem}
                   enableNum={chain.length || 0}
                   logInfo={chainLogs[item.profileItem.uid]}
-                  reactivating={reactivating}
+                  reactivating={
+                    !!chain.includes(item.profileItem.uid) && reactivating
+                  }
                   onEnable={() => onEnable(item.profileItem.uid)}
                   onDisable={() => onDisable(item.profileItem.uid)}
                   onDelete={() => onDelete(item.profileItem.uid)}
-                  onMoveTop={() => onMoveTop(item.profileItem.uid)}
-                  onMoveEnd={() => onMoveEnd(item.profileItem.uid)}
                   onEdit={() => viewerRef.current?.edit(item.profileItem)}
                   onActivatedSave={onEnhance}
                 />
