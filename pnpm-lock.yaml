@@ -31,7 +31,7 @@ importers:
         version: 7.3.2(@emotion/react@11.11.4(@types/react@18.3.1)(react@18.3.1))(@emotion/styled@11.11.5(@emotion/react@11.11.4(@types/react@18.3.1)(react@18.3.1))(@types/react@18.3.1)(react@18.3.1))(@mui/material@5.15.17(@emotion/react@11.11.4(@types/react@18.3.1)(react@18.3.1))(@emotion/styled@11.11.5(@emotion/react@11.11.4(@types/react@18.3.1)(react@18.3.1))(@types/react@18.3.1)(react@18.3.1))(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tauri-apps/api':
         specifier: ^1.5.3
-        version: 1.5.4
+        version: 1.5.5
       '@types/json-schema':
         specifier: ^7.0.15
         version: 7.0.15
@@ -882,8 +882,8 @@ packages:
     peerDependencies:
       '@svgr/core': '*'
 
-  '@tauri-apps/api@1.5.4':
-    resolution: {integrity: sha512-LKYae9URbdEdbHrOXBeXb/lZgVyWTX0E98rSFBuQlmkLr8OeG+akuE41PfLjBVyk1Q+fq7wxo4ieenLSMUAUhA==}
+  '@tauri-apps/api@1.5.5':
+    resolution: {integrity: sha512-Jgwj8BK/9YXZNzcqVDk1Al7+u5V9sWrZ8MhV41A1AKgJaicHuqlkc/qdx06sNDXvc+qprTPpBAaqnt891qOUIQ==}
     engines: {node: '>= 14.6.0', npm: '>= 6.6.0', yarn: '>= 1.19.1'}
 
   '@tauri-apps/cli-darwin-arm64@1.5.13':
@@ -2919,7 +2919,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tauri-apps/api@1.5.4': {}
+  '@tauri-apps/api@1.5.5': {}
 
   '@tauri-apps/cli-darwin-arm64@1.5.13':
     optional: true
