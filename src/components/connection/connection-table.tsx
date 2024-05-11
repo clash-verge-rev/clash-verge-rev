@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import {
   DataGrid,
   GridColDef,
-  GridToolbar,
+  GridActionsCellItem,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
@@ -14,6 +14,8 @@ import { useTranslation } from "react-i18next";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { zhCN, enUS } from "@mui/x-data-grid/locales";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import CancelIcon from "@mui/icons-material/Close";
+import { deleteConnection } from "@/services/api";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -47,6 +49,24 @@ export const ConnectionTable = (props: Props) => {
   >({});
 
   const columns: GridColDef[] = [
+    {
+      field: "actions",
+      type: "actions",
+      headerName: `${t("Actions")}`,
+      width: 50,
+      cellClassName: "actions",
+      getActions: ({ id }) => {
+        return [
+          <GridActionsCellItem
+            icon={<CancelIcon />}
+            label="Cancel"
+            className="textPrimary"
+            onClick={() => deleteConnection(id.toString())}
+            color="inherit"
+          />,
+        ];
+      },
+    },
     { field: "host", headerName: `${t("Host")}`, flex: 220, minWidth: 220 },
     {
       field: "upload",
