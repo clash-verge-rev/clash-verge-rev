@@ -35,6 +35,9 @@ export const LayoutItem = (props: Props) => {
               color: "text.primary",
               fontWeight: "700",
             },
+            "& .MuiListItemIcon-root": {
+              color: "text.primary",
+            },
           },
           ({ palette: { mode, primary } }) => {
             const bgcolor =
@@ -44,18 +47,11 @@ export const LayoutItem = (props: Props) => {
             const color = mode === "light" ? "#1f1f1f" : "#ffffff";
 
             return {
-              "&.MuiListItemButton-root .MuiListItemText-primary": {
-                color: alpha(color, 0.6),
-              },
-              "&.MuiListItemButton-root .MuiListItemIcon-root": {
-                color: alpha(color, 0.6),
-              },
               // 涟漪效果颜色
               "& .MuiTouchRipple-root .MuiTouchRipple-rippleVisible": {
                 color: primary.main,
               },
               "&.Mui-selected": { bgcolor },
-              "&.Mui-focusVisible": { bgcolor },
               "&.Mui-selected:hover": { bgcolor },
               "&.Mui-selected .MuiListItemText-primary": { color },
               "&.Mui-selected .MuiListItemIcon-root": { color },
