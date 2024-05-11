@@ -152,8 +152,10 @@ const ProfilePage = () => {
     }
   };
 
+  // only handle unenabled chain sort
   const handleChainDragEnd = async (event: SortableEvent) => {
     const activeId = sortableChainList[event.oldIndex!].id;
+    if (chain.includes(activeId)) return;
     const overId = sortableChainList[event.newIndex!].id;
     if (activeId !== overId) {
       await reorderProfile(activeId.toString(), overId.toString());
@@ -491,18 +493,24 @@ const ProfilePage = () => {
               scrollSensitivity={60}
               scrollSpeed={10}
               swapThreshold={0.8}
-              filter=".ignore-sort"
-              onMove={(moveEvt) => {
-                if (
-                  moveEvt.related &&
-                  moveEvt.related.classList.contains("ignore-sort")
-                ) {
+              list={sortableChainList}
+              setList={setList}
+              onMove={(moveEvt, originalEvent) => {
+                const { dragged, related } = moveEvt;
+                if (dragged && related) {
+                  const draggedType = dragged.classList.contains(
+                    "enable-enhanced-item",
+                  );
+                  const relatedType = related.classList.contains(
+                    "enable-enhanced-item",
+                  );
+                  if (draggedType === relatedType) {
+                    return true;
+                  }
                   return false;
                 }
-                return true;
               }}
-              list={sortableChainList}
-              setList={setList}>
+              onEnd={handleChainDragEnd}>
               {sortableChainList.map((item) => (
                 <ProfileMore
                   selected={!!chain.includes(item.profileItem.uid)}

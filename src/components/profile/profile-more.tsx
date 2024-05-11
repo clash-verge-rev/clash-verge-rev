@@ -138,7 +138,7 @@ export const ProfileMore = (props: Props) => {
 
   return (
     <Box
-      className={selected ? "" : "ignore-sort"}
+      className={selected ? "enable-enhanced-item" : ""}
       sx={{
         display: "flex",
         flexGrow: "1",
