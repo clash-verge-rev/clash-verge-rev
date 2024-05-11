@@ -18,6 +18,7 @@ import { useVerge } from "@/hooks/use-verge";
 import type { HeadState } from "./use-head-state";
 import type { ProxySortType } from "./use-filter-sort";
 import delayManager from "@/services/delay";
+import debounce from "lodash-es/debounce";
 
 interface Props {
   sx?: SxProps;
@@ -31,7 +32,8 @@ interface Props {
 export const ProxyHead = (props: Props) => {
   const { sx = {}, groupName, headState, onHeadState } = props;
 
-  const { showType, sortType, filterText, textState, testUrl } = headState;
+  const { showType, sortType, textState, testUrl } = headState;
+  const [filterText, setFilterText] = useState("");
 
   const { t } = useTranslation();
   const [autoFocus, setAutoFocus] = useState(false);
@@ -48,14 +50,17 @@ export const ProxyHead = (props: Props) => {
     delayManager.setUrl(groupName, testUrl || verge?.default_latency_test!);
   }, [groupName, testUrl, verge?.default_latency_test]);
 
+  const filterChange = debounce((text: string) => {
+    onHeadState({ filterText: text });
+  }, 500);
+
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ...sx }}>
       <IconButton
         size="small"
         color="inherit"
         title={t("Location")}
-        onClick={props.onLocation}
-      >
+        onClick={props.onLocation}>
         <MyLocationRounded />
       </IconButton>
 
@@ -69,8 +74,7 @@ export const ProxyHead = (props: Props) => {
             onHeadState({ textState: "url" });
           }
           props.onCheckDelay();
-        }}
-      >
+        }}>
         <NetworkCheckRounded />
       </IconButton>
 
@@ -84,8 +88,7 @@ export const ProxyHead = (props: Props) => {
         }
         onClick={() =>
           onHeadState({ sortType: ((sortType + 1) % 3) as ProxySortType })
-        }
-      >
+        }>
         {sortType !== 1 && sortType !== 2 && <SortRounded />}
         {sortType === 1 && <AccessTimeRounded />}
         {sortType === 2 && <SortByAlphaRounded />}
@@ -97,8 +100,7 @@ export const ProxyHead = (props: Props) => {
         title={t("Delay check URL")}
         onClick={() =>
           onHeadState({ textState: textState === "url" ? null : "url" })
-        }
-      >
+        }>
         {textState === "url" ? (
           <WifiTetheringRounded />
         ) : (
@@ -110,8 +112,7 @@ export const ProxyHead = (props: Props) => {
         size="small"
         color="inherit"
         title={showType ? t("Proxy basic") : t("Proxy detail")}
-        onClick={() => onHeadState({ showType: !showType })}
-      >
+        onClick={() => onHeadState({ showType: !showType })}>
         {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}
       </IconButton>
 
@@ -119,13 +120,13 @@ export const ProxyHead = (props: Props) => {
         size="small"
         color="inherit"
         title={t("Filter")}
-        onClick={() =>
+        onClick={() => {
+          setFilterText("");
           onHeadState({
             textState: textState === "filter" ? null : "filter",
             filterText: "",
-          })
-        }
-      >
+          });
+        }}>
         {textState === "filter" ? (
           <FilterAltRounded />
         ) : (
@@ -141,7 +142,11 @@ export const ProxyHead = (props: Props) => {
           size="small"
           variant="outlined"
           placeholder={t("Filter conditions")}
-          onChange={(e) => onHeadState({ filterText: e.target.value })}
+          onChange={(e) => {
+            const text = e.target.value;
+            setFilterText(text);
+            filterChange(text);
+          }}
           sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
         />
       )}
