@@ -1,3 +1,4 @@
+import axiosTauriApiAdapter from "axios-tauri-api-adapter";
 import axios, { AxiosInstance } from "axios";
 import { getClashInfo } from "./cmds";
 
@@ -25,6 +26,7 @@ export const getAxios = async (force: boolean = false) => {
   } catch {}
 
   axiosIns = axios.create({
+    adapter: axiosTauriApiAdapter,
     baseURL: `http://${server}`,
     headers: secret ? { Authorization: `Bearer ${secret}` } : {},
     timeout: 15000,
