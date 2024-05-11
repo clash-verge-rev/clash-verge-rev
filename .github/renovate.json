@@ -4,16 +4,8 @@
   "dependencyDashboard": true,
   "baseBranches": ["dev"],
   "labels": ["dependencies"],
+  "automerge": true,
   "packageRules": [
-    {
-      "matchDepTypes": [
-        "devDependencies",
-        "build-dependencies",
-        "dependencies",
-        "action"
-      ],
-      "automerge": true
-    },
     {
       "matchDepTypes": ["action"],
       "labels": ["github-actions"],
