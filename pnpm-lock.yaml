@@ -137,7 +137,7 @@ importers:
         version: 1.15.8
       '@vitejs/plugin-react':
         specifier: 4.2.1
-        version: 4.2.1(vite@5.2.11(@types/node@20.12.7)(sass@1.77.0))
+        version: 4.2.1(vite@5.2.11(@types/node@20.12.7)(sass@1.77.1))
       adm-zip:
         specifier: 0.5.12
         version: 0.5.12
@@ -163,20 +163,20 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(prettier@3.2.5)
       sass:
-        specifier: 1.77.0
-        version: 1.77.0
+        specifier: 1.77.1
+        version: 1.77.1
       typescript:
         specifier: 5.4.5
         version: 5.4.5
       vite:
         specifier: 5.2.11
-        version: 5.2.11(@types/node@20.12.7)(sass@1.77.0)
+        version: 5.2.11(@types/node@20.12.7)(sass@1.77.1)
       vite-plugin-monaco-editor:
         specifier: 1.1.0
         version: 1.1.0(monaco-editor@0.48.0)
       vite-plugin-svgr:
         specifier: 4.2.0
-        version: 4.2.0(rollup@4.16.1)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.7)(sass@1.77.0))
+        version: 4.2.0(rollup@4.16.1)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.7)(sass@1.77.1))
 
 packages:
 
@@ -1956,8 +1956,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  sass@1.77.0:
-    resolution: {integrity: sha512-eGj4HNfXqBWtSnvItNkn7B6icqH14i3CiCGbzMKs3BAPTq62pp9NBYsBgyN4cA+qssqo9r26lW4JSvlaUUWbgw==}
+  sass@1.77.1:
+    resolution: {integrity: sha512-OMEyfirt9XEfyvocduUIOlUSkWOXS/LAt6oblR/ISXCTukyavjex+zQNm51pPCOiFKY1QpWvEH1EeCkgyV3I6w==}
     engines: {node: '>=14.0.0'}
     hasBin: true
 
@@ -3053,14 +3053,14 @@ snapshots:
 
   '@ungap/structured-clone@1.2.0': {}
 
-  '@vitejs/plugin-react@4.2.1(vite@5.2.11(@types/node@20.12.7)(sass@1.77.0))':
+  '@vitejs/plugin-react@4.2.1(vite@5.2.11(@types/node@20.12.7)(sass@1.77.1))':
     dependencies:
       '@babel/core': 7.24.4
       '@babel/plugin-transform-react-jsx-self': 7.24.1(@babel/core@7.24.4)
       '@babel/plugin-transform-react-jsx-source': 7.24.1(@babel/core@7.24.4)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
-      vite: 5.2.11(@types/node@20.12.7)(sass@1.77.0)
+      vite: 5.2.11(@types/node@20.12.7)(sass@1.77.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -4119,7 +4119,7 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.16.1
       fsevents: 2.3.3
 
-  sass@1.77.0:
+  sass@1.77.1:
     dependencies:
       chokidar: 3.6.0
       immutable: 4.3.5
@@ -4305,18 +4305,18 @@ snapshots:
     dependencies:
       monaco-editor: 0.48.0
 
-  vite-plugin-svgr@4.2.0(rollup@4.16.1)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.7)(sass@1.77.0)):
+  vite-plugin-svgr@4.2.0(rollup@4.16.1)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.7)(sass@1.77.1)):
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.16.1)
       '@svgr/core': 8.1.0(typescript@5.4.5)
       '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0(typescript@5.4.5))
-      vite: 5.2.11(@types/node@20.12.7)(sass@1.77.0)
+      vite: 5.2.11(@types/node@20.12.7)(sass@1.77.1)
     transitivePeerDependencies:
       - rollup
       - supports-color
       - typescript
 
-  vite@5.2.11(@types/node@20.12.7)(sass@1.77.0):
+  vite@5.2.11(@types/node@20.12.7)(sass@1.77.1):
     dependencies:
       esbuild: 0.20.2
       postcss: 8.4.38
@@ -4324,7 +4324,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 20.12.7
       fsevents: 2.3.3
-      sass: 1.77.0
+      sass: 1.77.1
 
   void-elements@3.1.0: {}
 
