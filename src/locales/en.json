@@ -85,7 +85,7 @@
   "Log Level": "Log Level",
   "Port Config": "Port Config",
   "Random Port": "Random Port",
-  "After restart to take effect": "After restart to take effect",
+  "Restart Application to Apply Modifications": "Restart Application to Apply Modifications",
   "External": "External",
   "External Controller": "External Controller",
   "Core Secret": "Core Secret",
@@ -200,5 +200,24 @@
   "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode",
   "Information: Please make sure that the Clash Verge Service is installed and enabled": "Information: Please make sure that the Clash Verge Service is installed and enabled",
 
-  "Use Regular Expression": "Use Regular Expression"
+  "Use Regular Expression": "Use Regular Expression",
+
+  "External Controller Address Modified": "External Controller Address Modified",
+  "Clash Port Modified": "Clash Port Modified",
+  "Currently on the Latest Version": "Currently on the Latest Version",
+  "Only YAML Files Supported": "Only YAML Files Supported",
+  "Port Conflict": "Port Conflict",
+  "Proxy Daemon Duration Cannot be Less than 1 Second": "Proxy Daemon Duration Cannot be Less than 1 Second",
+  "Profile Switched": "Profile Switched",
+  "Profile Reactivated": "Profile Reactivated",
+  "Clash Config Updated": "Clash Config Updated",
+  "Settings Applied": "Settings Applied",
+  "Service Installed Successfully": "Service Installed Successfully",
+  "Service Uninstalled Successfully": "Service Uninstalled Successfully",
+  "GeoData Updated": "GeoData Updated",
+  "Permissions Granted Successfully for _clash Core": "Permissions Granted Successfully for {{core}} Core",
+  "Profile Imported Successfully": "Profile Imported Successfully",
+  "Clash Core Restarted": "Clash Core Restarted",
+  "Switched to _clash Core": "Switched to {{core}} Core",
+  "Core Version Updated": "Core Version Updated"
 }

@@ -26,7 +26,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const onSave = useLockFn(async () => {
     try {
       await patchInfo({ "external-controller": controller, secret });
-      Notice.success("Change Clash Config successfully!", 1000);
+      Notice.success(t("External Controller Address Modified"), 1000);
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 4000);

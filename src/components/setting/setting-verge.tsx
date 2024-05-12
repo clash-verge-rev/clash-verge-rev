@@ -67,7 +67,7 @@ const SettingVerge = ({ onError }: Props) => {
     try {
       const info = await checkUpdate();
       if (!info?.shouldUpdate) {
-        Notice.success("No Updates Available");
+        Notice.success(t("Currently on the Latest Version"));
       } else {
         updateRef.current?.open();
       }

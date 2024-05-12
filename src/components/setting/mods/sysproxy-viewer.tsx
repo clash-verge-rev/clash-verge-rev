@@ -53,7 +53,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
-      Notice.error("Proxy guard duration at least 1 seconds");
+      Notice.error(t("Proxy Daemon Duration Cannot be Less than 1 Second"));
       return;
     }
 

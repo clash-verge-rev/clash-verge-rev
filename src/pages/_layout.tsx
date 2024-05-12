@@ -72,7 +72,7 @@ const Layout = () => {
       const [status, msg] = payload as [string, string];
       switch (status) {
         case "set_config::ok":
-          Notice.success("Refresh clash config");
+          Notice.success(t("Clash Config Updated"));
           break;
         case "set_config::error":
           Notice.error(msg);

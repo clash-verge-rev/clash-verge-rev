@@ -54,7 +54,7 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = useLockFn(async () => {
     try {
       await updateGeoData();
-      Notice.success("Start update geodata");
+      Notice.success(t("GeoData Updated"));
     } catch (err: any) {
       Notice.error(err?.response.data.message || err.toString());
     }
@@ -120,7 +120,7 @@ const SettingClash = ({ onError }: Props) => {
               color={enable_random_port ? "primary" : "inherit"}
               size="small"
               onClick={() => {
-                Notice.success(t("After restart to take effect"), 1000);
+                Notice.success(t("Restart Application to Apply Modifications"), 1000);
                 onChangeVerge({ enable_random_port: !enable_random_port });
                 patchVerge({ enable_random_port: !enable_random_port });
               }}
