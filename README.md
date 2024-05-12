@@ -11,7 +11,9 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 
 ## Preview
 
-![preview](./docs/preview.png)
+| Dark                             | Light                             |
+| -------------------------------- | --------------------------------- |
+| ![预览](./docs/preview_dark.png) | ![预览](./docs/preview_light.png) |
 
 ## Install
 
