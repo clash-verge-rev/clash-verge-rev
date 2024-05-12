@@ -42,10 +42,8 @@ export const LayoutItem = (props: Props) => {
           ({ palette: { mode, primary } }) => {
             const bgcolor =
               mode === "light"
-                ? alpha(primary.main, 0.15)
+                ? alpha(primary.main, 0.25)
                 : alpha(primary.main, 0.35);
-            const color = mode === "light" ? "#1f1f1f" : "#ffffff";
-
             return {
               // 涟漪效果颜色
               "& .MuiTouchRipple-root .MuiTouchRipple-rippleVisible": {
@@ -53,8 +51,6 @@ export const LayoutItem = (props: Props) => {
               },
               "&.Mui-selected": { bgcolor },
               "&.Mui-selected:hover": { bgcolor },
-              "&.Mui-selected .MuiListItemText-primary": { color },
-              "&.Mui-selected .MuiListItemIcon-root": { color },
             };
           },
         ]}
