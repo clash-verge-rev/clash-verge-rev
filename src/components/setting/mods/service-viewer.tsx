@@ -28,7 +28,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       revalidateIfStale: false,
       shouldRetryOnError: false,
       focusThrottleInterval: 36e5, // 1 hour
-    }
+    },
   );
 
   useImperativeHandle(ref, () => ({
@@ -43,7 +43,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       await installService();
       mutateCheck();
       setOpen(false);
-      Notice.success("Service installed successfully");
+      Notice.success(t("Service Installed Successfully"));
     } catch (err: any) {
       mutateCheck();
       Notice.error(err.message || err.toString());
@@ -59,7 +59,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       await uninstallService();
       mutateCheck();
       setOpen(false);
-      Notice.success("Service uninstalled successfully");
+      Notice.success(t("Service Uninstalled Successfully"));
     } catch (err: any) {
       mutateCheck();
       Notice.error(err.message || err.toString());
@@ -84,15 +84,13 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       title={t("Service Mode")}
       contentSx={{ width: 360, userSelect: "text" }}
       disableFooter
-      onClose={() => setOpen(false)}
-    >
+      onClose={() => setOpen(false)}>
       <Typography
         sx={{
           "& span": {
             color: state === "active" ? "primary.main" : "text.primary",
           },
-        }}
-      >
+        }}>
         {t("Current State")}: <span>{t(state)}</span>
       </Typography>
 
@@ -105,8 +103,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       <Stack
         direction="row"
         spacing={1}
-        sx={{ mt: 4, justifyContent: "flex-end" }}
-      >
+        sx={{ mt: 4, justifyContent: "flex-end" }}>
         {state === "uninstall" && enable && (
           <Button variant="contained" onClick={onDisable}>
             {t("Disable Service Mode")}

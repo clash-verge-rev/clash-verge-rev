@@ -79,18 +79,18 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       OS === "linux" &&
       new Set([redirPort, tproxyPort, mixedPort, socksPort, port]).size !== 5
     ) {
-      Notice.error("Port conflict!", 4000);
+      Notice.error(t("Port Conflict"), 4000);
       return;
     }
     if (
       OS === "macos" &&
       new Set([redirPort, mixedPort, socksPort, port]).size !== 4
     ) {
-      Notice.error("Port conflict!", 4000);
+      Notice.error(t("Port Conflict"), 4000);
       return;
     }
     if (OS === "windows" && new Set([mixedPort, socksPort, port]).size !== 3) {
-      Notice.error("Port conflict!", 4000);
+      Notice.error(t("Port Conflict"), 4000);
       return;
     }
     try {
@@ -113,7 +113,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       await patchVerge({ verge_socks_enabled: socksEnabled });
       await patchVerge({ verge_http_enabled: httpEnabled });
       setOpen(false);
-      Notice.success("Change Clash port successfully!", 1000);
+      Notice.success(t("Clash Port Modified"), 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 4000);
     }

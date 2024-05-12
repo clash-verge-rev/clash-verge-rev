@@ -67,7 +67,7 @@ const SettingVerge = ({ onError }: Props) => {
     try {
       const info = await checkUpdate();
       if (!info?.shouldUpdate) {
-        Notice.success("No Updates Available");
+        Notice.success(t("Currently on the Latest Version"));
       } else {
         updateRef.current?.open();
       }
@@ -91,8 +91,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ language: e })}
-          onGuard={(e) => patchVerge({ language: e })}
-        >
+          onGuard={(e) => patchVerge({ language: e })}>
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="zh">中文</MenuItem>
             <MenuItem value="en">English</MenuItem>
@@ -107,8 +106,7 @@ const SettingVerge = ({ onError }: Props) => {
           value={theme_mode}
           onCatch={onError}
           onChange={(e) => onChangeData({ theme_mode: e })}
-          onGuard={(e) => patchVerge({ theme_mode: e })}
-        >
+          onGuard={(e) => patchVerge({ theme_mode: e })}>
           <ThemeModeSwitch />
         </GuardState>
       </SettingItem>
@@ -120,8 +118,7 @@ const SettingVerge = ({ onError }: Props) => {
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
             onChange={(e) => onChangeData({ tray_event: e })}
-            onGuard={(e) => patchVerge({ tray_event: e })}
-          >
+            onGuard={(e) => patchVerge({ tray_event: e })}>
             <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
               <MenuItem value="main_window">{t("Show Main Window")}</MenuItem>
               <MenuItem value="system_proxy">{t("System Proxy")}</MenuItem>
@@ -138,8 +135,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ env_type: e })}
-          onGuard={(e) => patchVerge({ env_type: e })}
-        >
+          onGuard={(e) => patchVerge({ env_type: e })}>
           <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
             <MenuItem value="bash">Bash</MenuItem>
             <MenuItem value="cmd">CMD</MenuItem>
@@ -154,8 +150,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ start_page: e })}
-          onGuard={(e) => patchVerge({ start_page: e })}
-        >
+          onGuard={(e) => patchVerge({ start_page: e })}>
           <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
             {routers.map((page: { label: string; path: string }) => {
               return <MenuItem value={page.path}>{t(page.label)}</MenuItem>;
@@ -170,8 +165,7 @@ const SettingVerge = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ startup_script: e })}
-          onGuard={(e) => patchVerge({ startup_script: e })}
-        >
+          onGuard={(e) => patchVerge({ startup_script: e })}>
           <Input
             value={startup_script}
             disabled
@@ -194,8 +188,7 @@ const SettingVerge = ({ onError }: Props) => {
                       onChangeData({ startup_script: `${path}` });
                       patchVerge({ startup_script: `${path}` });
                     }
-                  }}
-                >
+                  }}>
                   {t("Browse")}
                 </Button>
                 {startup_script && (
@@ -203,14 +196,12 @@ const SettingVerge = ({ onError }: Props) => {
                     onClick={async () => {
                       onChangeData({ startup_script: "" });
                       patchVerge({ startup_script: "" });
-                    }}
-                  >
+                    }}>
                     {t("Clear")}
                   </Button>
                 )}
               </>
-            }
-          ></Input>
+            }></Input>
         </GuardState>
       </SettingItem>
       <SettingItem label={t("Theme Setting")}>
@@ -218,8 +209,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => themeRef.current?.open()}
-        >
+          onClick={() => themeRef.current?.open()}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -229,8 +219,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => layoutRef.current?.open()}
-        >
+          onClick={() => layoutRef.current?.open()}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -240,8 +229,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => miscRef.current?.open()}
-        >
+          onClick={() => miscRef.current?.open()}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -251,8 +239,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => hotkeyRef.current?.open()}
-        >
+          onClick={() => hotkeyRef.current?.open()}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -262,8 +249,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => configRef.current?.open()}
-        >
+          onClick={() => configRef.current?.open()}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -273,8 +259,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={openAppDir}
-        >
+          onClick={openAppDir}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -284,8 +269,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={openCoreDir}
-        >
+          onClick={openCoreDir}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -295,8 +279,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={openLogsDir}
-        >
+          onClick={openLogsDir}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -306,8 +289,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={onCheckUpdate}
-        >
+          onClick={onCheckUpdate}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -317,8 +299,7 @@ const SettingVerge = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={openDevTools}
-        >
+          onClick={openDevTools}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -330,8 +311,7 @@ const SettingVerge = ({ onError }: Props) => {
           sx={{ my: "2px" }}
           onClick={() => {
             exitApp();
-          }}
-        >
+          }}>
           <ArrowForward />
         </IconButton>
       </SettingItem>

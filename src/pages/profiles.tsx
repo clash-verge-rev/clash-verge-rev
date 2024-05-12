@@ -120,7 +120,7 @@ const ProfilePage = () => {
       const fileList = event.payload as string[];
       for (let file of fileList) {
         if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-          Notice.error("Only support YAML files.");
+          Notice.error(t("Only YAML Files Supported"));
           continue;
         }
         const item = {
@@ -169,7 +169,7 @@ const ProfilePage = () => {
 
     try {
       await importProfile(url);
-      Notice.success("Successfully import profile.");
+      Notice.success(t("Profile Imported Successfully"));
       setUrl("");
       setLoading(false);
 
@@ -202,7 +202,7 @@ const ProfilePage = () => {
       mutateLogs();
       closeAllConnections();
       setTimeout(() => activateSelected(), 2000);
-      Notice.success("Refresh clash config", 1000);
+      Notice.success(t("Profile Switched"), 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString(), 4000);
     } finally {
@@ -244,7 +244,7 @@ const ProfilePage = () => {
       setReactivating(true);
       await enhanceProfiles();
       mutateLogs();
-      Notice.success("Refresh clash config", 1000);
+      Notice.success(t("Profile Reactivated"), 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
     }

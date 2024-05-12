@@ -52,7 +52,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
         mutate("getClashConfig");
         mutate("getVersion");
       }, 100);
-      Notice.success(`Successfully switch to ${core}`, 1000);
+      Notice.success(t("Switched to _clash Core", { core: `${core}` }), 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
@@ -63,7 +63,12 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       await grantPermission(core);
       // 自动重启
       if (core === clash_core) await restartSidecar();
-      Notice.success(`Successfully grant permission to ${core}`, 1000);
+      Notice.success(
+        t("Permissions Granted Successfully for _clash Core", {
+          core: `${core}`,
+        }),
+        1000,
+      );
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
@@ -72,7 +77,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
   const onRestart = useLockFn(async () => {
     try {
       await restartSidecar();
-      Notice.success(`Successfully restart core`, 1000);
+      Notice.success(t(`Clash Core Restarted`), 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
@@ -83,7 +88,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      Notice.success(`Successfully upgrade core`, 1000);
+      Notice.success(t(`Core Version Updated`), 1000);
     } catch (err: any) {
       setUpgrading(false);
       if (err?.response.data.message.includes("already using latest version")) {
@@ -108,16 +113,14 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
               loadingPosition="start"
               loading={upgrading}
               sx={{ marginRight: "8px" }}
-              onClick={onUpgrade}
-            >
+              onClick={onUpgrade}>
               {t("Upgrade")}
             </LoadingButton>
             <Button
               variant="contained"
               size="small"
               onClick={onRestart}
-              startIcon={<RestartAlt />}
-            >
+              startIcon={<RestartAlt />}>
               {t("Restart")}
             </Button>
           </Box>
@@ -134,15 +137,13 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       disableOk
       cancelBtn={t("Back")}
       onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
-    >
+      onCancel={() => setOpen(false)}>
       <List component="nav">
         {VALID_CORE.map((each) => (
           <ListItemButton
             key={each.core}
             selected={each.core === clash_core}
-            onClick={() => onCoreChange(each.core)}
-          >
+            onClick={() => onCoreChange(each.core)}>
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
 
             {(OS === "macos" || OS === "linux") && (
@@ -154,8 +155,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
                     e.preventDefault();
                     e.stopPropagation();
                     onGrant(each.core);
-                  }}
-                >
+                  }}>
                   {t("Grant")}
                 </Button>
               </Tooltip>

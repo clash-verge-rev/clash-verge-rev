@@ -38,6 +38,10 @@
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRGQ0QyMTIyRTRERTY0MzAKUldRd1pON2tJaUhOVDBuWXQ1NVY0dlNXWkZ2RlZCMmtIYkhqR2pxS3FsMlNERkUycEVBaFlvQm8K"
     },
     "allowlist": {
+      "http": {
+        "all": true,
+        "scope": ["http://**", "http://**"]
+      },
       "shell": {
         "all": true
       },

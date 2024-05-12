@@ -54,7 +54,7 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = useLockFn(async () => {
     try {
       await updateGeoData();
-      Notice.success("Start update geodata");
+      Notice.success(t("GeoData Updated"));
     } catch (err: any) {
       Notice.error(err?.response.data.message || err.toString());
     }
@@ -74,8 +74,7 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ "allow-lan": e })}
-          onGuard={(e) => patchClash({ "allow-lan": e })}
-        >
+          onGuard={(e) => patchClash({ "allow-lan": e })}>
           <Switch edge="end" />
         </GuardState>
       </SettingItem>
@@ -87,8 +86,7 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ ipv6: e })}
-          onGuard={(e) => patchClash({ ipv6: e })}
-        >
+          onGuard={(e) => patchClash({ ipv6: e })}>
           <Switch edge="end" />
         </GuardState>
       </SettingItem>
@@ -100,8 +98,7 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ "log-level": e })}
-          onGuard={(e) => patchClash({ "log-level": e })}
-        >
+          onGuard={(e) => patchClash({ "log-level": e })}>
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="debug">Debug</MenuItem>
             <MenuItem value="info">Info</MenuItem>
@@ -120,19 +117,20 @@ const SettingClash = ({ onError }: Props) => {
               color={enable_random_port ? "primary" : "inherit"}
               size="small"
               onClick={() => {
-                Notice.success(t("After restart to take effect"), 1000);
+                Notice.success(
+                  t("Restart Application to Apply Modifications"),
+                  1000,
+                );
                 onChangeVerge({ enable_random_port: !enable_random_port });
                 patchVerge({ enable_random_port: !enable_random_port });
-              }}
-            >
+              }}>
               <Shuffle
                 fontSize="inherit"
                 style={{ cursor: "pointer", opacity: 0.75 }}
               />
             </IconButton>
           </Tooltip>
-        }
-      >
+        }>
         <TextField
           disabled={enable_random_port}
           autoComplete="off"
@@ -151,8 +149,7 @@ const SettingClash = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => ctrlRef.current?.open()}
-        >
+          onClick={() => ctrlRef.current?.open()}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -162,8 +159,7 @@ const SettingClash = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={() => webRef.current?.open()}
-        >
+          onClick={() => webRef.current?.open()}>
           <ArrowForward />
         </IconButton>
       </SettingItem>
@@ -174,15 +170,13 @@ const SettingClash = ({ onError }: Props) => {
           <IconButton
             color="inherit"
             size="small"
-            onClick={() => coreRef.current?.open()}
-          >
+            onClick={() => coreRef.current?.open()}>
             <Settings
               fontSize="inherit"
               style={{ cursor: "pointer", opacity: 0.75 }}
             />
           </IconButton>
-        }
-      >
+        }>
         <Typography sx={{ py: "7px", pr: 1 }}>{version}</Typography>
       </SettingItem>
 
@@ -192,8 +186,7 @@ const SettingClash = ({ onError }: Props) => {
             color="inherit"
             size="small"
             sx={{ my: "2px" }}
-            onClick={invoke_uwp_tool}
-          >
+            onClick={invoke_uwp_tool}>
             <ArrowForward />
           </IconButton>
         </SettingItem>
@@ -204,8 +197,7 @@ const SettingClash = ({ onError }: Props) => {
           color="inherit"
           size="small"
           sx={{ my: "2px" }}
-          onClick={onUpdateGeo}
-        >
+          onClick={onUpdateGeo}>
           <ArrowForward />
         </IconButton>
       </SettingItem>

@@ -30,6 +30,7 @@
     "@types/json-schema": "^7.0.15",
     "ahooks": "^3.7.11",
     "axios": "^1.6.8",
+    "axios-tauri-api-adapter": "^0.2.1",
     "dayjs": "1.11.11",
     "i18next": "^23.11.2",
     "lodash-es": "^4.17.21",

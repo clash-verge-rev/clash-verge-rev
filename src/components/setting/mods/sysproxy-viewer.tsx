@@ -53,7 +53,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
-      Notice.error("Proxy guard duration at least 1 seconds");
+      Notice.error(t("Proxy Daemon Duration Cannot be Less than 1 Second"));
       return;
     }
 
@@ -86,8 +86,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
-      onOk={onSave}
-    >
+      onOk={onSave}>
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Proxy Guard")} />
