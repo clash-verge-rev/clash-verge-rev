@@ -43,7 +43,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       await installService();
       mutateCheck();
       setOpen(false);
-      Notice.success("Service installed successfully");
+      Notice.success(t("Service Installed Successfully"));
     } catch (err: any) {
       mutateCheck();
       Notice.error(err.message || err.toString());
@@ -59,7 +59,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       await uninstallService();
       mutateCheck();
       setOpen(false);
-      Notice.success("Service uninstalled successfully");
+      Notice.success(t("Service Uninstalled Successfully"));
     } catch (err: any) {
       mutateCheck();
       Notice.error(err.message || err.toString());

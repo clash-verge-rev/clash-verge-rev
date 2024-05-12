@@ -68,7 +68,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       );
       try {
         await enhanceProfiles();
-        Notice.success("Refresh clash config", 1000);
+        Notice.success(t("Settings Applied"), 1000);
       } catch (err: any) {
         Notice.error(err.message || err.toString(), 3000);
       }
