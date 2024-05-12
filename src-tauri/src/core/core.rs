@@ -5,6 +5,7 @@ use crate::{config::*, utils::dirs};
 use anyhow::{bail, Context, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
+use serde_yaml::Mapping;
 use std::{fs, io::Write, sync::Arc, time::Duration};
 use sysinfo::{Pid, System};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
@@ -232,6 +233,16 @@ impl CoreManager {
 
     /// 停止核心运行
     pub fn stop_core(&self) -> Result<()> {
+        // 关闭tun模式
+        tauri::async_runtime::block_on(async move {
+            let mut disable = Mapping::new();
+            let mut tun = Mapping::new();
+            tun.insert("enable".into(), false.into());
+            disable.insert("tun".into(), tun.into());
+            log::debug!(target: "app", "disable tun mode");
+            let _ = clash_api::patch_configs(&disable).await;
+        });
+
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
             tauri::async_runtime::block_on(async move {
