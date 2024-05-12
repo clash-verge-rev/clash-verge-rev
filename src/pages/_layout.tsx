@@ -12,7 +12,8 @@ import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
-import LogoSvg_dark from "@/assets/image/logo_dark.svg?react";
+import iconLight from "@/assets/image/icon_light.png";
+import iconDark from "@/assets/image/icon_dark.png";
 import { atomThemeMode } from "@/services/states";
 import { useRecoilState } from "recoil";
 import { Notice } from "@/components/base";
@@ -137,7 +138,26 @@ const Layout = () => {
         >
           <div className="layout__left">
             <div className="the-logo" data-tauri-drag-region="true">
-              {!isDark ? <LogoSvg /> : <LogoSvg_dark />}
+              <div
+                style={{
+                  height: "27px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <img
+                  src={isDark ? iconDark : iconLight}
+                  style={{
+                    height: "36px",
+                    width: "36px",
+                    marginTop: "-3px",
+                    marginRight: "5px",
+                    marginLeft: "-3px",
+                    display: "flex",
+                  }}
+                />
+                <LogoSvg fill={isDark ? "white" : "black"} />
+              </div>
               {<UpdateButton className="the-newbtn" />}
             </div>
 
