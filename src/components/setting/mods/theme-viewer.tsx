@@ -87,24 +87,24 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       onOk={onSave}
     >
       <List sx={{ pt: 0 }}>
-        {renderItem("Primary Color", "primary_color")}
+        {renderItem(t("Primary Color"), "primary_color")}
 
-        {renderItem("Secondary Color", "secondary_color")}
+        {renderItem(t("Secondary Color"), "secondary_color")}
 
-        {renderItem("Primary Text", "primary_text")}
+        {renderItem(t("Primary Text"), "primary_text")}
 
-        {renderItem("Secondary Text", "secondary_text")}
+        {renderItem(t("Secondary Text"), "secondary_text")}
 
-        {renderItem("Info Color", "info_color")}
+        {renderItem(t("Info Color"), "info_color")}
 
-        {renderItem("Error Color", "error_color")}
+        {renderItem(t("Warning Color"), "warning_color")}
 
-        {renderItem("Warning Color", "warning_color")}
+        {renderItem(t("Error Color"), "error_color")}
 
-        {renderItem("Success Color", "success_color")}
+        {renderItem(t("Success Color"), "success_color")}
 
         <Item>
-          <ListItemText primary="Font Family" />
+          <ListItemText primary={t("Font Family")} />
           <TextField
             {...textProps}
             value={theme.font_family ?? ""}
@@ -113,7 +113,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </Item>
         <Item>
-          <ListItemText primary="CSS Injection" />
+          <ListItemText primary={t("CSS Injection")} />
           <Button
             startIcon={<Edit />}
             variant="outlined"
