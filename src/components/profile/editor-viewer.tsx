@@ -66,8 +66,10 @@ export const EditorViewer = (props: Props) => {
     switch (mode) {
       case "profile": // profile文件
         fetchContent = readProfileFile(property);
+        break;
       case "text": // 文本内容
         fetchContent = Promise.resolve(property);
+        break;
     }
     fetchContent.then((data) => {
       const dom = editorRef.current;
