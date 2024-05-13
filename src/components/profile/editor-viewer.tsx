@@ -40,11 +40,13 @@ configureMonacoYaml(monaco, {
     {
       uri: "http://example.com/meta-json-schema.json",
       fileMatch: ["**/*.clash.yaml"],
+      //@ts-ignore
       schema: metaSchema as JSONSchema7,
     },
     {
       uri: "http://example.com/clash-verge-merge-json-schema.json",
       fileMatch: ["**/*.merge.yaml"],
+      //@ts-ignore
       schema: mergeSchema as JSONSchema7,
     },
   ],
