@@ -145,6 +145,17 @@
   "Restart": "Перезапуск",
   "Upgrade": "Обновлять",
 
+  "Primary Color": "Основной цвет",
+  "Secondary Color": "Вторичный цвет",
+  "Primary Text Color": "Основной текст",
+  "Secondary Text Color": "Вторичный текст",
+  "Info Color": "Информационный цвет",
+  "Warning Color": "Цвет предупреждения",
+  "Error Color": "Цвет ошибки",
+  "Success Color": "Цвет успеха",
+  "Font Family": "Семейство шрифтов",
+  "CSS Injection": "Внедрение CSS",
+
   "Back": "Назад",
   "Save": "Сохранить",
   "Cancel": "Отмена",

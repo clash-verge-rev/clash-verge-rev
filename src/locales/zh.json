@@ -145,6 +145,17 @@
   "Restart": "重启内核",
   "Upgrade": "升级内核",
 
+  "Primary Color": "主要颜色",
+  "Secondary Color": "次要颜色",
+  "Primary Text": "文本主要颜色",
+  "Secondary Text": "文本次要颜色",
+  "Info Color": "信息颜色",
+  "Warning Color": "警告颜色",
+  "Error Color": "错误颜色",
+  "Success Color": "成功颜色",
+  "Font Family": "字体系列",
+  "CSS Injection": "CSS 注入",
+
   "Back": "返回",
   "Save": "保存",
   "Cancel": "取消",

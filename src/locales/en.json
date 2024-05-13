@@ -145,6 +145,17 @@
   "Restart": "Restart",
   "Upgrade": "Upgrade",
 
+  "Primary Color": "Primary Color",
+  "Secondary Color": "Secondary Color",
+  "Primary Text": "Primary Text",
+  "Secondary Text": "Secondary Text",
+  "Info Color": "Info Color",
+  "Warning Color": "Warning Color",
+  "Error Color": "Error Color",
+  "Success Color": "Success Color",
+  "Font Family": "Font Family",
+  "CSS Injection": "CSS Injection",
+
   "Back": "Back",
   "Save": "Save",
   "Cancel": "Cancel",
