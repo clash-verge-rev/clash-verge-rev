@@ -36,7 +36,7 @@ import { throttle } from "lodash-es";
 import { useRecoilState } from "recoil";
 import { atomThemeMode } from "@/services/states";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
-import { ReactSortable, SortableEvent } from "react-sortablejs";
+import { MoveEvent, ReactSortable, SortableEvent } from "react-sortablejs";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/api/fs";
@@ -225,7 +225,7 @@ const ProfilePage = () => {
         break;
       }
     }
-    if (needUpdate) {
+    if (needUpdate && !reactivating) {
       try {
         setReactivating(true);
         await patchProfiles({ chain: newChain });
@@ -236,6 +236,21 @@ const ProfilePage = () => {
       } finally {
         setReactivating(false);
       }
+    }
+  };
+
+  const handleMove = (moveEvt: MoveEvent) => {
+    const { dragged, related } = moveEvt;
+    if (dragged && related) {
+      const draggedType = dragged.classList.contains("enable-enhanced-item");
+      const relatedType = related.classList.contains("enable-enhanced-item");
+      if (draggedType === relatedType) {
+        if (draggedType && reactivating) {
+          return false;
+        }
+        return true;
+      }
+      return false;
     }
   };
 
@@ -495,21 +510,7 @@ const ProfilePage = () => {
               swapThreshold={0.8}
               list={sortableChainList}
               setList={setList}
-              onMove={(moveEvt, originalEvent) => {
-                const { dragged, related } = moveEvt;
-                if (dragged && related) {
-                  const draggedType = dragged.classList.contains(
-                    "enable-enhanced-item",
-                  );
-                  const relatedType = related.classList.contains(
-                    "enable-enhanced-item",
-                  );
-                  if (draggedType === relatedType) {
-                    return true;
-                  }
-                  return false;
-                }
-              }}
+              onMove={handleMove}
               onEnd={handleChainDragEnd}>
               {sortableChainList.map((item) => (
                 <ProfileMore

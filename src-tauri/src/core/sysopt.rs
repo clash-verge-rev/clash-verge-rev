@@ -61,9 +61,9 @@ impl Sysopt {
 
         let mut bypass_value = DEFAULT_BYPASS.into();
         if let Some(value) = bypass {
-                if !value.trim().is_empty() {
-                    bypass_value = value;
-                }
+            if !value.trim().is_empty() {
+                bypass_value = value;
+            }
         }
         let current = Sysproxy {
             enable,
@@ -288,11 +288,18 @@ impl Sysopt {
                         .unwrap_or(Config::clash().data().get_mixed_port())
                 };
 
+                let mut bypass_value = DEFAULT_BYPASS.into();
+                if let Some(value) = bypass {
+                    if !value.trim().is_empty() {
+                        bypass_value = value;
+                    }
+                }
+
                 let sysproxy = Sysproxy {
                     enable: true,
                     host: "127.0.0.1".into(),
                     port,
-                    bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+                    bypass: bypass_value,
                 };
 
                 log_err!(sysproxy.set_system_proxy());
