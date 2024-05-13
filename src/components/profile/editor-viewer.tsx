@@ -39,12 +39,12 @@ configureMonacoYaml(monaco, {
     {
       uri: "http://example.com/meta-json-schema.json",
       fileMatch: ["**/*.clash.yaml"],
-      schema: metaSchema as JSONSchema7,
+      schema: metaSchema as unknown as JSONSchema7,
     },
     {
       uri: "http://example.com/clash-verge-merge-json-schema.json",
       fileMatch: ["**/*.merge.yaml"],
-      schema: mergeSchema as JSONSchema7,
+      schema: mergeSchema as unknown as JSONSchema7,
     },
   ],
 });
