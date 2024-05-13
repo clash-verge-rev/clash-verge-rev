@@ -63,7 +63,16 @@ impl Sysopt {
             enable,
             host: String::from("127.0.0.1"),
             port,
-            bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+            bypass: match bypass {
+                Some(bypass) => {
+                    if bypass.is_empty() {
+                        DEFAULT_BYPASS.into()
+                    } else {
+                        bypass
+                    }
+                }
+                None => DEFAULT_BYPASS.into(),
+            },
         };
 
         if enable {
@@ -101,7 +110,16 @@ impl Sysopt {
         let mut sysproxy = cur_sysproxy.take().unwrap();
 
         sysproxy.enable = enable;
-        sysproxy.bypass = bypass.unwrap_or(DEFAULT_BYPASS.into());
+        sysproxy.bypass = match bypass {
+            Some(bypass) => {
+                if bypass.is_empty() {
+                    DEFAULT_BYPASS.into()
+                } else {
+                    bypass
+                }
+            }
+            None => DEFAULT_BYPASS.into(),
+        };
 
         let port = Config::verge()
             .latest()
@@ -281,7 +299,16 @@ impl Sysopt {
                     enable: true,
                     host: "127.0.0.1".into(),
                     port,
-                    bypass: bypass.unwrap_or(DEFAULT_BYPASS.into()),
+                    bypass: match bypass {
+                        Some(bypass) => {
+                            if bypass.is_empty() {
+                                DEFAULT_BYPASS.into()
+                            } else {
+                                bypass
+                            }
+                        }
+                        None => DEFAULT_BYPASS.into(),
+                    },
                 };
 
                 log_err!(sysproxy.set_system_proxy());
