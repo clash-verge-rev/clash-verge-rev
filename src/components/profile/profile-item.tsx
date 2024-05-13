@@ -20,7 +20,7 @@ import { RefreshRounded, DragIndicator } from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
-import { EditorViewer } from "./editor-viewer";
+import { EditorViewer } from "@/components/profile/editor-viewer";
 import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
 import { ConfirmViewer } from "./confirm-viewer";
@@ -384,7 +384,8 @@ export const ProfileItem = (props: Props) => {
       </Menu>
 
       <EditorViewer
-        uid={uid}
+        mode="profile"
+        property={uid}
         open={fileOpen}
         language="yaml"
         schema="clash"

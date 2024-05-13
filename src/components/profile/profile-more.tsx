@@ -14,7 +14,7 @@ import {
 import { FeaturedPlayListRounded } from "@mui/icons-material";
 import { viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
-import { EditorViewer } from "./editor-viewer";
+import { EditorViewer } from "@/components/profile/editor-viewer";
 import { ProfileBox } from "./profile-box";
 import { LogViewer } from "./log-viewer";
 import { ConfirmViewer } from "./confirm-viewer";
@@ -233,7 +233,8 @@ export const ProfileMore = (props: Props) => {
       </Menu>
 
       <EditorViewer
-        uid={uid}
+        mode="profile"
+        property={uid}
         open={fileOpen}
         language={type === "merge" ? "yaml" : "javascript"}
         schema={type === "merge" ? "merge" : undefined}
