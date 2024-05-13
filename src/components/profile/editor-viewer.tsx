@@ -23,12 +23,13 @@ import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
 
 interface Props {
-  uid: string;
+  mode: "profile" | "text";
+  property: string;
   open: boolean;
-  language: "yaml" | "javascript";
+  language: "yaml" | "javascript" | "css";
   schema?: "clash" | "merge";
   onClose: () => void;
-  onChange?: () => void;
+  onChange?: (content?: string) => void;
 }
 
 // yaml worker
@@ -50,7 +51,7 @@ configureMonacoYaml(monaco, {
 });
 
 export const EditorViewer = (props: Props) => {
-  const { uid, open, language, schema, onClose, onChange } = props;
+  const { mode, property, open, language, schema, onClose, onChange } = props;
   const { t } = useTranslation();
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -59,7 +60,14 @@ export const EditorViewer = (props: Props) => {
   useEffect(() => {
     if (!open) return;
 
-    readProfileFile(uid).then((data) => {
+    let fetchContent;
+    switch (mode) {
+      case "profile": // profile文件
+        fetchContent = readProfileFile(property);
+      case "text": // 文本内容
+        fetchContent = Promise.resolve(property);
+    }
+    fetchContent.then((data) => {
       const dom = editorRef.current;
 
       if (!dom) return;
@@ -71,7 +79,7 @@ export const EditorViewer = (props: Props) => {
       instanceRef.current = editor.create(editorRef.current, {
         model: model,
         language: language,
-        tabSize: ["yaml", "javascript"].includes(language) ? 2 : 4, // 根据语言类型设置缩进
+        tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进
         theme: themeMode === "light" ? "vs" : "vs-dark",
         minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
         mouseWheelZoom: true, // Ctrl+滚轮调节缩放
@@ -79,6 +87,9 @@ export const EditorViewer = (props: Props) => {
           strings: true, // 字符串类型的建议
           comments: true, // 注释类型的建议
           other: true, // 其他类型的建议
+        },
+        padding: {
+          top: 33, // 顶部padding防止遮挡snippets
         },
       });
     });
@@ -97,8 +108,10 @@ export const EditorViewer = (props: Props) => {
     if (value == null) return;
 
     try {
-      await saveProfileFile(uid, value);
-      onChange?.();
+      if (mode === "profile") {
+        await saveProfileFile(property, value);
+      }
+      onChange?.(value);
       onClose();
     } catch (err: any) {
       Notice.error(err.message || err.toString());
