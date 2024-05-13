@@ -14,7 +14,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
-import { Edit, SwitchAccessShortcut } from "@mui/icons-material";
+import { Edit } from "@mui/icons-material";
 
 export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
