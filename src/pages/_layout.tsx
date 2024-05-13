@@ -12,7 +12,7 @@ import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
-import LogoSvg_dark from "@/assets/image/logo_dark.svg?react";
+import ClashVergeFontSvg from "@/assets/image/clash_verge.svg?react";
 import { atomThemeMode } from "@/services/states";
 import { useRecoilState } from "recoil";
 import { Notice } from "@/components/base";
@@ -165,7 +165,16 @@ const Layout = () => {
               enable_system_title ? "system-title" : ""
             }`}>
             <div className="the-logo" data-tauri-drag-region="true">
-              {!isDark ? <LogoSvg /> : <LogoSvg_dark />}
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{
+                    width: "50px",
+                    marginRight: "10px",
+                  }}>
+                  <LogoSvg />
+                </div>
+                <ClashVergeFontSvg />
+              </div>
               {<UpdateButton className="the-newbtn" />}
             </div>
 
