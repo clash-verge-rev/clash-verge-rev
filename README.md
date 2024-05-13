@@ -17,9 +17,9 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 | -------------------------- | ------------------------ |
 | ![light](./docs/light.png) | ![dark](./docs/dark.png) |
 
-| Pink (customize)            | Blue (customize)            |
-| --------------------------- | --------------------------- |
-| ![pink](./docs/other_1.png) | ![blue](./docs/other_2.png) |
+| Pink (customize)         | Blue (customize)         |
+| ------------------------ | ------------------------ |
+| ![pink](./docs/pink.png) | ![blue](./docs/blue.png) |
 
 ## Features
 
