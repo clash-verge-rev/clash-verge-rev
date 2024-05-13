@@ -8,3 +8,7 @@ update.json
 scripts/_env.sh
 .vscode
 .tool-versions
+
+archbuild/local_build/*
+!archbuild/local_build/PKGBUILD
+!archbuild/local_build/build.sh
