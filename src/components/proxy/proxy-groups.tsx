@@ -14,9 +14,9 @@ import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
 import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
-import { Box, IconButton, Link, List, ListItem } from "@mui/material";
+import { Box, Link, List, ListItem } from "@mui/material";
 import { max } from "lodash-es";
-import { ChevronRight, ChevronLeft } from "@mui/icons-material";
+import { ChevronRight } from "@mui/icons-material";
 
 interface Props {
   mode: string;
@@ -154,26 +154,6 @@ export const ProxyGroups = (props: Props) => {
 
   return (
     <Box display={"flex"} flexDirection={"row"} width={"100%"} height={"100%"}>
-      <Box flexGrow={1} height={"100%"}>
-        <Virtuoso
-          ref={virtuosoRef}
-          style={{ height: "calc(100% - 16px)" }}
-          totalCount={renderList.length}
-          increaseViewportBy={256}
-          itemContent={(index) => (
-            <ProxyRender
-              key={renderList[index].key}
-              item={renderList[index]}
-              indent={mode === "rule" || mode === "script"}
-              onLocation={handleLocation}
-              onCheckAll={handleCheckAll}
-              onHeadState={onHeadState}
-              onChangeProxy={handleChangeProxy}
-            />
-          )}
-        />
-      </Box>
-
       <Box position={"relative"}>
         <List
           dense
@@ -187,9 +167,9 @@ export const ProxyGroups = (props: Props) => {
               marginLeft: open ? "5px" : 0,
               overflow: "auto",
               cursor: "pointer",
-              transition: "all 0.3s",
+              transition: "all 0.2s",
               "&::-webkit-scrollbar": {
-                width: "3px",
+                width: "0px",
               },
             },
           ]}>
@@ -207,30 +187,97 @@ export const ProxyGroups = (props: Props) => {
               </ListItem>
             ))}
         </List>
-        <IconButton
-          size="small"
+      </Box>
+      <Box
+        flexGrow={1}
+        height={"100%"}
+        sx={{
+          position: "relative",
+        }}>
+        <Box
           sx={{
             width: "20px",
-            height: "35px",
             borderRadius: "0",
             position: "absolute",
-            right: open ? sidebarIconRight : 0,
-            top: "50%",
+            left: 0,
+            top: 0,
+            bottom: 0,
             zIndex: 999,
-            opacity: open ? 1 : 0.8,
-            transition: "all 0.3s",
-            "&:hover": {
-              bgcolor: "primary.main",
-              opacity: 1,
-            },
-          }}
-          onClick={() => {
-            const nextOpen = !open;
-            setOpen(nextOpen);
-            setGroupWidth(nextOpen ? sidebarWidth : 0);
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
           }}>
-          {open ? <ChevronRight /> : <ChevronLeft />}
-        </IconButton>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              "& .side-border": {
+                backgroundColor: open ? "primary.main" : "transparent",
+              },
+              "&:hover .side-border": {
+                backgroundColor: "primary.main",
+              },
+            }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "18px",
+                height: "80px",
+                transition: "all 0.2s",
+                transform: "perspective(11px) rotateY(5deg)",
+                opacity: open ? 1 : 0,
+                cursor: "pointer",
+                backgroundColor: open ? "primary.main" : "transparent",
+                "&:hover": {
+                  opacity: "1",
+                  backgroundColor: "primary.main",
+                },
+              }}
+              onClick={() => {
+                const nextOpen = !open;
+                setOpen(nextOpen);
+                setGroupWidth(nextOpen ? sidebarWidth : 0);
+              }}>
+              <ChevronRight
+                sx={{
+                  color: "white",
+                  transform: open ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
+            </Box>
+            <div
+              className="side-border"
+              style={{
+                position: "absolute",
+                width: 3,
+                left: 0,
+                top: 0,
+                bottom: 0,
+                zIndex: 999,
+                transition: "all 0.2s",
+              }}></div>
+          </Box>
+        </Box>
+        <Virtuoso
+          ref={virtuosoRef}
+          style={{ height: "calc(100% - 16px)" }}
+          totalCount={renderList.length}
+          increaseViewportBy={256}
+          itemContent={(index) => (
+            <ProxyRender
+              key={renderList[index].key}
+              item={renderList[index]}
+              indent={mode === "rule" || mode === "script"}
+              onLocation={handleLocation}
+              onCheckAll={handleCheckAll}
+              onHeadState={onHeadState}
+              onChangeProxy={handleChangeProxy}
+            />
+          )}
+        />
       </Box>
     </Box>
   );
