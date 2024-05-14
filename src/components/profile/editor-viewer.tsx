@@ -95,6 +95,8 @@ export const EditorViewer = (props: Props) => {
         padding: {
           top: 33, // 顶部padding防止遮挡snippets
         },
+        fontFamily:
+          "Fira Code, Roboto Mono, Source Code Pro, Menlo, Monaco, Consolas, Courier New, monospace",
       });
     });
 

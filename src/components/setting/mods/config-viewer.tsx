@@ -60,6 +60,11 @@ export const ConfigViewer = forwardRef<DialogRef>((props, ref) => {
           mouseWheelZoom: true, // Ctrl+滚轮调节缩放
           readOnly: true, // 只读
           readOnlyMessage: { value: t("ReadOnlyMessage") },
+          padding: {
+            top: 33, // 顶部padding防止遮挡snippets
+          },
+          fontFamily:
+            "Fira Code, Roboto Mono, Source Code Pro, Menlo, Monaco, Consolas, Courier New, monospace",
         });
       });
     },
