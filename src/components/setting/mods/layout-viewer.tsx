@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { open as openDialog } from "@tauri-apps/api/dialog";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { copyIconFile, getAppDir, restartApp } from "@/services/cmds";
@@ -111,7 +111,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                 setConfirmOpen(true);
                 setEnableSystemTitle(e);
               }}>
-              <Switch edge="end" />
+              <SwitchLovely edge="end" />
             </GuardState>
           </SettingItem>
         )}
@@ -148,7 +148,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onFormat={onSwitchFormat}
             onChange={(e) => onChangeData({ enable_keep_ui_active: e })}
             onGuard={(e) => patchVerge({ enable_keep_ui_active: e })}>
-            <Switch edge="end" />
+            <SwitchLovely edge="end" />
           </GuardState>
         </SettingItem>
         <SettingItem label={t("Traffic Graph")}>
@@ -159,7 +159,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onFormat={onSwitchFormat}
             onChange={(e) => onChangeData({ traffic_graph: e })}
             onGuard={(e) => patchVerge({ traffic_graph: e })}>
-            <Switch edge="end" />
+            <SwitchLovely edge="end" />
           </GuardState>
         </SettingItem>
 
@@ -171,7 +171,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onFormat={onSwitchFormat}
             onChange={(e) => onChangeData({ enable_memory_usage: e })}
             onGuard={(e) => patchVerge({ enable_memory_usage: e })}>
-            <Switch edge="end" />
+            <SwitchLovely edge="end" />
           </GuardState>
         </SettingItem>
 
@@ -183,7 +183,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onFormat={onSwitchFormat}
             onChange={(e) => onChangeData({ enable_group_icon: e })}
             onGuard={(e) => patchVerge({ enable_group_icon: e })}>
-            <Switch edge="end" />
+            <SwitchLovely edge="end" />
           </GuardState>
         </SettingItem>
 

@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { getSystemProxy } from "@/services/cmds";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -90,7 +90,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Proxy Guard")} />
-          <Switch
+          <SwitchLovely
             edge="end"
             disabled={!enabled}
             checked={value.guard}

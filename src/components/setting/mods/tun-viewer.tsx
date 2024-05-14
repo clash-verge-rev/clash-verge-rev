@@ -11,7 +11,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useClash } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { StackModeSwitch } from "./stack-mode-switch";
 import { enhanceProfiles } from "@/services/cmds";
 
@@ -158,7 +158,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Auto Route")} />
-          <Switch
+          <SwitchLovely
             edge="end"
             checked={values.autoRoute}
             onChange={(_, c) => setValues((v) => ({ ...v, autoRoute: c }))}
@@ -167,7 +167,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Strict Route")} />
-          <Switch
+          <SwitchLovely
             edge="end"
             checked={values.strictRoute}
             onChange={(_, c) => setValues((v) => ({ ...v, strictRoute: c }))}
@@ -176,7 +176,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Auto Detect Interface")} />
-          <Switch
+          <SwitchLovely
             edge="end"
             checked={values.autoDetectInterface}
             onChange={(_, c) =>

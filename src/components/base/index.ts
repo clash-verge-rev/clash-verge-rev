@@ -5,3 +5,4 @@ export { BaseLoading } from "./base-loading";
 export { BaseErrorBoundary } from "./base-error-boundary";
 export { Notice } from "./base-notice";
 export { Switch } from "./base-switch";
+export { SwitchLovely } from "./base-switch-lovely";

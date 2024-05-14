@@ -10,7 +10,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -72,8 +72,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
-      onOk={onSave}
-    >
+      onOk={onSave}>
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("App Log Level")} />
@@ -86,8 +85,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 ...v,
                 appLogLevel: e.target.value as string,
               }));
-            }}
-          >
+            }}>
             {["trace", "debug", "info", "warn", "error", "silent"].map((i) => (
               <MenuItem value={i} key={i}>
                 {i[0].toUpperCase() + i.slice(1).toLowerCase()}
@@ -98,7 +96,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Auto Close Connections")} />
-          <Switch
+          <SwitchLovely
             edge="end"
             checked={values.autoCloseConnection}
             onChange={(_, c) =>
@@ -109,7 +107,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Auto Check Update")} />
-          <Switch
+          <SwitchLovely
             edge="end"
             checked={values.autoCheckUpdate}
             onChange={(_, c) =>
@@ -120,7 +118,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Enable Builtin Enhanced")} />
-          <Switch
+          <SwitchLovely
             edge="end"
             checked={values.enableBuiltinEnhanced}
             onChange={(_, c) =>
@@ -140,8 +138,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 ...v,
                 proxyLayoutColumn: e.target.value as number,
               }));
-            }}
-          >
+            }}>
             <MenuItem value={6} key={6}>
               Auto
             </MenuItem>
@@ -164,8 +161,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 ...v,
                 autoLogClean: e.target.value as number,
               }));
-            }}
-          >
+            }}>
             {[
               { key: "Never Clean", value: 0 },
               { key: "Retain 7 Days", value: 1 },

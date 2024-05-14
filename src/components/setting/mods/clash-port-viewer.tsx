@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
 import { useClashInfo } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import getSystem from "@/utils/get-system";
 const OS = getSystem();
@@ -155,7 +155,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
             InputProps={{
               sx: { pr: 1 },
               endAdornment: (
-                <Switch
+                <SwitchLovely
                   checked={socksEnabled}
                   onChange={(_, c) => {
                     setSocksEnabled(c);
@@ -178,7 +178,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
             InputProps={{
               sx: { pr: 1 },
               endAdornment: (
-                <Switch
+                <SwitchLovely
                   checked={httpEnabled}
                   onChange={(_, c) => {
                     setHttpEnabled(c);
@@ -202,7 +202,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
               InputProps={{
                 sx: { pr: 1 },
                 endAdornment: (
-                  <Switch
+                  <SwitchLovely
                     checked={redirEnabled}
                     onChange={(_, c) => {
                       setRedirEnabled(c);
@@ -227,7 +227,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
               InputProps={{
                 sx: { pr: 1 },
                 endAdornment: (
-                  <Switch
+                  <SwitchLovely
                     checked={tproxyEnabled}
                     onChange={(_, c) => {
                       setTproxyEnabled(c);

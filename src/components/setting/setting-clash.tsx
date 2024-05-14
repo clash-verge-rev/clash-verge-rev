@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { ArrowForward, Settings, Shuffle } from "@mui/icons-material";
-import { DialogRef, Notice, Switch } from "@/components/base";
+import { DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
 import { WebUIViewer } from "./mods/web-ui-viewer";
@@ -75,7 +75,7 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ "allow-lan": e })}
           onGuard={(e) => patchClash({ "allow-lan": e })}>
-          <Switch edge="end" />
+          <SwitchLovely edge="end" />
         </GuardState>
       </SettingItem>
 
@@ -87,7 +87,7 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ ipv6: e })}
           onGuard={(e) => patchClash({ ipv6: e })}>
-          <Switch edge="end" />
+          <SwitchLovely edge="end" />
         </GuardState>
       </SettingItem>
 
