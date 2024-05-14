@@ -13,6 +13,7 @@ import {
   MenuItem,
   Menu,
   CircularProgress,
+  ButtonGroup,
 } from "@mui/material";
 import {
   LocalFireDepartmentRounded,
@@ -237,22 +238,26 @@ export const ProfileItem = (props: Props) => {
         }}>
         {selected && (
           <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              position: "absolute",
-              width: `${sideBtnShow ? "40" : "0"}px`,
-              opacity: sideBtnShow ? 1 : 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-              zIndex: sideBtnShow ? 10 : -10,
-              bgcolor: "primary.main",
-              transition: "all .3s",
-              borderRadius: "0 8px 8px 0",
-            }}>
+            sx={[
+              {
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                position: "absolute",
+                width: `${sideBtnShow ? "40" : "0"}px`,
+                opacity: sideBtnShow ? 1 : 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                zIndex: sideBtnShow ? 10 : -10,
+                transition: "all .3s",
+                borderRadius: "0 8px 8px 0",
+              },
+              (theme) => ({
+                bgcolor: theme.palette.primary.light,
+              }),
+            ]}>
             {hasUrl && (
               <IconButton
                 title={t("Update Profile")}
