@@ -7,6 +7,7 @@
     "dev": "tauri dev",
     "dev:diff": "tauri dev -f verge-dev",
     "build": "tauri build",
+    "arch-build": "cd archbuild/local_build && ./build.sh",
     "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsc && vite build",

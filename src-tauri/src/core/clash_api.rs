@@ -5,6 +5,18 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::collections::HashMap;
 
+/// PATCH /restart
+#[allow(unused)]
+pub async fn restart_core() -> Result<()> {
+    let (url, headers) = clash_client_info()?;
+    let url = format!("{url}/restart");
+
+    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
+    let builder = client.post(&url).headers(headers.clone());
+    builder.send().await?;
+    Ok(())
+}
+
 /// PUT /configs
 /// path 是绝对路径
 pub async fn put_configs(path: &str) -> Result<()> {
