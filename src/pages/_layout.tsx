@@ -5,15 +5,15 @@ import { SWRConfig, mutate } from "swr";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes } from "react-router-dom";
-import { List, Paper, ThemeProvider } from "@mui/material";
+import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
-import iconLight from "@/assets/image/icon_light.png";
-import iconDark from "@/assets/image/icon_dark.png";
+import iconLight from "@/assets/image/icon_light.svg?react";
+import iconDark from "@/assets/image/icon_dark.svg?react";
 import { atomThemeMode } from "@/services/states";
 import { useRecoilState } from "recoil";
 import { Notice } from "@/components/base";
@@ -145,16 +145,16 @@ const Layout = () => {
                   justifyContent: "space-between",
                 }}
               >
-                <img
-                  src={isDark ? iconDark : iconLight}
+                <SvgIcon
+                  component={isDark ? iconDark : iconLight}
                   style={{
                     height: "36px",
                     width: "36px",
                     marginTop: "-3px",
                     marginRight: "5px",
                     marginLeft: "-3px",
-                    display: "flex",
                   }}
+                  inheritViewBox
                 />
                 <LogoSvg fill={isDark ? "white" : "black"} />
               </div>
