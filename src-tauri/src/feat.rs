@@ -180,6 +180,8 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let proxy_bypass = patch.system_proxy_bypass;
     let language = patch.language;
     let port = patch.verge_mixed_port;
+    #[cfg(target_os = "macos")]
+    let tray_icon = patch.tray_icon;
     let common_tray_icon = patch.common_tray_icon;
     let sysproxy_tray_icon = patch.sysproxy_tray_icon;
     let tun_tray_icon = patch.tun_tray_icon;
@@ -238,6 +240,10 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             || sysproxy_tray_icon.is_some()
             || tun_tray_icon.is_some()
         {
+            handle::Handle::update_systray_part()?;
+        }
+        #[cfg(target_os = "macos")]
+        if tray_icon.is_some() {
             handle::Handle::update_systray_part()?;
         }
 
