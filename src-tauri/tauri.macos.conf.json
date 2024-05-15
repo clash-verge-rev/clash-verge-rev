@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "tauri": {
     "systemTray": {
-      "iconPath": "icons/mac-tray-icon.png",
+      "iconPath": "icons/tray-icon-mono.ico",
       "iconAsTemplate": true
     },
     "bundle": {

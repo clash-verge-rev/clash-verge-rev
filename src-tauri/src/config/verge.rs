@@ -42,6 +42,10 @@ pub struct IVerge {
     /// common tray icon
     pub common_tray_icon: Option<bool>,
 
+    /// tray icon
+    #[cfg(target_os = "macos")]
+    pub tray_icon: Option<String>,
+
     /// menu icon
     pub menu_icon: Option<String>,
 
@@ -198,6 +202,8 @@ impl IVerge {
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_group_icon: Some(true),
+            #[cfg(target_os = "macos")]
+            tray_icon: Some("monochrome".into()),
             menu_icon: Some("monochrome".into()),
             common_tray_icon: Some(false),
             sysproxy_tray_icon: Some(false),
@@ -255,6 +261,8 @@ impl IVerge {
         patch!(traffic_graph);
         patch!(enable_memory_usage);
         patch!(enable_group_icon);
+        #[cfg(target_os = "macos")]
+        patch!(tray_icon);
         patch!(menu_icon);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
