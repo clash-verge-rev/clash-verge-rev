@@ -155,7 +155,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
         <FlexBox>
           <Typography className="label">{t("Bypass")}</Typography>
-          <Typography className="value">{sysproxy?.bypass || "-"}</Typography>
+          <Typography className="value" style={{ overflowWrap: "anywhere" }}>
+            {sysproxy?.bypass || "-"}
+          </Typography>
         </FlexBox>
       </Box>
     </BaseDialog>
