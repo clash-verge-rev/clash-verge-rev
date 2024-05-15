@@ -166,7 +166,7 @@ export const ProfileMore = (props: Props) => {
                   size="small"
                   edge="start"
                   color="error"
-                  title="Console"
+                  title={t("Script Console")}
                   onClick={() => setLogOpen(true)}
                 >
                   <FeaturedPlayListRounded fontSize="inherit" />
@@ -177,7 +177,7 @@ export const ProfileMore = (props: Props) => {
                 size="small"
                 edge="start"
                 color="inherit"
-                title="Console"
+                title={t("Script Console")}
                 onClick={() => setLogOpen(true)}
               >
                 <FeaturedPlayListRounded fontSize="inherit" />

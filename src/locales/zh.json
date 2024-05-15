@@ -29,7 +29,8 @@
   "Profile URL": "订阅文件链接",
   "Import": "导入",
   "New": "新建",
-  "Create Profile": "新建订阅",
+  "Create Profile": "新建配置",
+  "Edit Profile": "编辑配置",
   "Choose File": "选择文件",
   "Close": "关闭",
   "Close All": "关闭全部",
@@ -51,6 +52,7 @@
   "Reactivate Profiles": "重新激活订阅",
   "Confirm deletion": "确认删除",
   "This operation is not reversible": "此操作不可逆",
+  "Script Console": "脚本控制台输出",
 
   "Location": "当前节点",
   "Delay check": "延迟测试",

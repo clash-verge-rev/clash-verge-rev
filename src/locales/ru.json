@@ -30,6 +30,7 @@
   "Import": "Импорт",
   "New": "Новый",
   "Create Profile": "Создать профиль",
+  "Edit Profile": "Изменить профиль",
   "Choose File": "Выбрать файл",
   "Close": "Закрыть",
   "Close All": "Закрыть всё",
@@ -51,6 +52,7 @@
   "Reactivate Profiles": "Реактивировать профили",
   "Confirm deletion": "Подтвердите удаление",
   "This operation is not reversible": "Эта операция необратима",
+  "Script Console": "Консоль скрипта",
 
   "Location": "Местоположение",
   "Delay check": "Проверка задержки",

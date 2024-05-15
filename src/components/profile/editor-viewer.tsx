@@ -129,7 +129,7 @@ export const EditorViewer = (props: Props) => {
       <DialogTitle>{t("Edit File")}</DialogTitle>
 
       <DialogContent
-        sx={{ width: "94%", height: "100vh", pb: 1, userSelect: "text" }}
+        sx={{ width: "auto", height: "100vh", pb: 1, userSelect: "text" }}
       >
         <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
       </DialogContent>
