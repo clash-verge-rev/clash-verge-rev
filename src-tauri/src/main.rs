@@ -10,8 +10,11 @@ mod enhance;
 mod feat;
 mod utils;
 
-use crate::utils::{init, resolve, server};
-use tauri::{api, SystemTray};
+use crate::{
+    config::Config,
+    utils::{init, resolve, server},
+};
+use tauri::{api, Manager, SystemTray};
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -26,7 +29,27 @@ fn main() -> std::io::Result<()> {
     let mut builder = tauri::Builder::default()
         .system_tray(SystemTray::new())
         .setup(|app| {
-            resolve::resolve_setup(app);
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            let app_handle = app.handle();
+            let splashscreen_window = app.get_window("splashscreen").unwrap();
+            let enable_splashscreen = { Config::verge().data().enable_splashscreen };
+            if !enable_splashscreen.unwrap_or(true) {
+                splashscreen_window.close().unwrap();
+            }
+            // we perform the initialization code on a new task so the app doesn't freeze
+            tauri::async_runtime::spawn(async move {
+                // initialize your app here instead of sleeping :)
+                resolve::resolve_setup(&app_handle);
+                std::thread::sleep(std::time::Duration::from_secs(2));
+                // create main window
+                let silent_start = { Config::verge().data().enable_silent_start };
+                if silent_start.unwrap_or(false) {
+                    splashscreen_window.close().unwrap();
+                } else {
+                    resolve::create_window(&app_handle);
+                }
+            });
             Ok(())
         })
         .on_system_tray_event(core::tray::Tray::on_system_tray_event)
@@ -42,6 +65,7 @@ fn main() -> std::io::Result<()> {
             cmds::restart_sidecar,
             cmds::grant_permission,
             // clash
+            cmds::get_clash_configs,
             cmds::get_clash_info,
             cmds::get_clash_logs,
             cmds::patch_clash_config,

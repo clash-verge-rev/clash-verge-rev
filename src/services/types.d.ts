@@ -214,6 +214,7 @@ interface IVergeConfig {
   enable_auto_launch?: boolean;
   enable_system_title?: boolean;
   enable_keep_ui_active?: boolean;
+  enable_splashscreen?: boolean;
   enable_service_mode?: boolean;
   enable_silent_start?: boolean;
   enable_system_proxy?: boolean;

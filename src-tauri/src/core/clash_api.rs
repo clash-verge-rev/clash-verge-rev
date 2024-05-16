@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::collections::HashMap;
 
-/// PATCH /restart
+/// POST /restart
 #[allow(unused)]
 pub async fn restart_core() -> Result<()> {
     let (url, headers) = clash_client_info()?;
@@ -15,6 +15,17 @@ pub async fn restart_core() -> Result<()> {
     let builder = client.post(&url).headers(headers.clone());
     builder.send().await?;
     Ok(())
+}
+
+/// GET /configs
+pub async fn get_configs() -> Result<String> {
+    let (url, headers) = clash_client_info()?;
+    let url = format!("{url}/configs");
+
+    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
+    let builder = client.get(&url).headers(headers.clone());
+    let response = builder.send().await?;
+    Ok(response.text().await?)
 }
 
 /// PUT /configs

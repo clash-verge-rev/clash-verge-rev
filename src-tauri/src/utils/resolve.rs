@@ -11,7 +11,7 @@ use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::api::notification;
-use tauri::{App, AppHandle, CloseRequestApi, Manager};
+use tauri::{ AppHandle, CloseRequestApi, Manager};
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
 
@@ -33,11 +33,9 @@ pub fn find_unused_port() -> Result<u16> {
 }
 
 /// handle something when start app
-pub fn resolve_setup(app: &mut App) {
-    #[cfg(target_os = "macos")]
-    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-    let version = app.package_info().version.to_string();
-    handle::Handle::global().init(app.app_handle());
+pub fn resolve_setup(app_handle: &AppHandle) {
+    let version = app_handle.package_info().version.to_string();
+    handle::Handle::global().init(app_handle.app_handle());
     VERSION.get_or_init(|| version.clone());
 
     log_err!(init::init_resources());
@@ -79,21 +77,16 @@ pub fn resolve_setup(app: &mut App) {
 
     // setup a simple http server for singleton
     log::trace!("launch embed server");
-    server::embed_server(app.app_handle());
+    server::embed_server(app_handle.app_handle());
 
     log::trace!("init system tray");
-    log_err!(tray::Tray::update_systray(&app.app_handle()));
-
-    let silent_start = { Config::verge().data().enable_silent_start };
-    if !silent_start.unwrap_or(false) {
-        create_window(&app.app_handle());
-    }
+    log_err!(tray::Tray::update_systray(&app_handle.app_handle()));
 
     log_err!(sysopt::Sysopt::global().init_launch());
     log_err!(sysopt::Sysopt::global().init_sysproxy());
 
     log_err!(handle::Handle::update_systray_part());
-    log_err!(hotkey::Hotkey::global().init(app.app_handle()));
+    log_err!(hotkey::Hotkey::global().init(app_handle.app_handle()));
     log_err!(timer::Timer::global().init());
 
     let argvs: Vec<String> = std::env::args().collect();

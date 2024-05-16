@@ -67,6 +67,9 @@ pub struct IVerge {
     /// 是否保持UI界面活动
     pub enable_keep_ui_active: Option<bool>,
 
+    /// 是否开启启动页
+    pub enable_splashscreen: Option<bool>,
+
     /// not show the window on launch
     pub enable_silent_start: Option<bool>,
 
@@ -212,6 +215,7 @@ impl IVerge {
             enable_silent_start: Some(false),
             enable_system_title: Some(false),
             enable_keep_ui_active: Some(false),
+            enable_splashscreen: Some(true),
             enable_system_proxy: Some(false),
             enable_random_port: Some(false),
             #[cfg(not(target_os = "windows"))]
@@ -274,6 +278,7 @@ impl IVerge {
         patch!(enable_silent_start);
         patch!(enable_system_title);
         patch!(enable_keep_ui_active);
+        patch!(enable_splashscreen);
         patch!(enable_random_port);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);

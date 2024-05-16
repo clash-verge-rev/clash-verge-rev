@@ -77,7 +77,17 @@
         "scope": ["$APPDATA/**", "$RESOURCE/../**", "$HOME/.local/**", "**"]
       }
     },
-    "windows": [],
+    "windows": [
+      {
+        "label": "splashscreen",
+        "width": 100,
+        "height": 100,
+        "decorations": false,
+        "resizable": false,
+        "transparent": true,
+        "url": "splashscreen.html"
+      }
+    ],
     "security": {
       "csp": "script-src 'unsafe-eval' 'self'; default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'; img-src asset: http: https: data: 'self';"
     }

@@ -29,7 +29,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const [commonIcon, setCommonIcon] = useState("");
   const [sysproxyIcon, setSysproxyIcon] = useState("");
   const [tunIcon, setTunIcon] = useState("");
-  const { enable_system_title, enable_keep_ui_active } = verge || {};
+  const { enable_system_title, enable_keep_ui_active, enable_splashscreen } =
+    verge || {};
   const systemOS = getSystem();
   const show_title_setting = systemOS === "linux" || systemOS === "windows";
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -89,6 +90,17 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}>
       <List>
+        <SettingItem label={t("Splashscreen")}>
+          <GuardState
+            value={enable_splashscreen ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_splashscreen: e })}
+            onGuard={(e) => patchVerge({ enable_splashscreen: e })}>
+            <SwitchLovely edge="end" />
+          </GuardState>
+        </SettingItem>
         {show_title_setting && (
           <SettingItem
             label={t("System Title")}
