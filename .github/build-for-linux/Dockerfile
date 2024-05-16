@@ -1,4 +1,4 @@
-FROM rust:buster@sha256:24d1a8e64801cd1c3c6fbc50f381e420cca71287cc5fa7b3b938866223a18f48
+FROM rust:buster@sha256:522a925f1d3642ae82a0079694a9051ed1c15f189842dbe4d75a1210d3a77e7e
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod a+x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"] 
