@@ -34,19 +34,19 @@ fn main() -> std::io::Result<()> {
             let app_handle = app.handle();
             let splashscreen_window = app.get_window("splashscreen").unwrap();
             let enable_splashscreen = { Config::verge().data().enable_splashscreen };
-            if !enable_splashscreen.unwrap_or(true) {
+            let enable_splashscreen = enable_splashscreen.unwrap_or(true);
+            let silent_start = { Config::verge().data().enable_silent_start };
+            let silent_start = silent_start.unwrap_or(false);
+            if !enable_splashscreen || silent_start {
                 splashscreen_window.close().unwrap();
             }
             // we perform the initialization code on a new task so the app doesn't freeze
             tauri::async_runtime::spawn(async move {
-                // initialize your app here instead of sleeping :)
+                // initialize your app here instead of sleeping :
                 resolve::resolve_setup(&app_handle);
                 std::thread::sleep(std::time::Duration::from_secs(2));
                 // create main window
-                let silent_start = { Config::verge().data().enable_silent_start };
-                if silent_start.unwrap_or(false) {
-                    splashscreen_window.close().unwrap();
-                } else {
+                if !silent_start {
                     resolve::create_window(&app_handle);
                 }
             });
