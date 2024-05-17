@@ -493,12 +493,15 @@ const ProfilePage = () => {
             flexItem
             sx={{
               width: `calc(100% - 32px)`,
+              my: 1,
               borderColor: dividercolor,
-            }}></Divider>
+            }}>
+            {t("Enhance Scripts")}
+          </Divider>
         )}
 
         {sortableChainList.length > 0 && (
-          <Box sx={{ mt: 1.5 }}>
+          <Box>
             <ReactSortable
               style={{
                 display: "flex",
