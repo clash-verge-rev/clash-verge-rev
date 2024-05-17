@@ -62,6 +62,12 @@ export const ProxyItemMini = (props: Props) => {
           const selectColor = mode === "light" ? primary.main : primary.light;
 
           return {
+            "&:hover": {
+              bgcolor:
+                mode === "light"
+                  ? alpha(primary.main, 0.15)
+                  : alpha(primary.main, 0.35),
+            },
             "&:hover .the-check": { display: !showDelay ? "block" : "none" },
             "&:hover .the-delay": { display: showDelay ? "block" : "none" },
             "&:hover .the-icon": { display: "none" },
@@ -84,12 +90,10 @@ export const ProxyItemMini = (props: Props) => {
             backgroundColor: bgcolor,
           };
         },
-      ]}
-    >
+      ]}>
       <Box
         title={`${proxy.name}\n${proxy.now ?? ""}`}
-        sx={{ overflow: "hidden" }}
-      >
+        sx={{ overflow: "hidden" }}>
         <Typography
           variant="body2"
           component="div"
@@ -100,8 +104,7 @@ export const ProxyItemMini = (props: Props) => {
             wordBreak: "break-all",
             overflow: "hidden",
             whiteSpace: "nowrap",
-          }}
-        >
+          }}>
           {proxy.name}
         </Typography>
 
@@ -112,8 +115,7 @@ export const ProxyItemMini = (props: Props) => {
               flexWrap: "nowrap",
               flex: "none",
               marginTop: "4px",
-            }}
-          >
+            }}>
             {proxy.now && (
               <Typography
                 variant="body2"
@@ -126,8 +128,7 @@ export const ProxyItemMini = (props: Props) => {
                   overflow: "hidden",
                   whiteSpace: "nowrap",
                   marginRight: "8px",
-                }}
-              >
+                }}>
                 {proxy.now}
               </Typography>
             )}
@@ -175,8 +176,7 @@ export const ProxyItemMini = (props: Props) => {
             sx={({ palette }) => ({
               display: "none", // hover才显示
               ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
-            })}
-          >
+            })}>
             Check
           </Widget>
         )}
@@ -196,8 +196,7 @@ export const ProxyItemMini = (props: Props) => {
               !proxy.provider
                 ? { ":hover": { bgcolor: alpha(palette.primary.main, 0.15) } }
                 : {}
-            }
-          >
+            }>
             {delayManager.formatDelay(delay, timeout)}
           </Widget>
         )}
