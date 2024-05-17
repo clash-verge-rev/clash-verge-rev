@@ -11,9 +11,8 @@ type SearchProps = {
   placeholder?: string;
   onSearch: (
     match: (content: string) => boolean,
-    search: (contents: string[]) => string[],
     state: {
-      input: string;
+      text: string;
       matchCase: boolean;
       matchWholeWord: boolean;
       useRegularExpression: boolean;
@@ -41,9 +40,8 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     props.onSearch(
       (content) => doSearch([content], e.target?.value ?? "").length > 0,
-      (contents: string[]) => doSearch(contents, e.target?.value ?? ""),
       {
-        input: e.target?.value ?? "",
+        text: e.target?.value ?? "",
         matchCase,
         matchWholeWord,
         useRegularExpression,
@@ -74,8 +72,8 @@ export const BaseSearchBox = styled((props: SearchProps) => {
         } else {
           return item.includes(searchItemCopy);
         }
-      } catch (e) {
-        setErrorMessage(`${e}`);
+      } catch (err) {
+        setErrorMessage(`${err}`);
       }
     });
   };

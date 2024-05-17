@@ -18,7 +18,7 @@ import {
 } from "@/components/connection/connection-detail";
 import parseTraffic from "@/utils/parse-traffic";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+import { BaseSearchBox } from "@/components/base/base-search-box";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -29,7 +29,7 @@ const ConnectionsPage = () => {
   const { clashInfo } = useClashInfo();
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
-  const [filterText, setFilterText] = useState("");
+  const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
   const [connData, setConnData] = useState<IConnections>(initConn);
 
@@ -52,7 +52,7 @@ const ConnectionsPage = () => {
   const [filterConn, download, upload] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
     let connections = connData.connections.filter((conn) =>
-      (conn.metadata.host || conn.metadata.destinationIP)?.includes(filterText)
+      match(conn.metadata.host || conn.metadata.destinationIP || "")
     );
 
     if (orderFunc) connections = orderFunc(connections);
@@ -63,7 +63,7 @@ const ConnectionsPage = () => {
       upload += x.upload;
     });
     return [connections, download, upload];
-  }, [connData, filterText, curOrderOpt]);
+  }, [connData, match, curOrderOpt]);
 
   const { connect, disconnect } = useWebsocket(
     (event) => {
@@ -182,11 +182,7 @@ const ConnectionsPage = () => {
             ))}
           </Select>
         )}
-
-        <BaseStyledTextField
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-        />
+        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
       <Box
