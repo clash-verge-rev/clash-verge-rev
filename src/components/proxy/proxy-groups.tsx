@@ -22,6 +22,19 @@ interface Props {
   mode: string;
 }
 
+// 获取字符串字节长度，中文占2字节，英文占1字节
+const getStringLentght = (str: string) => {
+  let len = 0;
+  for (let i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) > 127 || str.charCodeAt(i) === 94) {
+      len += 2;
+    } else {
+      len++;
+    }
+  }
+  return len;
+};
+
 export const ProxyGroups = (props: Props) => {
   const { mode } = props;
 
@@ -143,10 +156,10 @@ export const ProxyGroups = (props: Props) => {
     max(
       renderList
         .filter((item) => item.type === 0)
-        .flatMap((item) => item.key.length),
+        .flatMap((item) => getStringLentght(item.key)),
     ) ?? 8;
   const sidebarWidth =
-    maxGroupNameLength * 15 > 200 ? 200 : maxGroupNameLength * 15;
+    maxGroupNameLength * 8 > 200 ? 200 : maxGroupNameLength * 8;
   const [groupWidth, setGroupWidth] = useState(0);
   const [open, setOpen] = useState(false);
 
@@ -206,33 +219,41 @@ export const ProxyGroups = (props: Props) => {
             alignItems: "center",
           }}>
           <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              "& .side-border": {
-                backgroundColor: open ? "primary.main" : "transparent",
-              },
-              "&:hover .side-border": {
-                backgroundColor: "primary.main",
-              },
-            }}>
-            <Box
-              sx={{
+            sx={[
+              {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                width: "18px",
+              },
+              ({ palette }) => ({
+                "& .side-btn": {
+                  opacity: open ? 1 : 0,
+                  backgroundColor: open ? palette.primary.main : "transparent",
+                },
+                "&:hover .side-btn": {
+                  opacity: 1,
+                  backgroundColor: palette.primary.main,
+                },
+                "& .side-border": {
+                  backgroundColor: open ? palette.primary.main : "transparent",
+                },
+                "&:hover .side-border": {
+                  backgroundColor: palette.primary.main,
+                },
+              }),
+            ]}>
+            <div
+              className="side-btn"
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "20px",
                 height: "80px",
+                padding: "0",
                 transition: "all 0.2s",
                 transform: "perspective(11px) rotateY(5deg)",
-                opacity: open ? 1 : 0,
                 cursor: "pointer",
-                backgroundColor: open ? "primary.main" : "transparent",
-                "&:hover": {
-                  opacity: "1",
-                  backgroundColor: "primary.main",
-                },
               }}
               onClick={() => {
                 const nextOpen = !open;
@@ -245,7 +266,7 @@ export const ProxyGroups = (props: Props) => {
                   transform: open ? "rotate(180deg)" : "rotate(0deg)",
                 }}
               />
-            </Box>
+            </div>
             <div
               className="side-border"
               style={{
