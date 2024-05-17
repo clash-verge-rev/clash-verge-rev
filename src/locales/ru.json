@@ -214,7 +214,9 @@
   "System and Mixed Can Only be Used in Service Mode": "Система и смешанные могут использоваться только в сервисном режиме",
   "Information: Please make sure that the Clash Verge Service is installed and enabled": "Информация: Пожалуйста, убедитесь, что сервис Clash Verge Service установлен и включен",
 
-  "Use Regular Expression": "Использование регулярных выражений",
+  "Match Case": "Учитывать регистр",
+  "Match Whole Word": "Полное совпадение слова",
+  "Use Regular Expression": "Использовать регулярные выражения",
 
   "External Controller Address Modified": "Изменен адрес внешнего контроллера",
   "Clash Port Modified": "Clash порт изменен",

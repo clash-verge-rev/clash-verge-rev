@@ -214,6 +214,8 @@
   "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode",
   "Information: Please make sure that the Clash Verge Service is installed and enabled": "Information: Please make sure that the Clash Verge Service is installed and enabled",
 
+  "Match Case": "Match Case",
+  "Match Whole Word": "Match Whole Word",
   "Use Regular Expression": "Use Regular Expression",
 
   "External Controller Address Modified": "External Controller Address Modified",
