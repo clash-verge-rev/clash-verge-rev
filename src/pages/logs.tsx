@@ -19,7 +19,7 @@ import { atomEnableLog, atomLogData } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+import { BaseSearchBox } from "@/components/base/base-search-box";
 
 const StyledSelect = styled((props: SelectProps<string>) => {
   return (
@@ -46,35 +46,15 @@ const LogPage = () => {
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
   const [logState, setLogState] = useState("all");
-  const [filterText, setFilterText] = useState("");
-  const [useRegexSearch, setUseRegexSearch] = useState(true);
-  const [hasInputError, setInputError] = useState(false);
-  const [inputHelperText, setInputHelperText] = useState("");
+  const [match, setMatch] = useState(() => (_: string) => true);
+
   const filterLogs = useMemo(() => {
-    setInputHelperText("");
-    setInputError(false);
-    if (useRegexSearch) {
-      try {
-        const regex = new RegExp(filterText);
-        return logData.filter((data) => {
-          return (
-            regex.test(data.payload) &&
-            (logState === "all" ? true : data.type.includes(logState))
-          );
-        });
-      } catch (err: any) {
-        setInputHelperText(err.message.substring(0, 60));
-        setInputError(true);
-        return logData;
-      }
-    }
-    return logData.filter((data) => {
-      return (
-        data.payload.includes(filterText) &&
-        (logState === "all" ? true : data.type.includes(logState))
-      );
-    });
-  }, [logData, logState, filterText]);
+    return logData
+      .filter((data) =>
+        logState === "all" ? true : data.type.includes(logState)
+      )
+      .filter((data) => match(data.payload));
+  }, [logData, logState, match]);
 
   return (
     <BasePage
@@ -124,27 +104,7 @@ const LogPage = () => {
           <MenuItem value="warn">WARN</MenuItem>
           <MenuItem value="err">ERROR</MenuItem>
         </StyledSelect>
-
-        <BaseStyledTextField
-          error={hasInputError}
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          helperText={inputHelperText}
-          placeholder={t("Filter conditions")}
-          InputProps={{
-            sx: { pr: 1 },
-            endAdornment: (
-              <IconButton
-                sx={{ fontWeight: "800", height: "100%", padding: "0" }}
-                color={useRegexSearch ? "primary" : "default"}
-                title={t("Use Regular Expression")}
-                onClick={() => setUseRegexSearch(!useRegexSearch)}
-              >
-                .*
-              </IconButton>
-            ),
-          }}
-        />
+        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
       <Box
