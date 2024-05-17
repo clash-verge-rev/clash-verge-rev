@@ -32,8 +32,8 @@ interface Props {
 export const ProxyHead = (props: Props) => {
   const { sx = {}, groupName, headState, onHeadState } = props;
 
-  const { showType, sortType, textState, testUrl } = headState;
-  const [filterText, setFilterText] = useState("");
+  const { showType, sortType, filterText, textState, testUrl } = headState;
+  const [filterTextInp, setFilterTextInp] = useState(filterText ?? "");
 
   const { t } = useTranslation();
   const [autoFocus, setAutoFocus] = useState(false);
@@ -121,7 +121,7 @@ export const ProxyHead = (props: Props) => {
         color="inherit"
         title={t("Filter")}
         onClick={() => {
-          setFilterText("");
+          setFilterTextInp("");
           onHeadState({
             textState: textState === "filter" ? null : "filter",
             filterText: "",
@@ -138,13 +138,13 @@ export const ProxyHead = (props: Props) => {
         <TextField
           autoFocus={autoFocus}
           hiddenLabel
-          value={filterText}
+          value={filterTextInp}
           size="small"
           variant="outlined"
           placeholder={t("Filter conditions")}
           onChange={(e) => {
             const text = e.target.value;
-            setFilterText(text);
+            setFilterTextInp(text);
             filterChange(text);
           }}
           sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
