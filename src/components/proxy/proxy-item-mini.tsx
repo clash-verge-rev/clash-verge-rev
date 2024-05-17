@@ -5,6 +5,7 @@ import { alpha, Box, ListItemButton, styled, Typography } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import delayManager from "@/services/delay";
 import { useVerge } from "@/hooks/use-verge";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   group: IProxyGroupItem;
@@ -17,6 +18,8 @@ interface Props {
 // 多列布局
 export const ProxyItemMini = (props: Props) => {
   const { group, proxy, selected, showType = true, onClick } = props;
+
+  const { t } = useTranslation();
 
   // -1/<=0 为 不显示
   // -2 为 loading
@@ -209,10 +212,14 @@ export const ProxyItemMini = (props: Props) => {
           />
         )}
       </Box>
-
       {group.fixed && group.fixed === proxy.name && (
         // 展示fixed状态
-        <span className={proxy.name === group.now ? "the-pin" : "the-unpin"}>
+        <span
+          className={proxy.name === group.now ? "the-pin" : "the-unpin"}
+          title={
+            group.type === "URLTest" ? t("Delay check to cancel fixed") : ""
+          }
+        >
           📌
         </span>
       )}
