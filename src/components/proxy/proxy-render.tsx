@@ -19,7 +19,7 @@ import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
 import { useRecoilState } from "recoil";
 import { atomThemeMode } from "@/services/states";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { downloadIconCache } from "@/services/cmds";
 
@@ -66,12 +66,11 @@ export const ProxyRender = (props: RenderProps) => {
         dense
         style={{
           background: itembackgroundcolor,
-          height: "100%",
+          height: "70px",
           margin: "8px 8px",
           borderRadius: "8px",
         }}
-        onClick={() => onHeadState(group.name, { open: !headState?.open })}
-      >
+        onClick={() => onHeadState(group.name, { open: !headState?.open })}>
         {enable_group_icon &&
           group.icon &&
           group.icon.trim().startsWith("http") && (
@@ -107,8 +106,7 @@ export const ProxyRender = (props: RenderProps) => {
                 display: "flex",
                 alignItems: "center",
                 pt: "2px",
-              }}
-            >
+              }}>
               <Box sx={{ marginTop: "2px" }}>
                 <StyledTypeBox>{group.type}</StyledTypeBox>
                 <StyledSubtitle sx={{ color: "text.secondary" }}>
@@ -162,8 +160,7 @@ export const ProxyRender = (props: RenderProps) => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-        }}
-      >
+        }}>
         <InboxRounded sx={{ fontSize: "2.5em", color: "inherit" }} />
         <Typography sx={{ color: "inherit" }}>No Proxies</Typography>
       </Box>
@@ -171,6 +168,18 @@ export const ProxyRender = (props: RenderProps) => {
   }
 
   if (type === 4 && !group.hidden) {
+    const proxyColItems = useMemo(() => {
+      return proxyCol?.map((proxy) => (
+        <ProxyItemMini
+          key={item.key + proxy.name}
+          group={group}
+          proxy={proxy!}
+          selected={group.now === proxy.name}
+          showType={headState?.showType}
+          onClick={() => onChangeProxy(group, proxy!)}
+        />
+      ));
+    }, [proxyCol, group, headState]);
     return (
       <Box
         sx={{
@@ -181,18 +190,8 @@ export const ProxyRender = (props: RenderProps) => {
           pr: 2,
           pb: 1,
           gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
-        }}
-      >
-        {proxyCol?.map((proxy) => (
-          <ProxyItemMini
-            key={item.key + proxy.name}
-            group={group}
-            proxy={proxy!}
-            selected={group.now === proxy.name}
-            showType={headState?.showType}
-            onClick={() => onChangeProxy(group, proxy!)}
-          />
-        ))}
+        }}>
+        {proxyColItems}
       </Box>
     );
   }
