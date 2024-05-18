@@ -122,7 +122,7 @@ export const ProxyGroups = (props: Props) => {
   return (
     <Virtuoso
       ref={virtuosoRef}
-      style={{ height: "calc(100% - 12px)" }}
+      style={{ height: "calc(100% - 16px)" }}
       totalCount={renderList.length}
       increaseViewportBy={256}
       itemContent={(index) => (
