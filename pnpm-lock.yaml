@@ -65,11 +65,11 @@ importers:
         specifier: 1.18.4-beta5
         version: 1.18.4-beta5
       monaco-editor:
-        specifier: ^0.47.0
-        version: 0.47.0
+        specifier: ^0.48.0
+        version: 0.48.0
       monaco-yaml:
         specifier: ^5.1.1
-        version: 5.1.1(monaco-editor@0.47.0)
+        version: 5.1.1(monaco-editor@0.48.0)
       nanoid:
         specifier: ^5.0.7
         version: 5.0.7
@@ -109,6 +109,9 @@ importers:
       tar:
         specifier: ^6.2.1
         version: 6.2.1
+      types-pac:
+        specifier: ^1.0.2
+        version: 1.0.2
     devDependencies:
       "@actions/github":
         specifier: ^5.1.1
@@ -172,7 +175,7 @@ importers:
         version: 5.2.11(@types/node@20.12.10)(sass@1.77.0)
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
-        version: 1.1.0(monaco-editor@0.47.0)
+        version: 1.1.0(monaco-editor@0.48.0)
       vite-plugin-svgr:
         specifier: ^4.2.0
         version: 4.2.0(rollup@4.17.2)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.10)(sass@1.77.0))
@@ -2626,10 +2629,10 @@ packages:
     engines: { node: ">=10" }
     hasBin: true
 
-  monaco-editor@0.47.0:
+  monaco-editor@0.48.0:
     resolution:
       {
-        integrity: sha512-VabVvHvQ9QmMwXu4du008ZDuyLnHs9j7ThVFsiJoXSOQk18+LF89N4ADzPbFenm0W4V2bGHnFBztIRQTgBfxzw==,
+        integrity: sha512-goSDElNqFfw7iDHMg8WDATkfcyeLTNpBHQpO8incK6p5qZt5G/1j41X0xdGzpIkGojGXM+QiRQyLjnfDVvrpwA==,
       }
 
   monaco-languageserver-types@0.3.3:
@@ -3295,6 +3298,12 @@ packages:
         integrity: sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==,
       }
     engines: { node: ">=0.6.11 <=0.7.0 || >=0.7.3" }
+
+  types-pac@1.0.2:
+    resolution:
+      {
+        integrity: sha512-9zOLBtvgzEesEgpkJPrrh+uGTzSdNcYA+gk1jv3+14ytTsuxnunBko98OgbCCgUfcMzraEi4h+3zPrZaPoEsQg==,
+      }
 
   typescript@5.4.5:
     resolution:
@@ -5125,7 +5134,7 @@ snapshots:
 
   mkdirp@1.0.4: {}
 
-  monaco-editor@0.47.0: {}
+  monaco-editor@0.48.0: {}
 
   monaco-languageserver-types@0.3.3:
     dependencies:
@@ -5139,19 +5148,19 @@ snapshots:
 
   monaco-types@0.1.0: {}
 
-  monaco-worker-manager@2.0.1(monaco-editor@0.47.0):
+  monaco-worker-manager@2.0.1(monaco-editor@0.48.0):
     dependencies:
-      monaco-editor: 0.47.0
+      monaco-editor: 0.48.0
 
-  monaco-yaml@5.1.1(monaco-editor@0.47.0):
+  monaco-yaml@5.1.1(monaco-editor@0.48.0):
     dependencies:
       "@types/json-schema": 7.0.15
       jsonc-parser: 3.2.1
-      monaco-editor: 0.47.0
+      monaco-editor: 0.48.0
       monaco-languageserver-types: 0.3.3
       monaco-marker-data-provider: 1.2.2
       monaco-types: 0.1.0
-      monaco-worker-manager: 2.0.1(monaco-editor@0.47.0)
+      monaco-worker-manager: 2.0.1(monaco-editor@0.48.0)
       path-browserify: 1.0.1
       prettier: 2.8.8
       vscode-languageserver-textdocument: 1.0.11
@@ -5514,6 +5523,8 @@ snapshots:
 
   tunnel@0.0.6: {}
 
+  types-pac@1.0.2: {}
+
   typescript@5.4.5: {}
 
   undici-types@5.26.5: {}
@@ -5586,9 +5597,9 @@ snapshots:
       unist-util-stringify-position: 4.0.0
       vfile-message: 4.0.2
 
-  vite-plugin-monaco-editor@1.1.0(monaco-editor@0.47.0):
+  vite-plugin-monaco-editor@1.1.0(monaco-editor@0.48.0):
     dependencies:
-      monaco-editor: 0.47.0
+      monaco-editor: 0.48.0
 
   vite-plugin-svgr@4.2.0(rollup@4.17.2)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.10)(sass@1.77.0)):
     dependencies:
