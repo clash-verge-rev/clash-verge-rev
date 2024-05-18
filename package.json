@@ -35,7 +35,7 @@
     "dayjs": "1.11.11",
     "i18next": "^23.11.2",
     "lodash-es": "^4.17.21",
-    "meta-json-schema": "1.18.4-beta5",
+    "meta-json-schema": "1.18.4-beta6",
     "monaco-editor": "^0.48.0",
     "monaco-yaml": "^5.1.1",
     "nanoid": "^5.0.7",
