@@ -19,7 +19,7 @@ import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
 import { useRecoilState } from "recoil";
 import { atomThemeMode } from "@/services/states";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { downloadIconCache } from "@/services/cmds";
 
@@ -171,6 +171,18 @@ export const ProxyRender = (props: RenderProps) => {
   }
 
   if (type === 4 && !group.hidden) {
+    const proxyColItemsMemo = useMemo(() => {
+      return proxyCol?.map((proxy) => (
+        <ProxyItemMini
+          key={item.key + proxy.name}
+          group={group}
+          proxy={proxy!}
+          selected={group.now === proxy.name}
+          showType={headState?.showType}
+          onClick={() => onChangeProxy(group, proxy!)}
+        />
+      ));
+    }, [proxyCol, group, headState]);
     return (
       <Box
         sx={{
@@ -183,16 +195,7 @@ export const ProxyRender = (props: RenderProps) => {
           gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
         }}
       >
-        {proxyCol?.map((proxy) => (
-          <ProxyItemMini
-            key={item.key + proxy.name}
-            group={group}
-            proxy={proxy!}
-            selected={group.now === proxy.name}
-            showType={headState?.showType}
-            onClick={() => onChangeProxy(group, proxy!)}
-          />
-        ))}
+        {proxyColItemsMemo}
       </Box>
     );
   }
