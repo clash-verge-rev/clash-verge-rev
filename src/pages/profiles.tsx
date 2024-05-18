@@ -52,6 +52,7 @@ import { atomThemeMode } from "@/services/states";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/api/fs";
+import { readText } from "@tauri-apps/api/clipboard";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -267,7 +268,7 @@ const ProfilePage = () => {
   });
 
   const onCopyLink = async () => {
-    const text = await navigator.clipboard.readText();
+    const text = await readText();
     if (text) setUrl(text);
   };
   const [mode] = useRecoilState(atomThemeMode);
