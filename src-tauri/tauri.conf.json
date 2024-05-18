@@ -66,7 +66,7 @@
       },
       "protocol": {
         "asset": true,
-        "assetScope": ["$APPDATA/**", "$RESOURCE/../**"]
+        "assetScope": ["$APPDATA/**", "$RESOURCE/../**", "**"]
       },
       "path": {
         "all": true
