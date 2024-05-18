@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, MenuItem, Select } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  MenuItem,
+  Select,
+  SelectProps,
+  styled,
+} from "@mui/material";
 import { useRecoilState } from "recoil";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
@@ -19,6 +27,7 @@ import {
 import parseTraffic from "@/utils/parse-traffic";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { BaseSearchBox } from "@/components/base/base-search-box";
+import { BaseStyledSelect } from "@/components/base/base-styled-select";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
@@ -163,24 +172,16 @@ const ConnectionsPage = () => {
         }}
       >
         {!isTableLayout && (
-          <Select
-            size="small"
-            autoComplete="off"
+          <BaseStyledSelect
             value={curOrderOpt}
             onChange={(e) => setOrderOpt(e.target.value)}
-            sx={{
-              mr: 1,
-              width: i18n.language === "en" ? 190 : 120,
-              height: 33.375,
-              '[role="button"]': { py: 0.65 },
-            }}
           >
             {Object.keys(orderOpts).map((opt) => (
               <MenuItem key={opt} value={opt}>
                 <span style={{ fontSize: 14 }}>{t(opt)}</span>
               </MenuItem>
             ))}
-          </Select>
+          </BaseStyledSelect>
         )}
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
