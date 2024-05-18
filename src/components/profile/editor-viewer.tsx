@@ -21,6 +21,7 @@ import { configureMonacoYaml } from "monaco-yaml";
 import { type JSONSchema7 } from "json-schema";
 import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
+import pac from "types-pac/pac.d.ts?raw";
 
 interface Props {
   mode: "profile" | "text";
@@ -51,6 +52,8 @@ configureMonacoYaml(monaco, {
     },
   ],
 });
+// PAC definition
+monaco.languages.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
 
 export const EditorViewer = (props: Props) => {
   const { mode, property, open, language, schema, onClose, onChange } = props;
