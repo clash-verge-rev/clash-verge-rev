@@ -20,24 +20,7 @@ import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { BaseSearchBox } from "@/components/base/base-search-box";
-
-const StyledSelect = styled((props: SelectProps<string>) => {
-  return (
-    <Select
-      size="small"
-      autoComplete="off"
-      sx={{
-        width: 120,
-        height: 33.375,
-        mr: 1,
-        '[role="button"]': { py: 0.65 },
-      }}
-      {...props}
-    />
-  );
-})(({ theme }) => ({
-  background: theme.palette.mode === "light" ? "#fff" : undefined,
-}));
+import { BaseStyledSelect } from "@/components/base/base-styled-select";
 
 const LogPage = () => {
   const { t } = useTranslation();
@@ -95,7 +78,7 @@ const LogPage = () => {
           alignItems: "center",
         }}
       >
-        <StyledSelect
+        <BaseStyledSelect
           value={logState}
           onChange={(e) => setLogState(e.target.value)}
         >
@@ -103,7 +86,7 @@ const LogPage = () => {
           <MenuItem value="inf">INFO</MenuItem>
           <MenuItem value="warn">WARN</MenuItem>
           <MenuItem value="err">ERROR</MenuItem>
-        </StyledSelect>
+        </BaseStyledSelect>
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
