@@ -35,7 +35,6 @@ export const BaseSearchBox = styled((props: SearchProps) => {
     } as React.CSSProperties,
     inheritViewBox: true,
   };
-  const active = "var(--primary-main)";
 
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     props.onSearch(
@@ -99,7 +98,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                   <SvgIcon
                     component={matchCaseIcon}
                     {...iconStyle}
-                    sx={{ fill: matchCase ? active : undefined }}
+                    aria-label={matchCase ? "active" : "inactive"}
                     onClick={() => {
                       setMatchCase(!matchCase);
                     }}
@@ -111,7 +110,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                   <SvgIcon
                     component={matchWholeWordIcon}
                     {...iconStyle}
-                    sx={{ fill: matchWholeWord ? active : undefined }}
+                    aria-label={matchWholeWord ? "active" : "inactive"}
                     onClick={() => {
                       setMatchWholeWord(!matchWholeWord);
                     }}
@@ -122,7 +121,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                 <div>
                   <SvgIcon
                     component={useRegularExpressionIcon}
-                    sx={{ fill: useRegularExpression ? active : undefined }}
+                    aria-label={useRegularExpression ? "active" : "inactive"}
                     {...iconStyle}
                     onClick={() => {
                       setUseRegularExpression(!useRegularExpression);
@@ -133,11 +132,19 @@ export const BaseSearchBox = styled((props: SearchProps) => {
             </Box>
           ),
         }}
+        {...props}
       />
     </Tooltip>
   );
 })(({ theme }) => ({
   "& .MuiInputBase-root": {
     background: theme.palette.mode === "light" ? "#fff" : undefined,
+    "padding-right": "4px",
+  },
+  "& .MuiInputBase-root svg[aria-label='active'] path": {
+    fill: theme.palette.primary.light,
+  },
+  "& .MuiInputBase-root svg[aria-label='inactive'] path": {
+    fill: "#A7A7A7",
   },
 }));
