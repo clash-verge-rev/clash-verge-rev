@@ -420,55 +420,53 @@ Function .onInit
 FunctionEnd
 
 !macro CheckAllVergeProcesses
-    ; Check if Clash Verge.exe is running
-    nsis_tauri_utils::FindProcess "Clash Verge.exe"
-    ${If} $R0 != 0
-        ; Kill the process
-        DetailPrint "Kill Clash Verge.exe..."
-        !if "${INSTALLMODE}" == "currentUser"
-            nsis_tauri_utils::KillProcessCurrentUser "Clash Verge.exe"
-        !else
-            nsis_tauri_utils::KillProcess "Clash Verge.exe"
-        !endif
-    ${EndIf}
-
-    
-    ; Check if clash-verge-service.exe is running
+  ; Check if clash-verge-service.exe is running
+  !if "${INSTALLMODE}" == "currentUser"
+    nsis_tauri_utils::FindProcessCurrentUser "clash-verge-service.exe"
+  !else
     nsis_tauri_utils::FindProcess "clash-verge-service.exe"
-    ${If} $R0 != 0
-        ; Kill the process
-        DetailPrint "Kill clash-verge-service.exe..."
-        !if "${INSTALLMODE}" == "currentUser"
-            nsis_tauri_utils::KillProcessCurrentUser "clash-verge-service.exe"
-        !else
-            nsis_tauri_utils::KillProcess "clash-verge-service.exe"
-        !endif
-    ${EndIf}
+  !endif
+  Pop $R0
+  ${If} $R0 = 0
+    DetailPrint "Kill clash-verge-service.exe..."
+    !if "${INSTALLMODE}" == "currentUser"
+      nsis_tauri_utils::KillProcessCurrentUser "clash-verge-service.exe"
+    !else
+      nsis_tauri_utils::KillProcess "clash-verge-service.exe"
+    !endif
+  ${EndIf}
 
-       
-    ; Check if clash-meta-alpha.exe is running
+  ; Check if clash-meta-alpha.exe is running
+  !if "${INSTALLMODE}" == "currentUser"
+    nsis_tauri_utils::FindProcessCurrentUser "clash-meta-alpha.exe"
+  !else
     nsis_tauri_utils::FindProcess "clash-meta-alpha.exe"
-    ${If} $R0 != 0
-        ; Kill the process
-        DetailPrint "Kill clash-meta-alpha.exe..."
-        !if "${INSTALLMODE}" == "currentUser"
-            nsis_tauri_utils::KillProcessCurrentUser "clash-meta-alpha.exe"
-        !else
-            nsis_tauri_utils::KillProcess "clash-meta-alpha.exe"
-        !endif
-    ${EndIf}
+  !endif
+  Pop $R0
+  ${If} $R0 = 0
+    DetailPrint "Kill clash-meta-alpha.exe..."
+    !if "${INSTALLMODE}" == "currentUser"
+      nsis_tauri_utils::KillProcessCurrentUser "clash-meta-alpha.exe"
+    !else
+      nsis_tauri_utils::KillProcess "clash-meta-alpha.exe"
+    !endif
+  ${EndIf}
 
-    ; Check if clash-meta.exe is running
+  ; Check if clash-meta.exe is running
+  !if "${INSTALLMODE}" == "currentUser"
+    nsis_tauri_utils::FindProcessCurrentUser "clash-meta.exe"
+  !else
     nsis_tauri_utils::FindProcess "clash-meta.exe"
-    ${If} $R0 != 0
-        ; Kill the process
-        DetailPrint "Kill clash-meta.exe..."
-        !if "${INSTALLMODE}" == "currentUser"
-            nsis_tauri_utils::KillProcessCurrentUser "clash-meta.exe"
-        !else
-            nsis_tauri_utils::KillProcess "clash-meta.exe"
-        !endif
-    ${EndIf}
+  !endif
+  Pop $R0
+  ${If} $R0 = 0
+    DetailPrint "Kill clash-meta.exe..."
+    !if "${INSTALLMODE}" == "currentUser"
+      nsis_tauri_utils::KillProcessCurrentUser "clash-meta.exe"
+    !else
+      nsis_tauri_utils::KillProcess "clash-meta.exe"
+    !endif
+  ${EndIf}
 !macroend
 
 !macro StartVergeService
