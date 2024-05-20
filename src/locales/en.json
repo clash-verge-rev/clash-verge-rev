@@ -25,6 +25,7 @@
   "Test URL": "Test URL",
   "Test All": "Test All",
 
+  "Paste": "Paste",
   "Profiles": "Profiles",
   "Profile URL": "Profile URL",
   "Import": "Import",
@@ -69,6 +70,19 @@
   "Rules": "Rules",
   "Update All": "Update All",
   "Update At": "Update At",
+
+  "Host": "Host",
+  "Downloaded": "Downloaded",
+  "Uploaded": "Uploaded",
+  "DL Speed": "DL Speed",
+  "UL Speed": "UL Speed",
+  "Chains": "Chains",
+  "Rule": "Rule",
+  "Process": "Process",
+  "Time": "Time",
+  "Source": "Source",
+  "Destination IP": "Destination IP",
+  "Close Connection": "Close Connection",
 
   "Type": "Type",
   "Name": "Name",

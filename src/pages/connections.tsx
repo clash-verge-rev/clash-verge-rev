@@ -134,8 +134,12 @@ const ConnectionsPage = () => {
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ mx: 1 }}>Download: {parseTraffic(download)}</Box>
-          <Box sx={{ mx: 1 }}>Upload: {parseTraffic(upload)}</Box>
+          <Box sx={{ mx: 1 }}>
+            {t("Downloaded")}: {parseTraffic(download)}
+          </Box>
+          <Box sx={{ mx: 1 }}>
+            {t("Uploaded")}: {parseTraffic(upload)}
+          </Box>
           <IconButton
             color="inherit"
             size="small"

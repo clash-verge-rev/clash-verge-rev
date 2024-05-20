@@ -54,29 +54,32 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     : `${metadata.destinationIP}:${metadata.destinationPort}`;
 
   const information = [
-    { label: "Host", value: host },
-    { label: "Download", value: parseTraffic(data.download).join(" ") },
-    { label: "Upload", value: parseTraffic(data.upload).join(" ") },
+    { label: t("Host"), value: host },
+    { label: t("Downloaded"), value: parseTraffic(data.download).join(" ") },
+    { label: t("Uploaded"), value: parseTraffic(data.upload).join(" ") },
     {
-      label: "DL Speed",
+      label: t("DL Speed"),
       value: parseTraffic(data.curDownload ?? -1).join(" ") + "/s",
     },
     {
-      label: "UL Speed",
+      label: t("UL Speed"),
       value: parseTraffic(data.curUpload ?? -1).join(" ") + "/s",
     },
-    { label: "Chains", value: chains },
-    { label: "Rule", value: rule },
+    { label: t("Chains"), value: chains },
+    { label: t("Rule"), value: rule },
     {
-      label: "Process",
+      label: t("Process"),
       value: `${metadata.process}${
         metadata.processPath ? `(${metadata.processPath})` : ""
       }`,
     },
-    { label: "Time", value: dayjs(data.start).fromNow() },
-    { label: "Source", value: `${metadata.sourceIP}:${metadata.sourcePort}` },
-    { label: "Destination IP", value: metadata.destinationIP },
-    { label: "Type", value: `${metadata.type}(${metadata.network})` },
+    { label: t("Time"), value: dayjs(data.start).fromNow() },
+    {
+      label: t("Source"),
+      value: `${metadata.sourceIP}:${metadata.sourcePort}`,
+    },
+    { label: t("Destination IP"), value: metadata.destinationIP },
+    { label: t("Type"), value: `${metadata.type}(${metadata.network})` },
   ];
 
   const onDelete = useLockFn(async () => deleteConnection(data.id));
@@ -92,13 +95,13 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
       <Box sx={{ textAlign: "right" }}>
         <Button
           variant="contained"
-          title="Close Connection"
+          title={t("Close Connection")}
           onClick={() => {
             onDelete();
             onClose?.();
           }}
         >
-          {t("Close")}
+          {t("Close Connection")}
         </Button>
       </Box>
     </Box>
