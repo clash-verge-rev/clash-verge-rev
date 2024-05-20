@@ -7,8 +7,9 @@ import delayManager from "@/services/delay";
 import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
-  group: IProxyGroupItem;
+  groupName: string;
   proxy: IProxyItem;
+  fixed: boolean;
   selected: boolean;
   showType?: boolean;
   onClick?: (name: string) => void;
@@ -16,7 +17,7 @@ interface Props {
 
 // 多列布局
 export const ProxyItemMini = (props: Props) => {
-  const { group, proxy, selected, showType = true, onClick } = props;
+  const { groupName, proxy, fixed, selected, showType = true, onClick } = props;
 
   // -1/<=0 为 不显示
   // -2 为 loading
@@ -25,21 +26,21 @@ export const ProxyItemMini = (props: Props) => {
   const timeout = verge?.default_latency_timeout || 10000;
 
   useEffect(() => {
-    delayManager.setListener(proxy.name, group.name, setDelay);
+    delayManager.setListener(proxy.name, groupName, setDelay);
 
     return () => {
-      delayManager.removeListener(proxy.name, group.name);
+      delayManager.removeListener(proxy.name, groupName);
     };
-  }, [proxy.name, group.name]);
+  }, [proxy.name, groupName]);
 
   useEffect(() => {
     if (!proxy) return;
-    setDelay(delayManager.getDelayFix(proxy, group.name));
+    setDelay(delayManager.getDelayFix(proxy, groupName));
   }, [proxy]);
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);
-    setDelay(await delayManager.checkDelay(proxy.name, group.name, timeout));
+    setDelay(await delayManager.checkDelay(proxy.name, groupName, timeout));
   });
 
   return (
@@ -210,11 +211,9 @@ export const ProxyItemMini = (props: Props) => {
         )}
       </Box>
 
-      {group.fixed && group.fixed === proxy.name && (
+      {fixed && (
         // 展示fixed状态
-        <span className={proxy.name === group.now ? "the-pin" : "the-unpin"}>
-          📌
-        </span>
+        <span className={selected ? "the-pin" : "the-unpin"}>📌</span>
       )}
     </ListItemButton>
   );

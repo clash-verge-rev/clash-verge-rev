@@ -19,7 +19,7 @@ import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
 import { useRecoilState } from "recoil";
 import { atomThemeMode } from "@/services/states";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { downloadIconCache } from "@/services/cmds";
 
@@ -31,11 +31,43 @@ interface RenderProps {
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void;
   onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void;
 }
+interface ProxyColProps {
+  item: IRenderItem;
+  onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void;
+}
+const ProxyItemMiniCol = memo(function ProxyItemMiniCol(props: ProxyColProps) {
+  const { item, onChangeProxy } = props;
+  const { group, headState, proxyCol } = item;
+  return (
+    <Box
+      sx={{
+        height: 56,
+        display: "grid",
+        gap: 1,
+        pl: 2,
+        pr: 2,
+        pb: 1,
+        gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
+      }}>
+      {proxyCol?.map((proxy) => (
+        <ProxyItemMini
+          key={item.key + proxy.name}
+          groupName={group.name}
+          proxy={proxy!}
+          fixed={group.fixed === proxy.name}
+          selected={group.now === proxy.name}
+          showType={headState?.showType}
+          onClick={() => onChangeProxy(group, proxy!)}
+        />
+      ))}
+    </Box>
+  );
+});
 
 export const ProxyRender = (props: RenderProps) => {
   const { indent, item, onLocation, onCheckAll, onHeadState, onChangeProxy } =
     props;
-  const { type, group, headState, proxy, proxyCol } = item;
+  const { type, group, headState, proxy } = item;
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;
   const [mode] = useRecoilState(atomThemeMode);
@@ -168,32 +200,7 @@ export const ProxyRender = (props: RenderProps) => {
   }
 
   if (type === 4 && !group.hidden) {
-    const proxyColItems = useMemo(() => {
-      return proxyCol?.map((proxy) => (
-        <ProxyItemMini
-          key={item.key + proxy.name}
-          group={group}
-          proxy={proxy!}
-          selected={group.now === proxy.name}
-          showType={headState?.showType}
-          onClick={() => onChangeProxy(group, proxy!)}
-        />
-      ));
-    }, [proxyCol, group, headState]);
-    return (
-      <Box
-        sx={{
-          height: 56,
-          display: "grid",
-          gap: 1,
-          pl: 2,
-          pr: 2,
-          pb: 1,
-          gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
-        }}>
-        {proxyColItems}
-      </Box>
-    );
+    return <ProxyItemMiniCol item={item} onChangeProxy={onChangeProxy} />;
   }
 
   return null;
