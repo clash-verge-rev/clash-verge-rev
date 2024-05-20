@@ -92,7 +92,8 @@ export const ProxyItemMini = (props: Props) => {
         },
       ]}>
       <Box
-        title={`${proxy.name}\n${proxy.now ?? ""}`}
+        width={"100%"}
+        title={`${proxy.name}${proxy.now ? "\n" + proxy.now : ""}`}
         sx={{ overflow: "hidden" }}>
         <Typography
           variant="body2"
