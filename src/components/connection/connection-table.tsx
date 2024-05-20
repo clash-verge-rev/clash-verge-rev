@@ -7,6 +7,7 @@ import {
 } from "@mui/x-data-grid";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
+import { t } from "i18next";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -21,10 +22,10 @@ export const ConnectionTable = (props: Props) => {
   >({});
 
   const columns: GridColDef[] = [
-    { field: "host", headerName: "Host", flex: 220, minWidth: 220 },
+    { field: "host", headerName: t("Host"), flex: 220, minWidth: 220 },
     {
       field: "download",
-      headerName: "Download",
+      headerName: t("Downloaded"),
       width: 88,
       align: "right",
       headerAlign: "right",
@@ -33,7 +34,7 @@ export const ConnectionTable = (props: Props) => {
     },
     {
       field: "upload",
-      headerName: "Upload",
+      headerName: t("Uploaded"),
       width: 88,
       align: "right",
       headerAlign: "right",
@@ -42,7 +43,7 @@ export const ConnectionTable = (props: Props) => {
     },
     {
       field: "dlSpeed",
-      headerName: "DL Speed",
+      headerName: t("DL Speed"),
       width: 88,
       align: "right",
       headerAlign: "right",
@@ -51,19 +52,19 @@ export const ConnectionTable = (props: Props) => {
     },
     {
       field: "ulSpeed",
-      headerName: "UL Speed",
+      headerName: t("UL Speed"),
       width: 88,
       align: "right",
       headerAlign: "right",
       valueFormatter: (params: GridValueFormatterParams<number>) =>
         parseTraffic(params.value).join(" ") + "/s",
     },
-    { field: "chains", headerName: "Chains", flex: 360, minWidth: 360 },
-    { field: "rule", headerName: "Rule", flex: 300, minWidth: 250 },
-    { field: "process", headerName: "Process", flex: 240, minWidth: 120 },
+    { field: "chains", headerName: t("Chains"), flex: 360, minWidth: 360 },
+    { field: "rule", headerName: t("Rule"), flex: 300, minWidth: 250 },
+    { field: "process", headerName: t("Process"), flex: 240, minWidth: 120 },
     {
       field: "time",
-      headerName: "Time",
+      headerName: t("Time"),
       flex: 120,
       minWidth: 100,
       align: "right",
@@ -74,14 +75,14 @@ export const ConnectionTable = (props: Props) => {
       valueFormatter: (params: GridValueFormatterParams<string>) =>
         dayjs(params.value).fromNow(),
     },
-    { field: "source", headerName: "Source", flex: 200, minWidth: 130 },
+    { field: "source", headerName: t("Source"), flex: 200, minWidth: 130 },
     {
       field: "destinationIP",
-      headerName: "Destination IP",
+      headerName: t("Destination IP"),
       flex: 200,
       minWidth: 130,
     },
-    { field: "type", headerName: "Type", flex: 160, minWidth: 100 },
+    { field: "type", headerName: t("Type"), flex: 160, minWidth: 100 },
   ];
 
   const connRows = useMemo(() => {

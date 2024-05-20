@@ -25,6 +25,7 @@
   "Test URL": "测试地址",
   "Test All": "测试全部",
 
+  "Paste": "粘贴",
   "Profiles": "订阅",
   "Profile URL": "订阅文件链接",
   "Import": "导入",
@@ -69,6 +70,19 @@
   "Rules": "规则",
   "Update All": "更新全部",
   "Update At": "更新于",
+
+  "Host": "主机",
+  "Downloaded": "下载量",
+  "Uploaded": "上传量",
+  "DL Speed": "下载速度",
+  "UL Speed": "上传速度",
+  "Chains": "链路",
+  "Rule": "规则",
+  "Process": "进程",
+  "Time": "连接时间",
+  "Source": "源地址",
+  "Destination IP": "目标地址",
+  "Close Connection": "关闭连接",
 
   "Type": "类型",
   "Name": "名称",

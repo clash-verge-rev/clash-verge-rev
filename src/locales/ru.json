@@ -25,6 +25,7 @@
   "Test URL": "Тестовый URL",
   "Test All": "Тест Все",
 
+  "Paste": "Вставить",
   "Profiles": "Профили",
   "Profile URL": "URL профиля",
   "Import": "Импорт",
@@ -69,6 +70,19 @@
   "Rules": "Правила",
   "Update All": "Обновить все",
   "Update At": "Обновлено в",
+
+  "Host": "Хост",
+  "Downloaded": "Скачано",
+  "Uploaded": "Загружено",
+  "DL Speed": "Скорость загрузки",
+  "UL Speed": "Скорость выгрузки",
+  "Chains": "Цепочки",
+  "Rule": "Правило",
+  "Process": "Процесс",
+  "Time": "Время подключения",
+  "Source": "Исходный адрес",
+  "Destination IP": "IP-адрес назначения",
+  "Close Connection": "Закрыть соединение",
 
   "Type": "Тип",
   "Name": "Название",
