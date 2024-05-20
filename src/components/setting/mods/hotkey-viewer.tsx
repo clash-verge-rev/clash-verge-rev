@@ -79,7 +79,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Hotkey Viewer")}
+      title={t("Hotkey Setting")}
       contentSx={{ width: 450, maxHeight: 330 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}

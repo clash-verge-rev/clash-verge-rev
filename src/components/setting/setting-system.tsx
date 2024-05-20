@@ -11,7 +11,6 @@ import { GuardState } from "./mods/guard-state";
 import { ServiceViewer } from "./mods/service-viewer";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import { TunViewer } from "./mods/tun-viewer";
-import getSystem from "@/utils/get-system";
 
 interface Props {
   onError?: (err: Error) => void;

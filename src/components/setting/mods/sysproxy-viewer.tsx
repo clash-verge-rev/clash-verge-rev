@@ -120,13 +120,15 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
           <ListItemText primary={t("Proxy Bypass")} sx={{ padding: "3px 0" }} />
+        </ListItem>
+        <ListItem sx={{ padding: "5px 2px" }}>
           <TextField
             disabled={!enabled}
             size="small"
             autoComplete="off"
             multiline
-            rows={3}
-            sx={{ width: 280 }}
+            rows={4}
+            sx={{ width: "100%" }}
             value={value.bypass}
             placeholder={sysproxy?.bypass || `-`}
             onChange={(e) =>
@@ -155,9 +157,17 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
         <FlexBox>
           <Typography className="label">{t("Bypass")}</Typography>
-          <Typography className="value" style={{ overflowWrap: "anywhere" }}>
-            {sysproxy?.bypass || "-"}
-          </Typography>
+        </FlexBox>
+        <FlexBox>
+          <TextField
+            disabled={true}
+            size="small"
+            autoComplete="off"
+            multiline
+            rows={4}
+            sx={{ width: "100%" }}
+            value={sysproxy?.bypass || "-"}
+          />
         </FlexBox>
       </Box>
     </BaseDialog>

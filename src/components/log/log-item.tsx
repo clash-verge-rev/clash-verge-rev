@@ -30,6 +30,7 @@ const Item = styled(Box)(({ theme: { palette, typography } }) => ({
   },
   "& .data": {
     color: palette.text.primary,
+    overflowWrap: "anywhere",
   },
 }));
 
