@@ -40,7 +40,7 @@ importers:
         version: 3.7.11(react@18.3.1)
       axios:
         specifier: ^1.6.8
-        version: 1.6.8
+        version: 1.7.0
       axios-tauri-api-adapter:
         specifier: ^0.2.1
         version: 0.2.1
@@ -1086,8 +1086,8 @@ packages:
     resolution: {integrity: sha512-XuC6rDl8yOUrctN1nUe5fngPhmq+zhkUvKZVRCUOrlSn5UdLYH0OjrLJl7h8DQdxcAzZw0Oiw+PQFNOBuL42hg==}
     engines: {node: '>=16', pnpm: '>=7'}
 
-  axios@1.6.8:
-    resolution: {integrity: sha512-v/ZHtJDU39mDpyBoFVkETcd/uNdxrWRrg3bKpOKzXFA6Bvqopts6ALSMU3y6ijYxbw2B+wPrIv46egTzJXCLGQ==}
+  axios@1.7.0:
+    resolution: {integrity: sha512-IiB0wQeKyPRdsFVhBgIo31FbzOyf2M6wYl7/NVutFwFBRMiAbjNiydJIHKeLmPugF4kJLfA1uWZ82Is2QzqqFA==}
 
   babel-plugin-macros@3.1.0:
     resolution: {integrity: sha512-Cg7TFGpIr01vOQNODXOOaGz2NpCU5gl8x1qJFbb6hbZxR7XrcE2vtbAsTAbJ7/xwJtUuJEw8K8Zr/AE0LHlesg==}
@@ -3133,14 +3133,14 @@ snapshots:
   axios-tauri-api-adapter@0.2.1:
     dependencies:
       '@tauri-apps/api': 1.5.6
-      axios: 1.6.8
+      axios: 1.7.0
       build-url-ts: 6.1.7
       http-status-codes: 2.3.0
       url-parse: 1.5.10
     transitivePeerDependencies:
       - debug
 
-  axios@1.6.8:
+  axios@1.7.0:
     dependencies:
       follow-redirects: 1.15.6
       form-data: 4.0.0
