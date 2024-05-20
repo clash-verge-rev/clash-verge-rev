@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { useLockFn } from "ahooks";
 import { useRecoilValue } from "recoil";
 import { useTranslation } from "react-i18next";
@@ -24,9 +24,11 @@ import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.
 import pac from "types-pac/pac.d.ts?raw";
 
 interface Props {
+  title?: string | ReactNode;
   mode: "profile" | "text";
   property: string;
   open: boolean;
+  readOnly?: boolean;
   language: "yaml" | "javascript" | "css";
   schema?: "clash" | "merge";
   onClose: () => void;
@@ -56,7 +58,17 @@ configureMonacoYaml(monaco, {
 monaco.languages.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
 
 export const EditorViewer = (props: Props) => {
-  const { mode, property, open, language, schema, onClose, onChange } = props;
+  const {
+    title,
+    mode,
+    property,
+    open,
+    readOnly,
+    language,
+    schema,
+    onClose,
+    onChange,
+  } = props;
   const { t } = useTranslation();
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -86,10 +98,13 @@ export const EditorViewer = (props: Props) => {
       instanceRef.current = editor.create(editorRef.current, {
         model: model,
         language: language,
-        tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进
+        tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进大小
         theme: themeMode === "light" ? "vs" : "vs-dark",
         minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
-        mouseWheelZoom: true, // Ctrl+滚轮调节缩放
+        mouseWheelZoom: true, // 按住Ctrl滚轮调节缩放比例
+        readOnly: readOnly, // 只读模式
+        readOnlyMessage: { value: t("ReadOnlyMessage") }, // 只读模式尝试编辑时的提示信息
+        renderValidationDecorations: "on", // 只读模式下显示校验信息
         quickSuggestions: {
           strings: true, // 字符串类型的建议
           comments: true, // 注释类型的建议
@@ -129,11 +144,9 @@ export const EditorViewer = (props: Props) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
-      <DialogTitle>{t("Edit File")}</DialogTitle>
+      <DialogTitle>{title ?? t("Edit File")}</DialogTitle>
 
-      <DialogContent
-        sx={{ width: "auto", height: "100vh", pb: 1, userSelect: "text" }}
-      >
+      <DialogContent sx={{ width: "auto", height: "100vh" }}>
         <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
       </DialogContent>
 

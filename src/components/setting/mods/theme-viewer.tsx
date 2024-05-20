@@ -124,6 +124,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
             {t("Edit")} CSS
           </Button>
           <EditorViewer
+            title={`${t("Edit")} CSS`}
             mode="text"
             property={theme.css_injection ?? ""}
             open={editorOpen}
