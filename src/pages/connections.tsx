@@ -125,10 +125,10 @@ const ConnectionsPage = () => {
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ mx: 1 }}>
+          <Box sx={{ mx: 1, fontWeight: 600 }}>
             {t("Download")}: {parseTraffic(download)}
           </Box>
-          <Box sx={{ mx: 1 }}>
+          <Box sx={{ mx: 1, fontWeight: 600 }}>
             {t("Upload")}: {parseTraffic(upload)}
           </Box>
           <IconButton
@@ -140,8 +140,7 @@ const ConnectionsPage = () => {
                   ? { ...o, layout: "table" }
                   : { ...o, layout: "list" },
               )
-            }
-          >
+            }>
             {isTableLayout ? (
               <TableChartRounded fontSize="inherit" />
             ) : (
@@ -153,8 +152,7 @@ const ConnectionsPage = () => {
             {t("Close All")}
           </Button>
         </Box>
-      }
-    >
+      }>
       <Box
         sx={{
           pt: 1,
@@ -164,8 +162,7 @@ const ConnectionsPage = () => {
           display: "flex",
           alignItems: "center",
           userSelect: "text",
-        }}
-      >
+        }}>
         {!isTableLayout && (
           <Select
             size="small"
@@ -177,8 +174,7 @@ const ConnectionsPage = () => {
               width: i18n.language === "en" ? 190 : 120,
               height: 33.375,
               '[role="button"]': { py: 0.65 },
-            }}
-          >
+            }}>
             {Object.keys(orderOpts).map((opt) => (
               <MenuItem key={opt} value={opt}>
                 <span style={{ fontSize: 14 }}>{t(opt)}</span>
@@ -200,8 +196,7 @@ const ConnectionsPage = () => {
           margin: "10px",
           borderRadius: "8px",
           bgcolor: isDark ? "#282a36" : "#ffffff",
-        }}
-      >
+        }}>
         {filterConn.length === 0 ? (
           <BaseEmpty text={t("No Connections")} />
         ) : isTableLayout ? (

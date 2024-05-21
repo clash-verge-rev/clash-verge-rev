@@ -5,7 +5,6 @@ import { useLockFn } from "ahooks";
 import {
   Box,
   Badge,
-  Chip,
   Typography,
   MenuItem,
   Menu,
@@ -19,6 +18,8 @@ import { EditorViewer } from "./editor-viewer";
 import { ProfileBox } from "./profile-box";
 import { LogViewer } from "./log-viewer";
 import { ConfirmViewer } from "./confirm-viewer";
+import JSIcon from "@/assets/image/js.svg?react";
+import YamlIcon from "@/assets/image/yaml.svg?react";
 
 interface Props {
   selected: boolean;
@@ -186,13 +187,11 @@ export const ProfileMore = (props: Props) => {
             {itemData.name}
           </Typography>
 
-          <Chip
-            label={type}
-            color="primary"
-            size="small"
-            variant="outlined"
-            sx={{ height: 20, textTransform: "capitalize" }}
-          />
+          {type === "script" ? (
+            <JSIcon width={25} height={25} fill="var(--primary-main)" />
+          ) : (
+            <YamlIcon width={25} height={25} fill="var(--primary-main)" />
+          )}
         </Box>
 
         <Box sx={boxStyle}>
