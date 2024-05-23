@@ -464,7 +464,11 @@ const ProfilePage = () => {
           {sortableProfileList.map((item) => (
             <ProfileItem
               id={item.profileItem.uid}
-              selected={profiles.current === item.profileItem.uid}
+              selected={
+                (activating === "" &&
+                  profiles.current === item.profileItem.uid) ||
+                (activating !== "" && item.profileItem.uid === activating)
+              }
               activating={
                 activating === item.profileItem.uid ||
                 (profiles.current === item.profileItem.uid && reactivating)
@@ -522,7 +526,8 @@ const ProfilePage = () => {
                   enableNum={chain.length || 0}
                   logInfo={chainLogs[item.profileItem.uid]}
                   reactivating={
-                    !!chain.includes(item.profileItem.uid) && reactivating
+                    !!chain.includes(item.profileItem.uid) &&
+                    (reactivating || activating !== "")
                   }
                   onEnable={() => onEnable(item.profileItem.uid)}
                   onDisable={() => onDisable(item.profileItem.uid)}

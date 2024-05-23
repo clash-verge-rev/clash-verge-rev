@@ -31,10 +31,12 @@ interface RenderProps {
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void;
   onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void;
 }
+
 interface ProxyColProps {
   item: IRenderItem;
   onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void;
 }
+
 const ProxyItemMiniCol = memo(function ProxyItemMiniCol(props: ProxyColProps) {
   const { item, onChangeProxy } = props;
   const { group, headState, proxyCol } = item;
