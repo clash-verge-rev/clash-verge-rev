@@ -37,7 +37,7 @@ importers:
         version: 7.0.15
       ahooks:
         specifier: ^3.7.11
-        version: 3.7.11(react@18.3.1)
+        version: 3.8.0(react@18.3.1)
       axios:
         specifier: ^1.6.8
         version: 1.7.2
@@ -1093,8 +1093,8 @@ packages:
     resolution: {integrity: sha512-H0TSyFNDMomMNJQBn8wFV5YC/2eJ+VXECwOadZJT554xP6cODZHPX3H9QMQECxvrgiSOP1pHjy1sMWQVYJOUOA==}
     engines: {node: '>= 14'}
 
-  ahooks@3.7.11:
-    resolution: {integrity: sha512-BfSq7HJ9wk/7a2vX7WbLdwzHyQHmbNe21ipX1PfIzssXIzQfAl79WVJ9GjZaqNl4PFPsJusj/Xjg2OF+gIgGaQ==}
+  ahooks@3.8.0:
+    resolution: {integrity: sha512-M01m+mxLRNNeJ/PCT3Fom26UyreTj6oMqJBetUrJnK4VNI5j6eMA543Xxo53OBXn6XibA2FXKcCCgrT6YCTtKQ==}
     engines: {node: '>=8.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
@@ -3222,9 +3222,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ahooks@3.7.11(react@18.3.1):
+  ahooks@3.8.0(react@18.3.1):
     dependencies:
-      '@babel/runtime': 7.24.4
+      '@babel/runtime': 7.24.5
       dayjs: 1.11.11
       intersection-observer: 0.12.2
       js-cookie: 2.2.1
