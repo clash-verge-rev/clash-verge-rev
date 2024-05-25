@@ -73,6 +73,7 @@ const TestPage = () => {
   };
 
   const handleDragEnd = async (event: SortableEvent) => {
+    if (event.oldIndex === event.newIndex) return;
     let newList = reorder(testList, event.oldIndex!, event.newIndex!);
     await mutateVerge({ ...verge, test_list: newList }, false);
     await patchVerge({ test_list: newList });
