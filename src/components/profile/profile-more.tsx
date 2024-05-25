@@ -101,9 +101,7 @@ export const ProfileMore = (props: Props) => {
       label: "Delete",
       handler: () => {
         setAnchorEl(null);
-        setToggling(true);
         setConfirmOpen(true);
-        setToggling(false);
       },
     },
   ];

@@ -450,10 +450,7 @@ const ProfilePage = () => {
           overflowY: "auto",
         }}>
         <ReactSortable
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-          }}
+          style={{ display: "flex", flexWrap: "wrap" }}
           animation={150}
           scrollSensitivity={60}
           scrollSpeed={10}
@@ -507,10 +504,7 @@ const ProfilePage = () => {
         {sortableChainList.length > 0 && (
           <Box>
             <ReactSortable
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-              }}
+              style={{ display: "flex", flexWrap: "wrap" }}
               animation={150}
               scrollSensitivity={60}
               scrollSpeed={10}

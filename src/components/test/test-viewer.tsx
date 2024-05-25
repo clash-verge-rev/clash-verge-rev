@@ -39,7 +39,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       }
       return x;
     });
-    await patchVerge({ ...verge, test_list: newList });
+    await patchVerge({ test_list: newList });
   };
 
   useImperativeHandle(ref, () => ({
@@ -87,7 +87,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         Notice.error(err.message || err.toString());
         setLoading(false);
       }
-    })
+    }),
   );
 
   const handleClose = () => {
@@ -114,8 +114,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       onClose={handleClose}
       onCancel={handleClose}
       onOk={handleOk}
-      loading={loading}
-    >
+      loading={loading}>
       <Controller
         name="name"
         control={control}
