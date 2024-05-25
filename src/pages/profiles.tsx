@@ -211,8 +211,8 @@ const ProfilePage = () => {
   const setChainList = async (newList: ISortableItem[]) => {
     setSortableChainList(newList);
     const newChain = newList
-      .filter((item) => chain.includes(item.profileItem.uid))
-      .map((item) => item.profileItem.uid);
+      .filter((item) => chain.includes(item.id))
+      .map((item) => item.id);
     let needUpdate = false;
     for (let index = 0; index < chain.length; index++) {
       const chainId = chain[index];
@@ -227,7 +227,7 @@ const ProfilePage = () => {
         setReactivating(true);
         await patchProfiles({ chain: newChain });
         mutateLogs();
-        Notice.success("Refresh clash config", 1000);
+        Notice.success(t("Profile Reactivated"), 1000);
       } catch (err: any) {
         Notice.error(err.message || err.toString());
       } finally {
@@ -456,18 +456,17 @@ const ProfilePage = () => {
         >
           {sortableProfileList.map((item) => (
             <ProfileItem
-              id={item.profileItem.uid}
+              id={item.id}
               selected={
-                (activating === "" &&
-                  profiles.current === item.profileItem.uid) ||
-                (activating !== "" && item.profileItem.uid === activating)
+                (activating === "" && profiles.current === item.id) ||
+                activating === item.id
               }
               activating={
-                activating === item.profileItem.uid ||
-                (profiles.current === item.profileItem.uid && reactivating)
+                activating === item.id ||
+                (profiles.current === item.id && reactivating)
               }
               itemData={item.profileItem}
-              onSelect={(f) => onSelect(item.profileItem.uid, f)}
+              onSelect={(f) => onSelect(item.id, f)}
               onEdit={() => viewerRef.current?.edit(item.profileItem)}
               onReactivate={onEnhance}
             />
@@ -489,7 +488,11 @@ const ProfilePage = () => {
           <Divider
             variant="middle"
             flexItem
-            sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
+            sx={{
+              width: `calc(100% - 32px)`,
+              borderColor: dividercolor,
+              my: 1,
+            }}
           ></Divider>
         )}
 
@@ -511,16 +514,16 @@ const ProfilePage = () => {
             >
               {sortableChainList.map((item) => (
                 <ProfileMore
-                  selected={!!chain.includes(item.profileItem.uid)}
+                  selected={!!chain.includes(item.id)}
                   reactivating={
-                    !!chain.includes(item.profileItem.uid) &&
+                    !!chain.includes(item.id) &&
                     (reactivating || activating !== "")
                   }
                   itemData={item.profileItem}
-                  logInfo={chainLogs[item.profileItem.uid]}
-                  onEnable={() => onEnable(item.profileItem.uid)}
-                  onDisable={() => onDisable(item.profileItem.uid)}
-                  onDelete={() => onDelete(item.profileItem.uid)}
+                  logInfo={chainLogs[item.id]}
+                  onEnable={() => onEnable(item.id)}
+                  onDisable={() => onDisable(item.id)}
+                  onDelete={() => onDelete(item.id)}
                   onEdit={() => viewerRef.current?.edit(item.profileItem)}
                   onActivatedSave={onEnhance}
                 />
