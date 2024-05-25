@@ -113,18 +113,12 @@ const ProfilePage = () => {
     const regularItems = items
       .filter((i) => i && type1.includes(i.type!))
       .map((item) => {
-        return {
-          id: item.uid,
-          profileItem: item,
-        } as ISortableItem;
+        return { id: item.uid, profileItem: item };
       });
     const restItems = items
       .filter((i) => i && type2.includes(i.type!))
       .map((item) => {
-        return {
-          id: item.uid,
-          profileItem: item,
-        } as ISortableItem;
+        return { id: item.uid, profileItem: item };
       });
     const restMap = Object.fromEntries(restItems.map((i) => [i.id, i]));
     const enhanceItems = chain

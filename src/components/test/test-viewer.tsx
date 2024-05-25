@@ -39,7 +39,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       }
       return x;
     });
-    await patchVerge({ ...verge, test_list: newList });
+    await patchVerge({ test_list: newList });
   };
 
   useImperativeHandle(ref, () => ({
@@ -76,7 +76,6 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         } else {
           if (!form.uid) throw new Error("UID not found");
           uid = form.uid;
-
           await patchTestList(uid, form);
           props.onChange(uid, form);
         }
