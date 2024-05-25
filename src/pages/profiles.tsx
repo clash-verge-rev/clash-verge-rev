@@ -103,13 +103,11 @@ const ProfilePage = () => {
         };
         return item;
       });
-    const restMap = Object.fromEntries(
-      restItems.map((i) => [i.profileItem.uid, i]),
-    );
+    const restMap = Object.fromEntries(restItems.map((i) => [i.id, i]));
     const enhanceItems = chainIds
       .map((i) => restMap[i]!)
       .filter(Boolean)
-      .concat(restItems.filter((i) => !chainIds.includes(i.profileItem.uid)));
+      .concat(restItems.filter((i) => !chainIds.includes(i.id)));
     setSortableProfileList(regularItems);
     setSortableChainList(enhanceItems);
     return { regularItems };
@@ -214,8 +212,8 @@ const ProfilePage = () => {
   const setList = async (newList: ISortableItem[]) => {
     setSortableChainList(newList);
     const newChain = newList
-      .filter((item) => chain.includes(item.profileItem.uid))
-      .map((item) => item.profileItem.uid);
+      .filter((item) => chain.includes(item.id))
+      .map((item) => item.id);
     let needUpdate = false;
     for (let index = 0; index < chain.length; index++) {
       const chainId = chain[index];
@@ -318,15 +316,11 @@ const ProfilePage = () => {
       setLoadingCache((cache) => {
         // 获取没有正在更新的订阅
         const items = regularItems.filter(
-          (e) => e.profileItem.type === "remote" && !cache[e.profileItem.uid],
+          (e) => e.profileItem.type === "remote" && !cache[e.id],
         );
-        const change = Object.fromEntries(
-          items.map((e) => [e.profileItem.uid, true]),
-        );
+        const change = Object.fromEntries(items.map((e) => [e.id, true]));
 
-        Promise.allSettled(items.map((e) => updateOne(e.profileItem.uid))).then(
-          resolve,
-        );
+        Promise.allSettled(items.map((e) => updateOne(e.id))).then(resolve);
         return { ...cache, ...change };
       });
     });
@@ -460,18 +454,17 @@ const ProfilePage = () => {
           onEnd={handleProfileDragEnd}>
           {sortableProfileList.map((item) => (
             <ProfileItem
-              id={item.profileItem.uid}
+              id={item.id}
               selected={
-                (activating === "" &&
-                  profiles.current === item.profileItem.uid) ||
-                (activating !== "" && item.profileItem.uid === activating)
+                (activating === "" && profiles.current === item.id) ||
+                activating === item.id
               }
               activating={
-                activating === item.profileItem.uid ||
-                (profiles.current === item.profileItem.uid && reactivating)
+                activating === item.id ||
+                (profiles.current === item.id && reactivating)
               }
               itemData={item.profileItem}
-              onSelect={(f) => onSelect(item.profileItem.uid, f)}
+              onSelect={(f) => onSelect(item.id, f)}
               onEdit={() => viewerRef.current?.edit(item.profileItem)}
               onReactivate={onEnhance}
             />
@@ -515,17 +508,17 @@ const ProfilePage = () => {
               onEnd={handleChainDragEnd}>
               {sortableChainList.map((item) => (
                 <ProfileMore
-                  selected={!!chain.includes(item.profileItem.uid)}
+                  selected={!!chain.includes(item.id)}
                   itemData={item.profileItem}
                   enableNum={chain.length || 0}
-                  logInfo={chainLogs[item.profileItem.uid]}
+                  logInfo={chainLogs[item.id]}
                   reactivating={
-                    !!chain.includes(item.profileItem.uid) &&
+                    !!chain.includes(item.id) &&
                     (reactivating || activating !== "")
                   }
-                  onEnable={() => onEnable(item.profileItem.uid)}
-                  onDisable={() => onDisable(item.profileItem.uid)}
-                  onDelete={() => onDelete(item.profileItem.uid)}
+                  onEnable={() => onEnable(item.id)}
+                  onDisable={() => onDisable(item.id)}
+                  onDelete={() => onDelete(item.id)}
                   onEdit={() => viewerRef.current?.edit(item.profileItem)}
                   onActivatedSave={onEnhance}
                 />

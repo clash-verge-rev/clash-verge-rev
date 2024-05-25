@@ -121,11 +121,11 @@ const TestPage = () => {
           animation={150}
           dragClass="sortable-drag"
           list={sortableTestList}
-          setList={(newList: ISortableItem[]) => setSortableTestList(newList)}
+          setList={setSortableTestList}
           onEnd={handleDragEnd}>
           {sortableTestList.map((item) => (
             <TestItem
-              id={item.itemData.uid}
+              id={item.id}
               itemData={item.itemData}
               onEdit={() => viewerRef.current?.edit(item.itemData)}
               onDelete={onDeleteTestListItem}
