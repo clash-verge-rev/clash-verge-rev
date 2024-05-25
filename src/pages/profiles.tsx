@@ -475,7 +475,7 @@ const ProfilePage = () => {
               itemData={item.profileItem}
               onSelect={(f) => onSelect(item.profileItem.uid, f)}
               onEdit={() => viewerRef.current?.edit(item.profileItem)}
-              // onReactivate={onEnhance}
+              onReactivate={onEnhance}
             />
           ))}
           {[...new Array(20)].map((_) => (

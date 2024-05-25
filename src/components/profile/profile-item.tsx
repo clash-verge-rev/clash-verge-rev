@@ -14,7 +14,7 @@ import {
   Menu,
   CircularProgress,
 } from "@mui/material";
-import { RefreshRounded, DragIndicator } from "@mui/icons-material";
+import { RefreshRounded } from "@mui/icons-material";
 import { atomLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
@@ -35,10 +35,12 @@ interface Props {
   itemData: IProfileItem;
   onSelect: (force: boolean) => void;
   onEdit: () => void;
+  onReactivate: () => void;
 }
 
 export const ProfileItem = (props: Props) => {
-  const { selected, activating, itemData, onSelect, onEdit } = props;
+  const { selected, activating, itemData, onSelect, onEdit, onReactivate } =
+    props;
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -372,6 +374,11 @@ export const ProfileItem = (props: Props) => {
         language="yaml"
         schema="clash"
         onClose={() => setFileOpen(false)}
+        onChange={() => {
+          if (selected) {
+            onReactivate();
+          }
+        }}
       />
       <ConfirmViewer
         title="Confirm deletion"
