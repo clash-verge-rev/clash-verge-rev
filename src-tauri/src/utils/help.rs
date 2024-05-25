@@ -3,10 +3,7 @@ use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf, str::FromStr};
-use tauri::{
-    api::shell::{open, Program},
-    Manager,
-};
+use tauri::{api::shell::open, Manager};
 
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
@@ -100,16 +97,14 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
     let code = "Visual Studio Code";
     #[cfg(not(target_os = "macos"))]
     let code = "code";
-
-    let _ = match Program::from_str(code) {
-        Ok(code) => open(&app.shell_scope(), path.to_string_lossy(), Some(code)),
+    let _ = match open::with(&path.as_os_str(), code) {
+        Ok(()) => Ok(()),
         Err(err) => {
-            log::error!(target: "app", "Can't find VScode `{err}`");
+            log::error!(target: "app", "{}", err);
             // default open
             open(&app.shell_scope(), path.to_string_lossy(), None)
         }
     };
-
     Ok(())
 }
 
