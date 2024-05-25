@@ -107,7 +107,7 @@ const ProfilePage = () => {
   const configRef = useRef<DialogRef>(null);
 
   // distinguish type
-  const { regularItems, enhanceItems } = useMemo(() => {
+  const { regularItems } = useMemo(() => {
     const items = profiles.items || [];
     const chain = profiles.chain || [];
 
@@ -138,7 +138,7 @@ const ProfilePage = () => {
 
     setSortableProfileList(regularItems);
     setSortableChainList(enhanceItems);
-    return { regularItems, enhanceItems };
+    return { regularItems };
   }, [profiles]);
 
   const onImport = async () => {
@@ -491,7 +491,7 @@ const ProfilePage = () => {
           ))}
         </ReactSortable>
 
-        {enhanceItems.length > 0 && (
+        {sortableChainList.length > 0 && (
           <Divider
             variant="middle"
             flexItem
