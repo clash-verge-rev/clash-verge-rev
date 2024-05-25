@@ -13,6 +13,7 @@ import { atomThemeMode } from "@/services/states";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice } from "@/components/base";
 import { nanoid } from "nanoid";
+import getSystem from "@/utils/get-system";
 
 import * as monaco from "monaco-editor";
 import { editor } from "monaco-editor/esm/vs/editor/editor.api";
@@ -113,8 +114,11 @@ export const EditorViewer = (props: Props) => {
         padding: {
           top: 33, // 顶部padding防止遮挡snippets
         },
-        fontFamily:
-          "Fira Code, Roboto Mono, Source Code Pro, Menlo, Monaco, Consolas, Courier New, monospace",
+        fontFamily: `Fira Code, Roboto Mono, Roboto, Source Code Pro, Menlo, Monaco, Consolas, Courier New, monospace, "Apple Color Emoji"${
+          getSystem() === "windows" ? ", twemoji mozilla" : ""
+        }`,
+        fontLigatures: true, // 连字符
+        smoothScrolling: true, // 平滑滚动
       });
     });
 
