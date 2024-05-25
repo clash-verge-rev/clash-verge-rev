@@ -12,7 +12,6 @@ use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::api::notification;
 use tauri::{App, AppHandle, Manager};
-use window_shadows::set_shadow;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
 
@@ -198,7 +197,10 @@ pub fn create_window(app_handle: &AppHandle) {
             }
 
             #[cfg(not(target_os = "linux"))]
-            trace_err!(set_shadow(&win, true), "set win shadow");
+            {
+                use window_shadows::set_shadow;
+                trace_err!(set_shadow(&win, true), "set win shadow");
+            }
             if is_maximized {
                 trace_err!(win.maximize(), "set win maximize");
             }

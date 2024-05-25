@@ -18,9 +18,6 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.1.0",
-    "@dnd-kit/sortable": "^8.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@juggle/resize-observer": "^3.4.0",
@@ -30,6 +27,7 @@
     "@mui/x-data-grid": "^6.19.11",
     "@tauri-apps/api": "^1.5.4",
     "@types/json-schema": "^7.0.15",
+    "@types/sortablejs": "^1.15.8",
     "ahooks": "^3.7.11",
     "axios": "^1.6.8",
     "axios-tauri-api-adapter": "^0.2.1",
@@ -39,7 +37,6 @@
     "meta-json-schema": "1.18.5-alpha",
     "monaco-editor": "^0.48.0",
     "monaco-yaml": "^5.1.1",
-    "types-pac": "^1.0.2",
     "nanoid": "^5.0.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -48,11 +45,14 @@
     "react-i18next": "^13.5.0",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.23.0",
+    "react-sortablejs": "^6.1.4",
     "react-transition-group": "^4.4.5",
     "react-virtuoso": "^4.7.10",
     "recoil": "^0.7.7",
+    "sortablejs": "^1.15.2",
     "swr": "^1.3.0",
-    "tar": "^6.2.1"
+    "tar": "^6.2.1",
+    "types-pac": "^1.0.2"
   },
   "devDependencies": {
     "@actions/github": "^5.1.1",

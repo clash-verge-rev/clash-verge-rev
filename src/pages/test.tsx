@@ -1,19 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVerge } from "@/hooks/use-verge";
-import { Box, Button, Grid } from "@mui/material";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
+import { Box, Button } from "@mui/material";
 
 import { useTranslation } from "react-i18next";
 import { BasePage } from "@/components/base";
@@ -21,15 +8,16 @@ import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
 import { TestItem } from "@/components/test/test-item";
 import { emit } from "@tauri-apps/api/event";
 import { nanoid } from "nanoid";
+import { SortableEvent } from "sortablejs";
+import { ReactSortable } from "react-sortablejs";
+
+interface ISortableItem {
+  id: string;
+  itemData: IVergeTestItem;
+}
 
 const TestPage = () => {
   const { t } = useTranslation();
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
   const { verge, mutateVerge, patchVerge } = useVerge();
 
   // test list
@@ -53,6 +41,14 @@ const TestPage = () => {
       icon: `<svg enable-background="new 0 0 48 48" height="48" viewBox="0 0 48 48" width="48" xmlns="http://www.w3.org/2000/svg"><path d="m43.611 20.083h-1.611v-.083h-18v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657c-3.572-3.329-8.35-5.382-13.618-5.382-11.045 0-20 8.955-20 20s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" fill="#ffc107"/><path d="m6.306 14.691 6.571 4.819c1.778-4.402 6.084-7.51 11.123-7.51 3.059 0 5.842 1.154 7.961 3.039l5.657-5.657c-3.572-3.329-8.35-5.382-13.618-5.382-7.682 0-14.344 4.337-17.694 10.691z" fill="#ff3d00"/><path d="m24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238c-2.008 1.521-4.504 2.43-7.219 2.43-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025c3.31 6.477 10.032 10.921 17.805 10.921z" fill="#4caf50"/><path d="m43.611 20.083h-1.611v-.083h-18v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238c-.438.398 6.591-4.807 6.591-14.807 0-1.341-.138-2.65-.389-3.917z" fill="#1976d2"/></svg>`,
     },
   ];
+  const converTestItems = testList.map((x) => {
+    return {
+      id: x.uid,
+      itemData: x,
+    };
+  });
+  const [sortableTestList, setSortableTestList] =
+    useState<ISortableItem[]>(converTestItems);
 
   const onTestListItemChange = (
     uid: string,
@@ -84,26 +80,25 @@ const TestPage = () => {
     return result;
   };
 
-  const onDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over) {
-      if (active.id !== over.id) {
-        let old_index = testList.findIndex((x) => x.uid === active.id);
-        let new_index = testList.findIndex((x) => x.uid === over.id);
-        if (old_index < 0 || new_index < 0) {
-          return;
-        }
-        let newList = reorder(testList, old_index, new_index);
-        await mutateVerge({ ...verge, test_list: newList }, false);
-        await patchVerge({ test_list: newList });
-      }
-    }
+  const handleDragEnd = async (event: SortableEvent) => {
+    let newList = reorder(testList, event.oldIndex!, event.newIndex!);
+    await mutateVerge({ ...verge, test_list: newList }, false);
+    await patchVerge({ test_list: newList });
   };
 
   useEffect(() => {
     if (!verge) return;
     if (!verge?.test_list) {
       patchVerge({ test_list: testList });
+    } else {
+      const converTestItems: ISortableItem[] = verge.test_list.map((x) => {
+        return {
+          id: x.uid,
+          itemData: x,
+          onEdit: () => viewerRef.current?.edit(x),
+        };
+      });
+      setSortableTestList(converTestItems);
     }
   }, [verge]);
 
@@ -139,32 +134,37 @@ const TestPage = () => {
           px: "10px",
         }}
       >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onDragEnd}
+        <ReactSortable
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+          }}
+          animation={150}
+          dragClass="sortable-drag"
+          list={sortableTestList}
+          setList={(newList: ISortableItem[]) => setSortableTestList(newList)}
+          onEnd={handleDragEnd}
         >
-          <Box sx={{ mb: 4.5 }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
-              <SortableContext
-                items={testList.map((x) => {
-                  return x.uid;
-                })}
-              >
-                {testList.map((item) => (
-                  <Grid item xs={6} sm={4} md={3} lg={2} key={item.uid}>
-                    <TestItem
-                      id={item.uid}
-                      itemData={item}
-                      onEdit={() => viewerRef.current?.edit(item)}
-                      onDelete={onDeleteTestListItem}
-                    />
-                  </Grid>
-                ))}
-              </SortableContext>
-            </Grid>
-          </Box>
-        </DndContext>
+          {sortableTestList.map((item) => (
+            <TestItem
+              id={item.itemData.uid}
+              itemData={item.itemData}
+              onEdit={() => viewerRef.current?.edit(item.itemData)}
+              onDelete={onDeleteTestListItem}
+            />
+          ))}
+          {[...new Array(20)].map((_) => (
+            <i
+              style={{
+                display: "flex",
+                flexGrow: "1",
+                margin: "0 5px",
+                width: "180px",
+                height: "0",
+              }}
+            ></i>
+          ))}
+        </ReactSortable>
       </Box>
       <TestViewer ref={viewerRef} onChange={onTestListItemChange} />
     </BasePage>

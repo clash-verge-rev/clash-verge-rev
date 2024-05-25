@@ -10,6 +10,7 @@ import {
   MenuItem,
   Menu,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { FeaturedPlayListRounded } from "@mui/icons-material";
 import { viewProfile } from "@/services/cmds";
@@ -21,30 +22,30 @@ import { ConfirmViewer } from "./confirm-viewer";
 
 interface Props {
   selected: boolean;
+  reactivating: boolean;
   itemData: IProfileItem;
   enableNum: number;
   logInfo?: [string, string][];
-  onEnable: () => void;
-  onDisable: () => void;
-  onMoveTop: () => void;
-  onMoveEnd: () => void;
-  onDelete: () => void;
+  onEnable: () => Promise<void>;
+  onDisable: () => Promise<void>;
+  onDelete: () => Promise<void>;
   onEdit: () => void;
+  onActivatedSave: () => void;
 }
 
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
   const {
     selected,
+    reactivating,
     itemData,
     enableNum,
     logInfo = [],
     onEnable,
     onDisable,
-    onMoveTop,
-    onMoveEnd,
     onDelete,
     onEdit,
+    onActivatedSave,
   } = props;
 
   const { uid, type } = itemData;
@@ -54,6 +55,7 @@ export const ProfileMore = (props: Props) => {
   const [fileOpen, setFileOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   const onEditInfo = () => {
     setAnchorEl(null);
@@ -80,15 +82,19 @@ export const ProfileMore = (props: Props) => {
   };
 
   const hasError = !!logInfo.find((e) => e[0] === "exception");
-  const showMove = enableNum > 1 && !hasError;
 
   const enableMenu = [
-    { label: "Disable", handler: fnWrapper(onDisable) },
+    {
+      label: "Disable",
+      handler: fnWrapper(async () => {
+        setToggling(true);
+        await onDisable();
+        setToggling(false);
+      }),
+    },
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
-    { label: "To Top", show: showMove, handler: fnWrapper(onMoveTop) },
-    { label: "To End", show: showMove, handler: fnWrapper(onMoveEnd) },
     {
       label: "Delete",
       handler: () => {
@@ -99,7 +105,14 @@ export const ProfileMore = (props: Props) => {
   ];
 
   const disableMenu = [
-    { label: "Enable", handler: fnWrapper(onEnable) },
+    {
+      label: "Enable",
+      handler: fnWrapper(async () => {
+        setToggling(true);
+        await onEnable();
+        setToggling(false);
+      }),
+    },
     { label: "Edit Info", handler: onEditInfo },
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
@@ -121,7 +134,15 @@ export const ProfileMore = (props: Props) => {
   };
 
   return (
-    <>
+    <Box
+      className={selected ? "enable-enhanced-item" : ""}
+      sx={{
+        display: "flex",
+        flexGrow: "1",
+        margin: "5px",
+        width: "260px",
+      }}
+    >
       <ProfileBox
         aria-selected={selected}
         onDoubleClick={onEditFile}
@@ -133,6 +154,24 @@ export const ProfileMore = (props: Props) => {
           event.preventDefault();
         }}
       >
+        {(reactivating || toggling) && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              backdropFilter: "blur(2px)",
+              borderRadius: "8px",
+            }}
+          >
+            <CircularProgress size={20} />
+          </Box>
+        )}
         <Box
           display="flex"
           justifyContent="space-between"
@@ -239,15 +278,22 @@ export const ProfileMore = (props: Props) => {
         language={type === "merge" ? "yaml" : "javascript"}
         schema={type === "merge" ? "merge" : undefined}
         onClose={() => setFileOpen(false)}
+        onChange={() => {
+          if (selected) {
+            onActivatedSave();
+          }
+        }}
       />
       <ConfirmViewer
         title="Confirm deletion"
         message="This operation is not reversible"
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
-          onDelete();
+        onConfirm={async () => {
           setConfirmOpen(false);
+          setToggling(true);
+          await onDelete();
+          setToggling(false);
         }}
       />
       {selected && (
@@ -257,7 +303,7 @@ export const ProfileMore = (props: Props) => {
           onClose={() => setLogOpen(false)}
         />
       )}
-    </>
+    </Box>
   );
 };
 

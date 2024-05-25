@@ -7,15 +7,6 @@ settings:
 importers:
   .:
     dependencies:
-      "@dnd-kit/core":
-        specifier: ^6.1.0
-        version: 6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      "@dnd-kit/sortable":
-        specifier: ^8.0.0
-        version: 8.0.0(@dnd-kit/core@6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      "@dnd-kit/utilities":
-        specifier: ^3.2.2
-        version: 3.2.2(react@18.3.1)
       "@emotion/react":
         specifier: ^11.11.4
         version: 11.11.4(@types/react@18.3.1)(react@18.3.1)
@@ -43,6 +34,9 @@ importers:
       "@types/json-schema":
         specifier: ^7.0.15
         version: 7.0.15
+      "@types/sortablejs":
+        specifier: ^1.15.8
+        version: 1.15.8
       ahooks:
         specifier: ^3.7.11
         version: 3.7.11(react@18.3.1)
@@ -94,6 +88,9 @@ importers:
       react-router-dom:
         specifier: ^6.23.0
         version: 6.23.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-sortablejs:
+        specifier: ^6.1.4
+        version: 6.1.4(@types/sortablejs@1.15.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sortablejs@1.15.2)
       react-transition-group:
         specifier: ^4.4.5
         version: 4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -103,6 +100,9 @@ importers:
       recoil:
         specifier: ^0.7.7
         version: 0.7.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      sortablejs:
+        specifier: ^1.15.2
+        version: 1.15.2
       swr:
         specifier: ^1.3.0
         version: 1.3.0(react@18.3.1)
@@ -153,8 +153,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1
       husky:
-        specifier: ^7.0.4
-        version: 7.0.4
+        specifier: ^9.0.11
+        version: 9.0.11
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
@@ -381,40 +381,6 @@ packages:
         integrity: sha512-6mQNsaLeXTw0nxYUYu+NSa4Hx4BlF1x1x8/PMFbiR+GBSr+2DkECc69b8hgy2frEodNcvPffeH8YfWd3LI6jhQ==,
       }
     engines: { node: ">=6.9.0" }
-
-  "@dnd-kit/accessibility@3.1.0":
-    resolution:
-      {
-        integrity: sha512-ea7IkhKvlJUv9iSHJOnxinBcoOI3ppGnnL+VDJ75O45Nss6HtZd8IdN8touXPDtASfeI2T2LImb8VOZcL47wjQ==,
-      }
-    peerDependencies:
-      react: ">=16.8.0"
-
-  "@dnd-kit/core@6.1.0":
-    resolution:
-      {
-        integrity: sha512-J3cQBClB4TVxwGo3KEjssGEXNJqGVWx17aRTZ1ob0FliR5IjYgTxl5YJbKTzA6IzrtelotH19v6y7uoIRUZPSg==,
-      }
-    peerDependencies:
-      react: ">=16.8.0"
-      react-dom: ">=16.8.0"
-
-  "@dnd-kit/sortable@8.0.0":
-    resolution:
-      {
-        integrity: sha512-U3jk5ebVXe1Lr7c2wU7SBZjcWdQP+j7peHJfCspnA81enlu88Mgd7CC8Q+pub9ubP7eKVETzJW+IBAhsqbSu/g==,
-      }
-    peerDependencies:
-      "@dnd-kit/core": ^6.1.0
-      react: ">=16.8.0"
-
-  "@dnd-kit/utilities@3.2.2":
-    resolution:
-      {
-        integrity: sha512-+MKAJEOfaBe5SmV6t34p80MMKhjvUz0vRrvVJbPT0WElzaOJ/1xs+D+KDv+tD/NE5ujfrChEcshd4fLn0wpiqg==,
-      }
-    peerDependencies:
-      react: ">=16.8.0"
 
   "@emotion/babel-plugin@11.11.0":
     resolution:
@@ -1529,6 +1495,12 @@ packages:
         integrity: sha512-V0kuGBX3+prX+DQ/7r2qsv1NsdfnCLnTgnRJ1pYnxykBhGMz+qj+box5lq7XsO5mtZsBqpjwwTu/7wszPfMBcw==,
       }
 
+  "@types/sortablejs@1.15.8":
+    resolution:
+      {
+        integrity: sha512-b79830lW+RZfwaztgs1aVPgbasJ8e7AXtZYHTELNXZPsERt4ymJdjV4OccDbHQAvHrCcFpbF78jkm0R6h/pZVg==,
+      }
+
   "@types/unist@2.0.10":
     resolution:
       {
@@ -1735,6 +1707,12 @@ packages:
         integrity: sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==,
       }
     engines: { node: ">=10" }
+
+  classnames@2.3.1:
+    resolution:
+      {
+        integrity: sha512-OlQdbZ7gLfGarSqxesMesDa5uz7KFbID8Kpq/SxIoNGDqY8lSYs0D+hhtBXhcdB3rcbXArFr7vlHheLk1voeNA==,
+      }
 
   clsx@2.1.1:
     resolution:
@@ -2153,12 +2131,12 @@ packages:
       }
     engines: { node: ">=8.12.0" }
 
-  husky@7.0.4:
+  husky@9.0.11:
     resolution:
       {
-        integrity: sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==,
+        integrity: sha512-AB6lFlbwwyIqMdHYhwPe+kjOC3Oc5P3nThEoW/AaO2BX3vJDjWPFxYLxokUZOo6RNX20He3AaT8sESs9NJcmEw==,
       }
-    engines: { node: ">=12" }
+    engines: { node: ">=18" }
     hasBin: true
 
   i18next@23.11.3:
@@ -3014,6 +2992,17 @@ packages:
     peerDependencies:
       react: ">=16.8"
 
+  react-sortablejs@6.1.4:
+    resolution:
+      {
+        integrity: sha512-fc7cBosfhnbh53Mbm6a45W+F735jwZ1UFIYSrIqcO/gRIFoDyZeMtgKlpV4DdyQfbCzdh5LoALLTDRxhMpTyXQ==,
+      }
+    peerDependencies:
+      "@types/sortablejs": "1"
+      react: ">=16.9.0"
+      react-dom: ">=16.9.0"
+      sortablejs: "1"
+
   react-transition-group@4.4.5:
     resolution:
       {
@@ -3174,6 +3163,12 @@ packages:
         integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==,
       }
 
+  sortablejs@1.15.2:
+    resolution:
+      {
+        integrity: sha512-FJF5jgdfvoKn1MAKSdGs33bIqLi3LmsgVTliuX6iITj834F+JRQZN90Z93yql8h0K2t0RwDPBmxwlbZfDcxNZA==,
+      }
+
   source-map-js@1.2.0:
     resolution:
       {
@@ -3253,6 +3248,12 @@ packages:
         integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==,
       }
     engines: { node: ">=10" }
+
+  tiny-invariant@1.2.0:
+    resolution:
+      {
+        integrity: sha512-1Uhn/aqw5C6RI4KejVeTg6mIS7IqxnLJ8Mv2tV5rTc0qWobay7pDUz6Wi392Cnc8ak1H0F2cjoRzb2/AW4+Fvg==,
+      }
 
   to-fast-properties@2.0.0:
     resolution:
@@ -3720,31 +3721,6 @@ snapshots:
       "@babel/helper-string-parser": 7.24.1
       "@babel/helper-validator-identifier": 7.24.5
       to-fast-properties: 2.0.0
-
-  "@dnd-kit/accessibility@3.1.0(react@18.3.1)":
-    dependencies:
-      react: 18.3.1
-      tslib: 2.6.2
-
-  "@dnd-kit/core@6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
-    dependencies:
-      "@dnd-kit/accessibility": 3.1.0(react@18.3.1)
-      "@dnd-kit/utilities": 3.2.2(react@18.3.1)
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      tslib: 2.6.2
-
-  "@dnd-kit/sortable@8.0.0(@dnd-kit/core@6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)":
-    dependencies:
-      "@dnd-kit/core": 6.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      "@dnd-kit/utilities": 3.2.2(react@18.3.1)
-      react: 18.3.1
-      tslib: 2.6.2
-
-  "@dnd-kit/utilities@3.2.2(react@18.3.1)":
-    dependencies:
-      react: 18.3.1
-      tslib: 2.6.2
 
   "@emotion/babel-plugin@11.11.0":
     dependencies:
@@ -4404,6 +4380,8 @@ snapshots:
       "@types/prop-types": 15.7.12
       csstype: 3.1.3
 
+  "@types/sortablejs@1.15.8": {}
+
   "@types/unist@2.0.10": {}
 
   "@types/unist@3.0.2": {}
@@ -4533,6 +4511,8 @@ snapshots:
       fsevents: 2.3.3
 
   chownr@2.0.0: {}
+
+  classnames@2.3.1: {}
 
   clsx@2.1.1: {}
 
@@ -4785,7 +4765,7 @@ snapshots:
 
   human-signals@1.1.1: {}
 
-  husky@7.0.4: {}
+  husky@9.0.11: {}
 
   i18next@23.11.3:
     dependencies:
@@ -5356,6 +5336,15 @@ snapshots:
       "@remix-run/router": 1.16.0
       react: 18.3.1
 
+  react-sortablejs@6.1.4(@types/sortablejs@1.15.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sortablejs@1.15.2):
+    dependencies:
+      "@types/sortablejs": 1.15.8
+      classnames: 2.3.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      sortablejs: 1.15.2
+      tiny-invariant: 1.2.0
+
   react-transition-group@4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       "@babel/runtime": 7.24.5
@@ -5467,6 +5456,8 @@ snapshots:
       dot-case: 3.0.4
       tslib: 2.6.2
 
+  sortablejs@1.15.2: {}
+
   source-map-js@1.2.0: {}
 
   source-map@0.5.7: {}
@@ -5506,6 +5497,8 @@ snapshots:
       minizlib: 2.1.2
       mkdirp: 1.0.4
       yallist: 4.0.0
+
+  tiny-invariant@1.2.0: {}
 
   to-fast-properties@2.0.0: {}
 
