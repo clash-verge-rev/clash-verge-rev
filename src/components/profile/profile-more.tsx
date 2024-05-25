@@ -24,7 +24,6 @@ interface Props {
   selected: boolean;
   reactivating: boolean;
   itemData: IProfileItem;
-  enableNum: number;
   logInfo?: [string, string][];
   onEnable: () => Promise<void>;
   onDisable: () => Promise<void>;
@@ -39,7 +38,6 @@ export const ProfileMore = (props: Props) => {
     selected,
     reactivating,
     itemData,
-    enableNum,
     logInfo = [],
     onEnable,
     onDisable,

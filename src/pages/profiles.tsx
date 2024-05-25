@@ -266,16 +266,24 @@ const ProfilePage = () => {
 
   const onEnable = useLockFn(async (uid: string) => {
     if (chain.includes(uid)) return;
-    const newChain = [...chain, uid];
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
+    try {
+      const newChain = [...chain, uid];
+      await patchProfiles({ chain: newChain });
+      mutateLogs();
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
   });
 
   const onDisable = useLockFn(async (uid: string) => {
     if (!chain.includes(uid)) return;
-    const newChain = chain.filter((i) => i !== uid);
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
+    try {
+      const newChain = chain.filter((i) => i !== uid);
+      await patchProfiles({ chain: newChain });
+      mutateLogs();
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
   });
 
   const onDelete = useLockFn(async (uid: string) => {
@@ -287,20 +295,6 @@ const ProfilePage = () => {
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
-  });
-
-  const onMoveTop = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-    const newChain = [uid].concat(chain.filter((i) => i !== uid));
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
-  });
-
-  const onMoveEnd = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-    const newChain = chain.filter((i) => i !== uid).concat([uid]);
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
   });
 
   // 更新所有订阅
@@ -523,12 +517,7 @@ const ProfilePage = () => {
                     (reactivating || activating !== "")
                   }
                   itemData={item.profileItem}
-                  enableNum={chain.length || 0}
                   logInfo={chainLogs[item.profileItem.uid]}
-                  // reactivating={
-                  //   !!chain.includes(item.profileItem.uid) &&
-                  //   (reactivating || activating !== "")
-                  // }
                   onEnable={() => onEnable(item.profileItem.uid)}
                   onDisable={() => onDisable(item.profileItem.uid)}
                   onDelete={() => onDelete(item.profileItem.uid)}
