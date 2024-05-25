@@ -42,10 +42,10 @@ import { readTextFile } from "@tauri-apps/api/fs";
 import { readText } from "@tauri-apps/api/clipboard";
 import { MoveEvent, ReactSortable, SortableEvent } from "react-sortablejs";
 
-type ISortableItem = {
+interface ISortableItem {
   id: string;
   profileItem: IProfileItem;
-};
+}
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -54,12 +54,8 @@ const ProfilePage = () => {
   const [disabled, setDisabled] = useState(false);
   const [activating, setActivating] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sortableProfileList, setSortableProfileList] = useState<
-    ISortableItem[]
-  >([]);
-  const [sortableChainList, setSortableChainList] = useState<ISortableItem[]>(
-    []
-  );
+  const [profileList, setProfileList] = useState<ISortableItem[]>([]);
+  const [chainList, setChainList] = useState<ISortableItem[]>([]);
   const [reactivating, setReactivating] = useState(false);
 
   useEffect(() => {
@@ -136,8 +132,8 @@ const ProfilePage = () => {
       .filter(Boolean)
       .concat(restItems.filter((i) => !chain.includes(i.id)));
 
-    setSortableProfileList(regularItems);
-    setSortableChainList(enhanceItems);
+    setProfileList(regularItems);
+    setChainList(enhanceItems);
     return { regularItems };
   }, [profiles]);
 
@@ -172,8 +168,8 @@ const ProfilePage = () => {
   };
 
   const handleProfileDragEnd = async (event: SortableEvent) => {
-    const activeId = sortableProfileList[event.oldIndex!].id;
-    const overId = sortableProfileList[event.newIndex!].id;
+    const activeId = profileList[event.oldIndex!].id;
+    const overId = profileList[event.newIndex!].id;
     if (activeId !== overId) {
       await reorderProfile(activeId.toString(), overId.toString());
       mutateProfiles();
@@ -181,9 +177,9 @@ const ProfilePage = () => {
   };
 
   const handleChainDragEnd = async (event: SortableEvent) => {
-    const activeId = sortableChainList[event.oldIndex!].id;
+    const activeId = chainList[event.oldIndex!].id;
     if (chain.includes(activeId)) return;
-    const overId = sortableChainList[event.newIndex!].id;
+    const overId = chainList[event.newIndex!].id;
     if (activeId !== overId) {
       await reorderProfile(activeId.toString(), overId.toString());
       mutateProfiles();
@@ -208,8 +204,8 @@ const ProfilePage = () => {
     }
   });
 
-  const setChainList = async (newList: ISortableItem[]) => {
-    setSortableChainList(newList);
+  const setSortableList = async (newList: ISortableItem[]) => {
+    setChainList(newList);
     const newChain = newList
       .filter((item) => chain.includes(item.id))
       .map((item) => item.id);
@@ -450,11 +446,11 @@ const ProfilePage = () => {
           scrollSensitivity={60}
           scrollSpeed={10}
           swapThreshold={0.8}
-          list={sortableProfileList}
-          setList={setSortableProfileList}
+          list={profileList}
+          setList={setProfileList}
           onEnd={handleProfileDragEnd}
         >
-          {sortableProfileList.map((item) => (
+          {profileList.map((item) => (
             <ProfileItem
               id={item.id}
               selected={
@@ -484,7 +480,7 @@ const ProfilePage = () => {
           ))}
         </ReactSortable>
 
-        {sortableChainList.length > 0 && (
+        {chainList.length > 0 && (
           <Divider
             variant="middle"
             flexItem
@@ -496,7 +492,7 @@ const ProfilePage = () => {
           ></Divider>
         )}
 
-        {sortableChainList.length > 0 && (
+        {chainList.length > 0 && (
           <Box>
             <ReactSortable
               style={{
@@ -507,12 +503,12 @@ const ProfilePage = () => {
               scrollSensitivity={60}
               scrollSpeed={10}
               swapThreshold={0.8}
-              list={sortableChainList}
-              setList={setChainList}
+              list={chainList}
+              setList={setSortableList}
               onMove={handleMove}
               onEnd={handleChainDragEnd}
             >
-              {sortableChainList.map((item) => (
+              {chainList.map((item) => (
                 <ProfileMore
                   selected={!!chain.includes(item.id)}
                   reactivating={
