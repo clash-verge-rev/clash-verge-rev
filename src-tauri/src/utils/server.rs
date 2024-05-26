@@ -74,7 +74,11 @@ pub fn embed_server(app_handle: AppHandle) {
                 .latest()
                 .verge_mixed_port
                 .unwrap_or(Config::clash().data().get_mixed_port());
-            content.replace("%mixed-port%", &format!("{}", port))
+            let content = content.replace("%mixed-port%", &format!("{}", port));
+            warp::http::Response::builder()
+                .header("Content-Type", "application/x-ns-proxy-autoconfig")
+                .body(content)
+                .unwrap_or_default()
         });
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
