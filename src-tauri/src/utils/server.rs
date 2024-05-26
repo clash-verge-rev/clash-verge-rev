@@ -1,7 +1,7 @@
 extern crate warp;
 
 use super::resolve;
-use crate::config::IVerge;
+use crate::config::{Config, IVerge, DEFAULT_PAC};
 use anyhow::{bail, Result};
 use port_scanner::local_port_available;
 use std::convert::Infallible;
@@ -64,6 +64,18 @@ pub fn embed_server(app_handle: AppHandle) {
             "ok"
         });
 
+        let pac = warp::path!("commands" / "pac").map(move || {
+            let content = Config::verge()
+                .latest()
+                .pac_file_content
+                .clone()
+                .unwrap_or(DEFAULT_PAC.to_string());
+            let port = Config::verge()
+                .latest()
+                .verge_mixed_port
+                .unwrap_or(Config::clash().data().get_mixed_port());
+            content.replace("%mixed-port%", &format!("{}", port))
+        });
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
             .and_then(scheme_handler);
@@ -72,7 +84,7 @@ pub fn embed_server(app_handle: AppHandle) {
             resolve::resolve_scheme(query.param).await;
             Ok("ok")
         }
-        let commands = ping.or(visible).or(scheme);
+        let commands = ping.or(visible).or(pac).or(scheme);
         warp::serve(commands).run(([127, 0, 0, 1], port)).await;
     });
 }

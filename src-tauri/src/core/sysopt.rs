@@ -1,11 +1,14 @@
-use crate::{config::Config, log_err};
+use crate::{
+    config::{Config, IVerge},
+    log_err,
+};
 use anyhow::{anyhow, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::env::current_exe;
 use std::sync::Arc;
-use sysproxy::Sysproxy;
+use sysproxy::{Autoproxy, Sysproxy};
 use tauri::async_runtime::Mutex as TokioMutex;
 
 pub struct Sysopt {
@@ -15,6 +18,13 @@ pub struct Sysopt {
     /// record the original system proxy
     /// recover it when exit
     old_sysproxy: Arc<Mutex<Option<Sysproxy>>>,
+
+    /// current auto proxy setting
+    cur_autoproxy: Arc<Mutex<Option<Autoproxy>>>,
+
+    /// record the original auto proxy
+    /// recover it when exit
+    old_autoproxy: Arc<Mutex<Option<Autoproxy>>>,
 
     /// helps to auto launch the app
     auto_launch: Arc<Mutex<Option<AutoLaunch>>>,
@@ -38,6 +48,8 @@ impl Sysopt {
         SYSOPT.get_or_init(|| Sysopt {
             cur_sysproxy: Arc::new(Mutex::new(None)),
             old_sysproxy: Arc::new(Mutex::new(None)),
+            cur_autoproxy: Arc::new(Mutex::new(None)),
+            old_autoproxy: Arc::new(Mutex::new(None)),
             auto_launch: Arc::new(Mutex::new(None)),
             guard_state: Arc::new(TokioMutex::new(false)),
         })
@@ -49,38 +61,77 @@ impl Sysopt {
             .latest()
             .verge_mixed_port
             .unwrap_or(Config::clash().data().get_mixed_port());
+        let pac_port = IVerge::get_singleton_port();
 
-        let (enable, bypass) = {
+        let (enable, bypass, pac) = {
             let verge = Config::verge();
             let verge = verge.latest();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.system_proxy_bypass.clone(),
+                verge.proxy_auto_config.unwrap_or(false),
             )
         };
-
-        let current = Sysproxy {
-            enable,
-            host: String::from("127.0.0.1"),
-            port,
-            bypass: match bypass {
-                Some(bypass) => {
-                    if bypass.is_empty() {
-                        DEFAULT_BYPASS.into()
-                    } else {
-                        bypass
+        if pac {
+            let sys = Sysproxy {
+                enable: false,
+                host: String::from("127.0.0.1"),
+                port,
+                bypass: match bypass {
+                    Some(bypass) => {
+                        if bypass.is_empty() {
+                            DEFAULT_BYPASS.into()
+                        } else {
+                            bypass
+                        }
                     }
-                }
-                None => DEFAULT_BYPASS.into(),
-            },
-        };
-
-        if enable {
+                    None => DEFAULT_BYPASS.into(),
+                },
+            };
             let old = Sysproxy::get_system_proxy().ok();
-            current.set_system_proxy()?;
+            sys.set_system_proxy()?;
 
             *self.old_sysproxy.lock() = old;
-            *self.cur_sysproxy.lock() = Some(current);
+            *self.cur_sysproxy.lock() = Some(sys);
+            let auto = Autoproxy {
+                enable,
+                url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
+            };
+            let old = Autoproxy::get_auto_proxy().ok();
+            auto.set_auto_proxy()?;
+
+            *self.old_autoproxy.lock() = old;
+            *self.cur_autoproxy.lock() = Some(auto);
+        } else {
+            let auto = Autoproxy {
+                enable: false,
+                url: String::new(),
+            };
+            let old = Autoproxy::get_auto_proxy().ok();
+            auto.set_auto_proxy()?;
+
+            *self.old_autoproxy.lock() = old;
+            *self.cur_autoproxy.lock() = Some(auto);
+            let sys = Sysproxy {
+                enable,
+                host: String::from("127.0.0.1"),
+                port,
+                bypass: match bypass {
+                    Some(bypass) => {
+                        if bypass.is_empty() {
+                            DEFAULT_BYPASS.into()
+                        } else {
+                            bypass
+                        }
+                    }
+                    None => DEFAULT_BYPASS.into(),
+                },
+            };
+            let old = Sysproxy::get_system_proxy().ok();
+            sys.set_system_proxy()?;
+
+            *self.old_sysproxy.lock() = old;
+            *self.cur_sysproxy.lock() = Some(sys);
         }
 
         // run the system proxy guard
@@ -92,24 +143,38 @@ impl Sysopt {
     pub fn update_sysproxy(&self) -> Result<()> {
         let mut cur_sysproxy = self.cur_sysproxy.lock();
         let old_sysproxy = self.old_sysproxy.lock();
+        let mut cur_autoproxy = self.cur_autoproxy.lock();
+        let old_autoproxy = self.old_autoproxy.lock();
 
-        if cur_sysproxy.is_none() || old_sysproxy.is_none() {
-            drop(cur_sysproxy);
-            drop(old_sysproxy);
-            return self.init_sysproxy();
-        }
-
-        let (enable, bypass) = {
+        let (enable, bypass, pac) = {
             let verge = Config::verge();
             let verge = verge.latest();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.system_proxy_bypass.clone(),
+                verge.proxy_auto_config.unwrap_or(false),
             )
         };
-        let mut sysproxy = cur_sysproxy.take().unwrap();
+        if pac {
+            if cur_autoproxy.is_none() || old_autoproxy.is_none() {
+                drop(cur_autoproxy);
+                drop(old_autoproxy);
+                return self.init_sysproxy();
+            }
+        } else {
+            if cur_sysproxy.is_none() || old_sysproxy.is_none() {
+                drop(cur_sysproxy);
+                drop(old_sysproxy);
+                return self.init_sysproxy();
+            }
+        }
+        let port = Config::verge()
+            .latest()
+            .verge_mixed_port
+            .unwrap_or(Config::clash().data().get_mixed_port());
+        let pac_port = IVerge::get_singleton_port();
 
-        sysproxy.enable = enable;
+        let mut sysproxy = cur_sysproxy.take().unwrap();
         sysproxy.bypass = match bypass {
             Some(bypass) => {
                 if bypass.is_empty() {
@@ -120,15 +185,26 @@ impl Sysopt {
             }
             None => DEFAULT_BYPASS.into(),
         };
-
-        let port = Config::verge()
-            .latest()
-            .verge_mixed_port
-            .unwrap_or(Config::clash().data().get_mixed_port());
         sysproxy.port = port;
 
-        sysproxy.set_system_proxy()?;
-        *cur_sysproxy = Some(sysproxy);
+        let mut autoproxy = cur_autoproxy.take().unwrap();
+        autoproxy.url = format!("http://127.0.0.1:{pac_port}/commands/pac");
+
+        if pac {
+            sysproxy.enable = false;
+            sysproxy.set_system_proxy()?;
+            *cur_sysproxy = Some(sysproxy);
+            autoproxy.enable = enable;
+            autoproxy.set_auto_proxy()?;
+            *cur_autoproxy = Some(autoproxy);
+        } else {
+            autoproxy.enable = false;
+            autoproxy.set_auto_proxy()?;
+            *cur_autoproxy = Some(autoproxy);
+            sysproxy.enable = enable;
+            sysproxy.set_system_proxy()?;
+            *cur_sysproxy = Some(sysproxy);
+        }
 
         Ok(())
     }

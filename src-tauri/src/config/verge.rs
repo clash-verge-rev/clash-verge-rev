@@ -1,3 +1,4 @@
+use crate::config::DEFAULT_PAC;
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use log::LevelFilter;
@@ -79,6 +80,12 @@ pub struct IVerge {
 
     /// proxy guard duration
     pub proxy_guard_duration: Option<u64>,
+
+    /// use pac mode
+    pub proxy_auto_config: Option<bool>,
+
+    /// pac script content
+    pub pac_file_content: Option<String>,
 
     /// theme setting
     pub theme_setting: Option<IVergeTheme>,
@@ -211,6 +218,8 @@ impl IVerge {
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_system_proxy: Some(false),
+            proxy_auto_config: Some(false),
+            pac_file_content: Some(DEFAULT_PAC.into()),
             enable_random_port: Some(false),
             #[cfg(not(target_os = "windows"))]
             verge_redir_port: Some(7895),
@@ -290,6 +299,8 @@ impl IVerge {
         patch!(enable_proxy_guard);
         patch!(system_proxy_bypass);
         patch!(proxy_guard_duration);
+        patch!(proxy_auto_config);
+        patch!(pac_file_content);
 
         patch!(theme_setting);
         patch!(web_ui_list);
