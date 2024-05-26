@@ -8,7 +8,7 @@ use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
-use sysproxy::Sysproxy;
+use sysproxy::{Autoproxy, Sysproxy};
 use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
 
@@ -194,7 +194,6 @@ pub fn grant_permission(_core: String) -> CmdResult {
 #[tauri::command]
 pub fn get_sys_proxy() -> CmdResult<Mapping> {
     let current = wrap_err!(Sysproxy::get_system_proxy())?;
-
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
     map.insert(
@@ -202,6 +201,18 @@ pub fn get_sys_proxy() -> CmdResult<Mapping> {
         format!("{}:{}", current.host, current.port).into(),
     );
     map.insert("bypass".into(), current.bypass.into());
+
+    Ok(map)
+}
+
+/// get the system proxy
+#[tauri::command]
+pub fn get_auto_proxy() -> CmdResult<Mapping> {
+    let current = wrap_err!(Autoproxy::get_auto_proxy())?;
+
+    let mut map = Mapping::new();
+    map.insert("enable".into(), current.enable.into());
+    map.insert("url".into(), current.url.into());
 
     Ok(map)
 }
