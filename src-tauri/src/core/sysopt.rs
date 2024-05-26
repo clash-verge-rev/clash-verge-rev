@@ -72,64 +72,45 @@ impl Sysopt {
                 verge.proxy_auto_config.unwrap_or(false),
             )
         };
-        if pac {
-            let sys = Sysproxy {
-                enable: false,
-                host: String::from("127.0.0.1"),
-                port,
-                bypass: match bypass {
-                    Some(bypass) => {
-                        if bypass.is_empty() {
-                            DEFAULT_BYPASS.into()
-                        } else {
-                            bypass
-                        }
+        let mut sys = Sysproxy {
+            enable,
+            host: String::from("127.0.0.1"),
+            port,
+            bypass: match bypass {
+                Some(bypass) => {
+                    if bypass.is_empty() {
+                        DEFAULT_BYPASS.into()
+                    } else {
+                        bypass
                     }
-                    None => DEFAULT_BYPASS.into(),
-                },
-            };
+                }
+                None => DEFAULT_BYPASS.into(),
+            },
+        };
+        let mut auto = Autoproxy {
+            enable,
+            url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
+        };
+        if pac {
+            sys.enable = false;
             let old = Sysproxy::get_system_proxy().ok();
             sys.set_system_proxy()?;
-
             *self.old_sysproxy.lock() = old;
             *self.cur_sysproxy.lock() = Some(sys);
-            let auto = Autoproxy {
-                enable,
-                url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
-            };
+
             let old = Autoproxy::get_auto_proxy().ok();
             auto.set_auto_proxy()?;
-
             *self.old_autoproxy.lock() = old;
             *self.cur_autoproxy.lock() = Some(auto);
         } else {
-            let auto = Autoproxy {
-                enable: false,
-                url: String::new(),
-            };
+            auto.enable = false;
             let old = Autoproxy::get_auto_proxy().ok();
             auto.set_auto_proxy()?;
-
             *self.old_autoproxy.lock() = old;
             *self.cur_autoproxy.lock() = Some(auto);
-            let sys = Sysproxy {
-                enable,
-                host: String::from("127.0.0.1"),
-                port,
-                bypass: match bypass {
-                    Some(bypass) => {
-                        if bypass.is_empty() {
-                            DEFAULT_BYPASS.into()
-                        } else {
-                            bypass
-                        }
-                    }
-                    None => DEFAULT_BYPASS.into(),
-                },
-            };
+
             let old = Sysproxy::get_system_proxy().ok();
             sys.set_system_proxy()?;
-
             *self.old_sysproxy.lock() = old;
             *self.cur_sysproxy.lock() = Some(sys);
         }
@@ -213,8 +194,11 @@ impl Sysopt {
     pub fn reset_sysproxy(&self) -> Result<()> {
         let mut cur_sysproxy = self.cur_sysproxy.lock();
         let mut old_sysproxy = self.old_sysproxy.lock();
+        let mut cur_autoproxy = self.cur_autoproxy.lock();
+        let mut old_autoproxy = self.old_autoproxy.lock();
 
         let cur_sysproxy = cur_sysproxy.take();
+        let cur_autoproxy = cur_autoproxy.take();
 
         if let Some(mut old) = old_sysproxy.take() {
             // 如果原代理和当前代理 端口一致，就disable关闭，否则就恢复原代理设置
@@ -234,6 +218,28 @@ impl Sysopt {
             log::info!(target: "app", "reset proxy by disabling the current proxy");
             cur.enable = false;
             cur.set_system_proxy()?;
+        } else {
+            log::info!(target: "app", "reset proxy with no action");
+        }
+
+        if let Some(mut old) = old_autoproxy.take() {
+            // 如果原代理和当前代理 URL一致，就disable关闭，否则就恢复原代理设置
+            // 当前没有设置代理的时候，不确定旧设置是否和当前一致，全关了
+            let url_same = cur_autoproxy.map_or(true, |cur| old.url == cur.url);
+
+            if old.enable && url_same {
+                old.enable = false;
+                log::info!(target: "app", "reset proxy by disabling the original proxy");
+            } else {
+                log::info!(target: "app", "reset proxy to the original proxy");
+            }
+
+            old.set_auto_proxy()?;
+        } else if let Some(mut cur @ Autoproxy { enable: true, .. }) = cur_autoproxy {
+            // 没有原代理，就按现在的代理设置disable即可
+            log::info!(target: "app", "reset proxy by disabling the current proxy");
+            cur.enable = false;
+            cur.set_auto_proxy()?;
         } else {
             log::info!(target: "app", "reset proxy with no action");
         }
@@ -343,7 +349,7 @@ impl Sysopt {
             loop {
                 sleep(Duration::from_secs(wait_secs)).await;
 
-                let (enable, guard, guard_duration, bypass) = {
+                let (enable, guard, guard_duration, bypass, pac) = {
                     let verge = Config::verge();
                     let verge = verge.latest();
                     (
@@ -351,6 +357,7 @@ impl Sysopt {
                         verge.enable_proxy_guard.unwrap_or(false),
                         verge.proxy_guard_duration.unwrap_or(10),
                         verge.system_proxy_bypass.clone(),
+                        verge.proxy_auto_config.unwrap_or(false),
                     )
                 };
 
@@ -370,24 +377,32 @@ impl Sysopt {
                         .verge_mixed_port
                         .unwrap_or(Config::clash().data().get_mixed_port())
                 };
-
-                let sysproxy = Sysproxy {
-                    enable: true,
-                    host: "127.0.0.1".into(),
-                    port,
-                    bypass: match bypass {
-                        Some(bypass) => {
-                            if bypass.is_empty() {
-                                DEFAULT_BYPASS.into()
-                            } else {
-                                bypass
+                let pac_port = IVerge::get_singleton_port();
+                if pac {
+                    let autoproxy = Autoproxy {
+                        enable: true,
+                        url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
+                    };
+                    log_err!(autoproxy.set_auto_proxy());
+                } else {
+                    let sysproxy = Sysproxy {
+                        enable: true,
+                        host: "127.0.0.1".into(),
+                        port,
+                        bypass: match bypass {
+                            Some(bypass) => {
+                                if bypass.is_empty() {
+                                    DEFAULT_BYPASS.into()
+                                } else {
+                                    bypass
+                                }
                             }
-                        }
-                        None => DEFAULT_BYPASS.into(),
-                    },
-                };
+                            None => DEFAULT_BYPASS.into(),
+                        },
+                    };
 
-                log_err!(sysproxy.set_system_proxy());
+                    log_err!(sysproxy.set_system_proxy());
+                }
             }
 
             let mut state = guard_state.lock().await;
