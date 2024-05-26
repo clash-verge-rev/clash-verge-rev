@@ -18,7 +18,7 @@ import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { Edit } from "@mui/icons-material";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
-  return "PROXY 127.0.0.1:%mixed-port%; SOCKS5 127.0.0.1:%mixed-port%; DIRECT;"
+  return "PROXY 127.0.0.1:%mixed-port%; SOCKS5 127.0.0.1:%mixed-port%; DIRECT;";
 }`;
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
@@ -196,7 +196,11 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 open={editorOpen}
                 language="javascript"
                 onChange={(content) => {
-                  setValue((v) => ({ ...v, pac_content: content ?? "" }));
+                  let pac = DEFAULT_PAC;
+                  if (content && content.trim().length > 0) {
+                    pac = content;
+                  }
+                  setValue((v) => ({ ...v, pac_content: pac }));
                 }}
                 onClose={() => {
                   setEditorOpen(false);
