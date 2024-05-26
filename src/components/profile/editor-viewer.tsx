@@ -57,6 +57,23 @@ configureMonacoYaml(monaco, {
 });
 // PAC definition
 monaco.languages.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
+monaco.languages.registerCompletionItemProvider("javascript", {
+  provideCompletionItems: (model, position) => ({
+    suggestions: [
+      {
+        label: "%mixed-port%",
+        kind: monaco.languages.CompletionItemKind.Text,
+        insertText: "%mixed-port%",
+        range: {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: model.getWordUntilPosition(position).startColumn - 1,
+          endColumn: model.getWordUntilPosition(position).endColumn - 1,
+        },
+      },
+    ],
+  }),
+});
 
 export const EditorViewer = (props: Props) => {
   const {
