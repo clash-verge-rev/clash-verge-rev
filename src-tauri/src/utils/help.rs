@@ -100,7 +100,7 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
     let _ = match open::with(&path.as_os_str(), code) {
         Ok(()) => Ok(()),
         Err(err) => {
-            log::error!(target: "app", "{}", err);
+            log::error!(target: "app", "Can not open file with VS code, {}", err);
             // default open
             open(&app.shell_scope(), path.to_string_lossy(), None)
         }

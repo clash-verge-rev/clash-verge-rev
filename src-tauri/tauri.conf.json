@@ -79,12 +79,17 @@
     },
     "windows": [
       {
+        "label": "main",
+        "visible": false
+      },
+      {
         "label": "splashscreen",
         "width": 100,
         "height": 100,
         "decorations": false,
         "resizable": false,
         "transparent": true,
+        "center": true,
         "url": "splashscreen.html"
       }
     ],

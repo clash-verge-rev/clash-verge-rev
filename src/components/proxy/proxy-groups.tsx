@@ -159,7 +159,7 @@ export const ProxyGroups = (props: Props) => {
         .flatMap((item) => getStringLentght(item.key)),
     ) ?? 8;
   const sidebarWidth =
-    maxGroupNameLength * 8 > 200 ? 200 : maxGroupNameLength * 8;
+    maxGroupNameLength * 12 > 200 ? 200 : maxGroupNameLength * 12;
   const [groupWidth, setGroupWidth] = useState(0);
   const [open, setOpen] = useState(false);
 
