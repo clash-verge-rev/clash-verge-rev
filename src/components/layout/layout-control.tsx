@@ -36,6 +36,7 @@ export const LayoutControl = () => {
     <ButtonGroup
       variant="text"
       sx={{
+        zIndex: 1000,
         height: "100%",
         ".MuiButtonGroup-grouped": {
           borderRadius: "0px",

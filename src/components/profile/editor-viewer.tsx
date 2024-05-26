@@ -131,7 +131,7 @@ export const EditorViewer = (props: Props) => {
         padding: {
           top: 33, // 顶部padding防止遮挡snippets
         },
-        fontFamily: `Fira Code, Roboto Mono, Roboto, Source Code Pro, Menlo, Monaco, Consolas, Courier New, monospace, "Apple Color Emoji"${
+        fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
           getSystem() === "windows" ? ", twemoji mozilla" : ""
         }`,
         fontLigatures: true, // 连字符
