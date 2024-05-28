@@ -14,7 +14,7 @@ use crate::{
     config::Config,
     utils::{init, resolve, server},
 };
-use tauri::{api, Manager, SystemTray};
+use tauri::{api, SystemTray};
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -32,13 +32,26 @@ fn main() -> std::io::Result<()> {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let app_handle = app.handle();
-            let splashscreen_window = app.get_window("splashscreen").unwrap();
             let enable_splashscreen = { Config::verge().data().enable_splashscreen };
             let enable_splashscreen = enable_splashscreen.unwrap_or(true);
             let silent_start = { Config::verge().data().enable_silent_start };
             let silent_start = silent_start.unwrap_or(false);
-            if !enable_splashscreen || silent_start {
-                splashscreen_window.close().unwrap();
+            if enable_splashscreen && !silent_start {
+                let mut builder = tauri::window::WindowBuilder::new(
+                    &app_handle,
+                    "splashscreen",
+                    tauri::WindowUrl::App("splashscreen.html".into()),
+                )
+                .decorations(false)
+                .transparent(true)
+                .center()
+                .resizable(false)
+                .inner_size(100.0, 100.0);
+                #[cfg(target_os = "windows")]
+                {
+                    builder = builder.additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling");
+                }
+                builder.build()?;
             }
             // we perform the initialization code on a new task so the app doesn't freeze
             tauri::async_runtime::spawn(async move {
