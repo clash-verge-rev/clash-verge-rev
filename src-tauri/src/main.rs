@@ -43,10 +43,13 @@ fn main() -> std::io::Result<()> {
                     tauri::WindowUrl::App("splashscreen.html".into()),
                 )
                 .decorations(false)
-                .transparent(true)
                 .center()
                 .resizable(false)
                 .inner_size(100.0, 100.0);
+                #[cfg(not(target_os = "macos"))]
+                {
+                    builder = builder.transparent(true);
+                }
                 #[cfg(target_os = "windows")]
                 {
                     builder = builder.additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling");
