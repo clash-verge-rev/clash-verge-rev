@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import path from "path";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react";
-import { babel } from "@rollup/plugin-babel";
+import legacy from "@vitejs/plugin-legacy";
 import monacoEditor from "vite-plugin-monaco-editor";
 
 export default defineConfig({
@@ -11,17 +11,17 @@ export default defineConfig({
   plugins: [
     svgr(),
     react(),
-    {
-      apply: "build", // apply only for build, not for serve
-      ...babel({
-        babelHelpers: "bundled",
-        extensions: [".js", ".jsx", ".ts", ".tsx"],
-        targets: {
-          edge: "109", // last version to support Windows 7
-          safari: "13", // macOS 10.15 Catalina
-        },
-      }),
-    },
+    legacy({
+      targets: ["edge>=109", "safari>=13"],
+      modernPolyfills: true,
+      polyfills: ["web.structured-clone"],
+      additionalModernPolyfills: [
+        "matchmedia-polyfill",
+        "matchmedia-polyfill/matchMedia.addListener",
+        path.resolve("./src/polyfills/WeakRef.js"),
+        path.resolve("./src/polyfills/RegExp.js"),
+      ],
+    }),
     monacoEditor({
       languageWorkers: ["editorWorkerService", "typescript", "css"],
       customWorkers: [

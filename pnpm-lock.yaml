@@ -58,15 +58,18 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
+      matchmedia-polyfill:
+        specifier: ^0.3.2
+        version: 0.3.2
       meta-json-schema:
         specifier: 1.18.5-alpha
         version: 1.18.5-alpha
       monaco-editor:
-        specifier: ^0.47.0
-        version: 0.47.0
+        specifier: ^0.49.0
+        version: 0.49.0
       monaco-yaml:
         specifier: ^5.1.1
-        version: 5.1.1(monaco-editor@0.47.0)
+        version: 5.1.1(monaco-editor@0.49.0)
       nanoid:
         specifier: ^5.0.7
         version: 5.0.7
@@ -113,18 +116,6 @@ importers:
       "@actions/github":
         specifier: ^5.1.1
         version: 5.1.1
-      "@babel/preset-env":
-        specifier: ^7.24.6
-        version: 7.24.6(@babel/core@7.24.6)
-      "@babel/preset-react":
-        specifier: ^7.24.6
-        version: 7.24.6(@babel/core@7.24.6)
-      "@babel/preset-typescript":
-        specifier: ^7.24.6
-        version: 7.24.6(@babel/core@7.24.6)
-      "@rollup/plugin-babel":
-        specifier: ^6.0.4
-        version: 6.0.4(@babel/core@7.24.6)(@types/babel__core@7.20.5)(rollup@4.18.0)
       "@tauri-apps/cli":
         specifier: ^1.5.13
         version: 1.5.14
@@ -146,9 +137,12 @@ importers:
       "@types/react-transition-group":
         specifier: ^4.4.10
         version: 4.4.10
+      "@vitejs/plugin-legacy":
+        specifier: ^5.4.0
+        version: 5.4.0(terser@5.31.0)(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0))
       "@vitejs/plugin-react":
         specifier: ^4.3.0
-        version: 4.3.0(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2))
+        version: 4.3.0(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0))
       adm-zip:
         specifier: ^0.5.12
         version: 0.5.12
@@ -176,18 +170,21 @@ importers:
       sass:
         specifier: ^1.77.0
         version: 1.77.2
+      terser:
+        specifier: ^5.31.0
+        version: 5.31.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
       vite:
         specifier: ^5.2.11
-        version: 5.2.11(@types/node@20.12.12)(sass@1.77.2)
+        version: 5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0)
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
-        version: 1.1.0(monaco-editor@0.47.0)
+        version: 1.1.0(monaco-editor@0.49.0)
       vite-plugin-svgr:
         specifier: ^4.2.0
-        version: 4.2.0(rollup@4.18.0)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2))
+        version: 4.2.0(rollup@4.18.0)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0))
 
 packages:
   "@actions/github@5.1.1":
@@ -551,15 +548,6 @@ packages:
     peerDependencies:
       "@babel/core": ^7.0.0-0
 
-  "@babel/plugin-syntax-jsx@7.24.6":
-    resolution:
-      {
-        integrity: sha512-lWfvAIFNWMlCsU0DRUun2GpFwZdGTukLaHJqRh1JRb80NdAP5Sb1HDHB5X9P9OtgZHQl089UzQkpYlBq2VTPRw==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
-
   "@babel/plugin-syntax-logical-assignment-operators@7.10.4":
     resolution:
       {
@@ -621,15 +609,6 @@ packages:
     resolution:
       {
         integrity: sha512-hx++upLv5U1rgYfwe1xBQUhRmU41NEvpUvrp8jkrSCdvGSnM5/qdRMtylJ6PG5OFkBaHkbTAKTnd3/YyESRHFw==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
-
-  "@babel/plugin-syntax-typescript@7.24.6":
-    resolution:
-      {
-        integrity: sha512-TzCtxGgVTEJWWwcYwQhCIQ6WaKlo80/B+Onsk4RRCcYqpYGFcG9etPW94VToGte5AAcxRrhjPUFvUS3Y2qKi4A==,
       }
     engines: { node: ">=6.9.0" }
     peerDependencies:
@@ -977,24 +956,6 @@ packages:
     peerDependencies:
       "@babel/core": ^7.0.0-0
 
-  "@babel/plugin-transform-react-display-name@7.24.6":
-    resolution:
-      {
-        integrity: sha512-/3iiEEHDsJuj9QU09gbyWGSUxDboFcD7Nj6dnHIlboWSodxXAoaY/zlNMHeYAC0WsERMqgO9a7UaM77CsYgWcg==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
-
-  "@babel/plugin-transform-react-jsx-development@7.24.6":
-    resolution:
-      {
-        integrity: sha512-F7EsNp5StNDouSSdYyDSxh4J+xvj/JqG+Cb6s2fA+jCyHOzigG5vTwgH8tU2U8Voyiu5zCG9bAK49wTr/wPH0w==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
-
   "@babel/plugin-transform-react-jsx-self@7.24.6":
     resolution:
       {
@@ -1008,24 +969,6 @@ packages:
     resolution:
       {
         integrity: sha512-BQTBCXmFRreU3oTUXcGKuPOfXAGb1liNY4AvvFKsOBAJ89RKcTsIrSsnMYkj59fNa66OFKnSa4AJZfy5Y4B9WA==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
-
-  "@babel/plugin-transform-react-jsx@7.24.6":
-    resolution:
-      {
-        integrity: sha512-pCtPHhpRZHfwdA5G1Gpk5mIzMA99hv0R8S/Ket50Rw+S+8hkt3wBWqdqHaPw0CuUYxdshUgsPiLQ5fAs4ASMhw==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
-
-  "@babel/plugin-transform-react-pure-annotations@7.24.6":
-    resolution:
-      {
-        integrity: sha512-0HoDQlFJJkXRyV2N+xOpUETbKHcouSwijRQbKWVtxsPoq5bbB30qZag9/pSc5xcWVYjTHlLsBsY+hZDnzQTPNw==,
       }
     engines: { node: ">=6.9.0" }
     peerDependencies:
@@ -1094,15 +1037,6 @@ packages:
     peerDependencies:
       "@babel/core": ^7.0.0-0
 
-  "@babel/plugin-transform-typescript@7.24.6":
-    resolution:
-      {
-        integrity: sha512-H0i+hDLmaYYSt6KU9cZE0gb3Cbssa/oxWis7PX4ofQzbvsfix9Lbh8SRk7LCPDlLWJHUiFeHU0qRRpF/4Zv7mQ==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
-
   "@babel/plugin-transform-unicode-escapes@7.24.6":
     resolution:
       {
@@ -1155,24 +1089,6 @@ packages:
       }
     peerDependencies:
       "@babel/core": ^7.0.0-0 || ^8.0.0-0 <8.0.0
-
-  "@babel/preset-react@7.24.6":
-    resolution:
-      {
-        integrity: sha512-8mpzh1bWvmINmwM3xpz6ahu57mNaWavMm+wBNjQ4AFu1nghKBiIRET7l/Wmj4drXany/BBGjJZngICcD98F1iw==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
-
-  "@babel/preset-typescript@7.24.6":
-    resolution:
-      {
-        integrity: sha512-U10aHPDnokCFRXgyT/MaIRTivUu2K/mu0vJlwRS9LxJmJet+PFQNKpggPyFCUtC6zWSBPjvxjnpNkAn3Uw2m5w==,
-      }
-    engines: { node: ">=6.9.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0-0
 
   "@babel/regjsgen@0.8.0":
     resolution:
@@ -1597,6 +1513,12 @@ packages:
       }
     engines: { node: ">=6.0.0" }
 
+  "@jridgewell/source-map@0.3.6":
+    resolution:
+      {
+        integrity: sha512-1ZJTZebgqllO79ue2bm3rIGud/bOe0pP5BjSRCRxxYkEZS8STV7zN84UBbiYu7jy+eCKSnVIUgoWWE/tt+shMQ==,
+      }
+
   "@jridgewell/sourcemap-codec@1.4.15":
     resolution:
       {
@@ -1879,22 +1801,6 @@ packages:
         integrity: sha512-es2g3dq6Nb07iFxGk5GuHN20RwBZOsuDQN7izWIisUcv9r+d2C5jQxqmgkdebXgReWfiyUabcki6Fg77mSNrig==,
       }
     engines: { node: ">=14.0.0" }
-
-  "@rollup/plugin-babel@6.0.4":
-    resolution:
-      {
-        integrity: sha512-YF7Y52kFdFT/xVSuVdjkV5ZdX/3YtmX0QulG+x0taQOtJdHYzVU61aSSkAgVJ7NOv6qPkIYiJSgSWWN/DM5sGw==,
-      }
-    engines: { node: ">=14.0.0" }
-    peerDependencies:
-      "@babel/core": ^7.0.0
-      "@types/babel__core": ^7.1.9
-      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
-    peerDependenciesMeta:
-      "@types/babel__core":
-        optional: true
-      rollup:
-        optional: true
 
   "@rollup/pluginutils@5.1.0":
     resolution:
@@ -2389,6 +2295,16 @@ packages:
         integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==,
       }
 
+  "@vitejs/plugin-legacy@5.4.0":
+    resolution:
+      {
+        integrity: sha512-Z7o44IbOIir/appjqtVzxnmLeGD8DjWGNm48lfPWZn4hxjzUjTkMX7BDwncpauWAQ/0VIz6uPeMHl3Za0Rw7wA==,
+      }
+    engines: { node: ^18.0.0 || >=20.0.0 }
+    peerDependencies:
+      terser: ^5.4.0
+      vite: ^5.0.0
+
   "@vitejs/plugin-react@4.3.0":
     resolution:
       {
@@ -2397,6 +2313,14 @@ packages:
     engines: { node: ^14.18.0 || >=16.0.0 }
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0
+
+  acorn@8.11.3:
+    resolution:
+      {
+        integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==,
+      }
+    engines: { node: ">=0.4.0" }
+    hasBin: true
 
   adm-zip@0.5.12:
     resolution:
@@ -2510,6 +2434,16 @@ packages:
       }
     engines: { node: ">=8" }
 
+  browserslist-to-esbuild@2.1.1:
+    resolution:
+      {
+        integrity: sha512-KN+mty6C3e9AN8Z5dI1xeN15ExcRNeISoC3g7V0Kax/MMF9MSoYA2G7lkTTcVUFntiEjkpI0HNgqJC1NjdyNUw==,
+      }
+    engines: { node: ">=18" }
+    hasBin: true
+    peerDependencies:
+      browserslist: "*"
+
   browserslist@4.23.0:
     resolution:
       {
@@ -2517,6 +2451,12 @@ packages:
       }
     engines: { node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7 }
     hasBin: true
+
+  buffer-from@1.1.2:
+    resolution:
+      {
+        integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==,
+      }
 
   callsites@3.1.0:
     resolution:
@@ -2621,6 +2561,12 @@ packages:
         integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==,
       }
 
+  commander@2.20.3:
+    resolution:
+      {
+        integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==,
+      }
+
   convert-source-map@1.9.0:
     resolution:
       {
@@ -2637,6 +2583,12 @@ packages:
     resolution:
       {
         integrity: sha512-9TNiImhKvQqSUkOvk/mMRZzOANTiEVC7WaBNhHcKM7x+/5E1l5NvsysR19zuDQScE8k+kfQXWRN3AtS/eOSHpg==,
+      }
+
+  core-js@3.37.1:
+    resolution:
+      {
+        integrity: sha512-Xn6qmxrQZyB0FFY8E3bgRXei3lWDJHhvI+u0q9TKIYM49G8pAr0FgnnrFRAmsbptZL1yxRADVXn+x5AGsbBfyw==,
       }
 
   cosmiconfig@7.1.0:
@@ -3266,6 +3218,18 @@ packages:
         integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==,
       }
 
+  magic-string@0.30.10:
+    resolution:
+      {
+        integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==,
+      }
+
+  matchmedia-polyfill@0.3.2:
+    resolution:
+      {
+        integrity: sha512-B2zRzjqxZFUusBZrZux59XFFLoTN99SbGranxIHfjZVLGZuy8Iaf/s5iNR3qJwRQZBjBKsU6qBSUCltLV82gdw==,
+      }
+
   mdast-util-from-markdown@2.0.1:
     resolution:
       {
@@ -3313,6 +3277,13 @@ packages:
       {
         integrity: sha512-0H44vDimn51F0YwvxSJSm0eCDOJTRlmN0R1yBh4HLj9wiV1Dn0QoXGbvFAWj2hSItVTlCmBF1hqKlIyUBVFLPg==,
       }
+
+  meow@13.2.0:
+    resolution:
+      {
+        integrity: sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA==,
+      }
+    engines: { node: ">=18" }
 
   merge-stream@2.0.0:
     resolution:
@@ -3502,10 +3473,10 @@ packages:
     engines: { node: ">=10" }
     hasBin: true
 
-  monaco-editor@0.47.0:
+  monaco-editor@0.49.0:
     resolution:
       {
-        integrity: sha512-VabVvHvQ9QmMwXu4du008ZDuyLnHs9j7ThVFsiJoXSOQk18+LF89N4ADzPbFenm0W4V2bGHnFBztIRQTgBfxzw==,
+        integrity: sha512-2I8/T3X/hLxB2oPHgqcNYUVdA/ZEFShT7IAujifIPMfKkNbLOqY8XCoyHCXrsdjb36dW9MwoTwBCFpXKMwNwaQ==,
       }
 
   monaco-languageserver-types@0.3.3:
@@ -4075,10 +4046,23 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
+  source-map-support@0.5.21:
+    resolution:
+      {
+        integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==,
+      }
+
   source-map@0.5.7:
     resolution:
       {
         integrity: sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ==,
+      }
+    engines: { node: ">=0.10.0" }
+
+  source-map@0.6.1:
+    resolution:
+      {
+        integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==,
       }
     engines: { node: ">=0.10.0" }
 
@@ -4141,12 +4125,26 @@ packages:
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0
 
+  systemjs@6.15.1:
+    resolution:
+      {
+        integrity: sha512-Nk8c4lXvMB98MtbmjX7JwJRgJOL8fluecYCfCeYBznwmpOs8Bf15hLM6z4z71EDAhQVrQrI+wt1aLWSXZq+hXA==,
+      }
+
   tar@6.2.1:
     resolution:
       {
         integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==,
       }
     engines: { node: ">=10" }
+
+  terser@5.31.0:
+    resolution:
+      {
+        integrity: sha512-Q1JFAoUKE5IMfI4Z/lkE/E6+SwgzO+x4tq4v1AyBLRj8VSYvRO6A/rQrPg1yud4g0En9EKI1TvFRF2tQFcoUkg==,
+      }
+    engines: { node: ">=10" }
+    hasBin: true
 
   to-fast-properties@2.0.0:
     resolution:
@@ -4737,11 +4735,6 @@ snapshots:
       "@babel/core": 7.24.6
       "@babel/helper-plugin-utils": 7.24.6
 
-  "@babel/plugin-syntax-jsx@7.24.6(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-plugin-utils": 7.24.6
-
   "@babel/plugin-syntax-logical-assignment-operators@7.10.4(@babel/core@7.24.6)":
     dependencies:
       "@babel/core": 7.24.6
@@ -4778,11 +4771,6 @@ snapshots:
       "@babel/helper-plugin-utils": 7.24.6
 
   "@babel/plugin-syntax-top-level-await@7.14.5(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-plugin-utils": 7.24.6
-
-  "@babel/plugin-syntax-typescript@7.24.6(@babel/core@7.24.6)":
     dependencies:
       "@babel/core": 7.24.6
       "@babel/helper-plugin-utils": 7.24.6
@@ -5024,16 +5012,6 @@ snapshots:
       "@babel/core": 7.24.6
       "@babel/helper-plugin-utils": 7.24.6
 
-  "@babel/plugin-transform-react-display-name@7.24.6(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-plugin-utils": 7.24.6
-
-  "@babel/plugin-transform-react-jsx-development@7.24.6(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/plugin-transform-react-jsx": 7.24.6(@babel/core@7.24.6)
-
   "@babel/plugin-transform-react-jsx-self@7.24.6(@babel/core@7.24.6)":
     dependencies:
       "@babel/core": 7.24.6
@@ -5042,21 +5020,6 @@ snapshots:
   "@babel/plugin-transform-react-jsx-source@7.24.6(@babel/core@7.24.6)":
     dependencies:
       "@babel/core": 7.24.6
-      "@babel/helper-plugin-utils": 7.24.6
-
-  "@babel/plugin-transform-react-jsx@7.24.6(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-annotate-as-pure": 7.24.6
-      "@babel/helper-module-imports": 7.24.6
-      "@babel/helper-plugin-utils": 7.24.6
-      "@babel/plugin-syntax-jsx": 7.24.6(@babel/core@7.24.6)
-      "@babel/types": 7.24.6
-
-  "@babel/plugin-transform-react-pure-annotations@7.24.6(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-annotate-as-pure": 7.24.6
       "@babel/helper-plugin-utils": 7.24.6
 
   "@babel/plugin-transform-regenerator@7.24.6(@babel/core@7.24.6)":
@@ -5095,14 +5058,6 @@ snapshots:
     dependencies:
       "@babel/core": 7.24.6
       "@babel/helper-plugin-utils": 7.24.6
-
-  "@babel/plugin-transform-typescript@7.24.6(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-annotate-as-pure": 7.24.6
-      "@babel/helper-create-class-features-plugin": 7.24.6(@babel/core@7.24.6)
-      "@babel/helper-plugin-utils": 7.24.6
-      "@babel/plugin-syntax-typescript": 7.24.6(@babel/core@7.24.6)
 
   "@babel/plugin-transform-unicode-escapes@7.24.6(@babel/core@7.24.6)":
     dependencies:
@@ -5220,25 +5175,6 @@ snapshots:
       "@babel/helper-plugin-utils": 7.24.6
       "@babel/types": 7.24.6
       esutils: 2.0.3
-
-  "@babel/preset-react@7.24.6(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-plugin-utils": 7.24.6
-      "@babel/helper-validator-option": 7.24.6
-      "@babel/plugin-transform-react-display-name": 7.24.6(@babel/core@7.24.6)
-      "@babel/plugin-transform-react-jsx": 7.24.6(@babel/core@7.24.6)
-      "@babel/plugin-transform-react-jsx-development": 7.24.6(@babel/core@7.24.6)
-      "@babel/plugin-transform-react-pure-annotations": 7.24.6(@babel/core@7.24.6)
-
-  "@babel/preset-typescript@7.24.6(@babel/core@7.24.6)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-plugin-utils": 7.24.6
-      "@babel/helper-validator-option": 7.24.6
-      "@babel/plugin-syntax-jsx": 7.24.6(@babel/core@7.24.6)
-      "@babel/plugin-transform-modules-commonjs": 7.24.6(@babel/core@7.24.6)
-      "@babel/plugin-transform-typescript": 7.24.6(@babel/core@7.24.6)
 
   "@babel/regjsgen@0.8.0": {}
 
@@ -5472,6 +5408,11 @@ snapshots:
   "@jridgewell/resolve-uri@3.1.2": {}
 
   "@jridgewell/set-array@1.2.1": {}
+
+  "@jridgewell/source-map@0.3.6":
+    dependencies:
+      "@jridgewell/gen-mapping": 0.3.5
+      "@jridgewell/trace-mapping": 0.3.25
 
   "@jridgewell/sourcemap-codec@1.4.15": {}
 
@@ -5708,15 +5649,6 @@ snapshots:
   "@popperjs/core@2.11.8": {}
 
   "@remix-run/router@1.16.1": {}
-
-  "@rollup/plugin-babel@6.0.4(@babel/core@7.24.6)(@types/babel__core@7.20.5)(rollup@4.18.0)":
-    dependencies:
-      "@babel/core": 7.24.6
-      "@babel/helper-module-imports": 7.24.6
-      "@rollup/pluginutils": 5.1.0(rollup@4.18.0)
-    optionalDependencies:
-      "@types/babel__core": 7.20.5
-      rollup: 4.18.0
 
   "@rollup/pluginutils@5.1.0(rollup@4.18.0)":
     dependencies:
@@ -5971,16 +5903,33 @@ snapshots:
 
   "@ungap/structured-clone@1.2.0": {}
 
-  "@vitejs/plugin-react@4.3.0(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2))":
+  "@vitejs/plugin-legacy@5.4.0(terser@5.31.0)(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0))":
+    dependencies:
+      "@babel/core": 7.24.6
+      "@babel/preset-env": 7.24.6(@babel/core@7.24.6)
+      browserslist: 4.23.0
+      browserslist-to-esbuild: 2.1.1(browserslist@4.23.0)
+      core-js: 3.37.1
+      magic-string: 0.30.10
+      regenerator-runtime: 0.14.1
+      systemjs: 6.15.1
+      terser: 5.31.0
+      vite: 5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  "@vitejs/plugin-react@4.3.0(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0))":
     dependencies:
       "@babel/core": 7.24.6
       "@babel/plugin-transform-react-jsx-self": 7.24.6(@babel/core@7.24.6)
       "@babel/plugin-transform-react-jsx-source": 7.24.6(@babel/core@7.24.6)
       "@types/babel__core": 7.20.5
       react-refresh: 0.14.2
-      vite: 5.2.11(@types/node@20.12.12)(sass@1.77.2)
+      vite: 5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0)
     transitivePeerDependencies:
       - supports-color
+
+  acorn@8.11.3: {}
 
   adm-zip@0.5.12: {}
 
@@ -6064,12 +6013,19 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
+  browserslist-to-esbuild@2.1.1(browserslist@4.23.0):
+    dependencies:
+      browserslist: 4.23.0
+      meow: 13.2.0
+
   browserslist@4.23.0:
     dependencies:
       caniuse-lite: 1.0.30001623
       electron-to-chromium: 1.4.783
       node-releases: 2.0.14
       update-browserslist-db: 1.0.16(browserslist@4.23.0)
+
+  buffer-from@1.1.2: {}
 
   callsites@3.1.0: {}
 
@@ -6121,6 +6077,8 @@ snapshots:
 
   comma-separated-tokens@2.0.3: {}
 
+  commander@2.20.3: {}
+
   convert-source-map@1.9.0: {}
 
   convert-source-map@2.0.0: {}
@@ -6128,6 +6086,8 @@ snapshots:
   core-js-compat@3.37.1:
     dependencies:
       browserslist: 4.23.0
+
+  core-js@3.37.1: {}
 
   cosmiconfig@7.1.0:
     dependencies:
@@ -6468,6 +6428,12 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
+  magic-string@0.30.10:
+    dependencies:
+      "@jridgewell/sourcemap-codec": 1.4.15
+
+  matchmedia-polyfill@0.3.2: {}
+
   mdast-util-from-markdown@2.0.1:
     dependencies:
       "@types/mdast": 4.0.4
@@ -6556,6 +6522,8 @@ snapshots:
   mdast-util-to-string@4.0.0:
     dependencies:
       "@types/mdast": 4.0.4
+
+  meow@13.2.0: {}
 
   merge-stream@2.0.0: {}
 
@@ -6715,7 +6683,7 @@ snapshots:
 
   mkdirp@1.0.4: {}
 
-  monaco-editor@0.47.0: {}
+  monaco-editor@0.49.0: {}
 
   monaco-languageserver-types@0.3.3:
     dependencies:
@@ -6729,19 +6697,19 @@ snapshots:
 
   monaco-types@0.1.0: {}
 
-  monaco-worker-manager@2.0.1(monaco-editor@0.47.0):
+  monaco-worker-manager@2.0.1(monaco-editor@0.49.0):
     dependencies:
-      monaco-editor: 0.47.0
+      monaco-editor: 0.49.0
 
-  monaco-yaml@5.1.1(monaco-editor@0.47.0):
+  monaco-yaml@5.1.1(monaco-editor@0.49.0):
     dependencies:
       "@types/json-schema": 7.0.15
       jsonc-parser: 3.2.1
-      monaco-editor: 0.47.0
+      monaco-editor: 0.49.0
       monaco-languageserver-types: 0.3.3
       monaco-marker-data-provider: 1.2.2
       monaco-types: 0.1.0
-      monaco-worker-manager: 2.0.1(monaco-editor@0.47.0)
+      monaco-worker-manager: 2.0.1(monaco-editor@0.49.0)
       path-browserify: 1.0.1
       prettier: 2.8.8
       vscode-languageserver-textdocument: 1.0.11
@@ -7069,7 +7037,14 @@ snapshots:
 
   source-map-js@1.2.0: {}
 
+  source-map-support@0.5.21:
+    dependencies:
+      buffer-from: 1.1.2
+      source-map: 0.6.1
+
   source-map@0.5.7: {}
+
+  source-map@0.6.1: {}
 
   space-separated-tokens@2.0.2: {}
 
@@ -7098,6 +7073,8 @@ snapshots:
     dependencies:
       react: 18.3.1
 
+  systemjs@6.15.1: {}
+
   tar@6.2.1:
     dependencies:
       chownr: 2.0.0
@@ -7106,6 +7083,13 @@ snapshots:
       minizlib: 2.1.2
       mkdirp: 1.0.4
       yallist: 4.0.0
+
+  terser@5.31.0:
+    dependencies:
+      "@jridgewell/source-map": 0.3.6
+      acorn: 8.11.3
+      commander: 2.20.3
+      source-map-support: 0.5.21
 
   to-fast-properties@2.0.0: {}
 
@@ -7203,22 +7187,22 @@ snapshots:
       unist-util-stringify-position: 4.0.0
       vfile-message: 4.0.2
 
-  vite-plugin-monaco-editor@1.1.0(monaco-editor@0.47.0):
+  vite-plugin-monaco-editor@1.1.0(monaco-editor@0.49.0):
     dependencies:
-      monaco-editor: 0.47.0
+      monaco-editor: 0.49.0
 
-  vite-plugin-svgr@4.2.0(rollup@4.18.0)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2)):
+  vite-plugin-svgr@4.2.0(rollup@4.18.0)(typescript@5.4.5)(vite@5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0)):
     dependencies:
       "@rollup/pluginutils": 5.1.0(rollup@4.18.0)
       "@svgr/core": 8.1.0(typescript@5.4.5)
       "@svgr/plugin-jsx": 8.1.0(@svgr/core@8.1.0(typescript@5.4.5))
-      vite: 5.2.11(@types/node@20.12.12)(sass@1.77.2)
+      vite: 5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0)
     transitivePeerDependencies:
       - rollup
       - supports-color
       - typescript
 
-  vite@5.2.11(@types/node@20.12.12)(sass@1.77.2):
+  vite@5.2.11(@types/node@20.12.12)(sass@1.77.2)(terser@5.31.0):
     dependencies:
       esbuild: 0.20.2
       postcss: 8.4.38
@@ -7227,6 +7211,7 @@ snapshots:
       "@types/node": 20.12.12
       fsevents: 2.3.3
       sass: 1.77.2
+      terser: 5.31.0
 
   void-elements@3.1.0: {}
 
