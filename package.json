@@ -74,7 +74,7 @@
     "node-fetch": "3.3.2",
     "prettier": "3.2.5",
     "pretty-quick": "4.0.0",
-    "sass": "1.77.2",
+    "sass": "1.77.3",
     "typescript": "5.4.5",
     "vite": "5.2.12",
     "vite-plugin-monaco-editor": "1.1.0",
