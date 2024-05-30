@@ -92,7 +92,7 @@ function filterProxies(
   }
 
   return proxies.filter((p) =>
-    p.name.toLowerCase().includes(filterText.trim()),
+    p.name.toLowerCase().includes(filterText.toLowerCase().trim()),
   );
 }
 
