@@ -58,9 +58,6 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
-      matchmedia-polyfill:
-        specifier: ^0.3.2
-        version: 0.3.2
       meta-json-schema:
         specifier: 1.18.5-alpha
         version: 1.18.5-alpha
@@ -3222,12 +3219,6 @@ packages:
     resolution:
       {
         integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==,
-      }
-
-  matchmedia-polyfill@0.3.2:
-    resolution:
-      {
-        integrity: sha512-B2zRzjqxZFUusBZrZux59XFFLoTN99SbGranxIHfjZVLGZuy8Iaf/s5iNR3qJwRQZBjBKsU6qBSUCltLV82gdw==,
       }
 
   mdast-util-from-markdown@2.0.1:
@@ -6431,8 +6422,6 @@ snapshots:
   magic-string@0.30.10:
     dependencies:
       "@jridgewell/sourcemap-codec": 1.4.15
-
-  matchmedia-polyfill@0.3.2: {}
 
   mdast-util-from-markdown@2.0.1:
     dependencies:
