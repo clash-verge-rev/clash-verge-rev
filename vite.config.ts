@@ -18,6 +18,7 @@ export default defineConfig({
       additionalModernPolyfills: [
         "matchmedia-polyfill",
         "matchmedia-polyfill/matchMedia.addListener",
+        path.resolve("./src/polyfills/matchMediaEventTarget.js"),
         path.resolve("./src/polyfills/WeakRef.js"),
         path.resolve("./src/polyfills/RegExp.js"),
       ],
