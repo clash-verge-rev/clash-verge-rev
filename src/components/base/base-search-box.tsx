@@ -1,6 +1,6 @@
-import { Box, SvgIcon, TextField, Theme, styled } from "@mui/material";
+import { Box, SvgIcon, TextField, styled } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
@@ -22,6 +22,7 @@ type SearchProps = {
 
 export const BaseSearchBox = styled((props: SearchProps) => {
   const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [matchCase, setMatchCase] = useState(true);
   const [matchWholeWord, setMatchWholeWord] = useState(false);
   const [useRegularExpression, setUseRegularExpression] = useState(false);
@@ -35,6 +36,14 @@ export const BaseSearchBox = styled((props: SearchProps) => {
     } as React.CSSProperties,
     inheritViewBox: true,
   };
+
+  useEffect(() => {
+    if (!inputRef.current) return;
+
+    onChange({
+      target: inputRef.current,
+    } as ChangeEvent<HTMLInputElement>);
+  }, [matchCase, matchWholeWord, useRegularExpression]);
 
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     props.onSearch(
@@ -80,6 +89,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   return (
     <Tooltip title={errorMessage} placement="bottom-start">
       <TextField
+        inputRef={inputRef}
         hiddenLabel
         fullWidth
         size="small"
