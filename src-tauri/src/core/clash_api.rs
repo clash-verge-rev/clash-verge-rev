@@ -52,7 +52,7 @@ pub async fn get_proxy_delay(
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/proxies/{name}/delay");
 
-    let default_url = "http://1.1.1.1";
+    let default_url = "http://www.apple.com/library/test/success.html";
     let test_url = test_url
         .map(|s| if s.is_empty() { default_url.into() } else { s })
         .unwrap_or(default_url.into());
