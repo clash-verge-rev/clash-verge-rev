@@ -142,8 +142,8 @@ importers:
         specifier: 4.3.0
         version: 4.3.0(vite@5.2.12(@types/node@20.12.7)(sass@1.77.4))
       adm-zip:
-        specifier: 0.5.12
-        version: 0.5.12
+        specifier: 0.5.13
+        version: 0.5.13
       cross-env:
         specifier: 7.0.3
         version: 7.0.3
@@ -1089,9 +1089,9 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0
 
-  adm-zip@0.5.12:
-    resolution: {integrity: sha512-6TVU49mK6KZb4qG6xWaaM4C7sA/sgUMLy/JYMOzkcp3BvVLpW0fXDFQiIzAuxFCt/2+xD7fNIiPFAoLZPhVNLQ==}
-    engines: {node: '>=6.0'}
+  adm-zip@0.5.13:
+    resolution: {integrity: sha512-4U51tTl9J8UVEcuKGr6zRzY95tWoAa9l+ureGBNmsfleszjZblm5NyEEL/ZQxkhi86co5mZhSvL2T7gkZ6feYQ==}
+    engines: {node: '>=12.0'}
 
   agent-base@7.1.1:
     resolution: {integrity: sha512-H0TSyFNDMomMNJQBn8wFV5YC/2eJ+VXECwOadZJT554xP6cODZHPX3H9QMQECxvrgiSOP1pHjy1sMWQVYJOUOA==}
@@ -3225,7 +3225,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  adm-zip@0.5.12: {}
+  adm-zip@0.5.13: {}
 
   agent-base@7.1.1:
     dependencies:
