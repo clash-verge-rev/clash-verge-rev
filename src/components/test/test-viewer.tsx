@@ -39,7 +39,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       }
       return x;
     });
-    await patchVerge({ ...verge, test_list: newList });
+    await patchVerge({ test_list: newList });
   };
 
   useImperativeHandle(ref, () => ({
