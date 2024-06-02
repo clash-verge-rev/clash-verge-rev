@@ -7,6 +7,7 @@ import {
   MenuItem,
   Select,
   SelectProps,
+  Typography,
   styled,
 } from "@mui/material";
 import { useRecoilState } from "recoil";
@@ -130,7 +131,7 @@ const ConnectionsPage = () => {
   return (
     <BasePage
       full
-      title={t("Connections")}
+      title={<span style={{ whiteSpace: "nowrap" }}>{t("Connections")}</span>}
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -159,7 +160,9 @@ const ConnectionsPage = () => {
           </IconButton>
 
           <Button size="small" variant="contained" onClick={onCloseAll}>
-            {t("Close All")}
+            <Typography component="span" style={{ whiteSpace: "nowrap" }}>
+              {t("Close All")}
+            </Typography>
           </Button>
         </Box>
       }
