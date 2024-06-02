@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import {
-  Box,
-  Button,
-  IconButton,
-  MenuItem,
-  Select,
-  SelectProps,
-  Typography,
-  styled,
-} from "@mui/material";
+import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { useRecoilState } from "recoil";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
@@ -35,7 +26,7 @@ const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
 const ConnectionsPage = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
@@ -160,9 +151,7 @@ const ConnectionsPage = () => {
           </IconButton>
 
           <Button size="small" variant="contained" onClick={onCloseAll}>
-            <Typography component="span" style={{ whiteSpace: "nowrap" }}>
-              {t("Close All")}
-            </Typography>
+            <span style={{ whiteSpace: "nowrap" }}>{t("Close All")}</span>
           </Button>
         </Box>
       }
@@ -212,7 +201,7 @@ const ConnectionsPage = () => {
         ) : (
           <Virtuoso
             data={filterConn}
-            itemContent={(index, item) => (
+            itemContent={(_, item) => (
               <ConnectionItem
                 value={item}
                 onShowDetail={() => detailRef.current?.open(item)}
