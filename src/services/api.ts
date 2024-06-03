@@ -82,7 +82,7 @@ export const getProxyDelay = async (
 ) => {
   const params = {
     timeout: timeout || 10000,
-    url: url || "http://www.apple.com/library/test/success.html",
+    url: url || "http://1.1.1.1",
   };
   const instance = await getAxios();
   const result = await instance.get(
@@ -250,7 +250,7 @@ export const getGroupProxyDelays = async (
 ) => {
   const params = {
     timeout: timeout || 10000,
-    url: url || "http://www.apple.com/library/test/success.html",
+    url: url || "http://1.1.1.1",
   };
   const instance = await getAxios();
   const result = await instance.get(
