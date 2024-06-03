@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/api/dialog";
@@ -9,6 +9,7 @@ import {
   Select,
   Input,
   Typography,
+  keyframes,
 } from "@mui/material";
 import {
   exitApp,
@@ -17,7 +18,7 @@ import {
   openLogsDir,
   openDevTools,
 } from "@/services/cmds";
-import { ArrowForward } from "@mui/icons-material";
+import { ArrowForward, Refresh } from "@mui/icons-material";
 import { checkUpdate } from "@tauri-apps/api/updater";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
@@ -40,6 +41,11 @@ interface Props {
 
 const OS = getSystem();
 
+const round = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
 const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
 
@@ -58,6 +64,7 @@ const SettingVerge = ({ onError }: Props) => {
   const themeRef = useRef<DialogRef>(null);
   const layoutRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
+  const [checking, setChecking] = useState(false);
 
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -65,6 +72,7 @@ const SettingVerge = ({ onError }: Props) => {
 
   const onCheckUpdate = useLockFn(async () => {
     try {
+      setChecking(true);
       const info = await checkUpdate();
       if (!info?.shouldUpdate) {
         Notice.success(t("Currently on the Latest Version"));
@@ -73,6 +81,8 @@ const SettingVerge = ({ onError }: Props) => {
       }
     } catch (err: any) {
       Notice.error(err.message || err.toString());
+    } finally {
+      setChecking(false);
     }
   });
 
@@ -290,7 +300,11 @@ const SettingVerge = ({ onError }: Props) => {
           size="small"
           sx={{ my: "2px" }}
           onClick={onCheckUpdate}>
-          <ArrowForward />
+          {checking ? (
+            <Refresh sx={{ animation: `1s linear infinite ${round}` }} />
+          ) : (
+            <ArrowForward />
+          )}
         </IconButton>
       </SettingItem>
 

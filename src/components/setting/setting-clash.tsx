@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import {
@@ -8,8 +8,9 @@ import {
   Typography,
   IconButton,
   Tooltip,
+  keyframes,
 } from "@mui/material";
-import { ArrowForward, Settings, Shuffle } from "@mui/icons-material";
+import { ArrowForward, Refresh, Settings, Shuffle } from "@mui/icons-material";
 import { DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
@@ -28,6 +29,11 @@ const isWIN = getSystem() === "windows";
 interface Props {
   onError: (err: Error) => void;
 }
+
+const round = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
 
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
@@ -51,12 +57,18 @@ const SettingClash = ({ onError }: Props) => {
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
+
+  const [geoUpdating, setGeoUpdating] = useState(false);
+
   const onUpdateGeo = useLockFn(async () => {
     try {
+      setGeoUpdating(true);
       await updateGeoData();
       Notice.success(t("GeoData Updated"));
     } catch (err: any) {
       Notice.error(err?.response.data.message || err.toString());
+    } finally {
+      setGeoUpdating(false);
     }
   });
 
@@ -198,7 +210,11 @@ const SettingClash = ({ onError }: Props) => {
           size="small"
           sx={{ my: "2px" }}
           onClick={onUpdateGeo}>
-          <ArrowForward />
+          {geoUpdating ? (
+            <Refresh sx={{ animation: `1s linear infinite ${round}` }} />
+          ) : (
+            <ArrowForward />
+          )}
         </IconButton>
       </SettingItem>
     </SettingList>
