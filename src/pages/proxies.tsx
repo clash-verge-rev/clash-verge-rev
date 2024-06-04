@@ -19,7 +19,7 @@ const ProxyPage = () => {
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
-    getClashConfig
+    getClashConfig,
   );
 
   const { verge } = useVerge();
@@ -34,13 +34,13 @@ const ProxyPage = () => {
   const curMode = clashConfig?.mode?.toLowerCase();
 
   const onChangeMode = useLockFn(async (mode: string) => {
+    await updateConfigs({ mode });
+    await patchClashConfig({ mode });
+    mutateClash();
     // 断开连接
     if (mode !== curMode && verge?.auto_close_connection) {
       closeAllConnections();
     }
-    await updateConfigs({ mode });
-    await patchClashConfig({ mode });
-    mutateClash();
   });
 
   useEffect(() => {
@@ -64,15 +64,13 @@ const ProxyPage = () => {
                 key={mode}
                 variant={mode === curMode ? "contained" : "outlined"}
                 onClick={() => onChangeMode(mode)}
-                sx={{ textTransform: "capitalize" }}
-              >
+                sx={{ textTransform: "capitalize" }}>
                 {t(mode)}
               </Button>
             ))}
           </ButtonGroup>
         </Box>
-      }
-    >
+      }>
       <ProxyGroups mode={curMode!} />
     </BasePage>
   );
