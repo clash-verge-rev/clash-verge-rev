@@ -250,12 +250,12 @@ jobs:
           - MacOS apple M芯片: aarch64.dmg
 
           ### Linux
-          - Linux 64位: amd64.AppImage/amd64.deb
-          - Linux 32位: i386.deb
-          - Linux arm64架构: arm64.deb
-          - Linux armv7架构: armhf.deb
+          - Linux 64位: amd64.AppImage/amd64.deb/amd64.rpm
+          - Linux 32位: i386.deb/i386.rpm
+          - Linux arm64架构: arm64.deb/aarch64.rpm
+          - Linux armv7架构: armhf.deb/armhfp.rpm
 
-          ### Windows (Win7 用户请查看下面FAQ手动替换内核使用)
+          ### Windows (Win7 用户请查看下面FAQ中的解决方案)
           #### 正常版本(推荐)
           - 64位: x64-setup.exe
           - 32位: x86-setup.exe

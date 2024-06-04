@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "tauri dev",
@@ -35,7 +35,7 @@
     "dayjs": "1.11.5",
     "i18next": "^23.11.3",
     "lodash-es": "^4.17.21",
-    "meta-json-schema": "1.18.5-alpha",
+    "meta-json-schema": "1.18.5-alpha4",
     "monaco-editor": "^0.49.0",
     "monaco-yaml": "^5.1.1",
     "nanoid": "^5.0.7",
