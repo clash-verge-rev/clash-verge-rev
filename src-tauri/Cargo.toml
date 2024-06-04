@@ -10,7 +10,7 @@ edition = "2021"
 build = "build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1", features = [] }
+tauri-build = { git="https://github.com/Pylogmon/tauri",branch = "1.x", features = [] }
 
 [dependencies]
 warp = "0.3"
@@ -37,8 +37,7 @@ serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 sysproxy = { git="https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
 auto-launch = { git="https://github.com/zzzgydi/auto-launch", branch = "main" }
-tauri = { version = "1.6", features = [ "fs-read-file", "fs-exists", "path-all", "protocol-asset", "dialog-open", "notification-all", "icon-png", "icon-ico", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "devtools"] }
-
+tauri = { git="https://github.com/Pylogmon/tauri",branch = "1.x", features = [ "fs-read-file", "fs-exists", "path-all", "protocol-asset", "dialog-open", "notification-all", "icon-png", "icon-ico", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "devtools"] }
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
 deelevate = "0.2.0"
