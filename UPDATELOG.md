@@ -1,3 +1,17 @@
+## v1.6.5
+
+### Features
+
+- 添加 RPM 包支持
+- 优化细节
+
+### Bugs Fixes
+
+- MacOS 10.15 编辑器空白的问题
+- MacOS 低版本启动白屏的问题
+
+---
+
 ## v1.6.4
 
 ### Features
