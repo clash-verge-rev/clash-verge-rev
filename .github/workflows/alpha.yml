@@ -43,9 +43,6 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Install Tauri CLI
-        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
-
       - name: Install Node
         uses: actions/setup-node@v4
         with:
@@ -75,7 +72,7 @@ jobs:
           releaseBody: "More new features are now supported."
           releaseDraft: false
           prerelease: true
-          tauriScript: cargo tauri
+          tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
       - name: Portable Bundle
@@ -168,9 +165,6 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Install Tauri CLI
-        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
-
       - name: Install Node
         uses: actions/setup-node@v4
         with:
@@ -203,7 +197,7 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tauriScript: cargo tauri
+          tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
       - name: Rename
