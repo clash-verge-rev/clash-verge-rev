@@ -6,10 +6,20 @@
     },
     "bundle": {
       "identifier": "io.github.clash-verge-rev.clash-verge-rev",
-      "targets": ["deb", "appimage", "updater"],
+      "targets": ["deb", "rpm", "appimage", "updater"],
       "deb": {
         "depends": ["openssl"],
-        "desktopTemplate": "./template/clash-verge.desktop"
+        "desktopTemplate": "./template/clash-verge.desktop",
+        "provides": ["clash-verge", "clash-meta"],
+        "conflicts": ["clash-verge", "clash-meta"],
+        "replaces": ["clash-verge", "clash-meta"]
+      },
+      "rpm": {
+        "depends": ["openssl"],
+        "desktopTemplate": "./template/clash-verge.desktop",
+        "provides": ["clash-verge", "clash-meta"],
+        "conflicts": ["clash-verge", "clash-meta"],
+        "obsoletes": ["clash-verge", "clash-meta"]
       }
     }
   }
