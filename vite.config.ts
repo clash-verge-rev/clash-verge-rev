@@ -16,6 +16,7 @@ export default defineConfig({
       modernPolyfills: true,
       polyfills: ["web.structured-clone"],
       additionalModernPolyfills: [
+        "core-js/modules/es.object.has-own.js",
         path.resolve("./src/polyfills/matchMedia.js"),
         path.resolve("./src/polyfills/WeakRef.js"),
         path.resolve("./src/polyfills/RegExp.js"),
