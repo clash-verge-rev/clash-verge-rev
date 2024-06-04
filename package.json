@@ -84,5 +84,6 @@
     "semi": true,
     "singleQuote": false,
     "endOfLine": "lf"
-  }
+  },
+  "packageManager": "pnpm@9.1.4"
 }
