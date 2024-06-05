@@ -385,11 +385,19 @@ pub async fn test_delay(url: String) -> Result<u32> {
         .get(url).header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
     let start = Instant::now();
 
-    let response = request.send().await?;
-    if response.status().is_success() {
-        let delay = start.elapsed().as_millis() as u32;
-        Ok(delay)
-    } else {
-        Ok(10000u32)
+    let response = request.send().await;
+    match response {
+        Ok(response) => {
+            log::trace!(target: "app", "test_delay response: {:#?}", response);
+            if response.status().is_success() {
+                Ok(start.elapsed().as_millis() as u32)
+            } else {
+                Ok(10000u32)
+            }
+        }
+        Err(err) => {
+            log::trace!(target: "app", "test_delay error: {:#?}", err);
+            Err(err.into())
+        }
     }
 }
