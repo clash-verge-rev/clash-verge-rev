@@ -72,7 +72,7 @@
     "https-proxy-agent": "7.0.4",
     "husky": "9.0.11",
     "node-fetch": "3.3.2",
-    "prettier": "3.3.0",
+    "prettier": "3.3.1",
     "pretty-quick": "4.0.0",
     "sass": "1.77.4",
     "typescript": "5.4.5",

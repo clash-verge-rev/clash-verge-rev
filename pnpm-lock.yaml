@@ -160,11 +160,11 @@ importers:
         specifier: 3.3.2
         version: 3.3.2
       prettier:
-        specifier: 3.3.0
-        version: 3.3.0
+        specifier: 3.3.1
+        version: 3.3.1
       pretty-quick:
         specifier: 4.0.0
-        version: 4.0.0(prettier@3.3.0)
+        version: 4.0.0(prettier@3.3.1)
       sass:
         specifier: 1.77.4
         version: 1.77.4
@@ -1867,8 +1867,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.3.0:
-    resolution: {integrity: sha512-J9odKxERhCQ10OC2yb93583f6UnYutOeiV5i0zEDS7UGTdUt0u+y8erxl3lBKvwo/JHyyoEdXjwp4dke9oyZ/g==}
+  prettier@3.3.1:
+    resolution: {integrity: sha512-7CAwy5dRsxs8PHXT3twixW9/OEll8MLE0VRPCJyl7CkS6VHGPSlsVaWTiASPTyGyYRyApxlaWTzwUxVNrhcwDg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -4117,9 +4117,9 @@ snapshots:
 
   prettier@2.8.8: {}
 
-  prettier@3.3.0: {}
+  prettier@3.3.1: {}
 
-  pretty-quick@4.0.0(prettier@3.3.0):
+  pretty-quick@4.0.0(prettier@3.3.1):
     dependencies:
       execa: 5.1.1
       find-up: 5.0.0
@@ -4127,7 +4127,7 @@ snapshots:
       mri: 1.2.0
       picocolors: 1.0.0
       picomatch: 3.0.1
-      prettier: 3.3.0
+      prettier: 3.3.1
       tslib: 2.6.2
 
   prop-types@15.8.1:
