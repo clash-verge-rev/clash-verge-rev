@@ -19,6 +19,7 @@ import {
   LoadingCacheProvider,
   LogDataProvider,
   ThemeModeProvider,
+  UpdateStateProvider,
 } from "./services/states";
 
 const mainElementId = "root";
@@ -48,6 +49,7 @@ const contexts = [
   <ThemeModeProvider />,
   <LogDataProvider />,
   <LoadingCacheProvider />,
+  <UpdateStateProvider />,
 ];
 
 createRoot(container).render(

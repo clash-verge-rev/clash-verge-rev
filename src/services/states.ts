@@ -63,6 +63,10 @@ export const atomConnectionSetting = atom<IConnectionSetting>({
 const [LoadingCacheProvider, useLoadingCache, useSetLoadingCache] =
   createContextState<Record<string, boolean>>({});
 
+// save update state
+const [UpdateStateProvider, useUpdateState, useSetUpdateState] =
+  createContextState<boolean>(false);
+
 export {
   ThemeModeProvider,
   useThemeMode,
@@ -73,10 +77,7 @@ export {
   LoadingCacheProvider,
   useLoadingCache,
   useSetLoadingCache,
+  UpdateStateProvider,
+  useUpdateState,
+  useSetUpdateState,
 };
-
-// save update state
-export const atomUpdateState = atom<boolean>({
-  key: "atomUpdateState",
-  default: false,
-});
