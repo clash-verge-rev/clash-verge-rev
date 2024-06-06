@@ -12,7 +12,7 @@
         "frameworks": [],
         "minimumSystemVersion": "10.15",
         "exceptionDomain": "",
-        "signingIdentity": "-",
+        "signingIdentity": null,
         "entitlements": null
       }
     }
