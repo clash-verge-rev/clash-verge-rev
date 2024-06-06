@@ -1,5 +1,6 @@
 import { atom } from "recoil";
 import { createContextState } from "foxact/create-context-state";
+import { useLocalStorage } from "foxact/use-local-storage";
 
 const [ThemeModeProvider, useThemeMode, useSetThemeMode] = createContextState<
   "light" | "dark"
@@ -9,28 +10,7 @@ const [LogDataProvider, useLogData, useSetLogData] = createContextState<
   ILogItem[]
 >([]);
 
-export const atomEnableLog = atom<boolean>({
-  key: "atomEnableLog",
-  effects: [
-    ({ setSelf, onSet }) => {
-      const key = "enable-log";
-
-      try {
-        setSelf(localStorage.getItem(key) !== "false");
-      } catch {}
-
-      onSet((newValue, _, isReset) => {
-        try {
-          if (isReset) {
-            localStorage.removeItem(key);
-          } else {
-            localStorage.setItem(key, newValue.toString());
-          }
-        } catch {}
-      });
-    },
-  ],
-});
+export const useEnableLog = () => useLocalStorage("enable-log", true);
 
 interface IConnectionSetting {
   layout: "table" | "list";
