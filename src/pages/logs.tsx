@@ -7,7 +7,7 @@ import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { atomEnableLog, atomLogData } from "@/services/states";
+import { atomEnableLog, useLogData, useSetLogData } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
@@ -16,7 +16,8 @@ import { BaseStyledSelect } from "@/components/base/base-styled-select";
 
 const LogPage = () => {
   const { t } = useTranslation();
-  const [logData, setLogData] = useRecoilState(atomLogData);
+  const logData = useLogData();
+  const setLogData = useSetLogData();
   const [enableLog, setEnableLog] = useRecoilState(atomEnableLog);
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";

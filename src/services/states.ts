@@ -1,14 +1,16 @@
 import { atom } from "recoil";
+import { createContextState } from "foxact/create-context-state";
 
 export const atomThemeMode = atom<"light" | "dark">({
   key: "atomThemeMode",
   default: "light",
 });
 
-export const atomLogData = atom<ILogItem[]>({
-  key: "atomLogData",
-  default: [],
-});
+const [LogDataProvider, useLogData, useSetLogData] = createContextState<
+  ILogItem[]
+>([]);
+
+export { LogDataProvider, useLogData, useSetLogData };
 
 export const atomEnableLog = atom<boolean>({
   key: "atomEnableLog",
