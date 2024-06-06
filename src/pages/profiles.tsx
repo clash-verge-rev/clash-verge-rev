@@ -1,7 +1,6 @@
 import useSWR, { mutate } from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import { useSetRecoilState } from "recoil";
 import { Box, Button, Grid, IconButton, Stack, Divider } from "@mui/material";
 import {
   DndContext,
@@ -35,7 +34,7 @@ import {
   reorderProfile,
   createProfile,
 } from "@/services/cmds";
-import { atomLoadingCache, useThemeMode } from "@/services/states";
+import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import { closeAllConnections } from "@/services/api";
 import { BasePage, DialogRef, Notice } from "@/components/base";
 import {
@@ -237,7 +236,7 @@ const ProfilePage = () => {
   });
 
   // 更新所有订阅
-  const setLoadingCache = useSetRecoilState(atomLoadingCache);
+  const setLoadingCache = useSetLoadingCache();
   const onUpdateAll = useLockFn(async () => {
     const throttleMutate = throttle(mutateProfiles, 2000, {
       trailing: true,

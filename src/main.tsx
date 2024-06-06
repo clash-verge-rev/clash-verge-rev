@@ -15,7 +15,11 @@ import { BrowserRouter } from "react-router-dom";
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
 import "./services/i18n";
-import { LogDataProvider, ThemeModeProvider } from "./services/states";
+import {
+  LoadingCacheProvider,
+  LogDataProvider,
+  ThemeModeProvider,
+} from "./services/states";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -43,6 +47,7 @@ const contexts = [
   <RecoilRoot children />,
   <ThemeModeProvider />,
   <LogDataProvider />,
+  <LoadingCacheProvider />,
 ];
 
 createRoot(container).render(

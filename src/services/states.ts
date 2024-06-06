@@ -9,15 +9,6 @@ const [LogDataProvider, useLogData, useSetLogData] = createContextState<
   ILogItem[]
 >([]);
 
-export {
-  ThemeModeProvider,
-  useThemeMode,
-  useSetThemeMode,
-  LogDataProvider,
-  useLogData,
-  useSetLogData,
-};
-
 export const atomEnableLog = atom<boolean>({
   key: "atomEnableLog",
   effects: [
@@ -69,10 +60,20 @@ export const atomConnectionSetting = atom<IConnectionSetting>({
 });
 
 // save the state of each profile item loading
-export const atomLoadingCache = atom<Record<string, boolean>>({
-  key: "atomLoadingCache",
-  default: {},
-});
+const [LoadingCacheProvider, useLoadingCache, useSetLoadingCache] =
+  createContextState<Record<string, boolean>>({});
+
+export {
+  ThemeModeProvider,
+  useThemeMode,
+  useSetThemeMode,
+  LogDataProvider,
+  useLogData,
+  useSetLogData,
+  LoadingCacheProvider,
+  useLoadingCache,
+  useSetLoadingCache,
+};
 
 // save update state
 export const atomUpdateState = atom<boolean>({

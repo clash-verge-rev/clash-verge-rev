@@ -17,7 +17,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { RefreshRounded, DragIndicator } from "@mui/icons-material";
-import { atomLoadingCache } from "@/services/states";
+import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
@@ -47,7 +47,8 @@ export const ProfileItem = (props: Props) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
-  const [loadingCache, setLoadingCache] = useRecoilState(atomLoadingCache);
+  const loadingCache = useLoadingCache();
+  const setLoadingCache = useSetLoadingCache();
 
   const { uid, name = "Profile", extra, updated = 0 } = itemData;
 
