@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useRef } from "react";
 import { useLockFn } from "ahooks";
-import { useRecoilValue } from "recoil";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -9,7 +8,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import { atomThemeMode } from "@/services/states";
+import { useThemeMode } from "@/services/states";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice } from "@/components/base";
 import { nanoid } from "nanoid";
@@ -90,7 +89,7 @@ export const EditorViewer = (props: Props) => {
   const { t } = useTranslation();
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const themeMode = useRecoilValue(atomThemeMode);
+  const themeMode = useThemeMode();
 
   useEffect(() => {
     if (!open) return;

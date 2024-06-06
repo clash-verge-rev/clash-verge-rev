@@ -15,7 +15,7 @@ import { BrowserRouter } from "react-router-dom";
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
 import "./services/i18n";
-import { LogDataProvider } from "./services/states";
+import { LogDataProvider, ThemeModeProvider } from "./services/states";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -39,7 +39,11 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-const contexts = [<RecoilRoot children />, <LogDataProvider />];
+const contexts = [
+  <RecoilRoot children />,
+  <ThemeModeProvider />,
+  <LogDataProvider />,
+];
 
 createRoot(container).render(
   <React.StrictMode>
