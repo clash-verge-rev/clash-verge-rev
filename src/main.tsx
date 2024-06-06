@@ -9,7 +9,6 @@ if (!window.ResizeObserver) {
 
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { RecoilRoot } from "recoil";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { BrowserRouter } from "react-router-dom";
 import { BaseErrorBoundary } from "./components/base";
@@ -45,7 +44,6 @@ document.addEventListener("keydown", (event) => {
 });
 
 const contexts = [
-  <RecoilRoot children />,
   <ThemeModeProvider />,
   <LogDataProvider />,
   <LoadingCacheProvider />,

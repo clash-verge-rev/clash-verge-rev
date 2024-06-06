@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
-import { useRecoilState } from "recoil";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
 import { closeAllConnections } from "@/services/api";
-import { atomConnectionSetting } from "@/services/states";
+import {
+  defaultConnectionSetting,
+  useConnectionSetting,
+} from "@/services/states";
 import { useClashInfo } from "@/hooks/use-clash";
 import { BaseEmpty, BasePage } from "@/components/base";
 import { useWebsocket } from "@/hooks/use-websocket";
@@ -34,9 +36,10 @@ const ConnectionsPage = () => {
   const [curOrderOpt, setOrderOpt] = useState("Default");
   const [connData, setConnData] = useState<IConnections>(initConn);
 
-  const [setting, setSetting] = useRecoilState(atomConnectionSetting);
+  const [setting, setSetting] = useConnectionSetting();
 
-  const isTableLayout = setting.layout === "table";
+  const isTableLayout =
+    (setting || defaultConnectionSetting).layout === "table";
 
   const orderOpts: Record<string, OrderFunc> = {
     Default: (list) =>
@@ -137,7 +140,7 @@ const ConnectionsPage = () => {
             size="small"
             onClick={() =>
               setSetting((o) =>
-                o.layout === "list"
+                o?.layout !== "table"
                   ? { ...o, layout: "table" }
                   : { ...o, layout: "list" }
               )

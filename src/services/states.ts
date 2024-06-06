@@ -1,4 +1,3 @@
-import { atom } from "recoil";
 import { createContextState } from "foxact/create-context-state";
 import { useLocalStorage } from "foxact/use-local-storage";
 
@@ -16,28 +15,17 @@ interface IConnectionSetting {
   layout: "table" | "list";
 }
 
-export const atomConnectionSetting = atom<IConnectionSetting>({
-  key: "atomConnectionSetting",
-  effects: [
-    ({ setSelf, onSet }) => {
-      const key = "connections-setting";
+export const defaultConnectionSetting: IConnectionSetting = { layout: "table" };
 
-      try {
-        const value = localStorage.getItem(key);
-        const data = value == null ? { layout: "table" } : JSON.parse(value);
-        setSelf(data);
-      } catch {
-        setSelf({ layout: "table" });
-      }
-
-      onSet((newValue) => {
-        try {
-          localStorage.setItem(key, JSON.stringify(newValue));
-        } catch {}
-      });
-    },
-  ],
-});
+export const useConnectionSetting = () =>
+  useLocalStorage<IConnectionSetting>(
+    "connections-setting",
+    defaultConnectionSetting,
+    {
+      serializer: JSON.stringify,
+      deserializer: JSON.parse,
+    }
+  );
 
 // save the state of each profile item loading
 const [LoadingCacheProvider, useLoadingCache, useSetLoadingCache] =
