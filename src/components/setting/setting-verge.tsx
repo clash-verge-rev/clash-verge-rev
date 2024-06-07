@@ -2,14 +2,7 @@ import { useRef } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/api/dialog";
-import {
-  Button,
-  IconButton,
-  MenuItem,
-  Select,
-  Input,
-  Typography,
-} from "@mui/material";
+import { Button, MenuItem, Select, Input, Typography } from "@mui/material";
 import {
   exitApp,
   openAppDir,
@@ -17,7 +10,6 @@ import {
   openLogsDir,
   openDevTools,
 } from "@/services/cmds";
-import { ChevronRightRounded } from "@mui/icons-material";
 import { checkUpdate } from "@tauri-apps/api/updater";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";

@@ -9,7 +9,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { ChevronRightRounded, Settings, Shuffle } from "@mui/icons-material";
+import { Settings, Shuffle } from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
