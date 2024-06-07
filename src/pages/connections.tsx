@@ -5,10 +5,7 @@ import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
 import { closeAllConnections } from "@/services/api";
-import {
-  defaultConnectionSetting,
-  useConnectionSetting,
-} from "@/services/states";
+import { useConnectionSetting } from "@/services/states";
 import { useClashInfo } from "@/hooks/use-clash";
 import { BaseEmpty, BasePage } from "@/components/base";
 import { useWebsocket } from "@/hooks/use-websocket";
@@ -38,8 +35,7 @@ const ConnectionsPage = () => {
 
   const [setting, setSetting] = useConnectionSetting();
 
-  const isTableLayout =
-    (setting || defaultConnectionSetting).layout === "table";
+  const isTableLayout = setting.layout === "table";
 
   const orderOpts: Record<string, OrderFunc> = {
     Default: (list) =>

@@ -15,7 +15,7 @@ interface IConnectionSetting {
   layout: "table" | "list";
 }
 
-export const defaultConnectionSetting: IConnectionSetting = { layout: "table" };
+const defaultConnectionSetting: IConnectionSetting = { layout: "table" };
 
 export const useConnectionSetting = () =>
   useLocalStorage<IConnectionSetting>(

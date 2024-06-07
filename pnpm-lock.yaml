@@ -53,8 +53,8 @@ importers:
         specifier: 1.11.5
         version: 1.11.5
       foxact:
-        specifier: ^0.2.34
-        version: 0.2.34(react@18.3.1)
+        specifier: ^0.2.35
+        version: 0.2.35(react@18.3.1)
       i18next:
         specifier: ^23.11.5
         version: 23.11.5
@@ -2842,10 +2842,10 @@ packages:
       }
     engines: { node: ">=12.20.0" }
 
-  foxact@0.2.34:
+  foxact@0.2.35:
     resolution:
       {
-        integrity: sha512-9GrB4NPhTjaJ5pzMkfYFatLGgt5LWq3hhVhYR7zG/PaHhtt3ObOzdRVmmO/whh5E7W8JBykiS6RLtnjeLZLSeg==,
+        integrity: sha512-5e2p34TcBETZTTMhmf4WuljS07lgtv3laimqJer9OGOqYgOpYHgKfR0Cie8Q2IxH1FFhVkm1l0+2W/XL8nBL7Q==,
       }
     peerDependencies:
       react: "*"
@@ -6237,7 +6237,7 @@ snapshots:
     dependencies:
       fetch-blob: 3.2.0
 
-  foxact@0.2.34(react@18.3.1):
+  foxact@0.2.35(react@18.3.1):
     dependencies:
       client-only: 0.0.1
       server-only: 0.0.1
