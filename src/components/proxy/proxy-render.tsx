@@ -17,8 +17,7 @@ import { ProxyItem } from "./proxy-item";
 import { ProxyItemMini } from "./proxy-item-mini";
 import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
-import { useRecoilState } from "recoil";
-import { atomThemeMode } from "@/services/states";
+import { useThemeMode } from "@/services/states";
 import { useEffect, useMemo, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { downloadIconCache } from "@/services/cmds";
@@ -38,7 +37,7 @@ export const ProxyRender = (props: RenderProps) => {
   const { type, group, headState, proxy, proxyCol } = item;
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;
-  const [mode] = useRecoilState(atomThemeMode);
+  const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
   const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
   const [iconCachePath, setIconCachePath] = useState("");

@@ -7,8 +7,7 @@ import { openWebUrl } from "@/services/cmds";
 import SettingVerge from "@/components/setting/setting-verge";
 import SettingClash from "@/components/setting/setting-clash";
 import SettingSystem from "@/components/setting/setting-system";
-import { atomThemeMode } from "@/services/states";
-import { useRecoilState } from "recoil";
+import { useThemeMode } from "@/services/states";
 
 const SettingPage = () => {
   const { t } = useTranslation();
@@ -25,7 +24,7 @@ const SettingPage = () => {
     return openWebUrl("https://clash-verge-rev.github.io/guide/log.html");
   });
 
-  const [mode] = useRecoilState(atomThemeMode);
+  const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
 
   return (
