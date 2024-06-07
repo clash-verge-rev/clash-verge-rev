@@ -60,7 +60,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           curl -O https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
-          sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain DeveloperIDG2CA.cer
+          sudo security add-trusted-cert -d -r trustRoot -k ${HOME}/Library/Keychains/login.keychain-db DeveloperIDG2CA.cer
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
@@ -109,9 +109,10 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          #加入以下内容为提交app到apple认证，当前会报错，已发邮件与apple沟通
+          #APPLE_ID: ${{ secrets.APPLE_ID }}
+          #APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          #APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           target: ${{ matrix.target }}
 
