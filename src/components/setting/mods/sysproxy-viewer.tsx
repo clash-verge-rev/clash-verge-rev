@@ -1,6 +1,8 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
+import { IconButton, Tooltip } from "@mui/material";
+import { InfoRounded } from "@mui/icons-material";
 import {
   Box,
   InputAdornment,
@@ -103,7 +105,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("System Proxy Setting")}
-      contentSx={{ width: 450, maxHeight: 300 }}
+      contentSx={{ width: 450, maxHeight: 565 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
@@ -111,6 +113,39 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       onOk={onSave}
     >
       <List>
+        <Box
+          sx={{
+            border: "1px solid #bbb",
+            borderRadius: "5px",
+            padding: "8px",
+          }}
+        >
+          <Typography variant="body1" sx={{ fontSize: "18px" }}>
+            {t("Current System Proxy")}
+          </Typography>
+          <FlexBox>
+            <Typography className="label">{t("Enable status")}</Typography>
+            <Typography className="value">
+              {value.pac
+                ? autoproxy?.enable
+                  ? t("Enabled")
+                  : t("Disabled")
+                : sysproxy?.enable
+                ? t("Enabled")
+                : t("Disabled")}
+            </Typography>
+          </FlexBox>
+          {!value.pac && (
+            <>
+              <FlexBox>
+                <Typography className="label">{t("Server Addr")}</Typography>
+                <Typography className="value">
+                  {sysproxy?.server ? sysproxy.server : t("Not available")}
+                </Typography>
+              </FlexBox>
+            </>
+          )}
+        </Box>
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Use PAC Mode")} />
           <Switch
@@ -120,8 +155,17 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(_, e) => setValue((v) => ({ ...v, pac: e }))}
           />
         </ListItem>
+
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Proxy Guard")} />
+          <Tooltip title={t("Proxy Guard Info")}>
+            <IconButton color="inherit" size="small">
+              <InfoRounded
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </Tooltip>
           <Switch
             edge="end"
             disabled={!enabled}
@@ -148,15 +192,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             }}
           />
         </ListItem>
+
         {!value.pac && (
           <>
-            <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
-              <ListItemText
-                primary={t("Proxy Bypass")}
-                sx={{ padding: "3px 0" }}
-              />
-            </ListItem>
-            <ListItem sx={{ padding: "5px 2px" }}>
+            <FlexBox>
+              <Typography className="label">{t("Proxy Bypass")}</Typography>
+            </FlexBox>
+            <FlexBox>
               <TextField
                 disabled={!enabled}
                 size="small"
@@ -170,9 +212,24 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                   setValue((v) => ({ ...v, bypass: e.target.value }))
                 }
               />
-            </ListItem>
+            </FlexBox>
+            <FlexBox>
+              <Typography className="label">{t("Bypass")}</Typography>
+            </FlexBox>
+            <FlexBox>
+              <TextField
+                disabled={true}
+                size="small"
+                autoComplete="off"
+                multiline
+                rows={4}
+                sx={{ width: "100%" }}
+                value={sysproxy?.bypass || "-"}
+              />
+            </FlexBox>
           </>
         )}
+
         {value.pac && (
           <>
             <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
@@ -209,53 +266,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             </ListItem>
           </>
         )}
-      </List>
 
-      <Box sx={{ mt: 2.5 }}>
-        <Typography variant="body1" sx={{ fontSize: "18px", mb: 1 }}>
-          {t("Current System Proxy")}
-        </Typography>
-
-        <FlexBox>
-          <Typography className="label">{t("Enable status")}</Typography>
-          <Typography className="value">
-            {value.pac
-              ? (!!autoproxy?.enable).toString()
-              : (!!sysproxy?.enable).toString()}
-          </Typography>
-        </FlexBox>
-        {!value.pac && (
-          <>
-            <FlexBox>
-              <Typography className="label">{t("Server Addr")}</Typography>
-              <Typography className="value">
-                {sysproxy?.server || "-"}
-              </Typography>
-            </FlexBox>
-
-            <FlexBox>
-              <Typography className="label">{t("Bypass")}</Typography>
-            </FlexBox>
-            <FlexBox>
-              <TextField
-                disabled={true}
-                size="small"
-                autoComplete="off"
-                multiline
-                rows={4}
-                sx={{ width: "100%" }}
-                value={sysproxy?.bypass || "-"}
-              />
-            </FlexBox>
-          </>
-        )}
         {value.pac && (
           <FlexBox>
             <Typography className="label">{t("PAC URL")}</Typography>
             <Typography className="value">{autoproxy?.url || "-"}</Typography>
           </FlexBox>
         )}
-      </Box>
+      </List>
     </BaseDialog>
   );
 });
@@ -266,6 +284,6 @@ const FlexBox = styled("div")`
 
   .label {
     flex: none;
-    width: 85px;
+    //width: 85px;
   }
 `;
