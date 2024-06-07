@@ -59,6 +59,12 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
+      - name: Download and install Apple intermediate certificates
+        if: matrix.os == 'macos-latest'
+        run: |
+          curl -O https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain DeveloperIDG2CA.cer
+
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
