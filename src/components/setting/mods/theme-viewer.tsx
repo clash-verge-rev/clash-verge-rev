@@ -81,7 +81,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       title={t("Theme Setting")}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
-      contentSx={{ width: 400, maxHeight: 300, overflow: "auto", pb: 0 }}
+      contentSx={{ width: 400, maxHeight: 505, overflow: "auto", pb: 0 }}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}

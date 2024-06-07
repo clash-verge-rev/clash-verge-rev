@@ -123,16 +123,26 @@ const SettingSystem = ({ onError }: Props) => {
       <SettingItem
         label={t("System Proxy")}
         extra={
-          <IconButton
-            color="inherit"
-            size="small"
-            onClick={() => sysproxyRef.current?.open()}
-          >
-            <Settings
-              fontSize="inherit"
-              style={{ cursor: "pointer", opacity: 0.75 }}
-            />
-          </IconButton>
+          <>
+            <Tooltip title={t("System Proxy Info")} placement="top">
+              <IconButton color="inherit" size="small">
+                <InfoRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+            </Tooltip>
+            <IconButton
+              color="inherit"
+              size="small"
+              onClick={() => sysproxyRef.current?.open()}
+            >
+              <Settings
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </>
         }
       >
         <GuardState
