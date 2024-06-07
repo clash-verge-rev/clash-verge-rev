@@ -33,6 +33,7 @@
     "ahooks": "^3.8.0",
     "axios": "^1.7.2",
     "dayjs": "1.11.5",
+    "foxact": "^0.2.34",
     "i18next": "^23.11.5",
     "lodash-es": "^4.17.21",
     "meta-json-schema": "1.18.5-alpha4",
@@ -48,7 +49,6 @@
     "react-router-dom": "^6.23.1",
     "react-transition-group": "^4.4.5",
     "react-virtuoso": "^4.7.11",
-    "recoil": "^0.7.7",
     "swr": "^1.3.0",
     "tar": "^6.2.1",
     "types-pac": "^1.0.2"

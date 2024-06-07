@@ -1,7 +1,6 @@
 import useSWR, { mutate } from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import { useSetRecoilState } from "recoil";
 import { Box, Button, Grid, IconButton, Stack, Divider } from "@mui/material";
 import {
   DndContext,
@@ -35,7 +34,7 @@ import {
   reorderProfile,
   createProfile,
 } from "@/services/cmds";
-import { atomLoadingCache } from "@/services/states";
+import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import { closeAllConnections } from "@/services/api";
 import { BasePage, DialogRef, Notice } from "@/components/base";
 import {
@@ -47,8 +46,6 @@ import { ProfileMore } from "@/components/profile/profile-more";
 import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { throttle } from "lodash-es";
-import { useRecoilState } from "recoil";
-import { atomThemeMode } from "@/services/states";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/api/fs";
@@ -239,7 +236,7 @@ const ProfilePage = () => {
   });
 
   // 更新所有订阅
-  const setLoadingCache = useSetRecoilState(atomLoadingCache);
+  const setLoadingCache = useSetLoadingCache();
   const onUpdateAll = useLockFn(async () => {
     const throttleMutate = throttle(mutateProfiles, 2000, {
       trailing: true,
@@ -271,7 +268,7 @@ const ProfilePage = () => {
     const text = await readText();
     if (text) setUrl(text);
   };
-  const [mode] = useRecoilState(atomThemeMode);
+  const mode = useThemeMode();
   const islight = mode === "light" ? true : false;
   const dividercolor = islight
     ? "rgba(0, 0, 0, 0.06)"

@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useRecoilState } from "recoil";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
@@ -7,7 +6,7 @@ import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { atomEnableLog, atomLogData } from "@/services/states";
+import { useEnableLog, useLogData, useSetLogData } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
@@ -16,8 +15,9 @@ import { BaseStyledSelect } from "@/components/base/base-styled-select";
 
 const LogPage = () => {
   const { t } = useTranslation();
-  const [logData, setLogData] = useRecoilState(atomLogData);
-  const [enableLog, setEnableLog] = useRecoilState(atomEnableLog);
+  const logData = useLogData();
+  const setLogData = useSetLogData();
+  const [enableLog, setEnableLog] = useEnableLog();
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
   const [logState, setLogState] = useState("all");

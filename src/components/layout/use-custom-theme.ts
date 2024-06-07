@@ -1,8 +1,7 @@
 import { useEffect, useMemo } from "react";
-import { useRecoilState } from "recoil";
 import { alpha, createTheme, Shadows, Theme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
-import { atomThemeMode } from "@/services/states";
+import { useSetThemeMode, useThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
 
@@ -12,7 +11,8 @@ import { useVerge } from "@/hooks/use-verge";
 export const useCustomTheme = () => {
   const { verge } = useVerge();
   const { theme_mode, theme_setting } = verge ?? {};
-  const [mode, setMode] = useRecoilState(atomThemeMode);
+  const mode = useThemeMode();
+  const setMode = useSetThemeMode();
 
   useEffect(() => {
     const themeMode = ["light", "dark", "system"].includes(theme_mode!)

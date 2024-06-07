@@ -14,8 +14,7 @@ import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import iconDark from "@/assets/image/icon_dark.svg?react";
-import { atomThemeMode } from "@/services/states";
-import { useRecoilState } from "recoil";
+import { useThemeMode } from "@/services/states";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
@@ -36,7 +35,7 @@ dayjs.extend(relativeTime);
 const OS = getSystem();
 
 const Layout = () => {
-  const [mode] = useRecoilState(atomThemeMode);
+  const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
   const { theme } = useCustomTheme();

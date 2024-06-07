@@ -9,11 +9,17 @@ if (!window.ResizeObserver) {
 
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { RecoilRoot } from "recoil";
+import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { BrowserRouter } from "react-router-dom";
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
 import "./services/i18n";
+import {
+  LoadingCacheProvider,
+  LogDataProvider,
+  ThemeModeProvider,
+  UpdateStateProvider,
+} from "./services/states";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -37,14 +43,21 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+const contexts = [
+  <ThemeModeProvider />,
+  <LogDataProvider />,
+  <LoadingCacheProvider />,
+  <UpdateStateProvider />,
+];
+
 createRoot(container).render(
   <React.StrictMode>
-    <RecoilRoot>
+    <ComposeContextProvider contexts={contexts}>
       <BaseErrorBoundary>
         <BrowserRouter>
           <Layout />
         </BrowserRouter>
       </BaseErrorBoundary>
-    </RecoilRoot>
+    </ComposeContextProvider>
   </React.StrictMode>
 );
