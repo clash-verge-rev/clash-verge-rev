@@ -55,7 +55,7 @@ const SettingVerge = ({ onError }: Props) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
 
-  const onCheckUpdate = useLockFn(async () => {
+  const onCheckUpdate = async () => {
     try {
       const info = await checkUpdate();
       if (!info?.shouldUpdate) {
@@ -66,7 +66,7 @@ const SettingVerge = ({ onError }: Props) => {
     } catch (err: any) {
       Notice.error(err.message || err.toString());
     }
-  });
+  };
 
   return (
     <SettingList title={t("Verge Setting")}>

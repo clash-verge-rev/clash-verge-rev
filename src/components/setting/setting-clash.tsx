@@ -51,14 +51,14 @@ const SettingClash = ({ onError }: Props) => {
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
-  const onUpdateGeo = useLockFn(async () => {
+  const onUpdateGeo = async () => {
     try {
       await updateGeoData();
       Notice.success(t("GeoData Updated"));
     } catch (err: any) {
       Notice.error(err?.response.data.message || err.toString());
     }
-  });
+  };
 
   return (
     <SettingList title={t("Clash Setting")}>
