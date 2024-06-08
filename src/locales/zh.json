@@ -168,6 +168,7 @@
   "Runtime Config": "当前配置",
   "ReadOnly": "只读",
   "ReadOnlyMessage": "无法在只读模式下编辑",
+  "Go to Release Page": "前往发布页",
   "Restart": "重启内核",
   "Upgrade": "升级内核",
 

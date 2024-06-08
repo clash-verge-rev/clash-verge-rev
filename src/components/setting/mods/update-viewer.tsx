@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { forwardRef, useImperativeHandle, useState, useMemo } from "react";
 import { useLockFn } from "ahooks";
-import { Box, LinearProgress } from "@mui/material";
+import { Box, LinearProgress, Button } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { relaunch } from "@tauri-apps/api/process";
 import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
@@ -9,6 +9,7 @@ import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { useUpdateState, useSetUpdateState } from "@/services/states";
 import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
 import { portableFlag } from "@/pages/_layout";
+import { open as openUrl } from "@tauri-apps/api/shell";
 import ReactMarkdown from "react-markdown";
 
 let eventListener: UnlistenFn | null = null;
@@ -76,7 +77,24 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={`New Version v${updateInfo?.manifest?.version}`}
+      title={
+        <Box display="flex" justifyContent="space-between">
+          {`New Version v${updateInfo?.manifest?.version}`}
+          <Box>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
+                openUrl(
+                  `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${updateInfo?.manifest?.version}`
+                );
+              }}
+            >
+              {t("Go to Release Page")}
+            </Button>
+          </Box>
+        </Box>
+      }
       contentSx={{ minWidth: 360, maxWidth: 400, height: "50vh" }}
       okBtn={t("Update")}
       cancelBtn={t("Cancel")}
