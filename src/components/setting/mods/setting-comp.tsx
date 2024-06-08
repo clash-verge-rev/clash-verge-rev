@@ -16,7 +16,7 @@ interface ItemProps {
   extra?: ReactNode;
   children?: ReactNode;
   secondary?: ReactNode;
-  onClick?: () => void | Promise<void>;
+  onClick?: () => void | Promise<any>;
 }
 
 export const SettingItem: React.FC<ItemProps> = (props) => {
@@ -32,11 +32,13 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const handleClick = () => {
-    if (isAsyncFunction(onClick)) {
-      setIsLoading(true);
-      onClick().finally(() => setIsLoading(false));
-    } else {
-      onClick();
+    if (onClick) {
+      if (isAsyncFunction(onClick)) {
+        setIsLoading(true);
+        onClick()!.finally(() => setIsLoading(false));
+      } else {
+        onClick();
+      }
     }
   };
 
