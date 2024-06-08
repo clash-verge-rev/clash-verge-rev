@@ -103,13 +103,6 @@ jobs:
           NODE_OPTIONS: "--max_old_space_size=4096"
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          #加入以下内容为提交app到apple认证，当前会报错，已发邮件与apple沟通
-          #APPLE_ID: ${{ secrets.APPLE_ID }}
-          #APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          #APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           target: ${{ matrix.target }}
 
@@ -118,16 +111,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
-
-      - name: Upload Release
-        if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
-          body: "More new features are now supported."
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
