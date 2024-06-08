@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import {
   Box,
   List,
@@ -8,13 +8,15 @@ import {
   ListSubheader,
 } from "@mui/material";
 import { ChevronRightRounded } from "@mui/icons-material";
+import CircularProgress from "@mui/material/CircularProgress";
+import isAsyncFunction from "@/utils/is-async-function";
 
 interface ItemProps {
   label: ReactNode;
   extra?: ReactNode;
   children?: ReactNode;
   secondary?: ReactNode;
-  onClick?: () => void;
+  onClick?: () => void | Promise<any>;
 }
 
 export const SettingItem: React.FC<ItemProps> = (props) => {
@@ -28,11 +30,27 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
     </Box>
   );
 
+  const [isLoading, setIsLoading] = useState(false);
+  const handleClick = () => {
+    if (onClick) {
+      if (isAsyncFunction(onClick)) {
+        setIsLoading(true);
+        onClick()!.finally(() => setIsLoading(false));
+      } else {
+        onClick();
+      }
+    }
+  };
+
   return clickable ? (
     <ListItem disablePadding>
-      <ListItemButton onClick={onClick}>
+      <ListItemButton onClick={handleClick} disabled={isLoading}>
         <ListItemText primary={primary} secondary={secondary} />
-        <ChevronRightRounded />
+        {isLoading ? (
+          <CircularProgress color="inherit" size={20} />
+        ) : (
+          <ChevronRightRounded />
+        )}
       </ListItemButton>
     </ListItem>
   ) : (
