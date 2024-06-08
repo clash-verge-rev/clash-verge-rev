@@ -88,7 +88,7 @@ impl Tray {
                     ),
             ))
             .add_native_item(SystemTrayMenuItem::Separator)
-            .add_item(CustomMenuItem::new("quit", t!("Quit", "退出")).accelerator("CmdOrControl+Q"))
+            .add_item(CustomMenuItem::new("quit", t!("Quit", "退出")))
     }
 
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {

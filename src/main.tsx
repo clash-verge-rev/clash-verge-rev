@@ -37,7 +37,7 @@ document.addEventListener("keydown", (event) => {
   }
   if (
     (event.ctrlKey || event.metaKey) &&
-    ["F", "H", "P", "R", "U"].includes(event.key.toUpperCase())
+    ["F", "H", "P", "Q", "R", "U"].includes(event.key.toUpperCase())
   ) {
     event.preventDefault();
   }
