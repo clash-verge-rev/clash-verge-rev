@@ -41,6 +41,7 @@ async function resolveUpdater() {
       "windows-x86_64": { signature: "", url: "" },
       "windows-aarch64": { signature: "", url: "" },
       "windows-x86": { signature: "", url: "" },
+      "windows-i686": { signature: "", url: "" },
     },
   };
 
@@ -60,11 +61,13 @@ async function resolveUpdater() {
     // win32 url
     if (name.endsWith("x86_fixed_webview2-setup.nsis.zip")) {
       updateData.platforms["windows-x86"].url = browser_download_url;
+      updateData.platforms["windows-i686"].url = browser_download_url;
     }
     // win32 signature
     if (name.endsWith("x86_fixed_webview2-setup.nsis.zip.sig")) {
       const sig = await getSignature(browser_download_url);
       updateData.platforms["windows-x86"].signature = sig;
+      updateData.platforms["windows-i686"].signature = sig;
     }
 
     // win arm url

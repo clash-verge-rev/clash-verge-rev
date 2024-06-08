@@ -46,11 +46,13 @@ async function resolveUpdater() {
       "darwin-x86_64": { signature: "", url: "" },
       "linux-x86_64": { signature: "", url: "" },
       "linux-x86": { signature: "", url: "" },
+      "linux-i686": { signature: "", url: "" },
       "linux-aarch64": { signature: "", url: "" },
       "linux-armv7": { signature: "", url: "" },
       "windows-x86_64": { signature: "", url: "" },
       "windows-aarch64": { signature: "", url: "" },
       "windows-x86": { signature: "", url: "" },
+      "windows-i686": { signature: "", url: "" },
     },
   };
 
@@ -72,11 +74,13 @@ async function resolveUpdater() {
     // win32 url
     if (name.endsWith("x64-setup.nsis.zip")) {
       updateData.platforms["windows-x86"].url = browser_download_url;
+      updateData.platforms["windows-i686"].url = browser_download_url;
     }
     // win32 signature
     if (name.endsWith("x64-setup.nsis.zip.sig")) {
       const sig = await getSignature(browser_download_url);
       updateData.platforms["windows-x86"].signature = sig;
+      updateData.platforms["windows-i686"].signature = sig;
     }
 
     // win arm url
@@ -106,29 +110,22 @@ async function resolveUpdater() {
     // darwin url (aarch)
     if (name.endsWith("aarch64.app.tar.gz")) {
       updateData.platforms["darwin-aarch64"].url = browser_download_url;
+      // 使linux可以检查更新
+      updateData.platforms.linux.url = browser_download_url;
+      updateData.platforms["linux-x86_64"].url = browser_download_url;
+      updateData.platforms["linux-x86"].url = browser_download_url;
+      updateData.platforms["linux-i686"].url = browser_download_url;
+      updateData.platforms["linux-aarch64"].url = browser_download_url;
+      updateData.platforms["linux-armv7"].url = browser_download_url;
     }
     // darwin signature (aarch)
     if (name.endsWith("aarch64.app.tar.gz.sig")) {
       const sig = await getSignature(browser_download_url);
       updateData.platforms["darwin-aarch64"].signature = sig;
-    }
-
-    // linux x64 url
-    if (name.endsWith("amd64.AppImage.tar.gz")) {
-      updateData.platforms.linux.url = browser_download_url;
-      updateData.platforms["linux-x86_64"].url = browser_download_url;
-      updateData.platforms["linux-x86"].url = browser_download_url;
-      // 暂时使用x64版本的url和sig，使得可以检查更新，但aarch64版本还不支持构建appimage
-      updateData.platforms["linux-aarch64"].url = browser_download_url;
-      updateData.platforms["linux-armv7"].url = browser_download_url;
-    }
-    // linux x64 signature
-    if (name.endsWith("amd64.AppImage.tar.gz.sig")) {
-      const sig = await getSignature(browser_download_url);
       updateData.platforms.linux.signature = sig;
       updateData.platforms["linux-x86_64"].signature = sig;
       updateData.platforms["linux-x86"].url = browser_download_url;
-      // 暂时使用x64版本的url和sig，使得可以检查更新，但aarch64版本还不支持构建appimage
+      updateData.platforms["linux-i686"].url = browser_download_url;
       updateData.platforms["linux-aarch64"].signature = sig;
       updateData.platforms["linux-armv7"].signature = sig;
     }
