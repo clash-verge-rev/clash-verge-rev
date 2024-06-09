@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { IconButton, Tooltip } from "@mui/material";
 import { InfoRounded } from "@mui/icons-material";
 import {
-  Box,
   InputAdornment,
   List,
   ListItem,
@@ -19,6 +18,7 @@ import { getSystemProxy, getAutotemProxy } from "@/services/cmds";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { Edit } from "@mui/icons-material";
 import { EditorViewer } from "@/components/profile/editor-viewer";
+import { BaseFieldset } from "@/components/base/base-fieldset";
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY 127.0.0.1:%mixed-port%; SOCKS5 127.0.0.1:%mixed-port%; DIRECT;";
 }`;
@@ -113,16 +113,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       onOk={onSave}
     >
       <List>
-        <Box
-          sx={{
-            border: "1px solid #bbb",
-            borderRadius: "5px",
-            padding: "8px",
-          }}
-        >
-          <Typography variant="body1" sx={{ fontSize: "18px" }}>
-            {t("Current System Proxy")}
-          </Typography>
+        <BaseFieldset label={t("Current System Proxy")} padding="15px 10px">
           <FlexBox>
             <Typography className="label">{t("Enable status")}</Typography>
             <Typography className="value">
@@ -145,7 +136,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               </FlexBox>
             </>
           )}
-        </Box>
+        </BaseFieldset>
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Use PAC Mode")} />
           <Switch

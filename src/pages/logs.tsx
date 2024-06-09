@@ -39,6 +39,7 @@ const LogPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
+            title={t("Pause")}
             size="small"
             color="inherit"
             onClick={() => setEnableLog((e) => !e)}
