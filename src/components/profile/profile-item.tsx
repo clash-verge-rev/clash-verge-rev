@@ -278,6 +278,7 @@ export const ProfileItem = (props: Props) => {
           {/* only if has url can it be updated */}
           {hasUrl && (
             <IconButton
+              title={t("Refresh")}
               sx={{
                 position: "absolute",
                 p: "3px",
