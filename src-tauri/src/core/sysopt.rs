@@ -41,6 +41,33 @@ static DEFAULT_BYPASS: &str = "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172
 static DEFAULT_BYPASS: &str =
     "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 
+fn get_bypass() -> String {
+    let bypass = DEFAULT_BYPASS.to_string();
+
+    let custom_bypass = match {
+        let verge = Config::verge();
+        let verge = verge.latest();
+        verge.system_proxy_bypass.clone()
+    } {
+        Some(bypass) => bypass,
+        None => "".to_string(),
+    };
+    #[cfg(target_os = "windows")]
+    let bypass = if custom_bypass.is_empty() {
+        bypass
+    } else {
+        format!("{};{}", bypass, custom_bypass)
+    };
+    #[cfg(not(target_os = "windows"))]
+    let bypass = if custom_bypass.is_empty() {
+        bypass
+    } else {
+        format!("{},{}", bypass, custom_bypass)
+    };
+
+    bypass.into()
+}
+
 impl Sysopt {
     pub fn global() -> &'static Sysopt {
         static SYSOPT: OnceCell<Sysopt> = OnceCell::new();
@@ -63,12 +90,11 @@ impl Sysopt {
             .unwrap_or(Config::clash().data().get_mixed_port());
         let pac_port = IVerge::get_singleton_port();
 
-        let (enable, bypass, pac) = {
+        let (enable, pac) = {
             let verge = Config::verge();
             let verge = verge.latest();
             (
                 verge.enable_system_proxy.unwrap_or(false),
-                verge.system_proxy_bypass.clone(),
                 verge.proxy_auto_config.unwrap_or(false),
             )
         };
@@ -76,16 +102,7 @@ impl Sysopt {
             enable,
             host: String::from("127.0.0.1"),
             port,
-            bypass: match bypass {
-                Some(bypass) => {
-                    if bypass.is_empty() {
-                        DEFAULT_BYPASS.into()
-                    } else {
-                        bypass
-                    }
-                }
-                None => DEFAULT_BYPASS.into(),
-            },
+            bypass: get_bypass(),
         };
         let mut auto = Autoproxy {
             enable,
@@ -127,12 +144,11 @@ impl Sysopt {
         let mut cur_autoproxy = self.cur_autoproxy.lock();
         let old_autoproxy = self.old_autoproxy.lock();
 
-        let (enable, bypass, pac) = {
+        let (enable, pac) = {
             let verge = Config::verge();
             let verge = verge.latest();
             (
                 verge.enable_system_proxy.unwrap_or(false),
-                verge.system_proxy_bypass.clone(),
                 verge.proxy_auto_config.unwrap_or(false),
             )
         };
@@ -156,16 +172,7 @@ impl Sysopt {
         let pac_port = IVerge::get_singleton_port();
 
         let mut sysproxy = cur_sysproxy.take().unwrap();
-        sysproxy.bypass = match bypass {
-            Some(bypass) => {
-                if bypass.is_empty() {
-                    DEFAULT_BYPASS.into()
-                } else {
-                    bypass
-                }
-            }
-            None => DEFAULT_BYPASS.into(),
-        };
+        sysproxy.bypass = get_bypass();
         sysproxy.port = port;
 
         let mut autoproxy = cur_autoproxy.take().unwrap();
@@ -349,14 +356,13 @@ impl Sysopt {
             loop {
                 sleep(Duration::from_secs(wait_secs)).await;
 
-                let (enable, guard, guard_duration, bypass, pac) = {
+                let (enable, guard, guard_duration, pac) = {
                     let verge = Config::verge();
                     let verge = verge.latest();
                     (
                         verge.enable_system_proxy.unwrap_or(false),
                         verge.enable_proxy_guard.unwrap_or(false),
                         verge.proxy_guard_duration.unwrap_or(10),
-                        verge.system_proxy_bypass.clone(),
                         verge.proxy_auto_config.unwrap_or(false),
                     )
                 };
@@ -389,16 +395,7 @@ impl Sysopt {
                         enable: true,
                         host: "127.0.0.1".into(),
                         port,
-                        bypass: match bypass {
-                            Some(bypass) => {
-                                if bypass.is_empty() {
-                                    DEFAULT_BYPASS.into()
-                                } else {
-                                    bypass
-                                }
-                            }
-                            None => DEFAULT_BYPASS.into(),
-                        },
+                        bypass: get_bypass(),
                     };
 
                     log_err!(sysproxy.set_system_proxy());
