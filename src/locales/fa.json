@@ -21,6 +21,9 @@
 
   "Proxies": "پراکسی‌ها",
   "Proxy Groups": "گروه‌های پراکسی",
+  "Proxy Provider": "تأمین‌کننده پروکسی",
+  "Update All": "به‌روزرسانی همه",
+  "Update At": "به‌روزرسانی در",
   "rule": "قانون",
   "global": "جهانی",
   "direct": "مستقیم",
@@ -68,6 +71,8 @@
   "To End": "به پایان",
 
   "Connections": "اتصالات",
+  "Table View": "نمای جدولی",
+  "List View": "نمای لیستی",
   "Close All": "بستن همه",
   "Default": "پیش‌فرض",
   "Download Speed": "سرعت دانلود",
@@ -86,8 +91,7 @@
   "Close Connection": "بستن اتصال",
 
   "Rules": "قوانین",
-  "Update All": "به‌روزرسانی همه",
-  "Update At": "به‌روزرسانی در",
+  "Rule Provider": "تأمین‌کننده قانون",
 
   "Logs": "لاگ‌ها",
   "Pause": "توقف",

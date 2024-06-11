@@ -21,6 +21,9 @@
 
   "Proxies": "Proxies",
   "Proxy Groups": "Proxy Groups",
+  "Proxy Provider": "Proxy Provider",
+  "Update All": "Update All",
+  "Update At": "Update At",
   "rule": "rule",
   "global": "global",
   "direct": "direct",
@@ -68,6 +71,8 @@
   "To End": "To End",
 
   "Connections": "Connections",
+  "Table View": "Table View",
+  "List View": "List View",
   "Close All": "Close All",
   "Default": "Default",
   "Download Speed": "Download Speed",
@@ -86,8 +91,7 @@
   "Close Connection": "Close Connection",
 
   "Rules": "Rules",
-  "Update All": "Update All",
-  "Update At": "Update At",
+  "Rule Provider": "Rule Provider",
 
   "Logs": "Logs",
   "Pause": "Pause",
