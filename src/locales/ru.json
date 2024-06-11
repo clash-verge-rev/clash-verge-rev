@@ -21,6 +21,9 @@
 
   "Proxies": "Прокси",
   "Proxy Groups": "Группы прокси",
+  "Proxy Provider": "Провайдер прокси",
+  "Update All": "Обновить все",
+  "Update At": "Обновлено в",
   "rule": "правила",
   "global": "глобальный",
   "direct": "прямой",
@@ -68,6 +71,8 @@
   "To End": "Вниз",
 
   "Connections": "Соединения",
+  "Table View": "Tablichnyy vid",
+  "List View": "Spiskovyy vid",
   "Close All": "Закрыть всё",
   "Default": "По умолчанию",
   "Download Speed": "Скорость загрузки",
@@ -86,8 +91,7 @@
   "Close Connection": "Закрыть соединение",
 
   "Rules": "Правила",
-  "Update All": "Обновить все",
-  "Update At": "Обновлено в",
+  "Rule Provider": "Провайдер правило",
 
   "Logs": "Логи",
   "Pause": "Пауза",

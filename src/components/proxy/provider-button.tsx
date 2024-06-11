@@ -69,7 +69,7 @@ export const ProviderButton = () => {
         sx={{ textTransform: "capitalize" }}
         onClick={() => setOpen(true)}
       >
-        {t("Provider")}
+        {t("Proxy Provider")}
       </Button>
 
       <BaseDialog
@@ -171,7 +171,7 @@ export const ProviderButton = () => {
                   <IconButton
                     size="small"
                     color="inherit"
-                    title="Update Provider"
+                    title={`${t("Update")}${t("Proxy Provider")}`}
                     onClick={() => handleUpdate(key, index)}
                     sx={{
                       animation: updating[index]

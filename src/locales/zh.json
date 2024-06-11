@@ -21,6 +21,9 @@
 
   "Proxies": "代理",
   "Proxy Groups": "代理组",
+  "Proxy Provider": "代理集合",
+  "Update All": "更新全部",
+  "Update At": "更新于",
   "rule": "规则",
   "global": "全局",
   "direct": "直连",
@@ -68,6 +71,8 @@
   "To End": "移到末尾",
 
   "Connections": "连接",
+  "Table View": "表格视图",
+  "List View": "列表视图",
   "Close All": "关闭全部",
   "Default": "默认",
   "Download Speed": "下载速度",
@@ -86,8 +91,7 @@
   "Close Connection": "关闭连接",
 
   "Rules": "规则",
-  "Update All": "更新全部",
-  "Update At": "更新于",
+  "Rule Provider": "规则集合",
 
   "Logs": "日志",
   "Pause": "暂停",

@@ -143,9 +143,13 @@ const ConnectionsPage = () => {
             }
           >
             {isTableLayout ? (
-              <TableChartRounded fontSize="inherit" />
+              <span title={t("List View")}>
+                <TableRowsRounded fontSize="inherit" />
+              </span>
             ) : (
-              <TableRowsRounded fontSize="inherit" />
+              <span title={t("Table View")}>
+                <TableChartRounded fontSize="inherit" />
+              </span>
             )}
           </IconButton>
 

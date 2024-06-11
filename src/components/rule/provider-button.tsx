@@ -67,7 +67,7 @@ export const ProviderButton = () => {
         sx={{ textTransform: "capitalize" }}
         onClick={() => setOpen(true)}
       >
-        {t("Provider")}
+        {t("Rule Provider")}
       </Button>
 
       <BaseDialog
@@ -145,7 +145,7 @@ export const ProviderButton = () => {
                   <IconButton
                     size="small"
                     color="inherit"
-                    title="Update Provider"
+                    title={`${t("Update")}${t("Rule Provider")}`}
                     onClick={() => handleUpdate(key, index)}
                     sx={{
                       animation: updating[index]
