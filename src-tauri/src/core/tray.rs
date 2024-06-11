@@ -88,7 +88,7 @@ impl Tray {
                     ),
             ))
             .add_native_item(SystemTrayMenuItem::Separator)
-            .add_item(CustomMenuItem::new("quit", t!("Quit", "退出")).accelerator("CmdOrControl+Q"))
+            .add_item(CustomMenuItem::new("quit", t!("Quit", "退出")))
     }
 
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
@@ -172,15 +172,31 @@ impl Tray {
         let verge = verge.latest();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        #[cfg(target_os = "macos")]
+        let tray_icon = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
         let common_tray_icon = verge.common_tray_icon.as_ref().unwrap_or(&false);
         let sysproxy_tray_icon = verge.sysproxy_tray_icon.as_ref().unwrap_or(&false);
         let tun_tray_icon = verge.tun_tray_icon.as_ref().unwrap_or(&false);
-
+        #[cfg(target_os = "macos")]
+        match tray_icon.as_str() {
+            "monochrome" => {
+                let _ = tray.set_icon_as_template(true);
+            }
+            "colorful" => {
+                let _ = tray.set_icon_as_template(false);
+            }
+            _ => {}
+        }
         let mut indication_icon = if *system_proxy {
+            #[cfg(target_os = "macos")]
+            let mut icon = match tray_icon.as_str() {
+                "monochrome" => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
+                "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
+                _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
+            };
             #[cfg(not(target_os = "macos"))]
             let mut icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
-            #[cfg(target_os = "macos")]
-            let mut icon = include_bytes!("../../icons/mac-tray-icon-sys.png").to_vec();
+
             if *sysproxy_tray_icon {
                 let icon_dir_path = dirs::app_home_dir()?.join("icons");
                 let png_path = icon_dir_path.join("sysproxy.png");
@@ -193,10 +209,14 @@ impl Tray {
             }
             icon
         } else {
+            #[cfg(target_os = "macos")]
+            let mut icon = match tray_icon.as_str() {
+                "monochrome" => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
+                "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
+                _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
+            };
             #[cfg(not(target_os = "macos"))]
             let mut icon = include_bytes!("../../icons/tray-icon.png").to_vec();
-            #[cfg(target_os = "macos")]
-            let mut icon = include_bytes!("../../icons/mac-tray-icon.png").to_vec();
             if *common_tray_icon {
                 let icon_dir_path = dirs::app_home_dir()?.join("icons");
                 let png_path = icon_dir_path.join("common.png");
@@ -211,10 +231,14 @@ impl Tray {
         };
 
         if *tun_mode {
+            #[cfg(target_os = "macos")]
+            let mut icon = match tray_icon.as_str() {
+                "monochrome" => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
+                "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
+                _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
+            };
             #[cfg(not(target_os = "macos"))]
             let mut icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
-            #[cfg(target_os = "macos")]
-            let mut icon = include_bytes!("../../icons/mac-tray-icon-tun.png").to_vec();
             if *tun_tray_icon {
                 let icon_dir_path = dirs::app_home_dir()?.join("icons");
                 let png_path = icon_dir_path.join("tun.png");

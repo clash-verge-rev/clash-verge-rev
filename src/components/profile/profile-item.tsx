@@ -2,7 +2,6 @@ import dayjs from "dayjs";
 import { mutate } from "swr";
 import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
-import { useRecoilState } from "recoil";
 import { useTranslation } from "react-i18next";
 import {
   Box,
@@ -19,10 +18,10 @@ import {
   LocalFireDepartmentRounded,
   RefreshRounded,
 } from "@mui/icons-material";
-import { atomLoadingCache } from "@/services/states";
+import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
-import { EditorViewer } from "./editor-viewer";
+import { EditorViewer } from "@/components/profile/editor-viewer";
 import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
 import { ConfirmViewer } from "./confirm-viewer";
@@ -49,7 +48,8 @@ export const ProfileItem = (props: Props) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
-  const [loadingCache, setLoadingCache] = useRecoilState(atomLoadingCache);
+  const loadingCache = useLoadingCache();
+  const setLoadingCache = useSetLoadingCache();
   const [sideBtnShow, setSideBtnShow] = useState(false);
 
   const { uid, name = "Profile", extra, updated = 0 } = itemData;
@@ -317,6 +317,7 @@ export const ProfileItem = (props: Props) => {
           {/* only if has url can it be updated */}
           {hasUrl && (
             <IconButton
+              title={t("Refresh")}
               sx={{
                 position: "absolute",
                 p: "3px",
@@ -418,7 +419,8 @@ export const ProfileItem = (props: Props) => {
       </Menu>
 
       <EditorViewer
-        uid={uid}
+        mode="profile"
+        property={uid}
         open={fileOpen}
         language="yaml"
         schema="clash"

@@ -2,15 +2,7 @@ import { useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/api/dialog";
-import {
-  Button,
-  IconButton,
-  MenuItem,
-  Select,
-  Input,
-  Typography,
-  keyframes,
-} from "@mui/material";
+import { Button, MenuItem, Select, Input, Typography } from "@mui/material";
 import {
   exitApp,
   openAppDir,
@@ -18,7 +10,6 @@ import {
   openLogsDir,
   openDevTools,
 } from "@/services/cmds";
-import { ArrowForward, Refresh } from "@mui/icons-material";
 import { checkUpdate } from "@tauri-apps/api/updater";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
@@ -40,11 +31,6 @@ interface Props {
 }
 
 const OS = getSystem();
-
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
 
 const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
@@ -70,7 +56,7 @@ const SettingVerge = ({ onError }: Props) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
 
-  const onCheckUpdate = useLockFn(async () => {
+  const onCheckUpdate = async () => {
     try {
       setChecking(true);
       const info = await checkUpdate();
@@ -84,7 +70,7 @@ const SettingVerge = ({ onError }: Props) => {
     } finally {
       setChecking(false);
     }
-  });
+  };
 
   return (
     <SettingList title={t("Verge Setting")}>
@@ -102,7 +88,7 @@ const SettingVerge = ({ onError }: Props) => {
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ language: e })}
           onGuard={(e) => patchVerge({ language: e })}>
-          <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
+          <Select size="small" sx={{ width: 110, "> div": { py: "7.5px" } }}>
             <MenuItem value="zh">中文</MenuItem>
             <MenuItem value="en">English</MenuItem>
             <MenuItem value="ru">Русский</MenuItem>
@@ -214,121 +200,48 @@ const SettingVerge = ({ onError }: Props) => {
             }></Input>
         </GuardState>
       </SettingItem>
-      <SettingItem label={t("Theme Setting")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => themeRef.current?.open()}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
 
-      <SettingItem label={t("Layout Setting")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => layoutRef.current?.open()}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem
+        onClick={() => themeRef.current?.open()}
+        label={t("Theme Setting")}
+      />
 
-      <SettingItem label={t("Miscellaneous")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => miscRef.current?.open()}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem
+        onClick={() => layoutRef.current?.open()}
+        label={t("Layout Setting")}
+      />
 
-      <SettingItem label={t("Hotkey Setting")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => hotkeyRef.current?.open()}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem
+        onClick={() => miscRef.current?.open()}
+        label={t("Miscellaneous")}
+      />
 
-      <SettingItem label={t("Runtime Config")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => configRef.current?.open()}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem
+        onClick={() => hotkeyRef.current?.open()}
+        label={t("Hotkey Setting")}
+      />
 
-      <SettingItem label={t("Open App Dir")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={openAppDir}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem
+        onClick={() => configRef.current?.open()}
+        label={t("Runtime Config")}
+      />
 
-      <SettingItem label={t("Open Core Dir")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={openCoreDir}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem onClick={openAppDir} label={t("Open App Dir")} />
 
-      <SettingItem label={t("Open Logs Dir")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={openLogsDir}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem onClick={openCoreDir} label={t("Open Core Dir")} />
 
-      <SettingItem label={t("Check for Updates")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={onCheckUpdate}>
-          {checking ? (
-            <Refresh sx={{ animation: `1s linear infinite ${round}` }} />
-          ) : (
-            <ArrowForward />
-          )}
-        </IconButton>
-      </SettingItem>
+      <SettingItem onClick={openLogsDir} label={t("Open Logs Dir")} />
 
-      <SettingItem label={t("Open Dev Tools")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={openDevTools}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem onClick={onCheckUpdate} label={t("Check for Updates")} />
 
-      <SettingItem label={t("Exit")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => {
-            exitApp();
-          }}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem onClick={openDevTools} label={t("Open Dev Tools")} />
+
+      <SettingItem
+        onClick={() => {
+          exitApp();
+        }}
+        label={t("Exit")}
+      />
 
       <SettingItem label={t("Verge Version")}>
         <Typography sx={{ py: "7px", pr: 1 }}>v{version}</Typography>

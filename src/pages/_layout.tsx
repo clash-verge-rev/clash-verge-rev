@@ -5,7 +5,7 @@ import { SWRConfig, mutate } from "swr";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes } from "react-router-dom";
-import { List, Paper, ThemeProvider } from "@mui/material";
+import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
@@ -13,7 +13,7 @@ import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import ClashVergeFontSvg from "@/assets/image/clash_verge.svg?react";
-import { atomThemeMode } from "@/services/states";
+import { useThemeMode } from "@/services/states";
 import { useRecoilState } from "recoil";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
@@ -38,7 +38,7 @@ let keepUIActive = false;
 
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [mode] = useRecoilState(atomThemeMode);
+  const [mode] = useThemeMode();
   const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
   const { theme } = useCustomTheme();

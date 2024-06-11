@@ -10,7 +10,7 @@ import {
   Tooltip,
   keyframes,
 } from "@mui/material";
-import { ArrowForward, Refresh, Settings, Shuffle } from "@mui/icons-material";
+import { Settings, Shuffle } from "@mui/icons-material";
 import { DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
@@ -57,20 +57,14 @@ const SettingClash = ({ onError }: Props) => {
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
-
-  const [geoUpdating, setGeoUpdating] = useState(false);
-
-  const onUpdateGeo = useLockFn(async () => {
+  const onUpdateGeo = async () => {
     try {
-      setGeoUpdating(true);
       await updateGeoData();
       Notice.success(t("GeoData Updated"));
     } catch (err: any) {
       Notice.error(err?.response.data.message || err.toString());
-    } finally {
-      setGeoUpdating(false);
     }
-  });
+  };
 
   return (
     <SettingList title={t("Clash Setting")}>
@@ -156,25 +150,12 @@ const SettingClash = ({ onError }: Props) => {
         />
       </SettingItem>
 
-      <SettingItem label={t("External")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => ctrlRef.current?.open()}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem
+        onClick={() => ctrlRef.current?.open()}
+        label={t("External")}
+      />
 
-      <SettingItem label={t("Web UI")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={() => webRef.current?.open()}>
-          <ArrowForward />
-        </IconButton>
-      </SettingItem>
+      <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
 
       <SettingItem
         label={t("Clash Core")}
@@ -193,30 +174,10 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       {isWIN && (
-        <SettingItem label={t("Open UWP tool")}>
-          <IconButton
-            color="inherit"
-            size="small"
-            sx={{ my: "2px" }}
-            onClick={invoke_uwp_tool}>
-            <ArrowForward />
-          </IconButton>
-        </SettingItem>
+        <SettingItem onClick={invoke_uwp_tool} label={t("Open UWP tool")} />
       )}
 
-      <SettingItem label={t("Update GeoData")}>
-        <IconButton
-          color="inherit"
-          size="small"
-          sx={{ my: "2px" }}
-          onClick={onUpdateGeo}>
-          {geoUpdating ? (
-            <Refresh sx={{ animation: `1s linear infinite ${round}` }} />
-          ) : (
-            <ArrowForward />
-          )}
-        </IconButton>
-      </SettingItem>
+      <SettingItem onClick={onUpdateGeo} label={t("Update GeoData")} />
     </SettingList>
   );
 };

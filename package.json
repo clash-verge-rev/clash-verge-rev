@@ -33,6 +33,7 @@
     "axios": "^1.6.8",
     "axios-tauri-api-adapter": "^0.2.1",
     "dayjs": "1.11.11",
+    "foxact": "^0.2.35",
     "i18next": "^23.11.2",
     "lodash-es": "^4.17.21",
     "meta-json-schema": "1.18.4-beta6",
@@ -53,7 +54,8 @@
     "snarkdown": "^2.0.0",
     "sortablejs": "^1.15.2",
     "swr": "^2.2.5",
-    "tar": "^7.0.1"
+    "tar": "^7.0.1",
+    "types-pac": "^1.0.2"
   },
   "devDependencies": {
     "@actions/github": "6.0.0",
@@ -65,6 +67,7 @@
     "@types/react-dom": "18.3.0",
     "@types/react-transition-group": "4.4.10",
     "@types/sortablejs": "1.15.8",
+    "@vitejs/plugin-legacy": "^5.4.1",
     "@vitejs/plugin-react": "4.3.1",
     "adm-zip": "0.5.14",
     "cross-env": "7.0.3",
@@ -75,6 +78,7 @@
     "prettier": "3.3.2",
     "pretty-quick": "4.0.0",
     "sass": "1.77.4",
+    "terser": "^5.31.0",
     "typescript": "5.4.5",
     "vite": "5.2.13",
     "vite-plugin-monaco-editor": "1.1.0",

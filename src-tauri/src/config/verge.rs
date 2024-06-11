@@ -1,3 +1,4 @@
+use crate::config::DEFAULT_PAC;
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use log::LevelFilter;
@@ -42,6 +43,10 @@ pub struct IVerge {
     /// common tray icon
     pub common_tray_icon: Option<bool>,
 
+    /// tray icon
+    #[cfg(target_os = "macos")]
+    pub tray_icon: Option<String>,
+
     /// menu icon
     pub menu_icon: Option<String>,
 
@@ -84,6 +89,12 @@ pub struct IVerge {
 
     /// proxy guard duration
     pub proxy_guard_duration: Option<u64>,
+
+    /// use pac mode
+    pub proxy_auto_config: Option<bool>,
+
+    /// pac script content
+    pub pac_file_content: Option<String>,
 
     /// theme setting
     pub theme_setting: Option<IVergeTheme>,
@@ -207,6 +218,8 @@ impl IVerge {
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_group_icon: Some(true),
+            #[cfg(target_os = "macos")]
+            tray_icon: Some("monochrome".into()),
             menu_icon: Some("monochrome".into()),
             common_tray_icon: Some(false),
             sysproxy_tray_icon: Some(false),
@@ -217,6 +230,8 @@ impl IVerge {
             enable_keep_ui_active: Some(false),
             enable_splashscreen: Some(true),
             enable_system_proxy: Some(false),
+            proxy_auto_config: Some(false),
+            pac_file_content: Some(DEFAULT_PAC.into()),
             enable_random_port: Some(false),
             #[cfg(not(target_os = "windows"))]
             verge_redir_port: Some(7895),
@@ -267,6 +282,8 @@ impl IVerge {
         patch!(traffic_graph);
         patch!(enable_memory_usage);
         patch!(enable_group_icon);
+        #[cfg(target_os = "macos")]
+        patch!(tray_icon);
         patch!(menu_icon);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
@@ -297,6 +314,8 @@ impl IVerge {
         patch!(enable_proxy_guard);
         patch!(system_proxy_bypass);
         patch!(proxy_guard_duration);
+        patch!(proxy_auto_config);
+        patch!(pac_file_content);
 
         patch!(theme_setting);
         patch!(web_ui_list);

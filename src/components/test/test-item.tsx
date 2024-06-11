@@ -99,16 +99,14 @@ export const TestItem = (props: Props) => {
         flexGrow: "1",
         margin: "5px",
         width: "180px",
-      }}
-    >
+      }}>
       <TestBox
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });
           setAnchorEl(event.currentTarget);
           event.preventDefault();
-        }}
-      >
+        }}>
         <Box position="relative" sx={{ cursor: "move" }}>
           {icon && icon.trim() !== "" ? (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
@@ -147,8 +145,7 @@ export const TestItem = (props: Props) => {
             justifyContent: "center",
             marginTop: "8px",
             color: "primary.main",
-          }}
-        >
+          }}>
           {delay === -2 && (
             <Widget>
               <BaseLoading />
@@ -165,9 +162,8 @@ export const TestItem = (props: Props) => {
               }}
               sx={({ palette }) => ({
                 ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
-              })}
-            >
-              Check
+              })}>
+              {t("Test")}
             </Widget>
           )}
 
@@ -185,8 +181,7 @@ export const TestItem = (props: Props) => {
                 ":hover": {
                   bgcolor: alpha(palette.primary.main, 0.15),
                 },
-              })}
-            >
+              })}>
               {delayManager.formatDelay(delay)}
             </Widget>
           )}
@@ -204,15 +199,13 @@ export const TestItem = (props: Props) => {
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
-        }}
-      >
+        }}>
         {menu.map((item) => (
           <MenuItem
             key={item.label}
             onClick={item.handler}
             sx={{ minWidth: 120 }}
-            dense
-          >
+            dense>
             {t(item.label)}
           </MenuItem>
         ))}

@@ -9,13 +9,19 @@ if (!window.ResizeObserver) {
 
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { RecoilRoot } from "recoil";
+import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { BrowserRouter } from "react-router-dom";
 import { BaseErrorBoundary } from "@/components/base";
 import Layout from "@/pages/_layout";
 import "@/services/i18n";
 import { invoke } from "@tauri-apps/api/tauri";
 import { WebviewWindow } from "@tauri-apps/api/window";
+import {
+  LoadingCacheProvider,
+  LogDataProvider,
+  ThemeModeProvider,
+  UpdateStateProvider,
+} from "./services/states";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -40,7 +46,7 @@ document.addEventListener("keydown", (event) => {
   }
   if (
     (event.ctrlKey || event.metaKey) &&
-    ["F", "H", "P", "R", "U"].includes(event.key.toUpperCase())
+    ["F", "H", "P", "Q", "R", "U"].includes(event.key.toUpperCase())
   ) {
     event.preventDefault();
   }
@@ -63,14 +69,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+const contexts = [
+  <ThemeModeProvider />,
+  <LogDataProvider />,
+  <LoadingCacheProvider />,
+  <UpdateStateProvider />,
+];
+
 createRoot(container).render(
   <React.StrictMode>
-    <RecoilRoot>
+    <ComposeContextProvider contexts={contexts}>
       <BaseErrorBoundary>
         <BrowserRouter>
           <Layout />
         </BrowserRouter>
       </BaseErrorBoundary>
-    </RecoilRoot>
+    </ComposeContextProvider>
   </React.StrictMode>,
 );

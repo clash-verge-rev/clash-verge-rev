@@ -8,18 +8,18 @@ import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+import { BaseSearchBox } from "@/components/base/base-search-box";
 
 const RulesPage = () => {
   const { t } = useTranslation();
   const { data = [] } = useSWR("getRules", getRules);
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
-  const [filterText, setFilterText] = useState("");
+  const [match, setMatch] = useState(() => (_: string) => true);
 
   const rules = useMemo(() => {
-    return data.filter((each) => each.payload.includes(filterText));
-  }, [data, filterText]);
+    return data.filter((item) => match(item.payload));
+  }, [data, match]);
 
   return (
     <BasePage
@@ -30,8 +30,7 @@ const RulesPage = () => {
         <Box display="flex" alignItems="center" gap={1}>
           <ProviderButton />
         </Box>
-      }
-    >
+      }>
       <Box
         sx={{
           pt: 1,
@@ -40,12 +39,8 @@ const RulesPage = () => {
           height: "36px",
           display: "flex",
           alignItems: "center",
-        }}
-      >
-        <BaseStyledTextField
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-        />
+        }}>
+        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
       <Box
@@ -54,8 +49,7 @@ const RulesPage = () => {
           margin: "10px",
           borderRadius: "8px",
           bgcolor: isDark ? "#282a36" : "#ffffff",
-        }}
-      >
+        }}>
         {rules.length > 0 ? (
           <Virtuoso
             data={rules}

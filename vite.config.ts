@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import path from "path";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react";
+import legacy from "@vitejs/plugin-legacy";
 import monacoEditorPluginModule from "vite-plugin-monaco-editor";
 
 const isObjectWithDefaultFunction = (
@@ -16,7 +17,6 @@ const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
   ? monacoEditorPluginModule.default
   : monacoEditorPluginModule;
 
-// https://vitejs.dev/config/
 export default defineConfig({
   root: "src",
   // prevent vite from obscuring rust errors
@@ -38,8 +38,20 @@ export default defineConfig({
   plugins: [
     svgr(),
     react(),
+    legacy({
+      renderLegacyChunks: false,
+      modernTargets: ["edge>=109", "safari>=13"],
+      modernPolyfills: true,
+      additionalModernPolyfills: [
+        "core-js/modules/es.object.has-own.js",
+        "core-js/modules/web.structured-clone.js",
+        path.resolve("./src/polyfills/matchMedia.js"),
+        path.resolve("./src/polyfills/WeakRef.js"),
+        path.resolve("./src/polyfills/RegExp.js"),
+      ],
+    }),
     monacoEditorPlugin({
-      languageWorkers: ["editorWorkerService", "css", "typescript"],
+      languageWorkers: ["editorWorkerService", "css", "typescript", "css"],
       customWorkers: [
         {
           label: "yaml",

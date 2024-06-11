@@ -1,7 +1,7 @@
 extern crate warp;
 
 use super::resolve;
-use crate::config::IVerge;
+use crate::config::{Config, IVerge, DEFAULT_PAC};
 use anyhow::{bail, Result};
 use port_scanner::local_port_available;
 use std::convert::Infallible;
@@ -28,12 +28,14 @@ pub fn check_singleton() -> Result<()> {
                 let argvs: Vec<String> = std::env::args().collect();
                 if argvs.len() > 1 {
                     let param = argvs[1].as_str();
-                    reqwest::get(format!(
+                    if param.starts_with("clash:") {
+                        reqwest::get(format!(
                         "http://127.0.0.1:{port}/commands/scheme?param={param}"
-                    ))
-                    .await?
-                    .text()
-                    .await?;
+                        ))
+                        .await?
+                        .text()
+                        .await?;
+                    }
                 } else {
                     reqwest::get(format!("http://127.0.0.1:{port}/commands/visible"))
                         .await?
@@ -64,6 +66,22 @@ pub fn embed_server(app_handle: AppHandle) {
             "ok"
         });
 
+        let pac = warp::path!("commands" / "pac").map(move || {
+            let content = Config::verge()
+                .latest()
+                .pac_file_content
+                .clone()
+                .unwrap_or(DEFAULT_PAC.to_string());
+            let port = Config::verge()
+                .latest()
+                .verge_mixed_port
+                .unwrap_or(Config::clash().data().get_mixed_port());
+            let content = content.replace("%mixed-port%", &format!("{}", port));
+            warp::http::Response::builder()
+                .header("Content-Type", "application/x-ns-proxy-autoconfig")
+                .body(content)
+                .unwrap_or_default()
+        });
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
             .and_then(scheme_handler);
@@ -72,7 +90,7 @@ pub fn embed_server(app_handle: AppHandle) {
             resolve::resolve_scheme(query.param).await;
             Ok("ok")
         }
-        let commands = ping.or(visible).or(scheme);
+        let commands = ping.or(visible).or(pac).or(scheme);
         warp::serve(commands).run(([127, 0, 0, 1], port)).await;
     });
 }

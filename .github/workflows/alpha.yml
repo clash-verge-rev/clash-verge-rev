@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.77.0
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -43,15 +43,17 @@ jobs:
         with:
           workspaces: src-tauri
 
+      - name: Install Tauri CLI
+        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
+
       - name: Install Node
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
           node-version: "20"
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9
           run_install: false
 
       - name: Pnpm install and check
@@ -62,16 +64,23 @@ jobs:
       - name: Tauri build
         uses: tauri-apps/tauri-action@b1dc93b31afa36b1247a7a5f55c2dffbdc70dd05 # v0
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: alpha
           releaseName: "Clash Verge Rev Alpha"
           releaseBody: "More new features are now supported."
           releaseDraft: false
           prerelease: true
-          tauriScript: pnpm
+          tauriScript: cargo tauri
           args: --target ${{ matrix.target }}
 
       - name: Portable Bundle
@@ -101,6 +110,7 @@ jobs:
       - name: Build for Linux
         uses: ./.github/build-for-linux
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
@@ -161,15 +171,17 @@ jobs:
         with:
           workspaces: src-tauri
 
+      - name: Install Tauri CLI
+        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
+
       - name: Install Node
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
           node-version: "20"
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9
           run_install: false
 
       - name: Pnpm install and check
@@ -188,11 +200,12 @@ jobs:
         id: build
         uses: tauri-apps/tauri-action@b1dc93b31afa36b1247a7a5f55c2dffbdc70dd05 # v0
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tauriScript: pnpm
+          tauriScript: cargo tauri
           args: --target ${{ matrix.target }}
 
       - name: Rename
@@ -245,12 +258,12 @@ jobs:
           - MacOS apple M芯片: aarch64.dmg
 
           ### Linux
-          - Linux 64位: amd64.AppImage/amd64.deb
-          - Linux 32位: i386.deb
-          - Linux arm64架构: arm64.deb
-          - Linux armv7架构: armhf.deb
+          - Linux 64位: amd64.AppImage/amd64.deb/amd64.rpm
+          - Linux 32位: i386.deb/i386.rpm
+          - Linux arm64架构: arm64.deb/aarch64.rpm
+          - Linux armv7架构: armhf.deb/armhfp.rpm
 
-          ### Windows (Win7 用户请查看下面FAQ手动替换内核使用)
+          ### Windows (Win7 用户请查看下面FAQ中的解决方案)
           #### 正常版本(推荐)
           - 64位: x64-setup.exe
           - 32位: x86-setup.exe

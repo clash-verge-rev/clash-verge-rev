@@ -34,7 +34,7 @@ export const ProviderButton = () => {
 
   const hasProvider = Object.keys(data || {}).length > 0;
   const [updating, setUpdating] = useState(
-    Object.keys(data || {}).map(() => false)
+    Object.keys(data || {}).map(() => false),
   );
 
   const setUpdatingAt = (status: boolean, index: number) => {
@@ -67,9 +67,8 @@ export const ProviderButton = () => {
         size="small"
         variant="outlined"
         sx={{ textTransform: "capitalize" }}
-        onClick={() => setOpen(true)}
-      >
-        {t("Provider")}
+        onClick={() => setOpen(true)}>
+        {t("Proxy Provider")}
       </Button>
 
       <BaseDialog
@@ -84,10 +83,9 @@ export const ProviderButton = () => {
                 Object.entries(data || {}).forEach(
                   async ([key, item], index) => {
                     await handleUpdate(key, index);
-                  }
+                  },
                 );
-              }}
-            >
+              }}>
               {t("Update All")}
             </Button>
           </Box>
@@ -96,8 +94,7 @@ export const ProviderButton = () => {
         disableOk
         cancelBtn={t("Cancel")}
         onClose={() => setOpen(false)}
-        onCancel={() => setOpen(false)}
-      >
+        onCancel={() => setOpen(false)}>
         <List sx={{ py: 0, minHeight: 250 }}>
           {Object.entries(data || {}).map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
@@ -108,7 +105,7 @@ export const ProviderButton = () => {
             const total = sub?.Total || 0;
             const expire = sub?.Expire || 0;
             const progress = Math.round(
-              ((download + upload) * 100) / (total + 0.1)
+              ((download + upload) * 100) / (total + 0.1),
             );
             return (
               <>
@@ -119,8 +116,7 @@ export const ProviderButton = () => {
                     border: "solid 2px var(--divider-color)",
                     mb: 1,
                   }}
-                  key={key}
-                >
+                  key={key}>
                   <ListItemText
                     sx={{ px: 1 }}
                     primary={
@@ -129,8 +125,7 @@ export const ProviderButton = () => {
                           variant="h6"
                           component="span"
                           noWrap
-                          title={key}
-                        >
+                          title={key}>
                           {key}
                         </Typography>
                         <TypeBox component="span" sx={{ marginLeft: "8px" }}>
@@ -171,14 +166,13 @@ export const ProviderButton = () => {
                   <IconButton
                     size="small"
                     color="inherit"
-                    title="Update Provider"
+                    title={`${t("Update")}${t("Proxy Provider")}`}
                     onClick={() => handleUpdate(key, index)}
                     sx={{
                       animation: updating[index]
                         ? `1s linear infinite ${round}`
                         : "none",
-                    }}
-                  >
+                    }}>
                     <RefreshRounded />
                   </IconButton>
                 </ListItem>

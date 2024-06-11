@@ -19,6 +19,7 @@ const Tag = styled("span")(({ theme }) => ({
   border: "1px solid",
   borderRadius: 4,
   borderColor: alpha(theme.palette.text.secondary, 0.35),
+  marginTop: "4px",
   marginRight: "4px",
 }));
 
@@ -43,8 +44,7 @@ export const ConnectionItem = (props: Props) => {
         <IconButton edge="end" color="inherit" onClick={onDelete}>
           <CloseRounded />
         </IconButton>
-      }
-    >
+      }>
       <ListItemText
         sx={{ userSelect: "text", cursor: "pointer" }}
         primary={metadata.host || metadata.destinationIP}

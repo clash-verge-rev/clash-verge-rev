@@ -1,14 +1,13 @@
-import { Box, Grid, IconButton } from "@mui/material";
+import { Box, ButtonGroup, Grid, IconButton } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { BasePage, Notice } from "@/components/base";
-import { GitHub } from "@mui/icons-material";
+import { GitHub, HelpOutlineSharp } from "@mui/icons-material";
 import { openWebUrl } from "@/services/cmds";
 import SettingVerge from "@/components/setting/setting-verge";
 import SettingClash from "@/components/setting/setting-clash";
 import SettingSystem from "@/components/setting/setting-system";
-import { atomThemeMode } from "@/services/states";
-import { useRecoilState } from "recoil";
+import { useThemeMode } from "@/services/states";
 
 const SettingPage = () => {
   const { t } = useTranslation();
@@ -21,20 +20,33 @@ const SettingPage = () => {
     return openWebUrl("https://github.com/oomeow/clash-verge-rev");
   });
 
-  const [mode] = useRecoilState(atomThemeMode);
+  const toGithubDoc = useLockFn(() => {
+    return openWebUrl("https://clash-verge-rev.github.io/guide/log.html");
+  });
+
+  const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
 
   return (
     <BasePage
       title={t("Settings")}
       header={
-        <IconButton
-          size="medium"
-          color="inherit"
-          title="@oomeow/clash-verge-rev"
-          onClick={toGithubRepo}>
-          <GitHub fontSize="inherit" />
-        </IconButton>
+        <ButtonGroup variant="contained" aria-label="Basic button group">
+          <IconButton
+            size="medium"
+            color="inherit"
+            title="@clash-verge-rev/clash-verge-rev.github.io"
+            onClick={toGithubDoc}>
+            <HelpOutlineSharp fontSize="inherit" />
+          </IconButton>
+          <IconButton
+            size="medium"
+            color="inherit"
+            title="@oomeow/clash-verge-rev"
+            onClick={toGithubRepo}>
+            <GitHub fontSize="inherit" />
+          </IconButton>
+        </ButtonGroup>
       }>
       <Grid container spacing={{ xs: 1.5, lg: 1.5 }}>
         <Grid item xs={12} md={6}>

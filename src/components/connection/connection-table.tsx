@@ -67,10 +67,10 @@ export const ConnectionTable = (props: Props) => {
         ];
       },
     },
-    { field: "host", headerName: `${t("Host")}`, flex: 220, minWidth: 220 },
+    { field: "host", headerName: t("Host"), flex: 220, minWidth: 220 },
     {
       field: "upload",
-      headerName: `${t("Upload")}`,
+      headerName: t("Uploaded"),
       width: 88,
       align: "center",
       headerAlign: "center",
@@ -78,7 +78,7 @@ export const ConnectionTable = (props: Props) => {
     },
     {
       field: "download",
-      headerName: `${t("Download")}`,
+      headerName: t("Download"),
       width: 88,
       align: "center",
       headerAlign: "center",
@@ -86,7 +86,7 @@ export const ConnectionTable = (props: Props) => {
     },
     {
       field: "ulSpeed",
-      headerName: `${t("UL Speed")}`,
+      headerName: t("UL Speed"),
       width: 120,
       align: "center",
       headerAlign: "center",
@@ -94,23 +94,23 @@ export const ConnectionTable = (props: Props) => {
     },
     {
       field: "dlSpeed",
-      headerName: `${t("DL Speed")}`,
+      headerName: t("DL Speed"),
       width: 120,
       align: "center",
       headerAlign: "center",
       valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
     },
-    { field: "chains", headerName: `${t("Chains")}`, flex: 360, minWidth: 360 },
-    { field: "rule", headerName: `${t("Rule")}`, flex: 300, minWidth: 250 },
+    { field: "chains", headerName: t("Chains"), flex: 360, minWidth: 360 },
+    { field: "rule", headerName: t("Rule"), flex: 300, minWidth: 250 },
     {
       field: "process",
-      headerName: `${t("Process")}`,
+      headerName: t("Process"),
       flex: 240,
       minWidth: 120,
     },
     {
       field: "time",
-      headerName: `${t("Time")}`,
+      headerName: t("Time"),
       flex: 120,
       minWidth: 100,
       align: "right",
@@ -120,14 +120,14 @@ export const ConnectionTable = (props: Props) => {
       },
       valueFormatter: (value) => dayjs(value).fromNow(),
     },
-    { field: "source", headerName: `${t("Source")}`, flex: 200, minWidth: 130 },
+    { field: "source", headerName: t("Source"), flex: 200, minWidth: 130 },
     {
       field: "destinationIP",
-      headerName: `${t("Destination IP")}`,
+      headerName: t("Destination IP"),
       flex: 200,
       minWidth: 130,
     },
-    { field: "type", headerName: `${t("Type")}`, flex: 160, minWidth: 100 },
+    { field: "type", headerName: t("Type"), flex: 160, minWidth: 100 },
   ];
 
   const connRows = useMemo(() => {

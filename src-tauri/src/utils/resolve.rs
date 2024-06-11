@@ -190,7 +190,6 @@ pub fn create_window(app_handle: &AppHandle) {
                 }
                 Ok(center)
             })();
-
             if center.unwrap_or(true) {
                 trace_err!(win.center(), "set win center");
             }

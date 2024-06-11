@@ -19,6 +19,7 @@
         "icons/128x128.png",
         "icons/128x128@2x.png",
         "icons/icon.icns",
+        "icons/icon.icns",
         "icons/icon.ico"
       ],
       "resources": ["resources"],
@@ -38,10 +39,6 @@
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRGQ0QyMTIyRTRERTY0MzAKUldRd1pON2tJaUhOVDBuWXQ1NVY0dlNXWkZ2RlZCMmtIYkhqR2pxS3FsMlNERkUycEVBaFlvQm8K"
     },
     "allowlist": {
-      "http": {
-        "all": true,
-        "scope": ["http://**", "http://**"]
-      },
       "shell": {
         "all": true
       },
@@ -66,7 +63,7 @@
       },
       "protocol": {
         "asset": true,
-        "assetScope": ["$APPDATA/**", "$RESOURCE/../**", "$HOME/.local/**"]
+        "assetScope": ["$APPDATA/**", "$RESOURCE/../**", "**"]
       },
       "path": {
         "all": true
@@ -79,7 +76,7 @@
     },
     "windows": [],
     "security": {
-      "csp": "script-src 'unsafe-eval' 'self'; default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self'; img-src asset: http: https: data: 'self';"
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: asset: 'unsafe-eval' 'unsafe-inline' 'self';"
     }
   }
 }

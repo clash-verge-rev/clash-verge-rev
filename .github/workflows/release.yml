@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.77.0
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -45,10 +45,9 @@ jobs:
         with:
           node-version: "20"
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9
           run_install: false
 
       - name: Pnpm install and check
@@ -59,9 +58,16 @@ jobs:
       - name: Tauri build
         uses: tauri-apps/tauri-action@b1dc93b31afa36b1247a7a5f55c2dffbdc70dd05 # v0
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: v__VERSION__
           releaseName: "Clash Verge Rev v__VERSION__"
@@ -96,6 +102,7 @@ jobs:
       - name: Build for Linux
         uses: ./.github/build-for-linux
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
@@ -191,10 +198,9 @@ jobs:
         with:
           node-version: "20"
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9
           run_install: false
 
       - name: Pnpm install and check
@@ -213,6 +219,7 @@ jobs:
         id: build
         uses: tauri-apps/tauri-action@b1dc93b31afa36b1247a7a5f55c2dffbdc70dd05 # v0
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -286,10 +293,9 @@ jobs:
         with:
           node-version: "20"
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9
           run_install: false
 
       - name: Pnpm install
@@ -312,10 +318,9 @@ jobs:
         with:
           node-version: "20"
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9
           run_install: false
 
       - name: Pnpm install

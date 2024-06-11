@@ -65,7 +65,7 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
         url = url.replaceAll("%port", port || "9097");
         url = url.replaceAll(
           "%secret",
-          encodeURIComponent(clashInfo.secret || "")
+          encodeURIComponent(clashInfo.secret || ""),
         );
       }
 
@@ -85,8 +85,7 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
             variant="contained"
             size="small"
             disabled={editing}
-            onClick={() => setEditing(true)}
-          >
+            onClick={() => setEditing(true)}>
             {t("New")}
           </Button>
         </Box>
@@ -101,14 +100,13 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
       cancelBtn={t("Back")}
       disableOk
       onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
-    >
+      onCancel={() => setOpen(false)}>
       {!editing && webUIList.length === 0 && (
         <BaseEmpty
-          text="Empty List"
+          text="Empty"
           extra={
             <Typography mt={2} sx={{ fontSize: "12px" }}>
-              Replace host, port, secret with "%host" "%port" "%secret"
+              {t("Replace host, port, secret with %host, %port, %secret")}
             </Typography>
           }
         />

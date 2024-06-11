@@ -13,6 +13,7 @@ import {
   EditRounded,
   OpenInNewRounded,
 } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   value?: string;
@@ -35,6 +36,7 @@ export const WebUIItem = (props: Props) => {
 
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
+  const { t } = useTranslation();
 
   if (editing || onlyEdit) {
     return (
@@ -45,29 +47,27 @@ export const WebUIItem = (props: Props) => {
             size="small"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            placeholder={`Support %host %port %secret`}
+            placeholder={t("Support %host, %port, %secret")}
             autoComplete="off"
           />
           <IconButton
             size="small"
-            title="Save"
+            title={t("Save")}
             color="inherit"
             onClick={() => {
               onChange(editValue);
               setEditing(false);
-            }}
-          >
+            }}>
             <CheckRounded fontSize="inherit" />
           </IconButton>
           <IconButton
             size="small"
-            title="Cancel"
+            title={t("Cancel")}
             color="inherit"
             onClick={() => {
               onCancel?.();
               setEditing(false);
-            }}
-          >
+            }}>
             <CloseRounded fontSize="inherit" />
           </IconButton>
         </Stack>
@@ -100,29 +100,26 @@ export const WebUIItem = (props: Props) => {
         />
         <IconButton
           size="small"
-          title="Open URL"
+          title={t("Open URL")}
           color="inherit"
-          onClick={() => onOpenUrl?.(value)}
-        >
+          onClick={() => onOpenUrl?.(value)}>
           <OpenInNewRounded fontSize="inherit" />
         </IconButton>
         <IconButton
           size="small"
-          title="Edit"
+          title={t("Edit")}
           color="inherit"
           onClick={() => {
             setEditing(true);
             setEditValue(value);
-          }}
-        >
+          }}>
           <EditRounded fontSize="inherit" />
         </IconButton>
         <IconButton
           size="small"
-          title="Delete"
+          title={t("Delete")}
           color="inherit"
-          onClick={onDelete}
-        >
+          onClick={onDelete}>
           <DeleteRounded fontSize="inherit" />
         </IconButton>
       </Stack>

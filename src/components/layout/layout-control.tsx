@@ -23,6 +23,7 @@ export const LayoutControl = ({ maximized, onClose }: Props) => {
     <ButtonGroup
       variant="text"
       sx={{
+        zIndex: 1000,
         height: "100%",
         ".MuiButtonGroup-grouped": {
           borderRadius: "0px",

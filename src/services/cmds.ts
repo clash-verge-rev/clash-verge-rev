@@ -127,6 +127,13 @@ export async function getSystemProxy() {
   }>("get_sys_proxy");
 }
 
+export async function getAutotemProxy() {
+  return invoke<{
+    enable: boolean;
+    url: string;
+  }>("get_auto_proxy");
+}
+
 export async function changeClashCore(clashCore: string) {
   return invoke<any>("change_clash_core", { clashCore });
 }

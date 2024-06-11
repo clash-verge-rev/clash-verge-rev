@@ -207,6 +207,7 @@ interface IVergeConfig {
   enable_memory_usage?: boolean;
   enable_group_icon?: boolean;
   menu_icon?: "monochrome" | "colorful" | "disable";
+  tray_icon?: "monochrome" | "colorful";
   common_tray_icon?: boolean;
   sysproxy_tray_icon?: boolean;
   tun_tray_icon?: boolean;
@@ -218,6 +219,8 @@ interface IVergeConfig {
   enable_service_mode?: boolean;
   enable_silent_start?: boolean;
   enable_system_proxy?: boolean;
+  proxy_auto_config?: boolean;
+  pac_file_content?: string;
   enable_random_port?: boolean;
   verge_mixed_port?: number;
   verge_socks_port?: number;

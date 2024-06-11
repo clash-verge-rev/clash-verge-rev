@@ -79,14 +79,13 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Hotkey Viewer")}
+      title={t("Hotkey Setting")}
       contentSx={{ width: 450, maxHeight: 330 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
-      onOk={onSave}
-    >
+      onOk={onSave}>
       {HOTKEY_FUNC.map((func) => (
         <ItemWrapper key={func}>
           <Typography>{t(func)}</Typography>

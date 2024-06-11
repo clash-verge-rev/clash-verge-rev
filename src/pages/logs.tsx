@@ -1,80 +1,35 @@
 import { useMemo, useState } from "react";
-import { useRecoilState } from "recoil";
-import {
-  Box,
-  Button,
-  IconButton,
-  MenuItem,
-  Select,
-  SelectProps,
-  styled,
-} from "@mui/material";
+import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { atomEnableLog, atomLogData } from "@/services/states";
+import { useEnableLog, useLogData, useSetLogData } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
-
-const StyledSelect = styled((props: SelectProps<string>) => {
-  return (
-    <Select
-      size="small"
-      autoComplete="off"
-      sx={{
-        width: 120,
-        height: 33.375,
-        mr: 1,
-        '[role="button"]': { py: 0.65 },
-      }}
-      {...props}
-    />
-  );
-})(({ theme }) => ({
-  background: theme.palette.mode === "light" ? "#fff" : undefined,
-}));
+import { BaseSearchBox } from "@/components/base/base-search-box";
+import { BaseStyledSelect } from "@/components/base/base-styled-select";
 
 const LogPage = () => {
   const { t } = useTranslation();
-  const [logData, setLogData] = useRecoilState(atomLogData);
-  const [enableLog, setEnableLog] = useRecoilState(atomEnableLog);
+  const logData = useLogData();
+  const setLogData = useSetLogData();
+  const [enableLog, setEnableLog] = useEnableLog();
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
   const [logState, setLogState] = useState("all");
-  const [filterText, setFilterText] = useState("");
-  const [useRegexSearch, setUseRegexSearch] = useState(true);
-  const [hasInputError, setInputError] = useState(false);
-  const [inputHelperText, setInputHelperText] = useState("");
+  const [match, setMatch] = useState(() => (_: string) => true);
+
   const filterLogs = useMemo(() => {
-    setInputHelperText("");
-    setInputError(false);
-    if (useRegexSearch) {
-      try {
-        const regex = new RegExp(filterText);
-        return logData.filter((data) => {
-          return (
-            regex.test(data.payload) &&
-            (logState === "all" ? true : data.type.includes(logState))
-          );
-        });
-      } catch (err: any) {
-        setInputHelperText(err.message.substring(0, 60));
-        setInputError(true);
-        return logData;
-      }
-    }
-    return logData.filter((data) => {
-      return (
-        data.payload.includes(filterText) &&
-        (logState === "all" ? true : data.type.includes(logState))
-      );
-    });
-  }, [logData, logState, filterText]);
+    return logData
+      .filter((data) =>
+        logState === "all" ? true : data.type.includes(logState),
+      )
+      .filter((data) => match(data.payload));
+  }, [logData, logState, match]);
 
   return (
     <BasePage
@@ -84,6 +39,7 @@ const LogPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
+            title={t("Pause")}
             size="small"
             color="inherit"
             onClick={() => setEnableLog((e) => !e)}>
@@ -111,34 +67,15 @@ const LogPage = () => {
           display: "flex",
           alignItems: "center",
         }}>
-        <StyledSelect
+        <BaseStyledSelect
           value={logState}
           onChange={(e) => setLogState(e.target.value)}>
           <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="inf">INFO</MenuItem>
           <MenuItem value="warn">WARN</MenuItem>
           <MenuItem value="err">ERROR</MenuItem>
-        </StyledSelect>
-
-        <BaseStyledTextField
-          error={hasInputError}
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          label={inputHelperText}
-          placeholder={t("Filter conditions")}
-          InputProps={{
-            sx: { pr: 1 },
-            endAdornment: (
-              <IconButton
-                sx={{ fontWeight: "800", height: "100%", padding: "0" }}
-                color={useRegexSearch ? "primary" : "default"}
-                title={t("Use Regular Expression")}
-                onClick={() => setUseRegexSearch(!useRegexSearch)}>
-                .*
-              </IconButton>
-            ),
-          }}
-        />
+        </BaseStyledSelect>
+        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
       <Box

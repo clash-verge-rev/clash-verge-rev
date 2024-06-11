@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, MenuItem, Select } from "@mui/material";
-import { useRecoilState } from "recoil";
+import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
 import { closeAllConnections } from "@/services/api";
-import { atomConnectionSetting } from "@/services/states";
+import { useConnectionSetting } from "@/services/states";
 import { useClashInfo } from "@/hooks/use-clash";
 import { BaseEmpty, BasePage } from "@/components/base";
 import { useWebsocket } from "@/hooks/use-websocket";
@@ -18,22 +17,23 @@ import {
 } from "@/components/connection/connection-detail";
 import parseTraffic from "@/utils/parse-traffic";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+import { BaseSearchBox } from "@/components/base/base-search-box";
+import { BaseStyledSelect } from "@/components/base/base-styled-select";
 
 const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
 const ConnectionsPage = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
-  const [filterText, setFilterText] = useState("");
+  const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
   const [connData, setConnData] = useState<IConnections>(initConn);
 
-  const [setting, setSetting] = useRecoilState(atomConnectionSetting);
+  const [setting, setSetting] = useConnectionSetting();
 
   const isTableLayout = setting.layout === "table";
 
@@ -52,7 +52,7 @@ const ConnectionsPage = () => {
   const [filterConn, download, upload] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
     let connections = connData.connections.filter((conn) =>
-      (conn.metadata.host || conn.metadata.destinationIP)?.includes(filterText),
+      match(conn.metadata.host || conn.metadata.destinationIP || ""),
     );
 
     if (orderFunc) connections = orderFunc(connections);
@@ -63,7 +63,7 @@ const ConnectionsPage = () => {
       upload += x.upload;
     });
     return [connections, download, upload];
-  }, [connData, filterText, curOrderOpt]);
+  }, [connData, match, curOrderOpt]);
 
   const { connect, disconnect } = useWebsocket(
     (event) => {
@@ -121,35 +121,39 @@ const ConnectionsPage = () => {
   return (
     <BasePage
       full
-      title={t("Connections")}
+      title={<span style={{ whiteSpace: "nowrap" }}>{t("Connections")}</span>}
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ mx: 1, fontWeight: 600 }}>
-            {t("Download")}: {parseTraffic(download)}
+          <Box sx={{ mx: 1 }}>
+            {t("Downloaded")}: {parseTraffic(download)}
           </Box>
-          <Box sx={{ mx: 1, fontWeight: 600 }}>
-            {t("Upload")}: {parseTraffic(upload)}
+          <Box sx={{ mx: 1 }}>
+            {t("Uploaded")}: {parseTraffic(upload)}
           </Box>
           <IconButton
             color="inherit"
             size="small"
             onClick={() =>
               setSetting((o) =>
-                o.layout === "list"
+                o?.layout !== "table"
                   ? { ...o, layout: "table" }
                   : { ...o, layout: "list" },
               )
             }>
             {isTableLayout ? (
-              <TableChartRounded fontSize="inherit" />
+              <span title={t("List View")}>
+                <TableRowsRounded fontSize="inherit" />
+              </span>
             ) : (
-              <TableRowsRounded fontSize="inherit" />
+              <span title={t("Table View")}>
+                <TableChartRounded fontSize="inherit" />
+              </span>
             )}
           </IconButton>
 
           <Button size="small" variant="contained" onClick={onCloseAll}>
-            {t("Close All")}
+            <span style={{ whiteSpace: "nowrap" }}>{t("Close All")}</span>
           </Button>
         </Box>
       }>
@@ -164,29 +168,17 @@ const ConnectionsPage = () => {
           userSelect: "text",
         }}>
         {!isTableLayout && (
-          <Select
-            size="small"
-            autoComplete="off"
+          <BaseStyledSelect
             value={curOrderOpt}
-            onChange={(e) => setOrderOpt(e.target.value)}
-            sx={{
-              mr: 1,
-              width: i18n.language === "en" ? 190 : 120,
-              height: 33.375,
-              '[role="button"]': { py: 0.65 },
-            }}>
+            onChange={(e) => setOrderOpt(e.target.value)}>
             {Object.keys(orderOpts).map((opt) => (
               <MenuItem key={opt} value={opt}>
                 <span style={{ fontSize: 14 }}>{t(opt)}</span>
               </MenuItem>
             ))}
-          </Select>
+          </BaseStyledSelect>
         )}
-
-        <BaseStyledTextField
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-        />
+        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
       <Box
@@ -207,7 +199,7 @@ const ConnectionsPage = () => {
         ) : (
           <Virtuoso
             data={filterConn}
-            itemContent={(index, item) => (
+            itemContent={(_, item) => (
               <ConnectionItem
                 value={item}
                 onShowDetail={() => detailRef.current?.open(item)}

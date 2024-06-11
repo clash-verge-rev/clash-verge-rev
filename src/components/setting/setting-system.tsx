@@ -6,14 +6,11 @@ import { PrivacyTipRounded, Settings, InfoRounded } from "@mui/icons-material";
 import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { DialogRef, SwitchLovely } from "@/components/base";
-import { TunViewer } from "@/components/setting/mods/tun-viewer";
-import {
-  SettingItem,
-  SettingList,
-} from "@/components/setting/mods/setting-comp";
-import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
-import { ServiceViewer } from "@/components/setting/mods/service-viewer";
-import { GuardState } from "@/components/setting/mods/guard-state";
+import { SettingList, SettingItem } from "./mods/setting-comp";
+import { GuardState } from "./mods/guard-state";
+import { ServiceViewer } from "./mods/service-viewer";
+import { SysproxyViewer } from "./mods/sysproxy-viewer";
+import { TunViewer } from "./mods/tun-viewer";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -120,15 +117,25 @@ const SettingSystem = ({ onError }: Props) => {
       <SettingItem
         label={t("System Proxy")}
         extra={
-          <IconButton
-            color="inherit"
-            size="small"
-            onClick={() => sysproxyRef.current?.open()}>
-            <Settings
-              fontSize="inherit"
-              style={{ cursor: "pointer", opacity: 0.75 }}
-            />
-          </IconButton>
+          <>
+            <Tooltip title={t("System Proxy Info")} placement="top">
+              <IconButton color="inherit" size="small">
+                <InfoRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+            </Tooltip>
+            <IconButton
+              color="inherit"
+              size="small"
+              onClick={() => sysproxyRef.current?.open()}>
+              <Settings
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </>
         }>
         <GuardState
           value={enable_system_proxy ?? false}
