@@ -95,7 +95,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}>
       <List>
-        <SettingItem label={t("Splashscreen")}>
+        <Item>
+          <ListItemText primary={t("Splashscreen")} />
           <GuardState
             value={enable_splashscreen ?? true}
             valueProps="checked"
@@ -105,20 +106,18 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onGuard={(e) => patchVerge({ enable_splashscreen: e })}>
             <SwitchLovely edge="end" />
           </GuardState>
-        </SettingItem>
+        </Item>
         {show_title_setting && (
-          <SettingItem
-            label={t("System Title")}
-            extra={
-              <Tooltip title={t("App Title Info")} placement="top">
-                <IconButton color="inherit" size="small">
-                  <InfoRounded
-                    fontSize="inherit"
-                    style={{ cursor: "pointer", opacity: 0.75 }}
-                  />
-                </IconButton>
-              </Tooltip>
-            }>
+          <Item>
+            <ListItemText primary={t("System Title")} />
+            <Tooltip title={t("App Title Info")} placement="top">
+              <IconButton color="inherit" size="small">
+                <InfoRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+            </Tooltip>
             <GuardState
               value={enable_system_title ?? false}
               valueProps="checked"
@@ -130,7 +129,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               }}>
               <SwitchLovely edge="end" />
             </GuardState>
-          </SettingItem>
+          </Item>
         )}
 
         <ConfirmViewer
@@ -146,18 +145,16 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           }}
         />
 
-        <SettingItem
-          label={t("Keep UI Active")}
-          extra={
-            <Tooltip title={t("Keep UI Active Info")} placement="top">
-              <IconButton color="inherit" size="small">
-                <InfoRounded
-                  fontSize="inherit"
-                  style={{ cursor: "pointer", opacity: 0.75 }}
-                />
-              </IconButton>
-            </Tooltip>
-          }>
+        <Item>
+          <ListItemText primary={t("Keep UI Active")} />
+          <Tooltip title={t("Keep UI Active Info")} placement="top">
+            <IconButton color="inherit" size="small">
+              <InfoRounded
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </Tooltip>
           <GuardState
             value={enable_keep_ui_active ?? false}
             valueProps="checked"
@@ -167,7 +164,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onGuard={(e) => patchVerge({ enable_keep_ui_active: e })}>
             <SwitchLovely edge="end" />
           </GuardState>
-        </SettingItem>
+        </Item>
         <Item>
           <ListItemText primary={t("Traffic Graph")} />
           <GuardState
@@ -231,12 +228,10 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               onCatch={onError}
               onFormat={(e: any) => e.target.value}
               onChange={(e) => onChangeData({ tray_icon: e })}
-              onGuard={(e) => patchVerge({ tray_icon: e })}
-            >
+              onGuard={(e) => patchVerge({ tray_icon: e })}>
               <Select
                 size="small"
-                sx={{ width: 140, "> div": { py: "7.5px" } }}
-              >
+                sx={{ width: 140, "> div": { py: "7.5px" } }}>
                 <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>
                 <MenuItem value="colorful">{t("Colorful")}</MenuItem>
               </Select>
