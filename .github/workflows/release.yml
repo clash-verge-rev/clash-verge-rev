@@ -119,19 +119,19 @@ jobs:
 
       - run: |
           cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
-          ### 我应该下载哪个版本？
+          ## 我应该下载哪个版本？
 
           ### MacOS (提示文件损坏或开发者无法验证请查看下面FAQ)
           - MacOS intel芯片: x64.dmg
           - MacOS apple M芯片: aarch64.dmg
 
           ### Linux
-          - Linux 64位: amd64.AppImage/amd64.deb
-          - Linux 32位: i386.deb
-          - Linux arm64架构: arm64.deb
-          - Linux armv7架构: armhf.deb
+          - Linux 64位: amd64.deb/amd64.rpm
+          - Linux 32位: i386.deb/i386.rpm
+          - Linux arm64架构: arm64.deb/aarch64.rpm
+          - Linux armv7架构: armhf.deb/armhfp.rpm
 
-          ### Windows (Win7 用户请查看下面FAQ手动替换内核使用)
+          ### Windows (Win7 用户请查看下面FAQ中的解决方案)
           #### 正常版本(推荐)
           - 64位: x64-setup.exe
           - 32位: x86-setup.exe
@@ -148,17 +148,19 @@ jobs:
           ### FAQ
 
           - [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
+
+          Created at  ${{ env.BUILDTIME }}.
           EOF
 
-      - name: Upload Release
-        if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
-        with:
-          tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
-          body_path: ${{ github.workspace }}/CHANGELOG.txt
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
+      # - name: Upload Release
+      #   if: startsWith(matrix.target, 'x86_64')
+      #   uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
+      #   with:
+      #     tag_name: v${{env.VERSION}}
+      #     name: "Clash Verge Rev v${{env.VERSION}}"
+      #     body_path: ${{ github.workspace }}/CHANGELOG.txt
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
         uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
@@ -167,7 +169,9 @@ jobs:
           name: "Clash Verge Rev v${{env.VERSION}}"
           body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+          files: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   release-for-fixed-webview2:
     strategy:
