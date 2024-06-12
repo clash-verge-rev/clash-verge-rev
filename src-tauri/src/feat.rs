@@ -106,7 +106,7 @@ pub fn toggle_tun_mode() {
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
     Config::clash().draft().patch_config(patch.clone());
 
-    match {
+    let res = {
         let redir_port = patch.get("redir-port");
         let tproxy_port = patch.get("tproxy-port");
         let mixed_port = patch.get("mixed-port");
@@ -156,7 +156,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         Config::runtime().latest().patch_config(patch);
 
         <Result<()>>::Ok(())
-    } {
+    };
+    match res {
         Ok(()) => {
             Config::clash().apply();
             Config::clash().data().save_config()?;
@@ -193,7 +194,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let tproxy_enabled = patch.verge_tproxy_enabled;
     let socks_enabled = patch.verge_socks_enabled;
     let http_enabled = patch.verge_http_enabled;
-    match {
+    let res = {
         let service_mode = patch.enable_service_mode;
 
         if service_mode.is_some() {
@@ -255,7 +256,8 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         }
 
         <Result<()>>::Ok(())
-    } {
+    };
+    match res {
         Ok(()) => {
             Config::verge().apply();
             Config::verge().data().save_file()?;

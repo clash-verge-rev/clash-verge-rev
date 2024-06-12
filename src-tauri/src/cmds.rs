@@ -327,7 +327,7 @@ pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
             Err(err) => Err(err.to_string()),
         }
     } else {
-        return Err("file not found".to_string());
+        Err("file not found".to_string())
     }
 }
 

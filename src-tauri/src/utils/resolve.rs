@@ -91,9 +91,12 @@ pub fn resolve_setup(app_handle: &AppHandle) {
 
     let argvs: Vec<String> = std::env::args().collect();
     if argvs.len() > 1 {
-        tauri::async_runtime::block_on(async {
-            resolve_scheme(argvs[1].to_owned()).await;
-        });
+        let param = argvs[1].as_str();
+        if param.starts_with("clash:") {
+            tauri::async_runtime::block_on(async {
+                resolve_scheme(argvs[1].to_owned()).await;
+            });
+        }
     }
 }
 
@@ -205,7 +208,6 @@ pub fn create_window(app_handle: &AppHandle) {
         }
         Err(_) => {
             log::error!("failed to create window");
-            return;
         }
     }
 }

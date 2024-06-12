@@ -137,7 +137,7 @@ pub fn delete_log() -> Result<()> {
     }
 
     let service_log_dir = log_dir.join("service");
-    for file in fs::read_dir(&service_log_dir)?.flatten() {
+    for file in fs::read_dir(service_log_dir)?.flatten() {
         let _ = process_file(file);
     }
 
@@ -318,11 +318,11 @@ pub fn startup_script() -> Result<()> {
             Some(dir) => {
                 let _ = Command::new(shell)
                     .current_dir(dir.to_path_buf())
-                    .args(&[path])
+                    .args([path])
                     .output()?;
             }
             None => {
-                let _ = Command::new(shell).args(&[path]).output()?;
+                let _ = Command::new(shell).args([path]).output()?;
             }
         }
     }

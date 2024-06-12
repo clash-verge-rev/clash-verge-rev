@@ -60,11 +60,7 @@ pub fn use_sort(config: Mapping) -> Mapping {
 
     let supported_keys: HashSet<&str> = HANDLE_FIELDS.into_iter().chain(DEFAULT_FIELDS).collect();
 
-    let config_keys: HashSet<&str> = config
-        .keys()
-        .filter_map(|e| e.as_str())
-        .into_iter()
-        .collect();
+    let config_keys: HashSet<&str> = config.keys().filter_map(|e| e.as_str()).collect();
 
     config_keys.difference(&supported_keys).for_each(|&key| {
         let key = Value::from(key);
