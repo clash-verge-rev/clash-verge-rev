@@ -279,7 +279,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: |
+      - name: Generate Changelog
+        run: |
           cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
           ## 我应该下载哪个版本？
 

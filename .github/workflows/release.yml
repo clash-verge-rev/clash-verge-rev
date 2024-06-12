@@ -117,7 +117,8 @@ jobs:
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
 
-      - run: |
+      - name: Generate Changelog
+        run: |
           cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
           ## 我应该下载哪个版本？
 
@@ -149,7 +150,6 @@ jobs:
 
           - [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
 
-          Created at  ${{ env.BUILDTIME }}.
           EOF
 
       # - name: Upload Release
