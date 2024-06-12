@@ -103,7 +103,9 @@ impl PrfOption {
                 a.user_agent = b.user_agent.or(a.user_agent);
                 a.with_proxy = b.with_proxy.or(a.with_proxy);
                 a.self_proxy = b.self_proxy.or(a.self_proxy);
-                a.danger_accept_invalid_certs = b.danger_accept_invalid_certs.or(a.danger_accept_invalid_certs);
+                a.danger_accept_invalid_certs = b
+                    .danger_accept_invalid_certs
+                    .or(a.danger_accept_invalid_certs);
                 a.update_interval = b.update_interval.or(a.update_interval);
                 Some(a)
             }
@@ -182,7 +184,8 @@ impl PrfItem {
         let opt_ref = option.as_ref();
         let with_proxy = opt_ref.map_or(false, |o| o.with_proxy.unwrap_or(false));
         let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
-        let accept_invalid_certs = opt_ref.map_or(false, |o| o.danger_accept_invalid_certs.unwrap_or(false));
+        let accept_invalid_certs =
+            opt_ref.map_or(false, |o| o.danger_accept_invalid_certs.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
 
@@ -300,7 +303,7 @@ impl PrfItem {
             Some(value) => {
                 let str_value = value.to_str().unwrap_or("");
                 Some(str_value.to_string())
-            },
+            }
             None => None,
         };
 

@@ -1,4 +1,5 @@
 mod clash;
+#[allow(clippy::module_inception)]
 mod config;
 mod draft;
 mod prfitem;

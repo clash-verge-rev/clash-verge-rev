@@ -12,7 +12,7 @@ const MERGE_FIELDS: [&str; 6] = [
 
 fn deep_merge(a: &mut Value, b: &Value) {
     match (a, b) {
-        (&mut Value::Mapping(ref mut a), &Value::Mapping(ref b)) => {
+        (&mut Value::Mapping(ref mut a), Value::Mapping(b)) => {
             for (k, v) in b {
                 deep_merge(a.entry(k.clone()).or_insert(Value::Null), v);
             }

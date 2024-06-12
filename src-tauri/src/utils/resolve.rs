@@ -205,7 +205,6 @@ pub fn create_window(app_handle: &AppHandle) {
         }
         Err(_) => {
             log::error!("failed to create window");
-            return;
         }
     }
 }
