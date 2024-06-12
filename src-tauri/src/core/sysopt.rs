@@ -44,11 +44,12 @@ static DEFAULT_BYPASS: &str =
 fn get_bypass() -> String {
     let bypass = DEFAULT_BYPASS.to_string();
 
-    let custom_bypass = match {
+    let res = {
         let verge = Config::verge();
         let verge = verge.latest();
         verge.system_proxy_bypass.clone()
-    } {
+    };
+    let custom_bypass = match res {
         Some(bypass) => bypass,
         None => "".to_string(),
     };
@@ -65,7 +66,7 @@ fn get_bypass() -> String {
         format!("{},{}", bypass, custom_bypass)
     };
 
-    bypass.into()
+    bypass
 }
 
 impl Sysopt {
@@ -152,19 +153,18 @@ impl Sysopt {
                 verge.proxy_auto_config.unwrap_or(false),
             )
         };
-        if pac {
-            if cur_autoproxy.is_none() || old_autoproxy.is_none() {
-                drop(cur_autoproxy);
-                drop(old_autoproxy);
-                return self.init_sysproxy();
-            }
-        } else {
-            if cur_sysproxy.is_none() || old_sysproxy.is_none() {
-                drop(cur_sysproxy);
-                drop(old_sysproxy);
-                return self.init_sysproxy();
-            }
+        if pac && (cur_autoproxy.is_none() || old_autoproxy.is_none()) {
+            drop(cur_autoproxy);
+            drop(old_autoproxy);
+            return self.init_sysproxy();
         }
+
+        if !pac && (cur_sysproxy.is_none() || old_sysproxy.is_none()) {
+            drop(cur_sysproxy);
+            drop(old_sysproxy);
+            return self.init_sysproxy();
+        }
+
         let port = Config::verge()
             .latest()
             .verge_mixed_port

@@ -16,7 +16,7 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
             2,
             NativeFunction::from_closure(
                 move |_: &JsValue, args: &[JsValue], context: &mut Context| {
-                    let level = args.get(0).unwrap().to_string(context)?;
+                    let level = args.first().unwrap().to_string(context)?;
                     let level = level.to_std_string().unwrap();
                     let data = args.get(1).unwrap().to_string(context)?;
                     let data = data.to_std_string().unwrap();

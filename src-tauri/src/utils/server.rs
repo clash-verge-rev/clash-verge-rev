@@ -30,7 +30,7 @@ pub fn check_singleton() -> Result<()> {
                     let param = argvs[1].as_str();
                     if param.starts_with("clash:") {
                         reqwest::get(format!(
-                        "http://127.0.0.1:{port}/commands/scheme?param={param}"
+                            "http://127.0.0.1:{port}/commands/scheme?param={param}"
                         ))
                         .await?
                         .text()

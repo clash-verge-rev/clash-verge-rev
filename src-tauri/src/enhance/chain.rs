@@ -88,13 +88,13 @@ impl ChainItem {
 impl ChainSupport {
     pub fn is_support(&self, core: Option<&String>) -> bool {
         match core {
-            Some(core) => match (self, core.as_str()) {
-                (ChainSupport::All, _) => true,
-                (ChainSupport::Clash, "clash") => true,
-                (ChainSupport::ClashMeta, "clash-meta") => true,
-                (ChainSupport::ClashMetaAlpha, "clash-meta-alpha") => true,
-                _ => false,
-            },
+            Some(core) => matches!(
+                (self, core.as_str()),
+                (ChainSupport::All, _)
+                    | (ChainSupport::Clash, "clash")
+                    | (ChainSupport::ClashMeta, "clash-meta")
+                    | (ChainSupport::ClashMetaAlpha, "clash-meta-alpha")
+            ),
             None => true,
         }
     }

@@ -136,17 +136,15 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             .map(|(_, c)| c)
             .for_each(|item| {
                 log::debug!(target: "app", "run builtin script {}", item.uid);
-
-                match item.data {
-                    ChainType::Script(script) => match use_script(script, config.to_owned()) {
+                if let ChainType::Script(script) = item.data {
+                    match use_script(script, config.to_owned()) {
                         Ok((res_config, _)) => {
                             config = res_config;
                         }
                         Err(err) => {
                             log::error!(target: "app", "builtin script error `{err}`");
                         }
-                    },
-                    _ => {}
+                    }
                 }
             });
     }
@@ -155,7 +153,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     config = use_sort(config);
 
     let mut exists_set = HashSet::new();
-    exists_set.extend(exists_keys.into_iter());
+    exists_set.extend(exists_keys);
     exists_keys = exists_set.into_iter().collect();
 
     (config, exists_keys, result_map)

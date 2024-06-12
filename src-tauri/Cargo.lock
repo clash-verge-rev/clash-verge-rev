@@ -312,9 +312,9 @@ dependencies = [
 
 [[package]]
 name = "async-signal"
-version = "0.2.7"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "329972aa325176e89114919f2a80fdae4f4c040f66a370b1a1159c6c0f94e7aa"
+checksum = "794f185324c2f00e771cd9f1ae8b5ac68be2ca7abb129a87afd6e86d228bc54d"
 dependencies = [
  "async-io 2.3.3",
  "async-lock 3.4.0",
@@ -1985,8 +1985,8 @@ dependencies = [
  "aho-corasick 1.1.3",
  "bstr",
  "log 0.4.21",
- "regex-automata 0.4.6",
- "regex-syntax 0.8.3",
+ "regex-automata 0.4.7",
+ "regex-syntax 0.8.4",
 ]
 
 [[package]]
@@ -2249,12 +2249,12 @@ dependencies = [
 
 [[package]]
 name = "http-body-util"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0475f8b2ac86659c21b64320d5d653f9efe42acd2a4e560073ec61a155a34f1d"
+checksum = "793429d76616a256bcb62c2a2ec2bed781c8307e797e2598c50010f2bee2544f"
 dependencies = [
  "bytes",
- "futures-core",
+ "futures-util",
  "http 1.1.0",
  "http-body 1.0.0",
  "pin-project-lite",
@@ -2268,9 +2268,9 @@ checksum = "21dec9db110f5f872ed9699c3ecf50cf16f423502706ba5c72462e28d3157573"
 
 [[package]]
 name = "httparse"
-version = "1.8.0"
+version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d897f394bad6a705d5f4104762e116a75639e470d80901eed05a860a95cb1904"
+checksum = "d0e7a4dd27b9476dc40cb050d3632d3bba3a70ddbff012285f7f8559a1e7e545"
 
 [[package]]
 name = "httpdate"
@@ -2563,12 +2563,14 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "idna"
-version = "0.5.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "634d9b1461af396cad843f47fdba5597a4f9e6ddd4bfb6ff5d85028c25cb12f6"
+checksum = "4716a3a0933a1d01c2f72450e89596eb51dd34ef3c211ccd875acdf1f8fe47ed"
 dependencies = [
- "unicode-bidi",
- "unicode-normalization",
+ "icu_normalizer",
+ "icu_properties",
+ "smallvec",
+ "utf8_iter",
 ]
 
 [[package]]
@@ -2581,7 +2583,7 @@ dependencies = [
  "globset",
  "log 0.4.21",
  "memchr",
- "regex-automata 0.4.6",
+ "regex-automata 0.4.7",
  "same-file",
  "walkdir",
  "winapi-util",
@@ -2711,7 +2713,7 @@ checksum = "c416c05ba2a10240e022887617af3128fccdbf69713214da0fc81a5690d00df7"
 dependencies = [
  "ahash",
  "once_cell",
- "regex 1.10.4",
+ "regex 1.10.5",
 ]
 
 [[package]]
@@ -4338,14 +4340,14 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.10.4"
+version = "1.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c117dbdfde9c8308975b6a18d71f3f385c89461f7b3fb054288ecf2a2058ba4c"
+checksum = "b91213439dad192326a0d7c6ee3955910425f441d7038e0d6933b0aec5c4517f"
 dependencies = [
  "aho-corasick 1.1.3",
  "memchr",
- "regex-automata 0.4.6",
- "regex-syntax 0.8.3",
+ "regex-automata 0.4.7",
+ "regex-syntax 0.8.4",
 ]
 
 [[package]]
@@ -4359,13 +4361,13 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.6"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86b83b8b9847f9bf95ef68afb0b8e6cdb80f498442f5179a29fad448fcc1eaea"
+checksum = "38caf58cc5ef2fed281f89292ef23f6365465ed9a41b7a7754eb4e26496c92df"
 dependencies = [
  "aho-corasick 1.1.3",
  "memchr",
- "regex-syntax 0.8.3",
+ "regex-syntax 0.8.4",
 ]
 
 [[package]]
@@ -4385,9 +4387,9 @@ checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
 
 [[package]]
 name = "regex-syntax"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
+checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
 
 [[package]]
 name = "regress"
@@ -5381,7 +5383,7 @@ checksum = "e1fc403891a21bcfb7c37834ba66a547a8f402146eba7265b5a6d88059c9ff2f"
 [[package]]
 name = "tauri"
 version = "1.6.7"
-source = "git+https://github.com/tauri-apps/tauri?branch=1.x#3752eb1e6be2a8c31ea5519b5f1886d5721e4435"
+source = "git+https://github.com/tauri-apps/tauri?branch=1.x#d2786bf699ffca1d5e9c234a3b1b4d5ec173af87"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -5414,7 +5416,7 @@ dependencies = [
  "png",
  "rand 0.8.5",
  "raw-window-handle",
- "regex 1.10.4",
+ "regex 1.10.5",
  "reqwest 0.11.27",
  "rfd",
  "semver 1.0.23",
@@ -5444,7 +5446,7 @@ dependencies = [
 [[package]]
 name = "tauri-build"
 version = "1.5.2"
-source = "git+https://github.com/tauri-apps/tauri?branch=1.x#3752eb1e6be2a8c31ea5519b5f1886d5721e4435"
+source = "git+https://github.com/tauri-apps/tauri?branch=1.x#d2786bf699ffca1d5e9c234a3b1b4d5ec173af87"
 dependencies = [
  "anyhow",
  "cargo_toml",
@@ -5462,7 +5464,7 @@ dependencies = [
 [[package]]
 name = "tauri-codegen"
 version = "1.4.3"
-source = "git+https://github.com/tauri-apps/tauri?branch=1.x#3752eb1e6be2a8c31ea5519b5f1886d5721e4435"
+source = "git+https://github.com/tauri-apps/tauri?branch=1.x#d2786bf699ffca1d5e9c234a3b1b4d5ec173af87"
 dependencies = [
  "base64 0.21.7",
  "brotli",
@@ -5472,7 +5474,7 @@ dependencies = [
  "png",
  "proc-macro2",
  "quote",
- "regex 1.10.4",
+ "regex 1.10.5",
  "semver 1.0.23",
  "serde",
  "serde_json",
@@ -5487,7 +5489,7 @@ dependencies = [
 [[package]]
 name = "tauri-macros"
 version = "1.4.4"
-source = "git+https://github.com/tauri-apps/tauri?branch=1.x#3752eb1e6be2a8c31ea5519b5f1886d5721e4435"
+source = "git+https://github.com/tauri-apps/tauri?branch=1.x#d2786bf699ffca1d5e9c234a3b1b4d5ec173af87"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -5500,7 +5502,7 @@ dependencies = [
 [[package]]
 name = "tauri-runtime"
 version = "0.14.3"
-source = "git+https://github.com/tauri-apps/tauri?branch=1.x#3752eb1e6be2a8c31ea5519b5f1886d5721e4435"
+source = "git+https://github.com/tauri-apps/tauri?branch=1.x#d2786bf699ffca1d5e9c234a3b1b4d5ec173af87"
 dependencies = [
  "gtk",
  "http 0.2.12",
@@ -5520,7 +5522,7 @@ dependencies = [
 [[package]]
 name = "tauri-runtime-wry"
 version = "0.14.8"
-source = "git+https://github.com/tauri-apps/tauri?branch=1.x#3752eb1e6be2a8c31ea5519b5f1886d5721e4435"
+source = "git+https://github.com/tauri-apps/tauri?branch=1.x#d2786bf699ffca1d5e9c234a3b1b4d5ec173af87"
 dependencies = [
  "arboard",
  "cocoa 0.24.1",
@@ -5540,7 +5542,7 @@ dependencies = [
 [[package]]
 name = "tauri-utils"
 version = "1.5.4"
-source = "git+https://github.com/tauri-apps/tauri?branch=1.x#3752eb1e6be2a8c31ea5519b5f1886d5721e4435"
+source = "git+https://github.com/tauri-apps/tauri?branch=1.x#d2786bf699ffca1d5e9c234a3b1b4d5ec173af87"
 dependencies = [
  "brotli",
  "ctor",
@@ -5651,7 +5653,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "ordered-float",
- "regex 1.10.4",
+ "regex 1.10.5",
  "semver 0.11.0",
  "sha2 0.9.9",
  "signal-hook",
@@ -5779,21 +5781,6 @@ dependencies = [
  "displaydoc",
  "zerovec",
 ]
-
-[[package]]
-name = "tinyvec"
-version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87cc5ceb3875bb20c2890005a4e226a4651264a5c75edb2421b52861a0a0cb50"
-dependencies = [
- "tinyvec_macros",
-]
-
-[[package]]
-name = "tinyvec_macros"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
@@ -6030,7 +6017,7 @@ dependencies = [
  "matchers",
  "nu-ansi-term",
  "once_cell",
- "regex 1.10.4",
+ "regex 1.10.5",
  "sharded-slab",
  "smallvec",
  "thread_local 1.1.8",
@@ -6126,25 +6113,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "unicode-bidi"
-version = "0.3.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08f95100a766bf4f8f28f90d77e0a5461bbdb219042e7679bebe79004fed8d75"
-
-[[package]]
 name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
-
-[[package]]
-name = "unicode-normalization"
-version = "0.1.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a56d1686db2308d901306f92a263857ef59ea39678a5458e7cb17f01415101f5"
-dependencies = [
- "tinyvec",
-]
 
 [[package]]
 name = "unicode-segmentation"
@@ -6175,9 +6147,9 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "url"
-version = "2.5.0"
+version = "2.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31e6302e3bb753d46e83516cae55ae196fc0c309407cf11ab35cc51a4c2a4633"
+checksum = "f7c25da092f0a868cdf09e8674cd3b7ef3a7d92a24253e663a2fb85e2496de56"
 dependencies = [
  "form_urlencoded",
  "idna",
@@ -6606,7 +6578,7 @@ version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aac48ef20ddf657755fdcda8dfed2a7b4fc7e4581acce6fe9b88c3d64f29dee7"
 dependencies = [
- "regex 1.10.4",
+ "regex 1.10.5",
  "serde",
  "serde_json",
  "thiserror",
@@ -7255,12 +7227,12 @@ checksum = "213b7324336b53d2414b2db8537e56544d981803139155afa84f76eeebb7a546"
 
 [[package]]
 name = "xdg-home"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21e5a325c3cb8398ad6cf859c1135b25dd29e186679cf2da7581d9679f63b38e"
+checksum = "ca91dcf8f93db085f3a0a29358cd0b9d670915468f4290e8b85d118a34211ab8"
 dependencies = [
  "libc",
- "winapi",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
