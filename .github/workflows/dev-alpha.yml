@@ -123,15 +123,15 @@ jobs:
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
-      - name: Upload Release
-        if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
-        with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
+      # - name: Upload Release
+      #   if: startsWith(matrix.target, 'x86_64')
+      #   uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
+      #   with:
+      #     tag_name: alpha
+      #     name: "Clash Verge Rev Alpha"
+      #     prerelease: true
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
         uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
@@ -140,7 +140,9 @@ jobs:
           name: "Clash Verge Rev Alpha"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+          files: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   alpha-for-fixed-webview2:
     strategy:
