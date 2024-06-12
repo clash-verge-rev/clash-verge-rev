@@ -13,7 +13,6 @@ export const SwitchLovely = styled(Switch)(({ theme }) => {
     width,
     height,
     padding: 0,
-    overflow: "unset",
     // margin: theme.spacing(1),
     margin: 2,
     [`& .${switchClasses.switchBase}`]: {

@@ -12,11 +12,9 @@ import {
   MenuItem,
   Menu,
   CircularProgress,
+  SxProps,
 } from "@mui/material";
-import {
-  LocalFireDepartmentRounded,
-  RefreshRounded,
-} from "@mui/icons-material";
+import { RefreshRounded } from "@mui/icons-material";
 import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
@@ -25,14 +23,16 @@ import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
 import { ConfirmViewer } from "./confirm-viewer";
 import { open } from "@tauri-apps/api/shell";
+
 const round = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 `;
 
 interface Props {
-  id: string;
+  sx?: SxProps;
   selected: boolean;
+  isDragging?: boolean;
   activating: boolean;
   itemData: IProfileItem;
   onSelect: (force: boolean) => void;
@@ -41,15 +41,25 @@ interface Props {
 }
 
 export const ProfileItem = (props: Props) => {
-  const { selected, activating, itemData, onSelect, onEdit, onReactivate } =
-    props;
+  const {
+    sx,
+    selected,
+    isDragging,
+    activating,
+    itemData,
+    onSelect,
+    onEdit,
+    onReactivate,
+  } = props;
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
+  if (anchorEl && isDragging) {
+    setAnchorEl(null);
+  }
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const loadingCache = useLoadingCache();
   const setLoadingCache = useSetLoadingCache();
-  const [sideBtnShow, setSideBtnShow] = useState(false);
 
   const { uid, name = "Profile", extra, updated = 0 } = itemData;
 
@@ -213,21 +223,9 @@ export const ProfileItem = (props: Props) => {
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexGrow: "1",
-        margin: "5px",
-        width: "260px",
-      }}>
+    <Box sx={{ width: "100%", ...sx }}>
       <ProfileBox
         aria-selected={selected}
-        onMouseEnter={() => {
-          setSideBtnShow(true);
-        }}
-        onMouseLeave={() => {
-          setSideBtnShow(false);
-        }}
         onClick={() => onSelect(false)}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
@@ -235,53 +233,6 @@ export const ProfileItem = (props: Props) => {
           setAnchorEl(event.currentTarget);
           event.preventDefault();
         }}>
-        {selected && (
-          <Box
-            sx={[
-              {
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                position: "absolute",
-                width: `${sideBtnShow ? "40" : "0"}px`,
-                opacity: sideBtnShow ? 1 : 0,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                zIndex: sideBtnShow ? 10 : -10,
-                transition: "all .3s",
-                borderRadius: "0 8px 8px 0",
-              },
-              (theme) => ({
-                bgcolor: theme.palette.primary.light,
-              }),
-            ]}>
-            {hasUrl && (
-              <IconButton
-                title={t("Update Profile")}
-                sx={{
-                  animation: loading ? `1s linear infinite ${round}` : "none",
-                }}
-                onClick={(e) => {
-                  onUpdate(1);
-                  e.stopPropagation();
-                }}>
-                <RefreshRounded />
-              </IconButton>
-            )}
-            {selected && (
-              <IconButton
-                title={t("Reactivate Profiles")}
-                onClick={(e) => {
-                  onReactivate();
-                  e.stopPropagation();
-                }}>
-                <LocalFireDepartmentRounded />
-              </IconButton>
-            )}
-          </Box>
-        )}
         {activating && (
           <Box
             sx={{

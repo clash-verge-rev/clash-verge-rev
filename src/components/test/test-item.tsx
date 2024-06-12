@@ -7,8 +7,9 @@ import {
   Divider,
   MenuItem,
   Menu,
-  styled,
   alpha,
+  SxProps,
+  styled,
 } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import { LanguageTwoTone } from "@mui/icons-material";
@@ -16,23 +17,26 @@ import { Notice } from "@/components/base";
 import { TestBox } from "./test-box";
 import delayManager from "@/services/delay";
 import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 
 interface Props {
   id: string;
+  isDragging?: boolean;
+  sx?: SxProps;
   itemData: IVergeTestItem;
   onEdit: () => void;
   onDelete: (uid: string) => void;
 }
 
-let eventListener: UnlistenFn | null = null;
-
 export const TestItem = (props: Props) => {
-  const { itemData, onEdit, onDelete: onDeleteItem } = props;
+  const { isDragging, sx, itemData, onEdit, onDelete: onDeleteItem } = props;
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
+  if (anchorEl && isDragging) {
+    setAnchorEl(null);
+  }
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [delay, setDelay] = useState(-1);
   const { uid, name, icon, url } = itemData;
@@ -79,27 +83,18 @@ export const TestItem = (props: Props) => {
     { label: "Delete", handler: onDelete },
   ];
 
-  const listenTsetEvent = async () => {
-    if (eventListener !== null) {
-      eventListener();
-    }
-    eventListener = await listen("verge://test-all", () => {
+  useEffect(() => {
+    const unlisten = listen("verge://test-all", () => {
       onDelay();
     });
-  };
 
-  useEffect(() => {
-    listenTsetEvent();
+    return () => {
+      unlisten.then((fn) => fn());
+    };
   }, []);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexGrow: "1",
-        margin: "5px",
-        width: "180px",
-      }}>
+    <Box sx={{ width: "100%", ...sx }}>
       <TestBox
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
@@ -163,7 +158,7 @@ export const TestItem = (props: Props) => {
               sx={({ palette }) => ({
                 ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
               })}>
-              {t("Test")}
+              Check
             </Widget>
           )}
 
