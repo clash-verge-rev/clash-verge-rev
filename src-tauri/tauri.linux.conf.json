@@ -6,7 +6,7 @@
     },
     "bundle": {
       "identifier": "io.github.clash-verge-rev.clash-verge-rev",
-      "targets": ["deb", "appimage", "updater", "rpm"],
+      "targets": ["deb", "rpm"],
       "deb": {
         "depends": ["openssl"],
         "desktopTemplate": "./template/clash-verge.desktop",
