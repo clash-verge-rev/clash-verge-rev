@@ -21,7 +21,6 @@ import { exists } from "@tauri-apps/api/fs";
 import { ConfirmViewer } from "@/components/profile/confirm-viewer";
 import { InfoRounded } from "@mui/icons-material";
 import getSystem from "@/utils/get-system";
-import { SettingItem } from "@/components/setting/mods/setting-comp";
 import { GuardState } from "@/components/setting/mods/guard-state";
 
 const OS = getSystem();

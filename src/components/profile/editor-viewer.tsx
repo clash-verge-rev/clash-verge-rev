@@ -127,9 +127,9 @@ export const EditorViewer = (props: Props) => {
           other: true,
         },
         automaticLayout: true,
-        padding: {
-          top: 33, // 顶部padding防止遮挡snippets
-        },
+        // padding: {
+        //   top: 33, // 顶部padding防止遮挡snippets
+        // },
         fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
           getSystem() === "windows" ? ", twemoji mozilla" : ""
         }`,

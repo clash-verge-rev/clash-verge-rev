@@ -3,7 +3,6 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Box, Button, Snackbar } from "@mui/material";
 import { deleteConnection } from "@/services/api";
-import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
 

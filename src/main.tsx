@@ -7,7 +7,7 @@ if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
 }
 
-import React, { useState } from "react";
+import React from "react";
 import { createRoot } from "react-dom/client";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { BrowserRouter } from "react-router-dom";

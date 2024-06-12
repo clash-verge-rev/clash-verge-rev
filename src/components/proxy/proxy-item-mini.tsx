@@ -5,7 +5,6 @@ import { alpha, Box, ListItemButton, styled, Typography } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import delayManager from "@/services/delay";
 import { useVerge } from "@/hooks/use-verge";
-import { useTranslation } from "react-i18next";
 
 interface Props {
   groupName: string;

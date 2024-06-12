@@ -18,7 +18,7 @@ import { ProxyItemMini } from "./proxy-item-mini";
 import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
 import { useThemeMode } from "@/services/states";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { downloadIconCache } from "@/services/cmds";
 
