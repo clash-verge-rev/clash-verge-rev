@@ -100,9 +100,6 @@ importers:
       react-virtuoso:
         specifier: ^4.7.11
         version: 4.7.11(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      snarkdown:
-        specifier: ^2.0.0
-        version: 2.0.0
       swr:
         specifier: ^2.2.5
         version: 2.2.5(react@18.3.1)
@@ -4152,12 +4149,6 @@ packages:
         integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==,
       }
 
-  snarkdown@2.0.0:
-    resolution:
-      {
-        integrity: sha512-MgL/7k/AZdXCTJiNgrO7chgDqaB9FGM/1Tvlcenenb7div6obaDATzs16JhFyHHBGodHT3B7RzRc5qk8pFhg3A==,
-      }
-
   source-map-js@1.2.0:
     resolution:
       {
@@ -7286,8 +7277,6 @@ snapshots:
     dependencies:
       dot-case: 3.0.4
       tslib: 2.6.3
-
-  snarkdown@2.0.0: {}
 
   source-map-js@1.2.0: {}
 
