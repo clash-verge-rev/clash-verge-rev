@@ -89,5 +89,5 @@
     "endOfLine": "lf",
     "bracketSameLine": true
   },
-  "packageManager": "pnpm@9.1.4"
+  "packageManager": "pnpm@9.3.0"
 }
