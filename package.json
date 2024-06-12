@@ -88,5 +88,6 @@
     "singleQuote": false,
     "endOfLine": "lf",
     "bracketSameLine": true
-  }
+  },
+  "packageManager": "pnpm@9.1.4"
 }
