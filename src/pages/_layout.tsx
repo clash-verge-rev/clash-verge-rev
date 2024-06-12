@@ -14,7 +14,6 @@ import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import ClashVergeFontSvg from "@/assets/image/clash_verge.svg?react";
 import { useThemeMode } from "@/services/states";
-import { useRecoilState } from "recoil";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
