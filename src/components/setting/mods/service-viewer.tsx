@@ -41,8 +41,11 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const onInstall = useLockFn(async () => {
     try {
       await installService();
-      mutateCheck();
+      await mutateCheck();
       setOpen(false);
+      setTimeout(() => {
+        mutateCheck();
+      }, 2000);
       Notice.success(t("Service Installed Successfully"));
     } catch (err: any) {
       mutateCheck();

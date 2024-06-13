@@ -4,6 +4,7 @@ import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import getSystem from "@/utils/get-system";
 import useSWR from "swr";
+import { useEffect } from "react";
 
 const isWIN = getSystem() === "windows";
 
@@ -17,7 +18,7 @@ export const StackModeSwitch = (props: Props) => {
   const { verge } = useVerge();
   const { enable_service_mode } = verge ?? {};
   // service mode
-  const { data: serviceStatus } = useSWR(
+  const { data: serviceStatus, mutate: mutateCheck } = useSWR(
     isWIN ? "checkService" : null,
     checkService,
     {
@@ -27,6 +28,10 @@ export const StackModeSwitch = (props: Props) => {
   );
 
   const { t } = useTranslation();
+
+  useEffect(() => {
+    mutateCheck();
+  }, []);
 
   return (
     <Tooltip
