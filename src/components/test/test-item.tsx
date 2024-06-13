@@ -158,7 +158,7 @@ export const TestItem = (props: Props) => {
               sx={({ palette }) => ({
                 ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
               })}>
-              Check
+              {t("Test")}
             </Widget>
           )}
 
