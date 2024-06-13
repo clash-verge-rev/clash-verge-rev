@@ -80,7 +80,6 @@ fn main() -> std::io::Result<()> {
             cmds::get_portable_flag,
             // cmds::kill_sidecar,
             cmds::restart_sidecar,
-            cmds::grant_permission,
             // clash
             cmds::restart_clash,
             cmds::get_clash_configs,
