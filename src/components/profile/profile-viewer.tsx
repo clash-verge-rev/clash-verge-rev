@@ -246,7 +246,15 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         )}
 
         {isLocal && openType === "new" && (
-          <FileInput onChange={(val) => (fileDataRef.current = val)} />
+          <FileInput
+            onChange={(file, val) => {
+              if (!formIns.getValues("name")) {
+                const name = file.name.substring(0, file.name.lastIndexOf("."));
+                formIns.setValue("name", name);
+              }
+              fileDataRef.current = val;
+            }}
+          />
         )}
 
         {isRemote && (
