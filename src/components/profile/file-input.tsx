@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Box, Button, Typography } from "@mui/material";
 
 interface Props {
-  onChange: (value: string) => void;
+  onChange: (file: File, value: string) => void;
 }
 
 export const FileInput = (props: Props) => {
@@ -28,7 +28,7 @@ export const FileInput = (props: Props) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         resolve(null);
-        onChange(event.target?.result as string);
+        onChange(file, event.target?.result as string);
       };
       reader.onerror = reject;
       reader.readAsText(file);
