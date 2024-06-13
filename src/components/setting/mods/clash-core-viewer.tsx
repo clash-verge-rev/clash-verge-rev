@@ -6,17 +6,9 @@ import { useVerge } from "@/hooks/use-verge";
 import { useLockFn } from "ahooks";
 import { LoadingButton } from "@mui/lab";
 import { SwitchAccessShortcut, RestartAlt } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Tooltip,
-  List,
-  ListItemButton,
-  ListItemText,
-} from "@mui/material";
+import { Box, Button, List, ListItemButton, ListItemText } from "@mui/material";
 import { changeClashCore, restartSidecar } from "@/services/cmds";
 import { closeAllConnections, upgradeCore } from "@/services/api";
-import { grantPermission } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 
 const VALID_CORE = [
@@ -53,17 +45,6 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
         mutate("getVersion");
       }, 100);
       Notice.success(t("Switched to _clash Core", { core: `${core}` }), 1000);
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString());
-    }
-  });
-
-  const onGrant = useLockFn(async (core: string) => {
-    try {
-      await grantPermission(core);
-      // 自动重启
-      if (core === clash_core) await restartSidecar();
-      Notice.success(t("Permissions Granted Successfully for _clash Core", { core: `${core}` }), 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
@@ -140,22 +121,6 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
             onClick={() => onCoreChange(each.core)}
           >
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
-
-            {(OS === "macos" || OS === "linux") && (
-              <Tooltip title={t("Tun mode requires")}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onGrant(each.core);
-                  }}
-                >
-                  {t("Grant")}
-                </Button>
-              </Tooltip>
-            )}
           </ListItemButton>
         ))}
       </List>
