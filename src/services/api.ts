@@ -134,25 +134,48 @@ export const getProxies = async () => {
 
   const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
 
-  let groups = Object.values(proxyRecord)
-    .filter((each) => each.name !== "GLOBAL" && each.all)
-    .map((each) => ({
-      ...each,
-      all: each.all!.map((item) => generateItem(item)),
-    }));
+  interface Group {
+    all: IProxyItem[];
+    name: string;
+    type: string;
+    udp: boolean;
+    xudp: boolean;
+    tfo: boolean;
+    history: {
+      time: string;
+      delay: number;
+    }[];
+  }
+
+  let groups: Group[] = Object.values(proxyRecord).reduce<Group[]>(
+    (acc, each) => {
+      if (each.name !== "GLOBAL" && each.all) {
+        acc.push({
+          ...each,
+          all: each.all!.map((item) => generateItem(item)),
+        });
+      }
+
+      return acc;
+    },
+    []
+  );
 
   if (global?.all) {
-    let globalGroups = global.all
-      .filter((name) => proxyRecord[name]?.all)
-      .map((name) => proxyRecord[name])
-      .map((each) => ({
-        ...each,
-        all: each.all!.map((item) => generateItem(item)),
-      }));
-    let globalNames = globalGroups.map((each) => each.name);
+    let globalGroups: Group[] = global.all.reduce<Group[]>((acc, name) => {
+      if (proxyRecord[name]?.all) {
+        acc.push({
+          ...proxyRecord[name],
+          all: proxyRecord[name].all!.map((item) => generateItem(item)),
+        });
+      }
+      return acc;
+    }, []);
+
+    let globalNames = new Set(globalGroups.map((each) => each.name));
     groups = groups
       .filter((group) => {
-        return !globalNames.includes(group.name);
+        return !globalNames.has(group.name);
       })
       .concat(globalGroups);
   }
