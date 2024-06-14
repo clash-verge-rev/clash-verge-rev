@@ -22,11 +22,15 @@ const SettingSystem = ({ onError }: Props) => {
   const { verge, mutateVerge, patchVerge } = useVerge();
 
   // service mode
-  const { data: serviceStatus } = useSWR("checkService", checkService, {
-    revalidateIfStale: false,
-    shouldRetryOnError: false,
-    focusThrottleInterval: 36e5, // 1 hour
-  });
+  const { data: serviceStatus, mutate: mutateCheck } = useSWR(
+    "checkService",
+    checkService,
+    {
+      revalidateIfStale: false,
+      shouldRetryOnError: false,
+      focusThrottleInterval: 36e5, // 1 hour
+    },
+  );
 
   const serviceRef = useRef<DialogRef>(null);
   const sysproxyRef = useRef<DialogRef>(null);
@@ -81,7 +85,7 @@ const SettingSystem = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_tun_mode: e })}
           onGuard={(e) => patchVerge({ enable_tun_mode: e })}>
-          <SwitchLovely edge="end" />
+          <SwitchLovely disabled={serviceStatus !== "active"} edge="end" />
         </GuardState>
       </SettingItem>
 
@@ -104,7 +108,10 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_service_mode: e })}
-          onGuard={(e) => patchVerge({ enable_service_mode: e })}>
+          onGuard={(e) => {
+            setTimeout(() => mutateCheck(), 1000);
+            return patchVerge({ enable_service_mode: e });
+          }}>
           <SwitchLovely
             edge="end"
             disabled={
