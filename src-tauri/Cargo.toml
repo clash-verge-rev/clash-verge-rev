@@ -30,13 +30,13 @@ once_cell = "1.19"
 port_scanner = "0.1.5"
 delay_timer = "0.11"
 parking_lot = "0.12"
+auto-launch = "0.5.0"
 percent-encoding = "2.3.1"
 window-shadows = { version = "0.2" }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 sysproxy = { git="https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
-auto-launch = { git="https://github.com/zzzgydi/auto-launch", branch = "main" }
 tauri = { git="https://github.com/tauri-apps/tauri",branch = "1.x", features = [ "fs-read-file", "fs-exists", "path-all", "protocol-asset", "dialog-open", "notification-all", "icon-png", "icon-ico", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "devtools"] }
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
