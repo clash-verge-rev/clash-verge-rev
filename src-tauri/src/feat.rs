@@ -88,16 +88,37 @@ pub fn toggle_system_proxy() {
 pub fn toggle_tun_mode() {
     let enable = Config::verge().data().enable_tun_mode;
     let enable = enable.unwrap_or(false);
-
     tauri::async_runtime::spawn(async move {
-        match patch_verge(IVerge {
-            enable_tun_mode: Some(!enable),
-            ..IVerge::default()
-        })
-        .await
-        {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
+        if !enable {
+            if let Ok(res) = service::check_service().await {
+                if res.code == 0 {
+                    match patch_verge(IVerge {
+                        enable_tun_mode: Some(!enable),
+                        ..IVerge::default()
+                    })
+                    .await
+                    {
+                        Ok(_) => handle::Handle::refresh_verge(),
+                        Err(err) => log::error!(target: "app", "{err}"),
+                    }
+                    return;
+                }
+            }
+            tauri::api::dialog::message(
+                None::<&tauri::Window>,
+                "Please install and enable service mode",
+                "Service mode is required for Tun mode",
+            );
+        } else {
+            match patch_verge(IVerge {
+                enable_tun_mode: Some(!enable),
+                ..IVerge::default()
+            })
+            .await
+            {
+                Ok(_) => handle::Handle::refresh_verge(),
+                Err(err) => log::error!(target: "app", "{err}"),
+            }
         }
     });
 }
@@ -402,4 +423,20 @@ pub async fn test_delay(url: String) -> Result<u32> {
             Err(err.into())
         }
     }
+}
+
+pub fn check_permission() -> Result<()> {
+    #[cfg(target_os = "windows")]
+    {
+        let hklm = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
+
+        if let Ok(reg) = hklm.open_subkey_with_flags(
+            "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Run",
+            winreg::enums::KEY_SET_VALUE,
+        ) {
+            reg.delete_value("Clash Verge").unwrap_or_default();
+            return Ok(());
+        }
+    }
+    Err(anyhow::anyhow!("permission denied"))
 }
