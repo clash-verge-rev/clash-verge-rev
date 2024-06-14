@@ -19,6 +19,16 @@ fn main() -> std::io::Result<()> {
         println!("app exists");
         return Ok(());
     }
+    // 权限检测
+    if feat::check_permission().is_ok() {
+        println!("please do not run with admin permission");
+        tauri::api::dialog::blocking::message(
+            None::<&tauri::Window>,
+            "Please do not run with admin permission",
+            "If you want to use Tun mode, please enable service mode instead",
+        );
+        return Ok(());
+    }
 
     #[cfg(target_os = "linux")]
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
