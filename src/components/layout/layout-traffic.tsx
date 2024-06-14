@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Box, Typography } from "@mui/material";
 import {
   ArrowDownward,
@@ -10,8 +10,14 @@ import { useVerge } from "@/hooks/use-verge";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 import { useLogSetup } from "./use-log-setup";
 import { useVisibility } from "@/hooks/use-visibility";
-import { useWebsocket } from "@/hooks/use-websocket";
 import parseTraffic from "@/utils/parse-traffic";
+import useSWRSubscription from "swr/subscription";
+import Sockette from "sockette";
+
+interface MemoryUsage {
+  inuse: number;
+  oslimit?: number;
+}
 
 // setup the traffic
 export const LayoutTraffic = () => {
@@ -22,51 +28,92 @@ export const LayoutTraffic = () => {
   const trafficGraph = verge?.traffic_graph ?? true;
 
   const trafficRef = useRef<TrafficRef>(null);
-  const [traffic, setTraffic] = useState({ up: 0, down: 0 });
-  const [memory, setMemory] = useState({ inuse: 0 });
   const pageVisible = useVisibility();
 
   // setup log ws during layout
   useLogSetup();
 
-  const trafficWs = useWebsocket(
-    (event) => {
-      const data = JSON.parse(event.data) as ITrafficItem;
-      trafficRef.current?.appendData(data);
-      setTraffic(data);
+  const { data: traffic = { up: 0, down: 0 } } = useSWRSubscription<
+    ITrafficItem,
+    any,
+    "getRealtimeTraffic" | null
+  >(
+    clashInfo && pageVisible ? "getRealtimeTraffic" : null,
+    (_key, { next }) => {
+      const { server = "", secret = "" } = clashInfo!;
+
+      let errorCount = 10;
+
+      const s = new Sockette(
+        `ws://${server}/traffic?token=${encodeURIComponent(secret)}`,
+        {
+          onmessage(event) {
+            errorCount = 0; // reset counter
+            const data = JSON.parse(event.data) as ITrafficItem;
+            trafficRef.current?.appendData(data);
+            next(null, data);
+          },
+          onerror(event) {
+            errorCount -= 1;
+
+            if (errorCount <= 0) {
+              this.close();
+              next(event, { up: 0, down: 0 });
+            }
+          },
+        }
+      );
+
+      return () => {
+        s.close();
+      };
     },
-    { onError: () => setTraffic({ up: 0, down: 0 }), errorCount: 10 }
+    {
+      fallbackData: { up: 0, down: 0 },
+      keepPreviousData: true,
+    }
   );
-
-  useEffect(() => {
-    if (!clashInfo || !pageVisible) return;
-
-    const { server = "", secret = "" } = clashInfo;
-    trafficWs.connect(
-      `ws://${server}/traffic?token=${encodeURIComponent(secret)}`
-    );
-    return () => trafficWs.disconnect();
-  }, [clashInfo, pageVisible]);
 
   /* --------- meta memory information --------- */
   const isMetaCore = verge?.clash_core?.includes("clash-meta");
   const displayMemory = isMetaCore && (verge?.enable_memory_usage ?? true);
 
-  const memoryWs = useWebsocket(
-    (event) => {
-      setMemory(JSON.parse(event.data));
-    },
-    { onError: () => setMemory({ inuse: 0 }), errorCount: 10 }
-  );
+  const { data: memory = { inuse: 0 } } = useSWRSubscription<
+    MemoryUsage,
+    any,
+    "getRealtimeMemory" | null
+  >(
+    clashInfo && pageVisible && displayMemory ? "getRealtimeMemory" : null,
+    (_key, { next }) => {
+      const { server = "", secret = "" } = clashInfo!;
+      const ws = new WebSocket(
+        `ws://${server}/memory?token=${encodeURIComponent(secret)}`
+      );
 
-  useEffect(() => {
-    if (!clashInfo || !pageVisible || !displayMemory) return;
-    const { server = "", secret = "" } = clashInfo;
-    memoryWs.connect(
-      `ws://${server}/memory?token=${encodeURIComponent(secret)}`
-    );
-    return () => memoryWs.disconnect();
-  }, [clashInfo, pageVisible, displayMemory]);
+      let errorCount = 10;
+
+      ws.addEventListener("message", (event) => {
+        errorCount = 0; // reset counter
+        next(null, JSON.parse(event.data));
+      });
+      ws.addEventListener("error", (event) => {
+        errorCount -= 1;
+
+        if (errorCount <= 0) {
+          ws.close();
+          next(event, { inuse: 0 });
+        }
+      });
+
+      return () => {
+        ws.close();
+      };
+    },
+    {
+      fallbackData: { inuse: 0 },
+      keepPreviousData: true,
+    }
+  );
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
