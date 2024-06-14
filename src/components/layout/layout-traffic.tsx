@@ -12,6 +12,7 @@ import { useLogSetup } from "./use-log-setup";
 import { useVisibility } from "@/hooks/use-visibility";
 import parseTraffic from "@/utils/parse-traffic";
 import useSWRSubscription from "swr/subscription";
+import Sockette from "sockette";
 
 interface MemoryUsage {
   inuse: number;
@@ -40,29 +41,31 @@ export const LayoutTraffic = () => {
     clashInfo && pageVisible ? "getRealtimeTraffic" : null,
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
-      const ws = new WebSocket(
-        `ws://${server}/traffic?token=${encodeURIComponent(secret)}`
-      );
 
       let errorCount = 10;
 
-      ws.addEventListener("message", (event) => {
-        errorCount = 0; // reset counter
-        const data = JSON.parse(event.data) as ITrafficItem;
-        trafficRef.current?.appendData(data);
-        next(null, data);
-      });
-      ws.addEventListener("error", (event) => {
-        errorCount -= 1;
+      const s = new Sockette(
+        `ws://${server}/traffic?token=${encodeURIComponent(secret)}`,
+        {
+          onmessage(event) {
+            errorCount = 0; // reset counter
+            const data = JSON.parse(event.data) as ITrafficItem;
+            trafficRef.current?.appendData(data);
+            next(null, data);
+          },
+          onerror(event) {
+            errorCount -= 1;
 
-        if (errorCount <= 0) {
-          ws.close();
-          next(event, { up: 0, down: 0 });
+            if (errorCount <= 0) {
+              this.close();
+              next(event, { up: 0, down: 0 });
+            }
+          },
         }
-      });
+      );
 
       return () => {
-        ws.close();
+        s.close();
       };
     },
     {

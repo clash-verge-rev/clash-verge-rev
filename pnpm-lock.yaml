@@ -100,6 +100,9 @@ importers:
       react-virtuoso:
         specifier: ^4.7.11
         version: 4.7.11(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      sockette:
+        specifier: ^2.0.6
+        version: 2.0.6
       swr:
         specifier: ^2.2.5
         version: 2.2.5(react@18.3.1)
@@ -4032,6 +4035,12 @@ packages:
         integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==,
       }
 
+  sockette@2.0.6:
+    resolution:
+      {
+        integrity: sha512-W6iG8RGV6Zife3Cj+FhuyHV447E6fqFM2hKmnaQrTvg3OydINV3Msj3WPFbX76blUlUxvQSMMMdrJxce8NqI5Q==,
+      }
+
   source-map-js@1.2.0:
     resolution:
       {
@@ -7103,6 +7112,8 @@ snapshots:
     dependencies:
       dot-case: 3.0.4
       tslib: 2.6.3
+
+  sockette@2.0.6: {}
 
   source-map-js@1.2.0: {}
 
