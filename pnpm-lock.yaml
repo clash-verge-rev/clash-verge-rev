@@ -100,9 +100,12 @@ importers:
       react-virtuoso:
         specifier: ^4.7.11
         version: 4.7.11(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      sockette:
+        specifier: ^2.0.6
+        version: 2.0.6
       swr:
-        specifier: ^1.3.0
-        version: 1.3.0(react@18.3.1)
+        specifier: ^2.2.5
+        version: 2.2.5(react@18.3.1)
       tar:
         specifier: ^6.2.1
         version: 6.2.1
@@ -4032,6 +4035,12 @@ packages:
         integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==,
       }
 
+  sockette@2.0.6:
+    resolution:
+      {
+        integrity: sha512-W6iG8RGV6Zife3Cj+FhuyHV447E6fqFM2hKmnaQrTvg3OydINV3Msj3WPFbX76blUlUxvQSMMMdrJxce8NqI5Q==,
+      }
+
   source-map-js@1.2.0:
     resolution:
       {
@@ -4110,10 +4119,10 @@ packages:
         integrity: sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==,
       }
 
-  swr@1.3.0:
+  swr@2.2.5:
     resolution:
       {
-        integrity: sha512-dkghQrOl2ORX9HYrMDtPa7LTVHJjCTeZoB1dqTbnnEDlSvN8JEKpYIYurDfvbQFUUS8Cg8PceFVZNkW0KNNYPw==,
+        integrity: sha512-QtxqyclFeAsxEUeZIYmsaQ0UjimSq1RZ9Un7I68/0ClKK/U3LoyQunwkQfJZr2fc22DfIXLNDc2wFyTEikCUpg==,
       }
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0
@@ -4302,6 +4311,14 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: ">= 4.21.0"
+
+  use-sync-external-store@1.2.2:
+    resolution:
+      {
+        integrity: sha512-PElTlVMwpblvbNqQ82d2n6RjStvdSoNe9FG28kNfz3WiXilJm4DdNkEzRhCZuIDwY8U08WVihhGR5iRqAwfDiw==,
+      }
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
 
   vfile-message@4.0.2:
     resolution:
@@ -7096,6 +7113,8 @@ snapshots:
       dot-case: 3.0.4
       tslib: 2.6.3
 
+  sockette@2.0.6: {}
+
   source-map-js@1.2.0: {}
 
   source-map-support@0.5.21:
@@ -7130,9 +7149,11 @@ snapshots:
 
   svg-parser@2.0.4: {}
 
-  swr@1.3.0(react@18.3.1):
+  swr@2.2.5(react@18.3.1):
     dependencies:
+      client-only: 0.0.1
       react: 18.3.1
+      use-sync-external-store: 1.2.2(react@18.3.1)
 
   systemjs@6.15.1: {}
 
@@ -7236,6 +7257,10 @@ snapshots:
       browserslist: 4.23.1
       escalade: 3.1.2
       picocolors: 1.0.1
+
+  use-sync-external-store@1.2.2(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   vfile-message@4.0.2:
     dependencies:
