@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import {
   ArrowDownward,
   ArrowUpward,
@@ -128,19 +128,23 @@ export const LayoutTraffic = () => {
         </Box>
 
         {displayMemory && (
-          <Box
-            display="flex"
-            alignItems="center"
-            whiteSpace="nowrap"
-            title="Memory Usage">
-            <IconButton
-              color="primary"
-              sx={{ p: 0 }}
-              onClick={restartClashCore}>
-              <MemoryOutlined {...iconStyle} />
-            </IconButton>
-            <Typography {...valStyle}>{inuse}</Typography>
-            <Typography {...unitStyle}>{inuseUnit}</Typography>
+          <Box display="flex" alignItems="center" whiteSpace="nowrap">
+            <Tooltip title={t("Restart")}>
+              <IconButton
+                color="primary"
+                sx={{ p: 0 }}
+                onClick={restartClashCore}>
+                <MemoryOutlined {...iconStyle} />
+              </IconButton>
+            </Tooltip>
+            <Box
+              title={t("Memory Usage")}
+              display={"flex"}
+              flexGrow={1}
+              alignItems={"center"}>
+              <Typography {...valStyle}>{inuse}</Typography>
+              <Typography {...unitStyle}>{inuseUnit}</Typography>
+            </Box>
           </Box>
         )}
       </Box>

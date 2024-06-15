@@ -167,9 +167,12 @@ const ProfilePage = () => {
           Notice.error(t("Only YAML Files Supported"));
           continue;
         }
+        const filename =
+          file.split(/\/|\\/).pop()?.replace(RegExp(".yaml|.yml"), "") ??
+          "New Profile";
         const item = {
           type: "local",
-          name: file.split(/\/|\\/).pop() ?? "New Profile",
+          name: filename,
           desc: "",
           url: "",
           option: {
@@ -341,8 +344,9 @@ const ProfilePage = () => {
       Notice.success(t("Profile Reactivated"), 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
+    } finally {
+      setReactivating(false);
     }
-    setReactivating(false);
   });
 
   const onEnable = useLockFn(async (uid: string) => {
