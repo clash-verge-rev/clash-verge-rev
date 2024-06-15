@@ -13,7 +13,6 @@ import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import ClashVergeFontSvg from "@/assets/image/clash_verge.svg?react";
-import { useThemeMode } from "@/services/states";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
@@ -25,8 +24,6 @@ import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import { getPortableFlag } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
-import React from "react";
-import { TransitionGroup, CSSTransition } from "react-transition-group";
 
 export let portableFlag = false;
 
@@ -37,8 +34,6 @@ let keepUIActive = false;
 
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [mode] = useThemeMode();
-  const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
 
@@ -212,14 +207,15 @@ const Layout = () => {
               </div>
             )}
 
-            <TransitionGroup className="the-content">
+            <div className="the-content">{routersEles}</div>
+            {/* <TransitionGroup className="the-content">
               <CSSTransition
                 key={location.pathname}
                 timeout={300}
                 classNames="page">
-                {React.cloneElement(routersEles, { key: location.pathname })}
+                {routersEles}
               </CSSTransition>
-            </TransitionGroup>
+            </TransitionGroup> */}
           </div>
         </Paper>
       </ThemeProvider>
