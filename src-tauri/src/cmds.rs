@@ -349,6 +349,17 @@ pub fn restart_app(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
+pub async fn restart_clash() -> CmdResult<()> {
+    match clash_api::restart_core().await {
+        Ok(_) => {
+            println!("restart core successful");
+            Ok(())
+        },
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
 pub async fn get_clash_configs() -> CmdResult<bool> {
     match clash_api::get_configs().await {
         Ok(_) => {

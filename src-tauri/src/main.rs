@@ -82,6 +82,7 @@ fn main() -> std::io::Result<()> {
             cmds::restart_sidecar,
             cmds::grant_permission,
             // clash
+            cmds::restart_clash,
             cmds::get_clash_configs,
             cmds::get_clash_info,
             cmds::get_clash_logs,

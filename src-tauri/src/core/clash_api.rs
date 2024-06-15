@@ -6,7 +6,6 @@ use serde_yaml::Mapping;
 use std::collections::HashMap;
 
 /// POST /restart
-#[allow(unused)]
 pub async fn restart_core() -> Result<()> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/restart");

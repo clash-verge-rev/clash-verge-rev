@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, IconButton, Typography } from "@mui/material";
 import {
   ArrowDownward,
   ArrowUpward,
@@ -12,6 +12,9 @@ import { useLogSetup } from "./use-log-setup";
 import { useVisibility } from "@/hooks/use-visibility";
 import { useWebsocket } from "@/hooks/use-websocket";
 import parseTraffic from "@/utils/parse-traffic";
+import { invoke } from "@tauri-apps/api";
+import { Notice } from "@/components/base";
+import { t } from "i18next";
 
 // setup the traffic
 export const LayoutTraffic = () => {
@@ -88,6 +91,11 @@ export const LayoutTraffic = () => {
     sx: { flex: "0 1 27px", userSelect: "none" },
   };
 
+  const restartClashCore = async () => {
+    await invoke("restart_clash");
+    Notice.success(t("Clash Core Restarted"));
+  };
+
   return (
     <Box position="relative" onClick={trafficRef.current?.toggleStyle}>
       {trafficGraph && pageVisible && (
@@ -124,9 +132,13 @@ export const LayoutTraffic = () => {
             display="flex"
             alignItems="center"
             whiteSpace="nowrap"
-            title="Memory Usage"
-          >
-            <MemoryOutlined {...iconStyle} color="disabled" />
+            title="Memory Usage">
+            <IconButton
+              color="primary"
+              sx={{ p: 0 }}
+              onClick={restartClashCore}>
+              <MemoryOutlined {...iconStyle} />
+            </IconButton>
             <Typography {...valStyle}>{inuse}</Typography>
             <Typography {...unitStyle}>{inuseUnit}</Typography>
           </Box>
