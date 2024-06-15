@@ -24,11 +24,11 @@ const LogPage = () => {
   const [match, setMatch] = useState(() => (_: string) => true);
 
   const filterLogs = useMemo(() => {
-    return logData
-      .filter((data) =>
-        logState === "all" ? true : data.type.includes(logState)
-      )
-      .filter((data) => match(data.payload));
+    return logData.filter(
+      (data) =>
+        (logState === "all" ? true : data.type.includes(logState)) &&
+        match(data.payload)
+    );
   }, [logData, logState, match]);
 
   return (
