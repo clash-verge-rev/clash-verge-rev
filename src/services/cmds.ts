@@ -7,23 +7,22 @@ export async function getClashLogs() {
   const newRegex = /(.+?)\s+(.+?)\s+(.+)/;
   const logs = await invoke<string[]>("get_clash_logs");
 
-  return logs
-    .map((log) => {
-      const result = log.match(regex);
-      if (result) {
-        const [_, _time, type, payload] = result;
-        const time = dayjs(_time).format("MM-DD HH:mm:ss");
-        return { time, type, payload };
-      }
+  return logs.reduce<ILogItem[]>((acc, log) => {
+    const result = log.match(regex);
+    if (result) {
+      const [_, _time, type, payload] = result;
+      const time = dayjs(_time).format("MM-DD HH:mm:ss");
+      acc.push({ time, type, payload });
+      return acc;
+    }
 
-      const result2 = log.match(newRegex);
-      if (result2) {
-        const [_, time, type, payload] = result2;
-        return { time, type, payload };
-      }
-      return null;
-    })
-    .filter(Boolean) as ILogItem[];
+    const result2 = log.match(newRegex);
+    if (result2) {
+      const [_, time, type, payload] = result2;
+      acc.push({ time, type, payload });
+    }
+    return acc;
+  }, []);
 }
 
 export async function getProfiles() {
