@@ -330,7 +330,7 @@ export const ProfileItem = (props: Props) => {
             <span title={t("Updated Time")}>{parseExpire(updated)}</span>
           </Box>
         )}
-        <LinearProgress variant="determinate" value={progress} />
+        {hasExtra && <LinearProgress variant="determinate" value={progress} />}
       </ProfileBox>
 
       <Menu
