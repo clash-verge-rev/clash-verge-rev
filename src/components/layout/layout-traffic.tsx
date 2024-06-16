@@ -12,7 +12,7 @@ import { useLogSetup } from "./use-log-setup";
 import { useVisibility } from "@/hooks/use-visibility";
 import parseTraffic from "@/utils/parse-traffic";
 import useSWRSubscription from "swr/subscription";
-import { createSockette } from "../../utils/websocket";
+import { createSockette } from "@/utils/websocket";
 
 interface MemoryUsage {
   inuse: number;
