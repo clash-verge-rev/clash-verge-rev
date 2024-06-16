@@ -64,8 +64,9 @@ interface ISortableItem {
 }
 
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
-  return [...new Array(20)].map((_) => (
+  return [...new Array(20)].map((_, index) => (
     <i
+      key={index}
       style={{
         display: "flex",
         flexGrow: "1",

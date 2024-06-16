@@ -56,7 +56,7 @@ const ProxyPage = () => {
       title={t("Proxy Groups")}
       header={
         <Box display="flex" alignItems="center" gap={1}>
-          <ProviderButton />
+          <ProviderButton key={"provider"} />
 
           <ButtonGroup size="small">
             {modeList.map((mode) => (

@@ -4,9 +4,10 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
-    "dev": "tauri dev",
-    "dev:diff": "tauri dev -f verge-dev",
+    "dev": "cross-env RUST_BACKTRACE=1 concurrently -k \"tauri dev\" \"pnpm devtools\"",
+    "dev:diff": "cross-env RUST_BACKTRACE=1 concurrently -k \"tauri dev -f verge-dev\" \"pnpm devtools\"",
     "build": "tauri build",
+    "devtools": "pnpm react-devtools",
     "arch-build": "cd archbuild/local_build && ./build.sh",
     "tauri": "tauri",
     "web:dev": "vite",
@@ -17,7 +18,7 @@
     "updater-fixed-webview2": "node scripts/updater-fixed-webview2.mjs",
     "portable": "node scripts/portable.mjs",
     "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -68,6 +69,7 @@
     "@vitejs/plugin-legacy": "5.4.1",
     "@vitejs/plugin-react": "4.3.1",
     "adm-zip": "0.5.14",
+    "concurrently": "^8.2.2",
     "cross-env": "7.0.3",
     "fs-extra": "11.2.0",
     "https-proxy-agent": "7.0.4",
@@ -75,6 +77,7 @@
     "node-fetch": "3.3.2",
     "prettier": "3.3.2",
     "pretty-quick": "4.0.0",
+    "react-devtools": "^5.2.0",
     "sass": "1.77.5",
     "terser": "5.31.1",
     "typescript": "5.4.5",

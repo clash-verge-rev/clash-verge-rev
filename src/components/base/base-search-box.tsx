@@ -149,7 +149,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
 })(({ theme }) => ({
   "& .MuiInputBase-root": {
     background: theme.palette.mode === "light" ? "#fff" : undefined,
-    "padding-right": "4px",
+    paddingRight: "4px",
   },
   "& .MuiInputBase-root svg[aria-label='active'] path": {
     fill: theme.palette.primary.light,
