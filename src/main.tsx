@@ -16,7 +16,6 @@ import Layout from "./pages/_layout";
 import "./services/i18n";
 import {
   LoadingCacheProvider,
-  LogDataProvider,
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
@@ -45,7 +44,6 @@ document.addEventListener("keydown", (event) => {
 
 const contexts = [
   <ThemeModeProvider />,
-  <LogDataProvider />,
   <LoadingCacheProvider />,
   <UpdateStateProvider />,
 ];

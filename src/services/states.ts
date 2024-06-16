@@ -5,10 +5,6 @@ const [ThemeModeProvider, useThemeMode, useSetThemeMode] = createContextState<
   "light" | "dark"
 >("light");
 
-const [LogDataProvider, useLogData, useSetLogData] = createContextState<
-  ILogItem[]
->([]);
-
 export const useEnableLog = () => useLocalStorage("enable-log", true);
 
 interface IConnectionSetting {
@@ -39,9 +35,6 @@ export {
   ThemeModeProvider,
   useThemeMode,
   useSetThemeMode,
-  LogDataProvider,
-  useLogData,
-  useSetLogData,
   LoadingCacheProvider,
   useLoadingCache,
   useSetLoadingCache,
