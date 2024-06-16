@@ -15,6 +15,7 @@ import parseTraffic from "@/utils/parse-traffic";
 import { invoke } from "@tauri-apps/api";
 import { Notice } from "@/components/base";
 import { t } from "i18next";
+import { debounce } from "lodash-es";
 
 // setup the traffic
 export const LayoutTraffic = () => {
@@ -91,10 +92,10 @@ export const LayoutTraffic = () => {
     sx: { flex: "0 1 27px", userSelect: "none" },
   };
 
-  const restartClashCore = async () => {
+  const restartClashCore = debounce(async () => {
     await invoke("restart_clash");
     Notice.success(t("Clash Core Restarted"));
-  };
+  }, 500);
 
   return (
     <Box position="relative" onClick={trafficRef.current?.toggleStyle}>
@@ -133,7 +134,10 @@ export const LayoutTraffic = () => {
               <IconButton
                 color="primary"
                 sx={{ p: 0 }}
-                onClick={restartClashCore}>
+                onClick={(e) => {
+                  e.stopPropagation();
+                  restartClashCore();
+                }}>
                 <MemoryOutlined {...iconStyle} />
               </IconButton>
             </Tooltip>

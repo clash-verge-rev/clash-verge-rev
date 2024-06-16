@@ -351,10 +351,7 @@ pub fn restart_app(app_handle: tauri::AppHandle) {
 #[tauri::command]
 pub async fn restart_clash() -> CmdResult<()> {
     match clash_api::restart_core().await {
-        Ok(_) => {
-            println!("restart core successful");
-            Ok(())
-        },
+        Ok(_) => Ok(()),
         Err(e) => Err(e.to_string()),
     }
 }
@@ -362,10 +359,7 @@ pub async fn restart_clash() -> CmdResult<()> {
 #[tauri::command]
 pub async fn get_clash_configs() -> CmdResult<bool> {
     match clash_api::get_configs().await {
-        Ok(_) => {
-            println!("get clash configs success");
-            Ok(true)
-        }
+        Ok(_) => Ok(true),
         Err(e) => Err(e.to_string()),
     }
 }
