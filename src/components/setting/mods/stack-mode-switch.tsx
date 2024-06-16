@@ -24,7 +24,6 @@ export const StackModeSwitch = (props: Props) => {
       >
         gVisor
       </Button>
-
       <Button
         variant={value?.toLowerCase() === "mixed" ? "contained" : "outlined"}
         onClick={() => onChange?.("mixed")}
