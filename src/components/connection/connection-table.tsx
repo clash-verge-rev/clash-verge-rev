@@ -52,7 +52,7 @@ export const ConnectionTable = (props: Props) => {
     {
       field: "actions",
       type: "actions",
-      headerName: `${t("Actions")}`,
+      // headerName: `${t("Actions")}`,
       width: 50,
       cellClassName: "actions",
       getActions: ({ id }) => {
