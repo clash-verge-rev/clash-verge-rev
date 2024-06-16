@@ -1,0 +1,22 @@
+{
+  // 关于 tasks.json 格式文档，请参阅：https://go.microsoft.com/fwlink/?LinkId=733558
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ui:dev",
+      "type": "shell",
+      // `dev` keeps running in the background
+      // ideally you should also configure a `problemMatcher`
+      // see https://code.visualstudio.com/docs/editor/tasks#_can-a-background-task-be-used-as-a-prelaunchtask-in-launchjson
+      "isBackground": true,
+      // change this to your `beforeDevCommand`:
+      "command": "./.vscode/scripts/ui_dev.sh"
+    },
+    {
+      "label": "ui:build",
+      "type": "shell",
+      // change this to your `beforeBuildCommand`:
+      "command": "./.vscode/scripts/ui_build.sh"
+    }
+  ]
+}

@@ -10,15 +10,17 @@
     "devtools": "pnpm react-devtools",
     "arch-build": "cd archbuild/local_build && ./build.sh",
     "tauri": "tauri",
-    "web:dev": "vite",
+    "web:dev": "vite dev",
     "web:build": "tsc && vite build",
-    "web:server": "vite preview",
+    "web:preview": "vite preview",
     "check": "node scripts/check.mjs",
     "updater": "node scripts/updater.mjs",
     "updater-fixed-webview2": "node scripts/updater-fixed-webview2.mjs",
     "portable": "node scripts/portable.mjs",
     "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "cargo:check": "cd src-tauri && cargo check",
+    "cargo:update": "cd src-tauri && cargo update"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",

@@ -1,0 +1,47 @@
+{
+  // 使用 IntellliSense 来了解可能的属性。
+  // 悬停以查看现有属性的描述。
+  // 更多详情访问：https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Tauri Debug",
+      "cargo": {
+        "args": [
+          "build",
+          "--manifest-path=./src-tauri/Cargo.toml",
+          "--no-default-features"
+        ]
+      },
+      // task for the `beforeDevCommand` if used, must be configured in `.vscode/tasks.json`
+      "preLaunchTask": "ui:dev"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Tauri Debug Diff",
+      "cargo": {
+        "args": [
+          "build",
+          "--manifest-path=./src-tauri/Cargo.toml",
+          "--no-default-features",
+          "--features=verge-dev"
+        ]
+      },
+      // task for the `beforeDevCommand` if used, must be configured in `.vscode/tasks.json`
+      "preLaunchTask": "ui:dev"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Tauri Production Debug",
+      "cargo": {
+        "args": ["build", "--release", "--manifest-path=./src-tauri/Cargo.toml"]
+      },
+      // task for the `beforeBuildCommand` if used, must be configured in `.vscode/tasks.json`
+      "preLaunchTask": "ui:build"
+    }
+  ]
+}

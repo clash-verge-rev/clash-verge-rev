@@ -6,7 +6,6 @@ dist-ssr
 *.local
 update.json
 scripts/_env.sh
-.vscode
 .tool-versions
 
 archbuild/local_build/*
