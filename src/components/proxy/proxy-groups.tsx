@@ -15,25 +15,12 @@ import { useRenderList } from "./use-render-list";
 import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
 import { Box, Link, List, ListItem } from "@mui/material";
-import { max } from "lodash-es";
 import { ChevronRight } from "@mui/icons-material";
+import { max, toArray } from "lodash-es";
 
 interface Props {
   mode: string;
 }
-
-// 获取字符串字节长度，中文占2字节，英文占1字节
-const getStringLentght = (str: string) => {
-  let len = 0;
-  for (let i = 0; i < str.length; i++) {
-    if (str.charCodeAt(i) > 127 || str.charCodeAt(i) === 94) {
-      len += 2;
-    } else {
-      len++;
-    }
-  }
-  return len;
-};
 
 export const ProxyGroups = (props: Props) => {
   const { mode } = props;
@@ -152,14 +139,15 @@ export const ProxyGroups = (props: Props) => {
     }
   };
 
-  const maxGroupNameLength =
+  const sidebarWidth =
     max(
       renderList
         .filter((item) => item.type === 0)
-        .flatMap((item) => getStringLentght(item.key)),
-    ) ?? 8;
-  const sidebarWidth =
-    maxGroupNameLength * 12 > 200 ? 200 : maxGroupNameLength * 12;
+        .flatMap((item) => {
+          const width = toArray(item.key).length * 16;
+          return width <= 200 ? width : 200;
+        }),
+    ) ?? 64;
   const [groupWidth, setGroupWidth] = useState(0);
   const [open, setOpen] = useState(false);
 
