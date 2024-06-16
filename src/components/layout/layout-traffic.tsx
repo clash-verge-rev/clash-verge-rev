@@ -12,7 +12,7 @@ import { useLogSetup } from "./use-log-setup";
 import { useVisibility } from "@/hooks/use-visibility";
 import parseTraffic from "@/utils/parse-traffic";
 import useSWRSubscription from "swr/subscription";
-import Sockette from "sockette";
+import { createSockette } from "@/utils/websocket";
 
 interface MemoryUsage {
   inuse: number;
@@ -42,24 +42,17 @@ export const LayoutTraffic = () => {
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
 
-      let errorCount = 10;
-
-      const s = new Sockette(
+      const s = createSockette(
         `ws://${server}/traffic?token=${encodeURIComponent(secret)}`,
         {
           onmessage(event) {
-            errorCount = 0; // reset counter
             const data = JSON.parse(event.data) as ITrafficItem;
             trafficRef.current?.appendData(data);
             next(null, data);
           },
           onerror(event) {
-            errorCount -= 1;
-
-            if (errorCount <= 0) {
-              this.close();
-              next(event, { up: 0, down: 0 });
-            }
+            this.close();
+            next(event, { up: 0, down: 0 });
           },
         }
       );
@@ -86,27 +79,23 @@ export const LayoutTraffic = () => {
     clashInfo && pageVisible && displayMemory ? "getRealtimeMemory" : null,
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
-      const ws = new WebSocket(
-        `ws://${server}/memory?token=${encodeURIComponent(secret)}`
+
+      const s = createSockette(
+        `ws://${server}/memory?token=${encodeURIComponent(secret)}`,
+        {
+          onmessage(event) {
+            const data = JSON.parse(event.data) as MemoryUsage;
+            next(null, data);
+          },
+          onerror(event) {
+            this.close();
+            next(event, { inuse: 0 });
+          },
+        }
       );
 
-      let errorCount = 10;
-
-      ws.addEventListener("message", (event) => {
-        errorCount = 0; // reset counter
-        next(null, JSON.parse(event.data));
-      });
-      ws.addEventListener("error", (event) => {
-        errorCount -= 1;
-
-        if (errorCount <= 0) {
-          ws.close();
-          next(event, { inuse: 0 });
-        }
-      });
-
       return () => {
-        ws.close();
+        s.close();
       };
     },
     {
