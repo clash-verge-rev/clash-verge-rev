@@ -1,10 +1,6 @@
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
-import {
-  DataGrid,
-  GridColDef,
-  GridValueFormatterParams,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { t } from "i18next";
@@ -29,8 +25,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
-      valueFormatter: (params: GridValueFormatterParams<number>) =>
-        parseTraffic(params.value).join(" "),
+      valueFormatter: (value: number) => parseTraffic(value).join(" "),
     },
     {
       field: "upload",
@@ -38,8 +33,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
-      valueFormatter: (params: GridValueFormatterParams<number>) =>
-        parseTraffic(params.value).join(" "),
+      valueFormatter: (value: number) => parseTraffic(value).join(" "),
     },
     {
       field: "dlSpeed",
@@ -47,8 +41,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
-      valueFormatter: (params: GridValueFormatterParams<number>) =>
-        parseTraffic(params.value).join(" ") + "/s",
+      valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
     },
     {
       field: "ulSpeed",
@@ -56,8 +49,7 @@ export const ConnectionTable = (props: Props) => {
       width: 88,
       align: "right",
       headerAlign: "right",
-      valueFormatter: (params: GridValueFormatterParams<number>) =>
-        parseTraffic(params.value).join(" ") + "/s",
+      valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
     },
     { field: "chains", headerName: t("Chains"), flex: 360, minWidth: 360 },
     { field: "rule", headerName: t("Rule"), flex: 300, minWidth: 250 },
@@ -69,11 +61,10 @@ export const ConnectionTable = (props: Props) => {
       minWidth: 100,
       align: "right",
       headerAlign: "right",
-      sortComparator: (v1, v2) => {
+      sortComparator: (v1: string, v2: string) => {
         return new Date(v2).getTime() - new Date(v1).getTime();
       },
-      valueFormatter: (params: GridValueFormatterParams<string>) =>
-        dayjs(params.value).fromNow(),
+      valueFormatter: (value: number) => dayjs(value).fromNow(),
     },
     { field: "source", headerName: t("Source"), flex: 200, minWidth: 130 },
     {
