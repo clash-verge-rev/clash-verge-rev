@@ -21,7 +21,11 @@ import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import useSWRSubscription from "swr/subscription";
 import { createSockette } from "@/utils/websocket";
 
-const initConn = { uploadTotal: 0, downloadTotal: 0, connections: [] };
+const initConn: IConnections = {
+  uploadTotal: 0,
+  downloadTotal: 0,
+  connections: [],
+};
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
@@ -94,9 +98,16 @@ const ConnectionsPage = () => {
             return { ...data, connections };
           });
         },
+        onerror(event) {
+          next(event);
+        },
       },
       3
     );
+
+    return () => {
+      s.close();
+    };
   });
 
   const [filterConn, download, upload] = useMemo(() => {
@@ -106,6 +117,7 @@ const ConnectionsPage = () => {
     );
 
     if (orderFunc) connections = orderFunc(connections);
+
     let download = 0;
     let upload = 0;
     connections.forEach((x) => {
