@@ -18,7 +18,6 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import {
   LoadingCacheProvider,
-  LogDataProvider,
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
@@ -46,7 +45,7 @@ document.addEventListener("keydown", (event) => {
     (event.altKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) ||
     ((event.ctrlKey || event.metaKey) &&
       ["F", "G", "H", "J", "P", "Q", "R", "U"].includes(
-        event.key.toUpperCase()
+        event.key.toUpperCase(),
       ));
   disabledShortcuts && event.preventDefault();
 });
@@ -70,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const contexts = [
   <ThemeModeProvider />,
-  <LogDataProvider />,
   <LoadingCacheProvider />,
   <UpdateStateProvider />,
 ];
