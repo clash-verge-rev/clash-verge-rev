@@ -11,7 +11,7 @@
     "arch-build": "cd archbuild/local_build && ./build.sh",
     "tauri": "tauri",
     "web:dev": "vite dev",
-    "web:build": "tsc && vite build",
+    "web:build": "tsc && cross-env NODE_OPTIONS=\"--max_old_space_size=4096\" vite build",
     "web:preview": "vite preview",
     "check": "node scripts/check.mjs",
     "updater": "node scripts/updater.mjs",

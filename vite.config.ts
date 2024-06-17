@@ -20,11 +20,11 @@ const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
 const devtools = () => {
   return {
     name: "react-devtools",
-    transformIndexHtml(html) {
+    transformIndexHtml(html: string) {
       return html.replace(
-        /<\head>/,
+        `<head>`,
         `<head>
-          <script src="http://localhost:8097"></script>`,
+    <script src="http://localhost:8097"></script>`,
       );
     },
   };

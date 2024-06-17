@@ -93,6 +93,8 @@ export const LayoutTraffic = () => {
   };
 
   const restartClashCore = debounce(async () => {
+    setTraffic({ up: 0, down: 0 });
+    setMemory({ inuse: 0 });
     await invoke("restart_clash");
     Notice.success(t("Clash Core Restarted"));
   }, 500);
