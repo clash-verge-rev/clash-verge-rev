@@ -17,7 +17,7 @@ export const ConnectionTable = (props: Props) => {
     Partial<Record<keyof IConnectionsItem, boolean>>
   >({});
 
-  const columns: GridColDef[] = [
+  const [columns] = useState<GridColDef[]>([
     { field: "host", headerName: t("Host"), flex: 220, minWidth: 220 },
     {
       field: "download",
@@ -61,9 +61,8 @@ export const ConnectionTable = (props: Props) => {
       minWidth: 100,
       align: "right",
       headerAlign: "right",
-      sortComparator: (v1: string, v2: string) => {
-        return new Date(v2).getTime() - new Date(v1).getTime();
-      },
+      sortComparator: (v1: string, v2: string) =>
+        new Date(v2).getTime() - new Date(v1).getTime(),
       valueFormatter: (value: number) => dayjs(value).fromNow(),
     },
     { field: "source", headerName: t("Source"), flex: 200, minWidth: 130 },
@@ -74,7 +73,7 @@ export const ConnectionTable = (props: Props) => {
       minWidth: 130,
     },
     { field: "type", headerName: t("Type"), flex: 160, minWidth: 100 },
-  ];
+  ]);
 
   const connRows = useMemo(() => {
     return connections.map((each) => {
