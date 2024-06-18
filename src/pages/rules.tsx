@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import { Box } from "@mui/material";
-import { getRules } from "@/services/api";
+import { getRuleProviders, getRules } from "@/services/api";
 import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
@@ -15,6 +15,10 @@ import { readTextFile } from "@tauri-apps/api/fs";
 const RulesPage = () => {
   const { t } = useTranslation();
   const { data = [] } = useSWR("getRules", getRules);
+  const { data: ruleProvidersdata } = useSWR(
+    "getRuleProviders",
+    getRuleProviders,
+  );
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
@@ -39,7 +43,12 @@ const RulesPage = () => {
           item.matchPayloadItems = [];
           const payloadArr = item.ruleSetProviderPayload
             .split("\n")
-            .filter((o) => o.trim().length > 0);
+            .filter(
+              (o) =>
+                o.trim().length > 0 &&
+                !o.includes("#") &&
+                !o.includes("payload"),
+            );
           payloadArr.forEach((payload) => {
             if (match(payload)) {
               item.matchPayloadItems.push(payload);
@@ -48,7 +57,7 @@ const RulesPage = () => {
         }
         return (
           match(item.payload) ||
-          (item.ruleSetProviderPayload && match(item.ruleSetProviderPayload))
+          (item.matchPayloadItems && item.matchPayloadItems.length > 0)
         );
       });
   }, [data, ruleProvidersPaths, match]);
@@ -65,7 +74,7 @@ const RulesPage = () => {
 
   useEffect(() => {
     getAllRuleProvidersPaths();
-  }, []);
+  }, [data, ruleProvidersdata]);
 
   return (
     <BasePage

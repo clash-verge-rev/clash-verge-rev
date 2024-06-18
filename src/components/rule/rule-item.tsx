@@ -77,6 +77,13 @@ const RuleItem = (props: Props) => {
       <ListItemButton
         sx={{
           borderBottom: expanded ? "1px solid var(--divider-color)" : "",
+          bgcolor: expanded ? "var(--primary-main)" : "",
+          "&:hover": {
+            bgcolor: expanded ? "var(--primary-main)" : "",
+          },
+          "& .MuiTypography-root": {
+            color: expanded ? "white" : "",
+          },
         }}
         onClick={async () => {
           if (value.type === "RuleSet") {
@@ -131,8 +138,7 @@ const RuleItem = (props: Props) => {
           <Box
             sx={{
               margin: "auto",
-              px: "2px",
-              width: "90%",
+              padding: "0 10px 0 50px",
               height:
                 value.matchPayloadItems.length > 10
                   ? "320px"
