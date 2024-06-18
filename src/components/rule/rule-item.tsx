@@ -58,33 +58,42 @@ const RuleItem = (props: Props) => {
 
   return (
     <Card
-      sx={[
-        {
-          borderBottom: "1px solid var(--divider-color)",
-          margin: "6px 8px 0 0",
-          "& ::-webkit-scrollbar": {
-            width: "5px",
-          },
-          "& ::-webkit-scrollbar-thumb": {
-            backgroundColor: "var(--primary-main)",
-            borderRadius: "2px",
-          },
+      sx={{
+        borderBottom: "1px solid var(--divider-color)",
+        margin: "6px 8px 0 0",
+        "& ::-webkit-scrollbar": {
+          width: "5px",
         },
-        ({ palette }) => ({
-          bgcolor: expanded ? alpha(palette.primary.main, 0.2) : "",
-        }),
-      ]}>
+        "& ::-webkit-scrollbar-thumb": {
+          backgroundColor: "var(--primary-main)",
+          borderRadius: "2px",
+        },
+      }}>
       <ListItemButton
-        sx={{
-          borderBottom: expanded ? "1px solid var(--divider-color)" : "",
-          bgcolor: expanded ? "var(--primary-main)" : "",
-          "&:hover": {
-            bgcolor: expanded ? "var(--primary-main)" : "",
+        sx={[
+          {
+            borderBottom: expanded ? "1px solid var(--divider-color)" : "none",
           },
-          "& .MuiTypography-root": {
-            color: expanded ? "white" : "",
+          ({ palette: { mode, primary, text } }) => {
+            const bgcolor =
+              mode === "light"
+                ? alpha(primary.main, 0.25)
+                : alpha(primary.main, 0.35);
+            const color = expanded ? primary.main : "";
+            return {
+              bgcolor: expanded ? bgcolor : "",
+              "&:hover": {
+                bgcolor: expanded ? bgcolor : "",
+              },
+              "& .MuiTypography-root": {
+                color,
+              },
+              "& .MuiIconButton-root ": {
+                color,
+              },
+            };
           },
-        }}
+        ]}
         onClick={async () => {
           if (value.type === "RuleSet") {
             try {
@@ -103,7 +112,7 @@ const RuleItem = (props: Props) => {
           {index}
         </Typography>
 
-        <Box sx={{ userSelect: "text", width: "100%" }}>
+        <Box sx={{ userSelect: "none", width: "100%" }}>
           <Typography component="h6" variant="subtitle1" color="text.primary">
             {value.payload || "-"}
           </Typography>
@@ -134,28 +143,38 @@ const RuleItem = (props: Props) => {
         )}
       </ListItemButton>
       {value.matchPayloadItems && (
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Collapse
+          in={expanded}
+          timeout="auto"
+          unmountOnExit
+          sx={{ bgcolor: "var(--background-color-alpha)" }}>
           <Box
             sx={{
               margin: "auto",
               padding: "0 10px 0 50px",
               height:
                 value.matchPayloadItems.length > 10
-                  ? "320px"
-                  : value.matchPayloadItems.length * 32,
-              ":--scrollbar-width": "thin",
+                  ? "222px"
+                  : `${value.matchPayloadItems.length * 22 + 2}px`,
             }}>
             <Virtuoso
               data={value.matchPayloadItems}
               itemContent={(index, item) => (
-                <div
-                  style={{
-                    margin: "2px",
-                    height: "30px",
-                    lineHeight: "30px",
+                <Box
+                  sx={{
+                    userSelect: "text",
+                    marginTop: "2px",
+                    height: "20px",
+                    lineHeight: "20px",
                   }}>
-                  <span>{item}</span>
-                </div>
+                  <Typography
+                    unselectable="on"
+                    component="span"
+                    variant="body2"
+                    color="text.primary">
+                    {item}
+                  </Typography>
+                </Box>
               )}
             />
           </Box>
