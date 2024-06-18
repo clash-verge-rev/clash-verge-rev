@@ -10,11 +10,47 @@ use self::merge::*;
 use self::script::*;
 use self::tun::*;
 use crate::config::Config;
+use crate::utils::dirs::app_home_dir;
 use serde_yaml::Mapping;
+use serde_yaml::Value;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::path::PathBuf;
 
 type ResultLog = Vec<(String, String)>;
+
+pub fn generate_rule_provider(mut config: Mapping) -> Mapping {
+    let rule_providers_key = Value::from("rule-providers");
+    if !config.contains_key(&rule_providers_key) {
+        return config;
+    }
+    let rule_providers_val = config.get(&rule_providers_key);
+    let mut rule_providers_val = rule_providers_val.map_or(Mapping::new(), |val| {
+        val.as_mapping().cloned().unwrap_or(Mapping::new())
+    });
+    let mut rule_path_map: HashMap<String, PathBuf> = HashMap::new();
+    for (key, value) in rule_providers_val.iter_mut() {
+        let rule_name = key.as_str().unwrap();
+        let config_rule_map = value.as_mapping_mut().unwrap();
+        let rule_provider_path = Value::from("path");
+        let rule_path = config_rule_map.get(&rule_provider_path);
+        if rule_path.is_none() {
+            let rule_path = format!("./rules/{}.yaml", rule_name);
+            let absolute_rule_path = app_home_dir().unwrap().join(&rule_path);
+            config_rule_map.insert(rule_provider_path, Value::from(rule_path));
+            rule_path_map.insert(rule_name.into(), absolute_rule_path);
+        } else {
+            let path = rule_path.unwrap().as_str().unwrap();
+            let absolute_rule_path = app_home_dir().unwrap().join(&path);
+            rule_path_map.insert(rule_name.into(), absolute_rule_path);
+        }
+    }
+    let profiles = Config::profiles();
+    let mut profiles = profiles.latest();
+    let _ = profiles.set_rule_providers_path(rule_path_map);
+    config.insert(rule_providers_key, Value::from(rule_providers_val));
+    return config;
+}
 
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
@@ -151,6 +187,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
     config = use_tun(config, enable_tun);
     config = use_sort(config);
+    config = generate_rule_provider(config);
 
     let mut exists_set = HashSet::new();
     exists_set.extend(exists_keys);

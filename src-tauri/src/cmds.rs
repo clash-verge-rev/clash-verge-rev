@@ -7,7 +7,7 @@ use crate::{
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use serde_yaml::Mapping;
-use std::collections::{HashMap, VecDeque};
+use std::{collections::{HashMap, VecDeque}, path::PathBuf};
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
@@ -109,6 +109,18 @@ pub fn read_profile_file(index: String) -> CmdResult<String> {
     let item = wrap_err!(profiles.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
+}
+
+#[tauri::command]
+pub fn get_current_profile_rule_providers() -> CmdResult<HashMap<String, PathBuf>> {
+    let profiles = Config::profiles();
+    let profiles = profiles.latest();
+    let item = profiles.get_item(&profiles.get_current().unwrap()).unwrap();
+    if let Some(rule_providers_path) = item.rule_providers_path.clone() {
+        return Ok(rule_providers_path);
+    } else {
+        return Ok(HashMap::new());
+    }
 }
 
 #[tauri::command]

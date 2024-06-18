@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
 import matchWholeWordIcon from "@/assets/image/component/match_whole_word.svg?react";
 import useRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
+import { debounce } from "lodash-es";
 
 type SearchProps = {
   placeholder?: string;
@@ -23,9 +24,11 @@ type SearchProps = {
 export const BaseSearchBox = styled((props: SearchProps) => {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [matchCase, setMatchCase] = useState(true);
-  const [matchWholeWord, setMatchWholeWord] = useState(false);
-  const [useRegularExpression, setUseRegularExpression] = useState(false);
+  const [searchOptions, setSearchOptions] = useState({
+    matchCase: true,
+    matchWholeWord: false,
+    useRegularExpression: false,
+  });
   const [errorMessage, setErrorMessage] = useState("");
 
   const iconStyle = {
@@ -43,38 +46,39 @@ export const BaseSearchBox = styled((props: SearchProps) => {
     onChange({
       target: inputRef.current,
     } as ChangeEvent<HTMLInputElement>);
-  }, [matchCase, matchWholeWord, useRegularExpression]);
+  }, [searchOptions]);
 
-  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    props.onSearch(
-      (content) => doSearch([content], e.target?.value ?? "").length > 0,
-      {
-        text: e.target?.value ?? "",
-        matchCase,
-        matchWholeWord,
-        useRegularExpression,
-      },
-    );
-  };
+  const onChange = debounce(
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      props.onSearch(
+        (content) => doSearch([content], e.target?.value ?? "").length > 0,
+        {
+          text: e.target?.value ?? "",
+          ...searchOptions,
+        },
+      );
+    },
+    500,
+  );
 
   const doSearch = (searchList: string[], searchItem: string) => {
     setErrorMessage("");
     return searchList.filter((item) => {
       try {
         let searchItemCopy = searchItem;
-        if (!matchCase) {
+        if (!searchOptions.matchCase) {
           item = item.toLowerCase();
           searchItemCopy = searchItemCopy.toLowerCase();
         }
-        if (matchWholeWord) {
+        if (searchOptions.matchWholeWord) {
           const regex = new RegExp(`\\b${searchItemCopy}\\b`);
-          if (useRegularExpression) {
+          if (searchOptions.useRegularExpression) {
             const regexWithOptions = new RegExp(searchItemCopy);
             return regexWithOptions.test(item) && regex.test(item);
           } else {
             return regex.test(item);
           }
-        } else if (useRegularExpression) {
+        } else if (searchOptions.useRegularExpression) {
           const regex = new RegExp(searchItemCopy);
           return regex.test(item);
         } else {
@@ -108,9 +112,12 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                   <SvgIcon
                     component={matchCaseIcon}
                     {...iconStyle}
-                    aria-label={matchCase ? "active" : "inactive"}
+                    aria-label={searchOptions.matchCase ? "active" : "inactive"}
                     onClick={() => {
-                      setMatchCase(!matchCase);
+                      setSearchOptions((pre) => ({
+                        ...pre,
+                        matchCase: !pre.matchCase,
+                      }));
                     }}
                   />
                 </div>
@@ -120,9 +127,14 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                   <SvgIcon
                     component={matchWholeWordIcon}
                     {...iconStyle}
-                    aria-label={matchWholeWord ? "active" : "inactive"}
+                    aria-label={
+                      searchOptions.matchWholeWord ? "active" : "inactive"
+                    }
                     onClick={() => {
-                      setMatchWholeWord(!matchWholeWord);
+                      setSearchOptions((pre) => ({
+                        ...pre,
+                        matchWholeWord: !pre.matchWholeWord,
+                      }));
                     }}
                   />
                 </div>
@@ -131,10 +143,15 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                 <div>
                   <SvgIcon
                     component={useRegularExpressionIcon}
-                    aria-label={useRegularExpression ? "active" : "inactive"}
+                    aria-label={
+                      searchOptions.useRegularExpression ? "active" : "inactive"
+                    }
                     {...iconStyle}
                     onClick={() => {
-                      setUseRegularExpression(!useRegularExpression);
+                      setSearchOptions((pre) => ({
+                        ...pre,
+                        useRegularExpression: !pre.useRegularExpression,
+                      }));
                     }}
                   />{" "}
                 </div>

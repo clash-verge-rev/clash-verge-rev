@@ -53,6 +53,10 @@ export async function readProfileFile(index: string) {
   return invoke<string>("read_profile_file", { index });
 }
 
+export async function getCurrentProfileRuleProvidersPath() {
+  return invoke<Record<string, string>>("get_current_profile_rule_providers");
+}
+
 export async function saveProfileFile(index: string, fileData: string) {
   return invoke<void>("save_profile_file", { index, fileData });
 }

@@ -116,6 +116,7 @@ fn main() -> std::io::Result<()> {
             cmds::update_profile,
             cmds::delete_profile,
             cmds::read_profile_file,
+            cmds::get_current_profile_rule_providers,
             cmds::save_profile_file,
             // service mode
             cmds::service::check_service,

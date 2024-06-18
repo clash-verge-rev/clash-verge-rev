@@ -47,6 +47,10 @@ interface IRuleItem {
   type: string;
   payload: string;
   proxy: string;
+  ruleSetProviderPath: string;
+  ruleSetProviderPayload: string;
+  matchPayloadItems: string[];
+  expanded: boolean;
 }
 
 interface IProxyItem {

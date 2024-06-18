@@ -3,7 +3,7 @@ use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::fs;
+use std::{collections::HashMap, fs, path::PathBuf};
 use sysproxy::Sysproxy;
 
 use super::Config;
@@ -53,6 +53,10 @@ pub struct PrfItem {
     /// the file data
     #[serde(skip)]
     pub file_data: Option<String>,
+
+    /// profile rule providers path
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rule_providers_path: Option<HashMap<String, PathBuf>>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -170,6 +174,7 @@ impl PrfItem {
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
+            rule_providers_path: None,
         })
     }
 
@@ -336,6 +341,7 @@ impl PrfItem {
             home,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(data.into()),
+            rule_providers_path: None,
         })
     }
 
@@ -358,6 +364,7 @@ impl PrfItem {
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_MERGE.into()),
+            rule_providers_path: None,
         })
     }
 
@@ -380,6 +387,7 @@ impl PrfItem {
             option: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
+            rule_providers_path: None,
         })
     }
 

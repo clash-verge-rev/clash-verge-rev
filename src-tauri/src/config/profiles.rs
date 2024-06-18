@@ -3,7 +3,7 @@ use crate::utils::{dirs, help};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::{fs, io::Write};
+use std::{collections::HashMap, fs, io::Write, path::PathBuf};
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -277,6 +277,20 @@ impl IProfiles {
         self.items = Some(items);
         self.save_file()?;
         Ok(current == uid)
+    }
+
+    pub fn set_rule_providers_path(&mut self, path: HashMap<String, PathBuf>) -> Result<()> {
+        let current = self.current.as_ref().unwrap();
+        let current = current.clone();
+        let mut items = self.items.take().unwrap_or_default();
+        for item in items.iter_mut() {
+            if item.uid == Some(current.clone()) {
+                item.rule_providers_path = Some(path);
+                break;
+            }
+        }
+        self.items = Some(items);
+        return Ok(());
     }
 
     /// 获取current指向的订阅内容
