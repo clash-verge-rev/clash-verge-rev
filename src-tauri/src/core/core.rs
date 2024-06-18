@@ -2,12 +2,12 @@ use super::service;
 use super::{clash_api, logger::Logger};
 use crate::log_err;
 use crate::{config::*, utils::dirs};
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
-use std::{fs, io::Write, sync::Arc, time::Duration};
-use sysinfo::{Pid, System};
+use std::{sync::Arc, time::Duration};
+use sysinfo::System;
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time::sleep;
 
@@ -30,21 +30,6 @@ impl CoreManager {
     }
 
     pub fn init(&self) -> Result<()> {
-        // kill old clash process
-        let _ = dirs::clash_pid_path()
-            .and_then(|path| fs::read(path).map(|p| p.to_vec()).context(""))
-            .and_then(|pid| String::from_utf8_lossy(&pid).parse().context(""))
-            .map(|pid| {
-                let mut system = System::new();
-                system.refresh_all();
-                if let Some(proc) = system.process(Pid::from_u32(pid)) {
-                    if proc.name().contains("clash") {
-                        log::debug!(target: "app", "kill old clash process");
-                        proc.kill();
-                    }
-                }
-            });
-
         tauri::async_runtime::spawn(async {
             // 启动clash
             log_err!(Self::global().run_core().await);
@@ -94,6 +79,14 @@ impl CoreManager {
             }
             None => false,
         };
+
+        let mut system = System::new();
+        system.refresh_all();
+        let procs = system.processes_by_name("clash-meta");
+        for proc in procs {
+            log::debug!(target: "app", "kill all clash process");
+            proc.kill();
+        }
 
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
@@ -148,17 +141,6 @@ impl CoreManager {
 
         let cmd = Command::new_sidecar(clash_core)?;
         let (mut rx, cmd_child) = cmd.args(args).spawn()?;
-
-        // 将pid写入文件中
-        crate::log_err!((|| {
-            let pid = cmd_child.pid();
-            let path = dirs::clash_pid_path()?;
-            fs::File::create(path)
-                .context("failed to create the pid file")?
-                .write(format!("{pid}").as_bytes())
-                .context("failed to write pid to the file")?;
-            <Result<()>>::Ok(())
-        })());
 
         let mut sidecar = self.sidecar.lock();
         *sidecar = Some(cmd_child);
@@ -255,6 +237,13 @@ impl CoreManager {
         if let Some(child) = sidecar.take() {
             log::debug!(target: "app", "stop the core by sidecar");
             let _ = child.kill();
+        }
+        let mut system = System::new();
+        system.refresh_all();
+        let procs = system.processes_by_name("clash-meta");
+        for proc in procs {
+            log::debug!(target: "app", "kill all clash process");
+            proc.kill();
         }
         Ok(())
     }
