@@ -76,7 +76,24 @@ impl CoreManager {
             None => false,
         };
 
-        self.stop_core()?; // 先停止
+        // 关闭tun模式
+        let mut disable = Mapping::new();
+        let mut tun = Mapping::new();
+        tun.insert("enable".into(), false.into());
+        disable.insert("tun".into(), tun.into());
+        log::debug!(target: "app", "disable tun mode");
+        let _ = clash_api::patch_configs(&disable).await;
+
+        let mut system = System::new();
+        system.refresh_all();
+        let procs = system.processes_by_name("verge-mihomo");
+        for proc in procs {
+            log::debug!(target: "app", "kill all clash process");
+            #[cfg(target_os = "windows")]
+            proc.kill();
+            #[cfg(not(target_os = "windows"))]
+            proc.kill_with(sysinfo::Signal::Interrupt);
+        }
 
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
@@ -232,7 +249,10 @@ impl CoreManager {
         let procs = system.processes_by_name("verge-mihomo");
         for proc in procs {
             log::debug!(target: "app", "kill all clash process");
+            #[cfg(target_os = "windows")]
             proc.kill();
+            #[cfg(not(target_os = "windows"))]
+            proc.kill_with(sysinfo::Signal::Interrupt);
         }
         Ok(())
     }
