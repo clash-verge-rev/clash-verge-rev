@@ -7,7 +7,6 @@ import { getRuleProviders, getRules } from "@/services/api";
 import { BaseEmpty, BasePage, Notice } from "@/components/base";
 import { RuleItem } from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { getCurrentProfileRuleProvidersPath } from "@/services/cmds";
 import { readTextFile } from "@tauri-apps/api/fs";
@@ -15,12 +14,10 @@ import { readTextFile } from "@tauri-apps/api/fs";
 const RulesPage = () => {
   const { t } = useTranslation();
   const { data = [] } = useSWR("getRules", getRules);
-  const { data: ruleProvidersdata } = useSWR(
+  const { data: ruleProvidersData } = useSWR(
     "getRuleProviders",
     getRuleProviders,
   );
-  const { theme } = useCustomTheme();
-  const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const [ruleProvidersPaths, setRuleProvidersPaths] = useState<
     Record<string, string>
@@ -78,7 +75,7 @@ const RulesPage = () => {
 
   useEffect(() => {
     getAllRuleProvidersPaths();
-  }, [data, ruleProvidersdata]);
+  }, [data, ruleProvidersData]);
 
   return (
     <BasePage
@@ -107,11 +104,11 @@ const RulesPage = () => {
         sx={{
           marginLeft: "10px",
           borderRadius: "8px",
-          bgcolor: isDark ? "#282a36" : "#ffffff",
         }}>
         {rules.length > 0 ? (
           <Virtuoso
             data={rules}
+            increaseViewportBy={256}
             itemContent={(index, item) => (
               <RuleItem index={index + 1} value={item} />
             )}

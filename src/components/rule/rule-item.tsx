@@ -57,23 +57,31 @@ export const RuleItem = (props: Props) => {
 
   return (
     <Card
-      sx={{
-        borderBottom: "1px solid var(--divider-color)",
-        margin: "6px 8px 0 0",
-        "& ::-webkit-scrollbar": {
-          width: "5px",
+      sx={[
+        {
+          margin: "6px 6px 0 0",
+          "& ::-webkit-scrollbar": {
+            width: "5px",
+          },
+          backgroundImage: "none",
         },
-        "& ::-webkit-scrollbar-thumb": {
-          backgroundColor: "var(--primary-main)",
-          borderRadius: "2px",
+        ({ palette: { mode, primary } }) => {
+          const bgcolor = mode === "light" ? "#ffffff" : "#282A36";
+          return {
+            bgcolor,
+            "& ::-webkit-scrollbar-thumb": {
+              backgroundColor: alpha(primary.main, 0.35),
+              borderRadius: "2px",
+            },
+          };
         },
-      }}>
+      ]}>
       <ListItemButton
         sx={[
           {
             borderBottom: expanded ? "1px solid var(--divider-color)" : "none",
           },
-          ({ palette: { mode, primary, text } }) => {
+          ({ palette: { mode, primary } }) => {
             const bgcolor =
               mode === "light"
                 ? alpha(primary.main, 0.25)
@@ -141,11 +149,17 @@ export const RuleItem = (props: Props) => {
           in={expanded}
           timeout="auto"
           unmountOnExit
-          sx={{ bgcolor: "var(--background-color-alpha)" }}>
+          sx={[
+            ({ palette: { primary } }) => {
+              return {
+                bgcolor: alpha(primary.main, 0.15),
+              };
+            },
+          ]}>
           <Box
             sx={{
               margin: "auto",
-              padding: "0 10px 0 50px",
+              padding: "0 6px 0 50px",
               height:
                 value.matchPayloadItems.length > 10
                   ? "222px"
@@ -153,7 +167,8 @@ export const RuleItem = (props: Props) => {
             }}>
             <Virtuoso
               data={value.matchPayloadItems}
-              itemContent={(index, item) => (
+              increaseViewportBy={256}
+              itemContent={(_index, item) => (
                 <Box
                   sx={{
                     userSelect: "text",

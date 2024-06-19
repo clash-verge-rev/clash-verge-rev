@@ -1,4 +1,4 @@
-import { Box, SvgIcon, TextField, styled } from "@mui/material";
+import { Box, IconButton, SvgIcon, TextField, styled } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
@@ -43,19 +43,14 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   useEffect(() => {
     if (!inputRef.current) return;
 
-    onChange({
-      target: inputRef.current,
-    } as ChangeEvent<HTMLInputElement>);
+    onChange({ target: inputRef.current } as ChangeEvent<HTMLInputElement>);
   }, [searchOptions]);
 
   const onChange = debounce(
     (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       props.onSearch(
         (content) => doSearch([content], e.target?.value ?? "").length > 0,
-        {
-          text: e.target?.value ?? "",
-          ...searchOptions,
-        },
+        { text: e.target?.value ?? "", ...searchOptions },
       );
     },
     500,
@@ -104,12 +99,12 @@ export const BaseSearchBox = styled((props: SearchProps) => {
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
         InputProps={{
-          sx: { pr: 1 },
           endAdornment: (
             <Box display="flex">
               <Tooltip title={t("Match Case")}>
-                <div>
+                <IconButton size="small" sx={{ p: 0.5 }}>
                   <SvgIcon
+                    fontSize="inherit"
                     component={matchCaseIcon}
                     {...iconStyle}
                     aria-label={searchOptions.matchCase ? "active" : "inactive"}
@@ -120,11 +115,12 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                       }));
                     }}
                   />
-                </div>
+                </IconButton>
               </Tooltip>
               <Tooltip title={t("Match Whole Word")}>
-                <div>
+                <IconButton size="small" sx={{ p: 0.5 }}>
                   <SvgIcon
+                    fontSize="inherit"
                     component={matchWholeWordIcon}
                     {...iconStyle}
                     aria-label={
@@ -137,11 +133,12 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                       }));
                     }}
                   />
-                </div>
+                </IconButton>
               </Tooltip>
               <Tooltip title={t("Use Regular Expression")}>
-                <div>
+                <IconButton size="small" sx={{ p: 0.5 }}>
                   <SvgIcon
+                    fontSize="inherit"
                     component={useRegularExpressionIcon}
                     aria-label={
                       searchOptions.useRegularExpression ? "active" : "inactive"
@@ -153,8 +150,8 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                         useRegularExpression: !pre.useRegularExpression,
                       }));
                     }}
-                  />{" "}
-                </div>
+                  />
+                </IconButton>
               </Tooltip>
             </Box>
           ),
