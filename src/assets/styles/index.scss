@@ -79,3 +79,26 @@ body {
 //   transform: translateX(100px);
 //   transition: all 300ms;
 // }
+
+.switch-theme-btn-enter {
+  opacity: 0;
+  transform: translateX(-50%);
+}
+.switch-theme-btn-enter-active {
+  opacity: 1;
+  transform: translateX(0%);
+}
+.switch-theme-btn-exit {
+  opacity: 1;
+  transform: translateX(0%);
+}
+.switch-theme-btn-exit-active {
+  opacity: 0;
+  transform: translateX(50%);
+}
+.switch-theme-btn-enter-active,
+.switch-theme-btn-exit-active {
+  transition:
+    opacity 500ms,
+    transform 500ms;
+}

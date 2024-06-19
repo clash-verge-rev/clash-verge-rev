@@ -4,15 +4,15 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useRoutes } from "react-router-dom";
-import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
+import { useRoutes } from "react-router-dom";
+import { List, Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
-import ClashVergeFontSvg from "@/assets/image/clash_verge.svg?react";
+import AppNameSvg from "@/assets/image/clash_verge.svg?react";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
@@ -24,25 +24,52 @@ import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import { getPortableFlag } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
+import { DarkMode, LightMode } from "@mui/icons-material";
+import { CSSTransition, SwitchTransition } from "react-transition-group";
 
 export let portableFlag = false;
-
 dayjs.extend(relativeTime);
-
 const OS = getSystem();
 let keepUIActive = false;
+
+const SwitchThemeBtn = ({
+  isDark,
+  onClick,
+}: {
+  isDark: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    style={{
+      position: "absolute",
+      right: "15px",
+      top: "3px",
+      height: "30px",
+      width: "30px",
+      backgroundColor: "transparent",
+      border: "none",
+      cursor: "pointer",
+    }}
+    onClick={onClick}>
+    {isDark ? (
+      <DarkMode fontSize="inherit" />
+    ) : (
+      <LightMode fontSize="inherit" />
+    )}
+  </button>
+);
 
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
 
-  const { verge } = useVerge();
+  const { verge, patchVerge } = useVerge();
   const { language, start_page, enable_system_title, enable_keep_ui_active } =
     verge || {};
+  const isDark = theme.palette.mode === "dark";
   keepUIActive = enable_keep_ui_active ?? false;
   const navigate = useNavigate();
-  const location = useLocation();
   const routersEles = useRoutes(routers)!;
 
   appWindow.isMaximized().then((maximized) => {
@@ -159,17 +186,29 @@ const Layout = () => {
               enable_system_title ? "system-title" : ""
             }`}>
             <div className="the-logo" data-tauri-drag-region="true">
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div
-                  style={{
-                    width: "50px",
-                    marginRight: "10px",
-                  }}>
-                  <LogoSvg />
-                </div>
-                <ClashVergeFontSvg />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  overflow: "hidden",
+                }}>
+                <LogoSvg style={{ width: "50px", marginRight: "10px" }} />
+                <AppNameSvg style={{ position: "relative", top: "5px" }} />
               </div>
               {<UpdateButton className="the-newbtn" />}
+              <SwitchTransition mode="out-in">
+                <CSSTransition
+                  key={isDark ? "on" : "off"}
+                  timeout={500}
+                  classNames="switch-theme-btn">
+                  <SwitchThemeBtn
+                    isDark={isDark}
+                    onClick={() =>
+                      patchVerge({ theme_mode: isDark ? "light" : "dark" })
+                    }
+                  />
+                </CSSTransition>
+              </SwitchTransition>
             </div>
 
             <List className="the-menu">
