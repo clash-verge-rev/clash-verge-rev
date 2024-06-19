@@ -1,4 +1,5 @@
-use crate::config::Config;
+use crate::config::{Config, IVerge};
+use crate::core::handle;
 use crate::utils::dirs;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -237,7 +238,21 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     }
 
     let clash_core = { Config::verge().latest().clash_core.clone() };
-    let clash_core = clash_core.unwrap_or("clash".into());
+    let mut clash_core = clash_core.unwrap_or("verge-mihomo".into());
+
+    // compatibility
+    if clash_core.contains("clash") {
+        clash_core = "verge-mihomo".to_string();
+        Config::verge().draft().patch_config(IVerge {
+            clash_core: Some("verge-mihomo".to_string()),
+            ..IVerge::default()
+        });
+        Config::verge().apply();
+        match Config::verge().data().save_file() {
+            Ok(_) => handle::Handle::refresh_verge(),
+            Err(err) => log::error!(target: "app", "{err}"),
+        }
+    }
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let clash_bin = format!("{clash_core}{bin_ext}");

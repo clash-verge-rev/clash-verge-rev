@@ -27,7 +27,7 @@ export const useClash = () => {
   const version = versionData?.premium
     ? `${versionData.version} Premium`
     : versionData?.meta
-    ? `${versionData.version} Meta`
+    ? `${versionData.version} Mihomo`
     : versionData?.version || "-";
 
   return {
