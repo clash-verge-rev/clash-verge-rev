@@ -115,9 +115,10 @@ pub fn read_profile_file(index: String) -> CmdResult<String> {
 pub fn get_current_profile_rule_providers() -> CmdResult<HashMap<String, PathBuf>> {
     let profiles = Config::profiles();
     let profiles = profiles.latest();
-    let item = profiles.get_item(&profiles.get_current().unwrap()).unwrap();
-    if let Some(rule_providers_path) = item.rule_providers_path.clone() {
-        return Ok(rule_providers_path);
+    let current = profiles.get_current().unwrap();
+    let item = profiles.get_item(&current).unwrap();
+    if let Some(rule_providers_path) = &item.rule_providers_path {
+        return Ok(rule_providers_path.clone());
     } else {
         return Ok(HashMap::new());
     }

@@ -1,4 +1,3 @@
-import { Notice } from "@/components/base";
 import {
   styled,
   Box,
@@ -38,7 +37,7 @@ const COLOR = [
 
 interface Props {
   index: number;
-  item: IRuleItem;
+  value: IRuleItem;
 }
 
 const parseColor = (text: string) => {
@@ -52,8 +51,8 @@ const parseColor = (text: string) => {
   return COLOR[sum % COLOR.length];
 };
 
-const RuleItem = (props: Props) => {
-  const { index, item: value } = props;
+export const RuleItem = (props: Props) => {
+  const { index, value } = props;
   const [expanded, setExpanded] = useState(value.expanded ?? false);
 
   return (
@@ -94,15 +93,10 @@ const RuleItem = (props: Props) => {
             };
           },
         ]}
-        onClick={async () => {
+        onClick={() => {
           if (value.type === "RuleSet") {
-            try {
-              value.expanded = !expanded;
-              setExpanded(value.expanded);
-            } catch (e) {
-              console.log(e);
-              Notice.error("读取规则集失败, 请确认规则集文件是否已经更新同步");
-            }
+            value.expanded = !expanded;
+            setExpanded(value.expanded);
           }
         }}>
         <Typography
@@ -183,5 +177,3 @@ const RuleItem = (props: Props) => {
     </Card>
   );
 };
-
-export default RuleItem;

@@ -283,5 +283,7 @@
   "Updated Time": "Updated Time",
   "Expire Time": "Expire Time",
   "Used / Total": "Used / Total",
-  "Console": "Console"
+  "Console": "Console",
+
+  "Read Rule Providers Error": "Failed to read rule providers, please check if the rule providers has been updated and synchronized."
 }

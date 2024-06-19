@@ -19,7 +19,7 @@ use std::path::PathBuf;
 
 type ResultLog = Vec<(String, String)>;
 
-pub fn generate_rule_provider(mut config: Mapping) -> Mapping {
+pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
     let rule_providers_key = Value::from("rule-providers");
     if !config.contains_key(&rule_providers_key) {
         return config;
@@ -32,17 +32,18 @@ pub fn generate_rule_provider(mut config: Mapping) -> Mapping {
     for (key, value) in rule_providers_val.iter_mut() {
         let rule_name = key.as_str().unwrap();
         let config_rule_map = value.as_mapping_mut().unwrap();
-        let rule_provider_path = Value::from("path");
-        let rule_path = config_rule_map.get(&rule_provider_path);
-        if rule_path.is_none() {
-            let rule_path = format!("./rules/{}.yaml", rule_name);
-            let absolute_rule_path = app_home_dir().unwrap().join(&rule_path);
-            config_rule_map.insert(rule_provider_path, Value::from(rule_path));
-            rule_path_map.insert(rule_name.into(), absolute_rule_path);
+        let path_key = Value::from("path");
+        let path_val = config_rule_map.get(&path_key);
+        if let Some(rule_path) = path_val {
+            let rule_path = rule_path.as_str().unwrap();
+            let absolute_path = app_home_dir().unwrap().join(&rule_path);
+            rule_path_map.insert(rule_name.into(), absolute_path);
         } else {
-            let path = rule_path.unwrap().as_str().unwrap();
-            let absolute_rule_path = app_home_dir().unwrap().join(&path);
-            rule_path_map.insert(rule_name.into(), absolute_rule_path);
+            // no path value, set default path
+            let rule_path = format!("./rules/{}.yaml", rule_name);
+            let absolute_path = app_home_dir().unwrap().join(&rule_path);
+            config_rule_map.insert(path_key, Value::from(rule_path));
+            rule_path_map.insert(rule_name.into(), absolute_path);
         }
     }
     let profiles = Config::profiles();
@@ -187,7 +188,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
     config = use_tun(config, enable_tun);
     config = use_sort(config);
-    config = generate_rule_provider(config);
+    config = generate_rule_providers(config);
 
     let mut exists_set = HashSet::new();
     exists_set.extend(exists_keys);

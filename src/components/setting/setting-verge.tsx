@@ -49,7 +49,6 @@ const SettingVerge = ({ onError }: Props) => {
   const themeRef = useRef<DialogRef>(null);
   const layoutRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
-  const [checking, setChecking] = useState(false);
 
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -57,7 +56,6 @@ const SettingVerge = ({ onError }: Props) => {
 
   const onCheckUpdate = async () => {
     try {
-      setChecking(true);
       const info = await checkUpdate();
       if (!info?.shouldUpdate) {
         Notice.success(t("Currently on the Latest Version"));
@@ -66,8 +64,6 @@ const SettingVerge = ({ onError }: Props) => {
       }
     } catch (err: any) {
       Notice.error(err.message || err.toString());
-    } finally {
-      setChecking(false);
     }
   };
 

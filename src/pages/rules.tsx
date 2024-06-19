@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import { Box } from "@mui/material";
 import { getRuleProviders, getRules } from "@/services/api";
-import { BaseEmpty, BasePage } from "@/components/base";
-import RuleItem from "@/components/rule/rule-item";
+import { BaseEmpty, BasePage, Notice } from "@/components/base";
+import { RuleItem } from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { BaseSearchBox } from "@/components/base/base-search-box";
@@ -63,13 +63,17 @@ const RulesPage = () => {
   }, [data, ruleProvidersPaths, match]);
 
   const getAllRuleProvidersPaths = async () => {
-    let paths = await getCurrentProfileRuleProvidersPath();
-    for (const name in paths) {
-      const contents = await readTextFile(paths[name]);
-      const payloadKey = name + payloadSuffix;
-      paths[payloadKey] = contents;
+    try {
+      let pathsMap = await getCurrentProfileRuleProvidersPath();
+      for (const name in pathsMap) {
+        const contents = await readTextFile(pathsMap[name]);
+        const payloadKey = name + payloadSuffix;
+        pathsMap[payloadKey] = contents;
+      }
+      setRuleProvidersPaths(pathsMap);
+    } catch (error) {
+      Notice.error(t("Read Rule Providers Error"));
     }
-    setRuleProvidersPaths(paths);
   };
 
   useEffect(() => {
@@ -109,7 +113,7 @@ const RulesPage = () => {
           <Virtuoso
             data={rules}
             itemContent={(index, item) => (
-              <RuleItem index={index + 1} item={item} />
+              <RuleItem index={index + 1} value={item} />
             )}
             followOutput={"smooth"}
           />

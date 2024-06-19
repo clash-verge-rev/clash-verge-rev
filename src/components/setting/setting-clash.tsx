@@ -7,7 +7,6 @@ import {
   Typography,
   IconButton,
   Tooltip,
-  keyframes,
 } from "@mui/material";
 import { Settings, Shuffle } from "@mui/icons-material";
 import { DialogRef, Notice, SwitchLovely } from "@/components/base";
@@ -28,11 +27,6 @@ const isWIN = getSystem() === "windows";
 interface Props {
   onError: (err: Error) => void;
 }
-
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
 
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
