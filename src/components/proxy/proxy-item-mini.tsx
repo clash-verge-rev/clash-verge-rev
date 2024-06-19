@@ -226,16 +226,22 @@ const Widget = styled(Box)(({ theme: { typography } }) => ({
   borderRadius: "4px",
 }));
 
-const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
-  display: "inline-block",
-  border: "1px solid #ccc",
-  borderColor: "text.secondary",
-  color: "text.secondary",
-  borderRadius: 4,
-  fontSize: 10,
-  fontFamily: typography.fontFamily,
-  marginRight: "4px",
-  marginTop: "auto",
-  padding: "0 4px",
-  lineHeight: 1.5,
-}));
+const TypeBox = styled(Box)(
+  ({
+    theme: {
+      palette: { text },
+      typography,
+    },
+  }) => ({
+    display: "inline-block",
+    border: `1px solid ${text.secondary}`,
+    color: "text.secondary",
+    borderRadius: 4,
+    fontSize: 10,
+    fontFamily: typography.fontFamily,
+    marginRight: "4px",
+    marginTop: "auto",
+    padding: "0 4px",
+    lineHeight: 1.5,
+  }),
+);
