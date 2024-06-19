@@ -31,15 +31,14 @@ if (!container) {
 
 document.addEventListener("keydown", (event) => {
   // Disable WebView keyboard shortcuts
-  if (["F5", "F7"].includes(event.key)) {
-    event.preventDefault();
-  }
-  if (
-    (event.ctrlKey || event.metaKey) &&
-    ["F", "H", "P", "Q", "R", "U"].includes(event.key.toUpperCase())
-  ) {
-    event.preventDefault();
-  }
+  const disabledShortcuts =
+    ["F5", "F7"].includes(event.key) ||
+    (event.altKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) ||
+    ((event.ctrlKey || event.metaKey) &&
+      ["F", "G", "H", "J", "P", "Q", "R", "U"].includes(
+        event.key.toUpperCase()
+      ));
+  disabledShortcuts && event.preventDefault();
 });
 
 const contexts = [
