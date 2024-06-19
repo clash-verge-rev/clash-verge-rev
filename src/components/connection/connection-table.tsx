@@ -109,7 +109,13 @@ export const ConnectionTable = (props: Props) => {
       columns={columns}
       onRowClick={(e) => onShowDetail(e.row.connectionData)}
       density="compact"
-      sx={{ border: "none", "div:focus": { outline: "none !important" } }}
+      sx={{
+        border: "none",
+        "div:focus": { outline: "none !important" },
+        "& div[aria-rowindex='1']": {
+          backgroundColor: "inherit !important",
+        },
+      }}
       columnVisibilityModel={columnVisible}
       onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
     />
