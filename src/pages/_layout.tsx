@@ -42,8 +42,8 @@ const SwitchThemeBtn = ({
   <button
     style={{
       position: "absolute",
-      right: "15px",
-      top: "3px",
+      right: "10px",
+      top: "2px",
       height: "30px",
       width: "30px",
       backgroundColor: "transparent",
@@ -193,9 +193,9 @@ const Layout = () => {
                   overflow: "hidden",
                 }}>
                 <LogoSvg style={{ width: "50px", marginRight: "10px" }} />
-                <AppNameSvg style={{ position: "relative", top: "5px" }} />
+                <AppNameSvg />
               </div>
-              {<UpdateButton className="the-newbtn" />}
+              <UpdateButton className="the-newbtn" />
               <SwitchTransition mode="out-in">
                 <CSSTransition
                   key={isDark ? "on" : "off"}

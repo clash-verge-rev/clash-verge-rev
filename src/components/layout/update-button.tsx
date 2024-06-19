@@ -24,7 +24,7 @@ export const UpdateButton = (props: Props) => {
       errorRetryCount: 2,
       revalidateIfStale: false,
       focusThrottleInterval: 36e5, // 1 hour
-    }
+    },
   );
 
   if (!updateInfo?.shouldUpdate) return null;
@@ -33,15 +33,20 @@ export const UpdateButton = (props: Props) => {
     <>
       <UpdateViewer ref={viewerRef} />
 
-      <Button
-        color="error"
-        variant="contained"
-        size="small"
+      <button
+        style={{
+          backgroundColor: "#FF4040",
+          border: "none",
+          color: "white",
+          padding: "2px 10px",
+          fontSize: "14px",
+          fontWeight: 600,
+          borderRadius: "4px",
+        }}
         className={className}
-        onClick={() => viewerRef.current?.open()}
-      >
+        onClick={() => viewerRef.current?.open()}>
         New
-      </Button>
+      </button>
     </>
   );
 };
