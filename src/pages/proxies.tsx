@@ -24,12 +24,7 @@ const ProxyPage = () => {
 
   const { verge } = useVerge();
 
-  const modeList = useMemo(() => {
-    if (verge?.clash_core?.includes("clash-meta")) {
-      return ["rule", "global", "direct"];
-    }
-    return ["rule", "global", "direct", "script"];
-  }, [verge?.clash_core]);
+  const modeList = ["rule", "global", "direct"];
 
   const curMode = clashConfig?.mode?.toLowerCase();
 

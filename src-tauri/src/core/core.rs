@@ -1,7 +1,7 @@
-use super::service;
-use super::{clash_api, logger::Logger};
+use crate::config::*;
+use crate::core::{clash_api, handle, logger::Logger, service};
 use crate::log_err;
-use crate::{config::*, utils::dirs};
+use crate::utils::dirs;
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -72,21 +72,11 @@ impl CoreManager {
 
         #[allow(unused_mut)]
         let mut should_kill = match self.sidecar.lock().take() {
-            Some(child) => {
-                log::debug!(target: "app", "stop the core by sidecar");
-                let _ = child.kill();
-                true
-            }
+            Some(_) => true,
             None => false,
         };
 
-        let mut system = System::new();
-        system.refresh_all();
-        let procs = system.processes_by_name("clash-meta");
-        for proc in procs {
-            log::debug!(target: "app", "kill all clash process");
-            proc.kill();
-        }
+        self.stop_core()?; // 先停止
 
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
@@ -128,16 +118,25 @@ impl CoreManager {
         let app_dir = dirs::path_to_str(&app_dir)?;
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
-        let clash_core = clash_core.unwrap_or("clash".into());
-        let is_clash = clash_core == "clash";
+        let mut clash_core = clash_core.unwrap_or("verge-mihomo".into());
+
+        // compatibility
+        if clash_core.contains("clash") {
+            clash_core = "verge-mihomo".to_string();
+            Config::verge().draft().patch_config(IVerge {
+                clash_core: Some("verge-mihomo".to_string()),
+                ..IVerge::default()
+            });
+            Config::verge().apply();
+            match Config::verge().data().save_file() {
+                Ok(_) => handle::Handle::refresh_verge(),
+                Err(err) => log::error!(target: "app", "{err}"),
+            }
+        }
 
         let config_path = dirs::path_to_str(&config_path)?;
 
-        let args = match clash_core.as_str() {
-            "clash-meta" => vec!["-d", app_dir, "-f", config_path],
-            "clash-meta-alpha" => vec!["-d", app_dir, "-f", config_path],
-            _ => vec!["-d", app_dir, "-f", config_path],
-        };
+        let args = vec!["-d", app_dir, "-f", config_path];
 
         let cmd = Command::new_sidecar(clash_core)?;
         let (mut rx, cmd_child) = cmd.args(args).spawn()?;
@@ -150,25 +149,19 @@ impl CoreManager {
             while let Some(event) = rx.recv().await {
                 match event {
                     CommandEvent::Stdout(line) => {
-                        if is_clash {
-                            let stdout = clash_api::parse_log(line.clone());
-                            log::info!(target: "app", "[clash]: {stdout}");
-                        } else {
-                            log::info!(target: "app", "[clash]: {line}");
-                        };
+                        log::info!(target: "app", "[mihomo]: {line}");
                         Logger::global().set_log(line);
                     }
                     CommandEvent::Stderr(err) => {
-                        // let stdout = clash_api::parse_log(err.clone());
-                        log::error!(target: "app", "[clash]: {err}");
+                        log::error!(target: "app", "[mihomo]: {err}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Error(err) => {
-                        log::error!(target: "app", "[clash]: {err}");
+                        log::error!(target: "app", "[mihomo]: {err}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Terminated(_) => {
-                        log::info!(target: "app", "clash core terminated");
+                        log::info!(target: "app", "mihomo core terminated");
                         let _ = CoreManager::global().recover_core();
                         break;
                     }
@@ -188,9 +181,7 @@ impl CoreManager {
         }
 
         // 清空原来的sidecar值
-        if let Some(sidecar) = self.sidecar.lock().take() {
-            let _ = sidecar.kill();
-        }
+        let _ = self.sidecar.lock().take();
 
         tauri::async_runtime::spawn(async move {
             // 6秒之后再查看服务是否正常 (时间随便搞的)
@@ -234,13 +225,11 @@ impl CoreManager {
         }
 
         let mut sidecar = self.sidecar.lock();
-        if let Some(child) = sidecar.take() {
-            log::debug!(target: "app", "stop the core by sidecar");
-            let _ = child.kill();
-        }
+        let _ = sidecar.take();
+
         let mut system = System::new();
         system.refresh_all();
-        let procs = system.processes_by_name("clash-meta");
+        let procs = system.processes_by_name("verge-mihomo");
         for proc in procs {
             log::debug!(target: "app", "kill all clash process");
             proc.kill();
@@ -251,7 +240,7 @@ impl CoreManager {
     /// 切换核心
     pub async fn change_core(&self, clash_core: Option<String>) -> Result<()> {
         let clash_core = clash_core.ok_or(anyhow::anyhow!("clash core is null"))?;
-        const CLASH_CORES: [&str; 2] = ["clash-meta", "clash-meta-alpha"];
+        const CLASH_CORES: [&str; 2] = ["verge-mihomo", "verge-mihomo-alpha"];
 
         if !CLASH_CORES.contains(&clash_core.as_str()) {
             bail!("invalid clash core name \"{clash_core}\"");

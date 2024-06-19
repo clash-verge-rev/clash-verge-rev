@@ -92,8 +92,8 @@ impl ChainSupport {
                 (self, core.as_str()),
                 (ChainSupport::All, _)
                     | (ChainSupport::Clash, "clash")
-                    | (ChainSupport::ClashMeta, "clash-meta")
-                    | (ChainSupport::ClashMetaAlpha, "clash-meta-alpha")
+                    | (ChainSupport::ClashMeta, "verge-mihomo")
+                    | (ChainSupport::ClashMetaAlpha, "verge-mihomo-alpha")
             ),
             None => true,
         }
