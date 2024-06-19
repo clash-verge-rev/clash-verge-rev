@@ -10,16 +10,16 @@
       "deb": {
         "depends": ["openssl"],
         "desktopTemplate": "./template/clash-verge.desktop",
-        "provides": ["clash-verge", "clash-meta"],
-        "conflicts": ["clash-verge", "clash-meta"],
-        "replaces": ["clash-verge", "clash-meta"]
+        "provides": ["clash-verge"],
+        "conflicts": ["clash-verge"],
+        "replaces": ["clash-verge"]
       },
       "rpm": {
         "depends": ["openssl"],
         "desktopTemplate": "./template/clash-verge.desktop",
-        "provides": ["clash-verge", "clash-meta"],
-        "conflicts": ["clash-verge", "clash-meta"],
-        "obsoletes": ["clash-verge", "clash-meta"]
+        "provides": ["clash-verge"],
+        "conflicts": ["clash-verge"],
+        "obsoletes": ["clash-verge"]
       }
     }
   }

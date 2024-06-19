@@ -70,8 +70,8 @@ export const LayoutTraffic = () => {
   );
 
   /* --------- meta memory information --------- */
-  const isMetaCore = verge?.clash_core?.includes("clash-meta");
-  const displayMemory = isMetaCore && (verge?.enable_memory_usage ?? true);
+
+  const displayMemory = verge?.enable_memory_usage ?? true;
 
   const { data: memory = { inuse: 0 } } = useSWRSubscription<
     MemoryUsage,

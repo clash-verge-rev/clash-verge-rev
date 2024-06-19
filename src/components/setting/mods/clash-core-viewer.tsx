@@ -12,8 +12,8 @@ import { closeAllConnections, upgradeCore } from "@/services/api";
 import getSystem from "@/utils/get-system";
 
 const VALID_CORE = [
-  { name: "Clash Meta", core: "clash-meta" },
-  { name: "Clash Meta Alpha", core: "clash-meta-alpha" },
+  { name: "Mihomo", core: "verge-mihomo" },
+  { name: "Mihomo Alpha", core: "verge-mihomo-alpha" },
 ];
 
 const OS = getSystem();
@@ -31,7 +31,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  const { clash_core = "clash-meta" } = verge ?? {};
+  const { clash_core = "verge-mihomo" } = verge ?? {};
 
   const onCoreChange = useLockFn(async (core: string) => {
     if (core === clash_core) return;
