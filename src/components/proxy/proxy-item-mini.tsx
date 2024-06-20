@@ -21,6 +21,8 @@ export const ProxyItemMini = (props: Props) => {
 
   const { t } = useTranslation();
 
+  const presetList = ["DIRECT", "REJECT", "REJECT-DROP", "PASS", "COMPATIBLE"];
+  const isPreset = presetList.includes(proxy.name);
   // -1/<=0 为 不显示
   // -2 为 loading
   const [delay, setDelay] = useState(-1);
@@ -28,6 +30,7 @@ export const ProxyItemMini = (props: Props) => {
   const timeout = verge?.default_latency_timeout || 10000;
 
   useEffect(() => {
+    if (isPreset) return;
     delayManager.setListener(proxy.name, group.name, setDelay);
 
     return () => {
@@ -160,7 +163,9 @@ export const ProxyItemMini = (props: Props) => {
           </Box>
         )}
       </Box>
-      <Box sx={{ ml: 0.5, color: "primary.main" }}>
+      <Box
+        sx={{ ml: 0.5, color: "primary.main", display: isPreset ? "none" : "" }}
+      >
         {delay === -2 && (
           <Widget>
             <BaseLoading />
