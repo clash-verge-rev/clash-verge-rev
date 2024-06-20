@@ -46,12 +46,15 @@ const TypeBox = styled(Box)(({ theme }) => ({
 export const ProxyItem = (props: Props) => {
   const { group, proxy, selected, showType = true, sx, onClick } = props;
 
+  const presetList = ["DIRECT", "REJECT", "REJECT-DROP", "PASS", "COMPATIBLE"];
+  const isPreset = presetList.includes(proxy.name);
   // -1/<=0 为 不显示
   // -2 为 loading
   const [delay, setDelay] = useState(-1);
   const { verge } = useVerge();
   const timeout = verge?.default_latency_timeout || 10000;
   useEffect(() => {
+    if (isPreset) return;
     delayManager.setListener(proxy.name, group.name, setDelay);
 
     return () => {
@@ -131,7 +134,11 @@ export const ProxyItem = (props: Props) => {
         />
 
         <ListItemIcon
-          sx={{ justifyContent: "flex-end", color: "primary.main" }}
+          sx={{
+            justifyContent: "flex-end",
+            color: "primary.main",
+            display: isPreset ? "none" : "",
+          }}
         >
           {delay === -2 && (
             <Widget>
