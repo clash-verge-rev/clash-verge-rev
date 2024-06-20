@@ -58,6 +58,17 @@
         // }
       }
 
+      .switch-theme-btn {
+        position: absolute;
+        right: 10px;
+        top: 15px;
+        height: 30px;
+        width: 30px;
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+      }
+
       .the-newbtn {
         position: absolute;
         right: 35px;
@@ -128,20 +139,33 @@
     .layout__left .the-logo {
       flex: 1 0 58px;
       margin-top: 10px;
-      margin-left: 10px;
-      padding-top: 30px;
-      padding-left: 10px;
-      padding-right: 20px;
-      padding-bottom: 16px;
+      padding: 30px 20px 16px 20px;
+
+      .switch-theme-btn {
+        position: absolute;
+        right: 10px;
+        top: 15px;
+        height: 30px;
+        width: 30px;
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+      }
     }
 
-    .layout__left.system-title .the-logo {
-      margin-top: 0px !important;
-      padding-top: 16px !important;
-    }
+    .layout__left.system-title {
+      .the-logo {
+        margin-top: 0px !important;
+        padding-top: 16px !important;
 
-    .layout__left.system-title .the-newbtn {
-      top: 3px !important;
+        .switch-theme-btn {
+          top: 3px !important;
+        }
+
+        .the-newbtn {
+          top: 3px !important;
+        }
+      }
     }
 
     .layout__right .the-content {

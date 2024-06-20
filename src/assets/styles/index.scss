@@ -80,24 +80,24 @@ body {
 //   transition: all 300ms;
 // }
 
-.switch-theme-btn-enter {
+.fade-theme-enter {
   opacity: 0;
   transform: translateX(-50%);
 }
-.switch-theme-btn-enter-active {
+.fade-theme-enter-active {
   opacity: 1;
   transform: translateX(0%);
 }
-.switch-theme-btn-exit {
+.fade-theme-exit {
   opacity: 1;
   transform: translateX(0%);
 }
-.switch-theme-btn-exit-active {
+.fade-theme-exit-active {
   opacity: 0;
   transform: translateX(50%);
 }
-.switch-theme-btn-enter-active,
-.switch-theme-btn-exit-active {
+.fade-theme-enter-active,
+.fade-theme-exit-active {
   transition:
     opacity 500ms,
     transform 500ms;

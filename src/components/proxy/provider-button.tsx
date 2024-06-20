@@ -46,17 +46,11 @@ export const ProviderButton = () => {
   };
   const handleUpdate = async (key: string, index: number) => {
     setUpdatingAt(true, index);
-    proxyProviderUpdate(key)
-      .then(async () => {
-        setUpdatingAt(false, index);
-        await mutate("getProxies");
-        await mutate("getProxyProviders");
-      })
-      .catch(async () => {
-        setUpdatingAt(false, index);
-        await mutate("getProxies");
-        await mutate("getProxyProviders");
-      });
+    proxyProviderUpdate(key).finally(async () => {
+      setUpdatingAt(false, index);
+      await mutate("getProxies");
+      await mutate("getProxyProviders");
+    });
   };
 
   if (!hasProvider) return null;

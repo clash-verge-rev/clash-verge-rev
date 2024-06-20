@@ -32,33 +32,6 @@ dayjs.extend(relativeTime);
 const OS = getSystem();
 let keepUIActive = false;
 
-const SwitchThemeBtn = ({
-  isDark,
-  onClick,
-}: {
-  isDark: boolean;
-  onClick: () => void;
-}) => (
-  <button
-    style={{
-      position: "absolute",
-      right: "10px",
-      top: "2px",
-      height: "30px",
-      width: "30px",
-      backgroundColor: "transparent",
-      border: "none",
-      cursor: "pointer",
-    }}
-    onClick={onClick}>
-    {isDark ? (
-      <DarkMode fontSize="inherit" />
-    ) : (
-      <LightMode fontSize="inherit" />
-    )}
-  </button>
-);
-
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
@@ -198,15 +171,20 @@ const Layout = () => {
               <UpdateButton className="the-newbtn" />
               <SwitchTransition mode="out-in">
                 <CSSTransition
-                  key={isDark ? "on" : "off"}
+                  key={isDark ? "dark-on" : "dark-off"}
                   timeout={500}
-                  classNames="switch-theme-btn">
-                  <SwitchThemeBtn
-                    isDark={isDark}
+                  classNames="fade-theme">
+                  <button
+                    className="switch-theme-btn"
                     onClick={() =>
                       patchVerge({ theme_mode: isDark ? "light" : "dark" })
-                    }
-                  />
+                    }>
+                    {isDark ? (
+                      <DarkMode fontSize="inherit" />
+                    ) : (
+                      <LightMode fontSize="inherit" />
+                    )}
+                  </button>
                 </CSSTransition>
               </SwitchTransition>
             </div>
