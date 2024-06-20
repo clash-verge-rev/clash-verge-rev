@@ -89,10 +89,7 @@ impl CoreManager {
         let procs = system.processes_by_name("verge-mihomo");
         for proc in procs {
             log::debug!(target: "app", "kill all clash process");
-            #[cfg(target_os = "windows")]
             proc.kill();
-            #[cfg(not(target_os = "windows"))]
-            proc.kill_with(sysinfo::Signal::Interrupt);
         }
 
         if *self.use_service_mode.lock() {
@@ -249,10 +246,7 @@ impl CoreManager {
         let procs = system.processes_by_name("verge-mihomo");
         for proc in procs {
             log::debug!(target: "app", "kill all clash process");
-            #[cfg(target_os = "windows")]
             proc.kill();
-            #[cfg(not(target_os = "windows"))]
-            proc.kill_with(sysinfo::Signal::Interrupt);
         }
         Ok(())
     }
