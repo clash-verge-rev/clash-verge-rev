@@ -9,7 +9,7 @@ export const ProfileBox = styled(Box)(({
 
   const unselectedbackgroundColor = mode === "light" ? "#ffffff" : "#282A36";
   const selectedBackgroundColor =
-    mode === "light" ? alpha(primary.main, 0.2) : alpha(primary.main, 0.3);
+    mode === "light" ? alpha(primary.main, 0.25) : alpha(primary.main, 0.35);
   const backgroundColor = selected
     ? selectedBackgroundColor
     : unselectedbackgroundColor;

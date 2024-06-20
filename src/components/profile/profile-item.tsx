@@ -15,7 +15,11 @@ import {
   SxProps,
 } from "@mui/material";
 import { RefreshRounded } from "@mui/icons-material";
-import { useLoadingCache, useSetLoadingCache } from "@/services/states";
+import {
+  useLoadingCache,
+  useSetLoadingCache,
+  useThemeMode,
+} from "@/services/states";
 import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
@@ -53,6 +57,7 @@ export const ProfileItem = (props: Props) => {
   } = props;
 
   const { t } = useTranslation();
+  const themeMode = useThemeMode();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   if (anchorEl && isDragging) {
     setAnchorEl(null);
@@ -223,7 +228,13 @@ export const ProfileItem = (props: Props) => {
   };
 
   return (
-    <Box sx={{ width: "100%", ...sx }}>
+    <Box
+      sx={{
+        width: "100%",
+        bgcolor: themeMode === "light" ? "#FFFFFF" : "#282A36",
+        borderRadius: "8px",
+        ...sx,
+      }}>
       <ProfileBox
         aria-selected={selected}
         onClick={() => onSelect(false)}

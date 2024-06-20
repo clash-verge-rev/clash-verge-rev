@@ -21,6 +21,7 @@ import { LogViewer } from "./log-viewer";
 import { ConfirmViewer } from "./confirm-viewer";
 import JSIcon from "@/assets/image/js.svg?react";
 import YamlIcon from "@/assets/image/yaml.svg?react";
+import { useThemeMode } from "@/services/states";
 
 interface Props {
   sx?: SxProps;
@@ -44,7 +45,6 @@ export const ProfileMore = (props: Props) => {
     selected,
     isDragging,
     itemData,
-    enableNum,
     logInfo = [],
     reactivating,
     onEnable,
@@ -56,6 +56,7 @@ export const ProfileMore = (props: Props) => {
 
   const { uid, type } = itemData;
   const { t, i18n } = useTranslation();
+  const themeMode = useThemeMode();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   if (anchorEl && isDragging) {
     setAnchorEl(null);
@@ -91,7 +92,6 @@ export const ProfileMore = (props: Props) => {
   };
 
   const hasError = !!logInfo.find((e) => e[0] === "exception");
-  const showMove = enableNum > 1 && !hasError;
 
   const enableMenu = [
     {
@@ -144,7 +144,13 @@ export const ProfileMore = (props: Props) => {
   };
 
   return (
-    <Box sx={{ width: "100%", ...sx }}>
+    <Box
+      sx={{
+        width: "100%",
+        bgcolor: themeMode === "light" ? "#FFFFFF" : "#282A36",
+        borderRadius: "8px",
+        ...sx,
+      }}>
       <ProfileBox
         aria-selected={selected}
         onDoubleClick={onEditFile}
