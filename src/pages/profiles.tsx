@@ -57,6 +57,7 @@ import {
 } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { DraggableItem } from "@/components/base/draggable-item";
+import { useLocalStorage } from "foxact/use-local-storage";
 
 interface ISortableItem {
   id: string;
@@ -82,7 +83,7 @@ const ProfilePage = () => {
 
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-  const [activating, setActivating] = useState("");
+  const [activating, setActivating] = useLocalStorage("activatingProfile", "");
   const [loading, setLoading] = useState(false);
   const {
     profiles = {},

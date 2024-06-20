@@ -4,6 +4,7 @@ import { appWindow } from "@tauri-apps/api/window";
 import { useSetThemeMode, useThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
+import { useLocalStorage } from "foxact/use-local-storage";
 
 /**
  * custom theme
@@ -13,10 +14,20 @@ export const useCustomTheme = () => {
   const { theme_mode, theme_setting } = verge ?? {};
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
+  const [themeSetting, setThemeSetting] = useLocalStorage<
+    IVergeConfig["theme_setting"]
+  >(
+    "theme_setting",
+    {},
+    {
+      serializer: JSON.stringify,
+      deserializer: JSON.parse,
+    },
+  );
 
   useEffect(() => {
     if (theme_setting) {
-      localStorage.setItem("theme_setting", JSON.stringify(theme_setting));
+      setThemeSetting(theme_setting);
     }
   }, [theme_setting]);
 
@@ -39,9 +50,7 @@ export const useCustomTheme = () => {
   }, [theme_mode]);
 
   const theme = useMemo(() => {
-    const setting =
-      theme_setting ||
-      JSON.parse(localStorage.getItem("theme_setting") || "{}");
+    const setting = theme_setting || themeSetting!;
     const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
 
     let theme: Theme;
