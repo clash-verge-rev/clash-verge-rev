@@ -72,6 +72,26 @@ monaco.languages.registerCompletionItemProvider("javascript", {
   }),
 });
 
+const generateMergeYaml = `# Profile Enhancement Merge Template for Clash Verge
+
+prepend-rules:
+
+prepend-proxies:
+
+prepend-proxy-groups:
+
+append-rules:
+
+append-proxies:
+
+append-proxy-groups:`;
+
+const generateMergeJS = `// Define main function (script entry)
+
+function main(config) {
+  return config;
+}`;
+
 export const EditorViewer = (props: Props) => {
   const {
     title,
@@ -85,11 +105,11 @@ export const EditorViewer = (props: Props) => {
     onChange,
   } = props;
   const { t } = useTranslation();
-  const editorRef = useRef<any>();
+  const editorDomRef = useRef<any>();
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const registerCodeLensRef = useRef<any>();
   const themeMode = useThemeMode();
   const { size } = useWindowSize();
-
   useEffect(() => {
     if (!open) return;
 
@@ -103,7 +123,7 @@ export const EditorViewer = (props: Props) => {
         break;
     }
     fetchContent.then((data) => {
-      const dom = editorRef.current;
+      const dom = editorDomRef.current;
 
       if (!dom) return;
 
@@ -111,7 +131,7 @@ export const EditorViewer = (props: Props) => {
 
       const uri = monaco.Uri.parse(`${nanoid()}.${schema}.${language}`);
       const model = monaco.editor.createModel(data, language, uri);
-      instanceRef.current = monaco.editor.create(editorRef.current, {
+      instanceRef.current = monaco.editor.create(editorDomRef.current, {
         model: model,
         language: language,
         tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进大小
@@ -136,12 +156,56 @@ export const EditorViewer = (props: Props) => {
         fontLigatures: true, // 连字符
         smoothScrolling: true, // 平滑滚动
       });
+
+      if (schema === "merge" || language === "javascript") {
+        const generateCommand = instanceRef.current?.addCommand(
+          0,
+          () => {
+            if (language === "yaml") {
+              instanceRef.current?.setValue(generateMergeYaml);
+            } else if (language === "javascript") {
+              instanceRef.current?.setValue(generateMergeJS);
+            }
+          },
+          "",
+        );
+        registerCodeLensRef.current = monaco.languages.registerCodeLensProvider(
+          ["yaml", "javascript"],
+          {
+            provideCodeLenses(model, token) {
+              return {
+                lenses: [
+                  {
+                    range: {
+                      startLineNumber: 1,
+                      startColumn: 1,
+                      endLineNumber: 2,
+                      endColumn: 1,
+                    },
+                    id: "Reset Content",
+                    command: {
+                      id: generateCommand!,
+                      title: t("Reset Content"),
+                    },
+                  },
+                ],
+                dispose: () => {},
+              };
+            },
+            resolveCodeLens(model, codeLens, token) {
+              return codeLens;
+            },
+          },
+        );
+      }
     });
 
     return () => {
       if (instanceRef.current) {
         instanceRef.current.dispose();
+        registerCodeLensRef.current?.dispose();
         instanceRef.current = null;
+        registerCodeLensRef.current = null;
       }
     };
   }, [open]);
@@ -177,7 +241,7 @@ export const EditorViewer = (props: Props) => {
           pb: 1,
           userSelect: "text",
         }}>
-        <div style={{ width: "100%", height: "100%" }} ref={editorRef} />
+        <div style={{ width: "100%", height: "100%" }} ref={editorDomRef} />
       </DialogContent>
 
       <DialogActions>

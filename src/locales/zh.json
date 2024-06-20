@@ -285,5 +285,7 @@
   "Used / Total": "已使用 / 总共",
   "Console": "控制台",
 
-  "Read Rule Providers Error": "读取规则集失败, 请确认规则集文件是否已经更新同步"
+  "Read Rule Providers Error": "读取规则集失败, 请确认规则集文件是否已经更新同步",
+
+  "Reset Content": "重置内容"
 }
