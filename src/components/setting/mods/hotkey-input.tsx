@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { alpha, Box, IconButton, styled } from "@mui/material";
 import { DeleteRounded } from "@mui/icons-material";
 import { parseHotkey } from "@/utils/parse-hotkey";
+import { useTranslation } from "react-i18next";
 
 const KeyWrapper = styled("div")(({ theme }) => ({
   position: "relative",
@@ -41,9 +42,12 @@ const KeyWrapper = styled("div")(({ theme }) => ({
     border: "1px solid",
     borderColor: alpha(theme.palette.text.secondary, 0.2),
     borderRadius: "2px",
-    padding: "1px 1px",
+    padding: "1px 5px",
     margin: "2px 0",
-    marginRight: 8,
+  },
+  ".delimiter": {
+    lineHeight: "25px",
+    padding: "0 2px",
   },
 }));
 
@@ -54,6 +58,7 @@ interface Props {
 
 export const HotkeyInput = (props: Props) => {
   const { value, onChange } = props;
+  const { t } = useTranslation();
 
   const changeRef = useRef<string[]>([]);
   const [keys, setKeys] = useState(value);
@@ -83,17 +88,22 @@ export const HotkeyInput = (props: Props) => {
         />
 
         <div className="list">
-          {keys.map((key) => (
-            <div key={key} className="item">
-              {key}
-            </div>
+          {keys.map((key, index) => (
+            <Box display="flex">
+              <span className="delimiter" hidden={index === 0}>
+                +
+              </span>
+              <div key={key} className="item">
+                {key}
+              </div>
+            </Box>
           ))}
         </div>
       </KeyWrapper>
 
       <IconButton
         size="small"
-        title="Delete"
+        title={t("Delete")}
         color="inherit"
         onClick={() => {
           onChange([]);
