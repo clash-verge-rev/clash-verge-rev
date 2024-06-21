@@ -1,12 +1,13 @@
 import { Box, IconButton, SvgIcon, TextField, styled } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
 import matchWholeWordIcon from "@/assets/image/component/match_whole_word.svg?react";
 import useRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
 import { debounce } from "lodash-es";
+import { ClearRounded } from "@mui/icons-material";
 
 type SearchProps = {
   placeholder?: string;
@@ -22,8 +23,9 @@ type SearchProps = {
 };
 
 export const BaseSearchBox = styled((props: SearchProps) => {
+  const { placeholder, onSearch } = props;
   const { t } = useTranslation();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [filterText, setFilterText] = useState("");
   const [searchOptions, setSearchOptions] = useState({
     matchCase: true,
     matchWholeWord: false,
@@ -41,66 +43,75 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   };
 
   useEffect(() => {
-    if (!inputRef.current) return;
+    onChange(filterText);
+  }, [filterText, searchOptions]);
 
-    onChange({ target: inputRef.current } as ChangeEvent<HTMLInputElement>);
-  }, [searchOptions]);
-
-  const onChange = debounce(
-    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      props.onSearch(
-        (content) => doSearch([content], e.target?.value ?? "").length > 0,
-        { text: e.target?.value ?? "", ...searchOptions },
-      );
-    },
-    500,
-  );
+  const onChange = debounce((text: string) => {
+    onSearch((content) => doSearch([content], text), {
+      text: text,
+      ...searchOptions,
+    });
+  }, 500);
 
   const doSearch = (searchList: string[], searchItem: string) => {
     setErrorMessage("");
-    return searchList.filter((item) => {
-      try {
-        let searchItemCopy = searchItem;
-        if (!searchOptions.matchCase) {
-          item = item.toLowerCase();
-          searchItemCopy = searchItemCopy.toLowerCase();
-        }
-        if (searchOptions.matchWholeWord) {
-          const regex = new RegExp(`\\b${searchItemCopy}\\b`);
-          if (searchOptions.useRegularExpression) {
-            const regexWithOptions = new RegExp(searchItemCopy);
-            return regexWithOptions.test(item) && regex.test(item);
-          } else {
-            return regex.test(item);
+    return (
+      searchList.filter((item) => {
+        try {
+          let searchItemCopy = searchItem;
+          if (!searchOptions.matchCase) {
+            item = item.toLowerCase();
+            searchItemCopy = searchItemCopy.toLowerCase();
           }
-        } else if (searchOptions.useRegularExpression) {
-          const regex = new RegExp(searchItemCopy);
-          return regex.test(item);
-        } else {
-          return item.includes(searchItemCopy);
+          if (searchOptions.matchWholeWord) {
+            const regex = new RegExp(`\\b${searchItemCopy}\\b`);
+            if (searchOptions.useRegularExpression) {
+              const regexWithOptions = new RegExp(searchItemCopy);
+              return regexWithOptions.test(item) && regex.test(item);
+            } else {
+              return regex.test(item);
+            }
+          } else if (searchOptions.useRegularExpression) {
+            const regex = new RegExp(searchItemCopy);
+            return regex.test(item);
+          } else {
+            return item.includes(searchItemCopy);
+          }
+        } catch (err) {
+          setErrorMessage(`${err}`);
         }
-      } catch (err) {
-        setErrorMessage(`${err}`);
-      }
-    });
+      }).length > 0
+    );
   };
 
   return (
     <Tooltip title={errorMessage} placement="bottom-start">
       <TextField
-        inputRef={inputRef}
+        value={filterText}
         hiddenLabel
         fullWidth
         size="small"
         autoComplete="off"
         variant="outlined"
         spellCheck="false"
-        placeholder={props.placeholder ?? t("Filter conditions")}
+        placeholder={placeholder ?? t("Filter conditions")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
-        onChange={onChange}
+        onChange={(e) => {
+          setFilterText(() => e.target.value);
+        }}
         InputProps={{
           endAdornment: (
             <Box display="flex">
+              {filterText !== "" && (
+                <Tooltip title={t("Clear")}>
+                  <IconButton
+                    size="small"
+                    sx={{ p: 0.5 }}
+                    onClick={() => setFilterText("")}>
+                    <ClearRounded fontSize="inherit" />
+                  </IconButton>
+                </Tooltip>
+              )}
               <Tooltip title={t("Match Case")}>
                 <IconButton size="small" sx={{ p: 0.5 }}>
                   <SvgIcon
