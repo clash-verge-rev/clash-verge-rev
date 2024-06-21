@@ -78,12 +78,24 @@ const FlexDecorationItems = memo(function FlexDecoratorItems() {
   ));
 });
 
+interface ActivatingProfile {
+  profile: string;
+  chain: string;
+}
+
 const ProfilePage = () => {
   const { t } = useTranslation();
 
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-  const [activating, setActivating] = useLocalStorage("activatingProfile", "");
+  const [activating, setActivating] = useLocalStorage<ActivatingProfile>(
+    "activatingProfile",
+    { profile: "", chain: "" },
+    {
+      serializer: JSON.stringify,
+      deserializer: JSON.parse,
+    },
+  );
   const [loading, setLoading] = useState(false);
   const {
     profiles = {},
@@ -100,7 +112,6 @@ const ProfilePage = () => {
   const chain = profiles.chain || [];
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
-  const [reactivating, setReactivating] = useState(false);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -295,7 +306,10 @@ const ProfilePage = () => {
   const onSelect = useLockFn(async (current: string, force: boolean) => {
     if (!force && current === profiles.current) return;
     // 避免大多数情况下loading态闪烁
-    const reset = setTimeout(() => setActivating(current), 100);
+    const reset = setTimeout(
+      () => setActivating((o) => ({ profile: current, chain: o?.chain ?? "" })),
+      100,
+    );
     try {
       await patchProfiles({ current });
       mutateLogs();
@@ -306,7 +320,7 @@ const ProfilePage = () => {
       Notice.error(err?.message || err.toString(), 4000);
     } finally {
       clearTimeout(reset);
-      setActivating("");
+      setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
     }
   });
 
@@ -323,59 +337,65 @@ const ProfilePage = () => {
         break;
       }
     }
-    if (needReactive && !reactivating) {
-      setChainList(newList);
+    if (needReactive && activating.profile === "" && activating.chain === "") {
       try {
-        setReactivating(true);
+        setChainList(newList);
+        setActivating((o) => ({
+          profile: o?.profile ?? "",
+          chain: newActiveChain[0],
+        }));
         await patchProfiles({ chain: newActiveChain });
         mutateLogs();
         Notice.success("Refresh clash config", 1000);
       } catch (err: any) {
         Notice.error(err.message || err.toString());
       } finally {
-        setReactivating(false);
+        setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
       }
     }
   };
 
   const onEnhance = useLockFn(async () => {
     try {
-      setReactivating(true);
+      setActivating((o) => ({
+        profile: profiles.current!,
+        chain: o?.chain ?? "",
+      }));
       await enhanceProfiles();
       mutateLogs();
       Notice.success(t("Profile Reactivated"), 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
     } finally {
-      setReactivating(false);
+      setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
     }
   });
 
   const onEnable = useLockFn(async (uid: string) => {
     if (chain.includes(uid)) return;
     try {
-      setReactivating(true);
+      setActivating((o) => ({ profile: o?.profile ?? "", chain: uid }));
       const newChain = [...chain, uid];
       await patchProfiles({ chain: newChain });
       mutateLogs();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     } finally {
-      setReactivating(false);
+      setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
     }
   });
 
   const onDisable = useLockFn(async (uid: string) => {
     if (!chain.includes(uid)) return;
     try {
-      setReactivating(true);
+      setActivating((o) => ({ profile: o?.profile ?? "", chain: uid }));
       const newChain = chain.filter((i) => i !== uid);
       await patchProfiles({ chain: newChain });
       mutateLogs();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     } finally {
-      setReactivating(false);
+      setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
     }
   });
 
@@ -454,7 +474,7 @@ const ProfilePage = () => {
 
           <LoadingButton
             size="small"
-            loading={reactivating}
+            loading={activating.profile !== "" || activating.chain !== ""}
             loadingPosition="end"
             variant="contained"
             color="primary"
@@ -463,14 +483,6 @@ const ProfilePage = () => {
             onClick={onEnhance}>
             <span>{t("Reactivate Profiles")}</span>
           </LoadingButton>
-
-          {/* <IconButton
-            size="small"
-            color="primary"
-            title={t("Reactivate Profiles")}
-            onClick={onEnhance}>
-            <LocalFireDepartmentRounded />
-          </IconButton> */}
         </Box>
       }>
       <Stack
@@ -575,13 +587,15 @@ const ProfilePage = () => {
                         },
                       }}
                       selected={
-                        (activating === "" && profiles.current === item.id) ||
-                        activating === item.id
+                        (activating.profile === "" &&
+                          profiles.current === item.id) ||
+                        activating.profile === item.id
                       }
                       isDragging={draggingProfileItem ? true : false}
                       activating={
-                        activating === item.id ||
-                        (profiles.current === item.id && reactivating)
+                        activating.profile === item.id ||
+                        (profiles.current === item.id &&
+                          activating.chain !== "")
                       }
                       itemData={item.profileItem}
                       onSelect={(f) => onSelect(item.id, f)}
@@ -603,13 +617,14 @@ const ProfilePage = () => {
                   boxShadow: "0px 0px 10px 5px rgba(0,0,0,0.2)",
                 }}
                 selected={
-                  (activating === "" &&
+                  (activating.profile === "" &&
                     profiles.current === draggingProfileItem.id) ||
-                  activating === draggingProfileItem.id
+                  activating.profile === draggingProfileItem.id
                 }
                 activating={
-                  activating === draggingProfileItem.id ||
-                  (profiles.current === draggingProfileItem.id && reactivating)
+                  activating.profile === draggingProfileItem.id ||
+                  (profiles.current === draggingProfileItem.id &&
+                    activating.chain !== "")
                 }
                 itemData={draggingProfileItem.profileItem}
                 onSelect={(f) => onSelect(draggingProfileItem.id, f)}
@@ -679,14 +694,19 @@ const ProfilePage = () => {
                                 : "",
                           },
                         }}
-                        selected={!!chain.includes(item.id)}
+                        selected={
+                          !!chain.includes(item.id) ||
+                          activating.chain === item.id
+                        }
                         isDragging={draggingChainItem ? true : false}
                         itemData={item.profileItem}
                         enableNum={chain.length || 0}
                         logInfo={chainLogs[item.id]}
                         reactivating={
-                          !!chain.includes(item.id) &&
-                          (reactivating || activating !== "")
+                          (!!chain.includes(item.id) &&
+                            (activating.chain !== "" ||
+                              activating.profile !== "")) ||
+                          activating.chain === item.id
                         }
                         onEnable={() => onEnable(item.id)}
                         onDisable={() => onDisable(item.id)}
@@ -704,9 +724,7 @@ const ProfilePage = () => {
                     <DraggableItem
                       key={item.id}
                       id={item.id}
-                      data={{
-                        activated: !!chain.includes(item.id),
-                      }}
+                      data={{ activated: !!chain.includes(item.id) }}
                       sx={{
                         display: "flex",
                         flexGrow: 1,
@@ -728,8 +746,10 @@ const ProfilePage = () => {
                         enableNum={chain.length || 0}
                         logInfo={chainLogs[item.id]}
                         reactivating={
-                          !!chain.includes(item.id) &&
-                          (reactivating || activating !== "")
+                          (!!chain.includes(item.id) &&
+                            (activating.chain !== "" ||
+                              activating.profile !== "")) ||
+                          activating.chain === item.id
                         }
                         onEnable={() => onEnable(item.id)}
                         onDisable={() => onDisable(item.id)}
@@ -756,8 +776,10 @@ const ProfilePage = () => {
                       enableNum={chain.length || 0}
                       logInfo={chainLogs[draggingChainItem.id]}
                       reactivating={
-                        !!chain.includes(draggingChainItem.id) &&
-                        (reactivating || activating !== "")
+                        (!!chain.includes(draggingChainItem.id) &&
+                          (activating.chain !== "" ||
+                            activating.profile !== "")) ||
+                        activating.chain === draggingChainItem.id
                       }
                       onEnable={() => onEnable(draggingChainItem.id)}
                       onDisable={() => onDisable(draggingChainItem.id)}
