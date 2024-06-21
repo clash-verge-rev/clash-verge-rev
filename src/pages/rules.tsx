@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import { Box, IconButton } from "@mui/material";
 import { getRuleProviders, getRules } from "@/services/api";
-import { BaseEmpty, BasePage, Notice } from "@/components/base";
+import { BaseEmpty, BasePage } from "@/components/base";
 import { RuleItem } from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { BaseSearchBox } from "@/components/base/base-search-box";
@@ -65,17 +65,14 @@ const RulesPage = () => {
   }, [data, match, ruleProvidersPaths]);
 
   const getAllRuleProvidersPaths = async () => {
-    try {
-      let pathsMap = await getCurrentProfileRuleProvidersPath();
-      for (const name in pathsMap) {
-        const contents = await readTextFile(pathsMap[name]);
-        const payloadKey = name + payloadSuffix;
-        pathsMap[payloadKey] = contents;
-      }
-      setRuleProvidersPaths(pathsMap);
-    } catch (error) {
-      Notice.error(t("Read Rule Providers Error"));
+    let pathsMap = await getCurrentProfileRuleProvidersPath();
+    // 读取规则集文件内容
+    for (const name in pathsMap) {
+      const payloadKey = name + payloadSuffix;
+      const contents = await readTextFile(pathsMap[name]);
+      pathsMap[payloadKey] = contents;
     }
+    setRuleProvidersPaths(pathsMap);
   };
 
   useEffect(() => {

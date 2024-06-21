@@ -287,6 +287,7 @@
 
   "Expand All": "Expand All",
   "Collapse All": "Collapse All",
+  "Update Rule Provider Error": "[ {{name}} ] Update Failed：{{errorMsg}}",
   "Read Rule Providers Error": "Failed to read rule providers, please check if the rule providers has been updated and synchronized.",
 
   "Regenerate Template Content": "Regenerate Template Content"

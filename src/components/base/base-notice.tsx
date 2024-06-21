@@ -38,7 +38,7 @@ const NoticeInner = (props: InnerProps) => {
 
     appWindow.theme().then((m) => m && setIsDark(m === "dark"));
     const unlisten = appWindow.onThemeChanged((e) =>
-      setIsDark(e.payload === "dark")
+      setIsDark(e.payload === "dark"),
     );
 
     return () => {
@@ -56,8 +56,7 @@ const NoticeInner = (props: InnerProps) => {
 
         <Typography
           component="span"
-          sx={{ ml: 1, wordWrap: "break-word", width: "calc(100% - 35px)" }}
-        >
+          sx={{ ml: 1, wordWrap: "break-word", width: "calc(100% - 35px)" }}>
           {message}
         </Typography>
       </Box>

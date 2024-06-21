@@ -14,10 +14,10 @@ import {
   Divider,
   keyframes,
 } from "@mui/material";
-import { RefreshRounded } from "@mui/icons-material";
+import { Error, RefreshRounded } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { getRuleProviders, ruleProviderUpdate } from "@/services/api";
-import { BaseDialog } from "../base";
+import { BaseDialog, Notice } from "@/components/base";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -27,13 +27,14 @@ const round = keyframes`
 export const ProviderButton = () => {
   const { t } = useTranslation();
   const { data } = useSWR("getRuleProviders", getRuleProviders);
+  const entries = Object.entries(data || {});
+  const keys = entries.map(([key]) => key);
 
   const [open, setOpen] = useState(false);
 
-  const hasProvider = Object.keys(data || {}).length > 0;
-  const [updating, setUpdating] = useState(
-    Object.keys(data || {}).map(() => false),
-  );
+  const hasProvider = keys.length > 0;
+  const [updating, setUpdating] = useState(keys.map(() => false));
+  const [errorItems, setErrorItems] = useState<string[]>([]);
 
   const setUpdatingAt = (status: boolean, index: number) => {
     setUpdating((prev) => {
@@ -42,15 +43,33 @@ export const ProviderButton = () => {
       return next;
     });
   };
+
   const handleUpdate = async (key: string, index: number) => {
     setUpdatingAt(true, index);
     ruleProviderUpdate(key)
       .then(async () => {
-        setUpdatingAt(false, index);
-        await mutate("getRules");
-        await mutate("getRuleProviders");
+        setErrorItems((pre) => {
+          if (pre?.includes(key)) {
+            return pre.filter((item) => item !== key);
+          }
+          return pre;
+        });
       })
-      .catch(async () => {
+      .catch((e: any) => {
+        Notice.error(
+          t("Update Rule Provider Error", {
+            name: `${key}`,
+            errorMsg: e.message,
+          }),
+        );
+        setErrorItems((pre) => {
+          if (pre?.includes(key)) {
+            return pre;
+          }
+          return [...pre, key];
+        });
+      })
+      .finally(async () => {
         setUpdatingAt(false, index);
         await mutate("getRules");
         await mutate("getRuleProviders");
@@ -73,16 +92,16 @@ export const ProviderButton = () => {
         open={open}
         title={
           <Box display="flex" justifyContent="space-between" gap={1}>
-            <Typography variant="h6">{t("Rule Provider")}</Typography>
+            <Typography variant="h6">
+              {t("Rule Provider")} - {}
+            </Typography>
             <Button
               variant="contained"
               size="small"
               onClick={async () => {
-                Object.entries(data || {}).forEach(
-                  async ([key, item], index) => {
-                    await handleUpdate(key, index);
-                  },
-                );
+                entries.forEach(async ([key, item], index) => {
+                  await handleUpdate(key, index);
+                });
               }}>
               {t("Update All")}
             </Button>
@@ -94,7 +113,7 @@ export const ProviderButton = () => {
         onClose={() => setOpen(false)}
         onCancel={() => setOpen(false)}>
         <List sx={{ py: 0, minHeight: 250 }}>
-          {Object.entries(data || {}).map(([key, item], index) => {
+          {entries.map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
             return (
               <>
@@ -109,7 +128,10 @@ export const ProviderButton = () => {
                   <ListItemText
                     sx={{ px: 1 }}
                     primary={
-                      <>
+                      <Box display={"flex"} alignItems={"center"}>
+                        {errorItems?.includes(key) && (
+                          <Error fontSize="small" sx={{ margin: 0 }} />
+                        )}
                         <Typography
                           variant="h6"
                           component="span"
@@ -120,7 +142,7 @@ export const ProviderButton = () => {
                         <TypeBox component="span" sx={{ marginLeft: "8px" }}>
                           {item.ruleCount}
                         </TypeBox>
-                      </>
+                      </Box>
                     }
                     secondary={
                       <>
