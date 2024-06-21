@@ -9,7 +9,11 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useThemeMode } from "@/services/states";
-import { readProfileFile, saveProfileFile } from "@/services/cmds";
+import {
+  getEnhanceTemplate,
+  readProfileFile,
+  saveProfileFile,
+} from "@/services/cmds";
 import { Notice } from "@/components/base";
 import { nanoid } from "nanoid";
 import getSystem from "@/utils/get-system";
@@ -72,26 +76,6 @@ monaco.languages.registerCompletionItemProvider("javascript", {
   }),
 });
 
-const generateMergeYaml = `# Profile Enhancement Merge Template for Clash Verge
-
-prepend-rules:
-
-prepend-proxies:
-
-prepend-proxy-groups:
-
-append-rules:
-
-append-proxies:
-
-append-proxy-groups:`;
-
-const generateMergeJS = `// Define main function (script entry)
-
-function main(config) {
-  return config;
-}`;
-
 export const EditorViewer = (props: Props) => {
   const {
     title,
@@ -110,6 +94,7 @@ export const EditorViewer = (props: Props) => {
   const registerCodeLensRef = useRef<any>();
   const themeMode = useThemeMode();
   const { size } = useWindowSize();
+
   useEffect(() => {
     if (!open) return;
 
@@ -161,11 +146,9 @@ export const EditorViewer = (props: Props) => {
         const generateCommand = instanceRef.current?.addCommand(
           0,
           () => {
-            if (language === "yaml") {
-              instanceRef.current?.setValue(generateMergeYaml);
-            } else if (language === "javascript") {
-              instanceRef.current?.setValue(generateMergeJS);
-            }
+            getEnhanceTemplate(language).then((templateContent) => {
+              instanceRef.current?.setValue(templateContent);
+            });
           },
           "",
         );

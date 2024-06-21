@@ -106,6 +106,7 @@ fn main() -> std::io::Result<()> {
             // cmds::update_hotkeys,
             // profile
             cmds::get_profiles,
+            cmds::get_enhance_template,
             cmds::enhance_profiles,
             cmds::patch_profiles_config,
             cmds::view_profile,

@@ -30,6 +30,10 @@ export async function getProfiles() {
   return invoke<IProfilesConfig>("get_profiles");
 }
 
+export async function getEnhanceTemplate(profileSpace: string) {
+  return invoke<string>("get_enhance_template", { language: profileSpace });
+}
+
 export async function enhanceProfiles() {
   return invoke<void>("enhance_profiles");
 }

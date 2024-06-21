@@ -2,12 +2,15 @@ use crate::{
     config::*,
     core::*,
     feat,
-    utils::{dirs, help, resolve},
+    utils::{dirs, help, resolve, tmpl},
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use serde_yaml::Mapping;
-use std::{collections::{HashMap, VecDeque}, path::PathBuf};
+use std::{
+    collections::{HashMap, VecDeque},
+    path::PathBuf,
+};
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
@@ -15,6 +18,15 @@ type CmdResult<T = ()> = Result<T, String>;
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
     Ok(Config::profiles().data().clone())
+}
+
+#[tauri::command]
+pub fn get_enhance_template(language: String) -> CmdResult<String> {
+    match language.as_str() {
+        "yaml" => Ok(tmpl::ITEM_MERGE.into()),
+        "javascript" => Ok(tmpl::ITEM_SCRIPT.into()),
+        _ => Ok("".into()),
+    }
 }
 
 #[tauri::command]
