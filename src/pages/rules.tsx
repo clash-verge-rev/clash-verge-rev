@@ -1,8 +1,8 @@
 import useSWR from "swr";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
-import { Box } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import { getRuleProviders, getRules } from "@/services/api";
 import { BaseEmpty, BasePage, Notice } from "@/components/base";
 import { RuleItem } from "@/components/rule/rule-item";
@@ -10,6 +10,7 @@ import { ProviderButton } from "@/components/rule/provider-button";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { getCurrentProfileRuleProvidersPath } from "@/services/cmds";
 import { readTextFile } from "@tauri-apps/api/fs";
+import { UnfoldLess, UnfoldMore } from "@mui/icons-material";
 
 const RulesPage = () => {
   const { t } = useTranslation();
@@ -18,14 +19,16 @@ const RulesPage = () => {
     "getRuleProviders",
     getRuleProviders,
   );
+  const [rules, setRules] = useState(data);
   const [match, setMatch] = useState(() => (_: string) => true);
   const [ruleProvidersPaths, setRuleProvidersPaths] = useState<
     Record<string, string>
   >({});
   const payloadSuffix = "-payload";
+  const hasRuleSet = rules.findIndex((item) => item.type === "RuleSet") !== -1;
 
-  const rules = useMemo(() => {
-    return data
+  useEffect(() => {
+    const filterData = data
       .map((item) => {
         if (item.type === "RuleSet") {
           const itemName = item.payload;
@@ -45,7 +48,8 @@ const RulesPage = () => {
                 o.trim().length > 0 &&
                 !o.includes("#") &&
                 !o.includes("payload"),
-            );
+            )
+            .map((o) => o.trim());
           payloadArr.forEach((payload) => {
             if (match(payload)) {
               item.matchPayloadItems.push(payload);
@@ -57,7 +61,8 @@ const RulesPage = () => {
           (item.matchPayloadItems && item.matchPayloadItems.length > 0)
         );
       });
-  }, [data, ruleProvidersPaths, match]);
+    setRules(filterData);
+  }, [data, match, ruleProvidersPaths]);
 
   const getAllRuleProvidersPaths = async () => {
     try {
@@ -84,6 +89,38 @@ const RulesPage = () => {
       contentStyle={{ height: "100%" }}
       header={
         <Box display="flex" alignItems="center" gap={1}>
+          {hasRuleSet && (
+            <>
+              <IconButton
+                title={t("Expand All")}
+                color="primary"
+                size="small"
+                onClick={() => {
+                  setRules((pre) =>
+                    pre.map((o) => {
+                      o.expanded = true;
+                      return o;
+                    }),
+                  );
+                }}>
+                <UnfoldMore />
+              </IconButton>
+              <IconButton
+                title={t("Collapse All")}
+                color="primary"
+                size="small"
+                onClick={() => {
+                  setRules((pre) =>
+                    pre.map((o) => {
+                      o.expanded = false;
+                      return o;
+                    }),
+                  );
+                }}>
+                <UnfoldLess />
+              </IconButton>
+            </>
+          )}
           <ProviderButton />
         </Box>
       }>
@@ -108,9 +145,23 @@ const RulesPage = () => {
         {rules.length > 0 ? (
           <Virtuoso
             data={rules}
-            increaseViewportBy={256}
+            totalCount={rules.length}
             itemContent={(index, item) => (
-              <RuleItem index={index + 1} value={item} />
+              <RuleItem
+                key={item.payload}
+                index={index + 1}
+                value={item}
+                onExpand={(expanded) => {
+                  setRules((pre) =>
+                    pre.map((o) => {
+                      if (o.payload === item.payload) {
+                        o.expanded = !expanded;
+                      }
+                      return o;
+                    }),
+                  );
+                }}
+              />
             )}
             followOutput={"smooth"}
           />

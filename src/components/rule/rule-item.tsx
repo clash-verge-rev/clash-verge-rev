@@ -9,7 +9,6 @@ import {
   Collapse,
   alpha,
 } from "@mui/material";
-import { useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Virtuoso } from "react-virtuoso";
 
@@ -38,6 +37,7 @@ const COLOR = [
 interface Props {
   index: number;
   value: IRuleItem;
+  onExpand: (expanded: boolean) => void;
 }
 
 const parseColor = (text: string) => {
@@ -52,8 +52,8 @@ const parseColor = (text: string) => {
 };
 
 export const RuleItem = (props: Props) => {
-  const { index, value } = props;
-  const [expanded, setExpanded] = useState(value.expanded ?? false);
+  const { index, value, onExpand } = props;
+  const expanded = value.type === "RuleSet" && value.expanded;
 
   return (
     <Card
@@ -103,8 +103,7 @@ export const RuleItem = (props: Props) => {
         ]}
         onClick={() => {
           if (value.type === "RuleSet") {
-            value.expanded = !expanded;
-            setExpanded(value.expanded);
+            onExpand(expanded);
           }
         }}>
         <Typography
@@ -147,7 +146,7 @@ export const RuleItem = (props: Props) => {
       {value.matchPayloadItems && (
         <Collapse
           in={expanded}
-          timeout="auto"
+          timeout={0}
           unmountOnExit
           sx={[
             ({ palette: { primary } }) => {
