@@ -44,7 +44,7 @@ export const ProviderButton = () => {
     });
   };
 
-  const handleUpdate = async (key: string, index: number) => {
+  const handleUpdate = async (key: string, index: number, retryCount = 5) => {
     setUpdatingAt(true, index);
     ruleProviderUpdate(key)
       .then(async () => {
@@ -54,25 +54,33 @@ export const ProviderButton = () => {
           }
           return pre;
         });
-      })
-      .catch((e: any) => {
-        Notice.error(
-          t("Update Rule Provider Error", {
-            name: `${key}`,
-            errorMsg: e.message,
-          }),
-        );
-        setErrorItems((pre) => {
-          if (pre?.includes(key)) {
-            return pre;
-          }
-          return [...pre, key];
-        });
-      })
-      .finally(async () => {
         setUpdatingAt(false, index);
         await mutate("getRules");
         await mutate("getRuleProviders");
+      })
+      .catch(async (e: any) => {
+        if (retryCount > 0) {
+          // retry after 1 second
+          setTimeout(async () => {
+            await handleUpdate(key, index, retryCount - 1);
+          }, 1000);
+        } else {
+          Notice.error(
+            t("Update Rule Provider Error", {
+              name: `${key}`,
+              errorMsg: e.message,
+            }),
+          );
+          setErrorItems((pre) => {
+            if (pre?.includes(key)) {
+              return pre;
+            }
+            return [...pre, key];
+          });
+          setUpdatingAt(false, index);
+          await mutate("getRules");
+          await mutate("getRuleProviders");
+        }
       });
   };
 
@@ -91,10 +99,13 @@ export const ProviderButton = () => {
       <BaseDialog
         open={open}
         title={
-          <Box display="flex" justifyContent="space-between" gap={1}>
-            <Typography variant="h6">
-              {t("Rule Provider")} - {}
-            </Typography>
+          <Box display="flex" justifyContent={"space-between"} gap={1}>
+            <Box display={"flex"} alignItems={"center"}>
+              <Typography variant="h6">{t("Rule Provider")}</Typography>
+              <TypeBox component="span" sx={{ ml: 1, fontSize: 14 }}>
+                {entries.length}
+              </TypeBox>
+            </Box>
             <Button
               variant="contained"
               size="small"

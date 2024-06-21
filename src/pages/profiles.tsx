@@ -580,10 +580,8 @@ const ProfilePage = () => {
                     <ProfileItem
                       sx={{
                         "& > .MuiBox-root": {
-                          bgcolor:
-                            draggingProfileItem?.id === item.id
-                              ? "var(--background-color-alpha)"
-                              : "",
+                          opacity:
+                            draggingProfileItem?.id === item.id ? "0.8" : "1",
                         },
                       }}
                       selected={
@@ -676,9 +674,7 @@ const ProfilePage = () => {
                     <DraggableItem
                       key={item.id}
                       id={item.id}
-                      data={{
-                        activated: !!chain.includes(item.id),
-                      }}
+                      data={{ activated: !!chain.includes(item.id) }}
                       sx={{
                         display: "flex",
                         flexGrow: 1,
@@ -688,10 +684,8 @@ const ProfilePage = () => {
                       <ProfileMore
                         sx={{
                           "& > .MuiBox-root": {
-                            bgcolor:
-                              draggingChainItem?.id === item.id
-                                ? "var(--background-color-alpha)"
-                                : "",
+                            opacity:
+                              draggingChainItem?.id === item.id ? "0.8" : "1",
                           },
                         }}
                         selected={
@@ -734,10 +728,8 @@ const ProfilePage = () => {
                       <ProfileMore
                         sx={{
                           "& > .MuiBox-root": {
-                            bgcolor:
-                              draggingChainItem?.id === item.id
-                                ? "var(--background-color-alpha)"
-                                : "",
+                            opacity:
+                              draggingChainItem?.id === item.id ? "0.8" : "1",
                           },
                         }}
                         selected={!!chain.includes(item.id)}
