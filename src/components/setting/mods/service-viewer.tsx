@@ -99,7 +99,9 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
 
       {(state === "unknown" || state === "uninstall") && (
         <Typography>
-          {t("Information")}: {t("Service Mode Error")}
+          {t(
+            "Information: Please make sure that the Clash Verge Service is installed and enabled",
+          )}
         </Typography>
       )}
 
