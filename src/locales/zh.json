@@ -287,5 +287,5 @@
 
   "Read Rule Providers Error": "读取规则集失败, 请确认规则集文件是否已经更新同步",
 
-  "Reset Content": "重置内容"
+  "Regenerate Template Content": "重新生成模板内容"
 }

@@ -287,5 +287,5 @@
 
   "Read Rule Providers Error": "Failed to read rule providers, please check if the rule providers has been updated and synchronized.",
 
-  "Reset Content": "Reset Content"
+  "Regenerate Template Content": "Regenerate Template Content"
 }

@@ -182,10 +182,10 @@ export const EditorViewer = (props: Props) => {
                       endLineNumber: 2,
                       endColumn: 1,
                     },
-                    id: "Reset Content",
+                    id: "Regenerate Template Content",
                     command: {
                       id: generateCommand!,
-                      title: t("Reset Content"),
+                      title: t("Regenerate Template Content"),
                     },
                   },
                 ],
