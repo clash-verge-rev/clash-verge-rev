@@ -20,6 +20,7 @@
     "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
     "prepare": "husky",
     "cargo:check": "cd src-tauri && cargo check",
+    "cargo:clean": "cd src-tauri && cargo clean",
     "cargo:update": "cd src-tauri && cargo update"
   },
   "dependencies": {
