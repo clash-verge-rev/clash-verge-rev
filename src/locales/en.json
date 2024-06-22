@@ -230,6 +230,7 @@
   "Check for Updates": "Check for Updates",
   "Go to Release Page": "Go to Release Page",
   "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
+  "Break Change Update Error": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version",
   "Open Dev Tools": "Open Dev Tools",
   "Exit": "Exit",
   "Verge Version": "Verge Version",
