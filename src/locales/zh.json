@@ -230,6 +230,7 @@
   "Check for Updates": "检查更新",
   "Go to Release Page": "前往发布页",
   "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换",
+  "Break Change Update Error": "此版本为重大更新，不支持应用内更新，请卸载后手动下载安装",
   "Open Dev Tools": "打开开发者工具",
   "Exit": "退出",
   "Verge Version": "Verge 版本",

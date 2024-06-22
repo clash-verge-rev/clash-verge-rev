@@ -44,9 +44,21 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
     return updateInfo?.manifest?.body;
   }, [updateInfo]);
 
+  const breakChangeFlag = useMemo(() => {
+    if (!updateInfo?.manifest?.body) {
+      return false;
+    }
+    return updateInfo?.manifest?.body.toLowerCase().includes("break change");
+  }, [updateInfo]);
+
   const onUpdate = useLockFn(async () => {
     if (portableFlag) {
       Notice.error(t("Portable Updater Error"));
+      return;
+    }
+    if (!updateInfo?.manifest?.body) return;
+    if (breakChangeFlag) {
+      Notice.error(t("Break Change Update Error"));
       return;
     }
     if (updateState) return;
