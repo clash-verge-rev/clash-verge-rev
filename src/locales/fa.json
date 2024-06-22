@@ -1,4 +1,7 @@
 {
+  "millis": "میلی‌ثانیه",
+  "mins": "دقیقه",
+
   "Back": "بازگشت",
   "Close": "بستن",
   "Cancel": "لغو",
@@ -208,7 +211,8 @@
   "Auto Close Connections": "بستن خودکار اتصالات",
   "Auto Check Update": "بررسی خودکار به‌روزرسانی",
   "Enable Builtin Enhanced": "فعال کردن تقویت داخلی",
-  "Proxy Layout Column": "ستون چیدمان پراکسی",
+  "Proxy Layout Columns": "ستون چیدمان پراکسی",
+  "Auto Columns": "ستون‌های خودکار",
   "Auto Log Clean": "پاکسازی خودکار لاگ",
   "Never Clean": "هرگز پاک نکن",
   "Retain 7 Days": "نگهداری به مدت 7 روز",

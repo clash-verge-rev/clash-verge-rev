@@ -95,6 +95,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           if (form.type !== "remote" && form.type !== "local") {
             delete form.option;
           }
+
           if (form.option?.update_interval) {
             form.option.update_interval = +form.option.update_interval;
           } else {
@@ -228,16 +229,11 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               <TextField
                 {...text}
                 {...field}
-                onChange={(e) => {
-                  e.target.value = e.target.value
-                    ?.replace(/\D/, "")
-                    .slice(0, 10);
-                  field.onChange(e);
-                }}
+                type="number"
                 label={t("Update Interval")}
                 InputProps={{
                   endAdornment: (
-                    <InputAdornment position="end">mins</InputAdornment>
+                    <InputAdornment position="end">{t("mins")}</InputAdornment>
                   ),
                 }}
               />
@@ -248,10 +244,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         {isLocal && openType === "new" && (
           <FileInput
             onChange={(file, val) => {
-              if (!formIns.getValues("name")) {
-                const name = file.name.substring(0, file.name.lastIndexOf("."));
-                formIns.setValue("name", name);
-              }
+              formIns.setValue("name", formIns.getValues("name") || file.name);
               fileDataRef.current = val;
             }}
           />

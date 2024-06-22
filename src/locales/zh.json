@@ -1,4 +1,7 @@
 {
+  "millis": "毫秒",
+  "mins": "分钟",
+
   "Back": "返回",
   "Close": "关闭",
   "Cancel": "取消",
@@ -54,7 +57,7 @@
   "Update Interval": "更新间隔",
   "Choose File": "选择文件",
   "Use System Proxy": "使用系统代理更新",
-  "Use Clash Proxy": "使用 Clash 代理更新",
+  "Use Clash Proxy": "使用内核代理更新",
   "Accept Invalid Certs (Danger)": "允许无效证书 (危险)",
   "Refresh": "刷新",
   "Home": "首页",
@@ -208,7 +211,8 @@
   "Auto Close Connections": "自动关闭连接",
   "Auto Check Update": "自动检查更新",
   "Enable Builtin Enhanced": "内置增强功能",
-  "Proxy Layout Column": "代理页布局列数",
+  "Proxy Layout Columns": "代理页布局列数",
+  "Auto Columns": "自动列数",
   "Auto Log Clean": "自动清理日志",
   "Never Clean": "不清理",
   "Retain 7 Days": "保留7天",
