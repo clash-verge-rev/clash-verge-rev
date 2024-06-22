@@ -36,6 +36,9 @@ export const SwitchLovely = styled(Switch)(({ theme }) => {
       width: size,
       height: size,
     },
+    [`& .${switchClasses.disabled} .${switchClasses.thumb}`]: {
+      opacity: "0.3 !important",
+    },
     [`& .${switchClasses.track}`]: {
       borderRadius: 40,
       border: `solid ${theme.palette.grey[400]}`,
@@ -44,6 +47,9 @@ export const SwitchLovely = styled(Switch)(({ theme }) => {
       opacity: 1,
       transition: theme.transitions.create(["background-color", "border"]),
       boxSizing: "border-box",
+    },
+    [`& .${switchClasses.disabled}+.${switchClasses.track}`]: {
+      opacity: "0.3 !important",
     },
   };
 });
