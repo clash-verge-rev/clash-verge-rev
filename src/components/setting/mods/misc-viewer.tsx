@@ -8,6 +8,7 @@ import {
   MenuItem,
   Select,
   TextField,
+  InputAdornment,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
@@ -81,12 +82,12 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             size="small"
             sx={{ width: 100, "> div": { py: "7.5px" } }}
             value={values.appLogLevel}
-            onChange={(e) => {
+            onChange={(e) =>
               setValues((v) => ({
                 ...v,
                 appLogLevel: e.target.value as string,
-              }));
-            }}
+              }))
+            }
           >
             {["trace", "debug", "info", "warn", "error", "silent"].map((i) => (
               <MenuItem value={i} key={i}>
@@ -130,20 +131,20 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Proxy Layout Column")} />
+          <ListItemText primary={t("Proxy Layout Columns")} />
           <Select
             size="small"
             sx={{ width: 135, "> div": { py: "7.5px" } }}
             value={values.proxyLayoutColumn}
-            onChange={(e) => {
+            onChange={(e) =>
               setValues((v) => ({
                 ...v,
                 proxyLayoutColumn: e.target.value as number,
-              }));
-            }}
+              }))
+            }
           >
             <MenuItem value={6} key={6}>
-              Auto
+              {t("Auto Columns")}
             </MenuItem>
             {[1, 2, 3, 4, 5].map((i) => (
               <MenuItem value={i} key={i}>
@@ -159,12 +160,12 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             size="small"
             sx={{ width: 135, "> div": { py: "7.5px" } }}
             value={values.autoLogClean}
-            onChange={(e) => {
+            onChange={(e) =>
               setValues((v) => ({
                 ...v,
                 autoLogClean: e.target.value as number,
-              }));
-            }}
+              }))
+            }
           >
             {[
               { key: "Never Clean", value: 0 },
@@ -214,6 +215,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 defaultLatencyTimeout: parseInt(e.target.value),
               }))
             }
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">{t("millis")}</InputAdornment>
+              ),
+            }}
           />
         </ListItem>
       </List>

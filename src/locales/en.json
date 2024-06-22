@@ -1,4 +1,7 @@
 {
+  "millis": "millis",
+  "mins": "mins",
+
   "Back": "Back",
   "Close": "Close",
   "Cancel": "Cancel",
@@ -208,7 +211,8 @@
   "Auto Close Connections": "Auto Close Connections",
   "Auto Check Update": "Auto Check Update",
   "Enable Builtin Enhanced": "Enable Builtin Enhanced",
-  "Proxy Layout Column": "Proxy Layout Column",
+  "Proxy Layout Columns": "Proxy Layout Columns",
+  "Auto Columns": "Auto Columns",
   "Auto Log Clean": "Auto Log Clean",
   "Never Clean": "Never Clean",
   "Retain 7 Days": "Retain 7 Days",

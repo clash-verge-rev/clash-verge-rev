@@ -135,7 +135,7 @@ impl PrfItem {
             "local" => {
                 let name = item.name.unwrap_or("Local File".into());
                 let desc = item.desc.unwrap_or("".into());
-                PrfItem::from_local(name, desc, file_data)
+                PrfItem::from_local(name, desc, file_data, item.option)
             }
             "merge" => {
                 let name = item.name.unwrap_or("Merge".into());
@@ -153,7 +153,12 @@ impl PrfItem {
 
     /// ## Local type
     /// create a new item from name/desc
-    pub fn from_local(name: String, desc: String, file_data: Option<String>) -> Result<PrfItem> {
+    pub fn from_local(
+        name: String,
+        desc: String,
+        file_data: Option<String>,
+        option: Option<PrfOption>,
+    ) -> Result<PrfItem> {
         let uid = help::get_uid("l");
         let file = format!("{uid}.yaml");
 
@@ -166,7 +171,10 @@ impl PrfItem {
             url: None,
             selected: None,
             extra: None,
-            option: None,
+            option: Some(PrfOption {
+                update_interval: option.unwrap_or_default().update_interval,
+                ..PrfOption::default()
+            }),
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
