@@ -550,7 +550,6 @@ const ProfilePage = () => {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          // onDragStart={(event) => {}}
           onDragOver={(event) => {
             const { over } = event;
             if (over) {
@@ -650,7 +649,6 @@ const ProfilePage = () => {
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
-              // onDragStart={(event) => {}}
               onDragOver={(event) => {
                 const { over } = event;
                 if (over) {

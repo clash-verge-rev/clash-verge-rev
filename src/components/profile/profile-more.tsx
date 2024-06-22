@@ -226,7 +226,9 @@ export const ProfileMore = (props: Props) => {
             <Typography
               noWrap
               title={itemData.desc}
-              sx={i18n.language === "zh" ? { width: "calc(100% - 75px)" } : {}}>
+              sx={{
+                ...(i18n.language === "zh" && { width: "calc(100% - 75px)" }),
+              }}>
               {itemData.desc}
             </Typography>
           )}
@@ -255,10 +257,9 @@ export const ProfileMore = (props: Props) => {
                 { minWidth: 120 },
                 (theme) => {
                   return {
-                    color:
-                      item.label === "Delete"
-                        ? theme.palette.error.main
-                        : undefined,
+                    ...(item.label === "Delete" && {
+                      color: theme.palette.error.main,
+                    }),
                   };
                 },
               ]}

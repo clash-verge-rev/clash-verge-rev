@@ -284,7 +284,7 @@ export const ProfileItem = (props: Props) => {
                 p: "3px",
                 top: -1,
                 right: -5,
-                animation: loading ? `1s linear infinite ${round}` : "none",
+                ...(loading && { animation: `1s linear infinite ${round}` }),
               }}
               size="small"
               color="inherit"

@@ -79,7 +79,9 @@ export const RuleItem = (props: Props) => {
       <ListItemButton
         sx={[
           {
-            borderBottom: expanded ? "1px solid var(--divider-color)" : "none",
+            ...(expanded && {
+              borderBottom: "1px solid var(--divider-color)",
+            }),
           },
           ({ palette: { mode, primary } }) => {
             const bgcolor =
@@ -88,9 +90,9 @@ export const RuleItem = (props: Props) => {
                 : alpha(primary.main, 0.35);
             const color = expanded ? primary.main : "";
             return {
-              bgcolor: expanded ? bgcolor : "",
+              ...(expanded && { bgcolor }),
               "&:hover": {
-                bgcolor: expanded ? bgcolor : "",
+                ...(expanded && { bgcolor }),
               },
               "& .MuiTypography-root": {
                 color,

@@ -163,9 +163,9 @@ export const ProviderButton = () => {
                     title={`${t("Update")}${t("Proxy Provider")}`}
                     onClick={() => handleUpdate(key, index)}
                     sx={{
-                      animation: updating[index]
-                        ? `1s linear infinite ${round}`
-                        : "none",
+                      ...(updating[index] && {
+                        animation: `1s linear infinite ${round}`,
+                      }),
                     }}>
                     <RefreshRounded />
                   </IconButton>

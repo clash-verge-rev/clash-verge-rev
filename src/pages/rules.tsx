@@ -160,7 +160,6 @@ const RulesPage = () => {
                 }}
               />
             )}
-            followOutput={"smooth"}
           />
         ) : (
           <BaseEmpty text="No Rules" />
