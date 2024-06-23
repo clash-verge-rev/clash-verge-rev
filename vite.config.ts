@@ -98,6 +98,8 @@ export default defineConfig(({ command }) => {
                 return "monaco-editor";
               }
               return "vendor";
+            } else if (id.includes("src/components/base")) {
+              return "base-components";
             }
           },
         },
