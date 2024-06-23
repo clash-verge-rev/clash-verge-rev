@@ -100,7 +100,7 @@ export const ProxyRender = (props: RenderProps) => {
         style={{
           background: itembackgroundcolor,
           height: "70px",
-          margin: "8px 8px",
+          margin: "8px 8px 0",
           borderRadius: "8px",
         }}
         onClick={() => onHeadState(group.name, { open: !headState?.open })}>

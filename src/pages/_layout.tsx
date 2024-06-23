@@ -225,6 +225,7 @@ const Layout = () => {
             )}
 
             <div className="the-content">{routersEles}</div>
+            {/* when proxies page expanded item too musch, this transition will slowly */}
             {/* <TransitionGroup className="the-content">
               <CSSTransition
                 key={location.pathname}

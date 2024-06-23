@@ -149,7 +149,7 @@ export const ProxyGroups = (props: Props) => {
         }),
     ) ?? 64;
   const [groupWidth, setGroupWidth] = useState(0);
-  const [open, setOpen] = useState(false);
+  const open = groupWidth !== 0;
 
   return (
     <Box display={"flex"} flexDirection={"row"} width={"100%"} height={"100%"}>
@@ -244,9 +244,7 @@ export const ProxyGroups = (props: Props) => {
                 cursor: "pointer",
               }}
               onClick={() => {
-                const nextOpen = !open;
-                setOpen(nextOpen);
-                setGroupWidth(nextOpen ? sidebarWidth : 0);
+                setGroupWidth((prev) => (prev === 0 ? sidebarWidth : 0));
               }}>
               <ChevronRight
                 sx={{

@@ -1,10 +1,3 @@
-import LogsPage from "./logs";
-import ProxiesPage from "./proxies";
-import TestPage from "./test";
-import ProfilesPage from "./profiles";
-import SettingsPage from "./settings";
-import ConnectionsPage from "./connections";
-import RulesPage from "./rules";
 import { BaseErrorBoundary } from "@/components/base";
 
 import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
@@ -22,6 +15,17 @@ import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import { lazy, Suspense } from "react";
+import LoadingPage from "@/pages/loading";
+
+// const LoadingPage = lazy(() => import("./loading"));
+const ProxiesPage = lazy(() => import("./proxies"));
+const ProfilesPage = lazy(() => import("./profiles"));
+const ConnectionsPage = lazy(() => import("./connections"));
+const RulesPage = lazy(() => import("./rules"));
+const LogsPage = lazy(() => import("./logs"));
+const TestPage = lazy(() => import("./test"));
+const SettingsPage = lazy(() => import("./settings"));
 
 export const routers = [
   {
@@ -69,6 +73,8 @@ export const routers = [
 ].map((router) => ({
   ...router,
   element: (
-    <BaseErrorBoundary key={router.label}>{router.element}</BaseErrorBoundary>
+    <BaseErrorBoundary key={router.label}>
+      <Suspense fallback={<LoadingPage />}>{router.element}</Suspense>
+    </BaseErrorBoundary>
   ),
 }));
