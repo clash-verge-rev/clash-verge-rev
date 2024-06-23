@@ -4,6 +4,7 @@ mod core;
 pub mod handle;
 pub mod hotkey;
 pub mod logger;
+pub mod manager;
 pub mod service;
 pub mod sysopt;
 pub mod timer;
