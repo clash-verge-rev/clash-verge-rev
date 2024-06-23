@@ -85,7 +85,7 @@ const SettingSystem = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_tun_mode: e })}
           onGuard={(e) => patchVerge({ enable_tun_mode: e })}>
-          <SwitchLovely disabled={serviceStatus !== "active"} edge="end" />
+          <SwitchLovely edge="end" />
         </GuardState>
       </SettingItem>
 
