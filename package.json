@@ -64,7 +64,7 @@
   "devDependencies": {
     "@actions/github": "6.0.0",
     "@tauri-apps/cli": "1.5.14",
-    "@types/cli-color": "^2.0.6",
+    "@types/cli-color": "2.0.6",
     "@types/fs-extra": "11.0.4",
     "@types/js-cookie": "3.0.6",
     "@types/lodash-es": "4.17.12",
@@ -75,7 +75,7 @@
     "@vitejs/plugin-legacy": "5.4.1",
     "@vitejs/plugin-react": "4.3.1",
     "adm-zip": "0.5.14",
-    "cli-color": "^2.0.4",
+    "cli-color": "2.0.4",
     "concurrently": "8.2.2",
     "cross-env": "7.0.3",
     "fs-extra": "11.2.0",
