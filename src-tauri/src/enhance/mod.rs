@@ -20,37 +20,36 @@ use std::path::PathBuf;
 type ResultLog = Vec<(String, String)>;
 
 pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
-    let rule_providers_key = Value::from("rule-providers");
-    if !config.contains_key(&rule_providers_key) {
+    let rp_key = Value::from("rule-providers");
+    if !config.contains_key(&rp_key) {
         return config;
     }
-    let rule_providers_val = config.get(&rule_providers_key);
-    let mut rule_providers_val = rule_providers_val.map_or(Mapping::new(), |val| {
+    let rp_val = config.get(&rp_key);
+    let mut rp_val = rp_val.map_or(Mapping::new(), |val| {
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
-    let mut rule_path_map: HashMap<String, PathBuf> = HashMap::new();
-    for (key, value) in rule_providers_val.iter_mut() {
-        let rule_name = key.as_str().unwrap();
-        let config_rule_map = value.as_mapping_mut().unwrap();
+    let mut absolute_path_map: HashMap<String, PathBuf> = HashMap::new();
+    for (key, value) in rp_val.iter_mut() {
+        let name = key.as_str().unwrap();
+        let val_map = value.as_mapping_mut().unwrap();
         let path_key = Value::from("path");
-        let path_val = config_rule_map.get(&path_key);
-        if let Some(rule_path) = path_val {
-            let rule_path = rule_path.as_str().unwrap();
-            let absolute_path = app_home_dir().unwrap().join(&rule_path);
-            rule_path_map.insert(rule_name.into(), absolute_path);
+        if let Some(path) = val_map.get(&path_key) {
+            let path = path.as_str().unwrap();
+            let absolute_path = app_home_dir().unwrap().join(&path);
+            absolute_path_map.insert(name.into(), absolute_path);
         } else {
             // no path value, set default path
-            let rule_path = format!("./rules/{}.yaml", rule_name);
-            let absolute_path = app_home_dir().unwrap().join(&rule_path);
-            config_rule_map.insert(path_key, Value::from(rule_path));
-            rule_path_map.insert(rule_name.into(), absolute_path);
+            let path = format!("./rules/{name}.yaml");
+            let absolute_path = app_home_dir().unwrap().join(&path.replace("./", ""));
+            val_map.insert(path_key, Value::from(path));
+            absolute_path_map.insert(name.into(), absolute_path);
         }
     }
     let profiles = Config::profiles();
     let mut profiles = profiles.latest();
-    let _ = profiles.set_rule_providers_path(rule_path_map);
-    config.insert(rule_providers_key, Value::from(rule_providers_val));
-    return config;
+    let _ = profiles.set_rule_providers_path(absolute_path_map);
+    config.insert(rp_key, Value::from(rp_val));
+    config
 }
 
 /// Enhance mode
