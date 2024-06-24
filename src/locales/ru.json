@@ -284,11 +284,10 @@
   "Expire Time": "Время истечения",
   "Used / Total": "Использовано / Всего",
   "Console": "Консоль",
-
   "Expand All": "Расширить все",
   "Collapse All": "Свернуть все",
   "Update Rule Provider Error": "[ {{name}} ] Не удалось обновить：{{errorMsg}}",
   "Read Rule Providers Error": "Не удалось прочитать поставщиков правил. Проверьте, обновлены ли и синхронизированы ли поставщики правил.",
-
-  "Regenerate Template Content": "Восстановить содержимое шаблона"
+  "Regenerate Template Content": "Восстановить содержимое шаблона",
+  "Macos Device Name Error": "Имена устройств Tun на Macos должны начинаться с utun"
 }

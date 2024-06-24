@@ -284,11 +284,10 @@
   "Expire Time": "Expire Time",
   "Used / Total": "Used / Total",
   "Console": "Console",
-
   "Expand All": "Expand All",
   "Collapse All": "Collapse All",
   "Update Rule Provider Error": "[ {{name}} ] Update Failed：{{errorMsg}}",
   "Read Rule Providers Error": "Failed to read rule providers, please check if the rule providers has been updated and synchronized.",
-
-  "Regenerate Template Content": "Regenerate Template Content"
+  "Regenerate Template Content": "Regenerate Template Content",
+  "Macos Device Name Error": "Tun device names on Macos must start with utun"
 }

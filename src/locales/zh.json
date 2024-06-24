@@ -284,11 +284,10 @@
   "Expire Time": "过期时间",
   "Used / Total": "已使用 / 总共",
   "Console": "控制台",
-
   "Expand All": "全部展开",
   "Collapse All": "全部折叠",
   "Update Rule Provider Error": "[ {{name}} ] 更新失败：{{errorMsg}}",
   "Read Rule Providers Error": "读取规则集失败, 请确认规则集文件是否已经更新同步",
-
-  "Regenerate Template Content": "重新生成模板内容"
+  "Regenerate Template Content": "重新生成模板内容",
+  "Macos Device Name Error": "Macos 系统的 Tun 网卡名称必须以 utun 开头"
 }

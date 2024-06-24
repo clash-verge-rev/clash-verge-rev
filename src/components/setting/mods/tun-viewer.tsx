@@ -14,16 +14,19 @@ import { useClash } from "@/hooks/use-clash";
 import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { StackModeSwitch } from "./stack-mode-switch";
 import { enhanceProfiles } from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+
+const OS = getSystem();
 
 export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
-
   const { clash, mutateClash, patchClash } = useClash();
-
   const [open, setOpen] = useState(false);
+  const isMacos = OS === "macos";
+  const defaultDeviceName = isMacos ? "utun_Mihomo" : "Mihomo";
   const [values, setValues] = useState({
     stack: "gvisor",
-    device: "Mihomo",
+    device: defaultDeviceName,
     autoRoute: true,
     autoDetectInterface: true,
     dnsHijack: ["any:53"],
@@ -36,7 +39,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setValues({
         stack: clash?.tun.stack ?? "gvisor",
-        device: clash?.tun.device ?? "Mihomo",
+        device: clash?.tun.device ?? defaultDeviceName,
         autoRoute: clash?.tun["auto-route"] ?? true,
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
         dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53"],
@@ -49,9 +52,13 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     try {
+      if (isMacos && !values.device.startsWith("utun")) {
+        Notice.error(t("Macos Device Name Error"), 3000);
+        return;
+      }
       let tun = {
         stack: values.stack,
-        device: values.device === "" ? "Mihomo" : values.device,
+        device: values.device === "" ? defaultDeviceName : values.device,
         "auto-route": values.autoRoute,
         "auto-detect-interface": values.autoDetectInterface,
         "dns-hijack": values.dnsHijack[0] === "" ? [] : values.dnsHijack,
@@ -90,7 +97,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             onClick={async () => {
               let tun = {
                 stack: "gvisor",
-                device: "Mihomo",
+                device: defaultDeviceName,
                 "auto-route": true,
                 "auto-detect-interface": true,
                 "dns-hijack": ["any:53"],
@@ -99,7 +106,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
               };
               setValues({
                 stack: "gvisor",
-                device: "Mihomo",
+                device: defaultDeviceName,
                 autoRoute: true,
                 autoDetectInterface: true,
                 dnsHijack: ["any:53"],
@@ -107,13 +114,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
                 mtu: 1500,
               });
               await patchClash({ tun });
-              await mutateClash(
-                (old) => ({
-                  ...(old! || {}),
-                  tun,
-                }),
-                false,
-              );
+              await mutateClash((old) => ({ ...(old! || {}), tun }), false);
             }}>
             {t("Reset to Default")}
           </Button>
@@ -131,10 +132,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
           <StackModeSwitch
             value={values.stack}
             onChange={(value) => {
-              setValues((v) => ({
-                ...v,
-                stack: value,
-              }));
+              setValues((v) => ({ ...v, stack: value }));
             }}
           />
         </ListItem>
@@ -215,10 +213,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             value={values.mtu}
             placeholder="1500"
             onChange={(e) =>
-              setValues((v) => ({
-                ...v,
-                mtu: parseInt(e.target.value),
-              }))
+              setValues((v) => ({ ...v, mtu: parseInt(e.target.value) }))
             }
           />
         </ListItem>
