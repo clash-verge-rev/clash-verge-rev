@@ -6,6 +6,7 @@ import AdmZip from "adm-zip";
 import fetch from "node-fetch";
 import proxyAgent from "https-proxy-agent";
 import { execSync } from "child_process";
+import clc from "cli-color";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
@@ -91,9 +92,11 @@ async function getLatestAlphaVersion() {
     });
     let v = await response.text();
     META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
-    console.log(`Latest alpha version: ${META_ALPHA_VERSION}`);
+    console.log(clc.yellow(`Latest alpha version: ${META_ALPHA_VERSION}`));
   } catch (error) {
-    console.error("Error fetching latest alpha version:", error.message);
+    console.error(
+      clc.red("Error fetching latest alpha version:", error.message),
+    );
     process.exit(1);
   }
 }
@@ -138,9 +141,11 @@ async function getLatestReleaseVersion() {
     });
     let v = await response.text();
     META_VERSION = v.trim(); // Trim to remove extra whitespaces
-    console.log(`Latest release version: ${META_VERSION}`);
+    console.log(clc.yellow(`Latest release version: ${META_VERSION}`));
   } catch (error) {
-    console.error("Error fetching latest release version:", error.message);
+    console.error(
+      clc.red("Error fetching latest release version:", error.message),
+    );
     process.exit(1);
   }
 }
@@ -221,11 +226,13 @@ async function resolveSidecar(binInfo) {
     if (zipFile.endsWith(".zip")) {
       const zip = new AdmZip(tempZip);
       zip.getEntries().forEach((entry) => {
-        console.log(`[DEBUG]: "${name}" entry name`, entry.entryName);
+        console.log(
+          clc.white(`[DEBUG]: "${name}" entry name`, entry.entryName),
+        );
       });
       zip.extractAllTo(tempDir, true);
       await fs.rename(tempExe, sidecarPath);
-      console.log(`[INFO]: "${name}" unzip finished`);
+      console.log(clc.green(`"${name}" unzip finished`));
     } else if (zipFile.endsWith(".tgz")) {
       // tgz
       await fs.mkdirp(tempDir);
@@ -235,14 +242,14 @@ async function resolveSidecar(binInfo) {
         //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
       });
       const files = await fs.readdir(tempDir);
-      console.log(`[DEBUG]: "${name}" files in tempDir:`, files);
+      console.log(clc.white(`[DEBUG]: "${name}" files in tempDir:`, files));
       const extractedFile = files.find((file) => file.startsWith("虚空终端-"));
       if (extractedFile) {
         const extractedFilePath = path.join(tempDir, extractedFile);
         await fs.rename(extractedFilePath, sidecarPath);
-        console.log(`[INFO]: "${name}" file renamed to "${sidecarPath}"`);
+        console.log(clc.white(`"${name}" file renamed to "${sidecarPath}"`));
         execSync(`chmod 755 ${sidecarPath}`);
-        console.log(`[INFO]: "${name}" chmod binary finished`);
+        console.log(clc.green(`"${name}" chmod binary finished`));
       } else {
         throw new Error(`Expected file not found in ${tempDir}`);
       }
@@ -252,16 +259,16 @@ async function resolveSidecar(binInfo) {
       const writeStream = fs.createWriteStream(sidecarPath);
       await new Promise((resolve, reject) => {
         const onError = (error) => {
-          console.error(`[ERROR]: "${name}" gz failed:`, error.message);
+          console.error(clc.red(`"${name}" gz failed:`, error.message));
           reject(error);
         };
         readStream
           .pipe(zlib.createGunzip().on("error", onError))
           .pipe(writeStream)
           .on("finish", () => {
-            console.log(`[INFO]: "${name}" gunzip finished`);
+            console.log(clc.green(`"${name}" gunzip finished`));
             execSync(`chmod 755 ${sidecarPath}`);
-            console.log(`[INFO]: "${name}" chmod binary finished`);
+            console.log(clc.green(`"${name}" chmod binary finished`));
             resolve();
           })
           .on("error", onError);
@@ -281,7 +288,7 @@ async function resolveSidecar(binInfo) {
  * download the file to the resources dir
  */
 async function resolveResource(binInfo) {
-  const { file, downloadURL } = binInfo;
+  const { file, downloadURL, localPath } = binInfo;
 
   const resDir = path.join(cwd, "src-tauri/resources");
   const targetPath = path.join(resDir, file);
@@ -289,9 +296,14 @@ async function resolveResource(binInfo) {
   if (!FORCE && (await fs.pathExists(targetPath))) return;
 
   await fs.mkdirp(resDir);
-  await downloadFile(downloadURL, targetPath);
+  if (downloadURL) {
+    await downloadFile(downloadURL, targetPath);
+  }
+  if (localPath) {
+    await fs.copyFile(localPath, targetPath);
+  }
 
-  console.log(`[INFO]: ${file} finished`);
+  console.log(clc.green(`${file} finished`));
 }
 
 /**
@@ -318,7 +330,7 @@ async function downloadFile(url, path) {
   const buffer = await response.arrayBuffer();
   await fs.writeFile(path, new Uint8Array(buffer));
 
-  console.log(`[INFO]: download finished "${url}"`);
+  console.log(clc.cyan(`download finished "${url}"`));
 }
 
 // SimpleSC.dll
@@ -343,11 +355,11 @@ const resolvePlugin = async () => {
     }
     const zip = new AdmZip(tempZip);
     zip.getEntries().forEach((entry) => {
-      console.log(`[DEBUG]: "SimpleSC" entry name`, entry.entryName);
+      console.log(clc.white(`[DEBUG]: "SimpleSC" entry name`, entry.entryName));
     });
     zip.extractAllTo(tempDir, true);
     await fs.copyFile(tempDll, pluginPath);
-    console.log(`[INFO]: "SimpleSC" unzip finished`);
+    console.log(clc.green(`"SimpleSC" unzip finished`));
   } finally {
     await fs.remove(tempDir);
   }
@@ -365,7 +377,7 @@ const resolveServicePermission = async () => {
     const targetPath = path.join(resDir, f);
     if (await fs.pathExists(targetPath)) {
       execSync(`chmod 755 ${targetPath}`);
-      console.log(`[INFO]: "${targetPath}" chmod finished`);
+      console.log(clc.green(`"${f}" chmod finished`));
     }
   }
 };
@@ -374,7 +386,7 @@ const resolveServicePermission = async () => {
  * main
  */
 
-const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
+const SERVICE_URL = `https://github.com/oomeow/clash-verge-service/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () => {
   let ext = platform === "win32" ? ".exe" : "";
@@ -403,12 +415,14 @@ const resolveUninstall = () => {
 const resolveSetDnsScript = () =>
   resolveResource({
     file: "set_dns.sh",
-    downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/set_dns.sh`,
+    // downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/set_dns.sh`,
+    localPath: path.join(cwd, "scripts/set_dns.sh"),
   });
 const resolveUnSetDnsScript = () =>
   resolveResource({
     file: "unset_dns.sh",
-    downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/unset_dns.sh`,
+    // downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/unset_dns.sh`,
+    localPath: path.join(cwd, "scripts/unset_dns.sh"),
   });
 const resolveMmdb = () =>
   resolveResource({
@@ -480,7 +494,7 @@ async function runTask() {
       await task.func();
       break;
     } catch (err) {
-      console.error(`[ERROR]: task::${task.name} try ${i} ==`, err.message);
+      console.error(clc.red(`task::${task.name} try ${i} ==`, err.message));
       if (i === task.retry - 1) throw err;
     }
   }
@@ -488,4 +502,4 @@ async function runTask() {
 }
 
 runTask();
-runTask();
+// runTask();

@@ -122,6 +122,9 @@ importers:
       "@tauri-apps/cli":
         specifier: 1.5.14
         version: 1.5.14
+      "@types/cli-color":
+        specifier: ^2.0.6
+        version: 2.0.6
       "@types/fs-extra":
         specifier: 11.0.4
         version: 11.0.4
@@ -152,6 +155,9 @@ importers:
       adm-zip:
         specifier: 0.5.14
         version: 0.5.14
+      cli-color:
+        specifier: ^2.0.4
+        version: 2.0.4
       concurrently:
         specifier: 8.2.2
         version: 8.2.2
@@ -2270,6 +2276,12 @@ packages:
         integrity: sha512-IQ3EbTzGxIigb1I3qPZc1rWJnH0BmSKv5QYTalEwweFvyBDLSAe24zP0le/hyi7ecGfZVlIVAg4BZqb8WBwKqw==,
       }
 
+  "@types/cli-color@2.0.6":
+    resolution:
+      {
+        integrity: sha512-uLK0/0dOYdkX8hNsezpYh1gc8eerbhf9bOKZ3e24sP67703mw9S14/yW6mSTatiaKO9v+mU/a1EVy4rOXXeZTA==,
+      }
+
   "@types/debug@4.1.12":
     resolution:
       {
@@ -2786,6 +2798,13 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
+  cli-color@2.0.4:
+    resolution:
+      {
+        integrity: sha512-zlnpg0jNcibNrO7GG9IeHH7maWFeCz+Ja1wx/7tZNU5ASSSSZ+/qZciM0/LHCYxSdqv5h2sdbQ/PXYdOuetXvA==,
+      }
+    engines: { node: ">=0.10" }
+
   client-only@0.0.1:
     resolution:
       {
@@ -2954,6 +2973,13 @@ packages:
       {
         integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==,
       }
+
+  d@1.0.2:
+    resolution:
+      {
+        integrity: sha512-MOqHvMWF9/9MX6nza0KgvFH4HpMU0EF5uUDXqX/BtxtU8NfB0QzRtJ8Oe/6SuS4kbhyzVJwjd97EA4PKrzJ8bw==,
+      }
+    engines: { node: ">=0.12" }
 
   data-uri-to-buffer@4.0.1:
     resolution:
@@ -3157,10 +3183,36 @@ packages:
       }
     engines: { node: ">= 0.4" }
 
+  es5-ext@0.10.64:
+    resolution:
+      {
+        integrity: sha512-p2snDhiLaXe6dahss1LddxqEm+SkuDvV8dnIQG0MWjyHpcMNfXKPE+/Cc0y+PhxJX3A4xGNeFCj5oc0BUh6deg==,
+      }
+    engines: { node: ">=0.10" }
+
   es6-error@4.1.1:
     resolution:
       {
         integrity: sha512-Um/+FxMr9CISWh0bi5Zv0iOD+4cFh5qLeks1qhAopKVAJw3drgKbKySikp7wGhDL0HPeaja0P5ULZrxLkniUVg==,
+      }
+
+  es6-iterator@2.0.3:
+    resolution:
+      {
+        integrity: sha512-zw4SRzoUkd+cl+ZoE15A9o1oQd920Bb0iOJMQkQhl3jNc03YqVjAhG7scf9C5KWRU/R13Orf588uCC6525o02g==,
+      }
+
+  es6-symbol@3.1.4:
+    resolution:
+      {
+        integrity: sha512-U9bFFjX8tFiATgtkJ1zg25+KviIXpgRvRHS8sau3GfhVzThRQrOeksPeT0BWW2MNZs1OEWJ1DPXOQMn0KKRkvg==,
+      }
+    engines: { node: ">=0.12" }
+
+  es6-weak-map@2.0.3:
+    resolution:
+      {
+        integrity: sha512-p5um32HOTO1kP+w7PRnB+5lQ43Z6muuMuIMffvDN8ZB4GcnjLBV6zGStpbASIMk4DCAvEaamhe2zhyCb/QXXsA==,
       }
 
   esbuild@0.21.5:
@@ -3192,6 +3244,13 @@ packages:
       }
     engines: { node: ">=10" }
 
+  esniff@2.0.1:
+    resolution:
+      {
+        integrity: sha512-kTUIGKQ/mDPFoJ0oVfcmyJn4iBDRptjNVIzwIFR7tqWXdVI9xfA2RMwY/gbSpJG3lkdWNEjLap/NqVHZiJsdfg==,
+      }
+    engines: { node: ">=0.10" }
+
   estree-util-is-identifier-name@3.0.0:
     resolution:
       {
@@ -3211,6 +3270,12 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
+  event-emitter@0.3.5:
+    resolution:
+      {
+        integrity: sha512-D9rRn9y7kLPnJ+hMq7S/nhvoKwwvVJahBi2BPmx3bvbsEdK3W9ii8cBSGjP+72/LnM4n6fo3+dkCX5FeTQruXA==,
+      }
+
   execa@0.7.0:
     resolution:
       {
@@ -3224,6 +3289,12 @@ packages:
         integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==,
       }
     engines: { node: ">=10" }
+
+  ext@1.7.0:
+    resolution:
+      {
+        integrity: sha512-6hxeJYaL110a9b5TEJSj0gojyHQAmA2ch5Os+ySCiA1QGdS697XWY1pzsrSjqA9LDEEgdB/KypIlR59RcLuHYw==,
+      }
 
   extend@3.0.2:
     resolution:
@@ -3745,6 +3816,12 @@ packages:
       }
     engines: { node: ">=12" }
 
+  is-promise@2.2.2:
+    resolution:
+      {
+        integrity: sha512-+lP4/6lKUBfQjZ2pdxThZvLUAafmZb8OAxFb8XXtiQmS35INgr85hdOGoEs124ez1FCnZJt6jau/T+alh58QFQ==,
+      }
+
   is-redirect@1.0.0:
     resolution:
       {
@@ -3960,6 +4037,12 @@ packages:
         integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==,
       }
 
+  lru-queue@0.1.0:
+    resolution:
+      {
+        integrity: sha512-BpdYkt9EvGl8OfWHDQPISVpcl5xZthb+XPsbELj5AQXxIC8IriDZIQYjBJPEm5rS420sjZ0TLEzRcq5KdBhYrQ==,
+      }
+
   magic-string@0.30.10:
     resolution:
       {
@@ -4027,6 +4110,13 @@ packages:
       {
         integrity: sha512-0H44vDimn51F0YwvxSJSm0eCDOJTRlmN0R1yBh4HLj9wiV1Dn0QoXGbvFAWj2hSItVTlCmBF1hqKlIyUBVFLPg==,
       }
+
+  memoizee@0.4.17:
+    resolution:
+      {
+        integrity: sha512-DGqD7Hjpi/1or4F/aYAspXKNm5Yili0QDAFAY4QYvpqpgiY6+1jOfqpmByzjxbWd/T9mChbCArXAbDAsTm5oXA==,
+      }
+    engines: { node: ">=0.12" }
 
   meow@13.2.0:
     resolution:
@@ -4311,6 +4401,12 @@ packages:
       }
     engines: { node: ^18 || >=20 }
     hasBin: true
+
+  next-tick@1.1.0:
+    resolution:
+      {
+        integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==,
+      }
 
   no-case@3.0.4:
     resolution:
@@ -5262,6 +5358,13 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
+  timers-ext@0.1.8:
+    resolution:
+      {
+        integrity: sha512-wFH7+SEAcKfJpfLPkrgMPvvwnEtj8W4IurvEyrKsDleXnKLCDw71w8jltvfLa8Rm4qQxxT4jmDBYbJG/z7qoww==,
+      }
+    engines: { node: ">=0.12" }
+
   to-fast-properties@2.0.0:
     resolution:
       {
@@ -5314,6 +5417,12 @@ packages:
         integrity: sha512-34R7HTnG0XIJcBSn5XhDd7nNFPRcXYRZrBB2O2jdKqYODldSzBAqzsWoZYYvduky73toYS/ESqxPvkDf/F0XMg==,
       }
     engines: { node: ">=10" }
+
+  type@2.7.3:
+    resolution:
+      {
+        integrity: sha512-8j+1QmAbPvLZow5Qpi6NCaN8FB60p/6x8/vfNqOk/hC+HuvFZhL4+WfekuhQLiqFZXOgQdrs3B+XxEmCc6b3FQ==,
+      }
 
   types-pac@1.0.2:
     resolution:
@@ -7201,6 +7310,8 @@ snapshots:
       "@types/node": 20.14.2
       "@types/responselike": 1.0.3
 
+  "@types/cli-color@2.0.6": {}
+
   "@types/debug@4.1.12":
     dependencies:
       "@types/ms": 0.7.34
@@ -7508,6 +7619,14 @@ snapshots:
 
   cli-boxes@1.0.0: {}
 
+  cli-color@2.0.4:
+    dependencies:
+      d: 1.0.2
+      es5-ext: 0.10.64
+      es6-iterator: 2.0.3
+      memoizee: 0.4.17
+      timers-ext: 0.1.8
+
   client-only@0.0.1: {}
 
   cliui@8.0.1:
@@ -7614,6 +7733,11 @@ snapshots:
 
   csstype@3.1.3: {}
 
+  d@1.0.2:
+    dependencies:
+      es5-ext: 0.10.64
+      type: 2.7.3
+
   data-uri-to-buffer@4.0.1: {}
 
   date-fns@2.30.0:
@@ -7717,8 +7841,33 @@ snapshots:
   es-errors@1.3.0:
     optional: true
 
+  es5-ext@0.10.64:
+    dependencies:
+      es6-iterator: 2.0.3
+      es6-symbol: 3.1.4
+      esniff: 2.0.1
+      next-tick: 1.1.0
+
   es6-error@4.1.1:
     optional: true
+
+  es6-iterator@2.0.3:
+    dependencies:
+      d: 1.0.2
+      es5-ext: 0.10.64
+      es6-symbol: 3.1.4
+
+  es6-symbol@3.1.4:
+    dependencies:
+      d: 1.0.2
+      ext: 1.7.0
+
+  es6-weak-map@2.0.3:
+    dependencies:
+      d: 1.0.2
+      es5-ext: 0.10.64
+      es6-iterator: 2.0.3
+      es6-symbol: 3.1.4
 
   esbuild@0.21.5:
     optionalDependencies:
@@ -7752,11 +7901,23 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
+  esniff@2.0.1:
+    dependencies:
+      d: 1.0.2
+      es5-ext: 0.10.64
+      event-emitter: 0.3.5
+      type: 2.7.3
+
   estree-util-is-identifier-name@3.0.0: {}
 
   estree-walker@2.0.2: {}
 
   esutils@2.0.3: {}
+
+  event-emitter@0.3.5:
+    dependencies:
+      d: 1.0.2
+      es5-ext: 0.10.64
 
   execa@0.7.0:
     dependencies:
@@ -7779,6 +7940,10 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
       strip-final-newline: 2.0.0
+
+  ext@1.7.0:
+    dependencies:
+      type: 2.7.3
 
   extend@3.0.2: {}
 
@@ -8094,6 +8259,8 @@ snapshots:
 
   is-plain-obj@4.1.0: {}
 
+  is-promise@2.2.2: {}
+
   is-redirect@1.0.0: {}
 
   is-retry-allowed@1.2.0: {}
@@ -8187,6 +8354,10 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lru-queue@0.1.0:
+    dependencies:
+      es5-ext: 0.10.64
 
   magic-string@0.30.10:
     dependencies:
@@ -8289,6 +8460,17 @@ snapshots:
   mdast-util-to-string@4.0.0:
     dependencies:
       "@types/mdast": 4.0.4
+
+  memoizee@0.4.17:
+    dependencies:
+      d: 1.0.2
+      es5-ext: 0.10.64
+      es6-weak-map: 2.0.3
+      event-emitter: 0.3.5
+      is-promise: 2.2.2
+      lru-queue: 0.1.0
+      next-tick: 1.1.0
+      timers-ext: 0.1.8
 
   meow@13.2.0: {}
 
@@ -8497,6 +8679,8 @@ snapshots:
   nanoid@3.3.7: {}
 
   nanoid@5.0.7: {}
+
+  next-tick@1.1.0: {}
 
   no-case@3.0.4:
     dependencies:
@@ -9057,6 +9241,11 @@ snapshots:
 
   timed-out@4.0.1: {}
 
+  timers-ext@0.1.8:
+    dependencies:
+      es5-ext: 0.10.64
+      next-tick: 1.1.0
+
   to-fast-properties@2.0.0: {}
 
   to-regex-range@5.0.1:
@@ -9075,6 +9264,8 @@ snapshots:
 
   type-fest@0.13.1:
     optional: true
+
+  type@2.7.3: {}
 
   types-pac@1.0.2: {}
 
