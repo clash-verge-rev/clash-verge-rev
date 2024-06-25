@@ -62,7 +62,7 @@ const RulesPage = () => {
             followOutput={"smooth"}
           />
         ) : (
-          <BaseEmpty text="No Rules" />
+          <BaseEmpty />
         )}
       </Box>
     </BasePage>

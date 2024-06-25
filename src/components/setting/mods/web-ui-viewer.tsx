@@ -98,14 +98,13 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
         overflowY: "auto",
         userSelect: "text",
       }}
-      cancelBtn={t("Back")}
+      cancelBtn={t("Close")}
       disableOk
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
       {!editing && webUIList.length === 0 && (
         <BaseEmpty
-          text="Empty"
           extra={
             <Typography mt={2} sx={{ fontSize: "12px" }}>
               {t("Replace host, port, secret with %host, %port, %secret")}

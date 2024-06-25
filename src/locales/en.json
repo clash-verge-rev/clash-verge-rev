@@ -6,6 +6,7 @@
   "Close": "Close",
   "Cancel": "Cancel",
   "Confirm": "Confirm",
+  "Empty": "Empty",
 
   "New": "New",
   "Edit": "Edit",
@@ -150,6 +151,7 @@
   "PAC URL": "PAC URL: ",
   "Auto Launch": "Auto Launch",
   "Silent Start": "Silent Start",
+  "Silent Start Info": "Start the program in background mode without displaying the panel",
 
   "Clash Setting": "Clash Setting",
   "Allow Lan": "Allow Lan",
@@ -167,9 +169,12 @@
   "Clash Core": "Clash Core",
   "Upgrade": "Upgrade",
   "Restart": "Restart",
+  "Release Version": "Release Version",
+  "Alpha Version": "Alpha Version",
   "Tun mode requires": "Tun mode requires",
   "Grant": "Grant",
   "Open UWP tool": "Open UWP tool",
+  "Open UWP tool Info": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction",
   "Update GeoData": "Update GeoData",
 
   "Verge Setting": "Verge Setting",

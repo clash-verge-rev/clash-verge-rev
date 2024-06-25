@@ -13,6 +13,7 @@ import { useVisibility } from "@/hooks/use-visibility";
 import parseTraffic from "@/utils/parse-traffic";
 import useSWRSubscription from "swr/subscription";
 import { createSockette } from "@/utils/websocket";
+import { useTranslation } from "react-i18next";
 
 interface MemoryUsage {
   inuse: number;
@@ -21,6 +22,7 @@ interface MemoryUsage {
 
 // setup the traffic
 export const LayoutTraffic = () => {
+  const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
 
@@ -115,7 +117,6 @@ export const LayoutTraffic = () => {
   };
   const valStyle: any = {
     component: "span",
-    // color: "primary",
     textAlign: "center",
     sx: { flex: "1 1 56px", userSelect: "none" },
   };
@@ -128,15 +129,23 @@ export const LayoutTraffic = () => {
   };
 
   return (
-    <Box position="relative" onClick={trafficRef.current?.toggleStyle}>
+    <Box position="relative">
       {trafficGraph && pageVisible && (
-        <div style={{ width: "100%", height: 60, marginBottom: 6 }}>
+        <div
+          style={{ width: "100%", height: 60, marginBottom: 6 }}
+          onClick={trafficRef.current?.toggleStyle}
+        >
           <TrafficGraph ref={trafficRef} />
         </div>
       )}
 
       <Box display="flex" flexDirection="column" gap={0.75}>
-        <Box display="flex" alignItems="center" whiteSpace="nowrap">
+        <Box
+          display="flex"
+          alignItems="center"
+          whiteSpace="nowrap"
+          title={t("Upload Speed")}
+        >
           <ArrowUpward
             {...iconStyle}
             color={+up > 0 ? "secondary" : "disabled"}
@@ -147,7 +156,12 @@ export const LayoutTraffic = () => {
           <Typography {...unitStyle}>{upUnit}/s</Typography>
         </Box>
 
-        <Box display="flex" alignItems="center" whiteSpace="nowrap">
+        <Box
+          display="flex"
+          alignItems="center"
+          whiteSpace="nowrap"
+          title={t("Download Speed")}
+        >
           <ArrowDownward
             {...iconStyle}
             color={+down > 0 ? "primary" : "disabled"}
@@ -163,7 +177,7 @@ export const LayoutTraffic = () => {
             display="flex"
             alignItems="center"
             whiteSpace="nowrap"
-            title="Memory Usage"
+            title={t("Memory Usage")}
           >
             <MemoryOutlined {...iconStyle} color="disabled" />
             <Typography {...valStyle}>{inuse}</Typography>

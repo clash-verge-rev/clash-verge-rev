@@ -6,6 +6,7 @@
   "Close": "关闭",
   "Cancel": "取消",
   "Confirm": "确认",
+  "Empty": "空空如也",
 
   "New": "新建",
   "Edit": "编辑",
@@ -150,6 +151,7 @@
   "PAC URL": "PAC地址：",
   "Auto Launch": "开机自启",
   "Silent Start": "静默启动",
+  "Silent Start Info": "程序启动时以后台模式运行，不显示程序面板",
 
   "Clash Setting": "Clash 设置",
   "Allow Lan": "局域网连接",
@@ -167,9 +169,12 @@
   "Clash Core": "Clash 内核",
   "Upgrade": "升级内核",
   "Restart": "重启内核",
+  "Release Version": "正式版",
+  "Alpha Version": "内测版",
   "Tun mode requires": "如需启用 Tun 模式需要授权",
   "Grant": "授权",
   "Open UWP tool": "UWP 工具",
+  "Open UWP tool Info": "Windows 8开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制",
   "Update GeoData": "更新 GeoData",
 
   "Verge Setting": "Verge 设置",

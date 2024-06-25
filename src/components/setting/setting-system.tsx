@@ -170,7 +170,21 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Silent Start")}>
+      <SettingItem
+        label={t("Silent Start")}
+        extra={
+          <>
+            <Tooltip title={t("Silent Start Info")} placement="top">
+              <IconButton color="inherit" size="small">
+                <InfoRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+            </Tooltip>
+          </>
+        }
+      >
         <GuardState
           value={enable_silent_start ?? false}
           valueProps="checked"

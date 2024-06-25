@@ -92,7 +92,7 @@ export const ProviderButton = () => {
         }
         contentSx={{ width: 400 }}
         disableOk
-        cancelBtn={t("Cancel")}
+        cancelBtn={t("Close")}
         onClose={() => setOpen(false)}
         onCancel={() => setOpen(false)}
       >

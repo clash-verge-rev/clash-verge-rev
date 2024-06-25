@@ -208,7 +208,7 @@ const ConnectionsPage = () => {
         }}
       >
         {filterConn.length === 0 ? (
-          <BaseEmpty text="No Connections" />
+          <BaseEmpty />
         ) : isTableLayout ? (
           <ConnectionTable
             connections={filterConn}

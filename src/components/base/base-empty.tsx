@@ -1,5 +1,6 @@
 import { alpha, Box, Typography } from "@mui/material";
 import { InboxRounded } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   text?: React.ReactNode;
@@ -8,6 +9,7 @@ interface Props {
 
 export const BaseEmpty = (props: Props) => {
   const { text = "Empty", extra } = props;
+  const { t } = useTranslation();
 
   return (
     <Box
@@ -22,7 +24,7 @@ export const BaseEmpty = (props: Props) => {
       })}
     >
       <InboxRounded sx={{ fontSize: "4em" }} />
-      <Typography sx={{ fontSize: "1.25em" }}>{text}</Typography>
+      <Typography sx={{ fontSize: "1.25em" }}>{t(`${text}`)}</Typography>
       {extra}
     </Box>
   );

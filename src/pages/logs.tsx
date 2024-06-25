@@ -102,7 +102,7 @@ const LogPage = () => {
             followOutput={"smooth"}
           />
         ) : (
-          <BaseEmpty text="No Logs" />
+          <BaseEmpty />
         )}
       </Box>
     </BasePage>
