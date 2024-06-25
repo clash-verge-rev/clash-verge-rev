@@ -166,7 +166,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Proxy Guard")} />
+          <ListItemText
+            primary={t("Proxy Guard")}
+            sx={{ maxWidth: "fit-content" }}
+          />
           <Tooltip title={t("Proxy Guard Info")}>
             <IconButton color="inherit" size="small">
               <InfoRounded
@@ -180,6 +183,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             disabled={!enabled}
             checked={value.guard}
             onChange={(_, e) => setValue((v) => ({ ...v, guard: e }))}
+            sx={{ marginLeft: "auto" }}
           />
         </ListItem>
 

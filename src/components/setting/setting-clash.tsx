@@ -9,7 +9,8 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { Settings, Shuffle } from "@mui/icons-material";
+
+import { InfoRounded, Settings, Shuffle } from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
@@ -175,7 +176,22 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       {isWIN && (
-        <SettingItem onClick={invoke_uwp_tool} label={t("Open UWP tool")} />
+        <SettingItem
+          onClick={invoke_uwp_tool}
+          label={t("Open UWP tool")}
+          extra={
+            <>
+              <Tooltip title={t("Open UWP tool Info")} placement="top">
+                <IconButton color="inherit" size="small">
+                  <InfoRounded
+                    fontSize="inherit"
+                    style={{ cursor: "pointer", opacity: 0.75 }}
+                  />
+                </IconButton>
+              </Tooltip>
+            </>
+          }
+        />
       )}
 
       <SettingItem onClick={onUpdateGeo} label={t("Update GeoData")} />

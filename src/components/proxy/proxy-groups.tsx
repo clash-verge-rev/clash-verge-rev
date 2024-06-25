@@ -14,12 +14,14 @@ import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
 import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   mode: string;
 }
 
 export const ProxyGroups = (props: Props) => {
+  const { t } = useTranslation();
   const { mode } = props;
 
   const { renderList, onProxies, onHeadState } = useRenderList(mode);
@@ -116,7 +118,7 @@ export const ProxyGroups = (props: Props) => {
   };
 
   if (mode === "direct") {
-    return <BaseEmpty text="Direct Mode" />;
+    return <BaseEmpty text={t("clash_mode_direct")} />;
   }
 
   return (

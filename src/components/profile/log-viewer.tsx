@@ -61,7 +61,7 @@ export const LogViewer = (props: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
-          {t("Back")}
+          {t("Close")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -6,6 +6,7 @@
   "Close": "Закрыть",
   "Cancel": "Отмена",
   "Confirm": "Подтвердить",
+  "Empty": "Пусто",
 
   "New": "Новый",
   "Edit": "Редактировать",
@@ -150,6 +151,7 @@
   "PAC URL": "Адрес PAC: ",
   "Auto Launch": "Автозапуск",
   "Silent Start": "Тихий запуск",
+  "Silent Start Info": "Запускать программу в фоновом режиме без отображения панели",
 
   "Clash Setting": "Настройки Clash",
   "Allow Lan": "Разрешить локальную сеть",
@@ -167,9 +169,12 @@
   "Clash Core": "Ядра Clash",
   "Upgrade": "Обновлять",
   "Restart": "Перезапуск",
+  "Release Version": "Официальная версия",
+  "Alpha Version": "Альфа-версия",
   "Tun mode requires": "Требуется Режим туннеля",
   "Grant": "Предоставить",
   "Open UWP tool": "Открыть UWP инструмент",
+  "Open UWP tool Info": "С Windows 8 приложения UWP (такие как Microsoft Store) ограничены в прямом доступе к сетевым службам локального хоста, и этот инструмент позволяет обойти это ограничение",
   "Update GeoData": "Обновление GeoData",
 
   "Verge Setting": "Настройки Verge",

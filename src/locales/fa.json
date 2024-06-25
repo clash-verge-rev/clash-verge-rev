@@ -6,6 +6,7 @@
   "Close": "بستن",
   "Cancel": "لغو",
   "Confirm": "تأیید",
+  "Empty": "خالی خالی",
 
   "New": "جدید",
   "Edit": "ویرایش",
@@ -150,6 +151,7 @@
   "PAC URL": "PAC URL: ",
   "Auto Launch": "راه‌اندازی خودکار",
   "Silent Start": "شروع بی‌صدا",
+  "Silent Start Info": "برنامه را در حالت پس‌زمینه بدون نمایش پانل اجرا کنید",
 
   "Clash Setting": "تنظیمات Clash",
   "Allow Lan": "اجازه LAN",
@@ -167,9 +169,12 @@
   "Clash Core": "هسته Clash",
   "Upgrade": "ارتقاء",
   "Restart": "راه‌اندازی مجدد",
+  "Release Version": "نسخه نهایی",
+  "Alpha Version": "نسخه آلفا",
   "Tun mode requires": "Tun mode نیاز دارد",
   "Grant": "اعطا",
   "Open UWP tool": "باز کردن ابزار UWP",
+  "Open UWP tool Info": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود",
   "Update GeoData": "به‌روزرسانی GeoData",
 
   "Verge Setting": "تنظیمات Verge",
