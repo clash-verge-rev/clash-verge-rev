@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import {
   ArrowDownward,
@@ -21,8 +21,6 @@ interface MemoryUsage {
   oslimit?: number;
 }
 
-const isDebug = await isDebugEnabled();
-
 // setup the traffic
 export const LayoutTraffic = () => {
   const { t } = useTranslation();
@@ -34,6 +32,12 @@ export const LayoutTraffic = () => {
 
   const trafficRef = useRef<TrafficRef>(null);
   const pageVisible = useVisibility();
+  const [isDebug, setIsDebug] = useState(false);
+
+  useEffect(() => {
+    isDebugEnabled().then((flag) => setIsDebug(flag));
+    return () => {};
+  }, [isDebug]);
 
   // https://swr.vercel.app/docs/subscription#deduplication
   // useSWRSubscription auto deduplicates to one subscription per key per entire app
