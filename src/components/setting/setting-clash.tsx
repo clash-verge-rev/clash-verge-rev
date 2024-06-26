@@ -1,16 +1,14 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useLockFn } from "ahooks";
 import {
   TextField,
   Select,
   MenuItem,
   Typography,
   IconButton,
-  Tooltip,
 } from "@mui/material";
 
-import { InfoRounded, Settings, Shuffle } from "@mui/icons-material";
+import { Settings, Shuffle } from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
@@ -23,6 +21,7 @@ import { invoke_uwp_tool } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import { useVerge } from "@/hooks/use-verge";
 import { updateGeoData } from "@/services/api";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 
 const isWIN = getSystem() === "windows";
 
@@ -116,25 +115,19 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem
         label={t("Port Config")}
         extra={
-          <Tooltip title={t("Random Port")}>
-            <IconButton
-              color={enable_random_port ? "primary" : "inherit"}
-              size="small"
-              onClick={() => {
-                Notice.success(
-                  t("Restart Application to Apply Modifications"),
-                  1000
-                );
-                onChangeVerge({ enable_random_port: !enable_random_port });
-                patchVerge({ enable_random_port: !enable_random_port });
-              }}
-            >
-              <Shuffle
-                fontSize="inherit"
-                style={{ cursor: "pointer", opacity: 0.75 }}
-              />
-            </IconButton>
-          </Tooltip>
+          <TooltipIcon
+            title={t("Random Port")}
+            color={enable_random_port ? "primary" : "inherit"}
+            icon={Shuffle}
+            onClick={() => {
+              Notice.success(
+                t("Restart Application to Apply Modifications"),
+                1000
+              );
+              onChangeVerge({ enable_random_port: !enable_random_port });
+              patchVerge({ enable_random_port: !enable_random_port });
+            }}
+          />
         }
       >
         <TextField
@@ -160,16 +153,10 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem
         label={t("Clash Core")}
         extra={
-          <IconButton
-            color="inherit"
-            size="small"
+          <TooltipIcon
+            icon={Settings}
             onClick={() => coreRef.current?.open()}
-          >
-            <Settings
-              fontSize="inherit"
-              style={{ cursor: "pointer", opacity: 0.75 }}
-            />
-          </IconButton>
+          />
         }
       >
         <Typography sx={{ py: "7px", pr: 1 }}>{version}</Typography>
@@ -179,18 +166,7 @@ const SettingClash = ({ onError }: Props) => {
         <SettingItem
           onClick={invoke_uwp_tool}
           label={t("Open UWP tool")}
-          extra={
-            <>
-              <Tooltip title={t("Open UWP tool Info")} placement="top">
-                <IconButton color="inherit" size="small">
-                  <InfoRounded
-                    fontSize="inherit"
-                    style={{ cursor: "pointer", opacity: 0.75 }}
-                  />
-                </IconButton>
-              </Tooltip>
-            </>
-          }
+          extra={<TooltipIcon title={t("Open UWP tool Info")} />}
         />
       )}
 

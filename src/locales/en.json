@@ -122,6 +122,7 @@
   "DNS Hijack": "DNS Hijack",
   "MTU": "Max Transmission Unit",
   "Service Mode": "Service Mode",
+  "Service Mode Info": "The core launched by the service can obtain corresponding permissions after installation and authorization of the service",
   "Current State": "Current State",
   "pending": "pending",
   "installed": "installed",
