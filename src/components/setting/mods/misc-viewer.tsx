@@ -168,13 +168,13 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             }
           >
             {[
-              { key: "Never Clean", value: 0 },
-              { key: "Retain 7 Days", value: 1 },
-              { key: "Retain 30 Days", value: 2 },
-              { key: "Retain 90 Days", value: 3 },
+              { key: t("Never Clean"), value: 0 },
+              { key: t("Retain _n Days", { n: 7 }), value: 1 },
+              { key: t("Retain _n Days", { n: 30 }), value: 2 },
+              { key: t("Retain _n Days", { n: 90 }), value: 3 },
             ].map((i) => (
               <MenuItem key={i.value} value={i.value}>
-                {t(i.key)}
+                {i.key}
               </MenuItem>
             ))}
           </Select>
