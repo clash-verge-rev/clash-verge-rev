@@ -14,11 +14,14 @@ import parseTraffic from "@/utils/parse-traffic";
 import useSWRSubscription from "swr/subscription";
 import { createSockette } from "@/utils/websocket";
 import { useTranslation } from "react-i18next";
+import { isDebugEnabled, gc } from "@/services/api";
 
 interface MemoryUsage {
   inuse: number;
   oslimit?: number;
 }
+
+const isDebug = await isDebugEnabled();
 
 // setup the traffic
 export const LayoutTraffic = () => {
@@ -112,6 +115,11 @@ export const LayoutTraffic = () => {
   const [down, downUnit] = parseTraffic(traffic.down);
   const [inuse, inuseUnit] = parseTraffic(memory.inuse);
 
+  const boxStyle: any = {
+    display: "flex",
+    alignItems: "center",
+    whiteSpace: "nowrap",
+  };
   const iconStyle: any = {
     sx: { mr: "8px", fontSize: 16 },
   };
@@ -140,12 +148,7 @@ export const LayoutTraffic = () => {
       )}
 
       <Box display="flex" flexDirection="column" gap={0.75}>
-        <Box
-          display="flex"
-          alignItems="center"
-          whiteSpace="nowrap"
-          title={t("Upload Speed")}
-        >
+        <Box title={t("Upload Speed")} {...boxStyle}>
           <ArrowUpward
             {...iconStyle}
             color={+up > 0 ? "secondary" : "disabled"}
@@ -156,12 +159,7 @@ export const LayoutTraffic = () => {
           <Typography {...unitStyle}>{upUnit}/s</Typography>
         </Box>
 
-        <Box
-          display="flex"
-          alignItems="center"
-          whiteSpace="nowrap"
-          title={t("Download Speed")}
-        >
+        <Box title={t("Download Speed")} {...boxStyle}>
           <ArrowDownward
             {...iconStyle}
             color={+down > 0 ? "primary" : "disabled"}
@@ -174,12 +172,15 @@ export const LayoutTraffic = () => {
 
         {displayMemory && (
           <Box
-            display="flex"
-            alignItems="center"
-            whiteSpace="nowrap"
-            title={t("Memory Usage")}
+            title={t(isDebug ? "Memory Cleanup" : "Memory Usage")}
+            {...boxStyle}
+            sx={{ cursor: isDebug ? "pointer" : "auto" }}
+            color={isDebug ? "success.main" : "disabled"}
+            onClick={async () => {
+              isDebug && (await gc());
+            }}
           >
-            <MemoryOutlined {...iconStyle} color="disabled" />
+            <MemoryOutlined {...iconStyle} />
             <Typography {...valStyle}>{inuse}</Typography>
             <Typography {...unitStyle}>{inuseUnit}</Typography>
           </Box>
