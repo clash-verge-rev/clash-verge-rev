@@ -153,7 +153,9 @@ impl IClashTemp {
         ClashInfo {
             mixed_port: Self::guard_mixed_port(config),
             socks_port: Self::guard_socks_port(config),
+            #[cfg(not(target_os = "windows"))]
             redir_port: Self::guard_redir_port(config),
+            #[cfg(target_os = "linux")]
             tproxy_port: Self::guard_tproxy_port(config),
             port: Self::guard_port(config),
             server: Self::guard_client_ctrl(config),
@@ -268,7 +270,9 @@ pub struct ClashInfo {
     pub mixed_port: u16,
     pub port: u16,
     pub socks_port: u16,
+    #[cfg(not(target_os = "windows"))]
     pub redir_port: u16,
+    #[cfg(target_os = "linux")]
     pub tproxy_port: u16,
     /// same as `external-controller`
     pub server: String,
