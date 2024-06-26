@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
@@ -260,8 +259,3 @@ export const ProfileMore = (props: Props) => {
     </>
   );
 };
-
-function parseExpire(expire?: number) {
-  if (!expire) return "-";
-  return dayjs(expire * 1000).format("YYYY-MM-DD");
-}

@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/api/dialog";
 import { Button, MenuItem, Select, Input, Typography } from "@mui/material";
