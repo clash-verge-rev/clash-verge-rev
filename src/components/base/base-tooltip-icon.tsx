@@ -12,11 +12,11 @@ interface Props extends IconButtonProps {
 }
 
 export const TooltipIcon: React.FC<Props> = (props: Props) => {
-  const { title = "", icon: Icon = InfoRounded } = props;
+  const { title = "", icon: Icon = InfoRounded, ...restProps } = props;
 
   return (
     <Tooltip title={title} placement="top">
-      <IconButton color="inherit" size="small" {...props}>
+      <IconButton color="inherit" size="small" {...restProps}>
         <Icon fontSize="inherit" style={{ cursor: "pointer", opacity: 0.75 }} />
       </IconButton>
     </Tooltip>
