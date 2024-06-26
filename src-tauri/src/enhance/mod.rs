@@ -122,9 +122,6 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             }
             config.insert("tun".into(), tun.into());
         } else {
-            if key.as_str() == Some("enable-random-port") {
-                continue;
-            }
             config.insert(key, value);
         }
     }

@@ -228,11 +228,11 @@ async function resolveSidecar(binInfo) {
     if (zipFile.endsWith(".zip")) {
       const zip = new AdmZip(tempZip);
       zip.getEntries().forEach((entry) => {
-        log_debug(`[DEBUG]: "${name}" entry name`, entry.entryName);
+        log_debug(`"${name}" entry name`, entry.entryName);
       });
       zip.extractAllTo(tempDir, true);
       await fs.rename(tempExe, sidecarPath);
-      log_success(clc.green(`"${name}" unzip finished`));
+      log_success(`"${name}" unzip finished`);
     } else if (zipFile.endsWith(".tgz")) {
       // tgz
       await fs.mkdirp(tempDir);
