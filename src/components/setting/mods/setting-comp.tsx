@@ -1,4 +1,5 @@
-import React, { ReactNode, useState } from "react";
+import isAsyncFunction from "@/utils/is-async-function";
+import { ChevronRightRounded } from "@mui/icons-material";
 import {
   Box,
   List,
@@ -7,12 +8,12 @@ import {
   ListItemText,
   ListSubheader,
 } from "@mui/material";
-import { ChevronRightRounded } from "@mui/icons-material";
 import CircularProgress from "@mui/material/CircularProgress";
-import isAsyncFunction from "@/utils/is-async-function";
+import React, { ReactNode, useState } from "react";
 
 interface ItemProps {
   label: ReactNode;
+  disabled?: boolean;
   extra?: ReactNode;
   children?: ReactNode;
   secondary?: ReactNode;
@@ -20,7 +21,7 @@ interface ItemProps {
 }
 
 export const SettingItem: React.FC<ItemProps> = (props) => {
-  const { label, extra, children, secondary, onClick } = props;
+  const { label, disabled, extra, children, secondary, onClick } = props;
   const clickable = !!onClick;
 
   const primary = (
@@ -44,7 +45,7 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
 
   return clickable ? (
     <ListItem disablePadding>
-      <ListItemButton onClick={handleClick} disabled={isLoading}>
+      <ListItemButton onClick={handleClick} disabled={isLoading || disabled}>
         <ListItemText primary={primary} secondary={secondary} />
         {isLoading ? (
           <CircularProgress color="inherit" size={20} />
@@ -55,7 +56,11 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
     </ListItem>
   ) : (
     <ListItem sx={{ pt: "5px", pb: "5px" }}>
-      <ListItemText primary={primary} secondary={secondary} />
+      <ListItemText
+        primary={primary}
+        secondary={secondary}
+        sx={{ opacity: disabled ? 0.5 : 1 }}
+      />
       {children}
     </ListItem>
   );

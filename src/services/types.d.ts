@@ -30,16 +30,18 @@ interface IConfigData {
   "redir-port": number;
   "socks-port": number;
   "tproxy-port": number;
+  "enable-random-port": boolean;
   "external-controller": string;
   secret: string;
   tun: {
-    stack: string;
-    device: string;
-    "auto-route": boolean;
-    "auto-detect-interface": boolean;
-    "dns-hijack": string[];
-    "strict-route": boolean;
-    mtu: number;
+    enable?: boolean;
+    stack?: string;
+    device?: string;
+    "auto-route"?: boolean;
+    "auto-detect-interface"?: boolean;
+    "dns-hijack"?: string[];
+    "strict-route"?: boolean;
+    mtu?: number;
   };
 }
 
@@ -226,15 +228,6 @@ interface IVergeConfig {
   proxy_auto_config?: boolean;
   pac_file_content?: string;
   enable_random_port?: boolean;
-  verge_mixed_port?: number;
-  verge_socks_port?: number;
-  verge_redir_port?: number;
-  verge_tproxy_port?: number;
-  verge_port?: number;
-  verge_redir_enabled?: boolean;
-  verge_tproxy_enabled?: boolean;
-  verge_socks_enabled?: boolean;
-  verge_http_enabled?: boolean;
   enable_proxy_guard?: boolean;
   proxy_guard_duration?: number;
   system_proxy_bypass?: string;

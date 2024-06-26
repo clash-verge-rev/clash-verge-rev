@@ -1,18 +1,14 @@
-import useSWR from "swr";
-import { useEffect } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { Box, Button, ButtonGroup } from "@mui/material";
-import {
-  closeAllConnections,
-  getClashConfig,
-  updateConfigs,
-} from "@/services/api";
-import { patchClashConfig } from "@/services/cmds";
-import { useVerge } from "@/hooks/use-verge";
 import { BasePage } from "@/components/base";
-import { ProxyGroups } from "@/components/proxy/proxy-groups";
 import { ProviderButton } from "@/components/proxy/provider-button";
+import { ProxyGroups } from "@/components/proxy/proxy-groups";
+import { useVerge } from "@/hooks/use-verge";
+import { closeAllConnections, getClashConfig } from "@/services/api";
+import { patchClashConfig } from "@/services/cmds";
+import { Box, Button, ButtonGroup } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import useSWR from "swr";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
@@ -29,7 +25,7 @@ const ProxyPage = () => {
   const curMode = clashConfig?.mode?.toLowerCase();
 
   const onChangeMode = useLockFn(async (mode: string) => {
-    await updateConfigs({ mode });
+    // await updateConfigs({ mode });
     await patchClashConfig({ mode });
     mutateClash();
     // 断开连接

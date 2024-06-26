@@ -4,12 +4,16 @@
 //! - timer 定时器
 //! - cmds 页面调用
 //!
+use crate::cmds;
 use crate::config::*;
 use crate::core::*;
 use crate::log_err;
+use crate::utils::dirs::APP_ID;
 use crate::utils::resolve;
+use crate::utils::resolve::find_unused_port;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
+use tauri::api::notification::Notification;
 use tauri::{AppHandle, ClipboardManager, Manager};
 
 // 打开面板
@@ -86,67 +90,135 @@ pub fn toggle_system_proxy() {
 
 // 切换tun模式
 pub fn toggle_tun_mode() {
-    let enable = Config::verge().data().enable_tun_mode;
-    let enable = enable.unwrap_or(false);
+    let enable = Config::clash().data().get_enable_tun();
 
     tauri::async_runtime::spawn(async move {
-        match patch_verge(IVerge {
-            enable_tun_mode: Some(!enable),
-            ..IVerge::default()
-        })
-        .await
-        {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
+        match cmds::service::check_service().await {
+            Ok(service_status) => {
+                if service_status.code != 0 {
+                    let content = if service_status.code == 400 {
+                        format!("Please check whether clash verge service has been enabled.")
+                    } else {
+                        format!("Please check whether clash verge service has been installed.")
+                    };
+                    Notification::new(APP_ID)
+                        .title("Clash Verge")
+                        .body(content)
+                        .show()
+                        .unwrap();
+                } else {
+                    let mut tun = Mapping::new();
+                    let mut tun_val = Mapping::new();
+                    tun_val.insert("enable".into(), Value::from(!enable));
+                    tun.insert("tun".into(), tun_val.into());
+                    match patch_clash(tun).await {
+                        Ok(_) => log::info!(target: "app", "tun mode to {enable}"),
+                        Err(err) => {
+                            log::error!(target: "app", "{err}")
+                        }
+                    }
+                }
+            }
+            Err(err) => {
+                let content = format!("Toggle Tun Failed:\n {err}");
+                Notification::new(APP_ID)
+                    .title("Clash Verge")
+                    .body(content)
+                    .show()
+                    .unwrap();
+            }
         }
     });
 }
 
 /// 修改clash的订阅
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
-    Config::clash().draft().patch_config(patch.clone());
+    // enable-random-port filed store in verge config, only need update verge config
+    if let Some(random_val) = patch.get("enable-random-port") {
+        let enable_random_port = random_val.as_bool().unwrap_or(false);
+        let mut port = 7897;
+        if enable_random_port {
+            port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
+        }
+        // disable other port & update clash config
+        let mut tmp_map = Mapping::new();
+        tmp_map.insert("mixed-port".into(), port.into());
+        tmp_map.insert("port".into(), 0.into());
+        tmp_map.insert("socks-port".into(), 0.into());
+        tmp_map.insert("redir-port".into(), 0.into());
+        tmp_map.insert("tproxy-port".into(), 0.into());
+        let _ = clash_api::patch_configs(&tmp_map).await?;
+        Config::clash().draft().patch_config(tmp_map);
+        // update sysproxy
+        sysopt::Sysopt::global().update_sysproxy()?;
+        // update verge config
+        Config::verge().latest().patch_config(IVerge {
+            enable_random_port: Some(enable_random_port),
+            ..IVerge::default()
+        });
+        // emit refresh event & emit set config ok message
+        handle::Handle::refresh_verge();
+        handle::Handle::refresh_clash();
+        handle::Handle::notice_message("set_config::ok", "ok");
+        return Result::<()>::Ok(());
+    }
 
+    Config::clash()
+        .draft()
+        .patch_and_merge_config(patch.clone());
     let res = {
-        let redir_port = patch.get("redir-port");
-        let tproxy_port = patch.get("tproxy-port");
-        let mixed_port = patch.get("mixed-port");
-        let socks_port = patch.get("socks-port");
-        let port = patch.get("port");
-        let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
-        if mixed_port.is_some() && !enable_random_port {
-            let changed = mixed_port.unwrap()
-                != Config::verge()
-                    .latest()
-                    .verge_mixed_port
-                    .unwrap_or(Config::clash().data().get_mixed_port());
-            // 检查端口占用
-            if changed {
-                if let Some(port) = mixed_port.unwrap().as_u64() {
-                    if !port_scanner::local_port_available(port as u16) {
-                        Config::clash().discard();
-                        bail!("port already in use");
+        for key in CLASH_BASIC_CONFIG {
+            if let Some(manual_val) = patch.get(key) {
+                let mut mapping = Mapping::new();
+                let is_tun_setting = key == "tun";
+                let mut tun_enable = false;
+                if is_tun_setting {
+                    let mut clash_config = { Config::clash().data().0.clone() };
+                    let mut tun_mapping = clash_config.get_mut(key).map_or(Mapping::new(), |val| {
+                        val.as_mapping().cloned().unwrap_or(Mapping::new())
+                    });
+                    let manual_mapping = manual_val.as_mapping().cloned().unwrap_or(Mapping::new());
+                    for (tun_key, tun_value) in manual_mapping.into_iter() {
+                        tun_mapping.insert(tun_key, tun_value);
+                    }
+                    tun_enable = tun_mapping
+                        .get("enable")
+                        .map_or(false, |val| val.as_bool().unwrap_or(false));
+                    mapping.insert(key.into(), tun_mapping.into());
+                } else {
+                    mapping.insert(key.into(), manual_val.clone().into());
+                }
+                let _ = clash_api::patch_configs(&mapping).await?;
+                if is_tun_setting {
+                    let clash_configs = clash_api::get_configs().await?;
+                    let enable_tun_by_api = clash_configs
+                        .tun
+                        .get("enable")
+                        .map_or(false, |val| val.as_bool().unwrap_or(false));
+                    if tun_enable == enable_tun_by_api {
+                        handle::Handle::update_systray_part()?;
+                        handle::Handle::notice_message("set_config::ok", "ok");
+                    } else {
+                        handle::Handle::notice_message("set_config::error", "Tun Toggle Failed");
+                        bail!("Tun Toggle Failed");
+                        // return <Result<()>>::Ok(());
                     }
                 }
+                if key.contains("mixed-port") {
+                    sysopt::Sysopt::global().update_sysproxy()?;
+                }
+                // this clash basic config need to be synchronized in real time
+                Config::generate()?;
+                Config::generate_file(ConfigType::Run)?;
+                handle::Handle::refresh_clash();
             }
-        };
-
-        // 激活订阅
-        if redir_port.is_some()
-            || tproxy_port.is_some()
-            || mixed_port.is_some()
-            || socks_port.is_some()
-            || port.is_some()
-            || patch.get("secret").is_some()
-            || patch.get("external-controller").is_some()
-        {
-            Config::generate()?;
-            CoreManager::global().run_core().await?;
-            handle::Handle::refresh_clash();
         }
 
-        // 更新系统代理
-        if mixed_port.is_some() {
-            log_err!(sysopt::Sysopt::global().init_sysproxy());
+        // 激活订阅
+        if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
+            Config::generate()?;
+            CoreManager::global().run_core().await?;
+            // handle::Handle::refresh_clash();
         }
 
         if patch.get("mode").is_some() {
@@ -175,47 +247,22 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 pub async fn patch_verge(patch: IVerge) -> Result<()> {
     Config::verge().draft().patch_config(patch.clone());
 
-    let tun_mode = patch.enable_tun_mode;
     let auto_launch = patch.enable_auto_launch;
     let system_proxy = patch.enable_system_proxy;
     let pac = patch.proxy_auto_config;
     let pac_content = patch.pac_file_content;
     let proxy_bypass = patch.system_proxy_bypass;
     let language = patch.language;
-    let port = patch.verge_mixed_port;
     #[cfg(target_os = "macos")]
     let tray_icon = patch.tray_icon;
     let common_tray_icon = patch.common_tray_icon;
     let sysproxy_tray_icon = patch.sysproxy_tray_icon;
     let tun_tray_icon = patch.tun_tray_icon;
-    #[cfg(not(target_os = "windows"))]
-    let redir_enabled = patch.verge_redir_enabled;
-    #[cfg(target_os = "linux")]
-    let tproxy_enabled = patch.verge_tproxy_enabled;
-    let socks_enabled = patch.verge_socks_enabled;
-    let http_enabled = patch.verge_http_enabled;
     let res = {
         let service_mode = patch.enable_service_mode;
 
         if service_mode.is_some() {
             log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
-
-            Config::generate()?;
-            CoreManager::global().run_core().await?;
-        } else if tun_mode.is_some() {
-            update_core_config().await?;
-        }
-        #[cfg(not(target_os = "windows"))]
-        if redir_enabled.is_some() {
-            Config::generate()?;
-            CoreManager::global().run_core().await?;
-        }
-        #[cfg(target_os = "linux")]
-        if tproxy_enabled.is_some() {
-            Config::generate()?;
-            CoreManager::global().run_core().await?;
-        }
-        if socks_enabled.is_some() || http_enabled.is_some() {
             Config::generate()?;
             CoreManager::global().run_core().await?;
         }
@@ -224,12 +271,10 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         }
         if system_proxy.is_some()
             || proxy_bypass.is_some()
-            || port.is_some()
             || pac.is_some()
             || pac_content.is_some()
         {
             sysopt::Sysopt::global().update_sysproxy()?;
-            sysopt::Sysopt::global().guard_proxy();
         }
 
         if let Some(true) = patch.enable_proxy_guard {
@@ -243,7 +288,6 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if language.is_some() {
             handle::Handle::update_systray()?;
         } else if system_proxy.is_some()
-            || tun_mode.is_some()
             || common_tray_icon.is_some()
             || sysproxy_tray_icon.is_some()
             || tun_tray_icon.is_some()
@@ -326,7 +370,7 @@ async fn update_core_config() -> Result<()> {
 
 /// copy env variable
 pub fn copy_clash_env(app_handle: &AppHandle) {
-    let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
+    let port = { Config::clash().latest().get_mixed_port() };
     let http_proxy = format!("http://127.0.0.1:{}", port);
     let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
 
@@ -361,11 +405,8 @@ pub async fn test_delay(url: String) -> Result<u32> {
     use tokio::time::{Duration, Instant};
     let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
-    let port = Config::verge()
-        .latest()
-        .verge_mixed_port
-        .unwrap_or(Config::clash().data().get_mixed_port());
-    let tun_mode = Config::verge().latest().enable_tun_mode.unwrap_or(false);
+    let port = Config::clash().latest().get_mixed_port();
+    let tun_mode = Config::clash().latest().get_enable_tun();
 
     let proxy_scheme = format!("http://127.0.0.1:{port}");
 

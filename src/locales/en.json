@@ -171,7 +171,7 @@
   "Clash Core": "Clash Core",
   "Upgrade": "Upgrade",
   "Restart": "Restart",
-  "Tun mode requires": "Tun mode requires",
+  "Update core requires": "Update core requires",
   "Grant": "Grant",
   "Open UWP tool": "Open UWP tool",
   "Update GeoData": "Update GeoData",
@@ -275,10 +275,8 @@
   "App Title Info": "Restart the app to apply this change",
   "Confirm restart": "Restart App",
   "Restart App Message": "To change the title bar of this app, you need to restart the app, whether to change and restart the app immediately",
-
   "Keep UI Active": "Keep UI Active",
   "Keep UI Active Info": "Keep the UI active and open it again without re-rendering the interface",
-
   "From": "From",
   "Updated Time": "Updated Time",
   "Expire Time": "Expire Time",
@@ -286,8 +284,9 @@
   "Console": "Console",
   "Expand All": "Expand All",
   "Collapse All": "Collapse All",
-  "Update Rule Provider Error": "[ {{name}} ] Update Failed：{{errorMsg}}",
+  "Update Rule Provider Error": "[ {{name}} ] Update Failed: {{errorMsg}}",
   "Read Rule Providers Error": "Failed to read rule providers, please check if the rule providers has been updated and synchronized.",
   "Regenerate Template Content": "Regenerate Template Content",
-  "Macos Device Name Error": "Tun device names on Macos must start with utun"
+  "Macos Device Name Error": "Tun device names on Macos must start with utun",
+  "Tun Toggle Failed": "Switch Tun mode failed, please check the clash core permission is granted"
 }

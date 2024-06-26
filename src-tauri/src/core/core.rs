@@ -114,7 +114,6 @@ impl CoreManager {
             log::debug!(target: "app", "try to run core in service mode");
 
             let res = async {
-                service::check_service().await?;
                 service::run_core_by_service(&config_path).await
             }
             .await;

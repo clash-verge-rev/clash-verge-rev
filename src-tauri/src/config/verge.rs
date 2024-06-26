@@ -56,9 +56,6 @@ pub struct IVerge {
     /// tun tray icon
     pub tun_tray_icon: Option<bool>,
 
-    /// clash tun mode
-    pub enable_tun_mode: Option<bool>,
-
     /// windows service mode
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enable_service_mode: Option<bool>,
@@ -145,29 +142,6 @@ pub struct IVerge {
 
     /// 是否启用随机端口
     pub enable_random_port: Option<bool>,
-
-    /// verge 的各种 port 用于覆盖 clash 的各种 port
-    #[cfg(not(target_os = "windows"))]
-    pub verge_redir_port: Option<u16>,
-
-    #[cfg(not(target_os = "windows"))]
-    pub verge_redir_enabled: Option<bool>,
-
-    #[cfg(target_os = "linux")]
-    pub verge_tproxy_port: Option<u16>,
-
-    #[cfg(target_os = "linux")]
-    pub verge_tproxy_enabled: Option<bool>,
-
-    pub verge_mixed_port: Option<u16>,
-
-    pub verge_socks_port: Option<u16>,
-
-    pub verge_socks_enabled: Option<bool>,
-
-    pub verge_port: Option<u16>,
-
-    pub verge_http_enabled: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -233,19 +207,6 @@ impl IVerge {
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
             enable_random_port: Some(false),
-            #[cfg(not(target_os = "windows"))]
-            verge_redir_port: Some(7895),
-            #[cfg(not(target_os = "windows"))]
-            verge_redir_enabled: Some(true),
-            #[cfg(target_os = "linux")]
-            verge_tproxy_port: Some(7896),
-            #[cfg(target_os = "linux")]
-            verge_tproxy_enabled: Some(true),
-            verge_mixed_port: Some(7897),
-            verge_socks_port: Some(7898),
-            verge_socks_enabled: Some(true),
-            verge_port: Some(7899),
-            verge_http_enabled: Some(true),
             enable_proxy_guard: Some(false),
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
@@ -289,7 +250,6 @@ impl IVerge {
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);
 
-        patch!(enable_tun_mode);
         patch!(enable_service_mode);
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
@@ -297,19 +257,6 @@ impl IVerge {
         patch!(enable_keep_ui_active);
         patch!(enable_splashscreen);
         patch!(enable_random_port);
-        #[cfg(not(target_os = "windows"))]
-        patch!(verge_redir_port);
-        #[cfg(not(target_os = "windows"))]
-        patch!(verge_redir_enabled);
-        #[cfg(target_os = "linux")]
-        patch!(verge_tproxy_port);
-        #[cfg(target_os = "linux")]
-        patch!(verge_tproxy_enabled);
-        patch!(verge_mixed_port);
-        patch!(verge_socks_port);
-        patch!(verge_socks_enabled);
-        patch!(verge_port);
-        patch!(verge_http_enabled);
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
         patch!(system_proxy_bypass);

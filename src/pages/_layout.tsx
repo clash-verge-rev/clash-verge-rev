@@ -1,31 +1,30 @@
-import dayjs from "dayjs";
-import i18next from "i18next";
-import relativeTime from "dayjs/plugin/relativeTime";
-import { SWRConfig, mutate } from "swr";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useRoutes } from "react-router-dom";
-import { List, Paper, ThemeProvider } from "@mui/material";
-import { listen } from "@tauri-apps/api/event";
-import { appWindow } from "@tauri-apps/api/window";
-import { routers } from "./_routers";
-import { getAxios } from "@/services/api";
-import { useVerge } from "@/hooks/use-verge";
-import LogoSvg from "@/assets/image/logo.svg?react";
 import AppNameSvg from "@/assets/image/clash_verge.svg?react";
+import LogoSvg from "@/assets/image/logo.svg?react";
 import { Notice } from "@/components/base";
-import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
+import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { useVerge } from "@/hooks/use-verge";
+import { getAxios } from "@/services/api";
+import { getPortableFlag } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
+import { DarkMode, LightMode } from "@mui/icons-material";
+import { List, Paper, ThemeProvider } from "@mui/material";
+import { listen } from "@tauri-apps/api/event";
+import { appWindow } from "@tauri-apps/api/window";
+import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-import { getPortableFlag } from "@/services/cmds";
-import { useNavigate } from "react-router-dom";
-import { DarkMode, LightMode } from "@mui/icons-material";
+import relativeTime from "dayjs/plugin/relativeTime";
+import i18next from "i18next";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useRoutes } from "react-router-dom";
 import { CSSTransition, SwitchTransition } from "react-transition-group";
+import { SWRConfig, mutate } from "swr";
+import { routers } from "./_routers";
 
 export let portableFlag = false;
 dayjs.extend(relativeTime);
@@ -77,6 +76,8 @@ const Layout = () => {
       mutate("getProxies");
       mutate("getVersion");
       mutate("getClashConfig");
+      mutate("getClashInfo");
+      mutate("getRuntimeConfig");
       mutate("getProxyProviders");
     });
 
@@ -91,7 +92,7 @@ const Layout = () => {
           Notice.success(t("Clash Config Updated"));
           break;
         case "set_config::error":
-          Notice.error(msg);
+          Notice.error(t(msg));
           break;
         default:
           break;

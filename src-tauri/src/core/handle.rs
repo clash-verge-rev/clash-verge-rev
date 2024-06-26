@@ -1,9 +1,14 @@
 use super::tray::Tray;
-use crate::log_err;
+use crate::{
+    config::{Config, ConfigType},
+    core::clash_api,
+    log_err,
+};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
-use std::sync::Arc;
+use serde_yaml::Mapping;
+use std::{sync::Arc, thread::sleep, time::Duration};
 use tauri::{AppHandle, Manager, Window};
 
 #[derive(Debug, Default, Clone)]
@@ -72,6 +77,51 @@ impl Handle {
             bail!("update_systray unhandled error");
         }
         Tray::update_part(app_handle.as_ref().unwrap())?;
+        Ok(())
+    }
+
+    pub fn init_tun_mode_by_api() -> Result<()> {
+        tauri::async_runtime::spawn(async {
+            let tun_enable = Config::clash().latest().get_enable_tun();
+            let mut clash_configs = clash_api::get_configs().await.unwrap();
+            let mut update = false;
+            let tun_enable_by_api = clash_configs
+                .tun
+                .get("enable")
+                .map_or(false, |val| val.as_bool().unwrap_or(false));
+            if tun_enable != tun_enable_by_api {
+                for i in 0..=5 {
+                    clash_configs = clash_api::get_configs().await.unwrap();
+                    let tun_enable_by_api = clash_configs
+                        .tun
+                        .get("enable")
+                        .map_or(false, |val| val.as_bool().unwrap_or(false));
+                    if tun_enable == tun_enable_by_api {
+                        break;
+                    }
+                    if i == 4 {
+                        update = true;
+                        break;
+                    }
+                    sleep(Duration::from_secs(3));
+                }
+            }
+            if update {
+                log::error!(target: "app", "verge config: tun enable [{:?}], clash core run: tun enable [{:?}]", tun_enable, tun_enable_by_api);
+                let mut mapping = Mapping::new();
+                let mut tun_val_mapping = Mapping::new();
+                tun_val_mapping.insert("enable".into(), tun_enable_by_api.into());
+                mapping.insert("tun".into(), tun_val_mapping.into());
+                Config::clash()
+                    .latest()
+                    .patch_and_merge_config(mapping.clone());
+                if Config::clash().latest().save_config().is_ok() {
+                    Config::runtime().latest().patch_config(mapping);
+                    log_err!(Config::generate_file(ConfigType::Run));
+                    log_err!(Self::update_systray_part());
+                }
+            }
+        });
         Ok(())
     }
 }

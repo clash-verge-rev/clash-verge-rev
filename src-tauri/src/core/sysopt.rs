@@ -85,10 +85,7 @@ impl Sysopt {
 
     /// init the sysproxy
     pub fn init_sysproxy(&self) -> Result<()> {
-        let port = Config::verge()
-            .latest()
-            .verge_mixed_port
-            .unwrap_or(Config::clash().data().get_mixed_port());
+        let port = Config::clash().latest().get_mixed_port();
         let pac_port = IVerge::get_singleton_port();
 
         let (enable, pac) = {
@@ -165,10 +162,7 @@ impl Sysopt {
             return self.init_sysproxy();
         }
 
-        let port = Config::verge()
-            .latest()
-            .verge_mixed_port
-            .unwrap_or(Config::clash().data().get_mixed_port());
+        let port = Config::clash().latest().get_mixed_port();
         let pac_port = IVerge::get_singleton_port();
 
         let mut sysproxy = cur_sysproxy.take().unwrap();
@@ -377,12 +371,7 @@ impl Sysopt {
 
                 log::debug!(target: "app", "try to guard the system proxy");
 
-                let port = {
-                    Config::verge()
-                        .latest()
-                        .verge_mixed_port
-                        .unwrap_or(Config::clash().data().get_mixed_port())
-                };
+                let port = Config::clash().latest().get_mixed_port();
                 let pac_port = IVerge::get_singleton_port();
                 if pac {
                     let autoproxy = Autoproxy {

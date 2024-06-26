@@ -72,10 +72,7 @@ pub fn embed_server(app_handle: AppHandle) {
                 .pac_file_content
                 .clone()
                 .unwrap_or(DEFAULT_PAC.to_string());
-            let port = Config::verge()
-                .latest()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().data().get_mixed_port());
+            let port = Config::clash().latest().get_mixed_port();
             let content = content.replace("%mixed-port%", &format!("{}", port));
             warp::http::Response::builder()
                 .header("Content-Type", "application/x-ns-proxy-autoconfig")

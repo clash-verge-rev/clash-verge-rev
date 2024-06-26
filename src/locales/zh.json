@@ -171,7 +171,7 @@
   "Clash Core": "Clash 内核",
   "Upgrade": "升级内核",
   "Restart": "重启内核",
-  "Tun mode requires": "如需启用 Tun 模式需要授权",
+  "Update core requires": "如需更新内核需要授权",
   "Grant": "授权",
   "Open UWP tool": "UWP 工具",
   "Update GeoData": "更新 GeoData",
@@ -275,10 +275,8 @@
   "App Title Info": "重新启动应用程序以应用此更改",
   "Confirm restart": "重启应用",
   "Restart App Message": "更改应用标题栏需要重启应用，是否立即更改并重启应用",
-
   "Keep UI Active": "保持UI界面活动",
   "Keep UI Active Info": "保持UI界面活动，再次打开无需重新渲染界面",
-
   "From": "来自",
   "Updated Time": "更新时间",
   "Expire Time": "过期时间",
@@ -289,5 +287,6 @@
   "Update Rule Provider Error": "[ {{name}} ] 更新失败：{{errorMsg}}",
   "Read Rule Providers Error": "读取规则集失败, 请确认规则集文件是否已经更新同步",
   "Regenerate Template Content": "重新生成模板内容",
-  "Macos Device Name Error": "Macos 系统的 Tun 网卡名称必须以 utun 开头"
+  "Macos Device Name Error": "Macos 系统的 Tun 网卡名称必须以 utun 开头",
+  "Tun Toggle Failed": "Tun 模式切换失败，请查看内核是否授权"
 }

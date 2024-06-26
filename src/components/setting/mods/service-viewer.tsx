@@ -1,15 +1,15 @@
-import useSWR from "swr";
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { Button, Stack, Typography } from "@mui/material";
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import {
   checkService,
   installService,
-  uninstallService,
   patchVergeConfig,
+  uninstallService,
 } from "@/services/cmds";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { Button, Stack, Typography } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
+import useSWR from "swr";
 
 interface Props {
   enable: boolean;

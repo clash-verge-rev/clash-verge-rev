@@ -1,16 +1,12 @@
-import useSWR from "swr";
+import { DialogRef, SwitchLovely } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
+import { InfoRounded, Settings } from "@mui/icons-material";
+import { IconButton, Tooltip } from "@mui/material";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { IconButton, Tooltip } from "@mui/material";
-import { PrivacyTipRounded, Settings, InfoRounded } from "@mui/icons-material";
-import { checkService } from "@/services/cmds";
-import { useVerge } from "@/hooks/use-verge";
-import { DialogRef, SwitchLovely } from "@/components/base";
-import { SettingList, SettingItem } from "./mods/setting-comp";
 import { GuardState } from "./mods/guard-state";
-import { ServiceViewer } from "./mods/service-viewer";
+import { SettingItem, SettingList } from "./mods/setting-comp";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
-import { TunViewer } from "./mods/tun-viewer";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -21,105 +17,19 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { verge, mutateVerge, patchVerge } = useVerge();
 
-  // service mode
-  const { data: serviceStatus, mutate: mutateCheck } = useSWR(
-    "checkService",
-    checkService,
-    {
-      revalidateIfStale: false,
-      shouldRetryOnError: false,
-      focusThrottleInterval: 36e5, // 1 hour
-    },
-  );
-
-  const serviceRef = useRef<DialogRef>(null);
   const sysproxyRef = useRef<DialogRef>(null);
-  const tunRef = useRef<DialogRef>(null);
 
-  const {
-    enable_tun_mode,
-    enable_auto_launch,
-    enable_service_mode,
-    enable_silent_start,
-    enable_system_proxy,
-  } = verge ?? {};
+  const { enable_auto_launch, enable_silent_start, enable_system_proxy } =
+    verge ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
-  const onChangeData = (patch: Partial<IVergeConfig>) => {
+  const onChangeVerge = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
 
   return (
     <SettingList title={t("System Setting")}>
       <SysproxyViewer ref={sysproxyRef} />
-      <TunViewer ref={tunRef} />
-      <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
-
-      <SettingItem
-        label={t("Tun Mode")}
-        extra={
-          <>
-            <Tooltip title={t("Tun Mode Info")} placement="top">
-              <IconButton color="inherit" size="small">
-                <InfoRounded
-                  fontSize="inherit"
-                  style={{ cursor: "pointer", opacity: 0.75 }}
-                />
-              </IconButton>
-            </Tooltip>
-            <IconButton
-              color="inherit"
-              size="small"
-              onClick={() => tunRef.current?.open()}>
-              <Settings
-                fontSize="inherit"
-                style={{ cursor: "pointer", opacity: 0.75 }}
-              />
-            </IconButton>
-          </>
-        }>
-        <GuardState
-          value={enable_tun_mode ?? false}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_tun_mode: e })}
-          onGuard={(e) => patchVerge({ enable_tun_mode: e })}>
-          <SwitchLovely edge="end" />
-        </GuardState>
-      </SettingItem>
-
-      <SettingItem
-        label={t("Service Mode")}
-        extra={
-          <IconButton
-            color="inherit"
-            size="small"
-            onClick={() => serviceRef.current?.open()}>
-            <PrivacyTipRounded
-              fontSize="inherit"
-              style={{ cursor: "pointer", opacity: 0.75 }}
-            />
-          </IconButton>
-        }>
-        <GuardState
-          value={enable_service_mode ?? false}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_service_mode: e })}
-          onGuard={(e) => {
-            setTimeout(() => mutateCheck(), 1000);
-            return patchVerge({ enable_service_mode: e });
-          }}>
-          <SwitchLovely
-            edge="end"
-            disabled={
-              serviceStatus !== "active" && serviceStatus !== "installed"
-            }
-          />
-        </GuardState>
-      </SettingItem>
 
       <SettingItem
         label={t("System Proxy")}
@@ -149,7 +59,7 @@ const SettingSystem = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_system_proxy: e })}
+          onChange={(e) => onChangeVerge({ enable_system_proxy: e })}
           onGuard={(e) => patchVerge({ enable_system_proxy: e })}>
           <SwitchLovely edge="end" />
         </GuardState>
@@ -161,7 +71,7 @@ const SettingSystem = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_auto_launch: e })}
+          onChange={(e) => onChangeVerge({ enable_auto_launch: e })}
           onGuard={(e) => patchVerge({ enable_auto_launch: e })}>
           <SwitchLovely edge="end" />
         </GuardState>
@@ -173,7 +83,7 @@ const SettingSystem = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_silent_start: e })}
+          onChange={(e) => onChangeVerge({ enable_silent_start: e })}
           onGuard={(e) => patchVerge({ enable_silent_start: e })}>
           <SwitchLovely edge="end" />
         </GuardState>

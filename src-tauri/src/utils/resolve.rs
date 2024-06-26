@@ -1,4 +1,5 @@
-use crate::config::{IVerge, PrfOption};
+use super::dirs::APP_ID;
+use crate::config::PrfOption;
 use crate::{
     config::{Config, PrfItem},
     core::*,
@@ -8,10 +9,9 @@ use crate::{
 use crate::{log_err, trace_err};
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::api::notification;
-use tauri::{ AppHandle, CloseRequestApi, Manager};
+use tauri::{AppHandle, CloseRequestApi, Manager};
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
 
@@ -22,10 +22,7 @@ pub fn find_unused_port() -> Result<u16> {
             Ok(port)
         }
         Err(_) => {
-            let port = Config::verge()
-                .latest()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().data().get_mixed_port());
+            let port = Config::clash().latest().get_mixed_port();
             log::warn!(target: "app", "use default port: {}", port);
             Ok(port)
         }
@@ -41,32 +38,6 @@ pub fn resolve_setup(app_handle: &AppHandle) {
     log_err!(init::init_resources());
     log_err!(init::init_scheme());
     log_err!(init::startup_script());
-    // 处理随机端口
-    let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
-
-    let mut port = Config::verge()
-        .latest()
-        .verge_mixed_port
-        .unwrap_or(Config::clash().data().get_mixed_port());
-
-    if enable_random_port {
-        port = find_unused_port().unwrap_or(
-            Config::verge()
-                .latest()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().data().get_mixed_port()),
-        );
-    }
-
-    Config::verge().data().patch_config(IVerge {
-        verge_mixed_port: Some(port),
-        ..IVerge::default()
-    });
-    let _ = Config::verge().data().save_file();
-    let mut mapping = Mapping::new();
-    mapping.insert("mixed-port".into(), port.into());
-    Config::clash().data().patch_config(mapping);
-    let _ = Config::clash().data().save_config();
 
     // 启动核心
     log::trace!("init config");
@@ -88,6 +59,7 @@ pub fn resolve_setup(app_handle: &AppHandle) {
     log_err!(handle::Handle::update_systray_part());
     log_err!(hotkey::Hotkey::global().init(app_handle.app_handle()));
     log_err!(timer::Timer::global().init());
+    log_err!(handle::Handle::init_tun_mode_by_api());
 
     let argvs: Vec<String> = std::env::args().collect();
     if argvs.len() > 1 {
@@ -127,7 +99,10 @@ pub fn create_window(app_handle: &AppHandle) {
 
     #[cfg(not(target_os = "macos"))]
     {
-        let decoration = Config::verge().latest().enable_system_title.unwrap_or(false);
+        let decoration = Config::verge()
+            .latest()
+            .enable_system_title
+            .unwrap_or(false);
         builder = builder.decorations(decoration);
     }
 
@@ -251,14 +226,14 @@ pub async fn resolve_scheme(param: String) {
     };
     if let Ok(item) = PrfItem::from_url(url, None, None, Some(option)).await {
         if Config::profiles().data().append_item(item).is_ok() {
-            notification::Notification::new(crate::utils::dirs::APP_ID)
+            notification::Notification::new(APP_ID)
                 .title("Clash Verge")
                 .body("Import profile success")
                 .show()
                 .unwrap();
         };
     } else {
-        notification::Notification::new(crate::utils::dirs::APP_ID)
+        notification::Notification::new(APP_ID)
             .title("Clash Verge")
             .body("Import profile failed")
             .show()
@@ -268,12 +243,12 @@ pub async fn resolve_scheme(param: String) {
 }
 
 pub fn handle_window_close(api: CloseRequestApi, app_handle: &AppHandle) {
-  let verge = Config::verge();
-  let verge = verge.latest();
+    let verge = Config::verge();
+    let verge = verge.latest();
 
-  let keep_ui_active = verge.enable_keep_ui_active.unwrap_or(false);
-  if keep_ui_active {
-    app_handle.get_window("main").unwrap().hide().unwrap();
-    api.prevent_close();
-  }
+    let keep_ui_active = verge.enable_keep_ui_active.unwrap_or(false);
+    if keep_ui_active {
+        app_handle.get_window("main").unwrap().hide().unwrap();
+        api.prevent_close();
+    }
 }

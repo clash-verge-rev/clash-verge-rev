@@ -171,7 +171,9 @@ impl Tray {
         let verge = Config::verge();
         let verge = verge.latest();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
-        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        let clash = Config::clash();
+        let clash: parking_lot::lock_api::MappedMutexGuard<parking_lot::RawMutex, crate::config::IClashTemp> = clash.latest();
+        let tun_mode = clash.get_enable_tun();
         #[cfg(target_os = "macos")]
         let tray_icon = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
         let common_tray_icon = verge.common_tray_icon.as_ref().unwrap_or(&false);
@@ -230,7 +232,7 @@ impl Tray {
             icon
         };
 
-        if *tun_mode {
+        if tun_mode {
             #[cfg(target_os = "macos")]
             let mut icon = match tray_icon.as_str() {
                 "monochrome" => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
@@ -255,7 +257,7 @@ impl Tray {
         let _ = tray.set_icon(tauri::Icon::Raw(indication_icon));
 
         let _ = tray.get_item("system_proxy").set_selected(*system_proxy);
-        let _ = tray.get_item("tun_mode").set_selected(*tun_mode);
+        let _ = tray.get_item("tun_mode").set_selected(tun_mode);
         #[cfg(target_os = "linux")]
         {
             if *system_proxy {
@@ -267,7 +269,7 @@ impl Tray {
                     .get_item("system_proxy")
                     .set_title(t!("System Proxy", "系统代理"));
             }
-            if *tun_mode {
+            if tun_mode {
                 let _ = tray
                     .get_item("tun_mode")
                     .set_title(t!("TUN Mode  ✔", "Tun 模式  ✔"));
@@ -300,7 +302,7 @@ impl Tray {
             t!("System Proxy", "系统代理"),
             switch_map[system_proxy],
             t!("TUN Mode", "Tun 模式"),
-            switch_map[tun_mode],
+            switch_map[&tun_mode],
             t!("Curent Profile", "当前订阅"),
             current_profile_name
         ));

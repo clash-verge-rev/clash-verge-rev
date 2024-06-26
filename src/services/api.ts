@@ -50,10 +50,10 @@ export const getClashConfig = async () => {
 };
 
 /// Update current configs
-export const updateConfigs = async (config: Partial<IConfigData>) => {
-  const instance = await getAxios();
-  return instance.patch("/configs", config);
-};
+// export const updateConfigs = async (config: Partial<IConfigData>) => {
+//   const instance = await getAxios();
+//   return instance.patch("/configs", config);
+// };
 
 /// Update geo data
 export const updateGeoData = async () => {

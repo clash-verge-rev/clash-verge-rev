@@ -58,30 +58,14 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // config.yaml 的订阅
     let clash_config = { Config::clash().latest().0.clone() };
 
-    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled) = {
+    let (clash_core, enable_builtin) = {
         let verge = Config::verge();
         let verge = verge.latest();
         (
             verge.clash_core.clone(),
-            verge.enable_tun_mode.unwrap_or(false),
             verge.enable_builtin_enhanced.unwrap_or(true),
-            verge.verge_socks_enabled.unwrap_or(true),
-            verge.verge_http_enabled.unwrap_or(true),
         )
     };
-    #[cfg(not(target_os = "windows"))]
-    let redir_enabled = {
-        let verge = Config::verge();
-        let verge = verge.latest();
-        verge.verge_redir_enabled.unwrap_or(true)
-    };
-    #[cfg(target_os = "linux")]
-    let tproxy_enabled = {
-        let verge = Config::verge();
-        let verge = verge.latest();
-        verge.verge_tproxy_enabled.unwrap_or(true)
-    };
-
     // 从profiles里拿东西
     let (mut config, chain) = {
         let profiles = Config::profiles();
@@ -138,27 +122,8 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             }
             config.insert("tun".into(), tun.into());
         } else {
-            if key.as_str() == Some("socks-port") && !socks_enabled {
-                config.remove("socks-port");
+            if key.as_str() == Some("enable-random-port") {
                 continue;
-            }
-            if key.as_str() == Some("port") && !http_enabled {
-                config.remove("port");
-                continue;
-            }
-            #[cfg(not(target_os = "windows"))]
-            {
-                if key.as_str() == Some("redir-port") && !redir_enabled {
-                    config.remove("redir-port");
-                    continue;
-                }
-            }
-            #[cfg(target_os = "linux")]
-            {
-                if key.as_str() == Some("tproxy-port") && !tproxy_enabled {
-                    config.remove("tproxy-port");
-                    continue;
-                }
             }
             config.insert(key, value);
         }
@@ -185,6 +150,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             });
     }
 
+    let enable_tun = Config::clash().latest().get_enable_tun();
     config = use_tun(config, enable_tun);
     config = use_sort(config);
     config = generate_rule_providers(config);

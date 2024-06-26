@@ -1,26 +1,34 @@
-import { useRef } from "react";
-import { useTranslation } from "react-i18next";
-import {
-  TextField,
-  Select,
-  MenuItem,
-  Typography,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
-import { Settings, Shuffle } from "@mui/icons-material";
 import { DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { ServiceViewer } from "@/components/setting/mods/service-viewer";
+import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useClash } from "@/hooks/use-clash";
-import { GuardState } from "./mods/guard-state";
-import { WebUIViewer } from "./mods/web-ui-viewer";
-import { ClashPortViewer } from "./mods/clash-port-viewer";
-import { ControllerViewer } from "./mods/controller-viewer";
-import { SettingList, SettingItem } from "./mods/setting-comp";
-import { ClashCoreViewer } from "./mods/clash-core-viewer";
-import { invoke_uwp_tool } from "@/services/cmds";
-import getSystem from "@/utils/get-system";
 import { useVerge } from "@/hooks/use-verge";
 import { updateGeoData } from "@/services/api";
+import { checkService, invoke_uwp_tool } from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+import {
+  InfoRounded,
+  PrivacyTipRounded,
+  Settings,
+  Shuffle,
+} from "@mui/icons-material";
+import {
+  IconButton,
+  MenuItem,
+  Select,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import useSWR from "swr";
+import { ClashCoreViewer } from "./mods/clash-core-viewer";
+import { ClashPortViewer } from "./mods/clash-port-viewer";
+import { ControllerViewer } from "./mods/controller-viewer";
+import { GuardState } from "./mods/guard-state";
+import { SettingItem, SettingList } from "./mods/setting-comp";
+import { WebUIViewer } from "./mods/web-ui-viewer";
 
 const isWIN = getSystem() === "windows";
 
@@ -33,15 +41,31 @@ const SettingClash = ({ onError }: Props) => {
 
   const { clash, version, mutateClash, patchClash } = useClash();
   const { verge, mutateVerge, patchVerge } = useVerge();
+  // service mode
+  const { data: serviceStatus, mutate: mutateCheck } = useSWR(
+    "checkService",
+    checkService,
+    {
+      revalidateIfStale: false,
+      shouldRetryOnError: false,
+      focusThrottleInterval: 36e5, // 1 hour
+    },
+  );
 
-  const { ipv6, "allow-lan": allowLan, "log-level": logLevel } = clash ?? {};
-
-  const { enable_random_port = false, verge_mixed_port } = verge ?? {};
+  const {
+    ipv6,
+    "allow-lan": allowLan,
+    "log-level": logLevel,
+    tun,
+  } = clash ?? {};
+  const { enable_random_port = false, enable_service_mode } = verge ?? {};
 
   const webRef = useRef<DialogRef>(null);
   const portRef = useRef<DialogRef>(null);
   const ctrlRef = useRef<DialogRef>(null);
   const coreRef = useRef<DialogRef>(null);
+  const tunRef = useRef<DialogRef>(null);
+  const serviceRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -61,10 +85,83 @@ const SettingClash = ({ onError }: Props) => {
 
   return (
     <SettingList title={t("Clash Setting")}>
+      <TunViewer ref={tunRef} />
       <WebUIViewer ref={webRef} />
       <ClashPortViewer ref={portRef} />
       <ControllerViewer ref={ctrlRef} />
-      <ClashCoreViewer ref={coreRef} />
+      <ClashCoreViewer
+        ref={coreRef}
+        serviceActive={serviceStatus === "active"}
+      />
+      <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
+
+      <SettingItem
+        disabled={serviceStatus !== "active"}
+        label={t("Tun Mode")}
+        extra={
+          <>
+            <Tooltip title={t("Tun Mode Info")} placement="top">
+              <IconButton color="inherit" size="small">
+                <InfoRounded
+                  fontSize="inherit"
+                  style={{ cursor: "pointer", opacity: 0.75 }}
+                />
+              </IconButton>
+            </Tooltip>
+            <IconButton
+              color="inherit"
+              size="small"
+              onClick={() =>
+                serviceStatus === "active" && tunRef.current?.open()
+              }>
+              <Settings
+                fontSize="inherit"
+                style={{ cursor: "pointer", opacity: 0.75 }}
+              />
+            </IconButton>
+          </>
+        }>
+        <GuardState
+          value={tun?.enable ?? false}
+          valueProps="checked"
+          // onCatch={onError}
+          onFormat={onSwitchFormat}
+          onGuard={(e) => patchClash({ tun: { enable: e } })}>
+          <SwitchLovely disabled={serviceStatus !== "active"} edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t("Service Mode")}
+        extra={
+          <IconButton
+            color="inherit"
+            size="small"
+            onClick={() => serviceRef.current?.open()}>
+            <PrivacyTipRounded
+              fontSize="inherit"
+              style={{ cursor: "pointer", opacity: 0.75 }}
+            />
+          </IconButton>
+        }>
+        <GuardState
+          value={enable_service_mode ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeVerge({ enable_service_mode: e })}
+          onGuard={(e) => {
+            setTimeout(() => mutateCheck(), 1000);
+            return patchVerge({ enable_service_mode: e });
+          }}>
+          <SwitchLovely
+            edge="end"
+            disabled={
+              serviceStatus !== "active" && serviceStatus !== "installed"
+            }
+          />
+        </GuardState>
+      </SettingItem>
 
       <SettingItem label={t("Allow Lan")}>
         <GuardState
@@ -72,7 +169,7 @@ const SettingClash = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ "allow-lan": e })}
+          // onChange={(e) => onChangeData({ "allow-lan": e })}
           onGuard={(e) => patchClash({ "allow-lan": e })}>
           <SwitchLovely edge="end" />
         </GuardState>
@@ -84,7 +181,7 @@ const SettingClash = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ ipv6: e })}
+          // onChange={(e) => onChangeData({ ipv6: e })}
           onGuard={(e) => patchClash({ ipv6: e })}>
           <SwitchLovely edge="end" />
         </GuardState>
@@ -96,7 +193,7 @@ const SettingClash = ({ onError }: Props) => {
           value={logLevel === "warn" ? "warning" : logLevel ?? "info"}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
-          onChange={(e) => onChangeData({ "log-level": e })}
+          // onChange={(e) => onChangeData({ "log-level": e })}
           onGuard={(e) => patchClash({ "log-level": e })}>
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="debug">Debug</MenuItem>
@@ -116,12 +213,9 @@ const SettingClash = ({ onError }: Props) => {
               color={enable_random_port ? "primary" : "inherit"}
               size="small"
               onClick={() => {
-                Notice.success(
-                  t("Restart Application to Apply Modifications"),
-                  1000,
-                );
                 onChangeVerge({ enable_random_port: !enable_random_port });
                 patchVerge({ enable_random_port: !enable_random_port });
+                patchClash({ "enable-random-port": !enable_random_port });
               }}>
               <Shuffle
                 fontSize="inherit"
@@ -134,7 +228,7 @@ const SettingClash = ({ onError }: Props) => {
           disabled={enable_random_port}
           autoComplete="off"
           size="small"
-          value={verge_mixed_port ?? 7897}
+          value={clash?.["mixed-port"] ?? 7897}
           sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}
           onClick={(e) => {
             portRef.current?.open();

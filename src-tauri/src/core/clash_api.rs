@@ -1,6 +1,8 @@
 use crate::config::Config;
 use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
+use reqwest_middleware::ClientBuilder;
+use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::collections::HashMap;
@@ -10,21 +12,44 @@ pub async fn restart_core() -> Result<()> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/restart");
 
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client.post(&url).headers(headers.clone());
-    builder.send().await?;
+    // Retry up to 3 times with increasing intervals between attempts.
+    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
+    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
+        // Retry failed requests.
+        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+        .build();
+    let _ = client
+        .post(&url)
+        .headers(headers.clone())
+        .send()
+        .await
+        .unwrap();
     Ok(())
 }
 
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+pub struct ClashBasicConfig {
+    /// only use tun config for now
+    pub tun: Mapping,
+}
 /// GET /configs
-pub async fn get_configs() -> Result<String> {
+pub async fn get_configs() -> Result<ClashBasicConfig> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/configs");
 
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client.get(&url).headers(headers.clone());
-    let response = builder.send().await?;
-    Ok(response.text().await?)
+    // Retry up to 3 times with increasing intervals between attempts.
+    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
+    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
+        // Retry failed requests.
+        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+        .build();
+    let response = client
+        .get(&url)
+        .headers(headers.clone())
+        .send()
+        .await
+        .unwrap();
+    Ok(response.json::<ClashBasicConfig>().await?)
 }
 
 /// PUT /configs

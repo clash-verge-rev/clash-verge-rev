@@ -42,6 +42,7 @@ fn main() -> std::io::Result<()> {
                     "splashscreen",
                     tauri::WindowUrl::App("splashscreen.html".into()),
                 )
+                .title("splashscreen")
                 .decorations(false)
                 .center()
                 .resizable(false)

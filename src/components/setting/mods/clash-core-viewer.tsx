@@ -1,23 +1,30 @@
-import { mutate } from "swr";
-import { forwardRef, useImperativeHandle, useState } from "react";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
-import { useTranslation } from "react-i18next";
 import { useVerge } from "@/hooks/use-verge";
-import { useLockFn } from "ahooks";
+import { closeAllConnections, upgradeCore } from "@/services/api";
+import {
+  changeClashCore,
+  grantPermission,
+  restartSidecar,
+} from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+import { RestartAlt, SwitchAccessShortcut } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
-import { SwitchAccessShortcut, RestartAlt } from "@mui/icons-material";
 import {
   Box,
   Button,
-  Tooltip,
   List,
   ListItemButton,
   ListItemText,
+  Tooltip,
 } from "@mui/material";
-import { changeClashCore, restartSidecar } from "@/services/cmds";
-import { closeAllConnections, upgradeCore } from "@/services/api";
-import { grantPermission } from "@/services/cmds";
-import getSystem from "@/utils/get-system";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { mutate } from "swr";
+
+interface Props {
+  serviceActive: boolean;
+}
 
 const VALID_CORE = [
   { name: "Mihomo", core: "verge-mihomo" },
@@ -26,7 +33,8 @@ const VALID_CORE = [
 
 const OS = getSystem();
 
-export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
+export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
+  const { serviceActive } = props;
   const { t } = useTranslation();
 
   const { verge, mutateVerge } = useVerge();
@@ -146,8 +154,8 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
             onClick={() => onCoreChange(each.core)}>
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
 
-            {(OS === "macos" || OS === "linux") && (
-              <Tooltip title={t("Tun mode requires")}>
+            {(OS === "macos" || OS === "linux") && !serviceActive && (
+              <Tooltip title={t("Update core requires")}>
                 <Button
                   variant="outlined"
                   size="small"

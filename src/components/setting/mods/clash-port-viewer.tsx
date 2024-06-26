@@ -1,59 +1,34 @@
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { useClashInfo } from "@/hooks/use-clash";
+import getSystem from "@/utils/get-system";
+import { List, ListItem, ListItemText, TextField } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { uniq } from "lodash-es";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLockFn } from "ahooks";
-import { List, ListItem, ListItemText, TextField } from "@mui/material";
-import { useClashInfo } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
-import { useVerge } from "@/hooks/use-verge";
-import getSystem from "@/utils/get-system";
+import { mutate } from "swr";
+
 const OS = getSystem();
 
 export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const { clashInfo, patchInfo } = useClashInfo();
-  const { verge, patchVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
-  const [redirPort, setRedirPort] = useState(
-    verge?.verge_redir_port ?? clashInfo?.redir_port ?? 7895,
-  );
-  const [redirEnabled, setRedirEnabled] = useState(
-    verge?.verge_redir_enabled ?? true,
-  );
-  const [tproxyPort, setTproxyPort] = useState(
-    verge?.verge_tproxy_port ?? clashInfo?.tproxy_port ?? 7896,
-  );
-  const [tproxyEnabled, setTproxyEnabled] = useState(
-    verge?.verge_tproxy_enabled ?? true,
-  );
-  const [mixedPort, setMixedPort] = useState(
-    verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
-  );
-  const [socksPort, setSocksPort] = useState(
-    verge?.verge_socks_port ?? clashInfo?.socks_port ?? 7898,
-  );
-  const [socksEnabled, setSocksEnabled] = useState(
-    verge?.verge_socks_enabled ?? true,
-  );
-  const [port, setPort] = useState(
-    verge?.verge_port ?? clashInfo?.port ?? 7899,
-  );
-  const [httpEnabled, setHttpEnabled] = useState(
-    verge?.verge_http_enabled ?? true,
-  );
+  const [redirPort, setRedirPort] = useState(clashInfo?.redir_port ?? 7895);
+  const [tproxyPort, setTproxyPort] = useState(clashInfo?.tproxy_port ?? 7896);
+  const [mixedPort, setMixedPort] = useState(clashInfo?.mixed_port ?? 7897);
+  const [socksPort, setSocksPort] = useState(clashInfo?.socks_port ?? 7898);
+  const [port, setPort] = useState(clashInfo?.port ?? 7899);
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      if (verge?.verge_redir_port) setRedirPort(verge?.verge_redir_port);
-      setRedirEnabled(verge?.verge_redir_enabled ?? true);
-      if (verge?.verge_tproxy_port) setTproxyPort(verge?.verge_tproxy_port);
-      setTproxyEnabled(verge?.verge_tproxy_enabled ?? true);
-      if (verge?.verge_mixed_port) setMixedPort(verge?.verge_mixed_port);
-      if (verge?.verge_socks_port) setSocksPort(verge?.verge_socks_port);
-      setSocksEnabled(verge?.verge_socks_enabled ?? true);
-      if (verge?.verge_port) setPort(verge?.verge_port);
-      setHttpEnabled(verge?.verge_http_enabled ?? true);
+      setRedirPort(clashInfo?.redir_port ?? 7895);
+      setTproxyPort(clashInfo?.tproxy_port ?? 7896);
+      setMixedPort(clashInfo?.mixed_port ?? 7897);
+      setSocksPort(clashInfo?.socks_port ?? 7898);
+      setPort(clashInfo?.port ?? 7899);
       setOpen(true);
     },
     close: () => setOpen(false),
@@ -61,57 +36,59 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (
-      redirPort === verge?.verge_redir_port &&
-      tproxyPort === verge?.verge_tproxy_port &&
-      mixedPort === verge?.verge_mixed_port &&
-      socksPort === verge?.verge_socks_port &&
-      port === verge?.verge_port &&
-      redirEnabled === verge?.verge_redir_enabled &&
-      tproxyEnabled === verge?.verge_tproxy_enabled &&
-      socksEnabled === verge?.verge_socks_enabled &&
-      httpEnabled === verge?.verge_http_enabled
+      redirPort === clashInfo?.redir_port &&
+      tproxyPort === clashInfo?.tproxy_port &&
+      mixedPort === clashInfo?.mixed_port &&
+      socksPort === clashInfo?.socks_port &&
+      port === clashInfo?.port
     ) {
       setOpen(false);
       return;
     }
 
-    if (
-      OS === "linux" &&
-      new Set([redirPort, tproxyPort, mixedPort, socksPort, port]).size !== 5
-    ) {
-      Notice.error(t("Port Conflict"), 4000);
-      return;
+    if (OS === "linux") {
+      const conflictPorts = [
+        redirPort,
+        tproxyPort,
+        mixedPort,
+        socksPort,
+        port,
+      ].filter((port) => port !== 0);
+      if (uniq(conflictPorts).length !== conflictPorts.length) {
+        Notice.error(t("Port Conflict"), 4000);
+        return;
+      }
     }
-    if (
-      OS === "macos" &&
-      new Set([redirPort, mixedPort, socksPort, port]).size !== 4
-    ) {
-      Notice.error(t("Port Conflict"), 4000);
-      return;
+    if (OS === "macos") {
+      const conflictPorts = [redirPort, mixedPort, socksPort, port].filter(
+        (port) => port !== 0,
+      );
+      if (uniq(conflictPorts).length !== conflictPorts.length) {
+        Notice.error(t("Port Conflict"), 4000);
+        return;
+      }
     }
-    if (OS === "windows" && new Set([mixedPort, socksPort, port]).size !== 3) {
-      Notice.error(t("Port Conflict"), 4000);
-      return;
+    if (OS === "windows") {
+      const conflictPorts = [mixedPort, socksPort, port].filter(
+        (port) => port !== 0,
+      );
+      if (uniq(conflictPorts).length !== conflictPorts.length) {
+        Notice.error(t("Port Conflict"), 4000);
+        return;
+      }
     }
+
     try {
       if (OS !== "windows") {
         await patchInfo({ "redir-port": redirPort });
-        await patchVerge({ verge_redir_port: redirPort });
-        await patchVerge({ verge_redir_enabled: redirEnabled });
       }
       if (OS === "linux") {
         await patchInfo({ "tproxy-port": tproxyPort });
-        await patchVerge({ verge_tproxy_port: tproxyPort });
-        await patchVerge({ verge_tproxy_enabled: tproxyEnabled });
       }
       await patchInfo({ "mixed-port": mixedPort });
       await patchInfo({ "socks-port": socksPort });
       await patchInfo({ port });
-      await patchVerge({ verge_mixed_port: mixedPort });
-      await patchVerge({ verge_socks_port: socksPort });
-      await patchVerge({ verge_port: port });
-      await patchVerge({ verge_socks_enabled: socksEnabled });
-      await patchVerge({ verge_http_enabled: httpEnabled });
+      await mutate("getRuntimeConfig");
       setOpen(false);
       Notice.success(t("Clash Port Modified"), 1000);
     } catch (err: any) {
@@ -131,11 +108,14 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       onOk={onSave}>
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Mixed Port" />
+          <ListItemText
+            primary="Mixed Port"
+            sx={{ opacity: mixedPort === 0 ? 0.5 : 1 }}
+          />
           <TextField
             size="small"
             autoComplete="off"
-            sx={{ width: 135 }}
+            sx={{ width: 135, opacity: mixedPort === 0 ? 0.5 : 1 }}
             value={mixedPort}
             onChange={(e) =>
               setMixedPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
@@ -143,98 +123,66 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Socks Port" />
+          <ListItemText
+            primary="Socks Port"
+            sx={{ opacity: socksPort === 0 ? 0.5 : 1 }}
+          />
           <TextField
             size="small"
             autoComplete="off"
-            sx={{ width: 135 }}
+            sx={{ width: 135, opacity: socksPort === 0 ? 0.5 : 1 }}
             value={socksPort}
             onChange={(e) =>
               setSocksPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
             }
-            InputProps={{
-              sx: { pr: 1 },
-              endAdornment: (
-                <SwitchLovely
-                  checked={socksEnabled}
-                  onChange={(_, c) => {
-                    setSocksEnabled(c);
-                  }}
-                />
-              ),
-            }}
           />
         </ListItem>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Http Port" />
+          <ListItemText
+            primary="Http Port"
+            sx={{ opacity: port === 0 ? 0.5 : 1 }}
+          />
           <TextField
             size="small"
             autoComplete="off"
-            sx={{ width: 135 }}
+            sx={{ width: 135, opacity: port === 0 ? 0.5 : 1 }}
             value={port}
             onChange={(e) =>
               setPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
             }
-            InputProps={{
-              sx: { pr: 1 },
-              endAdornment: (
-                <SwitchLovely
-                  checked={httpEnabled}
-                  onChange={(_, c) => {
-                    setHttpEnabled(c);
-                  }}
-                />
-              ),
-            }}
           />
         </ListItem>
         {OS !== "windows" && (
           <ListItem sx={{ padding: "5px 2px" }}>
-            <ListItemText primary="Redir Port" />
+            <ListItemText
+              primary="Redir Port"
+              sx={{ opacity: redirPort === 0 ? 0.5 : 1 }}
+            />
             <TextField
               size="small"
               autoComplete="off"
-              sx={{ width: 135 }}
+              sx={{ width: 135, opacity: redirPort === 0 ? 0.5 : 1 }}
               value={redirPort}
               onChange={(e) =>
                 setRedirPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
               }
-              InputProps={{
-                sx: { pr: 1 },
-                endAdornment: (
-                  <SwitchLovely
-                    checked={redirEnabled}
-                    onChange={(_, c) => {
-                      setRedirEnabled(c);
-                    }}
-                  />
-                ),
-              }}
             />
           </ListItem>
         )}
         {OS === "linux" && (
           <ListItem sx={{ padding: "5px 2px" }}>
-            <ListItemText primary="Tproxy Port" />
+            <ListItemText
+              primary="Tproxy Port"
+              sx={{ opacity: tproxyPort === 0 ? 0.5 : 1 }}
+            />
             <TextField
               size="small"
               autoComplete="off"
-              sx={{ width: 135 }}
+              sx={{ width: 135, opacity: tproxyPort === 0 ? 0.5 : 1 }}
               value={tproxyPort}
               onChange={(e) =>
                 setTproxyPort(+e.target.value?.replace(/\D+/, "").slice(0, 5))
               }
-              InputProps={{
-                sx: { pr: 1 },
-                endAdornment: (
-                  <SwitchLovely
-                    checked={tproxyEnabled}
-                    onChange={(_, c) => {
-                      setTproxyEnabled(c);
-                    }}
-                  />
-                ),
-              }}
             />
           </ListItem>
         )}

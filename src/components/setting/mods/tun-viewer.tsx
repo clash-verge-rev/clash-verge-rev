@@ -1,20 +1,19 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
+import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { useClash } from "@/hooks/use-clash";
+import getSystem from "@/utils/get-system";
 import {
+  Box,
+  Button,
   List,
   ListItem,
   ListItemText,
-  Box,
-  Typography,
-  Button,
   TextField,
+  Typography,
 } from "@mui/material";
-import { useClash } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { StackModeSwitch } from "./stack-mode-switch";
-import { enhanceProfiles } from "@/services/cmds";
-import getSystem from "@/utils/get-system";
 
 const OS = getSystem();
 
@@ -57,6 +56,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         return;
       }
       let tun = {
+        ...clash?.tun,
         stack: values.stack,
         device: values.device === "" ? defaultDeviceName : values.device,
         "auto-route": values.autoRoute,
@@ -66,19 +66,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         mtu: values.mtu ?? 1500,
       };
       await patchClash({ tun });
-      await mutateClash(
-        (old) => ({
-          ...(old! || {}),
-          tun,
-        }),
-        false,
-      );
-      try {
-        await enhanceProfiles();
-        Notice.success(t("Settings Applied"), 1000);
-      } catch (err: any) {
-        Notice.error(err.message || err.toString(), 3000);
-      }
+      await mutateClash((old) => ({ ...(old! || {}), tun }), false);
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
@@ -95,15 +83,6 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             variant="outlined"
             size="small"
             onClick={async () => {
-              let tun = {
-                stack: "gvisor",
-                device: defaultDeviceName,
-                "auto-route": true,
-                "auto-detect-interface": true,
-                "dns-hijack": ["any:53"],
-                "strict-route": false,
-                mtu: 1500,
-              };
               setValues({
                 stack: "gvisor",
                 device: defaultDeviceName,
@@ -113,8 +92,6 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
                 strictRoute: false,
                 mtu: 1500,
               });
-              await patchClash({ tun });
-              await mutateClash((old) => ({ ...(old! || {}), tun }), false);
             }}>
             {t("Reset to Default")}
           </Button>
