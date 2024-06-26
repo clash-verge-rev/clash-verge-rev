@@ -271,3 +271,24 @@ export const getGroupProxyDelays = async (
   );
   return result as any as Record<string, number>;
 };
+
+// Is debug enabled
+export const isDebugEnabled = async () => {
+  try {
+    const instance = await getAxios();
+    await instance.get("/debug/pprof");
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// GC
+export const gc = async () => {
+  try {
+    const instance = await getAxios();
+    await instance.put("/debug/gc");
+  } catch (error) {
+    console.error(`Error gcing: ${error}`);
+  }
+};
