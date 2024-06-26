@@ -1,12 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  TextField,
-  Select,
-  MenuItem,
-  Typography,
-  IconButton,
-} from "@mui/material";
+import { TextField, Select, MenuItem, Typography } from "@mui/material";
 
 import { Settings, Shuffle } from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
