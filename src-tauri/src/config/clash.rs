@@ -34,10 +34,10 @@ impl IClashTemp {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
         tun.insert("stack".into(), "gvisor".into());
-        let device_name = "Mihomo";
+        #[cfg(not(target_os = "macos"))]
+        tun.insert("device".into(), "Mihomo".into());
         #[cfg(target_os = "macos")]
-        let device_name = "utun_Mihomo";
-        tun.insert("device".into(), device_name.into());
+        tun.insert("device".into(), "utun_Mihomo".into());
         tun.insert("auto-route".into(), true.into());
         tun.insert("strict-route".into(), false.into());
         tun.insert("auto-detect-interface".into(), true.into());
