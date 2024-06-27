@@ -13,6 +13,8 @@ use crate::utils::resolve;
 use crate::utils::resolve::find_unused_port;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
+use std::thread::sleep;
+use std::time::Duration;
 use tauri::api::notification::Notification;
 use tauri::{AppHandle, ClipboardManager, Manager};
 
@@ -188,32 +190,35 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
                 // handle tun config
                 if key == "tun" {
-                    let clash_basic_configs = clash_api::get_configs().await?;
-                    let tun_enable = value
-                        .as_mapping()
-                        .unwrap()
-                        .get("enable")
-                        .map_or(false, |val| val.as_bool().unwrap_or(false));
-                    let tun_enable_by_api = clash_basic_configs
-                        .tun
-                        .get("enable")
-                        .map_or(false, |val| val.as_bool().unwrap_or(false));
-                    if tun_enable == tun_enable_by_api {
-                        handle::Handle::update_systray_part()?;
-                        handle::Handle::notice_message("set_config::ok", "ok");
-                    } else {
-                        // set tun enable status
-                        let mut tun_mapping = Mapping::new();
-                        let mut tun_enable_mapping = Mapping::new();
-                        tun_enable_mapping.insert("enable".into(), tun_enable_by_api.into());
-                        tun_mapping.insert("tun".into(), tun_enable_mapping.into());
-                        Config::clash().draft().patch_and_merge_config(tun_mapping);
-                        let message = if tun_enable {
-                            "Tun Device Or Resource Busy"
+                    for _ in 0..5 {
+                        let clash_basic_configs = clash_api::get_configs().await?;
+                        let tun_enable = value
+                            .as_mapping()
+                            .unwrap()
+                            .get("enable")
+                            .map_or(false, |val| val.as_bool().unwrap_or(false));
+                        let tun_enable_by_api = clash_basic_configs
+                            .tun
+                            .get("enable")
+                            .map_or(false, |val| val.as_bool().unwrap_or(false));
+                        if tun_enable == tun_enable_by_api {
+                            handle::Handle::update_systray_part()?;
+                            handle::Handle::notice_message("set_config::ok", "ok");
                         } else {
-                            "Update Tun Config Failed"
-                        };
-                        handle::Handle::notice_message("set_config::error", message);
+                            // set tun enable status
+                            let mut tun_mapping = Mapping::new();
+                            let mut tun_enable_mapping = Mapping::new();
+                            tun_enable_mapping.insert("enable".into(), tun_enable_by_api.into());
+                            tun_mapping.insert("tun".into(), tun_enable_mapping.into());
+                            Config::clash().draft().patch_and_merge_config(tun_mapping);
+                            let message = if tun_enable {
+                                "Tun Device Or Resource Busy"
+                            } else {
+                                "Update Tun Config Failed"
+                            };
+                            handle::Handle::notice_message("set_config::error", message);
+                        }
+                        sleep(Duration::from_millis(500));
                     }
                 }
                 // handle system proxy

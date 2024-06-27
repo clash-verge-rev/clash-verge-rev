@@ -122,6 +122,7 @@ impl Handle {
                         log_err!(Self::update_systray_part());
                     }
                 }
+                sleep(Duration::from_secs(1));
             }
         });
         Ok(())
