@@ -2,6 +2,7 @@ use crate::config::*;
 use crate::core::{clash_api, handle, logger::Logger, service};
 use crate::log_err;
 use crate::utils::dirs;
+use crate::utils::resolve::find_unused_port;
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -31,7 +32,23 @@ impl CoreManager {
 
     pub fn init(&self) -> Result<()> {
         tauri::async_runtime::spawn(async {
-            // 启动clash
+            let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
+            if enable_random_port {
+                let port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
+                let mut port_mapping = Mapping::new();
+                port_mapping.insert("mixed-port".into(), port.into());
+                port_mapping.insert("port".into(), 0.into());
+                port_mapping.insert("socks-port".into(), 0.into());
+                port_mapping.insert("redir-port".into(), 0.into());
+                port_mapping.insert("tproxy-port".into(), 0.into());
+                // patch config
+                Config::clash()
+                    .latest()
+                    .patch_config(port_mapping.clone().into());
+                log_err!(Config::clash().latest().save_config());
+                Config::runtime().latest().patch_config(port_mapping);
+            }
+            // 启动 clash
             log_err!(Self::global().run_core().await);
         });
 
@@ -113,10 +130,7 @@ impl CoreManager {
             // 服务模式启动失败就直接运行sidecar
             log::debug!(target: "app", "try to run core in service mode");
 
-            let res = async {
-                service::run_core_by_service(&config_path).await
-            }
-            .await;
+            let res = async { service::run_core_by_service(&config_path).await }.await;
             match res {
                 Ok(_) => return Ok(()),
                 Err(err) => {
@@ -125,6 +139,17 @@ impl CoreManager {
                     log::error!(target: "app", "{err}");
                 }
             }
+        } else {
+            // patch config: disable tun mode
+            Config::clash()
+                .latest()
+                .patch_and_merge_config(disable.clone());
+            Config::clash().latest().save_config()?;
+            Config::runtime().latest().patch_config(disable.clone());
+            Config::generate_file(ConfigType::Run)?;
+            // emit refresh clash event & update tray menu
+            handle::Handle::refresh_clash();
+            handle::Handle::update_systray_part()?;
         }
 
         let app_dir = dirs::app_home_dir()?;
