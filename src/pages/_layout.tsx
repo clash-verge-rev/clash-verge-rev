@@ -82,7 +82,9 @@ const Layout = () => {
     });
 
     // update the verge config
-    listen("verge://refresh-verge-config", () => mutate("getVergeConfig"));
+    listen("verge://refresh-verge-config", () => {
+      mutate("getVergeConfig");
+    });
 
     // 设置提示监听
     listen("verge://notice-message", ({ payload }) => {

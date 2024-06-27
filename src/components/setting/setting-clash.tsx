@@ -2,9 +2,10 @@ import { DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { ServiceViewer } from "@/components/setting/mods/service-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useClash } from "@/hooks/use-clash";
+import { useService } from "@/hooks/use-service";
 import { useVerge } from "@/hooks/use-verge";
 import { updateGeoData } from "@/services/api";
-import { checkService, invoke_uwp_tool } from "@/services/cmds";
+import { invoke_uwp_tool } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import {
   InfoRounded,
@@ -20,9 +21,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
 import { ControllerViewer } from "./mods/controller-viewer";
@@ -41,16 +41,13 @@ const SettingClash = ({ onError }: Props) => {
 
   const { clash, version, mutateClash, patchClash } = useClash();
   const { verge, mutateVerge, patchVerge } = useVerge();
-  // service mode
-  const { data: serviceStatus, mutate: mutateCheck } = useSWR(
-    "checkService",
-    checkService,
-    {
-      revalidateIfStale: false,
-      shouldRetryOnError: false,
-      focusThrottleInterval: 36e5, // 1 hour
-    },
-  );
+  const { serviceStatus, mutateCheckService } = useService();
+
+  useEffect(() => {
+    if (!verge) return;
+
+    mutateCheckService();
+  }, [verge]);
 
   const {
     ipv6,
@@ -152,7 +149,7 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeVerge({ enable_service_mode: e })}
           onGuard={(e) => {
-            setTimeout(() => mutateCheck(), 1000);
+            setTimeout(() => mutateCheckService(), 1000);
             return patchVerge({ enable_service_mode: e });
           }}>
           <SwitchLovely

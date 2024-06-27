@@ -90,6 +90,49 @@ pub fn toggle_system_proxy() {
     });
 }
 
+pub fn toggle_service_mode() {
+    let enable = Config::verge()
+        .latest()
+        .enable_service_mode
+        .unwrap_or(false);
+
+    tauri::async_runtime::spawn(async move {
+        match cmds::service::check_service().await {
+            Ok(service_status) => {
+                if service_status.code == 400 || service_status.code == 0 {
+                    match patch_verge(IVerge {
+                        enable_service_mode: Some(!enable),
+                        ..IVerge::default()
+                    })
+                    .await
+                    {
+                        Ok(_) => handle::Handle::refresh_verge(),
+                        Err(err) => log::error!(target: "app", "{err}"),
+                    }
+                } else {
+                    let content = if service_status.code == 400 {
+                        format!("Toggle Service Mode Failed:\n Please check whether clash verge service has been enabled.")
+                    } else {
+                        format!("Toggle Service Mode Failed:\n Please check whether clash verge service has been installed.")
+                    };
+                    Notification::new(APP_ID)
+                        .title("Clash Verge")
+                        .body(content)
+                        .show()
+                        .unwrap();
+                }
+            }
+            _ => {
+                Notification::new(APP_ID)
+                    .title("Clash Verge")
+                    .body("Toggle Service Mode Failed:\n Please check whether clash verge service has been installed.")
+                    .show()
+                    .unwrap();
+            }
+        };
+    });
+}
+
 // 切换tun模式
 pub fn toggle_tun_mode() {
     let enable = Config::clash().data().get_enable_tun();
@@ -99,9 +142,9 @@ pub fn toggle_tun_mode() {
             Ok(service_status) => {
                 if service_status.code != 0 {
                     let content = if service_status.code == 400 {
-                        format!("Please check whether clash verge service has been enabled.")
+                        format!("Toggle Tun Failed:\n Please check whether clash verge service has been enabled.")
                     } else {
-                        format!("Please check whether clash verge service has been installed.")
+                        format!("Toggle Tun Failed:\n Please check whether clash verge service has been installed.")
                     };
                     Notification::new(APP_ID)
                         .title("Clash Verge")
@@ -122,7 +165,7 @@ pub fn toggle_tun_mode() {
                 }
             }
             Err(err) => {
-                let content = format!("Toggle Tun Failed:\n {err}");
+                let content = format!("Toggle Tun Failed:\n Please check whether clash verge service has been installed. \n {err}");
                 Notification::new(APP_ID)
                     .title("Clash Verge")
                     .body(content)
@@ -313,6 +356,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             || common_tray_icon.is_some()
             || sysproxy_tray_icon.is_some()
             || tun_tray_icon.is_some()
+            || service_mode.is_some()
         {
             handle::Handle::update_systray_part()?;
         }

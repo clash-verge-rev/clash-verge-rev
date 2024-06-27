@@ -52,6 +52,12 @@ impl Tray {
                 t!("System Proxy", "系统代理"),
             ))
             .add_item(CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式")))
+            .add_native_item(SystemTrayMenuItem::Separator)
+            .add_item(CustomMenuItem::new(
+                "service_mode",
+                t!("Service Mode", "服务模式"),
+            ))
+            .add_native_item(SystemTrayMenuItem::Separator)
             .add_item(CustomMenuItem::new(
                 "copy_env",
                 t!("Copy Env", "复制环境变量"),
@@ -174,6 +180,7 @@ impl Tray {
         let clash = Config::clash();
         let clash = clash.latest();
         let tun_mode = clash.get_enable_tun();
+        let service_mode = verge.enable_service_mode.as_ref().unwrap_or(&false);
         #[cfg(target_os = "macos")]
         let tray_icon = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
         let common_tray_icon = verge.common_tray_icon.as_ref().unwrap_or(&false);
@@ -258,6 +265,7 @@ impl Tray {
 
         let _ = tray.get_item("system_proxy").set_selected(*system_proxy);
         let _ = tray.get_item("tun_mode").set_selected(tun_mode);
+        let _ = tray.get_item("service_mode").set_selected(*service_mode);
         #[cfg(target_os = "linux")]
         {
             if *system_proxy {
@@ -277,6 +285,15 @@ impl Tray {
                 let _ = tray
                     .get_item("tun_mode")
                     .set_title(t!("TUN Mode", "Tun 模式"));
+            }
+            if *service_mode {
+                let _ = tray
+                    .get_item("service_mode")
+                    .set_title(t!("Service Mode  ✔", "服务模式  ✔"));
+            } else {
+                let _ = tray
+                    .get_item("service_mode")
+                    .set_title(t!("Service Mode", "服务模式"));
             }
         }
 
@@ -315,6 +332,7 @@ impl Tray {
         let tray_event = tray_event.unwrap_or("main_window".into());
         match tray_event.as_str() {
             "system_proxy" => feat::toggle_system_proxy(),
+            "service_mode" => feat::toggle_service_mode(),
             "tun_mode" => feat::toggle_tun_mode(),
             "main_window" => resolve::create_window(app_handle),
             _ => {}
@@ -334,6 +352,7 @@ impl Tray {
                 }
                 "open_window" => resolve::create_window(app_handle),
                 "system_proxy" => feat::toggle_system_proxy(),
+                "service_mode" => feat::toggle_service_mode(),
                 "tun_mode" => feat::toggle_tun_mode(),
                 "copy_env" => feat::copy_clash_env(app_handle),
                 "open_app_dir" => crate::log_err!(cmds::open_app_dir()),

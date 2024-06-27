@@ -1,6 +1,6 @@
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { useService } from "@/hooks/use-service";
 import {
-  checkService,
   installService,
   patchVergeConfig,
   uninstallService,
@@ -9,7 +9,6 @@ import { Button, Stack, Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
 
 interface Props {
   enable: boolean;
@@ -21,34 +20,26 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
-  const { data: status, mutate: mutateCheck } = useSWR(
-    "checkService",
-    checkService,
-    {
-      revalidateIfStale: false,
-      shouldRetryOnError: false,
-      focusThrottleInterval: 36e5, // 1 hour
-    },
-  );
+  const { serviceStatus, mutateCheckService } = useService();
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
     close: () => setOpen(false),
   }));
 
-  const state = status != null ? status : "pending";
+  const state = serviceStatus != null ? serviceStatus : "pending";
 
   const onInstall = useLockFn(async () => {
     try {
       await installService();
-      await mutateCheck();
+      await mutateCheckService();
       setOpen(false);
       setTimeout(() => {
-        mutateCheck();
+        mutateCheckService();
       }, 2000);
       Notice.success(t("Service Installed Successfully"));
     } catch (err: any) {
-      mutateCheck();
+      mutateCheckService();
       Notice.error(err.message || err.toString());
     }
   });
@@ -60,11 +51,11 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       }
 
       await uninstallService();
-      mutateCheck();
+      mutateCheckService();
       setOpen(false);
       Notice.success(t("Service Uninstalled Successfully"));
     } catch (err: any) {
-      mutateCheck();
+      mutateCheckService();
       Notice.error(err.message || err.toString());
     }
   });
@@ -73,10 +64,10 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const onDisable = useLockFn(async () => {
     try {
       await patchVergeConfig({ enable_service_mode: false });
-      mutateCheck();
+      mutateCheckService();
       setOpen(false);
     } catch (err: any) {
-      mutateCheck();
+      mutateCheckService();
       Notice.error(err.message || err.toString());
     }
   });
