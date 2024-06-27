@@ -1,8 +1,8 @@
+use super::CLASH_BASIC_CONFIG;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::collections::HashMap;
 
-use super::CLASH_BASIC_CONFIG;
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IRuntime {
     pub config: Option<Mapping>,

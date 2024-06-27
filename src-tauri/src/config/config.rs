@@ -1,4 +1,4 @@
-use super::{Draft, IClashTemp, IProfiles, IRuntime, IVerge};
+use super::{Draft, IClashConfig, IProfiles, IRuntime, IVerge};
 use crate::{
     enhance,
     utils::{dirs, help},
@@ -11,7 +11,7 @@ pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
 pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
 
 pub struct Config {
-    clash_config: Draft<IClashTemp>,
+    clash_config: Draft<IClashConfig>,
     verge_config: Draft<IVerge>,
     profiles_config: Draft<IProfiles>,
     runtime_config: Draft<IRuntime>,
@@ -22,14 +22,14 @@ impl Config {
         static CONFIG: OnceCell<Config> = OnceCell::new();
 
         CONFIG.get_or_init(|| Config {
-            clash_config: Draft::from(IClashTemp::new()),
+            clash_config: Draft::from(IClashConfig::new()),
             verge_config: Draft::from(IVerge::new()),
             profiles_config: Draft::from(IProfiles::new()),
             runtime_config: Draft::from(IRuntime::new()),
         })
     }
 
-    pub fn clash() -> Draft<IClashTemp> {
+    pub fn clash() -> Draft<IClashConfig> {
         Self::global().clash_config.clone()
     }
 

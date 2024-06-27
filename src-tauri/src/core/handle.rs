@@ -90,7 +90,7 @@ impl Handle {
                 .get("enable")
                 .map_or(false, |val| val.as_bool().unwrap_or(false));
             if tun_enable != tun_enable_by_api {
-                for i in 0..=5 {
+                for i in 0..5 {
                     clash_configs = clash_api::get_configs().await.unwrap();
                     let tun_enable_by_api = clash_configs
                         .tun

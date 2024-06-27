@@ -172,7 +172,7 @@ impl Tray {
         let verge = verge.latest();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let clash = Config::clash();
-        let clash: parking_lot::lock_api::MappedMutexGuard<parking_lot::RawMutex, crate::config::IClashTemp> = clash.latest();
+        let clash = clash.latest();
         let tun_mode = clash.get_enable_tun();
         #[cfg(target_os = "macos")]
         let tray_icon = verge.tray_icon.clone().unwrap_or("monochrome".to_string());

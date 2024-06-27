@@ -9,11 +9,11 @@ use std::{
 };
 
 #[derive(Default, Debug, Clone)]
-pub struct IClashTemp(pub Mapping);
+pub struct IClashConfig(pub Mapping);
 
-impl IClashTemp {
+impl IClashConfig {
     pub fn new() -> Self {
-        let template = Self::template();
+        let template = Self::default();
         match dirs::clash_path().and_then(|path| help::read_merge_mapping(&path)) {
             Ok(mut map) => {
                 template.0.keys().for_each(|key| {
@@ -30,7 +30,7 @@ impl IClashTemp {
         }
     }
 
-    pub fn template() -> Self {
+    pub fn default() -> Self {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
         tun.insert("stack".into(), "gvisor".into());
@@ -287,7 +287,7 @@ fn test_clash_info() {
         map.insert("mixed-port".into(), mp.into());
         map.insert("external-controller".into(), ec.into());
 
-        IClashTemp(IClashTemp::guard(map)).get_client_info()
+        IClashConfig(IClashConfig::guard(map)).get_client_info()
     }
 
     fn get_result<S: Into<String>>(port: u16, server: S) -> ClashInfo {
@@ -303,7 +303,7 @@ fn test_clash_info() {
     }
 
     assert_eq!(
-        IClashTemp(IClashTemp::guard(Mapping::new())).get_client_info(),
+        IClashConfig(IClashConfig::guard(Mapping::new())).get_client_info(),
         get_result(7897, "127.0.0.1:9097")
     );
 

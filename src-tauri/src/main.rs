@@ -14,6 +14,7 @@ use crate::{
     config::Config,
     utils::{init, resolve, server},
 };
+use std::{thread::sleep, time::Duration};
 use tauri::{api, SystemTray};
 
 fn main() -> std::io::Result<()> {
@@ -61,7 +62,7 @@ fn main() -> std::io::Result<()> {
             tauri::async_runtime::spawn(async move {
                 // initialize your app here instead of sleeping :
                 resolve::resolve_setup(&app_handle);
-                std::thread::sleep(std::time::Duration::from_secs(2));
+                sleep(Duration::from_secs(2));
                 // create main window
                 if !silent_start {
                     resolve::create_window(&app_handle);
