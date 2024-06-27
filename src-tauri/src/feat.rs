@@ -218,6 +218,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                             } else {
                                 "Update Tun Config Failed"
                             };
+                            handle::Handle::update_systray_part()?;
                             handle::Handle::notice_message("set_config::error", message);
                         }
                         sleep(Duration::from_millis(500));
