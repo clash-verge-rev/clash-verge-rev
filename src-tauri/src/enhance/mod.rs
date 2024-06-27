@@ -110,20 +110,24 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         }
     });
 
-    // 合并默认的config
+    // 合并 verge 配置的 clash 配置
     for (key, value) in clash_config.into_iter() {
-        if key.as_str() == Some("tun") {
-            let mut tun = config.get_mut("tun").map_or(Mapping::new(), |val| {
-                val.as_mapping().cloned().unwrap_or(Mapping::new())
-            });
-            let patch_tun = value.as_mapping().cloned().unwrap_or(Mapping::new());
-            for (key, value) in patch_tun.into_iter() {
-                tun.insert(key, value);
-            }
-            config.insert("tun".into(), tun.into());
-        } else {
-            config.insert(key, value);
-        }
+        // match value {
+        //     Value::Mapping(val_mapping) => {},
+        //     _ => {}
+        // };
+        // if key.as_str() == Some("tun") {
+        //     let mut tun = config.get_mut("tun").map_or(Mapping::new(), |val| {
+        //         val.as_mapping().cloned().unwrap_or(Mapping::new())
+        //     });
+        //     let patch_tun = value.as_mapping().cloned().unwrap_or(Mapping::new());
+        //     for (key, value) in patch_tun.into_iter() {
+        //         tun.insert(key, value);
+        //     }
+        //     config.insert("tun".into(), tun.into());
+        // } else {
+        // }
+        config.insert(key, value);
     }
 
     // 内建脚本最后跑
