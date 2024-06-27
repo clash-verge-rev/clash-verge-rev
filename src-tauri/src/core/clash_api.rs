@@ -1,8 +1,6 @@
 use crate::config::Config;
 use anyhow::{bail, Result};
 use reqwest::header::HeaderMap;
-use reqwest_middleware::ClientBuilder;
-use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::collections::HashMap;
@@ -12,12 +10,7 @@ pub async fn restart_core() -> Result<()> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/restart");
 
-    // Retry up to 3 times with increasing intervals between attempts.
-    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
-    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
-        // Retry failed requests.
-        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
-        .build();
+    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
     let _ = client
         .post(&url)
         .headers(headers.clone())
@@ -37,12 +30,7 @@ pub async fn get_configs() -> Result<ClashBasicConfig> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/configs");
 
-    // Retry up to 3 times with increasing intervals between attempts.
-    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
-    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
-        // Retry failed requests.
-        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
-        .build();
+    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
     let response = client
         .get(&url)
         .headers(headers.clone())
@@ -61,12 +49,7 @@ pub async fn put_configs(path: &str) -> Result<()> {
     let mut data = HashMap::new();
     data.insert("path", path);
 
-    // Retry up to 3 times with increasing intervals between attempts.
-    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
-    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
-        // Retry failed requests.
-        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
-        .build();
+    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
     let response = client.put(&url).headers(headers).json(&data).send().await?;
 
     match response.status().as_u16() {
@@ -82,12 +65,7 @@ pub async fn patch_configs(config: &Mapping) -> Result<()> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/configs");
 
-    // Retry up to 3 times with increasing intervals between attempts.
-    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
-    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
-        // Retry failed requests.
-        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
-        .build();
+    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
     let _ = client
         .patch(&url)
         .headers(headers.clone())
@@ -117,12 +95,7 @@ pub async fn get_proxy_delay(
         .map(|s| if s.is_empty() { default_url.into() } else { s })
         .unwrap_or(default_url.into());
 
-    // Retry up to 3 times with increasing intervals between attempts.
-    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
-    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
-        // Retry failed requests.
-        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
-        .build();
+    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
     let response = client
         .get(&url)
         .headers(headers)

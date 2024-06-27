@@ -35,11 +35,26 @@ percent-encoding = "2.3.1"
 window-shadows = { version = "0.2.2" }
 tokio = { version = "1.37.0", features = ["full"] }
 serde = { version = "1.0.200", features = ["derive"] }
-reqwest = { version = "0.12.4", features = ["json", "rustls-tls"] }
-reqwest-middleware = { version = "0.3", features = ["json"] }
-reqwest-retry = "0.5"
-sysproxy = { git="https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
-tauri = { version = "1.6.2", features = [ "fs-read-file", "fs-exists", "path-all", "protocol-asset", "dialog-open", "notification-all", "icon-png", "icon-ico", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "devtools"] }
+reqwest = { version = "0.12.4", features = ["rustls-tls", "json"] }
+sysproxy = { git = "https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
+tauri = { version = "1.6.2", features = [
+    "fs-read-file",
+    "fs-exists",
+    "path-all",
+    "protocol-asset",
+    "dialog-open",
+    "notification-all",
+    "icon-png",
+    "icon-ico",
+    "clipboard-all",
+    "global-shortcut-all",
+    "process-all",
+    "shell-all",
+    "system-tray",
+    "updater",
+    "window-all",
+    "devtools",
+] }
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
