@@ -61,9 +61,13 @@ pub async fn put_configs(path: &str) -> Result<()> {
     let mut data = HashMap::new();
     data.insert("path", path);
 
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client.put(&url).headers(headers).json(&data);
-    let response = builder.send().await?;
+    // Retry up to 3 times with increasing intervals between attempts.
+    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
+    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
+        // Retry failed requests.
+        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+        .build();
+    let response = client.put(&url).headers(headers).json(&data).send().await?;
 
     match response.status().as_u16() {
         204 => Ok(()),
@@ -78,9 +82,18 @@ pub async fn patch_configs(config: &Mapping) -> Result<()> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/configs");
 
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client.patch(&url).headers(headers.clone()).json(config);
-    builder.send().await?;
+    // Retry up to 3 times with increasing intervals between attempts.
+    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
+    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
+        // Retry failed requests.
+        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+        .build();
+    let _ = client
+        .patch(&url)
+        .headers(headers.clone())
+        .json(config)
+        .send()
+        .await?;
     Ok(())
 }
 
@@ -104,12 +117,18 @@ pub async fn get_proxy_delay(
         .map(|s| if s.is_empty() { default_url.into() } else { s })
         .unwrap_or(default_url.into());
 
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client
+    // Retry up to 3 times with increasing intervals between attempts.
+    let retry_policy = ExponentialBackoff::builder().build_with_max_retries(5);
+    let client = ClientBuilder::new(reqwest::ClientBuilder::new().no_proxy().build()?)
+        // Retry failed requests.
+        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+        .build();
+    let response = client
         .get(&url)
         .headers(headers)
-        .query(&[("timeout", &format!("{timeout}")), ("url", &test_url)]);
-    let response = builder.send().await?;
+        .query(&[("timeout", &format!("{timeout}")), ("url", &test_url)])
+        .send()
+        .await?;
 
     Ok(response.json::<DelayRes>().await?)
 }
