@@ -323,14 +323,9 @@ Var AppStartMenuFolder
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "$(createDesktop)"
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION CreateDesktopShortcut
 ; Show run app after installation.
-!define MUI_FINISHPAGE_RUN
-!define MUI_FINISHPAGE_RUN_FUNCTION RunMainBinary
+!define MUI_FINISHPAGE_RUN "$INSTDIR\${MAINBINARYNAME}.exe"
 !define MUI_PAGE_CUSTOMFUNCTION_PRE SkipIfPassive
 !insertmacro MUI_PAGE_FINISH
-
-Function RunMainBinary
-  nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" ""
-FunctionEnd
 
 ; Uninstaller Pages
 ; 1. Confirm uninstall page
@@ -766,7 +761,7 @@ Function .onInstSuccess
     ${GetOptions} $CMDLINE "/R" $R0
     IfErrors run_done 0
       ${GetOptions} $CMDLINE "/ARGS" $R0
-      nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" "$R0"
+      Exec '"$INSTDIR\${MAINBINARYNAME}.exe" $R0'
   run_done:
 FunctionEnd
 
