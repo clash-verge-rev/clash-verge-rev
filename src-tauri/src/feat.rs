@@ -190,7 +190,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
                 // handle tun config
                 if key == "tun" {
-                    for _ in 0..5 {
+                    for i in 0..5 {
                         let clash_basic_configs = clash_api::get_configs().await?;
                         let tun_enable = value
                             .as_mapping()
@@ -204,8 +204,10 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                         if tun_enable == tun_enable_by_api {
                             handle::Handle::update_systray_part()?;
                             handle::Handle::notice_message("set_config::ok", "ok");
-                        } else {
-                            // set tun enable status
+                            break;
+                        }
+                        if i == 4 {
+                            // retry max times, patch config to set tun enable status
                             let mut tun_mapping = Mapping::new();
                             let mut tun_enable_mapping = Mapping::new();
                             tun_enable_mapping.insert("enable".into(), tun_enable_by_api.into());
