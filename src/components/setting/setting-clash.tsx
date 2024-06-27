@@ -126,6 +126,7 @@ const SettingClash = ({ onError }: Props) => {
           valueProps="checked"
           // onCatch={onError}
           onFormat={onSwitchFormat}
+          // onChange={(e) => onChangeData({ tun: { enable: e } })}
           onGuard={(e) => patchClash({ tun: { enable: e } })}>
           <SwitchLovely disabled={serviceStatus !== "active"} edge="end" />
         </GuardState>

@@ -112,7 +112,7 @@ pub fn toggle_tun_mode() {
                     tun_val.insert("enable".into(), Value::from(!enable));
                     tun.insert("tun".into(), tun_val.into());
                     match patch_clash(tun).await {
-                        Ok(_) => log::info!(target: "app", "tun mode to {enable}"),
+                        Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
                         Err(err) => {
                             log::error!(target: "app", "{err}")
                         }
@@ -136,26 +136,32 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     // enable-random-port filed store in verge config, only need update verge config
     if let Some(random_val) = patch.get("enable-random-port") {
         let enable_random_port = random_val.as_bool().unwrap_or(false);
-        let mut port = 7897;
-        if enable_random_port {
-            port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
-        }
         // disable other port & update clash config
         let mut tmp_map = Mapping::new();
-        tmp_map.insert("mixed-port".into(), port.into());
+        if enable_random_port {
+            let port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
+            tmp_map.insert("mixed-port".into(), port.into());
+        } else {
+            tmp_map.insert("mixed-port".into(), 7897.into());
+        }
         tmp_map.insert("port".into(), 0.into());
         tmp_map.insert("socks-port".into(), 0.into());
         tmp_map.insert("redir-port".into(), 0.into());
         tmp_map.insert("tproxy-port".into(), 0.into());
         let _ = clash_api::patch_configs(&tmp_map).await?;
-        Config::clash().draft().patch_config(tmp_map);
-        // update sysproxy
-        sysopt::Sysopt::global().update_sysproxy()?;
-        // update verge config
+        // clash config
+        Config::clash().latest().patch_config(tmp_map);
+        Config::clash().latest().save_config()?;
+        // runtime config
+        Config::generate()?;
+        Config::generate_file(ConfigType::Run)?;
+        // verge config
         Config::verge().latest().patch_config(IVerge {
             enable_random_port: Some(enable_random_port),
             ..IVerge::default()
         });
+        // update sysproxy
+        sysopt::Sysopt::global().update_sysproxy()?;
         // emit refresh event & emit set config ok message
         handle::Handle::refresh_verge();
         handle::Handle::refresh_clash();
@@ -166,51 +172,54 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     Config::clash()
         .draft()
         .patch_and_merge_config(patch.clone());
+    let mut generate_runtime_config = false;
     let res = {
         for key in CLASH_BASIC_CONFIG {
-            if let Some(manual_val) = patch.get(key) {
+            if patch.get(key).is_some() {
+                if !generate_runtime_config {
+                    generate_runtime_config = true;
+                }
                 let mut mapping = Mapping::new();
-                let is_tun_setting = key == "tun";
-                let mut tun_enable = false;
-                if is_tun_setting {
-                    let mut clash_config = { Config::clash().data().0.clone() };
-                    let mut tun_mapping = clash_config.get_mut(key).map_or(Mapping::new(), |val| {
-                        val.as_mapping().cloned().unwrap_or(Mapping::new())
-                    });
-                    let manual_mapping = manual_val.as_mapping().cloned().unwrap_or(Mapping::new());
-                    for (tun_key, tun_value) in manual_mapping.into_iter() {
-                        tun_mapping.insert(tun_key, tun_value);
-                    }
-                    tun_enable = tun_mapping
+                let clash_config_mapping = { Config::clash().latest().0.clone() };
+                let value = clash_config_mapping.get(key).unwrap();
+
+                mapping.insert(key.into(), value.clone().into());
+                let _ = clash_api::patch_configs(&mapping).await?;
+
+                // handle tun config
+                if key == "tun" {
+                    let clash_basic_configs = clash_api::get_configs().await?;
+                    let tun_enable = value
+                        .as_mapping()
+                        .unwrap()
                         .get("enable")
                         .map_or(false, |val| val.as_bool().unwrap_or(false));
-                    mapping.insert(key.into(), tun_mapping.into());
-                } else {
-                    mapping.insert(key.into(), manual_val.clone().into());
-                }
-                let _ = clash_api::patch_configs(&mapping).await?;
-                if is_tun_setting {
-                    let clash_configs = clash_api::get_configs().await?;
-                    let enable_tun_by_api = clash_configs
+                    let tun_enable_by_api = clash_basic_configs
                         .tun
                         .get("enable")
                         .map_or(false, |val| val.as_bool().unwrap_or(false));
-                    if tun_enable == enable_tun_by_api {
+                    if tun_enable == tun_enable_by_api {
                         handle::Handle::update_systray_part()?;
                         handle::Handle::notice_message("set_config::ok", "ok");
                     } else {
-                        handle::Handle::notice_message("set_config::error", "Tun Toggle Failed");
-                        bail!("Tun Toggle Failed");
-                        // return <Result<()>>::Ok(());
+                        // set tun enable status
+                        let mut tun_mapping = Mapping::new();
+                        let mut tun_enable_mapping = Mapping::new();
+                        tun_enable_mapping.insert("enable".into(), tun_enable_by_api.into());
+                        tun_mapping.insert("tun".into(), tun_enable_mapping.into());
+                        Config::clash().draft().patch_and_merge_config(tun_mapping);
+                        let message = if tun_enable {
+                            "Tun Device Or Resource Busy"
+                        } else {
+                            "Update Tun Config Failed"
+                        };
+                        handle::Handle::notice_message("set_config::error", message);
                     }
                 }
-                if key.contains("mixed-port") {
+                // handle system proxy
+                if key == "mixed-port" {
                     sysopt::Sysopt::global().update_sysproxy()?;
                 }
-                // this clash basic config need to be synchronized in real time
-                Config::generate()?;
-                Config::generate_file(ConfigType::Run)?;
-                handle::Handle::refresh_clash();
             }
         }
 
@@ -218,7 +227,6 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
             Config::generate()?;
             CoreManager::global().run_core().await?;
-            // handle::Handle::refresh_clash();
         }
 
         if patch.get("mode").is_some() {
@@ -226,6 +234,11 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         }
 
         Config::runtime().latest().patch_config(patch);
+        if generate_runtime_config {
+            // if the clash basic config changed, we need to sync the runtime configuration file now
+            Config::generate()?;
+            Config::generate_file(ConfigType::Run)?;
+        }
 
         <Result<()>>::Ok(())
     };
@@ -233,6 +246,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         Ok(()) => {
             Config::clash().apply();
             Config::clash().data().save_config()?;
+            handle::Handle::refresh_clash();
             Ok(())
         }
         Err(err) => {

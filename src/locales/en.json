@@ -285,8 +285,9 @@
   "Expand All": "Expand All",
   "Collapse All": "Collapse All",
   "Update Rule Provider Error": "[ {{name}} ] Update Failed: {{errorMsg}}",
-  "Read Rule Providers Error": "Failed to read rule providers, please check if the rule providers has been updated and synchronized.",
+  "Read Rule Providers Error": "Failed to read rule providers, please check if the rule providers has been updated and synchronized",
   "Regenerate Template Content": "Regenerate Template Content",
   "Macos Device Name Error": "Tun device names on Macos must start with utun",
-  "Tun Toggle Failed": "Switch Tun mode failed, please check the clash core permission is granted"
+  "Tun Device Or Resource Busy": "Tun device or resource busy, will tun off Tun mode, please try to enable Tun mode again later",
+  "Update Tun Config Failed": "Update Tun Config Failed, please try again later"
 }

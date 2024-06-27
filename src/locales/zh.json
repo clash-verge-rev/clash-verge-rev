@@ -288,5 +288,6 @@
   "Read Rule Providers Error": "读取规则集失败, 请确认规则集文件是否已经更新同步",
   "Regenerate Template Content": "重新生成模板内容",
   "Macos Device Name Error": "Macos 系统的 Tun 网卡名称必须以 utun 开头",
-  "Tun Toggle Failed": "Tun 模式切换失败，请查看内核是否授权"
+  "Tun Device Or Resource Busy": "Tun 网卡或资源繁忙，将关闭 Tun 模式，请稍后再重新启用 Tun 模式",
+  "Update Tun Config Failed": "更新 Tun 设置失败，请稍后再试"
 }
