@@ -13,7 +13,7 @@ const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 const FORCE = process.argv.includes("--force");
 const log_success = (msg) => console.log(clc.green(msg));
 const log_error = (msg) => console.log(clc.red(msg));
-const log_info = (msg) => console.log(clc.cyan(msg));
+const log_info = (msg) => console.log(clc.bgBlue(msg));
 
 var debugMsg = clc.xterm(245);
 const log_debug = (msg) => console.log(debugMsg(msg));
@@ -232,7 +232,7 @@ async function resolveSidecar(binInfo) {
       });
       zip.extractAllTo(tempDir, true);
       await fs.rename(tempExe, sidecarPath);
-      log_success(`"${name}" unzip finished`);
+      log_success(`unzip finished: "${name}"`);
     } else if (zipFile.endsWith(".tgz")) {
       // tgz
       await fs.mkdirp(tempDir);
@@ -242,14 +242,14 @@ async function resolveSidecar(binInfo) {
         //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
       });
       const files = await fs.readdir(tempDir);
-      log_debug(`[DEBUG]: "${name}" files in tempDir:`, files);
+      log_debug(`"${name}" files in tempDir:`, files);
       const extractedFile = files.find((file) => file.startsWith("虚空终端-"));
       if (extractedFile) {
         const extractedFilePath = path.join(tempDir, extractedFile);
         await fs.rename(extractedFilePath, sidecarPath);
         log_debug(`"${name}" file renamed to "${sidecarPath}"`);
         execSync(`chmod 755 ${sidecarPath}`);
-        log_success(`"${name}" chmod binary finished`);
+        log_success(`chmod binary finished: "${name}"`);
       } else {
         throw new Error(`Expected file not found in ${tempDir}`);
       }
@@ -259,16 +259,16 @@ async function resolveSidecar(binInfo) {
       const writeStream = fs.createWriteStream(sidecarPath);
       await new Promise((resolve, reject) => {
         const onError = (error) => {
-          log_error(`"${name}" gz failed:`, error.message);
+          log_error(`gz failed ["${name}"]: `, error.message);
           reject(error);
         };
         readStream
           .pipe(zlib.createGunzip().on("error", onError))
           .pipe(writeStream)
           .on("finish", () => {
-            log_success(`"${name}" gunzip finished`);
+            log_success(`gunzip finished: "${name}"`);
             execSync(`chmod 755 ${sidecarPath}`);
-            log_success(`"${name}" chmod binary finished`);
+            log_success(`chmod binary finished: "${name}"`);
             resolve();
           })
           .on("error", onError);
@@ -301,9 +301,10 @@ async function resolveResource(binInfo) {
   }
   if (localPath) {
     await fs.copyFile(localPath, targetPath);
+    log_debug(`copy file finished: "${localPath}"`);
   }
 
-  log_success(`${file} finished`);
+  log_success(`resolve finished: ${file}`);
 }
 
 /**
@@ -330,7 +331,7 @@ async function downloadFile(url, path) {
   const buffer = await response.arrayBuffer();
   await fs.writeFile(path, new Uint8Array(buffer));
 
-  log_debug(`download finished "${url}"`);
+  log_debug(`download finished: "${url}"`);
 }
 
 // SimpleSC.dll
@@ -355,11 +356,11 @@ const resolvePlugin = async () => {
     }
     const zip = new AdmZip(tempZip);
     zip.getEntries().forEach((entry) => {
-      log_debug(`[DEBUG]: "SimpleSC" entry name`, entry.entryName);
+      log_debug(`"SimpleSC" entry name`, entry.entryName);
     });
     zip.extractAllTo(tempDir, true);
     await fs.copyFile(tempDll, pluginPath);
-    log_success(`"SimpleSC" unzip finished`);
+    log_success(`unzip finished: "SimpleSC"`);
   } finally {
     await fs.remove(tempDir);
   }
@@ -377,7 +378,7 @@ const resolveServicePermission = async () => {
     const targetPath = path.join(resDir, f);
     if (await fs.pathExists(targetPath)) {
       execSync(`chmod 755 ${targetPath}`);
-      log_success(`"${f}" chmod finished`);
+      log_success(`chmod finished: "${f}"`);
     }
   }
 };
@@ -491,6 +492,9 @@ async function runTask() {
 
   for (let i = 0; i < task.retry; i++) {
     try {
+      if (task.name === "plugin") log_info("Resolve plugin");
+      if (task.name === "service") log_info("Resolve resources");
+      if (task.name === "service_chmod") log_info("Chmod resources");
       await task.func();
       break;
     } catch (err) {
