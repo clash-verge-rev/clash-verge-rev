@@ -40,9 +40,6 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Install Tauri CLI
-        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
-
       - name: Install Node
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
@@ -61,7 +58,7 @@ jobs:
       - name: Tauri build
         uses: tauri-apps/tauri-action@b1dc93b31afa36b1247a7a5f55c2dffbdc70dd05 # v0
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          # NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -75,7 +72,7 @@ jobs:
           tagName: v__VERSION__
           releaseName: "Clash Verge Rev v__VERSION__"
           releaseBody: "More new features are now supported."
-          tauriScript: cargo tauri
+          tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
       - name: Portable Bundle
@@ -105,7 +102,7 @@ jobs:
       - name: Build for Linux
         uses: ./.github/build-for-linux
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          # NODE_OPTIONS: "--max_old_space_size=4096"
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
@@ -128,9 +125,9 @@ jobs:
 
           ### Linux
           - Linux 64位: amd64.deb/amd64.rpm
-          - Linux 32位: i386.deb/i386.rpm
-          - Linux arm64架构: arm64.deb/aarch64.rpm
-          - Linux armv7架构: armhf.deb/armhfp.rpm
+          - Linux 32位: i386.deb
+          - Linux arm64架构: arm64.deb
+          - Linux armv7架构: armhf.deb
 
           ### Windows (Win7 用户请查看下面FAQ中的解决方案)
           #### 正常版本(推荐)
@@ -152,15 +149,15 @@ jobs:
 
           EOF
 
-      # - name: Upload Release
-      #   if: startsWith(matrix.target, 'x86_64')
-      #   uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
-      #   with:
-      #     tag_name: v${{env.VERSION}}
-      #     name: "Clash Verge Rev v${{env.VERSION}}"
-      #     body_path: ${{ github.workspace }}/CHANGELOG.txt
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
+      - name: Upload Release
+        if: startsWith(matrix.target, 'x86_64')
+        uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87 # v2
+        with:
+          tag_name: v${{env.VERSION}}
+          name: "Clash Verge Rev v${{env.VERSION}}"
+          body_path: ${{ github.workspace }}/CHANGELOG.txt
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
         uses: softprops/action-gh-release@a74c6b72af54cfa997e81df42d94703d6313a2d0 # v2
@@ -171,7 +168,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+        # src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   release-for-fixed-webview2:
     strategy:
@@ -200,9 +197,6 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Install Tauri CLI
-        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
-
       - name: Install Node
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
@@ -229,12 +223,12 @@ jobs:
         id: build
         uses: tauri-apps/tauri-action@b1dc93b31afa36b1247a7a5f55c2dffbdc70dd05 # v0
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          # NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tauriScript: cargo tauri
+          tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
       - name: Rename
