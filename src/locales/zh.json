@@ -251,6 +251,9 @@
   "Open Dev Tools": "打开开发者工具",
   "Exit": "退出",
   "Verge Version": "Verge 版本",
+  "TG Channel": "Telegram 频道",
+  "Doc": "文档",
+  "Source Code": "源代码",
 
   "ReadOnly": "只读",
   "ReadOnlyMessage": "无法在只读模式下编辑",

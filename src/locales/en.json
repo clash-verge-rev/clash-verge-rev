@@ -246,6 +246,9 @@
   "Open Dev Tools": "Open Dev Tools",
   "Exit": "Exit",
   "Verge Version": "Verge Version",
+  "TG Channel": "Telegram Channel",
+  "Doc": "Docs",
+  "Source Code": "Source Code",
 
   "ReadOnly": "ReadOnly",
   "ReadOnlyMessage": "Cannot edit in read-only editor",
