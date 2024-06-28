@@ -99,7 +99,7 @@ dependencies = [
  "clipboard-win",
  "core-graphics 0.23.2",
  "image 0.25.1",
- "log 0.4.21",
+ "log 0.4.22",
  "objc2",
  "objc2-app-kit",
  "objc2-foundation",
@@ -203,7 +203,7 @@ dependencies = [
  "cfg-if",
  "concurrent-queue",
  "futures-lite 1.13.0",
- "log 0.4.21",
+ "log 0.4.22",
  "parking",
  "polling 2.8.0",
  "rustix 0.37.27",
@@ -794,7 +794,7 @@ dependencies = [
  "delay_timer",
  "dirs 5.0.1",
  "dunce",
- "log 0.4.21",
+ "log 0.4.22",
  "log4rs",
  "nanoid",
  "once_cell",
@@ -1159,7 +1159,7 @@ dependencies = [
  "dashmap",
  "event-listener 5.3.0",
  "futures",
- "log 0.4.21",
+ "log 0.4.22",
  "lru",
  "once_cell",
  "rs-snowflake",
@@ -1843,7 +1843,7 @@ checksum = "5cc16584ff22b460a382b7feec54b23d2908d858152e5739a120b949293bd74e"
 dependencies = [
  "cc",
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
  "rustversion",
  "windows 0.48.0",
 ]
@@ -1985,7 +1985,7 @@ checksum = "57da3b9b5b85bd66f31093f8c408b90a74431672542466497dcbdfdc02034be1"
 dependencies = [
  "aho-corasick 1.1.3",
  "bstr",
- "log 0.4.21",
+ "log 0.4.22",
  "regex-automata 0.4.7",
  "regex-syntax 0.8.4",
 ]
@@ -2203,7 +2203,7 @@ version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bea68cab48b8459f17cf1c944c67ddc572d272d9f2b274140f223ecb1da4a3b7"
 dependencies = [
- "log 0.4.21",
+ "log 0.4.22",
  "mac",
  "markup5ever",
  "proc-macro2",
@@ -2587,7 +2587,7 @@ checksum = "b46810df39e66e925525d6e38ce1e7f6e1d208f72dc39757880fcb66e2c58af1"
 dependencies = [
  "crossbeam-deque",
  "globset",
- "log 0.4.21",
+ "log 0.4.22",
  "memchr",
  "regex-automata 0.4.7",
  "same-file",
@@ -2794,7 +2794,7 @@ dependencies = [
  "cesu8",
  "combine",
  "jni-sys",
- "log 0.4.21",
+ "log 0.4.22",
  "thiserror",
  "walkdir",
 ]
@@ -2866,7 +2866,7 @@ dependencies = [
  "gtk",
  "gtk-sys",
  "libappindicator-sys",
- "log 0.4.21",
+ "log 0.4.22",
 ]
 
 [[package]]
@@ -2956,14 +2956,14 @@ version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e19e8d5c34a3e0e2223db8e060f9e8264aeeb5c5fc64a4ee9965c062211c024b"
 dependencies = [
- "log 0.4.21",
+ "log 0.4.22",
 ]
 
 [[package]]
 name = "log"
-version = "0.4.21"
+version = "0.4.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
+checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 dependencies = [
  "serde",
 ]
@@ -2987,7 +2987,7 @@ dependencies = [
  "fnv",
  "humantime",
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
  "log-mdc",
  "once_cell",
  "parking_lot",
@@ -3060,7 +3060,7 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a2629bb1404f3d34c2e921f21fd34ba00b206124c81f65c50b43b6aaefeb016"
 dependencies = [
- "log 0.4.21",
+ "log 0.4.22",
  "phf 0.10.1",
  "phf_codegen 0.10.0",
  "string_cache",
@@ -3182,7 +3182,7 @@ dependencies = [
  "futures-util",
  "http 0.2.12",
  "httparse",
- "log 0.4.21",
+ "log 0.4.22",
  "memchr",
  "mime",
  "spin",
@@ -3205,7 +3205,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8614eb2c83d59d1c8cc974dd3f920198647674a0a035e1af1fa58707e317466"
 dependencies = [
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
  "openssl",
  "openssl-probe",
  "openssl-sys",
@@ -3319,7 +3319,7 @@ version = "4.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5312f837191c317644f313f7b2b39f9cb1496570c74f7c17152dd3961219551f"
 dependencies = [
- "log 0.4.21",
+ "log 0.4.22",
  "mac-notification-sys",
  "serde",
  "tauri-winrt-notification",
@@ -4057,7 +4057,7 @@ dependencies = [
  "cfg-if",
  "concurrent-queue",
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
  "pin-project-lite",
  "windows-sys 0.48.0",
 ]
@@ -4472,7 +4472,7 @@ dependencies = [
  "hyper-tls 0.5.0",
  "ipnet",
  "js-sys",
- "log 0.4.21",
+ "log 0.4.22",
  "mime",
  "native-tls",
  "once_cell",
@@ -4517,7 +4517,7 @@ dependencies = [
  "hyper-util",
  "ipnet",
  "js-sys",
- "log 0.4.21",
+ "log 0.4.22",
  "mime",
  "native-tls",
  "once_cell",
@@ -4557,7 +4557,7 @@ dependencies = [
  "gtk-sys",
  "js-sys",
  "lazy_static 1.5.0",
- "log 0.4.21",
+ "log 0.4.22",
  "objc",
  "objc-foundation",
  "objc_id",
@@ -4789,7 +4789,7 @@ dependencies = [
  "cssparser",
  "derive_more",
  "fxhash",
- "log 0.4.21",
+ "log 0.4.22",
  "matches",
  "phf 0.8.0",
  "phf_codegen 0.8.0",
@@ -5303,7 +5303,7 @@ source = "git+https://github.com/zzzgydi/sysproxy-rs?branch=main#bd912f90ae7f20b
 dependencies = [
  "interfaces",
  "iptools",
- "log 0.4.21",
+ "log 0.4.22",
  "thiserror",
  "windows 0.52.0",
  "winreg 0.52.0",
@@ -5387,7 +5387,7 @@ dependencies = [
  "lazy_static 1.5.0",
  "libappindicator",
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
  "ndk",
  "ndk-context",
  "ndk-sys",
@@ -5620,7 +5620,7 @@ dependencies = [
  "infer 0.13.0",
  "json-patch",
  "kuchikiki",
- "log 0.4.21",
+ "log 0.4.22",
  "memchr",
  "phf 0.11.2",
  "proc-macro2",
@@ -5715,7 +5715,7 @@ dependencies = [
  "hex",
  "lazy_static 1.5.0",
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
  "memmem",
  "num-derive",
  "num-traits",
@@ -5922,7 +5922,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c83b561d025642014097b66e6c1bb422783339e0909e4429cde4749d1990bc38"
 dependencies = [
  "futures-util",
- "log 0.4.21",
+ "log 0.4.22",
  "tokio",
  "tungstenite",
 ]
@@ -6052,7 +6052,7 @@ version = "0.1.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3523ab5a71916ccf420eebdf5521fcef02141234bbc0b8a49f2fdc4544364ef"
 dependencies = [
- "log 0.4.21",
+ "log 0.4.22",
  "pin-project-lite",
  "tracing-attributes",
  "tracing-core",
@@ -6085,7 +6085,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee855f1f400bd0e5c02d150ae5de3840039a3f54b025156404e34c23c03f47c3"
 dependencies = [
- "log 0.4.21",
+ "log 0.4.22",
  "once_cell",
  "tracing-core",
 ]
@@ -6139,7 +6139,7 @@ dependencies = [
  "data-encoding",
  "http 1.1.0",
  "httparse",
- "log 0.4.21",
+ "log 0.4.22",
  "rand 0.8.5",
  "sha1",
  "thiserror",
@@ -6261,7 +6261,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24cc0f6d6f267b73e5a2cadf007ba8f9bc39c6a6f9666f8cf25ea809a153b032"
 dependencies = [
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
 ]
 
 [[package]]
@@ -6399,7 +6399,7 @@ dependencies = [
  "headers",
  "http 0.2.12",
  "hyper 0.14.29",
- "log 0.4.21",
+ "log 0.4.22",
  "mime",
  "mime_guess",
  "multer",
@@ -6445,7 +6445,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "614d787b966d3989fa7bb98a654e369c762374fd3213d212cfc0251257e747da"
 dependencies = [
  "bumpalo",
- "log 0.4.21",
+ "log 0.4.22",
  "once_cell",
  "proc-macro2",
  "quote",
@@ -6576,7 +6576,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "105b1842da6554f91526c14a2a2172897b7f745a805d62af4ce698706be79c12"
 dependencies = [
  "dlib",
- "log 0.4.21",
+ "log 0.4.22",
  "pkg-config",
 ]
 
@@ -7205,7 +7205,7 @@ checksum = "12b41773911497b18ca8553c3daaf8ec9fe9819caf93d451d3055f69de028adb"
 dependencies = [
  "derive-new",
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
  "nix 0.28.0",
  "os_pipe",
  "tempfile",
@@ -7249,7 +7249,7 @@ dependencies = [
  "http 0.2.12",
  "kuchikiki",
  "libc",
- "log 0.4.21",
+ "log 0.4.22",
  "objc",
  "objc_id",
  "once_cell",
