@@ -1,16 +1,17 @@
-import useSWR from "swr";
-import { useState, useEffect } from "react";
+import { BaseEmpty, BasePage } from "@/components/base";
+import { BaseSearchBox } from "@/components/base/base-search-box";
+import { ProviderButton } from "@/components/rule/provider-button";
+import { RuleItem } from "@/components/rule/rule-item";
+import { getRuleProviders, getRules } from "@/services/api";
+import { getCurrentProfileRuleProvidersPath } from "@/services/cmds";
+import ExpandIcon from "@mui/icons-material/Expand";
+import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
+import { Box, IconButton } from "@mui/material";
+import { readTextFile } from "@tauri-apps/api/fs";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
-import { Box, IconButton } from "@mui/material";
-import { getRuleProviders, getRules } from "@/services/api";
-import { BaseEmpty, BasePage } from "@/components/base";
-import { RuleItem } from "@/components/rule/rule-item";
-import { ProviderButton } from "@/components/rule/provider-button";
-import { BaseSearchBox } from "@/components/base/base-search-box";
-import { getCurrentProfileRuleProvidersPath } from "@/services/cmds";
-import { readTextFile } from "@tauri-apps/api/fs";
-import { UnfoldLess, UnfoldMore } from "@mui/icons-material";
+import useSWR from "swr";
 
 const RulesPage = () => {
   const { t } = useTranslation();
@@ -100,7 +101,7 @@ const RulesPage = () => {
                     }),
                   );
                 }}>
-                <UnfoldMore />
+                <ExpandIcon />
               </IconButton>
               <IconButton
                 title={t("Collapse All")}
@@ -114,7 +115,7 @@ const RulesPage = () => {
                     }),
                   );
                 }}>
-                <UnfoldLess />
+                <VerticalAlignCenterIcon />
               </IconButton>
             </>
           )}

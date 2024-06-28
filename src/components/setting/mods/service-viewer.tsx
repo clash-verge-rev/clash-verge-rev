@@ -5,7 +5,8 @@ import {
   patchVergeConfig,
   uninstallService,
 } from "@/services/cmds";
-import { Button, Stack, Typography } from "@mui/material";
+import { Check, Close } from "@mui/icons-material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -79,22 +80,30 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       contentSx={{ width: 360, userSelect: "text" }}
       disableFooter
       onClose={() => setOpen(false)}>
-      <Typography
-        sx={{
-          "& span": {
-            color: state === "active" ? "primary.main" : "text.primary",
-          },
-        }}>
-        {t("Current State")}: <span>{t(state)}</span>
-      </Typography>
-
-      {(state === "unknown" || state === "uninstall") && (
-        <Typography>
-          {t(
-            "Information: Please make sure that the Clash Verge Service is installed and enabled",
+      <Box display="flex" flexDirection={"row"} gap={1}>
+        {state === "active" || state === "installed" ? (
+          <Check color="success" />
+        ) : (
+          <Close color="error" />
+        )}
+        <Box>
+          <Typography
+            sx={{
+              "& span": {
+                color: state === "active" ? "primary.main" : "text.primary",
+              },
+            }}>
+            {t("Current State")}: {t(state)}
+          </Typography>
+          {(state === "unknown" || state === "uninstall") && (
+            <Typography mt={1} fontSize={14} color={"text.secondary"}>
+              {t(
+                "Information: Please make sure that the Clash Verge Service is installed and enabled",
+              )}
+            </Typography>
           )}
-        </Typography>
-      )}
+        </Box>
+      </Box>
 
       <Stack
         direction="row"
@@ -113,7 +122,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
         )}
 
         {(state === "active" || state === "installed") && (
-          <Button variant="outlined" onClick={onUninstall}>
+          <Button variant="contained" color="error" onClick={onUninstall}>
             {t("Uninstall")}
           </Button>
         )}
