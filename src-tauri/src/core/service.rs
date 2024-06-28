@@ -312,3 +312,39 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
     Ok(())
 }
+
+/// set dns by service
+pub fn set_dns_by_service() -> Result<()> {
+    let url = format!("{SERVICE_URL}/set_dns");
+    let res = reqwest::blocking::ClientBuilder::new()
+        .no_proxy()
+        .build()?
+        .post(url)
+        .send()?
+        .json::<JsonResponse>()
+        .context("failed to connect to the Clash Verge Service")?;
+
+    if res.code != 0 {
+        bail!(res.msg);
+    }
+
+    Ok(())
+}
+
+/// unset dns by service
+pub fn unset_dns_by_service() -> Result<()> {
+    let url = format!("{SERVICE_URL}/unset_dns");
+    let res = reqwest::blocking::ClientBuilder::new()
+        .no_proxy()
+        .build()?
+        .post(url)
+        .send()?
+        .json::<JsonResponse>()
+        .context("failed to connect to the Clash Verge Service")?;
+
+    if res.code != 0 {
+        bail!(res.msg);
+    }
+
+    Ok(())
+}
