@@ -112,6 +112,7 @@ pub fn resolve_setup(app: &mut App) {
 pub fn resolve_reset() {
     log_err!(sysopt::Sysopt::global().reset_sysproxy());
     log_err!(CoreManager::global().stop_core());
+    let _ = service::unset_dns_by_service();
 }
 
 /// create main window
