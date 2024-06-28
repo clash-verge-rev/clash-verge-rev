@@ -50,7 +50,7 @@ export const useLogData = () => {
       };
     },
     {
-      fallbackData: { up: 0, down: 0 },
+      fallbackData: [],
       keepPreviousData: true,
     }
   );
