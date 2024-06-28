@@ -62,6 +62,5 @@ export const ProfileBox = styled(Box)(({
     color,
     overflow: "hidden",
     "& h2": { color: h2color },
-    transition: "all 0.3s ease",
   };
 });

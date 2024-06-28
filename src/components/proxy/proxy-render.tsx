@@ -1,26 +1,26 @@
-import {
-  alpha,
-  Box,
-  ListItemText,
-  ListItemButton,
-  Typography,
-  styled,
-} from "@mui/material";
+import { useVerge } from "@/hooks/use-verge";
+import { downloadIconCache } from "@/services/cmds";
+import { useThemeMode } from "@/services/states";
 import {
   ExpandLessRounded,
   ExpandMoreRounded,
   InboxRounded,
 } from "@mui/icons-material";
-import { HeadState } from "./use-head-state";
+import {
+  alpha,
+  Box,
+  ListItemButton,
+  ListItemText,
+  styled,
+  Typography,
+} from "@mui/material";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { memo, useEffect, useState } from "react";
 import { ProxyHead } from "./proxy-head";
 import { ProxyItem } from "./proxy-item";
 import { ProxyItemMini } from "./proxy-item-mini";
+import { HeadState } from "./use-head-state";
 import type { IRenderItem } from "./use-render-list";
-import { useVerge } from "@/hooks/use-verge";
-import { useThemeMode } from "@/services/states";
-import { memo, useEffect, useState } from "react";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { downloadIconCache } from "@/services/cmds";
 
 interface RenderProps {
   item: IRenderItem;
@@ -102,6 +102,7 @@ export const ProxyRender = (props: RenderProps) => {
           height: "70px",
           margin: "8px 8px 0",
           borderRadius: "8px",
+          transition: "background-color 0s",
         }}
         onClick={() => onHeadState(group.name, { open: !headState?.open })}>
         {enable_group_icon &&

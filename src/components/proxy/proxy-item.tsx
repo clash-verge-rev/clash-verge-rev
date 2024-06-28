@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
+import { BaseLoading } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
+import delayManager from "@/services/delay";
 import { CheckCircleOutlineRounded } from "@mui/icons-material";
 import {
   alpha,
@@ -12,9 +13,8 @@ import {
   SxProps,
   Theme,
 } from "@mui/material";
-import { BaseLoading } from "@/components/base";
-import delayManager from "@/services/delay";
-import { useVerge } from "@/hooks/use-verge";
+import { useLockFn } from "ahooks";
+import { useEffect, useState } from "react";
 
 interface Props {
   group: IProxyGroupItem;
@@ -96,12 +96,12 @@ export const ProxyItem = (props: Props) => {
                     : alpha(primary.main, 0.35),
               },
               backgroundColor: bgcolor,
+              transition: "background-color 0s",
               marginBottom: "8px",
               height: "40px",
             };
           },
-        ]}
-      >
+        ]}>
         <ListItemText
           title={proxy.name}
           secondary={
@@ -112,8 +112,7 @@ export const ProxyItem = (props: Props) => {
                   marginRight: "8px",
                   fontSize: "14px",
                   color: "text.primary",
-                }}
-              >
+                }}>
                 {proxy.name}
                 {showType && proxy.now && ` - ${proxy.now}`}
               </Box>
@@ -131,8 +130,7 @@ export const ProxyItem = (props: Props) => {
         />
 
         <ListItemIcon
-          sx={{ justifyContent: "flex-end", color: "primary.main" }}
-        >
+          sx={{ justifyContent: "flex-end", color: "primary.main" }}>
           {delay === -2 && (
             <Widget>
               <BaseLoading />
@@ -151,8 +149,7 @@ export const ProxyItem = (props: Props) => {
               sx={({ palette }) => ({
                 display: "none", // hover才显示
                 ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
-              })}
-            >
+              })}>
               Check
             </Widget>
           )}
@@ -172,8 +169,7 @@ export const ProxyItem = (props: Props) => {
                 !proxy.provider
                   ? { ":hover": { bgcolor: alpha(palette.primary.main, 0.15) } }
                   : {}
-              }
-            >
+              }>
               {delayManager.formatDelay(delay, timeout)}
             </Widget>
           )}

@@ -1,22 +1,22 @@
-import { useRef, useState } from "react";
-import { useLockFn } from "ahooks";
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import {
-  getConnections,
-  providerHealthCheck,
-  updateProxy,
-  deleteConnection,
-  getGroupProxyDelays,
-} from "@/services/api";
+import { ProxyRender } from "@/components/proxy/proxy-render";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
+import {
+  deleteConnection,
+  getConnections,
+  getGroupProxyDelays,
+  providerHealthCheck,
+  updateProxy,
+} from "@/services/api";
+import delayManager from "@/services/delay";
+import { ChevronRight } from "@mui/icons-material";
+import { Box, Link, List, ListItem } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { max, toArray } from "lodash-es";
+import { useRef, useState } from "react";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
-import { ProxyRender } from "./proxy-render";
-import delayManager from "@/services/delay";
-import { Box, Link, List, ListItem } from "@mui/material";
-import { ChevronRight } from "@mui/icons-material";
-import { max, toArray } from "lodash-es";
 
 interface Props {
   mode: string;
