@@ -1,9 +1,9 @@
+import dayjs from "dayjs";
 import useSWRSubscription from "swr/subscription";
+import { getClashLogs } from "../services/cmds";
 import { useEnableLog } from "../services/states";
 import { createSockette } from "../utils/websocket";
 import { useClashInfo } from "./use-clash";
-import dayjs from "dayjs";
-import { getClashLogs } from "../services/cmds";
 
 const MAX_LOG_NUM = 1000;
 
@@ -50,7 +50,7 @@ export const useLogData = () => {
       };
     },
     {
-      fallbackData: { up: 0, down: 0 },
+      fallbackData: [],
       keepPreviousData: true,
     },
   );
