@@ -122,7 +122,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Clash Port")}
+      title={t("Port Config")}
       contentSx={{ width: 300 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
@@ -132,7 +132,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Mixed Port" />
+          <ListItemText primary={t("Mixed Port")} />
           <TextField
             size="small"
             autoComplete="off"
@@ -144,7 +144,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Socks Port" />
+          <ListItemText primary={t("Socks Port")} />
           <TextField
             size="small"
             autoComplete="off"
@@ -167,7 +167,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary="Http Port" />
+          <ListItemText primary={t("Http Port")} />
           <TextField
             size="small"
             autoComplete="off"
@@ -191,7 +191,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
         {OS !== "windows" && (
           <ListItem sx={{ padding: "5px 2px" }}>
-            <ListItemText primary="Redir Port" />
+            <ListItemText primary={t("Redir Port")} />
             <TextField
               size="small"
               autoComplete="off"
@@ -216,7 +216,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         )}
         {OS === "linux" && (
           <ListItem sx={{ padding: "5px 2px" }}>
-            <ListItemText primary="Tproxy Port" />
+            <ListItemText primary={t("Tproxy Port")} />
             <TextField
               size="small"
               autoComplete="off"
