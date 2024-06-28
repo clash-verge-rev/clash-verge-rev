@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -98,13 +99,18 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Auto Close Connections")} />
+          <ListItemText
+            primary={t("Auto Close Connections")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TooltipIcon title={t("Auto Close Connections Info")} />
           <Switch
             edge="end"
             checked={values.autoCloseConnection}
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoCloseConnection: c }))
             }
+            sx={{ marginLeft: "auto" }}
           />
         </ListItem>
 
@@ -120,13 +126,18 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Enable Builtin Enhanced")} />
+          <ListItemText
+            primary={t("Enable Builtin Enhanced")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TooltipIcon title={t("Enable Builtin Enhanced Info")} />
           <Switch
             edge="end"
             checked={values.enableBuiltinEnhanced}
             onChange={(_, c) =>
               setValues((v) => ({ ...v, enableBuiltinEnhanced: c }))
             }
+            sx={{ marginLeft: "auto" }}
           />
         </ListItem>
 
@@ -181,14 +192,18 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Default Latency Test")} />
+          <ListItemText
+            primary={t("Default Latency Test")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TooltipIcon title={t("Default Latency Test Info")} />
           <TextField
             size="small"
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck="false"
-            sx={{ width: 250 }}
+            sx={{ width: 250, marginLeft: "auto" }}
             value={values.defaultLatencyTest}
             placeholder="http://1.1.1.1"
             onChange={(e) =>
