@@ -42,13 +42,14 @@ jobs:
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
 
+      - name: Install Tauri CLI
+        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-
-      - name: Install Tauri CLI
-        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
+          cache-all-crates: true
 
       - name: Install Node
         uses: actions/setup-node@v4
