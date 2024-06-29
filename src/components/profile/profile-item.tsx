@@ -59,7 +59,7 @@ export const ProfileItem = (props: Props) => {
   const loadingCache = useLoadingCache();
   const setLoadingCache = useSetLoadingCache();
 
-  const { uid, name = "Profile", extra, updated = 0 } = itemData;
+  const { uid, name = "Profile", extra, updated = 0, option } = itemData;
 
   // local file mode
   // remote file mode
@@ -105,6 +105,8 @@ export const ProfileItem = (props: Props) => {
   }, [hasUrl, updated]);
 
   const [fileOpen, setFileOpen] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
+  const [scriptOpen, setScriptOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const onOpenHome = () => {
@@ -120,6 +122,16 @@ export const ProfileItem = (props: Props) => {
   const onEditFile = () => {
     setAnchorEl(null);
     setFileOpen(true);
+  };
+
+  const onEditMerge = () => {
+    setAnchorEl(null);
+    setMergeOpen(true);
+  };
+
+  const onEditScript = () => {
+    setAnchorEl(null);
+    setScriptOpen(true);
   };
 
   const onForceSelect = () => {
@@ -174,33 +186,55 @@ export const ProfileItem = (props: Props) => {
   });
 
   const urlModeMenu = (
-    hasHome ? [{ label: "Home", handler: onOpenHome }] : []
+    hasHome ? [{ label: "Home", handler: onOpenHome, disabled: false }] : []
   ).concat([
-    { label: "Select", handler: onForceSelect },
-    { label: "Edit Info", handler: onEditInfo },
-    { label: "Edit File", handler: onEditFile },
-    { label: "Open File", handler: onOpenFile },
-    { label: "Update", handler: () => onUpdate(0) },
-    { label: "Update(Proxy)", handler: () => onUpdate(2) },
+    { label: "Select", handler: onForceSelect, disabled: false },
+    { label: "Edit Info", handler: onEditInfo, disabled: false },
+    { label: "Edit File", handler: onEditFile, disabled: false },
+    {
+      label: "Edit Merge",
+      handler: onEditMerge,
+      disabled: option?.merge === null,
+    },
+    {
+      label: "Edit Script",
+      handler: onEditScript,
+      disabled: option?.script === null,
+    },
+    { label: "Open File", handler: onOpenFile, disabled: false },
+    { label: "Update", handler: () => onUpdate(0), disabled: false },
+    { label: "Update(Proxy)", handler: () => onUpdate(2), disabled: false },
     {
       label: "Delete",
       handler: () => {
         setAnchorEl(null);
         setConfirmOpen(true);
       },
+      disabled: false,
     },
   ]);
   const fileModeMenu = [
-    { label: "Select", handler: onForceSelect },
-    { label: "Edit Info", handler: onEditInfo },
-    { label: "Edit File", handler: onEditFile },
-    { label: "Open File", handler: onOpenFile },
+    { label: "Select", handler: onForceSelect, disabled: false },
+    { label: "Edit Info", handler: onEditInfo, disabled: false },
+    { label: "Edit File", handler: onEditFile, disabled: false },
+    {
+      label: "Edit Merge",
+      handler: onEditMerge,
+      disabled: option?.merge === null,
+    },
+    {
+      label: "Edit Script",
+      handler: onEditScript,
+      disabled: option?.script === null,
+    },
+    { label: "Open File", handler: onOpenFile, disabled: false },
     {
       label: "Delete",
       handler: () => {
         setAnchorEl(null);
         setConfirmOpen(true);
       },
+      disabled: false,
     },
   ];
 
@@ -369,6 +403,7 @@ export const ProfileItem = (props: Props) => {
           <MenuItem
             key={item.label}
             onClick={item.handler}
+            disabled={item.disabled}
             sx={[
               {
                 minWidth: 120,
@@ -397,6 +432,24 @@ export const ProfileItem = (props: Props) => {
         schema="clash"
         onChange={onChange}
         onClose={() => setFileOpen(false)}
+      />
+      <EditorViewer
+        mode="profile"
+        property={option?.merge ?? "123"}
+        open={mergeOpen}
+        language="yaml"
+        schema="merge"
+        onChange={onChange}
+        onClose={() => setMergeOpen(false)}
+      />
+      <EditorViewer
+        mode="profile"
+        property={option?.script ?? ""}
+        open={scriptOpen}
+        language="javascript"
+        schema={undefined}
+        onChange={onChange}
+        onClose={() => setScriptOpen(false)}
       />
       <ConfirmViewer
         title={t("Confirm deletion")}

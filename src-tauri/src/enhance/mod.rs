@@ -10,6 +10,7 @@ use self::merge::*;
 use self::script::*;
 use self::tun::*;
 use crate::config::Config;
+use crate::utils::tmpl;
 use serde_yaml::Mapping;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -47,33 +48,45 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     };
 
     // 从profiles里拿东西
-    let (mut config, chain) = {
+    let (mut config, merge_item, script_item) = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
 
         let current = profiles.current_mapping().unwrap_or_default();
+        let merge = profiles
+            .get_item(&profiles.current_merge().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Merge(
+                    serde_yaml::from_str::<Mapping>(tmpl::ITEM_MERGE).unwrap_or_default(),
+                ),
+            });
+        let script = profiles
+            .get_item(&profiles.current_script().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
+            });
 
-        let chain = match profiles.chain.as_ref() {
-            Some(chain) => chain
-                .iter()
-                .filter_map(|uid| profiles.get_item(uid).ok())
-                .filter_map(<Option<ChainItem>>::from)
-                .collect::<Vec<ChainItem>>(),
-            None => vec![],
-        };
-
-        (current, chain)
+        (current, merge, script)
     };
 
     let mut result_map = HashMap::new(); // 保存脚本日志
     let mut exists_keys = use_keys(&config); // 保存出现过的keys
 
     // 处理用户的profile
-    chain.into_iter().for_each(|item| match item.data {
+    match merge_item.data {
         ChainType::Merge(merge) => {
             exists_keys.extend(use_keys(&merge));
             config = use_merge(merge, config.to_owned());
         }
+        _ => {}
+    }
+    match script_item.data {
         ChainType::Script(script) => {
             let mut logs = vec![];
 
@@ -86,9 +99,10 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 Err(err) => logs.push(("exception".into(), err.to_string())),
             }
 
-            result_map.insert(item.uid, logs);
+            result_map.insert(script_item.uid, logs);
         }
-    });
+        _ => {}
+    }
 
     // 合并默认的config
     for (key, value) in clash_config.into_iter() {

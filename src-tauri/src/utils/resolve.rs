@@ -1,10 +1,6 @@
-use crate::config::{IVerge, PrfOption};
-use crate::{
-    config::{Config, PrfItem},
-    core::*,
-    utils::init,
-    utils::server,
-};
+use crate::cmds::import_profile;
+use crate::config::IVerge;
+use crate::{config::Config, core::*, utils::init, utils::server};
 use crate::{log_err, trace_err};
 use anyhow::Result;
 use once_cell::sync::OnceCell;
@@ -102,7 +98,7 @@ pub async fn resolve_setup(app: &mut App) {
     if argvs.len() > 1 {
         let param = argvs[1].as_str();
         if param.starts_with("clash:") {
-            resolve_scheme(argvs[1].to_owned()).await;
+            log_err!(resolve_scheme(argvs[1].to_owned()).await);
         }
     }
 }
@@ -240,31 +236,26 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
     Ok(())
 }
 
-pub async fn resolve_scheme(param: String) {
+pub async fn resolve_scheme(param: String) -> Result<()> {
     let url = param
         .trim_start_matches("clash://install-config/?url=")
         .trim_start_matches("clash://install-config?url=");
-    let option = PrfOption {
-        user_agent: None,
-        with_proxy: Some(true),
-        self_proxy: None,
-        danger_accept_invalid_certs: None,
-        update_interval: None,
-    };
-    if let Ok(item) = PrfItem::from_url(url, None, None, Some(option)).await {
-        if Config::profiles().data().append_item(item).is_ok() {
+    match import_profile(url.to_string(), None).await {
+        Ok(_) => {
             notification::Notification::new(crate::utils::dirs::APP_ID)
                 .title("Clash Verge")
                 .body("Import profile success")
                 .show()
                 .unwrap();
-        };
-    } else {
-        notification::Notification::new(crate::utils::dirs::APP_ID)
-            .title("Clash Verge")
-            .body("Import profile failed")
-            .show()
-            .unwrap();
-        log::error!("failed to parse url: {}", url);
+        }
+        Err(e) => {
+            notification::Notification::new(crate::utils::dirs::APP_ID)
+                .title("Clash Verge")
+                .body(format!("Import profile failed: {e}"))
+                .show()
+                .unwrap();
+            log::error!("Import profile failed: {e}");
+        }
     }
+    Ok(())
 }

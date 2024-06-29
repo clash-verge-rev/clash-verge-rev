@@ -1,20 +1,17 @@
 {
   "millis": "миллисекунды",
   "mins": "минуты",
-
   "Back": "Назад",
   "Close": "Закрыть",
   "Cancel": "Отмена",
   "Confirm": "Подтвердить",
   "Empty": "Пусто",
-
   "New": "Новый",
   "Edit": "Редактировать",
   "Save": "Сохранить",
   "Delete": "Удалить",
   "Enable": "Включить",
   "Disable": "Отключить",
-
   "Label-Proxies": "Прокси",
   "Label-Profiles": "Профили",
   "Label-Connections": "Соединения",
@@ -22,7 +19,6 @@
   "Label-Logs": "Логи",
   "Label-Test": "Тест",
   "Label-Settings": "Настройки",
-
   "Proxies": "Прокси",
   "Proxy Groups": "Группы прокси",
   "Proxy Provider": "Провайдер прокси",
@@ -41,7 +37,6 @@
   "Delay check to cancel fixed": "Проверка задержки для отмены фиксированного",
   "Proxy basic": "Резюме о прокси",
   "Proxy detail": "Подробности о прокси",
-
   "Profiles": "Профили",
   "Update All Profiles": "Обновить все профили",
   "View Runtime Config": "Просмотреть используемый конфиг",
@@ -55,6 +50,8 @@
   "Expire Time": "Время окончания",
   "Create Profile": "Создать профиль",
   "Edit Profile": "Изменить профиль",
+  "Edit Merge": "Изменить Merge.",
+  "Edit Script": "Изменить Script",
   "Type": "Тип",
   "Name": "Название",
   "Descriptions": "Описания",
@@ -77,7 +74,6 @@
   "Script Console": "Консоль скрипта",
   "To Top": "Наверх",
   "To End": "Вниз",
-
   "Connections": "Соединения",
   "Table View": "Tablichnyy vid",
   "List View": "Spiskovyy vid",
@@ -97,21 +93,17 @@
   "Source": "Исходный адрес",
   "Destination IP": "IP-адрес назначения",
   "Close Connection": "Закрыть соединение",
-
   "Rules": "Правила",
   "Rule Provider": "Провайдер правило",
-
   "Logs": "Логи",
   "Pause": "Пауза",
   "Clear": "Очистить",
-
   "Test": "Тест",
   "Test All": "Тест Все",
   "Create Test": "Создать тест",
   "Edit Test": "Редактировать тест",
   "Icon": "Икона",
   "Test URL": "Тестовый URL",
-
   "Settings": "Настройки",
   "System Setting": "Настройки системы",
   "Tun Mode": "Режим туннеля",
@@ -157,7 +149,6 @@
   "Auto Launch": "Автозапуск",
   "Silent Start": "Тихий запуск",
   "Silent Start Info": "Запускать программу в фоновом режиме без отображения панели",
-
   "Clash Setting": "Настройки Clash",
   "Allow Lan": "Разрешить локальную сеть",
   "IPv6": "IPv6",
@@ -186,7 +177,6 @@
   "Open UWP tool": "Открыть UWP инструмент",
   "Open UWP tool Info": "С Windows 8 приложения UWP (такие как Microsoft Store) ограничены в прямом доступе к сетевым службам локального хоста, и этот инструмент позволяет обойти это ограничение",
   "Update GeoData": "Обновление GeoData",
-
   "TG Channel": "Канал Telegram",
   "Manual": "Документация",
   "Github Repo": "GitHub репозиторий",
@@ -258,7 +248,6 @@
   "Open Dev Tools": "Открыть инструменты разработчика",
   "Exit": "Выход",
   "Verge Version": "Версия Verge",
-
   "ReadOnly": "Только для чтения",
   "ReadOnlyMessage": "Невозможно редактировать в режиме только для чтения",
   "Filter": "Фильтр",
@@ -266,7 +255,6 @@
   "Match Case": "Учитывать регистр",
   "Match Whole Word": "Полное совпадение слова",
   "Use Regular Expression": "Использовать регулярные выражения",
-
   "Profile Imported Successfully": "Профиль успешно импортирован",
   "Clash Config Updated": "Clash конфигурация Обновлена",
   "Profile Switched": "Профиль изменен",

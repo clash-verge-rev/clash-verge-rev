@@ -1,7 +1,10 @@
 extern crate warp;
 
 use super::resolve;
-use crate::config::{Config, IVerge, DEFAULT_PAC};
+use crate::{
+    config::{Config, IVerge, DEFAULT_PAC},
+    log_err,
+};
 use anyhow::{bail, Result};
 use port_scanner::local_port_available;
 use std::convert::Infallible;
@@ -85,7 +88,7 @@ pub fn embed_server(app_handle: AppHandle) {
             .and_then(scheme_handler);
 
         async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
-            resolve::resolve_scheme(query.param).await;
+            log_err!(resolve::resolve_scheme(query.param).await);
             Ok("ok")
         }
         let commands = ping.or(visible).or(pac).or(scheme);
