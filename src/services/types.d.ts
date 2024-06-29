@@ -234,6 +234,7 @@ interface IVergeConfig {
   system_proxy_bypass?: string;
   web_ui_list?: string[];
   hotkeys?: string[];
+  // not a verge config, only use it to set the current theme of app
   theme_setting?: {
     primary_color?: string;
     secondary_color?: string;

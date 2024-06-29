@@ -20,18 +20,9 @@ export const useVerge = () => {
     mutateVerge();
   };
 
-  const patchVergeTheme = async (value: Partial<IVergeConfig>) => {
-    await patchVergeConfig({
-      light_theme_setting: value.light_theme_setting,
-      dark_theme_setting: value.dark_theme_setting,
-    });
-    mutateVerge();
-  };
-
   return {
     verge,
     mutateVerge,
     patchVerge,
-    patchVergeTheme,
   };
 };

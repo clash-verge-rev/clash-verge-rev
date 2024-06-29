@@ -21,7 +21,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const { verge, patchVergeTheme } = useVerge();
+  const { verge, patchVerge } = useVerge();
   const { theme_mode } = verge ?? {};
   const [themeMode, setThemeMode] = useState(theme_mode ?? "light");
   const [themeSettings, setThemeSettings] = useState({
@@ -91,7 +91,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     try {
-      await patchVergeTheme(themeSettings);
+      await patchVerge(themeSettings);
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
