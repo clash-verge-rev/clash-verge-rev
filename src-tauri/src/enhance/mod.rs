@@ -103,47 +103,37 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     let mut exists_keys = use_keys(&config); // 保存出现过的keys
 
     // 处理用户的profile
-    match rules_item.data {
-        ChainType::Rules(rules) => {
-            config = use_seq(rules, config.to_owned(), "rules");
-        }
-        _ => {}
-    }
-    match proxies_item.data {
-        ChainType::Proxies(proxies) => {
-            config = use_seq(proxies, config.to_owned(), "proxies");
-        }
-        _ => {}
-    }
-    match groups_item.data {
-        ChainType::Groups(groups) => {
-            config = use_seq(groups, config.to_owned(), "proxy-groups");
-        }
-        _ => {}
-    }
-    match merge_item.data {
-        ChainType::Merge(merge) => {
-            exists_keys.extend(use_keys(&merge));
-            config = use_merge(merge, config.to_owned());
-        }
-        _ => {}
-    }
-    match script_item.data {
-        ChainType::Script(script) => {
-            let mut logs = vec![];
 
-            match use_script(script, config.to_owned()) {
-                Ok((res_config, res_logs)) => {
-                    exists_keys.extend(use_keys(&res_config));
-                    config = res_config;
-                    logs.extend(res_logs);
-                }
-                Err(err) => logs.push(("exception".into(), err.to_string())),
+    if let ChainType::Rules(rules) = rules_item.data {
+        config = use_seq(rules, config.to_owned(), "rules");
+    }
+
+    if let ChainType::Proxies(proxies) = proxies_item.data {
+        config = use_seq(proxies, config.to_owned(), "proxies");
+    }
+
+    if let ChainType::Groups(groups) = groups_item.data {
+        config = use_seq(groups, config.to_owned(), "proxy-groups");
+    }
+
+    if let ChainType::Merge(merge) = merge_item.data {
+        exists_keys.extend(use_keys(&merge));
+        config = use_merge(merge, config.to_owned());
+    }
+
+    if let ChainType::Script(script) = script_item.data {
+        let mut logs = vec![];
+
+        match use_script(script, config.to_owned()) {
+            Ok((res_config, res_logs)) => {
+                exists_keys.extend(use_keys(&res_config));
+                config = res_config;
+                logs.extend(res_logs);
             }
-
-            result_map.insert(script_item.uid, logs);
+            Err(err) => logs.push(("exception".into(), err.to_string())),
         }
-        _ => {}
+
+        result_map.insert(script_item.uid, logs);
     }
 
     // 合并默认的config

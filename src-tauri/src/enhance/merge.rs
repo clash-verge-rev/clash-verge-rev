@@ -1,14 +1,5 @@
-use super::{use_filter, use_lowercase};
-use serde_yaml::{self, Mapping, Sequence, Value};
-
-const MERGE_FIELDS: [&str; 6] = [
-    "prepend-rules",
-    "append-rules",
-    "prepend-proxies",
-    "append-proxies",
-    "prepend-proxy-groups",
-    "append-proxy-groups",
-];
+use super::use_lowercase;
+use serde_yaml::{self, Mapping, Value};
 
 fn deep_merge(a: &mut Value, b: &Value) {
     match (a, b) {
@@ -23,47 +14,12 @@ fn deep_merge(a: &mut Value, b: &Value) {
 
 pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
     let mut config = Value::from(config);
-    let mut merge_without_append = use_lowercase(merge.clone());
-    for key in MERGE_FIELDS {
-        merge_without_append.remove(key).unwrap_or_default();
-    }
-    deep_merge(&mut config, &Value::from(merge_without_append));
+    let merge = use_lowercase(merge.clone());
 
-    let mut config = config.as_mapping().unwrap().clone();
-    let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
-    let merge = use_filter(merge, &merge_list.collect());
+    deep_merge(&mut config, &Value::from(merge));
 
-    ["rules", "proxies", "proxy-groups"]
-        .iter()
-        .for_each(|key_str| {
-            let key_val = Value::from(key_str.to_string());
+    let config = config.as_mapping().unwrap().clone();
 
-            let mut list = Sequence::default();
-            list = config.get(&key_val).map_or(list.clone(), |val| {
-                val.as_sequence().map_or(list, |v| v.clone())
-            });
-
-            let pre_key = Value::from(format!("prepend-{key_str}"));
-            let post_key = Value::from(format!("append-{key_str}"));
-
-            if let Some(pre_val) = merge.get(&pre_key) {
-                if pre_val.is_sequence() {
-                    let mut pre_val = pre_val.as_sequence().unwrap().clone();
-                    pre_val.extend(list);
-                    list = pre_val;
-                }
-            }
-
-            if let Some(post_val) = merge.get(&post_key) {
-                if post_val.is_sequence() {
-                    list.extend(post_val.as_sequence().unwrap().clone());
-                }
-            }
-
-            if !list.is_empty() {
-                config.insert(key_val, Value::from(list));
-            }
-        });
     config
 }
 
