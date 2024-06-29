@@ -129,8 +129,8 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
             property={theme.css_injection ?? ""}
             open={editorOpen}
             language="css"
-            onChange={(content) => {
-              theme.css_injection = content;
+            onChange={(_prev, curr) => {
+              theme.css_injection = curr;
               handleChange("css_injection");
             }}
             onClose={() => {

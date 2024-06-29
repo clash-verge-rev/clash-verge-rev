@@ -56,7 +56,7 @@ const ProfilePage = () => {
 
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-  const [activating, setActivating] = useState("");
+  const [activatings, setActivatings] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -128,6 +128,10 @@ const ProfilePage = () => {
     return { regularItems, enhanceItems };
   }, [profiles]);
 
+  const currentActivatings = () => {
+    return [...new Set([profiles.current ?? "", ...chain])].filter(Boolean);
+  };
+
   const onImport = async () => {
     if (!url) return;
     setLoading(true);
@@ -138,13 +142,13 @@ const ProfilePage = () => {
       setUrl("");
       setLoading(false);
 
-      getProfiles().then((newProfiles) => {
+      getProfiles().then(async (newProfiles) => {
         mutate("getProfiles", newProfiles);
 
         const remoteItem = newProfiles.items?.find((e) => e.type === "remote");
         if (!newProfiles.current && remoteItem) {
           const current = remoteItem.uid;
-          patchProfiles({ current });
+          await patchProfiles({ current });
           mutateLogs();
           setTimeout(() => activateSelected(), 2000);
         }
@@ -171,7 +175,9 @@ const ProfilePage = () => {
   const onSelect = useLockFn(async (current: string, force: boolean) => {
     if (!force && current === profiles.current) return;
     // 避免大多数情况下loading态闪烁
-    const reset = setTimeout(() => setActivating(current), 100);
+    const reset = setTimeout(() => {
+      setActivatings([...currentActivatings(), current]);
+    }, 100);
     try {
       await patchProfiles({ current });
       mutateLogs();
@@ -182,42 +188,64 @@ const ProfilePage = () => {
       Notice.error(err?.message || err.toString(), 4000);
     } finally {
       clearTimeout(reset);
-      setActivating("");
+      setActivatings([]);
     }
   });
 
   const onEnhance = useLockFn(async () => {
+    setActivatings(currentActivatings());
     try {
       await enhanceProfiles();
       mutateLogs();
       Notice.success(t("Profile Reactivated"), 1000);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
+    } finally {
+      setActivatings([]);
     }
   });
 
   const onEnable = useLockFn(async (uid: string) => {
     if (chain.includes(uid)) return;
-    const newChain = [...chain, uid];
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
+    try {
+      setActivatings([...currentActivatings(), uid]);
+      const newChain = [...chain, uid];
+      await patchProfiles({ chain: newChain });
+      mutateLogs();
+    } catch (err: any) {
+      Notice.error(err.message || err.toString(), 3000);
+    } finally {
+      setActivatings([]);
+    }
   });
 
   const onDisable = useLockFn(async (uid: string) => {
     if (!chain.includes(uid)) return;
-    const newChain = chain.filter((i) => i !== uid);
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
+    try {
+      setActivatings([...currentActivatings(), uid]);
+      const newChain = chain.filter((i) => i !== uid);
+      await patchProfiles({ chain: newChain });
+      mutateLogs();
+    } catch (err: any) {
+      Notice.error(err.message || err.toString(), 3000);
+    } finally {
+      setActivatings([]);
+    }
   });
 
   const onDelete = useLockFn(async (uid: string) => {
+    const current = profiles.current === uid;
     try {
       await onDisable(uid);
+      setActivatings([...(current ? currentActivatings() : []), uid]);
       await deleteProfile(uid);
       mutateProfiles();
       mutateLogs();
+      current && (await onEnhance());
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
+    } finally {
+      setActivatings([]);
     }
   });
 
@@ -396,10 +424,14 @@ const ProfilePage = () => {
                     <ProfileItem
                       id={item.uid}
                       selected={profiles.current === item.uid}
-                      activating={activating === item.uid}
+                      activating={activatings.includes(item.uid)}
                       itemData={item}
                       onSelect={(f) => onSelect(item.uid, f)}
                       onEdit={() => viewerRef.current?.edit(item)}
+                      onChange={async (prev, curr) => {
+                        prev !== curr && (await onEnhance());
+                      }}
+                      onDelete={() => onDelete(item.uid)}
                     />
                   </Grid>
                 ))}
@@ -423,6 +455,7 @@ const ProfilePage = () => {
                 <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
                   <ProfileMore
                     selected={!!chain.includes(item.uid)}
+                    activating={activatings.includes(item.uid)}
                     itemData={item}
                     enableNum={chain.length || 0}
                     logInfo={chainLogs[item.uid]}
@@ -432,6 +465,9 @@ const ProfilePage = () => {
                     onMoveTop={() => onMoveTop(item.uid)}
                     onMoveEnd={() => onMoveEnd(item.uid)}
                     onEdit={() => viewerRef.current?.edit(item)}
+                    onChange={async (prev, curr) => {
+                      prev !== curr && (await onEnhance());
+                    }}
                   />
                 </Grid>
               ))}
