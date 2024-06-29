@@ -2,14 +2,16 @@ import { BaseDialog, DialogRef, EditorViewer, Notice } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
 import {
+  Box,
   Button,
+  ButtonGroup,
   Input,
   List,
   ListItem,
   ListItemText,
   styled,
   TextField,
-  useTheme,
+  Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
@@ -19,15 +21,27 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const { verge, patchVerge } = useVerge();
-  const { theme_setting } = verge ?? {};
-  const [theme, setTheme] = useState(theme_setting || {});
-  const [cssEditorOpen, setCssEditorOpen] = useState(false);
+  const { verge, patchVergeTheme } = useVerge();
+  const { theme_mode } = verge ?? {};
+  const [themeMode, setThemeMode] = useState(theme_mode ?? "light");
+  const [themeSettings, setThemeSettings] = useState({
+    light_theme_setting: verge?.light_theme_setting ?? {},
+    dark_theme_setting: verge?.dark_theme_setting ?? {},
+  });
+  const theme =
+    themeMode === "light"
+      ? themeSettings.light_theme_setting
+      : themeSettings.dark_theme_setting;
+  const [editorOpen, setEditorOpen] = useState(false);
 
   useImperativeHandle(ref, () => ({
     open: () => {
       setOpen(true);
-      setTheme({ ...theme_setting } || {});
+      setThemeMode(theme_mode ?? "light");
+      setThemeSettings({
+        light_theme_setting: verge?.light_theme_setting ?? {},
+        dark_theme_setting: verge?.dark_theme_setting ?? {},
+      });
     },
     close: () => setOpen(false),
   }));
@@ -39,16 +53,45 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   } as const;
 
   const handleChange = (field: keyof typeof theme) => (e: any) => {
-    setTheme((t) => ({ ...t, [field]: e.target.value }));
+    setThemeSettings((t) => {
+      return themeMode === "light"
+        ? {
+            ...t,
+            light_theme_setting: {
+              ...t.light_theme_setting,
+              [field]: e.target.value,
+            },
+          }
+        : {
+            ...t,
+            dark_theme_setting: {
+              ...t.dark_theme_setting,
+              [field]: e.target.value,
+            },
+          };
+    });
   };
 
   const handleCSSInjection = (css: string) => {
-    setTheme((t) => ({ ...t, css_injection: css }));
+    setThemeSettings((t) => {
+      return themeMode === "light"
+        ? {
+            ...t,
+            light_theme_setting: {
+              ...t.light_theme_setting,
+              css_injection: css,
+            },
+          }
+        : {
+            ...t,
+            dark_theme_setting: { ...t.dark_theme_setting, css_injection: css },
+          };
+    });
   };
 
   const onSave = useLockFn(async () => {
     try {
-      await patchVerge({ theme_setting: theme });
+      await patchVergeTheme(themeSettings, themeMode);
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
@@ -56,9 +99,9 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   });
 
   // default theme
-  const { palette } = useTheme();
+  // const { palette } = useTheme();
 
-  const dt = palette.mode === "light" ? defaultTheme : defaultDarkTheme;
+  const dt = themeMode === "light" ? defaultTheme : defaultDarkTheme;
 
   type ThemeKey = keyof typeof theme & keyof typeof defaultTheme;
 
@@ -81,7 +124,28 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Theme Setting")}
+      title={
+        // t("Theme Setting")
+        <Box display="flex" justifyContent={"space-between"} gap={1}>
+          <Typography variant="h6">{t("Theme Setting")}</Typography>
+          <ButtonGroup size="small">
+            <Button
+              variant={themeMode === "light" ? "contained" : "outlined"}
+              onClick={() => {
+                setThemeMode("light");
+              }}>
+              {t("theme.light")}
+            </Button>
+            <Button
+              variant={themeMode === "dark" ? "contained" : "outlined"}
+              onClick={() => {
+                setThemeMode("dark");
+              }}>
+              {t("theme.dark")}
+            </Button>
+          </ButtonGroup>
+        </Box>
+      }
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       contentSx={{ width: 400, maxHeight: 600, overflow: "auto", pb: 0 }}
@@ -122,22 +186,17 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
             disabled
             sx={{ width: 230 }}
             endAdornment={
-              <Button
-                onClick={() => {
-                  setCssEditorOpen(true);
-                }}>
-                {t("Edit")}
-              </Button>
+              <Button onClick={() => setEditorOpen(true)}>{t("Edit")}</Button>
             }
           />
         </Item>
         <EditorViewer
-          open={cssEditorOpen}
+          open={editorOpen}
           mode="text"
           language={"css"}
           property={theme.css_injection ?? ""}
           onChange={(css) => handleCSSInjection(css)}
-          onClose={() => setCssEditorOpen(false)}
+          onClose={() => setEditorOpen(false)}
         />
       </List>
     </BaseDialog>

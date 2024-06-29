@@ -246,6 +246,30 @@ interface IVergeConfig {
     font_family?: string;
     css_injection?: string;
   };
+  light_theme_setting?: {
+    primary_color?: string;
+    secondary_color?: string;
+    primary_text?: string;
+    secondary_text?: string;
+    info_color?: string;
+    error_color?: string;
+    warning_color?: string;
+    success_color?: string;
+    font_family?: string;
+    css_injection?: string;
+  };
+  dark_theme_setting?: {
+    primary_color?: string;
+    secondary_color?: string;
+    primary_text?: string;
+    secondary_text?: string;
+    info_color?: string;
+    error_color?: string;
+    warning_color?: string;
+    success_color?: string;
+    font_family?: string;
+    css_injection?: string;
+  };
   auto_close_connection?: boolean;
   auto_check_update?: boolean;
   default_latency_test?: string;

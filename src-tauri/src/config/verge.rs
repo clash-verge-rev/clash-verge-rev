@@ -93,8 +93,11 @@ pub struct IVerge {
     /// pac script content
     pub pac_file_content: Option<String>,
 
-    /// theme setting
-    pub theme_setting: Option<IVergeTheme>,
+    /// light theme setting
+    pub light_theme_setting: Option<IVergeTheme>,
+
+    /// dark theme setting
+    pub dark_theme_setting: Option<IVergeTheme>,
 
     /// web ui list
     pub web_ui_list: Option<Vec<String>>,
@@ -264,7 +267,8 @@ impl IVerge {
         patch!(proxy_auto_config);
         patch!(pac_file_content);
 
-        patch!(theme_setting);
+        patch!(light_theme_setting);
+        patch!(dark_theme_setting);
         patch!(web_ui_list);
         patch!(clash_core);
         patch!(hotkeys);
