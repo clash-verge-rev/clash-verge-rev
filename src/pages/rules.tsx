@@ -48,7 +48,7 @@ const RulesPage = () => {
               (o) =>
                 o.trim().length > 0 &&
                 !o.includes("#") &&
-                !o.includes("payload"),
+                !o.includes("payload:"),
             )
             .map((o) => o.trim());
           payloadArr.forEach((payload) => {

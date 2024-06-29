@@ -1,29 +1,29 @@
-import { useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { open } from "@tauri-apps/api/dialog";
-import { Button, MenuItem, Select, Input, Typography } from "@mui/material";
+import { DialogRef, Notice } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
+import { routers } from "@/pages/_routers";
 import {
   exitApp,
   openAppDir,
   openCoreDir,
-  openLogsDir,
   openDevTools,
+  openLogsDir,
 } from "@/services/cmds";
-import { checkUpdate } from "@tauri-apps/api/updater";
-import { useVerge } from "@/hooks/use-verge";
-import { version } from "@root/package.json";
-import { DialogRef, Notice } from "@/components/base";
-import { SettingList, SettingItem } from "./mods/setting-comp";
-import { ThemeModeSwitch } from "./mods/theme-mode-switch";
-import { ConfigViewer } from "./mods/config-viewer";
-import { HotkeyViewer } from "./mods/hotkey-viewer";
-import { MiscViewer } from "./mods/misc-viewer";
-import { ThemeViewer } from "./mods/theme-viewer";
-import { GuardState } from "./mods/guard-state";
-import { LayoutViewer } from "./mods/layout-viewer";
-import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
-import { routers } from "@/pages/_routers";
+import { Button, Input, MenuItem, Select, Typography } from "@mui/material";
+import { version } from "@root/package.json";
+import { open } from "@tauri-apps/api/dialog";
+import { checkUpdate } from "@tauri-apps/api/updater";
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { ConfigViewer } from "./mods/config-viewer";
+import { GuardState } from "./mods/guard-state";
+import { HotkeyViewer } from "./mods/hotkey-viewer";
+import { LayoutViewer } from "./mods/layout-viewer";
+import { MiscViewer } from "./mods/misc-viewer";
+import { SettingItem, SettingList } from "./mods/setting-comp";
+import { ThemeModeSwitch } from "./mods/theme-mode-switch";
+import { ThemeViewer } from "./mods/theme-viewer";
+import { UpdateViewer } from "./mods/update-viewer";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -144,7 +144,11 @@ const SettingVerge = ({ onError }: Props) => {
           onGuard={(e) => patchVerge({ start_page: e })}>
           <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
             {routers.map((page: { label: string; path: string }) => {
-              return <MenuItem value={page.path}>{t(page.label)}</MenuItem>;
+              return (
+                <MenuItem key={page.path} value={page.path}>
+                  {t(page.label)}
+                </MenuItem>
+              );
             })}
           </Select>
         </GuardState>
@@ -231,12 +235,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem onClick={openDevTools} label={t("Open Dev Tools")} />
 
-      <SettingItem
-        onClick={() => {
-          exitApp();
-        }}
-        label={t("Exit")}
-      />
+      <SettingItem onClick={() => exitApp()} label={t("Exit")} />
 
       <SettingItem label={t("Verge Version")}>
         <Typography sx={{ py: "7px", pr: 1 }}>v{version}</Typography>

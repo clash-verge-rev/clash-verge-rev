@@ -32,6 +32,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     strictRoute: false,
     mtu: 1500,
   });
+  const [isLoading, setLoading] = useState(false);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -55,6 +56,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         Notice.error(t("Macos Device Name Error"), 3000);
         return;
       }
+      setLoading(true);
       let tun = {
         ...clash?.tun,
         stack: values.stack,
@@ -67,9 +69,11 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       };
       await patchClash({ tun });
       await mutateClash((old) => ({ ...(old! || {}), tun }), false);
-      setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
+    } finally {
+      setLoading(false);
+      setOpen(false);
     }
   });
 
@@ -97,6 +101,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
           </Button>
         </Box>
       }
+      loading={isLoading}
       contentSx={{ width: 450 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}

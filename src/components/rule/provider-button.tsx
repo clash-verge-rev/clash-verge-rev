@@ -1,23 +1,23 @@
-import dayjs from "dayjs";
-import useSWR, { mutate } from "swr";
-import { useState } from "react";
+import { BaseDialog, Notice } from "@/components/base";
+import { getRuleProviders, ruleProviderUpdate } from "@/services/api";
+import { Error, RefreshRounded } from "@mui/icons-material";
 import {
+  Box,
   Button,
+  Divider,
   IconButton,
   List,
   ListItem,
   ListItemText,
   Typography,
-  styled,
-  Box,
   alpha,
-  Divider,
   keyframes,
+  styled,
 } from "@mui/material";
-import { Error, RefreshRounded } from "@mui/icons-material";
+import dayjs from "dayjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getRuleProviders, ruleProviderUpdate } from "@/services/api";
-import { BaseDialog, Notice } from "@/components/base";
+import useSWR, { mutate } from "swr";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -127,63 +127,61 @@ export const ProviderButton = () => {
           {entries.map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
             return (
-              <>
-                <ListItem
+              <ListItem
+                sx={{
+                  p: 0,
+                  borderRadius: "10px",
+                  border: "solid 2px var(--divider-color)",
+                  mb: 1,
+                }}
+                key={key}>
+                <ListItemText
+                  sx={{ px: 1 }}
+                  primary={
+                    <Box display={"flex"} alignItems={"center"}>
+                      {errorItems?.includes(key) && (
+                        <Error fontSize="small" sx={{ margin: 0 }} />
+                      )}
+                      <Typography
+                        variant="h6"
+                        component="span"
+                        noWrap
+                        title={key}>
+                        {key}
+                      </Typography>
+                      <TypeBox component="span" sx={{ marginLeft: "8px" }}>
+                        {item.ruleCount}
+                      </TypeBox>
+                    </Box>
+                  }
+                  secondary={
+                    <>
+                      <StyledTypeBox component="span">
+                        {item.vehicleType}
+                      </StyledTypeBox>
+                      <StyledTypeBox component="span">
+                        {item.behavior}
+                      </StyledTypeBox>
+                      <StyledTypeBox component="span">
+                        {t("Update At")} {time.fromNow()}
+                      </StyledTypeBox>
+                    </>
+                  }
+                />
+                <Divider orientation="vertical" flexItem />
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  title={`${t("Update")}${t("Rule Provider")}`}
+                  onClick={() => handleUpdate(key, index)}
                   sx={{
-                    p: 0,
-                    borderRadius: "10px",
-                    border: "solid 2px var(--divider-color)",
-                    mb: 1,
-                  }}
-                  key={key}>
-                  <ListItemText
-                    sx={{ px: 1 }}
-                    primary={
-                      <Box display={"flex"} alignItems={"center"}>
-                        {errorItems?.includes(key) && (
-                          <Error fontSize="small" sx={{ margin: 0 }} />
-                        )}
-                        <Typography
-                          variant="h6"
-                          component="span"
-                          noWrap
-                          title={key}>
-                          {key}
-                        </Typography>
-                        <TypeBox component="span" sx={{ marginLeft: "8px" }}>
-                          {item.ruleCount}
-                        </TypeBox>
-                      </Box>
-                    }
-                    secondary={
-                      <>
-                        <StyledTypeBox component="span">
-                          {item.vehicleType}
-                        </StyledTypeBox>
-                        <StyledTypeBox component="span">
-                          {item.behavior}
-                        </StyledTypeBox>
-                        <StyledTypeBox component="span">
-                          {t("Update At")} {time.fromNow()}
-                        </StyledTypeBox>
-                      </>
-                    }
-                  />
-                  <Divider orientation="vertical" flexItem />
-                  <IconButton
-                    size="small"
-                    color="inherit"
-                    title={`${t("Update")}${t("Rule Provider")}`}
-                    onClick={() => handleUpdate(key, index)}
-                    sx={{
-                      animation: updating[index]
-                        ? `1s linear infinite ${round}`
-                        : "none",
-                    }}>
-                    <RefreshRounded />
-                  </IconButton>
-                </ListItem>
-              </>
+                    animation: updating[index]
+                      ? `1s linear infinite ${round}`
+                      : "none",
+                  }}>
+                  <RefreshRounded />
+                </IconButton>
+              </ListItem>
             );
           })}
         </List>

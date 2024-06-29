@@ -97,25 +97,20 @@ const SettingClash = ({ onError }: Props) => {
         label={t("Tun Mode")}
         extra={
           <>
-            <Tooltip title={t("Tun Mode Info")} placement="top">
-              <IconButton color="inherit" size="small">
-                <InfoRounded
-                  fontSize="inherit"
-                  style={{ cursor: "pointer", opacity: 0.75 }}
-                />
+            {serviceStatus !== "active" ? (
+              <Tooltip title={t("Tun Mode Info")} placement="top">
+                <IconButton color="error" size="small">
+                  <InfoRounded fontSize="inherit" />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <IconButton
+                color="inherit"
+                size="small"
+                onClick={() => tunRef.current?.open()}>
+                <Settings fontSize="inherit" style={{ opacity: 0.75 }} />
               </IconButton>
-            </Tooltip>
-            <IconButton
-              color="inherit"
-              size="small"
-              onClick={() =>
-                serviceStatus === "active" && tunRef.current?.open()
-              }>
-              <Settings
-                fontSize="inherit"
-                style={{ cursor: "pointer", opacity: 0.75 }}
-              />
-            </IconButton>
+            )}
           </>
         }>
         <GuardState
@@ -137,8 +132,13 @@ const SettingClash = ({ onError }: Props) => {
             size="small"
             onClick={() => serviceRef.current?.open()}>
             <PrivacyTipRounded
+              color={
+                serviceStatus === "active" || serviceStatus === "installed"
+                  ? "inherit"
+                  : "error"
+              }
               fontSize="inherit"
-              style={{ cursor: "pointer", opacity: 0.75 }}
+              style={{ opacity: 0.75 }}
             />
           </IconButton>
         }>

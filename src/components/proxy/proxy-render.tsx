@@ -141,12 +141,12 @@ export const ProxyRender = (props: RenderProps) => {
                 alignItems: "center",
                 pt: "2px",
               }}>
-              <Box sx={{ marginTop: "2px" }}>
+              <span style={{ marginTop: "2px", display: "block" }}>
                 <StyledTypeBox>{group.type}</StyledTypeBox>
                 <StyledSubtitle sx={{ color: "text.secondary" }}>
                   {group.now}
                 </StyledSubtitle>
-              </Box>
+              </span>
             </ListItemTextChild>
           }
           secondaryTypographyProps={{

@@ -1,25 +1,25 @@
-import dayjs from "dayjs";
-import useSWR, { mutate } from "swr";
-import { useState } from "react";
+import { getProxyProviders, proxyProviderUpdate } from "@/services/api";
+import parseTraffic from "@/utils/parse-traffic";
+import { RefreshRounded } from "@mui/icons-material";
 import {
+  Box,
   Button,
+  Divider,
   IconButton,
+  LinearProgress,
   List,
   ListItem,
   ListItemText,
-  styled,
-  Box,
-  alpha,
   Typography,
-  Divider,
-  LinearProgress,
+  alpha,
   keyframes,
+  styled,
 } from "@mui/material";
-import { RefreshRounded } from "@mui/icons-material";
+import dayjs from "dayjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getProxyProviders, proxyProviderUpdate } from "@/services/api";
+import useSWR, { mutate } from "swr";
 import { BaseDialog } from "../base";
-import parseTraffic from "@/utils/parse-traffic";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -102,75 +102,73 @@ export const ProviderButton = () => {
               ((download + upload) * 100) / (total + 0.1),
             );
             return (
-              <>
-                <ListItem
-                  sx={{
-                    p: 0,
-                    borderRadius: "10px",
-                    border: "solid 2px var(--divider-color)",
-                    mb: 1,
-                  }}
-                  key={key}>
-                  <ListItemText
-                    sx={{ px: 1 }}
-                    primary={
-                      <>
-                        <Typography
-                          variant="h6"
-                          component="span"
-                          noWrap
-                          title={key}>
-                          {key}
-                        </Typography>
-                        <TypeBox component="span" sx={{ marginLeft: "8px" }}>
-                          {item.proxies.length}
-                        </TypeBox>
-                      </>
-                    }
-                    secondary={
-                      <>
-                        <StyledTypeBox component="span">
-                          {item.vehicleType}
-                        </StyledTypeBox>
-                        <StyledTypeBox component="span">
-                          {t("Update At")} {time.fromNow()}
-                        </StyledTypeBox>
-                        {hasSubInfo && (
-                          <>
-                            <Box sx={{ ...boxStyle, fontSize: 14 }}>
-                              <span title="Used / Total">
-                                {parseTraffic(upload + download)} /{" "}
-                                {parseTraffic(total)}
-                              </span>
-                              <span title="Expire Time">
-                                {parseExpire(expire)}
-                              </span>
-                            </Box>
+              <ListItem
+                sx={{
+                  p: 0,
+                  borderRadius: "10px",
+                  border: "solid 2px var(--divider-color)",
+                  mb: 1,
+                }}
+                key={key}>
+                <ListItemText
+                  sx={{ px: 1 }}
+                  primary={
+                    <>
+                      <Typography
+                        variant="h6"
+                        component="span"
+                        noWrap
+                        title={key}>
+                        {key}
+                      </Typography>
+                      <TypeBox component="span" sx={{ marginLeft: "8px" }}>
+                        {item.proxies.length}
+                      </TypeBox>
+                    </>
+                  }
+                  secondary={
+                    <>
+                      <StyledTypeBox component="span">
+                        {item.vehicleType}
+                      </StyledTypeBox>
+                      <StyledTypeBox component="span">
+                        {t("Update At")} {time.fromNow()}
+                      </StyledTypeBox>
+                      {hasSubInfo && (
+                        <>
+                          <Box sx={{ ...boxStyle, fontSize: 14 }}>
+                            <span title="Used / Total">
+                              {parseTraffic(upload + download)} /{" "}
+                              {parseTraffic(total)}
+                            </span>
+                            <span title="Expire Time">
+                              {parseExpire(expire)}
+                            </span>
+                          </Box>
 
-                            <LinearProgress
-                              variant="determinate"
-                              value={progress}
-                            />
-                          </>
-                        )}
-                      </>
-                    }
-                  />
-                  <Divider orientation="vertical" flexItem />
-                  <IconButton
-                    size="small"
-                    color="inherit"
-                    title={`${t("Update")}${t("Proxy Provider")}`}
-                    onClick={() => handleUpdate(key, index)}
-                    sx={{
-                      ...(updating[index] && {
-                        animation: `1s linear infinite ${round}`,
-                      }),
-                    }}>
-                    <RefreshRounded />
-                  </IconButton>
-                </ListItem>
-              </>
+                          <LinearProgress
+                            variant="determinate"
+                            value={progress}
+                          />
+                        </>
+                      )}
+                    </>
+                  }
+                />
+                <Divider orientation="vertical" flexItem />
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  title={`${t("Update")}${t("Proxy Provider")}`}
+                  onClick={() => handleUpdate(key, index)}
+                  sx={{
+                    ...(updating[index] && {
+                      animation: `1s linear infinite ${round}`,
+                    }),
+                  }}>
+                  <RefreshRounded />
+                </IconButton>
+              </ListItem>
             );
           })}
         </List>

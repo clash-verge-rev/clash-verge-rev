@@ -72,6 +72,7 @@ export const SettingList: React.FC<{
 }> = (props) => (
   <List>
     <ListSubheader
+      key={props.title}
       sx={[
         { background: "transparent", fontSize: "16px", fontWeight: "700" },
         ({ palette }) => {

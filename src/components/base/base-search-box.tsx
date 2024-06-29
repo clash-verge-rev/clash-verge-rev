@@ -2,12 +2,12 @@ import { Box, IconButton, SvgIcon, TextField, styled } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { useEffect, useState } from "react";
 
-import { useTranslation } from "react-i18next";
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
 import matchWholeWordIcon from "@/assets/image/component/match_whole_word.svg?react";
 import useRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
-import { debounce } from "lodash-es";
 import { ClearRounded } from "@mui/icons-material";
+import { debounce } from "lodash-es";
+import { useTranslation } from "react-i18next";
 
 type SearchProps = {
   placeholder?: string;
@@ -113,23 +113,33 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                 </Tooltip>
               )}
               <Tooltip title={t("Match Case")}>
-                <IconButton size="small" sx={{ p: 0.5 }}>
+                <IconButton
+                  size="small"
+                  sx={{ p: 0.5 }}
+                  onClick={() => {
+                    setSearchOptions((pre) => ({
+                      ...pre,
+                      matchCase: !pre.matchCase,
+                    }));
+                  }}>
                   <SvgIcon
                     fontSize="inherit"
                     component={matchCaseIcon}
                     {...iconStyle}
                     aria-label={searchOptions.matchCase ? "active" : "inactive"}
-                    onClick={() => {
-                      setSearchOptions((pre) => ({
-                        ...pre,
-                        matchCase: !pre.matchCase,
-                      }));
-                    }}
                   />
                 </IconButton>
               </Tooltip>
               <Tooltip title={t("Match Whole Word")}>
-                <IconButton size="small" sx={{ p: 0.5 }}>
+                <IconButton
+                  size="small"
+                  sx={{ p: 0.5 }}
+                  onClick={() => {
+                    setSearchOptions((pre) => ({
+                      ...pre,
+                      matchWholeWord: !pre.matchWholeWord,
+                    }));
+                  }}>
                   <SvgIcon
                     fontSize="inherit"
                     component={matchWholeWordIcon}
@@ -137,17 +147,19 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                     aria-label={
                       searchOptions.matchWholeWord ? "active" : "inactive"
                     }
-                    onClick={() => {
-                      setSearchOptions((pre) => ({
-                        ...pre,
-                        matchWholeWord: !pre.matchWholeWord,
-                      }));
-                    }}
                   />
                 </IconButton>
               </Tooltip>
               <Tooltip title={t("Use Regular Expression")}>
-                <IconButton size="small" sx={{ p: 0.5 }}>
+                <IconButton
+                  size="small"
+                  sx={{ p: 0.5 }}
+                  onClick={() => {
+                    setSearchOptions((pre) => ({
+                      ...pre,
+                      useRegularExpression: !pre.useRegularExpression,
+                    }));
+                  }}>
                   <SvgIcon
                     fontSize="inherit"
                     component={useRegularExpressionIcon}
@@ -155,19 +167,12 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                       searchOptions.useRegularExpression ? "active" : "inactive"
                     }
                     {...iconStyle}
-                    onClick={() => {
-                      setSearchOptions((pre) => ({
-                        ...pre,
-                        useRegularExpression: !pre.useRegularExpression,
-                      }));
-                    }}
                   />
                 </IconButton>
               </Tooltip>
             </Box>
           ),
         }}
-        {...props}
       />
     </Tooltip>
   );

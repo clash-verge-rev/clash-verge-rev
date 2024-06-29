@@ -1,13 +1,13 @@
+import { BasePage, Notice } from "@/components/base";
+import SettingClash from "@/components/setting/setting-clash";
+import SettingSystem from "@/components/setting/setting-system";
+import SettingVerge from "@/components/setting/setting-verge";
+import { openWebUrl } from "@/services/cmds";
+import { useThemeMode } from "@/services/states";
+import { GitHub, HelpOutlineSharp } from "@mui/icons-material";
 import { Box, ButtonGroup, Grid, IconButton } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import { BasePage, Notice } from "@/components/base";
-import { GitHub, HelpOutlineSharp } from "@mui/icons-material";
-import { openWebUrl } from "@/services/cmds";
-import SettingVerge from "@/components/setting/setting-verge";
-import SettingClash from "@/components/setting/setting-clash";
-import SettingSystem from "@/components/setting/setting-system";
-import { useThemeMode } from "@/services/states";
 
 const SettingPage = () => {
   const { t } = useTranslation();

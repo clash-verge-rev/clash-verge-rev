@@ -1,13 +1,11 @@
-import { memo, useEffect, useRef, useState } from "react";
 import { useVerge } from "@/hooks/use-verge";
 import { Box, Button } from "@mui/material";
+import { memo, useEffect, useRef, useState } from "react";
 
-import { useTranslation } from "react-i18next";
 import { BasePage } from "@/components/base";
-import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
+import { DraggableItem } from "@/components/base/draggable-item";
 import { TestItem } from "@/components/test/test-item";
-import { emit } from "@tauri-apps/api/event";
-import { nanoid } from "nanoid";
+import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
 import {
   DndContext,
   DragEndEvent,
@@ -18,18 +16,15 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext } from "@dnd-kit/sortable";
-import { DraggableItem } from "@/components/base/draggable-item";
+import { emit } from "@tauri-apps/api/event";
+import { nanoid } from "nanoid";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 // test icons
 import apple from "@/assets/image/test/apple.svg?raw";
 import github from "@/assets/image/test/github.svg?raw";
 import google from "@/assets/image/test/google.svg?raw";
 import youtube from "@/assets/image/test/youtube.svg?raw";
-
-interface ISortableItem {
-  id: string;
-  itemData: IVergeTestItem;
-}
 
 const FlexDecorationItems = memo(function FlexDecorationItems() {
   return [...new Array(20)].map((_, index) => (
@@ -79,9 +74,11 @@ const TestPage = () => {
       icon: youtube,
     },
   ];
-  const [sortableTestList, setSortableTestList] = useState<ISortableItem[]>([]);
+  const [sortableTestList, setSortableTestList] = useState<IVergeTestItem[]>(
+    [],
+  );
   const [draggingTestItem, setDraggingTestItem] =
-    useState<ISortableItem | null>(null);
+    useState<IVergeTestItem | null>(null);
 
   const [overItemWidth, setOverItemWidth] = useState(180);
 
@@ -117,13 +114,13 @@ const TestPage = () => {
 
   const getIndex = (id: UniqueIdentifier | undefined) => {
     if (id) {
-      return sortableTestList.findIndex((x) => x.id === id.toString());
+      return sortableTestList.findIndex((x) => x.uid === id.toString());
     } else {
       return -1;
     }
   };
 
-  const draggingTestIndex = getIndex(draggingTestItem?.id);
+  const draggingTestIndex = getIndex(draggingTestItem?.uid);
 
   const handleChainDragEnd = async (event: DragEndEvent) => {
     setDraggingTestItem(null);
@@ -137,9 +134,8 @@ const TestPage = () => {
           overIndex,
         );
         setSortableTestList(newTestList);
-        const testListVerge = newTestList.map((item) => item.itemData);
-        await mutateVerge({ ...verge, test_list: testListVerge }, false);
-        await patchVerge({ test_list: testListVerge });
+        await mutateVerge({ ...verge, test_list: newTestList }, false);
+        await patchVerge({ test_list: newTestList });
       }
     }
   };
@@ -149,14 +145,7 @@ const TestPage = () => {
     if (!verge?.test_list) {
       patchVerge({ test_list: testList });
     }
-    const converTestItems = (verge.test_list ?? testList).map((x) => {
-      return {
-        id: x.uid,
-        itemData: x,
-        onEdit: () => viewerRef.current?.edit(x),
-      };
-    });
-    setSortableTestList(converTestItems);
+    setSortableTestList(verge.test_list ?? testList);
   }, [verge]);
 
   const viewerRef = useRef<TestViewerRef>(null);
@@ -201,7 +190,7 @@ const TestPage = () => {
                 setOverItemWidth(itemWidth);
               }
               const item = sortableTestList.find(
-                (item) => item.id === event.active.id,
+                (item) => item.uid === event.active.id,
               )!;
               setDraggingTestItem(item);
             }
@@ -209,12 +198,12 @@ const TestPage = () => {
           onDragEnd={handleChainDragEnd}
           onDragCancel={() => setDraggingTestItem(null)}>
           <Box sx={{ width: "100%" }}>
-            <SortableContext items={sortableTestList.map((item) => item.id)}>
+            <SortableContext items={sortableTestList.map((item) => item.uid)}>
               <Box sx={{ display: "flex", flexWrap: "wrap" }}>
                 {sortableTestList.map((item) => (
                   <DraggableItem
-                    key={item.id}
-                    id={item.id}
+                    key={item.uid}
+                    id={item.uid}
                     sx={{
                       display: "flex",
                       flexGrow: "1",
@@ -225,15 +214,15 @@ const TestPage = () => {
                       sx={{
                         "& > .MuiBox-root": {
                           bgcolor:
-                            draggingTestItem?.id === item.id
+                            draggingTestItem?.uid === item.uid
                               ? "var(--background-color-alpha)"
                               : "",
                         },
                       }}
-                      id={item.id}
+                      id={item.uid}
                       isDragging={draggingTestItem ? true : false}
-                      itemData={item.itemData}
-                      onEdit={() => viewerRef.current?.edit(item.itemData)}
+                      itemData={item}
+                      onEdit={() => viewerRef.current?.edit(item)}
                       onDelete={onDeleteTestListItem}
                     />
                   </DraggableItem>
@@ -251,11 +240,9 @@ const TestPage = () => {
                     borderRadius: "8px",
                     boxShadow: "0px 0px 10px 5px rgba(0,0,0,0.2)",
                   }}
-                  id={draggingTestItem.id}
-                  itemData={draggingTestItem.itemData}
-                  onEdit={() =>
-                    viewerRef.current?.edit(draggingTestItem.itemData)
-                  }
+                  id={draggingTestItem.uid}
+                  itemData={draggingTestItem}
+                  onEdit={() => viewerRef.current?.edit(draggingTestItem)}
                   onDelete={onDeleteTestListItem}
                 />
               ) : null}

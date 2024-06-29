@@ -283,7 +283,7 @@ jobs:
           - MacOS apple M芯片: aarch64.dmg
 
           ### Linux
-          - Linux 64位: amd64.deb/amd64.Appimage
+          - Linux 64位: amd64.deb/amd64.AppImage
           - Linux 32位: i386.deb
           - Linux arm64架构: arm64.deb
           - Linux armv7架构: armhf.deb

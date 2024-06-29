@@ -1,6 +1,6 @@
-import dayjs from "dayjs";
-import { invoke } from "@tauri-apps/api/tauri";
 import { Notice } from "@/components/base";
+import { invoke } from "@tauri-apps/api/tauri";
+import dayjs from "dayjs";
 
 export async function getClashLogs() {
   const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/;
@@ -29,8 +29,8 @@ export async function getProfiles() {
   return invoke<IProfilesConfig>("get_profiles");
 }
 
-export async function getEnhanceTemplate(profileSpace: string) {
-  return invoke<string>("get_enhance_template", { language: profileSpace });
+export async function getEnhanceTemplate(language: string) {
+  return invoke<string>("get_enhance_template", { language });
 }
 
 export async function enhanceProfiles() {
