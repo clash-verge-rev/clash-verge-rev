@@ -429,7 +429,9 @@ const ProfilePage = () => {
                       onSelect={(f) => onSelect(item.uid, f)}
                       onEdit={() => viewerRef.current?.edit(item)}
                       onChange={async (prev, curr) => {
-                        prev !== curr && (await onEnhance());
+                        if (prev !== curr && profiles.current === item.uid) {
+                          await onEnhance();
+                        }
                       }}
                       onDelete={() => onDelete(item.uid)}
                     />
@@ -466,7 +468,9 @@ const ProfilePage = () => {
                     onMoveEnd={() => onMoveEnd(item.uid)}
                     onEdit={() => viewerRef.current?.edit(item)}
                     onChange={async (prev, curr) => {
-                      prev !== curr && (await onEnhance());
+                      if (prev !== curr && chain.includes(item.uid)) {
+                        await onEnhance();
+                      }
                     }}
                   />
                 </Grid>
