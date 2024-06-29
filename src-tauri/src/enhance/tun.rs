@@ -1,4 +1,4 @@
-use crate::core::service;
+use crate::{core::service, log_err};
 use serde_yaml::{Mapping, Value};
 
 macro_rules! revise {
@@ -18,7 +18,7 @@ macro_rules! append {
     };
 }
 
-pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
+pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
 
@@ -35,10 +35,10 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     revise!(config, "tun", tun_val);
 
     if enable {
-        let _ = service::set_dns_by_service();
+        log_err!(service::set_dns_by_service().await);
         use_dns_for_tun(config)
     } else {
-        let _ = service::unset_dns_by_service();
+        log_err!(service::unset_dns_by_service().await);
         config
     }
 }

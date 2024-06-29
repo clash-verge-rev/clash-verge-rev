@@ -14,40 +14,38 @@ struct QueryParam {
 }
 
 /// check whether there is already exists
-pub fn check_singleton() -> Result<()> {
+pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
 
     if !local_port_available(port) {
-        tauri::async_runtime::block_on(async {
-            let resp = reqwest::get(format!("http://127.0.0.1:{port}/commands/ping"))
-                .await?
-                .text()
-                .await?;
+        let resp = reqwest::get(format!("http://127.0.0.1:{port}/commands/ping"))
+            .await?
+            .text()
+            .await?;
 
-            if &resp == "ok" {
-                let argvs: Vec<String> = std::env::args().collect();
-                if argvs.len() > 1 {
-                    let param = argvs[1].as_str();
-                    if param.starts_with("clash:") {
-                        reqwest::get(format!(
-                            "http://127.0.0.1:{port}/commands/scheme?param={param}"
-                        ))
-                        .await?
-                        .text()
-                        .await?;
-                    }
-                } else {
-                    reqwest::get(format!("http://127.0.0.1:{port}/commands/visible"))
-                        .await?
-                        .text()
-                        .await?;
+        if &resp == "ok" {
+            let argvs: Vec<String> = std::env::args().collect();
+            if argvs.len() > 1 {
+                let param = argvs[1].as_str();
+                if param.starts_with("clash:") {
+                    reqwest::get(format!(
+                        "http://127.0.0.1:{port}/commands/scheme?param={param}"
+                    ))
+                    .await?
+                    .text()
+                    .await?;
                 }
-                bail!("app exists");
+            } else {
+                reqwest::get(format!("http://127.0.0.1:{port}/commands/visible"))
+                    .await?
+                    .text()
+                    .await?;
             }
+            bail!("app exists");
+        }
 
-            log::error!("failed to setup singleton listen server");
-            Ok(())
-        })
+        log::error!("failed to setup singleton listen server");
+        Ok(())
     } else {
         Ok(())
     }

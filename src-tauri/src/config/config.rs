@@ -46,8 +46,8 @@ impl Config {
     }
 
     /// 初始化订阅
-    pub fn init_config() -> Result<()> {
-        crate::log_err!(Self::generate());
+    pub async fn init_config() -> Result<()> {
+        crate::log_err!(Self::generate().await);
         if let Err(err) = Self::generate_file(ConfigType::Run) {
             log::error!(target: "app", "{err}");
 
@@ -83,8 +83,8 @@ impl Config {
     }
 
     /// 生成订阅存好
-    pub fn generate() -> Result<()> {
-        let (config, exists_keys, logs) = enhance::enhance();
+    pub async fn generate() -> Result<()> {
+        let (config, exists_keys, logs) = enhance::enhance().await;
 
         *Config::runtime().draft() = IRuntime {
             config: Some(config),

@@ -18,7 +18,7 @@ type ResultLog = Vec<(String, String)>;
 
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
-pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // config.yaml 的订阅
     let clash_config = { Config::clash().latest().0.clone() };
 
@@ -149,7 +149,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             });
     }
 
-    config = use_tun(config, enable_tun);
+    config = use_tun(config, enable_tun).await;
     config = use_sort(config);
 
     let mut exists_set = HashSet::new();
