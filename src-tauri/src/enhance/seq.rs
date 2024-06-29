@@ -24,10 +24,29 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
     for item in append {
         seq.push(item);
     }
-
+    let mut delete_names = Vec::new();
     for item in delete {
-        seq.retain(|x| x != &item);
+        let item = item.clone();
+        if let Some(name) = if item.is_string() {
+            Some(item)
+        } else {
+            item.get("name").map(|y| y.clone())
+        } {
+            delete_names.push(name.clone());
+        }
     }
+    seq.retain(|x| {
+        if let Some(x_name) = if x.is_string() {
+            Some(x)
+        } else {
+            x.get("name")
+        } {
+            !delete_names.contains(&x_name)
+        } else {
+            true
+        }
+    });
+
     let mut config = config.clone();
     config.insert(Value::from(name), Value::from(seq));
     return config;
