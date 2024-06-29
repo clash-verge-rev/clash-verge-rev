@@ -1,7 +1,6 @@
 import JSIcon from "@/assets/image/js.svg?react";
 import YamlIcon from "@/assets/image/yaml.svg?react";
-import { Notice } from "@/components/base";
-import { EditorViewer } from "@/components/profile/editor-viewer";
+import { EditorViewer, Notice } from "@/components/base";
 import { viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import { FeaturedPlayListRounded } from "@mui/icons-material";
@@ -270,17 +269,17 @@ export const ProfileMore = (props: Props) => {
       </Menu>
 
       <EditorViewer
-        mode="profile"
-        property={uid}
         open={fileOpen}
-        language={type === "merge" ? "yaml" : "javascript"}
+        mode="profile"
         scope={type === "merge" ? "merge" : "script"}
-        onClose={() => setFileOpen(false)}
+        language={type === "merge" ? "yaml" : "javascript"}
+        property={uid}
         onChange={() => {
           if (selected) {
             onActivatedSave();
           }
         }}
+        onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer
         title={t("Confirm deletion")}

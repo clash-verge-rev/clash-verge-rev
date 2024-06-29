@@ -1,5 +1,4 @@
-import { Notice } from "@/components/base";
-import { EditorViewer } from "@/components/profile/editor-viewer";
+import { EditorViewer, Notice } from "@/components/base";
 import { deleteProfile, updateProfile, viewProfile } from "@/services/cmds";
 import {
   useLoadingCache,
@@ -380,17 +379,17 @@ export const ProfileItem = (props: Props) => {
       </Menu>
 
       <EditorViewer
-        mode="profile"
-        property={uid}
         open={fileOpen}
-        language="yaml"
+        mode="profile"
         scope="clash"
-        onClose={() => setFileOpen(false)}
+        language="yaml"
+        property={uid}
         onChange={() => {
           if (selected) {
             onReactivate();
           }
         }}
+        onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer
         title={t("Confirm deletion")}

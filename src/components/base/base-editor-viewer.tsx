@@ -30,7 +30,7 @@ interface Props {
   language: "yaml" | "javascript" | "css";
   scope?: "clash" | "merge" | "pac" | "script";
   onClose: () => void;
-  onChange?: (content?: string) => void;
+  onChange?: (content: string) => void;
 }
 
 // yaml worker
@@ -194,7 +194,7 @@ export const EditorViewer = (props: Props) => {
   const onSave = useLockFn(async () => {
     const value = instanceRef.current?.getValue();
 
-    if (value == null) return;
+    if (value == undefined) return;
 
     try {
       if (mode === "profile") {

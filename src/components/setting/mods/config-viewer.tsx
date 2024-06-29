@@ -1,5 +1,4 @@
-import { DialogRef } from "@/components/base";
-import { EditorViewer } from "@/components/profile/editor-viewer";
+import { DialogRef, EditorViewer } from "@/components/base";
 import { getRuntimeYaml } from "@/services/cmds";
 import { Box, Chip } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
@@ -28,12 +27,12 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
           <Chip label={t("ReadOnly")} size="small" />
         </Box>
       }
-      mode="text"
-      property={runtimeConfig}
       open={open}
-      readOnly
-      language="yaml"
+      mode="text"
       scope="clash"
+      language="yaml"
+      property={runtimeConfig}
+      readOnly
       onClose={() => setOpen(false)}
     />
   );

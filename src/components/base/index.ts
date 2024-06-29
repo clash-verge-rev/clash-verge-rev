@@ -1,5 +1,6 @@
 export { BaseDialog, type DialogRef } from "./base-dialog";
 export { DraggableItem } from "./base-draggable-item";
+export { EditorViewer } from "./base-editor-viewer";
 export { BaseEmpty } from "./base-empty";
 export { BaseErrorBoundary } from "./base-error-boundary";
 export { BaseFieldset } from "./base-fieldset";

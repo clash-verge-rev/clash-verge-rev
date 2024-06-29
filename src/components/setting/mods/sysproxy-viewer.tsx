@@ -2,17 +2,18 @@ import {
   BaseDialog,
   BaseFieldset,
   DialogRef,
+  EditorViewer,
   Notice,
   SwitchLovely,
 } from "@/components/base";
-import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { getAutotemProxy, getSystemProxy } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
-import { Edit, InfoRounded } from "@mui/icons-material";
+import { InfoRounded } from "@mui/icons-material";
 import {
   Button,
   IconButton,
+  Input,
   InputAdornment,
   List,
   ListItem,
@@ -239,28 +240,30 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         {value.pac && (
           <>
             <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
-              <ListItemText
-                primary={t("PAC Script Content")}
-                sx={{ padding: "3px 0" }}
+              <ListItemText primary={t("PAC Script Content")} />
+              <Input
+                value={value.pac_content ?? ""}
+                disabled
+                sx={{ width: 230 }}
+                endAdornment={
+                  <Button
+                    onClick={() => {
+                      setEditorOpen(true);
+                    }}>
+                    {t("Edit")}
+                  </Button>
+                }
               />
-              <Button
-                startIcon={<Edit />}
-                variant="outlined"
-                onClick={() => {
-                  setEditorOpen(true);
-                }}>
-                {t("Edit")} PAC
-              </Button>
               <EditorViewer
                 title={`${t("Edit")} PAC`}
-                mode="text"
-                property={value.pac_content ?? ""}
                 open={editorOpen}
-                language="javascript"
+                mode="text"
                 scope="pac"
+                language="javascript"
+                property={value.pac_content ?? ""}
                 onChange={(content) => {
                   let pac = DEFAULT_PAC;
-                  if (content && content.trim().length > 0) {
+                  if (content.trim().length > 0) {
                     pac = content;
                   }
                   setValue((v) => ({ ...v, pac_content: pac }));

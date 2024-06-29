@@ -1,6 +1,6 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
+import { BaseDialog, DialogRef, EditorViewer, Notice } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
+import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
 import {
   Button,
   Input,
@@ -11,10 +11,9 @@ import {
   TextField,
   useTheme,
 } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
-import { CSSEditorViewer } from "@/components/setting/mods/css-editor-viewer";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -88,8 +87,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       contentSx={{ width: 400, maxHeight: 600, overflow: "auto", pb: 0 }}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
-      onOk={onSave}
-    >
+      onOk={onSave}>
       <List sx={{ pt: 0 }}>
         {renderItem("Primary Color", "primary_color")}
 
@@ -127,17 +125,18 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
               <Button
                 onClick={() => {
                   setCssEditorOpen(true);
-                }}
-              >
+                }}>
                 {t("Edit")}
               </Button>
             }
-          ></Input>
+          />
         </Item>
-        <CSSEditorViewer
+        <EditorViewer
           open={cssEditorOpen}
-          data={theme.css_injection ?? ""}
-          onSave={(css) => handleCSSInjection(css)}
+          mode="text"
+          language={"css"}
+          property={theme.css_injection ?? ""}
+          onChange={(css) => handleCSSInjection(css)}
           onClose={() => setCssEditorOpen(false)}
         />
       </List>
