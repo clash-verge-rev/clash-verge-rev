@@ -91,7 +91,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     try {
-      await patchVergeTheme(themeSettings, themeMode);
+      await patchVergeTheme(themeSettings);
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
@@ -99,8 +99,6 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   });
 
   // default theme
-  // const { palette } = useTheme();
-
   const dt = themeMode === "light" ? defaultTheme : defaultDarkTheme;
 
   type ThemeKey = keyof typeof theme & keyof typeof defaultTheme;
