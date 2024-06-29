@@ -50,6 +50,7 @@ jobs:
         with:
           workspaces: src-tauri
           cache-all-crates: true
+          cache-on-failure: true
 
       - name: Install Node
         uses: actions/setup-node@v4
