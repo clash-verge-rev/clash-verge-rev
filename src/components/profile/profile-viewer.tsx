@@ -33,7 +33,7 @@ export interface ProfileViewerRef {
 }
 
 // create or edit the profile
-// remote / local / merge / script
+// remote / local
 export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
   (props, ref) => {
     const { t } = useTranslation();
@@ -91,9 +91,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           if (!form.type) throw new Error("`Type` should not be null");
           if (form.type === "remote" && !form.url) {
             throw new Error("The URL should not be null");
-          }
-          if (form.type !== "remote" && form.type !== "local") {
-            delete form.option;
           }
 
           if (form.option?.update_interval) {
@@ -168,8 +165,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               <Select {...field} autoFocus label={t("Type")}>
                 <MenuItem value="remote">Remote</MenuItem>
                 <MenuItem value="local">Local</MenuItem>
-                <MenuItem value="script">Script</MenuItem>
-                <MenuItem value="merge">Merge</MenuItem>
               </Select>
             </FormControl>
           )}

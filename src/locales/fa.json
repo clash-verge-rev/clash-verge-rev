@@ -1,20 +1,17 @@
 {
   "millis": "میلی‌ثانیه",
   "mins": "دقیقه",
-
   "Back": "بازگشت",
   "Close": "بستن",
   "Cancel": "لغو",
   "Confirm": "تأیید",
   "Empty": "خالی خالی",
-
   "New": "جدید",
   "Edit": "ویرایش",
   "Save": "ذخیره",
   "Delete": "حذف",
   "Enable": "فعال کردن",
   "Disable": "غیرفعال کردن",
-
   "Label-Proxies": "پراکسی‌ها",
   "Label-Profiles": "پروفایل‌ها",
   "Label-Connections": "اتصالات",
@@ -22,7 +19,6 @@
   "Label-Logs": "لاگ‌ها",
   "Label-Test": "آزمون",
   "Label-Settings": "تنظیمات",
-
   "Proxies": "پراکسی‌ها",
   "Proxy Groups": "گروه‌های پراکسی",
   "Proxy Provider": "تأمین‌کننده پروکسی",
@@ -41,7 +37,6 @@
   "Delay check to cancel fixed": "بررسی تأخیر برای لغو ثابت",
   "Proxy basic": "پراکسی پایه",
   "Proxy detail": "جزئیات پراکسی",
-
   "Profiles": "پروفایل‌ها",
   "Update All Profiles": "به‌روزرسانی همه پروفایل‌ها",
   "View Runtime Config": "مشاهده پیکربندی زمان اجرا",
@@ -55,6 +50,8 @@
   "Expire Time": "زمان انقضا",
   "Create Profile": "ایجاد پروفایل",
   "Edit Profile": "ویرایش پروفایل",
+  "Edit Merge": "ادغام ویرایش",
+  "Edit Script": "ویرایش اسکریپت",
   "Type": "نوع",
   "Name": "نام",
   "Descriptions": "توضیحات",
@@ -77,7 +74,6 @@
   "Script Console": "کنسول اسکریپت",
   "To Top": "به بالا",
   "To End": "به پایان",
-
   "Connections": "اتصالات",
   "Table View": "نمای جدولی",
   "List View": "نمای لیستی",
@@ -97,21 +93,17 @@
   "Source": "منبع",
   "Destination IP": "آدرس IP مقصد",
   "Close Connection": "بستن اتصال",
-
   "Rules": "قوانین",
   "Rule Provider": "تأمین‌کننده قانون",
-
   "Logs": "لاگ‌ها",
   "Pause": "توقف",
   "Clear": "پاک کردن",
-
   "Test": "آزمون",
   "Test All": "آزمون همه",
   "Create Test": "ایجاد آزمون",
   "Edit Test": "ویرایش آزمون",
   "Icon": "آیکون",
   "Test URL": "آدرس آزمون",
-
   "Settings": "تنظیمات",
   "System Setting": "تنظیمات سیستم",
   "Tun Mode": "حالت Tun",
@@ -157,7 +149,6 @@
   "Auto Launch": "راه‌اندازی خودکار",
   "Silent Start": "شروع بی‌صدا",
   "Silent Start Info": "برنامه را در حالت پس‌زمینه بدون نمایش پانل اجرا کنید",
-
   "Clash Setting": "تنظیمات Clash",
   "Allow Lan": "اجازه LAN",
   "IPv6": "IPv6",
@@ -186,7 +177,6 @@
   "Open UWP tool": "باز کردن ابزار UWP",
   "Open UWP tool Info": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود",
   "Update GeoData": "به‌روزرسانی GeoData",
-
   "TG Channel": "کانال تلگرام",
   "Manual": "راهنما",
   "Github Repo": "مخزن GitHub",
@@ -258,7 +248,6 @@
   "Open Dev Tools": "باز کردن ابزارهای توسعه‌دهنده",
   "Exit": "خروج",
   "Verge Version": "نسخه Verge",
-
   "ReadOnly": "فقط خواندنی",
   "ReadOnlyMessage": "نمی‌توان در ویرایشگر فقط خواندنی ویرایش کرد",
   "Filter": "فیلتر",
@@ -266,7 +255,6 @@
   "Match Case": "تطبیق حروف کوچک و بزرگ",
   "Match Whole Word": "تطبیق کل کلمه",
   "Use Regular Expression": "استفاده از عبارت منظم",
-
   "Profile Imported Successfully": "پروفایل با موفقیت وارد شد",
   "Clash Config Updated": "پیکربندی Clash به‌روزرسانی شد",
   "Profile Switched": "پروفایل تغییر یافت",

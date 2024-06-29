@@ -292,7 +292,6 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
         Some((url, opt)) => {
             let merged_opt = PrfOption::merge(opt, option);
             let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
-
             let profiles = Config::profiles();
             let mut profiles = profiles.latest();
             profiles.update_item(uid.clone(), item)?;

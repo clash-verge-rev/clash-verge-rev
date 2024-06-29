@@ -42,7 +42,6 @@ import {
   ProfileViewerRef,
 } from "@/components/profile/profile-viewer";
 import { ProfileItem } from "@/components/profile/profile-item";
-import { ProfileMore } from "@/components/profile/profile-more";
 import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { throttle } from "lodash-es";
@@ -105,31 +104,22 @@ const ProfilePage = () => {
     getRuntimeLogs
   );
 
-  const chain = profiles.chain || [];
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
 
   // distinguish type
-  const { regularItems, enhanceItems } = useMemo(() => {
+  const profileItems = useMemo(() => {
     const items = profiles.items || [];
-    const chain = profiles.chain || [];
 
     const type1 = ["local", "remote"];
-    const type2 = ["merge", "script"];
 
-    const regularItems = items.filter((i) => i && type1.includes(i.type!));
-    const restItems = items.filter((i) => i && type2.includes(i.type!));
-    const restMap = Object.fromEntries(restItems.map((i) => [i.uid, i]));
-    const enhanceItems = chain
-      .map((i) => restMap[i]!)
-      .filter(Boolean)
-      .concat(restItems.filter((i) => !chain.includes(i.uid)));
+    const profileItems = items.filter((i) => i && type1.includes(i.type!));
 
-    return { regularItems, enhanceItems };
+    return profileItems;
   }, [profiles]);
 
   const currentActivatings = () => {
-    return [...new Set([profiles.current ?? "", ...chain])].filter(Boolean);
+    return [...new Set([profiles.current ?? ""])].filter(Boolean);
   };
 
   const onImport = async () => {
@@ -205,38 +195,9 @@ const ProfilePage = () => {
     }
   });
 
-  const onEnable = useLockFn(async (uid: string) => {
-    if (chain.includes(uid)) return;
-    try {
-      setActivatings([...currentActivatings(), uid]);
-      const newChain = [...chain, uid];
-      await patchProfiles({ chain: newChain });
-      mutateLogs();
-    } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
-    } finally {
-      setActivatings([]);
-    }
-  });
-
-  const onDisable = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-    try {
-      setActivatings([...currentActivatings(), uid]);
-      const newChain = chain.filter((i) => i !== uid);
-      await patchProfiles({ chain: newChain });
-      mutateLogs();
-    } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
-    } finally {
-      setActivatings([]);
-    }
-  });
-
   const onDelete = useLockFn(async (uid: string) => {
     const current = profiles.current === uid;
     try {
-      await onDisable(uid);
       setActivatings([...(current ? currentActivatings() : []), uid]);
       await deleteProfile(uid);
       mutateProfiles();
@@ -247,20 +208,6 @@ const ProfilePage = () => {
     } finally {
       setActivatings([]);
     }
-  });
-
-  const onMoveTop = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-    const newChain = [uid].concat(chain.filter((i) => i !== uid));
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
-  });
-
-  const onMoveEnd = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-    const newChain = chain.filter((i) => i !== uid).concat([uid]);
-    await patchProfiles({ chain: newChain });
-    mutateLogs();
   });
 
   // 更新所有订阅
@@ -281,7 +228,7 @@ const ProfilePage = () => {
     return new Promise((resolve) => {
       setLoadingCache((cache) => {
         // 获取没有正在更新的订阅
-        const items = regularItems.filter(
+        const items = profileItems.filter(
           (e) => e.type === "remote" && !cache[e.uid]
         );
         const change = Object.fromEntries(items.map((e) => [e.uid, true]));
@@ -296,11 +243,6 @@ const ProfilePage = () => {
     const text = await readText();
     if (text) setUrl(text);
   };
-  const mode = useThemeMode();
-  const islight = mode === "light" ? true : false;
-  const dividercolor = islight
-    ? "rgba(0, 0, 0, 0.06)"
-    : "rgba(255, 255, 255, 0.06)";
 
   return (
     <BasePage
@@ -415,11 +357,11 @@ const ProfilePage = () => {
           <Box sx={{ mb: 1.5 }}>
             <Grid container spacing={{ xs: 1, lg: 1 }}>
               <SortableContext
-                items={regularItems.map((x) => {
+                items={profileItems.map((x) => {
                   return x.uid;
                 })}
               >
-                {regularItems.map((item) => (
+                {profileItems.map((item) => (
                   <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
                     <ProfileItem
                       id={item.uid}
@@ -441,43 +383,6 @@ const ProfilePage = () => {
             </Grid>
           </Box>
         </DndContext>
-
-        {enhanceItems.length > 0 && (
-          <Divider
-            variant="middle"
-            flexItem
-            sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
-          ></Divider>
-        )}
-
-        {enhanceItems.length > 0 && (
-          <Box sx={{ mt: 1.5 }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
-              {enhanceItems.map((item) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
-                  <ProfileMore
-                    selected={!!chain.includes(item.uid)}
-                    activating={activatings.includes(item.uid)}
-                    itemData={item}
-                    enableNum={chain.length || 0}
-                    logInfo={chainLogs[item.uid]}
-                    onEnable={() => onEnable(item.uid)}
-                    onDisable={() => onDisable(item.uid)}
-                    onDelete={() => onDelete(item.uid)}
-                    onMoveTop={() => onMoveTop(item.uid)}
-                    onMoveEnd={() => onMoveEnd(item.uid)}
-                    onEdit={() => viewerRef.current?.edit(item)}
-                    onChange={async (prev, curr) => {
-                      if (prev !== curr && chain.includes(item.uid)) {
-                        await onEnhance();
-                      }
-                    }}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
       </Box>
       <ProfileViewer ref={viewerRef} onChange={() => mutateProfiles()} />
       <ConfigViewer ref={configRef} />

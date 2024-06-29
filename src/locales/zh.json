@@ -1,20 +1,17 @@
 {
   "millis": "毫秒",
   "mins": "分钟",
-
   "Back": "返回",
   "Close": "关闭",
   "Cancel": "取消",
   "Confirm": "确认",
   "Empty": "空空如也",
-
   "New": "新建",
   "Edit": "编辑",
   "Save": "保存",
   "Delete": "删除",
   "Enable": "启用",
   "Disable": "禁用",
-
   "Label-Proxies": "代 理",
   "Label-Profiles": "订 阅",
   "Label-Connections": "连 接",
@@ -22,7 +19,6 @@
   "Label-Logs": "日 志",
   "Label-Test": "测 试",
   "Label-Settings": "设 置",
-
   "Proxies": "代理",
   "Proxy Groups": "代理组",
   "Proxy Provider": "代理集合",
@@ -41,7 +37,6 @@
   "Delay check to cancel fixed": "进行延迟测试，以取消固定",
   "Proxy basic": "隐藏节点细节",
   "Proxy detail": "展示节点细节",
-
   "Profiles": "订阅",
   "Update All Profiles": "更新所有订阅",
   "View Runtime Config": "查看运行时订阅",
@@ -55,6 +50,8 @@
   "Expire Time": "到期时间",
   "Create Profile": "新建配置",
   "Edit Profile": "编辑配置",
+  "Edit Merge": "编辑 Merge",
+  "Edit Script": "编辑 Script",
   "Type": "类型",
   "Name": "名称",
   "Descriptions": "描述",
@@ -77,7 +74,6 @@
   "Script Console": "脚本控制台输出",
   "To Top": "移到最前",
   "To End": "移到末尾",
-
   "Connections": "连接",
   "Table View": "表格视图",
   "List View": "列表视图",
@@ -97,21 +93,17 @@
   "Source": "源地址",
   "Destination IP": "目标地址",
   "Close Connection": "关闭连接",
-
   "Rules": "规则",
   "Rule Provider": "规则集合",
-
   "Logs": "日志",
   "Pause": "暂停",
   "Clear": "清除",
-
   "Test": "测试",
   "Test All": "测试全部",
   "Create Test": "新建测试",
   "Edit Test": "编辑测试",
   "Icon": "图标",
   "Test URL": "测试地址",
-
   "Settings": "设置",
   "System Setting": "系统设置",
   "Tun Mode": "Tun 模式",
@@ -157,7 +149,6 @@
   "Auto Launch": "开机自启",
   "Silent Start": "静默启动",
   "Silent Start Info": "程序启动时以后台模式运行，不显示程序面板",
-
   "TG Channel": "Telegram 频道",
   "Manual": "使用手册",
   "Github Repo": "GitHub 项目地址",
@@ -189,7 +180,6 @@
   "Open UWP tool": "UWP 工具",
   "Open UWP tool Info": "Windows 8开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制",
   "Update GeoData": "更新 GeoData",
-
   "Verge Setting": "Verge 设置",
   "Language": "语言设置",
   "Theme Mode": "主题模式",
@@ -258,7 +248,6 @@
   "Open Dev Tools": "打开开发者工具",
   "Exit": "退出",
   "Verge Version": "Verge 版本",
-
   "ReadOnly": "只读",
   "ReadOnlyMessage": "无法在只读模式下编辑",
   "Filter": "过滤节点",
@@ -266,7 +255,6 @@
   "Match Case": "区分大小写",
   "Match Whole Word": "全字匹配",
   "Use Regular Expression": "使用正则表达式",
-
   "Profile Imported Successfully": "导入订阅成功",
   "Clash Config Updated": "Clash 配置已更新",
   "Profile Switched": "订阅已切换",

@@ -1,20 +1,17 @@
 {
   "millis": "millis",
   "mins": "mins",
-
   "Back": "Back",
   "Close": "Close",
   "Cancel": "Cancel",
   "Confirm": "Confirm",
   "Empty": "Empty",
-
   "New": "New",
   "Edit": "Edit",
   "Save": "Save",
   "Delete": "Delete",
   "Enable": "Enable",
   "Disable": "Disable",
-
   "Label-Proxies": "Proxies",
   "Label-Profiles": "Profiles",
   "Label-Connections": "Connections",
@@ -22,7 +19,6 @@
   "Label-Logs": "Logs",
   "Label-Test": "Test",
   "Label-Settings": "Settings",
-
   "Proxies": "Proxies",
   "Proxy Groups": "Proxy Groups",
   "Proxy Provider": "Proxy Provider",
@@ -41,7 +37,6 @@
   "Delay check to cancel fixed": "Delay check to cancel fixed",
   "Proxy basic": "Proxy basic",
   "Proxy detail": "Proxy detail",
-
   "Profiles": "Profiles",
   "Update All Profiles": "Update All Profiles",
   "View Runtime Config": "View Runtime Config",
@@ -55,6 +50,8 @@
   "Expire Time": "Expire Time",
   "Create Profile": "Create Profile",
   "Edit Profile": "Edit Profile",
+  "Edit Merge": "Edit Merge",
+  "Edit Script": "Edit Script",
   "Type": "Type",
   "Name": "Name",
   "Descriptions": "Descriptions",
@@ -77,7 +74,6 @@
   "Script Console": "Script Console",
   "To Top": "To Top",
   "To End": "To End",
-
   "Connections": "Connections",
   "Table View": "Table View",
   "List View": "List View",
@@ -97,21 +93,17 @@
   "Source": "Source",
   "Destination IP": "Destination IP",
   "Close Connection": "Close Connection",
-
   "Rules": "Rules",
   "Rule Provider": "Rule Provider",
-
   "Logs": "Logs",
   "Pause": "Pause",
   "Clear": "Clear",
-
   "Test": "Test",
   "Test All": "Test All",
   "Create Test": "Create Test",
   "Edit Test": "Edit Test",
   "Icon": "Icon",
   "Test URL": "Test URL",
-
   "Settings": "Settings",
   "System Setting": "System Setting",
   "Tun Mode": "Tun Mode",
@@ -157,7 +149,6 @@
   "Auto Launch": "Auto Launch",
   "Silent Start": "Silent Start",
   "Silent Start Info": "Start the program in background mode without displaying the panel",
-
   "Clash Setting": "Clash Setting",
   "Allow Lan": "Allow Lan",
   "IPv6": "IPv6",
@@ -181,7 +172,6 @@
   "Open UWP tool": "Open UWP tool",
   "Open UWP tool Info": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction",
   "Update GeoData": "Update GeoData",
-
   "TG Channel": "Telegram Channel",
   "Manual": "Manual",
   "Github Repo": "Github Repo",
@@ -253,7 +243,6 @@
   "Open Dev Tools": "Open Dev Tools",
   "Exit": "Exit",
   "Verge Version": "Verge Version",
-
   "ReadOnly": "ReadOnly",
   "ReadOnlyMessage": "Cannot edit in read-only editor",
   "Filter": "Filter",
@@ -261,7 +250,6 @@
   "Match Case": "Match Case",
   "Match Whole Word": "Match Whole Word",
   "Use Regular Expression": "Use Regular Expression",
-
   "Profile Imported Successfully": "Profile Imported Successfully",
   "Clash Config Updated": "Clash Config Updated",
   "Profile Switched": "Profile Switched",
