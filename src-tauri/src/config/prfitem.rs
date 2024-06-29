@@ -152,8 +152,6 @@ impl PrfItem {
                 let desc = item.desc.unwrap_or("".into());
                 PrfItem::from_local(name, desc, file_data, item.option)
             }
-            "merge" => PrfItem::from_merge(),
-            "script" => PrfItem::from_script(),
             typ => bail!("invalid profile item type \"{typ}\""),
         }
     }
@@ -166,15 +164,15 @@ impl PrfItem {
         file_data: Option<String>,
         option: Option<PrfOption>,
     ) -> Result<PrfItem> {
-        let uid = help::get_uid("l");
+        let uid = help::get_uid("L");
         let file = format!("{uid}.yaml");
         let opt_ref = option.as_ref();
         let update_interval = opt_ref.and_then(|o| o.update_interval);
         let mut merge = opt_ref.and_then(|o| o.merge.clone());
         let mut script = opt_ref.and_then(|o| o.script.clone());
-        let rules = opt_ref.and_then(|o| o.rules.clone());
-        let proxies = opt_ref.and_then(|o| o.proxies.clone());
-        let groups = opt_ref.and_then(|o| o.groups.clone());
+        let mut rules = opt_ref.and_then(|o| o.rules.clone());
+        let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
+        let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
         if merge.is_none() {
             let merge_item = PrfItem::from_merge()?;
@@ -185,6 +183,23 @@ impl PrfItem {
             let script_item = PrfItem::from_script()?;
             Config::profiles().data().append_item(script_item.clone())?;
             script = script_item.uid;
+        }
+        if rules.is_none() {
+            let rules_item = PrfItem::from_rules()?;
+            Config::profiles().data().append_item(rules_item.clone())?;
+            rules = rules_item.uid;
+        }
+        if proxies.is_none() {
+            let proxies_item = PrfItem::from_proxies()?;
+            Config::profiles()
+                .data()
+                .append_item(proxies_item.clone())?;
+            proxies = proxies_item.uid;
+        }
+        if groups.is_none() {
+            let groups_item = PrfItem::from_groups()?;
+            Config::profiles().data().append_item(groups_item.clone())?;
+            groups = groups_item.uid;
         }
         Ok(PrfItem {
             uid: Some(uid),
@@ -227,9 +242,9 @@ impl PrfItem {
         let update_interval = opt_ref.and_then(|o| o.update_interval);
         let mut merge = opt_ref.and_then(|o| o.merge.clone());
         let mut script = opt_ref.and_then(|o| o.script.clone());
-        let rules = opt_ref.and_then(|o| o.rules.clone());
-        let proxies = opt_ref.and_then(|o| o.proxies.clone());
-        let groups = opt_ref.and_then(|o| o.groups.clone());
+        let mut rules = opt_ref.and_then(|o| o.rules.clone());
+        let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
+        let mut groups = opt_ref.and_then(|o| o.groups.clone());
         let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
         if merge.is_none() {
@@ -241,6 +256,23 @@ impl PrfItem {
             let script_item = PrfItem::from_script()?;
             Config::profiles().data().append_item(script_item.clone())?;
             script = script_item.uid;
+        }
+        if rules.is_none() {
+            let rules_item = PrfItem::from_rules()?;
+            Config::profiles().data().append_item(rules_item.clone())?;
+            rules = rules_item.uid;
+        }
+        if proxies.is_none() {
+            let proxies_item = PrfItem::from_proxies()?;
+            Config::profiles()
+                .data()
+                .append_item(proxies_item.clone())?;
+            proxies = proxies_item.uid;
+        }
+        if groups.is_none() {
+            let groups_item = PrfItem::from_groups()?;
+            Config::profiles().data().append_item(groups_item.clone())?;
+            groups = groups_item.uid;
         }
         // 使用软件自己的代理
         if self_proxy {
@@ -352,7 +384,7 @@ impl PrfItem {
             None => None,
         };
 
-        let uid = help::get_uid("r");
+        let uid = help::get_uid("R");
         let file = format!("{uid}.yaml");
         let name = name.unwrap_or(filename.unwrap_or("Remote File".into()));
         let data = resp.text_with_charset("utf-8").await?;
@@ -433,6 +465,69 @@ impl PrfItem {
             option: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
+        })
+    }
+
+    /// ## Rules type (enhance)
+    pub fn from_rules() -> Result<PrfItem> {
+        let uid = help::get_uid("r");
+        let file = format!("{uid}.yaml"); // yaml ext
+
+        Ok(PrfItem {
+            uid: Some(uid),
+            itype: Some("rules".into()),
+            name: None,
+            desc: None,
+            file: Some(file),
+            url: None,
+            home: None,
+            selected: None,
+            extra: None,
+            option: None,
+            updated: Some(chrono::Local::now().timestamp() as usize),
+            file_data: Some(tmpl::ITEM_RULES.into()),
+        })
+    }
+
+    /// ## Proxies type (enhance)
+    pub fn from_proxies() -> Result<PrfItem> {
+        let uid = help::get_uid("p");
+        let file = format!("{uid}.yaml"); // yaml ext
+
+        Ok(PrfItem {
+            uid: Some(uid),
+            itype: Some("proxies".into()),
+            name: None,
+            desc: None,
+            file: Some(file),
+            url: None,
+            home: None,
+            selected: None,
+            extra: None,
+            option: None,
+            updated: Some(chrono::Local::now().timestamp() as usize),
+            file_data: Some(tmpl::ITEM_PROXIES.into()),
+        })
+    }
+
+    /// ## Groups type (enhance)
+    pub fn from_groups() -> Result<PrfItem> {
+        let uid = help::get_uid("g");
+        let file = format!("{uid}.yaml"); // yaml ext
+
+        Ok(PrfItem {
+            uid: Some(uid),
+            itype: Some("groups".into()),
+            name: None,
+            desc: None,
+            file: Some(file),
+            url: None,
+            home: None,
+            selected: None,
+            extra: None,
+            option: None,
+            updated: Some(chrono::Local::now().timestamp() as usize),
+            file_data: Some(tmpl::ITEM_GROUPS.into()),
         })
     }
 
