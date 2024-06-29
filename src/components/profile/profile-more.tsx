@@ -1,27 +1,27 @@
+import JSIcon from "@/assets/image/js.svg?react";
+import YamlIcon from "@/assets/image/yaml.svg?react";
+import { Notice } from "@/components/base";
+import { EditorViewer } from "@/components/profile/editor-viewer";
+import { viewProfile } from "@/services/cmds";
+import { useThemeMode } from "@/services/states";
+import { FeaturedPlayListRounded } from "@mui/icons-material";
+import {
+  Badge,
+  Box,
+  CircularProgress,
+  IconButton,
+  Menu,
+  MenuItem,
+  SxProps,
+  Typography,
+} from "@mui/material";
+import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLockFn } from "ahooks";
-import {
-  Box,
-  Badge,
-  Typography,
-  MenuItem,
-  Menu,
-  IconButton,
-  CircularProgress,
-  SxProps,
-} from "@mui/material";
-import { FeaturedPlayListRounded } from "@mui/icons-material";
-import { viewProfile } from "@/services/cmds";
-import { Notice } from "@/components/base";
-import { EditorViewer } from "@/components/profile/editor-viewer";
-import { ProfileBox } from "./profile-box";
-import { LogViewer } from "./log-viewer";
 import { ConfirmViewer } from "./confirm-viewer";
-import JSIcon from "@/assets/image/js.svg?react";
-import YamlIcon from "@/assets/image/yaml.svg?react";
-import { useThemeMode } from "@/services/states";
+import { LogViewer } from "./log-viewer";
+import { ProfileBox } from "./profile-box";
 
 interface Props {
   sx?: SxProps;
@@ -274,7 +274,7 @@ export const ProfileMore = (props: Props) => {
         property={uid}
         open={fileOpen}
         language={type === "merge" ? "yaml" : "javascript"}
-        schema={type === "merge" ? "merge" : undefined}
+        scope={type === "merge" ? "merge" : "script"}
         onClose={() => setFileOpen(false)}
         onChange={() => {
           if (selected) {

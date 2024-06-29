@@ -1,6 +1,8 @@
-import { ReactNode, useEffect, useRef } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
+import { Notice } from "@/components/base";
+import { useWindowSize } from "@/hooks/use-window-size";
+import { getTemplate, readProfileFile, saveProfileFile } from "@/services/cmds";
+import { useThemeMode } from "@/services/states";
+import getSystem from "@/utils/get-system";
 import {
   Button,
   Dialog,
@@ -8,23 +10,15 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import { useThemeMode } from "@/services/states";
-import {
-  getEnhanceTemplate,
-  readProfileFile,
-  saveProfileFile,
-} from "@/services/cmds";
-import { Notice } from "@/components/base";
-import { nanoid } from "nanoid";
-import getSystem from "@/utils/get-system";
-
+import { useLockFn } from "ahooks";
+import { type JSONSchema7 } from "json-schema";
+import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
+import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import * as monaco from "monaco-editor";
 import { configureMonacoYaml } from "monaco-yaml";
-
-import { type JSONSchema7 } from "json-schema";
-import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
-import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
-import { useWindowSize } from "@/hooks/use-window-size";
+import { nanoid } from "nanoid";
+import { ReactNode, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import pac from "types-pac/pac.d.ts?raw";
 
 interface Props {
@@ -34,7 +28,7 @@ interface Props {
   open: boolean;
   readOnly?: boolean;
   language: "yaml" | "javascript" | "css";
-  schema?: "clash" | "merge";
+  scope?: "clash" | "merge" | "pac" | "script";
   onClose: () => void;
   onChange?: (content?: string) => void;
 }
@@ -84,7 +78,7 @@ export const EditorViewer = (props: Props) => {
     open,
     readOnly,
     language,
-    schema,
+    scope,
     onClose,
     onChange,
   } = props;
@@ -114,7 +108,7 @@ export const EditorViewer = (props: Props) => {
 
       if (instanceRef.current) instanceRef.current.dispose();
 
-      const uri = monaco.Uri.parse(`${nanoid()}.${schema}.${language}`);
+      const uri = monaco.Uri.parse(`${nanoid()}.${scope}.${language}`);
       const model = monaco.editor.createModel(data, language, uri);
       instanceRef.current = monaco.editor.create(editorDomRef.current, {
         model: model,
@@ -142,11 +136,11 @@ export const EditorViewer = (props: Props) => {
         smoothScrolling: true, // 平滑滚动
       });
 
-      if (schema === "merge" || language === "javascript") {
+      if (scope && ["merge", "script", "pac"].includes(scope)) {
         const generateCommand = instanceRef.current?.addCommand(
           0,
           () => {
-            getEnhanceTemplate(language).then((templateContent) => {
+            getTemplate(scope, language).then((templateContent) => {
               instanceRef.current?.setValue(templateContent);
             });
           },

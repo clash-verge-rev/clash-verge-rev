@@ -1,5 +1,10 @@
-import { BasePage, DialogRef, Notice } from "@/components/base";
-import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+import {
+  BasePage,
+  BaseStyledTextField,
+  DialogRef,
+  DraggableItem,
+  Notice,
+} from "@/components/base";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { ProfileMore } from "@/components/profile/profile-more";
 import {
@@ -21,25 +26,6 @@ import {
 } from "@/services/cmds";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import {
-  ClearRounded,
-  ContentPasteRounded,
-  LocalFireDepartmentRounded,
-  RefreshRounded,
-  TextSnippetOutlined,
-} from "@mui/icons-material";
-import { LoadingButton } from "@mui/lab";
-import { Box, Button, Divider, IconButton, Stack } from "@mui/material";
-import { readText } from "@tauri-apps/api/clipboard";
-import { listen } from "@tauri-apps/api/event";
-import { readTextFile } from "@tauri-apps/api/fs";
-import { useLockFn } from "ahooks";
-import { throttle } from "lodash-es";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import useSWR, { mutate } from "swr";
-
-import { DraggableItem } from "@/components/base/draggable-item";
-import {
   closestCenter,
   defaultDropAnimationSideEffects,
   DndContext,
@@ -56,8 +42,25 @@ import {
   rectSortingStrategy,
   SortableContext,
 } from "@dnd-kit/sortable";
+import {
+  ClearRounded,
+  ContentPasteRounded,
+  LocalFireDepartmentRounded,
+  RefreshRounded,
+  TextSnippetOutlined,
+} from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
+import { Box, Button, Divider, IconButton, Stack } from "@mui/material";
+import { readText } from "@tauri-apps/api/clipboard";
+import { listen } from "@tauri-apps/api/event";
+import { readTextFile } from "@tauri-apps/api/fs";
+import { useLockFn } from "ahooks";
 import { useLocalStorage } from "foxact/use-local-storage";
+import { throttle } from "lodash-es";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import useSWR, { mutate } from "swr";
 
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
   return [...new Array(20)].map((_, index) => (

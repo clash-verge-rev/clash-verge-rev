@@ -1,25 +1,28 @@
-import { useMemo, useRef, useState } from "react";
-import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, MenuItem } from "@mui/material";
-import { Virtuoso } from "react-virtuoso";
-import { useTranslation } from "react-i18next";
-import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
-import { closeAllConnections } from "@/services/api";
-import { useConnectionSetting } from "@/services/states";
-import { useClashInfo } from "@/hooks/use-clash";
-import { BaseEmpty, BasePage } from "@/components/base";
-import { ConnectionItem } from "@/components/connection/connection-item";
-import { ConnectionTable } from "@/components/connection/connection-table";
+import {
+  BaseEmpty,
+  BasePage,
+  BaseSearchBox,
+  BaseStyledSelect,
+} from "@/components/base";
 import {
   ConnectionDetail,
   ConnectionDetailRef,
 } from "@/components/connection/connection-detail";
-import parseTraffic from "@/utils/parse-traffic";
+import { ConnectionItem } from "@/components/connection/connection-item";
+import { ConnectionTable } from "@/components/connection/connection-table";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { BaseSearchBox } from "@/components/base/base-search-box";
-import { BaseStyledSelect } from "@/components/base/base-styled-select";
-import useSWRSubscription from "swr/subscription";
+import { useClashInfo } from "@/hooks/use-clash";
+import { closeAllConnections } from "@/services/api";
+import { useConnectionSetting } from "@/services/states";
+import parseTraffic from "@/utils/parse-traffic";
 import { createSockette } from "@/utils/websocket";
+import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
+import { Box, Button, IconButton, MenuItem } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Virtuoso } from "react-virtuoso";
+import useSWRSubscription from "swr/subscription";
 
 const initConn: IConnections = {
   uploadTotal: 0,

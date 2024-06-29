@@ -1,5 +1,4 @@
-import { BaseEmpty, BasePage } from "@/components/base";
-import { BaseSearchBox } from "@/components/base/base-search-box";
+import { BaseEmpty, BasePage, BaseSearchBox } from "@/components/base";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { RuleItem } from "@/components/rule/rule-item";
 import { getRuleProviders, getRules } from "@/services/api";

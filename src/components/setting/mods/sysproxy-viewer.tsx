@@ -1,25 +1,31 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { IconButton, Tooltip } from "@mui/material";
-import { InfoRounded } from "@mui/icons-material";
 import {
+  BaseDialog,
+  BaseFieldset,
+  DialogRef,
+  Notice,
+  SwitchLovely,
+} from "@/components/base";
+import { EditorViewer } from "@/components/profile/editor-viewer";
+import { useVerge } from "@/hooks/use-verge";
+import { getAutotemProxy, getSystemProxy } from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+import { Edit, InfoRounded } from "@mui/icons-material";
+import {
+  Button,
+  IconButton,
   InputAdornment,
   List,
   ListItem,
   ListItemText,
   styled,
   TextField,
+  Tooltip,
   Typography,
-  Button,
 } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { getSystemProxy, getAutotemProxy } from "@/services/cmds";
-import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
-import { Edit } from "@mui/icons-material";
-import { EditorViewer } from "@/components/profile/editor-viewer";
-import { BaseFieldset } from "@/components/base/base-fieldset";
-import getSystem from "@/utils/get-system";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY 127.0.0.1:%mixed-port%; SOCKS5 127.0.0.1:%mixed-port%; DIRECT;";
 }`;
@@ -251,6 +257,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 property={value.pac_content ?? ""}
                 open={editorOpen}
                 language="javascript"
+                scope="pac"
                 onChange={(content) => {
                   let pac = DEFAULT_PAC;
                   if (content && content.trim().length > 0) {

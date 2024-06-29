@@ -21,10 +21,11 @@ pub fn get_profiles() -> CmdResult<IProfiles> {
 }
 
 #[tauri::command]
-pub fn get_enhance_template(language: String) -> CmdResult<String> {
-    match language.as_str() {
-        "yaml" => Ok(tmpl::ITEM_MERGE.into()),
-        "javascript" => Ok(tmpl::ITEM_SCRIPT.into()),
+pub fn get_template(scope: String, language: String) -> CmdResult<String> {
+    match (scope.as_str(), language.as_str()) {
+        ("merge", "yaml") => Ok(tmpl::ITEM_MERGE.into()),
+        ("script", "javascript") => Ok(tmpl::ITEM_SCRIPT.into()),
+        ("pac", "javascript") => Ok(DEFAULT_PAC.into()),
         _ => Ok("".into()),
     }
 }

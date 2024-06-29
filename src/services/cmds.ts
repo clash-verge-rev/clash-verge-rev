@@ -29,8 +29,8 @@ export async function getProfiles() {
   return invoke<IProfilesConfig>("get_profiles");
 }
 
-export async function getEnhanceTemplate(language: string) {
-  return invoke<string>("get_enhance_template", { language });
+export async function getTemplate(scope: string, language: string) {
+  return invoke<string>("get_template", { scope, language });
 }
 
 export async function enhanceProfiles() {

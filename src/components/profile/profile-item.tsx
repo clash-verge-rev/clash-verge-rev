@@ -1,32 +1,32 @@
-import dayjs from "dayjs";
-import { mutate } from "swr";
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import {
-  Box,
-  Typography,
-  LinearProgress,
-  IconButton,
-  keyframes,
-  MenuItem,
-  Menu,
-  CircularProgress,
-  SxProps,
-} from "@mui/material";
-import { RefreshRounded } from "@mui/icons-material";
+import { Notice } from "@/components/base";
+import { EditorViewer } from "@/components/profile/editor-viewer";
+import { deleteProfile, updateProfile, viewProfile } from "@/services/cmds";
 import {
   useLoadingCache,
   useSetLoadingCache,
   useThemeMode,
 } from "@/services/states";
-import { updateProfile, deleteProfile, viewProfile } from "@/services/cmds";
-import { Notice } from "@/components/base";
-import { EditorViewer } from "@/components/profile/editor-viewer";
-import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
-import { ConfirmViewer } from "./confirm-viewer";
+import { RefreshRounded } from "@mui/icons-material";
+import {
+  Box,
+  CircularProgress,
+  IconButton,
+  keyframes,
+  LinearProgress,
+  Menu,
+  MenuItem,
+  SxProps,
+  Typography,
+} from "@mui/material";
 import { open } from "@tauri-apps/api/shell";
+import { useLockFn } from "ahooks";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { mutate } from "swr";
+import { ConfirmViewer } from "./confirm-viewer";
+import { ProfileBox } from "./profile-box";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -384,7 +384,7 @@ export const ProfileItem = (props: Props) => {
         property={uid}
         open={fileOpen}
         language="yaml"
-        schema="clash"
+        scope="clash"
         onClose={() => setFileOpen(false)}
         onChange={() => {
           if (selected) {
