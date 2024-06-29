@@ -13,17 +13,8 @@ rules: []
 /// enhanced profile
 pub const ITEM_MERGE: &str = "# Profile Enhancement Merge Template for Clash Verge
 
-prepend-rules: []
-
-prepend-proxies: []
-
-prepend-proxy-groups: []
-
-append-rules: []
-
-append-proxies: []
-
-append-proxy-groups: []
+profile:
+  store-selected: true
 ";
 
 /// enhanced profile
