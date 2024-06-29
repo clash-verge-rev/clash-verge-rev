@@ -249,10 +249,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 property={value.pac_content ?? ""}
                 open={editorOpen}
                 language="javascript"
-                onChange={(content) => {
+                onChange={(_prev, curr) => {
                   let pac = DEFAULT_PAC;
-                  if (content && content.trim().length > 0) {
-                    pac = content;
+                  if (curr && curr.trim().length > 0) {
+                    pac = curr;
                   }
                   setValue((v) => ({ ...v, pac_content: pac }));
                 }}

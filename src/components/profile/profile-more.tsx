@@ -9,6 +9,7 @@ import {
   MenuItem,
   Menu,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { FeaturedPlayListRounded } from "@mui/icons-material";
 import { viewProfile } from "@/services/cmds";
@@ -20,6 +21,7 @@ import { ConfirmViewer } from "./confirm-viewer";
 
 interface Props {
   selected: boolean;
+  activating: boolean;
   itemData: IProfileItem;
   enableNum: number;
   logInfo?: [string, string][];
@@ -27,14 +29,16 @@ interface Props {
   onDisable: () => void;
   onMoveTop: () => void;
   onMoveEnd: () => void;
-  onDelete: () => void;
   onEdit: () => void;
+  onChange?: (prev?: string, curr?: string) => void;
+  onDelete: () => void;
 }
 
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
   const {
     selected,
+    activating,
     itemData,
     enableNum,
     logInfo = [],
@@ -44,6 +48,7 @@ export const ProfileMore = (props: Props) => {
     onMoveEnd,
     onDelete,
     onEdit,
+    onChange,
   } = props;
 
   const { uid, type } = itemData;
@@ -132,6 +137,24 @@ export const ProfileMore = (props: Props) => {
           event.preventDefault();
         }}
       >
+        {activating && (
+          <Box
+            sx={{
+              position: "absolute",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              top: 10,
+              left: 10,
+              right: 10,
+              bottom: 2,
+              zIndex: 10,
+              backdropFilter: "blur(2px)",
+            }}
+          >
+            <CircularProgress color="inherit" size={20} />
+          </Box>
+        )}
         <Box
           display="flex"
           justifyContent="space-between"
@@ -237,11 +260,12 @@ export const ProfileMore = (props: Props) => {
         open={fileOpen}
         language={type === "merge" ? "yaml" : "javascript"}
         schema={type === "merge" ? "merge" : undefined}
+        onChange={onChange}
         onClose={() => setFileOpen(false)}
       />
       <ConfirmViewer
-        title="Confirm deletion"
-        message="This operation is not reversible"
+        title={t("Confirm deletion")}
+        message={t("This operation is not reversible")}
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={() => {

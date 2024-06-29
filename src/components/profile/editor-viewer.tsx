@@ -32,7 +32,7 @@ interface Props {
   language: "yaml" | "javascript" | "css";
   schema?: "clash" | "merge";
   onClose: () => void;
-  onChange?: (content?: string) => void;
+  onChange?: (prev?: string, curr?: string) => void;
 }
 
 // yaml worker
@@ -90,6 +90,7 @@ export const EditorViewer = (props: Props) => {
   const editorRef = useRef<any>();
   const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useThemeMode();
+  const prevData = useRef<string>();
 
   useEffect(() => {
     if (!open) return;
@@ -136,6 +137,8 @@ export const EditorViewer = (props: Props) => {
         fontLigatures: true, // 连字符
         smoothScrolling: true, // 平滑滚动
       });
+
+      prevData.current = data;
     });
 
     return () => {
@@ -147,15 +150,15 @@ export const EditorViewer = (props: Props) => {
   }, [open]);
 
   const onSave = useLockFn(async () => {
-    const value = instanceRef.current?.getValue();
+    const currData = instanceRef.current?.getValue();
 
-    if (value == null) return;
+    if (currData == null) return;
 
     try {
       if (mode === "profile") {
-        await saveProfileFile(property, value);
+        await saveProfileFile(property, currData);
       }
-      onChange?.(value);
+      onChange?.(prevData.current, currData);
       onClose();
     } catch (err: any) {
       Notice.error(err.message || err.toString());

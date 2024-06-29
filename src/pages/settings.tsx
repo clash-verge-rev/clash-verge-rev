@@ -39,15 +39,7 @@ const SettingPage = () => {
           <IconButton
             size="medium"
             color="inherit"
-            title={t("TG Channel")}
-            onClick={toTelegramChannel}
-          >
-            <Telegram fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="medium"
-            color="inherit"
-            title={t("Doc")}
+            title={t("Manual")}
             onClick={toGithubDoc}
           >
             <HelpOutlineSharp fontSize="inherit" />
@@ -55,7 +47,16 @@ const SettingPage = () => {
           <IconButton
             size="medium"
             color="inherit"
-            title={t("Source Code")}
+            title={t("TG Channel")}
+            onClick={toTelegramChannel}
+          >
+            <Telegram fontSize="inherit" />
+          </IconButton>
+
+          <IconButton
+            size="medium"
+            color="inherit"
+            title={t("Github Repo")}
             onClick={toGithubRepo}
           >
             <GitHub fontSize="inherit" />
