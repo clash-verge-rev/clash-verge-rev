@@ -34,7 +34,7 @@ pub fn find_unused_port() -> Result<u16> {
 }
 
 /// handle something when start app
-pub fn resolve_setup(app: &mut App) {
+pub async fn resolve_setup(app: &mut App) {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
     let version = app.package_info().version.to_string();
@@ -73,7 +73,8 @@ pub fn resolve_setup(app: &mut App) {
 
     // 启动核心
     log::trace!("init config");
-    log_err!(Config::init_config());
+
+    log_err!(Config::init_config().await);
 
     log::trace!("launch core");
     log_err!(CoreManager::global().init());
@@ -101,9 +102,7 @@ pub fn resolve_setup(app: &mut App) {
     if argvs.len() > 1 {
         let param = argvs[1].as_str();
         if param.starts_with("clash:") {
-            tauri::async_runtime::block_on(async {
-                resolve_scheme(argvs[1].to_owned()).await;
-            });
+            resolve_scheme(argvs[1].to_owned()).await;
         }
     }
 }
@@ -111,8 +110,10 @@ pub fn resolve_setup(app: &mut App) {
 /// reset system proxy
 pub fn resolve_reset() {
     log_err!(sysopt::Sysopt::global().reset_sysproxy());
-    log_err!(CoreManager::global().stop_core());
-    let _ = service::unset_dns_by_service();
+    tauri::async_runtime::block_on(async move {
+        log_err!(CoreManager::global().stop_core().await);
+        log_err!(service::unset_dns_by_service().await);
+    });
 }
 
 /// create main window

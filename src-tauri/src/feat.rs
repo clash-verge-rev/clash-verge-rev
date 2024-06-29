@@ -139,7 +139,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             || patch.get("secret").is_some()
             || patch.get("external-controller").is_some()
         {
-            Config::generate()?;
+            Config::generate().await?;
             CoreManager::global().run_core().await?;
             handle::Handle::refresh_clash();
         }
@@ -200,23 +200,23 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if service_mode.is_some() {
             log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
 
-            Config::generate()?;
+            Config::generate().await?;
             CoreManager::global().run_core().await?;
         } else if tun_mode.is_some() {
             update_core_config().await?;
         }
         #[cfg(not(target_os = "windows"))]
         if redir_enabled.is_some() {
-            Config::generate()?;
+            Config::generate().await?;
             CoreManager::global().run_core().await?;
         }
         #[cfg(target_os = "linux")]
         if tproxy_enabled.is_some() {
-            Config::generate()?;
+            Config::generate().await?;
             CoreManager::global().run_core().await?;
         }
         if socks_enabled.is_some() || http_enabled.is_some() {
-            Config::generate()?;
+            Config::generate().await?;
             CoreManager::global().run_core().await?;
         }
         if auto_launch.is_some() {
