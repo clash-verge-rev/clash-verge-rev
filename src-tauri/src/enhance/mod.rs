@@ -2,12 +2,14 @@ mod chain;
 pub mod field;
 mod merge;
 mod script;
+pub mod seq;
 mod tun;
 
 use self::chain::*;
 use self::field::*;
 use self::merge::*;
 use self::script::*;
+use self::seq::*;
 use self::tun::*;
 use crate::config::Config;
 use crate::utils::tmpl;
@@ -48,7 +50,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     };
 
     // 从profiles里拿东西
-    let (mut config, merge_item, script_item) = {
+    let (mut config, merge_item, script_item, rules_item, proxies_item, groups_item) = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
 
@@ -59,9 +61,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             .and_then(<Option<ChainItem>>::from)
             .unwrap_or_else(|| ChainItem {
                 uid: "".into(),
-                data: ChainType::Merge(
-                    serde_yaml::from_str::<Mapping>(tmpl::ITEM_MERGE).unwrap_or_default(),
-                ),
+                data: ChainType::Merge(Mapping::new()),
             });
         let script = profiles
             .get_item(&profiles.current_script().unwrap_or_default())
@@ -71,14 +71,56 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 uid: "".into(),
                 data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
             });
+        let rules = profiles
+            .get_item(&profiles.current_rules().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Rules(SeqMap::default()),
+            });
+        let proxies = profiles
+            .get_item(&profiles.current_proxies().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Proxies(SeqMap::default()),
+            });
+        let groups = profiles
+            .get_item(&profiles.current_groups().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Groups(SeqMap::default()),
+            });
 
-        (current, merge, script)
+        (current, merge, script, rules, proxies, groups)
     };
 
     let mut result_map = HashMap::new(); // 保存脚本日志
     let mut exists_keys = use_keys(&config); // 保存出现过的keys
 
     // 处理用户的profile
+    match rules_item.data {
+        ChainType::Rules(rules) => {
+            config = use_seq(rules, config.to_owned(), "rules");
+        }
+        _ => {}
+    }
+    match proxies_item.data {
+        ChainType::Proxies(proxies) => {
+            config = use_seq(proxies, config.to_owned(), "proxies");
+        }
+        _ => {}
+    }
+    match groups_item.data {
+        ChainType::Groups(groups) => {
+            config = use_seq(groups, config.to_owned(), "proxy-groups");
+        }
+        _ => {}
+    }
     match merge_item.data {
         ChainType::Merge(merge) => {
             exists_keys.extend(use_keys(&merge));

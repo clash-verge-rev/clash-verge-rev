@@ -13,7 +13,7 @@ pub struct IClashTemp(pub Mapping);
 impl IClashTemp {
     pub fn new() -> Self {
         let template = Self::template();
-        match dirs::clash_path().and_then(|path| help::read_merge_mapping(&path)) {
+        match dirs::clash_path().and_then(|path| help::read_mapping(&path)) {
             Ok(mut map) => {
                 template.0.keys().for_each(|key| {
                     if !map.contains_key(key) {

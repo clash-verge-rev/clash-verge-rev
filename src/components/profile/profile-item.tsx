@@ -105,6 +105,9 @@ export const ProfileItem = (props: Props) => {
   }, [hasUrl, updated]);
 
   const [fileOpen, setFileOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [proxiesOpen, setProxiesOpen] = useState(false);
+  const [groupsOpen, setGroupsOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [scriptOpen, setScriptOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -122,6 +125,21 @@ export const ProfileItem = (props: Props) => {
   const onEditFile = () => {
     setAnchorEl(null);
     setFileOpen(true);
+  };
+
+  const onEditRules = () => {
+    setAnchorEl(null);
+    setRulesOpen(true);
+  };
+
+  const onEditProxies = () => {
+    setAnchorEl(null);
+    setProxiesOpen(true);
+  };
+
+  const onEditGroups = () => {
+    setAnchorEl(null);
+    setGroupsOpen(true);
   };
 
   const onEditMerge = () => {
@@ -192,6 +210,21 @@ export const ProfileItem = (props: Props) => {
     { label: "Edit Info", handler: onEditInfo, disabled: false },
     { label: "Edit File", handler: onEditFile, disabled: false },
     {
+      label: "Edit Rules",
+      handler: onEditRules,
+      disabled: option?.rules === null,
+    },
+    {
+      label: "Edit Proxies",
+      handler: onEditProxies,
+      disabled: option?.proxies === null,
+    },
+    {
+      label: "Edit Groups",
+      handler: onEditGroups,
+      disabled: option?.groups === null,
+    },
+    {
       label: "Edit Merge",
       handler: onEditMerge,
       disabled: option?.merge === null,
@@ -217,6 +250,21 @@ export const ProfileItem = (props: Props) => {
     { label: "Select", handler: onForceSelect, disabled: false },
     { label: "Edit Info", handler: onEditInfo, disabled: false },
     { label: "Edit File", handler: onEditFile, disabled: false },
+    {
+      label: "Edit Rules",
+      handler: onEditRules,
+      disabled: option?.rules === null,
+    },
+    {
+      label: "Edit Proxies",
+      handler: onEditProxies,
+      disabled: option?.proxies === null,
+    },
+    {
+      label: "Edit Groups",
+      handler: onEditGroups,
+      disabled: option?.groups === null,
+    },
     {
       label: "Edit Merge",
       handler: onEditMerge,
@@ -435,7 +483,34 @@ export const ProfileItem = (props: Props) => {
       />
       <EditorViewer
         mode="profile"
-        property={option?.merge ?? "123"}
+        property={option?.rules ?? ""}
+        open={rulesOpen}
+        language="yaml"
+        schema={undefined}
+        onChange={onChange}
+        onClose={() => setRulesOpen(false)}
+      />
+      <EditorViewer
+        mode="profile"
+        property={option?.proxies ?? ""}
+        open={proxiesOpen}
+        language="yaml"
+        schema={undefined}
+        onChange={onChange}
+        onClose={() => setProxiesOpen(false)}
+      />
+      <EditorViewer
+        mode="profile"
+        property={option?.groups ?? ""}
+        open={groupsOpen}
+        language="yaml"
+        schema={undefined}
+        onChange={onChange}
+        onClose={() => setGroupsOpen(false)}
+      />
+      <EditorViewer
+        mode="profile"
+        property={option?.merge ?? ""}
         open={mergeOpen}
         language="yaml"
         schema="merge"

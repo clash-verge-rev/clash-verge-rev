@@ -1,3 +1,4 @@
+use crate::enhance::seq::SeqMap;
 use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
@@ -26,7 +27,7 @@ pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
 }
 
 /// read mapping from yaml fix #165
-pub fn read_merge_mapping(path: &PathBuf) -> Result<Mapping> {
+pub fn read_mapping(path: &PathBuf) -> Result<Mapping> {
     let mut val: Value = read_yaml(path)?;
     val.apply_merge()
         .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
@@ -38,6 +39,13 @@ pub fn read_merge_mapping(path: &PathBuf) -> Result<Mapping> {
             path.display()
         ))?
         .to_owned())
+}
+
+/// read mapping from yaml fix #165
+pub fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
+    let val: SeqMap = read_yaml(path)?;
+
+    Ok(val)
 }
 
 /// save the data to the file
