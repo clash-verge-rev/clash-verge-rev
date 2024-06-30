@@ -1,7 +1,8 @@
-import { ReactNode, useEffect, useState, useRef, useCallback } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
 import { useTranslation } from "react-i18next";
+
 import {
   Autocomplete,
   Button,
@@ -12,21 +13,18 @@ import {
   List,
   ListItem,
   ListItemText,
-  MenuItem,
-  Select,
   TextField,
   styled,
 } from "@mui/material";
 import { useThemeMode } from "@/services/states";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { Notice } from "@/components/base";
+import { Notice, Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
 
-import MonacoEditor from "react-monaco-editor";
-import * as monaco from "monaco-editor";
-import { nanoid } from "nanoid";
+import Editor from "@monaco-editor/react";
 
 interface Props {
+  profileUid: string;
   title?: string | ReactNode;
   property: string;
   open: boolean;
@@ -63,37 +61,95 @@ const RuleTypeList = [
   "DSCP",
   "RULE-SET",
   "SUB-RULE",
+  "AND",
+  "OR",
+  "NOT",
   "MATCH",
+] as const;
+
+const NoResolveList = [
+  "GEOIP",
+  "IP-ASN",
+  "IP-CIDR",
+  "IP-CIDR6",
+  "IP-SUFFIX",
+  "RULE-SET",
 ];
+const ExampleMap = {
+  DOMAIN: "example.com",
+  "DOMAIN-SUFFIX": "example.com",
+  "DOMAIN-KEYWORD": "example",
+  "DOMAIN-REGEX": "example.*",
+  GEOSITE: "youtube",
+  "IP-CIDR": "127.0.0.0/8",
+  "IP-SUFFIX": "8.8.8.8/24",
+  "IP-ASN": "13335",
+  GEOIP: "CN",
+  "SRC-GEOIP": "cn",
+  "SRC-IP-ASN": "9808",
+  "SRC-IP-CIDR": "192.168.1.201/32",
+  "SRC-IP-SUFFIX": "192.168.1.201/8",
+  "DST-PORT": "80",
+  "SRC-PORT": "7777",
+  "IN-PORT": "7890",
+  "IN-TYPE": "SOCKS/HTTP",
+  "IN-USER": "mihomo",
+  "IN-NAME": "ss",
+  "PROCESS-PATH":
+    getSystem() === "windows"
+      ? "C:Program FilesGoogleChromeApplicationchrome.exe"
+      : "/usr/bin/wget",
+  "PROCESS-PATH-REGEX":
+    getSystem() === "windows" ? "(?i).*Application\\chrome.*" : ".*bin/wget",
+  "PROCESS-NAME": getSystem() === "windows" ? "chrome.exe" : "curl",
+  "PROCESS-NAME-REGEX": ".*telegram.*",
+  UID: "1001",
+  NETWORK: "udp",
+  DSCP: "4",
+  "RULE-SET": "providername",
+  "SUB-RULE": "",
+  AND: "((DOMAIN,baidu.com),(NETWORK,UDP))",
+  OR: "((NETWORK,UDP),(DOMAIN,baidu.com))",
+  NOT: "((DOMAIN,baidu.com))",
+  MATCH: "",
+};
+
+const BuiltinProxyPolicyList = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
 export const RulesEditorViewer = (props: Props) => {
-  const { title, property, open, onClose, onChange } = props;
+  const { title, profileUid, property, open, onClose, onChange } = props;
   const { t } = useTranslation();
-
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(); // 编辑器实例
-  const monacoRef = useRef<typeof monaco>(); // monaco 实例
-  const monacoHoverProviderRef = useRef<monaco.IDisposable>(); // monaco 注册缓存
-  const monacoCompletionItemProviderRef = useRef<monaco.IDisposable>(); // monaco 注册缓存
-
-  // 获取编辑器实例
-  const editorDidMountHandle = useCallback(
-    (editor: monaco.editor.IStandaloneCodeEditor, monacoIns: typeof monaco) => {
-      editorRef.current = editor;
-      monacoRef.current = monacoIns;
-    },
-    []
-  );
 
   const themeMode = useThemeMode();
   const [prevData, setPrevData] = useState("");
   const [currData, setCurrData] = useState("");
-  const [method, setMethod] = useState("append");
-  const [ruleType, setRuleType] = useState("DOMAIN");
+  const [rule, setRule] = useState("");
+  const [ruleType, setRuleType] =
+    useState<(typeof RuleTypeList)[number]>("DOMAIN");
   const [ruleContent, setRuleContent] = useState("");
-  const [proxyPolicy, setProxyPolicy] = useState("");
+  const [noResolve, setNoResolve] = useState(false);
+  const [proxyPolicy, setProxyPolicy] = useState("DIRECT");
+  const [proxyPolicyList, setProxyPolicyList] = useState<string[]>([]);
+  const [ruleList, setRuleList] = useState<string[]>([]);
 
-  const uri = monaco.Uri.parse(`${nanoid()}`);
-  const model = monaco.editor.createModel(prevData, "yaml", uri);
+  const editorOptions = {
+    tabSize: 2,
+    minimap: { enabled: false },
+    mouseWheelZoom: true,
+    quickSuggestions: {
+      strings: true,
+      comments: true,
+      other: true,
+    },
+    padding: {
+      top: 33,
+    },
+    fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
+      getSystem() === "windows" ? ", twemoji mozilla" : ""
+    }`,
+    fontLigatures: true,
+    smoothScrolling: true,
+  };
 
   const fetchContent = async () => {
     let data = await readProfileFile(property);
@@ -101,43 +157,59 @@ export const RulesEditorViewer = (props: Props) => {
     setPrevData(data);
   };
 
-  const addSeq = async () => {
+  const fetchProfile = async () => {
+    let data = await readProfileFile(profileUid);
+    let obj = yaml.load(data) as { "proxy-groups": []; proxies: []; rules: [] };
+    if (!obj["proxy-groups"]) {
+      obj = { "proxy-groups": [], proxies: [], rules: [] };
+    }
+    setProxyPolicyList(
+      BuiltinProxyPolicyList.concat(
+        obj["proxy-groups"].map((item: any) => item.name)
+      )
+    );
+    setRuleList(obj.rules);
+  };
+
+  const addSeq = async (method: "prepend" | "append" | "delete") => {
     let obj = yaml.load(currData) as ISeqProfileConfig;
     if (!obj.prepend) {
       obj = { prepend: [], append: [], delete: [] };
     }
     switch (method) {
       case "append": {
-        obj.append.push(`${ruleType},${ruleContent},${proxyPolicy}`);
+        obj.append.push(
+          `${ruleType}${
+            ruleType === "MATCH" ? "" : "," + ruleContent
+          },${proxyPolicy}${
+            NoResolveList.includes(ruleType) && noResolve ? ",no-resolve" : ""
+          }`
+        );
         break;
       }
       case "prepend": {
-        obj.prepend.push(`${ruleType},${ruleContent},${proxyPolicy}`);
+        obj.prepend.push(
+          `${ruleType}${
+            ruleType === "MATCH" ? "" : "," + ruleContent
+          },${proxyPolicy}${
+            NoResolveList.includes(ruleType) && noResolve ? ",no-resolve" : ""
+          }`
+        );
         break;
       }
       case "delete": {
-        obj.delete.push(`${ruleType},${ruleContent},${proxyPolicy}`);
+        obj.delete.push(rule);
         break;
       }
     }
     let raw = yaml.dump(obj);
 
-    await saveProfileFile(property, raw);
     setCurrData(raw);
   };
 
   useEffect(() => {
     fetchContent();
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (editorRef.current) {
-        editorRef.current.dispose();
-      }
-      monacoCompletionItemProviderRef.current?.dispose();
-      monacoHoverProviderRef.current?.dispose();
-    };
+    fetchProfile();
   }, [open]);
 
   const onSave = useLockFn(async () => {
@@ -152,7 +224,7 @@ export const RulesEditorViewer = (props: Props) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
-      <DialogTitle>{title ?? t("Edit File")}</DialogTitle>
+      <DialogTitle>{title ?? t("Edit Rules")}</DialogTitle>
 
       <DialogContent sx={{ display: "flex", width: "auto", height: "100vh" }}>
         <div
@@ -163,31 +235,10 @@ export const RulesEditorViewer = (props: Props) => {
         >
           <List>
             <Item>
-              <ListItemText primary={t("Add Method")} />
-              <Select
-                size="small"
-                sx={{ width: "100px" }}
-                value={method}
-                onChange={(e) => {
-                  setMethod(e.target.value);
-                }}
-              >
-                <MenuItem key="prepend" value="prepend">
-                  <span style={{ fontSize: 14 }}>Prepend</span>
-                </MenuItem>
-                <MenuItem key="append" value="append">
-                  <span style={{ fontSize: 14 }}>Append</span>
-                </MenuItem>
-                <MenuItem key="delete" value="delete">
-                  <span style={{ fontSize: 14 }}>Delete</span>
-                </MenuItem>
-              </Select>
-            </Item>
-            <Item>
               <ListItemText primary={t("Rule Type")} />
               <Autocomplete
                 size="small"
-                sx={{ width: "300px" }}
+                sx={{ minWidth: "240px" }}
                 value={ruleType}
                 options={RuleTypeList}
                 onChange={(_, v) => {
@@ -200,7 +251,9 @@ export const RulesEditorViewer = (props: Props) => {
               <ListItemText primary={t("Rule Content")} />
               <TextField
                 size="small"
+                sx={{ minWidth: "240px" }}
                 value={ruleContent}
+                placeholder={ExampleMap[ruleType]}
                 onChange={(e) => {
                   setRuleContent(e.target.value);
                 }}
@@ -208,52 +261,93 @@ export const RulesEditorViewer = (props: Props) => {
             </Item>
             <Item>
               <ListItemText primary={t("Proxy Policy")} />
-              <TextField
+              <Autocomplete
                 size="small"
+                sx={{ minWidth: "240px" }}
                 value={proxyPolicy}
-                onChange={(e) => {
-                  setProxyPolicy(e.target.value);
+                options={proxyPolicyList}
+                onChange={(_, v) => {
+                  if (v) setProxyPolicy(v);
                 }}
+                renderInput={(params) => <TextField {...params} />}
               />
             </Item>
+            {NoResolveList.includes(ruleType) && (
+              <Item>
+                <ListItemText primary={t("No Resolve")} />
+                <Switch
+                  checked={noResolve}
+                  onChange={() => {
+                    setNoResolve(!noResolve);
+                  }}
+                />
+              </Item>
+            )}
           </List>
-          <Button fullWidth variant="contained" onClick={addSeq}>
-            Add
-          </Button>
+          <Item>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => {
+                addSeq("prepend");
+              }}
+            >
+              {t("Add Prepend Rule")}
+            </Button>
+          </Item>
+          <Item>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => {
+                addSeq("append");
+              }}
+            >
+              {t("Add Append Rule")}
+            </Button>
+          </Item>
+          <Item>
+            <Autocomplete
+              fullWidth
+              size="small"
+              sx={{ minWidth: "240px" }}
+              value={rule}
+              options={ruleList}
+              onChange={(_, v) => {
+                if (v) setRule(v);
+              }}
+              renderInput={(params) => <TextField {...params} />}
+            />
+          </Item>
+          <Item>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => {
+                addSeq("delete");
+              }}
+            >
+              {t("Delete Rule")}
+            </Button>
+          </Item>
         </div>
         <div
           style={{
             display: "inline-block",
             width: "50%",
             height: "100%",
+            marginLeft: "10px",
           }}
         >
-          <MonacoEditor
+          <Editor
             language="yaml"
             theme={themeMode === "light" ? "vs" : "vs-dark"}
             height="100%"
             value={currData}
-            onChange={setCurrData}
-            options={{
-              model,
-              tabSize: 2,
-              minimap: { enabled: false }, // 超过一定宽度显示minimap滚动条
-              mouseWheelZoom: true, // 按住Ctrl滚轮调节缩放比例
-              quickSuggestions: {
-                strings: true, // 字符串类型的建议
-                comments: true, // 注释类型的建议
-                other: true, // 其他类型的建议
-              },
-              padding: {
-                top: 33, // 顶部padding防止遮挡snippets
-              },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                getSystem() === "windows" ? ", twemoji mozilla" : ""
-              }`,
-              fontLigatures: true, // 连字符
-              smoothScrolling: true, // 平滑滚动
+            onChange={(value, _) => {
+              if (value) setCurrData(value);
             }}
-            editorDidMount={editorDidMountHandle}
+            options={editorOptions}
           />
         </div>
       </DialogContent>

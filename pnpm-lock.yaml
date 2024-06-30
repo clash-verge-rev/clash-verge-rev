@@ -25,6 +25,9 @@ importers:
       "@juggle/resize-observer":
         specifier: ^3.4.0
         version: 3.4.0
+      "@monaco-editor/react":
+        specifier: ^4.6.0
+        version: 4.6.0(monaco-editor@0.49.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@mui/icons-material":
         specifier: ^5.15.20
         version: 5.15.20(@mui/material@5.15.20(@emotion/react@11.11.4(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.11.5(@emotion/react@11.11.4(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.3)(react@18.3.1)
@@ -94,9 +97,6 @@ importers:
       react-markdown:
         specifier: ^9.0.1
         version: 9.0.1(@types/react@18.3.3)(react@18.3.1)
-      react-monaco-editor:
-        specifier: ^0.55.0
-        version: 0.55.0(@types/react@18.3.3)(monaco-editor@0.49.0)(react@18.3.1)
       react-router-dom:
         specifier: ^6.23.1
         version: 6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1545,6 +1545,24 @@ packages:
       {
         integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==,
       }
+
+  "@monaco-editor/loader@1.4.0":
+    resolution:
+      {
+        integrity: sha512-00ioBig0x642hytVspPl7DbQyaSWRaolYie/UFNjoTdvoKPzo6xrXLhTk9ixgIKcLH5b5vDOjVNiGyY+uDCUlg==,
+      }
+    peerDependencies:
+      monaco-editor: ">= 0.21.0 < 1"
+
+  "@monaco-editor/react@4.6.0":
+    resolution:
+      {
+        integrity: sha512-RFkU9/i7cN2bsq/iTkurMWOEErmYcY6JiQI3Jn+WeR/FGISH8JbHERjpS9oRuSOPvDMJI0Z8nJeKkbOs9sBYQw==,
+      }
+    peerDependencies:
+      monaco-editor: ">= 0.25.0 < 1"
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
 
   "@mui/base@5.0.0-beta.20":
     resolution:
@@ -3845,16 +3863,6 @@ packages:
       "@types/react": ">=18"
       react: ">=18"
 
-  react-monaco-editor@0.55.0:
-    resolution:
-      {
-        integrity: sha512-GdEP0Q3Rn1dczfKEEyY08Nes5plWwIYU4sWRBQO0+jsQWQsKMHKCC6+hPRwR7G/4aA3V/iU9jSmWPzVJYMVFSQ==,
-      }
-    peerDependencies:
-      "@types/react": ">=16 <= 18"
-      monaco-editor: ^0.44.0
-      react: ">=16 <= 18"
-
   react-refresh@0.14.2:
     resolution:
       {
@@ -4096,6 +4104,12 @@ packages:
     resolution:
       {
         integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==,
+      }
+
+  state-local@1.0.7:
+    resolution:
+      {
+        integrity: sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==,
       }
 
   stringify-entities@4.0.4:
@@ -5524,6 +5538,18 @@ snapshots:
       "@jridgewell/sourcemap-codec": 1.4.15
 
   "@juggle/resize-observer@3.4.0": {}
+
+  "@monaco-editor/loader@1.4.0(monaco-editor@0.49.0)":
+    dependencies:
+      monaco-editor: 0.49.0
+      state-local: 1.0.7
+
+  "@monaco-editor/react@4.6.0(monaco-editor@0.49.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
+    dependencies:
+      "@monaco-editor/loader": 1.4.0(monaco-editor@0.49.0)
+      monaco-editor: 0.49.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   "@mui/base@5.0.0-beta.20(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
@@ -7000,13 +7026,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  react-monaco-editor@0.55.0(@types/react@18.3.3)(monaco-editor@0.49.0)(react@18.3.1):
-    dependencies:
-      "@types/react": 18.3.3
-      monaco-editor: 0.49.0
-      prop-types: 15.8.1
-      react: 18.3.1
-
   react-refresh@0.14.2: {}
 
   react-router-dom@6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
@@ -7162,6 +7181,8 @@ snapshots:
   source-map@0.6.1: {}
 
   space-separated-tokens@2.0.2: {}
+
+  state-local@1.0.7: {}
 
   stringify-entities@4.0.4:
     dependencies:
