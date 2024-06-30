@@ -20,8 +20,7 @@ import { useThemeMode } from "@/services/states";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice, Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
-
-import Editor from "@monaco-editor/react";
+import MonacoEditor from "react-monaco-editor";
 
 interface Props {
   profileUid: string;
@@ -339,7 +338,7 @@ export const RulesEditorViewer = (props: Props) => {
             marginLeft: "10px",
           }}
         >
-          <Editor
+          <MonacoEditor
             language="yaml"
             theme={themeMode === "light" ? "vs" : "vs-dark"}
             height="100%"
