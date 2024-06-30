@@ -43,7 +43,11 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Install Tauri CLI
-        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: tauri-cli
+          git: https://github.com/tauri-apps/tauri
+          branch: 1.x # `branch` and `commit` are also supported
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
