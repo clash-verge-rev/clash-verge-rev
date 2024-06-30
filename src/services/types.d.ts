@@ -198,6 +198,12 @@ interface IVergeTestItem {
   url: string;
 }
 
+interface ISeqProfileConfig {
+  prepend: string[];
+  append: string[];
+  delete: string[];
+}
+
 interface IVergeConfig {
   app_log_level?: "trace" | "debug" | "info" | "warn" | "error" | string;
   language?: string;
