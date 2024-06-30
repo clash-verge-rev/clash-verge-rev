@@ -39,9 +39,14 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          cache-all-crates: true
 
       - name: Install Tauri CLI
-        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: tauri-cli
+          git: https://github.com/tauri-apps/tauri
+          branch: 1.x # `branch` and `commit` are also supported
 
       - name: Install Node
         uses: actions/setup-node@v4
