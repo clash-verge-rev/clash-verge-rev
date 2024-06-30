@@ -483,6 +483,7 @@ export const ProfileItem = (props: Props) => {
         onClose={() => setFileOpen(false)}
       />
       <RulesEditorViewer
+        profileUid={uid}
         property={option?.rules ?? ""}
         open={rulesOpen}
         onChange={onChange}
