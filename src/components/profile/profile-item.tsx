@@ -485,8 +485,6 @@ export const ProfileItem = (props: Props) => {
       <RulesEditorViewer
         property={option?.rules ?? ""}
         open={rulesOpen}
-        language="yaml"
-        schema={undefined}
         onChange={onChange}
         onClose={() => setRulesOpen(false)}
       />
