@@ -127,6 +127,8 @@ export const RulesEditorViewer = (props: Props) => {
   const [proxyPolicy, setProxyPolicy] = useState("DIRECT");
   const [proxyPolicyList, setProxyPolicyList] = useState<string[]>([]);
   const [ruleList, setRuleList] = useState<string[]>([]);
+  const [ruleSetList, setRuleSetList] = useState<string[]>([]);
+  const [subRuleList, setSubRuleList] = useState<string[]>([]);
 
   const [prependSeq, setPrependSeq] = useState<string[]>([]);
   const [appendSeq, setAppendSeq] = useState<string[]>([]);
@@ -144,16 +146,26 @@ export const RulesEditorViewer = (props: Props) => {
 
   const fetchProfile = async () => {
     let data = await readProfileFile(profileUid);
-    let obj = yaml.load(data) as { "proxy-groups": []; proxies: []; rules: [] };
-    if (!obj["proxy-groups"]) {
-      obj = { "proxy-groups": [], proxies: [], rules: [] };
-    }
+    let groupsObj = yaml.load(data) as { "proxy-groups": [] };
+    let rulesObj = yaml.load(data) as { rules: [] };
+    let ruleSetObj = yaml.load(data) as { "rule-providers": [] };
+    let subRuleObj = yaml.load(data) as { "sub-rules": [] };
     setProxyPolicyList(
       BuiltinProxyPolicyList.concat(
-        obj["proxy-groups"].map((item: any) => item.name)
+        groupsObj["proxy-groups"]
+          ? groupsObj["proxy-groups"].map((item: any) => item.name)
+          : []
       )
     );
-    setRuleList(obj.rules);
+    setRuleList(rulesObj.rules || []);
+    setRuleSetList(
+      ruleSetObj["rule-providers"]
+        ? Object.keys(ruleSetObj["rule-providers"])
+        : []
+    );
+    setSubRuleList(
+      subRuleObj["sub-rules"] ? Object.keys(subRuleObj["sub-rules"]) : []
+    );
   };
 
   useEffect(() => {
@@ -203,15 +215,41 @@ export const RulesEditorViewer = (props: Props) => {
             </Item>
             <Item>
               <ListItemText primary={t("Rule Content")} />
-              <TextField
-                size="small"
-                sx={{ minWidth: "240px" }}
-                value={ruleContent}
-                placeholder={ExampleMap[ruleType]}
-                onChange={(e) => {
-                  setRuleContent(e.target.value);
-                }}
-              />
+              {ruleType === "RULE-SET" && (
+                <Autocomplete
+                  size="small"
+                  sx={{ minWidth: "240px" }}
+                  value={ruleContent}
+                  options={ruleSetList}
+                  onChange={(_, v) => {
+                    if (v) setRuleContent(v);
+                  }}
+                  renderInput={(params) => <TextField {...params} />}
+                />
+              )}
+              {ruleType === "SUB-RULE" && (
+                <Autocomplete
+                  size="small"
+                  sx={{ minWidth: "240px" }}
+                  value={ruleContent}
+                  options={subRuleList}
+                  onChange={(_, v) => {
+                    if (v) setRuleContent(v);
+                  }}
+                  renderInput={(params) => <TextField {...params} />}
+                />
+              )}
+              {ruleType !== "RULE-SET" && ruleType !== "SUB-RULE" && (
+                <TextField
+                  size="small"
+                  sx={{ minWidth: "240px" }}
+                  value={ruleContent}
+                  placeholder={ExampleMap[ruleType]}
+                  onChange={(e) => {
+                    setRuleContent(e.target.value);
+                  }}
+                />
+              )}
             </Item>
             <Item>
               <ListItemText primary={t("Proxy Policy")} />
