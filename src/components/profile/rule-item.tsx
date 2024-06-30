@@ -8,6 +8,8 @@ import {
   alpha,
 } from "@mui/material";
 import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 interface Props {
   type: "prepend" | "original" | "delete" | "append";
   ruleRaw: string;
@@ -17,7 +19,8 @@ interface Props {
 export const RuleItem = (props: Props) => {
   let { type, ruleRaw, onDelete } = props;
   const rule = ruleRaw.replace(",no-resolve", "").split(",");
-
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: ruleRaw });
   return (
     <ListItem
       sx={({ palette }) => ({
@@ -31,9 +34,14 @@ export const RuleItem = (props: Props) => {
             ? alpha(palette.error.main, 0.5)
             : alpha(palette.success.main, 0.5),
         mb: 1,
+        transform: CSS.Transform.toString(transform),
+        transition,
       })}
     >
       <ListItemText
+        {...attributes}
+        {...listeners}
+        ref={setNodeRef}
         sx={{ px: 1 }}
         primary={
           <>
