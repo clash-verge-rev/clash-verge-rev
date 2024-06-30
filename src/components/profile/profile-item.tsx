@@ -19,10 +19,11 @@ import { RefreshRounded, DragIndicator } from "@mui/icons-material";
 import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import { updateProfile, viewProfile } from "@/services/cmds";
 import { Notice } from "@/components/base";
+import { RulesEditorViewer } from "@/components/profile/rules-editor-viewer";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
-import { ConfirmViewer } from "./confirm-viewer";
+import { ConfirmViewer } from "@/components/profile/confirm-viewer";
 import { open } from "@tauri-apps/api/shell";
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -481,8 +482,7 @@ export const ProfileItem = (props: Props) => {
         onChange={onChange}
         onClose={() => setFileOpen(false)}
       />
-      <EditorViewer
-        mode="profile"
+      <RulesEditorViewer
         property={option?.rules ?? ""}
         open={rulesOpen}
         language="yaml"

@@ -58,6 +58,9 @@ importers:
       i18next:
         specifier: ^23.11.5
         version: 23.11.5
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.0
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -91,6 +94,9 @@ importers:
       react-markdown:
         specifier: ^9.0.1
         version: 9.0.1(@types/react@18.3.3)(react@18.3.1)
+      react-monaco-editor:
+        specifier: ^0.55.0
+        version: 0.55.0(@types/react@18.3.3)(monaco-editor@0.49.0)(react@18.3.1)
       react-router-dom:
         specifier: ^6.23.1
         version: 6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -125,6 +131,9 @@ importers:
       "@types/js-cookie":
         specifier: ^3.0.6
         version: 3.0.6
+      "@types/js-yaml":
+        specifier: ^4.0.9
+        version: 4.0.9
       "@types/lodash-es":
         specifier: ^4.17.12
         version: 4.17.12
@@ -2210,6 +2219,12 @@ packages:
         integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==,
       }
 
+  "@types/js-yaml@4.0.9":
+    resolution:
+      {
+        integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==,
+      }
+
   "@types/json-schema@7.0.15":
     resolution:
       {
@@ -3829,6 +3844,16 @@ packages:
     peerDependencies:
       "@types/react": ">=18"
       react: ">=18"
+
+  react-monaco-editor@0.55.0:
+    resolution:
+      {
+        integrity: sha512-GdEP0Q3Rn1dczfKEEyY08Nes5plWwIYU4sWRBQO0+jsQWQsKMHKCC6+hPRwR7G/4aA3V/iU9jSmWPzVJYMVFSQ==,
+      }
+    peerDependencies:
+      "@types/react": ">=16 <= 18"
+      monaco-editor: ^0.44.0
+      react: ">=16 <= 18"
 
   react-refresh@0.14.2:
     resolution:
@@ -5941,6 +5966,8 @@ snapshots:
 
   "@types/js-cookie@3.0.6": {}
 
+  "@types/js-yaml@4.0.9": {}
+
   "@types/json-schema@7.0.15": {}
 
   "@types/lodash-es@4.17.12":
@@ -6972,6 +6999,13 @@ snapshots:
       vfile: 6.0.1
     transitivePeerDependencies:
       - supports-color
+
+  react-monaco-editor@0.55.0(@types/react@18.3.3)(monaco-editor@0.49.0)(react@18.3.1):
+    dependencies:
+      "@types/react": 18.3.3
+      monaco-editor: 0.49.0
+      prop-types: 15.8.1
+      react: 18.3.1
 
   react-refresh@0.14.2: {}
 
