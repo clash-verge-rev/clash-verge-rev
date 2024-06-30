@@ -16,11 +16,11 @@ import {
   TextField,
   styled,
 } from "@mui/material";
-import { useThemeMode } from "@/services/states";
+
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice, Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
-import MonacoEditor from "react-monaco-editor";
+import { RuleItem } from "@/components/profile/rule-item";
 
 interface Props {
   profileUid: string;
@@ -119,10 +119,7 @@ export const RulesEditorViewer = (props: Props) => {
   const { title, profileUid, property, open, onClose, onChange } = props;
   const { t } = useTranslation();
 
-  const themeMode = useThemeMode();
   const [prevData, setPrevData] = useState("");
-  const [currData, setCurrData] = useState("");
-  const [rule, setRule] = useState("");
   const [ruleType, setRuleType] =
     useState<(typeof RuleTypeList)[number]>("DOMAIN");
   const [ruleContent, setRuleContent] = useState("");
@@ -131,28 +128,17 @@ export const RulesEditorViewer = (props: Props) => {
   const [proxyPolicyList, setProxyPolicyList] = useState<string[]>([]);
   const [ruleList, setRuleList] = useState<string[]>([]);
 
-  const editorOptions = {
-    tabSize: 2,
-    minimap: { enabled: false },
-    mouseWheelZoom: true,
-    quickSuggestions: {
-      strings: true,
-      comments: true,
-      other: true,
-    },
-    padding: {
-      top: 33,
-    },
-    fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-      getSystem() === "windows" ? ", twemoji mozilla" : ""
-    }`,
-    fontLigatures: true,
-    smoothScrolling: true,
-  };
+  const [prependSeq, setPrependSeq] = useState<string[]>([]);
+  const [appendSeq, setAppendSeq] = useState<string[]>([]);
+  const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
 
   const fetchContent = async () => {
     let data = await readProfileFile(property);
-    setCurrData(data);
+    let obj = yaml.load(data) as { prepend: []; append: []; delete: [] };
+
+    setPrependSeq(obj.prepend || []);
+    setAppendSeq(obj.append || []);
+    setDeleteSeq(obj.delete || []);
     setPrevData(data);
   };
 
@@ -170,42 +156,6 @@ export const RulesEditorViewer = (props: Props) => {
     setRuleList(obj.rules);
   };
 
-  const addSeq = async (method: "prepend" | "append" | "delete") => {
-    let obj = yaml.load(currData) as ISeqProfileConfig;
-    if (!obj.prepend) {
-      obj = { prepend: [], append: [], delete: [] };
-    }
-    switch (method) {
-      case "append": {
-        obj.append.push(
-          `${ruleType}${
-            ruleType === "MATCH" ? "" : "," + ruleContent
-          },${proxyPolicy}${
-            NoResolveList.includes(ruleType) && noResolve ? ",no-resolve" : ""
-          }`
-        );
-        break;
-      }
-      case "prepend": {
-        obj.prepend.push(
-          `${ruleType}${
-            ruleType === "MATCH" ? "" : "," + ruleContent
-          },${proxyPolicy}${
-            NoResolveList.includes(ruleType) && noResolve ? ",no-resolve" : ""
-          }`
-        );
-        break;
-      }
-      case "delete": {
-        obj.delete.push(rule);
-        break;
-      }
-    }
-    let raw = yaml.dump(obj);
-
-    setCurrData(raw);
-  };
-
   useEffect(() => {
     fetchContent();
     fetchProfile();
@@ -213,6 +163,11 @@ export const RulesEditorViewer = (props: Props) => {
 
   const onSave = useLockFn(async () => {
     try {
+      let currData = yaml.dump({
+        prepend: prependSeq,
+        append: appendSeq,
+        delete: deleteSeq,
+      });
       await saveProfileFile(property, currData);
       onChange?.(prevData, currData);
       onClose();
@@ -288,7 +243,15 @@ export const RulesEditorViewer = (props: Props) => {
               fullWidth
               variant="contained"
               onClick={() => {
-                addSeq("prepend");
+                let raw = `${ruleType}${
+                  ruleType === "MATCH" ? "" : "," + ruleContent
+                },${proxyPolicy}${
+                  NoResolveList.includes(ruleType) && noResolve
+                    ? ",no-resolve"
+                    : ""
+                }`;
+                if (prependSeq.includes(raw)) return;
+                setPrependSeq([...prependSeq, raw]);
               }}
             >
               {t("Add Prepend Rule")}
@@ -299,34 +262,18 @@ export const RulesEditorViewer = (props: Props) => {
               fullWidth
               variant="contained"
               onClick={() => {
-                addSeq("append");
+                let raw = `${ruleType}${
+                  ruleType === "MATCH" ? "" : "," + ruleContent
+                },${proxyPolicy}${
+                  NoResolveList.includes(ruleType) && noResolve
+                    ? ",no-resolve"
+                    : ""
+                }`;
+                if (appendSeq.includes(raw)) return;
+                setAppendSeq([...appendSeq, raw]);
               }}
             >
               {t("Add Append Rule")}
-            </Button>
-          </Item>
-          <Item>
-            <Autocomplete
-              fullWidth
-              size="small"
-              sx={{ minWidth: "240px" }}
-              value={rule}
-              options={ruleList}
-              onChange={(_, v) => {
-                if (v) setRule(v);
-              }}
-              renderInput={(params) => <TextField {...params} />}
-            />
-          </Item>
-          <Item>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={() => {
-                addSeq("delete");
-              }}
-            >
-              {t("Delete Rule")}
             </Button>
           </Item>
         </div>
@@ -335,19 +282,62 @@ export const RulesEditorViewer = (props: Props) => {
             display: "inline-block",
             width: "50%",
             height: "100%",
+            overflow: "auto",
             marginLeft: "10px",
           }}
         >
-          <MonacoEditor
-            language="yaml"
-            theme={themeMode === "light" ? "vs" : "vs-dark"}
-            height="100%"
-            value={currData}
-            onChange={(value, _) => {
-              if (value) setCurrData(value);
-            }}
-            options={editorOptions}
-          />
+          {prependSeq.length > 0 && (
+            <List sx={{ borderBottom: "solid 1px var(--divider-color)" }}>
+              {prependSeq.map((item, index) => {
+                return (
+                  <RuleItem
+                    key={`${item}-${index}`}
+                    type="prepend"
+                    ruleRaw={item}
+                    onDelete={() => {
+                      setPrependSeq(prependSeq.filter((v) => v !== item));
+                    }}
+                  />
+                );
+              })}
+            </List>
+          )}
+
+          <List>
+            {ruleList.map((item, index) => {
+              return (
+                <RuleItem
+                  key={`${item}-${index}`}
+                  type={deleteSeq.includes(item) ? "delete" : "original"}
+                  ruleRaw={item}
+                  onDelete={() => {
+                    if (deleteSeq.includes(item)) {
+                      setDeleteSeq(deleteSeq.filter((v) => v !== item));
+                    } else {
+                      setDeleteSeq([...deleteSeq, item]);
+                    }
+                  }}
+                />
+              );
+            })}
+          </List>
+
+          {appendSeq.length > 0 && (
+            <List sx={{ borderTop: "solid 1px var(--divider-color)" }}>
+              {appendSeq.map((item, index) => {
+                return (
+                  <RuleItem
+                    key={`${item}-${index}`}
+                    type="append"
+                    ruleRaw={item}
+                    onDelete={() => {
+                      setAppendSeq(appendSeq.filter((v) => v !== item));
+                    }}
+                  />
+                );
+              })}
+            </List>
+          )}
         </div>
       </DialogContent>
 
