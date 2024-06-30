@@ -2,7 +2,19 @@ import { ReactNode, useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
 import { useTranslation } from "react-i18next";
-
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
 import {
   Autocomplete,
   Button,
@@ -134,6 +146,38 @@ export const RulesEditorViewer = (props: Props) => {
   const [appendSeq, setAppendSeq] = useState<string[]>([]);
   const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  const reorder = (list: string[], startIndex: number, endIndex: number) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    return result;
+  };
+  const onPrependDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over) {
+      if (active.id !== over.id) {
+        let activeIndex = prependSeq.indexOf(active.id.toString());
+        let overIndex = prependSeq.indexOf(over.id.toString());
+        setPrependSeq(reorder(prependSeq, activeIndex, overIndex));
+      }
+    }
+  };
+  const onAppendDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over) {
+      if (active.id !== over.id) {
+        let activeIndex = appendSeq.indexOf(active.id.toString());
+        let overIndex = appendSeq.indexOf(over.id.toString());
+        setAppendSeq(reorder(appendSeq, activeIndex, overIndex));
+      }
+    }
+  };
   const fetchContent = async () => {
     let data = await readProfileFile(property);
     let obj = yaml.load(data) as { prepend: []; append: []; delete: [] };
@@ -325,20 +369,32 @@ export const RulesEditorViewer = (props: Props) => {
           }}
         >
           {prependSeq.length > 0 && (
-            <List sx={{ borderBottom: "solid 1px var(--divider-color)" }}>
-              {prependSeq.map((item, index) => {
-                return (
-                  <RuleItem
-                    key={`${item}-${index}`}
-                    type="prepend"
-                    ruleRaw={item}
-                    onDelete={() => {
-                      setPrependSeq(prependSeq.filter((v) => v !== item));
-                    }}
-                  />
-                );
-              })}
-            </List>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={onPrependDragEnd}
+            >
+              <List sx={{ borderBottom: "solid 1px var(--divider-color)" }}>
+                <SortableContext
+                  items={prependSeq.map((x) => {
+                    return x;
+                  })}
+                >
+                  {prependSeq.map((item, index) => {
+                    return (
+                      <RuleItem
+                        key={`${item}-${index}`}
+                        type="prepend"
+                        ruleRaw={item}
+                        onDelete={() => {
+                          setPrependSeq(prependSeq.filter((v) => v !== item));
+                        }}
+                      />
+                    );
+                  })}
+                </SortableContext>
+              </List>
+            </DndContext>
           )}
 
           <List>
@@ -361,20 +417,32 @@ export const RulesEditorViewer = (props: Props) => {
           </List>
 
           {appendSeq.length > 0 && (
-            <List sx={{ borderTop: "solid 1px var(--divider-color)" }}>
-              {appendSeq.map((item, index) => {
-                return (
-                  <RuleItem
-                    key={`${item}-${index}`}
-                    type="append"
-                    ruleRaw={item}
-                    onDelete={() => {
-                      setAppendSeq(appendSeq.filter((v) => v !== item));
-                    }}
-                  />
-                );
-              })}
-            </List>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={onAppendDragEnd}
+            >
+              <SortableContext
+                items={appendSeq.map((x) => {
+                  return x;
+                })}
+              >
+                <List sx={{ borderTop: "solid 1px var(--divider-color)" }}>
+                  {appendSeq.map((item, index) => {
+                    return (
+                      <RuleItem
+                        key={`${item}-${index}`}
+                        type="append"
+                        ruleRaw={item}
+                        onDelete={() => {
+                          setAppendSeq(appendSeq.filter((v) => v !== item));
+                        }}
+                      />
+                    );
+                  })}
+                </List>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </DialogContent>
