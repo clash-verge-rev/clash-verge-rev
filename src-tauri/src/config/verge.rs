@@ -75,6 +75,9 @@ pub struct IVerge {
     /// enable proxy guard
     pub enable_proxy_guard: Option<bool>,
 
+    /// always use default bypass
+    pub use_default_bypass: Option<bool>,
+
     /// set system proxy bypass
     pub system_proxy_bypass: Option<String>,
 
@@ -235,6 +238,7 @@ impl IVerge {
             verge_port: Some(7899),
             verge_http_enabled: Some(true),
             enable_proxy_guard: Some(false),
+            use_default_bypass: Some(true),
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
@@ -297,6 +301,7 @@ impl IVerge {
         patch!(verge_http_enabled);
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
+        patch!(use_default_bypass);
         patch!(system_proxy_bypass);
         patch!(proxy_guard_duration);
         patch!(proxy_auto_config);
