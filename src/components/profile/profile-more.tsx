@@ -152,7 +152,7 @@ export const ProfileMore = (props: Props) => {
       }}>
       <ProfileBox
         aria-selected={selected}
-        onDoubleClick={onEditFile}
+        onDoubleClick={() => onEditFile()}
         // onClick={() => onSelect(false)}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
@@ -251,7 +251,7 @@ export const ProfileMore = (props: Props) => {
           .map((item) => (
             <MenuItem
               key={item.label}
-              onClick={item.handler}
+              onClick={() => item.handler()}
               sx={[
                 { minWidth: 120 },
                 (theme) => {

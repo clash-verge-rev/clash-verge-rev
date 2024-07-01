@@ -111,6 +111,24 @@ const ProfilePage = () => {
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
 
+  // distinguish type
+  const { regularItems, enhanceItems } = useMemo(() => {
+    const items = profiles.items || [];
+    const chainIds = profiles.chain || [];
+
+    const type1 = ["local", "remote"];
+    const type2 = ["merge", "script"];
+
+    const regularItems = items.filter((i) => i && type1.includes(i.type!));
+    const restItems = items.filter((i) => i && type2.includes(i.type!));
+    const restMap = Object.fromEntries(restItems.map((i) => [i.uid, i]));
+    const enhanceItems = chainIds
+      .map((i) => restMap[i]!)
+      .filter(Boolean)
+      .concat(restItems.filter((i) => !chainIds.includes(i.uid)));
+    return { regularItems, enhanceItems };
+  }, [profiles]);
+
   // sortable
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -130,27 +148,10 @@ const ProfilePage = () => {
     useState<IProfileItem | null>(null);
   const [overItemWidth, setOverItemWidth] = useState(260);
 
-  // distinguish type
-  const { regularItems } = useMemo(() => {
-    const items = profiles.items || [];
-    const chainIds = profiles.chain || [];
-
-    const type1 = ["local", "remote"];
-    const type2 = ["merge", "script"];
-
-    const regularItems = items.filter((i) => i && type1.includes(i.type!));
-    const restItems = items.filter((i) => i && type2.includes(i.type!));
-    const restMap = Object.fromEntries(restItems.map((i) => [i.uid, i]));
-    const enhanceItems = chainIds
-      .map((i) => restMap[i]!)
-      .filter(Boolean)
-      .concat(restItems.filter((i) => !chainIds.includes(i.uid)));
-    // profiles
+  useEffect(() => {
     setProfileList(regularItems);
-    // chains
     setChainList(enhanceItems);
-    return { regularItems };
-  }, [profiles]);
+  }, [regularItems, enhanceItems]);
 
   useEffect(() => {
     const unlisten = listen("tauri://file-drop", async (event) => {
@@ -440,7 +441,7 @@ const ProfilePage = () => {
             size="small"
             color="inherit"
             title={t("Update All Profiles")}
-            onClick={onUpdateAll}>
+            onClick={() => onUpdateAll()}>
             <RefreshRounded />
           </IconButton>
 
@@ -460,7 +461,7 @@ const ProfilePage = () => {
             color="primary"
             endIcon={<LocalFireDepartmentRounded />}
             title={t("Reactivate Profiles")}
-            onClick={onEnhance}>
+            onClick={() => onEnhance()}>
             <span>{t("Reactivate Profiles")}</span>
           </LoadingButton>
         </Box>
@@ -488,7 +489,7 @@ const ProfilePage = () => {
                 size="small"
                 sx={{ p: 0.5 }}
                 title={t("Paste")}
-                onClick={onCopyLink}>
+                onClick={() => onCopyLink()}>
                 <ContentPasteRounded fontSize="inherit" />
               </IconButton>
             ) : (
@@ -508,7 +509,7 @@ const ProfilePage = () => {
           variant="contained"
           size="small"
           sx={{ borderRadius: "6px" }}
-          onClick={onImport}>
+          onClick={() => onImport()}>
           {t("Import")}
         </LoadingButton>
         <Button
@@ -541,7 +542,7 @@ const ProfilePage = () => {
               setDraggingProfileItem(item);
             }
           }}
-          onDragEnd={handleProfileDragEnd}
+          onDragEnd={(e) => handleProfileDragEnd(e)}
           onDragCancel={() => setDraggingProfileItem(null)}>
           <Box sx={{ width: "100%" }}>
             <SortableContext items={profileList.map((item) => item.uid)}>
@@ -577,7 +578,7 @@ const ProfilePage = () => {
                       itemData={item}
                       onSelect={(f) => onSelect(item.uid, f)}
                       onEdit={() => viewerRef.current?.edit(item)}
-                      onReactivate={onEnhance}
+                      onReactivate={() => onEnhance()}
                     />
                   </DraggableItem>
                 ))}
@@ -606,7 +607,7 @@ const ProfilePage = () => {
                 itemData={draggingProfileItem}
                 onSelect={(f) => onSelect(draggingProfileItem.uid, f)}
                 onEdit={() => viewerRef.current?.edit(draggingProfileItem)}
-                onReactivate={onEnhance}
+                onReactivate={() => onEnhance()}
               />
             ) : null}
           </DragOverlay>
@@ -640,7 +641,7 @@ const ProfilePage = () => {
                   setDraggingChainItem(item);
                 }
               }}
-              onDragEnd={handleChainDragEnd}
+              onDragEnd={(e) => handleChainDragEnd(e)}
               onDragCancel={() => setDraggingChainItem(null)}>
               <Box sx={{ display: "flex", flexWrap: "wrap", mr: "5px" }}>
                 <SortableContext
@@ -682,7 +683,7 @@ const ProfilePage = () => {
                         onDisable={() => onDisable(item.uid)}
                         onDelete={() => onDelete(item.uid)}
                         onEdit={() => viewerRef.current?.edit(item)}
-                        onActivatedSave={onEnhance}
+                        onActivatedSave={() => onEnhance()}
                       />
                     </DraggableItem>
                   ))}
@@ -723,7 +724,7 @@ const ProfilePage = () => {
                         onDisable={() => onDisable(item.uid)}
                         onDelete={() => onDelete(item.uid)}
                         onEdit={() => viewerRef.current?.edit(item)}
-                        onActivatedSave={onEnhance}
+                        onActivatedSave={() => onEnhance()}
                       />
                     </DraggableItem>
                   ))}
@@ -753,7 +754,7 @@ const ProfilePage = () => {
                       onDisable={() => onDisable(draggingChainItem.uid)}
                       onDelete={() => onDelete(draggingChainItem.uid)}
                       onEdit={() => viewerRef.current?.edit(draggingChainItem)}
-                      onActivatedSave={onEnhance}
+                      onActivatedSave={() => onEnhance()}
                     />
                   ) : null}
                 </DragOverlay>,
