@@ -104,8 +104,8 @@ export const ProfileMore = (props: Props) => {
         </Box>
 
         <Box sx={boxStyle}>
-          {id === "Script" ? (
-            hasError ? (
+          {id === "Script" &&
+            (hasError ? (
               <Badge color="error" variant="dot" overlap="circular">
                 <IconButton
                   size="small"
@@ -127,16 +127,7 @@ export const ProfileMore = (props: Props) => {
               >
                 <FeaturedPlayListRounded fontSize="inherit" />
               </IconButton>
-            )
-          ) : (
-            <Typography
-              noWrap
-              title={t(`${id} Description`)}
-              sx={i18n.language === "zh" ? { width: "calc(100% - 75px)" } : {}}
-            >
-              {t(`${id} Description`)}
-            </Typography>
-          )}
+            ))}
         </Box>
       </ProfileBox>
 
