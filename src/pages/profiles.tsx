@@ -41,6 +41,7 @@ import {
   ProfileViewer,
   ProfileViewerRef,
 } from "@/components/profile/profile-viewer";
+import { ProfileMore } from "@/components/profile/profile-more";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
@@ -49,6 +50,7 @@ import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/api/fs";
 import { readText } from "@tauri-apps/api/clipboard";
+import { EditorViewer } from "@/components/profile/editor-viewer";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -244,6 +246,12 @@ const ProfilePage = () => {
     if (text) setUrl(text);
   };
 
+  const mode = useThemeMode();
+  const islight = mode === "light" ? true : false;
+  const dividercolor = islight
+    ? "rgba(0, 0, 0, 0.06)"
+    : "rgba(255, 255, 255, 0.06)";
+
   return (
     <BasePage
       full
@@ -383,7 +391,38 @@ const ProfilePage = () => {
             </Grid>
           </Box>
         </DndContext>
+        <Divider
+          variant="middle"
+          flexItem
+          sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
+        ></Divider>
+        <Box sx={{ mt: 1.5 }}>
+          <Grid container spacing={{ xs: 1, lg: 1 }}>
+            <Grid item sm={6} md={6} lg={6}>
+              <ProfileMore
+                id="Merge"
+                onChange={async (prev, curr) => {
+                  if (prev !== curr) {
+                    await onEnhance();
+                  }
+                }}
+              />
+            </Grid>
+            <Grid item sm={6} md={6} lg={6}>
+              <ProfileMore
+                id="Script"
+                logInfo={chainLogs["Script"]}
+                onChange={async (prev, curr) => {
+                  if (prev !== curr) {
+                    await onEnhance();
+                  }
+                }}
+              />
+            </Grid>
+          </Grid>
+        </Box>
       </Box>
+
       <ProfileViewer ref={viewerRef} onChange={() => mutateProfiles()} />
       <ConfigViewer ref={configRef} />
     </BasePage>
