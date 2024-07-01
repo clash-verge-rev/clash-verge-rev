@@ -49,6 +49,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     proxy_auto_config,
     pac_file_content,
     enable_proxy_guard,
+    use_default_bypass,
     system_proxy_bypass,
     proxy_guard_duration,
   } = verge ?? {};
@@ -57,6 +58,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     guard: enable_proxy_guard,
     bypass: system_proxy_bypass,
     duration: proxy_guard_duration ?? 10,
+    use_default: use_default_bypass ?? true,
     pac: proxy_auto_config,
     pac_content: pac_file_content ?? DEFAULT_PAC,
   });
@@ -68,6 +70,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         guard: enable_proxy_guard,
         bypass: system_proxy_bypass,
         duration: proxy_guard_duration ?? 10,
+        use_default: use_default_bypass ?? true,
         pac: proxy_auto_config,
         pac_content: pac_file_content ?? DEFAULT_PAC,
       });
@@ -96,6 +99,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     }
     if (value.pac !== proxy_auto_config) {
       patch.proxy_auto_config = value.pac;
+    }
+    if (value.use_default !== use_default_bypass) {
+      patch.use_default_bypass = value.use_default;
     }
     if (value.pac_content !== pac_file_content) {
       patch.pac_file_content = value.pac_content;
@@ -197,6 +203,17 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             }}
           />
         </ListItem>
+        {!value.pac && (
+          <ListItem sx={{ padding: "5px 2px" }}>
+            <ListItemText primary={t("Always use Default Bypass")} />
+            <Switch
+              edge="end"
+              disabled={!enabled}
+              checked={value.use_default}
+              onChange={(_, e) => setValue((v) => ({ ...v, use_default: e }))}
+            />
+          </ListItem>
+        )}
         {!value.pac && (
           <>
             <ListItemText primary={t("Proxy Bypass")} />
