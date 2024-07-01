@@ -140,7 +140,7 @@ impl CoreManager {
                 }
             }
         } else {
-            // patch config: disable tun mode
+            // service mode is disable, patch the config: disable tun mode
             Config::clash()
                 .latest()
                 .patch_and_merge_config(disable.clone());

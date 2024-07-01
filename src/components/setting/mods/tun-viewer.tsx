@@ -50,15 +50,10 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  const onSave = useLockFn(async () => {
+  const doSave = async (retry = 5) => {
     try {
-      if (isMacos && !values.device.startsWith("utun")) {
-        Notice.error(t("Macos Device Name Error"), 3000);
-        return;
-      }
       setLoading(true);
       let tun = {
-        ...clash?.tun,
         stack: values.stack,
         device: values.device === "" ? defaultDeviceName : values.device,
         "auto-route": values.autoRoute,
@@ -68,13 +63,28 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         mtu: values.mtu ?? 1500,
       };
       await patchClash({ tun });
-      await mutateClash((old) => ({ ...(old! || {}), tun }), false);
-    } catch (err: any) {
-      Notice.error(err.message || err.toString());
-    } finally {
+      await mutateClash(
+        (old) => ({ ...(old! || {}), tun: { ...old?.tun, ...tun } }),
+        false,
+      );
+      Notice.success(t("Clash Config Updated"));
       setLoading(false);
       setOpen(false);
+    } catch (err: any) {
+      if (retry < 0) {
+        Notice.error(t(err));
+      } else {
+        setTimeout(() => doSave(retry - 1), 1000);
+      }
     }
+  };
+
+  const onSave = useLockFn(async () => {
+    if (isMacos && !values.device.startsWith("utun")) {
+      Notice.error(t("Macos Device Name Error"), 3000);
+      return;
+    }
+    doSave();
   });
 
   return (

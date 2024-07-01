@@ -62,6 +62,7 @@ fn main() -> std::io::Result<()> {
             tauri::async_runtime::spawn(async move {
                 // initialize your app here instead of sleeping :
                 resolve::resolve_setup(&app_handle);
+                // wait 2 seconds for clash core to init profile
                 sleep(Duration::from_secs(2));
                 // create main window
                 if !silent_start {

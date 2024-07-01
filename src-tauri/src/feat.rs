@@ -11,10 +11,10 @@ use crate::log_err;
 use crate::utils::dirs::APP_ID;
 use crate::utils::resolve;
 use crate::utils::resolve::find_unused_port;
+use anyhow::anyhow;
+use anyhow::Error;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
-use std::thread::sleep;
-use std::time::Duration;
 use tauri::api::notification::Notification;
 use tauri::{AppHandle, ClipboardManager, Manager};
 
@@ -219,6 +219,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         .patch_and_merge_config(patch.clone());
     let mut generate_runtime_config = false;
     let res = {
+        let mut update_tun_failed = false;
         for key in CLASH_BASIC_CONFIG {
             if patch.get(key).is_some() {
                 if !generate_runtime_config {
@@ -233,38 +234,21 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
                 // handle tun config
                 if key == "tun" {
-                    for i in 0..5 {
-                        let clash_basic_configs = clash_api::get_configs().await?;
-                        let tun_enable = value
-                            .as_mapping()
-                            .unwrap()
-                            .get("enable")
-                            .map_or(false, |val| val.as_bool().unwrap_or(false));
-                        let tun_enable_by_api = clash_basic_configs
-                            .tun
-                            .get("enable")
-                            .map_or(false, |val| val.as_bool().unwrap_or(false));
-                        if tun_enable == tun_enable_by_api {
-                            handle::Handle::update_systray_part()?;
-                            handle::Handle::notice_message("set_config::ok", "ok");
-                            break;
-                        }
-                        if i == 4 {
-                            // retry max times, patch config to set tun enable status
-                            let mut tun_mapping = Mapping::new();
-                            let mut tun_enable_mapping = Mapping::new();
-                            tun_enable_mapping.insert("enable".into(), tun_enable_by_api.into());
-                            tun_mapping.insert("tun".into(), tun_enable_mapping.into());
-                            Config::clash().draft().patch_and_merge_config(tun_mapping);
-                            let message = if tun_enable {
-                                "Tun Device Or Resource Busy"
-                            } else {
-                                "Update Tun Config Failed"
-                            };
-                            handle::Handle::update_systray_part()?;
-                            handle::Handle::notice_message("set_config::error", message);
-                        }
-                        sleep(Duration::from_millis(500));
+                    let clash_basic_configs = clash_api::get_configs().await?;
+                    let tun_enable = value
+                        .as_mapping()
+                        .unwrap()
+                        .get("enable")
+                        .map_or(false, |val| val.as_bool().unwrap_or(false));
+                    let tun_enable_by_api = clash_basic_configs
+                        .tun
+                        .get("enable")
+                        .map_or(false, |val| val.as_bool().unwrap_or(false));
+                    if tun_enable == tun_enable_by_api {
+                        handle::Handle::update_systray_part()?;
+                    } else {
+                        update_tun_failed = true;
+                        break;
                     }
                 }
                 // handle system proxy
@@ -274,33 +258,41 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             }
         }
 
-        // 激活订阅
-        if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
-            Config::generate()?;
-            CoreManager::global().run_core().await?;
-        }
+        if update_tun_failed {
+            <Result<(), Error>>::Err(anyhow!("Tun Device Or Resource Busy"))
+        } else {
+            // 激活订阅
+            if patch.get("secret").is_some()
+                || patch.get("external-controller").is_some()
+                || patch.get("unified-delay").is_some()
+            {
+                Config::generate()?;
+                CoreManager::global().run_core().await?;
+            }
 
-        if patch.get("mode").is_some() {
-            log_err!(handle::Handle::update_systray_part());
-        }
+            if patch.get("mode").is_some() {
+                log_err!(handle::Handle::update_systray_part());
+            }
 
-        Config::runtime().latest().patch_config(patch);
-        if generate_runtime_config {
-            // if the clash basic config changed, we need to sync the runtime configuration file now
-            Config::generate()?;
-            Config::generate_file(ConfigType::Run)?;
+            Config::runtime().latest().patch_config(patch);
+            if generate_runtime_config {
+                // if the clash basic config changed, we need to sync the runtime configuration file now
+                Config::generate()?;
+                Config::generate_file(ConfigType::Run)?;
+            }
+            <Result<()>>::Ok(())
         }
-
-        <Result<()>>::Ok(())
     };
     match res {
         Ok(()) => {
+            log::info!(target: "app", "update success, apply clash config");
             Config::clash().apply();
             Config::clash().data().save_config()?;
             handle::Handle::refresh_clash();
             Ok(())
         }
         Err(err) => {
+            log::error!(target: "app", "update failed, discard clash config");
             Config::clash().discard();
             Err(err)
         }
