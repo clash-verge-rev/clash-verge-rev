@@ -226,12 +226,12 @@ export const ProfileItem = (props: Props) => {
       disabled: option?.groups === null,
     },
     {
-      label: "Edit Merge",
+      label: "Extend Config",
       handler: onEditMerge,
       disabled: option?.merge === null,
     },
     {
-      label: "Edit Script",
+      label: "Extend Script",
       handler: onEditScript,
       disabled: option?.script === null,
     },
@@ -267,12 +267,12 @@ export const ProfileItem = (props: Props) => {
       disabled: option?.groups === null,
     },
     {
-      label: "Edit Merge",
+      label: "Extend Config",
       handler: onEditMerge,
       disabled: option?.merge === null,
     },
     {
-      label: "Edit Script",
+      label: "Extend Script",
       handler: onEditScript,
       disabled: option?.script === null,
     },

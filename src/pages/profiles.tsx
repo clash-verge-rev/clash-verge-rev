@@ -398,7 +398,7 @@ const ProfilePage = () => {
         ></Divider>
         <Box sx={{ mt: 1.5 }}>
           <Grid container spacing={{ xs: 1, lg: 1 }}>
-            <Grid item sm={6} md={6} lg={6}>
+            <Grid item xs={12} sm={6} md={6} lg={6}>
               <ProfileMore
                 id="Merge"
                 onChange={async (prev, curr) => {
@@ -408,7 +408,7 @@ const ProfilePage = () => {
                 }}
               />
             </Grid>
-            <Grid item sm={6} md={6} lg={6}>
+            <Grid item xs={12} sm={6} md={6} lg={6}>
               <ProfileMore
                 id="Script"
                 logInfo={chainLogs["Script"]}
