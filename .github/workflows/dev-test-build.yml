@@ -1,11 +1,11 @@
-name: Dev Build
+name: Dev Test Build
 
 on:
   pull_request:
   workflow_dispatch:
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: test-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -27,9 +27,6 @@ jobs:
         uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2
         with:
           workspaces: src-tauri
-
-      - name: Install Tauri CLI
-        run: cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
 
       - name: Install Node
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
@@ -53,8 +50,8 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Build Tauri
-        run: cargo tauri build
+        run: pnpm build
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          # NODE_OPTIONS: "--max_old_space_size=4096"
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
