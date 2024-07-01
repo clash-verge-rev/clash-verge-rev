@@ -50,7 +50,16 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     };
 
     // 从profiles里拿东西
-    let (mut config, merge_item, script_item, rules_item, proxies_item, groups_item) = {
+    let (
+        mut config,
+        merge_item,
+        script_item,
+        rules_item,
+        proxies_item,
+        groups_item,
+        global_merge,
+        global_script,
+    ) = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
 
@@ -96,7 +105,34 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 data: ChainType::Groups(SeqMap::default()),
             });
 
-        (current, merge, script, rules, proxies, groups)
+        let global_merge = profiles
+            .get_item(&"Merge".to_string())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "Merge".into(),
+                data: ChainType::Merge(Mapping::new()),
+            });
+
+        let global_script = profiles
+            .get_item(&"Script".to_string())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "Script".into(),
+                data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
+            });
+
+        (
+            current,
+            merge,
+            script,
+            rules,
+            proxies,
+            groups,
+            global_merge,
+            global_script,
+        )
     };
 
     let mut result_map = HashMap::new(); // 保存脚本日志
@@ -134,6 +170,27 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         }
 
         result_map.insert(script_item.uid, logs);
+    }
+
+    // 全局Merge和Script
+    if let ChainType::Merge(merge) = global_merge.data {
+        exists_keys.extend(use_keys(&merge));
+        config = use_merge(merge, config.to_owned());
+    }
+
+    if let ChainType::Script(script) = global_script.data {
+        let mut logs = vec![];
+
+        match use_script(script, config.to_owned()) {
+            Ok((res_config, res_logs)) => {
+                exists_keys.extend(use_keys(&res_config));
+                config = res_config;
+                logs.extend(res_logs);
+            }
+            Err(err) => logs.push(("exception".into(), err.to_string())),
+        }
+
+        result_map.insert(global_script.uid, logs);
     }
 
     // 合并默认的config
