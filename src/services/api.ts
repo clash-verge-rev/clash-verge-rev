@@ -271,3 +271,9 @@ export const getGroupProxyDelays = async (
   );
   return result as any as Record<string, number>;
 };
+
+// clear fakeip cache
+export const flushFakeipCache = async () => {
+  const instance = await getAxios();
+  await instance.post("/cache/fakeip/flush");
+};

@@ -33,6 +33,7 @@ impl IClashConfig {
     pub fn default() -> Self {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
+        tun.insert("enable".into(), false.into());
         tun.insert("stack".into(), "gvisor".into());
         #[cfg(not(target_os = "macos"))]
         tun.insert("device".into(), "Mihomo".into());
@@ -56,6 +57,7 @@ impl IClashConfig {
         map.insert("external-controller".into(), "127.0.0.1:9097".into());
         map.insert("secret".into(), nanoid!().into());
         map.insert("tun".into(), tun.into());
+        map.insert("unified-delay".into(), false.into());
 
         Self(map)
     }

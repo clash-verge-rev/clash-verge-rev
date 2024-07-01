@@ -115,7 +115,7 @@
   "System Setting": "系统设置",
   "Tun Mode": "Tun 模式",
   "Reset to Default": "重置为默认值",
-  "Tun Mode Info": "Tun模式需要授予内核相关权限，使用前请先开启服务模式",
+  "Tun Mode Info": "Tun 模式需要授予内核相关权限，使用前请先开启服务模式",
   "Stack": "Tun 模式堆栈",
   "System and Mixed Can Only be Used in Service Mode": "System 和 Mixed 只能在服务模式下使用",
   "Device": "Tun 网卡名称",
@@ -289,5 +289,9 @@
   "Regenerate Template Content": "重新生成模板内容",
   "Macos Device Name Error": "Macos 系统的 Tun 网卡名称必须以 utun 开头",
   "Tun Device Or Resource Busy": "Tun 网卡或资源繁忙，将关闭 Tun 模式，请稍后再重新启用 Tun 模式",
-  "Update Tun Config Failed": "更新 Tun 设置失败，请稍后再试"
+  "Update Tun Config Failed": "更新 Tun 设置失败，请稍后再试",
+  "Unified Delay": "统一延迟",
+  "Unified Delay Info": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
+  "Flush Fake-IP Cache": "清除 Fake-IP 缓存",
+  "Fake-IP Cache Flushed": "Fake-IP 缓存已清除"
 }

@@ -289,5 +289,9 @@
   "Regenerate Template Content": "Regenerate Template Content",
   "Macos Device Name Error": "Tun device names on Macos must start with utun",
   "Tun Device Or Resource Busy": "Tun device or resource busy, will tun off Tun mode, please try to enable Tun mode again later",
-  "Update Tun Config Failed": "Update Tun Config Failed, please try again later"
+  "Update Tun Config Failed": "Update Tun Config Failed, please try again later",
+  "Unified Delay": "Unified Delay",
+  "Unified Delay Info": "When unified delay is turned on, two delay tests will be performed to eliminate the delay differences between different types of nodes caused by connection handshakes, etc",
+  "Flush Fake-IP Cache": "Flush Fake-IP Cache",
+  "Fake-IP Cache Flushed": "Fake-IP Cache Flushed"
 }

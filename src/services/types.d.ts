@@ -30,10 +30,11 @@ interface IConfigData {
   "redir-port": number;
   "socks-port": number;
   "tproxy-port": number;
-  // It is only used as a parameter in the patch clash method and is not stored in the clash configuration file
+  // this filed is only used as a parameter in the patch clash method and is not stored in the clash configuration file
   "enable-random-port": boolean;
   "external-controller": string;
   secret: string;
+  "unified-delay": boolean;
   tun: {
     enable?: boolean;
     stack?: string;

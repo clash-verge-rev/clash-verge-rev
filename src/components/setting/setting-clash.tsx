@@ -4,7 +4,7 @@ import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useClash } from "@/hooks/use-clash";
 import { useService } from "@/hooks/use-service";
 import { useVerge } from "@/hooks/use-verge";
-import { updateGeoData } from "@/services/api";
+import { flushFakeipCache, updateGeoData } from "@/services/api";
 import { invoke_uwp_tool } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import {
@@ -53,6 +53,7 @@ const SettingClash = ({ onError }: Props) => {
     ipv6,
     "allow-lan": allowLan,
     "log-level": logLevel,
+    "unified-delay": UnifiedDelay,
     tun,
   } = clash ?? {};
   const { enable_random_port = false, enable_service_mode } = verge ?? {};
@@ -75,6 +76,15 @@ const SettingClash = ({ onError }: Props) => {
     try {
       await updateGeoData();
       Notice.success(t("GeoData Updated"));
+    } catch (err: any) {
+      Notice.error(err?.response.data.message || err.toString());
+    }
+  };
+
+  const onFlushFakeip = async () => {
+    try {
+      await flushFakeipCache();
+      Notice.success(t("Fake-IP Cache Flushed"));
     } catch (err: any) {
       Notice.error(err?.response.data.message || err.toString());
     }
@@ -158,6 +168,26 @@ const SettingClash = ({ onError }: Props) => {
               serviceStatus !== "active" && serviceStatus !== "installed"
             }
           />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t("Unified Delay")}
+        extra={
+          <Tooltip title={t("Unified Delay Info")} placement="top">
+            <IconButton color="inherit" size="small">
+              <InfoRounded fontSize="inherit" sx={{ opacity: 0.75 }} />
+            </IconButton>
+          </Tooltip>
+        }>
+        <GuardState
+          value={UnifiedDelay ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ "unified-delay": e })}
+          onGuard={(e) => patchClash({ "unified-delay": e })}>
+          <SwitchLovely edge="end" />
         </GuardState>
       </SettingItem>
 
@@ -263,6 +293,7 @@ const SettingClash = ({ onError }: Props) => {
       )}
 
       <SettingItem onClick={onUpdateGeo} label={t("Update GeoData")} />
+      <SettingItem onClick={onFlushFakeip} label={t("Flush Fake-IP Cache")} />
     </SettingList>
   );
 };
