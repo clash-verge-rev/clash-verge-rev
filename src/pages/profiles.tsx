@@ -50,7 +50,6 @@ import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/api/fs";
 import { readText } from "@tauri-apps/api/clipboard";
-import { EditorViewer } from "@/components/profile/editor-viewer";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -378,7 +377,7 @@ const ProfilePage = () => {
                       itemData={item}
                       onSelect={(f) => onSelect(item.uid, f)}
                       onEdit={() => viewerRef.current?.edit(item)}
-                      onChange={async (prev, curr) => {
+                      onSave={async (prev, curr) => {
                         if (prev !== curr && profiles.current === item.uid) {
                           await onEnhance();
                         }
@@ -401,7 +400,7 @@ const ProfilePage = () => {
             <Grid item xs={12} sm={6} md={6} lg={6}>
               <ProfileMore
                 id="Merge"
-                onChange={async (prev, curr) => {
+                onSave={async (prev, curr) => {
                   if (prev !== curr) {
                     await onEnhance();
                   }
@@ -412,7 +411,7 @@ const ProfilePage = () => {
               <ProfileMore
                 id="Script"
                 logInfo={chainLogs["Script"]}
-                onChange={async (prev, curr) => {
+                onSave={async (prev, curr) => {
                   if (prev !== curr) {
                     await onEnhance();
                   }

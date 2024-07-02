@@ -42,7 +42,7 @@ interface Props {
   property: string;
   open: boolean;
   onClose: () => void;
-  onChange?: (prev?: string, curr?: string) => void;
+  onSave?: (prev?: string, curr?: string) => void;
 }
 
 const portValidator = (value: string): boolean => {
@@ -227,7 +227,7 @@ const rules: {
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
 export const RulesEditorViewer = (props: Props) => {
-  const { title, profileUid, property, open, onClose, onChange } = props;
+  const { title, profileUid, property, open, onClose, onSave } = props;
   const { t } = useTranslation();
 
   const [prevData, setPrevData] = useState("");
@@ -330,7 +330,7 @@ export const RulesEditorViewer = (props: Props) => {
     },${proxyPolicy}${ruleType.noResolve && noResolve ? ",no-resolve" : ""}`;
   };
 
-  const onSave = useLockFn(async () => {
+  const handleSave = useLockFn(async () => {
     try {
       let currData = yaml.dump({
         prepend: prependSeq,
@@ -338,7 +338,7 @@ export const RulesEditorViewer = (props: Props) => {
         delete: deleteSeq,
       });
       await saveProfileFile(property, currData);
-      onChange?.(prevData, currData);
+      onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
       Notice.error(err.message || err.toString());
@@ -575,7 +575,7 @@ export const RulesEditorViewer = (props: Props) => {
           {t("Cancel")}
         </Button>
 
-        <Button onClick={onSave} variant="contained">
+        <Button onClick={handleSave} variant="contained">
           {t("Save")}
         </Button>
       </DialogActions>
