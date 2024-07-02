@@ -71,7 +71,7 @@ export const ProfileItem = (props: Props) => {
   const from = parseUrl(itemData.url);
   const description = itemData.desc;
   const expire = parseExpire(extra?.expire);
-  const progress = Math.round(((download + upload) * 100) / (total + 0.1));
+  const progress = Math.round(((download + upload) * 100) / (total + 0.01) + 1);
 
   const loading = loadingCache[itemData.uid] ?? false;
 
@@ -429,7 +429,7 @@ export const ProfileItem = (props: Props) => {
         <LinearProgress
           variant="determinate"
           value={progress}
-          style={{ opacity: progress > 0 ? 1 : 0 }}
+          style={{ opacity: total > 0 ? 1 : 0 }}
         />
       </ProfileBox>
 
