@@ -65,8 +65,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       meta-json-schema:
-        specifier: 1.18.5-alpha7
-        version: 1.18.5-alpha7
+        specifier: 1.18.6
+        version: 1.18.6
       monaco-editor:
         specifier: ^0.49.0
         version: 0.49.0
@@ -86,8 +86,8 @@ importers:
         specifier: ^3.1.4
         version: 3.1.4(react@18.3.1)
       react-hook-form:
-        specifier: ^7.52.0
-        version: 7.52.0(react@18.3.1)
+        specifier: ^7.52.1
+        version: 7.52.1(react@18.3.1)
       react-i18next:
         specifier: ^13.5.0
         version: 13.5.0(i18next@23.11.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3311,10 +3311,10 @@ packages:
         integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==,
       }
 
-  meta-json-schema@1.18.5-alpha7:
+  meta-json-schema@1.18.6:
     resolution:
       {
-        integrity: sha512-VhlrRXgtzZFIg6VAuipDfQ9cuBxUlondbwRHzB8++OkXWD9HZYp4wXYZPTNa7pcTIr1rMWsg+0llvBlGGp/Z5w==,
+        integrity: sha512-HMDu+1lcVsgEsa4kPlyo2ZNgOEbaQJhOzU4ll4qJahwx5TIw8NkcbXgxnKEW6NieqL4AOWWtoNgw3EKeuHg4+A==,
       }
 
   micromark-core-commonmark@2.0.1:
@@ -3800,10 +3800,10 @@ packages:
         integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==,
       }
 
-  react-hook-form@7.52.0:
+  react-hook-form@7.52.1:
     resolution:
       {
-        integrity: sha512-mJX506Xc6mirzLsmXUJyqlAI3Kj9Ph2RhplYhUVffeOQSnubK2uVqBFOBJmvKikvbFV91pxVXmDiR+QMF19x6A==,
+        integrity: sha512-uNKIhaoICJ5KQALYZ4TOaOLElyM+xipord+Ha3crEFhTntdLvWZqVY49Wqd/0GiVCA/f9NjemLeiNPjG7Hpurg==,
       }
     engines: { node: ">=12.22.0" }
     peerDependencies:
@@ -6639,7 +6639,7 @@ snapshots:
 
   merge-stream@2.0.0: {}
 
-  meta-json-schema@1.18.5-alpha7: {}
+  meta-json-schema@1.18.6: {}
 
   micromark-core-commonmark@2.0.1:
     dependencies:
@@ -6967,7 +6967,7 @@ snapshots:
 
   react-fast-compare@3.2.2: {}
 
-  react-hook-form@7.52.0(react@18.3.1):
+  react-hook-form@7.52.1(react@18.3.1):
     dependencies:
       react: 18.3.1
 

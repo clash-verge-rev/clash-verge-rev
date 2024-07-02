@@ -213,16 +213,16 @@ export const ProfileItem = (props: Props) => {
       handler: onEditRules,
       disabled: option?.rules === null,
     },
-    {
-      label: "Edit Proxies",
-      handler: onEditProxies,
-      disabled: option?.proxies === null,
-    },
-    {
-      label: "Edit Groups",
-      handler: onEditGroups,
-      disabled: option?.groups === null,
-    },
+    // {
+    //   label: "Edit Proxies",
+    //   handler: onEditProxies,
+    //   disabled: option?.proxies === null,
+    // },
+    // {
+    //   label: "Edit Groups",
+    //   handler: onEditGroups,
+    //   disabled: option?.groups === null,
+    // },
     {
       label: "Extend Config",
       handler: onEditMerge,
@@ -254,16 +254,16 @@ export const ProfileItem = (props: Props) => {
       handler: onEditRules,
       disabled: option?.rules === null,
     },
-    {
-      label: "Edit Proxies",
-      handler: onEditProxies,
-      disabled: option?.proxies === null,
-    },
-    {
-      label: "Edit Groups",
-      handler: onEditGroups,
-      disabled: option?.groups === null,
-    },
+    // {
+    //   label: "Edit Proxies",
+    //   handler: onEditProxies,
+    //   disabled: option?.proxies === null,
+    // },
+    // {
+    //   label: "Edit Groups",
+    //   handler: onEditGroups,
+    //   disabled: option?.groups === null,
+    // },
     {
       label: "Extend Config",
       handler: onEditMerge,
