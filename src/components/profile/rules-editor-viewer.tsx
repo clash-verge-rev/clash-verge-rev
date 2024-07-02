@@ -364,7 +364,7 @@ export const RulesEditorViewer = (props: Props) => {
             display: "inline-block",
             width: "50%",
             height: "100%",
-            overflow: "auto",
+            overflowY: "auto",
             marginLeft: "10px",
           }}
         >

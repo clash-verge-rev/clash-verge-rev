@@ -5,8 +5,6 @@ tar -Jxvf ./node-v20.10.0-linux-x64.tar.xz
 export PATH=$(pwd)/node-v20.10.0-linux-x64/bin:$PATH
 npm install pnpm -g
 
-cargo install --git https://github.com/tauri-apps/tauri --branch 1.x tauri-cli
-
 rustup target add "$INPUT_TARGET"
 
 if [ "$INPUT_TARGET" = "x86_64-unknown-linux-gnu" ]; then

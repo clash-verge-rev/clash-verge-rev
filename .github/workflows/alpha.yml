@@ -49,13 +49,6 @@ jobs:
           cache-all-crates: true
           cache-on-failure: true
 
-      - name: Install Tauri CLI
-        uses: baptiste0928/cargo-install@v3
-        with:
-          crate: tauri-cli
-          git: https://github.com/tauri-apps/tauri
-          branch: 1.x # `branch` and `commit` are also supported
-
       - name: Install Node
         uses: actions/setup-node@v4
         with:
@@ -90,7 +83,7 @@ jobs:
           releaseBody: "More new features are now supported."
           releaseDraft: false
           prerelease: true
-          tauriScript: cargo tauri
+          tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
       - name: Portable Bundle
@@ -174,13 +167,6 @@ jobs:
           cache-all-crates: true
           cache-on-failure: true
 
-      - name: Install Tauri CLI
-        uses: baptiste0928/cargo-install@v3
-        with:
-          crate: tauri-cli
-          git: https://github.com/tauri-apps/tauri
-          branch: 1.x # `branch` and `commit` are also supported
-
       - name: Install Node
         uses: actions/setup-node@v4
         with:
@@ -212,7 +198,7 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tauriScript: cargo tauri
+          tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
       - name: Rename
