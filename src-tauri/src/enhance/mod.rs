@@ -138,8 +138,28 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     let mut result_map = HashMap::new(); // 保存脚本日志
     let mut exists_keys = use_keys(&config); // 保存出现过的keys
 
-    // 处理用户的profile
+    // 全局Merge和Script
+    if let ChainType::Merge(merge) = global_merge.data {
+        exists_keys.extend(use_keys(&merge));
+        config = use_merge(merge, config.to_owned());
+    }
 
+    if let ChainType::Script(script) = global_script.data {
+        let mut logs = vec![];
+
+        match use_script(script, config.to_owned()) {
+            Ok((res_config, res_logs)) => {
+                exists_keys.extend(use_keys(&res_config));
+                config = res_config;
+                logs.extend(res_logs);
+            }
+            Err(err) => logs.push(("exception".into(), err.to_string())),
+        }
+
+        result_map.insert(global_script.uid, logs);
+    }
+
+    // 订阅关联的Merge、Script、Rules、Proxies、Groups
     if let ChainType::Rules(rules) = rules_item.data {
         config = use_seq(rules, config.to_owned(), "rules");
     }
@@ -170,27 +190,6 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         }
 
         result_map.insert(script_item.uid, logs);
-    }
-
-    // 全局Merge和Script
-    if let ChainType::Merge(merge) = global_merge.data {
-        exists_keys.extend(use_keys(&merge));
-        config = use_merge(merge, config.to_owned());
-    }
-
-    if let ChainType::Script(script) = global_script.data {
-        let mut logs = vec![];
-
-        match use_script(script, config.to_owned()) {
-            Ok((res_config, res_logs)) => {
-                exists_keys.extend(use_keys(&res_config));
-                config = res_config;
-                logs.extend(res_logs);
-            }
-            Err(err) => logs.push(("exception".into(), err.to_string())),
-        }
-
-        result_map.insert(global_script.uid, logs);
     }
 
     // 合并默认的config
