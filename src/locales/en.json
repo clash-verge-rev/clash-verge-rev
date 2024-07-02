@@ -58,6 +58,7 @@
   "No Resolve": "No Resolve",
   "Add Prepend Rule": "Add Prepend Rule",
   "Add Append Rule": "Add Append Rule",
+  "Invalid Rule": "Invalid Rule",
   "Delete Rule": "Delete Rule",
   "Edit Groups": "Edit Proxy Groups",
   "Extend Config": "Extend Config",
