@@ -217,6 +217,31 @@ export const RulesEditorViewer = (props: Props) => {
     fetchProfile();
   }, [open]);
 
+  const spliceRule = () => {
+    if (ruleContent === "") return "";
+    // Check valid by regex
+    switch (ruleType) {
+      case "IP-CIDR": {
+        let v4regex = new RegExp(
+          "^((?:(?:[1-9]?[0-9]|1[0-9][0-9]|2(?:[0-4][0-9]|5[0-5]))\\.){3}(?:[1-9]?[0-9]|1[0-9][0-9]|2(?:[0-4][0-9]|5[0-5])))?:(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-5]{2}[0-3][0-5])$"
+        );
+        let v6regex = new RegExp(
+          "^([0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4}){7}|::|:(?::[0-9a-fA-F]{1,4}){1,6}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,5}|(?:[0-9a-fA-F]{1,4}:){2}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){3}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){4}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){5}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,6}:)\\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9])$"
+        );
+        if (!v4regex.test(ruleContent) && !v6regex.test(ruleContent)) return "";
+
+        break;
+      }
+      default:
+        break;
+    }
+    return `${ruleType}${
+      ruleType === "MATCH" ? "" : "," + ruleContent
+    },${proxyPolicy}${
+      NoResolveList.includes(ruleType) && noResolve ? ",no-resolve" : ""
+    }`;
+  };
+
   const onSave = useLockFn(async () => {
     try {
       let currData = yaml.dump({
@@ -325,13 +350,11 @@ export const RulesEditorViewer = (props: Props) => {
               fullWidth
               variant="contained"
               onClick={() => {
-                let raw = `${ruleType}${
-                  ruleType === "MATCH" ? "" : "," + ruleContent
-                },${proxyPolicy}${
-                  NoResolveList.includes(ruleType) && noResolve
-                    ? ",no-resolve"
-                    : ""
-                }`;
+                let raw = spliceRule();
+                if (raw === "") {
+                  Notice.error(t("Invalid Rule"));
+                  return;
+                }
                 if (prependSeq.includes(raw)) return;
                 setPrependSeq([...prependSeq, raw]);
               }}
@@ -344,13 +367,11 @@ export const RulesEditorViewer = (props: Props) => {
               fullWidth
               variant="contained"
               onClick={() => {
-                let raw = `${ruleType}${
-                  ruleType === "MATCH" ? "" : "," + ruleContent
-                },${proxyPolicy}${
-                  NoResolveList.includes(ruleType) && noResolve
-                    ? ",no-resolve"
-                    : ""
-                }`;
+                let raw = spliceRule();
+                if (raw === "") {
+                  Notice.error(t("Invalid Rule"));
+                  return;
+                }
                 if (appendSeq.includes(raw)) return;
                 setAppendSeq([...appendSeq, raw]);
               }}

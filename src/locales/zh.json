@@ -58,6 +58,7 @@
   "No Resolve": "跳过DNS解析",
   "Add Prepend Rule": "添加前置规则",
   "Add Append Rule": "添加后置规则",
+  "Invalid Rule": "无效规则",
   "Delete Rule": "删除规则",
   "Edit Groups": "编辑代理组",
   "Extend Config": "扩展配置",
