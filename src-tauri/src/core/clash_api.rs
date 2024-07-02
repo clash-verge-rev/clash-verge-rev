@@ -11,12 +11,7 @@ pub async fn restart_core() -> Result<()> {
     let url = format!("{url}/restart");
 
     let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let _ = client
-        .post(&url)
-        .headers(headers.clone())
-        .send()
-        .await
-        .unwrap();
+    let _ = client.post(&url).headers(headers.clone()).send().await?;
     Ok(())
 }
 
@@ -31,12 +26,7 @@ pub async fn get_configs() -> Result<ClashBasicConfig> {
     let url = format!("{url}/configs");
 
     let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let response = client
-        .get(&url)
-        .headers(headers.clone())
-        .send()
-        .await
-        .unwrap();
+    let response = client.get(&url).headers(headers.clone()).send().await?;
     Ok(response.json::<ClashBasicConfig>().await?)
 }
 
