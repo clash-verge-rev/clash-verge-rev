@@ -46,10 +46,14 @@ export const RuleItem = (props: Props) => {
         primary={
           <>
             <Typography
-              sx={{ textDecoration: type === "delete" ? "line-through" : "" }}
+              sx={{
+                textDecoration: type === "delete" ? "line-through" : "",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+              }}
               variant="h6"
-              component="span"
-              noWrap
+              title={rule.length === 3 ? rule[1] : "-"}
             >
               {rule.length === 3 ? rule[1] : "-"}
             </Typography>

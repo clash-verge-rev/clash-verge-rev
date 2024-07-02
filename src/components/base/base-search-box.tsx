@@ -9,6 +9,9 @@ import useRegularExpressionIcon from "@/assets/image/component/use_regular_expre
 
 type SearchProps = {
   placeholder?: string;
+  matchCase?: boolean;
+  matchWholeWord?: boolean;
+  useRegularExpression?: boolean;
   onSearch: (
     match: (content: string) => boolean,
     state: {
@@ -23,9 +26,13 @@ type SearchProps = {
 export const BaseSearchBox = styled((props: SearchProps) => {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [matchCase, setMatchCase] = useState(true);
-  const [matchWholeWord, setMatchWholeWord] = useState(false);
-  const [useRegularExpression, setUseRegularExpression] = useState(false);
+  const [matchCase, setMatchCase] = useState(props.matchCase ?? true);
+  const [matchWholeWord, setMatchWholeWord] = useState(
+    props.matchWholeWord ?? false
+  );
+  const [useRegularExpression, setUseRegularExpression] = useState(
+    props.useRegularExpression ?? false
+  );
   const [errorMessage, setErrorMessage] = useState("");
 
   const iconStyle = {
