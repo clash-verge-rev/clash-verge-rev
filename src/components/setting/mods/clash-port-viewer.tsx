@@ -134,8 +134,8 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Mixed Port")} />
           <TextField
-            size="small"
             autoComplete="off"
+            size="small"
             sx={{ width: 135 }}
             value={mixedPort}
             onChange={(e) =>
@@ -146,8 +146,8 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Socks Port")} />
           <TextField
-            size="small"
             autoComplete="off"
+            size="small"
             sx={{ width: 135 }}
             value={socksPort}
             onChange={(e) =>
@@ -169,8 +169,8 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Http Port")} />
           <TextField
-            size="small"
             autoComplete="off"
+            size="small"
             sx={{ width: 135 }}
             value={port}
             onChange={(e) =>
@@ -193,8 +193,8 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
           <ListItem sx={{ padding: "5px 2px" }}>
             <ListItemText primary={t("Redir Port")} />
             <TextField
-              size="small"
               autoComplete="off"
+              size="small"
               sx={{ width: 135 }}
               value={redirPort}
               onChange={(e) =>
@@ -218,8 +218,8 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
           <ListItem sx={{ padding: "5px 2px" }}>
             <ListItemText primary={t("Tproxy Port")} />
             <TextField
-              size="small"
               autoComplete="off"
+              size="small"
               sx={{ width: 135 }}
               value={tproxyPort}
               onChange={(e) =>

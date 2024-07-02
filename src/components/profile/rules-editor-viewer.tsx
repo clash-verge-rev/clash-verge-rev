@@ -399,6 +399,7 @@ export const RulesEditorViewer = (props: Props) => {
               )}
               {ruleType.name !== "RULE-SET" && ruleType.name !== "SUB-RULE" && (
                 <TextField
+                  autoComplete="off"
                   size="small"
                   sx={{ minWidth: "240px" }}
                   value={ruleContent}

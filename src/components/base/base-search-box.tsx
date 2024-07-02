@@ -96,11 +96,11 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   return (
     <Tooltip title={errorMessage} placement="bottom-start">
       <TextField
+        autoComplete="off"
         inputRef={inputRef}
         hiddenLabel
         fullWidth
         size="small"
-        autoComplete="off"
         variant="outlined"
         spellCheck="false"
         placeholder={props.placeholder ?? t("Filter conditions")}

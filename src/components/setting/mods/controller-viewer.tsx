@@ -48,8 +48,8 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("External Controller")} />
           <TextField
-            size="small"
             autoComplete="off"
+            size="small"
             sx={{ width: 175 }}
             value={controller}
             placeholder="Required"
@@ -60,8 +60,8 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Core Secret")} />
           <TextField
-            size="small"
             autoComplete="off"
+            size="small"
             sx={{ width: 175 }}
             value={secret}
             placeholder={t("Recommended")}
