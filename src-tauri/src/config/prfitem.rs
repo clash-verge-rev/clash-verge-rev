@@ -428,8 +428,10 @@ impl PrfItem {
     /// create the enhanced item by using `merge` rule
     pub fn from_merge(uid: Option<String>) -> Result<PrfItem> {
         let mut id = help::get_uid("m");
+        let mut template = tmpl::ITEM_MERGE.into();
         if let Some(uid) = uid {
             id = uid;
+            template = tmpl::ITEM_MERGE_EMPTY.into();
         }
         let file = format!("{id}.yaml");
 
@@ -445,7 +447,7 @@ impl PrfItem {
             option: None,
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
-            file_data: Some(tmpl::ITEM_MERGE.into()),
+            file_data: Some(template),
         })
     }
 
