@@ -125,8 +125,8 @@ const SettingClash = ({ onError }: Props) => {
         }
       >
         <TextField
-          disabled={enable_random_port}
           autoComplete="off"
+          disabled={enable_random_port}
           size="small"
           value={verge_mixed_port ?? 7897}
           sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}

@@ -198,8 +198,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
           <TooltipIcon title={t("Default Latency Test Info")} />
           <TextField
-            size="small"
             autoComplete="off"
+            size="small"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck="false"
@@ -215,9 +215,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Default Latency Timeout")} />
           <TextField
+            autoComplete="off"
             size="small"
             type="number"
-            autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck="false"

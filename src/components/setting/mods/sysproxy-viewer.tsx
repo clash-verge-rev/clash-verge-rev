@@ -188,6 +188,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Guard Duration")} />
           <TextField
+            autoComplete="off"
             disabled={!enabled}
             size="small"
             value={value.duration}
@@ -218,10 +219,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           <>
             <ListItemText primary={t("Proxy Bypass")} />
             <TextField
+              autoComplete="off"
               error={value.bypass ? !validReg.test(value.bypass) : false}
               disabled={!enabled}
               size="small"
-              autoComplete="off"
               multiline
               rows={4}
               sx={{ width: "100%" }}
@@ -233,9 +234,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             <ListItemText primary={t("Bypass")} />
             <FlexBox>
               <TextField
+                autoComplete="off"
                 disabled={true}
                 size="small"
-                autoComplete="off"
                 multiline
                 rows={4}
                 sx={{ width: "100%" }}
