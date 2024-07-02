@@ -124,10 +124,10 @@ jobs:
           - MacOS apple M芯片: aarch64.dmg
 
           ### Linux
-          - Linux 64位: amd64.deb/amd64.AppImage
-          - Linux 32位: i386.deb
-          - Linux arm64架构: arm64.deb
-          - Linux armv7架构: armhf.deb
+          - Linux 64位: amd64.deb/amd64.AppImage/amd64.rpm
+          - Linux 32位: i386.deb/i386.rmp
+          - Linux arm64架构: arm64.deb/arm64.rpm
+          - Linux armv7架构: armhf.deb/armhf.rpm
 
           ### Windows (Win7 用户请查看下面FAQ中的解决方案)
           #### 正常版本(推荐)
@@ -168,7 +168,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-        # src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   release-for-fixed-webview2:
     strategy:
