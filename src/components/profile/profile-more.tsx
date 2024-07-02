@@ -173,7 +173,7 @@ export const ProfileMore = (props: Props) => {
         property={id}
         open={fileOpen}
         language={id === "Merge" ? "yaml" : "javascript"}
-        schema={id === "Merge" ? "merge" : undefined}
+        schema={id === "Merge" ? "clash" : undefined}
         onChange={onChange}
         onClose={() => setFileOpen(false)}
       />
