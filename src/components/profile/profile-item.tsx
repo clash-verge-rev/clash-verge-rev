@@ -17,7 +17,12 @@ import {
 } from "@mui/material";
 import { RefreshRounded, DragIndicator } from "@mui/icons-material";
 import { useLoadingCache, useSetLoadingCache } from "@/services/states";
-import { updateProfile, viewProfile } from "@/services/cmds";
+import {
+  viewProfile,
+  readProfileFile,
+  updateProfile,
+  saveProfileFile,
+} from "@/services/cmds";
 import { Notice } from "@/components/base";
 import { RulesEditorViewer } from "@/components/profile/rules-editor-viewer";
 import { EditorViewer } from "@/components/profile/editor-viewer";
@@ -37,20 +42,13 @@ interface Props {
   itemData: IProfileItem;
   onSelect: (force: boolean) => void;
   onEdit: () => void;
-  onChange?: (prev?: string, curr?: string) => void;
+  onSave?: (prev?: string, curr?: string) => void;
   onDelete: () => void;
 }
 
 export const ProfileItem = (props: Props) => {
-  const {
-    selected,
-    activating,
-    itemData,
-    onSelect,
-    onEdit,
-    onChange,
-    onDelete,
-  } = props;
+  const { selected, activating, itemData, onSelect, onEdit, onSave, onDelete } =
+    props;
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: props.id });
 
@@ -474,52 +472,62 @@ export const ProfileItem = (props: Props) => {
       </Menu>
 
       <EditorViewer
-        mode="profile"
-        property={uid}
         open={fileOpen}
+        initialData={readProfileFile(uid)}
         language="yaml"
         schema="clash"
-        onChange={onChange}
+        onSave={async (prev, curr) => {
+          await saveProfileFile(uid, curr ?? "");
+          onSave && onSave(prev, curr);
+        }}
         onClose={() => setFileOpen(false)}
       />
       <RulesEditorViewer
         profileUid={uid}
         property={option?.rules ?? ""}
         open={rulesOpen}
-        onChange={onChange}
+        onSave={onSave}
         onClose={() => setRulesOpen(false)}
       />
       <EditorViewer
-        mode="profile"
-        property={option?.proxies ?? ""}
         open={proxiesOpen}
+        initialData={readProfileFile(option?.proxies ?? "")}
         language="yaml"
-        onChange={onChange}
+        onSave={async (prev, curr) => {
+          await saveProfileFile(option?.proxies ?? "", curr ?? "");
+          onSave && onSave(prev, curr);
+        }}
         onClose={() => setProxiesOpen(false)}
       />
       <EditorViewer
-        mode="profile"
-        property={option?.groups ?? ""}
         open={groupsOpen}
+        initialData={readProfileFile(option?.proxies ?? "")}
         language="yaml"
-        onChange={onChange}
+        onSave={async (prev, curr) => {
+          await saveProfileFile(option?.proxies ?? "", curr ?? "");
+          onSave && onSave(prev, curr);
+        }}
         onClose={() => setGroupsOpen(false)}
       />
       <EditorViewer
-        mode="profile"
-        property={option?.merge ?? ""}
         open={mergeOpen}
+        initialData={readProfileFile(option?.merge ?? "")}
         language="yaml"
         schema="clash"
-        onChange={onChange}
+        onSave={async (prev, curr) => {
+          await saveProfileFile(option?.merge ?? "", curr ?? "");
+          onSave && onSave(prev, curr);
+        }}
         onClose={() => setMergeOpen(false)}
       />
       <EditorViewer
-        mode="profile"
-        property={option?.script ?? ""}
         open={scriptOpen}
+        initialData={readProfileFile(option?.script ?? "")}
         language="javascript"
-        onChange={onChange}
+        onSave={async (prev, curr) => {
+          await saveProfileFile(option?.script ?? "", curr ?? "");
+          onSave && onSave(prev, curr);
+        }}
         onClose={() => setScriptOpen(false)}
       />
       <ConfirmViewer

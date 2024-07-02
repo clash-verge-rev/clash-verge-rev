@@ -11,7 +11,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { FeaturedPlayListRounded } from "@mui/icons-material";
-import { viewProfile } from "@/services/cmds";
+import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { ProfileBox } from "./profile-box";
@@ -20,14 +20,14 @@ import { LogViewer } from "./log-viewer";
 interface Props {
   logInfo?: [string, string][];
   id: "Merge" | "Script";
-  onChange?: (prev?: string, curr?: string) => void;
+  onSave?: (prev?: string, curr?: string) => void;
 }
 
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
-  const { id, logInfo = [], onChange } = props;
+  const { id, logInfo = [], onSave } = props;
 
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [fileOpen, setFileOpen] = useState(false);
@@ -169,12 +169,15 @@ export const ProfileMore = (props: Props) => {
       </Menu>
 
       <EditorViewer
-        mode="profile"
-        property={id}
         open={fileOpen}
+        title={`${t("Global " + id)}`}
+        initialData={readProfileFile(id)}
         language={id === "Merge" ? "yaml" : "javascript"}
         schema={id === "Merge" ? "clash" : undefined}
-        onChange={onChange}
+        onSave={async (prev, curr) => {
+          await saveProfileFile(id, curr ?? "");
+          onSave && onSave(prev, curr);
+        }}
         onClose={() => setFileOpen(false)}
       />
 

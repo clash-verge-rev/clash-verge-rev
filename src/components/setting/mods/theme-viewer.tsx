@@ -124,12 +124,11 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
             {t("Edit")} CSS
           </Button>
           <EditorViewer
-            title={`${t("Edit")} CSS`}
-            mode="text"
-            property={theme.css_injection ?? ""}
             open={editorOpen}
+            title={`${t("Edit")} CSS`}
+            initialData={Promise.resolve(theme.css_injection ?? "")}
             language="css"
-            onChange={(_prev, curr) => {
+            onSave={(_prev, curr) => {
               theme.css_injection = curr;
               handleChange("css_injection");
             }}
