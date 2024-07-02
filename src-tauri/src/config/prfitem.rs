@@ -428,10 +428,10 @@ impl PrfItem {
     /// create the enhanced item by using `merge` rule
     pub fn from_merge(uid: Option<String>) -> Result<PrfItem> {
         let mut id = help::get_uid("m");
-        let mut template = tmpl::ITEM_MERGE.into();
+        let mut template = tmpl::ITEM_MERGE_EMPTY.into();
         if let Some(uid) = uid {
             id = uid;
-            template = tmpl::ITEM_MERGE_EMPTY.into();
+            template = tmpl::ITEM_MERGE.into();
         }
         let file = format!("{id}.yaml");
 
