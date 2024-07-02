@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
 import { useTranslation } from "react-i18next";
@@ -247,6 +247,11 @@ export const RulesEditorViewer = (props: Props) => {
   const [appendSeq, setAppendSeq] = useState<string[]>([]);
   const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
 
+  const filteredRuleList = useMemo(
+    () => ruleList.filter((rule) => match(rule)),
+    [ruleList, match]
+  );
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -482,7 +487,7 @@ export const RulesEditorViewer = (props: Props) => {
           <Virtuoso
             style={{ height: "calc(100% - 16px)", marginTop: "8px" }}
             totalCount={
-              ruleList.length +
+              filteredRuleList.length +
               (prependSeq.length > 0 ? 1 : 0) +
               (appendSeq.length > 0 ? 1 : 0)
             }
@@ -518,24 +523,29 @@ export const RulesEditorViewer = (props: Props) => {
                     </SortableContext>
                   </DndContext>
                 );
-              } else if (index < ruleList.length + shift) {
+              } else if (index < filteredRuleList.length + shift) {
                 let newIndex = index - shift;
                 return (
                   <RuleItem
-                    key={`${ruleList[newIndex]}-${index}`}
+                    key={`${filteredRuleList[newIndex]}-${index}`}
                     type={
-                      deleteSeq.includes(ruleList[newIndex])
+                      deleteSeq.includes(filteredRuleList[newIndex])
                         ? "delete"
                         : "original"
                     }
-                    ruleRaw={ruleList[newIndex]}
+                    ruleRaw={filteredRuleList[newIndex]}
                     onDelete={() => {
-                      if (deleteSeq.includes(ruleList[newIndex])) {
+                      if (deleteSeq.includes(filteredRuleList[newIndex])) {
                         setDeleteSeq(
-                          deleteSeq.filter((v) => v !== ruleList[newIndex])
+                          deleteSeq.filter(
+                            (v) => v !== filteredRuleList[newIndex]
+                          )
                         );
                       } else {
-                        setDeleteSeq((prev) => [...prev, ruleList[newIndex]]);
+                        setDeleteSeq((prev) => [
+                          ...prev,
+                          filteredRuleList[newIndex],
+                        ]);
                       }
                     }}
                   />
