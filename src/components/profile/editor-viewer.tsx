@@ -1,16 +1,22 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import {
   Button,
+  ButtonGroup,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
 } from "@mui/material";
+import FormatPaintIcon from "@mui/icons-material/FormatPaint";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
+import CloseFullscreenIcon from "@mui/icons-material/CloseFullscreen";
 import { useThemeMode } from "@/services/states";
 import { Notice } from "@/components/base";
 import { nanoid } from "nanoid";
+import { appWindow } from "@tauri-apps/api/window";
 import getSystem from "@/utils/get-system";
 
 import * as monaco from "monaco-editor";
@@ -73,6 +79,7 @@ const monacoInitialization = () => {
 export const EditorViewer = <T extends Language>(props: Props<T>) => {
   const { t } = useTranslation();
   const themeMode = useThemeMode();
+  const [isMaximized, setIsMaximized] = useState(false);
 
   const {
     open = false,
@@ -138,7 +145,14 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
   });
 
   useEffect(() => {
+    const unlistenResized = appWindow.onResized(() => {
+      appWindow.isMaximized().then((maximized) => {
+        setIsMaximized(() => maximized);
+      });
+    });
+
     return () => {
+      unlistenResized.then((fn) => fn());
       editorRef.current?.dispose();
       editorRef.current = undefined;
     };
@@ -179,6 +193,35 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
           editorDidMount={editorDidMount}
           onChange={handleChange}
         />
+
+        <ButtonGroup
+          variant="contained"
+          sx={{ position: "absolute", left: "14px", bottom: "8px" }}
+        >
+          <IconButton
+            size="medium"
+            color="inherit"
+            sx={{ display: readOnly ? "none" : "" }}
+            title={t("Format document")}
+            onClick={() =>
+              editorRef.current
+                ?.getAction("editor.action.formatDocument")
+                ?.run()
+            }
+          >
+            <FormatPaintIcon fontSize="inherit" />
+          </IconButton>
+          <IconButton
+            size="medium"
+            color="inherit"
+            title={t(isMaximized ? "Minimize" : "Maximize")}
+            onClick={() =>
+              appWindow.toggleMaximize().then(() => editorRef.current?.layout())
+            }
+          >
+            {isMaximized ? <CloseFullscreenIcon /> : <OpenInFullIcon />}
+          </IconButton>
+        </ButtonGroup>
       </DialogContent>
 
       <DialogActions>
