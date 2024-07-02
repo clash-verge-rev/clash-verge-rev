@@ -34,6 +34,7 @@ import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice, Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
 import { RuleItem } from "@/components/profile/rule-item";
+import { BaseSearchBox } from "../base/base-search-box";
 
 interface Props {
   profileUid: string;
@@ -230,6 +231,7 @@ export const RulesEditorViewer = (props: Props) => {
   const { t } = useTranslation();
 
   const [prevData, setPrevData] = useState("");
+  const [match, setMatch] = useState(() => (_: string) => true);
 
   const [ruleType, setRuleType] = useState<(typeof rules)[number]>(rules[0]);
   const [ruleContent, setRuleContent] = useState("");
@@ -476,9 +478,16 @@ export const RulesEditorViewer = (props: Props) => {
             width: "50%",
             height: "100%",
             overflowY: "auto",
-            marginLeft: "10px",
+            overflowX: "hidden",
+            padding: "0 10px",
           }}
         >
+          <div style={{ position: "sticky", top: 0, zIndex: 10 }}>
+            <BaseSearchBox
+              matchCase={false}
+              onSearch={(match) => setMatch(() => match)}
+            />
+          </div>
           {prependSeq.length > 0 && (
             <DndContext
               sensors={sensors}
@@ -509,22 +518,24 @@ export const RulesEditorViewer = (props: Props) => {
           )}
 
           <List>
-            {ruleList.map((item, index) => {
-              return (
-                <RuleItem
-                  key={`${item}-${index}`}
-                  type={deleteSeq.includes(item) ? "delete" : "original"}
-                  ruleRaw={item}
-                  onDelete={() => {
-                    if (deleteSeq.includes(item)) {
-                      setDeleteSeq(deleteSeq.filter((v) => v !== item));
-                    } else {
-                      setDeleteSeq([...deleteSeq, item]);
-                    }
-                  }}
-                />
-              );
-            })}
+            {ruleList
+              .filter((item) => match(item))
+              .map((item, index) => {
+                return (
+                  <RuleItem
+                    key={`${item}-${index}`}
+                    type={deleteSeq.includes(item) ? "delete" : "original"}
+                    ruleRaw={item}
+                    onDelete={() => {
+                      if (deleteSeq.includes(item)) {
+                        setDeleteSeq(deleteSeq.filter((v) => v !== item));
+                      } else {
+                        setDeleteSeq([...deleteSeq, item]);
+                      }
+                    }}
+                  />
+                );
+              })}
           </List>
 
           {appendSeq.length > 0 && (
