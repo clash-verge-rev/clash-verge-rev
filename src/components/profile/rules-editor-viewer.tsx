@@ -35,6 +35,7 @@ import { Notice, Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
 import { RuleItem } from "@/components/profile/rule-item";
 import { BaseSearchBox } from "../base/base-search-box";
+import { Virtuoso } from "react-virtuoso";
 
 interface Props {
   profileUid: string;
@@ -350,92 +351,91 @@ export const RulesEditorViewer = (props: Props) => {
       <DialogTitle>{title ?? t("Edit Rules")}</DialogTitle>
 
       <DialogContent sx={{ display: "flex", width: "auto", height: "100vh" }}>
-        <div
-          style={{
+        <List
+          sx={{
+            height: "calc(100% - 16px)",
             width: "50%",
-            height: "100%",
+            padding: "0 10px",
           }}
         >
-          <List>
-            <Item>
-              <ListItemText primary={t("Rule Type")} />
-              <Autocomplete
-                size="small"
-                sx={{ minWidth: "240px" }}
-                renderInput={(params) => <TextField {...params} />}
-                options={rules}
-                value={ruleType}
-                getOptionLabel={(option) => option.name}
-                renderOption={(props, option) => (
-                  <li {...props} title={t(option.name)}>
-                    {option.name}
-                  </li>
-                )}
-                onChange={(_, value) => value && setRuleType(value)}
-              />
-            </Item>
-            <Item sx={{ display: !(ruleType.required ?? true) ? "none" : "" }}>
-              <ListItemText primary={t("Rule Content")} />
+          <Item>
+            <ListItemText primary={t("Rule Type")} />
+            <Autocomplete
+              size="small"
+              sx={{ minWidth: "240px" }}
+              renderInput={(params) => <TextField {...params} />}
+              options={rules}
+              value={ruleType}
+              getOptionLabel={(option) => option.name}
+              renderOption={(props, option) => (
+                <li {...props} title={t(option.name)}>
+                  {option.name}
+                </li>
+              )}
+              onChange={(_, value) => value && setRuleType(value)}
+            />
+          </Item>
+          <Item sx={{ display: !(ruleType.required ?? true) ? "none" : "" }}>
+            <ListItemText primary={t("Rule Content")} />
 
-              {ruleType.name === "RULE-SET" && (
-                <Autocomplete
-                  size="small"
-                  sx={{ minWidth: "240px" }}
-                  renderInput={(params) => <TextField {...params} />}
-                  options={ruleSetList}
-                  value={ruleContent}
-                  onChange={(_, value) => value && setRuleContent(value)}
-                />
-              )}
-              {ruleType.name === "SUB-RULE" && (
-                <Autocomplete
-                  size="small"
-                  sx={{ minWidth: "240px" }}
-                  renderInput={(params) => <TextField {...params} />}
-                  options={subRuleList}
-                  value={ruleContent}
-                  onChange={(_, value) => value && setRuleContent(value)}
-                />
-              )}
-              {ruleType.name !== "RULE-SET" && ruleType.name !== "SUB-RULE" && (
-                <TextField
-                  autoComplete="off"
-                  size="small"
-                  sx={{ minWidth: "240px" }}
-                  value={ruleContent}
-                  required={ruleType.required ?? true}
-                  error={(ruleType.required ?? true) && !ruleContent}
-                  placeholder={ruleType.example}
-                  onChange={(e) => setRuleContent(e.target.value)}
-                />
-              )}
-            </Item>
-            <Item>
-              <ListItemText primary={t("Proxy Policy")} />
+            {ruleType.name === "RULE-SET" && (
               <Autocomplete
                 size="small"
                 sx={{ minWidth: "240px" }}
                 renderInput={(params) => <TextField {...params} />}
-                options={proxyPolicyList}
-                value={proxyPolicy}
-                renderOption={(props, option) => (
-                  <li {...props} title={t(option)}>
-                    {option}
-                  </li>
-                )}
-                onChange={(_, value) => value && setProxyPolicy(value)}
+                options={ruleSetList}
+                value={ruleContent}
+                onChange={(_, value) => value && setRuleContent(value)}
+              />
+            )}
+            {ruleType.name === "SUB-RULE" && (
+              <Autocomplete
+                size="small"
+                sx={{ minWidth: "240px" }}
+                renderInput={(params) => <TextField {...params} />}
+                options={subRuleList}
+                value={ruleContent}
+                onChange={(_, value) => value && setRuleContent(value)}
+              />
+            )}
+            {ruleType.name !== "RULE-SET" && ruleType.name !== "SUB-RULE" && (
+              <TextField
+                autoComplete="off"
+                size="small"
+                sx={{ minWidth: "240px" }}
+                value={ruleContent}
+                required={ruleType.required ?? true}
+                error={(ruleType.required ?? true) && !ruleContent}
+                placeholder={ruleType.example}
+                onChange={(e) => setRuleContent(e.target.value)}
+              />
+            )}
+          </Item>
+          <Item>
+            <ListItemText primary={t("Proxy Policy")} />
+            <Autocomplete
+              size="small"
+              sx={{ minWidth: "240px" }}
+              renderInput={(params) => <TextField {...params} />}
+              options={proxyPolicyList}
+              value={proxyPolicy}
+              renderOption={(props, option) => (
+                <li {...props} title={t(option)}>
+                  {option}
+                </li>
+              )}
+              onChange={(_, value) => value && setProxyPolicy(value)}
+            />
+          </Item>
+          {ruleType.noResolve && (
+            <Item>
+              <ListItemText primary={t("No Resolve")} />
+              <Switch
+                checked={noResolve}
+                onChange={() => setNoResolve(!noResolve)}
               />
             </Item>
-            {ruleType.noResolve && (
-              <Item>
-                <ListItemText primary={t("No Resolve")} />
-                <Switch
-                  checked={noResolve}
-                  onChange={() => setNoResolve(!noResolve)}
-                />
-              </Item>
-            )}
-          </List>
+          )}
           <Item>
             <Button
               fullWidth
@@ -443,8 +443,6 @@ export const RulesEditorViewer = (props: Props) => {
               onClick={() => {
                 try {
                   let raw = validateRule();
-                  console.log(raw);
-
                   if (prependSeq.includes(raw)) return;
                   setPrependSeq([...prependSeq, raw]);
                 } catch (err: any) {
@@ -463,7 +461,7 @@ export const RulesEditorViewer = (props: Props) => {
                 try {
                   let raw = validateRule();
                   if (appendSeq.includes(raw)) return;
-                  setPrependSeq([...appendSeq, raw]);
+                  setAppendSeq([...appendSeq, raw]);
                 } catch (err: any) {
                   Notice.error(err.message || err.toString());
                 }
@@ -472,102 +470,107 @@ export const RulesEditorViewer = (props: Props) => {
               {t("Append Rule")}
             </Button>
           </Item>
-        </div>
-        <div
-          style={{
-            display: "inline-block",
-            width: "50%",
-            height: "100%",
-            overflowY: "auto",
-            overflowX: "hidden",
-            padding: "0 10px",
-          }}
-        >
-          <div style={{ position: "sticky", top: 0, zIndex: 10 }}>
-            <BaseSearchBox
-              matchCase={false}
-              onSearch={(match) => setMatch(() => match)}
-            />
-          </div>
-          {prependSeq.length > 0 && (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={onPrependDragEnd}
-            >
-              <List sx={{ borderBottom: "solid 1px var(--divider-color)" }}>
-                <SortableContext
-                  items={prependSeq.map((x) => {
-                    return x;
-                  })}
-                >
-                  {prependSeq.map((item, index) => {
-                    return (
-                      <RuleItem
-                        key={`${item}-${index}`}
-                        type="prepend"
-                        ruleRaw={item}
-                        onDelete={() => {
-                          setPrependSeq(prependSeq.filter((v) => v !== item));
-                        }}
-                      />
-                    );
-                  })}
-                </SortableContext>
-              </List>
-            </DndContext>
-          )}
+        </List>
 
-          <List>
-            {ruleList
-              .filter((item) => match(item))
-              .map((item, index) => {
+        <List
+          sx={{ height: "calc(100% - 16px)", width: "50%", padding: "0 10px" }}
+        >
+          <BaseSearchBox
+            matchCase={false}
+            onSearch={(match) => setMatch(() => match)}
+          />
+          <Virtuoso
+            style={{ height: "calc(100% - 16px)", marginTop: "8px" }}
+            totalCount={
+              ruleList.length +
+              (prependSeq.length > 0 ? 1 : 0) +
+              (appendSeq.length > 0 ? 1 : 0)
+            }
+            increaseViewportBy={256}
+            itemContent={(index) => {
+              let shift = prependSeq.length > 0 ? 1 : 0;
+              if (prependSeq.length > 0 && index === 0) {
+                return (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={onPrependDragEnd}
+                  >
+                    <SortableContext
+                      items={prependSeq.map((x) => {
+                        return x;
+                      })}
+                    >
+                      {prependSeq.map((item, index) => {
+                        return (
+                          <RuleItem
+                            key={`${item}-${index}`}
+                            type="prepend"
+                            ruleRaw={item}
+                            onDelete={() => {
+                              setPrependSeq(
+                                prependSeq.filter((v) => v !== item)
+                              );
+                            }}
+                          />
+                        );
+                      })}
+                    </SortableContext>
+                  </DndContext>
+                );
+              } else if (index < ruleList.length + shift) {
+                let newIndex = index - shift;
                 return (
                   <RuleItem
-                    key={`${item}-${index}`}
-                    type={deleteSeq.includes(item) ? "delete" : "original"}
-                    ruleRaw={item}
+                    key={`${ruleList[newIndex]}-${index}`}
+                    type={
+                      deleteSeq.includes(ruleList[newIndex])
+                        ? "delete"
+                        : "original"
+                    }
+                    ruleRaw={ruleList[newIndex]}
                     onDelete={() => {
-                      if (deleteSeq.includes(item)) {
-                        setDeleteSeq(deleteSeq.filter((v) => v !== item));
+                      if (deleteSeq.includes(ruleList[newIndex])) {
+                        setDeleteSeq(
+                          deleteSeq.filter((v) => v !== ruleList[newIndex])
+                        );
                       } else {
-                        setDeleteSeq([...deleteSeq, item]);
+                        setDeleteSeq((prev) => [...prev, ruleList[newIndex]]);
                       }
                     }}
                   />
                 );
-              })}
-          </List>
-
-          {appendSeq.length > 0 && (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={onAppendDragEnd}
-            >
-              <SortableContext
-                items={appendSeq.map((x) => {
-                  return x;
-                })}
-              >
-                <List sx={{ borderTop: "solid 1px var(--divider-color)" }}>
-                  {appendSeq.map((item, index) => {
-                    return (
-                      <RuleItem
-                        key={`${item}-${index}`}
-                        type="append"
-                        ruleRaw={item}
-                        onDelete={() => {
-                          setAppendSeq(appendSeq.filter((v) => v !== item));
-                        }}
-                      />
-                    );
-                  })}
-                </List>
-              </SortableContext>
-            </DndContext>
-          )}
-        </div>
+              } else {
+                return (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={onAppendDragEnd}
+                  >
+                    <SortableContext
+                      items={appendSeq.map((x) => {
+                        return x;
+                      })}
+                    >
+                      {appendSeq.map((item, index) => {
+                        return (
+                          <RuleItem
+                            key={`${item}-${index}`}
+                            type="append"
+                            ruleRaw={item}
+                            onDelete={() => {
+                              setAppendSeq(appendSeq.filter((v) => v !== item));
+                            }}
+                          />
+                        );
+                      })}
+                    </SortableContext>
+                  </DndContext>
+                );
+              }
+            }}
+          />
+        </List>
       </DialogContent>
 
       <DialogActions>
