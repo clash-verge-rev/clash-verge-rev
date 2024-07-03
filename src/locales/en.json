@@ -64,6 +64,8 @@
   "Delete Rule": "Delete Rule",
   "Rule Condition Required": "Rule Condition Required",
   "Invalid Rule": "Invalid Rule",
+  "Advanced": "Advanced",
+  "Visible": "Visible",
   "DOMAIN": "Matches the full domain name",
   "DOMAIN-SUFFIX": "Matches the domain suffix",
   "DOMAIN-KEYWORD": "Matches the domain keyword",

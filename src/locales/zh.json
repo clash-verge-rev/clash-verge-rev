@@ -64,6 +64,8 @@
   "Delete Rule": "删除规则",
   "Rule Condition Required": "规则条件缺失",
   "Invalid Rule": "无效规则",
+  "Advanced": "高级",
+  "Visible": "可视化",
   "DOMAIN": "匹配完整域名",
   "DOMAIN-SUFFIX": "匹配域名后缀",
   "DOMAIN-KEYWORD": "匹配域名关键字",
