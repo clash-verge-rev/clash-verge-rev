@@ -8,7 +8,7 @@ pub struct SeqMap {
 }
 
 pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
-    let prepend = seq_map.prepend;
+    let mut prepend = seq_map.prepend;
     let append = seq_map.append;
     let delete = seq_map.delete;
 
@@ -16,7 +16,7 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
         val.as_sequence().unwrap_or(&Sequence::default()).clone()
     });
     let mut seq = origin_seq.clone();
-
+    prepend.reverse();
     for item in prepend {
         seq.insert(0, item);
     }
