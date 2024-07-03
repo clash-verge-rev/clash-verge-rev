@@ -42,7 +42,7 @@
     "foxact": "^0.2.35",
     "i18next": "^23.11.5",
     "lodash-es": "^4.17.21",
-    "meta-json-schema": "1.18.4-beta6",
+    "meta-json-schema": "1.18.6",
     "monaco-editor": "^0.50.0",
     "monaco-yaml": "^5.2.0",
     "nanoid": "^5.0.7",
