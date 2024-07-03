@@ -18,9 +18,17 @@ interface Props {
 
 export const RuleItem = (props: Props) => {
   let { type, ruleRaw, onDelete } = props;
+  const sortable = type === "prepend" || type === "append";
   const rule = ruleRaw.replace(",no-resolve", "").split(",");
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: ruleRaw });
+  const { attributes, listeners, setNodeRef, transform, transition } = sortable
+    ? useSortable({ id: ruleRaw })
+    : {
+        attributes: {},
+        listeners: {},
+        setNodeRef: null,
+        transform: null,
+        transition: null,
+      };
   return (
     <ListItem
       sx={({ palette }) => ({
