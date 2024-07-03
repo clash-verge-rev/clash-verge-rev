@@ -247,33 +247,6 @@ impl PrfItem {
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
         let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
-        if merge.is_none() {
-            let merge_item = PrfItem::from_merge(None)?;
-            Config::profiles().data().append_item(merge_item.clone())?;
-            merge = merge_item.uid;
-        }
-        if script.is_none() {
-            let script_item = PrfItem::from_script(None)?;
-            Config::profiles().data().append_item(script_item.clone())?;
-            script = script_item.uid;
-        }
-        if rules.is_none() {
-            let rules_item = PrfItem::from_rules()?;
-            Config::profiles().data().append_item(rules_item.clone())?;
-            rules = rules_item.uid;
-        }
-        if proxies.is_none() {
-            let proxies_item = PrfItem::from_proxies()?;
-            Config::profiles()
-                .data()
-                .append_item(proxies_item.clone())?;
-            proxies = proxies_item.uid;
-        }
-        if groups.is_none() {
-            let groups_item = PrfItem::from_groups()?;
-            Config::profiles().data().append_item(groups_item.clone())?;
-            groups = groups_item.uid;
-        }
         // 使用软件自己的代理
         if self_proxy {
             let port = Config::verge()
@@ -398,6 +371,34 @@ impl PrfItem {
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
             bail!("profile does not contain `proxies` or `proxy-providers`");
+        }
+
+        if merge.is_none() {
+            let merge_item = PrfItem::from_merge(None)?;
+            Config::profiles().data().append_item(merge_item.clone())?;
+            merge = merge_item.uid;
+        }
+        if script.is_none() {
+            let script_item = PrfItem::from_script(None)?;
+            Config::profiles().data().append_item(script_item.clone())?;
+            script = script_item.uid;
+        }
+        if rules.is_none() {
+            let rules_item = PrfItem::from_rules()?;
+            Config::profiles().data().append_item(rules_item.clone())?;
+            rules = rules_item.uid;
+        }
+        if proxies.is_none() {
+            let proxies_item = PrfItem::from_proxies()?;
+            Config::profiles()
+                .data()
+                .append_item(proxies_item.clone())?;
+            proxies = proxies_item.uid;
+        }
+        if groups.is_none() {
+            let groups_item = PrfItem::from_groups()?;
+            Config::profiles().data().append_item(groups_item.clone())?;
+            groups = groups_item.uid;
         }
 
         Ok(PrfItem {
