@@ -355,9 +355,10 @@ export const RulesEditorViewer = (props: Props) => {
       throw new Error(t("Invalid Rule"));
     }
 
-    return `${ruleType.name}${
-      ruleContent ? "," + ruleContent : ""
-    },${proxyPolicy}${ruleType.noResolve && noResolve ? ",no-resolve" : ""}`;
+    const condition = ruleType.required ?? true ? ruleContent : "";
+    return `${ruleType.name}${condition ? "," + condition : ""},${proxyPolicy}${
+      ruleType.noResolve && noResolve ? ",no-resolve" : ""
+    }`;
   };
 
   const handleSave = useLockFn(async () => {
