@@ -40,6 +40,8 @@ import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
 
 interface Props {
+  groupsUid: string;
+  mergeUid: string;
   profileUid: string;
   title?: string | ReactNode;
   property: string;
@@ -230,7 +232,16 @@ const rules: {
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
 export const RulesEditorViewer = (props: Props) => {
-  const { title, profileUid, property, open, onClose, onSave } = props;
+  const {
+    title,
+    groupsUid,
+    mergeUid,
+    profileUid,
+    property,
+    open,
+    onClose,
+    onSave,
+  } = props;
   const { t } = useTranslation();
   const themeMode = useThemeMode();
 
@@ -291,11 +302,11 @@ export const RulesEditorViewer = (props: Props) => {
   };
   const fetchContent = async () => {
     let data = await readProfileFile(property);
-    let obj = yaml.load(data) as { prepend: []; append: []; delete: [] };
+    let obj = yaml.load(data) as { prepend: []; append: []; delete: [] } | null;
 
-    setPrependSeq(obj.prepend || []);
-    setAppendSeq(obj.append || []);
-    setDeleteSeq(obj.delete || []);
+    setPrependSeq(obj?.prepend || []);
+    setAppendSeq(obj?.append || []);
+    setDeleteSeq(obj?.delete || []);
 
     setPrevData(data);
     setCurrData(data);
@@ -305,10 +316,14 @@ export const RulesEditorViewer = (props: Props) => {
     if (currData === "") return;
     if (visible !== true) return;
 
-    let obj = yaml.load(currData) as { prepend: []; append: []; delete: [] };
-    setPrependSeq(obj.prepend || []);
-    setAppendSeq(obj.append || []);
-    setDeleteSeq(obj.delete || []);
+    let obj = yaml.load(currData) as {
+      prepend: [];
+      append: [];
+      delete: [];
+    } | null;
+    setPrependSeq(obj?.prepend || []);
+    setAppendSeq(obj?.append || []);
+    setDeleteSeq(obj?.delete || []);
   }, [visible]);
 
   useEffect(() => {
@@ -320,26 +335,45 @@ export const RulesEditorViewer = (props: Props) => {
 
   const fetchProfile = async () => {
     let data = await readProfileFile(profileUid);
-    let groupsObj = yaml.load(data) as { "proxy-groups": [] };
-    let rulesObj = yaml.load(data) as { rules: [] };
-    let ruleSetObj = yaml.load(data) as { "rule-providers": [] };
-    let subRuleObj = yaml.load(data) as { "sub-rules": [] };
+    let groupsData = await readProfileFile(groupsUid);
+    let mergeData = await readProfileFile(mergeUid);
+    let globalMergeData = await readProfileFile("Merge");
+
+    let rulesObj = yaml.load(data) as { rules: [] } | null;
+
+    let originGroupsObj = yaml.load(data) as { "proxy-groups": [] } | null;
+    let originGroups = originGroupsObj?.["proxy-groups"] || [];
+    let moreGroupsObj = yaml.load(groupsData) as { "proxy-groups": [] } | null;
+    let moreGroups = moreGroupsObj?.["proxy-groups"] || [];
+    let groups = originGroups.concat(moreGroups);
+
+    let originRuleSetObj = yaml.load(data) as { "rule-providers": {} } | null;
+    let originRuleSet = originRuleSetObj?.["rule-providers"] || {};
+    let moreRuleSetObj = yaml.load(mergeData) as {
+      "rule-providers": {};
+    } | null;
+    let moreRuleSet = moreRuleSetObj?.["rule-providers"] || {};
+    let globalRuleSetObj = yaml.load(globalMergeData) as {
+      "rule-providers": {};
+    } | null;
+    let globalRuleSet = globalRuleSetObj?.["rule-providers"] || {};
+    let ruleSet = Object.assign({}, originRuleSet, moreRuleSet, globalRuleSet);
+
+    let originSubRuleObj = yaml.load(data) as { "sub-rules": {} } | null;
+    let originSubRule = originSubRuleObj?.["sub-rules"] || {};
+    let moreSubRuleObj = yaml.load(mergeData) as { "sub-rules": {} } | null;
+    let moreSubRule = moreSubRuleObj?.["sub-rules"] || {};
+    let globalSubRuleObj = yaml.load(globalMergeData) as {
+      "sub-rules": {};
+    } | null;
+    let globalSubRule = globalSubRuleObj?.["sub-rules"] || {};
+    let subRule = Object.assign({}, originSubRule, moreSubRule, globalSubRule);
     setProxyPolicyList(
-      builtinProxyPolicies.concat(
-        groupsObj["proxy-groups"]
-          ? groupsObj["proxy-groups"].map((item: any) => item.name)
-          : []
-      )
+      builtinProxyPolicies.concat(groups.map((group: any) => group.name))
     );
-    setRuleList(rulesObj.rules || []);
-    setRuleSetList(
-      ruleSetObj["rule-providers"]
-        ? Object.keys(ruleSetObj["rule-providers"])
-        : []
-    );
-    setSubRuleList(
-      subRuleObj["sub-rules"] ? Object.keys(subRuleObj["sub-rules"]) : []
-    );
+    setRuleSetList(Object.keys(ruleSet));
+    setSubRuleList(Object.keys(subRule));
+    setRuleList(rulesObj?.rules || []);
   };
 
   useEffect(() => {
