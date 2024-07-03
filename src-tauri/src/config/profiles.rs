@@ -1,4 +1,4 @@
-use super::prfitem::PrfItem;
+use super::{prfitem::PrfItem, PrfOption};
 use crate::utils::{dirs, help};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -205,6 +205,7 @@ impl IProfiles {
                     each.extra = item.extra;
                     each.updated = item.updated;
                     each.home = item.home;
+                    each.option = PrfOption::merge(each.option.clone(), item.option);
                     // save the file data
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
