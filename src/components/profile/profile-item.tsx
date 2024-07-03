@@ -501,10 +501,10 @@ export const ProfileItem = (props: Props) => {
       />
       <EditorViewer
         open={groupsOpen}
-        initialData={readProfileFile(option?.proxies ?? "")}
+        initialData={readProfileFile(option?.groups ?? "")}
         language="yaml"
         onSave={async (prev, curr) => {
-          await saveProfileFile(option?.proxies ?? "", curr ?? "");
+          await saveProfileFile(option?.groups ?? "", curr ?? "");
           onSave && onSave(prev, curr);
         }}
         onClose={() => setGroupsOpen(false)}
