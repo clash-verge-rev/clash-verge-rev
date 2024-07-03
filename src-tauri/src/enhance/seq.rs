@@ -13,7 +13,7 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
     let delete = seq_map.delete;
 
     let origin_seq = config.get(&name).map_or(Sequence::default(), |val| {
-        val.as_sequence().unwrap().clone()
+        val.as_sequence().unwrap_or(&Sequence::default()).clone()
     });
     let mut seq = origin_seq.clone();
 
