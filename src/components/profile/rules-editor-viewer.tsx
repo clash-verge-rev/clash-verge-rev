@@ -391,12 +391,13 @@ export const RulesEditorViewer = (props: Props) => {
         }
       </DialogTitle>
 
-      <DialogContent sx={{ display: "flex", width: "auto", height: "100vh" }}>
+      <DialogContent
+        sx={{ display: "flex", width: "auto", height: "calc(100vh - 185px)" }}
+      >
         {visible ? (
           <>
             <List
               sx={{
-                height: "calc(100% - 16px)",
                 width: "50%",
                 padding: "0 10px",
               }}
@@ -520,7 +521,6 @@ export const RulesEditorViewer = (props: Props) => {
 
             <List
               sx={{
-                height: "calc(100% - 16px)",
                 width: "50%",
                 padding: "0 10px",
               }}
@@ -530,7 +530,7 @@ export const RulesEditorViewer = (props: Props) => {
                 onSearch={(match) => setMatch(() => match)}
               />
               <Virtuoso
-                style={{ height: "calc(100% - 16px)", marginTop: "8px" }}
+                style={{ height: "calc(100% - 24px)", marginTop: "8px" }}
                 totalCount={
                   filteredRuleList.length +
                   (prependSeq.length > 0 ? 1 : 0) +

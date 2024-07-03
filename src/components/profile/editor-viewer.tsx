@@ -162,7 +162,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
       <DialogTitle>{title}</DialogTitle>
 
-      <DialogContent sx={{ width: "auto", height: "100vh" }}>
+      <DialogContent sx={{ width: "auto", height: "calc(100vh - 185px)" }}>
         <MonacoEditor
           language={language}
           theme={themeMode === "light" ? "vs" : "vs-dark"}
