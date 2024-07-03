@@ -483,6 +483,8 @@ export const ProfileItem = (props: Props) => {
         onClose={() => setFileOpen(false)}
       />
       <RulesEditorViewer
+        groupsUid={option?.groups ?? ""}
+        mergeUid={option?.merge ?? ""}
         profileUid={uid}
         property={option?.rules ?? ""}
         open={rulesOpen}
