@@ -211,27 +211,27 @@ export const ProfileItem = (props: Props) => {
     {
       label: "Edit Rules",
       handler: onEditRules,
-      disabled: option?.rules === null,
+      disabled: !option?.rules,
     },
-    // {
-    //   label: "Edit Proxies",
-    //   handler: onEditProxies,
-    //   disabled: option?.proxies === null,
-    // },
-    // {
-    //   label: "Edit Groups",
-    //   handler: onEditGroups,
-    //   disabled: option?.groups === null,
-    // },
+    {
+      label: "Edit Proxies",
+      handler: onEditProxies,
+      disabled: !option?.proxies,
+    },
+    {
+      label: "Edit Groups",
+      handler: onEditGroups,
+      disabled: !option?.groups,
+    },
     {
       label: "Extend Config",
       handler: onEditMerge,
-      disabled: option?.merge === null,
+      disabled: !option?.merge,
     },
     {
       label: "Extend Script",
       handler: onEditScript,
-      disabled: option?.script === null,
+      disabled: !option?.script,
     },
     { label: "Open File", handler: onOpenFile, disabled: false },
     { label: "Update", handler: () => onUpdate(0), disabled: false },
@@ -252,27 +252,27 @@ export const ProfileItem = (props: Props) => {
     {
       label: "Edit Rules",
       handler: onEditRules,
-      disabled: option?.rules === null,
+      disabled: !option?.rules,
     },
-    // {
-    //   label: "Edit Proxies",
-    //   handler: onEditProxies,
-    //   disabled: option?.proxies === null,
-    // },
-    // {
-    //   label: "Edit Groups",
-    //   handler: onEditGroups,
-    //   disabled: option?.groups === null,
-    // },
+    {
+      label: "Edit Proxies",
+      handler: onEditProxies,
+      disabled: !option?.proxies,
+    },
+    {
+      label: "Edit Groups",
+      handler: onEditGroups,
+      disabled: !option?.groups,
+    },
     {
       label: "Extend Config",
       handler: onEditMerge,
-      disabled: option?.merge === null,
+      disabled: !option?.merge,
     },
     {
       label: "Extend Script",
       handler: onEditScript,
-      disabled: option?.script === null,
+      disabled: !option?.script,
     },
     { label: "Open File", handler: onOpenFile, disabled: false },
     {
