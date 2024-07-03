@@ -798,7 +798,7 @@ dependencies = [
  "log4rs",
  "nanoid",
  "once_cell",
- "open 5.1.4",
+ "open 5.2.0",
  "parking_lot",
  "percent-encoding",
  "port_scanner",
@@ -3623,9 +3623,9 @@ dependencies = [
 
 [[package]]
 name = "open"
-version = "5.1.4"
+version = "5.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5ca541f22b1c46d4bb9801014f234758ab4297e7870b904b6a8415b980a7388"
+checksum = "9d2c909a3fce3bd80efef4cd1c6c056bd9376a8fe06fcfdbebaf32cb485a7e37"
 dependencies = [
  "is-wsl",
  "libc",
