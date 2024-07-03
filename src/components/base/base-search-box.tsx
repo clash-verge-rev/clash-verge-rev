@@ -116,6 +116,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
+                  color={searchOptions.matchCase ? "primary" : "default"}
                   onClick={() => {
                     setSearchOptions((pre) => ({
                       ...pre,
@@ -126,7 +127,6 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                     fontSize="inherit"
                     component={matchCaseIcon}
                     {...iconStyle}
-                    aria-label={searchOptions.matchCase ? "active" : "inactive"}
                   />
                 </IconButton>
               </Tooltip>
@@ -134,6 +134,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
+                  color={searchOptions.matchWholeWord ? "primary" : "default"}
                   onClick={() => {
                     setSearchOptions((pre) => ({
                       ...pre,
@@ -144,9 +145,6 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                     fontSize="inherit"
                     component={matchWholeWordIcon}
                     {...iconStyle}
-                    aria-label={
-                      searchOptions.matchWholeWord ? "active" : "inactive"
-                    }
                   />
                 </IconButton>
               </Tooltip>
@@ -154,6 +152,9 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
+                  color={
+                    searchOptions.useRegularExpression ? "primary" : "default"
+                  }
                   onClick={() => {
                     setSearchOptions((pre) => ({
                       ...pre,
@@ -163,9 +164,6 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                   <SvgIcon
                     fontSize="inherit"
                     component={useRegularExpressionIcon}
-                    aria-label={
-                      searchOptions.useRegularExpression ? "active" : "inactive"
-                    }
                     {...iconStyle}
                   />
                 </IconButton>
@@ -180,11 +178,5 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   "& .MuiInputBase-root": {
     background: theme.palette.mode === "light" ? "#fff" : undefined,
     paddingRight: "4px",
-  },
-  "& .MuiInputBase-root svg[aria-label='active'] path": {
-    fill: theme.palette.primary.light,
-  },
-  "& .MuiInputBase-root svg[aria-label='inactive'] path": {
-    fill: "#A7A7A7",
   },
 }));
