@@ -1,6 +1,6 @@
 # Maintainer: oomeow <oomeow@outlook.com>
 
-pkgname=clash-verge-rev-patch-alpha-bin
+pkgname=clash-verge-rev-alpha-bin
 _pkgname=clash-verge-rev
 pkgver=1.6.7
 pkgrel=1
@@ -9,9 +9,9 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/oomeow/clash-verge-rev"
 license=('GPL3')
 depends=('webkit2gtk' 'gtk3' 'libayatana-appindicator')
-conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "$_pkgname-patch-bin" "$_pkgname-patch-alpha-bin" "clash-verge" "clash-verge-bin" "clash-nyanpasu" "clash-nyanpasu-bin" "clash-nyanpasu-git" "clash-meta")
+conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "clash-verge" "clash-verge-bin" "clash-nyanpasu" "clash-nyanpasu-bin" "clash-nyanpasu-git" "clash-meta")
 
-source_x86_64=("clash-verge_${pkgver}-patch_amd64.deb")
+source_x86_64=("clash-verge_${pkgver}_amd64.deb")
 
 sha512sums_x86_64=('SKIP')
 

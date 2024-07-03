@@ -30,7 +30,7 @@ read -p "install now? (y/n): " yay_install
 ARCH_PKG_VERSION=$(grep "^pkgver=" ${CURRENT_SCRIPT_DIR}/PKGBUILD | sed 's/^pkgver=//')
 if [[ "$yay_install" =~ ^[Yy]$ ]]; then
     echo "installing..."
-    yay -U clash-verge-rev-patch-alpha-bin-${ARCH_PKG_VERSION}-1-x86_64.pkg.tar.zst
+    yay -U clash-verge-rev-alpha-bin-${ARCH_PKG_VERSION}-1-x86_64.pkg.tar.zst
     echo -e "\e[32m install finished."
 else
     echo -e "\e[32m skip install."
