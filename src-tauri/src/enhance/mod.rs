@@ -59,6 +59,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         groups_item,
         global_merge,
         global_script,
+        profile_name,
     ) = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
@@ -123,6 +124,12 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
             });
 
+        let name = profiles
+            .get_item(&profiles.get_current().unwrap_or_default())
+            .ok()
+            .and_then(|item| item.name.clone())
+            .unwrap_or_default();
+
         (
             current,
             merge,
@@ -132,6 +139,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             groups,
             global_merge,
             global_script,
+            name,
         )
     };
 
@@ -147,7 +155,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Script(script) = global_script.data {
         let mut logs = vec![];
 
-        match use_script(script, config.to_owned()) {
+        match use_script(script, config.to_owned(), profile_name.to_owned()) {
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
@@ -180,7 +188,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Script(script) = script_item.data {
         let mut logs = vec![];
 
-        match use_script(script, config.to_owned()) {
+        match use_script(script, config.to_owned(), profile_name.to_owned()) {
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
@@ -239,7 +247,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             .for_each(|item| {
                 log::debug!(target: "app", "run builtin script {}", item.uid);
                 if let ChainType::Script(script) = item.data {
-                    match use_script(script, config.to_owned()) {
+                    match use_script(script, config.to_owned(), "".to_string()) {
                         Ok((res_config, _)) => {
                             config = res_config;
                         }
