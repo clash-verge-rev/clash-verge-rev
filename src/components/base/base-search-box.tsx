@@ -1,12 +1,10 @@
-import { Box, IconButton, SvgIcon, TextField, styled } from "@mui/material";
-import Tooltip from "@mui/material/Tooltip";
-import { useEffect, useState } from "react";
-
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
 import matchWholeWordIcon from "@/assets/image/component/match_whole_word.svg?react";
 import useRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
 import { ClearRounded } from "@mui/icons-material";
-import { debounce } from "lodash-es";
+import { Box, IconButton, SvgIcon, TextField, Tooltip } from "@mui/material";
+import { useDebounce, useMemoizedFn } from "ahooks";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 type SearchProps = {
@@ -22,10 +20,11 @@ type SearchProps = {
   ) => void;
 };
 
-export const BaseSearchBox = styled((props: SearchProps) => {
+export const BaseSearchBox = (props: SearchProps) => {
   const { placeholder, onSearch } = props;
   const { t } = useTranslation();
   const [filterText, setFilterText] = useState("");
+  const debounceFilterText = useDebounce(filterText, { wait: 500 });
   const [searchOptions, setSearchOptions] = useState({
     matchCase: true,
     matchWholeWord: false,
@@ -43,15 +42,15 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   };
 
   useEffect(() => {
-    onChange(filterText);
-  }, [filterText, searchOptions]);
+    onChange(debounceFilterText);
+  }, [debounceFilterText, searchOptions]);
 
-  const onChange = debounce((text: string) => {
+  const onChange = useMemoizedFn((text: string) => {
     onSearch((content) => doSearch([content], text), {
       text: text,
       ...searchOptions,
     });
-  }, 500);
+  });
 
   const doSearch = (searchList: string[], searchItem: string) => {
     setErrorMessage("");
@@ -87,15 +86,20 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   return (
     <Tooltip title={errorMessage} placement="bottom-start">
       <TextField
-        value={filterText}
         hiddenLabel
         fullWidth
         size="small"
         autoComplete="off"
         variant="outlined"
         spellCheck="false"
+        value={filterText}
         placeholder={placeholder ?? t("Filter conditions")}
-        sx={{ input: { py: 0.65, px: 1.25 } }}
+        sx={[
+          { input: { py: 0.65, px: 1.25 } },
+          ({ palette: { mode } }) => {
+            return { ...(mode === "light" && { backgroundColor: "#fff" }) };
+          },
+        ]}
         onChange={(e) => {
           setFilterText(() => e.target.value);
         }}
@@ -106,6 +110,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
                 <Tooltip title={t("Clear")}>
                   <IconButton
                     size="small"
+                    color="primary"
                     sx={{ p: 0.5 }}
                     onClick={() => setFilterText("")}>
                     <ClearRounded fontSize="inherit" />
@@ -174,9 +179,4 @@ export const BaseSearchBox = styled((props: SearchProps) => {
       />
     </Tooltip>
   );
-})(({ theme }) => ({
-  "& .MuiInputBase-root": {
-    background: theme.palette.mode === "light" ? "#fff" : undefined,
-    paddingRight: "4px",
-  },
-}));
+};

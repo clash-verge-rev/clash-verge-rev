@@ -5,7 +5,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { closeAllConnections, getClashConfig } from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
 import { Box, Button, ButtonGroup } from "@mui/material";
-import { useLockFn } from "ahooks";
+import { useLockFn, useMemoizedFn } from "ahooks";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
@@ -24,15 +24,17 @@ const ProxyPage = () => {
 
   const curMode = clashConfig?.mode?.toLowerCase();
 
-  const onChangeMode = useLockFn(async (mode: string) => {
-    // await updateConfigs({ mode });
-    await patchClashConfig({ mode });
-    mutateClash();
-    // 断开连接
-    if (mode !== curMode && verge?.auto_close_connection) {
-      closeAllConnections();
-    }
-  });
+  const onChangeMode = useMemoizedFn(
+    useLockFn(async (mode: string) => {
+      // await updateConfigs({ mode });
+      await patchClashConfig({ mode });
+      mutateClash();
+      // 断开连接
+      if (mode !== curMode && verge?.auto_close_connection) {
+        closeAllConnections();
+      }
+    }),
+  );
 
   useEffect(() => {
     if (curMode && !modeList.includes(curMode)) {

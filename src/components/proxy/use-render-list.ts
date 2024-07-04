@@ -1,12 +1,12 @@
-import useSWR from "swr";
-import { useEffect, useMemo } from "react";
-import { getProxies } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
-import { filterSort } from "./use-filter-sort";
 import { useWindowSize } from "@/hooks/use-window-size";
+import { getProxies } from "@/services/api";
+import { useEffect, useMemo } from "react";
+import useSWR from "swr";
+import { filterSort } from "./use-filter-sort";
 import {
-  useHeadStateNew,
   DEFAULT_STATE,
+  useHeadStateNew,
   type HeadState,
 } from "./use-head-state";
 

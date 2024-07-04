@@ -89,7 +89,7 @@ export const ProviderButton = () => {
         cancelBtn={t("Cancel")}
         onClose={() => setOpen(false)}
         onCancel={() => setOpen(false)}>
-        <List sx={{ py: 0, minHeight: 250 }}>
+        <List sx={{ py: 0 }}>
           {Object.entries(data || {}).map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
             const sub = item.subscriptionInfo;
@@ -105,7 +105,7 @@ export const ProviderButton = () => {
               <ListItem
                 sx={{
                   p: 0,
-                  borderRadius: "10px",
+                  borderRadius: "8px",
                   border: "solid 2px var(--divider-color)",
                   mb: 1,
                 }}
@@ -113,7 +113,7 @@ export const ProviderButton = () => {
                 <ListItemText
                   sx={{ px: 1 }}
                   primary={
-                    <>
+                    <Box display={"flex"} alignItems={"center"}>
                       <Typography
                         variant="h6"
                         component="span"
@@ -121,10 +121,8 @@ export const ProviderButton = () => {
                         title={key}>
                         {key}
                       </Typography>
-                      <TypeBox component="span" sx={{ marginLeft: "8px" }}>
-                        {item.proxies.length}
-                      </TypeBox>
-                    </>
+                      <TypeBox component="span">{item.proxies.length}</TypeBox>
+                    </Box>
                   }
                   secondary={
                     <>
@@ -183,9 +181,13 @@ const TypeBox = styled(Box)(({ theme }) => ({
   color: alpha(theme.palette.secondary.main, 0.8),
   borderRadius: 4,
   fontSize: 10,
+  marginLeft: "8px",
   marginRight: "4px",
   padding: "0 2px",
-  lineHeight: 1.25,
+  minWidth: "15px",
+  textAlign: "center",
+  height: "15px",
+  lineHeight: "15px",
 }));
 
 const StyledTypeBox = styled(Box)(({ theme }) => ({
@@ -196,8 +198,10 @@ const StyledTypeBox = styled(Box)(({ theme }) => ({
   borderRadius: 4,
   fontSize: 10,
   marginRight: "4px",
-  padding: "0 2px",
-  lineHeight: 1.25,
+  textAlign: "center",
+  padding: "1px 4px",
+  height: "15px",
+  lineHeight: "15px",
 }));
 
 const boxStyle = {

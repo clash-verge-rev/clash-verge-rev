@@ -54,13 +54,18 @@ import { Box, Button, Divider, IconButton, Stack } from "@mui/material";
 import { readText } from "@tauri-apps/api/clipboard";
 import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/api/fs";
-import { useLockFn } from "ahooks";
+import { useLockFn, useMemoizedFn } from "ahooks";
 import { useLocalStorage } from "foxact/use-local-storage";
 import { throttle } from "lodash-es";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
+
+interface ActivatingProfile {
+  profile: string;
+  chain: string;
+}
 
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
   return [...new Array(20)].map((_, index) => (
@@ -75,11 +80,6 @@ const FlexDecorationItems = memo(function FlexDecoratorItems() {
       }}></i>
   ));
 });
-
-interface ActivatingProfile {
-  profile: string;
-  chain: string;
-}
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -184,20 +184,19 @@ const ProfilePage = () => {
     };
   }, []);
 
-  const getDraggingIndex = (
-    type: "chain" | "profile",
-    id: UniqueIdentifier | undefined,
-  ) => {
-    if (id) {
-      if (type === "profile") {
-        return profileList.findIndex((item) => item.uid === id);
+  const getDraggingIndex = useMemoizedFn(
+    (type: "chain" | "profile", id: UniqueIdentifier | undefined) => {
+      if (id) {
+        if (type === "profile") {
+          return profileList.findIndex((item) => item.uid === id);
+        } else {
+          return chainList.findIndex((item) => item.uid === id);
+        }
       } else {
-        return chainList.findIndex((item) => item.uid === id);
+        return -1;
       }
-    } else {
-      return -1;
-    }
-  };
+    },
+  );
 
   const draggingProfileIndex = getDraggingIndex(
     "profile",
@@ -205,7 +204,7 @@ const ProfilePage = () => {
   );
   const draggingChainIndex = getDraggingIndex("chain", draggingChainItem?.uid);
 
-  const handleProfileDragEnd = async (event: DragEndEvent) => {
+  const handleProfileDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
     setDraggingProfileItem(null);
     const { active, over } = event;
     if (over) {
@@ -220,9 +219,9 @@ const ProfilePage = () => {
         mutateProfiles();
       }
     }
-  };
+  });
 
-  const handleChainDragEnd = async (event: DragEndEvent) => {
+  const handleChainDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
     setDraggingChainItem(null);
     const { active, over } = event;
     if (over) {
@@ -252,9 +251,9 @@ const ProfilePage = () => {
         }
       }
     }
-  };
+  });
 
-  const onImport = async () => {
+  const onImport = useMemoizedFn(async () => {
     if (!url) return;
     setLoading(true);
 
@@ -282,30 +281,33 @@ const ProfilePage = () => {
       setDisabled(false);
       setLoading(false);
     }
-  };
-
-  const onSelect = useLockFn(async (current: string, force: boolean) => {
-    if (!force && current === profiles.current) return;
-    // 避免大多数情况下loading态闪烁
-    const reset = setTimeout(
-      () => setActivating((o) => ({ profile: current, chain: o?.chain ?? "" })),
-      100,
-    );
-    try {
-      await patchProfiles({ current });
-      mutateLogs();
-      closeAllConnections();
-      setTimeout(() => activateSelected(), 2000);
-      Notice.success(t("Profile Switched"), 1000);
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString(), 4000);
-    } finally {
-      clearTimeout(reset);
-      setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
-    }
   });
 
-  const setActiveChainList = async (newList: IProfileItem[]) => {
+  const onSelect = useMemoizedFn(
+    useLockFn(async (current: string, force: boolean) => {
+      if (!force && current === profiles.current) return;
+      // 避免大多数情况下loading态闪烁
+      const reset = setTimeout(
+        () =>
+          setActivating((o) => ({ profile: current, chain: o?.chain ?? "" })),
+        100,
+      );
+      try {
+        await patchProfiles({ current });
+        mutateLogs();
+        closeAllConnections();
+        setTimeout(() => activateSelected(), 2000);
+        Notice.success(t("Profile Switched"), 1000);
+      } catch (err: any) {
+        Notice.error(err?.message || err.toString(), 4000);
+      } finally {
+        clearTimeout(reset);
+        setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
+      }
+    }),
+  );
+
+  const setActiveChainList = useMemoizedFn(async (newList: IProfileItem[]) => {
     const newActiveChain = newList
       .filter((item) => chain.includes(item.uid))
       .map((item) => item.uid);
@@ -334,96 +336,106 @@ const ProfilePage = () => {
         setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
       }
     }
-  };
-
-  const onEnhance = useLockFn(async () => {
-    try {
-      setActivating((o) => ({
-        profile: profiles.current!,
-        chain: o?.chain ?? "",
-      }));
-      await enhanceProfiles();
-      mutateLogs();
-      Notice.success(t("Profile Reactivated"), 1000);
-    } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
-    } finally {
-      setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
-    }
   });
 
-  const onEnable = useLockFn(async (uid: string) => {
-    if (chain.includes(uid)) return;
-    try {
-      setActivating((o) => ({ profile: o?.profile ?? "", chain: uid }));
-      const newChain = [...chain, uid];
-      await patchProfiles({ chain: newChain });
-      mutateLogs();
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString());
-    } finally {
-      setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
-    }
-  });
+  const onEnhance = useMemoizedFn(
+    useLockFn(async () => {
+      try {
+        setActivating((o) => ({
+          profile: profiles.current!,
+          chain: o?.chain ?? "",
+        }));
+        await enhanceProfiles();
+        mutateLogs();
+        Notice.success(t("Profile Reactivated"), 1000);
+      } catch (err: any) {
+        Notice.error(err.message || err.toString(), 3000);
+      } finally {
+        setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
+      }
+    }),
+  );
 
-  const onDisable = useLockFn(async (uid: string) => {
-    if (!chain.includes(uid)) return;
-    try {
-      setActivating((o) => ({ profile: o?.profile ?? "", chain: uid }));
-      const newChain = chain.filter((i) => i !== uid);
-      await patchProfiles({ chain: newChain });
-      mutateLogs();
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString());
-    } finally {
-      setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
-    }
-  });
+  const onEnable = useMemoizedFn(
+    useLockFn(async (uid: string) => {
+      if (chain.includes(uid)) return;
+      try {
+        setActivating((o) => ({ profile: o?.profile ?? "", chain: uid }));
+        const newChain = [...chain, uid];
+        await patchProfiles({ chain: newChain });
+        mutateLogs();
+      } catch (err: any) {
+        Notice.error(err?.message || err.toString());
+      } finally {
+        setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
+      }
+    }),
+  );
 
-  const onDelete = useLockFn(async (uid: string) => {
-    try {
-      await onDisable(uid);
-      await deleteProfile(uid);
-      mutateProfiles();
-      mutateLogs();
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString());
-    }
-  });
+  const onDisable = useMemoizedFn(
+    useLockFn(async (uid: string) => {
+      if (!chain.includes(uid)) return;
+      try {
+        setActivating((o) => ({ profile: o?.profile ?? "", chain: uid }));
+        const newChain = chain.filter((i) => i !== uid);
+        await patchProfiles({ chain: newChain });
+        mutateLogs();
+      } catch (err: any) {
+        Notice.error(err?.message || err.toString());
+      } finally {
+        setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
+      }
+    }),
+  );
+
+  const onDelete = useMemoizedFn(
+    useLockFn(async (uid: string) => {
+      try {
+        await onDisable(uid);
+        await deleteProfile(uid);
+        mutateProfiles();
+        mutateLogs();
+      } catch (err: any) {
+        Notice.error(err?.message || err.toString());
+      }
+    }),
+  );
 
   // 更新所有订阅
   const setLoadingCache = useSetLoadingCache();
-  const onUpdateAll = useLockFn(async () => {
-    const throttleMutate = throttle(mutateProfiles, 2000, {
-      trailing: true,
-    });
-    const updateOne = async (uid: string) => {
-      try {
-        await updateProfile(uid);
-        throttleMutate();
-      } finally {
-        setLoadingCache((cache) => ({ ...cache, [uid]: false }));
-      }
-    };
-
-    return new Promise((resolve) => {
-      setLoadingCache((cache) => {
-        // 获取没有正在更新的订阅
-        const items = regularItems.filter(
-          (e) => e.type === "remote" && !cache[e.uid],
-        );
-        const change = Object.fromEntries(items.map((e) => [e.uid, true]));
-
-        Promise.allSettled(items.map((e) => updateOne(e.uid))).then(resolve);
-        return { ...cache, ...change };
+  const onUpdateAll = useMemoizedFn(
+    useLockFn(async () => {
+      const throttleMutate = throttle(mutateProfiles, 2000, {
+        trailing: true,
       });
-    });
-  });
+      const updateOne = async (uid: string) => {
+        try {
+          await updateProfile(uid);
+          throttleMutate();
+        } finally {
+          setLoadingCache((cache) => ({ ...cache, [uid]: false }));
+        }
+      };
 
-  const onCopyLink = async () => {
+      return new Promise((resolve) => {
+        setLoadingCache((cache) => {
+          // 获取没有正在更新的订阅
+          const items = regularItems.filter(
+            (e) => e.type === "remote" && !cache[e.uid],
+          );
+          const change = Object.fromEntries(items.map((e) => [e.uid, true]));
+
+          Promise.allSettled(items.map((e) => updateOne(e.uid))).then(resolve);
+          return { ...cache, ...change };
+        });
+      });
+    }),
+  );
+
+  const onCopyLink = useMemoizedFn(async () => {
     const text = await readText();
     if (text) setUrl(text);
-  };
+  });
   const mode = useThemeMode();
   const islight = mode === "light" ? true : false;
   const dividercolor = islight
@@ -482,11 +494,17 @@ const ProfilePage = () => {
           variant="outlined"
           onChange={(e) => setUrl(e.target.value)}
           placeholder={t("Profile URL")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && url.length > 0) {
+              onImport();
+            }
+          }}
           InputProps={{
             sx: { pr: 1 },
             endAdornment: !url ? (
               <IconButton
                 size="small"
+                color="primary"
                 sx={{ p: 0.5 }}
                 title={t("Paste")}
                 onClick={() => onCopyLink()}>
@@ -495,6 +513,7 @@ const ProfilePage = () => {
             ) : (
               <IconButton
                 size="small"
+                color="primary"
                 sx={{ p: 0.5 }}
                 title={t("Clear")}
                 onClick={() => setUrl("")}>
@@ -559,10 +578,11 @@ const ProfilePage = () => {
                     }}>
                     <ProfileItem
                       sx={{
-                        "& > .MuiBox-root": {
-                          opacity:
-                            draggingProfileItem?.uid === item.uid ? "0.8" : "1",
-                        },
+                        ...(draggingProfileItem?.uid === item.uid && {
+                          "& > .MuiBox-root": {
+                            backgroundColor: "var(--background-color-alpha)",
+                          },
+                        }),
                       }}
                       selected={
                         (activating.profile === "" &&
@@ -660,10 +680,11 @@ const ProfilePage = () => {
                       }}>
                       <ProfileMore
                         sx={{
-                          "& > .MuiBox-root": {
-                            opacity:
-                              draggingChainItem?.uid === item.uid ? "0.8" : "1",
-                          },
+                          ...(draggingChainItem?.uid === item.uid && {
+                            "& > .MuiBox-root": {
+                              backgroundColor: "var(--background-color-alpha)",
+                            },
+                          }),
                         }}
                         selected={
                           !!chain.includes(item.uid) ||
@@ -704,10 +725,11 @@ const ProfilePage = () => {
                       }}>
                       <ProfileMore
                         sx={{
-                          "& > .MuiBox-root": {
-                            opacity:
-                              draggingChainItem?.uid === item.uid ? "0.8" : "1",
-                          },
+                          ...(draggingChainItem?.uid === item.uid && {
+                            "& > .MuiBox-root": {
+                              backgroundColor: "var(--background-color-alpha)",
+                            },
+                          }),
                         }}
                         selected={!!chain.includes(item.uid)}
                         isDragging={draggingChainItem ? true : false}

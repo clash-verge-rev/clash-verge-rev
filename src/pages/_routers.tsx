@@ -1,22 +1,20 @@
-import { BaseErrorBoundary } from "@/components/base";
-
-import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
-import ProfilesSvg from "@/assets/image/itemicon/profiles.svg?react";
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
-import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
-import TestSvg from "@/assets/image/itemicon/test.svg?react";
+import ProfilesSvg from "@/assets/image/itemicon/profiles.svg?react";
+import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
+import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
-
-import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
-import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
-import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
-import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
-import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
-import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import { lazy, Suspense } from "react";
+import TestSvg from "@/assets/image/itemicon/test.svg?react";
+import { BaseErrorBoundary } from "@/components/base";
 import LoadingPage from "@/pages/loading";
+import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
+import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
+import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
+import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
+import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
+import { lazy, Suspense } from "react";
 
 // const LoadingPage = lazy(() => import("./loading"));
 const ProxiesPage = lazy(() => import("./proxies"));

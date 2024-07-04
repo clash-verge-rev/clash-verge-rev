@@ -10,9 +10,6 @@ export const ProfileBox = styled(Box)(({
   const unselectedbackgroundColor = mode === "light" ? "#ffffff" : "#282A36";
   const selectedBackgroundColor =
     mode === "light" ? alpha(primary.main, 0.25) : alpha(primary.main, 0.35);
-  const backgroundColor = selected
-    ? selectedBackgroundColor
-    : unselectedbackgroundColor;
 
   const color = {
     "light-true": text.secondary,
@@ -56,7 +53,9 @@ export const ProfileBox = styled(Box)(({
     textAlign: "left",
     padding: "8px 16px",
     boxSizing: "border-box",
-    backgroundColor,
+    backgroundColor: selected
+      ? `${selectedBackgroundColor} !important`
+      : unselectedbackgroundColor,
     ...borderSelect,
     borderRadius: "8px",
     color,

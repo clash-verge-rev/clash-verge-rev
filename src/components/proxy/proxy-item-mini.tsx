@@ -15,6 +15,33 @@ interface Props {
   onClick?: (name: string) => void;
 }
 
+const Widget = styled(Box)(({ theme: { typography } }) => ({
+  padding: "2px 4px",
+  fontSize: 14,
+  fontFamily: typography.fontFamily,
+  borderRadius: "4px",
+}));
+
+const TypeBox = styled(Box)(
+  ({
+    theme: {
+      palette: { text },
+      typography,
+    },
+  }) => ({
+    display: "inline-block",
+    border: `1px solid ${text.secondary}`,
+    color: "text.secondary",
+    borderRadius: 4,
+    fontSize: 10,
+    fontFamily: typography.fontFamily,
+    marginRight: "4px",
+    marginTop: "auto",
+    padding: "0 4px",
+    lineHeight: 1.5,
+  }),
+);
+
 // 多列布局
 export const ProxyItemMini = (props: Props) => {
   const { groupName, proxy, fixed, selected, showType = true, onClick } = props;
@@ -219,30 +246,3 @@ export const ProxyItemMini = (props: Props) => {
     </ListItemButton>
   );
 };
-
-const Widget = styled(Box)(({ theme: { typography } }) => ({
-  padding: "2px 4px",
-  fontSize: 14,
-  fontFamily: typography.fontFamily,
-  borderRadius: "4px",
-}));
-
-const TypeBox = styled(Box)(
-  ({
-    theme: {
-      palette: { text },
-      typography,
-    },
-  }) => ({
-    display: "inline-block",
-    border: `1px solid ${text.secondary}`,
-    color: "text.secondary",
-    borderRadius: 4,
-    fontSize: 10,
-    fontFamily: typography.fontFamily,
-    marginRight: "4px",
-    marginTop: "auto",
-    padding: "0 4px",
-    lineHeight: 1.5,
-  }),
-);

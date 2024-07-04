@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { useMemoizedFn } from "ahooks";
 import { memo, useEffect, useState } from "react";
 import { ProxyHead } from "./proxy-head";
 import { ProxyItem } from "./proxy-item";
@@ -35,6 +36,38 @@ interface ProxyColProps {
   item: IRenderItem;
   onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void;
 }
+
+const StyledPrimary = styled("span")`
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+const StyledSubtitle = styled("span")`
+  font-size: 13px;
+  overflow: hidden;
+  color: text.secondary;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const ListItemTextChild = styled("span")`
+  display: block;
+`;
+
+const StyledTypeBox = styled(ListItemTextChild)(({ theme }) => ({
+  display: "inline-block",
+  border: "1px solid #ccc",
+  borderColor: alpha(theme.palette.primary.main, 0.5),
+  color: alpha(theme.palette.primary.main, 0.8),
+  borderRadius: 4,
+  fontSize: 10,
+  padding: "0 4px",
+  lineHeight: 1.5,
+  marginRight: "8px",
+}));
 
 const ProxyItemMiniCol = memo(function ProxyItemMiniCol(props: ProxyColProps) {
   const { item, onChangeProxy } = props;
@@ -80,18 +113,18 @@ export const ProxyRender = (props: RenderProps) => {
     initIconCachePath();
   }, [group]);
 
-  async function initIconCachePath() {
+  const initIconCachePath = useMemoizedFn(async () => {
     if (group.icon && group.icon.trim().startsWith("http")) {
       const fileName =
         group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
       const iconPath = await downloadIconCache(group.icon, fileName);
       setIconCachePath(convertFileSrc(iconPath));
     }
-  }
+  });
 
-  function getFileName(url: string) {
+  const getFileName = useMemoizedFn((url: string) => {
     return url.substring(url.lastIndexOf("/") + 1);
-  }
+  });
 
   if (type === 0 && !group.hidden) {
     return (
@@ -207,35 +240,3 @@ export const ProxyRender = (props: RenderProps) => {
 
   return null;
 };
-
-const StyledPrimary = styled("span")`
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.5;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-const StyledSubtitle = styled("span")`
-  font-size: 13px;
-  overflow: hidden;
-  color: text.secondary;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const ListItemTextChild = styled("span")`
-  display: block;
-`;
-
-const StyledTypeBox = styled(ListItemTextChild)(({ theme }) => ({
-  display: "inline-block",
-  border: "1px solid #ccc",
-  borderColor: alpha(theme.palette.primary.main, 0.5),
-  color: alpha(theme.palette.primary.main, 0.8),
-  borderRadius: 4,
-  fontSize: 10,
-  padding: "0 4px",
-  lineHeight: 1.5,
-  marginRight: "8px",
-}));

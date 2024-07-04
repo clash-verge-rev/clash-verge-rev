@@ -11,7 +11,7 @@ import {
 import delayManager from "@/services/delay";
 import { ChevronRight } from "@mui/icons-material";
 import { Box, Link, List, ListItem } from "@mui/material";
-import { useLockFn } from "ahooks";
+import { useLockFn, useMemoizedFn } from "ahooks";
 import { max, toArray } from "lodash-es";
 import { useRef, useState } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
@@ -38,8 +38,8 @@ export const ProxyGroups = (props: Props) => {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
   // 切换分组的节点代理
-  const handleChangeProxy = useLockFn(
-    async (group: IProxyGroupItem, proxy: IProxyItem) => {
+  const handleChangeProxy = useMemoizedFn(
+    useLockFn(async (group: IProxyGroupItem, proxy: IProxyItem) => {
       if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
 
       const { name, now } = group;
@@ -71,38 +71,42 @@ export const ProxyGroups = (props: Props) => {
         current.selected[index] = { name, now: proxy.name };
       }
       await patchCurrent({ selected: current.selected });
-    },
+    }),
   );
 
   // 测全部延迟
-  const handleCheckAll = useLockFn(async (groupName: string) => {
-    const proxies = renderList
-      .filter(
-        (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4),
-      )
-      .flatMap((e) => e.proxyCol || e.proxy!)
-      .filter(Boolean);
+  const handleCheckAll = useMemoizedFn(
+    useLockFn(async (groupName: string) => {
+      const proxies = renderList
+        .filter(
+          (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4),
+        )
+        .flatMap((e) => e.proxyCol || e.proxy!)
+        .filter(Boolean);
 
-    const providers = new Set(proxies.map((p) => p!.provider!).filter(Boolean));
+      const providers = new Set(
+        proxies.map((p) => p!.provider!).filter(Boolean),
+      );
 
-    if (providers.size) {
-      Promise.allSettled(
-        [...providers].map((p) => providerHealthCheck(p)),
-      ).then(() => onProxies());
-    }
+      if (providers.size) {
+        Promise.allSettled(
+          [...providers].map((p) => providerHealthCheck(p)),
+        ).then(() => onProxies());
+      }
 
-    const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
+      const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
 
-    await Promise.race([
-      delayManager.checkListDelay(names, groupName, timeout),
-      getGroupProxyDelays(groupName, delayManager.getUrl(groupName), timeout), // 查询group delays 将清除fixed(不关注调用结果)
-    ]);
+      await Promise.race([
+        delayManager.checkListDelay(names, groupName, timeout),
+        getGroupProxyDelays(groupName, delayManager.getUrl(groupName), timeout), // 查询group delays 将清除fixed(不关注调用结果)
+      ]);
 
-    onProxies();
-  });
+      onProxies();
+    }),
+  );
 
   // 滚到对应的节点
-  const handleGroupLocation = (groupName: string) => {
+  const handleGroupLocation = useMemoizedFn((groupName: string) => {
     if (!groupName) return;
 
     const index = renderList.findIndex(
@@ -116,10 +120,10 @@ export const ProxyGroups = (props: Props) => {
         behavior: "auto",
       });
     }
-  };
+  });
 
   // 滚到对应的节点
-  const handleLocation = (group: IProxyGroupItem) => {
+  const handleLocation = useMemoizedFn((group: IProxyGroupItem) => {
     if (!group) return;
     const { name, now } = group;
 
@@ -137,7 +141,7 @@ export const ProxyGroups = (props: Props) => {
         behavior: "smooth",
       });
     }
-  };
+  });
 
   const sidebarWidth =
     max(
