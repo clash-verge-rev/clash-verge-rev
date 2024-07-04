@@ -1,11 +1,10 @@
 import {
   Box,
-  Divider,
   IconButton,
   ListItem,
   ListItemText,
-  Typography,
   alpha,
+  styled,
 } from "@mui/material";
 import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
 import { useSortable } from "@dnd-kit/sortable";
@@ -31,17 +30,19 @@ export const RuleItem = (props: Props) => {
       };
   return (
     <ListItem
+      dense
       sx={({ palette }) => ({
-        p: 0,
-        borderRadius: "10px",
-        border: "solid 2px",
-        borderColor:
+        background:
           type === "original"
-            ? "var(--divider-color)"
+            ? palette.mode === "dark"
+              ? alpha(palette.background.paper, 0.3)
+              : alpha(palette.grey[400], 0.3)
             : type === "delete"
-            ? alpha(palette.error.main, 0.5)
-            : alpha(palette.success.main, 0.5),
-        mb: 1,
+            ? alpha(palette.error.main, 0.3)
+            : alpha(palette.success.main, 0.3),
+        height: "100%",
+        margin: "8px 0",
+        borderRadius: "8px",
         transform: CSS.Transform.toString(transform),
         transition,
       })}
@@ -50,34 +51,76 @@ export const RuleItem = (props: Props) => {
         {...attributes}
         {...listeners}
         ref={setNodeRef}
-        sx={{ px: 1 }}
+        sx={{ cursor: sortable ? "move" : "" }}
         primary={
-          <>
-            <Typography
-              sx={{
-                textDecoration: type === "delete" ? "line-through" : "",
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-                textOverflow: "ellipsis",
-              }}
-              variant="h6"
-              title={rule.length === 3 ? rule[1] : "-"}
-            >
-              {rule.length === 3 ? rule[1] : "-"}
-            </Typography>
-          </>
+          <StyledPrimary
+            sx={{ textDecoration: type === "delete" ? "line-through" : "" }}
+          >
+            {rule.length === 3 ? rule[1] : "-"}
+          </StyledPrimary>
         }
         secondary={
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Box>{rule[0]}</Box>
-            <Box>{rule.length === 3 ? rule[2] : rule[1]}</Box>
-          </Box>
+          <ListItemTextChild
+            sx={{
+              width: "62%",
+              overflow: "hidden",
+              display: "flex",
+              justifyContent: "space-between",
+              pt: "2px",
+            }}
+          >
+            <Box sx={{ marginTop: "2px" }}>
+              <StyledTypeBox>{rule[0]}</StyledTypeBox>
+            </Box>
+            <StyledSubtitle sx={{ color: "text.secondary" }}>
+              {rule.length === 3 ? rule[2] : rule[1]}
+            </StyledSubtitle>
+          </ListItemTextChild>
         }
+        secondaryTypographyProps={{
+          sx: {
+            display: "flex",
+            alignItems: "center",
+            color: "#ccc",
+          },
+        }}
       />
-      <Divider orientation="vertical" flexItem />
-      <IconButton size="small" color="inherit" onClick={onDelete}>
+      <IconButton onClick={onDelete}>
         {type === "delete" ? <UndoRounded /> : <DeleteForeverRounded />}
       </IconButton>
     </ListItem>
   );
 };
+
+const StyledPrimary = styled("span")`
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const StyledSubtitle = styled("span")`
+  font-size: 13px;
+  overflow: hidden;
+  color: text.secondary;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const ListItemTextChild = styled("span")`
+  display: block;
+`;
+
+const StyledTypeBox = styled(ListItemTextChild)(({ theme }) => ({
+  display: "inline-block",
+  border: "1px solid #ccc",
+  borderColor: alpha(theme.palette.primary.main, 0.5),
+  color: alpha(theme.palette.primary.main, 0.8),
+  borderRadius: 4,
+  fontSize: 10,
+  padding: "0 4px",
+  lineHeight: 1.5,
+  marginRight: "8px",
+}));
