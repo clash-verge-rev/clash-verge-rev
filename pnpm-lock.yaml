@@ -184,8 +184,8 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(prettier@3.3.2)
       react-devtools:
-        specifier: 5.3.0
-        version: 5.3.0
+        specifier: 5.3.1
+        version: 5.3.1
       sass:
         specifier: 1.77.6
         version: 1.77.6
@@ -2915,11 +2915,11 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  react-devtools-core@5.3.0:
-    resolution: {integrity: sha512-IG3T+azv48Oc5VLdHR4XdBNKNZIUOKRtx0sJMRvb++Zom/uqtx73j6u37JCsIBNIaq6vA7RPH5Bbcf/Wj53KXA==}
+  react-devtools-core@5.3.1:
+    resolution: {integrity: sha512-7FSb9meX0btdBQLwdFOwt6bGqvRPabmVMMslv8fgoSPqXyuGpgQe36kx8gR86XPw7aV1yVouTp6fyZ0EH+NfUw==}
 
-  react-devtools@5.3.0:
-    resolution: {integrity: sha512-m7M+bBKlFM/dPfdHkM0Rcp0cqu8GrFDs3OPYq3nZ6OcWIfvQxrtPP/JayzVuf3KoPt5r/fA50F1HChEbikDKyQ==}
+  react-devtools@5.3.1:
+    resolution: {integrity: sha512-RcSV/u+lPChcTB+A4fij0xkE204yzKdAsGUFy6+DrfUzWSawB+cu0n3WLmJcJXQ/VnmjSUlIrqmVLicRhT/gLA==}
     hasBin: true
 
   react-dom@18.3.1:
@@ -6591,7 +6591,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  react-devtools-core@5.3.0:
+  react-devtools-core@5.3.1:
     dependencies:
       shell-quote: 1.8.1
       ws: 7.5.10
@@ -6599,13 +6599,13 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  react-devtools@5.3.0:
+  react-devtools@5.3.1:
     dependencies:
       cross-spawn: 5.1.0
       electron: 23.3.13
       internal-ip: 6.2.0
       minimist: 1.2.8
-      react-devtools-core: 5.3.0
+      react-devtools-core: 5.3.1
       update-notifier: 2.5.0
     transitivePeerDependencies:
       - bufferutil
