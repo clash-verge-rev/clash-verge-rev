@@ -19,13 +19,13 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
     verge?.verge_redir_port ?? clashInfo?.redir_port ?? 7895
   );
   const [redirEnabled, setRedirEnabled] = useState(
-    verge?.verge_redir_enabled ?? true
+    verge?.verge_redir_enabled ?? false
   );
   const [tproxyPort, setTproxyPort] = useState(
     verge?.verge_tproxy_port ?? clashInfo?.tproxy_port ?? 7896
   );
   const [tproxyEnabled, setTproxyEnabled] = useState(
-    verge?.verge_tproxy_enabled ?? true
+    verge?.verge_tproxy_enabled ?? false
   );
   const [mixedPort, setMixedPort] = useState(
     verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897
@@ -34,26 +34,26 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
     verge?.verge_socks_port ?? clashInfo?.socks_port ?? 7898
   );
   const [socksEnabled, setSocksEnabled] = useState(
-    verge?.verge_socks_enabled ?? true
+    verge?.verge_socks_enabled ?? false
   );
   const [port, setPort] = useState(
     verge?.verge_port ?? clashInfo?.port ?? 7899
   );
   const [httpEnabled, setHttpEnabled] = useState(
-    verge?.verge_http_enabled ?? true
+    verge?.verge_http_enabled ?? false
   );
 
   useImperativeHandle(ref, () => ({
     open: () => {
       if (verge?.verge_redir_port) setRedirPort(verge?.verge_redir_port);
-      setRedirEnabled(verge?.verge_redir_enabled ?? true);
+      setRedirEnabled(verge?.verge_redir_enabled ?? false);
       if (verge?.verge_tproxy_port) setTproxyPort(verge?.verge_tproxy_port);
-      setTproxyEnabled(verge?.verge_tproxy_enabled ?? true);
+      setTproxyEnabled(verge?.verge_tproxy_enabled ?? false);
       if (verge?.verge_mixed_port) setMixedPort(verge?.verge_mixed_port);
       if (verge?.verge_socks_port) setSocksPort(verge?.verge_socks_port);
-      setSocksEnabled(verge?.verge_socks_enabled ?? true);
+      setSocksEnabled(verge?.verge_socks_enabled ?? false);
       if (verge?.verge_port) setPort(verge?.verge_port);
-      setHttpEnabled(verge?.verge_http_enabled ?? true);
+      setHttpEnabled(verge?.verge_http_enabled ?? false);
       setOpen(true);
     },
     close: () => setOpen(false),

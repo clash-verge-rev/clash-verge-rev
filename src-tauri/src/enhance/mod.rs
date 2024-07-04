@@ -32,21 +32,21 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             verge.clash_core.clone(),
             verge.enable_tun_mode.unwrap_or(false),
             verge.enable_builtin_enhanced.unwrap_or(true),
-            verge.verge_socks_enabled.unwrap_or(true),
-            verge.verge_http_enabled.unwrap_or(true),
+            verge.verge_socks_enabled.unwrap_or(false),
+            verge.verge_http_enabled.unwrap_or(false),
         )
     };
     #[cfg(not(target_os = "windows"))]
     let redir_enabled = {
         let verge = Config::verge();
         let verge = verge.latest();
-        verge.verge_redir_enabled.unwrap_or(true)
+        verge.verge_redir_enabled.unwrap_or(false)
     };
     #[cfg(target_os = "linux")]
     let tproxy_enabled = {
         let verge = Config::verge();
         let verge = verge.latest();
-        verge.verge_tproxy_enabled.unwrap_or(true)
+        verge.verge_tproxy_enabled.unwrap_or(false)
     };
 
     // 从profiles里拿东西
