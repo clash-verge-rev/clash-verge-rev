@@ -199,9 +199,32 @@ interface IVergeTestItem {
 }
 
 interface ISeqProfileConfig {
-  prepend: string[];
-  append: string[];
-  delete: string[];
+  prepend: [];
+  append: [];
+  delete: [];
+}
+
+interface IProxyGroupConfig {
+  name: string;
+  type: "select" | "url-test" | "fallback" | "load-balance" | "relay";
+  proxies?: string[];
+  use?: string[];
+  url?: string;
+  interval?: number;
+  lazy?: boolean;
+  timeout?: number;
+  "disable-udp"?: boolean;
+  "interface-name": string;
+  "routing-mark"?: number;
+  "include-all"?: boolean;
+  "include-all-proxies"?: boolean;
+  "include-all-providers"?: boolean;
+  filter?: string;
+  "exclude-filter"?: string;
+  "exclude-type"?: string;
+  "expected-status"?: number;
+  hidden?: boolean;
+  icon?: string;
 }
 
 interface IVergeConfig {

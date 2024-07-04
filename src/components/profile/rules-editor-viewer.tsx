@@ -43,7 +43,6 @@ interface Props {
   groupsUid: string;
   mergeUid: string;
   profileUid: string;
-  title?: string | ReactNode;
   property: string;
   open: boolean;
   onClose: () => void;
@@ -232,16 +231,8 @@ const rules: {
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
 export const RulesEditorViewer = (props: Props) => {
-  const {
-    title,
-    groupsUid,
-    mergeUid,
-    profileUid,
-    property,
-    open,
-    onClose,
-    onSave,
-  } = props;
+  const { groupsUid, mergeUid, profileUid, property, open, onClose, onSave } =
+    props;
   const { t } = useTranslation();
   const themeMode = useThemeMode();
 
@@ -302,7 +293,7 @@ export const RulesEditorViewer = (props: Props) => {
   };
   const fetchContent = async () => {
     let data = await readProfileFile(property);
-    let obj = yaml.load(data) as { prepend: []; append: []; delete: [] } | null;
+    let obj = yaml.load(data) as ISeqProfileConfig | null;
 
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
@@ -316,11 +307,7 @@ export const RulesEditorViewer = (props: Props) => {
     if (currData === "") return;
     if (visible !== true) return;
 
-    let obj = yaml.load(currData) as {
-      prepend: [];
-      append: [];
-      delete: [];
-    } | null;
+    let obj = yaml.load(currData) as ISeqProfileConfig | null;
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
@@ -334,18 +321,29 @@ export const RulesEditorViewer = (props: Props) => {
   }, [prependSeq, appendSeq, deleteSeq]);
 
   const fetchProfile = async () => {
-    let data = await readProfileFile(profileUid);
-    let groupsData = await readProfileFile(groupsUid);
-    let mergeData = await readProfileFile(mergeUid);
-    let globalMergeData = await readProfileFile("Merge");
+    let data = await readProfileFile(profileUid); // 原配置文件
+    let groupsData = await readProfileFile(groupsUid); // groups配置文件
+    let mergeData = await readProfileFile(mergeUid); // merge配置文件
+    let globalMergeData = await readProfileFile("Merge"); // global merge配置文件
 
     let rulesObj = yaml.load(data) as { rules: [] } | null;
 
     let originGroupsObj = yaml.load(data) as { "proxy-groups": [] } | null;
     let originGroups = originGroupsObj?.["proxy-groups"] || [];
-    let moreGroupsObj = yaml.load(groupsData) as { "proxy-groups": [] } | null;
-    let moreGroups = moreGroupsObj?.["proxy-groups"] || [];
-    let groups = originGroups.concat(moreGroups);
+    let moreGroupsObj = yaml.load(groupsData) as ISeqProfileConfig | null;
+    let morePrependGroups = moreGroupsObj?.["prepend"] || [];
+    let moreAppendGroups = moreGroupsObj?.["append"] || [];
+    let moreDeleteGroups =
+      moreGroupsObj?.["delete"] || ([] as string[] | { name: string }[]);
+    let groups = originGroups
+      .filter((group: any) => {
+        if (group.name) {
+          return !moreDeleteGroups.includes(group.name);
+        } else {
+          return !moreDeleteGroups.includes(group);
+        }
+      })
+      .concat(morePrependGroups, moreAppendGroups);
 
     let originRuleSetObj = yaml.load(data) as { "rule-providers": {} } | null;
     let originRuleSet = originRuleSetObj?.["rule-providers"] || {};
