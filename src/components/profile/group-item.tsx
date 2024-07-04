@@ -9,7 +9,6 @@ import {
 import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useThemeMode } from "@/services/states";
 interface Props {
   type: "prepend" | "original" | "delete" | "append";
   group: IProxyGroupConfig;
@@ -18,8 +17,6 @@ interface Props {
 
 export const GroupItem = (props: Props) => {
   let { type, group, onDelete } = props;
-  const themeMode = useThemeMode();
-  const itembackgroundcolor = themeMode === "dark" ? "#282A36" : "#ffffff";
   const sortable = type === "prepend" || type === "append";
 
   const { attributes, listeners, setNodeRef, transform, transition } = sortable
@@ -37,11 +34,12 @@ export const GroupItem = (props: Props) => {
       sx={({ palette }) => ({
         background:
           type === "original"
-            ? itembackgroundcolor
+            ? palette.mode === "dark"
+              ? alpha(palette.background.paper, 0.3)
+              : alpha(palette.grey[400], 0.3)
             : type === "delete"
             ? alpha(palette.error.main, 0.3)
             : alpha(palette.success.main, 0.3),
-
         height: "100%",
         margin: "8px 0",
         borderRadius: "8px",
@@ -79,6 +77,7 @@ export const GroupItem = (props: Props) => {
         {...attributes}
         {...listeners}
         ref={setNodeRef}
+        sx={{ cursor: sortable ? "move" : "" }}
         primary={
           <StyledPrimary
             sx={{ textDecoration: type === "delete" ? "line-through" : "" }}
