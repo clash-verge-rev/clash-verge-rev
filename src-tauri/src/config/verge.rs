@@ -227,16 +227,16 @@ impl IVerge {
             #[cfg(not(target_os = "windows"))]
             verge_redir_port: Some(7895),
             #[cfg(not(target_os = "windows"))]
-            verge_redir_enabled: Some(true),
+            verge_redir_enabled: Some(false),
             #[cfg(target_os = "linux")]
             verge_tproxy_port: Some(7896),
             #[cfg(target_os = "linux")]
-            verge_tproxy_enabled: Some(true),
+            verge_tproxy_enabled: Some(false),
             verge_mixed_port: Some(7897),
             verge_socks_port: Some(7898),
-            verge_socks_enabled: Some(true),
+            verge_socks_enabled: Some(false),
             verge_port: Some(7899),
-            verge_http_enabled: Some(true),
+            verge_http_enabled: Some(false),
             enable_proxy_guard: Some(false),
             use_default_bypass: Some(true),
             proxy_guard_duration: Some(30),
