@@ -335,15 +335,16 @@ export const RulesEditorViewer = (props: Props) => {
     let moreAppendGroups = moreGroupsObj?.["append"] || [];
     let moreDeleteGroups =
       moreGroupsObj?.["delete"] || ([] as string[] | { name: string }[]);
-    let groups = originGroups
-      .filter((group: any) => {
+    let groups = morePrependGroups.concat(
+      originGroups.filter((group: any) => {
         if (group.name) {
           return !moreDeleteGroups.includes(group.name);
         } else {
           return !moreDeleteGroups.includes(group);
         }
-      })
-      .concat(morePrependGroups, moreAppendGroups);
+      }),
+      moreAppendGroups
+    );
 
     let originRuleSetObj = yaml.load(data) as { "rule-providers": {} } | null;
     let originRuleSet = originRuleSetObj?.["rule-providers"] || {};
@@ -375,6 +376,7 @@ export const RulesEditorViewer = (props: Props) => {
   };
 
   useEffect(() => {
+    if (!open) return;
     fetchContent();
     fetchProfile();
   }, [open]);
