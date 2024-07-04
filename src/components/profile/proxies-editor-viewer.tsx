@@ -29,7 +29,7 @@ import {
   TextField,
   styled,
 } from "@mui/material";
-import { GroupItem } from "@/components/profile/group-item";
+import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice, Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
@@ -40,8 +40,6 @@ import { useThemeMode } from "@/services/states";
 import { Controller, useForm } from "react-hook-form";
 
 interface Props {
-  proxiesUid: string;
-  mergeUid: string;
   profileUid: string;
   property: string;
   open: boolean;
@@ -51,9 +49,8 @@ interface Props {
 
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
-export const GroupsEditorViewer = (props: Props) => {
-  const { mergeUid, proxiesUid, profileUid, property, open, onClose, onSave } =
-    props;
+export const ProxiesEditorViewer = (props: Props) => {
+  const { profileUid, property, open, onClose, onSave } = props;
   const { t } = useTranslation();
   const themeMode = useThemeMode();
   const [prevData, setPrevData] = useState("");
@@ -61,23 +58,21 @@ export const GroupsEditorViewer = (props: Props) => {
   const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
 
-  const { control, watch, register, ...formIns } = useForm<IProxyGroupConfig>({
+  const { control, watch, register, ...formIns } = useForm<IProxyConfig>({
     defaultValues: {
-      type: "select",
+      type: "ss",
       name: "",
-      lazy: true,
     },
   });
-  const [groupList, setGroupList] = useState<IProxyGroupConfig[]>([]);
-  const [proxyPolicyList, setProxyPolicyList] = useState<string[]>([]);
-  const [proxyProviderList, setProxyProviderList] = useState<string[]>([]);
-  const [prependSeq, setPrependSeq] = useState<IProxyGroupConfig[]>([]);
-  const [appendSeq, setAppendSeq] = useState<IProxyGroupConfig[]>([]);
+
+  const [proxyList, setProxyList] = useState<IProxyConfig[]>([]);
+  const [prependSeq, setPrependSeq] = useState<IProxyConfig[]>([]);
+  const [appendSeq, setAppendSeq] = useState<IProxyConfig[]>([]);
   const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
 
-  const filteredGroupList = useMemo(
-    () => groupList.filter((group) => match(group.name)),
-    [groupList, match]
+  const filteredProxyList = useMemo(
+    () => proxyList.filter((proxy) => match(proxy.name)),
+    [proxyList, match]
   );
 
   const sensors = useSensors(
@@ -87,7 +82,7 @@ export const GroupsEditorViewer = (props: Props) => {
     })
   );
   const reorder = (
-    list: IProxyGroupConfig[],
+    list: IProxyConfig[],
     startIndex: number,
     endIndex: number
   ) => {
@@ -133,6 +128,17 @@ export const GroupsEditorViewer = (props: Props) => {
       }
     }
   };
+
+  const fetchProfile = async () => {
+    let data = await readProfileFile(profileUid);
+
+    let originProxiesObj = yaml.load(data) as {
+      proxies: IProxyConfig[];
+    } | null;
+
+    setProxyList(originProxiesObj?.proxies || []);
+  };
+
   const fetchContent = async () => {
     let data = await readProfileFile(property);
     let obj = yaml.load(data) as ISeqProfileConfig | null;
@@ -171,91 +177,11 @@ export const GroupsEditorViewer = (props: Props) => {
       );
   }, [prependSeq, appendSeq, deleteSeq]);
 
-  const fetchProxyPolicy = async () => {
-    let data = await readProfileFile(profileUid);
-    let proxiesData = await readProfileFile(proxiesUid);
-    let originGroupsObj = yaml.load(data) as {
-      "proxy-groups": IProxyGroupConfig[];
-    } | null;
-
-    let originProxiesObj = yaml.load(data) as { proxies: [] } | null;
-    let originProxies = originProxiesObj?.proxies || [];
-    let moreProxiesObj = yaml.load(proxiesData) as ISeqProfileConfig | null;
-    let morePrependProxies = moreProxiesObj?.prepend || [];
-    let moreAppendProxies = moreProxiesObj?.append || [];
-    let moreDeleteProxies =
-      moreProxiesObj?.delete || ([] as string[] | { name: string }[]);
-
-    let proxies = morePrependProxies.concat(
-      originProxies.filter((proxy: any) => {
-        if (proxy.name) {
-          return !moreDeleteProxies.includes(proxy.name);
-        } else {
-          return !moreDeleteProxies.includes(proxy);
-        }
-      }),
-      moreAppendProxies
-    );
-
-    setProxyPolicyList(
-      builtinProxyPolicies.concat(
-        prependSeq.map((group: IProxyGroupConfig) => group.name),
-        originGroupsObj?.["proxy-groups"]
-          .map((group: IProxyGroupConfig) => group.name)
-          .filter((name) => !deleteSeq.includes(name)) || [],
-        appendSeq.map((group: IProxyGroupConfig) => group.name),
-        proxies.map((proxy: any) => proxy.name)
-      )
-    );
-  };
-  const fetchProfile = async () => {
-    let data = await readProfileFile(profileUid);
-    let mergeData = await readProfileFile(mergeUid);
-    let globalMergeData = await readProfileFile("Merge");
-
-    let originGroupsObj = yaml.load(data) as {
-      "proxy-groups": IProxyGroupConfig[];
-    } | null;
-
-    let originProviderObj = yaml.load(data) as { "proxy-providers": {} } | null;
-    let originProvider = originProviderObj?.["proxy-providers"] || {};
-
-    let moreProviderObj = yaml.load(mergeData) as {
-      "proxy-providers": {};
-    } | null;
-    let moreProvider = moreProviderObj?.["proxy-providers"] || {};
-
-    let globalProviderObj = yaml.load(globalMergeData) as {
-      "proxy-providers": {};
-    } | null;
-    let globalProvider = globalProviderObj?.["proxy-providers"] || {};
-
-    let provider = Object.assign(
-      {},
-      originProvider,
-      moreProvider,
-      globalProvider
-    );
-
-    setProxyProviderList(Object.keys(provider));
-    setGroupList(originGroupsObj?.["proxy-groups"] || []);
-  };
-  useEffect(() => {
-    fetchProxyPolicy();
-  }, [prependSeq, appendSeq, deleteSeq]);
   useEffect(() => {
     if (!open) return;
     fetchContent();
-    fetchProxyPolicy();
     fetchProfile();
   }, [open]);
-
-  const validateGroup = () => {
-    let group = formIns.getValues();
-    if (group.name === "") {
-      throw new Error(t("Group Name Cannot Be Empty"));
-    }
-  };
 
   const handleSave = useLockFn(async () => {
     try {
@@ -272,7 +198,7 @@ export const GroupsEditorViewer = (props: Props) => {
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">
-            {t("Edit Groups")}
+            {t("Edit Proxies")}
             <Box>
               <Button
                 variant="contained"
@@ -310,16 +236,26 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText primary={t("Group Type")} />
+                      <ListItemText primary={t("Proxy Type")} />
                       <Autocomplete
                         size="small"
                         sx={{ minWidth: "240px" }}
                         options={[
-                          "select",
-                          "url-test",
-                          "fallback",
-                          "load-balance",
-                          "relay",
+                          "ss",
+                          "ssr",
+                          "direct",
+                          "dns",
+                          "snell",
+                          "http",
+                          "trojan",
+                          "hysteria",
+                          "hysteria2",
+                          "tuic",
+                          "wireguard",
+                          "ssh",
+                          "socks5",
+                          "vmess",
+                          "vless",
                         ]}
                         value={field.value}
                         onChange={(_, value) => value && field.onChange(value)}
@@ -333,7 +269,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText primary={t("Group Name")} />
+                      <ListItemText primary={t("Proxy Name")} />
                       <TextField
                         autoComplete="off"
                         size="small"
@@ -345,11 +281,11 @@ export const GroupsEditorViewer = (props: Props) => {
                   )}
                 />
                 <Controller
-                  name="icon"
+                  name="server"
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText primary={t("Icon")} />
+                      <ListItemText primary={t("Proxy Server")} />
                       <TextField
                         autoComplete="off"
                         size="small"
@@ -360,61 +296,11 @@ export const GroupsEditorViewer = (props: Props) => {
                   )}
                 />
                 <Controller
-                  name="proxies"
+                  name="port"
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText primary={t("Use Proxies")} />
-                      <Autocomplete
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        multiple
-                        options={proxyPolicyList}
-                        onChange={(_, value) => value && field.onChange(value)}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="use"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Use Provider")} />
-                      <Autocomplete
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        multiple
-                        options={proxyProviderList}
-                        onChange={(_, value) => value && field.onChange(value)}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
-                    </Item>
-                  )}
-                />
-
-                <Controller
-                  name="url"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Health Check Url")} />
-                      <TextField
-                        autoComplete="off"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        {...field}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="interval"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Interval")} />
+                      <ListItemText primary={t("Proxy Port")} />
                       <TextField
                         autoComplete="off"
                         type="number"
@@ -424,198 +310,6 @@ export const GroupsEditorViewer = (props: Props) => {
                           field.onChange(parseInt(e.target.value));
                         }}
                       />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="timeout"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Timeout")} />
-                      <TextField
-                        autoComplete="off"
-                        type="number"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value));
-                        }}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="max-failed-times"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Max Failed Times")} />
-                      <TextField
-                        autoComplete="off"
-                        type="number"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value));
-                        }}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="interface-name"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Interface Name")} />
-                      <TextField
-                        autoComplete="off"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        {...field}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="routing-mark"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Routing Mark")} />
-                      <TextField
-                        autoComplete="off"
-                        type="number"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value));
-                        }}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="filter"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Filter")} />
-                      <TextField
-                        autoComplete="off"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        {...field}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="exclude-filter"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Exclude Filter")} />
-                      <TextField
-                        autoComplete="off"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        {...field}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="exclude-type"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Exclude Type")} />
-                      <TextField
-                        autoComplete="off"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        {...field}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="expected-status"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Expected Status")} />
-                      <TextField
-                        autoComplete="off"
-                        type="number"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value));
-                        }}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="include-all"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Include All")} />
-                      <Switch checked={field.value} {...field} />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="include-all-proxies"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Include All Proxies")} />
-                      <Switch checked={field.value} {...field} />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="include-all-providers"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Include All Providers")} />
-                      <Switch checked={field.value} {...field} />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="lazy"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Lazy")} />
-                      <Switch checked={field.value} {...field} />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="disable-udp"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Disable UDP")} />
-                      <Switch checked={field.value} {...field} />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="hidden"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Hidden")} />
-                      <Switch checked={field.value} {...field} />
                     </Item>
                   )}
                 />
@@ -626,10 +320,9 @@ export const GroupsEditorViewer = (props: Props) => {
                   variant="contained"
                   onClick={() => {
                     try {
-                      validateGroup();
                       for (const item of prependSeq) {
                         if (item.name === formIns.getValues().name) {
-                          throw new Error(t("Group Name Already Exists"));
+                          throw new Error(t("Proxy Name Already Exists"));
                         }
                       }
                       setPrependSeq([...prependSeq, formIns.getValues()]);
@@ -638,7 +331,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     }
                   }}
                 >
-                  {t("Prepend Group")}
+                  {t("Prepend Proxy")}
                 </Button>
               </Item>
               <Item>
@@ -647,10 +340,9 @@ export const GroupsEditorViewer = (props: Props) => {
                   variant="contained"
                   onClick={() => {
                     try {
-                      validateGroup();
                       for (const item of appendSeq) {
                         if (item.name === formIns.getValues().name) {
-                          throw new Error(t("Group Name Already Exists"));
+                          throw new Error(t("Proxy Name Already Exists"));
                         }
                       }
                       setAppendSeq([...appendSeq, formIns.getValues()]);
@@ -659,7 +351,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     }
                   }}
                 >
-                  {t("Append Group")}
+                  {t("Append Proxy")}
                 </Button>
               </Item>
             </List>
@@ -677,7 +369,7 @@ export const GroupsEditorViewer = (props: Props) => {
               <Virtuoso
                 style={{ height: "calc(100% - 24px)", marginTop: "8px" }}
                 totalCount={
-                  filteredGroupList.length +
+                  filteredProxyList.length +
                   (prependSeq.length > 0 ? 1 : 0) +
                   (appendSeq.length > 0 ? 1 : 0)
                 }
@@ -698,10 +390,10 @@ export const GroupsEditorViewer = (props: Props) => {
                         >
                           {prependSeq.map((item, index) => {
                             return (
-                              <GroupItem
+                              <ProxyItem
                                 key={`${item.name}-${index}`}
                                 type="prepend"
-                                group={item}
+                                proxy={item}
                                 onDelete={() => {
                                   setPrependSeq(
                                     prependSeq.filter(
@@ -715,30 +407,30 @@ export const GroupsEditorViewer = (props: Props) => {
                         </SortableContext>
                       </DndContext>
                     );
-                  } else if (index < filteredGroupList.length + shift) {
+                  } else if (index < filteredProxyList.length + shift) {
                     let newIndex = index - shift;
                     return (
-                      <GroupItem
-                        key={`${filteredGroupList[newIndex].name}-${index}`}
+                      <ProxyItem
+                        key={`${filteredProxyList[newIndex].name}-${index}`}
                         type={
-                          deleteSeq.includes(filteredGroupList[newIndex].name)
+                          deleteSeq.includes(filteredProxyList[newIndex].name)
                             ? "delete"
                             : "original"
                         }
-                        group={filteredGroupList[newIndex]}
+                        proxy={filteredProxyList[newIndex]}
                         onDelete={() => {
                           if (
-                            deleteSeq.includes(filteredGroupList[newIndex].name)
+                            deleteSeq.includes(filteredProxyList[newIndex].name)
                           ) {
                             setDeleteSeq(
                               deleteSeq.filter(
-                                (v) => v !== filteredGroupList[newIndex].name
+                                (v) => v !== filteredProxyList[newIndex].name
                               )
                             );
                           } else {
                             setDeleteSeq((prev) => [
                               ...prev,
-                              filteredGroupList[newIndex].name,
+                              filteredProxyList[newIndex].name,
                             ]);
                           }
                         }}
@@ -758,10 +450,10 @@ export const GroupsEditorViewer = (props: Props) => {
                         >
                           {appendSeq.map((item, index) => {
                             return (
-                              <GroupItem
+                              <ProxyItem
                                 key={`${item.name}-${index}`}
                                 type="append"
-                                group={item}
+                                proxy={item}
                                 onDelete={() => {
                                   setAppendSeq(
                                     appendSeq.filter(

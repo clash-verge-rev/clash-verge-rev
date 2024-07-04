@@ -316,7 +316,12 @@ export const RulesEditorViewer = (props: Props) => {
   useEffect(() => {
     if (prependSeq && appendSeq && deleteSeq)
       setCurrData(
-        yaml.dump({ prepend: prependSeq, append: appendSeq, delete: deleteSeq })
+        yaml.dump(
+          { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
+          {
+            forceQuotes: true,
+          }
+        )
       );
   }, [prependSeq, appendSeq, deleteSeq]);
 

@@ -31,6 +31,7 @@ import { ProfileBox } from "./profile-box";
 import parseTraffic from "@/utils/parse-traffic";
 import { ConfirmViewer } from "@/components/profile/confirm-viewer";
 import { open } from "@tauri-apps/api/shell";
+import { ProxiesEditorViewer } from "./proxies-editor-viewer";
 const round = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -492,14 +493,11 @@ export const ProfileItem = (props: Props) => {
         onSave={onSave}
         onClose={() => setRulesOpen(false)}
       />
-      <EditorViewer
+      <ProxiesEditorViewer
+        profileUid={uid}
+        property={option?.proxies ?? ""}
         open={proxiesOpen}
-        initialData={readProfileFile(option?.proxies ?? "")}
-        language="yaml"
-        onSave={async (prev, curr) => {
-          await saveProfileFile(option?.proxies ?? "", curr ?? "");
-          onSave && onSave(prev, curr);
-        }}
+        onSave={onSave}
         onClose={() => setProxiesOpen(false)}
       />
       <GroupsEditorViewer

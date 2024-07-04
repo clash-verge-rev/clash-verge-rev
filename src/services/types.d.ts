@@ -228,6 +228,35 @@ interface IProxyGroupConfig {
   icon?: string;
 }
 
+interface IProxyConfig {
+  name: string;
+  type:
+    | "ss"
+    | "ssr"
+    | "direct"
+    | "dns"
+    | "snell"
+    | "http"
+    | "trojan"
+    | "hysteria"
+    | "hysteria2"
+    | "tuic"
+    | "wireguard"
+    | "ssh"
+    | "socks5"
+    | "vmess"
+    | "vless";
+  server: string;
+  port: number;
+  "ip-version"?: string;
+  udp?: boolean;
+  "interface-name"?: string;
+  "routing-mark"?: number;
+  tfo?: boolean;
+  mptcp?: boolean;
+  "dialer-proxy"?: string;
+}
+
 interface IVergeConfig {
   app_log_level?: "trace" | "debug" | "info" | "warn" | "error" | string;
   language?: string;
