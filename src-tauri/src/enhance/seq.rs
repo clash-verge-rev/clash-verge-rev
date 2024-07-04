@@ -16,14 +16,7 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
         val.as_sequence().unwrap_or(&Sequence::default()).clone()
     });
     let mut seq = origin_seq.clone();
-    prepend.reverse();
-    for item in prepend {
-        seq.insert(0, item);
-    }
 
-    for item in append {
-        seq.push(item);
-    }
     let mut delete_names = Vec::new();
     for item in delete {
         let item = item.clone();
@@ -46,6 +39,15 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
             true
         }
     });
+
+    prepend.reverse();
+    for item in prepend {
+        seq.insert(0, item);
+    }
+
+    for item in append {
+        seq.push(item);
+    }
 
     let mut config = config.clone();
     config.insert(Value::from(name), Value::from(seq));
