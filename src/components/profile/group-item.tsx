@@ -9,6 +9,9 @@ import {
 import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { downloadIconCache } from "@/services/cmds";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { useEffect, useState } from "react";
 interface Props {
   type: "prepend" | "original" | "delete" | "append";
   group: IProxyGroupConfig;
@@ -28,6 +31,26 @@ export const GroupItem = (props: Props) => {
         transform: null,
         transition: null,
       };
+
+  const [iconCachePath, setIconCachePath] = useState("");
+
+  useEffect(() => {
+    initIconCachePath();
+  }, [group]);
+
+  async function initIconCachePath() {
+    if (group.icon && group.icon.trim().startsWith("http")) {
+      const fileName =
+        group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
+      const iconPath = await downloadIconCache(group.icon, fileName);
+      setIconCachePath(convertFileSrc(iconPath));
+    }
+  }
+
+  function getFileName(url: string) {
+    return url.substring(url.lastIndexOf("/") + 1);
+  }
+
   return (
     <ListItem
       dense
@@ -49,7 +72,7 @@ export const GroupItem = (props: Props) => {
     >
       {group.icon && group.icon?.trim().startsWith("http") && (
         <img
-          src={group.icon}
+          src={iconCachePath === "" ? group.icon : iconCachePath}
           width="32px"
           style={{
             marginRight: "12px",
