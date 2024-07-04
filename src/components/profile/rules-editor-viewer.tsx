@@ -238,7 +238,7 @@ export const RulesEditorViewer = (props: Props) => {
 
   const [prevData, setPrevData] = useState("");
   const [currData, setCurrData] = useState("");
-  const [visible, setVisible] = useState(true);
+  const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
 
   const [ruleType, setRuleType] = useState<(typeof rules)[number]>(rules[0]);
@@ -305,13 +305,13 @@ export const RulesEditorViewer = (props: Props) => {
 
   useEffect(() => {
     if (currData === "") return;
-    if (visible !== true) return;
+    if (visualization !== true) return;
 
     let obj = yaml.load(currData) as ISeqProfileConfig | null;
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
-  }, [visible]);
+  }, [visualization]);
 
   useEffect(() => {
     if (prependSeq && appendSeq && deleteSeq)
@@ -416,10 +416,10 @@ export const RulesEditorViewer = (props: Props) => {
                 variant="contained"
                 size="small"
                 onClick={() => {
-                  setVisible((prev) => !prev);
+                  setVisualization((prev) => !prev);
                 }}
               >
-                {visible ? t("Advanced") : t("Visible")}
+                {visualization ? t("Advanced") : t("Visualization")}
               </Button>
             </Box>
           </Box>
@@ -429,7 +429,7 @@ export const RulesEditorViewer = (props: Props) => {
       <DialogContent
         sx={{ display: "flex", width: "auto", height: "calc(100vh - 185px)" }}
       >
-        {visible ? (
+        {visualization ? (
           <>
             <List
               sx={{
