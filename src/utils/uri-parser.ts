@@ -85,7 +85,7 @@ function URI_SS(line: string): IProxyShadowsocksConfig {
   let content = line.split("ss://")[1];
 
   const proxy: IProxyShadowsocksConfig = {
-    name: trimStr(decodeURIComponent(line.split("#")[1])),
+    name: decodeURIComponent(line.split("#")[1]).trim(),
     type: "ss",
     server: "",
     port: 0,
@@ -124,9 +124,7 @@ function URI_SS(line: string): IProxyShadowsocksConfig {
   proxy.port = parseInt(
     `${serverAndPort?.substring(portIdx + 1)}`.match(/\d+/)?.[0] ?? ""
   );
-  console.log(userInfoStr);
   const userInfo = userInfoStr.match(/(^.*?):(.*$)/);
-  console.log(userInfo);
   proxy.cipher = userInfo?.[1];
   proxy.password = userInfo?.[2];
 
@@ -214,8 +212,8 @@ function URI_SSR(line: string): IProxyshadowsocksRConfig {
   proxy = {
     ...proxy,
     name: other_params.remarks
-      ? trimStr(decodeBase64OrOriginal(other_params.remarks))
-      : proxy.server,
+      ? decodeBase64OrOriginal(other_params.remarks).trim()
+      : proxy.server ?? "",
     "protocol-param": getIfNotBlank(
       decodeBase64OrOriginal(other_params.protoparam || "").replace(/\s/g, "")
     ),
@@ -229,11 +227,9 @@ function URI_SSR(line: string): IProxyshadowsocksRConfig {
 function URI_VMESS(line: string): IProxyVmessConfig {
   line = line.split("vmess://")[1];
   let content = decodeBase64OrOriginal(line);
-  console.log(content);
   if (/=\s*vmess/.test(content)) {
     // Quantumult VMess URI format
     const partitions = content.split(",").map((p) => p.trim());
-    console.log(partitions);
     const params: Record<string, string> = {};
     for (const part of partitions) {
       if (part.indexOf("=") !== -1) {
@@ -243,7 +239,7 @@ function URI_VMESS(line: string): IProxyVmessConfig {
     }
 
     const proxy: IProxyVmessConfig = {
-      name: trimStr(partitions[0].split("=")[0]),
+      name: partitions[0].split("=")[0].trim(),
       type: "vmess",
       server: partitions[1],
       port: parseInt(partitions[2], 10),
@@ -571,7 +567,7 @@ function URI_Trojan(line: string): IProxyTrojanConfig {
   const proxy: IProxyTrojanConfig = parser.parse(newLine);
   if (isNotBlank(name)) {
     try {
-      proxy.name = trimStr(decodeURIComponent(name));
+      proxy.name = decodeURIComponent(name).trim();
     } catch (e) {
       throw Error("Can not get proxy name");
     }
@@ -926,7 +922,19 @@ function URI_HTTP(line: string): IProxyHttpConfig {
         proxy["skip-cert-verify"] = /(TRUE)|1/i.test(value);
         break;
       case "ip-version":
-        proxy["ip-version"] = value;
+        if (
+          ["dual", "ipv4", "ipv6", "ipv4-prefer", "ipv6-prefer"].includes(value)
+        ) {
+          proxy["ip-version"] = value as
+            | "dual"
+            | "ipv4"
+            | "ipv6"
+            | "ipv4-prefer"
+            | "ipv6-prefer";
+        } else {
+          proxy["ip-version"] = "dual";
+        }
+
         break;
       default:
         break;
@@ -980,7 +988,18 @@ function URI_SOCKS(line: string): IProxySocks5Config {
         proxy["udp"] = /(TRUE)|1/i.test(value);
         break;
       case "ip-version":
-        proxy["ip-version"] = value;
+        if (
+          ["dual", "ipv4", "ipv6", "ipv4-prefer", "ipv6-prefer"].includes(value)
+        ) {
+          proxy["ip-version"] = value as
+            | "dual"
+            | "ipv4"
+            | "ipv6"
+            | "ipv4-prefer"
+            | "ipv6-prefer";
+        } else {
+          proxy["ip-version"] = "dual";
+        }
         break;
       default:
         break;
