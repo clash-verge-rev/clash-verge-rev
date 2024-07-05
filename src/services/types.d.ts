@@ -255,6 +255,98 @@ interface IProxyConfig {
   tfo?: boolean;
   mptcp?: boolean;
   "dialer-proxy"?: string;
+  plugin?: "obfs" | "v2ray-plugin" | "shadow-tls" | "restls";
+  "plugin-opts"?: {
+    mode?: string;
+    host?: string;
+    path?: string;
+    tls?: string;
+  };
+  cipher?: string;
+  password?: string;
+  "udp-over-tcp"?: boolean;
+  protocol?: string;
+  obfs?: string;
+  "protocol-param"?: string;
+  "obfs-param"?: string;
+  uuid?: string;
+  tls?: boolean;
+  "skip-cert-verify"?: boolean;
+  network?: "ws" | "http" | "h2" | "grpc";
+  "ws-opts"?: {
+    path?: string;
+    headers?: {};
+  };
+  alterId?: number;
+  sni?: string;
+  "http-opts"?: {};
+  "grpc-opts"?: {};
+  "ws-opts"?: {};
+  "h2-opts"?: {};
+  "reality-opts"?: {
+    "public-key"?: string;
+    "short-id"?: string;
+  };
+  flow?: "xtls-rprx-vision";
+  "client-fingerprint"?:
+    | "chrome"
+    | "firefox"
+    | "safari"
+    | "iOS"
+    | "android"
+    | "edge"
+    | "360"
+    | "qq"
+    | "random";
+  alpn?: string[];
+  ws?: {
+    headers?: {
+      Host?: string;
+    };
+    "ws-service-name"?: string;
+    path?: string;
+  };
+  http?: {
+    headers?: {
+      Host?: string;
+    };
+    "http-service-name"?: string;
+    path?: string;
+  };
+  grpc?: {};
+  ports?: string;
+  "obfs-password"?: string;
+  "tls-fingerprint"?: string;
+  "auth-str"?: string;
+  up?: string;
+  down?: string;
+  "fast-open"?: boolean;
+  fingerprint?: string;
+  "disable-mtu-discovery"?: boolean;
+  ca?: string;
+  "ca-str"?: string;
+  "recv-window-conn"?: number;
+  "recv-window"?: number;
+  token?: string;
+  ip?: string;
+  "heartbeat-interval"?: number;
+  "disable-sni"?: boolean;
+  "reduce-rtt"?: boolean;
+  "request-timeout"?: number;
+  "udp-relay-mode"?: string;
+  "congestion-controller"?: string;
+  "max-udp-relay-packet-size"?: number;
+  "max-open-streams"?: number;
+  "private-key"?: string;
+  "public-key"?: string;
+  ipv6?: string;
+  reserved?: number[];
+  mtu?: number;
+  "remote-dns-resolve"?: boolean;
+  "allowed-ips"?: string[];
+  dns?: string[];
+  "pre-shared-key"?: string;
+  username?: string;
 }
 
 interface IVergeConfig {

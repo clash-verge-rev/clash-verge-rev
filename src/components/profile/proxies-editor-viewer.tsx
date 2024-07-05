@@ -16,7 +16,6 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import {
-  Autocomplete,
   Box,
   Button,
   Dialog,
@@ -31,13 +30,13 @@ import {
 } from "@mui/material";
 import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { Notice, Switch } from "@/components/base";
+import { Notice } from "@/components/base";
 import getSystem from "@/utils/get-system";
 import { BaseSearchBox } from "../base/base-search-box";
 import { Virtuoso } from "react-virtuoso";
 import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
-import { Controller, useForm } from "react-hook-form";
+import parseUri from "@/utils/uri-parser";
 
 interface Props {
   profileUid: string;
@@ -47,8 +46,6 @@ interface Props {
   onSave?: (prev?: string, curr?: string) => void;
 }
 
-const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
-
 export const ProxiesEditorViewer = (props: Props) => {
   const { profileUid, property, open, onClose, onSave } = props;
   const { t } = useTranslation();
@@ -57,13 +54,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const [currData, setCurrData] = useState("");
   const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
-
-  const { control, watch, register, ...formIns } = useForm<IProxyConfig>({
-    defaultValues: {
-      type: "ss",
-      name: "",
-    },
-  });
+  const [proxyUri, setProxyUri] = useState<string>("");
 
   const [proxyList, setProxyList] = useState<IProxyConfig[]>([]);
   const [prependSeq, setPrependSeq] = useState<IProxyConfig[]>([]);
@@ -231,104 +222,36 @@ export const ProxiesEditorViewer = (props: Props) => {
                   overflowY: "auto",
                 }}
               >
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Proxy Type")} />
-                      <Autocomplete
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        options={[
-                          "ss",
-                          "ssr",
-                          "direct",
-                          "dns",
-                          "snell",
-                          "http",
-                          "trojan",
-                          "hysteria",
-                          "hysteria2",
-                          "tuic",
-                          "wireguard",
-                          "ssh",
-                          "socks5",
-                          "vmess",
-                          "vless",
-                        ]}
-                        value={field.value}
-                        onChange={(_, value) => value && field.onChange(value)}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="name"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Proxy Name")} />
-                      <TextField
-                        autoComplete="off"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        {...field}
-                        required={true}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="server"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Proxy Server")} />
-                      <TextField
-                        autoComplete="off"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        {...field}
-                      />
-                    </Item>
-                  )}
-                />
-                <Controller
-                  name="port"
-                  control={control}
-                  render={({ field }) => (
-                    <Item>
-                      <ListItemText primary={t("Proxy Port")} />
-                      <TextField
-                        autoComplete="off"
-                        type="number"
-                        size="small"
-                        sx={{ minWidth: "240px" }}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value));
-                        }}
-                      />
-                    </Item>
-                  )}
-                />
+                <Item>
+                  <TextField
+                    autoComplete="off"
+                    placeholder={t("Use newlines for multiple uri")}
+                    fullWidth
+                    minRows={8}
+                    multiline
+                    size="small"
+                    onChange={(e) => setProxyUri(e.target.value)}
+                  />
+                </Item>
               </Box>
               <Item>
                 <Button
                   fullWidth
                   variant="contained"
                   onClick={() => {
-                    try {
-                      for (const item of prependSeq) {
-                        if (item.name === formIns.getValues().name) {
-                          throw new Error(t("Proxy Name Already Exists"));
+                    let proxies = [] as IProxyConfig[];
+                    proxyUri
+                      .trim()
+                      .split("\n")
+                      .forEach((uri) => {
+                        try {
+                          let proxy = parseUri(uri.trim());
+                          proxies.push(proxy);
+                        } catch (err: any) {
+                          Notice.error(err.message || err.toString());
                         }
-                      }
-                      setPrependSeq([...prependSeq, formIns.getValues()]);
-                    } catch (err: any) {
-                      Notice.error(err.message || err.toString());
-                    }
+                      });
+                    setPrependSeq([...prependSeq, ...proxies]);
                   }}
                 >
                   {t("Prepend Proxy")}
@@ -339,16 +262,19 @@ export const ProxiesEditorViewer = (props: Props) => {
                   fullWidth
                   variant="contained"
                   onClick={() => {
-                    try {
-                      for (const item of appendSeq) {
-                        if (item.name === formIns.getValues().name) {
-                          throw new Error(t("Proxy Name Already Exists"));
+                    let proxies = [] as IProxyConfig[];
+                    proxyUri
+                      .trim()
+                      .split("\n")
+                      .forEach((uri) => {
+                        try {
+                          let proxy = parseUri(uri.trim());
+                          proxies.push(proxy);
+                        } catch (err: any) {
+                          Notice.error(err.message || err.toString());
                         }
-                      }
-                      setAppendSeq([...appendSeq, formIns.getValues()]);
-                    } catch (err: any) {
-                      Notice.error(err.message || err.toString());
-                    }
+                      });
+                    setAppendSeq([...appendSeq, ...proxies]);
                   }}
                 >
                   {t("Append Proxy")}
