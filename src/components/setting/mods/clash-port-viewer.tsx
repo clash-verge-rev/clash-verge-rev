@@ -79,15 +79,17 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
     }
 
     try {
+      let updatePorts: Record<string, number> = {};
       if (OS !== "windows") {
-        await patchInfo({ "redir-port": redirPort });
+        updatePorts["redir-port"] = redirPort;
       }
       if (OS === "linux") {
-        await patchInfo({ "tproxy-port": tproxyPort });
+        updatePorts["tproxy-port"] = tproxyPort;
       }
-      await patchInfo({ "mixed-port": mixedPort });
-      await patchInfo({ "socks-port": socksPort });
-      await patchInfo({ port });
+      updatePorts["mixed-port"] = mixedPort;
+      updatePorts["socks-port"] = socksPort;
+      updatePorts["port"] = port;
+      await patchInfo(updatePorts);
       await mutate("getRuntimeConfig");
       setOpen(false);
       Notice.success(t("Clash Port Modified"), 1000);
