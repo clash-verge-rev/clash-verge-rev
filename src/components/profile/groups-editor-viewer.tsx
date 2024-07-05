@@ -65,6 +65,9 @@ export const GroupsEditorViewer = (props: Props) => {
     defaultValues: {
       type: "select",
       name: "",
+      interval: 300,
+      timeout: 5000,
+      "max-failed-times": 5,
       lazy: true,
     },
   });
@@ -313,7 +316,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       <ListItemText primary={t("Group Type")} />
                       <Autocomplete
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         options={[
                           "select",
                           "url-test",
@@ -337,8 +340,9 @@ export const GroupsEditorViewer = (props: Props) => {
                       <TextField
                         autoComplete="off"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         {...field}
+                        error={field.value === ""}
                         required={true}
                       />
                     </Item>
@@ -353,7 +357,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       <TextField
                         autoComplete="off"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         {...field}
                       />
                     </Item>
@@ -367,7 +371,9 @@ export const GroupsEditorViewer = (props: Props) => {
                       <ListItemText primary={t("Use Proxies")} />
                       <Autocomplete
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{
+                          width: "calc(100% - 150px)",
+                        }}
                         multiple
                         options={proxyPolicyList}
                         onChange={(_, value) => value && field.onChange(value)}
@@ -384,7 +390,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       <ListItemText primary={t("Use Provider")} />
                       <Autocomplete
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         multiple
                         options={proxyProviderList}
                         onChange={(_, value) => value && field.onChange(value)}
@@ -403,7 +409,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       <TextField
                         autoComplete="off"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         {...field}
                       />
                     </Item>
@@ -419,7 +425,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         autoComplete="off"
                         type="number"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
@@ -437,7 +443,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         autoComplete="off"
                         type="number"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
@@ -455,7 +461,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         autoComplete="off"
                         type="number"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
@@ -472,7 +478,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       <TextField
                         autoComplete="off"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         {...field}
                       />
                     </Item>
@@ -488,7 +494,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         autoComplete="off"
                         type="number"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
@@ -505,7 +511,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       <TextField
                         autoComplete="off"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         {...field}
                       />
                     </Item>
@@ -520,7 +526,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       <TextField
                         autoComplete="off"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         {...field}
                       />
                     </Item>
@@ -532,11 +538,32 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText primary={t("Exclude Type")} />
-                      <TextField
-                        autoComplete="off"
+                      <Autocomplete
+                        multiple
+                        options={[
+                          "ss",
+                          "ssr",
+                          "direct",
+                          "dns",
+                          "snell",
+                          "http",
+                          "trojan",
+                          "hysteria",
+                          "hysteria2",
+                          "tuic",
+                          "wireguard",
+                          "ssh",
+                          "socks5",
+                          "vmess",
+                          "vless",
+                        ]}
                         size="small"
-                        sx={{ minWidth: "240px" }}
-                        {...field}
+                        sx={{ width: "calc(100% - 150px)" }}
+                        value={field.value?.split("|")}
+                        onChange={(_, value) => {
+                          field.onChange(value.join("|"));
+                        }}
+                        renderInput={(params) => <TextField {...params} />}
                       />
                     </Item>
                   )}
@@ -551,7 +578,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         autoComplete="off"
                         type="number"
                         size="small"
-                        sx={{ minWidth: "240px" }}
+                        sx={{ width: "calc(100% - 150px)" }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
