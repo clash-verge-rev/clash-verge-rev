@@ -54,6 +54,7 @@
   "Create Profile": "Создать профиль",
   "Edit Profile": "Изменить профиль",
   "Edit Proxies": "Редактировать прокси",
+  "Use newlines for multiple uri": "Используйте новые строки для нескольких URI",
   "Edit Rules": "Редактировать правила",
   "Rule Type": "Тип правила",
   "Rule Content": "Содержимое правила",

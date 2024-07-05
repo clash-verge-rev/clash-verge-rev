@@ -58,6 +58,9 @@ importers:
       i18next:
         specifier: ^23.11.5
         version: 23.11.5
+      js-base64:
+        specifier: ^3.7.7
+        version: 3.7.7
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -76,6 +79,9 @@ importers:
       nanoid:
         specifier: ^5.0.7
         version: 5.0.7
+      peggy:
+        specifier: ^4.0.3
+        version: 4.0.3
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -98,8 +104,8 @@ importers:
         specifier: ^0.55.0
         version: 0.55.0(@types/react@18.3.3)(monaco-editor@0.49.0)(react@18.3.1)
       react-router-dom:
-        specifier: ^6.24.0
-        version: 6.24.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^6.24.1
+        version: 6.24.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-transition-group:
         specifier: ^4.4.5
         version: 4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -148,10 +154,10 @@ importers:
         version: 4.4.10
       "@vitejs/plugin-legacy":
         specifier: ^5.4.1
-        version: 5.4.1(terser@5.31.1)(vite@5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))
+        version: 5.4.1(terser@5.31.1)(vite@5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))
       "@vitejs/plugin-react":
         specifier: ^4.3.1
-        version: 4.3.1(vite@5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))
+        version: 4.3.1(vite@5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))
       adm-zip:
         specifier: ^0.5.14
         version: 0.5.14
@@ -186,14 +192,14 @@ importers:
         specifier: ^5.5.3
         version: 5.5.3
       vite:
-        specifier: ^5.3.2
-        version: 5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)
+        specifier: ^5.3.3
+        version: 5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
         version: 1.1.0(monaco-editor@0.49.0)
       vite-plugin-svgr:
         specifier: ^4.2.0
-        version: 4.2.0(rollup@4.18.0)(typescript@5.5.3)(vite@5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))
+        version: 4.2.0(rollup@4.18.0)(typescript@5.5.3)(vite@5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))
 
 packages:
   "@actions/github@5.1.1":
@@ -1797,16 +1803,23 @@ packages:
         integrity: sha512-eJ2jbzjdijiL3B4PrSQaSjuF2sPEQPVCPzBvTHJD9Nz+9dw2SGH4K4xeQJ77YfTq5bRQ+bD8wT11JbeDPmxmGg==,
       }
 
+  "@peggyjs/from-mem@1.3.0":
+    resolution:
+      {
+        integrity: sha512-kzGoIRJjkg3KuGI4bopz9UvF3KguzfxalHRDEIdqEZUe45xezsQ6cx30e0RKuxPUexojQRBfu89Okn7f4/QXsw==,
+      }
+    engines: { node: ">=18" }
+
   "@popperjs/core@2.11.8":
     resolution:
       {
         integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==,
       }
 
-  "@remix-run/router@1.17.0":
+  "@remix-run/router@1.17.1":
     resolution:
       {
-        integrity: sha512-2D6XaHEVvkCn682XBnipbJjgZUU7xjLtA4dGJRBVUKpEaDYOZMENZoZjAOSb7qirxt5RupjzZxz4fK2FO+EFPw==,
+        integrity: sha512-mCOMec4BKd6BRGBZeSnGiIgwsbLGp3yhVqAD8H+PxiRNEHgDpZb8J1TnrSDlg97t0ySKMQJTHCWBCmBpSmkF6Q==,
       }
     engines: { node: ">=14.0.0" }
 
@@ -2328,10 +2341,10 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0
 
-  acorn@8.12.0:
+  acorn@8.12.1:
     resolution:
       {
-        integrity: sha512-RTvkC4w+KNXrM39/lWCUaG0IbRkWdCv7W/IOW9oU6SawyxulvkQy5HQPVTKxEjczcUvapcrw3cFx/60VN/NRNw==,
+        integrity: sha512-tcpGyI9zbizT9JbV6oYE477V6mTlXvvi0T0G3SNIYE2apm/G5huBa1+K89VGeovbg+jycCrfhl3ADxErOuO6Jg==,
       }
     engines: { node: ">=0.4.0" }
     hasBin: true
@@ -2486,10 +2499,10 @@ packages:
       }
     engines: { node: ">=10" }
 
-  caniuse-lite@1.0.30001639:
+  caniuse-lite@1.0.30001640:
     resolution:
       {
-        integrity: sha512-eFHflNTBIlFwP2AIKaYuBQN/apnUoKNhBdza8ZnW/h2di4LCZ4xFqYlxUxo+LQ76KFI1PGcC1QDxMbxTZpSCAg==,
+        integrity: sha512-lA4VMpW0PSUrFnkmVuEKBUovSWKhj7puyCg8StBChgu298N1AtuF1sKWEvfDuimSEDbhlb/KqPKC3fs1HbuQUA==,
       }
 
   ccount@2.0.1:
@@ -2580,6 +2593,13 @@ packages:
       {
         integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==,
       }
+
+  commander@12.1.0:
+    resolution:
+      {
+        integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==,
+      }
+    engines: { node: ">=18" }
 
   commander@2.20.3:
     resolution:
@@ -3128,6 +3148,12 @@ packages:
         integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==,
       }
 
+  js-base64@3.7.7:
+    resolution:
+      {
+        integrity: sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==,
+      }
+
   js-cookie@2.2.1:
     resolution:
       {
@@ -3243,6 +3269,13 @@ packages:
       {
         integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==,
       }
+
+  lru-cache@6.0.0:
+    resolution:
+      {
+        integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==,
+      }
+    engines: { node: ">=10" }
 
   magic-string@0.30.10:
     resolution:
@@ -3708,6 +3741,14 @@ packages:
       }
     engines: { node: ">=8" }
 
+  peggy@4.0.3:
+    resolution:
+      {
+        integrity: sha512-v7/Pt6kGYsfXsCrfb52q7/yg5jaAwiVaUMAPLPvy4DJJU6Wwr72t6nDIqIDkGfzd1B4zeVuTnQT0RGeOhe/uSA==,
+      }
+    engines: { node: ">=18" }
+    hasBin: true
+
   picocolors@1.0.1:
     resolution:
       {
@@ -3863,20 +3904,20 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
-  react-router-dom@6.24.0:
+  react-router-dom@6.24.1:
     resolution:
       {
-        integrity: sha512-960sKuau6/yEwS8e+NVEidYQb1hNjAYM327gjEyXlc6r3Skf2vtwuJ2l7lssdegD2YjoKG5l8MsVyeTDlVeY8g==,
+        integrity: sha512-U19KtXqooqw967Vw0Qcn5cOvrX5Ejo9ORmOtJMzYWtCT4/WOfFLIZGGsVLxcd9UkBO0mSTZtXqhZBsWlHr7+Sg==,
       }
     engines: { node: ">=14.0.0" }
     peerDependencies:
       react: ">=16.8"
       react-dom: ">=16.8"
 
-  react-router@6.24.0:
+  react-router@6.24.1:
     resolution:
       {
-        integrity: sha512-sQrgJ5bXk7vbcC4BxQxeNa5UmboFm35we1AFK0VvQaz9g0LzxEIuLOhHIoZ8rnu9BO21ishGeL9no1WB76W/eg==,
+        integrity: sha512-PTXFXGK2pyXpHzVo3rR9H7ip4lSPZZc0bHG5CARmj65fTT6qG7sTngmb6lcYu1gf3y/8KxORoy9yn59pGpCnpg==,
       }
     engines: { node: ">=14.0.0" }
     peerDependencies:
@@ -4028,6 +4069,14 @@ packages:
       }
     hasBin: true
 
+  semver@7.6.0:
+    resolution:
+      {
+        integrity: sha512-EnwXhrlwXMk9gKu5/flx5sv/an57AkRplG3hTK68W7FRDN+k+OWBj65M7719OkA82XLBxrcX0KSHj+X5COhOVg==,
+      }
+    engines: { node: ">=10" }
+    hasBin: true
+
   server-only@0.0.1:
     resolution:
       {
@@ -4065,6 +4114,13 @@ packages:
       {
         integrity: sha512-W6iG8RGV6Zife3Cj+FhuyHV447E6fqFM2hKmnaQrTvg3OydINV3Msj3WPFbX76blUlUxvQSMMMdrJxce8NqI5Q==,
       }
+
+  source-map-generator@0.8.0:
+    resolution:
+      {
+        integrity: sha512-psgxdGMwl5MZM9S3FWee4EgsEaIjahYV5AzGnwUvPhWeITz/j6rKpysQHlQ4USdxvINlb8lKfWGIXwfkrgtqkA==,
+      }
+    engines: { node: ">= 10" }
 
   source-map-js@1.2.0:
     resolution:
@@ -4328,10 +4384,10 @@ packages:
       }
     engines: { node: ">= 10.0.0" }
 
-  update-browserslist-db@1.0.16:
+  update-browserslist-db@1.1.0:
     resolution:
       {
-        integrity: sha512-KVbTxlBYlckhF5wgfyZXTWnMn7MMZjMu9XG8bPlliUOP9ThaF4QnhP8qrjrH7DRzHfSk0oQv1wToW+iA5GajEQ==,
+        integrity: sha512-EdRAaAyk2cUE1wOf2DkEhzxqOQvFOoRJFNS6NeyJ01Gp2beMRpBAINjM2iDXE3KCuKhwnvHIQCJm6ThL2Z+HzQ==,
       }
     hasBin: true
     peerDependencies:
@@ -4373,10 +4429,10 @@ packages:
     peerDependencies:
       vite: ^2.6.0 || 3 || 4 || 5
 
-  vite@5.3.2:
+  vite@5.3.3:
     resolution:
       {
-        integrity: sha512-6lA7OBHBlXUxiJxbO5aAY2fsHHzDr1q7DvXYnyZycRs2Dz+dXBWuhpWHvmljTRTpQC2uvGmUFFkSHF2vGo90MA==,
+        integrity: sha512-NPQdeCU0Dv2z5fu+ULotpuq5yfCS1BzKUIPhNbP3YBfAMGJXbt2nS+sbTFu+qchaqWTD+H3JK++nRwr6XIcp6A==,
       }
     engines: { node: ^18.0.0 || >=20.0.0 }
     hasBin: true
@@ -5751,9 +5807,13 @@ snapshots:
     dependencies:
       "@octokit/openapi-types": 12.11.0
 
+  "@peggyjs/from-mem@1.3.0":
+    dependencies:
+      semver: 7.6.0
+
   "@popperjs/core@2.11.8": {}
 
-  "@remix-run/router@1.17.0": {}
+  "@remix-run/router@1.17.1": {}
 
   "@rollup/pluginutils@5.1.0(rollup@4.18.0)":
     dependencies:
@@ -6010,7 +6070,7 @@ snapshots:
 
   "@ungap/structured-clone@1.2.0": {}
 
-  "@vitejs/plugin-legacy@5.4.1(terser@5.31.1)(vite@5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))":
+  "@vitejs/plugin-legacy@5.4.1(terser@5.31.1)(vite@5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))":
     dependencies:
       "@babel/core": 7.24.7
       "@babel/preset-env": 7.24.7(@babel/core@7.24.7)
@@ -6021,22 +6081,22 @@ snapshots:
       regenerator-runtime: 0.14.1
       systemjs: 6.15.1
       terser: 5.31.1
-      vite: 5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)
+      vite: 5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)
     transitivePeerDependencies:
       - supports-color
 
-  "@vitejs/plugin-react@4.3.1(vite@5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))":
+  "@vitejs/plugin-react@4.3.1(vite@5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1))":
     dependencies:
       "@babel/core": 7.24.7
       "@babel/plugin-transform-react-jsx-self": 7.24.7(@babel/core@7.24.7)
       "@babel/plugin-transform-react-jsx-source": 7.24.7(@babel/core@7.24.7)
       "@types/babel__core": 7.20.5
       react-refresh: 0.14.2
-      vite: 5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)
+      vite: 5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)
     transitivePeerDependencies:
       - supports-color
 
-  acorn@8.12.0: {}
+  acorn@8.12.1: {}
 
   adm-zip@0.5.14: {}
 
@@ -6127,10 +6187,10 @@ snapshots:
 
   browserslist@4.23.1:
     dependencies:
-      caniuse-lite: 1.0.30001639
+      caniuse-lite: 1.0.30001640
       electron-to-chromium: 1.4.816
       node-releases: 2.0.14
-      update-browserslist-db: 1.0.16(browserslist@4.23.1)
+      update-browserslist-db: 1.1.0(browserslist@4.23.1)
 
   buffer-from@1.1.2: {}
 
@@ -6138,7 +6198,7 @@ snapshots:
 
   camelcase@6.3.0: {}
 
-  caniuse-lite@1.0.30001639: {}
+  caniuse-lite@1.0.30001640: {}
 
   ccount@2.0.1: {}
 
@@ -6185,6 +6245,8 @@ snapshots:
       delayed-stream: 1.0.0
 
   comma-separated-tokens@2.0.3: {}
+
+  commander@12.1.0: {}
 
   commander@2.20.3: {}
 
@@ -6492,6 +6554,8 @@ snapshots:
 
   isexe@2.0.0: {}
 
+  js-base64@3.7.7: {}
+
   js-cookie@2.2.1: {}
 
   js-tokens@4.0.0: {}
@@ -6541,6 +6605,10 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lru-cache@6.0.0:
+    dependencies:
+      yallist: 4.0.0
 
   magic-string@0.30.10:
     dependencies:
@@ -6914,6 +6982,12 @@ snapshots:
 
   path-type@4.0.0: {}
 
+  peggy@4.0.3:
+    dependencies:
+      "@peggyjs/from-mem": 1.3.0
+      commander: 12.1.0
+      source-map-generator: 0.8.0
+
   picocolors@1.0.1: {}
 
   picomatch@2.3.1: {}
@@ -7010,16 +7084,16 @@ snapshots:
 
   react-refresh@0.14.2: {}
 
-  react-router-dom@6.24.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-router-dom@6.24.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      "@remix-run/router": 1.17.0
+      "@remix-run/router": 1.17.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      react-router: 6.24.0(react@18.3.1)
+      react-router: 6.24.1(react@18.3.1)
 
-  react-router@6.24.0(react@18.3.1):
+  react-router@6.24.1(react@18.3.1):
     dependencies:
-      "@remix-run/router": 1.17.0
+      "@remix-run/router": 1.17.1
       react: 18.3.1
 
   react-transition-group@4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
@@ -7134,6 +7208,10 @@ snapshots:
 
   semver@6.3.1: {}
 
+  semver@7.6.0:
+    dependencies:
+      lru-cache: 6.0.0
+
   server-only@0.0.1: {}
 
   shebang-command@2.0.0:
@@ -7150,6 +7228,8 @@ snapshots:
       tslib: 2.6.3
 
   sockette@2.0.6: {}
+
+  source-map-generator@0.8.0: {}
 
   source-map-js@1.2.0: {}
 
@@ -7205,7 +7285,7 @@ snapshots:
   terser@5.31.1:
     dependencies:
       "@jridgewell/source-map": 0.3.6
-      acorn: 8.12.0
+      acorn: 8.12.1
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -7288,7 +7368,7 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  update-browserslist-db@1.0.16(browserslist@4.23.1):
+  update-browserslist-db@1.1.0(browserslist@4.23.1):
     dependencies:
       browserslist: 4.23.1
       escalade: 3.1.2
@@ -7313,18 +7393,18 @@ snapshots:
     dependencies:
       monaco-editor: 0.49.0
 
-  vite-plugin-svgr@4.2.0(rollup@4.18.0)(typescript@5.5.3)(vite@5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)):
+  vite-plugin-svgr@4.2.0(rollup@4.18.0)(typescript@5.5.3)(vite@5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)):
     dependencies:
       "@rollup/pluginutils": 5.1.0(rollup@4.18.0)
       "@svgr/core": 8.1.0(typescript@5.5.3)
       "@svgr/plugin-jsx": 8.1.0(@svgr/core@8.1.0(typescript@5.5.3))
-      vite: 5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)
+      vite: 5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1)
     transitivePeerDependencies:
       - rollup
       - supports-color
       - typescript
 
-  vite@5.3.2(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1):
+  vite@5.3.3(@types/node@20.14.9)(sass@1.77.6)(terser@5.31.1):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.4.39
