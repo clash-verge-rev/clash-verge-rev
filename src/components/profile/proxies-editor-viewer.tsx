@@ -227,7 +227,8 @@ export const ProxiesEditorViewer = (props: Props) => {
                     autoComplete="off"
                     placeholder={t("Use newlines for multiple uri")}
                     fullWidth
-                    minRows={8}
+                    rows={9}
+                    sx={{ height: "100px" }}
                     multiline
                     size="small"
                     onChange={(e) => setProxyUri(e.target.value)}
