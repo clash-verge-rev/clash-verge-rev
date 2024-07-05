@@ -247,9 +247,20 @@ interface HttpOptions {
   };
 }
 
+interface H2Options {
+  path?: string;
+  host?: string;
+}
+
 interface GrpcOptions {
   "grpc-service-name"?: string;
 }
+
+interface RealityOptions {
+  "public-key"?: string;
+  "short-id"?: string;
+}
+
 type NetworkType = "ws" | "http" | "h2" | "grpc";
 
 // base
@@ -258,22 +269,22 @@ interface IProxyBaseConfig {
   mptcp?: boolean;
   "interface-name"?: string;
   "routing-mark"?: number;
-  "ip-version"?: string;
+  "ip-version"?: "dual" | "ipv4" | "ipv6" | "ipv4-prefer" | "ipv6-prefer";
   "dialer-proxy"?: string;
 }
 // direct
 interface IProxyDirectConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "direct";
 }
 // dns
 interface IProxyDnsConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "dns";
 }
 // http
 interface IProxyHttpConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "http";
   server?: string;
   port?: number;
@@ -287,7 +298,7 @@ interface IProxyHttpConfig extends IProxyBaseConfig {
 }
 // socks5
 interface IProxySocks5Config extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "socks5";
   server?: string;
   port?: number;
@@ -300,7 +311,7 @@ interface IProxySocks5Config extends IProxyBaseConfig {
 }
 // ssh
 interface IProxySshConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "ssh";
   server?: string;
   port?: number;
@@ -313,7 +324,7 @@ interface IProxySshConfig extends IProxyBaseConfig {
 }
 // trojan
 interface IProxyTrojanConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "trojan";
   server?: string;
   port?: number;
@@ -324,7 +335,7 @@ interface IProxyTrojanConfig extends IProxyBaseConfig {
   fingerprint?: string;
   udp?: boolean;
   network?: NetworkType;
-  "reality-opts"?: {};
+  "reality-opts"?: RealityOptions;
   "grpc-opts"?: GrpcOptions;
   "ws-opts"?: WsOptions;
   "ss-opts"?: {
@@ -336,7 +347,7 @@ interface IProxyTrojanConfig extends IProxyBaseConfig {
 }
 // tuic
 interface IProxyTuicConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "tuic";
   server?: string;
   port?: number;
@@ -369,7 +380,7 @@ interface IProxyTuicConfig extends IProxyBaseConfig {
 }
 // vless
 interface IProxyVlessConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "vless";
   server?: string;
   port?: number;
@@ -382,12 +393,9 @@ interface IProxyVlessConfig extends IProxyBaseConfig {
   xudp?: boolean;
   "packet-encoding"?: string;
   network?: NetworkType;
-  "reality-opts"?: {
-    "public-key"?: string;
-    "short-id"?: string;
-  };
+  "reality-opts"?: RealityOptions;
   "http-opts"?: HttpOptions;
-  "h2-opts"?: {};
+  "h2-opts"?: H2Options;
   "grpc-opts"?: GrpcOptions;
   "ws-opts"?: WsOptions;
   "ws-path"?: string;
@@ -399,7 +407,7 @@ interface IProxyVlessConfig extends IProxyBaseConfig {
 }
 // vmess
 interface IProxyVmessConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "vmess";
   server?: string;
   port?: number;
@@ -413,12 +421,9 @@ interface IProxyVmessConfig extends IProxyBaseConfig {
   "skip-cert-verify"?: boolean;
   fingerprint?: string;
   servername?: string;
-  "reality-opts"?: {};
+  "reality-opts"?: RealityOptions;
   "http-opts"?: HttpOptions;
-  "h2-opts"?: {
-    path?: string;
-    host?: string;
-  };
+  "h2-opts"?: H2Options;
   "grpc-opts"?: GrpcOptions;
   "ws-opts"?: WsOptions;
   "packet-addr"?: boolean;
@@ -438,7 +443,7 @@ interface WireGuardPeerOptions {
 }
 // wireguard
 interface IProxyWireguardConfig extends IProxyBaseConfig, WireGuardPeerOptions {
-  name?: string;
+  name: string;
   type: "wireguard";
   ip?: string;
   ipv6?: string;
@@ -454,7 +459,7 @@ interface IProxyWireguardConfig extends IProxyBaseConfig, WireGuardPeerOptions {
 }
 // hysteria
 interface IProxyHysteriaConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "hysteria";
   server?: string;
   port?: number;
@@ -482,7 +487,7 @@ interface IProxyHysteriaConfig extends IProxyBaseConfig {
 }
 // hysteria2
 interface IProxyHysteria2Config extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "hysteria2";
   server?: string;
   port?: number;
@@ -506,14 +511,14 @@ interface IProxyHysteria2Config extends IProxyBaseConfig {
 }
 // shadowsocks
 interface IProxyShadowsocksConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "ss";
   server?: string;
   port?: number;
   password?: string;
   cipher?: string;
   udp?: boolean;
-  plugin?: string;
+  plugin?: "obfs" | "v2ray-plugin" | "shadow-tls" | "restls";
   "plugin-opts"?: {
     mode?: string;
     host?: string;
@@ -536,7 +541,7 @@ interface IProxyShadowsocksConfig extends IProxyBaseConfig {
 }
 // shadowsocksR
 interface IProxyshadowsocksRConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "ssr";
   server?: string;
   port?: number;
@@ -552,7 +557,7 @@ interface IProxyshadowsocksRConfig extends IProxyBaseConfig {
 interface IProxySmuxConfig {
   smux?: {
     enabled?: boolean;
-    protocol?: string;
+    protocol?: "smux" | "yamux" | "h2mux";
     "max-connections"?: number;
     "min-streams"?: number;
     "max-streams"?: number;
@@ -568,7 +573,7 @@ interface IProxySmuxConfig {
 }
 // snell
 interface IProxySnellConfig extends IProxyBaseConfig {
-  name?: string;
+  name: string;
   type: "snell";
   server?: string;
   port?: number;
