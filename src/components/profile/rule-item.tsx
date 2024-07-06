@@ -18,7 +18,12 @@ interface Props {
 export const RuleItem = (props: Props) => {
   let { type, ruleRaw, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
-  const rule = ruleRaw.replace(",no-resolve", "").split(",");
+  const rule = ruleRaw.replace(",no-resolve", "");
+
+  const ruleType = rule.match(/^[^,]+/)?.[0] ?? "";
+  const proxyPolicy = rule.match(/[^,]+$/)?.[0] ?? "";
+  const ruleContent = rule.slice(ruleType.length + 1, -proxyPolicy.length - 1);
+
   const { attributes, listeners, setNodeRef, transform, transition } = sortable
     ? useSortable({ id: ruleRaw })
     : {
@@ -56,7 +61,7 @@ export const RuleItem = (props: Props) => {
           <StyledPrimary
             sx={{ textDecoration: type === "delete" ? "line-through" : "" }}
           >
-            {rule.length === 3 ? rule[1] : "-"}
+            {ruleContent || "-"}
           </StyledPrimary>
         }
         secondary={
@@ -70,10 +75,10 @@ export const RuleItem = (props: Props) => {
             }}
           >
             <Box sx={{ marginTop: "2px" }}>
-              <StyledTypeBox>{rule[0]}</StyledTypeBox>
+              <StyledTypeBox>{ruleType}</StyledTypeBox>
             </Box>
             <StyledSubtitle sx={{ color: "text.secondary" }}>
-              {rule.length === 3 ? rule[2] : rule[1]}
+              {proxyPolicy}
             </StyledSubtitle>
           </ListItemTextChild>
         }
