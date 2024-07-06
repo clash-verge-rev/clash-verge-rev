@@ -31,7 +31,7 @@
     "@emotion/styled": "^11.11.5",
     "@juggle/resize-observer": "^3.4.0",
     "@mui/icons-material": "^5.15.19",
-    "@mui/lab": "5.0.0-alpha.170",
+    "@mui/lab": "5.0.0-alpha.171",
     "@mui/material": "^5.15.19",
     "@mui/x-data-grid": "^7.6.2",
     "@tauri-apps/api": "^1.5.6",
