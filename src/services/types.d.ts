@@ -223,7 +223,7 @@ interface IProxyGroupConfig {
   filter?: string;
   "exclude-filter"?: string;
   "exclude-type"?: string;
-  "expected-status"?: number;
+  "expected-status"?: string;
   hidden?: boolean;
   icon?: string;
 }

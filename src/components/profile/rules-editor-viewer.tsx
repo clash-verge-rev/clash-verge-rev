@@ -254,9 +254,17 @@ export const RulesEditorViewer = (props: Props) => {
   const [appendSeq, setAppendSeq] = useState<string[]>([]);
   const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
 
+  const filteredPrependSeq = useMemo(
+    () => prependSeq.filter((rule) => match(rule)),
+    [prependSeq, match]
+  );
   const filteredRuleList = useMemo(
     () => ruleList.filter((rule) => match(rule)),
     [ruleList, match]
+  );
+  const filteredAppendSeq = useMemo(
+    () => appendSeq.filter((rule) => match(rule)),
+    [appendSeq, match]
   );
 
   const sensors = useSensors(
@@ -573,13 +581,13 @@ export const RulesEditorViewer = (props: Props) => {
                 style={{ height: "calc(100% - 24px)", marginTop: "8px" }}
                 totalCount={
                   filteredRuleList.length +
-                  (prependSeq.length > 0 ? 1 : 0) +
-                  (appendSeq.length > 0 ? 1 : 0)
+                  (filteredPrependSeq.length > 0 ? 1 : 0) +
+                  (filteredAppendSeq.length > 0 ? 1 : 0)
                 }
                 increaseViewportBy={256}
                 itemContent={(index) => {
-                  let shift = prependSeq.length > 0 ? 1 : 0;
-                  if (prependSeq.length > 0 && index === 0) {
+                  let shift = filteredPrependSeq.length > 0 ? 1 : 0;
+                  if (filteredPrependSeq.length > 0 && index === 0) {
                     return (
                       <DndContext
                         sensors={sensors}
@@ -587,11 +595,11 @@ export const RulesEditorViewer = (props: Props) => {
                         onDragEnd={onPrependDragEnd}
                       >
                         <SortableContext
-                          items={prependSeq.map((x) => {
+                          items={filteredPrependSeq.map((x) => {
                             return x;
                           })}
                         >
-                          {prependSeq.map((item, index) => {
+                          {filteredPrependSeq.map((item, index) => {
                             return (
                               <RuleItem
                                 key={`${item}-${index}`}
@@ -643,11 +651,11 @@ export const RulesEditorViewer = (props: Props) => {
                         onDragEnd={onAppendDragEnd}
                       >
                         <SortableContext
-                          items={appendSeq.map((x) => {
+                          items={filteredAppendSeq.map((x) => {
                             return x;
                           })}
                         >
-                          {appendSeq.map((item, index) => {
+                          {filteredAppendSeq.map((item, index) => {
                             return (
                               <RuleItem
                                 key={`${item}-${index}`}
