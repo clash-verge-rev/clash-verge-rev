@@ -127,7 +127,31 @@ export const ProxiesEditorViewer = (props: Props) => {
       }
     }
   };
-
+  const handleParse = () => {
+    let proxies = [] as IProxyConfig[];
+    let names: string[] = [];
+    let uris = "";
+    try {
+      uris = atob(proxyUri);
+    } catch {
+      uris = proxyUri;
+    }
+    uris
+      .trim()
+      .split("\n")
+      .forEach((uri) => {
+        try {
+          let proxy = parseUri(uri.trim());
+          if (!names.includes(proxy.name)) {
+            proxies.push(proxy);
+            names.push(proxy.name);
+          }
+        } catch (err: any) {
+          Notice.error(err.message || err.toString());
+        }
+      });
+    return proxies;
+  };
   const fetchProfile = async () => {
     let data = await readProfileFile(profileUid);
 
@@ -247,18 +271,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                   fullWidth
                   variant="contained"
                   onClick={() => {
-                    let proxies = [] as IProxyConfig[];
-                    proxyUri
-                      .trim()
-                      .split("\n")
-                      .forEach((uri) => {
-                        try {
-                          let proxy = parseUri(uri.trim());
-                          proxies.push(proxy);
-                        } catch (err: any) {
-                          Notice.error(err.message || err.toString());
-                        }
-                      });
+                    let proxies = handleParse();
                     setPrependSeq([...prependSeq, ...proxies]);
                   }}
                 >
@@ -270,18 +283,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                   fullWidth
                   variant="contained"
                   onClick={() => {
-                    let proxies = [] as IProxyConfig[];
-                    proxyUri
-                      .trim()
-                      .split("\n")
-                      .forEach((uri) => {
-                        try {
-                          let proxy = parseUri(uri.trim());
-                          proxies.push(proxy);
-                        } catch (err: any) {
-                          Notice.error(err.message || err.toString());
-                        }
-                      });
+                    let proxies = handleParse();
                     setAppendSeq([...appendSeq, ...proxies]);
                   }}
                 >
