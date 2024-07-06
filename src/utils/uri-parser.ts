@@ -83,7 +83,7 @@ function decodeBase64OrOriginal(str: string): string {
 function URI_SS(line: string): IProxyShadowsocksConfig {
   // parse url
   let content = line.split("ss://")[1];
-  content = decodeBase64OrOriginal(content);
+
   const proxy: IProxyShadowsocksConfig = {
     name: decodeURIComponent(line.split("#")[1]).trim(),
     type: "ss",
@@ -172,7 +172,7 @@ function URI_SS(line: string): IProxyShadowsocksConfig {
 
 function URI_SSR(line: string): IProxyshadowsocksRConfig {
   line = decodeBase64OrOriginal(line.split("ssr://")[1]);
-  line = decodeBase64OrOriginal(line);
+
   // handle IPV6 & IPV4 format
   let splitIdx = line.indexOf(":origin");
   if (splitIdx === -1) {
@@ -411,7 +411,6 @@ function URI_VMESS(line: string): IProxyVmessConfig {
 
 function URI_VLESS(line: string): IProxyVlessConfig {
   line = line.split("vless://")[1];
-  line = decodeBase64OrOriginal(line);
   let isShadowrocket;
   let parsed = /^(.*?)@(.*?):(\d+)\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!;
   if (!parsed) {
@@ -578,7 +577,6 @@ function URI_Trojan(line: string): IProxyTrojanConfig {
 
 function URI_Hysteria2(line: string): IProxyHysteria2Config {
   line = line.split(/(hysteria2|hy2):\/\//)[2];
-  line = decodeBase64OrOriginal(line);
   // eslint-disable-next-line no-unused-vars
   let [__, password, server, ___, port, ____, addons = "", name] =
     /^(.*?)@(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line) || [];
@@ -627,7 +625,6 @@ function URI_Hysteria2(line: string): IProxyHysteria2Config {
 
 function URI_Hysteria(line: string): IProxyHysteriaConfig {
   line = line.split(/(hysteria|hy):\/\//)[2];
-  line = decodeBase64OrOriginal(line);
   let [__, server, ___, port, ____, addons = "", name] =
     /^(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!;
   let portNum = parseInt(`${port}`, 10);
@@ -723,7 +720,7 @@ function URI_Hysteria(line: string): IProxyHysteriaConfig {
 
 function URI_TUIC(line: string): IProxyTuicConfig {
   line = line.split(/tuic:\/\//)[1];
-  line = decodeBase64OrOriginal(line);
+
   let [__, uuid, password, server, ___, port, ____, addons = "", name] =
     /^(.*?):(.*?)@(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line) || [];
 
@@ -803,7 +800,6 @@ function URI_TUIC(line: string): IProxyTuicConfig {
 
 function URI_Wireguard(line: string): IProxyWireguardConfig {
   line = line.split(/(wireguard|wg):\/\//)[2];
-  line = decodeBase64OrOriginal(line);
   let [__, ___, privateKey, server, ____, port, _____, addons = "", name] =
     /^((.*?)@)?(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!;
 
@@ -886,7 +882,6 @@ function URI_Wireguard(line: string): IProxyWireguardConfig {
 
 function URI_HTTP(line: string): IProxyHttpConfig {
   line = line.split(/(http|https):\/\//)[2];
-  line = decodeBase64OrOriginal(line);
   let [__, ___, auth, server, ____, port, _____, addons = "", name] =
     /^((.*?)@)?(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!;
 
@@ -951,7 +946,6 @@ function URI_HTTP(line: string): IProxyHttpConfig {
 
 function URI_SOCKS(line: string): IProxySocks5Config {
   line = line.split(/socks5:\/\//)[1];
-  line = decodeBase64OrOriginal(line);
   let [__, ___, auth, server, ____, port, _____, addons = "", name] =
     /^((.*?)@)?(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!;
 
