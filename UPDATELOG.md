@@ -1,3 +1,18 @@
+## v1.7.3
+
+### Features
+
+- 支持可视化编辑订阅代理组
+- 支持可视化编辑订阅节点
+- 支持可视化编辑订阅规则
+- 扩展脚本支持订阅名称参数 `function main(config, profileName)`
+
+### Bugs Fixes
+
+- 代理绕过格式检查错误
+
+---
+
 ## v1.7.2
 
 ### Break Changes

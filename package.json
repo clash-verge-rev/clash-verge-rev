@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "tauri dev",
@@ -24,10 +24,10 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@juggle/resize-observer": "^3.4.0",
-    "@mui/icons-material": "^5.15.21",
+    "@mui/icons-material": "^5.16.0",
     "@mui/lab": "5.0.0-alpha.149",
-    "@mui/material": "^5.15.21",
-    "@mui/x-data-grid": "^7.8.0",
+    "@mui/material": "^5.16.0",
+    "@mui/x-data-grid": "^7.9.0",
     "@tauri-apps/api": "^1.6.0",
     "@types/json-schema": "^7.0.15",
     "ahooks": "^3.8.0",
