@@ -78,9 +78,17 @@ export const GroupsEditorViewer = (props: Props) => {
   const [appendSeq, setAppendSeq] = useState<IProxyGroupConfig[]>([]);
   const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
 
+  const filteredPrependSeq = useMemo(
+    () => prependSeq.filter((group) => match(group.name)),
+    [prependSeq, match]
+  );
   const filteredGroupList = useMemo(
     () => groupList.filter((group) => match(group.name)),
     [groupList, match]
+  );
+  const filteredAppendSeq = useMemo(
+    () => appendSeq.filter((group) => match(group.name)),
+    [appendSeq, match]
   );
 
   const sensors = useSensors(
@@ -376,6 +384,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         }}
                         multiple
                         options={proxyPolicyList}
+                        disableCloseOnSelect
                         onChange={(_, value) => value && field.onChange(value)}
                         renderInput={(params) => <TextField {...params} />}
                       />
@@ -393,6 +402,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         sx={{ width: "calc(100% - 150px)" }}
                         multiple
                         options={proxyProviderList}
+                        disableCloseOnSelect
                         onChange={(_, value) => value && field.onChange(value)}
                         renderInput={(params) => <TextField {...params} />}
                       />
@@ -541,23 +551,33 @@ export const GroupsEditorViewer = (props: Props) => {
                       <Autocomplete
                         multiple
                         options={[
-                          "ss",
-                          "ssr",
-                          "direct",
-                          "dns",
-                          "snell",
-                          "http",
-                          "trojan",
-                          "hysteria",
-                          "hysteria2",
-                          "tuic",
-                          "wireguard",
-                          "ssh",
-                          "socks5",
-                          "vmess",
-                          "vless",
+                          "Direct",
+                          "Reject",
+                          "RejectDrop",
+                          "Compatible",
+                          "Pass",
+                          "Dns",
+                          "Shadowsocks",
+                          "ShadowsocksR",
+                          "Snell",
+                          "Socks5",
+                          "Http",
+                          "Vmess",
+                          "Vless",
+                          "Trojan",
+                          "Hysteria",
+                          "Hysteria2",
+                          "WireGuard",
+                          "Tuic",
+                          "Relay",
+                          "Selector",
+                          "Fallback",
+                          "URLTest",
+                          "LoadBalance",
+                          "Ssh",
                         ]}
                         size="small"
+                        disableCloseOnSelect
                         sx={{ width: "calc(100% - 150px)" }}
                         value={field.value?.split("|")}
                         onChange={(_, value) => {
@@ -576,7 +596,6 @@ export const GroupsEditorViewer = (props: Props) => {
                       <ListItemText primary={t("Expected Status")} />
                       <TextField
                         autoComplete="off"
-                        type="number"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         onChange={(e) => {
@@ -705,13 +724,13 @@ export const GroupsEditorViewer = (props: Props) => {
                 style={{ height: "calc(100% - 24px)", marginTop: "8px" }}
                 totalCount={
                   filteredGroupList.length +
-                  (prependSeq.length > 0 ? 1 : 0) +
-                  (appendSeq.length > 0 ? 1 : 0)
+                  (filteredPrependSeq.length > 0 ? 1 : 0) +
+                  (filteredAppendSeq.length > 0 ? 1 : 0)
                 }
                 increaseViewportBy={256}
                 itemContent={(index) => {
-                  let shift = prependSeq.length > 0 ? 1 : 0;
-                  if (prependSeq.length > 0 && index === 0) {
+                  let shift = filteredPrependSeq.length > 0 ? 1 : 0;
+                  if (filteredPrependSeq.length > 0 && index === 0) {
                     return (
                       <DndContext
                         sensors={sensors}
@@ -719,11 +738,11 @@ export const GroupsEditorViewer = (props: Props) => {
                         onDragEnd={onPrependDragEnd}
                       >
                         <SortableContext
-                          items={prependSeq.map((x) => {
+                          items={filteredPrependSeq.map((x) => {
                             return x.name;
                           })}
                         >
-                          {prependSeq.map((item, index) => {
+                          {filteredPrependSeq.map((item, index) => {
                             return (
                               <GroupItem
                                 key={`${item.name}-${index}`}
@@ -779,11 +798,11 @@ export const GroupsEditorViewer = (props: Props) => {
                         onDragEnd={onAppendDragEnd}
                       >
                         <SortableContext
-                          items={appendSeq.map((x) => {
+                          items={filteredAppendSeq.map((x) => {
                             return x.name;
                           })}
                         >
-                          {appendSeq.map((item, index) => {
+                          {filteredAppendSeq.map((item, index) => {
                             return (
                               <GroupItem
                                 key={`${item.name}-${index}`}

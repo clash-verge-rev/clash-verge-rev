@@ -92,7 +92,7 @@ export const RuleItem = (props: Props) => {
   );
 };
 
-const StyledPrimary = styled("span")`
+const StyledPrimary = styled("div")`
   font-size: 15px;
   font-weight: 700;
   line-height: 1.5;
