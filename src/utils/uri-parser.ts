@@ -80,6 +80,79 @@ function decodeBase64OrOriginal(str: string): string {
   }
 }
 
+function getCipher(str: string | undefined) {
+  switch (str) {
+    case "none":
+      return "none";
+    case "auto":
+      return "auto";
+    case "dummy":
+      return "dummy";
+    case "aes-128-gcm":
+      return "aes-128-gcm";
+    case "aes-192-gcm":
+      return "aes-192-gcm";
+    case "aes-256-gcm":
+      return "aes-256-gcm";
+    case "lea-128-gcm":
+      return "lea-128-gcm";
+    case "lea-192-gcm":
+      return "lea-192-gcm";
+    case "lea-256-gcm":
+      return "lea-256-gcm";
+    case "aes-128-gcm-siv":
+      return "aes-128-gcm-siv";
+    case "aes-256-gcm-siv":
+      return "aes-256-gcm-siv";
+    case "2022-blake3-aes-128-gcm":
+      return "2022-blake3-aes-128-gcm";
+    case "2022-blake3-aes-256-gcm":
+      return "2022-blake3-aes-256-gcm";
+    case "aes-128-cfb":
+      return "aes-128-cfb";
+    case "aes-192-cfb":
+      return "aes-192-cfb";
+    case "aes-256-cfb":
+      return "aes-256-cfb";
+    case "aes-128-ctr":
+      return "aes-128-ctr";
+    case "aes-192-ctr":
+      return "aes-192-ctr";
+    case "aes-256-ctr":
+      return "aes-256-ctr";
+    case "chacha20":
+      return "chacha20";
+    case "chacha20-poly1305":
+      return "chacha20-ietf-poly1305";
+    case "chacha20-ietf":
+      return "chacha20-ietf";
+    case "chacha20-ietf-poly1305":
+      return "chacha20-ietf-poly1305";
+    case "2022-blake3-chacha20-poly1305":
+      return "2022-blake3-chacha20-poly1305";
+    case "rabbit128-poly1305":
+      return "rabbit128-poly1305";
+    case "xchacha20-ietf-poly1305":
+      return "xchacha20-ietf-poly1305";
+    case "xchacha20":
+      return "xchacha20";
+    case "aegis-128l":
+      return "aegis-128l";
+    case "aegis-256":
+      return "aegis-256";
+    case "aez-384":
+      return "aez-384";
+    case "deoxys-ii-256-128":
+      return "deoxys-ii-256-128";
+    case "rc4-md5":
+      return "rc4-md5";
+    case undefined:
+      return "none";
+    default:
+      return "auto";
+  }
+}
+
 function URI_SS(line: string): IProxyShadowsocksConfig {
   // parse url
   let content = line.split("ss://")[1];
@@ -125,7 +198,7 @@ function URI_SS(line: string): IProxyShadowsocksConfig {
     `${serverAndPort?.substring(portIdx + 1)}`.match(/\d+/)?.[0] ?? ""
   );
   const userInfo = userInfoStr.match(/(^.*?):(.*$)/);
-  proxy.cipher = userInfo?.[1];
+  proxy.cipher = getCipher(userInfo?.[1]);
   proxy.password = userInfo?.[2];
 
   // handle obfs
@@ -194,7 +267,7 @@ function URI_SSR(line: string): IProxyshadowsocksRConfig {
     server,
     port,
     protocol: params[0],
-    cipher: params[1],
+    cipher: getCipher(params[1]),
     obfs: params[2],
     password: decodeBase64OrOriginal(params[3]),
   };
@@ -243,7 +316,7 @@ function URI_VMESS(line: string): IProxyVmessConfig {
       type: "vmess",
       server: partitions[1],
       port: parseInt(partitions[2], 10),
-      cipher: getIfNotBlank(partitions[3], "auto"),
+      cipher: getCipher(getIfNotBlank(partitions[3], "auto")),
       uuid: partitions[4].match(/^"(.*)"$/)?.[1] || "",
       tls: params.obfs === "wss",
       udp: getIfPresent(params["udp-relay"]),
@@ -320,7 +393,7 @@ function URI_VMESS(line: string): IProxyVmessConfig {
       type: "vmess",
       server,
       port,
-      cipher: getIfPresent(params.scy, "auto"),
+      cipher: getCipher(getIfPresent(params.scy, "auto")),
       uuid: params.id,
       tls: ["tls", true, 1, "1"].includes(params.tls),
       "skip-cert-verify": isPresent(params.verify_cert)
