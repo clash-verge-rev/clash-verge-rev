@@ -243,7 +243,7 @@ interface HttpOptions {
   method?: string;
   path?: string[];
   headers?: {
-    [key: string]: string;
+    [key: string]: string[];
   };
 }
 
@@ -325,7 +325,9 @@ interface IProxyHttpConfig extends IProxyBaseConfig {
   sni?: string;
   "skip-cert-verify"?: boolean;
   fingerprint?: string;
-  headers?: {};
+  headers?: {
+    [key: string]: string;
+  };
 }
 // socks5
 interface IProxySocks5Config extends IProxyBaseConfig {
@@ -430,7 +432,9 @@ interface IProxyVlessConfig extends IProxyBaseConfig {
   "grpc-opts"?: GrpcOptions;
   "ws-opts"?: WsOptions;
   "ws-path"?: string;
-  "ws-headers"?: {};
+  "ws-headers"?: {
+    [key: string]: string;
+  };
   "skip-cert-verify"?: boolean;
   fingerprint?: string;
   servername?: string;
@@ -557,7 +561,9 @@ interface IProxyShadowsocksConfig extends IProxyBaseConfig {
     path?: string;
     tls?: string;
     fingerprint?: string;
-    headers?: {};
+    headers?: {
+      [key: string]: string;
+    };
     "skip-cert-verify"?: boolean;
     version?: number;
     mux?: boolean;
