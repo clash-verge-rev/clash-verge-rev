@@ -59,6 +59,7 @@ export const RuleItem = (props: Props) => {
         sx={{ cursor: sortable ? "move" : "" }}
         primary={
           <StyledPrimary
+            title={ruleContent || "-"}
             sx={{ textDecoration: type === "delete" ? "line-through" : "" }}
           >
             {ruleContent || "-"}
