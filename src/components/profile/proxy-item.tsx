@@ -56,6 +56,7 @@ export const ProxyItem = (props: Props) => {
         sx={{ cursor: sortable ? "move" : "" }}
         primary={
           <StyledPrimary
+            title={proxy.name}
             sx={{ textDecoration: type === "delete" ? "line-through" : "" }}
           >
             {proxy.name}

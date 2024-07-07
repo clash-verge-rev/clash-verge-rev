@@ -26,7 +26,7 @@ type SearchProps = {
 export const BaseSearchBox = styled((props: SearchProps) => {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [matchCase, setMatchCase] = useState(props.matchCase ?? true);
+  const [matchCase, setMatchCase] = useState(props.matchCase ?? false);
   const [matchWholeWord, setMatchWholeWord] = useState(
     props.matchWholeWord ?? false
   );
