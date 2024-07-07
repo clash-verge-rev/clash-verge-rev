@@ -105,8 +105,9 @@ export const ProviderButton = () => {
             const download = sub?.Download || 0;
             const total = sub?.Total || 0;
             const expire = sub?.Expire || 0;
-            const progress = Math.round(
-              ((download + upload) * 100) / (total + 0.1)
+            const progress = Math.min(
+              Math.round(((download + upload) * 100) / (total + 0.01)) + 1,
+              100
             );
             return (
               <>
@@ -159,6 +160,7 @@ export const ProviderButton = () => {
                             <LinearProgress
                               variant="determinate"
                               value={progress}
+                              style={{ opacity: total > 0 ? 1 : 0 }}
                             />
                           </>
                         )}
