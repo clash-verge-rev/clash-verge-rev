@@ -44,13 +44,27 @@ impl CoreManager {
         let config_path = dirs::path_to_str(&config_path)?;
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
-        let clash_core = clash_core.unwrap_or("clash".into());
+        let mut clash_core = clash_core.unwrap_or("verge-mihomo".into());
 
-        let app_dir = dirs::app_home_dir()?;
-        let app_dir = dirs::path_to_str(&app_dir)?;
+        // compatibility
+        if clash_core.contains("clash") {
+            clash_core = "verge-mihomo".to_string();
+            Config::verge().draft().patch_config(IVerge {
+                clash_core: Some("verge-mihomo".to_string()),
+                ..IVerge::default()
+            });
+            Config::verge().apply();
+            match Config::verge().data().save_file() {
+                Ok(_) => handle::Handle::refresh_verge(),
+                Err(err) => log::error!(target: "app", "{err}"),
+            }
+        }
+
+        let test_dir = dirs::app_home_dir()?.join("test");
+        let test_dir = dirs::path_to_str(&test_dir)?;
 
         let output = Command::new_sidecar(clash_core)?
-            .args(["-t", "-d", app_dir, "-f", config_path])
+            .args(["-t", "-d", test_dir, "-f", config_path])
             .output()?;
 
         if !output.status.success() {
@@ -82,7 +96,7 @@ impl CoreManager {
             log::debug!(target: "app", "stop the core by service");
             log_err!(service::stop_core_by_service().await);
         } else {
-            let mut system = System::new_with_specifics(
+            let system = System::new_with_specifics(
                 RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
             );
             let procs = system.processes_by_name("verge-mihomo");
@@ -227,7 +241,7 @@ impl CoreManager {
         let mut sidecar = self.sidecar.lock();
         let _ = sidecar.take();
 
-        let mut system = System::new_with_specifics(
+        let system = System::new_with_specifics(
             RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
         );
         let procs = system.processes_by_name("verge-mihomo");
@@ -278,7 +292,6 @@ impl CoreManager {
     /// 如果涉及端口和外部控制则需要重启
     pub async fn update_config(&self) -> Result<()> {
         log::debug!(target: "app", "try to update clash config");
-
         // 更新订阅
         Config::generate().await?;
 
@@ -290,20 +303,19 @@ impl CoreManager {
         let path = dirs::path_to_str(&path)?;
 
         // 发送请求 发送5次
-        for i in 0..5 {
+        for i in 0..10 {
             match clash_api::put_configs(path).await {
                 Ok(_) => break,
                 Err(err) => {
-                    if i < 4 {
+                    if i < 9 {
                         log::info!(target: "app", "{err}");
                     } else {
                         bail!(err);
                     }
                 }
             }
-            sleep(Duration::from_millis(250)).await;
+            sleep(Duration::from_millis(100)).await;
         }
-
         Ok(())
     }
 }
