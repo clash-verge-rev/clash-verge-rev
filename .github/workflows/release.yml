@@ -256,3 +256,14 @@ jobs:
         run: pnpm updater-fixed-webview2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  submit-to-winget:
+    runs-on: windows-latest
+    needs: [release-update]
+    steps:
+      - name: Submit to Winget
+        uses: vedantmgoyal9/winget-releaser@main
+        with:
+          identifer: ClashVergeRev.ClashVergeRev
+          installers-regex: '_(arm64|x64|x86)-setup\.exe$'
+          token: ${{ secrets.GITHUB_TOKEN }}
