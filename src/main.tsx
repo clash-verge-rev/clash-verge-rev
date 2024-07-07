@@ -10,7 +10,7 @@ if (!window.ResizeObserver) {
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
-import { BrowserRouter } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 import { BaseErrorBoundary } from "@/components/base";
 import Layout from "@/pages/_layout";
 import "@/services/i18n";
@@ -21,6 +21,7 @@ import {
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
+import router from "@/pages/_routers";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -77,9 +78,7 @@ createRoot(container).render(
   <React.StrictMode>
     <ComposeContextProvider contexts={contexts}>
       <BaseErrorBoundary>
-        <BrowserRouter>
-          <Layout />
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </BaseErrorBoundary>
     </ComposeContextProvider>
   </React.StrictMode>,

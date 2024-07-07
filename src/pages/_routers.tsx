@@ -6,7 +6,8 @@ import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 import TestSvg from "@/assets/image/itemicon/test.svg?react";
 import { BaseErrorBoundary } from "@/components/base";
-import LoadingPage from "@/pages/loading";
+import Layout from "@/pages/_layout";
+import { NotFountPage } from "@/pages/_not-found";
 import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
 import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
@@ -14,7 +15,8 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
 import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
+import { createBrowserRouter } from "react-router-dom";
 
 // const LoadingPage = lazy(() => import("./loading"));
 const ProxiesPage = lazy(() => import("./proxies"));
@@ -68,11 +70,29 @@ export const routers = [
     icon: [<SettingsRoundedIcon />, <SettingsSvg />],
     element: <SettingsPage />,
   },
-].map((router) => ({
-  ...router,
-  element: (
-    <BaseErrorBoundary key={router.label}>
-      <Suspense fallback={<LoadingPage />}>{router.element}</Suspense>
-    </BaseErrorBoundary>
-  ),
-}));
+];
+
+const routerObj = [
+  {
+    path: "/",
+    element: <Layout />,
+    errorElement: <BaseErrorBoundary />,
+    children: [
+      {
+        errorElement: <BaseErrorBoundary />,
+        children: [
+          { index: true, element: <ProxiesPage /> },
+          ...routers.map((item) => ({
+            path: item.path,
+            element: item.element,
+          })),
+          { path: "*", element: <NotFountPage /> },
+        ],
+      },
+    ],
+  },
+];
+
+const router = createBrowserRouter(routerObj);
+
+export default router;

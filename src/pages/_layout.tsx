@@ -19,12 +19,13 @@ import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
 import i18next from "i18next";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useRoutes } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { CSSTransition, SwitchTransition } from "react-transition-group";
 import { SWRConfig, mutate } from "swr";
 import { routers } from "./_routers";
+import LoadingPage from "@/pages/loading";
 
 export let portableFlag = false;
 dayjs.extend(relativeTime);
@@ -42,7 +43,6 @@ const Layout = () => {
   const isDark = theme.palette.mode === "dark";
   keepUIActive = enable_keep_ui_active ?? false;
   const navigate = useNavigate();
-  const routersEles = useRoutes(routers)!;
 
   appWindow.isMaximized().then((maximized) => {
     setIsMaximized(maximized);
@@ -227,14 +227,20 @@ const Layout = () => {
               </div>
             )}
 
-            <div className="the-content">{routersEles}</div>
+            <div className="the-content">
+              <Suspense fallback={<LoadingPage />}>
+                <Outlet />
+              </Suspense>
+            </div>
             {/* when proxies page expanded item too musch, this transition will slowly */}
             {/* <TransitionGroup className="the-content">
               <CSSTransition
                 key={location.pathname}
                 timeout={300}
                 classNames="page">
-                {routersEles}
+                <Suspense fallback={<LoadingPage />}>
+                  <Outlet />
+                </Suspense>
               </CSSTransition>
             </TransitionGroup> */}
           </div>
