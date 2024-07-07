@@ -260,8 +260,17 @@ interface RealityOptions {
   "public-key"?: string;
   "short-id"?: string;
 }
-
-type NetworkType = "ws" | "http" | "h2" | "grpc";
+type ClientFingerprint =
+  | "chrome"
+  | "firefox"
+  | "safari"
+  | "iOS"
+  | "android"
+  | "edge"
+  | "360"
+  | "qq"
+  | "random";
+type NetworkType = "ws" | "http" | "h2" | "grpc" | "tcp";
 type CipherType =
   | "none"
   | "auto"
@@ -376,7 +385,7 @@ interface IProxyTrojanConfig extends IProxyBaseConfig {
     method?: string;
     password?: string;
   };
-  "client-fingerprint"?: string;
+  "client-fingerprint"?: ClientFingerprint;
 }
 // tuic
 interface IProxyTuicConfig extends IProxyBaseConfig {
@@ -438,7 +447,7 @@ interface IProxyVlessConfig extends IProxyBaseConfig {
   "skip-cert-verify"?: boolean;
   fingerprint?: string;
   servername?: string;
-  "client-fingerprint"?: string;
+  "client-fingerprint"?: ClientFingerprint;
 }
 // vmess
 interface IProxyVmessConfig extends IProxyBaseConfig {
@@ -466,7 +475,7 @@ interface IProxyVmessConfig extends IProxyBaseConfig {
   "packet-encoding"?: string;
   "global-padding"?: boolean;
   "authenticated-length"?: boolean;
-  "client-fingerprint"?: string;
+  "client-fingerprint"?: ClientFingerprint;
 }
 interface WireGuardPeerOptions {
   server?: string;
@@ -574,7 +583,7 @@ interface IProxyShadowsocksConfig extends IProxyBaseConfig {
   };
   "udp-over-tcp"?: boolean;
   "udp-over-tcp-version"?: number;
-  "client-fingerprint"?: string;
+  "client-fingerprint"?: ClientFingerprint;
 }
 // shadowsocksR
 interface IProxyshadowsocksRConfig extends IProxyBaseConfig {

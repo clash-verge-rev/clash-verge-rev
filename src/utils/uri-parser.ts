@@ -1,5 +1,3 @@
-import getTrojanURIParser from "@/utils/trojan-uri";
-
 export default function parseUri(uri: string): IProxyConfig {
   const head = uri.split("://")[0];
   switch (head) {
@@ -467,7 +465,19 @@ function URI_VMESS(line: string): IProxyVmessConfig {
             opts["v2ray-http-upgrade"] = true;
             opts["v2ray-http-upgrade-fast-open"] = true;
           }
-          proxy[`${proxy.network}-opts`] = opts;
+          switch (proxy.network) {
+            case "ws":
+              proxy["ws-opts"] = opts;
+              break;
+            case "http":
+              proxy["http-opts"] = opts;
+              break;
+            case "h2":
+              proxy["h2-opts"] = opts;
+              break;
+            default:
+              break;
+          }
         }
       } else {
         delete proxy.network;
@@ -530,16 +540,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
   proxy.servername = params.sni || params.peer;
   proxy.flow = params.flow ? "xtls-rprx-vision" : undefined;
 
-  proxy["client-fingerprint"] = params.fp as
-    | "chrome"
-    | "firefox"
-    | "safari"
-    | "iOS"
-    | "android"
-    | "edge"
-    | "360"
-    | "qq"
-    | "random";
+  proxy["client-fingerprint"] = params.fp as ClientFingerprint;
   proxy.alpn = params.alpn ? params.alpn.split(",") : undefined;
   proxy["skip-cert-verify"] = /(TRUE)|1/i.test(params.allowInsecure);
 
@@ -635,16 +636,89 @@ function URI_VLESS(line: string): IProxyVlessConfig {
 }
 
 function URI_Trojan(line: string): IProxyTrojanConfig {
-  let [newLine, name] = line.split(/#(.+)/, 2);
-  const parser = getTrojanURIParser();
-  const proxy: IProxyTrojanConfig = parser.parse(newLine);
-  if (isNotBlank(name)) {
-    try {
-      proxy.name = decodeURIComponent(name).trim();
-    } catch (e) {
-      throw Error("Can not get proxy name");
+  line = line.split("trojan://")[1];
+  let [__, password, server, ___, port, ____, addons = "", name] =
+    /^(.*?)@(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line) || [];
+
+  let portNum = parseInt(`${port}`, 10);
+  if (isNaN(portNum)) {
+    portNum = 443;
+  }
+
+  password = decodeURIComponent(password);
+
+  let decodedName = trimStr(decodeURIComponent(name));
+
+  name = decodedName ?? `Trojan ${server}:${portNum}`;
+  const proxy: IProxyTrojanConfig = {
+    type: "trojan",
+    name,
+    server,
+    port: portNum,
+    password,
+  };
+  let host = "";
+  let path = "";
+
+  for (const addon of addons.split("&")) {
+    let [key, value] = addon.split("=");
+    value = decodeURIComponent(value);
+    switch (key) {
+      case "type":
+        if (["ws", "h2"].includes(value)) {
+          proxy.network = value as NetworkType;
+        } else {
+          proxy.network = "tcp";
+        }
+        break;
+      case "host":
+        host = value;
+        break;
+      case "path":
+        path = value;
+        break;
+      case "alpn":
+        proxy["alpn"] = value ? value.split(",") : undefined;
+        break;
+      case "sni":
+        proxy["sni"] = value;
+        break;
+      case "skip-cert-verify":
+        proxy["skip-cert-verify"] = /(TRUE)|1/i.test(value);
+        break;
+      case "fingerprint":
+        proxy["fingerprint"] = value;
+        break;
+      case "fp":
+        proxy["fingerprint"] = value;
+        break;
+      case "encryption":
+        let encryption = value.split(";");
+        if (encryption.length === 3) {
+          proxy["ss-opts"] = {
+            enabled: true,
+            method: encryption[1],
+            password: encryption[2],
+          };
+        }
+      case "client-fingerprint":
+        proxy["client-fingerprint"] = value as ClientFingerprint;
+        break;
+      default:
+        break;
     }
   }
+  if (proxy.network === "ws") {
+    proxy["ws-opts"] = {
+      headers: { Host: host },
+      path,
+    } as WsOptions;
+  } else if (proxy.network === "grpc") {
+    proxy["grpc-opts"] = {
+      "grpc-service-name": path,
+    } as GrpcOptions;
+  }
+
   return proxy;
 }
 
