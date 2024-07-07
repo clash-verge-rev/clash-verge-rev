@@ -132,7 +132,7 @@ export const ProxyHead = (props: Props) => {
 
       {textState === "filter" && (
         <TextField
-          autoComplete="off"
+          autoComplete="new-password"
           autoFocus={autoFocus}
           hiddenLabel
           value={filterText}
@@ -146,7 +146,7 @@ export const ProxyHead = (props: Props) => {
 
       {textState === "url" && (
         <TextField
-          autoComplete="off"
+          autoComplete="new-password"
           autoFocus={autoFocus}
           hiddenLabel
           autoSave="off"

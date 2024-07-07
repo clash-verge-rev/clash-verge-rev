@@ -6,7 +6,7 @@ export const BaseStyledTextField = styled((props: TextFieldProps) => {
 
   return (
     <TextField
-      autoComplete="off"
+      autoComplete="new-password"
       hiddenLabel
       fullWidth
       size="small"

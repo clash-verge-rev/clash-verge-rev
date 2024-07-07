@@ -346,7 +346,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Group Name")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         {...field}
@@ -363,7 +363,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Icon")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         {...field}
@@ -417,7 +417,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Health Check Url")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         {...field}
@@ -432,7 +432,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Interval")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         type="number"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
@@ -450,7 +450,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Timeout")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         type="number"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
@@ -468,7 +468,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Max Failed Times")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         type="number"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
@@ -486,7 +486,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Interface Name")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         {...field}
@@ -501,7 +501,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Routing Mark")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         type="number"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
@@ -519,7 +519,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Filter")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         {...field}
@@ -534,7 +534,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Exclude Filter")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         {...field}
@@ -595,7 +595,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText primary={t("Expected Status")} />
                       <TextField
-                        autoComplete="off"
+                        autoComplete="new-password"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         onChange={(e) => {

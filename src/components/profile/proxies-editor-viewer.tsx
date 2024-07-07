@@ -256,7 +256,7 @@ export const ProxiesEditorViewer = (props: Props) => {
               >
                 <Item>
                   <TextField
-                    autoComplete="off"
+                    autoComplete="new-password"
                     placeholder={t("Use newlines for multiple uri")}
                     fullWidth
                     rows={9}

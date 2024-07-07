@@ -43,7 +43,7 @@ export const WebUIItem = (props: Props) => {
       <>
         <Stack spacing={0.75} direction="row" mt={1} mb={1} alignItems="center">
           <TextField
-            autoComplete="off"
+            autoComplete="new-password"
             fullWidth
             size="small"
             value={editValue}

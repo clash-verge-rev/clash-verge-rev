@@ -96,7 +96,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   return (
     <Tooltip title={errorMessage} placement="bottom-start">
       <TextField
-        autoComplete="off"
+        autoComplete="new-password"
         inputRef={inputRef}
         hiddenLabel
         fullWidth
