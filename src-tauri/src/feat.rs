@@ -107,46 +107,11 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     Config::clash().draft().patch_config(patch.clone());
 
     let res = {
-        let redir_port = patch.get("redir-port");
-        let tproxy_port = patch.get("tproxy-port");
-        let mixed_port = patch.get("mixed-port");
-        let socks_port = patch.get("socks-port");
-        let port = patch.get("port");
-        let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
-        if mixed_port.is_some() && !enable_random_port {
-            let changed = mixed_port.unwrap()
-                != Config::verge()
-                    .latest()
-                    .verge_mixed_port
-                    .unwrap_or(Config::clash().data().get_mixed_port());
-            // 检查端口占用
-            if changed {
-                if let Some(port) = mixed_port.unwrap().as_u64() {
-                    if !port_scanner::local_port_available(port as u16) {
-                        Config::clash().discard();
-                        bail!("port already in use");
-                    }
-                }
-            }
-        };
-
         // 激活订阅
-        if redir_port.is_some()
-            || tproxy_port.is_some()
-            || mixed_port.is_some()
-            || socks_port.is_some()
-            || port.is_some()
-            || patch.get("secret").is_some()
-            || patch.get("external-controller").is_some()
-        {
+        if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
             Config::generate().await?;
             CoreManager::global().run_core().await?;
             handle::Handle::refresh_clash();
-        }
-
-        // 更新系统代理
-        if mixed_port.is_some() {
-            log_err!(sysopt::Sysopt::global().init_sysproxy());
         }
 
         if patch.get("mode").is_some() {
@@ -174,7 +139,6 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 /// 一般都是一个个的修改
 pub async fn patch_verge(patch: IVerge) -> Result<()> {
     Config::verge().draft().patch_config(patch.clone());
-
     let tun_mode = patch.enable_tun_mode;
     let auto_launch = patch.enable_auto_launch;
     let system_proxy = patch.enable_system_proxy;
@@ -182,7 +146,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let pac_content = patch.pac_file_content;
     let proxy_bypass = patch.system_proxy_bypass;
     let language = patch.language;
-    let port = patch.verge_mixed_port;
+    let mixed_port = patch.verge_mixed_port;
     #[cfg(target_os = "macos")]
     let tray_icon = patch.tray_icon;
     let common_tray_icon = patch.common_tray_icon;
@@ -190,41 +154,62 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let tun_tray_icon = patch.tun_tray_icon;
     #[cfg(not(target_os = "windows"))]
     let redir_enabled = patch.verge_redir_enabled;
+    #[cfg(not(target_os = "windows"))]
+    let redir_port = patch.verge_redir_port;
     #[cfg(target_os = "linux")]
     let tproxy_enabled = patch.verge_tproxy_enabled;
+    #[cfg(target_os = "linux")]
+    let tproxy_port = patch.verge_tproxy_port;
     let socks_enabled = patch.verge_socks_enabled;
+    let socks_port = patch.verge_socks_port;
     let http_enabled = patch.verge_http_enabled;
+    let http_port = patch.verge_port;
     let res = {
         let service_mode = patch.enable_service_mode;
-
+        let mut generated = false;
         if service_mode.is_some() {
             log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
-
-            Config::generate().await?;
-            CoreManager::global().run_core().await?;
+            if !generated {
+                Config::generate().await?;
+                CoreManager::global().run_core().await?;
+                generated = true;
+            }
         } else if tun_mode.is_some() {
             update_core_config().await?;
         }
         #[cfg(not(target_os = "windows"))]
-        if redir_enabled.is_some() {
-            Config::generate().await?;
-            CoreManager::global().run_core().await?;
+        if redir_enabled.is_some() || redir_port.is_some() {
+            if !generated {
+                Config::generate().await?;
+                CoreManager::global().run_core().await?;
+                generated = true;
+            }
         }
         #[cfg(target_os = "linux")]
-        if tproxy_enabled.is_some() {
-            Config::generate().await?;
-            CoreManager::global().run_core().await?;
+        if tproxy_enabled.is_some() || tproxy_port.is_some() {
+            if !generated {
+                Config::generate().await?;
+                CoreManager::global().run_core().await?;
+                generated = true;
+            }
         }
-        if socks_enabled.is_some() || http_enabled.is_some() {
-            Config::generate().await?;
-            CoreManager::global().run_core().await?;
+        if socks_enabled.is_some()
+            || http_enabled.is_some()
+            || socks_port.is_some()
+            || http_port.is_some()
+            || mixed_port.is_some()
+        {
+            if !generated {
+                Config::generate().await?;
+                CoreManager::global().run_core().await?;
+            }
         }
         if auto_launch.is_some() {
             sysopt::Sysopt::global().update_launch()?;
         }
         if system_proxy.is_some()
             || proxy_bypass.is_some()
-            || port.is_some()
+            || mixed_port.is_some()
             || pac.is_some()
             || pac_content.is_some()
         {
