@@ -171,10 +171,11 @@ const ProfilePage = () => {
     }, 100);
     try {
       await patchProfiles({ current });
-      mutateLogs();
+      await mutateLogs();
       closeAllConnections();
-      setTimeout(() => activateSelected(), 2000);
-      Notice.success(t("Profile Switched"), 1000);
+      activateSelected().then(() => {
+        Notice.success(t("Profile Switched"), 1000);
+      });
     } catch (err: any) {
       Notice.error(err?.message || err.toString(), 4000);
     } finally {
