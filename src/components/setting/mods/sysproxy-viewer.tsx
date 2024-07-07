@@ -261,20 +261,22 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               >
                 {t("Edit")} PAC
               </Button>
-              <EditorViewer
-                open={editorOpen}
-                title={`${t("Edit")} PAC`}
-                initialData={Promise.resolve(value.pac_content ?? "")}
-                language="javascript"
-                onSave={(_prev, curr) => {
-                  let pac = DEFAULT_PAC;
-                  if (curr && curr.trim().length > 0) {
-                    pac = curr;
-                  }
-                  setValue((v) => ({ ...v, pac_content: pac }));
-                }}
-                onClose={() => setEditorOpen(false)}
-              />
+              {editorOpen && (
+                <EditorViewer
+                  open={true}
+                  title={`${t("Edit")} PAC`}
+                  initialData={Promise.resolve(value.pac_content ?? "")}
+                  language="javascript"
+                  onSave={(_prev, curr) => {
+                    let pac = DEFAULT_PAC;
+                    if (curr && curr.trim().length > 0) {
+                      pac = curr;
+                    }
+                    setValue((v) => ({ ...v, pac_content: pac }));
+                  }}
+                  onClose={() => setEditorOpen(false)}
+                />
+              )}
             </ListItem>
           </>
         )}

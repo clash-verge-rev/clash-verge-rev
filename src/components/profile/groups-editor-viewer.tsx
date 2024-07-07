@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
 import { useTranslation } from "react-i18next";
@@ -30,7 +30,11 @@ import {
   styled,
 } from "@mui/material";
 import { GroupItem } from "@/components/profile/group-item";
-import { readProfileFile, saveProfileFile } from "@/services/cmds";
+import {
+  getNetworkInterfaces,
+  readProfileFile,
+  saveProfileFile,
+} from "@/services/cmds";
 import { Notice, Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
 import { BaseSearchBox } from "../base/base-search-box";
@@ -60,7 +64,7 @@ export const GroupsEditorViewer = (props: Props) => {
   const [currData, setCurrData] = useState("");
   const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
-
+  const [interfaceNameList, setInterfaceNameList] = useState<string[]>([]);
   const { control, watch, register, ...formIns } = useForm<IProxyGroupConfig>({
     defaultValues: {
       type: "select",
@@ -251,6 +255,10 @@ export const GroupsEditorViewer = (props: Props) => {
     setProxyProviderList(Object.keys(provider));
     setGroupList(originGroupsObj?.["proxy-groups"] || []);
   };
+  const getInterfaceNameList = async () => {
+    let list = await getNetworkInterfaces();
+    setInterfaceNameList(list);
+  };
   useEffect(() => {
     fetchProxyPolicy();
   }, [prependSeq, appendSeq, deleteSeq]);
@@ -259,6 +267,7 @@ export const GroupsEditorViewer = (props: Props) => {
     fetchContent();
     fetchProxyPolicy();
     fetchProfile();
+    getInterfaceNameList();
   }, [open]);
 
   const validateGroup = () => {
@@ -485,11 +494,13 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText primary={t("Interface Name")} />
-                      <TextField
-                        autoComplete="new-password"
+                      <Autocomplete
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
-                        {...field}
+                        options={interfaceNameList}
+                        value={field.value}
+                        onChange={(_, value) => value && field.onChange(value)}
+                        renderInput={(params) => <TextField {...params} />}
                       />
                     </Item>
                   )}

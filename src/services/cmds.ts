@@ -233,3 +233,7 @@ export async function copyIconFile(
 export async function downloadIconCache(url: string, name: string) {
   return invoke<string>("download_icon_cache", { url, name });
 }
+
+export async function getNetworkInterfaces() {
+  return invoke<string[]>("get_network_interfaces");
+}

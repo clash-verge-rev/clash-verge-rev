@@ -475,64 +475,78 @@ export const ProfileItem = (props: Props) => {
           </MenuItem>
         ))}
       </Menu>
+      {fileOpen && (
+        <EditorViewer
+          open={true}
+          initialData={readProfileFile(uid)}
+          language="yaml"
+          schema="clash"
+          onSave={async (prev, curr) => {
+            await saveProfileFile(uid, curr ?? "");
+            onSave && onSave(prev, curr);
+          }}
+          onClose={() => setFileOpen(false)}
+        />
+      )}
+      {rulesOpen && (
+        <RulesEditorViewer
+          groupsUid={option?.groups ?? ""}
+          mergeUid={option?.merge ?? ""}
+          profileUid={uid}
+          property={option?.rules ?? ""}
+          open={true}
+          onSave={onSave}
+          onClose={() => setRulesOpen(false)}
+        />
+      )}
+      {proxiesOpen && (
+        <ProxiesEditorViewer
+          profileUid={uid}
+          property={option?.proxies ?? ""}
+          open={true}
+          onSave={onSave}
+          onClose={() => setProxiesOpen(false)}
+        />
+      )}
+      {groupsOpen && (
+        <GroupsEditorViewer
+          mergeUid={option?.merge ?? ""}
+          proxiesUid={option?.proxies ?? ""}
+          profileUid={uid}
+          property={option?.groups ?? ""}
+          open={true}
+          onSave={onSave}
+          onClose={() => {
+            setGroupsOpen(false);
+          }}
+        />
+      )}
+      {mergeOpen && (
+        <EditorViewer
+          open={true}
+          initialData={readProfileFile(option?.merge ?? "")}
+          language="yaml"
+          schema="clash"
+          onSave={async (prev, curr) => {
+            await saveProfileFile(option?.merge ?? "", curr ?? "");
+            onSave && onSave(prev, curr);
+          }}
+          onClose={() => setMergeOpen(false)}
+        />
+      )}
+      {scriptOpen && (
+        <EditorViewer
+          open={true}
+          initialData={readProfileFile(option?.script ?? "")}
+          language="javascript"
+          onSave={async (prev, curr) => {
+            await saveProfileFile(option?.script ?? "", curr ?? "");
+            onSave && onSave(prev, curr);
+          }}
+          onClose={() => setScriptOpen(false)}
+        />
+      )}
 
-      <EditorViewer
-        open={fileOpen}
-        initialData={readProfileFile(uid)}
-        language="yaml"
-        schema="clash"
-        onSave={async (prev, curr) => {
-          await saveProfileFile(uid, curr ?? "");
-          onSave && onSave(prev, curr);
-        }}
-        onClose={() => setFileOpen(false)}
-      />
-      <RulesEditorViewer
-        groupsUid={option?.groups ?? ""}
-        mergeUid={option?.merge ?? ""}
-        profileUid={uid}
-        property={option?.rules ?? ""}
-        open={rulesOpen}
-        onSave={onSave}
-        onClose={() => setRulesOpen(false)}
-      />
-      <ProxiesEditorViewer
-        profileUid={uid}
-        property={option?.proxies ?? ""}
-        open={proxiesOpen}
-        onSave={onSave}
-        onClose={() => setProxiesOpen(false)}
-      />
-      <GroupsEditorViewer
-        mergeUid={option?.merge ?? ""}
-        proxiesUid={option?.proxies ?? ""}
-        profileUid={uid}
-        property={option?.groups ?? ""}
-        open={groupsOpen}
-        onSave={onSave}
-        onClose={() => setGroupsOpen(false)}
-      />
-      <EditorViewer
-        open={mergeOpen}
-        initialData={readProfileFile(option?.merge ?? "")}
-        language="yaml"
-        schema="clash"
-        onSave={async (prev, curr) => {
-          await saveProfileFile(option?.merge ?? "", curr ?? "");
-          onSave && onSave(prev, curr);
-        }}
-        onClose={() => setMergeOpen(false)}
-      />
-      <EditorViewer
-        open={scriptOpen}
-        initialData={readProfileFile(option?.script ?? "")}
-        language="javascript"
-        onSave={async (prev, curr) => {
-          await saveProfileFile(option?.script ?? "", curr ?? "");
-          onSave && onSave(prev, curr);
-        }}
-        onClose={() => setScriptOpen(false)}
-      />
       <ConfirmViewer
         title={t("Confirm deletion")}
         message={t("This operation is not reversible")}

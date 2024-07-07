@@ -167,25 +167,27 @@ export const ProfileMore = (props: Props) => {
             </MenuItem>
           ))}
       </Menu>
-
-      <EditorViewer
-        open={fileOpen}
-        title={`${t("Global " + id)}`}
-        initialData={readProfileFile(id)}
-        language={id === "Merge" ? "yaml" : "javascript"}
-        schema={id === "Merge" ? "clash" : undefined}
-        onSave={async (prev, curr) => {
-          await saveProfileFile(id, curr ?? "");
-          onSave && onSave(prev, curr);
-        }}
-        onClose={() => setFileOpen(false)}
-      />
-
-      <LogViewer
-        open={logOpen}
-        logInfo={logInfo}
-        onClose={() => setLogOpen(false)}
-      />
+      {fileOpen && (
+        <EditorViewer
+          open={true}
+          title={`${t("Global " + id)}`}
+          initialData={readProfileFile(id)}
+          language={id === "Merge" ? "yaml" : "javascript"}
+          schema={id === "Merge" ? "clash" : undefined}
+          onSave={async (prev, curr) => {
+            await saveProfileFile(id, curr ?? "");
+            onSave && onSave(prev, curr);
+          }}
+          onClose={() => setFileOpen(false)}
+        />
+      )}
+      {logOpen && (
+        <LogViewer
+          open={logOpen}
+          logInfo={logInfo}
+          onClose={() => setLogOpen(false)}
+        />
+      )}
     </>
   );
 };
