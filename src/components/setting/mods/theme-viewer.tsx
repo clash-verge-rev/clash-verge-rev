@@ -123,19 +123,21 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
           >
             {t("Edit")} CSS
           </Button>
-          <EditorViewer
-            open={editorOpen}
-            title={`${t("Edit")} CSS`}
-            initialData={Promise.resolve(theme.css_injection ?? "")}
-            language="css"
-            onSave={(_prev, curr) => {
-              theme.css_injection = curr;
-              handleChange("css_injection");
-            }}
-            onClose={() => {
-              setEditorOpen(false);
-            }}
-          />
+          {editorOpen && (
+            <EditorViewer
+              open={true}
+              title={`${t("Edit")} CSS`}
+              initialData={Promise.resolve(theme.css_injection ?? "")}
+              language="css"
+              onSave={(_prev, curr) => {
+                theme.css_injection = curr;
+                handleChange("css_injection");
+              }}
+              onClose={() => {
+                setEditorOpen(false);
+              }}
+            />
+          )}
         </Item>
       </List>
     </BaseDialog>

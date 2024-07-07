@@ -323,6 +323,17 @@ pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
 }
 
 #[tauri::command]
+pub fn get_network_interfaces() -> Vec<String> {
+    use sysinfo::Networks;
+    let mut result = Vec::new();
+    let networks = Networks::new_with_refreshed_list();
+    for (interface_name, _) in &networks {
+        result.push(interface_name.clone());
+    }
+    return result;
+}
+
+#[tauri::command]
 pub fn open_devtools(app_handle: tauri::AppHandle) {
     if let Some(window) = app_handle.get_window("main") {
         if !window.is_devtools_open() {

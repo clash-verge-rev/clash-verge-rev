@@ -20,9 +20,10 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
     close: () => setOpen(false),
   }));
 
+  if (!open) return null;
   return (
     <EditorViewer
-      open={open}
+      open={true}
       title={
         <Box>
           {t("Runtime Config")}
