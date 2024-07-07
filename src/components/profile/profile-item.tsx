@@ -73,7 +73,10 @@ export const ProfileItem = (props: Props) => {
   const from = parseUrl(itemData.url);
   const description = itemData.desc;
   const expire = parseExpire(extra?.expire);
-  const progress = Math.round(((download + upload) * 100) / (total + 0.01) + 1);
+  const progress = Math.min(
+    Math.round(((download + upload) * 100) / (total + 0.01)) + 1,
+    100
+  );
 
   const loading = loadingCache[itemData.uid] ?? false;
 
