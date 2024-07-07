@@ -125,7 +125,7 @@ const SettingClash = ({ onError }: Props) => {
         }
       >
         <TextField
-          autoComplete="off"
+          autoComplete="new-password"
           disabled={enable_random_port}
           size="small"
           value={verge_mixed_port ?? 7897}

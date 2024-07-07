@@ -4,7 +4,7 @@ export const BaseStyledSelect = styled((props: SelectProps<string>) => {
   return (
     <Select
       size="small"
-      autoComplete="off"
+      autoComplete="new-password"
       sx={{
         width: 120,
         height: 33.375,
