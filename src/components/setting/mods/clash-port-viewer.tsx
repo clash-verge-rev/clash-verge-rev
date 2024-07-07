@@ -13,7 +13,6 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
 
   const { clashInfo, patchInfo } = useClashInfo();
   const { verge, patchVerge } = useVerge();
-
   const [open, setOpen] = useState(false);
   const [redirPort, setRedirPort] = useState(
     verge?.verge_redir_port ?? clashInfo?.redir_port ?? 7895
@@ -94,24 +93,57 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       return;
     }
     try {
-      if (OS !== "windows") {
-        await patchInfo({ "redir-port": redirPort });
-        await patchVerge({ verge_redir_port: redirPort });
-        await patchVerge({ verge_redir_enabled: redirEnabled });
+      if (OS === "windows") {
+        await patchInfo({
+          "mixed-port": mixedPort,
+          "socks-port": socksPort,
+          port,
+        });
+        await patchVerge({
+          verge_mixed_port: mixedPort,
+          verge_socks_port: socksPort,
+          verge_socks_enabled: socksEnabled,
+          verge_port: port,
+          verge_http_enabled: httpEnabled,
+        });
+      }
+      if (OS === "macos") {
+        await patchInfo({
+          "redir-port": redirPort,
+          "mixed-port": mixedPort,
+          "socks-port": socksPort,
+          port,
+        });
+        await patchVerge({
+          verge_redir_port: redirPort,
+          verge_redir_enabled: redirEnabled,
+          verge_mixed_port: mixedPort,
+          verge_socks_port: socksPort,
+          verge_socks_enabled: socksEnabled,
+          verge_port: port,
+          verge_http_enabled: httpEnabled,
+        });
       }
       if (OS === "linux") {
-        await patchInfo({ "tproxy-port": tproxyPort });
-        await patchVerge({ verge_tproxy_port: tproxyPort });
-        await patchVerge({ verge_tproxy_enabled: tproxyEnabled });
+        await patchInfo({
+          "redir-port": redirPort,
+          "tproxy-port": tproxyPort,
+          "mixed-port": mixedPort,
+          "socks-port": socksPort,
+          port,
+        });
+        await patchVerge({
+          verge_redir_port: redirPort,
+          verge_redir_enabled: redirEnabled,
+          verge_tproxy_port: tproxyPort,
+          verge_tproxy_enabled: tproxyEnabled,
+          verge_mixed_port: mixedPort,
+          verge_socks_port: socksPort,
+          verge_socks_enabled: socksEnabled,
+          verge_port: port,
+          verge_http_enabled: httpEnabled,
+        });
       }
-      await patchInfo({ "mixed-port": mixedPort });
-      await patchInfo({ "socks-port": socksPort });
-      await patchInfo({ port });
-      await patchVerge({ verge_mixed_port: mixedPort });
-      await patchVerge({ verge_socks_port: socksPort });
-      await patchVerge({ verge_port: port });
-      await patchVerge({ verge_socks_enabled: socksEnabled });
-      await patchVerge({ verge_http_enabled: httpEnabled });
       setOpen(false);
       Notice.success(t("Clash Port Modified"), 1000);
     } catch (err: any) {

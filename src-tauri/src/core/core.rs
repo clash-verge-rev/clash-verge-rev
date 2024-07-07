@@ -7,7 +7,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
 use std::{sync::Arc, time::Duration};
-use sysinfo::System;
+use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time::sleep;
 
@@ -70,12 +70,6 @@ impl CoreManager {
     pub async fn run_core(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Run)?;
 
-        #[allow(unused_mut)]
-        let mut should_kill = match self.sidecar.lock().take() {
-            Some(_) => true,
-            None => false,
-        };
-
         // 关闭tun模式
         let mut disable = Mapping::new();
         let mut tun = Mapping::new();
@@ -84,23 +78,19 @@ impl CoreManager {
         log::debug!(target: "app", "disable tun mode");
         let _ = clash_api::patch_configs(&disable).await;
 
-        let mut system = System::new();
-        system.refresh_all();
-        let procs = system.processes_by_name("verge-mihomo");
-        for proc in procs {
-            log::debug!(target: "app", "kill all clash process");
-            proc.kill();
-        }
-
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
             log_err!(service::stop_core_by_service().await);
-            should_kill = true;
-        }
+        } else {
+            let mut system = System::new_with_specifics(
+                RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
+            );
+            let procs = system.processes_by_name("verge-mihomo");
 
-        // 这里得等一会儿
-        if should_kill {
-            sleep(Duration::from_millis(500)).await;
+            for proc in procs {
+                log::debug!(target: "app", "kill all clash process");
+                proc.kill();
+            }
         }
 
         // 服务模式
@@ -237,8 +227,9 @@ impl CoreManager {
         let mut sidecar = self.sidecar.lock();
         let _ = sidecar.take();
 
-        let mut system = System::new();
-        system.refresh_all();
+        let mut system = System::new_with_specifics(
+            RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
+        );
         let procs = system.processes_by_name("verge-mihomo");
         for proc in procs {
             log::debug!(target: "app", "kill all clash process");
