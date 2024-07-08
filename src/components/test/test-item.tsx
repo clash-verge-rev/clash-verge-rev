@@ -32,8 +32,14 @@ let eventListener: UnlistenFn | null = null;
 
 export const TestItem = (props: Props) => {
   const { itemData, onEdit, onDelete: onDeleteItem } = props;
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.id });
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -99,8 +105,10 @@ export const TestItem = (props: Props) => {
   return (
     <Box
       sx={{
+        position: "relative",
         transform: CSS.Transform.toString(transform),
         transition,
+        zIndex: isDragging ? "calc(infinity)" : undefined,
       }}
     >
       <TestBox

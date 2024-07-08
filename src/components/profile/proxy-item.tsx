@@ -20,7 +20,14 @@ export const ProxyItem = (props: Props) => {
   let { type, proxy, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
 
-  const { attributes, listeners, setNodeRef, transform, transition } = sortable
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = sortable
     ? useSortable({ id: proxy.name })
     : {
         attributes: {},
@@ -28,12 +35,14 @@ export const ProxyItem = (props: Props) => {
         setNodeRef: null,
         transform: null,
         transition: null,
+        isDragging: false,
       };
 
   return (
     <ListItem
       dense
       sx={({ palette }) => ({
+        position: "relative",
         background:
           type === "original"
             ? palette.mode === "dark"
@@ -47,6 +56,7 @@ export const ProxyItem = (props: Props) => {
         borderRadius: "8px",
         transform: CSS.Transform.toString(transform),
         transition,
+        zIndex: isDragging ? "calc(infinity)" : undefined,
       })}
     >
       <ListItemText

@@ -24,7 +24,14 @@ export const RuleItem = (props: Props) => {
   const proxyPolicy = rule.match(/[^,]+$/)?.[0] ?? "";
   const ruleContent = rule.slice(ruleType.length + 1, -proxyPolicy.length - 1);
 
-  const { attributes, listeners, setNodeRef, transform, transition } = sortable
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = sortable
     ? useSortable({ id: ruleRaw })
     : {
         attributes: {},
@@ -32,11 +39,13 @@ export const RuleItem = (props: Props) => {
         setNodeRef: null,
         transform: null,
         transition: null,
+        isDragging: false,
       };
   return (
     <ListItem
       dense
       sx={({ palette }) => ({
+        position: "relative",
         background:
           type === "original"
             ? palette.mode === "dark"
@@ -50,6 +59,7 @@ export const RuleItem = (props: Props) => {
         borderRadius: "8px",
         transform: CSS.Transform.toString(transform),
         transition,
+        zIndex: isDragging ? "calc(infinity)" : undefined,
       })}
     >
       <ListItemText
