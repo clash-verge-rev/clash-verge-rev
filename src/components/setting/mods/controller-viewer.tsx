@@ -1,9 +1,18 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { List, ListItem, ListItemText, TextField } from "@mui/material";
-import { useClashInfo } from "@/hooks/use-clash";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { useClashInfo } from "@/hooks/use-clash";
+import { Shuffle } from "@mui/icons-material";
+import {
+  Box,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  TextField,
+} from "@mui/material";
+import { useLockFn } from "ahooks";
+import { nanoid } from "nanoid";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -57,7 +66,24 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Core Secret")} />
+          <ListItemText
+            primary={
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "3px",
+                }}>
+                <span>{t("Core Secret")}</span>
+                <IconButton
+                  color="inherit"
+                  size="small"
+                  onClick={() => setSecret(nanoid())}>
+                  <Shuffle fontSize="inherit" style={{ opacity: 0.75 }} />
+                </IconButton>
+              </Box>
+            }
+          />
           <TextField
             size="small"
             autoComplete="off"
