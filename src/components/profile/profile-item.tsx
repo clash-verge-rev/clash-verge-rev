@@ -51,8 +51,14 @@ interface Props {
 export const ProfileItem = (props: Props) => {
   const { selected, activating, itemData, onSelect, onEdit, onSave, onDelete } =
     props;
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.id });
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -300,8 +306,10 @@ export const ProfileItem = (props: Props) => {
   return (
     <Box
       sx={{
+        position: "relative",
         transform: CSS.Transform.toString(transform),
         transition,
+        zIndex: isDragging ? "calc(infinity)" : undefined,
       }}
     >
       <ProfileBox

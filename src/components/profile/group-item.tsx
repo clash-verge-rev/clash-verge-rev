@@ -22,7 +22,14 @@ export const GroupItem = (props: Props) => {
   let { type, group, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
 
-  const { attributes, listeners, setNodeRef, transform, transition } = sortable
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = sortable
     ? useSortable({ id: group.name })
     : {
         attributes: {},
@@ -30,6 +37,7 @@ export const GroupItem = (props: Props) => {
         setNodeRef: null,
         transform: null,
         transition: null,
+        isDragging: false,
       };
 
   const [iconCachePath, setIconCachePath] = useState("");
@@ -55,6 +63,7 @@ export const GroupItem = (props: Props) => {
     <ListItem
       dense
       sx={({ palette }) => ({
+        position: "relative",
         background:
           type === "original"
             ? palette.mode === "dark"
@@ -68,6 +77,7 @@ export const GroupItem = (props: Props) => {
         borderRadius: "8px",
         transform: CSS.Transform.toString(transform),
         transition,
+        zIndex: isDragging ? "calc(infinity)" : undefined,
       })}
     >
       {group.icon && group.icon?.trim().startsWith("http") && (
