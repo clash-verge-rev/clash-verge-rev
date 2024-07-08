@@ -216,7 +216,12 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
             color="inherit"
             title={t(isMaximized ? "Minimize" : "Maximize")}
             onClick={() =>
-              appWindow.toggleMaximize().then(() => editorRef.current?.layout())
+              appWindow.toggleMaximize().then(() => {
+                editorRef.current?.layout();
+                setTimeout(() => {
+                  editorRef.current?.layout();
+                }, 500);
+              })
             }
           >
             {isMaximized ? <CloseFullscreenIcon /> : <OpenInFullIcon />}
