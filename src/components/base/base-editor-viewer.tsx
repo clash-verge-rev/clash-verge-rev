@@ -11,11 +11,10 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { type JSONSchema7 } from "json-schema";
 import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
 import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import * as monaco from "monaco-editor";
-import { configureMonacoYaml } from "monaco-yaml";
+import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -41,12 +40,12 @@ configureMonacoYaml(monaco, {
     {
       uri: "http://example.com/meta-json-schema.json",
       fileMatch: ["**/*.clash.yaml"],
-      schema: metaSchema as unknown as JSONSchema7,
+      schema: metaSchema as unknown as JSONSchema,
     },
     {
       uri: "http://example.com/clash-verge-merge-json-schema.json",
       fileMatch: ["**/*.merge.yaml"],
-      schema: mergeSchema as unknown as JSONSchema7,
+      schema: mergeSchema as unknown as JSONSchema,
     },
   ],
 });
