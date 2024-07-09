@@ -12,7 +12,7 @@ import {
 import { checkUpdate } from "@tauri-apps/api/updater";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
-import { DialogRef, Notice } from "@/components/base";
+import { DialogRef, Notice, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { ThemeModeSwitch } from "./mods/theme-mode-switch";
 import { ConfigViewer } from "./mods/config-viewer";
@@ -24,6 +24,7 @@ import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
+import { hideTrayIcon } from "@/services/cmds";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -75,6 +76,10 @@ const SettingVerge = ({ onError }: Props) => {
       <MiscViewer ref={miscRef} />
       <LayoutViewer ref={layoutRef} />
       <UpdateViewer ref={updateRef} />
+
+      <SettingItem label={t("Hide tray icon")}>
+        <Button onClick={() => hideTrayIcon()}>{t("Confirm")}</Button>
+      </SettingItem>
 
       <SettingItem label={t("Language")}>
         <GuardState

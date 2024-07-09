@@ -360,5 +360,6 @@
   "Clash Core Restarted": "Clash ядра перезапущено",
   "Switched to _clash Core": "Переключено на ядра {{core}}",
   "GeoData Updated": "GeoData Обновлена",
-  "Currently on the Latest Version": "В настоящее время используется последняя версия"
+  "Currently on the Latest Version": "В настоящее время используется последняя версия",
+  "Hide tray icon": "Скрыть значок в трее"
 }

@@ -237,3 +237,7 @@ export async function downloadIconCache(url: string, name: string) {
 export async function getNetworkInterfaces() {
   return invoke<string[]>("get_network_interfaces");
 }
+
+export async function hideTrayIcon() {
+  return invoke<void>("hide_tray_icon");
+}

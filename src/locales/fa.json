@@ -360,5 +360,6 @@
   "Clash Core Restarted": "هسته Clash مجدداً راه‌اندازی شد",
   "Switched to _clash Core": "تغییر به هسته {{core}}",
   "GeoData Updated": "GeoData به‌روزرسانی شد",
-  "Currently on the Latest Version": "در حال حاضر در آخرین نسخه"
+  "Currently on the Latest Version": "در حال حاضر در آخرین نسخه",
+  "Hide tray icon": "إخفاء رمز العلبة"
 }

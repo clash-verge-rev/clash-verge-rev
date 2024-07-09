@@ -12,6 +12,12 @@ use sysproxy::{Autoproxy, Sysproxy};
 use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
 
+// 命令函数，用于切换托盘图标的显示状态
+#[tauri::command]
+pub fn hide_tray_icon(app_handle: tauri::AppHandle) {
+    let _ = app_handle.tray_handle().destroy();
+}
+
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
     Ok(Config::profiles().data().clone())

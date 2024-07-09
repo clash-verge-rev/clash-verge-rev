@@ -65,6 +65,7 @@ fn main() -> std::io::Result<()> {
             cmds::get_runtime_logs,
             cmds::uwp::invoke_uwp_tool,
             // verge
+            cmds::hide_tray_icon,
             cmds::get_verge_config,
             cmds::patch_verge_config,
             cmds::test_delay,
