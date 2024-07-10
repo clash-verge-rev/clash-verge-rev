@@ -1,8 +1,31 @@
-import { styled } from "@mui/material/styles";
+import { keyframes, styled } from "@mui/material/styles";
 import Switch, { switchClasses } from "@mui/material/Switch";
 
+// const loading = keyframes`
+//   from { transform: rotate(0deg); }
+//   to { transform: rotate(360deg); }
+// `;
+
+const bailPulse = keyframes`
+   0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(0.1);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+`;
+
 // const pxToRem = (px: number, oneRemPx = 21) => `${px}px`;
-export const SwitchLovely = styled(Switch)(({ theme }) => {
+
+export const SwitchLovely = styled(Switch)(({ theme, "aria-busy": busy }) => {
   const borderWidth = 2;
   const width = 42;
   const height = 26;
@@ -50,6 +73,64 @@ export const SwitchLovely = styled(Switch)(({ theme }) => {
     },
     [`& .${switchClasses.disabled}+.${switchClasses.track}`]: {
       opacity: "0.3 !important",
+    },
+
+    // switch aria-busy style
+    // [`[aria-busy=true] .${switchClasses.thumb}::before`]: {
+    //   content: '""',
+    //   position: "absolute",
+    //   width: "calc(100% - 10px)",
+    //   height: "calc(100% - 10px)",
+    //   border: "2px solid #fff",
+    //   clip: "rect(0, 42px, 15px, 0px)",
+    //   borderRadius: "50%",
+    //   animation: `${loading} 1s linear infinite`,
+    //   top: 3,
+    //   left: 3,
+    //   zIndex: 1,
+    // },
+    [`[aria-busy=true] .${switchClasses.thumb}::before, [aria-busy=true] .${switchClasses.thumb}::after`]:
+      {
+        content: '""',
+        position: "absolute",
+        display: "inline-block",
+        width: "10px",
+        height: "10px",
+        top: "calc(50% - 5px)",
+        borderRadius: "100%",
+        backgroundColor: theme.palette.primary.main,
+      },
+    [`[aria-busy=true] .${switchClasses.thumb}::before`]: {
+      left: "2px",
+      animation: `${bailPulse} infinite 0.75s -0.4s cubic-bezier(0.2, 0.68, 0.18, 1.08)`,
+    },
+    [`[aria-busy=true] .${switchClasses.thumb}::after`]: {
+      left: "10px",
+      animation: `${bailPulse} infinite 0.75s cubic-bezier(0.2, 0.68, 0.18, 1.08)`,
+    },
+    [`[aria-busy=true] .${switchClasses.thumb}`]: {
+      boxShadow: "none",
+      backgroundColor: "#EADDFF",
+      width: size,
+      height: size,
+    },
+    [`[aria-busy=true] + .${switchClasses.track}`]: {
+      backgroundColor: "#EADDFF",
+      opacity: 1,
+      border: "none",
+    },
+    [`[aria-busy=true].${switchClasses.checked}`]: {
+      [`& .${switchClasses.thumb}`]: {
+        boxShadow: "none",
+        backgroundColor: "#EADDFF",
+        width: size,
+        height: size,
+      },
+      [`& + .${switchClasses.track}`]: {
+        backgroundColor: "#EADDFF",
+        opacity: 1,
+        border: "none",
+      },
     },
   };
 });

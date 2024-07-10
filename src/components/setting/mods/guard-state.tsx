@@ -1,5 +1,11 @@
-import { cloneElement, isValidElement, ReactNode, useRef } from "react";
 import noop from "@/utils/noop";
+import {
+  cloneElement,
+  isValidElement,
+  ReactNode,
+  useRef,
+  useState,
+} from "react";
 
 interface Props<Value> {
   value?: Value;
@@ -9,6 +15,7 @@ interface Props<Value> {
   onChange?: (value: Value) => void;
   onFormat?: (...args: any[]) => Value;
   onGuard?: (value: Value, oldValue: Value) => Promise<void>;
+  onSuccess?: (value: Value) => void;
   onCatch?: (error: Error) => void;
   children: ReactNode;
 }
@@ -21,6 +28,7 @@ export function GuardState<T>(props: Props<T>) {
     onChangeProps = "onChange",
     waitTime = 0, // debounce wait time default 0
     onGuard = noop,
+    onSuccess = noop,
     onCatch = noop,
     onChange = noop,
     onFormat = (v: T) => v,
@@ -30,6 +38,8 @@ export function GuardState<T>(props: Props<T>) {
   const saveRef = useRef(value);
   const lastRef = useRef(0);
   const timeRef = useRef<any>();
+  const [busy, setBusy] = useState(false);
+  const showChildrenBusy = onChange === noop;
 
   if (!isValidElement(children)) {
     return children as any;
@@ -38,6 +48,7 @@ export function GuardState<T>(props: Props<T>) {
   const childProps = { ...children.props };
 
   childProps[valueProps] = value;
+  childProps["aria-busy"] = busy;
   childProps[onChangeProps] = async (...args: any[]) => {
     // 多次操作无效
     if (lockRef.current) return;
@@ -59,14 +70,28 @@ export function GuardState<T>(props: Props<T>) {
       lastRef.current = now;
 
       if (waitTime <= 0) {
-        await onGuard(newValue, value!);
+        if (showChildrenBusy) {
+          setBusy(true);
+          await onGuard(newValue, value!);
+          setBusy(false);
+        } else {
+          await onGuard(newValue, value!);
+        }
+        onSuccess(newValue);
       } else {
         // debounce guard
         clearTimeout(timeRef.current);
 
         timeRef.current = setTimeout(async () => {
           try {
-            await onGuard(newValue, saveRef.current!);
+            if (showChildrenBusy) {
+              setBusy(true);
+              await onGuard(newValue, saveRef.current!);
+              setBusy(false);
+            } else {
+              await onGuard(newValue, saveRef.current!);
+            }
+            onSuccess(newValue);
           } catch (err: any) {
             // 状态回退
             onChange(saveRef.current!);

@@ -147,7 +147,7 @@ impl CoreManager {
             Config::clash().latest().save_config()?;
             Config::runtime().latest().patch_config(disable.clone());
             Config::generate_file(ConfigType::Run)?;
-            // emit refresh clash event & update tray menu
+            // emit refresh clash event and update tray menu
             handle::Handle::refresh_clash();
             handle::Handle::update_systray_part()?;
         }

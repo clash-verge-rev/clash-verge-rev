@@ -157,11 +157,9 @@ const SettingClash = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeVerge({ enable_service_mode: e })}
-          onGuard={(e) => {
-            setTimeout(() => mutateCheckService(), 1000);
-            return patchVerge({ enable_service_mode: e });
-          }}>
+          // onChange={(e) => onChangeVerge({ enable_service_mode: e })}
+          onGuard={(e) => patchVerge({ enable_service_mode: e })}
+          onSuccess={() => mutateCheckService()}>
           <SwitchLovely
             edge="end"
             disabled={
@@ -185,7 +183,7 @@ const SettingClash = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ "unified-delay": e })}
+          // onChange={(e) => onChangeData({ "unified-delay": e })}
           onGuard={(e) => patchClash({ "unified-delay": e })}>
           <SwitchLovely edge="end" />
         </GuardState>
