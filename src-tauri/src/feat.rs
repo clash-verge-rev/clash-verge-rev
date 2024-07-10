@@ -10,11 +10,12 @@ use crate::core::*;
 use crate::log_err;
 use crate::utils::dirs::APP_ID;
 use crate::utils::resolve;
-use crate::utils::resolve::find_unused_port;
-use anyhow::anyhow;
-use anyhow::Error;
-use anyhow::{bail, Result};
-use serde_yaml::{Mapping, Value};
+use anyhow::{anyhow, bail, Error, Result};
+use serde_yaml::Mapping;
+use serde_yaml::Value;
+use tauri::api::dialog::blocking::MessageDialogBuilder;
+use tauri::api::dialog::MessageDialogButtons;
+use tauri::api::dialog::MessageDialogKind;
 use tauri::api::notification::Notification;
 use tauri::{AppHandle, ClipboardManager, Manager};
 
@@ -123,11 +124,16 @@ pub fn toggle_service_mode() {
                 }
             }
             _ => {
-                Notification::new(APP_ID)
-                    .title("Clash Verge")
-                    .body("Toggle Service Mode Failed:\n Please check whether clash verge service has been installed.")
-                    .show()
-                    .unwrap();
+                let status = MessageDialogBuilder::new(
+                    "Install and run Clash Verge Service",
+                    "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?",
+                )
+                .kind(MessageDialogKind::Warning)
+                .buttons(MessageDialogButtons::OkCancel)
+                .show();
+                if status {
+                    let _ = install_and_run_service().await;
+                }
             }
         };
     });
@@ -164,16 +170,60 @@ pub fn toggle_tun_mode() {
                     }
                 }
             }
-            Err(err) => {
-                let content = format!("Toggle Tun Failed:\n Please check whether clash verge service has been installed. \n {err}");
-                Notification::new(APP_ID)
-                    .title("Clash Verge")
-                    .body(content)
-                    .show()
-                    .unwrap();
+            Err(_) => {
+                let status = MessageDialogBuilder::new(
+                    "Install and run Clash Verge Service",
+                    "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?",
+                )
+                .kind(MessageDialogKind::Warning)
+                .buttons(MessageDialogButtons::OkCancel)
+                .show();
+                if status {
+                    let _ = install_and_run_service().await;
+                }
             }
         }
     });
+}
+
+async fn install_and_run_service() -> Result<()> {
+    let title = "Install and run Clash Verge Service";
+    match cmds::service::install_service().await {
+        Ok(()) => {
+            match patch_verge(IVerge {
+                enable_service_mode: Some(true),
+                ..IVerge::default()
+            })
+            .await
+            {
+                Ok(()) => {
+                    Notification::new(APP_ID)
+                        .title(title)
+                        .body("install and running successfully")
+                        .show()
+                        .unwrap();
+                    handle::Handle::refresh_verge();
+                    Ok(())
+                }
+                Err(err) => {
+                    Notification::new(APP_ID)
+                        .title(title)
+                        .body(format!("install success, but service run failed, {err}"))
+                        .show()
+                        .unwrap();
+                    Err(err)
+                }
+            }
+        }
+        Err(err) => {
+            Notification::new(APP_ID)
+                .title(title)
+                .body(format!("install failed, {err}"))
+                .show()
+                .unwrap();
+            Err(anyhow!(err))
+        }
+    }
 }
 
 /// 修改clash的订阅
@@ -184,7 +234,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         // disable other port & update clash config
         let mut tmp_map = Mapping::new();
         if enable_random_port {
-            let port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
+            let port = resolve::find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
             tmp_map.insert("mixed-port".into(), port.into());
         } else {
             tmp_map.insert("mixed-port".into(), 7890.into());

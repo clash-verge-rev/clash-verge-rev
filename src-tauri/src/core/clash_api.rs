@@ -35,9 +35,7 @@ pub async fn get_configs() -> Result<ClashBasicConfig> {
 pub async fn put_configs(path: &str) -> Result<()> {
     let (url, headers) = clash_client_info()?;
     let url = format!("{url}/configs");
-
-    let mut data = HashMap::new();
-    data.insert("path", path);
+    let data = HashMap::from([("path", path)]);
 
     let client = reqwest::ClientBuilder::new().no_proxy().build()?;
     let response = client.put(&url).headers(headers).json(&data).send().await?;

@@ -5,6 +5,7 @@ use crate::{
     utils::{dirs, resolve},
 };
 use anyhow::Result;
+use std::collections::HashMap;
 use tauri::{
     AppHandle, CustomMenuItem, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
     SystemTraySubmenu,
@@ -297,12 +298,7 @@ impl Tray {
             }
         }
 
-        let switch_map = {
-            let mut map = std::collections::HashMap::new();
-            map.insert(true, "on");
-            map.insert(false, "off");
-            map
-        };
+        let switch_map = HashMap::from([(true, "ON"), (false, "OFF")]);
 
         let mut current_profile_name = "None".to_string();
         let profiles = Config::profiles();
