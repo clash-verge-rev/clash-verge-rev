@@ -12,7 +12,7 @@ import {
 import { checkUpdate } from "@tauri-apps/api/updater";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
-import { DialogRef, Notice, Switch } from "@/components/base";
+import { DialogRef, Notice } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { ThemeModeSwitch } from "./mods/theme-mode-switch";
 import { ConfigViewer } from "./mods/config-viewer";
@@ -153,8 +153,12 @@ const SettingVerge = ({ onError }: Props) => {
           onGuard={(e) => patchVerge({ start_page: e })}
         >
           <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
-            {routers.map((page: { label: string; path: string }) => {
-              return <MenuItem value={page.path}>{t(page.label)}</MenuItem>;
+            {routers.map((page: { label: string; path: string }, index) => {
+              return (
+                <MenuItem key={`${index}-${page.label}`} value={page.path}>
+                  {t(page.label)}
+                </MenuItem>
+              );
             })}
           </Select>
         </GuardState>

@@ -15,7 +15,9 @@
     "updater-fixed-webview2": "node scripts/updater-fixed-webview2.mjs",
     "portable": "node scripts/portable.mjs",
     "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "eslint": "npx eslint ./src",
+    "lint-staged": "npx lint-staged"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -60,6 +62,7 @@
   },
   "devDependencies": {
     "@actions/github": "^5.1.1",
+    "@eslint/js": "^9.6.0",
     "@tauri-apps/cli": "^1.6.0",
     "@types/fs-extra": "^9.0.13",
     "@types/js-cookie": "^3.0.6",
@@ -72,7 +75,10 @@
     "@vitejs/plugin-react": "^4.3.1",
     "adm-zip": "^0.5.14",
     "cross-env": "^7.0.3",
+    "eslint": "8.x",
+    "eslint-plugin-react": "^7.34.3",
     "fs-extra": "^11.2.0",
+    "globals": "^15.8.0",
     "https-proxy-agent": "^5.0.1",
     "husky": "^7.0.4",
     "node-fetch": "^3.3.2",
@@ -81,6 +87,7 @@
     "sass": "^1.77.6",
     "terser": "^5.31.1",
     "typescript": "^5.5.3",
+    "typescript-eslint": "^7.16.0",
     "vite": "^5.3.3",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.2.0"
