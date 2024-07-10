@@ -22,9 +22,23 @@ impl Tray {
         macro_rules! t {
             ($en: expr, $zh: expr) => {
                 if zh {
-                    $zh
+                    #[cfg(not(target_os = "linux"))]
+                    {
+                        format!("{}", $zh)
+                    }
+                    #[cfg(target_os = "linux")]
+                    {
+                        format!("      {}", $zh)
+                    }
                 } else {
-                    $en
+                    #[cfg(not(target_os = "linux"))]
+                    {
+                        format!("{}", $en)
+                    }
+                    #[cfg(target_os = "linux")]
+                    {
+                        format!("      {}", $en)
+                    }
                 }
             };
         }
@@ -114,9 +128,52 @@ impl Tray {
         macro_rules! t {
             ($en: expr, $zh: expr) => {
                 if zh {
-                    $zh
+                    #[cfg(not(target_os = "linux"))]
+                    {
+                        format!("{}", $zh)
+                    }
+                    #[cfg(target_os = "linux")]
+                    {
+                        format!("      {}", $zh)
+                    }
                 } else {
-                    $en
+                    #[cfg(not(target_os = "linux"))]
+                    {
+                        format!("{}", $en)
+                    }
+                    #[cfg(target_os = "linux")]
+                    {
+                        format!("      {}", $en)
+                    }
+                }
+            };
+            ($selected: literal,$en: expr, $zh: expr) => {
+                if zh {
+                    #[cfg(not(target_os = "linux"))]
+                    {
+                        format!("{}", $zh)
+                    }
+                    #[cfg(target_os = "linux")]
+                    {
+                        if $selected {
+                            format!("✅  {}", $zh)
+                        } else {
+                            format!("      {}", $zh)
+                        }
+                    }
+                } else {
+                    #[cfg(not(target_os = "linux"))]
+                    {
+                        format!("{}", $en)
+                    }
+                    #[cfg(target_os = "linux")]
+                    {
+                        if $selected {
+                            format!("✅  {}", $en)
+                        } else {
+                            format!("      {}", $en)
+                        }
+                    }
                 }
             };
         }
@@ -142,7 +199,7 @@ impl Tray {
             "rule" => {
                 let _ = tray
                     .get_item("rule_mode")
-                    .set_title(t!("Rule Mode  ✔", "规则模式  ✔"));
+                    .set_title(t!(true, "Rule Mode", "规则模式"));
                 let _ = tray
                     .get_item("global_mode")
                     .set_title(t!("Global Mode", "全局模式"));
@@ -156,7 +213,7 @@ impl Tray {
                     .set_title(t!("Rule Mode", "规则模式"));
                 let _ = tray
                     .get_item("global_mode")
-                    .set_title(t!("Global Mode  ✔", "全局模式  ✔"));
+                    .set_title(t!(true, "Global Mode", "全局模式"));
                 let _ = tray
                     .get_item("direct_mode")
                     .set_title(t!("Direct Mode", "直连模式"));
@@ -170,7 +227,7 @@ impl Tray {
                     .set_title(t!("Global Mode", "全局模式"));
                 let _ = tray
                     .get_item("direct_mode")
-                    .set_title(t!("Direct Mode  ✔", "直连模式  ✔"));
+                    .set_title(t!(true, "Direct Mode", "直连模式"));
             }
             _ => {}
         }
@@ -272,7 +329,7 @@ impl Tray {
             if *system_proxy {
                 let _ = tray
                     .get_item("system_proxy")
-                    .set_title(t!("System Proxy  ✔", "系统代理  ✔"));
+                    .set_title(t!(true, "System Proxy", "系统代理"));
             } else {
                 let _ = tray
                     .get_item("system_proxy")
@@ -281,7 +338,7 @@ impl Tray {
             if tun_mode {
                 let _ = tray
                     .get_item("tun_mode")
-                    .set_title(t!("TUN Mode  ✔", "Tun 模式  ✔"));
+                    .set_title(t!(true, "TUN Mode", "Tun 模式"));
             } else {
                 let _ = tray
                     .get_item("tun_mode")
@@ -290,7 +347,7 @@ impl Tray {
             if *service_mode {
                 let _ = tray
                     .get_item("service_mode")
-                    .set_title(t!("Service Mode  ✔", "服务模式  ✔"));
+                    .set_title(t!(true, "Service Mode", "服务模式"));
             } else {
                 let _ = tray
                     .get_item("service_mode")
