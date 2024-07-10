@@ -20,6 +20,10 @@ interface Props<Value> {
   children: ReactNode;
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function GuardState<T>(props: Props<T>) {
   const {
     value,
@@ -68,12 +72,25 @@ export function GuardState<T>(props: Props<T>) {
       }
 
       lastRef.current = now;
+      const guradRetry = async (newValue: any, oldValue: any, retry = 5) => {
+        try {
+          setBusy(true);
+          await onGuard(newValue, oldValue);
+          setBusy(false);
+        } catch (err: any) {
+          if (retry > 0) {
+            await sleep(1000);
+            await guradRetry(newValue, oldValue, retry - 1);
+          } else {
+            setBusy(false);
+            throw err;
+          }
+        }
+      };
 
       if (waitTime <= 0) {
         if (showChildrenBusy) {
-          setBusy(true);
-          await onGuard(newValue, value!);
-          setBusy(false);
+          await guradRetry(newValue, value!);
         } else {
           await onGuard(newValue, value!);
         }
@@ -85,9 +102,7 @@ export function GuardState<T>(props: Props<T>) {
         timeRef.current = setTimeout(async () => {
           try {
             if (showChildrenBusy) {
-              setBusy(true);
-              await onGuard(newValue, saveRef.current!);
-              setBusy(false);
+              await guradRetry(newValue, saveRef.current!);
             } else {
               await onGuard(newValue, saveRef.current!);
             }
@@ -96,6 +111,8 @@ export function GuardState<T>(props: Props<T>) {
             // 状态回退
             onChange(saveRef.current!);
             onCatch(err);
+          } finally {
+            setBusy(false);
           }
         }, waitTime);
       }
@@ -103,6 +120,8 @@ export function GuardState<T>(props: Props<T>) {
       // 状态回退
       onChange(saveRef.current!);
       onCatch(err);
+    } finally {
+      setBusy(false);
     }
     lockRef.current = false;
   };
