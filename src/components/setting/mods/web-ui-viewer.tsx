@@ -1,11 +1,11 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { Button, Box, Typography } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { openWebUrl } from "@/services/cmds";
 import { BaseDialog, BaseEmpty, DialogRef, Notice } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
+import { useVerge } from "@/hooks/use-verge";
+import { openWebUrl } from "@/services/cmds";
+import { Box, Button, Typography } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { WebUIItem } from "./web-ui-item";
 
 export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
@@ -62,7 +62,7 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
           .slice(clashInfo.server.indexOf(":") + 1)
           .trim();
 
-        url = url.replaceAll("%port", port || "9097");
+        url = url.replaceAll("%port", port || "9090");
         url = url.replaceAll(
           "%secret",
           encodeURIComponent(clashInfo.secret || ""),

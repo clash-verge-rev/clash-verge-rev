@@ -256,7 +256,7 @@ const SettingClash = ({ onError }: Props) => {
           disabled={enable_random_port}
           autoComplete="off"
           size="small"
-          value={clash?.["mixed-port"] ?? 7897}
+          value={clash?.["mixed-port"] ?? 7890}
           sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}
           onClick={(e) => {
             portRef.current?.open();

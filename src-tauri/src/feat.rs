@@ -187,7 +187,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             let port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
             tmp_map.insert("mixed-port".into(), port.into());
         } else {
-            tmp_map.insert("mixed-port".into(), 7897.into());
+            tmp_map.insert("mixed-port".into(), 7890.into());
         }
         tmp_map.insert("port".into(), 0.into());
         tmp_map.insert("socks-port".into(), 0.into());

@@ -16,19 +16,19 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   const { clashInfo, patchInfo } = useClashInfo();
 
   const [open, setOpen] = useState(false);
-  const [redirPort, setRedirPort] = useState(clashInfo?.redir_port ?? 7895);
-  const [tproxyPort, setTproxyPort] = useState(clashInfo?.tproxy_port ?? 7896);
-  const [mixedPort, setMixedPort] = useState(clashInfo?.mixed_port ?? 7897);
-  const [socksPort, setSocksPort] = useState(clashInfo?.socks_port ?? 7898);
-  const [port, setPort] = useState(clashInfo?.port ?? 7899);
+  const [redirPort, setRedirPort] = useState(clashInfo?.redir_port ?? 0);
+  const [tproxyPort, setTproxyPort] = useState(clashInfo?.tproxy_port ?? 0);
+  const [mixedPort, setMixedPort] = useState(clashInfo?.mixed_port ?? 7890);
+  const [socksPort, setSocksPort] = useState(clashInfo?.socks_port ?? 0);
+  const [port, setPort] = useState(clashInfo?.port ?? 0);
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      setRedirPort(clashInfo?.redir_port ?? 7895);
-      setTproxyPort(clashInfo?.tproxy_port ?? 7896);
-      setMixedPort(clashInfo?.mixed_port ?? 7897);
-      setSocksPort(clashInfo?.socks_port ?? 7898);
-      setPort(clashInfo?.port ?? 7899);
+      setRedirPort(clashInfo?.redir_port ?? 0);
+      setTproxyPort(clashInfo?.tproxy_port ?? 0);
+      setMixedPort(clashInfo?.mixed_port ?? 7890);
+      setSocksPort(clashInfo?.socks_port ?? 0);
+      setPort(clashInfo?.port ?? 0);
       setOpen(true);
     },
     close: () => setOpen(false),

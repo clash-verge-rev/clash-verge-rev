@@ -48,16 +48,16 @@ impl IClashConfig {
         map.insert("redir-port".into(), 0.into());
         #[cfg(target_os = "linux")]
         map.insert("tproxy-port".into(), 0.into());
-        map.insert("mixed-port".into(), 7897.into());
+        map.insert("mixed-port".into(), 7890.into());
         map.insert("socks-port".into(), 0.into());
         map.insert("port".into(), 0.into());
         map.insert("log-level".into(), "info".into());
         map.insert("allow-lan".into(), false.into());
         map.insert("mode".into(), "rule".into());
-        map.insert("external-controller".into(), "127.0.0.1:9097".into());
+        map.insert("external-controller".into(), "127.0.0.1:9090".into());
         map.insert("secret".into(), nanoid!().into());
         map.insert("tun".into(), tun.into());
-        map.insert("unified-delay".into(), false.into());
+        map.insert("unified-delay".into(), true.into());
 
         Self(map)
     }
@@ -178,7 +178,7 @@ impl IClashConfig {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7895);
+            .unwrap_or(0);
         port
     }
 
@@ -191,7 +191,7 @@ impl IClashConfig {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7896);
+            .unwrap_or(0);
         port
     }
 
@@ -203,7 +203,7 @@ impl IClashConfig {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7897);
+            .unwrap_or(7890);
         port
     }
 
@@ -215,7 +215,7 @@ impl IClashConfig {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7898);
+            .unwrap_or(0);
         port
     }
 
@@ -227,7 +227,7 @@ impl IClashConfig {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7899);
+            .unwrap_or(0);
         port
     }
 
@@ -249,7 +249,7 @@ impl IClashConfig {
                 }
                 None => None,
             })
-            .unwrap_or("127.0.0.1:9097".into())
+            .unwrap_or("127.0.0.1:9090".into())
     }
 
     pub fn guard_client_ctrl(config: &Mapping) -> String {
@@ -261,7 +261,7 @@ impl IClashConfig {
                 }
                 socket.to_string()
             }
-            Err(_) => "127.0.0.1:9097".into(),
+            Err(_) => "127.0.0.1:9090".into(),
         }
     }
 }
@@ -295,10 +295,10 @@ fn test_clash_info() {
     fn get_result<S: Into<String>>(port: u16, server: S) -> ClashInfo {
         ClashInfo {
             mixed_port: port,
-            socks_port: 7898,
-            redir_port: 7895,
-            tproxy_port: 7896,
-            port: 7899,
+            socks_port: 0,
+            redir_port: 0,
+            tproxy_port: 0,
+            port: 0,
             server: server.into(),
             secret: None,
         }
@@ -306,12 +306,12 @@ fn test_clash_info() {
 
     assert_eq!(
         IClashConfig(IClashConfig::guard(Mapping::new())).get_client_info(),
-        get_result(7897, "127.0.0.1:9097")
+        get_result(7890, "127.0.0.1:9090")
     );
 
-    assert_eq!(get_case("", ""), get_result(7897, "127.0.0.1:9097"));
+    assert_eq!(get_case("", ""), get_result(7890, "127.0.0.1:9090"));
 
-    assert_eq!(get_case(65537, ""), get_result(1, "127.0.0.1:9097"));
+    assert_eq!(get_case(65537, ""), get_result(1, "127.0.0.1:9090"));
 
     assert_eq!(
         get_case(8888, "127.0.0.1:8888"),
@@ -320,7 +320,7 @@ fn test_clash_info() {
 
     assert_eq!(
         get_case(8888, "   :98888 "),
-        get_result(8888, "127.0.0.1:9097")
+        get_result(8888, "127.0.0.1:9090")
     );
 
     assert_eq!(
@@ -345,7 +345,7 @@ fn test_clash_info() {
 
     assert_eq!(
         get_case(8888, "192.168.1.1:80800"),
-        get_result(8888, "127.0.0.1:9097")
+        get_result(8888, "127.0.0.1:9090")
     );
 }
 
