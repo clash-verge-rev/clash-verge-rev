@@ -101,14 +101,6 @@ impl CoreManager {
         log::debug!(target: "app", "disable tun mode");
         let _ = clash_api::patch_configs(&disable).await;
 
-        let mut system = System::new();
-        system.refresh_all();
-        let procs = system.processes_by_name("verge-mihomo");
-        for proc in procs {
-            log::debug!(target: "app", "kill all clash process");
-            proc.kill();
-        }
-
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
             log_err!(service::stop_core_by_service().await);
@@ -123,8 +115,15 @@ impl CoreManager {
         // 服务模式
         let enable = { Config::verge().latest().enable_service_mode };
         let enable = enable.unwrap_or(false);
-
         *self.use_service_mode.lock() = enable;
+
+        let mut system = System::new();
+        system.refresh_all();
+        let procs = system.processes_by_name("verge-mihomo");
+        for proc in procs {
+            log::debug!(target: "app", "kill all clash process");
+            proc.kill();
+        }
 
         if enable {
             // 服务模式启动失败就直接运行sidecar
