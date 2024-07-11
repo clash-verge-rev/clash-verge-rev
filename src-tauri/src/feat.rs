@@ -180,6 +180,25 @@ pub fn toggle_tun_mode() {
                 .show();
                 if status {
                     let _ = install_and_run_service().await;
+                    if let Ok(_) = cmds::service::check_service_and_clash().await {
+                        let mut tun = Mapping::new();
+                        let mut tun_val = Mapping::new();
+                        tun_val.insert("enable".into(), Value::from(!enable));
+                        tun.insert("tun".into(), tun_val.into());
+                        match patch_clash(tun).await {
+                            Ok(_) => {
+                                log::info!(target: "app", "change tun mode to {:?}", !enable);
+                                Notification::new(APP_ID)
+                                    .title("Clash Verge")
+                                    .body("Enable tun mode successfully")
+                                    .show()
+                                    .unwrap();
+                            }
+                            Err(err) => {
+                                log::error!(target: "app", "{err}")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -199,7 +218,7 @@ async fn install_and_run_service() -> Result<()> {
                 Ok(()) => {
                     Notification::new(APP_ID)
                         .title(title)
-                        .body("install and running successfully")
+                        .body("Install and running successfully")
                         .show()
                         .unwrap();
                     handle::Handle::refresh_verge();
@@ -208,7 +227,7 @@ async fn install_and_run_service() -> Result<()> {
                 Err(err) => {
                     Notification::new(APP_ID)
                         .title(title)
-                        .body(format!("install success, but service run failed, {err}"))
+                        .body(format!("Install success, but service run failed, {err}"))
                         .show()
                         .unwrap();
                     Err(err)
@@ -218,7 +237,7 @@ async fn install_and_run_service() -> Result<()> {
         Err(err) => {
             Notification::new(APP_ID)
                 .title(title)
-                .body(format!("install failed, {err}"))
+                .body(format!("Install failed, {err}"))
                 .show()
                 .unwrap();
             Err(anyhow!(err))
@@ -234,7 +253,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         // disable other port & update clash config
         let mut tmp_map = Mapping::new();
         if enable_random_port {
-            let port = resolve::find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
+            let port =
+                resolve::find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
             tmp_map.insert("mixed-port".into(), port.into());
         } else {
             tmp_map.insert("mixed-port".into(), 7890.into());

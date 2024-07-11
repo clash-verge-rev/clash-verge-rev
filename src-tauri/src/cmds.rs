@@ -400,6 +400,8 @@ pub fn exit_app(app_handle: tauri::AppHandle) {
 }
 
 pub mod service {
+    use std::{thread::sleep, time::Duration};
+
     use super::*;
     use crate::core::service;
 
@@ -416,6 +418,28 @@ pub mod service {
     #[tauri::command]
     pub async fn uninstall_service() -> CmdResult {
         wrap_err!(service::uninstall_service().await)
+    }
+
+    pub async fn check_service_and_clash() -> CmdResult<()> {
+        for i in 0..5 {
+            if let Err(_) = service::check_service().await {
+                if i == 4 {
+                    return Err("service check failed".to_string());
+                } else {
+                    sleep(Duration::from_secs(1));
+                }
+            };
+        }
+        for i in 0..5 {
+            if let Err(_) = clash_api::get_configs().await {
+                if i == 4 {
+                    return Err("clash check failed".to_string());
+                } else {
+                    sleep(Duration::from_secs(1));
+                }
+            }
+        }
+        Ok(())
     }
 }
 
