@@ -1,3 +1,5 @@
+import mergeSchema from "@/assets/schema/clash-verge-merge-json-schema.json";
+import metaSchema from "@/assets/schema/meta-json-schema.json";
 import { Notice } from "@/components/base";
 import { useWindowSize } from "@/hooks/use-window-size";
 import { getTemplate, readProfileFile, saveProfileFile } from "@/services/cmds";
@@ -11,8 +13,6 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
-import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import * as monaco from "monaco-editor";
 import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
 import { nanoid } from "nanoid";
