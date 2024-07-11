@@ -128,7 +128,7 @@ pub fn toggle_service_mode() {
                     "Install and run Clash Verge Service",
                     "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?",
                 )
-                .kind(MessageDialogKind::Warning)
+                .kind(MessageDialogKind::Info)
                 .buttons(MessageDialogButtons::OkCancel)
                 .show();
                 if status {
@@ -175,7 +175,7 @@ pub fn toggle_tun_mode() {
                     "Install and run Clash Verge Service",
                     "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?",
                 )
-                .kind(MessageDialogKind::Warning)
+                .kind(MessageDialogKind::Info)
                 .buttons(MessageDialogButtons::OkCancel)
                 .show();
                 if status {
