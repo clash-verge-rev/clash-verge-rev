@@ -7,8 +7,10 @@ import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
+import LoadingPage from "@/pages/loading";
 import { getAxios } from "@/services/api";
 import { getPortableFlag } from "@/services/cmds";
+import { useSetThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import { DarkMode, LightMode } from "@mui/icons-material";
 import { List, Paper, ThemeProvider } from "@mui/material";
@@ -19,13 +21,13 @@ import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
 import i18next from "i18next";
-import { Suspense, useEffect, useState } from "react";
+import { MouseEvent, Suspense, useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router-dom";
 import { CSSTransition, SwitchTransition } from "react-transition-group";
 import { SWRConfig, mutate } from "swr";
 import { routers } from "./_routers";
-import LoadingPage from "@/pages/loading";
 
 export let portableFlag = false;
 dayjs.extend(relativeTime);
@@ -36,6 +38,7 @@ const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
+  const setMode = useSetThemeMode();
 
   const { verge, patchVerge } = useVerge();
   const { language, start_page, enable_system_title, enable_keep_ui_active } =
@@ -123,6 +126,50 @@ const Layout = () => {
     }
   }, [language, start_page]);
 
+  const toggleTheme = (event: MouseEvent) => {
+    // @ts-ignore
+    // prettier-ignore
+    const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!isAppearanceTransition) {
+      // setMode(isDark ? "light" : "dark");
+      patchVerge({ theme_mode: isDark ? "light" : "dark" });
+      return;
+    }
+
+    const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, innerWidth - x),
+      Math.max(y, innerHeight - y),
+    );
+
+    const transition = document.startViewTransition(() => {
+      flushSync(() => {
+        // setMode(isDark ? "light" : "dark");
+        patchVerge({ theme_mode: isDark ? "light" : "dark" });
+        document.documentElement.className = isDark ? "light" : "dark";
+      });
+    });
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+      document.documentElement.animate(
+        {
+          clipPath: isDark ? [...clipPath].reverse() : clipPath,
+        },
+        {
+          duration: 400,
+          easing: "ease-out",
+          pseudoElement: isDark
+            ? "::view-transition-old(root)"
+            : "::view-transition-new(root)",
+        },
+      );
+    });
+  };
+
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
       <ThemeProvider theme={theme}>
@@ -179,9 +226,7 @@ const Layout = () => {
                   classNames="fade-theme">
                   <button
                     className="switch-theme-btn"
-                    onClick={() =>
-                      patchVerge({ theme_mode: isDark ? "light" : "dark" })
-                    }>
+                    onClick={(e) => toggleTheme(e)}>
                     {isDark ? (
                       <DarkMode fontSize="inherit" />
                     ) : (

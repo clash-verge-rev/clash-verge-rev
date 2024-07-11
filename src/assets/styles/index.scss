@@ -31,10 +31,12 @@ body {
   height: 8px;
   background: transparent;
 }
+
 *::-webkit-scrollbar-thumb {
   border-radius: 6px;
   background-color: var(--scroller-color);
 }
+
 *::-webkit-scrollbar-corner {
   background-color: transparent;
 }
@@ -84,21 +86,47 @@ body {
   opacity: 0;
   transform: translateX(-50%);
 }
+
 .fade-theme-enter-active {
   opacity: 1;
   transform: translateX(0%);
 }
+
 .fade-theme-exit {
   opacity: 1;
   transform: translateX(0%);
 }
+
 .fade-theme-exit-active {
   opacity: 0;
   transform: translateX(50%);
 }
+
 .fade-theme-enter-active,
 .fade-theme-exit-active {
   transition:
     opacity 500ms,
     transform 500ms;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 9999;
+}
+
+::view-transition-new(root) {
+  z-index: 1;
+}
+
+.dark::view-transition-old(root) {
+  z-index: 1;
+}
+
+.dark::view-transition-new(root) {
+  z-index: 9999;
 }
