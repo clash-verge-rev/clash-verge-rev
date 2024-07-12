@@ -13,6 +13,12 @@ use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
 
 #[tauri::command]
+pub fn copy_clash_env(app_handle: tauri::AppHandle) -> CmdResult {
+    feat::copy_clash_env(&app_handle);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
     Ok(Config::profiles().data().clone())
 }
