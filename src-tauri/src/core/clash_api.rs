@@ -91,7 +91,12 @@ pub async fn get_proxy_delay(
         .send()
         .await?;
 
-    Ok(response.json::<DelayRes>().await?)
+    match response.json::<DelayRes>().await {
+        Ok(delay) => Ok(delay),
+        Err(_) => Ok(DelayRes {
+            delay: timeout as u64,
+        }),
+    }
 }
 
 /// 根据clash info获取clash服务地址和请求头
