@@ -54,7 +54,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
         default_latency_test: values.defaultLatencyTest,
-        default_latency_timeout: values.defaultLatencyTimeout,
+        default_latency_timeout: values.defaultLatencyTimeout || 5000,
         auto_log_clean: values.autoLogClean as any,
       });
       setOpen(false);
@@ -202,7 +202,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             autoCapitalize="off"
             spellCheck="false"
             sx={{ width: 250 }}
-            value={values.defaultLatencyTimeout}
+            value={values.defaultLatencyTimeout || ""}
             placeholder="5000"
             onChange={(e) =>
               setValues((v) => ({

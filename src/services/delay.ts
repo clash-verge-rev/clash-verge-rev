@@ -116,12 +116,12 @@ class DelayManager {
   formatDelay(delay: number, timeout = 5000) {
     if (delay <= 0) return "Error";
     if (delay > 1e5) return "Error";
-    if (delay >= timeout) return "Timeout"; // 5s timeout, maybe this condition no need, because the delay request has send `timeout` param
+    if (delay >= timeout) return "Timeout"; // 5s
     return `${delay}`;
   }
 
   formatDelayColor(delay: number, timeout = 5000) {
-    if (delay >= timeout) return "error.main"; // maybe this condition no need, because the delay request has send `timeout` param
+    if (delay >= timeout) return "error.main";
     if (delay <= 0) return "error.main";
     if (delay > 500) return "warning.main";
     return "success.main";
