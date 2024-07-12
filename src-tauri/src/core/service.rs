@@ -103,6 +103,12 @@ pub async fn install_service() -> Result<()> {
     if !installer_path.exists() {
         bail!("installer not found");
     }
+
+    let _ = StdCommand::new("chmod")
+        .arg("+x")
+        .arg(installer_path.to_string_lossy().replace(" ", "\\ "))
+        .output();
+
     let shell = installer_path.to_string_lossy().replace(" ", "\\\\ ");
     let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
 
