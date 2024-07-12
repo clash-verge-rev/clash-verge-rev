@@ -52,7 +52,7 @@ importers:
         version: 1.11.11
       foxact:
         specifier: ^0.2.35
-        version: 0.2.35(react@18.3.1)
+        version: 0.2.36(react@18.3.1)
       i18next:
         specifier: ^23.11.5
         version: 23.11.5
@@ -2120,8 +2120,8 @@ packages:
     resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
     engines: {node: '>=12.20.0'}
 
-  foxact@0.2.35:
-    resolution: {integrity: sha512-5e2p34TcBETZTTMhmf4WuljS07lgtv3laimqJer9OGOqYgOpYHgKfR0Cie8Q2IxH1FFhVkm1l0+2W/XL8nBL7Q==}
+  foxact@0.2.36:
+    resolution: {integrity: sha512-oqra6g2x0GCbnwcD5SoEJuRzwv6gEj/840biKkIHNuTOMk0U1kR0V8iBSk4RU6jCa9p9oM17eCwJj2fqpvlvUg==}
     peerDependencies:
       react: '*'
     peerDependenciesMeta:
@@ -5657,7 +5657,7 @@ snapshots:
     dependencies:
       fetch-blob: 3.2.0
 
-  foxact@0.2.35(react@18.3.1):
+  foxact@0.2.36(react@18.3.1):
     dependencies:
       client-only: 0.0.1
       server-only: 0.0.1
