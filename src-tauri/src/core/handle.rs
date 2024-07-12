@@ -129,7 +129,7 @@ impl Handle {
                         if i == 4 {
                             log::error!(target: "app", "init tun mode status on tray, get clash configs error, {:?}", e);
                         } else {
-                            log::error!(target: "app", "init tun mode status on tray, get clash configs error, retry......");
+                            log::warn!(target: "app", "init tun mode status on tray, get clash configs error, retry times: {:?}", i + 1);
                             sleep(Duration::from_secs(1));
                         }
                     }

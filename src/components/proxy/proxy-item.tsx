@@ -50,7 +50,7 @@ export const ProxyItem = (props: Props) => {
   // -2 为 loading
   const [delay, setDelay] = useState(-1);
   const { verge } = useVerge();
-  const timeout = verge?.default_latency_timeout || 10000;
+  const timeout = verge?.default_latency_timeout || 5000;
   useEffect(() => {
     delayManager.setListener(proxy.name, group.name, setDelay);
 

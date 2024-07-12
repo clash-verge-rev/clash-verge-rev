@@ -585,7 +585,7 @@ pub async fn test_delay(url: String) -> Result<u32> {
     }
 
     let request = builder
-        .timeout(Duration::from_millis(10000))
+        .timeout(Duration::from_millis(5000))
         .build()?
         .get(url).header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
     let start = Instant::now();
@@ -597,7 +597,7 @@ pub async fn test_delay(url: String) -> Result<u32> {
             if response.status().is_success() {
                 Ok(start.elapsed().as_millis() as u32)
             } else {
-                Ok(10000u32)
+                Ok(5000u32)
             }
         }
         Err(err) => {

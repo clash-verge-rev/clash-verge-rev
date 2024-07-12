@@ -33,7 +33,7 @@ export const ProxyGroups = (props: Props) => {
 
   const { verge } = useVerge();
   const { current, patchCurrent } = useProfiles();
-  const timeout = verge?.default_latency_timeout || 10000;
+  const timeout = verge?.default_latency_timeout || 5000;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 

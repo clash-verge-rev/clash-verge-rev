@@ -1,6 +1,5 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
+import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
 import {
   List,
   ListItem,
@@ -9,8 +8,9 @@ import {
   Select,
   TextField,
 } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -25,7 +25,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     proxyLayoutColumn: 6,
     defaultLatencyTest: "",
     autoLogClean: 0,
-    defaultLatencyTimeout: 10000,
+    defaultLatencyTimeout: 5000,
   });
 
   useImperativeHandle(ref, () => ({
@@ -39,7 +39,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         proxyLayoutColumn: verge?.proxy_layout_column || 6,
         defaultLatencyTest: verge?.default_latency_test || "",
         autoLogClean: verge?.auto_log_clean || 0,
-        defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
+        defaultLatencyTimeout: verge?.default_latency_timeout || 5000,
       });
     },
     close: () => setOpen(false),
@@ -203,7 +203,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             spellCheck="false"
             sx={{ width: 250 }}
             value={values.defaultLatencyTimeout}
-            placeholder="10000"
+            placeholder="5000"
             onChange={(e) =>
               setValues((v) => ({
                 ...v,

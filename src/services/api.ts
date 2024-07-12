@@ -81,7 +81,7 @@ export const getProxyDelay = async (
   timeout?: number,
 ) => {
   const params = {
-    timeout: timeout || 10000,
+    timeout: timeout || 5000,
     url: url || "https://www.gstatic.com/generate_204",
   };
   const instance = await getAxios();
@@ -261,7 +261,7 @@ export const getGroupProxyDelays = async (
   timeout?: number,
 ) => {
   const params = {
-    timeout: timeout || 10000,
+    timeout: timeout || 5000,
     url: url || "https://www.gstatic.com/generate_204",
   };
   const instance = await getAxios();
