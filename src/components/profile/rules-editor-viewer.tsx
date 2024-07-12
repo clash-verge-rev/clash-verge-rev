@@ -29,7 +29,8 @@ import {
   TextField,
   styled,
 } from "@mui/material";
-
+import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
+import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice, Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
@@ -535,6 +536,7 @@ export const RulesEditorViewer = (props: Props) => {
                 <Button
                   fullWidth
                   variant="contained"
+                  startIcon={<VerticalAlignTopIcon />}
                   onClick={() => {
                     try {
                       let raw = validateRule();
@@ -552,6 +554,7 @@ export const RulesEditorViewer = (props: Props) => {
                 <Button
                   fullWidth
                   variant="contained"
+                  startIcon={<VerticalAlignBottomIcon />}
                   onClick={() => {
                     try {
                       let raw = validateRule();
