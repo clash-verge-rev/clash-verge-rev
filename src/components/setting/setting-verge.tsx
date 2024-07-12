@@ -1,13 +1,21 @@
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/api/dialog";
-import { Button, MenuItem, Select, Input, Typography } from "@mui/material";
+import {
+  Button,
+  MenuItem,
+  Select,
+  Input,
+  Typography,
+  Box,
+} from "@mui/material";
 import {
   exitApp,
   openAppDir,
   openCoreDir,
   openLogsDir,
   openDevTools,
+  copyClashEnv,
 } from "@/services/cmds";
 import { checkUpdate } from "@tauri-apps/api/updater";
 import { useVerge } from "@/hooks/use-verge";
@@ -24,6 +32,8 @@ import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { ContentCopyRounded } from "@mui/icons-material";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -66,6 +76,11 @@ const SettingVerge = ({ onError }: Props) => {
       Notice.error(err.message || err.toString());
     }
   };
+
+  const onCopyClashEnv = useCallback(async () => {
+    await copyClashEnv();
+    Notice.success(t("Copy Success"), 1000);
+  }, []);
 
   return (
     <SettingList title={t("Verge Setting")}>
@@ -123,7 +138,12 @@ const SettingVerge = ({ onError }: Props) => {
         </SettingItem>
       )}
 
-      <SettingItem label={t("Copy Env Type")}>
+      <SettingItem
+        label={t("Copy Env Type")}
+        extra={
+          <TooltipIcon icon={ContentCopyRounded} onClick={onCopyClashEnv} />
+        }
+      >
         <GuardState
           value={env_type ?? (OS === "windows" ? "powershell" : "bash")}
           onCatch={onError}
