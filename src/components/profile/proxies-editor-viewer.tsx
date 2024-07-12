@@ -24,10 +24,11 @@ import {
   DialogTitle,
   List,
   ListItem,
-  ListItemText,
   TextField,
   styled,
 } from "@mui/material";
+import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
+import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice } from "@/components/base";
@@ -270,6 +271,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                 <Button
                   fullWidth
                   variant="contained"
+                  startIcon={<VerticalAlignTopIcon />}
                   onClick={() => {
                     let proxies = handleParse();
                     setPrependSeq([...prependSeq, ...proxies]);
@@ -282,6 +284,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                 <Button
                   fullWidth
                   variant="contained"
+                  startIcon={<VerticalAlignBottomIcon />}
                   onClick={() => {
                     let proxies = handleParse();
                     setAppendSeq([...appendSeq, ...proxies]);
