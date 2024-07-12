@@ -25,7 +25,7 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
     <EditorViewer
       open={true}
       title={
-        <Box>
+        <Box display="flex" alignItems="center" gap={2}>
           {t("Runtime Config")}
           <Chip label={t("ReadOnly")} size="small" />
         </Box>
