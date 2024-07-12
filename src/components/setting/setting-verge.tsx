@@ -33,7 +33,7 @@ import { UpdateViewer } from "./mods/update-viewer";
 import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { CopyAll } from "@mui/icons-material";
+import { ContentCopyRounded } from "@mui/icons-material";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -140,7 +140,9 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem
         label={t("Copy Env Type")}
-        extra={<TooltipIcon icon={CopyAll} onClick={onCopyClashEnv} />}
+        extra={
+          <TooltipIcon icon={ContentCopyRounded} onClick={onCopyClashEnv} />
+        }
       >
         <GuardState
           value={env_type ?? (OS === "windows" ? "powershell" : "bash")}
