@@ -80,7 +80,7 @@
     "https-proxy-agent": "7.0.5",
     "husky": "9.0.11",
     "node-fetch": "3.3.2",
-    "prettier": "3.3.2",
+    "prettier": "3.3.3",
     "pretty-quick": "4.0.0",
     "react-devtools": "5.3.1",
     "sass": "1.77.8",

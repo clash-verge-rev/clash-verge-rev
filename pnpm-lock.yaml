@@ -172,11 +172,11 @@ importers:
         specifier: 3.3.2
         version: 3.3.2
       prettier:
-        specifier: 3.3.2
-        version: 3.3.2
+        specifier: 3.3.3
+        version: 3.3.3
       pretty-quick:
         specifier: 4.0.0
-        version: 4.0.0(prettier@3.3.2)
+        version: 4.0.0(prettier@3.3.3)
       react-devtools:
         specifier: 5.3.1
         version: 5.3.1
@@ -2838,8 +2838,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.3.2:
-    resolution: {integrity: sha512-rAVeHYMcv8ATV5d508CFdn+8/pHPpXeIid1DdrPwXnaAdH7cqjVbpJaT5eq4yRAFU/lsbwYwSF/n5iNrdJHPQA==}
+  prettier@3.3.3:
+    resolution: {integrity: sha512-i2tDNA0O5IrMO757lfrdQZCc2jPNDVntV0m/+4whiDfWaTKfMNgR7Qz0NAeGz/nRqF4m5/6CLzbP4/liHt12Ew==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -6485,9 +6485,9 @@ snapshots:
 
   prettier@2.8.8: {}
 
-  prettier@3.3.2: {}
+  prettier@3.3.3: {}
 
-  pretty-quick@4.0.0(prettier@3.3.2):
+  pretty-quick@4.0.0(prettier@3.3.3):
     dependencies:
       execa: 5.1.1
       find-up: 5.0.0
@@ -6495,7 +6495,7 @@ snapshots:
       mri: 1.2.0
       picocolors: 1.0.1
       picomatch: 3.0.1
-      prettier: 3.3.2
+      prettier: 3.3.3
       tslib: 2.6.3
 
   progress@2.0.3: {}
