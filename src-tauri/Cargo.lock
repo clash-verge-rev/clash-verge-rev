@@ -803,6 +803,7 @@ dependencies = [
  "log 0.4.22",
  "log4rs",
  "nanoid",
+ "network-interface",
  "once_cell",
  "open 5.2.0",
  "parking_lot",
@@ -3241,6 +3242,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e5a6ae77c8ee183dcbbba6150e2e6b9f3f4196a7666c02a715a95692ec1fa97"
 dependencies = [
  "jni-sys",
+]
+
+[[package]]
+name = "network-interface"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "433419f898328beca4f2c6c73a1b52540658d92b0a99f0269330457e0fd998d5"
+dependencies = [
+ "cc",
+ "libc",
+ "serde",
+ "thiserror",
+ "winapi",
 ]
 
 [[package]]
