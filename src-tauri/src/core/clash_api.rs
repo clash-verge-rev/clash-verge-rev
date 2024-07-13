@@ -93,9 +93,7 @@ pub async fn get_proxy_delay(
 
     match response.json::<DelayRes>().await {
         Ok(delay) => Ok(delay),
-        Err(_) => Ok(DelayRes {
-            delay: 99999 as u64,
-        }),
+        Err(_) => Ok(DelayRes { delay: 0 }),
     }
 }
 

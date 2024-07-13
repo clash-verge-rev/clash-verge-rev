@@ -63,8 +63,7 @@ class DelayManager {
     }
 
     if (proxy.history.length > 0) {
-      // 0ms以error显示
-      return proxy.history[proxy.history.length - 1].delay || 1e6;
+      return proxy.history[proxy.history.length - 1].delay;
     }
     return -1;
   }
@@ -114,7 +113,9 @@ class DelayManager {
   }
 
   formatDelay(delay: number, timeout = 5000) {
-    if (delay <= 0) return "Error";
+    // console.log(`formatDelay: ${delay}`);
+    if (delay < 0) return "Error";
+    if (delay == 0) return "Timeout";
     if (delay > 1e5) return "Error";
     if (delay >= timeout) return "Timeout"; // 5s
     return `${delay}`;
