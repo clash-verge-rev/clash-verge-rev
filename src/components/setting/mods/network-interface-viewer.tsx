@@ -43,7 +43,7 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                 setIsV4((prev) => !prev);
               }}
             >
-              {isV4 ? t("Ipv6") : t("Ipv4")}
+              {isV4 ? "Ipv6" : "Ipv4"}
             </Button>
           </Box>
         </Box>
@@ -65,12 +65,15 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                     address.V4 && (
                       <AddressDisplay
                         key={address.V4.ip}
-                        label="Address"
+                        label={t("Ip Address")}
                         content={address.V4.ip}
                       />
                     )
                 )}
-                <AddressDisplay label="Mac" content={item.mac_addr ?? ""} />
+                <AddressDisplay
+                  label={t("Mac Address")}
+                  content={item.mac_addr ?? ""}
+                />
               </>
             )}
             {!isV4 && (
@@ -80,12 +83,15 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                     address.V6 && (
                       <AddressDisplay
                         key={address.V6.ip}
-                        label="Address"
+                        label={t("Ip Address")}
                         content={address.V6.ip}
                       />
                     )
                 )}
-                <AddressDisplay label="Mac" content={item.mac_addr ?? ""} />
+                <AddressDisplay
+                  label={t("Mac Address")}
+                  content={item.mac_addr ?? ""}
+                />
               </>
             )}
           </Box>
