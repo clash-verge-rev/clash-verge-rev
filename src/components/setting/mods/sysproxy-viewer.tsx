@@ -25,19 +25,24 @@ const DEFAULT_PAC = `function FindProxyForURL(url, host) {
 
 /** NO_PROXY validation */
 
+// *., cdn*., *, etc.
 const domain_subdomain_part = String.raw`(?:[a-z0-9\-\*]+\.|\*)*`;
+// .*, .cn, .moe, .co*, *
 const domain_tld_part = String.raw`(?:\w{2,64}\*?|\*)`;
+// *epicgames*, *skk.moe, *.skk.moe, skk.*, sponsor.cdn.skk.moe, *.*, etc.
+// also matches 192.168.*, 10.*, 127.0.0.*, etc. (partial ipv4)
 const rDomainSimple = domain_subdomain_part + domain_tld_part;
 
 const ipv4_part = String.raw`\d{1,3}`;
+// 127.0.0.1 (full ipv4)
 const rIPv4 = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`;
-const rIPv4Partial = String.raw`${ipv4_part}\.(?:(?:${ipv4_part}|\*)\.){0,2}\.\*`;
+// const rIPv4Partial = String.raw`${ipv4_part}\.(?:(?:${ipv4_part}|\*)\.){0,2}\.\*`;
 
 const ipv6_part = "(?:[a-fA-F0-9:])+";
 const rIPv6 = `(?:${ipv6_part}:+)+${ipv6_part}`;
 
 const rLocal = `localhost|<local>|localdomain`;
-const rValidPart = `${rDomainSimple}|${rIPv4}|${rIPv4Partial}|${rIPv6}|${rLocal}`;
+const rValidPart = `${rDomainSimple}|${rIPv4}|${rIPv6}|${rLocal}`;
 
 const getValidReg = (isWindows: boolean) => {
   const separator = isWindows ? ";" : ",";
