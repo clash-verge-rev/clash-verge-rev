@@ -197,6 +197,24 @@ interface IVergeTestItem {
   icon?: string;
   url: string;
 }
+interface IAddress {
+  V4?: {
+    ip: string;
+    broadcast?: string;
+    netmask?: string;
+  };
+  V6?: {
+    ip: string;
+    broadcast?: string;
+    netmask?: string;
+  };
+}
+interface INetworkInterface {
+  name: string;
+  addr: IAddress[];
+  mac_addr?: string;
+  index: number;
+}
 
 interface ISeqProfileConfig {
   prepend: [];

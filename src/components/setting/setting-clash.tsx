@@ -2,7 +2,11 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { TextField, Select, MenuItem, Typography } from "@mui/material";
 
-import { Settings, Shuffle } from "@mui/icons-material";
+import {
+  SettingsRounded,
+  ShuffleRounded,
+  LanRounded,
+} from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
@@ -16,6 +20,7 @@ import getSystem from "@/utils/get-system";
 import { useVerge } from "@/hooks/use-verge";
 import { updateGeoData } from "@/services/api";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
 
 const isWIN = getSystem() === "windows";
 
@@ -37,6 +42,7 @@ const SettingClash = ({ onError }: Props) => {
   const portRef = useRef<DialogRef>(null);
   const ctrlRef = useRef<DialogRef>(null);
   const coreRef = useRef<DialogRef>(null);
+  const networkRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -60,8 +66,21 @@ const SettingClash = ({ onError }: Props) => {
       <ClashPortViewer ref={portRef} />
       <ControllerViewer ref={ctrlRef} />
       <ClashCoreViewer ref={coreRef} />
+      <NetworkInterfaceViewer ref={networkRef} />
 
-      <SettingItem label={t("Allow Lan")}>
+      <SettingItem
+        label={t("Allow Lan")}
+        extra={
+          <TooltipIcon
+            title={t("Network Interface")}
+            color={"inherit"}
+            icon={LanRounded}
+            onClick={() => {
+              networkRef.current?.open();
+            }}
+          />
+        }
+      >
         <GuardState
           value={allowLan ?? false}
           valueProps="checked"
@@ -112,7 +131,7 @@ const SettingClash = ({ onError }: Props) => {
           <TooltipIcon
             title={t("Random Port")}
             color={enable_random_port ? "primary" : "inherit"}
-            icon={Shuffle}
+            icon={ShuffleRounded}
             onClick={() => {
               Notice.success(
                 t("Restart Application to Apply Modifications"),
@@ -148,7 +167,7 @@ const SettingClash = ({ onError }: Props) => {
         label={t("Clash Core")}
         extra={
           <TooltipIcon
-            icon={Settings}
+            icon={SettingsRounded}
             onClick={() => coreRef.current?.open()}
           />
         }

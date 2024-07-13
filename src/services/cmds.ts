@@ -241,3 +241,7 @@ export async function downloadIconCache(url: string, name: string) {
 export async function getNetworkInterfaces() {
   return invoke<string[]>("get_network_interfaces");
 }
+
+export async function getNetworkInterfacesInfo() {
+  return invoke<INetworkInterface[]>("get_network_interfaces_info");
+}

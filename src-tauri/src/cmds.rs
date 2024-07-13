@@ -6,6 +6,7 @@ use crate::{
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
+use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
 use sysproxy::{Autoproxy, Sysproxy};
@@ -337,6 +338,25 @@ pub fn get_network_interfaces() -> Vec<String> {
         result.push(interface_name.clone());
     }
     return result;
+}
+
+#[tauri::command]
+pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
+    use network_interface::NetworkInterface;
+    use network_interface::NetworkInterfaceConfig;
+
+    let names = get_network_interfaces();
+    let interfaces = wrap_err!(NetworkInterface::show())?;
+
+    let mut result = Vec::new();
+
+    for interface in interfaces {
+        if names.contains(&interface.name) {
+            result.push(interface);
+        }
+    }
+
+    Ok(result)
 }
 
 #[tauri::command]

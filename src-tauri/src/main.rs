@@ -74,6 +74,7 @@ fn main() -> std::io::Result<()> {
             cmds::download_icon_cache,
             cmds::open_devtools,
             cmds::exit_app,
+            cmds::get_network_interfaces_info,
             // cmds::update_hotkeys,
             // profile
             cmds::get_profiles,
