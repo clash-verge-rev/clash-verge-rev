@@ -30,8 +30,10 @@ import {
   TextField,
   styled,
 } from "@mui/material";
-import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
-import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
+import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
 import { GroupItem } from "@/components/profile/group-item";
 import {
   getNetworkInterfaces,
@@ -712,7 +714,7 @@ export const GroupsEditorViewer = (props: Props) => {
                 <Button
                   fullWidth
                   variant="contained"
-                  startIcon={<VerticalAlignTopIcon />}
+                  startIcon={<VerticalAlignTopRounded />}
                   onClick={() => {
                     try {
                       validateGroup();
@@ -734,7 +736,7 @@ export const GroupsEditorViewer = (props: Props) => {
                 <Button
                   fullWidth
                   variant="contained"
-                  startIcon={<VerticalAlignBottomIcon />}
+                  startIcon={<VerticalAlignBottomRounded />}
                   onClick={() => {
                     try {
                       validateGroup();

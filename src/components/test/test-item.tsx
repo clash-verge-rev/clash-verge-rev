@@ -13,7 +13,7 @@ import {
   alpha,
 } from "@mui/material";
 import { BaseLoading } from "@/components/base";
-import { LanguageTwoTone } from "@mui/icons-material";
+import { LanguageRounded } from "@mui/icons-material";
 import { Notice } from "@/components/base";
 import { TestBox } from "./test-box";
 import delayManager from "@/services/delay";
@@ -146,7 +146,7 @@ export const TestItem = (props: Props) => {
             </Box>
           ) : (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <LanguageTwoTone sx={{ height: "40px" }} fontSize="large" />
+              <LanguageRounded sx={{ height: "40px" }} fontSize="large" />
             </Box>
           )}
 

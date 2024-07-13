@@ -14,7 +14,7 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { getSystemProxy, getAutotemProxy } from "@/services/cmds";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
-import { Edit } from "@mui/icons-material";
+import { EditRounded } from "@mui/icons-material";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { BaseFieldset } from "@/components/base/base-fieldset";
 import getSystem from "@/utils/get-system";
@@ -253,7 +253,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 sx={{ padding: "3px 0" }}
               />
               <Button
-                startIcon={<Edit />}
+                startIcon={<EditRounded />}
                 variant="outlined"
                 onClick={() => {
                   setEditorOpen(true);

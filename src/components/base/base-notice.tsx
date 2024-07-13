@@ -1,7 +1,11 @@
 import { createRoot } from "react-dom/client";
 import { ReactNode, useState, useEffect } from "react";
 import { Box, IconButton, Slide, Snackbar, Typography } from "@mui/material";
-import { Close, CheckCircleRounded, ErrorRounded } from "@mui/icons-material";
+import {
+  CloseRounded,
+  CheckCircleRounded,
+  ErrorRounded,
+} from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { appWindow } from "@tauri-apps/api/window";
 interface InnerProps {
@@ -81,7 +85,7 @@ const NoticeInner = (props: InnerProps) => {
       transitionDuration={200}
       action={
         <IconButton size="small" color="inherit" onClick={onBtnClose}>
-          <Close fontSize="inherit" />
+          <CloseRounded fontSize="inherit" />
         </IconButton>
       }
     />
