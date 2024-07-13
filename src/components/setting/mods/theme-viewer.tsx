@@ -14,7 +14,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
-import { Edit } from "@mui/icons-material";
+import { EditRounded } from "@mui/icons-material";
 
 export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -115,7 +115,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
         <Item>
           <ListItemText primary={t("CSS Injection")} />
           <Button
-            startIcon={<Edit />}
+            startIcon={<EditRounded />}
             variant="outlined"
             onClick={() => {
               setEditorOpen(true);

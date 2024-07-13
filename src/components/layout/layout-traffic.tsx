@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import {
-  ArrowDownward,
-  ArrowUpward,
-  MemoryOutlined,
+  ArrowDownwardRounded,
+  ArrowUpwardRounded,
+  MemoryRounded,
 } from "@mui/icons-material";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
@@ -153,7 +153,7 @@ export const LayoutTraffic = () => {
 
       <Box display="flex" flexDirection="column" gap={0.75}>
         <Box title={t("Upload Speed")} {...boxStyle}>
-          <ArrowUpward
+          <ArrowUpwardRounded
             {...iconStyle}
             color={+up > 0 ? "secondary" : "disabled"}
           />
@@ -164,7 +164,7 @@ export const LayoutTraffic = () => {
         </Box>
 
         <Box title={t("Download Speed")} {...boxStyle}>
-          <ArrowDownward
+          <ArrowDownwardRounded
             {...iconStyle}
             color={+down > 0 ? "primary" : "disabled"}
           />
@@ -184,7 +184,7 @@ export const LayoutTraffic = () => {
               isDebug && (await gc());
             }}
           >
-            <MemoryOutlined {...iconStyle} />
+            <MemoryRounded {...iconStyle} />
             <Typography {...valStyle}>{inuse}</Typography>
             <Typography {...unitStyle}>{inuseUnit}</Typography>
           </Box>

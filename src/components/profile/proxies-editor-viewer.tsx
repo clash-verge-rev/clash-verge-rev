@@ -27,8 +27,10 @@ import {
   TextField,
   styled,
 } from "@mui/material";
-import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
-import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
+import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
 import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { Notice } from "@/components/base";
@@ -271,7 +273,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                 <Button
                   fullWidth
                   variant="contained"
-                  startIcon={<VerticalAlignTopIcon />}
+                  startIcon={<VerticalAlignTopRounded />}
                   onClick={() => {
                     let proxies = handleParse();
                     setPrependSeq([...prependSeq, ...proxies]);
@@ -284,7 +286,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                 <Button
                   fullWidth
                   variant="contained"
-                  startIcon={<VerticalAlignBottomIcon />}
+                  startIcon={<VerticalAlignBottomRounded />}
                   onClick={() => {
                     let proxies = handleParse();
                     setAppendSeq([...appendSeq, ...proxies]);

@@ -15,7 +15,7 @@ import {
   Menu,
   CircularProgress,
 } from "@mui/material";
-import { RefreshRounded, DragIndicator } from "@mui/icons-material";
+import { RefreshRounded, DragIndicatorRounded } from "@mui/icons-material";
 import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import {
   viewProfile,
@@ -348,7 +348,7 @@ export const ProfileItem = (props: Props) => {
               {...attributes}
               {...listeners}
             >
-              <DragIndicator
+              <DragIndicatorRounded
                 sx={[
                   { cursor: "move", marginLeft: "-6px" },
                   ({ palette: { text } }) => {

@@ -10,9 +10,11 @@ import {
   DialogTitle,
   IconButton,
 } from "@mui/material";
-import FormatPaintIcon from "@mui/icons-material/FormatPaint";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
-import CloseFullscreenIcon from "@mui/icons-material/CloseFullscreen";
+import {
+  FormatPaintRounded,
+  OpenInFullRounded,
+  CloseFullscreenRounded,
+} from "@mui/icons-material";
 import { useThemeMode } from "@/services/states";
 import { Notice } from "@/components/base";
 import { nanoid } from "nanoid";
@@ -223,7 +225,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
                 ?.run()
             }
           >
-            <FormatPaintIcon fontSize="inherit" />
+            <FormatPaintRounded fontSize="inherit" />
           </IconButton>
           <IconButton
             size="medium"
@@ -231,7 +233,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
             title={t(isMaximized ? "Minimize" : "Maximize")}
             onClick={() => appWindow.toggleMaximize().then(editorResize)}
           >
-            {isMaximized ? <CloseFullscreenIcon /> : <OpenInFullIcon />}
+            {isMaximized ? <CloseFullscreenRounded /> : <OpenInFullRounded />}
           </IconButton>
         </ButtonGroup>
       </DialogContent>
