@@ -46,7 +46,7 @@ const rValidPart = `${rDomainSimple}|${rIPv4}|${rIPv6}|${rLocal}`;
 
 const getValidReg = (isWindows: boolean) => {
   const separator = isWindows ? ";" : ",";
-  const rValid = String.raw`^(${rValidPart})(?:${separator}(${rValidPart}))*${separator}?$`;
+  const rValid = String.raw`^(${rValidPart})(?:${separator}\s?(${rValidPart}))*${separator}?$`;
 
   return new RegExp(rValid);
 };
