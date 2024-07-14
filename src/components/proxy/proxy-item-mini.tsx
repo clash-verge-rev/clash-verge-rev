@@ -230,7 +230,7 @@ export const ProxyItemMini = (props: Props) => {
             {delayManager.formatDelay(delay, timeout)}
           </Widget>
         )}
-        {delay !== -2 && delay <= 0 && selected && (
+        {delay !== -2 && delay < 0 && selected && (
           // 展示已选择的icon
           <CheckCircleOutlineRounded
             className="the-icon"

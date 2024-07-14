@@ -161,49 +161,47 @@ pub fn toggle_tun_mode() {
     tauri::async_runtime::spawn(async move {
         match cmds::service::check_service().await {
             Ok(service_status) => {
-                if service_status.code != 0 {
-                    if service_status.code == 400 {
-                        // service installed but no enable, need to patch verge to enable service mode
-                        match patch_verge(IVerge {
-                            enable_service_mode: Some(true),
-                            ..IVerge::default()
-                        })
-                        .await
-                        {
-                            Ok(_) => {
-                                let _ = cmds::service::check_service_and_clash().await;
-                                handle::Handle::refresh_verge();
-                                match patch_clash(tun).await {
-                                    Ok(_) => {
-                                        log::info!(target: "app", "change tun mode to {:?}", !enable)
-                                    }
-                                    Err(err) => {
-                                        log::error!(target: "app", "{err}")
-                                    }
-                                }
-                            }
-                            Err(err) => {
-                                Notification::new(APP_ID)
-                                    .title("Tun Mode")
-                                    .body(format!("{}, {}", toggle_failed_msg, err))
-                                    .show()
-                                    .unwrap();
-                            }
-                        }
-                    } else {
-                        Notification::new(APP_ID)
-                            .title("Tun Mode")
-                            .body(format!("{}, {}", toggle_failed_msg, service_status.msg))
-                            .show()
-                            .unwrap();
-                    }
-                } else {
+                if service_status.code == 0 {
                     match patch_clash(tun).await {
                         Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
                         Err(err) => {
                             log::error!(target: "app", "{err}")
                         }
                     }
+                } else if service_status.code == 400 {
+                    // service installed but no enable, need to patch verge to enable service mode
+                    match patch_verge(IVerge {
+                        enable_service_mode: Some(true),
+                        ..IVerge::default()
+                    })
+                    .await
+                    {
+                        Ok(_) => {
+                            let _ = cmds::service::check_service_and_clash().await;
+                            handle::Handle::refresh_verge();
+                            match patch_clash(tun).await {
+                                Ok(_) => {
+                                    log::info!(target: "app", "change tun mode to {:?}", !enable)
+                                }
+                                Err(err) => {
+                                    log::error!(target: "app", "{err}")
+                                }
+                            }
+                        }
+                        Err(err) => {
+                            Notification::new(APP_ID)
+                                .title("Tun Mode")
+                                .body(format!("{}, {}", toggle_failed_msg, err))
+                                .show()
+                                .unwrap();
+                        }
+                    }
+                } else {
+                    Notification::new(APP_ID)
+                        .title("Tun Mode")
+                        .body(format!("{}, {}", toggle_failed_msg, service_status.msg))
+                        .show()
+                        .unwrap();
                 }
             }
             Err(_) => {
@@ -365,11 +363,12 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         if update_tun_failed {
             <Result<(), Error>>::Err(anyhow!("Tun Device Or Resource Busy"))
         } else {
+            // 重新载入订阅
+            if patch.get("unified-delay").is_some() {
+                update_core_config().await?;
+            }
             // 激活订阅
-            if patch.get("secret").is_some()
-                || patch.get("external-controller").is_some()
-                || patch.get("unified-delay").is_some()
-            {
+            if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
                 Config::generate()?;
                 CoreManager::global().run_core().await?;
             }
