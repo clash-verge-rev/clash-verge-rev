@@ -7,21 +7,20 @@ if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
 }
 
-import React from "react";
-import { createRoot } from "react-dom/client";
-import { ComposeContextProvider } from "foxact/compose-context-provider";
-import { RouterProvider } from "react-router-dom";
 import { BaseErrorBoundary } from "@/components/base";
-import Layout from "@/pages/_layout";
+import router from "@/pages/_routers";
 import "@/services/i18n";
 import { invoke } from "@tauri-apps/api/tauri";
 import { WebviewWindow } from "@tauri-apps/api/window";
+import { ComposeContextProvider } from "foxact/compose-context-provider";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
-import router from "@/pages/_routers";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -57,11 +56,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const splashscreenWindow = WebviewWindow.getByLabel("splashscreen");
   if (splashscreenWindow) {
     const timer = setInterval(async () => {
-      const clashStartSuccess = await invoke<boolean>("get_clash_configs");
-      if (clashStartSuccess || checkCount < 0) {
+      if (checkCount <= 0) {
         clearInterval(timer);
         splashscreenWindow.close();
         throw new Error("clash core start failed, please restart the app");
+      }
+      const clashStartSuccess = await invoke<boolean>("get_clash_configs");
+      if (clashStartSuccess) {
+        clearInterval(timer);
+        splashscreenWindow.close();
       }
       checkCount--;
     }, 1000);
