@@ -242,6 +242,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             <ListItemText primary={t("Proxy Bypass")} />
             <TextField
               autoComplete="new-password"
+              error={value.bypass ? !validReg.test(value.bypass) : false}
               disabled={!enabled}
               size="small"
               multiline
