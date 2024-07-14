@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,16 +23,38 @@ const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY 127.0.0.1:%mixed-port%; SOCKS5 127.0.0.1:%mixed-port%; DIRECT;";
 }`;
 
+/** NO_PROXY validation */
+
+// *., cdn*., *, etc.
+const domain_subdomain_part = String.raw`(?:[a-z0-9\-\*]+\.|\*)*`;
+// .*, .cn, .moe, .co*, *
+const domain_tld_part = String.raw`(?:\w{2,64}\*?|\*)`;
+// *epicgames*, *skk.moe, *.skk.moe, skk.*, sponsor.cdn.skk.moe, *.*, etc.
+// also matches 192.168.*, 10.*, 127.0.0.*, etc. (partial ipv4)
+const rDomainSimple = domain_subdomain_part + domain_tld_part;
+
+const ipv4_part = String.raw`\d{1,3}`;
+// 127.0.0.1 (full ipv4)
+const rIPv4 = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`;
+// const rIPv4Partial = String.raw`${ipv4_part}\.(?:(?:${ipv4_part}|\*)\.){0,2}\.\*`;
+
+const ipv6_part = "(?:[a-fA-F0-9:])+";
+const rIPv6 = `(?:${ipv6_part}:+)+${ipv6_part}`;
+
+const rLocal = `localhost|<local>|localdomain`;
+const rValidPart = `${rDomainSimple}|${rIPv4}|${rIPv6}|${rLocal}`;
+
+const getValidReg = (isWindows: boolean) => {
+  const separator = isWindows ? ";" : ",";
+  const rValid = String.raw`^(${rValidPart})(?:${separator}\s?(${rValidPart}))*${separator}?$`;
+
+  return new RegExp(rValid);
+};
+
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
-  let validReg;
-  if (getSystem() === "windows") {
-    validReg =
-      /^((\*\.)?([a-zA-Z0-9-]+\.?)+(local|test|example|invalid|localhost|onion|([a-zA-Z]{2,}))|(\d{1,3}\.){1,3}\d{1,3}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\*|\d{1,3}\.\d{1,3}\.\*|\d{1,3}\.\*|([a-fA-F0-9:]+:+)+[a-fA-F0-9]+|localhost|<local>)(;((\*\.)?([a-zA-Z0-9-]+\.?)+(local|test|example|invalid|localhost|onion|([a-zA-Z]{2,}))|(\d{1,3}\.){1,3}\d{1,3}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\*|\d{1,3}\.\d{1,3}\.\*|\d{1,3}\.\*|([a-fA-F0-9:]+:+)+[a-fA-F0-9]+|localhost|<local>))*;?$/;
-  } else {
-    validReg =
-      /^((\*\.)?([a-zA-Z0-9-]+\.?)+(local|test|example|invalid|localhost|onion|([a-zA-Z]{2,}))|(\d{1,3}\.){1,3}\d{1,3}(\/\d{1,2}|\/3[0-2])?|\d{1,3}\.\d{1,3}\.\d{1,3}\.\*(\/\d{1,2}|\/3[0-2])?|\d{1,3}\.\d{1,3}\.\*(\/\d{1,2}|\/3[0-2])?|\d{1,3}\.\*(\/\d{1,2}|\/3[0-2])?|([a-fA-F0-9:]+:+)+[a-fA-F0-9]+(\/\d{1,3})?|localhost|<local>)(,((\*\.)?([a-zA-Z0-9-]+\.?)+(local|test|example|invalid|localhost|onion|([a-zA-Z]{2,}))|(\d{1,3}\.){1,3}\d{1,3}(\/\d{1,2}|\/3[0-2])?|\d{1,3}\.\d{1,3}\.\d{1,3}\.\*(\/\d{1,2}|\/3[0-2])?|\d{1,3}\.\d{1,3}\.\*(\/\d{1,2}|\/3[0-2])?|\d{1,3}\.\*(\/3[0-2])?|([a-fA-F0-9:]+:+)+[a-fA-F0-9]+(\/\d{1,3})?|localhost|<local>))*,?$/;
-  }
+  const isWindows = getSystem() === "windows";
+  const validReg = useMemo(() => getValidReg(isWindows), [isWindows]);
 
   const [open, setOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
