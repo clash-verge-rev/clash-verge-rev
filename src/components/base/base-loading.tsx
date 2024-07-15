@@ -17,7 +17,7 @@ const Loading = styled("div")`
     animation: loading 0.7s -0.15s infinite linear;
   }
 
-  & > div:nth-child(2n-1) {
+  & > div:nth-of-type(2n-1) {
     animation-delay: -0.5s;
   }
 

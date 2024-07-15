@@ -25,7 +25,7 @@ const bailPulse = keyframes`
 
 // const pxToRem = (px: number, oneRemPx = 21) => `${px}px`;
 
-export const SwitchLovely = styled(Switch)(({ theme, "aria-busy": busy }) => {
+export const SwitchLovely = styled(Switch)(({ theme }) => {
   const borderWidth = 2;
   const width = 42;
   const height = 26;

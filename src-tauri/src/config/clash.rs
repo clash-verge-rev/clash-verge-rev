@@ -296,7 +296,9 @@ fn test_clash_info() {
         ClashInfo {
             mixed_port: port,
             socks_port: 0,
+            #[cfg(not(target_os = "windows"))]
             redir_port: 0,
+            #[cfg(target_os = "linux")]
             tproxy_port: 0,
             port: 0,
             server: server.into(),

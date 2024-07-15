@@ -1,15 +1,11 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-svgr/client" />
+
 import "@/assets/styles/index.scss";
-
-import { ResizeObserver } from "@juggle/resize-observer";
-if (!window.ResizeObserver) {
-  window.ResizeObserver = ResizeObserver;
-}
-
 import { BaseErrorBoundary } from "@/components/base";
 import router from "@/pages/_routers";
 import "@/services/i18n";
+import { ResizeObserver } from "@juggle/resize-observer";
 import { invoke } from "@tauri-apps/api/tauri";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
@@ -22,9 +18,12 @@ import {
   UpdateStateProvider,
 } from "./services/states";
 
+if (!window.ResizeObserver) {
+  window.ResizeObserver = ResizeObserver;
+}
+
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
-
 if (!container) {
   throw new Error(
     `No container '${mainElementId}' found to render application`,
@@ -57,14 +56,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (splashscreenWindow) {
     const timer = setInterval(async () => {
       if (checkCount <= 0) {
-        clearInterval(timer);
         splashscreenWindow.close();
+        clearInterval(timer);
         throw new Error("clash core start failed, please restart the app");
       }
       const clashStartSuccess = await invoke<boolean>("get_clash_configs");
       if (clashStartSuccess) {
-        clearInterval(timer);
         splashscreenWindow.close();
+        clearInterval(timer);
       }
       checkCount--;
     }, 1000);

@@ -89,7 +89,7 @@ export const getProxyDelay = async (
     `/proxies/${encodeURIComponent(name)}/delay`,
     { params },
   );
-  return result as any as { delay: number };
+  return result as unknown as { delay: number };
 };
 
 /// Update the Proxy Choose
@@ -239,7 +239,7 @@ export const ruleProviderUpdate = async (name: string) => {
 export const getConnections = async () => {
   const instance = await getAxios();
   const result = await instance.get("/connections");
-  return result as any as IConnections;
+  return result as unknown as IConnections;
 };
 
 // Close specific connection
@@ -269,7 +269,7 @@ export const getGroupProxyDelays = async (
     `/group/${encodeURIComponent(groupName)}/delay`,
     { params },
   );
-  return result as any as Record<string, number>;
+  return result as unknown as Record<string, number>;
 };
 
 // clear fakeip cache

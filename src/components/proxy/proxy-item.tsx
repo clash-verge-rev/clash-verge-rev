@@ -31,7 +31,7 @@ const Widget = styled(Box)(() => ({
   borderRadius: "4px",
 }));
 
-const TypeBox = styled(Box)(({ theme }) => ({
+const TypeBox = styled("span")(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.text.secondary, 0.36),
@@ -106,8 +106,8 @@ export const ProxyItem = (props: Props) => {
           title={proxy.name}
           secondary={
             <>
-              <Box
-                sx={{
+              <span
+                style={{
                   display: "inline-block",
                   marginRight: "8px",
                   fontSize: "14px",
@@ -115,16 +115,14 @@ export const ProxyItem = (props: Props) => {
                 }}>
                 {proxy.name}
                 {showType && proxy.now && ` - ${proxy.now}`}
-              </Box>
+              </span>
               {showType && !!proxy.provider && (
-                <TypeBox component="span">{proxy.provider}</TypeBox>
+                <TypeBox>{proxy.provider}</TypeBox>
               )}
-              {showType && <TypeBox component="span">{proxy.type}</TypeBox>}
-              {showType && proxy.udp && <TypeBox component="span">UDP</TypeBox>}
-              {showType && proxy.xudp && (
-                <TypeBox component="span">XUDP</TypeBox>
-              )}
-              {showType && proxy.tfo && <TypeBox component="span">TFO</TypeBox>}
+              {showType && <TypeBox>{proxy.type}</TypeBox>}
+              {showType && proxy.udp && <TypeBox>UDP</TypeBox>}
+              {showType && proxy.xudp && <TypeBox>XUDP</TypeBox>}
+              {showType && proxy.tfo && <TypeBox>TFO</TypeBox>}
             </>
           }
         />

@@ -109,7 +109,7 @@ const ConnectionsPage = () => {
     );
 
     return () => {
-      s.close();
+      if (s) s.close();
     };
   });
 

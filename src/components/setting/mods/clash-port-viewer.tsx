@@ -79,7 +79,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
     }
 
     try {
-      let updatePorts: Record<string, number> = {};
+      const updatePorts: Record<string, number> = {};
       if (OS !== "windows") {
         updatePorts["redir-port"] = redirPort;
       }
