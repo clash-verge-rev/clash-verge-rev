@@ -49,9 +49,8 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
         </Box>
       }
       contentSx={{ width: 450, maxHeight: 330 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
-      onClose={() => setOpen(false)}
+      disableOk
+      cancelBtn={t("Close")}
       onCancel={() => setOpen(false)}
     >
       {networkInterfaces.map((item) => (
