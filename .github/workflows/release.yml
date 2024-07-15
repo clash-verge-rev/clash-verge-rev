@@ -258,12 +258,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   submit-to-winget:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: [release-update]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get Version
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
+          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
       - name: Submit to Winget
         uses: vedantmgoyal9/winget-releaser@main
         with:
           identifier: ClashVergeRev.ClashVergeRev
+          version: ${{env.VERSION}}
           installers-regex: '_(arm64|x64|x86)-setup\.exe$'
           token: ${{ secrets.GITHUB_TOKEN }}
