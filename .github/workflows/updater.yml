@@ -27,26 +27,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  release-update-for-fixed-webview2:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+  # release-update-for-fixed-webview2:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
-      - name: Install Node
-        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
-        with:
-          node-version: "20"
+  #     - name: Install Node
+  #       uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
+  #       with:
+  #         node-version: "20"
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
+  #     - uses: pnpm/action-setup@v4
+  #       name: Install pnpm
+  #       with:
+  #         run_install: false
 
-      - name: Pnpm install
-        run: pnpm i
+  #     - name: Pnpm install
+  #       run: pnpm i
 
-      - name: Release updater file
-        run: pnpm updater-fixed-webview2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Release updater file
+  #       run: pnpm updater-fixed-webview2
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
