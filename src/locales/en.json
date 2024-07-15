@@ -266,7 +266,7 @@
   "Restart": "Restart",
   "Release Version": "Release Version",
   "Alpha Version": "Alpha Version",
-  "Tun mode requires": "Tun mode requires",
+  "Please Enable Service Mode": "Please Install and Enable Service Mode First",
   "Grant": "Grant",
   "Open UWP tool": "Open UWP tool",
   "Open UWP tool Info": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction",

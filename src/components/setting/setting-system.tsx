@@ -1,22 +1,16 @@
 import useSWR from "swr";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsRounded } from "@mui/icons-material";
-import {
-  checkService,
-  installService,
-  uninstallService,
-} from "@/services/cmds";
+import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { GuardState } from "./mods/guard-state";
-import { ServiceViewer } from "./mods/service-viewer";
+import { ServiceSwitcher } from "./mods/service-switcher";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import { TunViewer } from "./mods/tun-viewer";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { LoadingButton } from "@mui/lab";
-import { useLockFn } from "ahooks";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -26,8 +20,6 @@ const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { verge, mutateVerge, patchVerge } = useVerge();
-  const [serviceLoading, setServiceLoading] = useState(false);
-  const [uninstallServiceLoaing, setUninstallServiceLoading] = useState(false);
   // service mode
   const { data: serviceStatus, mutate: mutateServiceStatus } = useSWR(
     "checkService",
@@ -39,14 +31,12 @@ const SettingSystem = ({ onError }: Props) => {
     }
   );
 
-  const serviceRef = useRef<DialogRef>(null);
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
 
   const {
     enable_tun_mode,
     enable_auto_launch,
-    enable_service_mode,
     enable_silent_start,
     enable_system_proxy,
   } = verge ?? {};
@@ -56,58 +46,10 @@ const SettingSystem = ({ onError }: Props) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
 
-  const onInstallOrEnableService = useLockFn(async () => {
-    setServiceLoading(true);
-    try {
-      if (serviceStatus === "uninstall" || serviceStatus === "unknown") {
-        // install service
-        await installService();
-        await mutateServiceStatus();
-        setTimeout(() => {
-          mutateServiceStatus();
-        }, 2000);
-        Notice.success(t("Service Installed Successfully"));
-        setServiceLoading(false);
-      } else {
-        // enable or disable service
-        const enable = serviceStatus === "active";
-        await patchVerge({ enable_service_mode: !enable });
-        onChangeData({ enable_service_mode: !enable });
-        await mutateServiceStatus();
-        setTimeout(() => {
-          mutateServiceStatus();
-        }, 2000);
-        setServiceLoading(false);
-      }
-    } catch (err: any) {
-      await mutateServiceStatus();
-      Notice.error(err.message || err.toString());
-      setServiceLoading(false);
-    }
-  });
-
-  const onUninstallService = useLockFn(async () => {
-    setUninstallServiceLoading(true);
-    try {
-      await uninstallService();
-      await mutateServiceStatus();
-      setTimeout(() => {
-        mutateServiceStatus();
-      }, 2000);
-      Notice.success(t("Service Uninstalled Successfully"));
-      setUninstallServiceLoading(false);
-    } catch (err: any) {
-      await mutateServiceStatus();
-      Notice.error(err.message || err.toString());
-      setUninstallServiceLoading(false);
-    }
-  });
-
   return (
     <SettingList title={t("System Setting")}>
       <SysproxyViewer ref={sysproxyRef} />
       <TunViewer ref={tunRef} />
-      <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
 
       <SettingItem
         label={t("Tun Mode")}
@@ -133,7 +75,7 @@ const SettingSystem = ({ onError }: Props) => {
           }}
           onGuard={(e) => {
             if (serviceStatus !== "active" && e) {
-              Notice.error(t("Please enable service mode first"));
+              Notice.error(t("Please Enable Service Mode"));
               return Promise.resolve();
             } else {
               return patchVerge({ enable_tun_mode: e });
@@ -145,31 +87,12 @@ const SettingSystem = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem label={t("Service Mode")}>
-        <LoadingButton
-          size="small"
-          variant="contained"
-          sx={{ mr: serviceStatus !== "installed" ? -1 : 0 }}
-          onClick={onInstallOrEnableService}
-          loading={serviceLoading}
-        >
-          {serviceStatus === "active"
-            ? t("Disable")
-            : serviceStatus === "installed"
-            ? t("Enable")
-            : t("Install")}
-        </LoadingButton>
-        {serviceStatus === "installed" && (
-          <LoadingButton
-            size="small"
-            variant="outlined"
-            color="error"
-            sx={{ ml: 1, mr: -1 }}
-            onClick={onUninstallService}
-            loading={uninstallServiceLoaing}
-          >
-            {t("Uninstall")}
-          </LoadingButton>
-        )}
+        <ServiceSwitcher
+          status={serviceStatus ?? "unknown"}
+          mutate={mutateServiceStatus}
+          patchVerge={patchVerge}
+          onChangeData={onChangeData}
+        />
       </SettingItem>
 
       <SettingItem

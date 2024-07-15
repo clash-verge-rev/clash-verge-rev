@@ -266,7 +266,7 @@
   "Restart": "重启内核",
   "Release Version": "正式版",
   "Alpha Version": "预览版",
-  "Tun mode requires": "如需启用 Tun 模式需要授权",
+  "Please Enable Service Mode": "请先安装并启用服务模式",
   "Grant": "授权",
   "Open UWP tool": "UWP 工具",
   "Open UWP tool Info": "Windows 8开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制",
