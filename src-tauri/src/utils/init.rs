@@ -191,10 +191,14 @@ pub fn init_config() -> Result<()> {
 /// after tauri setup
 pub fn init_resources() -> Result<()> {
     let app_dir = dirs::app_home_dir()?;
+    let test_dir = app_dir.join("test");
     let res_dir = dirs::app_resources_dir()?;
 
     if !app_dir.exists() {
         let _ = fs::create_dir_all(&app_dir);
+    }
+    if !test_dir.exists() {
+        let _ = fs::create_dir_all(&test_dir);
     }
     if !res_dir.exists() {
         let _ = fs::create_dir_all(&res_dir);
@@ -210,9 +214,10 @@ pub fn init_resources() -> Result<()> {
     for file in file_list.iter() {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
+        let test_dest_path = test_dir.join(file);
 
-        let handle_copy = || {
-            match fs::copy(&src_path, &dest_path) {
+        let handle_copy = |dest: &PathBuf| {
+            match fs::copy(&src_path, dest) {
                 Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
                 Err(err) => {
                     log::error!(target: "app", "failed to copy resources '{file}', {err}")
@@ -220,8 +225,11 @@ pub fn init_resources() -> Result<()> {
             };
         };
 
+        if src_path.exists() && !test_dest_path.exists() {
+            handle_copy(&test_dest_path);
+        }
         if src_path.exists() && !dest_path.exists() {
-            handle_copy();
+            handle_copy(&dest_path);
             continue;
         }
 
@@ -231,14 +239,14 @@ pub fn init_resources() -> Result<()> {
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
-                    handle_copy();
+                    handle_copy(&dest_path);
                 } else {
                     log::debug!(target: "app", "skipping resource copy '{file}'");
                 }
             }
             _ => {
                 log::debug!(target: "app", "failed to get modified '{file}'");
-                handle_copy();
+                handle_copy(&dest_path);
             }
         };
     }
