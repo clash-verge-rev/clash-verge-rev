@@ -40,6 +40,9 @@ export const ServiceSwitcher = (props: Props) => {
       setServiceLoading(false);
     } catch (err: any) {
       await mutate();
+      setTimeout(() => {
+        mutate();
+      }, 2000);
       Notice.error(err.message || err.toString());
       setServiceLoading(false);
     }
@@ -57,6 +60,9 @@ export const ServiceSwitcher = (props: Props) => {
       setUninstallServiceLoading(false);
     } catch (err: any) {
       await mutate();
+      setTimeout(() => {
+        mutate();
+      }, 2000);
       Notice.error(err.message || err.toString());
       setUninstallServiceLoading(false);
     }
