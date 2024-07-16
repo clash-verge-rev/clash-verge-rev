@@ -35,7 +35,7 @@ const rDomainSimple = domain_subdomain_part + domain_tld_part;
 
 const ipv4_part = String.raw`\d{1,3}`;
 // 127.0.0.1 (full ipv4)
-const rIPv4 = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`;
+const rIPv4 = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}(?:\/\d{1,2})?`;
 // const rIPv4Partial = String.raw`${ipv4_part}\.(?:(?:${ipv4_part}|\*)\.){0,2}\.\*`;
 
 const ipv6_part = "(?:[a-fA-F0-9:])+";
