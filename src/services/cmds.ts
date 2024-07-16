@@ -201,12 +201,13 @@ export async function checkService() {
   }
 }
 
-export async function installService() {
-  return invoke<void>("install_service");
+export async function installService(passwd: string) {
+  console.log(passwd);
+  return invoke<void>("install_service", { passwd });
 }
 
-export async function uninstallService() {
-  return invoke<void>("uninstall_service");
+export async function uninstallService(passwd: string) {
+  return invoke<void>("uninstall_service", { passwd });
 }
 
 export async function invoke_uwp_tool() {

@@ -389,13 +389,13 @@ pub mod service {
     }
 
     #[tauri::command]
-    pub async fn install_service() -> CmdResult {
-        wrap_err!(service::install_service().await)
+    pub async fn install_service(passwd: String) -> CmdResult {
+        wrap_err!(service::install_service(passwd).await)
     }
 
     #[tauri::command]
-    pub async fn uninstall_service() -> CmdResult {
-        wrap_err!(service::uninstall_service().await)
+    pub async fn uninstall_service(passwd: String) -> CmdResult {
+        wrap_err!(service::uninstall_service(passwd).await)
     }
 }
 

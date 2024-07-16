@@ -8,6 +8,7 @@ use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::api::notification;
 use tauri::{App, AppHandle, Manager};
+#[cfg(not(target_os = "linux"))]
 use window_shadows::set_shadow;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
