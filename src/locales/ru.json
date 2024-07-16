@@ -265,6 +265,7 @@
   "Release Version": "Официальная версия",
   "Alpha Version": "Альфа-версия",
   "Please Enable Service Mode": "Пожалуйста, сначала установите и включите режим обслуживания",
+  "Please enter your root password": "Пожалуйста, введите ваш пароль root",
   "Grant": "Предоставить",
   "Open UWP tool": "Открыть UWP инструмент",
   "Open UWP tool Info": "С Windows 8 приложения UWP (такие как Microsoft Store) ограничены в прямом доступе к сетевым службам локального хоста, и этот инструмент позволяет обойти это ограничение",

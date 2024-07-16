@@ -262,6 +262,7 @@
   "Release Version": "نسخه نهایی",
   "Alpha Version": "نسخه آلفا",
   "Please Install and Enable Service Mode First": "لطفاً ابتدا حالت سرویس را نصب و فعال کنید",
+  "Please enter your root password": "لطفاً رمز ریشه خود را وارد کنید",
   "Grant": "اعطا",
   "Open UWP tool": "باز کردن ابزار UWP",
   "Open UWP tool Info": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود",

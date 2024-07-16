@@ -28,11 +28,19 @@ pub struct JsonResponse {
     pub data: Option<ResponseBody>,
 }
 
+#[cfg(not(target_os = "windows"))]
+pub fn sudo(passwd: &String, cmd: String) -> StdCommand {
+    let shell = format!("echo {} | sudo -S {}", passwd, cmd);
+    let mut command = StdCommand::new("bash");
+    command.arg("-c").arg(shell);
+    command
+}
+
 /// Install the Clash Verge Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 ///
 #[cfg(target_os = "windows")]
-pub async fn install_service() -> Result<()> {
+pub async fn install_service(_passwd: String) -> Result<()> {
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
@@ -65,30 +73,45 @@ pub async fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn install_service() -> Result<()> {
+pub async fn install_service(passwd: String) -> Result<()> {
     use users::get_effective_uid;
 
     let binary_path = dirs::service_path()?;
     let installer_path = binary_path.with_file_name("install-service");
-
     if !installer_path.exists() {
         bail!("installer not found");
     }
 
-    let elevator = crate::utils::unix_helper::linux_elevator();
-    let status = match get_effective_uid() {
-        0 => StdCommand::new(installer_path).status()?,
-        _ => StdCommand::new(elevator)
-            .arg("sh")
-            .arg("-c")
-            .arg(installer_path)
-            .status()?,
+    let output = match get_effective_uid() {
+        0 => {
+            StdCommand::new("chmod")
+                .arg("+x")
+                .arg(installer_path.clone())
+                .output()?;
+            StdCommand::new("chmod")
+                .arg("+x")
+                .arg(binary_path)
+                .output()?;
+            StdCommand::new(installer_path.clone()).output()?
+        }
+        _ => {
+            sudo(
+                &passwd,
+                format!("chmod +x {}", installer_path.to_string_lossy()),
+            )
+            .output()?;
+            sudo(
+                &passwd,
+                format!("chmod +x {}", binary_path.to_string_lossy()),
+            )
+            .output()?;
+            sudo(&passwd, format!("{}", installer_path.to_string_lossy())).output()?
+        }
     };
-
-    if !status.success() {
+    if output.stderr.len() > 0 {
         bail!(
-            "failed to install service with status {}",
-            status.code().unwrap()
+            "failed to install service with error: {}",
+            String::from_utf8_lossy(&output.stderr)
         );
     }
 
@@ -96,7 +119,7 @@ pub async fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn install_service() -> Result<()> {
+pub async fn install_service(passwd: String) -> Result<()> {
     let binary_path = dirs::service_path()?;
     let installer_path = binary_path.with_file_name("install-service");
 
@@ -104,22 +127,24 @@ pub async fn install_service() -> Result<()> {
         bail!("installer not found");
     }
 
-    let _ = StdCommand::new("chmod")
-        .arg("+x")
-        .arg(installer_path.to_string_lossy().replace(" ", "\\ "))
-        .output();
+    sudo(
+        &passwd,
+        format!(
+            "chmod +x {}",
+            installer_path.to_string_lossy().replace(" ", "\\ ")
+        ),
+    )
+    .output()?;
+    let output = sudo(
+        &passwd,
+        format!("{}", installer_path.to_string_lossy().replace(" ", "\\ ")),
+    )
+    .output()?;
 
-    let shell = installer_path.to_string_lossy().replace(" ", "\\\\ ");
-    let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
-
-    let status = StdCommand::new("osascript")
-        .args(vec!["-e", &command])
-        .status()?;
-
-    if !status.success() {
+    if output.stderr.len() > 0 {
         bail!(
-            "failed to install service with status {}",
-            status.code().unwrap()
+            "failed to install service with error: {}",
+            String::from_utf8_lossy(&output.stderr)
         );
     }
 
@@ -128,7 +153,7 @@ pub async fn install_service() -> Result<()> {
 /// Uninstall the Clash Verge Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 #[cfg(target_os = "windows")]
-pub async fn uninstall_service() -> Result<()> {
+pub async fn uninstall_service(_passwd: String) -> Result<()> {
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
@@ -161,7 +186,7 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn uninstall_service() -> Result<()> {
+pub async fn uninstall_service(passwd: String) -> Result<()> {
     use users::get_effective_uid;
 
     let binary_path = dirs::service_path()?;
@@ -171,20 +196,28 @@ pub async fn uninstall_service() -> Result<()> {
         bail!("uninstaller not found");
     }
 
-    let elevator = crate::utils::unix_helper::linux_elevator();
-    let status = match get_effective_uid() {
-        0 => StdCommand::new(uninstaller_path).status()?,
-        _ => StdCommand::new(elevator)
-            .arg("sh")
-            .arg("-c")
-            .arg(uninstaller_path)
-            .status()?,
-    };
+    let output = match get_effective_uid() {
+        0 => {
+            StdCommand::new("chmod")
+                .arg("+x")
+                .arg(uninstaller_path.clone())
+                .output()?;
+            StdCommand::new(uninstaller_path.clone()).output()?
+        }
+        _ => {
+            sudo(
+                &passwd,
+                format!("chmod +x {}", uninstaller_path.to_string_lossy()),
+            )
+            .output()?;
 
-    if !status.success() {
+            sudo(&passwd, format!("{}", uninstaller_path.to_string_lossy())).output()?
+        }
+    };
+    if output.stderr.len() > 0 {
         bail!(
-            "failed to install service with status {}",
-            status.code().unwrap()
+            "failed to install service with error: {}",
+            String::from_utf8_lossy(&output.stderr)
         );
     }
 
@@ -192,7 +225,7 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn uninstall_service() -> Result<()> {
+pub async fn uninstall_service(passwd: String) -> Result<()> {
     let binary_path = dirs::service_path()?;
     let uninstaller_path = binary_path.with_file_name("uninstall-service");
 
@@ -200,17 +233,24 @@ pub async fn uninstall_service() -> Result<()> {
         bail!("uninstaller not found");
     }
 
-    let shell = uninstaller_path.to_string_lossy().replace(" ", "\\\\ ");
-    let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
+    sudo(
+        &passwd,
+        format!(
+            "chmod +x {}",
+            uninstaller_path.to_string_lossy().replace(" ", "\\ ")
+        ),
+    )
+    .output()?;
+    let output = sudo(
+        &passwd,
+        format!("{}", uninstaller_path.to_string_lossy().replace(" ", "\\ ")),
+    )
+    .output()?;
 
-    let status = StdCommand::new("osascript")
-        .args(vec!["-e", &command])
-        .status()?;
-
-    if !status.success() {
+    if output.stderr.len() > 0 {
         bail!(
-            "failed to install service with status {}",
-            status.code().unwrap()
+            "failed to uninstall service with error: {}",
+            String::from_utf8_lossy(&output.stderr)
         );
     }
 
