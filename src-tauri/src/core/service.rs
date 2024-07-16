@@ -141,7 +141,8 @@ pub async fn install_service(passwd: String) -> Result<()> {
     )
     .output()?;
 
-    if output.stderr.len() > 0 {
+    // MacOS default outout "Password:" in stderr
+    if output.stderr.len() > 10 {
         bail!(
             "failed to install service with error: {}",
             String::from_utf8_lossy(&output.stderr)
@@ -247,7 +248,8 @@ pub async fn uninstall_service(passwd: String) -> Result<()> {
     )
     .output()?;
 
-    if output.stderr.len() > 0 {
+    // MacOS default outout "Password:" in stderr
+    if output.stderr.len() > 10 {
         bail!(
             "failed to uninstall service with error: {}",
             String::from_utf8_lossy(&output.stderr)
