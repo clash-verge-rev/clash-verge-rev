@@ -34,17 +34,22 @@ const domain_tld_part = String.raw`(?:\w{2,64}\*?|\*)`;
 const rDomainSimple = domain_subdomain_part + domain_tld_part;
 
 const ipv4_part = String.raw`\d{1,3}`;
-// 127.0.0.1 (full ipv4)
-const rIPv4 = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`;
-// const rIPv4Partial = String.raw`${ipv4_part}\.(?:(?:${ipv4_part}|\*)\.){0,2}\.\*`;
 
 const ipv6_part = "(?:[a-fA-F0-9:])+";
-const rIPv6 = `(?:${ipv6_part}:+)+${ipv6_part}`;
 
 const rLocal = `localhost|<local>|localdomain`;
-const rValidPart = `${rDomainSimple}|${rIPv4}|${rIPv6}|${rLocal}`;
 
 const getValidReg = (isWindows: boolean) => {
+  // 127.0.0.1 (full ipv4)
+  const rIPv4Unix = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}(?:\/\d{1,2})?`;
+  const rIPv4Windows = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`;
+
+  const rIPv6Unix = String.raw`(?:${ipv6_part}:+)+${ipv6_part}(?:\/\d{1,3})?`;
+  const rIPv6Windows = String.raw`(?:${ipv6_part}:+)+${ipv6_part}`;
+
+  const rValidPart = `${rDomainSimple}|${
+    isWindows ? rIPv4Windows : rIPv4Unix
+  }|${isWindows ? rIPv6Windows : rIPv6Unix}|${rLocal}`;
   const separator = isWindows ? ";" : ",";
   const rValid = String.raw`^(${rValidPart})(?:${separator}\s?(${rValidPart}))*${separator}?$`;
 
