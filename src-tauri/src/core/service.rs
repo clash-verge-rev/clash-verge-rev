@@ -108,7 +108,7 @@ pub async fn install_service(passwd: String) -> Result<()> {
             sudo(&passwd, format!("{}", installer_path.to_string_lossy())).output()?
         }
     };
-    if output.stderr.len() > 0 {
+    if !output.status.success() {
         bail!(
             "failed to install service with error: {}",
             String::from_utf8_lossy(&output.stderr)
@@ -141,8 +141,7 @@ pub async fn install_service(passwd: String) -> Result<()> {
     )
     .output()?;
 
-    // MacOS default outout "Password:" in stderr
-    if output.stderr.len() > 10 {
+    if !output.status.success() {
         bail!(
             "failed to install service with error: {}",
             String::from_utf8_lossy(&output.stderr)
@@ -215,7 +214,8 @@ pub async fn uninstall_service(passwd: String) -> Result<()> {
             sudo(&passwd, format!("{}", uninstaller_path.to_string_lossy())).output()?
         }
     };
-    if output.stderr.len() > 0 {
+
+    if !output.status.success() {
         bail!(
             "failed to install service with error: {}",
             String::from_utf8_lossy(&output.stderr)
@@ -248,8 +248,7 @@ pub async fn uninstall_service(passwd: String) -> Result<()> {
     )
     .output()?;
 
-    // MacOS default outout "Password:" in stderr
-    if output.stderr.len() > 10 {
+    if !output.status.success() {
         bail!(
             "failed to uninstall service with error: {}",
             String::from_utf8_lossy(&output.stderr)
