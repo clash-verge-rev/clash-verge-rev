@@ -48,7 +48,7 @@
     "react-dom": "^18.3.1",
     "react-error-boundary": "^4.0.13",
     "react-hook-form": "^7.51.5",
-    "react-i18next": "^14.1.2",
+    "react-i18next": "^15.0.0",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.23.1",
     "react-spinners": "^0.14.0",
