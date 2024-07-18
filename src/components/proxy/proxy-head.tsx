@@ -21,6 +21,7 @@ import delayManager from "@/services/delay";
 
 interface Props {
   sx?: SxProps;
+  url?: string;
   groupName: string;
   headState: HeadState;
   onLocation: () => void;
@@ -29,7 +30,7 @@ interface Props {
 }
 
 export const ProxyHead = (props: Props) => {
-  const { sx = {}, groupName, headState, onHeadState } = props;
+  const { sx = {}, url, groupName, headState, onHeadState } = props;
 
   const { showType, sortType, filterText, textState, testUrl } = headState;
 
@@ -45,7 +46,10 @@ export const ProxyHead = (props: Props) => {
   const { verge } = useVerge();
 
   useEffect(() => {
-    delayManager.setUrl(groupName, testUrl || verge?.default_latency_test!);
+    delayManager.setUrl(
+      groupName,
+      testUrl || url || verge?.default_latency_test!
+    );
   }, [groupName, testUrl, verge?.default_latency_test]);
 
   return (
