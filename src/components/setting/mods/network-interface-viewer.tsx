@@ -24,7 +24,6 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
   useEffect(() => {
     if (!open) return;
     getNetworkInterfacesInfo().then((res) => {
-      console.log(res);
       setNetworkInterfaces(res);
     });
   }, [open]);

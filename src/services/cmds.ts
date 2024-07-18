@@ -202,7 +202,6 @@ export async function checkService() {
 }
 
 export async function installService(passwd: string) {
-  console.log(passwd);
   return invoke<void>("install_service", { passwd });
 }
 
