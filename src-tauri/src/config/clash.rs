@@ -88,25 +88,26 @@ impl IClashConfig {
         }
     }
 
-    pub fn patch_and_merge_config(&mut self, patch: Mapping) {
-        let config = &mut self.0;
-        for (key, value) in patch.into_iter() {
-            match value {
-                Value::Mapping(val_map) => {
-                    // let val_map = val_map.clone();
-                    let mut patch_val_map = config.get(&key).map_or(Mapping::new(), |val| {
-                        val.as_mapping().cloned().unwrap_or(Mapping::new())
-                    });
-                    for (k, v) in val_map.into_iter() {
-                        patch_val_map.insert(k, v);
-                    }
-                    config.insert(key, patch_val_map.into());
-                }
-                _ => {
-                    config.insert(key, value);
+    /// merge from src into dest
+    fn merge_into(src: &Value, dest: &mut Value) {
+        match (src, dest) {
+            // handle mapping value
+            (Value::Mapping(src), Value::Mapping(dest)) => {
+                for (key, src_val) in src {
+                    match dest.get_mut(key) {
+                        Some(dest_val) => Self::merge_into(src_val, dest_val),
+                        None => _ = dest.insert(key.clone(), src_val.clone()),
+                    };
                 }
             }
+            (src, dest) => *dest = src.clone(),
         }
+    }
+
+    pub fn patch_and_merge_config(&mut self, patch: Mapping) {
+        let mut dest = Value::from(self.0.clone());
+        Self::merge_into(&Value::from(patch), &mut dest);
+        self.0 = dest.as_mapping().unwrap().clone();
     }
 
     pub fn save_config(&self) -> Result<()> {
