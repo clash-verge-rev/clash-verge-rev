@@ -72,12 +72,12 @@ async function resolveUpdater() {
     }
 
     // win32 url
-    if (name.endsWith("x64-setup.nsis.zip")) {
+    if (name.endsWith("x86-setup.nsis.zip")) {
       updateData.platforms["windows-x86"].url = browser_download_url;
       updateData.platforms["windows-i686"].url = browser_download_url;
     }
     // win32 signature
-    if (name.endsWith("x64-setup.nsis.zip.sig")) {
+    if (name.endsWith("x86-setup.nsis.zip.sig")) {
       const sig = await getSignature(browser_download_url);
       updateData.platforms["windows-x86"].signature = sig;
       updateData.platforms["windows-i686"].signature = sig;
