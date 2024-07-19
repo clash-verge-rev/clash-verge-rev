@@ -64,7 +64,7 @@ importers:
         version: 0.50.0
       monaco-yaml:
         specifier: ^5.2.0
-        version: 5.2.1(monaco-editor@0.50.0)
+        version: 5.2.2(monaco-editor@0.50.0)
       nanoid:
         specifier: ^5.0.7
         version: 5.0.7
@@ -2723,8 +2723,8 @@ packages:
   monaco-editor@0.50.0:
     resolution: {integrity: sha512-8CclLCmrRRh+sul7C08BmPBP3P8wVWfBHomsTcndxg5NRCEPfu/mc2AGU8k37ajjDVXcXFc12ORAMUkmk+lkFA==}
 
-  monaco-languageserver-types@0.3.4:
-    resolution: {integrity: sha512-d58sP5yNhjs8uG1ESXs0hFnuX2YfdMhiGeWhdgTUZyG9aaWgyI4dDwrK1khf1mPF2u9Sljv42sfYqPFZnqYMYg==}
+  monaco-languageserver-types@0.4.0:
+    resolution: {integrity: sha512-QQ3BZiU5LYkJElGncSNb5AKoJ/LCs6YBMCJMAz9EA7v+JaOdn3kx2cXpPTcZfKA5AEsR0vc97sAw+5mdNhVBmw==}
 
   monaco-marker-data-provider@1.2.3:
     resolution: {integrity: sha512-BOiQs9UNEwVrF1rwYI32HUP8D7JTuHlJRlykx83e4+jfh1ceBWIBfB5ENDVSFUz651d95kxjKj36vV2JO3zr9w==}
@@ -2737,8 +2737,8 @@ packages:
     peerDependencies:
       monaco-editor: '>=0.30.0'
 
-  monaco-yaml@5.2.1:
-    resolution: {integrity: sha512-hquqqJSOf1y+rDX5FbvynsMck5OG/x2wFGac8eRNcE9jfcczodHprYwqYylDfsH6+OtNl5FuENB24UmPzk7waQ==}
+  monaco-yaml@5.2.2:
+    resolution: {integrity: sha512-NWO/UhtJATlIsqwWPzK7YfbcIvPo3riFGsUkaGxNJoGiNPOvHD8vZ83ecqMQGkHPOpgHtSbe94uokE1AJvpbyQ==}
     peerDependencies:
       monaco-editor: '>=0.36'
 
@@ -6466,7 +6466,7 @@ snapshots:
 
   monaco-editor@0.50.0: {}
 
-  monaco-languageserver-types@0.3.4:
+  monaco-languageserver-types@0.4.0:
     dependencies:
       monaco-types: 0.1.0
       vscode-languageserver-protocol: 3.17.5
@@ -6482,11 +6482,11 @@ snapshots:
     dependencies:
       monaco-editor: 0.50.0
 
-  monaco-yaml@5.2.1(monaco-editor@0.50.0):
+  monaco-yaml@5.2.2(monaco-editor@0.50.0):
     dependencies:
       jsonc-parser: 3.3.1
       monaco-editor: 0.50.0
-      monaco-languageserver-types: 0.3.4
+      monaco-languageserver-types: 0.4.0
       monaco-marker-data-provider: 1.2.3
       monaco-types: 0.1.0
       monaco-worker-manager: 2.0.1(monaco-editor@0.50.0)
