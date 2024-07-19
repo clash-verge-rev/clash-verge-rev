@@ -28,7 +28,7 @@ interface Props {
   onDelete: (uid: string) => void;
 }
 
-let eventListener: UnlistenFn | null = null;
+let eventListener: UnlistenFn = () => {};
 
 export const TestItem = (props: Props) => {
   const { itemData, onEdit, onDelete: onDeleteItem } = props;
@@ -90,9 +90,7 @@ export const TestItem = (props: Props) => {
   ];
 
   const listenTsetEvent = async () => {
-    if (eventListener !== null) {
-      eventListener();
-    }
+    eventListener();
     eventListener = await listen("verge://test-all", () => {
       onDelay();
     });
@@ -100,7 +98,7 @@ export const TestItem = (props: Props) => {
 
   useEffect(() => {
     listenTsetEvent();
-  }, []);
+  }, [url]);
 
   return (
     <Box
