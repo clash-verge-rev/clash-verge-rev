@@ -126,7 +126,7 @@ const SettingClash = ({ onError }: Props) => {
         <GuardState
           value={tun?.enable ?? false}
           valueProps="checked"
-          // onCatch={onError}
+          onCatch={onError}
           onFormat={onSwitchFormat}
           // onChange={(e) => onChangeData({ tun: { enable: e } })}
           onGuard={(e) => patchClash({ tun: { enable: e } })}>
@@ -216,7 +216,7 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem label={t("Log Level")}>
         <GuardState
           // clash premium 2022.08.26 值为warn
-          value={logLevel === "warn" ? "warning" : logLevel ?? "info"}
+          value={logLevel === "warn" ? "warning" : (logLevel ?? "info")}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           // onChange={(e) => onChangeData({ "log-level": e })}

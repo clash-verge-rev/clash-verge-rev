@@ -51,27 +51,37 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   }));
 
   const doSave = async (retry = 5) => {
+    setLoading(true);
+    const tun = {
+      stack: values.stack,
+      device: values.device === "" ? defaultDeviceName : values.device,
+      "auto-route": values.autoRoute,
+      "auto-detect-interface": values.autoDetectInterface,
+      "dns-hijack": values.dnsHijack[0] === "" ? [] : values.dnsHijack,
+      "strict-route": values.strictRoute,
+      mtu: values.mtu ?? 9000,
+    };
     try {
-      setLoading(true);
-      let tun = {
-        stack: values.stack,
-        device: values.device === "" ? defaultDeviceName : values.device,
-        "auto-route": values.autoRoute,
-        "auto-detect-interface": values.autoDetectInterface,
-        "dns-hijack": values.dnsHijack[0] === "" ? [] : values.dnsHijack,
-        "strict-route": values.strictRoute,
-        mtu: values.mtu ?? 9000,
-      };
       await patchClash({ tun });
       await mutateClash(
         (old) => ({ ...(old! || {}), tun: { ...old?.tun, ...tun } }),
         false,
       );
-      Notice.success(t("Clash Config Updated"));
       setLoading(false);
       setOpen(false);
+      Notice.success(t("Clash Config Updated"));
     } catch (err: any) {
       if (retry < 0) {
+        await patchClash({ tun: { enable: false } });
+        await mutateClash(
+          (old) => ({
+            ...(old! || {}),
+            tun: { ...old?.tun, ...tun, enable: false },
+          }),
+          false,
+        );
+        setLoading(false);
+        setOpen(false);
         Notice.error(t(err));
       } else {
         setTimeout(() => doSave(retry - 1), 1000);
