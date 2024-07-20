@@ -205,7 +205,7 @@ export const ProfileItem = (props: Props) => {
       ? [
           {
             label: "Home",
-            icon: <Home fontSize="small" />,
+            icon: <Home fontSize="small" color="primary" />,
             handler: onOpenHome,
           },
         ]
@@ -213,32 +213,32 @@ export const ProfileItem = (props: Props) => {
   ).concat([
     {
       label: "Select",
-      icon: <CheckCircle fontSize="small" />,
+      icon: <CheckCircle fontSize="small" color="primary" />,
       handler: onForceSelect,
     },
     {
       label: "Edit Info",
-      icon: <Edit fontSize="small" />,
+      icon: <Edit fontSize="small" color="primary" />,
       handler: onEditInfo,
     },
     {
       label: "Edit File",
-      icon: <EditNote fontSize="small" />,
+      icon: <EditNote fontSize="small" color="primary" />,
       handler: onEditFile,
     },
     {
       label: "Open File",
-      icon: <FileOpen fontSize="small" />,
+      icon: <FileOpen fontSize="small" color="primary" />,
       handler: onOpenFile,
     },
     {
       label: "Update",
-      icon: <Refresh fontSize="small" />,
+      icon: <Refresh fontSize="small" color="primary" />,
       handler: () => onUpdate(0),
     },
     {
       label: "Update(Proxy)",
-      icon: <CloudSync fontSize="small" />,
+      icon: <CloudSync fontSize="small" color="primary" />,
       handler: () => onUpdate(2),
     },
     {
@@ -253,22 +253,22 @@ export const ProfileItem = (props: Props) => {
   const fileModeMenu = [
     {
       label: "Select",
-      icon: <CheckCircle fontSize="small" />,
+      icon: <CheckCircle fontSize="small" color="primary" />,
       handler: onForceSelect,
     },
     {
       label: "Edit Info",
-      icon: <Edit fontSize="small" />,
+      icon: <Edit fontSize="small" color="primary" />,
       handler: onEditInfo,
     },
     {
       label: "Edit File",
-      icon: <EditNote fontSize="small" />,
+      icon: <EditNote fontSize="small" color="primary" />,
       handler: onEditFile,
     },
     {
       label: "Open File",
-      icon: <FileOpen fontSize="small" />,
+      icon: <FileOpen fontSize="small" color="primary" />,
       handler: onOpenFile,
     },
     {

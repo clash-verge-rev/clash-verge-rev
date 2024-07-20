@@ -104,7 +104,7 @@ export const ProfileMore = (props: Props) => {
   const enableMenu = [
     {
       label: "Disable",
-      icon: <CheckCircle fontSize="small" />,
+      icon: <CheckCircle fontSize="small" color="primary" />,
       handler: fnWrapper(async () => {
         setToggling(true);
         await onDisable();
@@ -113,17 +113,17 @@ export const ProfileMore = (props: Props) => {
     },
     {
       label: "Edit Info",
-      icon: <Edit fontSize="small" />,
+      icon: <Edit fontSize="small" color="primary" />,
       handler: onEditInfo,
     },
     {
       label: "Edit File",
-      icon: <EditNote fontSize="small" />,
+      icon: <EditNote fontSize="small" color="primary" />,
       handler: onEditFile,
     },
     {
       label: "Open File",
-      icon: <FileOpen fontSize="small" />,
+      icon: <FileOpen fontSize="small" color="primary" />,
       handler: onOpenFile,
     },
     {
@@ -139,7 +139,7 @@ export const ProfileMore = (props: Props) => {
   const disableMenu = [
     {
       label: "Enable",
-      icon: <CheckCircle fontSize="small" />,
+      icon: <CheckCircle fontSize="small" color="primary" />,
       handler: fnWrapper(async () => {
         setToggling(true);
         await onEnable();
@@ -148,17 +148,17 @@ export const ProfileMore = (props: Props) => {
     },
     {
       label: "Edit Info",
-      icon: <Edit fontSize="small" />,
+      icon: <Edit fontSize="small" color="primary" />,
       handler: onEditInfo,
     },
     {
       label: "Edit File",
-      icon: <EditNote fontSize="small" />,
+      icon: <EditNote fontSize="small" color="primary" />,
       handler: onEditFile,
     },
     {
       label: "Open File",
-      icon: <FileOpen fontSize="small" />,
+      icon: <FileOpen fontSize="small" color="primary" />,
       handler: onOpenFile,
     },
     {
