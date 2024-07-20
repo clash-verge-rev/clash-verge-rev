@@ -6,13 +6,25 @@ import {
   useThemeMode,
 } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
-import { RefreshRounded } from "@mui/icons-material";
+import {
+  CheckCircle,
+  CloudSync,
+  Delete,
+  Edit,
+  EditNote,
+  FileOpen,
+  Home,
+  Refresh,
+  RefreshRounded,
+} from "@mui/icons-material";
 import {
   Box,
   CircularProgress,
   IconButton,
   keyframes,
   LinearProgress,
+  ListItemIcon,
+  ListItemText,
   Menu,
   MenuItem,
   SxProps,
@@ -189,16 +201,49 @@ export const ProfileItem = (props: Props) => {
   });
 
   const urlModeMenu = (
-    hasHome ? [{ label: "Home", handler: onOpenHome }] : []
+    hasHome
+      ? [
+          {
+            label: "Home",
+            icon: <Home fontSize="small" />,
+            handler: onOpenHome,
+          },
+        ]
+      : []
   ).concat([
-    { label: "Select", handler: onForceSelect },
-    { label: "Edit Info", handler: onEditInfo },
-    { label: "Edit File", handler: onEditFile },
-    { label: "Open File", handler: onOpenFile },
-    { label: "Update", handler: () => onUpdate(0) },
-    { label: "Update(Proxy)", handler: () => onUpdate(2) },
+    {
+      label: "Select",
+      icon: <CheckCircle fontSize="small" />,
+      handler: onForceSelect,
+    },
+    {
+      label: "Edit Info",
+      icon: <Edit fontSize="small" />,
+      handler: onEditInfo,
+    },
+    {
+      label: "Edit File",
+      icon: <EditNote fontSize="small" />,
+      handler: onEditFile,
+    },
+    {
+      label: "Open File",
+      icon: <FileOpen fontSize="small" />,
+      handler: onOpenFile,
+    },
+    {
+      label: "Update",
+      icon: <Refresh fontSize="small" />,
+      handler: () => onUpdate(0),
+    },
+    {
+      label: "Update(Proxy)",
+      icon: <CloudSync fontSize="small" />,
+      handler: () => onUpdate(2),
+    },
     {
       label: "Delete",
+      icon: <Delete fontSize="small" color="error" />,
       handler: () => {
         setAnchorEl(null);
         setConfirmOpen(true);
@@ -206,12 +251,29 @@ export const ProfileItem = (props: Props) => {
     },
   ]);
   const fileModeMenu = [
-    { label: "Select", handler: onForceSelect },
-    { label: "Edit Info", handler: onEditInfo },
-    { label: "Edit File", handler: onEditFile },
-    { label: "Open File", handler: onOpenFile },
+    {
+      label: "Select",
+      icon: <CheckCircle fontSize="small" />,
+      handler: onForceSelect,
+    },
+    {
+      label: "Edit Info",
+      icon: <Edit fontSize="small" />,
+      handler: onEditInfo,
+    },
+    {
+      label: "Edit File",
+      icon: <EditNote fontSize="small" />,
+      handler: onEditFile,
+    },
+    {
+      label: "Open File",
+      icon: <FileOpen fontSize="small" />,
+      handler: onOpenFile,
+    },
     {
       label: "Delete",
+      icon: <Delete fontSize="small" color="error" />,
       handler: () => {
         setAnchorEl(null);
         setConfirmOpen(true);
@@ -373,7 +435,8 @@ export const ProfileItem = (props: Props) => {
               },
             ]}
             dense>
-            {t(item.label)}
+            <ListItemIcon color="primary">{item.icon}</ListItemIcon>
+            <ListItemText>{t(item.label)}</ListItemText>
           </MenuItem>
         ))}
       </Menu>

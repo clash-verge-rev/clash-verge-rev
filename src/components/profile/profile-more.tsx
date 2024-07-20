@@ -3,12 +3,21 @@ import YamlIcon from "@/assets/image/yaml.svg?react";
 import { EditorViewer, Notice } from "@/components/base";
 import { viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
-import { FeaturedPlayListRounded } from "@mui/icons-material";
+import {
+  CheckCircle,
+  Delete,
+  Edit,
+  EditNote,
+  FeaturedPlayListRounded,
+  FileOpen,
+} from "@mui/icons-material";
 import {
   Badge,
   Box,
   CircularProgress,
   IconButton,
+  ListItemIcon,
+  ListItemText,
   Menu,
   MenuItem,
   SxProps,
@@ -95,17 +104,31 @@ export const ProfileMore = (props: Props) => {
   const enableMenu = [
     {
       label: "Disable",
+      icon: <CheckCircle fontSize="small" />,
       handler: fnWrapper(async () => {
         setToggling(true);
         await onDisable();
         setToggling(false);
       }),
     },
-    { label: "Edit Info", handler: onEditInfo },
-    { label: "Edit File", handler: onEditFile },
-    { label: "Open File", handler: onOpenFile },
+    {
+      label: "Edit Info",
+      icon: <Edit fontSize="small" />,
+      handler: onEditInfo,
+    },
+    {
+      label: "Edit File",
+      icon: <EditNote fontSize="small" />,
+      handler: onEditFile,
+    },
+    {
+      label: "Open File",
+      icon: <FileOpen fontSize="small" />,
+      handler: onOpenFile,
+    },
     {
       label: "Delete",
+      icon: <Delete fontSize="small" color="error" />,
       handler: () => {
         setAnchorEl(null);
         setConfirmOpen(true);
@@ -116,17 +139,31 @@ export const ProfileMore = (props: Props) => {
   const disableMenu = [
     {
       label: "Enable",
+      icon: <CheckCircle fontSize="small" />,
       handler: fnWrapper(async () => {
         setToggling(true);
         await onEnable();
         setToggling(false);
       }),
     },
-    { label: "Edit Info", handler: onEditInfo },
-    { label: "Edit File", handler: onEditFile },
-    { label: "Open File", handler: onOpenFile },
+    {
+      label: "Edit Info",
+      icon: <Edit fontSize="small" />,
+      handler: onEditInfo,
+    },
+    {
+      label: "Edit File",
+      icon: <EditNote fontSize="small" />,
+      handler: onEditFile,
+    },
+    {
+      label: "Open File",
+      icon: <FileOpen fontSize="small" />,
+      handler: onOpenFile,
+    },
     {
       label: "Delete",
+      icon: <Delete fontSize="small" color="error" />,
       handler: () => {
         setAnchorEl(null);
         setConfirmOpen(true);
@@ -263,7 +300,8 @@ export const ProfileMore = (props: Props) => {
                 },
               ]}
               dense>
-              {t(item.label)}
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText>{t(item.label)}</ListItemText>
             </MenuItem>
           ))}
       </Menu>
