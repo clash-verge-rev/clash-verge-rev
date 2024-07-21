@@ -4,6 +4,7 @@ import { EditorViewer, Notice } from "@/components/base";
 import { viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import {
+  Block,
   CheckCircle,
   Delete,
   Edit,
@@ -104,7 +105,7 @@ export const ProfileMore = (props: Props) => {
   const enableMenu = [
     {
       label: "Disable",
-      icon: <CheckCircle fontSize="small" color="primary" />,
+      icon: <Block fontSize="small" color="primary" />,
       handler: fnWrapper(async () => {
         setToggling(true);
         await onDisable();

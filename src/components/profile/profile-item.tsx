@@ -427,15 +427,14 @@ export const ProfileItem = (props: Props) => {
               },
               (theme) => {
                 return {
-                  color:
-                    item.label === "Delete"
-                      ? theme.palette.error.main
-                      : undefined,
+                  ...(item.label === "Delete" && {
+                    color: theme.palette.error.main,
+                  }),
                 };
               },
             ]}
             dense>
-            <ListItemIcon color="primary">{item.icon}</ListItemIcon>
+            <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText>{t(item.label)}</ListItemText>
           </MenuItem>
         ))}
