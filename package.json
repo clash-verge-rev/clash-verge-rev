@@ -85,7 +85,7 @@
     "react-devtools": "5.3.1",
     "sass": "1.77.8",
     "terser": "5.31.3",
-    "typescript": "5.5.3",
+    "typescript": "5.5.4",
     "vite": "5.3.4",
     "vite-plugin-monaco-editor": "1.1.0",
     "vite-plugin-svgr": "4.2.0"
