@@ -114,7 +114,7 @@ const AddressDisplay = (props: { label: string; content: string }) => {
       <Box
         sx={({ palette }) => ({
           borderRadius: "8px",
-          padding: "2px",
+          padding: "2px 2px 2px 8px",
           background:
             palette.mode === "dark"
               ? alpha(palette.background.paper, 0.3)
