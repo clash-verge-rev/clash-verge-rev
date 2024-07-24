@@ -543,7 +543,7 @@ export const RulesEditorViewer = (props: Props) => {
                     try {
                       let raw = validateRule();
                       if (prependSeq.includes(raw)) return;
-                      setPrependSeq([...prependSeq, raw]);
+                      setPrependSeq([raw, ...prependSeq]);
                     } catch (err: any) {
                       Notice.error(err.message || err.toString());
                     }
