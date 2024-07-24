@@ -30,7 +30,7 @@ pub struct JsonResponse {
 
 #[cfg(not(target_os = "windows"))]
 pub fn sudo(passwd: &String, cmd: String) -> StdCommand {
-    let shell = format!("echo {} | sudo -S {}", passwd, cmd);
+    let shell = format!("echo \"{}\" | sudo -S {}", passwd, cmd);
     let mut command = StdCommand::new("bash");
     command.arg("-c").arg(shell);
     command
