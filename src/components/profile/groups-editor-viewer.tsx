@@ -723,7 +723,7 @@ export const GroupsEditorViewer = (props: Props) => {
                           throw new Error(t("Group Name Already Exists"));
                         }
                       }
-                      setPrependSeq([...prependSeq, formIns.getValues()]);
+                      setPrependSeq([formIns.getValues(), ...prependSeq]);
                     } catch (err: any) {
                       Notice.error(err.message || err.toString());
                     }

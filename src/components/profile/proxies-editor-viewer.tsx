@@ -276,7 +276,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                   startIcon={<VerticalAlignTopRounded />}
                   onClick={() => {
                     let proxies = handleParse();
-                    setPrependSeq([...prependSeq, ...proxies]);
+                    setPrependSeq([...proxies, ...prependSeq]);
                   }}
                 >
                   {t("Prepend Proxy")}
