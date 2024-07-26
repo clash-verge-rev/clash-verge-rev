@@ -166,8 +166,8 @@ importers:
         specifier: 7.0.5
         version: 7.0.5
       husky:
-        specifier: 9.1.2
-        version: 9.1.2
+        specifier: 9.1.3
+        version: 9.1.3
       node-fetch:
         specifier: 3.3.2
         version: 3.3.2
@@ -2283,8 +2283,8 @@ packages:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
 
-  husky@9.1.2:
-    resolution: {integrity: sha512-1/aDMXZdhr1VdJJTLt6e7BipM0Jd9qkpubPiIplon1WmCeOy3nnzsCMeBqS9AsL5ioonl8F8y/F2CLOmk19/Pw==}
+  husky@9.1.3:
+    resolution: {integrity: sha512-ET3TQmQgdIu0pt+jKkpo5oGyg/4MQZpG6xcam5J5JyNJV+CBT23OBpCF15bKHKycRyMH9k6ONy8g2HdGIsSkMQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -5909,7 +5909,7 @@ snapshots:
 
   human-signals@2.1.0: {}
 
-  husky@9.1.2: {}
+  husky@9.1.3: {}
 
   i18next@23.12.2:
     dependencies:

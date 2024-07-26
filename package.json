@@ -78,7 +78,7 @@
     "cross-env": "7.0.3",
     "fs-extra": "11.2.0",
     "https-proxy-agent": "7.0.5",
-    "husky": "9.1.2",
+    "husky": "9.1.3",
     "node-fetch": "3.3.2",
     "prettier": "3.3.3",
     "pretty-quick": "4.0.0",
