@@ -13,5 +13,7 @@
         </array>
     </dict>
 </array>
+<key>LSUIElement</key>
+<string>true</string>
 </dict>
 </plist>
