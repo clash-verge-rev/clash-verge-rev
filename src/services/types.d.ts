@@ -744,3 +744,12 @@ interface IVergeConfig {
   proxy_layout_column?: number;
   test_list?: IVergeTestItem[];
 }
+
+interface TrafficRecord extends ITrafficItem {
+  date: number;
+}
+
+interface TrafficStatistics extends ITrafficItem {
+  date: number;
+  type: string;
+}

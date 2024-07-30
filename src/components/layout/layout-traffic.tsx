@@ -16,6 +16,15 @@ import { createSockette } from "@/utils/websocket";
 import { useTranslation } from "react-i18next";
 import { isDebugEnabled, gc } from "@/services/api";
 
+console.log(new URL("@/services/traffic-worker.ts", import.meta.url));
+const trafficWorker = new Worker(
+  new URL("@/services/traffic-worker.ts", import.meta.url),
+  { type: "module" }
+);
+trafficWorker.onerror = (event) => {
+  console.error(event);
+};
+
 interface MemoryUsage {
   inuse: number;
   oslimit?: number;
@@ -59,10 +68,12 @@ export const LayoutTraffic = () => {
           onmessage(event) {
             const data = JSON.parse(event.data) as ITrafficItem;
             trafficRef.current?.appendData(data);
+            trafficWorker.postMessage({ type: "TRAFFIC", data });
             next(null, data);
           },
           onerror(event) {
             this.close();
+            trafficWorker.postMessage({ type: "TERMINATE" });
             next(event, { up: 0, down: 0 });
           },
         }
