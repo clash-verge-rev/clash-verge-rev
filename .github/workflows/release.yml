@@ -56,7 +56,7 @@ jobs:
           pnpm check ${{ matrix.target }}
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@f290eb8e3c2a5097b2c6facfa1b6674dab9eaefb # v0
+        uses: tauri-apps/tauri-action@9ec12e079625d30c39e5d2a6ee24618aed9ac207 # v0
         env:
           # NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
