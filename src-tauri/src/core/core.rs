@@ -84,28 +84,8 @@ impl CoreManager {
     pub async fn run_core(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Run)?;
 
-        // 关闭tun模式
-        let mut disable = Mapping::new();
-        let mut tun = Mapping::new();
-        tun.insert("enable".into(), false.into());
-        disable.insert("tun".into(), tun.into());
-        log::debug!(target: "app", "disable tun mode");
-        let _ = clash_api::patch_configs(&disable).await;
-
-        if *self.use_service_mode.lock() {
-            log::debug!(target: "app", "stop the core by service");
-            log_err!(service::stop_core_by_service().await);
-        } else {
-            let system = System::new_with_specifics(
-                RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
-            );
-            let procs = system.processes_by_name("verge-mihomo");
-
-            for proc in procs {
-                log::debug!(target: "app", "kill all clash process");
-                proc.kill();
-            }
-        }
+        // 停止核心运行
+        let _ = CoreManager::global().stop_core().await;
 
         // 服务模式
         let enable = { Config::verge().latest().enable_service_mode };
@@ -241,13 +221,24 @@ impl CoreManager {
         let mut sidecar = self.sidecar.lock();
         let _ = sidecar.take();
 
+        // 获取当前执行的 clash 路径
+        let verge_mihomo_dir = dirs::app_exe_dir()?.join("verge-mihomo");
+        let verge_mihomo_dir = dirs::path_to_str(&verge_mihomo_dir)?.to_string();
+        log::debug!(target: "app", "verge mihomo dir: {verge_mihomo_dir}");
+
         let system = System::new_with_specifics(
             RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
         );
         let procs = system.processes_by_name("verge-mihomo");
         for proc in procs {
-            log::debug!(target: "app", "kill all clash process");
-            proc.kill();
+            // 判断是否是当前目录下的 clash
+            if proc.exe()
+                .and_then(|proc_path| proc_path.to_str())
+                .map_or(false, |proc_path_str| proc_path_str.starts_with(&verge_mihomo_dir))
+            {
+                log::debug!(target: "app", "kill clash process at {}", proc.exe().unwrap().display());
+                proc.kill();
+            }
         }
         Ok(())
     }
