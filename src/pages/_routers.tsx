@@ -11,6 +11,7 @@ import { BaseErrorBoundary } from "@/components/base";
 import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
 import ProfilesSvg from "@/assets/image/itemicon/profiles.svg?react";
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
+import TrafficSvg from "@/assets/image/itemicon/traffic.svg?react";
 import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
 import TestSvg from "@/assets/image/itemicon/test.svg?react";
@@ -47,7 +48,7 @@ export const routers = [
   {
     label: "Label-Traffic",
     path: "/traffic",
-    icon: [<SsidChartRoundedIcon />, <ConnectionsSvg />],
+    icon: [<SsidChartRoundedIcon />, <TrafficSvg />],
     element: <TrafficPage />,
   },
   {
