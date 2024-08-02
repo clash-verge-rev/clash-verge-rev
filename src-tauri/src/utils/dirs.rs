@@ -34,6 +34,18 @@ pub fn init_portable_flag() -> Result<()> {
     Ok(())
 }
 
+/// get the verge app exe dir
+pub fn app_exe_dir() -> Result<PathBuf> {
+    use tauri::utils::platform::current_exe;
+
+    let app_exe = current_exe()?;
+    let app_exe = dunce::canonicalize(app_exe)?;
+    let app_dir = app_exe
+        .parent()
+        .ok_or(anyhow::anyhow!("failed to get the app exe dir"))?;
+    return Ok(PathBuf::from(app_dir));
+}
+
 /// get the verge app home dir
 pub fn app_home_dir() -> Result<PathBuf> {
     use tauri::utils::platform::current_exe;
