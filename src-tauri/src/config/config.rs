@@ -1,5 +1,6 @@
 use super::{Draft, IClashTemp, IProfiles, IRuntime, IVerge};
 use crate::{
+    config::PrfItem,
     enhance,
     utils::{dirs, help},
 };
@@ -46,8 +47,24 @@ impl Config {
     }
 
     /// 初始化订阅
-    pub fn init_config() -> Result<()> {
-        crate::log_err!(Self::generate());
+    pub async fn init_config() -> Result<()> {
+        if Self::profiles()
+            .data()
+            .get_item(&"Merge".to_string())
+            .is_err()
+        {
+            let merge_item = PrfItem::from_merge(Some("Merge".to_string()))?;
+            Self::profiles().data().append_item(merge_item.clone())?;
+        }
+        if Self::profiles()
+            .data()
+            .get_item(&"Script".to_string())
+            .is_err()
+        {
+            let script_item = PrfItem::from_script(Some("Script".to_string()))?;
+            Self::profiles().data().append_item(script_item.clone())?;
+        }
+        crate::log_err!(Self::generate().await);
         if let Err(err) = Self::generate_file(ConfigType::Run) {
             log::error!(target: "app", "{err}");
 
@@ -83,8 +100,8 @@ impl Config {
     }
 
     /// 生成订阅存好
-    pub fn generate() -> Result<()> {
-        let (config, exists_keys, logs) = enhance::enhance();
+    pub async fn generate() -> Result<()> {
+        let (config, exists_keys, logs) = enhance::enhance().await;
 
         *Config::runtime().draft() = IRuntime {
             config: Some(config),

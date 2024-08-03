@@ -1,8 +1,8 @@
 import useSWR from "swr";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import { Box, Button, ButtonGroup, Paper } from "@mui/material";
+import { Box, Button, ButtonGroup } from "@mui/material";
 import {
   closeAllConnections,
   getClashConfig,
@@ -24,12 +24,7 @@ const ProxyPage = () => {
 
   const { verge } = useVerge();
 
-  const modeList = useMemo(() => {
-    if (verge?.clash_core?.includes("clash-meta")) {
-      return ["rule", "global", "direct"];
-    }
-    return ["rule", "global", "direct", "script"];
-  }, [verge?.clash_core]);
+  const modeList = ["rule", "global", "direct"];
 
   const curMode = clashConfig?.mode?.toLowerCase();
 

@@ -6,10 +6,10 @@ export const BaseStyledTextField = styled((props: TextFieldProps) => {
 
   return (
     <TextField
+      autoComplete="new-password"
       hiddenLabel
       fullWidth
       size="small"
-      autoComplete="off"
       variant="outlined"
       spellCheck="false"
       placeholder={t("Filter conditions")}

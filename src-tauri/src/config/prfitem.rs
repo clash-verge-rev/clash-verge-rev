@@ -94,6 +94,16 @@ pub struct PrfOption {
     /// default is `false`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub danger_accept_invalid_certs: Option<bool>,
+
+    pub merge: Option<String>,
+
+    pub script: Option<String>,
+
+    pub rules: Option<String>,
+
+    pub proxies: Option<String>,
+
+    pub groups: Option<String>,
 }
 
 impl PrfOption {
@@ -103,8 +113,15 @@ impl PrfOption {
                 a.user_agent = b.user_agent.or(a.user_agent);
                 a.with_proxy = b.with_proxy.or(a.with_proxy);
                 a.self_proxy = b.self_proxy.or(a.self_proxy);
-                a.danger_accept_invalid_certs = b.danger_accept_invalid_certs.or(a.danger_accept_invalid_certs);
+                a.danger_accept_invalid_certs = b
+                    .danger_accept_invalid_certs
+                    .or(a.danger_accept_invalid_certs);
                 a.update_interval = b.update_interval.or(a.update_interval);
+                a.merge = b.merge.or(a.merge);
+                a.script = b.script.or(a.script);
+                a.rules = b.rules.or(a.rules);
+                a.proxies = b.proxies.or(a.proxies);
+                a.groups = b.groups.or(a.groups);
                 Some(a)
             }
             t => t.0.or(t.1),
@@ -133,17 +150,7 @@ impl PrfItem {
             "local" => {
                 let name = item.name.unwrap_or("Local File".into());
                 let desc = item.desc.unwrap_or("".into());
-                PrfItem::from_local(name, desc, file_data)
-            }
-            "merge" => {
-                let name = item.name.unwrap_or("Merge".into());
-                let desc = item.desc.unwrap_or("".into());
-                PrfItem::from_merge(name, desc)
-            }
-            "script" => {
-                let name = item.name.unwrap_or("Script".into());
-                let desc = item.desc.unwrap_or("".into());
-                PrfItem::from_script(name, desc)
+                PrfItem::from_local(name, desc, file_data, item.option)
             }
             typ => bail!("invalid profile item type \"{typ}\""),
         }
@@ -151,10 +158,49 @@ impl PrfItem {
 
     /// ## Local type
     /// create a new item from name/desc
-    pub fn from_local(name: String, desc: String, file_data: Option<String>) -> Result<PrfItem> {
-        let uid = help::get_uid("l");
+    pub fn from_local(
+        name: String,
+        desc: String,
+        file_data: Option<String>,
+        option: Option<PrfOption>,
+    ) -> Result<PrfItem> {
+        let uid = help::get_uid("L");
         let file = format!("{uid}.yaml");
+        let opt_ref = option.as_ref();
+        let update_interval = opt_ref.and_then(|o| o.update_interval);
+        let mut merge = opt_ref.and_then(|o| o.merge.clone());
+        let mut script = opt_ref.and_then(|o| o.script.clone());
+        let mut rules = opt_ref.and_then(|o| o.rules.clone());
+        let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
+        let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
+        if merge.is_none() {
+            let merge_item = PrfItem::from_merge(None)?;
+            Config::profiles().data().append_item(merge_item.clone())?;
+            merge = merge_item.uid;
+        }
+        if script.is_none() {
+            let script_item = PrfItem::from_script(None)?;
+            Config::profiles().data().append_item(script_item.clone())?;
+            script = script_item.uid;
+        }
+        if rules.is_none() {
+            let rules_item = PrfItem::from_rules()?;
+            Config::profiles().data().append_item(rules_item.clone())?;
+            rules = rules_item.uid;
+        }
+        if proxies.is_none() {
+            let proxies_item = PrfItem::from_proxies()?;
+            Config::profiles()
+                .data()
+                .append_item(proxies_item.clone())?;
+            proxies = proxies_item.uid;
+        }
+        if groups.is_none() {
+            let groups_item = PrfItem::from_groups()?;
+            Config::profiles().data().append_item(groups_item.clone())?;
+            groups = groups_item.uid;
+        }
         Ok(PrfItem {
             uid: Some(uid),
             itype: Some("local".into()),
@@ -164,7 +210,15 @@ impl PrfItem {
             url: None,
             selected: None,
             extra: None,
-            option: None,
+            option: Some(PrfOption {
+                update_interval,
+                merge,
+                script,
+                rules,
+                proxies,
+                groups,
+                ..PrfOption::default()
+            }),
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
@@ -182,10 +236,15 @@ impl PrfItem {
         let opt_ref = option.as_ref();
         let with_proxy = opt_ref.map_or(false, |o| o.with_proxy.unwrap_or(false));
         let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
-        let accept_invalid_certs = opt_ref.map_or(false, |o| o.danger_accept_invalid_certs.unwrap_or(false));
+        let accept_invalid_certs =
+            opt_ref.map_or(false, |o| o.danger_accept_invalid_certs.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
-
+        let mut merge = opt_ref.and_then(|o| o.merge.clone());
+        let mut script = opt_ref.and_then(|o| o.script.clone());
+        let mut rules = opt_ref.and_then(|o| o.rules.clone());
+        let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
+        let mut groups = opt_ref.and_then(|o| o.groups.clone());
         let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
         // 使用软件自己的代理
@@ -279,17 +338,11 @@ impl PrfItem {
                 crate::utils::help::get_last_part_and_decode(url).unwrap_or("Remote File".into()),
             ),
         };
-        let option = match update_interval {
-            Some(val) => Some(PrfOption {
-                update_interval: Some(val),
-                ..PrfOption::default()
-            }),
+        let update_interval = match update_interval {
+            Some(val) => Some(val),
             None => match header.get("profile-update-interval") {
                 Some(value) => match value.to_str().unwrap_or("").parse::<u64>() {
-                    Ok(val) => Some(PrfOption {
-                        update_interval: Some(val * 60), // hour -> min
-                        ..PrfOption::default()
-                    }),
+                    Ok(val) => Some(val * 60), // hour -> min
                     Err(_) => None,
                 },
                 None => None,
@@ -300,11 +353,11 @@ impl PrfItem {
             Some(value) => {
                 let str_value = value.to_str().unwrap_or("");
                 Some(str_value.to_string())
-            },
+            }
             None => None,
         };
 
-        let uid = help::get_uid("r");
+        let uid = help::get_uid("R");
         let file = format!("{uid}.yaml");
         let name = name.unwrap_or(filename.unwrap_or("Remote File".into()));
         let data = resp.text_with_charset("utf-8").await?;
@@ -320,6 +373,34 @@ impl PrfItem {
             bail!("profile does not contain `proxies` or `proxy-providers`");
         }
 
+        if merge.is_none() {
+            let merge_item = PrfItem::from_merge(None)?;
+            Config::profiles().data().append_item(merge_item.clone())?;
+            merge = merge_item.uid;
+        }
+        if script.is_none() {
+            let script_item = PrfItem::from_script(None)?;
+            Config::profiles().data().append_item(script_item.clone())?;
+            script = script_item.uid;
+        }
+        if rules.is_none() {
+            let rules_item = PrfItem::from_rules()?;
+            Config::profiles().data().append_item(rules_item.clone())?;
+            rules = rules_item.uid;
+        }
+        if proxies.is_none() {
+            let proxies_item = PrfItem::from_proxies()?;
+            Config::profiles()
+                .data()
+                .append_item(proxies_item.clone())?;
+            proxies = proxies_item.uid;
+        }
+        if groups.is_none() {
+            let groups_item = PrfItem::from_groups()?;
+            Config::profiles().data().append_item(groups_item.clone())?;
+            groups = groups_item.uid;
+        }
+
         Ok(PrfItem {
             uid: Some(uid),
             itype: Some("remote".into()),
@@ -329,7 +410,15 @@ impl PrfItem {
             url: Some(url.into()),
             selected: None,
             extra,
-            option,
+            option: Some(PrfOption {
+                update_interval,
+                merge,
+                script,
+                rules,
+                proxies,
+                groups,
+                ..PrfOption::default()
+            }),
             home,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(data.into()),
@@ -338,15 +427,20 @@ impl PrfItem {
 
     /// ## Merge type (enhance)
     /// create the enhanced item by using `merge` rule
-    pub fn from_merge(name: String, desc: String) -> Result<PrfItem> {
-        let uid = help::get_uid("m");
-        let file = format!("{uid}.yaml");
+    pub fn from_merge(uid: Option<String>) -> Result<PrfItem> {
+        let mut id = help::get_uid("m");
+        let mut template = tmpl::ITEM_MERGE_EMPTY.into();
+        if let Some(uid) = uid {
+            id = uid;
+            template = tmpl::ITEM_MERGE.into();
+        }
+        let file = format!("{id}.yaml");
 
         Ok(PrfItem {
-            uid: Some(uid),
+            uid: Some(id),
             itype: Some("merge".into()),
-            name: Some(name),
-            desc: Some(desc),
+            name: None,
+            desc: None,
             file: Some(file),
             url: None,
             selected: None,
@@ -354,21 +448,24 @@ impl PrfItem {
             option: None,
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
-            file_data: Some(tmpl::ITEM_MERGE.into()),
+            file_data: Some(template),
         })
     }
 
     /// ## Script type (enhance)
     /// create the enhanced item by using javascript quick.js
-    pub fn from_script(name: String, desc: String) -> Result<PrfItem> {
-        let uid = help::get_uid("s");
-        let file = format!("{uid}.js"); // js ext
+    pub fn from_script(uid: Option<String>) -> Result<PrfItem> {
+        let mut id = help::get_uid("s");
+        if let Some(uid) = uid {
+            id = uid;
+        }
+        let file = format!("{id}.js"); // js ext
 
         Ok(PrfItem {
-            uid: Some(uid),
+            uid: Some(id),
             itype: Some("script".into()),
-            name: Some(name),
-            desc: Some(desc),
+            name: None,
+            desc: None,
             file: Some(file),
             url: None,
             home: None,
@@ -377,6 +474,69 @@ impl PrfItem {
             option: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
+        })
+    }
+
+    /// ## Rules type (enhance)
+    pub fn from_rules() -> Result<PrfItem> {
+        let uid = help::get_uid("r");
+        let file = format!("{uid}.yaml"); // yaml ext
+
+        Ok(PrfItem {
+            uid: Some(uid),
+            itype: Some("rules".into()),
+            name: None,
+            desc: None,
+            file: Some(file),
+            url: None,
+            home: None,
+            selected: None,
+            extra: None,
+            option: None,
+            updated: Some(chrono::Local::now().timestamp() as usize),
+            file_data: Some(tmpl::ITEM_RULES.into()),
+        })
+    }
+
+    /// ## Proxies type (enhance)
+    pub fn from_proxies() -> Result<PrfItem> {
+        let uid = help::get_uid("p");
+        let file = format!("{uid}.yaml"); // yaml ext
+
+        Ok(PrfItem {
+            uid: Some(uid),
+            itype: Some("proxies".into()),
+            name: None,
+            desc: None,
+            file: Some(file),
+            url: None,
+            home: None,
+            selected: None,
+            extra: None,
+            option: None,
+            updated: Some(chrono::Local::now().timestamp() as usize),
+            file_data: Some(tmpl::ITEM_PROXIES.into()),
+        })
+    }
+
+    /// ## Groups type (enhance)
+    pub fn from_groups() -> Result<PrfItem> {
+        let uid = help::get_uid("g");
+        let file = format!("{uid}.yaml"); // yaml ext
+
+        Ok(PrfItem {
+            uid: Some(uid),
+            itype: Some("groups".into()),
+            name: None,
+            desc: None,
+            file: Some(file),
+            url: None,
+            home: None,
+            selected: None,
+            extra: None,
+            option: None,
+            updated: Some(chrono::Local::now().timestamp() as usize),
+            file_data: Some(tmpl::ITEM_GROUPS.into()),
         })
     }
 

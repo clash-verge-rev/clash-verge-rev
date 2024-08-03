@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "1.6.1"
+version = "1.7.5"
 description = "clash verge"
 authors = ["zzzgydi", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
@@ -10,13 +10,13 @@ edition = "2021"
 build = "build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1", features = [] }
+tauri-build = { version="1", features = [] }
 
 [dependencies]
 warp = "0.3"
 anyhow = "1.0"
 dirs = "5.0"
-open = "5.0"
+open = "5.1"
 log = "0.4"
 dunce = "1.0"
 log4rs = "1"
@@ -26,19 +26,19 @@ sysinfo = "0.30"
 boa_engine = "0.18"
 serde_json = "1.0"
 serde_yaml = "0.9"
-once_cell = "1.18"
+once_cell = "1.19"
 port_scanner = "0.1.5"
-delay_timer = "0.11.5"
+delay_timer = "0.11"
 parking_lot = "0.12"
+auto-launch = "0.5.0"
 percent-encoding = "2.3.1"
 window-shadows = { version = "0.2" }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 sysproxy = { git="https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
-auto-launch = { git="https://github.com/zzzgydi/auto-launch", branch = "main" }
-tauri = { version = "1.6", features = [ "fs-read-file", "fs-exists", "path-all", "protocol-asset", "dialog-open", "notification-all", "icon-png", "icon-ico", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "devtools"] }
-
+tauri = { version="1", features = [ "fs-read-file", "fs-exists", "path-all", "protocol-asset", "dialog-open", "notification-all", "icon-png", "icon-ico", "clipboard-all", "global-shortcut-all", "process-all", "shell-all", "system-tray", "updater", "window-all", "devtools"] }
+network-interface = { version = "2.0.0", features = ["serde"] }
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
 deelevate = "0.2.0"

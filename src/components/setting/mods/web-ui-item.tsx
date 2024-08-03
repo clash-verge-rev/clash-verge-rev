@@ -13,6 +13,7 @@ import {
   EditRounded,
   OpenInNewRounded,
 } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   value?: string;
@@ -35,22 +36,23 @@ export const WebUIItem = (props: Props) => {
 
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
+  const { t } = useTranslation();
 
   if (editing || onlyEdit) {
     return (
       <>
         <Stack spacing={0.75} direction="row" mt={1} mb={1} alignItems="center">
           <TextField
+            autoComplete="new-password"
             fullWidth
             size="small"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            placeholder={`Support %host %port %secret`}
-            autoComplete="off"
+            placeholder={t("Support %host, %port, %secret")}
           />
           <IconButton
             size="small"
-            title="Save"
+            title={t("Save")}
             color="inherit"
             onClick={() => {
               onChange(editValue);
@@ -61,7 +63,7 @@ export const WebUIItem = (props: Props) => {
           </IconButton>
           <IconButton
             size="small"
-            title="Cancel"
+            title={t("Cancel")}
             color="inherit"
             onClick={() => {
               onCancel?.();
@@ -100,7 +102,7 @@ export const WebUIItem = (props: Props) => {
         />
         <IconButton
           size="small"
-          title="Open URL"
+          title={t("Open URL")}
           color="inherit"
           onClick={() => onOpenUrl?.(value)}
         >
@@ -108,7 +110,7 @@ export const WebUIItem = (props: Props) => {
         </IconButton>
         <IconButton
           size="small"
-          title="Edit"
+          title={t("Edit")}
           color="inherit"
           onClick={() => {
             setEditing(true);
@@ -119,7 +121,7 @@ export const WebUIItem = (props: Props) => {
         </IconButton>
         <IconButton
           size="small"
-          title="Delete"
+          title={t("Delete")}
           color="inherit"
           onClick={onDelete}
         >

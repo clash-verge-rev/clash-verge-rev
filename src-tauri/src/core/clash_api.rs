@@ -85,6 +85,7 @@ fn clash_client_info() -> Result<(String, HeaderMap)> {
 }
 
 /// 缩短clash的日志
+#[allow(dead_code)]
 pub fn parse_log(log: String) -> String {
     if log.starts_with("time=") && log.len() > 33 {
         return (log[33..]).to_owned();

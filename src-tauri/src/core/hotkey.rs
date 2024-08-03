@@ -43,7 +43,7 @@ impl Hotkey {
                     }
                 }
             }
-            *self.current.lock() = hotkeys.clone();
+            self.current.lock().clone_from(hotkeys);
         }
 
         Ok(())
@@ -142,7 +142,7 @@ impl Hotkey {
         });
 
         new_map.iter().for_each(|(&key, &func)| {
-            if old_map.get(key).is_none() {
+            if !old_map.contains_key(key) {
                 add_list.push((key, func));
             }
         });

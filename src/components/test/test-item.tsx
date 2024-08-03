@@ -13,7 +13,7 @@ import {
   alpha,
 } from "@mui/material";
 import { BaseLoading } from "@/components/base";
-import { LanguageTwoTone } from "@mui/icons-material";
+import { LanguageRounded } from "@mui/icons-material";
 import { Notice } from "@/components/base";
 import { TestBox } from "./test-box";
 import delayManager from "@/services/delay";
@@ -28,12 +28,18 @@ interface Props {
   onDelete: (uid: string) => void;
 }
 
-let eventListener: UnlistenFn | null = null;
+let eventListener: UnlistenFn = () => {};
 
 export const TestItem = (props: Props) => {
   const { itemData, onEdit, onDelete: onDeleteItem } = props;
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.id });
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -84,9 +90,7 @@ export const TestItem = (props: Props) => {
   ];
 
   const listenTsetEvent = async () => {
-    if (eventListener !== null) {
-      eventListener();
-    }
+    eventListener();
     eventListener = await listen("verge://test-all", () => {
       onDelay();
     });
@@ -94,13 +98,15 @@ export const TestItem = (props: Props) => {
 
   useEffect(() => {
     listenTsetEvent();
-  }, []);
+  }, [url]);
 
   return (
     <Box
       sx={{
+        position: "relative",
         transform: CSS.Transform.toString(transform),
         transition,
+        zIndex: isDragging ? "calc(infinity)" : undefined,
       }}
     >
       <TestBox
@@ -138,7 +144,7 @@ export const TestItem = (props: Props) => {
             </Box>
           ) : (
             <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <LanguageTwoTone sx={{ height: "40px" }} fontSize="large" />
+              <LanguageRounded sx={{ height: "40px" }} fontSize="large" />
             </Box>
           )}
 
@@ -175,7 +181,7 @@ export const TestItem = (props: Props) => {
                 ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
               })}
             >
-              Check
+              {t("Test")}
             </Widget>
           )}
 

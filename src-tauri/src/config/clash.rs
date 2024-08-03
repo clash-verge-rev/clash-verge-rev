@@ -13,7 +13,7 @@ pub struct IClashTemp(pub Mapping);
 impl IClashTemp {
     pub fn new() -> Self {
         let template = Self::template();
-        match dirs::clash_path().and_then(|path| help::read_merge_mapping(&path)) {
+        match dirs::clash_path().and_then(|path| help::read_mapping(&path)) {
             Ok(mut map) => {
                 template.0.keys().for_each(|key| {
                     if !map.contains_key(key) {
@@ -33,7 +33,7 @@ impl IClashTemp {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
         tun.insert("stack".into(), "gvisor".into());
-        tun.insert("device".into(), "Meta".into());
+        tun.insert("device".into(), "Mihomo".into());
         tun.insert("auto-route".into(), true.into());
         tun.insert("strict-route".into(), false.into());
         tun.insert("auto-detect-interface".into(), true.into());

@@ -134,25 +134,37 @@ export const getProxies = async () => {
 
   const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
 
-  let groups = Object.values(proxyRecord)
-    .filter((each) => each.name !== "GLOBAL" && each.all)
-    .map((each) => ({
-      ...each,
-      all: each.all!.map((item) => generateItem(item)),
-    }));
-
-  if (global?.all) {
-    let globalGroups = global.all
-      .filter((name) => proxyRecord[name]?.all)
-      .map((name) => proxyRecord[name])
-      .map((each) => ({
+  let groups: IProxyGroupItem[] = Object.values(proxyRecord).reduce<
+    IProxyGroupItem[]
+  >((acc, each) => {
+    if (each.name !== "GLOBAL" && each.all) {
+      acc.push({
         ...each,
         all: each.all!.map((item) => generateItem(item)),
-      }));
-    let globalNames = globalGroups.map((each) => each.name);
+      });
+    }
+
+    return acc;
+  }, []);
+
+  if (global?.all) {
+    let globalGroups: IProxyGroupItem[] = global.all.reduce<IProxyGroupItem[]>(
+      (acc, name) => {
+        if (proxyRecord[name]?.all) {
+          acc.push({
+            ...proxyRecord[name],
+            all: proxyRecord[name].all!.map((item) => generateItem(item)),
+          });
+        }
+        return acc;
+      },
+      []
+    );
+
+    let globalNames = new Set(globalGroups.map((each) => each.name));
     groups = groups
       .filter((group) => {
-        return !globalNames.includes(group.name);
+        return !globalNames.has(group.name);
       })
       .concat(globalGroups);
   }
@@ -258,4 +270,25 @@ export const getGroupProxyDelays = async (
     { params }
   );
   return result as any as Record<string, number>;
+};
+
+// Is debug enabled
+export const isDebugEnabled = async () => {
+  try {
+    const instance = await getAxios();
+    await instance.get("/debug/pprof");
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// GC
+export const gc = async () => {
+  try {
+    const instance = await getAxios();
+    await instance.put("/debug/gc");
+  } catch (error) {
+    console.error(`Error gcing: ${error}`);
+  }
 };

@@ -19,6 +19,7 @@ const Tag = styled("span")(({ theme }) => ({
   border: "1px solid",
   borderRadius: 4,
   borderColor: alpha(theme.palette.text.secondary, 0.35),
+  marginTop: "4px",
   marginRight: "4px",
 }));
 

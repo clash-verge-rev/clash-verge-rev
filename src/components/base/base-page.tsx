@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Typography, alpha } from "@mui/material";
+import { Typography } from "@mui/material";
 import { BaseErrorBoundary } from "./base-error-boundary";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 

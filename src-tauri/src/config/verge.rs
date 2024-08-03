@@ -1,3 +1,4 @@
+use crate::config::DEFAULT_PAC;
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use log::LevelFilter;
@@ -42,6 +43,10 @@ pub struct IVerge {
     /// common tray icon
     pub common_tray_icon: Option<bool>,
 
+    /// tray icon
+    #[cfg(target_os = "macos")]
+    pub tray_icon: Option<String>,
+
     /// menu icon
     pub menu_icon: Option<String>,
 
@@ -70,11 +75,20 @@ pub struct IVerge {
     /// enable proxy guard
     pub enable_proxy_guard: Option<bool>,
 
+    /// always use default bypass
+    pub use_default_bypass: Option<bool>,
+
     /// set system proxy bypass
     pub system_proxy_bypass: Option<String>,
 
     /// proxy guard duration
     pub proxy_guard_duration: Option<u64>,
+
+    /// use pac mode
+    pub proxy_auto_config: Option<bool>,
+
+    /// pac script content
+    pub pac_file_content: Option<String>,
 
     /// theme setting
     pub theme_setting: Option<IVergeTheme>,
@@ -130,14 +144,24 @@ pub struct IVerge {
     #[cfg(not(target_os = "windows"))]
     pub verge_redir_port: Option<u16>,
 
+    #[cfg(not(target_os = "windows"))]
+    pub verge_redir_enabled: Option<bool>,
+
     #[cfg(target_os = "linux")]
     pub verge_tproxy_port: Option<u16>,
+
+    #[cfg(target_os = "linux")]
+    pub verge_tproxy_enabled: Option<bool>,
 
     pub verge_mixed_port: Option<u16>,
 
     pub verge_socks_port: Option<u16>,
 
+    pub verge_socks_enabled: Option<bool>,
+
     pub verge_port: Option<u16>,
+
+    pub verge_http_enabled: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -177,7 +201,7 @@ impl IVerge {
 
     pub fn template() -> Self {
         Self {
-            clash_core: Some("clash-meta".into()),
+            clash_core: Some("verge-mihomo".into()),
             language: Some("zh".into()),
             theme_mode: Some("system".into()),
             #[cfg(not(target_os = "windows"))]
@@ -188,6 +212,8 @@ impl IVerge {
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_group_icon: Some(true),
+            #[cfg(target_os = "macos")]
+            tray_icon: Some("monochrome".into()),
             menu_icon: Some("monochrome".into()),
             common_tray_icon: Some(false),
             sysproxy_tray_icon: Some(false),
@@ -195,15 +221,24 @@ impl IVerge {
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_system_proxy: Some(false),
+            proxy_auto_config: Some(false),
+            pac_file_content: Some(DEFAULT_PAC.into()),
             enable_random_port: Some(false),
             #[cfg(not(target_os = "windows"))]
             verge_redir_port: Some(7895),
+            #[cfg(not(target_os = "windows"))]
+            verge_redir_enabled: Some(false),
             #[cfg(target_os = "linux")]
             verge_tproxy_port: Some(7896),
+            #[cfg(target_os = "linux")]
+            verge_tproxy_enabled: Some(false),
             verge_mixed_port: Some(7897),
             verge_socks_port: Some(7898),
+            verge_socks_enabled: Some(false),
             verge_port: Some(7899),
+            verge_http_enabled: Some(false),
             enable_proxy_guard: Some(false),
+            use_default_bypass: Some(true),
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
@@ -239,6 +274,8 @@ impl IVerge {
         patch!(traffic_graph);
         patch!(enable_memory_usage);
         patch!(enable_group_icon);
+        #[cfg(target_os = "macos")]
+        patch!(tray_icon);
         patch!(menu_icon);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
@@ -251,15 +288,24 @@ impl IVerge {
         patch!(enable_random_port);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);
+        #[cfg(not(target_os = "windows"))]
+        patch!(verge_redir_enabled);
         #[cfg(target_os = "linux")]
         patch!(verge_tproxy_port);
+        #[cfg(target_os = "linux")]
+        patch!(verge_tproxy_enabled);
         patch!(verge_mixed_port);
         patch!(verge_socks_port);
+        patch!(verge_socks_enabled);
         patch!(verge_port);
+        patch!(verge_http_enabled);
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
+        patch!(use_default_bypass);
         patch!(system_proxy_bypass);
         patch!(proxy_guard_duration);
+        patch!(proxy_auto_config);
+        patch!(pac_file_content);
 
         patch!(theme_setting);
         patch!(web_ui_list);

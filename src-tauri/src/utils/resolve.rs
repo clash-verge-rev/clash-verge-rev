@@ -1,10 +1,6 @@
-use crate::config::{IVerge, PrfOption};
-use crate::{
-    config::{Config, PrfItem},
-    core::*,
-    utils::init,
-    utils::server,
-};
+use crate::cmds::import_profile;
+use crate::config::IVerge;
+use crate::{config::Config, core::*, utils::init, utils::server};
 use crate::{log_err, trace_err};
 use anyhow::Result;
 use once_cell::sync::OnceCell;
@@ -12,6 +8,7 @@ use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::api::notification;
 use tauri::{App, AppHandle, Manager};
+#[cfg(not(target_os = "linux"))]
 use window_shadows::set_shadow;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
@@ -34,7 +31,7 @@ pub fn find_unused_port() -> Result<u16> {
 }
 
 /// handle something when start app
-pub fn resolve_setup(app: &mut App) {
+pub async fn resolve_setup(app: &mut App) {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
     let version = app.package_info().version.to_string();
@@ -73,7 +70,8 @@ pub fn resolve_setup(app: &mut App) {
 
     // 启动核心
     log::trace!("init config");
-    log_err!(Config::init_config());
+
+    log_err!(Config::init_config().await);
 
     log::trace!("launch core");
     log_err!(CoreManager::global().init());
@@ -99,16 +97,20 @@ pub fn resolve_setup(app: &mut App) {
 
     let argvs: Vec<String> = std::env::args().collect();
     if argvs.len() > 1 {
-        tauri::async_runtime::block_on(async {
-            resolve_scheme(argvs[1].to_owned()).await;
-        });
+        let param = argvs[1].as_str();
+        if param.starts_with("clash:") {
+            log_err!(resolve_scheme(argvs[1].to_owned()).await);
+        }
     }
 }
 
 /// reset system proxy
 pub fn resolve_reset() {
     log_err!(sysopt::Sysopt::global().reset_sysproxy());
-    log_err!(CoreManager::global().stop_core());
+    tauri::async_runtime::block_on(async move {
+        log_err!(CoreManager::global().stop_core().await);
+        log_err!(service::unset_dns_by_service().await);
+    });
 }
 
 /// create main window
@@ -193,11 +195,11 @@ pub fn create_window(app_handle: &AppHandle) {
                 }
                 Ok(center)
             })();
-
             if center.unwrap_or(true) {
                 trace_err!(win.center(), "set win center");
             }
 
+            #[cfg(not(target_os = "linux"))]
             trace_err!(set_shadow(&win, true), "set win shadow");
             if is_maximized {
                 trace_err!(win.maximize(), "set win maximize");
@@ -205,7 +207,6 @@ pub fn create_window(app_handle: &AppHandle) {
         }
         Err(_) => {
             log::error!("failed to create window");
-            return;
         }
     }
 }
@@ -236,31 +237,26 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
     Ok(())
 }
 
-pub async fn resolve_scheme(param: String) {
+pub async fn resolve_scheme(param: String) -> Result<()> {
     let url = param
         .trim_start_matches("clash://install-config/?url=")
         .trim_start_matches("clash://install-config?url=");
-    let option = PrfOption {
-        user_agent: None,
-        with_proxy: Some(true),
-        self_proxy: None,
-        danger_accept_invalid_certs: None,
-        update_interval: None,
-    };
-    if let Ok(item) = PrfItem::from_url(url, None, None, Some(option)).await {
-        if Config::profiles().data().append_item(item).is_ok() {
+    match import_profile(url.to_string(), None).await {
+        Ok(_) => {
             notification::Notification::new(crate::utils::dirs::APP_ID)
                 .title("Clash Verge")
                 .body("Import profile success")
                 .show()
                 .unwrap();
-        };
-    } else {
-        notification::Notification::new(crate::utils::dirs::APP_ID)
-            .title("Clash Verge")
-            .body("Import profile failed")
-            .show()
-            .unwrap();
-        log::error!("failed to parse url: {}", url);
+        }
+        Err(e) => {
+            notification::Notification::new(crate::utils::dirs::APP_ID)
+                .title("Clash Verge")
+                .body(format!("Import profile failed: {e}"))
+                .show()
+                .unwrap();
+            log::error!("Import profile failed: {e}");
+        }
     }
+    Ok(())
 }

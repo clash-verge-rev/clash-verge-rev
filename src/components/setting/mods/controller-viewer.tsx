@@ -26,7 +26,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const onSave = useLockFn(async () => {
     try {
       await patchInfo({ "external-controller": controller, secret });
-      Notice.success("Change Clash Config successfully!", 1000);
+      Notice.success(t("External Controller Address Modified"), 1000);
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 4000);
@@ -48,8 +48,8 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("External Controller")} />
           <TextField
+            autoComplete="new-password"
             size="small"
-            autoComplete="off"
             sx={{ width: 175 }}
             value={controller}
             placeholder="Required"
@@ -60,8 +60,8 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Core Secret")} />
           <TextField
+            autoComplete="new-password"
             size="small"
-            autoComplete="off"
             sx={{ width: 175 }}
             value={secret}
             placeholder={t("Recommended")}

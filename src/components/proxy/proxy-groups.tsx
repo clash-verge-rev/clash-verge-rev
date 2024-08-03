@@ -14,12 +14,14 @@ import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
 import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   mode: string;
 }
 
 export const ProxyGroups = (props: Props) => {
+  const { t } = useTranslation();
   const { mode } = props;
 
   const { renderList, onProxies, onHeadState } = useRenderList(mode);
@@ -116,13 +118,13 @@ export const ProxyGroups = (props: Props) => {
   };
 
   if (mode === "direct") {
-    return <BaseEmpty text="Direct Mode" />;
+    return <BaseEmpty text={t("clash_mode_direct")} />;
   }
 
   return (
     <Virtuoso
       ref={virtuosoRef}
-      style={{ height: "calc(100% - 12px)" }}
+      style={{ height: "calc(100% - 16px)" }}
       totalCount={renderList.length}
       increaseViewportBy={256}
       itemContent={(index) => (

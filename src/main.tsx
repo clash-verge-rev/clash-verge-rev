@@ -9,11 +9,16 @@ if (!window.ResizeObserver) {
 
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { RecoilRoot } from "recoil";
+import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { BrowserRouter } from "react-router-dom";
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
 import "./services/i18n";
+import {
+  LoadingCacheProvider,
+  ThemeModeProvider,
+  UpdateStateProvider,
+} from "./services/states";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -26,25 +31,30 @@ if (!container) {
 
 document.addEventListener("keydown", (event) => {
   // Disable WebView keyboard shortcuts
-  if (["F5", "F7"].includes(event.key)) {
-    event.preventDefault();
-  }
-  if (
-    (event.ctrlKey || event.metaKey) &&
-    ["F", "H", "P", "R", "U"].includes(event.key.toUpperCase())
-  ) {
-    event.preventDefault();
-  }
+  const disabledShortcuts =
+    ["F5", "F7"].includes(event.key) ||
+    (event.altKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) ||
+    ((event.ctrlKey || event.metaKey) &&
+      ["F", "G", "H", "J", "P", "Q", "R", "U"].includes(
+        event.key.toUpperCase()
+      ));
+  disabledShortcuts && event.preventDefault();
 });
+
+const contexts = [
+  <ThemeModeProvider />,
+  <LoadingCacheProvider />,
+  <UpdateStateProvider />,
+];
 
 createRoot(container).render(
   <React.StrictMode>
-    <RecoilRoot>
+    <ComposeContextProvider contexts={contexts}>
       <BaseErrorBoundary>
         <BrowserRouter>
           <Layout />
         </BrowserRouter>
       </BaseErrorBoundary>
-    </RecoilRoot>
+    </ComposeContextProvider>
   </React.StrictMode>
 );

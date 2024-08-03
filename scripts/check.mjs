@@ -121,8 +121,8 @@ function clashMetaAlpha() {
   const zipFile = `${name}-${META_ALPHA_VERSION}.${urlExt}`;
 
   return {
-    name: "clash-meta-alpha",
-    targetFile: `clash-meta-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "verge-mihomo-alpha",
+    targetFile: `verge-mihomo-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     downloadURL,
@@ -138,8 +138,8 @@ function clashMeta() {
   const zipFile = `${name}-${META_VERSION}.${urlExt}`;
 
   return {
-    name: "clash-meta",
-    targetFile: `clash-meta-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "verge-mihomo",
+    targetFile: `verge-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     downloadURL,
@@ -349,16 +349,6 @@ const resolveUninstall = () => {
   });
 };
 
-const resolveSetDnsScript = () =>
-  resolveResource({
-    file: "set_dns.sh",
-    downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/set_dns.sh`,
-  });
-const resolveUnSetDnsScript = () =>
-  resolveResource({
-    file: "unset_dns.sh",
-    downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/unset_dns.sh`,
-  });
 const resolveMmdb = () =>
   resolveResource({
     file: "Country.mmdb",
@@ -383,13 +373,13 @@ const resolveEnableLoopback = () =>
 const tasks = [
   // { name: "clash", func: resolveClash, retry: 5 },
   {
-    name: "clash-meta-alpha",
+    name: "verge-mihomo-alpha",
     func: () =>
       getLatestAlphaVersion().then(() => resolveSidecar(clashMetaAlpha())),
     retry: 5,
   },
   {
-    name: "clash-meta",
+    name: "verge-mihomo",
     func: () =>
       getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
     retry: 5,
@@ -398,8 +388,6 @@ const tasks = [
   { name: "service", func: resolveService, retry: 5 },
   { name: "install", func: resolveInstall, retry: 5 },
   { name: "uninstall", func: resolveUninstall, retry: 5 },
-  { name: "set_dns_script", func: resolveSetDnsScript, retry: 5 },
-  { name: "unset_dns_script", func: resolveUnSetDnsScript, retry: 5 },
   { name: "mmdb", func: resolveMmdb, retry: 5 },
   { name: "geosite", func: resolveGeosite, retry: 5 },
   { name: "geoip", func: resolveGeoIP, retry: 5 },

@@ -1,4 +1,4 @@
-function main(config) {
+function main(config, _name) {
   if (config.mode === "script") {
     config.mode = "rule";
   }

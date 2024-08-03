@@ -2,7 +2,11 @@ use super::use_lowercase;
 use anyhow::{Error, Result};
 use serde_yaml::Mapping;
 
-pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(String, String)>)> {
+pub fn use_script(
+    script: String,
+    config: Mapping,
+    name: String,
+) -> Result<(Mapping, Vec<(String, String)>)> {
     use boa_engine::{native_function::NativeFunction, Context, JsValue, Source};
     use std::sync::{Arc, Mutex};
     let mut context = Context::default();
@@ -16,7 +20,7 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
             2,
             NativeFunction::from_closure(
                 move |_: &JsValue, args: &[JsValue], context: &mut Context| {
-                    let level = args.get(0).unwrap().to_string(context)?;
+                    let level = args.first().unwrap().to_string(context)?;
                     let level = level.to_std_string().unwrap();
                     let data = args.get(1).unwrap().to_string(context)?;
                     let data = data.to_std_string().unwrap();
@@ -42,7 +46,7 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
     let code = format!(
         r#"try{{
         {script};
-        JSON.stringify(main({config_str})||'')
+        JSON.stringify(main({config_str},'{name}')||'')
       }} catch(err) {{
         `__error_flag__ ${{err.toString()}}`
       }}"#
@@ -97,7 +101,7 @@ fn test_script() {
   "#;
 
     let config = serde_yaml::from_str(config).unwrap();
-    let (config, results) = use_script(script.into(), config).unwrap();
+    let (config, results) = use_script(script.into(), config, "".to_string()).unwrap();
 
     let config_str = serde_yaml::to_string(&config).unwrap();
 

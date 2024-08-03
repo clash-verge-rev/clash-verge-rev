@@ -9,6 +9,10 @@ permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
+concurrency:
+  # only allow per workflow per commit (and not pr) to run at a time
+  group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   alpha:
@@ -33,7 +37,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.77.0
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -42,16 +46,17 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          cache-all-crates: true
+          cache-on-failure: true
 
       - name: Install Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9
           run_install: false
 
       - name: Pnpm install and check
@@ -62,9 +67,16 @@ jobs:
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: alpha
           releaseName: "Clash Verge Rev Alpha"
@@ -79,8 +91,6 @@ jobs:
         run: pnpm portable ${{ matrix.target }} --alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
   alpha-for-linux:
     strategy:
@@ -103,6 +113,7 @@ jobs:
       - name: Build for Linux
         uses: ./.github/build-for-linux
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
@@ -116,7 +127,6 @@ jobs:
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
       - name: Upload Release
-        if: startsWith(matrix.target, 'x86_64')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: alpha
@@ -124,17 +134,9 @@ jobs:
           body: "More new features are now supported."
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
-          body: "More new features are now supported."
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+          files: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   alpha-for-fixed-webview2:
     strategy:
@@ -162,16 +164,17 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          cache-all-crates: true
+          cache-on-failure: true
 
       - name: Install Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9
           run_install: false
 
       - name: Pnpm install and check
@@ -190,6 +193,7 @@ jobs:
         id: build
         uses: tauri-apps/tauri-action@v0
         env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -204,7 +208,7 @@ jobs:
           Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip.sig' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip.sig'
 
       - name: Upload Release
-        uses: MystiPanda/action-gh-release@master
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
@@ -212,6 +216,11 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
+
+      - name: Portable Bundle
+        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --alpha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   update_tag:
     name: Update tag
@@ -235,27 +244,35 @@ jobs:
 
       - run: |
           cat > release.txt << 'EOF'
-          ### 我应该下载哪个版本？
+          ## 我应该下载哪个版本？
 
-          - Windows 64位: x64-setup.exe (不支持win7)
-          - Windows 32位: x86-setup.exe (不支持win7)
-          - Windows arm64架构: arm64-setup.exe
+          ### MacOS (提示文件损坏或开发者无法验证请查看下面FAQ)
           - MacOS intel芯片: x64.dmg
-          - MacOS apple M芯片: aarch64.dmg (提示文件损坏看下面FAQ)
-          - Linux 64位: amd64.AppImage/amd64.deb
-          - Linux 32位: i386.deb
-          - Linux arm64架构: arm64.deb
-          - Linux armv7架构: armhf.deb
-          - Windows 便携版 64位: x64_portable.zip (不推荐使用，无法自动更新)
-          - Windows 便携版 32位: x86_portable.zip (不推荐使用，无法自动更新)
-          - Windows 便携版 arm64架构: arm64_portable.zip (不推荐使用，无法自动更新)
-          - Windows 内置Webview2版 64位: x64_fixed_webview2-setup.exe (体积较大，仅在无法安装webview2时使用)
-          - Windows 内置Webview2版 32位: x86_fixed_webview2-setup.exe (体积较大，仅在无法安装webview2时使用)
-          - Windows 内置Webview2版 arm64架构: arm64_fixed_webview2-setup.exe (体积较大，仅在无法安装webview2时使用)
+          - MacOS apple M芯片: aarch64.dmg
+
+          ### Linux
+          - Linux 64位: amd64.deb/amd64.rpm
+          - Linux 32位: i386.deb/i386.rpm
+          - Linux arm64架构: arm64.deb/aarch64.rpm
+          - Linux armv7架构: armhf.deb/armhfp.rpm
+
+          ### Windows (Win7 用户请查看下面FAQ中的解决方案)
+          #### 正常版本(推荐)
+          - 64位: x64-setup.exe
+          - 32位: x86-setup.exe
+          - arm64架构: arm64-setup.exe
+          #### 便携版(不推荐使用，无法自动更新)
+          - 64位: x64_portable.zip
+          - 32位: x86_portable.zip
+          - arm64架构: arm64_portable.zip
+          #### 内置Webview2版(体积较大，仅在企业版系统或Win7无法安装webview2时使用)
+          - 64位: x64_fixed_webview2-setup.exe
+          - 32位: x86_fixed_webview2-setup.exe
+          - arm64架构: arm64_fixed_webview2-setup.exe
 
           ### FAQ
 
-          - [FAQ](https://clash-verge-rev.github.io/faq/install.html)
+          - [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
 
           Created at  ${{ env.BUILDTIME }}.
           EOF

@@ -23,7 +23,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
     stack: "gvisor",
-    device: "Meta",
+    device: "Mihomo",
     autoRoute: true,
     autoDetectInterface: true,
     dnsHijack: ["any:53"],
@@ -36,7 +36,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setValues({
         stack: clash?.tun.stack ?? "gvisor",
-        device: clash?.tun.device ?? "Meta",
+        device: clash?.tun.device ?? "Mihomo",
         autoRoute: clash?.tun["auto-route"] ?? true,
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
         dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53"],
@@ -51,7 +51,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       let tun = {
         stack: values.stack,
-        device: values.device === "" ? "Meta" : values.device,
+        device: values.device === "" ? "Mihomo" : values.device,
         "auto-route": values.autoRoute,
         "auto-detect-interface": values.autoDetectInterface,
         "dns-hijack": values.dnsHijack[0] === "" ? [] : values.dnsHijack,
@@ -68,7 +68,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       );
       try {
         await enhanceProfiles();
-        Notice.success("Refresh clash config", 1000);
+        Notice.success(t("Settings Applied"), 1000);
       } catch (err: any) {
         Notice.error(err.message || err.toString(), 3000);
       }
@@ -90,7 +90,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             onClick={async () => {
               let tun = {
                 stack: "gvisor",
-                device: "Meta",
+                device: "Mihomo",
                 "auto-route": true,
                 "auto-detect-interface": true,
                 "dns-hijack": ["any:53"],
@@ -99,7 +99,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
               };
               setValues({
                 stack: "gvisor",
-                device: "Meta",
+                device: "Mihomo",
                 autoRoute: true,
                 autoDetectInterface: true,
                 dnsHijack: ["any:53"],
@@ -144,14 +144,14 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Device")} />
           <TextField
+            autoComplete="new-password"
             size="small"
-            autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck="false"
             sx={{ width: 250 }}
             value={values.device}
-            placeholder="Meta"
+            placeholder="Mihomo"
             onChange={(e) =>
               setValues((v) => ({ ...v, device: e.target.value }))
             }
@@ -190,8 +190,8 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("DNS Hijack")} />
           <TextField
+            autoComplete="new-password"
             size="small"
-            autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck="false"
@@ -207,9 +207,9 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("MTU")} />
           <TextField
+            autoComplete="new-password"
             size="small"
             type="number"
-            autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck="false"

@@ -17,9 +17,8 @@ import { ProxyItem } from "./proxy-item";
 import { ProxyItemMini } from "./proxy-item-mini";
 import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
-import { useRecoilState } from "recoil";
-import { atomThemeMode } from "@/services/states";
-import { useEffect, useState } from "react";
+import { useThemeMode } from "@/services/states";
+import { useEffect, useMemo, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { downloadIconCache } from "@/services/cmds";
 
@@ -38,7 +37,7 @@ export const ProxyRender = (props: RenderProps) => {
   const { type, group, headState, proxy, proxyCol } = item;
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;
-  const [mode] = useRecoilState(atomThemeMode);
+  const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
   const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
   const [iconCachePath, setIconCachePath] = useState("");
@@ -130,6 +129,7 @@ export const ProxyRender = (props: RenderProps) => {
     return (
       <ProxyHead
         sx={{ pl: 2, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
+        url={group.testUrl}
         groupName={group.name}
         headState={headState!}
         onLocation={() => onLocation(group)}
@@ -171,6 +171,18 @@ export const ProxyRender = (props: RenderProps) => {
   }
 
   if (type === 4 && !group.hidden) {
+    const proxyColItemsMemo = useMemo(() => {
+      return proxyCol?.map((proxy) => (
+        <ProxyItemMini
+          key={item.key + proxy.name}
+          group={group}
+          proxy={proxy!}
+          selected={group.now === proxy.name}
+          showType={headState?.showType}
+          onClick={() => onChangeProxy(group, proxy!)}
+        />
+      ));
+    }, [proxyCol, group, headState]);
     return (
       <Box
         sx={{
@@ -183,16 +195,7 @@ export const ProxyRender = (props: RenderProps) => {
           gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
         }}
       >
-        {proxyCol?.map((proxy) => (
-          <ProxyItemMini
-            key={item.key + proxy.name}
-            group={group}
-            proxy={proxy!}
-            selected={group.now === proxy.name}
-            showType={headState?.showType}
-            onClick={() => onChangeProxy(group, proxy!)}
-          />
-        ))}
+        {proxyColItemsMemo}
       </Box>
     );
   }

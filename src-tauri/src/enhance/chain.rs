@@ -1,3 +1,4 @@
+use super::SeqMap;
 use crate::{
     config::PrfItem,
     utils::{dirs, help},
@@ -15,6 +16,9 @@ pub struct ChainItem {
 pub enum ChainType {
     Merge(Mapping),
     Script(String),
+    Rules(SeqMap),
+    Proxies(SeqMap),
+    Groups(SeqMap),
 }
 
 #[derive(Debug, Clone)]
@@ -43,7 +47,19 @@ impl From<&PrfItem> for Option<ChainItem> {
             }),
             "merge" => Some(ChainItem {
                 uid,
-                data: ChainType::Merge(help::read_merge_mapping(&path).ok()?),
+                data: ChainType::Merge(help::read_mapping(&path).ok()?),
+            }),
+            "rules" => Some(ChainItem {
+                uid,
+                data: ChainType::Rules(help::read_seq_map(&path).ok()?),
+            }),
+            "proxies" => Some(ChainItem {
+                uid,
+                data: ChainType::Proxies(help::read_seq_map(&path).ok()?),
+            }),
+            "groups" => Some(ChainItem {
+                uid,
+                data: ChainType::Groups(help::read_seq_map(&path).ok()?),
             }),
             _ => None,
         }
@@ -88,13 +104,13 @@ impl ChainItem {
 impl ChainSupport {
     pub fn is_support(&self, core: Option<&String>) -> bool {
         match core {
-            Some(core) => match (self, core.as_str()) {
-                (ChainSupport::All, _) => true,
-                (ChainSupport::Clash, "clash") => true,
-                (ChainSupport::ClashMeta, "clash-meta") => true,
-                (ChainSupport::ClashMetaAlpha, "clash-meta-alpha") => true,
-                _ => false,
-            },
+            Some(core) => matches!(
+                (self, core.as_str()),
+                (ChainSupport::All, _)
+                    | (ChainSupport::Clash, "clash")
+                    | (ChainSupport::ClashMeta, "verge-mihomo")
+                    | (ChainSupport::ClashMetaAlpha, "verge-mihomo-alpha")
+            ),
             None => true,
         }
     }

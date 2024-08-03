@@ -1,3 +1,4 @@
+use crate::{core::service, log_err};
 use serde_yaml::{Mapping, Value};
 
 macro_rules! revise {
@@ -17,7 +18,7 @@ macro_rules! append {
     };
 }
 
-pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
+pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
 
@@ -34,60 +35,10 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     revise!(config, "tun", tun_val);
 
     if enable {
-        #[cfg(target_os = "macos")]
-        {
-            use crate::utils::dirs;
-            use tauri::api::process::Command;
-            log::info!(target: "app", "try to set system dns");
-            let resource_dir = dirs::app_resources_dir().unwrap();
-            let script = resource_dir.join("set_dns.sh");
-            let script = script.to_string_lossy();
-            match Command::new("bash")
-                .args([script])
-                .current_dir(resource_dir)
-                .status()
-            {
-                Ok(status) => {
-                    if status.success() {
-                        log::info!(target: "app", "set system dns successfully");
-                    } else {
-                        let code = status.code().unwrap_or(-1);
-                        log::error!(target: "app", "set system dns failed: {code}");
-                    }
-                }
-                Err(err) => {
-                    log::error!(target: "app", "set system dns failed: {err}");
-                }
-            }
-        }
+        log_err!(service::set_dns_by_service().await);
         use_dns_for_tun(config)
     } else {
-        #[cfg(target_os = "macos")]
-        {
-            use crate::utils::dirs;
-            use tauri::api::process::Command;
-            log::info!(target: "app", "try to unset system dns");
-            let resource_dir = dirs::app_resources_dir().unwrap();
-            let script = resource_dir.join("unset_dns.sh");
-            let script = script.to_string_lossy();
-            match Command::new("bash")
-                .args([script])
-                .current_dir(resource_dir)
-                .status()
-            {
-                Ok(status) => {
-                    if status.success() {
-                        log::info!(target: "app", "unset system dns successfully");
-                    } else {
-                        let code = status.code().unwrap_or(-1);
-                        log::error!(target: "app", "unset system dns failed: {code}");
-                    }
-                }
-                Err(err) => {
-                    log::error!(target: "app", "unset system dns failed: {err}");
-                }
-            }
-        }
+        log_err!(service::unset_dns_by_service().await);
         config
     }
 }

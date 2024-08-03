@@ -1,20 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import {
-  ArrowDownward,
-  ArrowUpward,
-  MemoryOutlined,
+  ArrowDownwardRounded,
+  ArrowUpwardRounded,
+  MemoryRounded,
 } from "@mui/icons-material";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
-import { useLogSetup } from "./use-log-setup";
+import { useLogData } from "@/hooks/use-log-data";
 import { useVisibility } from "@/hooks/use-visibility";
-import { useWebsocket } from "@/hooks/use-websocket";
 import parseTraffic from "@/utils/parse-traffic";
+import useSWRSubscription from "swr/subscription";
+import { createSockette } from "@/utils/websocket";
+import { useTranslation } from "react-i18next";
+import { isDebugEnabled, gc } from "@/services/api";
+
+interface MemoryUsage {
+  inuse: number;
+  oslimit?: number;
+}
 
 // setup the traffic
 export const LayoutTraffic = () => {
+  const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
 
@@ -22,62 +31,104 @@ export const LayoutTraffic = () => {
   const trafficGraph = verge?.traffic_graph ?? true;
 
   const trafficRef = useRef<TrafficRef>(null);
-  const [traffic, setTraffic] = useState({ up: 0, down: 0 });
-  const [memory, setMemory] = useState({ inuse: 0 });
   const pageVisible = useVisibility();
-
-  // setup log ws during layout
-  useLogSetup();
-
-  const trafficWs = useWebsocket(
-    (event) => {
-      const data = JSON.parse(event.data) as ITrafficItem;
-      trafficRef.current?.appendData(data);
-      setTraffic(data);
-    },
-    { onError: () => setTraffic({ up: 0, down: 0 }), errorCount: 10 }
-  );
+  const [isDebug, setIsDebug] = useState(false);
 
   useEffect(() => {
-    if (!clashInfo || !pageVisible) return;
+    isDebugEnabled().then((flag) => setIsDebug(flag));
+    return () => {};
+  }, [isDebug]);
 
-    const { server = "", secret = "" } = clashInfo;
-    trafficWs.connect(
-      `ws://${server}/traffic?token=${encodeURIComponent(secret)}`
-    );
-    return () => trafficWs.disconnect();
-  }, [clashInfo, pageVisible]);
+  // https://swr.vercel.app/docs/subscription#deduplication
+  // useSWRSubscription auto deduplicates to one subscription per key per entire app
+  // So we can simply invoke it here acting as preconnect
+  useLogData();
+
+  const { data: traffic = { up: 0, down: 0 } } = useSWRSubscription<
+    ITrafficItem,
+    any,
+    "getRealtimeTraffic" | null
+  >(
+    clashInfo && pageVisible ? "getRealtimeTraffic" : null,
+    (_key, { next }) => {
+      const { server = "", secret = "" } = clashInfo!;
+
+      const s = createSockette(
+        `ws://${server}/traffic?token=${encodeURIComponent(secret)}`,
+        {
+          onmessage(event) {
+            const data = JSON.parse(event.data) as ITrafficItem;
+            trafficRef.current?.appendData(data);
+            next(null, data);
+          },
+          onerror(event) {
+            this.close();
+            next(event, { up: 0, down: 0 });
+          },
+        }
+      );
+
+      return () => {
+        s.close();
+      };
+    },
+    {
+      fallbackData: { up: 0, down: 0 },
+      keepPreviousData: true,
+    }
+  );
 
   /* --------- meta memory information --------- */
-  const isMetaCore = verge?.clash_core?.includes("clash-meta");
-  const displayMemory = isMetaCore && (verge?.enable_memory_usage ?? true);
 
-  const memoryWs = useWebsocket(
-    (event) => {
-      setMemory(JSON.parse(event.data));
+  const displayMemory = verge?.enable_memory_usage ?? true;
+
+  const { data: memory = { inuse: 0 } } = useSWRSubscription<
+    MemoryUsage,
+    any,
+    "getRealtimeMemory" | null
+  >(
+    clashInfo && pageVisible && displayMemory ? "getRealtimeMemory" : null,
+    (_key, { next }) => {
+      const { server = "", secret = "" } = clashInfo!;
+
+      const s = createSockette(
+        `ws://${server}/memory?token=${encodeURIComponent(secret)}`,
+        {
+          onmessage(event) {
+            const data = JSON.parse(event.data) as MemoryUsage;
+            next(null, data);
+          },
+          onerror(event) {
+            this.close();
+            next(event, { inuse: 0 });
+          },
+        }
+      );
+
+      return () => {
+        s.close();
+      };
     },
-    { onError: () => setMemory({ inuse: 0 }), errorCount: 10 }
+    {
+      fallbackData: { inuse: 0 },
+      keepPreviousData: true,
+    }
   );
-
-  useEffect(() => {
-    if (!clashInfo || !pageVisible || !displayMemory) return;
-    const { server = "", secret = "" } = clashInfo;
-    memoryWs.connect(
-      `ws://${server}/memory?token=${encodeURIComponent(secret)}`
-    );
-    return () => memoryWs.disconnect();
-  }, [clashInfo, pageVisible, displayMemory]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
   const [inuse, inuseUnit] = parseTraffic(memory.inuse);
 
+  const boxStyle: any = {
+    display: "flex",
+    alignItems: "center",
+    whiteSpace: "nowrap",
+  };
   const iconStyle: any = {
     sx: { mr: "8px", fontSize: 16 },
   };
   const valStyle: any = {
     component: "span",
-    // color: "primary",
     textAlign: "center",
     sx: { flex: "1 1 56px", userSelect: "none" },
   };
@@ -90,16 +141,19 @@ export const LayoutTraffic = () => {
   };
 
   return (
-    <Box position="relative" onClick={trafficRef.current?.toggleStyle}>
+    <Box position="relative">
       {trafficGraph && pageVisible && (
-        <div style={{ width: "100%", height: 60, marginBottom: 6 }}>
+        <div
+          style={{ width: "100%", height: 60, marginBottom: 6 }}
+          onClick={trafficRef.current?.toggleStyle}
+        >
           <TrafficGraph ref={trafficRef} />
         </div>
       )}
 
       <Box display="flex" flexDirection="column" gap={0.75}>
-        <Box display="flex" alignItems="center" whiteSpace="nowrap">
-          <ArrowUpward
+        <Box title={t("Upload Speed")} {...boxStyle}>
+          <ArrowUpwardRounded
             {...iconStyle}
             color={+up > 0 ? "secondary" : "disabled"}
           />
@@ -109,8 +163,8 @@ export const LayoutTraffic = () => {
           <Typography {...unitStyle}>{upUnit}/s</Typography>
         </Box>
 
-        <Box display="flex" alignItems="center" whiteSpace="nowrap">
-          <ArrowDownward
+        <Box title={t("Download Speed")} {...boxStyle}>
+          <ArrowDownwardRounded
             {...iconStyle}
             color={+down > 0 ? "primary" : "disabled"}
           />
@@ -122,12 +176,15 @@ export const LayoutTraffic = () => {
 
         {displayMemory && (
           <Box
-            display="flex"
-            alignItems="center"
-            whiteSpace="nowrap"
-            title="Memory Usage"
+            title={t(isDebug ? "Memory Cleanup" : "Memory Usage")}
+            {...boxStyle}
+            sx={{ cursor: isDebug ? "pointer" : "auto" }}
+            color={isDebug ? "success.main" : "disabled"}
+            onClick={async () => {
+              isDebug && (await gc());
+            }}
           >
-            <MemoryOutlined {...iconStyle} color="disabled" />
+            <MemoryRounded {...iconStyle} />
             <Typography {...valStyle}>{inuse}</Typography>
             <Typography {...unitStyle}>{inuseUnit}</Typography>
           </Box>

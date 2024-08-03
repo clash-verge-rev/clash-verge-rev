@@ -1,15 +1,25 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { List, Button, Select, MenuItem } from "@mui/material";
+import {
+  List,
+  Button,
+  Select,
+  MenuItem,
+  styled,
+  ListItem,
+  ListItemText,
+} from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
-import { SettingItem } from "./setting-comp";
 import { GuardState } from "./guard-state";
 import { open as openDialog } from "@tauri-apps/api/dialog";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { join } from "@tauri-apps/api/path";
 import { exists } from "@tauri-apps/api/fs";
+import getSystem from "@/utils/get-system";
+
+const OS = getSystem();
 
 export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -69,12 +79,13 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
       title={t("Layout Setting")}
       contentSx={{ width: 450 }}
       disableOk
-      cancelBtn={t("Cancel")}
+      cancelBtn={t("Close")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
       <List>
-        <SettingItem label={t("Traffic Graph")}>
+        <Item>
+          <ListItemText primary={t("Traffic Graph")} />
           <GuardState
             value={verge?.traffic_graph ?? true}
             valueProps="checked"
@@ -85,9 +96,10 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           >
             <Switch edge="end" />
           </GuardState>
-        </SettingItem>
+        </Item>
 
-        <SettingItem label={t("Memory Usage")}>
+        <Item>
+          <ListItemText primary={t("Memory Usage")} />
           <GuardState
             value={verge?.enable_memory_usage ?? true}
             valueProps="checked"
@@ -98,9 +110,10 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           >
             <Switch edge="end" />
           </GuardState>
-        </SettingItem>
+        </Item>
 
-        <SettingItem label={t("Proxy Group Icon")}>
+        <Item>
+          <ListItemText primary={t("Proxy Group Icon")} />
           <GuardState
             value={verge?.enable_group_icon ?? true}
             valueProps="checked"
@@ -111,9 +124,10 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           >
             <Switch edge="end" />
           </GuardState>
-        </SettingItem>
+        </Item>
 
-        <SettingItem label={t("Menu Icon")}>
+        <Item>
+          <ListItemText primary={t("Nav Icon")} />
           <GuardState
             value={verge?.menu_icon ?? "monochrome"}
             onCatch={onError}
@@ -127,9 +141,31 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               <MenuItem value="disable">{t("Disable")}</MenuItem>
             </Select>
           </GuardState>
-        </SettingItem>
+        </Item>
 
-        <SettingItem label={t("Common Tray Icon")}>
+        {OS === "macos" && (
+          <Item>
+            <ListItemText primary={t("Tray Icon")} />
+            <GuardState
+              value={verge?.tray_icon ?? "monochrome"}
+              onCatch={onError}
+              onFormat={(e: any) => e.target.value}
+              onChange={(e) => onChangeData({ tray_icon: e })}
+              onGuard={(e) => patchVerge({ tray_icon: e })}
+            >
+              <Select
+                size="small"
+                sx={{ width: 140, "> div": { py: "7.5px" } }}
+              >
+                <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>
+                <MenuItem value="colorful">{t("Colorful")}</MenuItem>
+              </Select>
+            </GuardState>
+          </Item>
+        )}
+
+        <Item>
+          <ListItemText primary={t("Common Tray Icon")} />
           <GuardState
             value={verge?.common_tray_icon}
             onCatch={onError}
@@ -172,9 +208,10 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               {verge?.common_tray_icon ? t("Clear") : t("Browse")}
             </Button>
           </GuardState>
-        </SettingItem>
+        </Item>
 
-        <SettingItem label={t("System Proxy Tray Icon")}>
+        <Item>
+          <ListItemText primary={t("System Proxy Tray Icon")} />
           <GuardState
             value={verge?.sysproxy_tray_icon}
             onCatch={onError}
@@ -217,9 +254,10 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               {verge?.sysproxy_tray_icon ? t("Clear") : t("Browse")}
             </Button>
           </GuardState>
-        </SettingItem>
+        </Item>
 
-        <SettingItem label={t("Tun Tray Icon")}>
+        <Item>
+          <ListItemText primary={t("Tun Tray Icon")} />
           <GuardState
             value={verge?.tun_tray_icon}
             onCatch={onError}
@@ -260,8 +298,12 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               {verge?.tun_tray_icon ? t("Clear") : t("Browse")}
             </Button>
           </GuardState>
-        </SettingItem>
+        </Item>
       </List>
     </BaseDialog>
   );
 });
+
+const Item = styled(ListItem)(() => ({
+  padding: "5px 2px",
+}));

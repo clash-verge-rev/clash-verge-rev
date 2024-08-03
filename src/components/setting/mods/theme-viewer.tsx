@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import {
+  Button,
   List,
   ListItem,
   ListItemText,
@@ -12,11 +13,14 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { EditorViewer } from "@/components/profile/editor-viewer";
+import { EditRounded } from "@mui/icons-material";
 
 export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
   const { verge, patchVerge } = useVerge();
   const { theme_setting } = verge ?? {};
   const [theme, setTheme] = useState(theme_setting || {});
@@ -77,30 +81,30 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       title={t("Theme Setting")}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
-      contentSx={{ width: 400, maxHeight: 300, overflow: "auto", pb: 0 }}
+      contentSx={{ width: 400, maxHeight: 505, overflow: "auto", pb: 0 }}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <List sx={{ pt: 0 }}>
-        {renderItem("Primary Color", "primary_color")}
+        {renderItem(t("Primary Color"), "primary_color")}
 
-        {renderItem("Secondary Color", "secondary_color")}
+        {renderItem(t("Secondary Color"), "secondary_color")}
 
-        {renderItem("Primary Text", "primary_text")}
+        {renderItem(t("Primary Text"), "primary_text")}
 
-        {renderItem("Secondary Text", "secondary_text")}
+        {renderItem(t("Secondary Text"), "secondary_text")}
 
-        {renderItem("Info Color", "info_color")}
+        {renderItem(t("Info Color"), "info_color")}
 
-        {renderItem("Error Color", "error_color")}
+        {renderItem(t("Warning Color"), "warning_color")}
 
-        {renderItem("Warning Color", "warning_color")}
+        {renderItem(t("Error Color"), "error_color")}
 
-        {renderItem("Success Color", "success_color")}
+        {renderItem(t("Success Color"), "success_color")}
 
         <Item>
-          <ListItemText primary="Font Family" />
+          <ListItemText primary={t("Font Family")} />
           <TextField
             {...textProps}
             value={theme.font_family ?? ""}
@@ -108,15 +112,32 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
             onKeyDown={(e) => e.key === "Enter" && onSave()}
           />
         </Item>
-
         <Item>
-          <ListItemText primary="CSS Injection" />
-          <TextField
-            {...textProps}
-            value={theme.css_injection ?? ""}
-            onChange={handleChange("css_injection")}
-            onKeyDown={(e) => e.key === "Enter" && onSave()}
-          />
+          <ListItemText primary={t("CSS Injection")} />
+          <Button
+            startIcon={<EditRounded />}
+            variant="outlined"
+            onClick={() => {
+              setEditorOpen(true);
+            }}
+          >
+            {t("Edit")} CSS
+          </Button>
+          {editorOpen && (
+            <EditorViewer
+              open={true}
+              title={`${t("Edit")} CSS`}
+              initialData={Promise.resolve(theme.css_injection ?? "")}
+              language="css"
+              onSave={(_prev, curr) => {
+                theme.css_injection = curr;
+                handleChange("css_injection");
+              }}
+              onClose={() => {
+                setEditorOpen(false);
+              }}
+            />
+          )}
         </Item>
       </List>
     </BaseDialog>

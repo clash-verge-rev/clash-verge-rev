@@ -6,11 +6,18 @@ use crate::{
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
+use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
-use sysproxy::Sysproxy;
+use sysproxy::{Autoproxy, Sysproxy};
 use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
+
+#[tauri::command]
+pub fn copy_clash_env(app_handle: tauri::AppHandle) -> CmdResult {
+    feat::copy_clash_env(&app_handle);
+    Ok(())
+}
 
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
@@ -181,20 +188,10 @@ pub async fn restart_sidecar() -> CmdResult {
     wrap_err!(CoreManager::global().run_core().await)
 }
 
-#[tauri::command]
-pub fn grant_permission(_core: String) -> CmdResult {
-    #[cfg(any(target_os = "macos", target_os = "linux"))]
-    return wrap_err!(manager::grant_permission(_core));
-
-    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
-    return Err("Unsupported target".into());
-}
-
 /// get the system proxy
 #[tauri::command]
 pub fn get_sys_proxy() -> CmdResult<Mapping> {
     let current = wrap_err!(Sysproxy::get_system_proxy())?;
-
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
     map.insert(
@@ -202,6 +199,18 @@ pub fn get_sys_proxy() -> CmdResult<Mapping> {
         format!("{}:{}", current.host, current.port).into(),
     );
     map.insert("bypass".into(), current.bypass.into());
+
+    Ok(map)
+}
+
+/// get the system proxy
+#[tauri::command]
+pub fn get_auto_proxy() -> CmdResult<Mapping> {
+    let current = wrap_err!(Autoproxy::get_auto_proxy())?;
+
+    let mut map = Mapping::new();
+    map.insert("enable".into(), current.enable.into());
+    map.insert("url".into(), current.url.into());
 
     Ok(map)
 }
@@ -316,8 +325,38 @@ pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
             Err(err) => Err(err.to_string()),
         }
     } else {
-        return Err("file not found".to_string());
+        Err("file not found".to_string())
     }
+}
+
+#[tauri::command]
+pub fn get_network_interfaces() -> Vec<String> {
+    use sysinfo::Networks;
+    let mut result = Vec::new();
+    let networks = Networks::new_with_refreshed_list();
+    for (interface_name, _) in &networks {
+        result.push(interface_name.clone());
+    }
+    return result;
+}
+
+#[tauri::command]
+pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
+    use network_interface::NetworkInterface;
+    use network_interface::NetworkInterfaceConfig;
+
+    let names = get_network_interfaces();
+    let interfaces = wrap_err!(NetworkInterface::show())?;
+
+    let mut result = Vec::new();
+
+    for interface in interfaces {
+        if names.contains(&interface.name) {
+            result.push(interface);
+        }
+    }
+
+    Ok(result)
 }
 
 #[tauri::command]
@@ -350,13 +389,13 @@ pub mod service {
     }
 
     #[tauri::command]
-    pub async fn install_service() -> CmdResult {
-        wrap_err!(service::install_service().await)
+    pub async fn install_service(passwd: String) -> CmdResult {
+        wrap_err!(service::install_service(passwd).await)
     }
 
     #[tauri::command]
-    pub async fn uninstall_service() -> CmdResult {
-        wrap_err!(service::uninstall_service().await)
+    pub async fn uninstall_service(passwd: String) -> CmdResult {
+        wrap_err!(service::uninstall_service(passwd).await)
     }
 }
 
