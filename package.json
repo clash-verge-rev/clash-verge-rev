@@ -11,6 +11,8 @@
     "web:build": "tsc && vite build",
     "web:serve": "vite preview",
     "check": "node scripts/check.mjs",
+    "check-offline": "node scripts/check-offline.mjs",
+    "download-offline-dependencies": "node scripts/download-offline-dependencies.mjs",
     "updater": "node scripts/updater.mjs",
     "updater-fixed-webview2": "node scripts/updater-fixed-webview2.mjs",
     "portable": "node scripts/portable.mjs",

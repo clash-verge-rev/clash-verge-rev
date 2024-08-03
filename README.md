@@ -27,20 +27,6 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
 ### TG Group: [@clash_verge_rev](https://t.me/clash_verge_rev)
 
-## Promotion
-
-[狗狗加速 —— 技术流机场 Doggygo VPN](https://狗狗加速.com)
-
-- 高性能海外机场，免费试用，优惠套餐，解锁流媒体，全球首家支持 Hysteria 协议。
-- 使用 Clash Verge 专属邀请链接注册送 3 天，每天 1G 流量免费试用：https://verge.狗狗加速.com/#/register?code=oaxsAGo6
-- Clash Verge 专属 8 折优惠码: verge20 (仅有 500 份)
-- 优惠套餐每月仅需 15.8 元，160G 流量，年付 8 折
-- 海外团队，无跑路风险，高达 50% 返佣
-- 集群负载均衡设计，高速专线(兼容老客户端)，极低延迟，无视晚高峰，4K 秒开
-- 全球首家 Hysteria 协议机场，现已上线更快的 `Hysteria2` 协议(Clash Verge 客户端最佳搭配)
-- 解锁流媒体及 ChatGPT
-- 官网：https://狗狗加速.com
-
 ## Features
 
 - Since the clash core has been removed. The project no longer maintains the clash core, but only the Clash Meta core.
@@ -57,13 +43,27 @@ Refer to [Doc FAQ Page](https://clash-verge-rev.github.io/faq/windows.html)
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
+简单来说就是要先准备好 `nodejs` 和 `rust` 环境，然后搭好梯子，就可以按照下面的命令在本地运行了。
+
 To run the development server, execute the following commands after all prerequisites for **Tauri** are installed:
 
 ```shell
+npm install pnpm -g
 pnpm i
 pnpm run check
 pnpm dev
 ```
+
+如果网络不好，或无法下载可以使用以下方式
+
+```shell
+npm install pnpm -g
+pnpm i
+pnpm run check-offline
+pnpm dev
+```
+
+[点击此处查看](./offline-dependencies/README.md)都有哪些离线的依赖服务
 
 ## Contributions
 
