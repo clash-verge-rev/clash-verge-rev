@@ -14,9 +14,9 @@
 | https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat                                         | `../src-tauri/resources/geosite.dat`                                                 |
 | https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb                                        | `../src-tauri/resources/Country.mmdb`                                                |
 | https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat                                           | `../src-tauri/resources/geoip.dat`                                                   |
-| https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/mihomo-windows-amd64-compatible-alpha-5dd883e.zip | `../src-tauri/sidecar/clash-meta-alpha-x86_64-pc-windows-msvc.exe`                   |
-| https://github.com/MetaCubeX/mihomo/releases/download/v1.18.4/mihomo-windows-amd64-compatible-v1.18.4.zip                | `../src-tauri/sidecar/clash-meta-x86_64-pc-windows-msvc.exe`                         |
+| https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/mihomo-windows-amd64-compatible-alpha-e7e1400.zip | `../src-tauri/sidecar/verge-mihomo-alpha-x86_64-pc-windows-msvc.exe`                 |
+| https://github.com/MetaCubeX/mihomo/releases/download/v1.18.7/mihomo-windows-amd64-compatible-v1.18.7.zip                | `../src-tauri/sidecar/verge-mihomo-x86_64-pc-windows-msvc.exe`                       |
 
-- `dependencies/set-dns-script-main.zip` 是 `https://github.com/clash-verge-rev/set-dns-script` 仓库 `main` 分支的源码。
-- `dependencies/clash-verge-service-main.zip` 是 `https://github.com/clash-verge-rev/clash-verge-service` 仓库 `main` 分支的源码，若无对应的编译产物，可自行编译。
-- `clash-meta-alpha`、`clash-meta` 和 `clash-verge-service` 需要自行根据系统环境下载对应的文件。
+- `offline-dependencies/set-dns-script-main.zip` 是 `https://github.com/clash-verge-rev/set-dns-script` 仓库 `main` 分支的源码。
+- `offline-dependencies/clash-verge-service-main.zip` 是 `https://github.com/clash-verge-rev/clash-verge-service` 仓库 `main` 分支的源码，若无对应的编译产物，可自行编译。
+- `verge-mihomo-alpha`、`verge-mihomo` 和 `clash-verge-service` 需要自行根据系统环境下载对应的文件。

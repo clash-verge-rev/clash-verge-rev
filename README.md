@@ -43,6 +43,8 @@ Refer to [Doc FAQ Page](https://clash-verge-rev.github.io/faq/windows.html)
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
+简单来说就是要先准备好 `nodejs` 和 `rust` 环境，然后搭好梯子，就可以按照下面的命令在本地运行了。
+
 To run the development server, execute the following commands after all prerequisites for **Tauri** are installed:
 
 ```shell
@@ -60,6 +62,8 @@ pnpm i
 pnpm run check-offline
 pnpm dev
 ```
+
+[点击此处查看](./offline-dependencies/README.md)都有哪些离线的依赖服务
 
 ## Contributions
 

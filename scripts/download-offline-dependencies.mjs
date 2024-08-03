@@ -31,7 +31,7 @@ let META_ALPHA_VERSION;
 
 // Fetch the latest alpha release version from the version.txt file
 async function getLatestAlphaVersion() {
-  const dir = path.join(STORE_DIR, "sidecar/clash-meta-alpha");
+  const dir = path.join(STORE_DIR, "sidecar/verge-mihomo-alpha");
   try {
     const response = await fetch(META_ALPHA_VERSION_URL, {
       ...proxyOptions,
@@ -46,10 +46,12 @@ async function getLatestAlphaVersion() {
     }
     fs.mkdirpSync(dir);
     fs.writeFileSync(path.join(dir, "version.txt"), META_ALPHA_VERSION);
-    console.log(`Latest alpha release version: ${META_ALPHA_VERSION}`);
+    console.log(
+      `Latest verge-mihomo-alpha release version: ${META_ALPHA_VERSION}`
+    );
   } catch (error) {
     console.error(
-      "Error fetching latest alpha release version:",
+      "Error fetching latest verge-mihomo-alpha release version:",
       error.message
     );
     process.exit(1);
@@ -61,7 +63,7 @@ function clashMetaAlpha(name) {
   const downloadURL = `${META_ALPHA_URL_PREFIX}/${name}-${META_ALPHA_VERSION}.${urlExt}`;
 
   return resolveResource({
-    dir: "sidecar/clash-meta-alpha",
+    dir: "sidecar/verge-mihomo-alpha",
     file: `${name}-${META_ALPHA_VERSION}.${urlExt}`,
     downloadURL,
   });
@@ -72,7 +74,7 @@ let META_VERSION;
 
 // Fetch the latest release version from the version.txt file
 async function getLatestReleaseVersion() {
-  const dir = path.join(STORE_DIR, "sidecar/clash-meta");
+  const dir = path.join(STORE_DIR, "sidecar/verge-mihomo");
   try {
     const response = await fetch(META_VERSION_URL, {
       ...proxyOptions,
@@ -87,9 +89,12 @@ async function getLatestReleaseVersion() {
     }
     fs.mkdirpSync(dir);
     fs.writeFileSync(path.join(dir, "version.txt"), META_VERSION);
-    console.log(`Latest release version: ${META_VERSION}`);
+    console.log(`Latest verge-mihomo release version: ${META_VERSION}`);
   } catch (error) {
-    console.error("Error fetching latest release version:", error.message);
+    console.error(
+      "Error fetching latest verge-mihomo release version:",
+      error.message
+    );
     process.exit(1);
   }
 }
@@ -99,7 +104,7 @@ function clashMeta(name) {
   const downloadURL = `${META_URL_PREFIX}/${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
 
   return resolveResource({
-    dir: "sidecar/clash-meta",
+    dir: "sidecar/verge-mihomo",
     file: `${name}-${META_VERSION}.${urlExt}`,
     downloadURL,
   });
@@ -182,6 +187,19 @@ const resolveClashVergeService = (platform, name) => {
   });
 };
 
+const resolveClashVergeServiceCode = () =>
+  resolveResource({
+    dir: "",
+    file: "clash-verge-service-main.zip",
+    downloadURL: `https://codeload.github.com/clash-verge-rev/clash-verge-service/zip/refs/heads/main`,
+  });
+
+const resolveSetDnsScriptCode = () =>
+  resolveResource({
+    dir: "",
+    file: "set-dns-script-main.zip",
+    downloadURL: `https://codeload.github.com/clash-verge-rev/set-dns-script/zip/refs/heads/main`,
+  });
 const resolveSetDnsScript = () =>
   resolveResource({
     dir: "set-dns-script",
@@ -220,15 +238,15 @@ const resolveEnableLoopback = () =>
   });
 
 const tasks = [
-  { name: "clash-meta-alpha-version", func: getLatestAlphaVersion, retry: 5 },
+  { name: "verge-mihomo-alpha-version", func: getLatestAlphaVersion, retry: 5 },
   ...Object.values(META_ALPHA_MAP).map((name) => ({
-    name: "clash-meta-alpha",
+    name: "verge-mihomo-alpha",
     func: () => clashMetaAlpha(name),
     retry: 5,
   })),
-  { name: "clash-meta-version", func: getLatestReleaseVersion, retry: 5 },
+  { name: "verge-mihomo-version", func: getLatestReleaseVersion, retry: 5 },
   ...Object.values(META_MAP).map((name) => ({
-    name: "clash-meta",
+    name: "verge-mihomo",
     func: () => clashMeta(name),
     retry: 5,
   })),
@@ -240,6 +258,12 @@ const tasks = [
       retry: 5,
     }))
   ),
+  {
+    name: "clash-verge-service-main",
+    func: resolveClashVergeServiceCode,
+    retry: 5,
+  },
+  { name: "set-dns-script-main", func: resolveSetDnsScriptCode, retry: 5 },
   { name: "set_dns_script", func: resolveSetDnsScript, retry: 5 },
   { name: "unset_dns_script", func: resolveUnSetDnsScript, retry: 5 },
   { name: "mmdb", func: resolveMmdb, retry: 5 },

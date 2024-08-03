@@ -48,7 +48,7 @@ if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
  * core info
  */
 function clashMetaAlpha() {
-  const dir = path.join(STORE_DIR, "sidecar/clash-meta-alpha");
+  const dir = path.join(STORE_DIR, "sidecar/verge-mihomo-alpha");
   const versionFile = path.join(dir, "version.txt");
   let version;
   try {
@@ -65,8 +65,8 @@ function clashMetaAlpha() {
   const zipFile = `${name}-${version}.${urlExt}`;
 
   return {
-    name: "clash-meta-alpha",
-    targetFile: `clash-meta-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "verge-mihomo-alpha",
+    targetFile: `verge-mihomo-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     srcPath: path.join(dir, zipFile),
@@ -74,7 +74,7 @@ function clashMetaAlpha() {
 }
 
 function clashMeta() {
-  const dir = path.join(STORE_DIR, "sidecar/clash-meta");
+  const dir = path.join(STORE_DIR, "sidecar/verge-mihomo");
   const versionFile = path.join(dir, "version.txt");
   let version;
   try {
@@ -91,8 +91,8 @@ function clashMeta() {
   const zipFile = `${name}-${version}.${urlExt}`;
 
   return {
-    name: "clash-meta",
-    targetFile: `clash-meta-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "verge-mihomo",
+    targetFile: `verge-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     srcPath: path.join(dir, zipFile),
@@ -286,11 +286,11 @@ const resolveEnableLoopback = () =>
 
 const tasks = [
   {
-    name: "clash-meta-alpha",
+    name: "verge-mihomo-alpha",
     func: () => resolveSidecar(clashMetaAlpha()),
   },
   {
-    name: "clash-meta",
+    name: "verge-mihomo",
     func: () => resolveSidecar(clashMeta()),
   },
   { name: "plugin", func: resolvePlugin, winOnly: true },
@@ -298,11 +298,11 @@ const tasks = [
     name: "service",
     func: () => resolveClashVergeService(name),
   })),
-  { name: "set_dns_script", func: resolveSetDnsScript, retry: 5 },
-  { name: "unset_dns_script", func: resolveUnSetDnsScript, retry: 5 },
-  { name: "mmdb", func: resolveMmdb, retry: 5 },
-  { name: "geosite", func: resolveGeosite, retry: 5 },
-  { name: "geoip", func: resolveGeoIP, retry: 5 },
+  // { name: "set_dns_script", func: resolveSetDnsScript },
+  // { name: "unset_dns_script", func: resolveUnSetDnsScript },
+  { name: "mmdb", func: resolveMmdb },
+  { name: "geosite", func: resolveGeosite },
+  { name: "geoip", func: resolveGeoIP },
   {
     name: "enableLoopback",
     func: resolveEnableLoopback,
