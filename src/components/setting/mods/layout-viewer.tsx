@@ -1,27 +1,27 @@
+import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { ConfirmViewer } from "@/components/profile/confirm-viewer";
+import { GuardState } from "@/components/setting/mods/guard-state";
+import { useVerge } from "@/hooks/use-verge";
+import { copyIconFile, getAppDir, restartApp } from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+import { InfoRounded } from "@mui/icons-material";
+import {
+  Button,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  MenuItem,
+  Select,
+  styled,
+  Tooltip,
+} from "@mui/material";
+import { open as openDialog } from "@tauri-apps/api/dialog";
+import { exists } from "@tauri-apps/api/fs";
+import { join } from "@tauri-apps/api/path";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  List,
-  Button,
-  Select,
-  MenuItem,
-  IconButton,
-  Tooltip,
-  ListItemText,
-  styled,
-  ListItem,
-} from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
-import { open as openDialog } from "@tauri-apps/api/dialog";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { copyIconFile, getAppDir, restartApp } from "@/services/cmds";
-import { join } from "@tauri-apps/api/path";
-import { exists } from "@tauri-apps/api/fs";
-import { ConfirmViewer } from "@/components/profile/confirm-viewer";
-import { InfoRounded } from "@mui/icons-material";
-import getSystem from "@/utils/get-system";
-import { GuardState } from "@/components/setting/mods/guard-state";
 
 const OS = getSystem();
 

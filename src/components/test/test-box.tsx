@@ -11,14 +11,14 @@ export const TestBox = styled(Box)(({ theme, "aria-selected": selected }) => {
     "light-false": text.secondary,
     "dark-true": alpha(text.secondary, 0.65),
     "dark-false": alpha(text.secondary, 0.65),
-  }[key]!;
+  }[key];
 
   const h2color = {
     "light-true": primary.main,
     "light-false": text.primary,
     "dark-true": primary.main,
     "dark-false": text.primary,
-  }[key]!;
+  }[key];
 
   return {
     position: "relative",

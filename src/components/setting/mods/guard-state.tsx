@@ -1,3 +1,4 @@
+import { sleep } from "@/utils";
 import noop from "@/utils/noop";
 import {
   cloneElement,
@@ -18,10 +19,6 @@ interface Props<Value> {
   onSuccess?: (value: Value) => void;
   onCatch?: (error: Error) => void;
   children: ReactNode;
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function GuardState<T>(props: Props<T>) {

@@ -5,8 +5,9 @@ import "@/assets/styles/index.scss";
 import { BaseErrorBoundary } from "@/components/base";
 import router from "@/pages/_routers";
 import "@/services/i18n";
+import { sleep } from "@/utils";
 import { ResizeObserver } from "@juggle/resize-observer";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
@@ -32,7 +33,7 @@ if (!container) {
 
 if (process.env.NODE_ENV !== "development") {
   // disable context menu
-  document.addEventListener("contextmenu", function (event) {
+  document.addEventListener("contextmenu", (event) => {
     event.preventDefault();
   });
 }
@@ -49,31 +50,29 @@ document.addEventListener("keydown", (event) => {
   disabledShortcuts && event.preventDefault();
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // close splashscreen window here, but first we need to check if the clash program is avaliable
-  let checkCount = 10;
   const splashscreenWindow = WebviewWindow.getByLabel("splashscreen");
   if (splashscreenWindow) {
-    const timer = setInterval(async () => {
-      if (checkCount <= 0) {
+    for (let i = 10; i >= 0; i--) {
+      if (i == 0) {
         splashscreenWindow.close();
-        clearInterval(timer);
         throw new Error("clash core start failed, please restart the app");
       }
       const clashStartSuccess = await invoke<boolean>("get_clash_configs");
       if (clashStartSuccess) {
         splashscreenWindow.close();
-        clearInterval(timer);
+        break;
       }
-      checkCount--;
-    }, 1000);
+      await sleep(1000);
+    }
   }
 });
 
 const contexts = [
-  <ThemeModeProvider />,
-  <LoadingCacheProvider />,
-  <UpdateStateProvider />,
+  <ThemeModeProvider key={"themeModeProvider"} />,
+  <LoadingCacheProvider key={"loadingCacheProvider"} />,
+  <UpdateStateProvider key={"updateStateProvider"} />,
 ];
 
 createRoot(container).render(

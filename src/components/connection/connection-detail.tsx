@@ -1,9 +1,9 @@
-import dayjs from "dayjs";
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { Box, Button, Snackbar } from "@mui/material";
 import { deleteConnection } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
+import { Box, Button, Snackbar } from "@mui/material";
+import { useLockFn } from "ahooks";
+import dayjs from "dayjs";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface ConnectionDetailRef {
@@ -13,7 +13,7 @@ export interface ConnectionDetailRef {
 export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
   (props, ref) => {
     const [open, setOpen] = useState(false);
-    const [detail, setDetail] = useState<IConnectionsItem>(null!);
+    const [detail, setDetail] = useState<IConnectionsItem>();
 
     useImperativeHandle(ref, () => ({
       open: (detail: IConnectionsItem) => {
@@ -61,11 +61,11 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     { label: t("Uploaded"), value: parseTraffic(data.upload).join(" ") },
     {
       label: t("DL Speed"),
-      value: parseTraffic(data.curDownload ?? -1).join(" ") + "/s",
+      value: `${parseTraffic(data.curDownload ?? -1).join(" ")}/s`,
     },
     {
       label: t("UL Speed"),
-      value: parseTraffic(data.curUpload ?? -1).join(" ") + "/s",
+      value: `${parseTraffic(data.curUpload ?? -1).join(" ")}/s`,
     },
     { label: t("Chains"), value: chains },
     { label: t("Rule"), value: rule },

@@ -1,5 +1,5 @@
 (function () {
-  if (window.matchMedia && window.matchMedia("all").addEventListener) {
+  if (window.matchMedia?.("all").addEventListener) {
     return;
   }
 
@@ -9,7 +9,7 @@
     const mediaQueryList = originalMatchMedia(query);
 
     if (!mediaQueryList.addEventListener) {
-      mediaQueryList.addEventListener = function (eventType, listener) {
+      mediaQueryList.addEventListener = (eventType, listener) => {
         if (eventType !== "change" || typeof listener !== "function") {
           console.error("Invalid arguments for addEventListener:", arguments);
           return;

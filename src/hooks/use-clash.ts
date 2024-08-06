@@ -63,7 +63,7 @@ export const useClashInfo = () => {
       patch["tproxy-port"] != null ||
       patch["mixed-port"] != null ||
       patch["socks-port"] != null ||
-      patch["port"] != null ||
+      patch.port != null ||
       patch["external-controller"] != null ||
       patch.secret != null;
 
@@ -109,8 +109,8 @@ export const useClashInfo = () => {
       }
     }
 
-    if (patch["port"]) {
-      const port = patch["port"];
+    if (patch.port) {
+      const port = patch.port;
       if (port < 1000) {
         throw new Error("The port should not < 1000");
       }
