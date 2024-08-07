@@ -92,6 +92,7 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 
 /// open file
 /// use vscode by default
+#[cfg(not(target_os = "windows"))]
 pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
     #[cfg(target_os = "macos")]
     let code = "Visual Studio Code";
@@ -105,6 +106,23 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
             open(&app.shell_scope(), path.to_string_lossy(), None)
         }
     };
+    Ok(())
+}
+
+/// open file
+/// use vscode by default
+#[cfg(target_os = "windows")]
+pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
+    use std::process::Command;
+    use std::os::windows::process::CommandExt;
+
+    let output = Command::new("cmd")
+        .args(["/c", "code", &path.to_string_lossy()])
+        .creation_flags(0x08000000)
+        .output()?;
+    if !output.status.success() {
+        let _ = open(&app.shell_scope(), path.to_string_lossy(), None);
+    }
     Ok(())
 }
 

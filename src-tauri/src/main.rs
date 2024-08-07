@@ -33,9 +33,9 @@ fn main() -> std::io::Result<()> {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let app_handle = app.handle();
-            let enable_splashscreen = { Config::verge().data().enable_splashscreen };
+            let enable_splashscreen = Config::verge().data().enable_splashscreen;
             let enable_splashscreen = enable_splashscreen.unwrap_or(true);
-            let silent_start = { Config::verge().data().enable_silent_start };
+            let silent_start = Config::verge().data().enable_silent_start;
             let silent_start = silent_start.unwrap_or(false);
             if enable_splashscreen && !silent_start {
                 let mut builder = tauri::window::WindowBuilder::new(
