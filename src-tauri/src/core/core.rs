@@ -119,7 +119,7 @@ impl CoreManager {
 
         let mut system = System::new();
         system.refresh_all();
-        let procs = system.processes_by_name("verge-mihomo");
+        let procs = system.processes_by_name("verge-mihomo".as_ref());
         for proc in procs {
             log::debug!(target: "app", "kill all clash process");
             proc.kill();
@@ -266,7 +266,7 @@ impl CoreManager {
 
         let mut system = System::new();
         system.refresh_all();
-        let procs = system.processes_by_name("verge-mihomo");
+        let procs = system.processes_by_name("verge-mihomo".as_ref());
         for proc in procs {
             log::debug!(target: "app", "kill all clash process");
             proc.kill();
