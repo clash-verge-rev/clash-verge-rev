@@ -77,18 +77,22 @@ function renderRoot(container: HTMLElement) {
   );
 }
 
-for (let i = 1; i <= 10; i++) {
-  if (i >= 10) {
-    renderRoot(container);
-    Notice.error(
-      "Failed to get clash configs, please check clash core start successfully",
-      3000,
-    );
+async function checkClashAndRender(container: HTMLElement) {
+  for (let i = 1; i <= 10; i++) {
+    if (i >= 10) {
+      renderRoot(container);
+      Notice.error(
+        "Failed to get clash configs, please check clash core start successfully",
+        3000,
+      );
+    }
+    const clashConfigs = await getClashConfig();
+    if (clashConfigs) {
+      renderRoot(container);
+      break;
+    }
+    await sleep(500);
   }
-  const clashConfigs = await getClashConfig();
-  if (clashConfigs) {
-    renderRoot(container);
-    break;
-  }
-  await sleep(500);
 }
+
+checkClashAndRender(container);
