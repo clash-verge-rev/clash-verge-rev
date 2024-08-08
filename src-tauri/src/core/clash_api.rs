@@ -34,7 +34,7 @@ pub async fn get_configs() -> Result<ClashBasicConfig> {
 /// path 是绝对路径
 pub async fn put_configs(path: &str) -> Result<()> {
     let (url, headers) = clash_client_info()?;
-    let url = format!("{url}/configs");
+    let url = format!("{url}/configs?force=true");
     let data = HashMap::from([("path", path)]);
 
     let client = reqwest::ClientBuilder::new().no_proxy().build()?;
