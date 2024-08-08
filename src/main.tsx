@@ -2,12 +2,12 @@
 /// <reference types="vite-plugin-svgr/client" />
 
 import "@/assets/styles/index.scss";
-import { BaseErrorBoundary } from "@/components/base";
+import { BaseErrorBoundary, Notice } from "@/components/base";
 import router from "@/pages/_routers";
+import { getClashConfig } from "@/services/api";
 import "@/services/i18n";
 import { sleep } from "@/utils";
 import { ResizeObserver } from "@juggle/resize-observer";
-import { invoke } from "@tauri-apps/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
@@ -51,21 +51,11 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // close splashscreen window here, but first we need to check if the clash program is avaliable
   const splashscreenWindow = WebviewWindow.getByLabel("splashscreen");
   if (splashscreenWindow) {
-    for (let i = 10; i >= 0; i--) {
-      if (i == 0) {
-        splashscreenWindow.close();
-        throw new Error("clash core start failed, please restart the app");
-      }
-      const clashStartSuccess = await invoke<boolean>("get_clash_configs");
-      if (clashStartSuccess) {
-        splashscreenWindow.close();
-        break;
-      }
-      await sleep(1000);
-    }
+    setTimeout(() => {
+      splashscreenWindow.close();
+    }, 1000);
   }
 });
 
@@ -75,12 +65,30 @@ const contexts = [
   <UpdateStateProvider key={"updateStateProvider"} />,
 ];
 
-createRoot(container).render(
-  <React.StrictMode>
-    <ComposeContextProvider contexts={contexts}>
-      <BaseErrorBoundary>
-        <RouterProvider router={router} />
-      </BaseErrorBoundary>
-    </ComposeContextProvider>
-  </React.StrictMode>,
-);
+function renderRoot(container: HTMLElement) {
+  createRoot(container).render(
+    <React.StrictMode>
+      <ComposeContextProvider contexts={contexts}>
+        <BaseErrorBoundary>
+          <RouterProvider router={router} />
+        </BaseErrorBoundary>
+      </ComposeContextProvider>
+    </React.StrictMode>,
+  );
+}
+
+for (let i = 1; i <= 10; i++) {
+  if (i >= 10) {
+    renderRoot(container);
+    Notice.error(
+      "Failed to get clash configs, please check clash core start successfully",
+      3000,
+    );
+  }
+  const clashConfigs = await getClashConfig();
+  if (clashConfigs) {
+    renderRoot(container);
+    break;
+  }
+  await sleep(500);
+}
