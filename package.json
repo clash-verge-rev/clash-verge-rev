@@ -68,7 +68,7 @@
     "@types/lodash-es": "4.17.12",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
-    "@types/react-transition-group": "4.4.10",
+    "@types/react-transition-group": "4.4.11",
     "@types/sortablejs": "1.15.8",
     "@vitejs/plugin-legacy": "5.4.1",
     "@vitejs/plugin-react": "4.3.1",
