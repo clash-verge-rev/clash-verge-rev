@@ -101,46 +101,43 @@ pub fn toggle_service_mode() {
     };
 
     tauri::async_runtime::spawn(async move {
-        match cmds::service::check_service().await {
-            Ok(response) => {
-                if response.code == 400 || response.code == 0 {
-                    match patch_verge(IVerge {
-                        enable_service_mode: Some(!enable),
-                        ..IVerge::default()
-                    })
-                    .await
-                    {
-                        Ok(_) => handle::Handle::refresh_verge(),
-                        Err(err) => {
-                            Notification::new(APP_ID)
-                                .title("Clash Verge Service")
-                                .body(format!("{}, {}", toggle_failed_msg, err))
-                                .show()
-                                .unwrap();
-                            log::error!(target: "app", "{err}")
-                        }
+        if let Ok(response) = cmds::service::check_service().await {
+            if response.code == 400 || response.code == 0 {
+                match patch_verge(IVerge {
+                    enable_service_mode: Some(!enable),
+                    ..IVerge::default()
+                })
+                .await
+                {
+                    Ok(_) => handle::Handle::refresh_verge(),
+                    Err(err) => {
+                        Notification::new(APP_ID)
+                            .title("Clash Verge Service")
+                            .body(format!("{}, {}", toggle_failed_msg, err))
+                            .show()
+                            .unwrap();
+                        log::error!(target: "app", "{err}")
                     }
-                } else {
-                    Notification::new(APP_ID)
-                        .title("Clash Verge Service")
-                        .body(format!("{}, {}", toggle_failed_msg, response.msg))
-                        .show()
-                        .unwrap();
                 }
+            } else {
+                Notification::new(APP_ID)
+                    .title("Clash Verge Service")
+                    .body(format!("{}, {}", toggle_failed_msg, response.msg))
+                    .show()
+                    .unwrap();
             }
-            _ => {
-                let status = MessageDialogBuilder::new(
+        } else {
+            let status = MessageDialogBuilder::new(
                     "Install And Run Clash Verge Service",
                     "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?",
                 )
                 .kind(MessageDialogKind::Info)
                 .buttons(MessageDialogButtons::OkCancel)
                 .show();
-                if status {
-                    let _ = install_and_run_service().await;
-                }
+            if status {
+                let _ = install_and_run_service().await;
             }
-        };
+        }
     });
 }
 
@@ -159,75 +156,71 @@ pub fn toggle_tun_mode() {
     tun.insert("tun".into(), tun_val.into());
 
     tauri::async_runtime::spawn(async move {
-        match cmds::service::check_service().await {
-            Ok(service_status) => {
-                if service_status.code == 0 {
-                    match patch_clash(tun).await {
-                        Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
-                        Err(err) => {
-                            log::error!(target: "app", "{err}")
-                        }
+        if let Ok(response) = cmds::service::check_service().await {
+            if response.code == 0 {
+                match patch_clash(tun).await {
+                    Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
+                    Err(err) => {
+                        log::error!(target: "app", "{err}")
                     }
-                } else if service_status.code == 400 {
-                    // service installed but no enable, need to patch verge to enable service mode
-                    match patch_verge(IVerge {
-                        enable_service_mode: Some(true),
-                        ..IVerge::default()
-                    })
-                    .await
-                    {
-                        Ok(_) => {
-                            let _ = cmds::service::check_service_and_clash().await;
-                            handle::Handle::refresh_verge();
-                            match patch_clash(tun).await {
-                                Ok(_) => {
-                                    log::info!(target: "app", "change tun mode to {:?}", !enable)
-                                }
-                                Err(err) => {
-                                    log::error!(target: "app", "{err}")
-                                }
-                            }
-                        }
-                        Err(err) => {
-                            Notification::new(APP_ID)
-                                .title("Tun Mode")
-                                .body(format!("{}, {}", toggle_failed_msg, err))
-                                .show()
-                                .unwrap();
-                        }
-                    }
-                } else {
-                    Notification::new(APP_ID)
-                        .title("Tun Mode")
-                        .body(format!("{}, {}", toggle_failed_msg, service_status.msg))
-                        .show()
-                        .unwrap();
                 }
+            } else if response.code == 400 {
+                // service installed but no enable, need to patch verge to enable service mode
+                match patch_verge(IVerge {
+                    enable_service_mode: Some(true),
+                    ..IVerge::default()
+                })
+                .await
+                {
+                    Ok(_) => {
+                        let _ = cmds::service::check_service_and_clash().await;
+                        handle::Handle::refresh_verge();
+                        match patch_clash(tun).await {
+                            Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
+                            Err(err) => log::error!(target: "app", "{err}"),
+                        }
+                    }
+                    Err(err) => {
+                        Notification::new(APP_ID)
+                            .title("Tun Mode")
+                            .body(format!("{}, {}", toggle_failed_msg, err))
+                            .show()
+                            .unwrap();
+                    }
+                }
+            } else {
+                Notification::new(APP_ID)
+                    .title("Tun Mode")
+                    .body(format!("{}, {}", toggle_failed_msg, response.msg))
+                    .show()
+                    .unwrap();
             }
-            Err(_) => {
-                let status = MessageDialogBuilder::new(
+        } else {
+            let status = MessageDialogBuilder::new(
                     "Install And Run Clash Verge Service",
                     "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?",
                 )
                 .kind(MessageDialogKind::Info)
                 .buttons(MessageDialogButtons::OkCancel)
                 .show();
-                if status {
-                    let _ = install_and_run_service().await;
-                    if let Ok(_) = cmds::service::check_service_and_clash().await {
-                        match patch_clash(tun).await {
-                            Ok(_) => {
-                                log::info!(target: "app", "change tun mode to {:?}", !enable);
-                            }
-                            Err(err) => {
-                                Notification::new(APP_ID)
-                                    .title("Tun Mode")
-                                    .body(format!("{}, {}", toggle_failed_msg, err))
-                                    .show()
-                                    .unwrap();
-                                log::error!(target: "app", "{err}")
-                            }
-                        }
+            if status {
+                let _ = install_and_run_service().await;
+                if let Err(err) = cmds::service::check_service_and_clash().await {
+                    Notification::new(APP_ID)
+                        .title("Tun Mode")
+                        .body(format!("{}, {}", toggle_failed_msg, err))
+                        .show()
+                        .unwrap();
+                } else {
+                    if let Err(err) = patch_clash(tun).await {
+                        Notification::new(APP_ID)
+                            .title("Tun Mode")
+                            .body(format!("{}, {}", toggle_failed_msg, err))
+                            .show()
+                            .unwrap();
+                        log::error!(target: "app", "{err}")
+                    } else {
+                        log::info!(target: "app", "change tun mode to {:?}", !enable);
                     }
                 }
             }
@@ -237,42 +230,38 @@ pub fn toggle_tun_mode() {
 
 async fn install_and_run_service() -> Result<()> {
     let title = "Clash Verge Service";
-    match cmds::service::install_service().await {
-        Ok(()) => {
-            match patch_verge(IVerge {
-                enable_service_mode: Some(true),
-                ..IVerge::default()
-            })
-            .await
-            {
-                Ok(()) => {
-                    Notification::new(APP_ID)
-                        .title(title)
-                        .body("Install and run Clash Verge Service successfully")
-                        .show()
-                        .unwrap();
-                    handle::Handle::refresh_verge();
-                    Ok(())
-                }
-                Err(err) => {
-                    Notification::new(APP_ID)
-                        .title(title)
-                        .body(format!(
-                            "Install successfully, but Clash Verge Service run failed, {err}"
-                        ))
-                        .show()
-                        .unwrap();
-                    Err(err)
-                }
-            }
-        }
-        Err(err) => {
+
+    if let Err(err) = cmds::service::install_service().await {
+        Notification::new(APP_ID)
+            .title(title)
+            .body(format!("Install failed, {err}"))
+            .show()
+            .unwrap();
+        Err(anyhow!(err))
+    } else {
+        if let Err(err) = patch_verge(IVerge {
+            enable_service_mode: Some(true),
+            ..IVerge::default()
+        })
+        .await
+        {
             Notification::new(APP_ID)
                 .title(title)
-                .body(format!("Install failed, {err}"))
+                .body(format!(
+                    "Install successfully, but Clash Verge Service run failed, {}",
+                    err
+                ))
                 .show()
                 .unwrap();
-            Err(anyhow!(err))
+            Err(err)
+        } else {
+            Notification::new(APP_ID)
+                .title(title)
+                .body("Install and run Clash Verge Service successfully")
+                .show()
+                .unwrap();
+            handle::Handle::refresh_verge();
+            Ok(())
         }
     }
 }

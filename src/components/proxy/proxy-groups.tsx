@@ -191,12 +191,7 @@ export const ProxyGroups = (props: Props) => {
             ))}
         </List>
       </Box>
-      <Box
-        flexGrow={1}
-        height={"100%"}
-        sx={{
-          position: "relative",
-        }}>
+      <Box flexGrow={1} height={"100%"} position={"relative"}>
         <Box
           sx={{
             width: "20px",
@@ -272,7 +267,7 @@ export const ProxyGroups = (props: Props) => {
         </Box>
         <Virtuoso
           ref={virtuosoRef}
-          style={{ height: "calc(100% - 16px)" }}
+          style={{ height: "calc(100% - 8px)" }}
           totalCount={renderList.length}
           increaseViewportBy={256}
           itemContent={(index) => (
