@@ -118,6 +118,16 @@ impl IClashConfig {
         )
     }
 
+    pub fn get_mode(&self) -> String {
+        self.0
+            .get("mode")
+            .and_then(|value| match value {
+                Value::String(val_str) => Some(val_str.clone()),
+                _ => None,
+            })
+            .unwrap_or("rule".to_string())
+    }
+
     pub fn get_enable_tun(&self) -> bool {
         let config = &self.0;
         let tun_val = config

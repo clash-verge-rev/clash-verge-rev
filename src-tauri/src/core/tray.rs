@@ -5,20 +5,100 @@ use crate::{
     utils::{dirs, resolve},
 };
 use anyhow::Result;
-use std::collections::HashMap;
 use tauri::{
-    AppHandle, CustomMenuItem, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
+    AppHandle, CustomMenuItem, Icon, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
     SystemTraySubmenu,
 };
 
 pub struct Tray {}
 
 impl Tray {
+    fn get_tray_icon() -> Icon {
+        let verge_config = Config::verge();
+        let clash_config = Config::clash();
+        let icon_dir_path = dirs::app_home_dir().unwrap().join("icons");
+        let sysproxy_enabled = verge_config.latest().enable_system_proxy.unwrap_or(false);
+        let tun_enabled = clash_config.latest().get_enable_tun();
+        #[cfg(target_os = "macos")]
+        let tray_icon = verge_config
+            .latest()
+            .tray_icon
+            .clone()
+            .unwrap_or("monochrome".to_string());
+        // get icon
+        let common_tray_icon = verge_config.latest().common_tray_icon.unwrap_or(false);
+        let sysproxy_tray_icon = verge_config.latest().sysproxy_tray_icon.unwrap_or(false);
+        let tun_tray_icon = verge_config.latest().tun_tray_icon.unwrap_or(false);
+        let icon = match (sysproxy_enabled, tun_enabled) {
+            (_, true) => {
+                if tun_tray_icon {
+                    let mut icon_path = icon_dir_path.join("tun.ico");
+                    if !icon_path.exists() {
+                        icon_path = icon_dir_path.join("tun.png");
+                    }
+                    Icon::File(icon_path)
+                } else {
+                    #[cfg(target_os = "macos")]
+                    let icon = match tray_icon.as_str() {
+                        "monochrome" => {
+                            include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec()
+                        }
+                        "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
+                        _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
+                    };
+                    #[cfg(not(target_os = "macos"))]
+                    let icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
+                    Icon::Raw(icon)
+                }
+            }
+            (true, _) => {
+                if sysproxy_tray_icon {
+                    let mut icon_path = icon_dir_path.join("sysproxy.ico");
+                    if !icon_path.exists() {
+                        icon_path = icon_dir_path.join("sysproxy.png");
+                    }
+                    Icon::File(icon_path)
+                } else {
+                    #[cfg(target_os = "macos")]
+                    let icon = match tray_icon.as_str() {
+                        "monochrome" => {
+                            include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec()
+                        }
+                        "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
+                        _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
+                    };
+                    #[cfg(not(target_os = "macos"))]
+                    let icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
+                    Icon::Raw(icon)
+                }
+            }
+            _ => {
+                if common_tray_icon {
+                    let mut icon_path = icon_dir_path.join("common.ico");
+                    if !icon_path.exists() {
+                        icon_path = icon_dir_path.join("common.png");
+                    }
+                    Icon::File(icon_path)
+                } else {
+                    #[cfg(target_os = "macos")]
+                    let icon = match tray_icon.as_str() {
+                        "monochrome" => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
+                        "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
+                        _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
+                    };
+                    #[cfg(not(target_os = "macos"))]
+                    let icon = include_bytes!("../../icons/tray-icon.png").to_vec();
+                    Icon::Raw(icon)
+                }
+            }
+        };
+        icon
+    }
+
     pub fn tray_menu(app_handle: &AppHandle) -> SystemTrayMenu {
-        let zh = { Config::verge().latest().language == Some("zh".into()) };
-
+        let verge_config = Config::verge();
+        let zh = verge_config.latest().language == Some("zh".into());
         let version = app_handle.package_info().version.to_string();
-
         macro_rules! t {
             ($en: expr, $zh: expr) => {
                 if zh {
@@ -29,73 +109,55 @@ impl Tray {
             };
         }
 
+        let open_window = CustomMenuItem::new("open_window", t!("Dashboard", "打开面板"));
+        let rule_mode = CustomMenuItem::new("rule_mode", t!("Rule Mode", "规则模式"));
+        let global_mode = CustomMenuItem::new("global_mode", t!("Global Mode", "全局模式"));
+        let direct_mode = CustomMenuItem::new("direct_mode", t!("Direct Mode", "直连模式"));
+        let system_proxy = CustomMenuItem::new("system_proxy", t!("System Proxy", "系统代理"));
+        let tun_mode = CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式"));
+        let service_mode = CustomMenuItem::new("service_mode", t!("Service Mode", "服务模式"));
+        let copy_env = CustomMenuItem::new("copy_env", t!("Copy Env", "复制环境变量"));
+        let open_app_dir = CustomMenuItem::new("open_app_dir", t!("App Dir", "应用目录"));
+        let open_core_dir = CustomMenuItem::new("open_core_dir", t!("Core Dir", "核心目录"));
+        let open_logs_dir = CustomMenuItem::new("open_logs_dir", t!("Log Dir", "日志目录"));
+        let open_dir = SystemTraySubmenu::new(
+            t!("Open Dir", "打开目录"),
+            SystemTrayMenu::new()
+                .add_item(open_app_dir)
+                .add_item(open_core_dir)
+                .add_item(open_logs_dir),
+        );
+        let restart_clash = CustomMenuItem::new("restart_clash", t!("Restart Clash", "重启 Clash"));
+        let restart_app = CustomMenuItem::new("restart_app", t!("Restart", "重启应用"));
+        let app_version =
+            CustomMenuItem::new("app_version", format!("Version {version}")).disabled();
+        let more = SystemTraySubmenu::new(
+            t!("More", "更多"),
+            SystemTrayMenu::new()
+                .add_item(restart_clash)
+                .add_item(restart_app)
+                .add_item(app_version),
+        );
+        let quit = CustomMenuItem::new("quit", t!("Quit", "退出"));
+        let separator = SystemTrayMenuItem::Separator;
+
         SystemTrayMenu::new()
-            .add_item(CustomMenuItem::new(
-                "open_window",
-                t!("Dashboard", "打开面板"),
-            ))
-            .add_native_item(SystemTrayMenuItem::Separator)
-            .add_item(CustomMenuItem::new(
-                "rule_mode",
-                t!("Rule Mode", "规则模式"),
-            ))
-            .add_item(CustomMenuItem::new(
-                "global_mode",
-                t!("Global Mode", "全局模式"),
-            ))
-            .add_item(CustomMenuItem::new(
-                "direct_mode",
-                t!("Direct Mode", "直连模式"),
-            ))
-            .add_native_item(SystemTrayMenuItem::Separator)
-            .add_item(CustomMenuItem::new(
-                "system_proxy",
-                t!("System Proxy", "系统代理"),
-            ))
-            .add_item(CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式")))
-            .add_native_item(SystemTrayMenuItem::Separator)
-            .add_item(CustomMenuItem::new(
-                "service_mode",
-                t!("Service Mode", "服务模式"),
-            ))
-            .add_native_item(SystemTrayMenuItem::Separator)
-            .add_item(CustomMenuItem::new(
-                "copy_env",
-                t!("Copy Env", "复制环境变量"),
-            ))
-            .add_submenu(SystemTraySubmenu::new(
-                t!("Open Dir", "打开目录"),
-                SystemTrayMenu::new()
-                    .add_item(CustomMenuItem::new(
-                        "open_app_dir",
-                        t!("App Dir", "应用目录"),
-                    ))
-                    .add_item(CustomMenuItem::new(
-                        "open_core_dir",
-                        t!("Core Dir", "内核目录"),
-                    ))
-                    .add_item(CustomMenuItem::new(
-                        "open_logs_dir",
-                        t!("Logs Dir", "日志目录"),
-                    )),
-            ))
-            .add_submenu(SystemTraySubmenu::new(
-                t!("More", "更多"),
-                SystemTrayMenu::new()
-                    .add_item(CustomMenuItem::new(
-                        "restart_clash",
-                        t!("Restart Clash", "重启 Clash"),
-                    ))
-                    .add_item(CustomMenuItem::new(
-                        "restart_app",
-                        t!("Restart App", "重启应用"),
-                    ))
-                    .add_item(
-                        CustomMenuItem::new("app_version", format!("Version {version}")).disabled(),
-                    ),
-            ))
-            .add_native_item(SystemTrayMenuItem::Separator)
-            .add_item(CustomMenuItem::new("quit", t!("Quit", "退出")))
+            .add_item(open_window)
+            .add_native_item(separator.clone())
+            .add_item(rule_mode)
+            .add_item(global_mode)
+            .add_item(direct_mode)
+            .add_native_item(separator.clone())
+            .add_item(system_proxy)
+            .add_item(tun_mode)
+            .add_native_item(separator.clone())
+            .add_item(service_mode)
+            .add_native_item(separator.clone())
+            .add_item(copy_env)
+            .add_submenu(open_dir)
+            .add_submenu(more)
+            .add_native_item(separator.clone())
+            .add_item(quit)
     }
 
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
@@ -107,10 +169,10 @@ impl Tray {
     }
 
     pub fn update_part(app_handle: &AppHandle) -> Result<()> {
-        let zh = { Config::verge().latest().language == Some("zh".into()) };
-
-        let version = app_handle.package_info().version.to_string();
-
+        let tray = app_handle.tray_handle();
+        let verge_config = Config::verge();
+        let clash_config = Config::clash();
+        let zh = verge_config.latest().language == Some("zh".into());
         macro_rules! t {
             ($en: expr, $zh: expr) => {
                 if zh {
@@ -120,206 +182,151 @@ impl Tray {
                 }
             };
         }
+        let mode = clash_config.latest().get_mode();
+        let sysproxy_enabled = verge_config.latest().enable_system_proxy.unwrap_or(false);
+        let tun_enabled = clash_config.latest().get_enable_tun();
+        let service_enabled = verge_config.latest().enable_service_mode.unwrap_or(false);
 
-        let mode = {
-            Config::clash()
-                .latest()
-                .0
-                .get("mode")
-                .map(|val| val.as_str().unwrap_or("rule"))
-                .unwrap_or("rule")
-                .to_owned()
-        };
-
-        let tray = app_handle.tray_handle();
-
-        let _ = tray.get_item("rule_mode").set_selected(mode == "rule");
-        let _ = tray.get_item("global_mode").set_selected(mode == "global");
-        let _ = tray.get_item("direct_mode").set_selected(mode == "direct");
-
-        #[cfg(target_os = "linux")]
+        let rule_menu = tray.get_item("rule_mode");
+        let global_menu = tray.get_item("global_mode");
+        let direct_menu = tray.get_item("direct_mode");
         match mode.as_str() {
             "rule" => {
-                let _ = tray
-                    .get_item("rule_mode")
-                    .set_title(t!("Rule Mode  ✔", "规则模式  ✔"));
-                let _ = tray
-                    .get_item("global_mode")
-                    .set_title(t!("Global Mode", "全局模式"));
-                let _ = tray
-                    .get_item("direct_mode")
-                    .set_title(t!("Direct Mode", "直连模式"));
+                #[cfg(not(target_os = "linux"))]
+                {
+                    rule_menu.set_selected(true)?;
+                    global_menu.set_selected(false)?;
+                    direct_menu.set_selected(false)?;
+                }
+                #[cfg(target_os = "linux")]
+                {
+                    rule_menu.set_title(t!("Rule Mode ✔", "规则模式 ✔"))?;
+                    global_menu.set_title(t!("Global Mode", "全局模式"))?;
+                    direct_menu.set_title(t!("Direct Mode", "直连模式"))?;
+                }
             }
             "global" => {
-                let _ = tray
-                    .get_item("rule_mode")
-                    .set_title(t!("Rule Mode", "规则模式"));
-                let _ = tray
-                    .get_item("global_mode")
-                    .set_title(t!("Global Mode  ✔", "全局模式  ✔"));
-                let _ = tray
-                    .get_item("direct_mode")
-                    .set_title(t!("Direct Mode", "直连模式"));
+                #[cfg(not(target_os = "linux"))]
+                {
+                    rule_menu.set_selected(false)?;
+                    global_menu.set_selected(true)?;
+                    direct_menu.set_selected(false)?;
+                }
+                #[cfg(target_os = "linux")]
+                {
+                    rule_menu.set_title(t!("Rule Mode", "规则模式"))?;
+                    global_menu.set_title(t!("Global Mode ✔", "全局模式 ✔"))?;
+                    direct_menu.set_title(t!("Direct Mode", "直连模式"))?;
+                }
             }
             "direct" => {
-                let _ = tray
-                    .get_item("rule_mode")
-                    .set_title(t!("Rule Mode", "规则模式"));
-                let _ = tray
-                    .get_item("global_mode")
-                    .set_title(t!("Global Mode", "全局模式"));
-                let _ = tray
-                    .get_item("direct_mode")
-                    .set_title(t!("Direct Mode  ✔", "直连模式  ✔"));
-            }
-            _ => {}
-        }
-
-        let verge = Config::verge();
-        let verge = verge.latest();
-        let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
-        let clash = Config::clash();
-        let clash = clash.latest();
-        let tun_mode = clash.get_enable_tun();
-        let service_mode = verge.enable_service_mode.as_ref().unwrap_or(&false);
-        #[cfg(target_os = "macos")]
-        let tray_icon = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
-        let common_tray_icon = verge.common_tray_icon.as_ref().unwrap_or(&false);
-        let sysproxy_tray_icon = verge.sysproxy_tray_icon.as_ref().unwrap_or(&false);
-        let tun_tray_icon = verge.tun_tray_icon.as_ref().unwrap_or(&false);
-        #[cfg(target_os = "macos")]
-        match tray_icon.as_str() {
-            "monochrome" => {
-                let _ = tray.set_icon_as_template(true);
-            }
-            "colorful" => {
-                let _ = tray.set_icon_as_template(false);
-            }
-            _ => {}
-        }
-        let mut indication_icon = if *system_proxy {
-            #[cfg(target_os = "macos")]
-            let mut icon = match tray_icon.as_str() {
-                "monochrome" => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
-                "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
-            };
-            #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
-
-            if *sysproxy_tray_icon {
-                let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                let png_path = icon_dir_path.join("sysproxy.png");
-                let ico_path = icon_dir_path.join("sysproxy.ico");
-                if ico_path.exists() {
-                    icon = std::fs::read(ico_path).unwrap();
-                } else if png_path.exists() {
-                    icon = std::fs::read(png_path).unwrap();
+                #[cfg(not(target_os = "linux"))]
+                {
+                    rule_menu.set_selected(false)?;
+                    global_menu.set_selected(false)?;
+                    direct_menu.set_selected(true)?;
+                }
+                #[cfg(target_os = "linux")]
+                {
+                    rule_menu.set_title(t!("Rule Mode", "规则模式"))?;
+                    global_menu.set_title(t!("Global Mode", "全局模式"))?;
+                    direct_menu.set_title(t!("Direct Mode ✔", "直连模式 ✔"))?;
                 }
             }
-            icon
+            _ => (),
+        }
+
+        let system_proxy_menu = tray.get_item("system_proxy");
+        if sysproxy_enabled {
+            #[cfg(not(target_os = "linux"))]
+            system_proxy_menu.set_selected(true)?;
+            #[cfg(target_os = "linux")]
+            system_proxy_menu.set_title(t!("System Proxy ✔", "系统代理 ✔"))?;
         } else {
-            #[cfg(target_os = "macos")]
-            let mut icon = match tray_icon.as_str() {
-                "monochrome" => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
-                "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
-            };
-            #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon.png").to_vec();
-            if *common_tray_icon {
-                let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                let png_path = icon_dir_path.join("common.png");
-                let ico_path = icon_dir_path.join("common.ico");
-                if ico_path.exists() {
-                    icon = std::fs::read(ico_path).unwrap();
-                } else if png_path.exists() {
-                    icon = std::fs::read(png_path).unwrap();
-                }
-            }
-            icon
-        };
-
-        if tun_mode {
-            #[cfg(target_os = "macos")]
-            let mut icon = match tray_icon.as_str() {
-                "monochrome" => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
-                "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
-            };
-            #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
-            if *tun_tray_icon {
-                let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                let png_path = icon_dir_path.join("tun.png");
-                let ico_path = icon_dir_path.join("tun.ico");
-                if ico_path.exists() {
-                    icon = std::fs::read(ico_path).unwrap();
-                } else if png_path.exists() {
-                    icon = std::fs::read(png_path).unwrap();
-                }
-            }
-            indication_icon = icon
+            #[cfg(not(target_os = "linux"))]
+            system_proxy_menu.set_selected(false)?;
+            #[cfg(target_os = "linux")]
+            system_proxy_menu.set_title(t!("System Proxy", "系统代理"))?;
         }
 
-        let _ = tray.set_icon(tauri::Icon::Raw(indication_icon));
+        let tun_mode_menu = tray.get_item("tun_mode");
+        if tun_enabled {
+            #[cfg(not(target_os = "linux"))]
+            tun_mode_menu.set_selected(true)?;
+            #[cfg(target_os = "linux")]
+            tun_mode_menu.set_title(t!("TUN Mode ✔", "TUN 模式 ✔"))?;
+        } else {
+            #[cfg(not(target_os = "linux"))]
+            tun_mode_menu.set_selected(false)?;
+            #[cfg(target_os = "linux")]
+            tun_mode_menu.set_title(t!("TUN Mode", "TUN 模式"))?;
+        }
 
-        let _ = tray.get_item("system_proxy").set_selected(*system_proxy);
-        let _ = tray.get_item("tun_mode").set_selected(tun_mode);
-        let _ = tray.get_item("service_mode").set_selected(*service_mode);
-        #[cfg(target_os = "linux")]
+        let service_mode_menu = tray.get_item("service_mode");
+        if service_enabled {
+            #[cfg(not(target_os = "linux"))]
+            service_mode_menu.set_selected(true)?;
+            #[cfg(target_os = "linux")]
+            service_mode_menu.set_title(t!("Service Mode ✔", "服务模式 ✔"))?;
+        } else {
+            #[cfg(not(target_os = "linux"))]
+            service_mode_menu.set_selected(false)?;
+            #[cfg(target_os = "linux")]
+            service_mode_menu.set_title(t!("Service Mode", "服务模式"))?;
+        }
+
+        #[cfg(target_os = "macos")]
         {
-            if *system_proxy {
-                let _ = tray
-                    .get_item("system_proxy")
-                    .set_title(t!("System Proxy  ✔", "系统代理  ✔"));
-            } else {
-                let _ = tray
-                    .get_item("system_proxy")
-                    .set_title(t!("System Proxy", "系统代理"));
-            }
-            if tun_mode {
-                let _ = tray
-                    .get_item("tun_mode")
-                    .set_title(t!("TUN Mode  ✔", "Tun 模式  ✔"));
-            } else {
-                let _ = tray
-                    .get_item("tun_mode")
-                    .set_title(t!("TUN Mode", "Tun 模式"));
-            }
-            if *service_mode {
-                let _ = tray
-                    .get_item("service_mode")
-                    .set_title(t!("Service Mode  ✔", "服务模式  ✔"));
-            } else {
-                let _ = tray
-                    .get_item("service_mode")
-                    .set_title(t!("Service Mode", "服务模式"));
+            let verge_config = Config::verge();
+            let tray_icon = verge_config
+                .latest()
+                .tray_icon
+                .clone()
+                .unwrap_or("monochrome".to_string());
+            match tray_icon.as_str() {
+                "monochrome" => {
+                    let _ = tray.set_icon_as_template(true);
+                }
+                "colorful" => {
+                    let _ = tray.set_icon_as_template(false);
+                }
+                _ => {}
             }
         }
 
-        let switch_map = HashMap::from([(true, "ON"), (false, "OFF")]);
+        // set tray icon
+        tray.set_icon(Self::get_tray_icon())?;
 
-        let mut current_profile_name = "None".to_string();
-        let profiles = Config::profiles();
-        let profiles = profiles.latest();
-        if let Some(current_profile_uid) = profiles.get_current() {
-            let current_profile = profiles.get_item(&current_profile_uid);
-            current_profile_name = match &current_profile.unwrap().name {
-                Some(profile_name) => profile_name.to_string(),
-                None => current_profile_name,
+        #[cfg(not(target_os = "linux"))]
+        {
+            let version = app_handle.package_info().version.to_string();
+            let mut current_profile_name = "None".to_string();
+            let profiles = Config::profiles();
+            let profiles = profiles.latest();
+            if let Some(current_profile_uid) = profiles.get_current() {
+                let current_profile = profiles.get_item(&current_profile_uid);
+                current_profile_name = match &current_profile.unwrap().name {
+                    Some(profile_name) => profile_name.to_string(),
+                    None => current_profile_name,
+                };
             };
-        };
-        let _ = tray.set_tooltip(&format!(
-            "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
-            t!("System Proxy", "系统代理"),
-            switch_map[system_proxy],
-            t!("TUN Mode", "Tun 模式"),
-            switch_map[&tun_mode],
-            t!("Curent Profile", "当前订阅"),
-            current_profile_name
-        ));
-
+            let switch_map = |status| {
+                if status {
+                    "ON"
+                } else {
+                    "OFF"
+                }
+            };
+            tray.set_tooltip(&format!(
+                "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
+                t!("System Proxy", "系统代理"),
+                switch_map(sysproxy_enabled),
+                t!("TUN Mode", "Tun 模式"),
+                switch_map(tun_enabled),
+                t!("Curent Profile", "当前订阅"),
+                current_profile_name
+            ))?;
+        }
         Ok(())
     }
 

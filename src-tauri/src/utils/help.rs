@@ -113,8 +113,8 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
 /// use vscode by default
 #[cfg(target_os = "windows")]
 pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
-    use std::process::Command;
     use std::os::windows::process::CommandExt;
+    use std::process::Command;
 
     let output = Command::new("cmd")
         .args(["/c", "code", &path.to_string_lossy()])
