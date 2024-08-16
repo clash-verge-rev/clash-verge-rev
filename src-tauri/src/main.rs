@@ -29,6 +29,7 @@ fn main() -> std::io::Result<()> {
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
         .system_tray(SystemTray::new())
+        .on_system_tray_event(core::tray::Tray::on_system_tray_event)
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -71,7 +72,6 @@ fn main() -> std::io::Result<()> {
             });
             Ok(())
         })
-        .on_system_tray_event(core::tray::Tray::on_system_tray_event)
         .invoke_handler(tauri::generate_handler![
             // common
             cmds::get_sys_proxy,

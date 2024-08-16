@@ -1,18 +1,22 @@
 use serde_yaml::{Mapping, Value};
 use std::collections::HashSet;
 
-pub const HANDLE_FIELDS: [&str; 11] = [
+pub const HANDLE_FIELDS: [&str; 15] = [
     "mode",
+    "mixed-port",
+    "port",
+    "socks-port",
     "redir-port",
     "tproxy-port",
-    "mixed-port",
-    "socks-port",
-    "port",
     "allow-lan",
-    "log-level",
     "ipv6",
-    "secret",
+    "log-level",
+    "unified-delay",
     "external-controller",
+    "secret",
+    "profile",
+    "tun",
+    "dns"
 ];
 
 pub const DEFAULT_FIELDS: [&str; 5] = [
