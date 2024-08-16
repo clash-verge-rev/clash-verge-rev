@@ -55,7 +55,7 @@ importers:
         version: 0.2.36(react@18.3.1)
       i18next:
         specifier: ^23.11.5
-        version: 23.12.7
+        version: 23.13.0
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -82,7 +82,7 @@ importers:
         version: 7.52.2(react@18.3.1)
       react-i18next:
         specifier: ^15.0.0
-        version: 15.0.1(i18next@23.12.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 15.0.1(i18next@23.13.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-markdown:
         specifier: ^9.0.1
         version: 9.0.1(@types/react@18.3.3)(react@18.3.1)
@@ -2451,8 +2451,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  i18next@23.12.7:
-    resolution: {integrity: sha512-LW7WpZV929NiNfifCPW3JRruEngBviTgaGSviRaXGxxhloCpECNHL8T6axfxGqgGntffiuJwxCWBmTz9hHcfAg==}
+  i18next@23.13.0:
+    resolution: {integrity: sha512-B+g0/KTKmN3+NeMKPljQxdrih6Q6lyDF5O2e/Ofd0JQsTLojJD/BSTTN04iw6OVc0yBiHeypu5hoBNV6ag44Zw==}
 
   ignore@5.3.1:
     resolution: {integrity: sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==}
@@ -6305,7 +6305,7 @@ snapshots:
 
   husky@9.1.4: {}
 
-  i18next@23.12.7:
+  i18next@23.13.0:
     dependencies:
       '@babel/runtime': 7.25.0
 
@@ -7026,11 +7026,11 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  react-i18next@15.0.1(i18next@23.12.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-i18next@15.0.1(i18next@23.13.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.25.0
       html-parse-stringify: 3.0.1
-      i18next: 23.12.7
+      i18next: 23.13.0
       react: 18.3.1
     optionalDependencies:
       react-dom: 18.3.1(react@18.3.1)
