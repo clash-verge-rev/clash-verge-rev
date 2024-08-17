@@ -1,3 +1,27 @@
+## v1.7.6
+
+### Notice
+
+- Clash Verge Rev 目前已进入稳定周期，日后更新将着重于 bug 修复与内核常规升级
+
+### Features
+
+- Meta(mihomo)内核升级 1.18.7
+- 界面细节调整
+- 优化服务模式安装逻辑
+- 移除无用的 console log
+- 能自动选择第一个订阅
+
+### Bugs Fixes
+
+- 修复服务模式安装问题
+- 修复 Mac 下的代理绕过 CIDR 写法过滤
+- 修复 32 位升级 URL
+- 修复不同分组 URL 测试地址配置无效的问题
+- 修复 Web UI 下的一处 hostname 参数
+
+---
+
 ## v1.7.5
 
 ### Features
