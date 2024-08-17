@@ -1,12 +1,10 @@
 .base-page {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  > header {
-    flex: 0 0 58px;
+
+  > .base-header {
+    height: 50px;
     width: 100%;
-    // max-width: 850px;
     margin: 0 auto;
     padding: 0 20px;
     box-sizing: border-box;
@@ -17,42 +15,30 @@
   }
 
   .base-container {
-    height: 100%;
-    overflow: hidden;
-    // border-radius: 10px;
-    // border-top-left-radius: var(--border-radius);
+    height: calc(100% - 50px);
 
-    > section {
-      position: relative;
-      flex: 1 1 100%;
+    > .base-section {
       width: 100%;
       height: 100%;
       overflow: auto;
       padding: 10px 0;
       box-sizing: border-box;
       scrollbar-gutter: stable;
+
       .base-content {
-        width: calc(100% - 10px * 2);
-        margin: 0 auto;
+        width: 100%;
       }
     }
 
     &.no-padding {
-      > section {
+      > .base-section {
         padding: 0;
         overflow: visible;
+
         .base-content {
           width: 100%;
         }
       }
     }
-  }
-
-  // sortablejs drag style
-  .sortable-drag {
-    opacity: 0.8;
-  }
-  .sortable-ghost > .MuiBox-root {
-    background-color: var(--background-color-alpha) !important;
   }
 }

@@ -153,7 +153,7 @@ const TestPage = () => {
     <BasePage
       full
       title={t("Test")}
-      contentStyle={{ height: "100%" }}
+      contentStyle={{ height: "100%", overflow: "auto" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
@@ -174,9 +174,7 @@ const TestPage = () => {
         sx={{
           pt: 1.25,
           mb: 0.5,
-          px: "10px",
-          height: "100%",
-          overflow: "auto",
+          px: "5px",
         }}>
         <DndContext
           sensors={sensors}

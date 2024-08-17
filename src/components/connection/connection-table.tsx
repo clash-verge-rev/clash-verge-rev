@@ -1,21 +1,20 @@
-import React from "react";
-import dayjs from "dayjs";
-import { useMemo, useState } from "react";
+import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { deleteConnection } from "@/services/api";
+import parseTraffic from "@/utils/parse-traffic";
+import { truncateStr } from "@/utils/truncate-str";
+import CancelIcon from "@mui/icons-material/Close";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import {
   DataGrid,
-  GridColDef,
   GridActionsCellItem,
+  GridColDef,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
-import { truncateStr } from "@/utils/truncate-str";
-import parseTraffic from "@/utils/parse-traffic";
+import { enUS, zhCN } from "@mui/x-data-grid/locales";
+import dayjs from "dayjs";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { zhCN, enUS } from "@mui/x-data-grid/locales";
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import CancelIcon from "@mui/icons-material/Close";
-import { deleteConnection } from "@/services/api";
 
 interface Props {
   connections: IConnectionsItem[];

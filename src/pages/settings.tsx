@@ -48,34 +48,36 @@ const SettingPage = () => {
           </IconButton>
         </ButtonGroup>
       }>
-      <Grid container spacing={{ xs: 1.5, lg: 1.5 }}>
-        <Grid item xs={12} md={6}>
-          <Box
-            sx={{
-              borderRadius: 2,
-              marginBottom: 1.5,
-              backgroundColor: isDark ? "#282a36" : "#ffffff",
-            }}>
-            <SettingSystem onError={onError} />
-          </Box>
-          <Box
-            sx={{
-              borderRadius: 2,
-              backgroundColor: isDark ? "#282a36" : "#ffffff",
-            }}>
-            <SettingClash onError={onError} />
-          </Box>
+      <div style={{ padding: "0 10px" }}>
+        <Grid container spacing={{ xs: 1.5, lg: 1.5 }}>
+          <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                borderRadius: 2,
+                marginBottom: 1.5,
+                backgroundColor: isDark ? "#282a36" : "#ffffff",
+              }}>
+              <SettingSystem onError={onError} />
+            </Box>
+            <Box
+              sx={{
+                borderRadius: 2,
+                backgroundColor: isDark ? "#282a36" : "#ffffff",
+              }}>
+              <SettingClash onError={onError} />
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                borderRadius: 2,
+                backgroundColor: isDark ? "#282a36" : "#ffffff",
+              }}>
+              <SettingVerge onError={onError} />
+            </Box>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Box
-            sx={{
-              borderRadius: 2,
-              backgroundColor: isDark ? "#282a36" : "#ffffff",
-            }}>
-            <SettingVerge onError={onError} />
-          </Box>
-        </Grid>
-      </Grid>
+      </div>
     </BasePage>
   );
 };

@@ -10,7 +10,6 @@ import { useVerge } from "@/hooks/use-verge";
 import LoadingPage from "@/pages/loading";
 import { getAxios } from "@/services/api";
 import { getPortableFlag } from "@/services/cmds";
-import { useSetThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import { DarkMode, LightMode } from "@mui/icons-material";
 import { List, Paper, ThemeProvider } from "@mui/material";
@@ -38,7 +37,6 @@ const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
-  const setMode = useSetThemeMode();
 
   const { verge, patchVerge } = useVerge();
   const { language, start_page, enable_system_title, enable_keep_ui_active } =
@@ -73,24 +71,27 @@ const Layout = () => {
       }
     });
 
-    listen("verge://refresh-clash-config", async () => {
-      // the clash info may be updated
-      await getAxios(true);
-      mutate("getProxies");
-      mutate("getVersion");
-      mutate("getClashConfig");
-      mutate("getClashInfo");
-      mutate("getRuntimeConfig");
-      mutate("getProxyProviders");
-    });
+    const unlistenRefreshClash = listen(
+      "verge://refresh-clash-config",
+      async () => {
+        // the clash info may be updated
+        await getAxios(true);
+        mutate("getProxies");
+        mutate("getVersion");
+        mutate("getClashConfig");
+        mutate("getClashInfo");
+        mutate("getRuntimeConfig");
+        mutate("getProxyProviders");
+      },
+    );
 
     // update the verge config
-    listen("verge://refresh-verge-config", () => {
+    const unlistenRefreshVerge = listen("verge://refresh-verge-config", () => {
       mutate("getVergeConfig");
     });
 
     // 设置提示监听
-    listen("verge://notice-message", ({ payload }) => {
+    const unlistenNotice = listen("verge://notice-message", ({ payload }) => {
       const [status, msg] = payload as [string, string];
       switch (status) {
         case "set_config::ok":
@@ -112,7 +113,10 @@ const Layout = () => {
     }, 50);
 
     return () => {
-      unlistenResize.then();
+      unlistenRefreshClash.then((fn) => fn());
+      unlistenRefreshVerge.then((fn) => fn());
+      unlistenNotice.then((fn) => fn());
+      unlistenResize.then((fn) => fn());
     };
   }, []);
 
@@ -131,7 +135,6 @@ const Layout = () => {
     // prettier-ignore
     const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!isAppearanceTransition) {
-      // setMode(isDark ? "light" : "dark");
       patchVerge({ theme_mode: isDark ? "light" : "dark" });
       return;
     }
@@ -145,7 +148,6 @@ const Layout = () => {
 
     const transition = document.startViewTransition(() => {
       flushSync(() => {
-        // setMode(isDark ? "light" : "dark");
         patchVerge({ theme_mode: isDark ? "light" : "dark" });
         document.documentElement.className = isDark ? "light" : "dark";
       });
@@ -197,9 +199,9 @@ const Layout = () => {
             }),
             OS === "linux" && !enable_system_title
               ? {
-                  borderRadius: `${isMaximized ? 0 : "8px"}`,
+                  borderRadius: `${isMaximized ? 0 : "6px"}`,
                   border: "2px solid var(--divider-color)",
-                  width: "calc(100vw - 4px)",
+                  width: "calc(100% - 4px)",
                   height: "calc(100vh - 4px)",
                 }
               : {},
@@ -213,9 +215,10 @@ const Layout = () => {
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
+                  alignItems: "end",
                   overflow: "hidden",
                 }}>
-                <LogoSvg style={{ width: "50px", marginRight: "10px" }} />
+                <LogoSvg style={{ width: "50px" }} />
                 <AppNameSvg />
               </div>
               <UpdateButton className="the-newbtn" />
