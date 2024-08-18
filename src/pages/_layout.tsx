@@ -7,6 +7,7 @@ import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
+import { useVisibility } from "@/hooks/use-visibility";
 import LoadingPage from "@/pages/loading";
 import { getAxios } from "@/services/api";
 import { getPortableFlag } from "@/services/cmds";
@@ -37,6 +38,7 @@ const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
+  const visible = useVisibility();
 
   const { verge, patchVerge } = useVerge();
   const { language, start_page, enable_system_title, enable_keep_ui_active } =
@@ -128,7 +130,7 @@ const Layout = () => {
     if (start_page) {
       navigate(start_page);
     }
-  }, [language, start_page]);
+  }, [language, start_page, visible]);
 
   const toggleTheme = (event: MouseEvent) => {
     // @ts-ignore
@@ -196,15 +198,14 @@ const Layout = () => {
           sx={[
             ({ palette }) => ({
               bgcolor: palette.background.paper,
-            }),
-            OS === "linux" && !enable_system_title
-              ? {
+              ...(OS === "linux" &&
+                !enable_system_title && {
                   borderRadius: `${isMaximized ? 0 : "6px"}`,
                   border: "2px solid var(--divider-color)",
-                  width: "calc(100% - 4px)",
+                  width: "calc(100vw - 4px)",
                   height: "calc(100vh - 4px)",
-                }
-              : {},
+                }),
+            }),
           ]}>
           <div
             className={`layout__left ${enable_system_title && "system-title"}`}>

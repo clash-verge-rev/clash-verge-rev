@@ -66,6 +66,8 @@
 
     .the-traffic {
       height: 160px;
+      display: flex;
+      align-items: center;
 
       > div {
         margin: 0 auto;
