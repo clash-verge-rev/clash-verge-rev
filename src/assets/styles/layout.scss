@@ -13,14 +13,21 @@
     -ms-user-select: none;
     border-right: 1px solid var(--divider-color);
 
-    .the-logo {
+    .logo-wrap {
       position: relative;
       width: 100%;
       display: flex;
       align-items: end;
       height: 80px;
-      padding: 10px 15px;
+      padding: 5px 20px;
       box-sizing: border-box;
+
+      .the-logo {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        overflow: hidden;
+      }
 
       img,
       svg {
@@ -97,7 +104,7 @@
 .unknown {
   &.layout {
     & .layout__left.system-title {
-      & .the-logo {
+      & .logo-wrap {
         height: 60px;
 
         .switch-theme-btn {

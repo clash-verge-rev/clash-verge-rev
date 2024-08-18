@@ -207,18 +207,10 @@ const Layout = () => {
               : {},
           ]}>
           <div
-            className={`layout__left ${
-              enable_system_title ? "system-title" : ""
-            }`}>
-            <div className="the-logo" data-tauri-drag-region="true">
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "end",
-                  overflow: "hidden",
-                }}>
-                <LogoSvg style={{ width: "50px" }} />
+            className={`layout__left ${enable_system_title && "system-title"}`}>
+            <div className="logo-wrap" data-tauri-drag-region="true">
+              <div className="the-logo">
+                <LogoSvg style={{ width: "50px", marginRight: "5px" }} />
                 <AppNameSvg />
               </div>
               <UpdateButton className="the-newbtn" />
@@ -257,9 +249,7 @@ const Layout = () => {
           </div>
 
           <div
-            className={`layout__right ${
-              enable_system_title ? "system-title" : ""
-            }`}>
+            className={`layout__right ${enable_system_title && "system-title"}`}>
             {!enable_system_title && (
               <div className="the-bar">
                 <div
