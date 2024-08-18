@@ -1,5 +1,3 @@
-import { Button, ButtonGroup } from "@mui/material";
-import { appWindow } from "@tauri-apps/api/window";
 import {
   CloseRounded,
   CropSquareRounded,
@@ -8,6 +6,8 @@ import {
   PushPinOutlined,
   PushPinRounded,
 } from "@mui/icons-material";
+import { Button, ButtonGroup } from "@mui/material";
+import { appWindow } from "@tauri-apps/api/window";
 import { useState } from "react";
 
 interface Props {
@@ -74,7 +74,7 @@ export const LayoutControl = ({ maximized, onClose }: Props) => {
         sx={{
           minWidth,
           svg: { transform: "scale(1.05)" },
-          ":hover": { bgcolor: "#ff000090" },
+          ":hover": { bgcolor: "#ff000090", color: "#fff" },
         }}
         onClick={onClose}>
         <CloseRounded fontSize="small" />

@@ -6,19 +6,21 @@
 
   &__left {
     height: 100%;
-    flex: 1 0 200px;
+    flex: 0 0 200px;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     border-right: 1px solid var(--divider-color);
+    display: flex;
+    flex-direction: column;
 
     .logo-wrap {
+      flex: 0 0 80px;
       position: relative;
-      width: 100%;
       display: flex;
+      width: 100%;
       align-items: end;
-      height: 80px;
       padding: 5px 20px;
       box-sizing: border-box;
 
@@ -39,8 +41,8 @@
 
       .switch-theme-btn {
         position: absolute;
-        right: 10px;
         top: 23px;
+        right: 10px;
         height: 30px;
         width: 30px;
         background-color: transparent;
@@ -50,8 +52,8 @@
 
       .the-newbtn {
         position: absolute;
-        right: 35px;
         top: 23px;
+        right: 35px;
         border-radius: 8px;
         padding: 2px 4px;
         transform: scale(0.8);
@@ -59,13 +61,13 @@
     }
 
     .the-menu {
-      height: calc(100% - 80px - 160px);
+      flex: 1 1 auto;
       overflow-y: auto;
       box-sizing: border-box;
     }
 
     .the-traffic {
-      height: 160px;
+      flex: 0 0 160px;
       display: flex;
       align-items: center;
 
@@ -107,7 +109,7 @@
   &.layout {
     & .layout__left.system-title {
       & .logo-wrap {
-        height: 60px;
+        flex: 0 0 60px;
 
         .switch-theme-btn {
           top: 3px;
@@ -116,10 +118,6 @@
         .the-newbtn {
           top: 3px;
         }
-      }
-
-      & .the-menu {
-        height: calc(100% - 60px - 160px);
       }
     }
 

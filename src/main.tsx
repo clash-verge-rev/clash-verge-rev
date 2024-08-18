@@ -59,13 +59,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-const contexts = [
-  <ThemeModeProvider key={"themeModeProvider"} />,
-  <LoadingCacheProvider key={"loadingCacheProvider"} />,
-  <UpdateStateProvider key={"updateStateProvider"} />,
-];
-
 function renderRoot(container: HTMLElement) {
+  const contexts = [
+    <ThemeModeProvider key={"themeModeProvider"} />,
+    <LoadingCacheProvider key={"loadingCacheProvider"} />,
+    <UpdateStateProvider key={"updateStateProvider"} />,
+  ];
   createRoot(container).render(
     <React.StrictMode>
       <ComposeContextProvider contexts={contexts}>
