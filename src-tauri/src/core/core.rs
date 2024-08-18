@@ -93,13 +93,15 @@ impl CoreManager {
             None => false,
         };
 
-        // 关闭tun模式
         let mut disable = Mapping::new();
         let mut tun = Mapping::new();
         tun.insert("enable".into(), false.into());
         disable.insert("tun".into(), tun.into());
-        log::debug!(target: "app", "disable tun mode");
-        let _ = clash_api::patch_configs(&disable).await;
+        if should_kill {
+            // 关闭tun模式
+            log::debug!(target: "app", "disable tun mode");
+            let _ = clash_api::patch_configs(&disable).await;
+        }
 
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
