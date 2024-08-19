@@ -114,12 +114,12 @@ export const ProfileMore = (props: Props) => {
     },
     {
       label: "Edit Info",
-      icon: <Edit fontSize="small" color="primary" />,
+      icon: <EditNote fontSize="small" color="primary" />,
       handler: onEditInfo,
     },
     {
       label: "Edit File",
-      icon: <EditNote fontSize="small" color="primary" />,
+      icon: <Edit fontSize="small" color="primary" />,
       handler: onEditFile,
     },
     {
@@ -149,12 +149,12 @@ export const ProfileMore = (props: Props) => {
     },
     {
       label: "Edit Info",
-      icon: <Edit fontSize="small" color="primary" />,
+      icon: <EditNote fontSize="small" color="primary" />,
       handler: onEditInfo,
     },
     {
       label: "Edit File",
-      icon: <EditNote fontSize="small" color="primary" />,
+      icon: <Edit fontSize="small" color="primary" />,
       handler: onEditFile,
     },
     {
