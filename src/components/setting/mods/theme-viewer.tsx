@@ -2,6 +2,11 @@ import { BaseDialog, DialogRef, EditorViewer, Notice } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
 import {
+  useSetThemeMode,
+  useThemeMode,
+  useThemeSettings,
+} from "@/services/states";
+import {
   Box,
   Button,
   ButtonGroup,
@@ -21,27 +26,17 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const { verge, patchVerge } = useVerge();
-  const { theme_mode } = verge ?? {};
-  const [themeMode, setThemeMode] = useState(theme_mode ?? "light");
-  const [themeSettings, setThemeSettings] = useState({
-    light_theme_setting: verge?.light_theme_setting ?? {},
-    dark_theme_setting: verge?.dark_theme_setting ?? {},
-  });
+  const { patchVerge } = useVerge();
+  const themeMode = useThemeMode();
+  const setThemeMode = useSetThemeMode();
+  const [themeSettings, setThemeSettings] = useThemeSettings();
   const theme =
-    themeMode === "light"
-      ? themeSettings.light_theme_setting
-      : themeSettings.dark_theme_setting;
+    (themeMode === "light" ? themeSettings.light : themeSettings.dark) ?? {};
   const [editorOpen, setEditorOpen] = useState(false);
 
   useImperativeHandle(ref, () => ({
     open: () => {
       setOpen(true);
-      setThemeMode(theme_mode ?? "light");
-      setThemeSettings({
-        light_theme_setting: verge?.light_theme_setting ?? {},
-        dark_theme_setting: verge?.dark_theme_setting ?? {},
-      });
     },
     close: () => setOpen(false),
   }));
@@ -53,45 +48,27 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   } as const;
 
   const handleChange = (field: keyof typeof theme) => (e: any) => {
-    setThemeSettings((t) => {
+    setThemeSettings((t: any) => {
       return themeMode === "light"
-        ? {
-            ...t,
-            light_theme_setting: {
-              ...t.light_theme_setting,
-              [field]: e.target.value,
-            },
-          }
-        : {
-            ...t,
-            dark_theme_setting: {
-              ...t.dark_theme_setting,
-              [field]: e.target.value,
-            },
-          };
+        ? { ...t, light: { ...t.light, [field]: e.target.value } }
+        : { ...t, dark: { ...t.dark, [field]: e.target.value } };
     });
   };
 
   const handleCSSInjection = (css: string) => {
-    setThemeSettings((t) => {
+    setThemeSettings((t: any) => {
       return themeMode === "light"
-        ? {
-            ...t,
-            light_theme_setting: {
-              ...t.light_theme_setting,
-              css_injection: css,
-            },
-          }
-        : {
-            ...t,
-            dark_theme_setting: { ...t.dark_theme_setting, css_injection: css },
-          };
+        ? { ...t, light: { ...t.light, css_injection: css } }
+        : { ...t, dark: { ...t.dark, css_injection: css } };
     });
   };
 
   const onSave = useLockFn(async () => {
     try {
-      await patchVerge(themeSettings);
+      patchVerge({
+        light_theme_setting: themeSettings.light,
+        dark_theme_setting: themeSettings.dark,
+      });
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
@@ -100,7 +77,6 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
 
   // default theme
   const dt = themeMode === "light" ? defaultTheme : defaultDarkTheme;
-
   type ThemeKey = keyof typeof theme & keyof typeof defaultTheme;
 
   const renderItem = (label: string, key: ThemeKey) => {
@@ -119,25 +95,77 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
     );
   };
 
+  // const isDark = themeMode === "dark";
+  // const toggleTheme = (event: MouseEvent) => {
+  //   // @ts-ignore
+  //   // prettier-ignore
+  //   const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  //   if (!isAppearanceTransition) {
+  //     setThemeMode(isDark ? "light" : "dark");
+  //     setTimeout(() => {
+  //       patchVerge({ theme_mode: isDark ? "light" : "dark" });
+  //     }, 800);
+  //     return;
+  //   }
+
+  //   const x = event.clientX;
+  //   const y = event.clientY;
+  //   const endRadius = Math.hypot(
+  //     Math.max(x, innerWidth - x),
+  //     Math.max(y, innerHeight - y),
+  //   );
+
+  //   const transition = document.startViewTransition(() => {
+  //     flushSync(() => {
+  //       setThemeMode(isDark ? "light" : "dark");
+  //       setTimeout(() => {
+  //         patchVerge({ theme_mode: isDark ? "light" : "dark" });
+  //       }, 800);
+  //       document.documentElement.className = isDark ? "light" : "dark";
+  //     });
+  //   });
+  //   transition.ready.then(() => {
+  //     const clipPath = [
+  //       `circle(0px at ${x}px ${y}px)`,
+  //       `circle(${endRadius}px at ${x}px ${y}px)`,
+  //     ];
+  //     document.documentElement.animate(
+  //       {
+  //         clipPath: isDark ? [...clipPath].reverse() : clipPath,
+  //       },
+  //       {
+  //         duration: 400,
+  //         easing: "ease-out",
+  //         pseudoElement: isDark
+  //           ? "::view-transition-old(root)"
+  //           : "::view-transition-new(root)",
+  //       },
+  //     );
+  //   });
+  // };
+
   return (
     <BaseDialog
       open={open}
       title={
-        // t("Theme Setting")
         <Box display="flex" justifyContent={"space-between"} gap={1}>
           <Typography variant="h6">{t("Theme Setting")}</Typography>
           <ButtonGroup size="small">
             <Button
               variant={themeMode === "light" ? "contained" : "outlined"}
-              onClick={() => {
+              onClick={(e) => {
                 setThemeMode("light");
+                // toggleTheme(e);
+                patchVerge({ theme_mode: "light" });
               }}>
               {t("theme.light")}
             </Button>
             <Button
               variant={themeMode === "dark" ? "contained" : "outlined"}
-              onClick={() => {
+              onClick={(e) => {
                 setThemeMode("dark");
+                // toggleTheme(e);
+                patchVerge({ theme_mode: "dark" });
               }}>
               {t("theme.dark")}
             </Button>

@@ -1,46 +1,38 @@
-import { useEffect, useMemo } from "react";
+import { useVerge } from "@/hooks/use-verge";
+import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
+import {
+  useSetThemeMode,
+  useThemeMode,
+  useThemeSettings,
+} from "@/services/states";
 import { alpha, createTheme, Shadows, Theme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
-import { useSetThemeMode, useThemeMode } from "@/services/states";
-import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
-import { useVerge } from "@/hooks/use-verge";
-import { useLocalStorage } from "foxact/use-local-storage";
+import { useEffect, useMemo } from "react";
 
 /**
  * custom theme
  */
 export const useCustomTheme = () => {
   const { verge } = useVerge();
-  const { theme_mode, theme_setting } = verge ?? {};
+  const { theme_mode, light_theme_setting, dark_theme_setting } = verge ?? {};
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
-  const [themeSetting, setThemeSetting] = useLocalStorage<
-    IVergeConfig["theme_setting"]
-  >(
-    "theme_setting",
-    {},
-    {
-      serializer: JSON.stringify,
-      deserializer: JSON.parse,
-    },
-  );
-
+  const [themeSettings, setThemeSettings] = useThemeSettings();
   useEffect(() => {
-    if (theme_setting) {
-      setThemeSetting(theme_setting);
-    }
-  }, [theme_setting]);
+    setThemeSettings({
+      light: light_theme_setting ?? {},
+      dark: dark_theme_setting ?? {},
+    });
+  }, [light_theme_setting, dark_theme_setting]);
 
   useEffect(() => {
     const themeMode = ["light", "dark", "system"].includes(theme_mode!)
       ? theme_mode!
       : "light";
-
     if (themeMode !== "system") {
       setMode(themeMode);
       return;
     }
-
     appWindow.theme().then((m) => m && setMode(m));
     const unlisten = appWindow.onThemeChanged((e) => setMode(e.payload));
 
@@ -50,11 +42,10 @@ export const useCustomTheme = () => {
   }, [theme_mode]);
 
   const theme = useMemo(() => {
-    const setting = theme_setting || themeSetting!;
+    const setting = themeSettings[mode]!;
     const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
 
     let theme: Theme;
-
     try {
       theme = createTheme({
         breakpoints: {
@@ -135,7 +126,6 @@ export const useCustomTheme = () => {
 
     // update svg icon
     const { palette } = theme;
-
     setTimeout(() => {
       const dom = document.querySelector("#Gradient2");
       if (dom) {
@@ -148,7 +138,7 @@ export const useCustomTheme = () => {
     }, 0);
 
     return theme;
-  }, [mode, theme_setting]);
+  }, [mode, themeSettings]);
 
   return { theme };
 };

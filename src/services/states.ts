@@ -5,6 +5,17 @@ const [ThemeModeProvider, useThemeMode, useSetThemeMode] = createContextState<
   "light" | "dark"
 >("light");
 
+interface ThemeSettings {
+  light: IVergeConfig["light_theme_setting"];
+  dark: IVergeConfig["dark_theme_setting"];
+}
+const defaultThemeSettings: ThemeSettings = { light: {}, dark: {} };
+export const useThemeSettings = () =>
+  useLocalStorage<ThemeSettings>("theme_settings", defaultThemeSettings, {
+    serializer: JSON.stringify,
+    deserializer: JSON.parse,
+  });
+
 export const useEnableLog = () => useLocalStorage("enable-log", true);
 
 interface IConnectionSetting {
@@ -32,13 +43,13 @@ const [UpdateStateProvider, useUpdateState, useSetUpdateState] =
   createContextState<boolean>(false);
 
 export {
-  ThemeModeProvider,
-  useThemeMode,
-  useSetThemeMode,
   LoadingCacheProvider,
+  ThemeModeProvider,
+  UpdateStateProvider,
   useLoadingCache,
   useSetLoadingCache,
-  UpdateStateProvider,
-  useUpdateState,
+  useSetThemeMode,
   useSetUpdateState,
+  useThemeMode,
+  useUpdateState,
 };

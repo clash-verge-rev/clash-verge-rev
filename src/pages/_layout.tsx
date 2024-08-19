@@ -11,6 +11,7 @@ import { useVisibility } from "@/hooks/use-visibility";
 import LoadingPage from "@/pages/loading";
 import { getAxios } from "@/services/api";
 import { getPortableFlag } from "@/services/cmds";
+import { useSetThemeMode, useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import { DarkMode, LightMode } from "@mui/icons-material";
 import { List, Paper, ThemeProvider } from "@mui/material";
@@ -39,11 +40,13 @@ const Layout = () => {
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
   const visible = useVisibility();
+  const setMode = useSetThemeMode();
+  const mode = useThemeMode();
 
   const { verge, patchVerge } = useVerge();
   const { language, start_page, enable_system_title, enable_keep_ui_active } =
     verge || {};
-  const isDark = theme.palette.mode === "dark";
+  const isDark = mode === "dark";
   keepUIActive = enable_keep_ui_active ?? false;
   const navigate = useNavigate();
 
@@ -137,7 +140,10 @@ const Layout = () => {
     // prettier-ignore
     const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!isAppearanceTransition) {
-      patchVerge({ theme_mode: isDark ? "light" : "dark" });
+      setMode(isDark ? "light" : "dark");
+      setTimeout(() => {
+        patchVerge({ theme_mode: isDark ? "light" : "dark" });
+      }, 800);
       return;
     }
 
@@ -150,7 +156,10 @@ const Layout = () => {
 
     const transition = document.startViewTransition(() => {
       flushSync(() => {
-        patchVerge({ theme_mode: isDark ? "light" : "dark" });
+        setMode(isDark ? "light" : "dark");
+        setTimeout(() => {
+          patchVerge({ theme_mode: isDark ? "light" : "dark" });
+        }, 800);
         document.documentElement.className = isDark ? "light" : "dark";
       });
     });
