@@ -23,7 +23,8 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const { patchVerge } = useVerge();
+  const { verge, patchVerge } = useVerge();
+  const { light_theme_setting, dark_theme_setting } = verge || {};
   const { toggleTheme } = useCustomTheme();
   const themeMode = useThemeMode();
   const [themeSettings, setThemeSettings] = useThemeSettings();
@@ -119,8 +120,20 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       contentSx={{ width: 400, maxHeight: 600, overflow: "auto", pb: 0 }}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
+      onClose={() => {
+        setThemeSettings({
+          light: light_theme_setting,
+          dark: dark_theme_setting,
+        });
+        setOpen(false);
+      }}
+      onCancel={() => {
+        setThemeSettings({
+          light: light_theme_setting,
+          dark: dark_theme_setting,
+        });
+        setOpen(false);
+      }}
       onOk={onSave}>
       <List sx={{ pt: 0 }}>
         {renderItem("Primary Color", "primary_color")}
