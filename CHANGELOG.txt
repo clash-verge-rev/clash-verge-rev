@@ -6,6 +6,7 @@
 - `GuardState` 组件里支持失败重试 5 次
 - 主题色切换动画（仅支持左侧边栏 logo 上的主题切换按钮）
 - 订阅文件右键菜单列表添加图标
+- windows 下主题切换全部添加动画
 
 ### 🚀 Performance Improvements
 - 只调用一次更改接口对多个 clash 端口更改

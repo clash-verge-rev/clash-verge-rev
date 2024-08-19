@@ -1,5 +1,6 @@
-import { useTranslation } from "react-i18next";
+import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { Button, ButtonGroup } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 type ThemeValue = IVergeConfig["theme_mode"];
 
@@ -11,6 +12,7 @@ interface Props {
 export const ThemeModeSwitch = (props: Props) => {
   const { value, onChange } = props;
   const { t } = useTranslation();
+  const { toggleTheme } = useCustomTheme();
 
   const modes = ["light", "dark", "system"] as const;
 
@@ -20,9 +22,8 @@ export const ThemeModeSwitch = (props: Props) => {
         <Button
           key={mode}
           variant={mode === value ? "contained" : "outlined"}
-          onClick={() => onChange?.(mode)}
-          sx={{ textTransform: "capitalize" }}
-        >
+          onClick={(e) => toggleTheme(e, mode)}
+          sx={{ textTransform: "capitalize" }}>
           {t(`theme.${mode}`)}
         </Button>
       ))}

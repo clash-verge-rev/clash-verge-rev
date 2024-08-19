@@ -1,11 +1,8 @@
 import { BaseDialog, DialogRef, EditorViewer, Notice } from "@/components/base";
+import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
 import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
-import {
-  useSetThemeMode,
-  useThemeMode,
-  useThemeSettings,
-} from "@/services/states";
+import { useThemeMode, useThemeSettings } from "@/services/states";
 import {
   Box,
   Button,
@@ -27,8 +24,8 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [open, setOpen] = useState(false);
   const { patchVerge } = useVerge();
+  const { toggleTheme } = useCustomTheme();
   const themeMode = useThemeMode();
-  const setThemeMode = useSetThemeMode();
   const [themeSettings, setThemeSettings] = useThemeSettings();
   const theme =
     (themeMode === "light" ? themeSettings.light : themeSettings.dark) ?? {};
@@ -95,55 +92,6 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
     );
   };
 
-  // const isDark = themeMode === "dark";
-  // const toggleTheme = (event: MouseEvent) => {
-  //   // @ts-ignore
-  //   // prettier-ignore
-  //   const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  //   if (!isAppearanceTransition) {
-  //     setThemeMode(isDark ? "light" : "dark");
-  //     setTimeout(() => {
-  //       patchVerge({ theme_mode: isDark ? "light" : "dark" });
-  //     }, 800);
-  //     return;
-  //   }
-
-  //   const x = event.clientX;
-  //   const y = event.clientY;
-  //   const endRadius = Math.hypot(
-  //     Math.max(x, innerWidth - x),
-  //     Math.max(y, innerHeight - y),
-  //   );
-
-  //   const transition = document.startViewTransition(() => {
-  //     flushSync(() => {
-  //       setThemeMode(isDark ? "light" : "dark");
-  //       setTimeout(() => {
-  //         patchVerge({ theme_mode: isDark ? "light" : "dark" });
-  //       }, 800);
-  //       document.documentElement.className = isDark ? "light" : "dark";
-  //     });
-  //   });
-  //   transition.ready.then(() => {
-  //     const clipPath = [
-  //       `circle(0px at ${x}px ${y}px)`,
-  //       `circle(${endRadius}px at ${x}px ${y}px)`,
-  //     ];
-  //     document.documentElement.animate(
-  //       {
-  //         clipPath: isDark ? [...clipPath].reverse() : clipPath,
-  //       },
-  //       {
-  //         duration: 400,
-  //         easing: "ease-out",
-  //         pseudoElement: isDark
-  //           ? "::view-transition-old(root)"
-  //           : "::view-transition-new(root)",
-  //       },
-  //     );
-  //   });
-  // };
-
   return (
     <BaseDialog
       open={open}
@@ -154,18 +102,14 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
             <Button
               variant={themeMode === "light" ? "contained" : "outlined"}
               onClick={(e) => {
-                setThemeMode("light");
-                // toggleTheme(e);
-                patchVerge({ theme_mode: "light" });
+                toggleTheme(e, "light");
               }}>
               {t("theme.light")}
             </Button>
             <Button
               variant={themeMode === "dark" ? "contained" : "outlined"}
               onClick={(e) => {
-                setThemeMode("dark");
-                // toggleTheme(e);
-                patchVerge({ theme_mode: "dark" });
+                toggleTheme(e, "dark");
               }}>
               {t("theme.dark")}
             </Button>

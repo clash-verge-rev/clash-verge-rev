@@ -11,7 +11,7 @@ import { useVisibility } from "@/hooks/use-visibility";
 import LoadingPage from "@/pages/loading";
 import { getAxios } from "@/services/api";
 import { getPortableFlag } from "@/services/cmds";
-import { useSetThemeMode, useThemeMode } from "@/services/states";
+import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import { DarkMode, LightMode } from "@mui/icons-material";
 import { List, Paper, ThemeProvider } from "@mui/material";
@@ -22,8 +22,7 @@ import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
 import i18next from "i18next";
-import { MouseEvent, Suspense, useEffect, useState } from "react";
-import { flushSync } from "react-dom";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router-dom";
 import { CSSTransition, SwitchTransition } from "react-transition-group";
@@ -38,12 +37,11 @@ let keepUIActive = false;
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
-  const { theme } = useCustomTheme();
+  const { theme, toggleTheme } = useCustomTheme();
   const visible = useVisibility();
-  const setMode = useSetThemeMode();
   const mode = useThemeMode();
 
-  const { verge, patchVerge } = useVerge();
+  const { verge } = useVerge();
   const { language, start_page, enable_system_title, enable_keep_ui_active } =
     verge || {};
   const isDark = mode === "dark";
@@ -135,54 +133,6 @@ const Layout = () => {
     }
   }, [language, start_page, visible]);
 
-  const toggleTheme = (event: MouseEvent) => {
-    // @ts-ignore
-    // prettier-ignore
-    const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!isAppearanceTransition) {
-      setMode(isDark ? "light" : "dark");
-      setTimeout(() => {
-        patchVerge({ theme_mode: isDark ? "light" : "dark" });
-      }, 800);
-      return;
-    }
-
-    const x = event.clientX;
-    const y = event.clientY;
-    const endRadius = Math.hypot(
-      Math.max(x, innerWidth - x),
-      Math.max(y, innerHeight - y),
-    );
-
-    const transition = document.startViewTransition(() => {
-      flushSync(() => {
-        setMode(isDark ? "light" : "dark");
-        setTimeout(() => {
-          patchVerge({ theme_mode: isDark ? "light" : "dark" });
-        }, 800);
-        document.documentElement.className = isDark ? "light" : "dark";
-      });
-    });
-    transition.ready.then(() => {
-      const clipPath = [
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`,
-      ];
-      document.documentElement.animate(
-        {
-          clipPath: isDark ? [...clipPath].reverse() : clipPath,
-        },
-        {
-          duration: 400,
-          easing: "ease-out",
-          pseudoElement: isDark
-            ? "::view-transition-old(root)"
-            : "::view-transition-new(root)",
-        },
-      );
-    });
-  };
-
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
       <ThemeProvider theme={theme}>
@@ -231,7 +181,7 @@ const Layout = () => {
                   classNames="fade-theme">
                   <button
                     className="switch-theme-btn"
-                    onClick={(e) => toggleTheme(e)}>
+                    onClick={(e) => toggleTheme(e, isDark ? "light" : "dark")}>
                     {isDark ? (
                       <DarkMode fontSize="inherit" />
                     ) : (

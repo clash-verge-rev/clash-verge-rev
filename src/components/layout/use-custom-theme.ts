@@ -7,13 +7,14 @@ import {
 } from "@/services/states";
 import { alpha, createTheme, Shadows, Theme } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
-import { useEffect, useMemo } from "react";
+import { MouseEvent, useEffect, useMemo } from "react";
+import { flushSync } from "react-dom";
 
 /**
  * custom theme
  */
 export const useCustomTheme = () => {
-  const { verge } = useVerge();
+  const { verge, patchVerge } = useVerge();
   const { theme_mode, light_theme_setting, dark_theme_setting } = verge ?? {};
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
@@ -140,5 +141,68 @@ export const useCustomTheme = () => {
     return theme;
   }, [mode, themeSettings]);
 
-  return { theme };
+  const toggleTheme = async (
+    event: MouseEvent,
+    vergeThemeMode: "light" | "dark" | "system",
+  ) => {
+    let tmp: "light" | "dark" = "light";
+    if (vergeThemeMode === "system") {
+      const appTheme = await appWindow.theme();
+      tmp = appTheme as "light" | "dark";
+    } else {
+      tmp = vergeThemeMode;
+    }
+    const nextThemeMode = tmp;
+    if (mode === nextThemeMode) {
+      patchVerge({ theme_mode: vergeThemeMode });
+      return;
+    }
+    const isDark = nextThemeMode === "light";
+    // @ts-ignore
+    // prettier-ignore
+    const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!isAppearanceTransition) {
+      setMode(isDark ? "light" : "dark");
+      setTimeout(() => {
+        patchVerge({ theme_mode: vergeThemeMode });
+      }, 800);
+      return;
+    }
+
+    const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, innerWidth - x),
+      Math.max(y, innerHeight - y),
+    );
+
+    const transition = document.startViewTransition(() => {
+      flushSync(() => {
+        setMode(isDark ? "light" : "dark");
+        setTimeout(() => {
+          patchVerge({ theme_mode: vergeThemeMode });
+        }, 800);
+        document.documentElement.className = isDark ? "light" : "dark";
+      });
+    });
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+      document.documentElement.animate(
+        {
+          clipPath: isDark ? [...clipPath].reverse() : clipPath,
+        },
+        {
+          duration: 400,
+          easing: "ease-out",
+          pseudoElement: isDark
+            ? "::view-transition-old(root)"
+            : "::view-transition-new(root)",
+        },
+      );
+    });
+  };
+  return { theme, toggleTheme };
 };
