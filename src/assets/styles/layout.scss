@@ -146,8 +146,14 @@
     .layout__left {
       padding-top: 24px;
     }
+
     .layout__right .the-content {
       top: 24px;
+    }
+
+    .layout__left .the-newbtn {
+      right: 9px;
+      top: 2px;
     }
   }
 }
