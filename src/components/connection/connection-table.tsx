@@ -77,7 +77,7 @@ export const ConnectionTable = (props: Props) => {
     },
     {
       field: "download",
-      headerName: t("Download"),
+      headerName: t("Downloaded"),
       width: 88,
       align: "center",
       headerAlign: "center",
