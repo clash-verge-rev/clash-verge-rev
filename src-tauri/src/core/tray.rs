@@ -297,11 +297,11 @@ impl Tray {
         };
         let _ = tray.set_tooltip(&format!(
             "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
-            t!("System Proxy", "系统代理"),
+            t!("SysProxy", "系统代理"),
             switch_map[system_proxy],
-            t!("TUN Mode", "Tun 模式"),
+            t!("TUN", "Tun模式"),
             switch_map[tun_mode],
-            t!("Curent Profile", "当前订阅"),
+            t!("Profile", "当前订阅"),
             current_profile_name
         ));
 
