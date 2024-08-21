@@ -35,7 +35,6 @@ export const useCustomTheme = () => {
     const themeMode = ["light", "dark", "system"].includes(theme_mode!)
       ? theme_mode!
       : "light";
-    console.log("first load theme mode", firstLoadThemeByVerge);
     if (firstLoadThemeByVerge) {
       // first load theme mode by verge, no need to set theme mode again
       return;
