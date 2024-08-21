@@ -21,9 +21,7 @@ export const useEnableLog = () => useLocalStorage("enable-log", true);
 interface IConnectionSetting {
   layout: "table" | "list";
 }
-
 const defaultConnectionSetting: IConnectionSetting = { layout: "table" };
-
 export const useConnectionSetting = () =>
   useLocalStorage<IConnectionSetting>(
     "connections-setting",

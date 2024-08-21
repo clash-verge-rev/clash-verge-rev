@@ -10,6 +10,9 @@ import { appWindow } from "@tauri-apps/api/window";
 import { MouseEvent, useEffect, useMemo } from "react";
 import { flushSync } from "react-dom";
 
+/// use verge's theme mode when first loading the app interface
+let firstLoadThemeByVerge = false;
+
 /**
  * custom theme
  */
@@ -26,10 +29,18 @@ export const useCustomTheme = () => {
     });
   }, [light_theme_setting, dark_theme_setting]);
 
+  // This effect ensures that the verge's theme mode is used when the application interface is first loaded
   useEffect(() => {
+    if (!theme_mode) return;
     const themeMode = ["light", "dark", "system"].includes(theme_mode!)
       ? theme_mode!
       : "light";
+    console.log("first load theme mode", firstLoadThemeByVerge);
+    if (firstLoadThemeByVerge) {
+      // first load theme mode by verge, no need to set theme mode again
+      return;
+    }
+    firstLoadThemeByVerge = true;
     if (themeMode !== "system") {
       setMode(themeMode);
       return;
