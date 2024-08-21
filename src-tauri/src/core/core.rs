@@ -180,9 +180,10 @@ impl CoreManager {
         let cmd = Command::new_sidecar(clash_core)?;
         let (mut rx, cmd_child) = cmd.args(args).spawn()?;
 
-        let mut sidecar = self.sidecar.lock();
-        *sidecar = Some(cmd_child);
-        drop(sidecar);
+        {
+            let mut sidecar = self.sidecar.lock();
+            *sidecar = Some(cmd_child);
+        }
 
         tauri::async_runtime::spawn(async move {
             while let Some(event) = rx.recv().await {
@@ -263,8 +264,10 @@ impl CoreManager {
             return Ok(());
         }
 
-        let mut sidecar = self.sidecar.lock();
-        let _ = sidecar.take();
+        {
+            let mut sidecar = self.sidecar.lock();
+            let _ = sidecar.take();
+        }
 
         let mut system = System::new();
         system.refresh_all();

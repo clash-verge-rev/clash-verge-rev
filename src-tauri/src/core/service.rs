@@ -15,9 +15,17 @@ const SERVICE_URL: &str = "http://127.0.0.1:33211";
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ResponseBody {
+    auto_restart: bool,
+    restart_retry_count: u32,
+    info: Option<ClashInfo>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+struct ClashInfo {
     pub core_type: Option<String>,
     pub bin_path: String,
     pub config_dir: String,
+    pub config_file: String,
     pub log_file: String,
 }
 
