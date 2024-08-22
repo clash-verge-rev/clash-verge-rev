@@ -14,10 +14,14 @@ use tokio::time::sleep;
 
 #[derive(Debug)]
 pub struct CoreManager {
+    /// clash sidecar process
     sidecar: Arc<Mutex<Option<CommandChild>>>,
 
-    #[allow(unused)]
+    /// true if clash core is running in service mode
     use_service_mode: Arc<Mutex<bool>>,
+
+    /// true if clash core needs to be restarted when it is terminated
+    need_restart_core: Arc<Mutex<bool>>,
 }
 
 impl CoreManager {
@@ -27,6 +31,7 @@ impl CoreManager {
         CORE_MANAGER.get_or_init(|| CoreManager {
             sidecar: Arc::new(Mutex::new(None)),
             use_service_mode: Arc::new(Mutex::new(false)),
+            need_restart_core: Arc::new(Mutex::new(true)),
         })
     }
 
@@ -87,18 +92,15 @@ impl CoreManager {
     pub async fn run_core(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Run)?;
 
-        #[allow(unused_mut)]
-        let mut should_kill = match self.sidecar.lock().take() {
-            Some(_) => true,
-            None => false,
-        };
-
         let mut disable = Mapping::new();
         let mut tun = Mapping::new();
         tun.insert("enable".into(), false.into());
         disable.insert("tun".into(), tun.into());
-        if should_kill {
-            // 关闭tun模式
+
+        if self.sidecar.lock().is_some() {
+            *self.need_restart_core.lock() = false;
+            self.sidecar.lock().take();
+            // 关闭 tun 模式
             log::debug!(target: "app", "disable tun mode");
             let _ = clash_api::patch_configs(&disable).await;
         }
@@ -106,16 +108,10 @@ impl CoreManager {
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
             log_err!(service::stop_core_by_service().await);
-            should_kill = true;
-        }
-
-        // 这里得等一会儿
-        if should_kill {
-            sleep(Duration::from_millis(500)).await;
         }
 
         // 服务模式
-        let enable = { Config::verge().latest().enable_service_mode };
+        let enable = Config::verge().latest().enable_service_mode;
         let enable = enable.unwrap_or(false);
         *self.use_service_mode.lock() = enable;
 
@@ -130,7 +126,6 @@ impl CoreManager {
         if enable {
             // 服务模式启动失败就直接运行sidecar
             log::debug!(target: "app", "try to run core in service mode");
-
             let res = async { service::run_core_by_service(&config_path).await }.await;
             match res {
                 Ok(_) => return Ok(()),
@@ -155,10 +150,8 @@ impl CoreManager {
 
         let app_dir = dirs::app_home_dir()?;
         let app_dir = dirs::path_to_str(&app_dir)?;
-
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let mut clash_core = clash_core.unwrap_or("verge-mihomo".into());
-
         // compatibility
         if clash_core.contains("clash") {
             clash_core = "verge-mihomo".to_string();
@@ -172,19 +165,15 @@ impl CoreManager {
                 Err(err) => log::error!(target: "app", "{err}"),
             }
         }
-
         let config_path = dirs::path_to_str(&config_path)?;
-
         let args = vec!["-d", app_dir, "-f", config_path];
 
         let cmd = Command::new_sidecar(clash_core)?;
         let (mut rx, cmd_child) = cmd.args(args).spawn()?;
-
         {
             let mut sidecar = self.sidecar.lock();
             *sidecar = Some(cmd_child);
         }
-
         tauri::async_runtime::spawn(async move {
             while let Some(event) = rx.recv().await {
                 match event {
@@ -215,27 +204,20 @@ impl CoreManager {
 
     /// 重启内核
     pub fn recover_core(&'static self) -> Result<()> {
-        // 服务模式不管
-        if *self.use_service_mode.lock() {
+        // 服务模式 / 切换内核 不进行恢复
+        if *self.use_service_mode.lock() || !*self.need_restart_core.lock() {
             return Ok(());
         }
-
-        // 清空原来的sidecar值
+        // 清空原来的 sidecar 值
         let _ = self.sidecar.lock().take();
 
         tauri::async_runtime::spawn(async move {
-            // 6秒之后再查看服务是否正常 (时间随便搞的)
-            // terminated 可能是切换内核 (切换内核已经有500ms的延迟)
-            sleep(Duration::from_millis(6666)).await;
-
             if self.sidecar.lock().is_none() {
                 log::info!(target: "app", "recover clash core");
-
                 // 重新启动app
                 if let Err(err) = self.run_core().await {
                     log::error!(target: "app", "failed to recover clash core");
                     log::error!(target: "app", "{err}");
-
                     let _ = self.recover_core();
                 }
             }
@@ -246,6 +228,7 @@ impl CoreManager {
 
     /// 停止核心运行
     pub fn stop_core(&self) -> Result<()> {
+        *self.need_restart_core.lock() = false;
         // 关闭tun模式
         tauri::async_runtime::block_on(async move {
             let mut disable = Mapping::new();
@@ -281,22 +264,19 @@ impl CoreManager {
 
     /// 切换核心
     pub async fn change_core(&self, clash_core: Option<String>) -> Result<()> {
+        *self.need_restart_core.lock() = false;
+
         let clash_core = clash_core.ok_or(anyhow::anyhow!("clash core is null"))?;
         const CLASH_CORES: [&str; 2] = ["verge-mihomo", "verge-mihomo-alpha"];
-
         if !CLASH_CORES.contains(&clash_core.as_str()) {
             bail!("invalid clash core name \"{clash_core}\"");
         }
 
         log::debug!(target: "app", "change core to `{clash_core}`");
-
         Config::verge().draft().clash_core = Some(clash_core);
-
         // 更新订阅
         Config::generate()?;
-
         self.check_config()?;
-
         // 清掉旧日志
         Logger::global().clear_log();
 
@@ -305,11 +285,13 @@ impl CoreManager {
                 Config::verge().apply();
                 Config::runtime().apply();
                 log_err!(Config::verge().latest().save_file());
+                *self.need_restart_core.lock() = true;
                 Ok(())
             }
             Err(err) => {
                 Config::verge().discard();
                 Config::runtime().discard();
+                *self.need_restart_core.lock() = true;
                 Err(err)
             }
         }

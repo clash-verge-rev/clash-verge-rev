@@ -105,7 +105,7 @@ export const ProxyRender = (props: RenderProps) => {
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;
   const mode = useThemeMode();
-  const isDark = mode === "light" ? false : true;
+  const isDark = mode === "dark" ? true : false;
   const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
   const [iconCachePath, setIconCachePath] = useState("");
 

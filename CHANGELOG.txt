@@ -11,6 +11,7 @@
 
 ### 🚀 Performance Improvements
 - 只调用一次更改接口对多个 clash 端口更改
+- 优化内核切换和恢复重启的逻辑
 
 ### 🐛 Bug Fixes
 - 开启服务模式时，内核还会在常规模式下重启
