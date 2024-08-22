@@ -1,14 +1,9 @@
 use super::tray::Tray;
-use crate::{
-    config::{Config, ConfigType},
-    core::clash_api,
-    log_err,
-};
+use crate::log_err;
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
-use serde_yaml::Mapping;
-use std::{sync::Arc, thread::sleep, time::Duration};
+use std::sync::Arc;
 use tauri::{AppHandle, Manager, Window};
 
 #[derive(Debug, Default, Clone)]
@@ -80,62 +75,4 @@ impl Handle {
         Ok(())
     }
 
-    pub fn init_tun_mode_by_api() -> Result<()> {
-        tauri::async_runtime::spawn(async {
-            for i in 0..5 {
-                let tun_enable = Config::clash().latest().get_enable_tun();
-                match clash_api::get_configs().await {
-                    Ok(mut clash_configs) => {
-                        let mut update = false;
-                        let tun_enable_by_api = clash_configs
-                            .tun
-                            .get("enable")
-                            .map_or(false, |val| val.as_bool().unwrap_or(false));
-                        if tun_enable != tun_enable_by_api {
-                            for j in 0..5 {
-                                clash_configs = clash_api::get_configs().await.unwrap();
-                                let tun_enable_by_api = clash_configs
-                                    .tun
-                                    .get("enable")
-                                    .map_or(false, |val| val.as_bool().unwrap_or(false));
-                                if tun_enable == tun_enable_by_api {
-                                    break;
-                                }
-                                if j == 4 {
-                                    update = true;
-                                    break;
-                                }
-                                sleep(Duration::from_secs(3));
-                            }
-                        }
-                        if update {
-                            log::error!(target: "app", "verge config: tun enable [{:?}], clash core run: tun enable [{:?}]", tun_enable, tun_enable_by_api);
-                            let mut mapping = Mapping::new();
-                            let mut tun_val_mapping = Mapping::new();
-                            tun_val_mapping.insert("enable".into(), tun_enable_by_api.into());
-                            mapping.insert("tun".into(), tun_val_mapping.into());
-                            Config::clash()
-                                .latest()
-                                .patch_and_merge_config(mapping.clone());
-                            if Config::clash().latest().save_config().is_ok() {
-                                Config::runtime().latest().patch_config(mapping);
-                                log_err!(Config::generate_file(ConfigType::Run));
-                                log_err!(Self::update_systray_part());
-                            }
-                        }
-                        break;
-                    }
-                    Err(e) => {
-                        if i == 4 {
-                            log::error!(target: "app", "init tun mode status on tray, get clash configs error, {:?}", e);
-                        } else {
-                            log::warn!(target: "app", "init tun mode status on tray, get clash configs error, retry times: {:?}", i + 1);
-                            sleep(Duration::from_secs(1));
-                        }
-                    }
-                }
-            }
-        });
-        Ok(())
-    }
 }
