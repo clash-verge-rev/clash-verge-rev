@@ -10,7 +10,7 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 </h3>
 
 <div align="center">
-  <img height="500" src="./docs/verge.gif" />
+  <img style="max-height: 500" src="./docs/verge.gif" />
 </div>
 
 ## Preview
