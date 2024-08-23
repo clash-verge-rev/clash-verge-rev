@@ -5,11 +5,7 @@ use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::time::Duration;
 use std::{env::current_exe, process::Command as StdCommand};
-use tokio::time::sleep;
-
-// Windows only
 
 const SERVICE_URL: &str = "http://127.0.0.1:33211";
 
@@ -238,14 +234,10 @@ pub async fn check_service() -> Result<JsonResponse> {
 
 /// start the clash by service
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
-    let status = check_service().await?;
+    check_service().await?;
+    stop_core_by_service().await?;
 
-    if status.code == 0 {
-        stop_core_by_service().await?;
-        sleep(Duration::from_secs(1)).await;
-    }
-
-    let clash_core = { Config::verge().latest().clash_core.clone() };
+    let clash_core = Config::verge().latest().clash_core.clone();
     let mut clash_core = clash_core.unwrap_or("verge-mihomo".into());
 
     // compatibility

@@ -126,7 +126,7 @@ impl CoreManager {
         if enable {
             // 服务模式启动失败就直接运行sidecar
             log::debug!(target: "app", "try to run core in service mode");
-            let res = async { service::run_core_by_service(&config_path).await }.await;
+            let res = service::run_core_by_service(&config_path).await;
             match res {
                 Ok(_) => return Ok(()),
                 Err(err) => {
