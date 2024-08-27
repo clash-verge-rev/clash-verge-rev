@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
 import delayManager from "@/services/delay";
+import { useEffect, useMemo, useState } from "react";
 
 // default | delay | alphabet
 export type ProxySortType = 0 | 1 | 2;
@@ -114,8 +114,8 @@ function sortProxies(
       const ad = delayManager.getDelayFix(a, groupName);
       const bd = delayManager.getDelayFix(b, groupName);
 
-      if (ad === -1 || ad === -2) return 1;
-      if (bd === -1 || bd === -2) return -1;
+      if (ad === -1 || ad === -2 || ad === 0) return 1;
+      if (bd === -1 || bd === -2 || bd === 0) return -1;
 
       return ad - bd;
     });
