@@ -74,7 +74,11 @@ class DelayManager {
     try {
       const url = this.getUrl(group);
       const result = await cmdGetProxyDelay(name, timeout, url);
-      delay = result.delay;
+      if (result.delay) {
+        delay = result.delay;
+      } else if (result.message) {
+        delay = 0; // timeout
+      }
     } catch {
       delay = 1e6; // error
     }

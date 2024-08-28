@@ -185,11 +185,10 @@ export async function cmdGetProxyDelay(
   url?: string,
 ) {
   name = encodeURIComponent(name);
-  return invoke<{ delay: number }>("clash_api_get_proxy_delay", {
-    name,
-    url,
-    timeout,
-  });
+  return invoke<{ message: string; delay: number }>(
+    "clash_api_get_proxy_delay",
+    { name, url, timeout },
+  );
 }
 
 export async function cmdTestDelay(url: string) {

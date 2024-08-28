@@ -65,7 +65,8 @@ pub async fn patch_configs(config: &Mapping) -> Result<()> {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct DelayRes {
-    delay: u64,
+    message: Option<String>,
+    delay: Option<u64>,
 }
 
 /// GET /proxies/{name}/delay
@@ -90,11 +91,7 @@ pub async fn get_proxy_delay(
         .query(&[("timeout", &format!("{timeout}")), ("url", &test_url)])
         .send()
         .await?;
-
-    match response.json::<DelayRes>().await {
-        Ok(delay) => Ok(delay),
-        Err(_) => Ok(DelayRes { delay: 0 }),
-    }
+    Ok(response.json::<DelayRes>().await?)
 }
 
 /// 根据clash info获取clash服务地址和请求头
