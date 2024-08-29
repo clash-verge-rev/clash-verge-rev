@@ -1,6 +1,6 @@
-import { alpha, Box, styled } from "@mui/material";
+import { alpha, styled } from "@mui/material";
 
-export const ProfileBox = styled(Box)(({
+export const ProfileDiv = styled("div")(({
   theme,
   "aria-selected": selected,
 }) => {

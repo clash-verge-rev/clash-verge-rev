@@ -30,7 +30,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ConfirmViewer } from "./confirm-viewer";
 import { LogViewer } from "./log-viewer";
-import { ProfileBox } from "./profile-box";
+import { ProfileDiv } from "./profile-box";
 
 interface Props {
   sx?: SxProps;
@@ -188,7 +188,7 @@ export const ProfileMore = (props: Props) => {
         borderRadius: "8px",
         ...sx,
       }}>
-      <ProfileBox
+      <ProfileDiv
         aria-selected={selected}
         onDoubleClick={() => onEditFile()}
         // onClick={() => onSelect(false)}
@@ -270,7 +270,7 @@ export const ProfileMore = (props: Props) => {
             </Typography>
           )}
         </Box>
-      </ProfileBox>
+      </ProfileDiv>
 
       <Menu
         open={!!anchorEl}

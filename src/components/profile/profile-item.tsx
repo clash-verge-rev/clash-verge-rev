@@ -37,7 +37,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 import { ConfirmViewer } from "./confirm-viewer";
-import { ProfileBox } from "./profile-box";
+import { ProfileDiv } from "./profile-box";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -296,7 +296,7 @@ export const ProfileItem = (props: Props) => {
         borderRadius: "8px",
         ...sx,
       }}>
-      <ProfileBox
+      <ProfileDiv
         aria-selected={selected}
         onClick={() => onSelect(false)}
         onContextMenu={(event) => {
@@ -403,7 +403,7 @@ export const ProfileItem = (props: Props) => {
           </Box>
         )}
         {hasExtra && <LinearProgress variant="determinate" value={progress} />}
-      </ProfileBox>
+      </ProfileDiv>
 
       <Menu
         open={!!anchorEl}

@@ -1,6 +1,6 @@
-import { styled, Box } from "@mui/material";
+import { styled } from "@mui/material";
 
-const Item = styled(Box)(({ theme: { palette, typography } }) => ({
+const Item = styled("div")(({ theme: { palette, typography } }) => ({
   padding: "8px 0",
   margin: "0 12px",
   lineHeight: 1.35,

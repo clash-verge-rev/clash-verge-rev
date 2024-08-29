@@ -102,9 +102,7 @@ export const ProviderButton = () => {
           <Box display="flex" justifyContent={"space-between"} gap={1}>
             <Box display={"flex"} alignItems={"center"}>
               <Typography variant="h6">{t("Rule Provider")}</Typography>
-              <TypeBox component="span" sx={{ ml: 1, fontSize: 14 }}>
-                {entries.length}
-              </TypeBox>
+              <TypeSpan sx={{ ml: 1, fontSize: 14 }}>{entries.length}</TypeSpan>
             </Box>
             <Button
               variant="contained"
@@ -142,29 +140,21 @@ export const ProviderButton = () => {
                       {errorItems?.includes(key) && (
                         <Error fontSize="small" sx={{ margin: 0 }} />
                       )}
-                      <Typography
-                        variant="h6"
-                        component="span"
-                        noWrap
-                        title={key}>
+                      <Typography variant="h6" noWrap title={key}>
                         {key}
                       </Typography>
-                      <TypeBox component="span" sx={{ marginLeft: "8px" }}>
+                      <TypeSpan sx={{ marginLeft: "8px" }}>
                         {item.ruleCount}
-                      </TypeBox>
+                      </TypeSpan>
                     </Box>
                   }
                   secondary={
                     <>
-                      <StyledTypeBox component="span">
-                        {item.vehicleType}
-                      </StyledTypeBox>
-                      <StyledTypeBox component="span">
-                        {item.behavior}
-                      </StyledTypeBox>
-                      <StyledTypeBox component="span">
+                      <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>
+                      <StyledTypeSpan>{item.behavior}</StyledTypeSpan>
+                      <StyledTypeSpan>
                         {t("Update At")} {time.fromNow()}
-                      </StyledTypeBox>
+                      </StyledTypeSpan>
                     </>
                   }
                 />
@@ -189,7 +179,7 @@ export const ProviderButton = () => {
     </>
   );
 };
-const TypeBox = styled(Box)(({ theme }) => ({
+const TypeSpan = styled("span")(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.secondary.main, 0.5),
@@ -201,7 +191,7 @@ const TypeBox = styled(Box)(({ theme }) => ({
   lineHeight: 1.25,
 }));
 
-const StyledTypeBox = styled(Box)(({ theme }) => ({
+const StyledTypeSpan = styled("span")(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.primary.main, 0.5),

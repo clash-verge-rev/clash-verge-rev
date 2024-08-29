@@ -1,24 +1,23 @@
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
+import { BaseLoading, Notice } from "@/components/base";
+import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
+import delayManager from "@/services/delay";
+import { LanguageTwoTone } from "@mui/icons-material";
 import {
   Box,
-  Typography,
   Divider,
-  MenuItem,
   Menu,
-  alpha,
+  MenuItem,
   SxProps,
+  Typography,
+  alpha,
   styled,
 } from "@mui/material";
-import { BaseLoading } from "@/components/base";
-import { LanguageTwoTone } from "@mui/icons-material";
-import { Notice } from "@/components/base";
-import { TestBox } from "./test-box";
-import delayManager from "@/services/delay";
-import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import { listen } from "@tauri-apps/api/event";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { useLockFn } from "ahooks";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { TestDiv } from "./test-box";
 
 interface Props {
   id: string;
@@ -95,7 +94,7 @@ export const TestItem = (props: Props) => {
 
   return (
     <Box sx={{ width: "100%", ...sx }}>
-      <TestBox
+      <TestDiv
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });
@@ -181,7 +180,7 @@ export const TestItem = (props: Props) => {
             </Widget>
           )}
         </Box>
-      </TestBox>
+      </TestDiv>
 
       <Menu
         open={!!anchorEl}
@@ -208,7 +207,7 @@ export const TestItem = (props: Props) => {
     </Box>
   );
 };
-const Widget = styled(Box)(({ theme: { typography } }) => ({
+const Widget = styled("div")(({ theme: { typography } }) => ({
   padding: "3px 6px",
   fontSize: 14,
   fontFamily: typography.fontFamily,

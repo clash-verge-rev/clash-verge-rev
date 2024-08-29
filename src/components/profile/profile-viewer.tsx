@@ -1,15 +1,7 @@
+import { BaseDialog, Notice, SwitchLovely } from "@/components/base";
+import { FileInput } from "@/components/profile/file-input";
+import { createProfile, patchProfile } from "@/services/cmds";
 import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { useForm, Controller } from "react-hook-form";
-import {
-  Box,
   Button,
   ButtonGroup,
   InputAdornment,
@@ -17,10 +9,17 @@ import {
   styled,
   TextField,
 } from "@mui/material";
-import { createProfile, patchProfile } from "@/services/cmds";
-import { BaseDialog, Notice, SwitchLovely } from "@/components/base";
 import { version } from "@root/package.json";
-import { FileInput } from "@/components/profile/file-input";
+import { useLockFn } from "ahooks";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   onChange: () => void;
@@ -265,14 +264,14 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               name="option.with_proxy"
               control={control}
               render={({ field }) => (
-                <StyledBox>
+                <StyledDiv>
                   <InputLabel>{t("Use System Proxy")}</InputLabel>
                   <SwitchLovely
                     checked={field.value}
                     {...field}
                     color="primary"
                   />
-                </StyledBox>
+                </StyledDiv>
               )}
             />
 
@@ -280,14 +279,14 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               name="option.self_proxy"
               control={control}
               render={({ field }) => (
-                <StyledBox>
+                <StyledDiv>
                   <InputLabel>{t("Use Clash Proxy")}</InputLabel>
                   <SwitchLovely
                     checked={field.value}
                     {...field}
                     color="primary"
                   />
-                </StyledBox>
+                </StyledDiv>
               )}
             />
 
@@ -295,14 +294,14 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               name="option.danger_accept_invalid_certs"
               control={control}
               render={({ field }) => (
-                <StyledBox>
+                <StyledDiv>
                   <InputLabel>{t("Accept Invalid Certs (Danger)")}</InputLabel>
                   <SwitchLovely
                     checked={field.value}
                     {...field}
                     color="primary"
                   />
-                </StyledBox>
+                </StyledDiv>
               )}
             />
           </>
@@ -312,7 +311,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
   },
 );
 
-const StyledBox = styled(Box)(() => ({
+const StyledDiv = styled("div")(() => ({
   margin: "8px 0 8px 8px",
   display: "flex",
   alignItems: "center",

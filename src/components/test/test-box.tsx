@@ -1,6 +1,6 @@
-import { alpha, Box, styled } from "@mui/material";
+import { alpha, styled } from "@mui/material";
 
-export const TestBox = styled(Box)(({ theme, "aria-selected": selected }) => {
+export const TestDiv = styled("div")(({ theme, "aria-selected": selected }) => {
   const { mode, primary, text } = theme.palette;
   const key = `${mode}-${!!selected}`;
 

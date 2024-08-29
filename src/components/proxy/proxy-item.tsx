@@ -4,7 +4,6 @@ import delayManager from "@/services/delay";
 import { CheckCircleOutlineRounded } from "@mui/icons-material";
 import {
   alpha,
-  Box,
   ListItem,
   ListItemButton,
   ListItemIcon,
@@ -25,7 +24,7 @@ interface Props {
   onClick?: (name: string) => void;
 }
 
-const Widget = styled(Box)(() => ({
+const Widget = styled("div")(() => ({
   padding: "3px 6px",
   fontSize: 14,
   borderRadius: "4px",

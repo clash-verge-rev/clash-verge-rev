@@ -1,5 +1,5 @@
+import { styled } from "@mui/material";
 import React from "react";
-import { Box, styled } from "@mui/material";
 
 type Props = {
   label: string;
@@ -10,7 +10,7 @@ type Props = {
 };
 
 export const BaseFieldset: React.FC<Props> = (props: Props) => {
-  const Fieldset = styled(Box)(() => ({
+  const Fieldset = styled("div")(() => ({
     position: "relative",
     border: "1px solid #bbb",
     borderRadius: "5px",
@@ -30,7 +30,7 @@ export const BaseFieldset: React.FC<Props> = (props: Props) => {
   }));
 
   return (
-    <Fieldset component="fieldset">
+    <Fieldset>
       <Label>{props.label}</Label>
       {props.children}
     </Fieldset>

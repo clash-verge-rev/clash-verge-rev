@@ -121,17 +121,15 @@ export const ProviderButton = () => {
                         title={key}>
                         {key}
                       </Typography>
-                      <TypeBox component="span">{item.proxies.length}</TypeBox>
+                      <TypeSpan>{item.proxies.length}</TypeSpan>
                     </Box>
                   }
                   secondary={
                     <>
-                      <StyledTypeBox component="span">
-                        {item.vehicleType}
-                      </StyledTypeBox>
-                      <StyledTypeBox component="span">
+                      <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>
+                      <StyledTypeSpan>
                         {t("Update At")} {time.fromNow()}
-                      </StyledTypeBox>
+                      </StyledTypeSpan>
                       {hasSubInfo && (
                         <>
                           <Box sx={{ ...boxStyle, fontSize: 14 }}>
@@ -174,7 +172,7 @@ export const ProviderButton = () => {
     </>
   );
 };
-const TypeBox = styled(Box)(({ theme }) => ({
+const TypeSpan = styled("span")(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.secondary.main, 0.5),
@@ -190,7 +188,7 @@ const TypeBox = styled(Box)(({ theme }) => ({
   lineHeight: "15px",
 }));
 
-const StyledTypeBox = styled(Box)(({ theme }) => ({
+const StyledTypeSpan = styled("span")(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.primary.main, 0.5),

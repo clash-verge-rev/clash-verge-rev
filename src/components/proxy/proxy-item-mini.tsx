@@ -15,14 +15,14 @@ interface Props {
   onClick?: (name: string) => void;
 }
 
-const Widget = styled(Box)(({ theme: { typography } }) => ({
+const Widget = styled("div")(({ theme: { typography } }) => ({
   padding: "2px 4px",
   fontSize: 14,
   fontFamily: typography.fontFamily,
   borderRadius: "4px",
 }));
 
-const TypeBox = styled(Box)(
+const TypeSpan = styled("span")(
   ({
     theme: {
       palette: { text },
@@ -163,28 +163,12 @@ export const ProxyItemMini = (props: Props) => {
               </Typography>
             )}
             {!!proxy.provider && (
-              <TypeBox color="text.secondary" component="span">
-                {proxy.provider}
-              </TypeBox>
+              <TypeSpan color="text.secondary">{proxy.provider}</TypeSpan>
             )}
-            <TypeBox color="text.secondary" component="span">
-              {proxy.type}
-            </TypeBox>
-            {proxy.udp && (
-              <TypeBox color="text.secondary" component="span">
-                UDP
-              </TypeBox>
-            )}
-            {proxy.xudp && (
-              <TypeBox color="text.secondary" component="span">
-                XUDP
-              </TypeBox>
-            )}
-            {proxy.tfo && (
-              <TypeBox color="text.secondary" component="span">
-                TFO
-              </TypeBox>
-            )}
+            <TypeSpan color="text.secondary">{proxy.type}</TypeSpan>
+            {proxy.udp && <TypeSpan color="text.secondary">UDP</TypeSpan>}
+            {proxy.xudp && <TypeSpan color="text.secondary">XUDP</TypeSpan>}
+            {proxy.tfo && <TypeSpan color="text.secondary">TFO</TypeSpan>}
           </Box>
         )}
       </Box>
