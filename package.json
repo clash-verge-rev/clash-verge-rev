@@ -70,7 +70,7 @@
     "@types/sortablejs": "1.15.8",
     "@vitejs/plugin-legacy": "5.4.2",
     "@vitejs/plugin-react": "4.3.1",
-    "adm-zip": "0.5.15",
+    "adm-zip": "0.5.16",
     "cli-color": "2.0.4",
     "concurrently": "8.2.2",
     "cross-env": "7.0.3",
