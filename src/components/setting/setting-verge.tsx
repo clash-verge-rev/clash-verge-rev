@@ -224,6 +224,11 @@ const SettingVerge = ({ onError }: Props) => {
       />
 
       <SettingItem
+        onClick={() => webDavRef.current?.open()}
+        label={t("WebDav Backup")}
+      />
+
+      <SettingItem
         onClick={() => configRef.current?.open()}
         label={t("Runtime Config")}
       />
@@ -237,11 +242,6 @@ const SettingVerge = ({ onError }: Props) => {
       <SettingItem onClick={onCheckUpdate} label={t("Check for Updates")} />
 
       <SettingItem onClick={openDevTools} label={t("Open Dev Tools")} />
-
-      <SettingItem
-        onClick={() => webDavRef.current?.open()}
-        label={t("WebDav Backup")}
-      />
 
       <SettingItem onClick={() => exitApp()} label={t("Exit")} />
 

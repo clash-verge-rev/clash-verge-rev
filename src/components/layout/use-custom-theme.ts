@@ -57,7 +57,7 @@ export const useCustomTheme = () => {
   const theme = useMemo(() => {
     const setting = themeSettings[mode]!;
     const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
-    const themeLocale = language === "zh" ? zhCN : enUS;
+    const muiDataGridLocale = language === "zh" ? zhCN : enUS;
 
     let theme: Theme;
     try {
@@ -91,7 +91,7 @@ export const useCustomTheme = () => {
               : dt.font_family,
           },
         },
-        themeLocale,
+        muiDataGridLocale,
       );
     } catch {
       // fix #294
@@ -113,7 +113,7 @@ export const useCustomTheme = () => {
           },
           typography: { fontFamily: dt.font_family },
         },
-        themeLocale,
+        muiDataGridLocale,
       );
     }
 
