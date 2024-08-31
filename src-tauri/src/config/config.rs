@@ -1,6 +1,6 @@
 use super::{Draft, IClashConfig, IProfiles, IRuntime, IVerge};
 use crate::{
-    enhance,
+    enhance, feat,
     utils::{dirs, help},
 };
 use anyhow::{anyhow, Result};
@@ -92,6 +92,28 @@ impl Config {
             chain_logs: logs,
         };
 
+        Ok(())
+    }
+
+    pub fn reload() -> Result<()> {
+        let clash_config = Self::clash();
+        let verge_config = Self::verge();
+        let profiles_config = Self::profiles();
+        let runtime_config = Self::runtime();
+        // discard all config draft
+        clash_config.discard();
+        verge_config.discard();
+        profiles_config.discard();
+        runtime_config.discard();
+        // reload config data from yaml file
+        clash_config.data().0 = Draft::from(IClashConfig::new()).data().0.clone();
+        *verge_config.data() = Draft::from(IVerge::new()).data().clone();
+        *profiles_config.data() = Draft::from(IProfiles::new()).data().clone();
+        *runtime_config.data() = Draft::from(IRuntime::new()).data().clone();
+        // generate runtime config
+        Self::init_config()?;
+        // restart clash core
+        feat::restart_clash_core();
         Ok(())
     }
 }

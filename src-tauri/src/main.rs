@@ -14,8 +14,10 @@ use crate::{
     config::Config,
     utils::{init, resolve, server},
 };
+use core::backup;
 use std::{thread::sleep, time::Duration};
 use tauri::{api, SystemTray};
+use utils::resolve::resolve_scheme;
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -63,6 +65,18 @@ fn main() -> std::io::Result<()> {
             tauri::async_runtime::spawn(async move {
                 // initialize your app here instead of sleeping :
                 resolve::resolve_setup(&app_handle);
+
+                log::trace!("init webdav config");
+                log_err!(backup::WebDav::global().init().await);
+
+                let argvs: Vec<String> = std::env::args().collect();
+                if argvs.len() > 1 {
+                    let param = argvs[1].as_str();
+                    if param.starts_with("clash:") {
+                        resolve_scheme(argvs[1].to_owned()).await;
+                    }
+                }
+
                 // wait 2 seconds for clash core to init profile
                 sleep(Duration::from_secs(2));
                 // create main window
@@ -127,7 +141,13 @@ fn main() -> std::io::Result<()> {
             cmds::service::install_service,
             cmds::service::uninstall_service,
             // clash api
-            cmds::clash_api_get_proxy_delay
+            cmds::clash_api_get_proxy_delay,
+            // web dav
+            cmds::update_webdav_info,
+            cmds::create_and_upload_backup,
+            cmds::list_backup,
+            cmds::download_backup_and_reload,
+            cmds::delete_backup
         ]);
 
     #[cfg(target_os = "macos")]

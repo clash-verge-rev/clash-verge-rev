@@ -1,4 +1,5 @@
 import { DialogRef, Notice } from "@/components/base";
+import { WebDavViewer } from "@/components/setting/mods/webdav-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { routers } from "@/pages/_routers";
 import {
@@ -49,6 +50,7 @@ const SettingVerge = ({ onError }: Props) => {
   const themeRef = useRef<DialogRef>(null);
   const layoutRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
+  const webDavRef = useRef<DialogRef>(null);
 
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -75,6 +77,7 @@ const SettingVerge = ({ onError }: Props) => {
       <MiscViewer ref={miscRef} />
       <LayoutViewer ref={layoutRef} />
       <UpdateViewer ref={updateRef} />
+      <WebDavViewer ref={webDavRef} />
 
       <SettingItem label={t("Language")}>
         <GuardState
@@ -234,6 +237,11 @@ const SettingVerge = ({ onError }: Props) => {
       <SettingItem onClick={onCheckUpdate} label={t("Check for Updates")} />
 
       <SettingItem onClick={openDevTools} label={t("Open Dev Tools")} />
+
+      <SettingItem
+        onClick={() => webDavRef.current?.open()}
+        label={t("WebDav Backup")}
+      />
 
       <SettingItem onClick={() => exitApp()} label={t("Exit")} />
 

@@ -294,5 +294,14 @@
   "Unified Delay": "统一延迟",
   "Unified Delay Info": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
   "Flush Fake-IP Cache": "清除 Fake-IP 缓存",
-  "Fake-IP Cache Flushed": "Fake-IP 缓存已清除"
+  "Fake-IP Cache Flushed": "Fake-IP 缓存已清除",
+
+  "WebDav Backup": "WebDav 备份",
+  "Backup": "备份",
+  "Only Backup Profiles": "仅备份订阅文件",
+  "WebDav URL": "WebDav 地址",
+  "WebDav Username": "WebDav 用户名",
+  "WebDav Password": "WebDav 密码",
+  "Backup Files": "备份文件列表",
+  "Apply": "应用"
 }

@@ -74,6 +74,16 @@ const Layout = () => {
       }
     });
 
+    const unlistenReloadAll = listen("verge://reload-all", async () => {
+      mutate("getVergeConfig");
+      mutate("getProxies");
+      mutate("getVersion");
+      mutate("getClashConfig");
+      mutate("getClashInfo");
+      mutate("getRuntimeConfig");
+      mutate("getProxyProviders");
+    });
+
     const unlistenRefreshClash = listen(
       "verge://refresh-clash-config",
       async () => {
@@ -116,6 +126,7 @@ const Layout = () => {
     }, 50);
 
     return () => {
+      unlistenReloadAll.then((fn) => fn());
       unlistenRefreshClash.then((fn) => fn());
       unlistenRefreshVerge.then((fn) => fn());
       unlistenNotice.then((fn) => fn());

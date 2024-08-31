@@ -145,6 +145,13 @@ pub struct IVerge {
 
     /// 是否启用随机端口
     pub enable_random_port: Option<bool>,
+
+    /// webdav url
+    pub webdav_url: Option<String>,
+    /// webdav username
+    pub webdav_username: Option<String>,
+    /// webdav password
+    pub webdav_password: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -283,6 +290,9 @@ impl IVerge {
         patch!(auto_log_clean);
         patch!(window_size_position);
         patch!(window_is_maximized);
+        patch!(webdav_url);
+        patch!(webdav_username);
+        patch!(webdav_password);
     }
 
     /// 在初始化前尝试拿到单例端口的值

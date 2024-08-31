@@ -192,12 +192,17 @@ pub fn init_config() -> Result<()> {
 pub fn init_resources() -> Result<()> {
     let app_dir = dirs::app_home_dir()?;
     let res_dir = dirs::app_resources_dir()?;
+    let backup_dir = dirs::backup_dir()?;
 
     if !app_dir.exists() {
         let _ = fs::create_dir_all(&app_dir);
     }
     if !res_dir.exists() {
         let _ = fs::create_dir_all(&res_dir);
+    }
+
+    if !backup_dir.exists() {
+        let _ = fs::create_dir_all(&backup_dir);
     }
 
     #[cfg(target_os = "windows")]

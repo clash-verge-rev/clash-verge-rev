@@ -248,3 +248,38 @@ export async function copyIconFile(
 export async function downloadIconCache(url: string, name: string) {
   return invoke<string>("download_icon_cache", { url, name });
 }
+
+// web dav
+export async function updateWebDavInfo(
+  url: string,
+  username: string,
+  password: string,
+) {
+  return invoke<void>("update_webdav_info", { url, username, password });
+}
+
+export async function createAndUploadBackup(
+  localSave = false,
+  onlyBackupProfiles = false,
+) {
+  return invoke<void>("create_and_upload_backup", {
+    localSave,
+    onlyBackupProfiles,
+  });
+}
+
+export async function listBackup() {
+  let list: IWebDavListFile[] = await invoke<IWebDavListFile[]>("list_backup");
+  list.map((item) => {
+    item.filename = item.href.split("/").pop() as string;
+  });
+  return list;
+}
+
+export async function downloadBackupAndReload(fileName: string) {
+  return invoke<void>("download_backup_and_reload", { fileName });
+}
+
+export async function deleteBackup(fileName: string) {
+  return invoke<void>("delete_backup", { fileName });
+}

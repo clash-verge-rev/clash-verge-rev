@@ -36,6 +36,8 @@ window-shadows = { version = "0.2.2" }
 tokio = { version = "1.37.0", features = ["full"] }
 serde = { version = "1.0.200", features = ["derive"] }
 reqwest = { version = "0.12.4", features = ["rustls-tls", "json"] }
+reqwest_dav = "0.1.13"
+zip = "2.2.0"
 sysproxy = { git = "https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
 tauri = { version = "1.6.2", features = [
     "fs-read-file",

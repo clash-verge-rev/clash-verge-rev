@@ -16,6 +16,22 @@ export const useThemeSettings = () =>
     deserializer: JSON.parse,
   });
 
+export interface WebDavConfig {
+  url: string;
+  username: string;
+  password: string;
+}
+const defaultWebDavConfig: WebDavConfig = {
+  url: "",
+  username: "",
+  password: "",
+};
+export const useWebDavConfig = () =>
+  useLocalStorage<WebDavConfig>("webdav_config", defaultWebDavConfig, {
+    serializer: JSON.stringify,
+    deserializer: JSON.parse,
+  });
+
 export const useEnableLog = () => useLocalStorage("enable-log", true);
 
 interface IConnectionSetting {

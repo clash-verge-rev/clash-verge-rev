@@ -280,6 +280,9 @@ interface IVergeConfig {
   auto_log_clean?: 0 | 1 | 2 | 3;
   proxy_layout_column?: number;
   test_list?: IVergeTestItem[];
+  webdav_url?: string;
+  webdav_username?: string;
+  webdav_password?: string;
 }
 
 type IClashConfigValue = any;
@@ -352,4 +355,13 @@ interface IEnhancedResult {
   data: IProfileData;
   status: string;
   error?: string;
+}
+
+interface IWebDavListFile {
+  filename: string;
+  href: string;
+  last_modified: string;
+  content_length: number;
+  content_type: string;
+  tag: string;
 }

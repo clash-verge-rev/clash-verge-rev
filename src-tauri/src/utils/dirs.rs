@@ -14,9 +14,9 @@ pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev.dev";
 
 pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 
-static CLASH_CONFIG: &str = "config.yaml";
-static VERGE_CONFIG: &str = "verge.yaml";
-static PROFILE_YAML: &str = "profiles.yaml";
+pub static CLASH_CONFIG: &str = "config.yaml";
+pub static VERGE_CONFIG: &str = "verge.yaml";
+pub static PROFILE_YAML: &str = "profiles.yaml";
 
 /// init portable flag
 pub fn init_portable_flag() -> Result<()> {
@@ -96,6 +96,14 @@ pub fn service_path() -> Result<PathBuf> {
 #[cfg(windows)]
 pub fn service_path() -> Result<PathBuf> {
     Ok(app_resources_dir()?.join("clash-verge-service.exe"))
+}
+
+pub fn backup_dir() -> Result<PathBuf> {
+    Ok(app_home_dir()?.join("backup"))
+}
+
+pub fn backup_archive_file() -> Result<PathBuf> {
+    Ok(app_home_dir()?.join("archive.zip"))
 }
 
 pub fn service_log_file() -> Result<PathBuf> {

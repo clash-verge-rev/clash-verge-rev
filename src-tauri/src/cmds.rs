@@ -6,9 +6,12 @@ use crate::{
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
+use backup::WebDav;
+use reqwest_dav::list_cmd::ListFile;
 use serde_yaml::Mapping;
 use std::{
     collections::{HashMap, VecDeque},
+    fs,
     path::PathBuf,
 };
 use sysproxy::{Autoproxy, Sysproxy};
@@ -451,4 +454,78 @@ pub mod uwp {
     pub async fn invoke_uwp_tool() -> CmdResult {
         Ok(())
     }
+}
+
+// backup
+// #[tauri::command]
+// pub async fn create_backup_local(only_backup_profiles: bool) -> CmdResult<(String, PathBuf)> {
+//     let (file_name, file_path) = backup::create_backup(true, only_backup_profiles).unwrap();
+//     Ok((file_name, file_path))
+// }
+
+// #[tauri::command]
+// pub async fn extract_backup(file_path: String) -> CmdResult {
+//     let mut zip: zip::ZipArchive<fs::File> =
+//         zip::ZipArchive::new(fs::File::open(file_path).unwrap()).unwrap();
+//     zip.extract(dirs::app_home_dir().unwrap()).unwrap();
+//     // reload config
+//     if let Err(e) = Config::reload() {
+//         return Err(format!(
+//             "download backup file success, but reload config failed. error: {:?}",
+//             e
+//         ));
+//     }
+//     Ok(())
+// }
+
+// web dav
+#[tauri::command]
+pub async fn update_webdav_info(url: String, username: String, password: String) -> CmdResult {
+    match WebDav::global()
+        .update_webdav_info(url, username, password)
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!(target: "app", "update webdav info failed. error: {e:?}");
+            Err(format!("update webdav info failed."))
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn create_and_upload_backup(local_save: bool, only_backup_profiles: bool) -> CmdResult {
+    let (file_name, file_path) = backup::create_backup(local_save, only_backup_profiles).unwrap();
+    wrap_err!(WebDav::upload_file(file_path, file_name).await)
+}
+
+#[tauri::command]
+pub async fn list_backup() -> CmdResult<Vec<ListFile>> {
+    wrap_err!(WebDav::list_file().await)
+}
+
+#[tauri::command]
+pub async fn download_backup_and_reload(file_name: String) -> CmdResult {
+    let backup_archive = dirs::backup_archive_file().unwrap();
+    if let Err(e) = WebDav::download_file(file_name, backup_archive.clone()).await {
+        log::error!(target: "app", "download backup file failed. error: {e:?}");
+        return Err(format!("download backup file failed. error: {:?}", e));
+    }
+    // extract zip file
+    let mut zip = zip::ZipArchive::new(fs::File::open(backup_archive).unwrap()).unwrap();
+    zip.extract(dirs::app_home_dir().unwrap()).unwrap();
+    // reload config
+    if let Err(e) = Config::reload() {
+        log::error!(target: "app", "download backup file success, but reload config failed. error: {e:?}");
+        return Err(format!(
+            "download backup file success, but reload config failed. error: {:?}",
+            e
+        ));
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_backup(file_name: String) -> CmdResult {
+    wrap_err!(WebDav::delete_file(file_name).await)
 }

@@ -10,5 +10,6 @@ pub mod sysopt;
 pub mod timer;
 pub mod tray;
 pub mod win_uwp;
+pub mod backup;
 
 pub use self::core::*;
