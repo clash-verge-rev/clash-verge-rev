@@ -3,7 +3,6 @@ import { deleteConnection } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
 import { truncateStr } from "@/utils/truncate-str";
 import CancelIcon from "@mui/icons-material/Close";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -11,9 +10,8 @@ import {
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
-import { enUS, zhCN } from "@mui/x-data-grid/locales";
 import dayjs from "dayjs";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Props {
@@ -22,19 +20,11 @@ interface Props {
 }
 
 export const ConnectionTable = (props: Props) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { connections, onShowDetail } = props;
 
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
-  const themeWithLocale = React.useMemo(() => {
-    switch (i18n.language) {
-      case "zh":
-        return createTheme(theme, zhCN);
-      default:
-        return createTheme(theme, enUS);
-    }
-  }, [theme]);
 
   const Toolbar = () => (
     <div style={{ margin: "5px" }}>
@@ -157,26 +147,24 @@ export const ConnectionTable = (props: Props) => {
   }, [connections]);
 
   return (
-    <ThemeProvider theme={themeWithLocale}>
-      <DataGrid
-        hideFooter
-        disableDensitySelector
-        disableColumnMenu
-        rows={connRows}
-        columns={columns}
-        slots={{ toolbar: Toolbar }}
-        onRowClick={(e) => onShowDetail(e.row.connectionData)}
-        density="compact"
-        sx={{
-          border: "none",
-          "div:focus": { outline: "none !important" },
-          "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
-            backgroundColor: isDark ? "#282a36" : "#ffffff",
-          },
-        }}
-        columnVisibilityModel={columnVisible}
-        onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
-      />
-    </ThemeProvider>
+    <DataGrid
+      hideFooter
+      disableDensitySelector
+      disableColumnMenu
+      rows={connRows}
+      columns={columns}
+      slots={{ toolbar: Toolbar }}
+      onRowClick={(e) => onShowDetail(e.row.connectionData)}
+      density="compact"
+      sx={{
+        border: "none",
+        "div:focus": { outline: "none !important" },
+        "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
+          backgroundColor: isDark ? "#282a36" : "#ffffff",
+        },
+      }}
+      columnVisibilityModel={columnVisible}
+      onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
+    />
   );
 };
