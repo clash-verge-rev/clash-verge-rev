@@ -205,12 +205,12 @@ export const ProxyItemMini = (props: Props) => {
               e.stopPropagation();
               onDelay();
             }}
-            color={delayManager.formatDelayColor(delay, timeout)}
-            sx={({ palette }) =>
-              !proxy.provider
-                ? { ":hover": { bgcolor: alpha(palette.primary.main, 0.15) } }
-                : {}
-            }>
+            sx={({ palette }) => ({
+              color: delayManager.formatDelayColor(delay, timeout),
+              ...(!proxy.provider && {
+                ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
+              }),
+            })}>
             {delayManager.formatDelay(delay, timeout)}
           </Widget>
         )}

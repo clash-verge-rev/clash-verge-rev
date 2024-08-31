@@ -170,8 +170,8 @@ export const TestItem = (props: Props) => {
                 e.stopPropagation();
                 onDelay();
               }}
-              color={delayManager.formatDelayColor(delay)}
               sx={({ palette }) => ({
+                color: delayManager.formatDelayColor(delay),
                 ":hover": {
                   bgcolor: alpha(palette.primary.main, 0.15),
                 },

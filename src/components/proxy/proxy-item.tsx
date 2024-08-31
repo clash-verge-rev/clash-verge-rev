@@ -30,17 +30,25 @@ const Widget = styled("div")(() => ({
   borderRadius: "4px",
 }));
 
-const TypeBox = styled("span")(({ theme }) => ({
-  display: "inline-block",
-  border: "1px solid #ccc",
-  borderColor: alpha(theme.palette.text.secondary, 0.36),
-  color: alpha(theme.palette.text.secondary, 0.42),
-  borderRadius: 4,
-  fontSize: 10,
-  marginRight: "4px",
-  padding: "0 2px",
-  lineHeight: 1.25,
-}));
+const TypeSpan = styled("span")(
+  ({
+    theme: {
+      palette: { text },
+      typography,
+    },
+  }) => ({
+    display: "inline-block",
+    border: `1px solid ${text.secondary}`,
+    color: "text.secondary",
+    borderRadius: 4,
+    fontSize: 10,
+    fontFamily: typography.fontFamily,
+    marginRight: "4px",
+    marginTop: "auto",
+    padding: "0 4px",
+    lineHeight: 1.5,
+  }),
+);
 
 export const ProxyItem = (props: Props) => {
   const { group, proxy, selected, showType = true, sx, onClick } = props;
@@ -116,12 +124,12 @@ export const ProxyItem = (props: Props) => {
                 {showType && proxy.now && ` - ${proxy.now}`}
               </span>
               {showType && !!proxy.provider && (
-                <TypeBox>{proxy.provider}</TypeBox>
+                <TypeSpan>{proxy.provider}</TypeSpan>
               )}
-              {showType && <TypeBox>{proxy.type}</TypeBox>}
-              {showType && proxy.udp && <TypeBox>UDP</TypeBox>}
-              {showType && proxy.xudp && <TypeBox>XUDP</TypeBox>}
-              {showType && proxy.tfo && <TypeBox>TFO</TypeBox>}
+              {showType && <TypeSpan>{proxy.type}</TypeSpan>}
+              {showType && proxy.udp && <TypeSpan>UDP</TypeSpan>}
+              {showType && proxy.xudp && <TypeSpan>XUDP</TypeSpan>}
+              {showType && proxy.tfo && <TypeSpan>TFO</TypeSpan>}
             </>
           }
         />
@@ -161,12 +169,12 @@ export const ProxyItem = (props: Props) => {
                 e.stopPropagation();
                 onDelay();
               }}
-              color={delayManager.formatDelayColor(delay, timeout)}
-              sx={({ palette }) =>
-                !proxy.provider
-                  ? { ":hover": { bgcolor: alpha(palette.primary.main, 0.15) } }
-                  : {}
-              }>
+              sx={({ palette }) => ({
+                color: delayManager.formatDelayColor(delay, timeout),
+                ...(!proxy.provider && {
+                  ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
+                }),
+              })}>
               {delayManager.formatDelay(delay, timeout)}
             </Widget>
           )}
