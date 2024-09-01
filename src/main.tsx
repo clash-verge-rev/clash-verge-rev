@@ -2,11 +2,9 @@
 /// <reference types="vite-plugin-svgr/client" />
 
 import "@/assets/styles/index.scss";
-import { BaseErrorBoundary, Notice } from "@/components/base";
+import { BaseErrorBoundary } from "@/components/base";
 import router from "@/pages/_routers";
-import { getClashConfig } from "@/services/api";
 import "@/services/i18n";
-import { sleep } from "@/utils";
 import { ResizeObserver } from "@juggle/resize-observer";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
@@ -59,39 +57,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-function renderRoot(container: HTMLElement) {
-  const contexts = [
-    <ThemeModeProvider key={"themeModeProvider"} />,
-    <LoadingCacheProvider key={"loadingCacheProvider"} />,
-    <UpdateStateProvider key={"updateStateProvider"} />,
-  ];
-  createRoot(container).render(
-    <React.StrictMode>
-      <ComposeContextProvider contexts={contexts}>
-        <BaseErrorBoundary>
-          <RouterProvider router={router} />
-        </BaseErrorBoundary>
-      </ComposeContextProvider>
-    </React.StrictMode>,
-  );
-}
+const contexts = [
+  <ThemeModeProvider key={"themeModeProvider"} />,
+  <LoadingCacheProvider key={"loadingCacheProvider"} />,
+  <UpdateStateProvider key={"updateStateProvider"} />,
+];
 
-async function checkClashAndRender(container: HTMLElement) {
-  for (let i = 1; i <= 10; i++) {
-    if (i >= 10) {
-      renderRoot(container);
-      Notice.error(
-        "Failed to get clash configs, please check clash core start successfully",
-        3000,
-      );
-    }
-    const clashConfigs = await getClashConfig();
-    if (clashConfigs) {
-      renderRoot(container);
-      break;
-    }
-    await sleep(500);
-  }
-}
-
-checkClashAndRender(container);
+createRoot(container).render(
+  <React.StrictMode>
+    <ComposeContextProvider contexts={contexts}>
+      <BaseErrorBoundary>
+        <RouterProvider router={router} />
+      </BaseErrorBoundary>
+    </ComposeContextProvider>
+  </React.StrictMode>,
+);
