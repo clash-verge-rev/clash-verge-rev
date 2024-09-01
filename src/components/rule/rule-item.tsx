@@ -1,15 +1,15 @@
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
-  styled,
   Box,
-  Typography,
-  ListItemButton,
-  IconButtonProps,
-  IconButton,
   Card,
   Collapse,
+  IconButton,
+  IconButtonProps,
+  ListItemButton,
+  Typography,
   alpha,
+  styled,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Virtuoso } from "react-virtuoso";
 
 interface ExpandMoreProps extends IconButtonProps {
@@ -78,28 +78,20 @@ export const RuleItem = (props: Props) => {
       ]}>
       <ListItemButton
         sx={[
-          {
-            ...(expanded && {
-              borderBottom: "1px solid var(--divider-color)",
-            }),
-          },
           ({ palette: { mode, primary } }) => {
             const bgcolor =
               mode === "light"
                 ? alpha(primary.main, 0.25)
                 : alpha(primary.main, 0.35);
-            const color = expanded ? primary.main : "";
             return {
-              ...(expanded && { bgcolor }),
-              "&:hover": {
-                ...(expanded && { bgcolor }),
-              },
-              "& .MuiTypography-root": {
-                color,
-              },
-              "& .MuiIconButton-root ": {
-                color,
-              },
+              ...(expanded && {
+                bgcolor,
+                "&:hover": { bgcolor },
+                borderBottom: "1px solid var(--divider-color)",
+                "& .MuiTypography-root, & .MuiIconButton-root ": {
+                  color: primary.main,
+                },
+              }),
             };
           },
         ]}
@@ -160,7 +152,7 @@ export const RuleItem = (props: Props) => {
           <Box
             sx={{
               margin: "auto",
-              padding: "0 6px 0 50px",
+              padding: "0 6px 0 70px",
               height:
                 value.matchPayloadItems.length > 10
                   ? "222px"
