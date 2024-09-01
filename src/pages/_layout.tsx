@@ -21,11 +21,11 @@ import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { motion } from "framer-motion";
 import i18next from "i18next";
 import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router-dom";
-import { CSSTransition, SwitchTransition } from "react-transition-group";
 import { SWRConfig, mutate } from "swr";
 import { routers } from "./_routers";
 
@@ -33,6 +33,22 @@ export let portableFlag = false;
 dayjs.extend(relativeTime);
 const OS = getSystem();
 let keepUIActive = false;
+
+const show = {
+  x: [-25, 0],
+  opacity: 1,
+  display: "block",
+  transition: { duration: 0.6 },
+};
+
+const hide = {
+  x: 20,
+  opacity: 0,
+  transition: { duration: 0.3 },
+  transitionEnd: {
+    display: "none",
+  },
+};
 
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -185,22 +201,22 @@ const Layout = () => {
                 <AppNameSvg />
               </div>
               <UpdateButton className="the-newbtn" />
-              <SwitchTransition mode="out-in">
-                <CSSTransition
-                  key={isDark ? "dark-on" : "dark-off"}
-                  timeout={500}
-                  classNames="fade-theme">
-                  <button
-                    className="switch-theme-btn"
-                    onClick={(e) => toggleTheme(e, isDark ? "light" : "dark")}>
-                    {isDark ? (
-                      <DarkMode fontSize="inherit" />
-                    ) : (
-                      <LightMode fontSize="inherit" />
-                    )}
-                  </button>
-                </CSSTransition>
-              </SwitchTransition>
+              <motion.div>
+                <motion.button
+                  animate={isDark ? show : hide}
+                  className="switch-theme-btn"
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => toggleTheme(e, "light")}>
+                  <DarkMode fontSize="inherit" />
+                </motion.button>
+                <motion.button
+                  animate={isDark ? hide : show}
+                  className="switch-theme-btn"
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => toggleTheme(e, "dark")}>
+                  <LightMode fontSize="inherit" />
+                </motion.button>
+              </motion.div>
             </div>
 
             <List className="the-menu">
