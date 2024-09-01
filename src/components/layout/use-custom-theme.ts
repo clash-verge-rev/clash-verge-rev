@@ -25,6 +25,8 @@ export const useCustomTheme = () => {
   const setMode = useSetThemeMode();
   const [themeSettings, setThemeSettings] = useThemeSettings();
   useEffect(() => {
+    // TODO: temporary solutions to ensure that the theme is loaded correctly
+    if (themeSettings.light?.primary_color) return;
     setThemeSettings({
       light: light_theme_setting ?? {},
       dark: dark_theme_setting ?? {},
