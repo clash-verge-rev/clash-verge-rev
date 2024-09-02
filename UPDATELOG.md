@@ -1,3 +1,12 @@
+## v2.0.0
+
+### Breaking changes
+
+- 重大框架升级：使用 Tauri 2.0（巨量改进与性能提升）
+- 敬请测试，出现 bug 到 issues 中提出
+
+---
+
 ## v1.7.7
 
 ### Bugs Fixes
