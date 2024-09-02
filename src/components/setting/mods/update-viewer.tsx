@@ -3,13 +3,13 @@ import { forwardRef, useImperativeHandle, useState, useMemo } from "react";
 import { useLockFn } from "ahooks";
 import { Box, LinearProgress, Button } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { relaunch } from "@tauri-apps/api/process";
-import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { useUpdateState, useSetUpdateState } from "@/services/states";
 import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
 import { portableFlag } from "@/pages/_layout";
-import { open as openUrl } from "@tauri-apps/api/shell";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
 import ReactMarkdown from "react-markdown";
 
 let eventListener: UnlistenFn | null = null;
@@ -38,17 +38,17 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   }));
 
   const markdownContent = useMemo(() => {
-    if (!updateInfo?.manifest?.body) {
+    if (!updateInfo?.body) {
       return "New Version is available";
     }
-    return updateInfo?.manifest?.body;
+    return updateInfo?.body;
   }, [updateInfo]);
 
   const breakChangeFlag = useMemo(() => {
-    if (!updateInfo?.manifest?.body) {
+    if (!updateInfo?.body) {
       return false;
     }
-    return updateInfo?.manifest?.body.toLowerCase().includes("break change");
+    return updateInfo?.body.toLowerCase().includes("break change");
   }, [updateInfo]);
 
   const onUpdate = useLockFn(async () => {
@@ -56,7 +56,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       Notice.error(t("Portable Updater Error"));
       return;
     }
-    if (!updateInfo?.manifest?.body) return;
+    if (!updateInfo?.body) return;
     if (breakChangeFlag) {
       Notice.error(t("Break Change Update Error"));
       return;
@@ -77,7 +77,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       }
     );
     try {
-      await installUpdate();
+      await updateInfo.install();
       await relaunch();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
@@ -91,14 +91,14 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {`New Version v${updateInfo?.manifest?.version}`}
+          {`New Version v${updateInfo?.version}`}
           <Box>
             <Button
               variant="contained"
               size="small"
               onClick={() => {
                 openUrl(
-                  `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${updateInfo?.manifest?.version}`
+                  `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${updateInfo?.version}`
                 );
               }}
             >

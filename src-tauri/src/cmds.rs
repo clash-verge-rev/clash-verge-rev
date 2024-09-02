@@ -10,8 +10,8 @@ use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
+use tauri::Manager;
 
 #[tauri::command]
 pub fn copy_clash_env(app_handle: tauri::AppHandle) -> CmdResult {
@@ -361,7 +361,7 @@ pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
 
 #[tauri::command]
 pub fn open_devtools(app_handle: tauri::AppHandle) {
-    if let Some(window) = app_handle.get_window("main") {
+    if let Some(window) = app_handle.get_webview_window("main") {
         if !window.is_devtools_open() {
             window.open_devtools();
         } else {
@@ -374,7 +374,6 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 pub fn exit_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, true);
     resolve::resolve_reset();
-    api::process::kill_children();
     app_handle.exit(0);
     std::process::exit(0);
 }

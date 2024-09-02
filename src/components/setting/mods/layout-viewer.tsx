@@ -12,11 +12,11 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { GuardState } from "./guard-state";
-import { open as openDialog } from "@tauri-apps/api/dialog";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { join } from "@tauri-apps/api/path";
-import { exists } from "@tauri-apps/api/fs";
+import { exists } from "@tauri-apps/plugin-fs";
 import getSystem from "@/utils/get-system";
 
 const OS = getSystem();
@@ -186,7 +186,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                   onChangeData({ common_tray_icon: false });
                   patchVerge({ common_tray_icon: false });
                 } else {
-                  const path = await openDialog({
+                  const selected = await openDialog({
                     directory: false,
                     multiple: false,
                     filters: [
@@ -196,8 +196,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                       },
                     ],
                   });
-                  if (path?.length) {
-                    await copyIconFile(`${path}`, "common");
+                  if (selected?.path.length) {
+                    await copyIconFile(`${selected.path}`, "common");
                     await initIconPath();
                     onChangeData({ common_tray_icon: true });
                     patchVerge({ common_tray_icon: true });
@@ -232,7 +232,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                   onChangeData({ sysproxy_tray_icon: false });
                   patchVerge({ sysproxy_tray_icon: false });
                 } else {
-                  const path = await openDialog({
+                  const selected = await openDialog({
                     directory: false,
                     multiple: false,
                     filters: [
@@ -242,8 +242,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                       },
                     ],
                   });
-                  if (path?.length) {
-                    await copyIconFile(`${path}`, "sysproxy");
+                  if (selected?.path.length) {
+                    await copyIconFile(`${selected.path}`, "sysproxy");
                     await initIconPath();
                     onChangeData({ sysproxy_tray_icon: true });
                     patchVerge({ sysproxy_tray_icon: true });
@@ -276,7 +276,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                   onChangeData({ tun_tray_icon: false });
                   patchVerge({ tun_tray_icon: false });
                 } else {
-                  const path = await openDialog({
+                  const selected = await openDialog({
                     directory: false,
                     multiple: false,
                     filters: [
@@ -286,8 +286,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                       },
                     ],
                   });
-                  if (path?.length) {
-                    await copyIconFile(`${path}`, "tun");
+                  if (selected?.path.length) {
+                    await copyIconFile(`${selected.path}`, "tun");
                     await initIconPath();
                     onChangeData({ tun_tray_icon: true });
                     patchVerge({ tun_tray_icon: true });

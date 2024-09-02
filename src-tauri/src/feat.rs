@@ -10,14 +10,15 @@ use crate::log_err;
 use crate::utils::resolve;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
-use tauri::{AppHandle, ClipboardManager, Manager};
+use tauri::{AppHandle, Manager};
+use tauri_plugin_clipboard_manager::ClipboardExt;
 
 // 打开面板
 pub fn open_or_close_dashboard() {
     let handle = handle::Handle::global();
     let app_handle = handle.app_handle.lock();
     if let Some(app_handle) = app_handle.as_ref() {
-        if let Some(window) = app_handle.get_window("main") {
+        if let Some(window) = app_handle.get_webview_window("main") {
             if let Ok(true) = window.is_focused() {
                 let _ = window.close();
                 return;
@@ -319,8 +320,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     let cmd: String = format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}");
     let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
 
-    let mut cliboard = app_handle.clipboard_manager();
-
+    let cliboard = app_handle.clipboard();
     let env_type = { Config::verge().latest().env_type.clone() };
     let env_type = match env_type {
         Some(env_type) => env_type,

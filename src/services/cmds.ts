@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { Notice } from "@/components/base";
 
 export async function copyClashEnv() {

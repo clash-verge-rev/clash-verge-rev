@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes } from "react-router-dom";
 import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
@@ -28,6 +28,7 @@ import { getPortableFlag } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
+const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
 
 dayjs.extend(relativeTime);

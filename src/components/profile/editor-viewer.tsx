@@ -18,7 +18,7 @@ import {
 import { useThemeMode } from "@/services/states";
 import { Notice } from "@/components/base";
 import { nanoid } from "nanoid";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import getSystem from "@/utils/get-system";
 import debounce from "@/utils/debounce";
 
@@ -29,6 +29,7 @@ import { type JSONSchema7 } from "json-schema";
 import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
 import pac from "types-pac/pac.d.ts?raw";
+const appWindow = getCurrentWebviewWindow();
 
 type Language = "yaml" | "javascript" | "css";
 type Schema<T extends Language> = LanguageSchemaMap[T];

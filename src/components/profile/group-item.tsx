@@ -10,7 +10,7 @@ import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { downloadIconCache } from "@/services/cmds";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 interface Props {
   type: "prepend" | "original" | "delete" | "append";

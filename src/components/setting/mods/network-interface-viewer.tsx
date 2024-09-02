@@ -4,7 +4,7 @@ import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { getNetworkInterfacesInfo } from "@/services/cmds";
 import { alpha, Box, Button, Chip, IconButton } from "@mui/material";
 import { ContentCopyRounded } from "@mui/icons-material";
-import { writeText } from "@tauri-apps/api/clipboard";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
