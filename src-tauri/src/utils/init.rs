@@ -10,7 +10,8 @@ use log4rs::encode::pattern::PatternEncoder;
 use std::fs::{self, DirEntry};
 use std::path::PathBuf;
 use std::str::FromStr;
-use tauri::api::process::Command;
+use tauri::AppHandle;
+use tauri_plugin_shell::ShellExt;
 
 /// initialize this instance's log file
 fn init_log() -> Result<()> {
@@ -296,43 +297,39 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 
-pub fn startup_script() -> Result<()> {
-    let path = {
+pub async fn startup_script(app_handle: &AppHandle) -> Result<()> {
+    let script_path = {
         let verge = Config::verge();
         let verge = verge.latest();
         verge.startup_script.clone().unwrap_or("".to_string())
     };
 
-    if !path.is_empty() {
-        let mut shell = "";
-        if path.ends_with(".sh") {
-            shell = "bash";
-        }
-        if path.ends_with(".ps1") {
-            shell = "powershell";
-        }
-        if path.ends_with(".bat") {
-            shell = "powershell";
-        }
-        if shell.is_empty() {
-            return Err(anyhow::anyhow!("unsupported script: {path}"));
-        }
-        let current_dir = PathBuf::from(path.clone());
-        if !current_dir.exists() {
-            return Err(anyhow::anyhow!("script not found: {path}"));
-        }
-        let current_dir = current_dir.parent();
-        match current_dir {
-            Some(dir) => {
-                let _ = Command::new(shell)
-                    .current_dir(dir.to_path_buf())
-                    .args([path])
-                    .output()?;
-            }
-            None => {
-                let _ = Command::new(shell).args([path]).output()?;
-            }
-        }
+    if script_path.is_empty() {
+        return Ok(());
     }
+
+    let shell_type = if script_path.ends_with(".sh") {
+        "bash"
+    } else if script_path.ends_with(".ps1") || script_path.ends_with(".bat") {
+        "powershell"
+    } else {
+        return Err(anyhow::anyhow!("unsupported script extension: {}", script_path));
+    };
+
+    let script_dir = PathBuf::from(&script_path);
+    if !script_dir.exists() {
+        return Err(anyhow::anyhow!("script not found: {}", script_path));
+    }
+
+    let parent_dir = script_dir.parent();
+    let working_dir = parent_dir.unwrap_or(script_dir.as_ref());
+
+    app_handle
+        .shell()
+        .command(shell_type)
+        .current_dir(working_dir.to_path_buf())
+        .args(&[script_path])
+        .output().await?;
+
     Ok(())
 }

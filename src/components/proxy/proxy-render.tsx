@@ -19,7 +19,7 @@ import type { IRenderItem } from "./use-render-list";
 import { useVerge } from "@/hooks/use-verge";
 import { useThemeMode } from "@/services/states";
 import { useEffect, useMemo, useState } from "react";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { downloadIconCache } from "@/services/cmds";
 
 interface RenderProps {

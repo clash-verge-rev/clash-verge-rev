@@ -1,20 +1,13 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "tauri": {
-    "systemTray": {
-      "iconPath": "icons/tray-icon-mono.ico",
-      "iconAsTemplate": true
-    },
-    "bundle": {
-      "identifier": "io.github.clash-verge-rev.clash-verge-rev",
-      "targets": ["app", "dmg", "updater"],
-      "macOS": {
-        "frameworks": [],
-        "minimumSystemVersion": "10.15",
-        "exceptionDomain": "",
-        "signingIdentity": null,
-        "entitlements": null
-      },
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "bundle": {
+    "targets": ["app", "dmg"],
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "entitlements": null,
       "dmg": {
         "background": "images/background.png",
         "appPosition": {
@@ -34,6 +27,12 @@
           "y": 180
         }
       }
+    }
+  },
+  "app": {
+    "trayIcon": {
+      "iconPath": "icons/tray-icon-mono.ico",
+      "iconAsTemplate": true
     }
   }
 }

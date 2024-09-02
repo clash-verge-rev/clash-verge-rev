@@ -6,10 +6,12 @@ use anyhow::Result;
 use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
-use tauri::api::notification;
 use tauri::{App, AppHandle, Manager};
 #[cfg(not(target_os = "linux"))]
-use window_shadows::set_shadow;
+// use window_shadows::set_shadow;
+use tauri_plugin_notification::NotificationExt;
+
+
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
 
@@ -33,14 +35,14 @@ pub fn find_unused_port() -> Result<u16> {
 /// handle something when start app
 pub async fn resolve_setup(app: &mut App) {
     #[cfg(target_os = "macos")]
-    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    app.set_activation_policy(tauri::ActivationPolicy::Regular);
     let version = app.package_info().version.to_string();
     handle::Handle::global().init(app.app_handle());
     VERSION.get_or_init(|| version.clone());
 
     log_err!(init::init_resources());
     log_err!(init::init_scheme());
-    log_err!(init::startup_script());
+    log_err!(init::startup_script(app.app_handle()).await);
     // 处理随机端口
     let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
 
@@ -74,7 +76,7 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(Config::init_config().await);
 
     log::trace!("launch core");
-    log_err!(CoreManager::global().init());
+    log_err!(CoreManager::global().init(app.app_handle()));
 
     // setup a simple http server for singleton
     log::trace!("launch embed server");
@@ -115,17 +117,17 @@ pub fn resolve_reset() {
 
 /// create main window
 pub fn create_window(app_handle: &AppHandle) {
-    if let Some(window) = app_handle.get_window("main") {
+    if let Some(window) = app_handle.get_webview_window("main") {
         trace_err!(window.unminimize(), "set win unminimize");
         trace_err!(window.show(), "set win visible");
         trace_err!(window.set_focus(), "set win focus");
         return;
     }
 
-    let mut builder = tauri::window::WindowBuilder::new(
+    let mut builder = tauri::WebviewWindowBuilder::new(
         app_handle,
         "main".to_string(),
-        tauri::WindowUrl::App("index.html".into()),
+        tauri::WebviewUrl::App("index.html".into()),
     )
     .title("Clash Verge")
     .visible(false)
@@ -199,8 +201,8 @@ pub fn create_window(app_handle: &AppHandle) {
                 trace_err!(win.center(), "set win center");
             }
 
-            #[cfg(not(target_os = "linux"))]
-            trace_err!(set_shadow(&win, true), "set win shadow");
+            // #[cfg(not(target_os = "linux"))]
+            //  trace_err!(set_shadow(&win, true), "set win shadow");
             if is_maximized {
                 trace_err!(win.maximize(), "set win maximize");
             }
@@ -221,7 +223,7 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
     }
 
     let win = app_handle
-        .get_window("main")
+        .get_webview_window("main")
         .ok_or(anyhow::anyhow!("failed to get window"))?;
 
     let scale = win.scale_factor()?;
@@ -241,21 +243,30 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
     let url = param
         .trim_start_matches("clash://install-config/?url=")
         .trim_start_matches("clash://install-config?url=");
-    match import_profile(url.to_string(), None).await {
-        Ok(_) => {
-            notification::Notification::new(crate::utils::dirs::APP_ID)
-                .title("Clash Verge")
-                .body("Import profile success")
-                .show()
-                .unwrap();
-        }
-        Err(e) => {
-            notification::Notification::new(crate::utils::dirs::APP_ID)
-                .title("Clash Verge")
-                .body(format!("Import profile failed: {e}"))
-                .show()
-                .unwrap();
-            log::error!("Import profile failed: {e}");
+
+    let handle = handle::Handle::global();
+    let app_handle = handle.app_handle.lock();
+    if let Some(app_handle) = app_handle.as_ref() {
+        match import_profile(url.to_string(), None).await {
+            Ok(_) => {
+                app_handle
+                    .notification()
+                    .builder()
+                    .title("Clash Verge")
+                    .body("Import profile success")
+                    .show()
+                    .unwrap();
+            }
+            Err(e) => {
+                app_handle
+                    .notification()
+                    .builder()
+                    .title("Clash Verge")
+                    .body(format!("Import profile failed: {e}"))
+                    .show()
+                    .unwrap();
+                log::error!("Import profile failed: {e}");
+            }
         }
     }
     Ok(())

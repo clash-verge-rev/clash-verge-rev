@@ -1,20 +1,16 @@
 extern crate warp;
 
 use super::resolve;
-use crate::{
-    config::{Config, IVerge, DEFAULT_PAC},
-    log_err,
-};
+use crate::config::{Config, IVerge, DEFAULT_PAC};
 use anyhow::{bail, Result};
 use port_scanner::local_port_available;
 use std::convert::Infallible;
 use tauri::AppHandle;
+use warp::http::StatusCode;
 use warp::Filter;
 
 #[derive(serde::Deserialize, Debug)]
-struct QueryParam {
-    param: String,
-}
+struct QueryParam {}
 
 /// check whether there is already exists
 pub async fn check_singleton() -> Result<()> {
@@ -56,14 +52,15 @@ pub async fn check_singleton() -> Result<()> {
 
 /// The embed server only be used to implement singleton process
 /// maybe it can be used as pac server later
-pub fn embed_server(app_handle: AppHandle) {
+pub fn embed_server(app_handle: &AppHandle) {
     let port = IVerge::get_singleton_port();
 
+    let handle = app_handle.clone();
     tauri::async_runtime::spawn(async move {
         let ping = warp::path!("commands" / "ping").map(move || "ok");
 
         let visible = warp::path!("commands" / "visible").map(move || {
-            resolve::create_window(&app_handle);
+            resolve::create_window(&handle);
             "ok"
         });
 
@@ -87,9 +84,9 @@ pub fn embed_server(app_handle: AppHandle) {
             .and(warp::query::<QueryParam>())
             .and_then(scheme_handler);
 
-        async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
-            log_err!(resolve::resolve_scheme(query.param).await);
-            Ok("ok")
+        async fn scheme_handler(_: QueryParam) -> Result<impl warp::Reply, Infallible> {
+            //let _ = resolve::resolve_scheme(query.param).await;
+            Ok(warp::reply::with_status("Ok", StatusCode::OK))
         }
         let commands = ping.or(visible).or(pac).or(scheme);
         warp::serve(commands).run(([127, 0, 0, 1], port)).await;

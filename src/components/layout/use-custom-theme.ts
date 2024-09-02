@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { alpha, createTheme, Shadows, Theme } from "@mui/material";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useSetThemeMode, useThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
+const appWindow = getCurrentWebviewWindow();
 
 /**
  * custom theme

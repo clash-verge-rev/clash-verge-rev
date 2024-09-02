@@ -2,19 +2,22 @@ use crate::config::*;
 use crate::core::{clash_api, handle, logger::Logger, service};
 use crate::log_err;
 use crate::utils::dirs;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
-use std::{sync::Arc, time::Duration};
+use std::{fs, io::Write, sync::Arc, time::Duration};
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
-use tauri::api::process::{Command, CommandChild, CommandEvent};
+use tauri::AppHandle;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::ShellExt;
+
 use tokio::time::sleep;
 
 #[derive(Debug)]
 pub struct CoreManager {
+    app_handle: Arc<Mutex<Option<AppHandle>>>,
     sidecar: Arc<Mutex<Option<CommandChild>>>,
-
     #[allow(unused)]
     use_service_mode: Arc<Mutex<bool>>,
 }
@@ -24,12 +27,14 @@ impl CoreManager {
         static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
 
         CORE_MANAGER.get_or_init(|| CoreManager {
+            app_handle: Arc::new(Mutex::new(None)),
             sidecar: Arc::new(Mutex::new(None)),
             use_service_mode: Arc::new(Mutex::new(false)),
         })
     }
 
-    pub fn init(&self) -> Result<()> {
+    pub fn init(&self, app_handle: &AppHandle) -> Result<()> {
+        *self.app_handle.lock() = Some(app_handle.clone());
         tauri::async_runtime::spawn(async {
             // 启动clash
             log_err!(Self::global().run_core().await);
@@ -39,7 +44,7 @@ impl CoreManager {
     }
 
     /// 检查订阅是否正确
-    pub fn check_config(&self) -> Result<()> {
+    pub async fn check_config(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Check)?;
         let config_path = dirs::path_to_str(&config_path)?;
 
@@ -62,19 +67,29 @@ impl CoreManager {
 
         let test_dir = dirs::app_home_dir()?.join("test");
         let test_dir = dirs::path_to_str(&test_dir)?;
+        let app_handle_option = {
+            let lock = self.app_handle.lock();
+            lock.as_ref().cloned() 
+        };
+    
+        if let Some(app_handle) = app_handle_option {
+            let output = app_handle
+                .shell()
+                .sidecar(clash_core)?
+                .args(["-t", "-d", test_dir, "-f", config_path])
+                .output()
+                .await?;
 
-        let output = Command::new_sidecar(clash_core)?
-            .args(["-t", "-d", test_dir, "-f", config_path])
-            .output()?;
-
-        if !output.status.success() {
-            let error = clash_api::parse_check_output(output.stdout.clone());
-            let error = match !error.is_empty() {
-                true => error,
-                false => output.stdout.clone(),
-            };
-            Logger::global().set_log(output.stdout);
-            bail!("{error}");
+            if !output.status.success() {
+                let stdout = String::from_utf8(output.stdout).unwrap_or_default();
+                let error = clash_api::parse_check_output(stdout.clone());
+                let error = match !error.is_empty() {
+                    true => error,
+                    false => stdout.clone(),
+                };
+                Logger::global().set_log(stdout.clone());
+                bail!("{error}");
+            }
         }
 
         Ok(())
@@ -156,37 +171,54 @@ impl CoreManager {
 
         let args = vec!["-d", app_dir, "-f", config_path];
 
-        let cmd = Command::new_sidecar(clash_core)?;
-        let (mut rx, cmd_child) = cmd.args(args).spawn()?;
+        let app_handle = self.app_handle.lock();
 
-        let mut sidecar = self.sidecar.lock();
-        *sidecar = Some(cmd_child);
-        drop(sidecar);
+        if let Some(app_handle) = app_handle.as_ref() {
+            let cmd = app_handle.shell().sidecar(clash_core)?;
+            let (mut rx, cmd_child) = cmd.args(args).spawn()?;
 
-        tauri::async_runtime::spawn(async move {
-            while let Some(event) = rx.recv().await {
-                match event {
-                    CommandEvent::Stdout(line) => {
-                        log::info!(target: "app", "[mihomo]: {line}");
-                        Logger::global().set_log(line);
+            // 将pid写入文件中
+            crate::log_err!((|| {
+                let pid = cmd_child.pid();
+                let path = dirs::clash_pid_path()?;
+                fs::File::create(path)
+                    .context("failed to create the pid file")?
+                    .write(format!("{pid}").as_bytes())
+                    .context("failed to write pid to the file")?;
+                <Result<()>>::Ok(())
+            })());
+
+            let mut sidecar = self.sidecar.lock();
+            *sidecar = Some(cmd_child);
+            drop(sidecar);
+
+            tauri::async_runtime::spawn(async move {
+                while let Some(event) = rx.recv().await {
+                    match event {
+                        CommandEvent::Stdout(line) => {
+                            let line = String::from_utf8(line).unwrap_or_default();
+                            log::info!(target: "app", "[mihomo]: {line}");
+                            Logger::global().set_log(line);
+                        }
+                        CommandEvent::Stderr(err) => {
+                            let err = String::from_utf8(err).unwrap_or_default();
+                            log::error!(target: "app", "[mihomo]: {err}");
+                            Logger::global().set_log(err);
+                        }
+                        CommandEvent::Error(err) => {
+                            log::error!(target: "app", "[mihomo]: {err}");
+                            Logger::global().set_log(err);
+                        }
+                        CommandEvent::Terminated(_) => {
+                            log::info!(target: "app", "mihomo core terminated");
+                            let _ = CoreManager::global().recover_core();
+                            break;
+                        }
+                        _ => {}
                     }
-                    CommandEvent::Stderr(err) => {
-                        log::error!(target: "app", "[mihomo]: {err}");
-                        Logger::global().set_log(err);
-                    }
-                    CommandEvent::Error(err) => {
-                        log::error!(target: "app", "[mihomo]: {err}");
-                        Logger::global().set_log(err);
-                    }
-                    CommandEvent::Terminated(_) => {
-                        log::info!(target: "app", "mihomo core terminated");
-                        let _ = CoreManager::global().recover_core();
-                        break;
-                    }
-                    _ => {}
                 }
-            }
-        });
+            });
+        }
 
         Ok(())
     }
@@ -268,7 +300,7 @@ impl CoreManager {
         // 更新订阅
         Config::generate().await?;
 
-        self.check_config()?;
+        self.check_config().await?;
 
         // 清掉旧日志
         Logger::global().clear_log();
@@ -296,7 +328,7 @@ impl CoreManager {
         Config::generate().await?;
 
         // 检查订阅是否正常
-        self.check_config()?;
+        self.check_config().await?;
 
         // 更新运行时订阅
         let path = Config::generate_file(ConfigType::Run)?;

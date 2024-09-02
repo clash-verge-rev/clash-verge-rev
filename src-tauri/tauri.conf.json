@@ -1,82 +1,49 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "package": {
-    "productName": "Clash Verge",
-    "version": "1.7.7"
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "bundle": {
+    "active": true,
+    "longDescription": "A Clash Meta GUI based on tauri.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": ["resources"],
+    "publisher": "Clash Verge Rev",
+    "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
+    "copyright": "GNU General Public License v3.0",
+    "category": "DeveloperTool",
+    "shortDescription": "A Clash Meta GUI based on tauri.",
+    "createUpdaterArtifacts": "v1Compatible"
   },
   "build": {
-    "distDir": "../dist",
-    "devPath": "http://localhost:3000/",
+    "beforeBuildCommand": "pnpm run web:build",
+    "frontendDist": "../dist",
     "beforeDevCommand": "pnpm run web:dev",
-    "beforeBuildCommand": "pnpm run web:build"
+    "devUrl": "http://localhost:3000/"
   },
-  "tauri": {
-    "bundle": {
-      "active": true,
-      "identifier": "io.github.clash-verge-rev.clash-verge-rev",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "resources": ["resources"],
-      "publisher": "Clash Verge Rev",
-      "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
-      "copyright": "GNU General Public License v3.0",
-      "category": "DeveloperTool",
-      "shortDescription": "A Clash Meta GUI based on tauri.",
-      "longDescription": "A Clash Meta GUI based on tauri."
-    },
+  "productName": "Clash Verge",
+  "version": "1.7.7",
+  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+  "plugins": {
     "updater": {
-      "active": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK",
       "endpoints": [
         "https://download.clashverge.dev/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
         "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json"
-      ],
-      "dialog": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK"
-    },
-    "allowlist": {
-      "shell": {
-        "all": true
-      },
-      "window": {
-        "all": true
-      },
-      "process": {
-        "all": true
-      },
-      "globalShortcut": {
-        "all": true
-      },
-      "clipboard": {
-        "all": true
-      },
-      "notification": {
-        "all": true
-      },
-      "dialog": {
-        "all": false,
-        "open": true
-      },
-      "protocol": {
-        "asset": true,
-        "assetScope": ["$APPDATA/**", "$RESOURCE/../**", "**"]
-      },
-      "path": {
-        "all": true
-      },
-      "fs": {
-        "exists": true,
-        "readFile": true,
-        "scope": ["$APPDATA/**", "$RESOURCE/../**", "**"]
-      }
-    },
-    "windows": [],
-    "security": {
-      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: asset: 'unsafe-eval' 'unsafe-inline' 'self';"
+      ]
     }
+  },
+  "app": {
+    "security": {
+      "assetProtocol": {
+        "scope": ["$APPDATA/**", "$RESOURCE/../**", "**"],
+        "enable": true
+      },
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: asset: 'unsafe-eval' 'unsafe-inline' 'self';; connect-src ipc: http://ipc.localhost"
+    },
+    "windows": []
   }
 }

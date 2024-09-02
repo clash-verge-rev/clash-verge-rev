@@ -1,29 +1,28 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "tauri": {
-    "systemTray": {
-      "iconPath": "icons/tray-icon.ico"
-    },
-    "bundle": {
-      "identifier": "io.github.clash-verge-rev.clash-verge-rev",
-      "targets": ["nsis", "updater"],
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": "",
-        "webviewInstallMode": {
-          "type": "embedBootstrapper",
-          "silent": true
-        },
-        "nsis": {
-          "displayLanguageSelector": true,
-          "installerIcon": "icons/icon.ico",
-          "languages": ["SimpChinese", "English"],
-          "license": "../LICENSE",
-          "installMode": "perMachine",
-          "template": "./template/installer.nsi"
-        }
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "bundle": {
+    "targets": ["nsis"],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "displayLanguageSelector": true,
+        "installerIcon": "icons/icon.ico",
+        "languages": ["SimpChinese", "English"],
+        "installMode": "perMachine",
+        "template": "./template/installer.nsi"
       }
+    }
+  },
+  "app": {
+    "trayIcon": {
+      "iconPath": "icons/tray-icon.ico",
+      "iconAsTemplate": true
     }
   }
 }

@@ -1,14 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { open } from "@tauri-apps/api/dialog";
-import {
-  Button,
-  MenuItem,
-  Select,
-  Input,
-  Typography,
-  Box,
-} from "@mui/material";
+import { open } from "@tauri-apps/plugin-dialog";
+import { Button, MenuItem, Select, Input, Typography } from "@mui/material";
 import {
   exitApp,
   openAppDir,
@@ -17,7 +10,7 @@ import {
   openDevTools,
   copyClashEnv,
 } from "@/services/cmds";
-import { checkUpdate } from "@tauri-apps/api/updater";
+import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
 import { DialogRef, Notice } from "@/components/base";
@@ -67,7 +60,7 @@ const SettingVerge = ({ onError }: Props) => {
   const onCheckUpdate = async () => {
     try {
       const info = await checkUpdate();
-      if (!info?.shouldUpdate) {
+      if (!info?.available) {
         Notice.success(t("Currently on the Latest Version"));
       } else {
         updateRef.current?.open();
@@ -191,7 +184,7 @@ const SettingVerge = ({ onError }: Props) => {
               <>
                 <Button
                   onClick={async () => {
-                    const path = await open({
+                    const selected = await open({
                       directory: false,
                       multiple: false,
                       filters: [
@@ -201,9 +194,9 @@ const SettingVerge = ({ onError }: Props) => {
                         },
                       ],
                     });
-                    if (path?.length) {
-                      onChangeData({ startup_script: `${path}` });
-                      patchVerge({ startup_script: `${path}` });
+                    if (selected?.path.length) {
+                      onChangeData({ startup_script: `${selected.path}` });
+                      patchVerge({ startup_script: `${selected.path}` });
                     }
                   }}
                 >
