@@ -38,6 +38,7 @@
   },
   "app": {
     "security": {
+      "capabilities": ["desktop-capability", "migrated"],
       "assetProtocol": {
         "scope": ["$APPDATA/**", "$RESOURCE/../**", "**"],
         "enable": true
