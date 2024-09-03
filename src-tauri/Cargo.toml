@@ -10,7 +10,7 @@ edition = "2021"
 build = "build.rs"
 
 [build-dependencies]
-tauri-build = { version= "2.0.0-rc", features = [] }
+tauri-build = { version = "2.0.0-rc", features = [] }
 
 [dependencies]
 warp = "0.3"
@@ -36,8 +36,14 @@ window-shadows = { version = "0.2.2" }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
-sysproxy = { git="https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
-tauri = { version= "2.0.0-rc", features = [ "protocol-asset", "devtools", "tray-icon", "image-ico", "image-png"] }
+sysproxy = { git = "https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
+tauri = { version = "2.0.0-rc", features = [
+    "protocol-asset",
+    "devtools",
+    "tray-icon",
+    "image-ico",
+    "image-png",
+] }
 network-interface = { version = "2.0.0", features = ["serde"] }
 tauri-plugin-shell = "2.0.0-rc"
 tauri-plugin-dialog = "2.0.0-rc"
@@ -68,3 +74,7 @@ panic = "abort"
 codegen-units = 1
 lto = true
 opt-level = "s"
+strip = true
+
+[profile.dev]
+incremental = true

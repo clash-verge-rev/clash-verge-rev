@@ -11,8 +11,6 @@ use tauri::{App, AppHandle, Manager};
 // use window_shadows::set_shadow;
 use tauri_plugin_notification::NotificationExt;
 
-
-
 pub static VERSION: OnceCell<String> = OnceCell::new();
 
 pub fn find_unused_port() -> Result<u16> {
