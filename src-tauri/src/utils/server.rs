@@ -10,7 +10,9 @@ use warp::http::StatusCode;
 use warp::Filter;
 
 #[derive(serde::Deserialize, Debug)]
-struct QueryParam {}
+struct QueryParam {
+    param: String,
+}
 
 /// check whether there is already exists
 pub async fn check_singleton() -> Result<()> {
@@ -84,10 +86,16 @@ pub fn embed_server(app_handle: &AppHandle) {
             .and(warp::query::<QueryParam>())
             .and_then(scheme_handler);
 
-        async fn scheme_handler(_: QueryParam) -> Result<impl warp::Reply, Infallible> {
-            //let _ = resolve::resolve_scheme(query.param).await;
-            Ok(warp::reply::with_status("Ok", StatusCode::OK))
+        async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
+            let result = resolve::resolve_scheme(query.param).await;
+            Ok(match result {
+                Ok(_) => warp::reply::with_status("Ok", StatusCode::OK),
+                Err(_) => {
+                    warp::reply::with_status("Internal Error", StatusCode::INTERNAL_SERVER_ERROR)
+                }
+            })
         }
+
         let commands = ping.or(visible).or(pac).or(scheme);
         warp::serve(commands).run(([127, 0, 0, 1], port)).await;
     });
