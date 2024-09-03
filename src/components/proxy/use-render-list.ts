@@ -7,6 +7,7 @@ import {
   DEFAULT_STATE,
   type HeadState,
 } from "./use-head-state";
+<<<<<<< HEAD
 import { useAppData } from "@/providers/app-data-provider";
 
 // 定义代理项接口
@@ -47,6 +48,7 @@ type ProxyGroup = {
   testUrl?: string;
   provider?: string;
 };
+import { truncate } from "lodash-es";
 
 export interface IRenderItem {
   // 组 | head | item | empty | item col
@@ -126,6 +128,7 @@ export const useRenderList = (mode: string) => {
 
     const retList = renderGroups.flatMap((group: ProxyGroup) => {
       const headState = headStates[group.name] || DEFAULT_STATE;
+      const hiddenInvalidNetwork = headState.hiddenInvalidNetwork;
       const ret: IRenderItem[] = [
         {
           type: 0,

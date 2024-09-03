@@ -35,6 +35,8 @@
   "direct": "direct",
   "script": "script",
   "locate": "locate",
+  "Enable Hidden Invalid Network": "Hidden Invalid Network",
+  "Disable Hidden Invalid Network": "Show Proxy Items",
   "Delay check": "Delay check",
   "Sort by default": "Sort by default",
   "Sort by delay": "Sort by delay",

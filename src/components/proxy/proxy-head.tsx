@@ -13,6 +13,8 @@ import {
   WifiTetheringOffRounded,
   SortByAlphaRounded,
   SortRounded,
+  SignalWifiStatusbar4Bar,
+  SignalWifiStatusbarConnectedNoInternet4,
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import type { HeadState } from "./use-head-state";
@@ -32,7 +34,14 @@ interface Props {
 export const ProxyHead = (props: Props) => {
   const { sx = {}, url, groupName, headState, onHeadState } = props;
 
-  const { showType, sortType, filterText, textState, testUrl } = headState;
+  const {
+    hiddenInvalidNetwork,
+    showType,
+    sortType,
+    filterText,
+    textState,
+    testUrl,
+  } = headState;
 
   const { t } = useTranslation();
   const [autoFocus, setAutoFocus] = useState(false);
