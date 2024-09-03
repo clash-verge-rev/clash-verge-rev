@@ -243,7 +243,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
         .trim_start_matches("clash://install-config?url=");
 
     let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock();
+    let app_handle = handle.app_handle.lock().clone();
     if let Some(app_handle) = app_handle.as_ref() {
         match import_profile(url.to_string(), None).await {
             Ok(_) => {

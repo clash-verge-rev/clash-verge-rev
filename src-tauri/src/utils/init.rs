@@ -313,7 +313,10 @@ pub async fn startup_script(app_handle: &AppHandle) -> Result<()> {
     } else if script_path.ends_with(".ps1") || script_path.ends_with(".bat") {
         "powershell"
     } else {
-        return Err(anyhow::anyhow!("unsupported script extension: {}", script_path));
+        return Err(anyhow::anyhow!(
+            "unsupported script extension: {}",
+            script_path
+        ));
     };
 
     let script_dir = PathBuf::from(&script_path);
@@ -329,7 +332,8 @@ pub async fn startup_script(app_handle: &AppHandle) -> Result<()> {
         .command(shell_type)
         .current_dir(working_dir.to_path_buf())
         .args(&[script_path])
-        .output().await?;
+        .output()
+        .await?;
 
     Ok(())
 }
