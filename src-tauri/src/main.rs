@@ -10,8 +10,7 @@ mod enhance;
 mod feat;
 mod utils;
 
-use crate::utils::{init, resolve, server};
-use tauri::tray::TrayIconBuilder;
+use crate::utils::{resolve, server};
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -30,7 +29,8 @@ fn main() -> std::io::Result<()> {
     #[cfg(target_os = "linux")]
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
 
-    crate::log_err!(init::init_config());
+    #[cfg(debug_assertions)]
+    let devtools = tauri_plugin_devtools::init();
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
@@ -43,26 +43,9 @@ fn main() -> std::io::Result<()> {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
-            TrayIconBuilder::new().build(app)?;
-
-            #[cfg(target_os = "macos")]
-            {
-                use tauri::menu::MenuBuilder;
-                let _ = MenuBuilder::new(app)
-                    .copy()
-                    .paste()
-                    .undo()
-                    .redo()
-                    .cut()
-                    .select_all()
-                    .quit()
-                    .close_window()
-                    .build();
-            }
             tauri::async_runtime::block_on(async move {
                 resolve::resolve_setup(app).await;
             });
-
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -119,6 +102,11 @@ fn main() -> std::io::Result<()> {
             // clash api
             cmds::clash_api_get_proxy_delay
         ]);
+
+    #[cfg(debug_assertions)]
+    {
+        builder = builder.plugin(devtools);
+    }
 
     let app = builder
         .build(tauri::generate_context!())

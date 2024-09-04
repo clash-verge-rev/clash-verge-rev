@@ -1,5 +1,7 @@
 {
   "identifier": "desktop-capability",
   "platforms": ["macOS", "windows", "linux"],
+  "webviews": ["main"],
+  "windows": ["main"],
   "permissions": ["global-shortcut:default", "updater:default"]
 }
