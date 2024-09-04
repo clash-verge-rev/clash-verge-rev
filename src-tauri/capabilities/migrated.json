@@ -46,6 +46,9 @@
     "core:webview:allow-print",
     "shell:allow-execute",
     "shell:allow-open",
+    "shell:allow-kill",
+    "shell:allow-spawn",
+    "shell:allow-stdin-write",
     "dialog:allow-open",
     "notification:default",
     "global-shortcut:allow-is-registered",
@@ -59,7 +62,6 @@
     "clipboard-manager:allow-write-text",
     "shell:default",
     "dialog:default",
-    "fs:default",
     "notification:default"
   ]
 }

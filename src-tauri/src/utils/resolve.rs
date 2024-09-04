@@ -7,7 +7,7 @@ use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::{App, AppHandle, Manager};
-#[cfg(not(target_os = "linux"))]
+//#[cfg(not(target_os = "linux"))]
 // use window_shadows::set_shadow;
 use tauri_plugin_notification::NotificationExt;
 
@@ -33,11 +33,11 @@ pub fn find_unused_port() -> Result<u16> {
 /// handle something when start app
 pub async fn resolve_setup(app: &mut App) {
     #[cfg(target_os = "macos")]
-    app.set_activation_policy(tauri::ActivationPolicy::Regular);
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
     let version = app.package_info().version.to_string();
     handle::Handle::global().init(app.app_handle());
     VERSION.get_or_init(|| version.clone());
-
+    log_err!(init::init_config());
     log_err!(init::init_resources());
     log_err!(init::init_scheme());
     log_err!(init::startup_script(app.app_handle()).await);

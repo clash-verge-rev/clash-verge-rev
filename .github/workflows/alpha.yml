@@ -99,12 +99,6 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: i686-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
@@ -114,15 +108,15 @@ jobs:
         uses: ./.github/build-for-linux
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           target: ${{ matrix.target }}
 
       - name: Get Version
         run: |
           sudo apt-get update
-          sudo apt-get install jq
+          sudo apt-get install jq 
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
@@ -195,8 +189,8 @@ jobs:
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
@@ -252,9 +246,6 @@ jobs:
 
           ### Linux
           - Linux 64位: amd64.deb/amd64.rpm
-          - Linux 32位: i386.deb/i386.rpm
-          - Linux arm64架构: arm64.deb/aarch64.rpm
-          - Linux armv7架构: armhf.deb/armhfp.rpm
 
           ### Windows (Win7 用户请查看下面FAQ中的解决方案)
           #### 正常版本(推荐)

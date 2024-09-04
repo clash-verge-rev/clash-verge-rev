@@ -6,7 +6,6 @@ use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf, str::FromStr};
 use tauri_plugin_shell::ShellExt;
 
-
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
     if !path.exists() {
@@ -157,6 +156,17 @@ macro_rules! wrap_err {
 macro_rules! ret_err {
     ($str: expr) => {
         return Err($str.into())
+    };
+}
+
+#[macro_export]
+macro_rules! t {
+    ($en:expr, $zh:expr, $use_zh:expr) => {
+        if $use_zh {
+            $zh
+        } else {
+            $en
+        }
     };
 }
 

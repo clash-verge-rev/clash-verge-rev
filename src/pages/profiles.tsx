@@ -137,7 +137,12 @@ const ProfilePage = () => {
         mutate("getProfiles", newProfiles);
 
         const remoteItem = newProfiles.items?.find((e) => e.type === "remote");
-        if (newProfiles.current && remoteItem) {
+
+        const profilesCount = newProfiles.items?.filter(
+          (e) => e.type === "remote" || e.type === "local"
+        ).length as number;
+
+        if (remoteItem && (profilesCount == 1 || !newProfiles.current)) {
           const current = remoteItem.uid;
           await patchProfiles({ current });
           mutateLogs();

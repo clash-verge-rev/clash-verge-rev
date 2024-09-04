@@ -51,6 +51,7 @@ tauri-plugin-fs = "2.0.0-rc"
 tauri-plugin-notification = "2.0.0-rc"
 tauri-plugin-process = "2.0.0-rc"
 tauri-plugin-clipboard-manager = "2.1.0-beta.7"
+tauri-plugin-devtools = "2.0.0-rc"
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
 deelevate = "0.2.0"

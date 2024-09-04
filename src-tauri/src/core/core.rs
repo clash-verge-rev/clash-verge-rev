@@ -36,8 +36,10 @@ impl CoreManager {
     pub fn init(&self, app_handle: &AppHandle) -> Result<()> {
         *self.app_handle.lock() = Some(app_handle.clone());
         tauri::async_runtime::spawn(async {
+            log::trace!("run core start");
             // 启动clash
             log_err!(Self::global().run_core().await);
+            log::trace!("run core end");
         });
 
         Ok(())
@@ -69,9 +71,9 @@ impl CoreManager {
         let test_dir = dirs::path_to_str(&test_dir)?;
         let app_handle_option = {
             let lock = self.app_handle.lock();
-            lock.as_ref().cloned() 
+            lock.as_ref().cloned()
         };
-    
+
         if let Some(app_handle) = app_handle_option {
             let output = app_handle
                 .shell()
