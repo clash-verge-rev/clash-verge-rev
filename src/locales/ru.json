@@ -34,6 +34,8 @@
   "direct": "прямой",
   "script": "скриптовый",
   "locate": "Местоположение",
+  "Enable Hidden Invalid Network": "Скрытая недействительная сеть",
+  "Disable Hidden Invalid Network": "Показать прокси-элементы",
   "Delay check": "Проверка задержки",
   "Sort by default": "Сортировать по умолчанию",
   "Sort by delay": "Сортировать по задержке",
