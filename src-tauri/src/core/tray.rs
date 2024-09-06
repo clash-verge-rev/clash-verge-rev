@@ -14,21 +14,17 @@ pub struct Tray {}
 
 impl Tray {
     fn get_tray_icon() -> Icon {
-        let verge_config = Config::verge();
-        let clash_config = Config::clash();
+        let verge = Config::verge().latest().clone();
+        let clash = Config::clash().latest().clone();
         let icon_dir_path = dirs::app_home_dir().unwrap().join("icons");
-        let sysproxy_enabled = verge_config.latest().enable_system_proxy.unwrap_or(false);
-        let tun_enabled = clash_config.latest().get_enable_tun();
+        let sysproxy_enabled = verge.enable_system_proxy.unwrap_or(false);
+        let tun_enabled = clash.get_enable_tun();
         #[cfg(target_os = "macos")]
-        let tray_icon = verge_config
-            .latest()
-            .tray_icon
-            .clone()
-            .unwrap_or("monochrome".to_string());
+        let tray_icon = verge.tray_icon.unwrap_or("monochrome".to_string());
         // get icon
-        let common_tray_icon = verge_config.latest().common_tray_icon.unwrap_or(false);
-        let sysproxy_tray_icon = verge_config.latest().sysproxy_tray_icon.unwrap_or(false);
-        let tun_tray_icon = verge_config.latest().tun_tray_icon.unwrap_or(false);
+        let common_tray_icon = verge.common_tray_icon.unwrap_or(false);
+        let sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
+        let tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
         let icon = match (sysproxy_enabled, tun_enabled) {
             (_, true) => {
                 if tun_tray_icon {
@@ -96,8 +92,8 @@ impl Tray {
     }
 
     pub fn tray_menu(app_handle: &AppHandle) -> SystemTrayMenu {
-        let verge_config = Config::verge();
-        let zh = verge_config.latest().language == Some("zh".into());
+        let verge = Config::verge().latest().clone();
+        let zh = verge.language == Some("zh".into());
         let version = app_handle.package_info().version.to_string();
         macro_rules! t {
             ($en: expr, $zh: expr) => {
@@ -156,7 +152,7 @@ impl Tray {
             .add_item(copy_env)
             .add_submenu(open_dir)
             .add_submenu(more)
-            .add_native_item(separator.clone())
+            .add_native_item(separator)
             .add_item(quit)
     }
 
@@ -170,9 +166,9 @@ impl Tray {
 
     pub fn update_part(app_handle: &AppHandle) -> Result<()> {
         let tray = app_handle.tray_handle();
-        let verge_config = Config::verge();
-        let clash_config = Config::clash();
-        let zh = verge_config.latest().language == Some("zh".into());
+        let verge = Config::verge().latest().clone();
+        let clash = Config::clash().latest().clone();
+        let zh = verge.language == Some("zh".into());
         macro_rules! t {
             ($en: expr, $zh: expr) => {
                 if zh {
@@ -182,10 +178,10 @@ impl Tray {
                 }
             };
         }
-        let mode = clash_config.latest().get_mode();
-        let sysproxy_enabled = verge_config.latest().enable_system_proxy.unwrap_or(false);
-        let tun_enabled = clash_config.latest().get_enable_tun();
-        let service_enabled = verge_config.latest().enable_service_mode.unwrap_or(false);
+        let mode = clash.get_mode();
+        let sysproxy_enabled = verge.enable_system_proxy.unwrap_or(false);
+        let tun_enabled = clash.get_enable_tun();
+        let service_enabled = verge.enable_service_mode.unwrap_or(false);
 
         let rule_menu = tray.get_item("rule_mode");
         let global_menu = tray.get_item("global_mode");
@@ -277,12 +273,7 @@ impl Tray {
 
         #[cfg(target_os = "macos")]
         {
-            let verge_config = Config::verge();
-            let tray_icon = verge_config
-                .latest()
-                .tray_icon
-                .clone()
-                .unwrap_or("monochrome".to_string());
+            let tray_icon = verge.tray_icon.unwrap_or("monochrome".to_string());
             match tray_icon.as_str() {
                 "monochrome" => {
                     let _ = tray.set_icon_as_template(true);
@@ -301,8 +292,7 @@ impl Tray {
         {
             let version = app_handle.package_info().version.to_string();
             let mut current_profile_name = "None".to_string();
-            let profiles = Config::profiles();
-            let profiles = profiles.latest();
+            let profiles = Config::profiles().latest().clone();
             if let Some(current_profile_uid) = profiles.get_current() {
                 let current_profile = profiles.get_item(&current_profile_uid);
                 current_profile_name = match &current_profile.unwrap().name {
@@ -331,7 +321,7 @@ impl Tray {
     }
 
     pub fn on_click(app_handle: &AppHandle) {
-        let tray_event = { Config::verge().latest().tray_event.clone() };
+        let tray_event = Config::verge().latest().tray_event.clone();
         let tray_event = tray_event.unwrap_or("main_window".into());
         match tray_event.as_str() {
             "system_proxy" => feat::toggle_system_proxy(),
@@ -364,7 +354,6 @@ impl Tray {
                 "restart_clash" => feat::restart_clash_core(),
                 "restart_app" => cmds::restart_app(app_handle.clone()),
                 "quit" => cmds::exit_app(app_handle.clone()),
-
                 _ => {}
             },
             _ => {}

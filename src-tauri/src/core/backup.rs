@@ -18,7 +18,7 @@ static BACKUP_DIR: &str = "clash-verge-rev-dev";
 
 static TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 
-/// create backup zip
+/// create backup zip file
 ///
 /// retrurn backup file name and path
 ///
@@ -30,13 +30,13 @@ pub fn create_backup(
 ) -> Result<(String, PathBuf), Box<dyn std::error::Error>> {
     let now = chrono::Local::now().format(TIME_FORMAT_PATTERN).to_string();
 
-    let mut file_name = format!("{}-backup-{}.zip", OS, now);
+    let mut zip_file_name = format!("{}-backup-{}.zip", OS, now);
     if only_backup_profiles {
-        file_name = format!("{}-profiles-backup-{}.zip", OS, now);
+        zip_file_name = format!("{}-profiles-backup-{}.zip", OS, now);
     }
-    let mut zip_path = temp_dir().join(&file_name);
+    let mut zip_path = temp_dir().join(&zip_file_name);
     if local_save {
-        zip_path = dirs::backup_dir()?.join(&file_name);
+        zip_path = dirs::backup_dir()?.join(&zip_file_name);
     }
 
     let file = fs::File::create(&zip_path)?;
@@ -63,7 +63,7 @@ pub fn create_backup(
     zip.start_file(dirs::PROFILE_YAML, options)?;
     zip.write_all(fs::read(dirs::profiles_path()?)?.as_slice())?;
     zip.finish()?;
-    Ok((file_name, zip_path))
+    Ok((zip_file_name, zip_path))
 }
 
 pub struct WebDav {
@@ -73,7 +73,6 @@ pub struct WebDav {
     client: Arc<Mutex<Option<reqwest_dav::Client>>>,
 }
 
-// #[allow(dead_code)]
 impl WebDav {
     pub fn global() -> &'static WebDav {
         static WEBDAV: OnceCell<WebDav> = OnceCell::new();
@@ -87,18 +86,10 @@ impl WebDav {
     }
 
     pub async fn init(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let verge = Config::verge();
-        let url = verge.latest().webdav_url.clone().unwrap_or("".to_string());
-        let username = verge
-            .latest()
-            .webdav_username
-            .clone()
-            .unwrap_or("".to_string());
-        let password = verge
-            .latest()
-            .webdav_password
-            .clone()
-            .unwrap_or("".to_string());
+        let verge = Config::verge().latest().clone();
+        let url = verge.webdav_url.unwrap_or("".to_string());
+        let username = verge.webdav_username.unwrap_or("".to_string());
+        let password = verge.webdav_password.unwrap_or("".to_string());
         self.update_webdav_info(url, username, password).await?;
         Ok(())
     }
@@ -121,7 +112,7 @@ impl WebDav {
         Ok(())
     }
 
-    async fn get_client(&self) -> Result<reqwest_dav::Client, Box<dyn std::error::Error>> {
+    fn get_client(&self) -> Result<reqwest_dav::Client, Box<dyn std::error::Error>> {
         if self.client.lock().is_none() {
             log::error!("Web dav client is not initialized");
             return Err("Web dav client is not initialized".into());
@@ -130,7 +121,7 @@ impl WebDav {
     }
 
     pub async fn list_file() -> Result<Vec<ListFile>, Box<dyn std::error::Error>> {
-        let client = Self::global().get_client().await?;
+        let client = Self::global().get_client()?;
         let files = client
             .list(BACKUP_DIR, reqwest_dav::Depth::Number(1))
             .await?;
@@ -147,7 +138,7 @@ impl WebDav {
         webdav_file_name: String,
         storage_path: PathBuf,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let client = Self::global().get_client().await?;
+        let client = Self::global().get_client()?;
         let path = format!("{}/{}", BACKUP_DIR, webdav_file_name);
         let response = client.get(&path.as_str()).await?;
         let content = response.bytes().await?;
@@ -159,14 +150,14 @@ impl WebDav {
         file_path: PathBuf,
         webdav_file_name: String,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let client = Self::global().get_client().await?;
+        let client = Self::global().get_client()?;
         let web_dav_path = format!("{}/{}", BACKUP_DIR, webdav_file_name);
         client.put(&web_dav_path, fs::read(file_path)?).await?;
         Ok(())
     }
 
     pub async fn delete_file(file_name: String) -> Result<(), Box<dyn std::error::Error>> {
-        let client = Self::global().get_client().await?;
+        let client = Self::global().get_client()?;
         let path = format!("{}/{}", BACKUP_DIR, file_name);
         client.delete(&path).await?;
         Ok(())

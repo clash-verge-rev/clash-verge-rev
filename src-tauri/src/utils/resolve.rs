@@ -59,7 +59,6 @@ pub fn resolve_setup(app_handle: &AppHandle) {
     log_err!(handle::Handle::update_systray_part());
     log_err!(hotkey::Hotkey::global().init(app_handle.app_handle()));
     log_err!(timer::Timer::global().init());
-
 }
 
 /// reset system proxy

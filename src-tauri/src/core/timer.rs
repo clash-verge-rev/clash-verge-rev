@@ -33,7 +33,7 @@ impl Timer {
 
     /// restore timer
     pub fn init(&self) -> Result<()> {
-        self.refresh()?;
+        self.refresh_profiles()?;
 
         let cur_timestamp = chrono::Local::now().timestamp();
 
@@ -67,8 +67,8 @@ impl Timer {
     }
 
     /// Correctly update all cron tasks
-    pub fn refresh(&self) -> Result<()> {
-        let diff_map = self.gen_diff();
+    pub fn refresh_profiles(&self) -> Result<()> {
+        let diff_map = self.gen_diff_profiles();
 
         let mut timer_map = self.timer_map.lock();
         let mut delay_timer = self.delay_timer.lock();
@@ -81,12 +81,12 @@ impl Timer {
                 }
                 DiffFlag::Add(tid, val) => {
                     let _ = timer_map.insert(uid.clone(), (tid, val));
-                    crate::log_err!(self.add_task(&mut delay_timer, uid, tid, val));
+                    crate::log_err!(self.add_profiles_task(&mut delay_timer, uid, tid, val));
                 }
                 DiffFlag::Mod(tid, val) => {
                     let _ = timer_map.insert(uid.clone(), (tid, val));
                     crate::log_err!(delay_timer.remove_task(tid));
-                    crate::log_err!(self.add_task(&mut delay_timer, uid, tid, val));
+                    crate::log_err!(self.add_profiles_task(&mut delay_timer, uid, tid, val));
                 }
             }
         }
@@ -94,8 +94,8 @@ impl Timer {
         Ok(())
     }
 
-    /// generate a uid -> update_interval map
-    fn gen_map(&self) -> HashMap<String, u64> {
+    /// generate a map -> (uid, update_interval)
+    fn gen_profiles_interval(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
         if let Some(items) = Config::profiles().latest().get_items() {
@@ -115,12 +115,12 @@ impl Timer {
     }
 
     /// generate the diff map for refresh
-    fn gen_diff(&self) -> HashMap<String, DiffFlag> {
+    fn gen_diff_profiles(&self) -> HashMap<String, DiffFlag> {
         let mut diff_map = HashMap::new();
 
         let timer_map = self.timer_map.lock();
 
-        let new_map = self.gen_map();
+        let new_map = self.gen_profiles_interval();
         let cur_map = &timer_map;
 
         cur_map.iter().for_each(|(uid, (tid, val))| {
@@ -147,7 +147,7 @@ impl Timer {
     }
 
     /// add a cron task
-    fn add_task(
+    fn add_profiles_task(
         &self,
         delay_timer: &mut DelayTimer,
         uid: String,
@@ -159,7 +159,7 @@ impl Timer {
             .set_maximum_parallel_runnable_num(1)
             .set_frequency_repeated_by_minutes(minutes)
             // .set_frequency_repeated_by_seconds(minutes) // for test
-            .spawn_async_routine(move || Self::async_task(uid.to_owned()))
+            .spawn_async_routine(move || Self::update_profile_task(uid.to_owned()))
             .context("failed to create timer task")?;
 
         delay_timer
@@ -169,8 +169,31 @@ impl Timer {
         Ok(())
     }
 
+    #[allow(unused)]
+    pub fn add_async_task<T, S, F, U>(id: T, seconds: S, task_function: F) -> Result<()>
+    where
+        T: Into<TaskID>,
+        S: Into<u64>,
+        F: Fn() -> U + 'static + Send,
+        U: std::future::Future + 'static + Send,
+    {
+        let task = TaskBuilder::default()
+            .set_task_id(id.into())
+            .set_maximum_parallel_runnable_num(1)
+            .set_frequency_repeated_by_seconds(seconds.into())
+            .spawn_async_routine(task_function)
+            .context("failed to create timer task")?;
+
+        let delay_timer = Self::global().delay_timer.lock();
+        delay_timer
+            .add_task(task)
+            .context("failed to add timer task")?;
+
+        Ok(())
+    }
+
     /// the task runner
-    async fn async_task(uid: String) {
+    async fn update_profile_task(uid: String) {
         log::info!(target: "app", "running timer task `{uid}`");
         crate::log_err!(feat::update_profile(uid, None).await);
     }
