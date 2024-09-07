@@ -103,7 +103,7 @@ importers:
         version: 7.4.3
       types-pac:
         specifier: ^1.0.2
-        version: 1.0.2
+        version: 1.0.3
     devDependencies:
       '@actions/github':
         specifier: 6.0.0
@@ -3497,8 +3497,8 @@ packages:
   type@2.7.3:
     resolution: {integrity: sha512-8j+1QmAbPvLZow5Qpi6NCaN8FB60p/6x8/vfNqOk/hC+HuvFZhL4+WfekuhQLiqFZXOgQdrs3B+XxEmCc6b3FQ==}
 
-  types-pac@1.0.2:
-    resolution: {integrity: sha512-9zOLBtvgzEesEgpkJPrrh+uGTzSdNcYA+gk1jv3+14ytTsuxnunBko98OgbCCgUfcMzraEi4h+3zPrZaPoEsQg==}
+  types-pac@1.0.3:
+    resolution: {integrity: sha512-MF2UAZGvGMOM+vHi9Zj/LvQqdNN1m1xSB+PjAW9B/GvFqaB4GwR18YaIbGIGDRTW/J8iqFXQHLZd5eJVtho46w==}
 
   typescript@5.5.4:
     resolution: {integrity: sha512-Mtq29sKDAEYP7aljRgtPOpTvOfbwRWlS6dPRzwjdE+C0R4brX/GUyhHSecbHMFLNBLcJIPt9nl9yG5TZ1weH+Q==}
@@ -7482,7 +7482,7 @@ snapshots:
 
   type@2.7.3: {}
 
-  types-pac@1.0.2: {}
+  types-pac@1.0.3: {}
 
   typescript@5.5.4: {}
 
