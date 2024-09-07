@@ -49,7 +49,7 @@ importers:
         version: 0.2.37(react@18.3.1)
       framer-motion:
         specifier: ^11.3.31
-        version: 11.5.3(@emotion/is-prop-valid@1.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 11.5.4(@emotion/is-prop-valid@1.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       i18next:
         specifier: ^23.11.5
         version: 23.14.0
@@ -2332,8 +2332,8 @@ packages:
       react:
         optional: true
 
-  framer-motion@11.5.3:
-    resolution: {integrity: sha512-SvoshQ/iH2oaZrkmIcAht2Ko76DsZtD2f6SNMIVLe2N1l1RNDkCkyuygF8FkUGN7TXrhhH7UYDNwhRB94wCCfA==}
+  framer-motion@11.5.4:
+    resolution: {integrity: sha512-E+tb3/G6SO69POkdJT+3EpdMuhmtCh9EWuK4I1DnIC23L7tFPrl8vxP+LSovwaw6uUr73rUbpb4FgK011wbRJQ==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0
@@ -6184,7 +6184,7 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  framer-motion@11.5.3(@emotion/is-prop-valid@1.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  framer-motion@11.5.4(@emotion/is-prop-valid@1.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       tslib: 2.7.0
     optionalDependencies:
