@@ -20,10 +20,14 @@ static TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 
 /// create backup zip file
 ///
-/// retrurn backup file name and path
-///
-/// `String`: backup file name
-/// `PathBuf`: backup file path
+/// # Arguments
+/// - `local_save`: save to local or not
+/// - `only_backup_profiles`: only backup profiles
+/// 
+/// # Return
+/// - `Result<(String, PathBuf), Box<dyn std::error::Error>>`: backup file name and path
+///     - `String`: backup file name
+///     - `PathBuf`: backup file path
 pub fn create_backup(
     local_save: bool,
     only_backup_profiles: bool,

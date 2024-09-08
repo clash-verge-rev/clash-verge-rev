@@ -16,6 +16,7 @@ use tauri::api::dialog::blocking::MessageDialogBuilder;
 use tauri::api::dialog::{MessageDialogButtons, MessageDialogKind};
 use tauri::api::notification::Notification;
 use tauri::{AppHandle, ClipboardManager, Manager};
+use verge_log::VergeLog;
 
 // 打开面板
 pub fn open_or_close_dashboard() {
@@ -407,7 +408,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let common_tray_icon = patch.common_tray_icon;
     let sysproxy_tray_icon = patch.sysproxy_tray_icon;
     let tun_tray_icon = patch.tun_tray_icon;
+    let log_level = patch.app_log_level;
     let res = {
+        if log_level.is_some() {
+            let log_level = Config::verge().latest().get_log_level();
+            VergeLog::update_log_level(log_level)?;
+        }
         let service_mode = patch.enable_service_mode;
 
         if service_mode.is_some() {

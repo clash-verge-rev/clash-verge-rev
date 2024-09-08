@@ -11,5 +11,6 @@ pub mod timer;
 pub mod tray;
 pub mod win_uwp;
 pub mod backup;
+pub mod verge_log;
 
 pub use self::core::*;
