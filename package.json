@@ -72,7 +72,7 @@
     "@vitejs/plugin-react": "4.3.1",
     "adm-zip": "0.5.16",
     "cli-color": "2.0.4",
-    "concurrently": "8.2.2",
+    "concurrently": "9.0.0",
     "cross-env": "7.0.3",
     "fs-extra": "11.2.0",
     "https-proxy-agent": "7.0.5",
