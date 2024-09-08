@@ -577,6 +577,8 @@ async function runTask() {
       break;
     } catch (err) {
       log_error(`task::${task.name} try ${i} ==`, err.message);
+      // wait 1s
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       if (i === task.retry - 1) throw err;
     }
   }
