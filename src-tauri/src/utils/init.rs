@@ -7,13 +7,14 @@ use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
+use log4rs::Handle;
 use std::fs::{self, DirEntry};
 use std::path::PathBuf;
 use std::str::FromStr;
 use tauri::api::process::Command;
 
 /// initialize this instance's log file
-fn init_log() -> Result<()> {
+fn init_log() -> Result<Option<Handle>> {
     let log_dir = dirs::app_logs_dir()?;
     if !log_dir.exists() {
         let _ = fs::create_dir_all(&log_dir);
@@ -21,7 +22,7 @@ fn init_log() -> Result<()> {
 
     let log_level = Config::verge().data().get_log_level();
     if log_level == LevelFilter::Off {
-        return Ok(());
+        return Ok(None);
     }
 
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
@@ -30,7 +31,7 @@ fn init_log() -> Result<()> {
 
     let log_pattern = match log_level {
         LevelFilter::Trace => "{d(%Y-%m-%d %H:%M:%S)} {l} [{M}] - {m}{n}",
-        _ => "{d(%Y-%m-%d %H:%M:%S)} {l} - {m}{n}",
+            _ => "{d(%Y-%m-%d %H:%M:%S)} {l} - {m}{n}",
     };
 
     let encode = Box::new(PatternEncoder::new(log_pattern));
@@ -66,9 +67,9 @@ fn init_log() -> Result<()> {
         .logger(logger_builder.additive(false).build("app", log_level))
         .build_lossy(root_builder.build(log_level));
 
-    log4rs::init_config(config)?;
+    let handle = log4rs::init_config(config)?;
 
-    Ok(())
+    Ok(Some(handle))
 }
 
 /// 删除log文件

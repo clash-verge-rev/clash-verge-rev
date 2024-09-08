@@ -48,12 +48,19 @@ pub async fn install_service() -> Result<()> {
         bail!("installer exe not found");
     }
 
+    let log_dir = dirs::app_logs_dir()?.join("service");
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
 
     let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).status()?,
+        PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path)
+            .arg("--log-dir")
+            .arg(log_dir)
+            .show(false)
+            .status()?,
         _ => StdCommand::new(install_path)
+            .arg("--log-dir")
+            .arg(log_dir)
             .creation_flags(0x08000000)
             .status()?,
     };
@@ -79,14 +86,25 @@ pub async fn install_service() -> Result<()> {
         bail!("installer not found");
     }
 
+    let log_dir = dirs::app_logs_dir()?.join("service");
     let elevator = crate::utils::unix_helper::linux_elevator();
     let status = match get_effective_uid() {
-        0 => StdCommand::new(installer_path).status()?,
-        _ => StdCommand::new(elevator)
-            .arg("sh")
-            .arg("-c")
-            .arg(installer_path)
+        0 => StdCommand::new(installer_path)
+            .arg("--log-dir")
+            .arg(log_dir.clone())
             .status()?,
+        _ => {
+            let execute_cmd = format!(
+                "{} --log-dir {}",
+                installer_path.display(),
+                log_dir.display()
+            );
+            StdCommand::new(elevator)
+                .arg("sh")
+                .arg("-c")
+                .arg(execute_cmd)
+                .status()?
+        }
     };
 
     if !status.success() {
@@ -107,8 +125,13 @@ pub async fn install_service() -> Result<()> {
     if !installer_path.exists() {
         bail!("installer not found");
     }
+    let log_dir = dirs::app_logs_dir()?.join("service");
     let shell = installer_path.to_string_lossy().replace(" ", "\\\\ ");
-    let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
+    let command = format!(
+        r#"do shell script "{} --log-dir {}" with administrator privileges"#,
+        shell,
+        log_dir.display()
+    );
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])
@@ -138,12 +161,19 @@ pub async fn uninstall_service() -> Result<()> {
         bail!("uninstaller exe not found");
     }
 
+    let log_dir = dirs::app_logs_dir()?.join("service");
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
 
     let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
+        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path)
+            .arg("--log-dir")
+            .arg(log_dir)
+            .show(false)
+            .status()?,
         _ => StdCommand::new(uninstall_path)
+            .arg("--log-dir")
+            .arg(log_dir)
             .creation_flags(0x08000000)
             .status()?,
     };
@@ -169,14 +199,25 @@ pub async fn uninstall_service() -> Result<()> {
         bail!("uninstaller not found");
     }
 
+    let log_dir = dirs::app_logs_dir()?.join("service");
     let elevator = crate::utils::unix_helper::linux_elevator();
     let status = match get_effective_uid() {
-        0 => StdCommand::new(uninstaller_path).status()?,
-        _ => StdCommand::new(elevator)
-            .arg("sh")
-            .arg("-c")
-            .arg(uninstaller_path)
+        0 => StdCommand::new(uninstaller_path)
+            .arg("--log-dir")
+            .arg(log_dir)
             .status()?,
+        _ => {
+            let execute_cmd = format!(
+                "{} --log-dir {}",
+                uninstaller_path.display(),
+                log_dir.display()
+            );
+            StdCommand::new(elevator)
+                .arg("sh")
+                .arg("-c")
+                .arg(execute_cmd)
+                .status()?
+        }
     };
 
     if !status.success() {
@@ -198,8 +239,13 @@ pub async fn uninstall_service() -> Result<()> {
         bail!("uninstaller not found");
     }
 
+    let log_dir = dirs::app_logs_dir()?.join("service");
     let shell = uninstaller_path.to_string_lossy().replace(" ", "\\\\ ");
-    let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
+    let command = format!(
+        r#"do shell script "{} --log-dir {}" with administrator privileges"#,
+        shell,
+        log_dir.display()
+    );
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])

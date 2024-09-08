@@ -11,12 +11,17 @@ import zlib from "zlib";
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 const FORCE = process.argv.includes("--force");
-const log_success = (msg) => console.log(clc.green(msg));
-const log_error = (msg) => console.log(clc.red(msg));
-const log_info = (msg) => console.log(clc.bgBlue(msg));
 
+// log
+const log_success = (msg, ...optionalParams) =>
+  console.log(clc.green(msg), ...optionalParams);
+const log_error = (msg, ...optionalParams) =>
+  console.log(clc.red(msg), ...optionalParams);
+const log_info = (msg, ...optionalParams) =>
+  console.log(clc.bgBlue(msg), ...optionalParams);
 var debugMsg = clc.xterm(245);
-const log_debug = (msg) => console.log(debugMsg(msg));
+const log_debug = (msg, ...optionalParams) =>
+  console.log(debugMsg(msg), ...optionalParams);
 
 const PLATFORM_MAP = {
   "x86_64-pc-windows-msvc": "win32",
@@ -373,7 +378,7 @@ const resolveServicePermission = async () => {
     "install-service",
     "uninstall-service",
   ];
-  const resDir = path.join(cwd, "src-tauri/resources");
+  const resDir = path.join(cwd, "src-tauri", "resources");
   for (let f of serviceExecutables) {
     const targetPath = path.join(resDir, f);
     if (await fs.pathExists(targetPath)) {
@@ -383,35 +388,107 @@ const resolveServicePermission = async () => {
   }
 };
 
+// clash-verge-service
+const GET_LATEST_RELEASE_API =
+  "https://api.github.com/repos/oomeow/clash-verge-service/releases/latest";
+async function getLatestClashVergeServices() {
+  const response = await fetch(GET_LATEST_RELEASE_API);
+  const json = await response.json();
+  const version = json.tag_name;
+  log_info(`Latest Clash Verge Service version: ${version}`);
+  const assets = json.assets;
+  const list = assets.map((item) => {
+    const platformService = {
+      file: item.name,
+      downloadURL: item.browser_download_url,
+    };
+    return platformService;
+  });
+  return list;
+}
+
+const resolveClashVergeService = async () => {
+  const clashVergeServiceList = await getLatestClashVergeServices();
+  let serviceCheckList = [
+    "clash-verge-service",
+    "install-service",
+    "uninstall-service",
+  ];
+  if (platform === "win32") {
+    serviceCheckList = [
+      "clash-verge-service.exe",
+      "install-service.exe",
+      "uninstall-service.exe",
+    ];
+  }
+  const resourceDir = path.join(cwd, "src-tauri", "resources");
+  let needResolve = false;
+  for (let file of serviceCheckList) {
+    const targetPath = path.join(resourceDir, file);
+    if (!(await fs.pathExists(targetPath))) {
+      needResolve = true;
+      break;
+    }
+  }
+
+  if (!FORCE && !needResolve) return;
+
+  let downloadItem = null;
+  for (let item of clashVergeServiceList) {
+    if (item.file.includes(SIDECAR_HOST)) {
+      downloadItem = item;
+      break;
+    }
+  }
+
+  if (!downloadItem) {
+    log_error("can not find service to download");
+    return;
+  }
+  const tempDir = path.join(TEMP_DIR, "clash-verge-service");
+  const tempGz = path.join(tempDir, downloadItem.file);
+  await fs.mkdirp(tempDir);
+  await fs.mkdirp(resourceDir);
+  try {
+    await downloadFile(downloadItem.downloadURL, tempGz);
+    await tar.x({ cwd: resourceDir, file: tempGz });
+    log_success("unzip Clash Verge Service finished");
+  } catch (e) {
+    fs.remove(tempDir);
+    log_error("resolve Clash Verge Service error, ", e);
+  } finally {
+    fs.remove(tempDir);
+  }
+};
+
 /**
  * main
  */
+// const SERVICE_URL = `https://github.com/oomeow/clash-verge-service/releases/download/${SIDECAR_HOST}`;
 
-const SERVICE_URL = `https://github.com/oomeow/clash-verge-service/releases/download/${SIDECAR_HOST}`;
+// const resolveService = () => {
+//   let ext = platform === "win32" ? ".exe" : "";
+//   resolveResource({
+//     file: "clash-verge-service" + ext,
+//     downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
+//   });
+// };
 
-const resolveService = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  resolveResource({
-    file: "clash-verge-service" + ext,
-    downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
-  });
-};
+// const resolveInstall = () => {
+//   let ext = platform === "win32" ? ".exe" : "";
+//   resolveResource({
+//     file: "install-service" + ext,
+//     downloadURL: `${SERVICE_URL}/install-service${ext}`,
+//   });
+// };
 
-const resolveInstall = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  resolveResource({
-    file: "install-service" + ext,
-    downloadURL: `${SERVICE_URL}/install-service${ext}`,
-  });
-};
-
-const resolveUninstall = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  resolveResource({
-    file: "uninstall-service" + ext,
-    downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
-  });
-};
+// const resolveUninstall = () => {
+//   let ext = platform === "win32" ? ".exe" : "";
+//   resolveResource({
+//     file: "uninstall-service" + ext,
+//     downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
+//   });
+// };
 
 const resolveSetDnsScript = () =>
   resolveResource({
@@ -461,9 +538,10 @@ const tasks = [
     retry: 5,
   },
   { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
-  { name: "service", func: resolveService, retry: 5 },
-  { name: "install", func: resolveInstall, retry: 5 },
-  { name: "uninstall", func: resolveUninstall, retry: 5 },
+  { name: "clash-verge-service", func: resolveClashVergeService, retry: 5 },
+  // { name: "service", func: resolveService, retry: 5 },
+  // { name: "install", func: resolveInstall, retry: 5 },
+  // { name: "uninstall", func: resolveUninstall, retry: 5 },
   { name: "set_dns_script", func: resolveSetDnsScript, retry: 5 },
   { name: "unset_dns_script", func: resolveUnSetDnsScript, retry: 5 },
   { name: "mmdb", func: resolveMmdb, retry: 5 },
