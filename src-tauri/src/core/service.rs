@@ -263,7 +263,7 @@ pub async fn uninstall_service() -> Result<()> {
 
 /// check the windows service status
 pub async fn check_service() -> Result<JsonResponse> {
-    let url = format!("{SERVICE_URL}/get_clash");
+    let url = format!("{SERVICE_URL}/clash");
     let response = reqwest::ClientBuilder::new()
         .no_proxy()
         .build()?
@@ -320,7 +320,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     map.insert("config_file", config_file);
     map.insert("log_file", log_path);
 
-    let url = format!("{SERVICE_URL}/start_clash");
+    let url = format!("{SERVICE_URL}/clash");
     let res = reqwest::ClientBuilder::new()
         .no_proxy()
         .build()?
@@ -341,11 +341,11 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 
 /// stop the clash by service
 pub(super) async fn stop_core_by_service() -> Result<()> {
-    let url = format!("{SERVICE_URL}/stop_clash");
+    let url = format!("{SERVICE_URL}/clash");
     let res = reqwest::ClientBuilder::new()
         .no_proxy()
         .build()?
-        .post(url)
+        .delete(url)
         .send()
         .await?
         .json::<JsonResponse>()
