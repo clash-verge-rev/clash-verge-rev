@@ -1,5 +1,5 @@
 pnpm install
-pnpm check $INPUT_TARGET
+pnpm check $INPUT_TARGET --alpha
 sed -i "s/#openssl/openssl={version=\"0.10\",features=[\"vendored\"]}/g" src-tauri/Cargo.toml
 
 if [ "$INPUT_TARGET" = "x86_64-unknown-linux-gnu" ]; then

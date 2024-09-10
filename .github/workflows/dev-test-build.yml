@@ -41,7 +41,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm check
+          pnpm check --alpha
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-latest'
