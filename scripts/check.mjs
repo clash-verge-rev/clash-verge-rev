@@ -412,17 +412,21 @@ async function getLatestClashVergeServices() {
   };
 }
 
-async function getAlphaClashVergeServices() {
-  const response = await fetch(GET_ALL_RELEASE_API);
-  const json = await response.json();
-  const alphaVersion = json.find((item) => item.tag_name === "alpha");
-  const version = alphaVersion.tag_name;
-  log_info(`Latest Clash Verge Service version: ${version}`);
-  const assets = alphaVersion.assets;
-  const downloadItem = assets.find((item) => item.name.includes(SIDECAR_HOST));
+function getAlphaClashVergeServices() {
+  // const response = await fetch({ url: GET_ALL_RELEASE_API, method: "GET", });
+  // const json = await response.json();
+  // const list = Object.values(json);
+  // log_info(`All Clash Verge Service version: `, list);
+  // const alphaVersion = list.find((item) => item.tag_name === "alpha");
+  // const version = alphaVersion.tag_name;
+  // log_info(`Latest Clash Verge Service version: ${version}`);
+  // const assets = alphaVersion.assets;
+  // const downloadItem = assets.find((item) => item.name.includes(SIDECAR_HOST));
+  const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
+  const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/alpha/${fileName}`;
   return {
-    file: downloadItem.name,
-    downloadURL: downloadItem.browser_download_url,
+    file: fileName,
+    downloadURL: downloadURL,
   };
 }
 
