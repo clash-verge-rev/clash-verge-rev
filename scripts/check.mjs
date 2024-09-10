@@ -10,7 +10,12 @@ import zlib from "zlib";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
-const FORCE = process.argv.includes("--force");
+let process_argvs = process.argv;
+const FORCE = process_argvs.includes("--force");
+const useAlphaService = process_argvs.includes("--alpha");
+if (useAlphaService) {
+  process_argvs = process_argvs.filter((item) => item !== "--alpha");
+}
 
 // log
 const log_success = (msg, ...optionalParams) =>
@@ -50,8 +55,8 @@ const ARCH_MAP = {
   "loongarch64-unknown-linux-gnu": "loong64",
 };
 
-const arg1 = process.argv.slice(2)[0];
-const arg2 = process.argv.slice(2)[1];
+const arg1 = process_argvs.slice(2)[0];
+const arg2 = process_argvs.slice(2)[1];
 const target = arg1 === "--force" ? arg2 : arg1;
 const { platform, arch } = target
   ? { platform: PLATFORM_MAP[target], arch: ARCH_MAP[target] }
@@ -391,24 +396,43 @@ const resolveServicePermission = async () => {
 // clash-verge-service
 const GET_LATEST_RELEASE_API =
   "https://api.github.com/repos/oomeow/clash-verge-service/releases/latest";
+const GET_ALL_RELEASE_API =
+  "https://api.github.com/repos/oomeow/clash-verge-service/releases";
+
 async function getLatestClashVergeServices() {
   const response = await fetch(GET_LATEST_RELEASE_API);
   const json = await response.json();
   const version = json.tag_name;
   log_info(`Latest Clash Verge Service version: ${version}`);
   const assets = json.assets;
-  const list = assets.map((item) => {
-    const platformService = {
-      file: item.name,
-      downloadURL: item.browser_download_url,
-    };
-    return platformService;
-  });
-  return list;
+  const downloadItem = assets.find((item) => item.name.includes(SIDECAR_HOST));
+  return {
+    file: downloadItem.name,
+    downloadURL: downloadItem.browser_download_url,
+  };
+}
+
+async function getAlphaClashVergeServices() {
+  const response = await fetch(GET_ALL_RELEASE_API);
+  const json = await response.json();
+  const alphaVersion = json.find((item) => item.tag_name === "alpha");
+  const version = alphaVersion.tag_name;
+  log_info(`Latest Clash Verge Service version: ${version}`);
+  const assets = alphaVersion.assets;
+  const downloadItem = assets.find((item) => item.name.includes(SIDECAR_HOST));
+  return {
+    file: downloadItem.name,
+    downloadURL: downloadItem.browser_download_url,
+  };
 }
 
 const resolveClashVergeService = async () => {
-  const clashVergeServiceList = await getLatestClashVergeServices();
+  let downloadItem;
+  if (useAlphaService) {
+    downloadItem = await getAlphaClashVergeServices();
+  } else {
+    downloadItem = await getLatestClashVergeServices();
+  }
   let serviceCheckList = [
     "clash-verge-service",
     "install-service",
@@ -432,14 +456,6 @@ const resolveClashVergeService = async () => {
   }
 
   if (!FORCE && !needResolve) return;
-
-  let downloadItem = null;
-  for (let item of clashVergeServiceList) {
-    if (item.file.includes(SIDECAR_HOST)) {
-      downloadItem = item;
-      break;
-    }
-  }
 
   if (!downloadItem) {
     log_error("can not find service to download");
