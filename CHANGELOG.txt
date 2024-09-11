@@ -1,8 +1,14 @@
 ### ✨ Features
 - 支持 webdav 备份
+
+### 🚀 Performance Improvements
 - 优化内核停止逻辑
+- 仅当主题颜色设置初始化或改变时才存储到 LocalStorage
 
 ### 🐛 Bug Fixes
 - 延迟测试返回数据解析失败
 - 节点延迟排序错误
-- release 工作流使用 rust 稳定版
+- 连接界面使用本地语言错误
+- 内核未运行时，主窗口未渲染显示
+- 使用 framer motion 替换 react-transition-group 的动画
+- 工作流中使用 rust 稳定版
