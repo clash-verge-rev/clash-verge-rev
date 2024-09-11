@@ -65,7 +65,7 @@ winreg = "0.52"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 users = "0.11"
-#openssl
+openssl = { version = "0.10", features = ["vendored"] }
 
 [features]
 default = ["custom-protocol"]
