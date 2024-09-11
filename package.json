@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "@actions/github": "^5.1.1",
-    "@tauri-apps/cli": "2.0.0-rc.8",
+    "@tauri-apps/cli": "2.0.0-rc.13",
     "@types/fs-extra": "^9.0.13",
     "@types/js-cookie": "^3.0.6",
     "@types/js-yaml": "^4.0.9",
