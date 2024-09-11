@@ -2,7 +2,7 @@
 name = "clash-verge"
 version = "1.6.8"
 description = "clash verge"
-authors = ["zzzgydi", "wonfen", "MystiPanda"]
+authors = ["zzzgydi", "wonfen", "MystiPanda", "oomeow"]
 license = "GPL-3.0-only"
 repository = "https://github.com/oomeow/clash-verge-rev.git"
 default-run = "clash-verge"
@@ -10,36 +10,36 @@ edition = "2021"
 build = "build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1.5.1", features = [] }
+tauri-build = { version = "1.5.4", features = [] }
 
 [dependencies]
-warp = "0.3.7"
-anyhow = "1.0.82"
-dirs = "5.0.1"
-open = "5.1.2"
-log = "0.4.21"
-dunce = "1.0.4"
-log4rs = "1.3.0"
+warp = "0.3"
+anyhow = "1.0"
+dirs = "5.0"
+open = "5.3"
+log = "0.4"
+dunce = "1.0"
+log4rs = "1.3"
 nanoid = "0.4"
-chrono = "0.4.38"
-sysinfo = "0.31.0"
+chrono = "0.4"
+sysinfo = "0.31"
 boa_engine = "0.19"
-serde_json = "1.0.116"
-serde_yaml = "0.9.34"
+serde_json = "1.0"
+serde_yaml = "0.9"
 once_cell = "1.19"
-port_scanner = "0.1.5"
+port_scanner = "0.1"
 delay_timer = "0.11"
 parking_lot = "0.12"
-auto-launch = "0.5.0"
-percent-encoding = "2.3.1"
+auto-launch = "0.5"
+percent-encoding = "2.3"
 window-shadows = { version = "0.2.2" }
-tokio = { version = "1.37.0", features = ["full"] }
-serde = { version = "1.0.200", features = ["derive"] }
-reqwest = { version = "0.12.4", features = ["rustls-tls", "json"] }
-reqwest_dav = "0.1.13"
-zip = "2.2.0"
+tokio = { version = "1.40", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.12", features = ["rustls-tls", "json"] }
+reqwest_dav = "0.1"
+zip = "2.2"
 sysproxy = { git = "https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
-tauri = { version = "1.6.2", features = [
+tauri = { version = "1.7", features = [
     "fs-read-file",
     "fs-exists",
     "path-all",
@@ -59,12 +59,12 @@ tauri = { version = "1.6.2", features = [
 ] }
 
 [target.'cfg(windows)'.dependencies]
-runas = "=1.2.0"
-deelevate = "0.2.0"
-winreg = "0.52.0"
+runas = "=1.2"
+deelevate = "0.2"
+winreg = "0.52"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-users = "0.11.0"
+users = "0.11"
 #openssl
 
 [features]
