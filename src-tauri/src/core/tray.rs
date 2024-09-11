@@ -221,6 +221,33 @@ fn create_tray_menu(
         "Tun 模式"
     };
 
+    let open_app_dir = &MenuItem::with_id(
+        app_handle,
+        "open_app_dir",
+        t!("App Dir", "应用目录", use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
+    let open_core_dir = &MenuItem::with_id(
+        app_handle,
+        "open_core_dir",
+        t!("Core Dir", "内核目录", use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
+    let open_logs_dir = &MenuItem::with_id(
+        app_handle,
+        "open_logs_dir",
+        t!("Logs Dir", "日志目录", use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
     let restart_clash = &MenuItem::with_id(
         app_handle,
         "restart_clash",
@@ -322,12 +349,12 @@ fn create_tray_menu(
             .unwrap(),
         )
         .item(
-            &MenuItem::with_id(
+            &Submenu::with_id_and_items(
                 app_handle,
                 "open_dir",
                 t!("Open Dir", "打开目录", use_zh),
                 true,
-                None::<&str>,
+                &[open_app_dir, open_core_dir, open_logs_dir],
             )
             .unwrap(),
         )
@@ -369,7 +396,9 @@ fn on_menu_event(app_handle: &AppHandle, event: MenuEvent) {
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(),
         "copy_env" => feat::copy_clash_env(app_handle),
-        "open_dir" => crate::log_err!(cmds::open_app_dir()),
+        "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
+        "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
+        "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => tauri::process::restart(&app_handle.env()),
         "quit" => cmds::exit_app(app_handle.clone()),
