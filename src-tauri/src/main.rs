@@ -10,7 +10,8 @@ mod enhance;
 mod feat;
 mod utils;
 
-use crate::utils::{resolve, server};
+use crate::utils::{resolve, resolve::resolve_scheme, server};
+use tauri::Listener;
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -42,10 +43,25 @@ fn main() -> std::io::Result<()> {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
+            #[cfg(target_os = "linux")]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                app.deep_link().register_all()?;
+            }
+
+            app.listen("deep-link://new-url", |event| {
+                tauri::async_runtime::spawn(async move {
+                    let payload = event.payload();
+                    log_err!(resolve_scheme(payload.to_string()).await);
+                });
+            });
+
             tauri::async_runtime::block_on(async move {
                 resolve::resolve_setup(app).await;
             });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

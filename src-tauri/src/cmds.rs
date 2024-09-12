@@ -32,8 +32,12 @@ pub async fn enhance_profiles() -> CmdResult {
 }
 
 #[tauri::command]
-pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
-    let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
+pub async fn import_profile(
+    url: String,
+    name: Option<String>,
+    option: Option<PrfOption>,
+) -> CmdResult {
+    let item = wrap_err!(PrfItem::from_url(&url, name, None, option).await)?;
     wrap_err!(Config::profiles().data().append_item(item))
 }
 

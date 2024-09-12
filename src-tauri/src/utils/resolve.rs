@@ -2,12 +2,15 @@ use crate::cmds::import_profile;
 use crate::config::IVerge;
 use crate::utils::error;
 use crate::{config::Config, core::*, utils::init, utils::server};
-use crate::{log_err, trace_err};
-use anyhow::Result;
+use crate::{error as er, log_err, trace_err};
+use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
+use percent_encoding::percent_decode_str;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::{App, AppHandle, Manager};
+
+use url::Url;
 //#[cfg(not(target_os = "linux"))]
 // use window_shadows::set_shadow;
 use tauri_plugin_notification::NotificationExt;
@@ -96,14 +99,6 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(handle::Handle::update_systray_part());
     log_err!(hotkey::Hotkey::global().init(app.app_handle()));
     log_err!(timer::Timer::global().init());
-
-    let argvs: Vec<String> = std::env::args().collect();
-    if argvs.len() > 1 {
-        let param = argvs[1].as_str();
-        if param.starts_with("clash:") {
-            log_err!(resolve_scheme(argvs[1].to_owned()).await);
-        }
-    }
 }
 
 /// reset system proxy
@@ -240,34 +235,67 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
-    let url = param
-        .trim_start_matches("clash://install-config/?url=")
-        .trim_start_matches("clash://install-config?url=");
+    log::info!("received deep link: {}", param);
+    let param_str = if param.starts_with("[") && param.len() > 4 {
+        param
+            .get(2..param.len() - 2)
+            .ok_or_else(|| anyhow::anyhow!("Invalid string slice boundaries"))?
+    } else {
+        bail!("invalid deep link param: {:?}", param)
+    };
 
-    let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock().clone();
-    if let Some(app_handle) = app_handle.as_ref() {
-        match import_profile(url.to_string(), None).await {
-            Ok(_) => {
-                app_handle
-                    .notification()
-                    .builder()
-                    .title("Clash Verge")
-                    .body("Import profile success")
-                    .show()
-                    .unwrap();
+    // 解析 URL
+    let link_parsed = match Url::parse(param_str) {
+        Ok(url) => url,
+        Err(e) => {
+            bail!("failed to parse deep link: {:?}, param: {:?}", e, param);
+        }
+    };
+
+    if link_parsed.scheme() == "clash" || link_parsed.scheme() == "clash-verge" {
+        let name = link_parsed
+            .query_pairs()
+            .find(|(key, _)| key == "name")
+            .map(|(_, value)| value.into_owned());
+
+        let encode_url = link_parsed
+            .query_pairs()
+            .find(|(key, _)| key == "url")
+            .map(|(_, value)| value.into_owned());
+
+        match encode_url {
+            Some(url) => {
+                let decoded_url = percent_decode_str(url.as_ref()).decode_utf8_lossy();
+                let handle = handle::Handle::global();
+                let app_handle = handle.app_handle.lock().clone();
+                if let Some(app_handle) = app_handle.as_ref() {
+                    er!(format!("decode_url: {}", decoded_url));
+                    match import_profile(decoded_url.to_string(), name.clone(), None).await {
+                        Ok(_) => {
+                            app_handle
+                                .notification()
+                                .builder()
+                                .title("Clash Verge")
+                                .body("Import profile success")
+                                .show()
+                                .unwrap();
+                        }
+                        Err(e) => {
+                            app_handle
+                                .notification()
+                                .builder()
+                                .title("Clash Verge")
+                                .body(format!("Import profile failed: {e}"))
+                                .show()
+                                .unwrap();
+                            bail!("Import profile failed: {e}");
+                        }
+                    }
+                }
             }
-            Err(e) => {
-                app_handle
-                    .notification()
-                    .builder()
-                    .title("Clash Verge")
-                    .body(format!("Import profile failed: {e}"))
-                    .show()
-                    .unwrap();
-                log::error!("Import profile failed: {e}");
-            }
+            None => bail!("failed to get profile url"),
         }
     }
+
     Ok(())
 }
