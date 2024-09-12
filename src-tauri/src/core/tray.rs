@@ -220,6 +220,69 @@ fn create_tray_menu(
         "Tun 模式"
     };
 
+    let open_window = &MenuItem::with_id(
+        app_handle,
+        "open_window",
+        t!("Dashboard", "打开面板", use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
+    let rule_mode = &MenuItem::with_id(
+        app_handle,
+        "rule_mode",
+        t!("Rule Mode", rule_mode_text, use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
+    let global_mode = &MenuItem::with_id(
+        app_handle,
+        "global_mode",
+        t!("Global Mode", global_mode_text, use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
+    let direct_mode = &MenuItem::with_id(
+        app_handle,
+        "direct_mode",
+        t!("Direct Mode", direct_mode_text, use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
+    let system_proxy = &MenuItem::with_id(
+        app_handle,
+        "system_proxy",
+        t!("System Proxy", system_proxy_text, use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
+    let tun_mode = &MenuItem::with_id(
+        app_handle,
+        "tun_mode",
+        t!("TUN Mode", tun_mode_text, use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
+    let copy_env = &MenuItem::with_id(
+        app_handle,
+        "copy_env",
+        t!("Copy Env", "复制环境变量", use_zh),
+        true,
+        None::<&str>,
+    )
+    .unwrap();
+
     let open_app_dir = &MenuItem::with_id(
         app_handle,
         "open_app_dir",
@@ -244,6 +307,14 @@ fn create_tray_menu(
         t!("Logs Dir", "日志目录", use_zh),
         true,
         None::<&str>,
+    )
+    .unwrap();
+    let open_dir = &Submenu::with_id_and_items(
+        app_handle,
+        "open_dir",
+        t!("Open Dir", "打开目录", use_zh),
+        true,
+        &[open_app_dir, open_core_dir, open_logs_dir],
     )
     .unwrap();
 
@@ -274,112 +345,70 @@ fn create_tray_menu(
     )
     .unwrap();
 
-    let menu = tauri::menu::MenuBuilder::new(app_handle)
-        .item(
-            &MenuItem::with_id(
-                app_handle,
-                "open_window",
-                t!("Dashboard", "打开面板", use_zh),
-                true,
-                None::<&str>,
-            )
-            .unwrap(),
-        )
-        .item(&PredefinedMenuItem::separator(app_handle).unwrap())
-        .item(
-            &MenuItem::with_id(
-                app_handle,
-                "rule_mode",
-                t!("Rule Mode", rule_mode_text, use_zh),
-                true,
-                None::<&str>,
-            )
-            .unwrap(),
-        )
-        .item(
-            &MenuItem::with_id(
-                app_handle,
-                "global_mode",
-                t!("Global Mode", global_mode_text, use_zh),
-                true,
-                None::<&str>,
-            )
-            .unwrap(),
-        )
-        .item(
-            &MenuItem::with_id(
-                app_handle,
-                "direct_mode",
-                t!("Direct Mode", direct_mode_text, use_zh),
-                true,
-                None::<&str>,
-            )
-            .unwrap(),
-        )
-        .item(&PredefinedMenuItem::separator(app_handle).unwrap())
-        .item(
-            &MenuItem::with_id(
-                app_handle,
-                "system_proxy",
-                t!("System Proxy", system_proxy_text, use_zh),
-                true,
-                None::<&str>,
-            )
-            .unwrap(),
-        )
-        .item(
-            &MenuItem::with_id(
-                app_handle,
-                "tun_mode",
-                t!("TUN Mode", tun_mode_text, use_zh),
-                true,
-                None::<&str>,
-            )
-            .unwrap(),
-        )
-        .item(
-            &MenuItem::with_id(
-                app_handle,
-                "copy_env",
-                t!("Copy Env", "复制环境变量", use_zh),
-                true,
-                None::<&str>,
-            )
-            .unwrap(),
-        )
-        .item(
-            &Submenu::with_id_and_items(
-                app_handle,
-                "open_dir",
-                t!("Open Dir", "打开目录", use_zh),
-                true,
-                &[open_app_dir, open_core_dir, open_logs_dir],
-            )
-            .unwrap(),
-        )
-        .item(
-            &Submenu::with_id_and_items(
-                app_handle,
-                "more",
-                t!("More", "更多", use_zh),
-                true,
-                &[restart_clash, restart_app, app_version],
-            )
-            .unwrap(),
-        )
-        .item(&PredefinedMenuItem::separator(app_handle).unwrap())
-        .item(
-            &MenuItem::with_id(
-                app_handle,
-                "quit",
-                t!("Quit", "退出", use_zh),
-                true,
-                Some("CmdOrControl+Q"),
-            )
-            .unwrap(),
-        )
-        .build()
-        .unwrap();
+    let more = &Submenu::with_id_and_items(
+        app_handle,
+        "more",
+        t!("More", "更多", use_zh),
+        true,
+        &[restart_clash, restart_app, app_version],
+    )
+    .unwrap();
+
+    let quit = &MenuItem::with_id(
+        app_handle,
+        "quit",
+        t!("Quit", "退出", use_zh),
+        true,
+        Some("CmdOrControl+Q"),
+    )
+    .unwrap();
+
+    let separator = &PredefinedMenuItem::separator(app_handle).unwrap();
+    let enable = {
+        Config::verge()
+            .latest()
+            .enable_service_mode
+            .unwrap_or(false)
+    };
+
+    let menu = if enable {
+        tauri::menu::MenuBuilder::new(app_handle)
+            .items(&[
+                open_window,
+                separator,
+                rule_mode,
+                global_mode,
+                direct_mode,
+                separator,
+                system_proxy,
+                tun_mode,
+                copy_env,
+                open_dir,
+                more,
+                separator,
+                quit,
+            ])
+            .build()
+            .unwrap()
+    } else {
+        tauri::menu::MenuBuilder::new(app_handle)
+            .items(&[
+                open_window,
+                separator,
+                rule_mode,
+                global_mode,
+                direct_mode,
+                separator,
+                system_proxy,
+                copy_env,
+                open_dir,
+                more,
+                separator,
+                quit,
+            ])
+            .build()
+            .unwrap()
+    };
 
     Ok(menu)
 }
