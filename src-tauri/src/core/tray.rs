@@ -8,7 +8,7 @@ use crate::{
     },
 };
 use anyhow::Result;
-use tauri::tray::{MouseButton, MouseButtonState, TrayIconEvent};
+use tauri::tray::{MouseButton, TrayIconEvent};
 use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     Wry,
