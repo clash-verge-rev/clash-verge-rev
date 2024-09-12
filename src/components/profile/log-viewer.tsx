@@ -1,5 +1,4 @@
-import { Fragment } from "react";
-import { useTranslation } from "react-i18next";
+import { BaseEmpty } from "@/components/base";
 import {
   Button,
   Chip,
@@ -10,7 +9,8 @@ import {
   Divider,
   Typography,
 } from "@mui/material";
-import { BaseEmpty } from "@/components/base";
+import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -24,7 +24,10 @@ export const LogViewer = (props: Props) => {
   const { t } = useTranslation();
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      onMouseDown={(e) => e.stopPropagation()}>
       <DialogTitle>{t("Script Console")}</DialogTitle>
 
       <DialogContent
@@ -34,8 +37,7 @@ export const LogViewer = (props: Props) => {
           overflowX: "hidden",
           userSelect: "text",
           pb: 1,
-        }}
-      >
+        }}>
         {logInfo.map(([level, log], index) => (
           <Fragment key={index.toString()}>
             <Typography color="text.secondary" component="div">
