@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::sync::Arc;
-use tauri::{AppHandle, WebviewWindow, Manager, Emitter};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 #[derive(Debug, Default, Clone)]
 pub struct Handle {

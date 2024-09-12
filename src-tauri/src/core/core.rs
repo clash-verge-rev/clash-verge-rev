@@ -2,11 +2,11 @@ use crate::config::*;
 use crate::core::{clash_api, handle, logger::Logger, service};
 use crate::log_err;
 use crate::utils::dirs;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
-use std::{fs, io::Write, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tauri::AppHandle;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
@@ -177,22 +177,7 @@ impl CoreManager {
 
         if let Some(app_handle) = app_handle.as_ref() {
             let cmd = app_handle.shell().sidecar(clash_core)?;
-            let (mut rx, cmd_child) = cmd.args(args).spawn()?;
-
-            // 将pid写入文件中
-            crate::log_err!((|| {
-                let pid = cmd_child.pid();
-                let path = dirs::clash_pid_path()?;
-                fs::File::create(path)
-                    .context("failed to create the pid file")?
-                    .write(format!("{pid}").as_bytes())
-                    .context("failed to write pid to the file")?;
-                <Result<()>>::Ok(())
-            })());
-
-            let mut sidecar = self.sidecar.lock();
-            *sidecar = Some(cmd_child);
-            drop(sidecar);
+            let (mut rx, _) = cmd.args(args).spawn()?;
 
             tauri::async_runtime::spawn(async move {
                 while let Some(event) = rx.recv().await {
