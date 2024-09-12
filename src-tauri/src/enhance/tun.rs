@@ -18,28 +18,33 @@ macro_rules! append {
     };
 }
 
-pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
+pub async fn use_tun(mut config: Mapping, enable: bool, enable_service_mode: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
 
     if !enable && tun_val.is_none() {
         return config;
     }
-
     let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
-
     revise!(tun_val, "enable", enable);
-
     revise!(config, "tun", tun_val);
 
+    if enable_service_mode {
+        handle_dns_service(enable).await;
+        if enable {
+            return use_dns_for_tun(config);
+        }
+    }
+    config
+}
+
+async fn handle_dns_service(enable: bool) {
     if enable {
         log_err!(service::set_dns_by_service().await);
-        use_dns_for_tun(config)
     } else {
         log_err!(service::unset_dns_by_service().await);
-        config
     }
 }
 

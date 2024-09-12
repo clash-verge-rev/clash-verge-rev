@@ -25,7 +25,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // config.yaml 的订阅
     let clash_config = { Config::clash().latest().0.clone() };
 
-    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled) = {
+    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_service_mode) = {
         let verge = Config::verge();
         let verge = verge.latest();
         (
@@ -34,6 +34,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             verge.enable_builtin_enhanced.unwrap_or(true),
             verge.verge_socks_enabled.unwrap_or(false),
             verge.verge_http_enabled.unwrap_or(false),
+            verge.enable_service_mode.unwrap_or(false),
         )
     };
     #[cfg(not(target_os = "windows"))]
@@ -259,7 +260,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             });
     }
 
-    config = use_tun(config, enable_tun).await;
+    config = use_tun(config, enable_tun, enable_service_mode).await;
     config = use_sort(config);
 
     let mut exists_set = HashSet::new();

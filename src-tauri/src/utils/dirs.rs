@@ -102,10 +102,6 @@ pub fn profiles_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
 }
 
-pub fn clash_pid_path() -> Result<PathBuf> {
-    Ok(app_home_dir()?.join("clash.pid"))
-}
-
 #[cfg(not(target_os = "windows"))]
 pub fn service_path() -> Result<PathBuf> {
     Ok(app_resources_dir()?.join("clash-verge-service"))
