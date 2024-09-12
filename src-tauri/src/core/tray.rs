@@ -24,7 +24,6 @@ impl Tray {
             let tray_event: String = tray_event.unwrap_or("main_window".into());
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
-                button_state: MouseButtonState::Up,
                 ..
             } = event
             {
