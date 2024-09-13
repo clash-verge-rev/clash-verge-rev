@@ -109,8 +109,7 @@ export const ProfileEditorViewer = (props: Props) => {
     onClose,
     onChange,
   } = props;
-  const isEnhanceProfile =
-    mode === "profile" && (scope === "merge" || scope === "script");
+  const isScriptMerge = mode === "profile" && scope === "script";
   const [logOpen, setLogOpen] = useState(false);
   const [logs, setLogs] = useState<LogMessage[]>(logInfo ?? []);
   const { t } = useTranslation();
@@ -265,7 +264,7 @@ export const ProfileEditorViewer = (props: Props) => {
             overflow: "hidden",
           }}>
           <div style={{ width: "100%", height: "100%" }} ref={editorDomRef} />
-          {isEnhanceProfile && (
+          {isScriptMerge && (
             <>
               {logs.length > 0 && (
                 <Fab
