@@ -379,7 +379,7 @@ export const ProfileEditorViewer = (props: Props) => {
           {readOnly ? null : (
             <Button
               onClick={onSave}
-              disabled={!scriptChecked || hasError}
+              disabled={isScriptMerge ? !scriptChecked || hasError : false}
               variant="contained">
               {t("Save")}
             </Button>
