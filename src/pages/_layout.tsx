@@ -4,7 +4,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useRoutes } from "react-router-dom";
+import { useLocation, useRoutes, useNavigate } from "react-router-dom";
 import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -25,7 +25,6 @@ import getSystem from "@/utils/get-system";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import { getPortableFlag } from "@/services/cmds";
-import { useNavigate } from "react-router-dom";
 import React from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 const appWindow = getCurrentWebviewWindow();
@@ -73,9 +72,12 @@ const Layout = () => {
       const [status, msg] = payload as [string, string];
       switch (status) {
         case "import_sub_url::ok":
+          navigate("/profile", { state: { current: msg } });
+
           Notice.success(t("Import Subscription Successful"));
           break;
         case "import_sub_url::error":
+          navigate("/profile");
           Notice.error(msg);
           break;
         case "set_config::ok":

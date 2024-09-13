@@ -50,9 +50,11 @@ import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
+import { useLocation } from "react-router-dom";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
+  const location = useLocation();
 
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
@@ -64,6 +66,7 @@ const ProfilePage = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+  const { current } = location.state || {};
 
   useEffect(() => {
     const unlisten = listen("tauri://file-drop", async (event) => {
@@ -138,11 +141,11 @@ const ProfilePage = () => {
 
         const remoteItem = newProfiles.items?.find((e) => e.type === "remote");
 
-        const profilesCount = newProfiles.items?.filter(
+        const itemsCount = newProfiles.items?.filter(
           (e) => e.type === "remote" || e.type === "local"
         ).length as number;
 
-        if (remoteItem && (profilesCount == 1 || !newProfiles.current)) {
+        if (remoteItem && (itemsCount == 1 || !newProfiles.current)) {
           const current = remoteItem.uid;
           await patchProfiles({ current });
           mutateLogs();
@@ -168,26 +171,39 @@ const ProfilePage = () => {
     }
   };
 
-  const onSelect = useLockFn(async (current: string, force: boolean) => {
-    if (!force && current === profiles.current) return;
+  const activateProfile = async (profile: string) => {
     // 避免大多数情况下loading态闪烁
+
     const reset = setTimeout(() => {
-      setActivatings([...currentActivatings(), current]);
+      setActivatings((prev) => [...prev, profile]);
     }, 100);
+
     try {
-      await patchProfiles({ current });
+      await patchProfiles({ current: profile });
       await mutateLogs();
       closeAllConnections();
-      activateSelected().then(() => {
-        Notice.success(t("Profile Switched"), 1000);
-      });
+      await activateSelected();
+      Notice.success(t("Profile Switched"), 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString(), 4000);
     } finally {
       clearTimeout(reset);
       setActivatings([]);
     }
+  };
+  const onSelect = useLockFn(async (current: string, force: boolean) => {
+    if (!force && current === profiles.current) return;
+    await activateProfile(current);
   });
+
+  useEffect(() => {
+    (async () => {
+      if (current && current !== profiles.current) {
+        console.log("current:", current);
+        await activateProfile(current);
+      }
+    })();
+  }, current);
 
   const onEnhance = useLockFn(async () => {
     setActivatings(currentActivatings());
