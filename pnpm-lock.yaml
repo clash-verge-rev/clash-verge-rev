@@ -28,11 +28,11 @@ importers:
       "@mui/material":
         specifier: ^6.1.0
         version: 6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mui/x-data-grid':
-        specifier: ^7.6.2
+      "@mui/x-data-grid":
+        specifier: ^7.17.0
         version: 7.17.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@mui/material@6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@tauri-apps/api':
-        specifier: ^1.5.6
+      "@tauri-apps/api":
+        specifier: ^1.6.0
         version: 1.6.0
       ahooks:
         specifier: ^3.8.1
@@ -139,10 +139,10 @@ importers:
         version: 1.15.8
       "@vitejs/plugin-legacy":
         specifier: 5.4.2
-        version: 5.4.2(terser@5.32.0)(vite@5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0))
-      '@vitejs/plugin-react':
+        version: 5.4.2(terser@5.32.0)(vite@5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0))
+      "@vitejs/plugin-react":
         specifier: 4.3.1
-        version: 4.3.1(vite@5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0))
+        version: 4.3.1(vite@5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0))
       adm-zip:
         specifier: 0.5.16
         version: 0.5.16
@@ -187,13 +187,13 @@ importers:
         version: 5.6.2
       vite:
         specifier: 5.4.5
-        version: 5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0)
+        version: 5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0)
       vite-plugin-monaco-editor:
         specifier: 1.1.0
         version: 1.1.0(monaco-editor@0.51.0)
       vite-plugin-svgr:
         specifier: 4.2.0
-        version: 4.2.0(rollup@4.21.0)(typescript@5.6.2)(vite@5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0))
+        version: 4.2.0(rollup@4.21.3)(typescript@5.6.2)(vite@5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0))
 
 packages:
   "@actions/github@6.0.0":
@@ -1860,9 +1860,12 @@ packages:
       "@types/react":
         optional: true
 
-  '@mui/x-data-grid@7.17.0':
-    resolution: {integrity: sha512-d3pFdrQlNR+8waol7iM6LlNIpvqo9SgYeKcMIOSQ3etpue9iRFNy8s1HCHd9Nxnhzgr+fqMy/v3bXZnd196qig==}
-    engines: {node: '>=14.0.0'}
+  "@mui/x-data-grid@7.17.0":
+    resolution:
+      {
+        integrity: sha512-d3pFdrQlNR+8waol7iM6LlNIpvqo9SgYeKcMIOSQ3etpue9iRFNy8s1HCHd9Nxnhzgr+fqMy/v3bXZnd196qig==,
+      }
+    engines: { node: ">=14.0.0" }
     peerDependencies:
       "@emotion/react": ^11.9.0
       "@emotion/styled": ^11.8.1
@@ -1876,9 +1879,12 @@ packages:
       "@emotion/styled":
         optional: true
 
-  '@mui/x-internals@7.17.0':
-    resolution: {integrity: sha512-FLlAGSJl/vsuaA/8hPGazXFppyzIzxApJJDZMoTS0geUmHd0hyooISV2ltllLmrZ/DGtHhI08m8GGnHL6/vVeg==}
-    engines: {node: '>=14.0.0'}
+  "@mui/x-internals@7.17.0":
+    resolution:
+      {
+        integrity: sha512-FLlAGSJl/vsuaA/8hPGazXFppyzIzxApJJDZMoTS0geUmHd0hyooISV2ltllLmrZ/DGtHhI08m8GGnHL6/vVeg==,
+      }
+    engines: { node: ">=14.0.0" }
     peerDependencies:
       react: ^17.0.0 || ^18.0.0
 
@@ -3253,10 +3259,10 @@ packages:
         integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==,
       }
 
-  electron-to-chromium@1.5.20:
+  electron-to-chromium@1.5.22:
     resolution:
       {
-        integrity: sha512-74mdl6Fs1HHzK9SUX4CKFxAtAe3nUns48y79TskHNAG6fGOlLfyKA4j855x+0b5u8rWJIrlaG9tcTPstMlwjIw==,
+        integrity: sha512-tKYm5YHPU1djz0O+CGJ+oJIvimtsCcwR2Z9w7Skh08lUdyzXY5djods3q+z2JkWdb7tCcmM//eVavSRAiaPRNg==,
       }
 
   electron@23.3.13:
@@ -4286,10 +4292,10 @@ packages:
         integrity: sha512-aJEUyzZ6TzlsX2s5B4Of7lN7EQtAxvtradMMglCQDyaTFgse6CmtmdJ15ElnVRlCg1vpNyVtbem0PWzlNieZsA==,
       }
 
-  mdast-util-mdx-expression@2.0.0:
+  mdast-util-mdx-expression@2.0.1:
     resolution:
       {
-        integrity: sha512-fGCu8eWdKUKNu5mohVGkhBXCXGnOTLuFqOvGMvdikr+J1w7lDJgxThOKpwRWzzbyXAU2hhSwsmssOY4yTokluw==,
+        integrity: sha512-J6f+9hUp+ldTZqKRSg7Vw5V6MqjATc+3E4gf3CFNcuZNWD8XdyI6zQ8GqH7f8169MM6P7hMBRDVGnn7oHB9kXQ==,
       }
 
   mdast-util-mdx-jsx@3.1.3:
@@ -5843,8 +5849,11 @@ packages:
       vite: ^2.6.0 || 3 || 4 || 5
 
   vite@5.4.5:
-    resolution: {integrity: sha512-pXqR0qtb2bTwLkev4SE3r4abCNioP3GkjvIDLlzziPpXtHgiJIjuKl+1GN6ESOT3wMjG3JTeARopj2SwYaHTOA==}
-    engines: {node: ^18.0.0 || >=20.0.0}
+    resolution:
+      {
+        integrity: sha512-pXqR0qtb2bTwLkev4SE3r4abCNioP3GkjvIDLlzziPpXtHgiJIjuKl+1GN6ESOT3wMjG3JTeARopj2SwYaHTOA==,
+      }
+    engines: { node: ^18.0.0 || >=20.0.0 }
     hasBin: true
     peerDependencies:
       "@types/node": ^18.0.0 || >=20.0.0
@@ -7340,25 +7349,13 @@ snapshots:
     optionalDependencies:
       "@types/react": 18.3.5
 
-  "@mui/x-data-grid@7.16.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@mui/material@6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
+  "@mui/x-data-grid@7.17.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@mui/material@6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
-      '@babel/runtime': 7.25.6
-      '@mui/types': 7.2.16(@types/react@18.3.5)
-      '@types/prop-types': 15.7.12
-      clsx: 2.1.1
-      prop-types: 15.8.1
-      react: 18.3.1
-      react-is: 18.3.1
-    optionalDependencies:
-      '@types/react': 18.3.5
-
-  '@mui/x-data-grid@7.17.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@mui/material@6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.25.6
-      '@mui/material': 6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mui/system': 6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1)
-      '@mui/utils': 5.16.6(@types/react@18.3.5)(react@18.3.1)
-      '@mui/x-internals': 7.17.0(@types/react@18.3.5)(react@18.3.1)
+      "@babel/runtime": 7.25.6
+      "@mui/material": 6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@mui/system": 6.1.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1))(@types/react@18.3.5)(react@18.3.1)
+      "@mui/utils": 5.16.6(@types/react@18.3.5)(react@18.3.1)
+      "@mui/x-internals": 7.17.0(@types/react@18.3.5)(react@18.3.1)
       clsx: 2.1.1
       prop-types: 15.8.1
       react: 18.3.1
@@ -7370,7 +7367,7 @@ snapshots:
     transitivePeerDependencies:
       - "@types/react"
 
-  '@mui/x-internals@7.17.0(@types/react@18.3.5)(react@18.3.1)':
+  "@mui/x-internals@7.17.0(@types/react@18.3.5)(react@18.3.1)":
     dependencies:
       "@babel/runtime": 7.25.6
       "@mui/utils": 5.16.6(@types/react@18.3.5)(react@18.3.1)
@@ -7679,7 +7676,7 @@ snapshots:
 
   "@types/keyv@3.1.4":
     dependencies:
-      "@types/node": 16.18.108
+      "@types/node": 22.5.4
 
   "@types/lodash-es@4.17.12":
     dependencies:
@@ -7733,7 +7730,7 @@ snapshots:
 
   "@ungap/structured-clone@1.2.0": {}
 
-  '@vitejs/plugin-legacy@5.4.2(terser@5.32.0)(vite@5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0))':
+  "@vitejs/plugin-legacy@5.4.2(terser@5.32.0)(vite@5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0))":
     dependencies:
       "@babel/core": 7.25.2
       "@babel/preset-env": 7.25.4(@babel/core@7.25.2)
@@ -7744,18 +7741,18 @@ snapshots:
       regenerator-runtime: 0.14.1
       systemjs: 6.15.1
       terser: 5.32.0
-      vite: 5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0)
+      vite: 5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react@4.3.1(vite@5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0))':
+  "@vitejs/plugin-react@4.3.1(vite@5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0))":
     dependencies:
       "@babel/core": 7.25.2
       "@babel/plugin-transform-react-jsx-self": 7.24.7(@babel/core@7.25.2)
       "@babel/plugin-transform-react-jsx-source": 7.24.7(@babel/core@7.25.2)
       "@types/babel__core": 7.20.5
       react-refresh: 0.14.2
-      vite: 5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0)
+      vite: 5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -7910,7 +7907,7 @@ snapshots:
   browserslist@4.23.3:
     dependencies:
       caniuse-lite: 1.0.30001660
-      electron-to-chromium: 1.5.20
+      electron-to-chromium: 1.5.22
       node-releases: 2.0.18
       update-browserslist-db: 1.1.0(browserslist@4.23.3)
 
@@ -8190,7 +8187,7 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  electron-to-chromium@1.5.20: {}
+  electron-to-chromium@1.5.22: {}
 
   electron@23.3.13:
     dependencies:
@@ -8539,7 +8536,7 @@ snapshots:
       devlop: 1.1.0
       estree-util-is-identifier-name: 3.0.0
       hast-util-whitespace: 3.0.0
-      mdast-util-mdx-expression: 2.0.0
+      mdast-util-mdx-expression: 2.0.1
       mdast-util-mdx-jsx: 3.1.3
       mdast-util-mdxjs-esm: 2.0.1
       property-information: 6.5.0
@@ -8819,7 +8816,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  mdast-util-mdx-expression@2.0.0:
+  mdast-util-mdx-expression@2.0.1:
     dependencies:
       "@types/estree-jsx": 1.0.5
       "@types/hast": 3.0.4
@@ -9817,18 +9814,18 @@ snapshots:
     dependencies:
       monaco-editor: 0.51.0
 
-  vite-plugin-svgr@4.2.0(rollup@4.21.0)(typescript@5.6.2)(vite@5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0)):
+  vite-plugin-svgr@4.2.0(rollup@4.21.3)(typescript@5.6.2)(vite@5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0)):
     dependencies:
-      '@rollup/pluginutils': 5.1.0(rollup@4.21.0)
-      '@svgr/core': 8.1.0(typescript@5.6.2)
-      '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0(typescript@5.6.2))
-      vite: 5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0)
+      "@rollup/pluginutils": 5.1.0(rollup@4.21.3)
+      "@svgr/core": 8.1.0(typescript@5.6.2)
+      "@svgr/plugin-jsx": 8.1.0(@svgr/core@8.1.0(typescript@5.6.2))
+      vite: 5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0)
     transitivePeerDependencies:
       - rollup
       - supports-color
       - typescript
 
-  vite@5.4.5(@types/node@20.14.2)(sass@1.78.0)(terser@5.32.0):
+  vite@5.4.5(@types/node@22.5.4)(sass@1.78.0)(terser@5.32.0):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.4.45

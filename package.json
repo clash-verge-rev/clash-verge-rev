@@ -31,7 +31,7 @@
     "@mui/icons-material": "^6.1.0",
     "@mui/lab": "5.0.0-alpha.173",
     "@mui/material": "^6.1.0",
-    "@mui/x-data-grid": "^7.16.0",
+    "@mui/x-data-grid": "^7.17.0",
     "@tauri-apps/api": "^1.6.0",
     "ahooks": "^3.8.1",
     "axios": "^1.7.7",
