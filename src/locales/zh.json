@@ -331,7 +331,7 @@
   "toggle_system_proxy": "打开/关闭系统代理",
   "toggle_tun_mode": "打开/关闭 Tun 模式",
   "Runtime Config": "当前配置",
-  "Open App Dir": "应用目录",
+  "Open Conf Dir": "配置目录",
   "Open Core Dir": "内核目录",
   "Open Logs Dir": "日志目录",
   "Check for Updates": "检查更新",
