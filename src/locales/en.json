@@ -367,5 +367,6 @@
   "Clash Core Restarted": "Clash Core Restarted",
   "Switched to _clash Core": "Switched to {{core}} Core",
   "GeoData Updated": "GeoData Updated",
-  "Currently on the Latest Version": "Currently on the Latest Version"
+  "Currently on the Latest Version": "Currently on the Latest Version",
+  "Import Subscription Successful": "Import subscription successful"
 }

@@ -72,6 +72,12 @@ const Layout = () => {
     listen("verge://notice-message", ({ payload }) => {
       const [status, msg] = payload as [string, string];
       switch (status) {
+        case "import_sub_url::ok":
+          Notice.success(t("Import Subscription Successful"));
+          break;
+        case "import_sub_url::error":
+          Notice.error(msg);
+          break;
         case "set_config::ok":
           Notice.success(t("Clash Config Updated"));
           break;

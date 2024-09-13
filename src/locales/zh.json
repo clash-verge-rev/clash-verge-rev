@@ -367,5 +367,6 @@
   "Clash Core Restarted": "已重启 Clash 内核",
   "Switched to _clash Core": "已切换至 {{core}} 内核",
   "GeoData Updated": "已更新 GeoData",
-  "Currently on the Latest Version": "当前已是最新版本"
+  "Currently on the Latest Version": "当前已是最新版本",
+  "Import Subscription Successful": "导入订阅成功"
 }
