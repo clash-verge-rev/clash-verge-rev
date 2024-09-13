@@ -279,6 +279,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                                 .body("Import profile success")
                                 .show()
                                 .unwrap();
+                            handle::Handle::notice_message("import_sub_url::ok", "ok");
                         }
                         Err(e) => {
                             app_handle
@@ -288,6 +289,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                                 .body(format!("Import profile failed: {e}"))
                                 .show()
                                 .unwrap();
+                            handle::Handle::notice_message("import_sub_url::error", e.clone());
                             bail!("Import profile failed: {e}");
                         }
                     }
