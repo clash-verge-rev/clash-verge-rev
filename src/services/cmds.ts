@@ -1,4 +1,16 @@
 import { Notice } from "@/components/base";
+import {
+  IClashInfo,
+  IConfigData,
+  ILogItem,
+  IProfileItem,
+  IProfileOption,
+  IProfilesConfig,
+  IVergeConfig,
+  IWebDavListFile,
+  LogMessage,
+  MergeResult,
+} from "@/services/types";
 import { invoke } from "@tauri-apps/api/tauri";
 import dayjs from "dayjs";
 
@@ -111,7 +123,66 @@ export async function getRuntimeExists() {
 }
 
 export async function getRuntimeLogs() {
-  return invoke<Record<string, [string, string][]>>("get_runtime_logs");
+  const res = await invoke<Record<string, LogMessage[]>>("get_runtime_logs");
+  const list = Object.entries(res);
+  list.map((item) => {
+    const profileUid = item[0];
+    const logs = item[1];
+    logs.forEach((logsItem) => {
+      const newData = logsItem.data.map((i) => {
+        try {
+          const jsonData = JSON.parse(i);
+          return jsonData;
+        } catch (err) {
+          return i;
+        }
+      });
+      logsItem.data = newData;
+    });
+    res[profileUid] = logs;
+  });
+  return res;
+}
+
+export async function getPreMergeResult(modifiedChainId: string) {
+  const res = await invoke<MergeResult>("get_pre_merge_result", {
+    modifiedChainId,
+  });
+  if (res.logs[modifiedChainId]) {
+    res.logs[modifiedChainId].map((item) => {
+      const newData = item.data.map((i) => {
+        try {
+          const jsonData = JSON.parse(i);
+          return jsonData;
+        } catch (err) {
+          return i;
+        }
+      });
+      item.data = newData;
+    });
+  }
+  return res;
+}
+
+export async function testMergeChain(modifiedChainId: string, content: string) {
+  const res = await invoke<MergeResult>("test_merge_chain", {
+    modifiedChainId,
+    content,
+  });
+  if (res.logs[modifiedChainId]) {
+    res.logs[modifiedChainId].map((item) => {
+      const newData = item.data.map((i) => {
+        try {
+          const jsonData = JSON.parse(i);
+          return jsonData;
+        } catch (err) {
+          return i;
+        }
+      });
+      item.data = newData;
+    });
+  }
+  return res;
 }
 
 export async function patchClashConfig(payload: Partial<IConfigData>) {

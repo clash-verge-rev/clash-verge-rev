@@ -1,3 +1,4 @@
+import { IProxyItem } from "@/services/types";
 import { cmdGetProxyDelay } from "./cmds";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
@@ -117,7 +118,6 @@ class DelayManager {
   }
 
   formatDelay(delay: number, timeout = 5000) {
-    // console.log(`formatDelay: ${delay}`);
     if (delay < 0) return "Error";
     if (delay == 0) return "Timeout";
     if (delay > 1e5) return "Error";

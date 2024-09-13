@@ -25,6 +25,7 @@ import {
   updateProfile,
 } from "@/services/cmds";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
+import { IProfileItem } from "@/services/types";
 import {
   closestCenter,
   defaultDropAnimationSideEffects,

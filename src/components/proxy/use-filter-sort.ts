@@ -1,4 +1,5 @@
 import delayManager from "@/services/delay";
+import { IProxyItem } from "@/services/types";
 import { useEffect, useMemo, useState } from "react";
 
 // default | delay | alphabet

@@ -109,6 +109,8 @@ fn main() -> std::io::Result<()> {
             cmds::get_runtime_yaml,
             cmds::get_runtime_exists,
             cmds::get_runtime_logs,
+            cmds::get_pre_merge_result,
+            cmds::test_merge_chain,
             cmds::uwp::invoke_uwp_tool,
             // verge
             cmds::get_verge_config,

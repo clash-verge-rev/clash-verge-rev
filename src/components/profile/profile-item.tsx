@@ -1,10 +1,12 @@
-import { EditorViewer, Notice } from "@/components/base";
+import { Notice } from "@/components/base";
+import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { deleteProfile, updateProfile, viewProfile } from "@/services/cmds";
 import {
   useLoadingCache,
   useSetLoadingCache,
   useThemeMode,
 } from "@/services/states";
+import { IProfileItem, IProfileOption } from "@/services/types";
 import parseTraffic from "@/utils/parse-traffic";
 import {
   CheckCircle,
@@ -440,7 +442,7 @@ export const ProfileItem = (props: Props) => {
         ))}
       </Menu>
 
-      <EditorViewer
+      <ProfileEditorViewer
         open={fileOpen}
         mode="profile"
         scope="clash"

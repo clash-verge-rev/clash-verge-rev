@@ -1,3 +1,5 @@
+import { Message } from "console-feed/lib/definitions/Component";
+
 type Platform =
   | "aix"
   | "android"
@@ -364,4 +366,13 @@ interface IWebDavListFile {
   content_length: number;
   content_type: string;
   tag: string;
+}
+
+interface MergeResult {
+  config: string;
+  logs: Record<string, LogMessage[]>;
+}
+
+interface LogMessage extends Message {
+  exception?: string;
 }

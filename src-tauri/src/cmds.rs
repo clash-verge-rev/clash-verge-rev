@@ -1,6 +1,7 @@
 use crate::{
     config::*,
     core::*,
+    enhance::{self, LogMessage, MergeResult},
     feat,
     utils::{dirs, help, resolve, tmpl},
 };
@@ -8,6 +9,7 @@ use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use backup::WebDav;
 use reqwest_dav::list_cmd::ListFile;
+use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{
     collections::{HashMap, VecDeque},
@@ -17,6 +19,12 @@ use std::{
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::{api, Manager};
 type CmdResult<T = ()> = Result<T, String>;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CmdMergeResult {
+    config: String,
+    logs: HashMap<String, Vec<LogMessage>>,
+}
 
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
@@ -180,8 +188,27 @@ pub fn get_runtime_exists() -> CmdResult<Vec<String>> {
 }
 
 #[tauri::command]
-pub fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String)>>> {
+pub fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<LogMessage>>> {
     Ok(Config::runtime().latest().chain_logs.clone())
+}
+
+#[tauri::command]
+pub fn get_pre_merge_result(modified_chain_id: String) -> CmdResult<CmdMergeResult> {
+    let MergeResult { config, logs } = enhance::get_pre_merge_result(modified_chain_id).unwrap();
+    let config = serde_yaml::to_string(&config)
+        .map_err(|err| err.to_string())
+        .unwrap();
+    return Ok(CmdMergeResult { config, logs });
+}
+
+#[tauri::command]
+pub fn test_merge_chain(modified_chain_id: String, content: String) -> CmdResult<CmdMergeResult> {
+    let MergeResult { config, logs } =
+        enhance::test_merge_chain(modified_chain_id, content).unwrap();
+    let config = serde_yaml::to_string(&config)
+        .map_err(|err| err.to_string())
+        .unwrap();
+    return Ok(CmdMergeResult { config, logs });
 }
 
 #[tauri::command]

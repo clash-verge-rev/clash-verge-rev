@@ -1,8 +1,10 @@
+use crate::enhance::LogMessage;
+
 use super::use_lowercase;
 use anyhow::{Error, Result};
 use serde_yaml::Mapping;
 
-pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(String, String)>)> {
+pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<LogMessage>)> {
     use boa_engine::{native_function::NativeFunction, Context, JsValue, Source};
     use std::sync::{Arc, Mutex};
     let mut context = Context::default();
@@ -21,7 +23,11 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
                     let data = args.get(1).unwrap().to_string(context)?;
                     let data = data.to_std_string().unwrap();
                     let mut out = copy_outputs.lock().unwrap();
-                    out.push((level, data));
+                    out.push(LogMessage {
+                        method: level,
+                        data: vec![data],
+                        exception: None,
+                    });
                     Ok(JsValue::undefined())
                 },
             ),
@@ -64,7 +70,11 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<(Stri
         match res {
             Ok(config) => Ok((use_lowercase(config), out.to_vec())),
             Err(err) => {
-                out.push(("exception".into(), err.to_string()));
+                out.push(LogMessage {
+                    method: "error".into(),
+                    data: vec![err.to_string()],
+                    exception: Some(err.to_string()),
+                });
                 Ok((config, out.to_vec()))
             }
         }

@@ -1,19 +1,23 @@
 import JSIcon from "@/assets/image/js.svg?react";
 import YamlIcon from "@/assets/image/yaml.svg?react";
-import { EditorViewer, Notice } from "@/components/base";
+import { Notice } from "@/components/base";
+import { LogViewer } from "@/components/profile/log-viewer";
+import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
+import { IProfileItem, LogMessage } from "@/services/types";
 import {
   Block,
   CheckCircle,
   Delete,
   Edit,
   EditNote,
-  FeaturedPlayListRounded,
   FileOpen,
+  Terminal,
 } from "@mui/icons-material";
 import {
   Badge,
+  BadgeProps,
   Box,
   CircularProgress,
   IconButton,
@@ -21,6 +25,7 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  styled,
   SxProps,
   Typography,
 } from "@mui/material";
@@ -29,7 +34,6 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ConfirmViewer } from "./confirm-viewer";
-import { LogViewer } from "./log-viewer";
 import { ProfileDiv } from "./profile-box";
 
 interface Props {
@@ -38,7 +42,7 @@ interface Props {
   isDragging?: boolean;
   itemData: IProfileItem;
   enableNum: number;
-  logInfo?: [string, string][];
+  logInfo?: LogMessage[];
   reactivating: boolean;
   onEnable: () => Promise<void>;
   onDisable: () => Promise<void>;
@@ -46,6 +50,15 @@ interface Props {
   onEdit: () => void;
   onActivatedSave: () => void;
 }
+
+const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
+  "& .MuiBadge-badge": {
+    right: -2,
+    top: 5,
+    border: `2px solid ${theme.palette.background.paper}`,
+    padding: "0 4px",
+  },
+}));
 
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
@@ -100,7 +113,7 @@ export const ProfileMore = (props: Props) => {
     return fn();
   };
 
-  const hasError = !!logInfo.find((e) => e[0] === "exception");
+  const hasError = !!logInfo.find((e) => e.exception);
 
   const enableMenu = [
     {
@@ -239,16 +252,16 @@ export const ProfileMore = (props: Props) => {
         <Box sx={boxStyle}>
           {selected && type === "script" ? (
             hasError ? (
-              <Badge color="error" variant="dot" overlap="circular">
-                <IconButton
-                  size="small"
-                  edge="start"
-                  color="error"
-                  title={t("Script Console")}
-                  onClick={() => setLogOpen(true)}>
-                  <FeaturedPlayListRounded fontSize="inherit" />
-                </IconButton>
-              </Badge>
+              <IconButton
+                size="small"
+                edge="start"
+                color="error"
+                title={t("Script Console")}
+                onClick={() => setLogOpen(true)}>
+                <Badge color="error" variant="dot">
+                  <Terminal fontSize="medium" />
+                </Badge>
+              </IconButton>
             ) : (
               <IconButton
                 size="small"
@@ -256,7 +269,9 @@ export const ProfileMore = (props: Props) => {
                 color="inherit"
                 title={t("Script Console")}
                 onClick={() => setLogOpen(true)}>
-                <FeaturedPlayListRounded fontSize="inherit" />
+                <StyledBadge badgeContent={logInfo.length} color="primary">
+                  <Terminal fontSize="medium" />
+                </StyledBadge>
               </IconButton>
             )
           ) : (
@@ -307,11 +322,12 @@ export const ProfileMore = (props: Props) => {
           ))}
       </Menu>
 
-      <EditorViewer
+      <ProfileEditorViewer
         open={fileOpen}
         mode="profile"
         scope={type === "merge" ? "merge" : "script"}
         language={type === "merge" ? "yaml" : "javascript"}
+        logInfo={type === "script" ? logInfo : undefined}
         property={uid}
         onChange={() => {
           if (selected) {

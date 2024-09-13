@@ -6,7 +6,7 @@
   },
   "build": {
     "distDir": "../dist",
-    "devPath": "http://localhost:3000/",
+    "devPath": "http://localhost:5173/",
     "beforeDevCommand": "pnpm run web:dev",
     "beforeBuildCommand": "pnpm run web:build"
   },
