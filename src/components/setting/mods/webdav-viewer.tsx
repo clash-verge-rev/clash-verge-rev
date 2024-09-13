@@ -9,7 +9,6 @@ import {
   updateWebDavInfo,
 } from "@/services/cmds";
 import { WebDavConfig } from "@/services/states";
-import { IWebDavListFile } from "@/services/types";
 import { sleep } from "@/utils";
 import {
   Backup,

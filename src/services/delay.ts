@@ -1,4 +1,3 @@
-import { IProxyItem } from "@/services/types";
 import { cmdGetProxyDelay } from "./cmds";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;

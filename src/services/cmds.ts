@@ -1,18 +1,12 @@
 import { Notice } from "@/components/base";
-import {
-  IClashInfo,
-  IConfigData,
-  ILogItem,
-  IProfileItem,
-  IProfileOption,
-  IProfilesConfig,
-  IVergeConfig,
-  IWebDavListFile,
-  LogMessage,
-  MergeResult,
-} from "@/services/types";
+import { LogMessage } from "@/components/profile/profile-more";
 import { invoke } from "@tauri-apps/api/tauri";
 import dayjs from "dayjs";
+
+export interface MergeResult {
+  config: string;
+  logs: Record<string, LogMessage[]>;
+}
 
 export async function getClashLogs() {
   const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/;

@@ -5,7 +5,6 @@ import { LogViewer } from "@/components/profile/log-viewer";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
-import { IProfileItem, LogMessage } from "@/services/types";
 import {
   Block,
   CheckCircle,
@@ -30,12 +29,16 @@ import {
   Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
+import { Message } from "console-feed/lib/definitions/Component";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ConfirmViewer } from "./confirm-viewer";
 import { ProfileDiv } from "./profile-box";
 
+export interface LogMessage extends Message {
+  exception?: string;
+}
 interface Props {
   sx?: SxProps;
   selected: boolean;

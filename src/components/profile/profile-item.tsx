@@ -6,7 +6,6 @@ import {
   useSetLoadingCache,
   useThemeMode,
 } from "@/services/states";
-import { IProfileItem, IProfileOption } from "@/services/types";
 import parseTraffic from "@/utils/parse-traffic";
 import {
   CheckCircle,

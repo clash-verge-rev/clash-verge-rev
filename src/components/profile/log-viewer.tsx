@@ -1,6 +1,6 @@
 import { BaseEmpty } from "@/components/base";
+import { LogMessage } from "@/components/profile/profile-more";
 import { useThemeMode } from "@/services/states";
-import { LogMessage } from "@/services/types";
 import { Drawer } from "@mui/material";
 import { Console } from "console-feed";
 import { useTranslation } from "react-i18next";

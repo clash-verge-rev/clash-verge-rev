@@ -2,6 +2,7 @@ import mergeSchema from "@/assets/schema/clash-verge-merge-json-schema.json";
 import metaSchema from "@/assets/schema/meta-json-schema.json";
 import { Notice } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
+import { LogMessage } from "@/components/profile/profile-more";
 import { useWindowSize } from "@/hooks/use-window-size";
 import {
   getTemplate,
@@ -10,7 +11,6 @@ import {
   testMergeChain,
 } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
-import { LogMessage } from "@/services/types";
 import getSystem from "@/utils/get-system";
 import {
   CheckCircleOutline,
