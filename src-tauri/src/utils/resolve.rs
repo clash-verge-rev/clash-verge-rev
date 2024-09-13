@@ -1,8 +1,7 @@
-use crate::cmds::import_profile;
 use crate::config::IVerge;
 use crate::utils::error;
-use crate::{config::Config, core::*, utils::init, utils::server};
-use crate::{error as er, log_err, trace_err};
+use crate::{config::Config, config::PrfItem, core::*, utils::init, utils::server};
+use crate::{log_err, trace_err, wrap_err};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use percent_encoding::percent_decode_str;
@@ -265,13 +264,17 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
 
         match encode_url {
             Some(url) => {
-                let decoded_url = percent_decode_str(url.as_ref()).decode_utf8_lossy();
+                let url = percent_decode_str(url.as_ref())
+                    .decode_utf8_lossy()
+                    .to_string();
+
                 let handle = handle::Handle::global();
                 let app_handle = handle.app_handle.lock().clone();
                 if let Some(app_handle) = app_handle.as_ref() {
-                    er!(format!("decode_url: {}", decoded_url));
-                    match import_profile(decoded_url.to_string(), name.clone(), None).await {
-                        Ok(_) => {
+                    match PrfItem::from_url(url.as_ref(), name, None, None).await {
+                        Ok(item) => {
+                            let uid = item.uid.clone().unwrap();
+                            let _ = wrap_err!(Config::profiles().data().append_item(item));
                             app_handle
                                 .notification()
                                 .builder()
@@ -279,7 +282,8 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                                 .body("Import profile success")
                                 .show()
                                 .unwrap();
-                            handle::Handle::notice_message("import_sub_url::ok", "ok");
+
+                            handle::Handle::notice_message("import_sub_url::ok", uid);
                         }
                         Err(e) => {
                             app_handle
@@ -289,8 +293,8 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                                 .body(format!("Import profile failed: {e}"))
                                 .show()
                                 .unwrap();
-                            handle::Handle::notice_message("import_sub_url::error", e.clone());
-                            bail!("Import profile failed: {e}");
+                            handle::Handle::notice_message("import_sub_url::error", e.to_string());
+                            bail!("Failed to add subscriptions: {e}");
                         }
                     }
                 }
