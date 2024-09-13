@@ -243,7 +243,7 @@ const SettingVerge = ({ onError }: Props) => {
         label={t("Runtime Config")}
       />
 
-      <SettingItem onClick={openAppDir} label={t("Open App Dir")} />
+      <SettingItem onClick={openAppDir} label={t("Open Conf Dir")} />
 
       <SettingItem onClick={openCoreDir} label={t("Open Core Dir")} />
 

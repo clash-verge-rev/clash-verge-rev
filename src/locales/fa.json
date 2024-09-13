@@ -329,7 +329,7 @@
   "toggle_system_proxy": "فعال/غیرفعال کردن پراکسی سیستم",
   "toggle_tun_mode": "فعال/غیرفعال کردن حالت Tun",
   "Runtime Config": "پیکربندی زمان اجرا",
-  "Open App Dir": "باز کردن پوشه برنامه",
+  "Open Conf Dir": "باز کردن پوشه برنامه",
   "Open Core Dir": "باز کردن پوشه هسته",
   "Open Logs Dir": "باز کردن پوشه لاگ‌ها",
   "Check for Updates": "بررسی برای به‌روزرسانی‌ها",
