@@ -83,3 +83,7 @@ strip = true
 
 [profile.dev]
 incremental = true
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
