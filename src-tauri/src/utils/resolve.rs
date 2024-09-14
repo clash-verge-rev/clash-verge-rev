@@ -235,6 +235,7 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
     log::info!("received deep link: {}", param);
+
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param
             .get(2..param.len() - 2)
@@ -271,6 +272,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                 let handle = handle::Handle::global();
                 let app_handle = handle.app_handle.lock().clone();
                 if let Some(app_handle) = app_handle.as_ref() {
+                    create_window(app_handle);
                     match PrfItem::from_url(url.as_ref(), name, None, None).await {
                         Ok(item) => {
                             let uid = item.uid.clone().unwrap();
