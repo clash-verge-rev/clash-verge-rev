@@ -14,10 +14,8 @@ use crate::{
     config::Config,
     utils::{init, resolve, server},
 };
-use core::backup;
 use std::{thread::sleep, time::Duration};
 use tauri::{api, SystemTray};
-use utils::resolve::resolve_scheme;
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -64,19 +62,7 @@ fn main() -> std::io::Result<()> {
             // we perform the initialization code on a new task so the app doesn't freeze
             tauri::async_runtime::spawn(async move {
                 // initialize your app here instead of sleeping :
-                resolve::resolve_setup(&app_handle);
-
-                log::trace!("init webdav config");
-                log_err!(backup::WebDav::global().init().await);
-
-                let argvs: Vec<String> = std::env::args().collect();
-                if argvs.len() > 1 {
-                    let param = argvs[1].as_str();
-                    if param.starts_with("clash:") {
-                        resolve_scheme(argvs[1].to_owned()).await;
-                    }
-                }
-
+                resolve::resolve_setup(&app_handle).await;
                 // wait 2 seconds for clash core to init profile
                 sleep(Duration::from_secs(2));
                 // create main window

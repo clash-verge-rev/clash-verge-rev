@@ -30,7 +30,7 @@ pub fn find_unused_port() -> Result<u16> {
 }
 
 /// handle something when start app
-pub fn resolve_setup(app_handle: &AppHandle) {
+pub async fn resolve_setup(app_handle: &AppHandle) {
     let version = app_handle.package_info().version.to_string();
     handle::Handle::global().init(app_handle.app_handle());
     VERSION.get_or_init(|| version.clone());
@@ -42,6 +42,9 @@ pub fn resolve_setup(app_handle: &AppHandle) {
     // 启动核心
     log::trace!("init config");
     log_err!(Config::init_config());
+
+    log::trace!("init webdav config");
+    log_err!(backup::WebDav::global().init().await);
 
     log::trace!("launch core");
     log_err!(CoreManager::global().init());
@@ -59,6 +62,14 @@ pub fn resolve_setup(app_handle: &AppHandle) {
     log_err!(handle::Handle::update_systray_part());
     log_err!(hotkey::Hotkey::global().init(app_handle.app_handle()));
     log_err!(timer::Timer::global().init());
+
+    let argvs: Vec<String> = std::env::args().collect();
+    if argvs.len() > 1 {
+        let param = argvs[1].as_str();
+        if param.starts_with("clash:") {
+            resolve_scheme(argvs[1].to_owned()).await;
+        }
+    }
 }
 
 /// reset system proxy
