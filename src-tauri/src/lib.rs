@@ -47,6 +47,7 @@ pub fn run() {
             }
 
             app.listen("deep-link://new-url", |event| {
+                log::trace!("deep link event: {:?}", event);
                 tauri::async_runtime::spawn(async move {
                     let payload = event.payload();
                     log_err!(resolve_scheme(payload.to_string()).await);
