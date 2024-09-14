@@ -286,7 +286,7 @@ fn create_tray_menu(
     let open_app_dir = &MenuItem::with_id(
         app_handle,
         "open_app_dir",
-        t!("App Dir", "应用目录", use_zh),
+        t!("Conf Dir", "配置目录", use_zh),
         true,
         None::<&str>,
     )
@@ -321,7 +321,7 @@ fn create_tray_menu(
     let restart_clash = &MenuItem::with_id(
         app_handle,
         "restart_clash",
-        t!("Restart App", "重启 Clash", use_zh),
+        t!("Restart Clash Core", "重启Clash内核", use_zh),
         true,
         None::<&str>,
     )
@@ -330,7 +330,7 @@ fn create_tray_menu(
     let restart_app = &MenuItem::with_id(
         app_handle,
         "restart_app",
-        t!("Restart App", "重启应用", use_zh),
+        t!("Restart App", "重启Verge", use_zh),
         true,
         None::<&str>,
     )

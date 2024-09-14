@@ -8,6 +8,16 @@
 ### Features
 
 - Meta(mihomo)内核升级 1.18.8
+- Mac 下可用 URL Scheme 导入订阅
+- 成功导入订阅的提示消息
+- 能自动选中新导入的订阅
+- 改进多处文本表述
+
+### Performance
+
+- 优化内核启动逻辑
+- 优化 TUN 启动逻辑
+- 移除无用的 PID 创建逻辑
 
 ### Bugs Fixes
 
