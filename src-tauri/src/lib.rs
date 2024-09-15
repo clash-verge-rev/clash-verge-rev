@@ -6,6 +6,7 @@ mod feat;
 mod utils;
 
 use crate::utils::{resolve, resolve::resolve_scheme, server};
+#[cfg(target_os = "macos")]
 use tauri::Listener;
 
 pub fn run() {
@@ -45,14 +46,15 @@ pub fn run() {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 app.deep_link().register_all()?;
             }
-
-            app.listen("deep-link://new-url", |event| {
-                tauri::async_runtime::spawn(async move {
-                    let payload = event.payload();
-                    log_err!(resolve_scheme(payload.to_owned()).await);
+            #[cfg(target_os = "macos")]
+            {
+                app.listen("deep-link://new-url", |event| {
+                    tauri::async_runtime::spawn(async move {
+                        let payload = event.payload();
+                        log_err!(resolve_scheme(payload.to_owned()).await);
+                    });
                 });
-            });
-
+            }
             tauri::async_runtime::block_on(async move {
                 resolve::resolve_setup(app).await;
                 #[cfg(not(target_os = "macos"))]
