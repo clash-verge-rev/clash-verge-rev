@@ -47,7 +47,6 @@ pub fn run() {
                 app.deep_link().register_all()?;
             }
 
-            #[cfg(target_os = "macos")]
             app.listen("deep-link://new-url", |event| {
                 tauri::async_runtime::spawn(async move {
                     let payload = event.payload();
