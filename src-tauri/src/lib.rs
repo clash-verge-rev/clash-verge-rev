@@ -6,7 +6,6 @@ mod feat;
 mod utils;
 
 use crate::utils::{resolve, resolve::resolve_scheme, server};
-#[cfg(target_os = "macos")]
 use tauri::Listener;
 
 pub fn run() {
