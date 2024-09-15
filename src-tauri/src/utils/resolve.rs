@@ -241,7 +241,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
             .get(2..param.len() - 2)
             .ok_or_else(|| anyhow::anyhow!("Invalid string slice boundaries"))?
     } else {
-        bail!("invalid deep link param: {:?}", param)
+        param.as_str()
     };
 
     // 解析 URL

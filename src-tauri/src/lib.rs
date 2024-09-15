@@ -46,16 +46,24 @@ pub fn run() {
                 app.deep_link().register_all()?;
             }
 
+            #[cfg(target_os = "macos")]
             app.listen("deep-link://new-url", |event| {
-                log::trace!("deep link event: {:?}", event);
                 tauri::async_runtime::spawn(async move {
                     let payload = event.payload();
-                    log_err!(resolve_scheme(payload.to_string()).await);
+                    log_err!(resolve_scheme(payload.to_owned()).await);
                 });
             });
 
             tauri::async_runtime::block_on(async move {
                 resolve::resolve_setup(app).await;
+                #[cfg(not(target_os = "macos"))]
+                {
+                    let argvs: Vec<String> = std::env::args().collect();
+                    if argvs.len() > 1 {
+                        let param = argvs[1].as_str();
+                        log_err!(resolve_scheme(argvs[1].to_owned()));
+                    }
+                }
             });
 
             Ok(())
