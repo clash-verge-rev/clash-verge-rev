@@ -2,19 +2,37 @@ extern crate warp;
 
 use super::resolve;
 use crate::config::{Config, IVerge, DEFAULT_PAC};
+use crate::log_err;
 use anyhow::{bail, Result};
 use port_scanner::local_port_available;
+use std::convert::Infallible;
 use tauri::AppHandle;
 use warp::Filter;
+
+#[derive(serde::Deserialize, Debug)]
+struct QueryParam {
+    param: String,
+}
 
 /// check whether there is already exists
 pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
     if !local_port_available(port) {
-        reqwest::get(format!("http://127.0.0.1:{port}/commands/visible"))
-            .await?
-            .text()
-            .await?;
+        let argvs: Vec<String> = std::env::args().collect();
+        if argvs.len() > 1 {
+            #[cfg(not(target_os = "macos"))]
+            {
+                let param = argvs[1].as_str();
+                if param.starts_with("clash:") {
+                    let _ = reqwest::get(format!(
+                        "http://127.0.0.1:{port}/commands/scheme?param={param}"
+                    ))
+                    .await;
+                }
+            }
+        } else {
+            let _ = reqwest::get(format!("http://127.0.0.1:{port}/commands/visible")).await;
+        }
         log::error!("failed to setup singleton listen server");
         bail!("app exists");
     } else {
@@ -50,8 +68,15 @@ pub fn embed_server(app_handle: &AppHandle) {
                 .body(content)
                 .unwrap_or_default()
         });
+        async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
+            log_err!(resolve::resolve_scheme(query.param).await);
+            Ok("ok")
+        }
 
-        let commands = visible.or(pac);
+        let scheme = warp::path!("commands" / "scheme")
+            .and(warp::query::<QueryParam>())
+            .and_then(scheme_handler);
+        let commands = visible.or(scheme).or(pac);
         warp::serve(commands).run(([127, 0, 0, 1], port)).await;
     });
 }
