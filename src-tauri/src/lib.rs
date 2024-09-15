@@ -6,6 +6,7 @@ mod feat;
 mod utils;
 
 use crate::utils::{resolve, resolve::resolve_scheme, server};
+#[cfg(target_os = "macos")]
 use tauri::Listener;
 
 pub fn run() {
@@ -61,7 +62,7 @@ pub fn run() {
                     let argvs: Vec<String> = std::env::args().collect();
                     if argvs.len() > 1 {
                         let param = argvs[1].as_str();
-                        log_err!(resolve_scheme(argvs[1].to_owned()));
+                        log_err!(resolve_scheme(argvs[1].to_owned()).await);
                     }
                 }
             });
