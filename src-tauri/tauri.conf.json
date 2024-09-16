@@ -50,6 +50,11 @@
       },
       "csp": null
     },
-    "windows": []
+    "windows": [
+      {
+        "label": "main",
+        "fullscreen": true
+      }
+    ]
   }
 }
