@@ -2,7 +2,7 @@ use crate::{
     config::*,
     core::*,
     feat,
-    utils::{dirs, help, resolve},
+    utils::{dirs, help},
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
@@ -371,11 +371,8 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub fn exit_app(app_handle: tauri::AppHandle) {
-    let _ = resolve::save_window_size_position(&app_handle, true);
-    resolve::resolve_reset();
-    app_handle.exit(0);
-    std::process::exit(0);
+pub fn exit_app() {
+    feat::quit();
 }
 
 pub mod service {
