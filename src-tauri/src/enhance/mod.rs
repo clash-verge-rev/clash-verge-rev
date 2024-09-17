@@ -37,8 +37,11 @@ pub struct MergeResult {
 }
 
 pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
+    let profiles = Config::profiles();
+    let mut profiles = profiles.latest();
     let rp_key = Value::from("rule-providers");
     if !config.contains_key(&rp_key) {
+        let _ = profiles.set_rule_providers_path(HashMap::new());
         return config;
     }
     let rp_val = config.get(&rp_key);
@@ -50,20 +53,23 @@ pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
         let name = key.as_str().unwrap();
         let val_map = value.as_mapping_mut().unwrap();
         let path_key = Value::from("path");
+        let rp_format = val_map.get(Value::from("format")).cloned();
+        if rp_format.is_none() {
+            val_map.insert(Value::from("format"), Value::from("yaml"));
+        }
+        let format_val = rp_format.as_ref().map_or("yaml", |v| v.as_str().unwrap());
         if let Some(path) = val_map.get(&path_key) {
             let path = path.as_str().unwrap();
             let absolute_path = app_home_dir().unwrap().join(&path);
             absolute_path_map.insert(name.into(), absolute_path);
         } else {
             // no path value, set default path
-            let path = format!("./rules/{name}.yaml");
+            let path = format!("./rules/{name}.{}", format_val);
             let absolute_path = app_home_dir().unwrap().join(&path.trim_start_matches("./"));
             val_map.insert(path_key, Value::from(path));
             absolute_path_map.insert(name.into(), absolute_path);
         }
     }
-    let profiles = Config::profiles();
-    let mut profiles = profiles.latest();
     let _ = profiles.set_rule_providers_path(absolute_path_map);
     config.insert(rp_key, Value::from(rp_val));
     config

@@ -53,7 +53,11 @@ const parseColor = (text: string) => {
 
 export const RuleItem = (props: Props) => {
   const { index, value, onExpand } = props;
-  const expanded = value.type === "RuleSet" && value.expanded;
+  const canExpandRuleItem =
+    value.type === "RuleSet" &&
+    !!value.ruleSetProviderPath &&
+    !value.ruleSetProviderPath.endsWith(".mrs");
+  const expanded = canExpandRuleItem && value.expanded;
 
   return (
     <Card
@@ -127,7 +131,7 @@ export const RuleItem = (props: Props) => {
             {value.proxy}
           </Typography>
         </Box>
-        {value.type === "RuleSet" && (
+        {canExpandRuleItem && (
           <ExpandMore
             color="primary"
             expand={expanded}

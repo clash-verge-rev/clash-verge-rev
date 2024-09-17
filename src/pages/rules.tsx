@@ -30,8 +30,12 @@ const RulesPage = () => {
   useEffect(() => {
     const filterData = data
       .map((item) => {
-        if (item.type === "RuleSet") {
-          const itemName = item.payload;
+        const itemName = item.payload;
+        if (
+          item.type === "RuleSet" &&
+          !!ruleProvidersPaths[itemName] &&
+          !ruleProvidersPaths[itemName].endsWith(".mrs")
+        ) {
           const payloadKey = itemName + payloadSuffix;
           item.ruleSetProviderPath = ruleProvidersPaths[itemName];
           item.ruleSetProviderPayload = ruleProvidersPaths[payloadKey];
@@ -69,7 +73,12 @@ const RulesPage = () => {
     // 读取规则集文件内容
     for (const name in pathsMap) {
       const payloadKey = name + payloadSuffix;
-      const contents = await readTextFile(pathsMap[name]);
+      const filePath = pathsMap[name];
+      const isMrsFile = filePath.endsWith(".mrs");
+      if (isMrsFile) {
+        continue;
+      }
+      const contents = await readTextFile(filePath);
       pathsMap[payloadKey] = contents;
     }
     setRuleProvidersPaths(pathsMap);
@@ -123,8 +132,8 @@ const RulesPage = () => {
       }>
       <Box
         sx={{
-          pt: 1,
-          mb: 0.5,
+          pt: "6px",
+          mb: "6px",
           mx: "10px",
           height: "36px",
           display: "flex",
@@ -134,7 +143,7 @@ const RulesPage = () => {
       </Box>
 
       <Box
-        height="calc(100% - 65px)"
+        height={"calc(100% - 54px)"}
         sx={{
           marginLeft: "10px",
           borderRadius: "8px",
