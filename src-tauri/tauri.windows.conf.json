@@ -24,14 +24,6 @@
       "iconPath": "icons/tray-icon.ico",
       "iconAsTemplate": true
     },
-    "windows": [
-      {
-        "label": "main",
-        "fullscreen": false,
-        "resizable": true,
-        "maxWidth": null,
-        "maxHeight": null
-      }
-    ]
+    "windows": []
   }
 }
