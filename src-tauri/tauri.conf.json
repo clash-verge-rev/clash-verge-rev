@@ -49,12 +49,6 @@
         "enable": true
       },
       "csp": null
-    },
-    "windows": [
-      {
-        "label": "main",
-        "fullscreen": true
-      }
-    ]
+    }
   }
 }
