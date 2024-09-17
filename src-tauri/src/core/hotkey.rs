@@ -4,8 +4,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
 use tauri::AppHandle;
-use tauri_plugin_global_shortcut::GlobalShortcutExt;
-
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
     app_handle: Arc<Mutex<Option<AppHandle>>>,
@@ -69,7 +68,11 @@ impl Hotkey {
             _ => bail!("invalid function \"{func}\""),
         };
 
-        let _ = manager.on_shortcut(hotkey, move |_, _, _| f());
+        let _ = manager.on_shortcut(hotkey, move |_app_handle, _hotkey, event| {
+            if event.state == ShortcutState::Pressed {
+                f()
+            }
+        });
         log::info!(target: "app", "register hotkey {hotkey} {func}");
         Ok(())
     }
