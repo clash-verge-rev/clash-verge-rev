@@ -16,7 +16,7 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 // 打开面板
 pub fn open_or_close_dashboard() {
     let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock();
+    let app_handle = handle.app_handle.lock().clone();
     if let Some(app_handle) = app_handle.as_ref() {
         if let Some(window) = app_handle.get_webview_window("main") {
             if let Ok(true) = window.is_focused() {
@@ -101,6 +101,17 @@ pub fn toggle_tun_mode() {
             Err(err) => log::error!(target: "app", "{err}"),
         }
     });
+}
+
+pub fn quit() {
+    let handle = handle::Handle::global();
+    let app_handle = handle.app_handle.lock().clone();
+    if let Some(app_handle) = app_handle.as_ref() {
+        let _ = resolve::save_window_size_position(&app_handle, true);
+        resolve::resolve_reset();
+        app_handle.exit(0);
+        std::process::exit(0);
+    }
 }
 
 /// 修改clash的订阅

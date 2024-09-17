@@ -429,7 +429,10 @@ fn on_menu_event(app_handle: &AppHandle, event: MenuEvent) {
         "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => tauri::process::restart(&app_handle.env()),
-        "quit" => cmds::exit_app(app_handle.clone()),
+        "quit" => {
+            println!("quit");
+            feat::quit();
+        }
         _ => {}
     }
 }

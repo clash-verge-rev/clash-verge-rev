@@ -24,6 +24,16 @@ impl Hotkey {
         *self.app_handle.lock() = Some(app_handle.clone());
         let verge = Config::verge();
 
+        #[cfg(target_os = "macos")]
+        {
+            log_err!(self.register("CMD+Q", "quit"));
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            log_err!(self.register("Control+Q", "quit"));
+        }
+
         if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
@@ -65,6 +75,7 @@ impl Hotkey {
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
             "toggle_system_proxy" => feat::toggle_system_proxy,
             "toggle_tun_mode" => feat::toggle_tun_mode,
+            "quit" => feat::quit,
             _ => bail!("invalid function \"{func}\""),
         };
 
@@ -73,6 +84,7 @@ impl Hotkey {
                 f()
             }
         });
+
         log::info!(target: "app", "register hotkey {hotkey} {func}");
         Ok(())
     }
