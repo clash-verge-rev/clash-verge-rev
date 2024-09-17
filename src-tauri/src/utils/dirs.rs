@@ -46,7 +46,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
     }
 
     let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock();
+    let app_handle = handle.app_handle.lock().clone();
 
     if let Some(app_handle) = app_handle.as_ref() {
         match app_handle.path().data_dir() {
