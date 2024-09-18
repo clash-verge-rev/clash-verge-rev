@@ -3,8 +3,8 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
-use tauri::AppHandle;
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+use tauri::{AppHandle, Manager};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
     app_handle: Arc<Mutex<Option<AppHandle>>>,
@@ -23,6 +23,16 @@ impl Hotkey {
     pub fn init(&self, app_handle: &AppHandle) -> Result<()> {
         *self.app_handle.lock() = Some(app_handle.clone());
         let verge = Config::verge();
+
+        #[cfg(target_os = "macos")]
+        {
+            log_err!(self.register("CMD+Q", "quit"));
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            log_err!(self.register("Control+Q", "quit"));
+        }
 
         if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
             for hotkey in hotkeys.iter() {
@@ -69,9 +79,17 @@ impl Hotkey {
             _ => bail!("invalid function \"{func}\""),
         };
 
-        let _ = manager.on_shortcut(hotkey, move |_app_handle, _hotkey, event| {
+        let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey, event| {
             if event.state == ShortcutState::Pressed {
-                f()
+                if hotkey.key == Code::KeyQ {
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        if window.is_focused().unwrap_or(false) {
+                            f();
+                        }
+                    }
+                } else {
+                    f();
+                }
             }
         });
 
