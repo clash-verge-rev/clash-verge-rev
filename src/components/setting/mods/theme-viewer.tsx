@@ -175,7 +175,6 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
         </Item>
         <EditorViewer
           open={editorOpen}
-          mode="text"
           language={"css"}
           property={theme.css_injection ?? ""}
           onChange={(css) => handleCSSInjection(css)}

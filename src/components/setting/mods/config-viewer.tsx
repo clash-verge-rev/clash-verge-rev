@@ -1,4 +1,5 @@
-import { DialogRef, EditorViewer } from "@/components/base";
+import { DialogRef } from "@/components/base";
+import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { getRuntimeYaml } from "@/services/cmds";
 import { Box, Chip } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
@@ -20,7 +21,7 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
   }));
 
   return (
-    <EditorViewer
+    <ProfileEditorViewer
       title={
         <Box>
           {t("Runtime Config")}

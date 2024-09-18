@@ -1,8 +1,6 @@
-import mergeSchema from "@/assets/schema/clash-verge-merge-json-schema.json";
-import metaSchema from "@/assets/schema/meta-json-schema.json";
 import { Notice } from "@/components/base";
 import { useWindowSize } from "@/hooks/use-window-size";
-import { getTemplate, readProfileFile, saveProfileFile } from "@/services/cmds";
+import { getTemplate } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
@@ -14,7 +12,6 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import * as monaco from "monaco-editor";
-import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,33 +19,14 @@ import pac from "types-pac/pac.d.ts?raw";
 
 interface Props {
   title?: string | ReactNode;
-  mode: "profile" | "text";
   property: string;
   open: boolean;
-  readOnly?: boolean;
-  language: "yaml" | "javascript" | "css";
-  scope?: "clash" | "merge" | "pac" | "script";
+  language: "javascript" | "css";
+  scope?: "pac" | "script";
   onClose: () => void;
   onChange?: (content: string) => void;
 }
 
-// yaml worker
-configureMonacoYaml(monaco, {
-  validate: true,
-  enableSchemaRequest: true,
-  schemas: [
-    {
-      uri: "http://example.com/meta-json-schema.json",
-      fileMatch: ["**/*.clash.yaml"],
-      schema: metaSchema as unknown as JSONSchema,
-    },
-    {
-      uri: "http://example.com/clash-verge-merge-json-schema.json",
-      fileMatch: ["**/*.merge.yaml"],
-      schema: mergeSchema as unknown as JSONSchema,
-    },
-  ],
-});
 // PAC definition
 monaco.languages.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
 monaco.languages.registerCompletionItemProvider("javascript", {
@@ -70,17 +48,7 @@ monaco.languages.registerCompletionItemProvider("javascript", {
 });
 
 export const EditorViewer = (props: Props) => {
-  const {
-    title,
-    mode,
-    property,
-    open,
-    readOnly,
-    language,
-    scope,
-    onClose,
-    onChange,
-  } = props;
+  const { title, property, open, language, scope, onClose, onChange } = props;
   const { t } = useTranslation();
   const editorDomRef = useRef<any>();
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -91,15 +59,7 @@ export const EditorViewer = (props: Props) => {
   useEffect(() => {
     if (!open) return;
 
-    let fetchContent;
-    switch (mode) {
-      case "profile": // profile文件
-        fetchContent = readProfileFile(property);
-        break;
-      case "text": // 文本内容
-        fetchContent = Promise.resolve(property);
-        break;
-    }
+    const fetchContent = Promise.resolve(property);
     fetchContent.then((data) => {
       const dom = editorDomRef.current;
 
@@ -116,8 +76,6 @@ export const EditorViewer = (props: Props) => {
         theme: themeMode === "light" ? "vs" : "vs-dark",
         minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
         mouseWheelZoom: true, // 按住Ctrl滚轮调节缩放比例
-        readOnly: readOnly, // 只读模式
-        readOnlyMessage: { value: t("ReadOnlyMessage") }, // 只读模式尝试编辑时的提示信息
         renderValidationDecorations: "on", // 只读模式下显示校验信息
         quickSuggestions: {
           strings: true,
@@ -135,7 +93,7 @@ export const EditorViewer = (props: Props) => {
         smoothScrolling: true, // 平滑滚动
       });
 
-      if (scope && ["merge", "script", "pac"].includes(scope)) {
+      if (scope && "pac" === scope) {
         const generateCommand = instanceRef.current?.addCommand(
           0,
           () => {
@@ -146,7 +104,7 @@ export const EditorViewer = (props: Props) => {
           "",
         );
         registerCodeLensRef.current = monaco.languages.registerCodeLensProvider(
-          ["yaml", "javascript"],
+          ["javascript"],
           {
             provideCodeLenses(model, token) {
               return {
@@ -196,9 +154,6 @@ export const EditorViewer = (props: Props) => {
     if (value == undefined) return;
 
     try {
-      if (mode === "profile") {
-        await saveProfileFile(property, value);
-      }
       onChange?.(value);
       onClose();
     } catch (err: any) {
@@ -221,14 +176,12 @@ export const EditorViewer = (props: Props) => {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} variant={readOnly ? "contained" : "outlined"}>
+        <Button onClick={onClose} variant="outlined">
           {t("Cancel")}
         </Button>
-        {readOnly ? null : (
-          <Button onClick={onSave} variant="contained">
-            {t("Save")}
-          </Button>
-        )}
+        <Button onClick={onSave} variant="contained">
+          {t("Save")}
+        </Button>
       </DialogActions>
     </Dialog>
   );

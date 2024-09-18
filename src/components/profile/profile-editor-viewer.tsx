@@ -35,7 +35,6 @@ import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import pac from "types-pac/pac.d.ts?raw";
 
 interface Props {
   title?: string | ReactNode;
@@ -75,25 +74,6 @@ configureMonacoYaml(monaco, {
       schema: mergeSchema as unknown as JSONSchema,
     },
   ],
-});
-// PAC definition
-monaco.languages.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
-monaco.languages.registerCompletionItemProvider("javascript", {
-  provideCompletionItems: (model, position) => ({
-    suggestions: [
-      {
-        label: "%mixed-port%",
-        kind: monaco.languages.CompletionItemKind.Text,
-        insertText: "%mixed-port%",
-        range: {
-          startLineNumber: position.lineNumber,
-          endLineNumber: position.lineNumber,
-          startColumn: model.getWordUntilPosition(position).startColumn - 1,
-          endColumn: model.getWordUntilPosition(position).endColumn - 1,
-        },
-      },
-    ],
-  }),
 });
 
 export const ProfileEditorViewer = (props: Props) => {
@@ -172,7 +152,7 @@ export const ProfileEditorViewer = (props: Props) => {
         setScriptChecked(false);
       });
 
-      if (scope && ["merge", "script", "pac"].includes(scope)) {
+      if (scope && ["merge", "script"].includes(scope)) {
         const generateCommand = instanceRef.current?.addCommand(
           0,
           () => {

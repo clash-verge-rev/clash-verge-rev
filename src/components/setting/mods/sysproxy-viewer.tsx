@@ -279,7 +279,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               <EditorViewer
                 title={`${t("Edit")} PAC`}
                 open={editorOpen}
-                mode="text"
                 scope="pac"
                 language="javascript"
                 property={value.pac_content ?? ""}
