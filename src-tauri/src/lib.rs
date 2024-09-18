@@ -5,6 +5,7 @@ mod enhance;
 mod feat;
 mod utils;
 
+use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
 #[cfg(target_os = "macos")]
 use tauri::Listener;
@@ -148,6 +149,28 @@ pub fn run() {
                     }
                     tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
                         let _ = resolve::save_window_size_position(app_handle, false);
+                    }
+                    tauri::WindowEvent::Focused(true) => {
+                        #[cfg(target_os = "macos")]
+                        {
+                            log_err!(hotkey::Hotkey::global().register("CMD+Q", "quit"));
+                        }
+
+                        #[cfg(not(target_os = "macos"))]
+                        {
+                            log_err!(hotkey::Hotkey::global().register()("Control+Q", "quit"));
+                        };
+                    }
+                    tauri::WindowEvent::Focused(false) => {
+                        #[cfg(target_os = "macos")]
+                        {
+                            log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
+                        }
+
+                        #[cfg(not(target_os = "macos"))]
+                        {
+                            log_err!(hotkey::Hotkey::global().unregister()("Control+Q"));
+                        };
                     }
                     _ => {}
                 }
