@@ -24,16 +24,6 @@ impl Hotkey {
         *self.app_handle.lock() = Some(app_handle.clone());
         let verge = Config::verge();
 
-        #[cfg(target_os = "macos")]
-        {
-            log_err!(self.register("CMD+Q", "quit"));
-        }
-
-        #[cfg(not(target_os = "macos"))]
-        {
-            log_err!(self.register("Control+Q", "quit"));
-        }
-
         if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
@@ -57,7 +47,7 @@ impl Hotkey {
         Ok(())
     }
 
-    fn register(&self, hotkey: &str, func: &str) -> Result<()> {
+    pub fn register(&self, hotkey: &str, func: &str) -> Result<()> {
         let app_handle = self.app_handle.lock();
         if app_handle.is_none() {
             bail!("failed to get the hotkey manager");
@@ -97,7 +87,7 @@ impl Hotkey {
         Ok(())
     }
 
-    fn unregister(&self, hotkey: &str) -> Result<()> {
+    pub fn unregister(&self, hotkey: &str) -> Result<()> {
         let app_handle = self.app_handle.lock();
         if app_handle.is_none() {
             bail!("failed to get the hotkey manager");
