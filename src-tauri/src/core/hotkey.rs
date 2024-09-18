@@ -24,16 +24,6 @@ impl Hotkey {
         *self.app_handle.lock() = Some(app_handle.clone());
         let verge = Config::verge();
 
-        #[cfg(target_os = "macos")]
-        {
-            log_err!(self.register("CMD+Q", "quit"));
-        }
-
-        #[cfg(not(target_os = "macos"))]
-        {
-            log_err!(self.register("Control+Q", "quit"));
-        }
-
         if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
