@@ -155,9 +155,6 @@ importers:
       "@tauri-apps/cli":
         specifier: 2.0.0-rc.16
         version: 2.0.0-rc.16
-      "@types/fs-extra":
-        specifier: ^9.0.13
-        version: 9.0.13
       "@types/js-cookie":
         specifier: ^3.0.6
         version: 3.0.6
@@ -188,9 +185,6 @@ importers:
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
-      fs-extra:
-        specifier: ^11.2.0
-        version: 11.2.0
       https-proxy-agent:
         specifier: ^5.0.1
         version: 5.0.1
@@ -2294,12 +2288,6 @@ packages:
         integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==,
       }
 
-  "@types/fs-extra@9.0.13":
-    resolution:
-      {
-        integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==,
-      }
-
   "@types/hast@3.0.4":
     resolution:
       {
@@ -2970,13 +2958,6 @@ packages:
       react:
         optional: true
 
-  fs-extra@11.2.0:
-    resolution:
-      {
-        integrity: sha512-PmDi3uwK5nFuXh7XDTlVnS17xJS7vW36is2+w3xcv8SVxiB4NyATf4ctkVY5bkSjX0Y4nbvZCq1/EjtEyr9ktw==,
-      }
-    engines: { node: ">=14.14" }
-
   fs-minipass@2.1.0:
     resolution:
       {
@@ -3025,12 +3006,6 @@ packages:
         integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==,
       }
     engines: { node: ">=4" }
-
-  graceful-fs@4.2.11:
-    resolution:
-      {
-        integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==,
-      }
 
   has-flag@3.0.0:
     resolution:
@@ -3286,12 +3261,6 @@ packages:
     resolution:
       {
         integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==,
-      }
-
-  jsonfile@6.1.0:
-    resolution:
-      {
-        integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==,
       }
 
   lines-and-columns@1.2.4:
@@ -4456,13 +4425,6 @@ packages:
       {
         integrity: sha512-yCzhz6FN2wU1NiiQRogkTQszlQSlpWaw8SvVegAc+bDxbzHgh1vX8uIe8OYyMH6DwH+sdTJsgMl36+mSMdRJIQ==,
       }
-
-  universalify@2.0.1:
-    resolution:
-      {
-        integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==,
-      }
-    engines: { node: ">= 10.0.0" }
 
   update-browserslist-db@1.1.0:
     resolution:
@@ -6138,10 +6100,6 @@ snapshots:
 
   "@types/estree@1.0.5": {}
 
-  "@types/fs-extra@9.0.13":
-    dependencies:
-      "@types/node": 20.14.10
-
   "@types/hast@3.0.4":
     dependencies:
       "@types/unist": 3.0.2
@@ -6167,6 +6125,7 @@ snapshots:
   "@types/node@20.14.10":
     dependencies:
       undici-types: 5.26.5
+    optional: true
 
   "@types/parse-json@4.0.2": {}
 
@@ -6541,12 +6500,6 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  fs-extra@11.2.0:
-    dependencies:
-      graceful-fs: 4.2.11
-      jsonfile: 6.1.0
-      universalify: 2.0.1
-
   fs-minipass@2.1.0:
     dependencies:
       minipass: 3.3.6
@@ -6567,8 +6520,6 @@ snapshots:
       is-glob: 4.0.3
 
   globals@11.12.0: {}
-
-  graceful-fs@4.2.11: {}
 
   has-flag@3.0.0: {}
 
@@ -6694,12 +6645,6 @@ snapshots:
   json5@2.2.3: {}
 
   jsonc-parser@3.3.1: {}
-
-  jsonfile@6.1.0:
-    dependencies:
-      universalify: 2.0.1
-    optionalDependencies:
-      graceful-fs: 4.2.11
 
   lines-and-columns@1.2.4: {}
 
@@ -7430,7 +7375,8 @@ snapshots:
 
   typescript@5.5.3: {}
 
-  undici-types@5.26.5: {}
+  undici-types@5.26.5:
+    optional: true
 
   undici@5.28.4:
     dependencies:
@@ -7486,8 +7432,6 @@ snapshots:
       unist-util-visit-parents: 6.0.1
 
   universal-user-agent@6.0.1: {}
-
-  universalify@2.0.1: {}
 
   update-browserslist-db@1.1.0(browserslist@4.23.1):
     dependencies:
