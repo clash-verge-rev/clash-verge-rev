@@ -69,7 +69,6 @@
   "devDependencies": {
     "@actions/github": "^5.1.1",
     "@tauri-apps/cli": "2.0.0-rc.16",
-    "@types/fs-extra": "^9.0.13",
     "@types/js-cookie": "^3.0.6",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
@@ -80,7 +79,6 @@
     "@vitejs/plugin-react": "^4.3.1",
     "adm-zip": "^0.5.14",
     "cross-env": "^7.0.3",
-    "fs-extra": "^11.2.0",
     "https-proxy-agent": "^5.0.1",
     "husky": "^7.0.4",
     "node-fetch": "^3.3.2",
