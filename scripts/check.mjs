@@ -1,4 +1,5 @@
-import fs from "fs-extra";
+import fs from "fs";
+import fsp from "fs/promises";
 import zlib from "zlib";
 import tar from "tar";
 import path from "path";
@@ -205,16 +206,16 @@ async function resolveSidecar(binInfo) {
   const sidecarDir = path.join(cwd, "src-tauri", "sidecar");
   const sidecarPath = path.join(sidecarDir, targetFile);
 
-  await fs.mkdirp(sidecarDir);
-  if (!FORCE && (await fs.pathExists(sidecarPath))) return;
+  await fsp.mkdir(sidecarDir, { recursive: true });
+  if (!FORCE && fs.existsSync(sidecarPath)) return;
 
   const tempDir = path.join(TEMP_DIR, name);
   const tempZip = path.join(tempDir, zipFile);
   const tempExe = path.join(tempDir, exeFile);
 
-  await fs.mkdirp(tempDir);
+  await fsp.mkdir(tempDir, { recursive: true });
   try {
-    if (!(await fs.pathExists(tempZip))) {
+    if (!fs.existsSync(tempZip)) {
       await downloadFile(downloadURL, tempZip);
     }
 
@@ -224,22 +225,22 @@ async function resolveSidecar(binInfo) {
         console.log(`[DEBUG]: "${name}" entry name`, entry.entryName);
       });
       zip.extractAllTo(tempDir, true);
-      await fs.rename(tempExe, sidecarPath);
+      await fsp.rename(tempExe, sidecarPath);
       console.log(`[INFO]: "${name}" unzip finished`);
     } else if (zipFile.endsWith(".tgz")) {
       // tgz
-      await fs.mkdirp(tempDir);
+      await fsp.mkdir(tempDir, { recursive: true });
       await tar.extract({
         cwd: tempDir,
         file: tempZip,
         //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
       });
-      const files = await fs.readdir(tempDir);
+      const files = await fsp.readdir(tempDir);
       console.log(`[DEBUG]: "${name}" files in tempDir:`, files);
       const extractedFile = files.find((file) => file.startsWith("虚空终端-"));
       if (extractedFile) {
         const extractedFilePath = path.join(tempDir, extractedFile);
-        await fs.rename(extractedFilePath, sidecarPath);
+        await fsp.rename(extractedFilePath, sidecarPath);
         console.log(`[INFO]: "${name}" file renamed to "${sidecarPath}"`);
         execSync(`chmod 755 ${sidecarPath}`);
         console.log(`[INFO]: "${name}" chmod binary finished`);
@@ -269,11 +270,11 @@ async function resolveSidecar(binInfo) {
     }
   } catch (err) {
     // 需要删除文件
-    await fs.remove(sidecarPath);
+    await fsp.rm(sidecarPath, { recursive: true, force: true });
     throw err;
   } finally {
     // delete temp dir
-    await fs.remove(tempDir);
+    await fsp.rm(tempDir, { recursive: true, force: true });
   }
 }
 
@@ -286,9 +287,9 @@ async function resolveResource(binInfo) {
   const resDir = path.join(cwd, "src-tauri/resources");
   const targetPath = path.join(resDir, file);
 
-  if (!FORCE && (await fs.pathExists(targetPath))) return;
+  if (!FORCE && fs.existsSync(targetPath)) return;
 
-  await fs.mkdirp(resDir);
+  await fsp.mkdir(resDir, { recursive: true });
   await downloadFile(downloadURL, targetPath);
 
   console.log(`[INFO]: ${file} finished`);
@@ -316,7 +317,7 @@ async function downloadFile(url, path) {
     headers: { "Content-Type": "application/octet-stream" },
   });
   const buffer = await response.arrayBuffer();
-  await fs.writeFile(path, new Uint8Array(buffer));
+  await fsp.writeFile(path, new Uint8Array(buffer));
 
   console.log(`[INFO]: download finished "${url}"`);
 }
@@ -334,11 +335,11 @@ const resolvePlugin = async () => {
   const tempDll = path.join(tempDir, "SimpleSC.dll");
   const pluginDir = path.join(process.env.APPDATA, "Local/NSIS");
   const pluginPath = path.join(pluginDir, "SimpleSC.dll");
-  await fs.mkdirp(pluginDir);
-  await fs.mkdirp(tempDir);
-  if (!FORCE && (await fs.pathExists(pluginPath))) return;
+  await fsp.mkdir(pluginDir, { recursive: true });
+  await fsp.mkdir(tempDir, { recursive: true });
+  if (!FORCE && fs.existsSync(pluginPath)) return;
   try {
-    if (!(await fs.pathExists(tempZip))) {
+    if (!fs.existsSync(tempZip)) {
       await downloadFile(url, tempZip);
     }
     const zip = new AdmZip(tempZip);
@@ -346,10 +347,10 @@ const resolvePlugin = async () => {
       console.log(`[DEBUG]: "SimpleSC" entry name`, entry.entryName);
     });
     zip.extractAllTo(tempDir, true);
-    await fs.copyFile(tempDll, pluginPath);
+    await fsp.cp(tempDll, pluginPath, { recursive: true, force: true });
     console.log(`[INFO]: "SimpleSC" unzip finished`);
   } finally {
-    await fs.remove(tempDir);
+    await fsp.rm(tempDir, { recursive: true, force: true });
   }
 };
 
@@ -363,7 +364,7 @@ const resolveServicePermission = async () => {
   const resDir = path.join(cwd, "src-tauri/resources");
   for (let f of serviceExecutables) {
     const targetPath = path.join(resDir, f);
-    if (await fs.pathExists(targetPath)) {
+    if (fs.existsSync(targetPath)) {
       execSync(`chmod 755 ${targetPath}`);
       console.log(`[INFO]: "${targetPath}" chmod finished`);
     }
