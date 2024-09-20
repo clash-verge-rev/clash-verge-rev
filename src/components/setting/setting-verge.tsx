@@ -194,9 +194,9 @@ const SettingVerge = ({ onError }: Props) => {
                         },
                       ],
                     });
-                    if (selected?.path.length) {
-                      onChangeData({ startup_script: `${selected.path}` });
-                      patchVerge({ startup_script: `${selected.path}` });
+                    if (selected) {
+                      onChangeData({ startup_script: `${selected}` });
+                      patchVerge({ startup_script: `${selected}` });
                     }
                   }}
                 >
