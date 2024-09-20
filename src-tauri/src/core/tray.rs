@@ -8,7 +8,10 @@ use crate::{
     },
 };
 use anyhow::Result;
-use tauri::tray::{MouseButton, TrayIconEvent};
+use tauri::{
+    menu::CheckMenuItem,
+    tray::{MouseButton, TrayIconEvent},
+};
 use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     Wry,
@@ -190,36 +193,6 @@ fn create_tray_menu(
     let use_zh = { Config::verge().latest().language == Some("zh".into()) };
     let version = VERSION.get().unwrap();
 
-    let rule_mode_text = if mode == "rule" {
-        "✓ 规则模式"
-    } else {
-        "规则模式"
-    };
-
-    let global_mode_text = if mode == "global" {
-        "✓ 全局模式"
-    } else {
-        "全局模式"
-    };
-
-    let direct_mode_text = if mode == "direct" {
-        "✓ 直连模式"
-    } else {
-        "直连模式"
-    };
-
-    let system_proxy_text = if system_proxy_enabled {
-        "✓ 系统代理"
-    } else {
-        "系统代理"
-    };
-
-    let tun_mode_text = if tun_mode_enabled {
-        "✓ Tun 模式"
-    } else {
-        "Tun 模式"
-    };
-
     let open_window = &MenuItem::with_id(
         app_handle,
         "open_window",
@@ -229,47 +202,52 @@ fn create_tray_menu(
     )
     .unwrap();
 
-    let rule_mode = &MenuItem::with_id(
+    let rule_mode = &CheckMenuItem::with_id(
         app_handle,
         "rule_mode",
-        t!("Rule Mode", rule_mode_text, use_zh),
+        t!("Rule Mode", "规则模式", use_zh),
         true,
+        mode == "rule",
         None::<&str>,
     )
     .unwrap();
 
-    let global_mode = &MenuItem::with_id(
+    let global_mode = &CheckMenuItem::with_id(
         app_handle,
         "global_mode",
-        t!("Global Mode", global_mode_text, use_zh),
+        t!("Global Mode", "全局模式", use_zh),
         true,
+        mode == "global",
         None::<&str>,
     )
     .unwrap();
 
-    let direct_mode = &MenuItem::with_id(
+    let direct_mode = &CheckMenuItem::with_id(
         app_handle,
         "direct_mode",
-        t!("Direct Mode", direct_mode_text, use_zh),
+        t!("Direct Mode", "直连模式", use_zh),
         true,
+        mode == "direct",
         None::<&str>,
     )
     .unwrap();
 
-    let system_proxy = &MenuItem::with_id(
+    let system_proxy = &CheckMenuItem::with_id(
         app_handle,
         "system_proxy",
-        t!("System Proxy", system_proxy_text, use_zh),
+        t!("System Proxy", "系统代理", use_zh),
         true,
+        system_proxy_enabled,
         None::<&str>,
     )
     .unwrap();
 
-    let tun_mode = &MenuItem::with_id(
+    let tun_mode = &CheckMenuItem::with_id(
         app_handle,
         "tun_mode",
-        t!("TUN Mode", tun_mode_text, use_zh),
+        t!("TUN Mode", "Tun 模式", use_zh),
         true,
+        tun_mode_enabled,
         None::<&str>,
     )
     .unwrap();
