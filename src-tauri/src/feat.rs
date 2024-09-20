@@ -244,11 +244,8 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             || common_tray_icon.is_some()
             || sysproxy_tray_icon.is_some()
             || tun_tray_icon.is_some()
+            || tray_icon.is_some()
         {
-            handle::Handle::update_systray_part()?;
-        }
-        #[cfg(target_os = "macos")]
-        if tray_icon.is_some() {
             handle::Handle::update_systray_part()?;
         }
 

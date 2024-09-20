@@ -57,7 +57,7 @@ impl Handle {
     }
 
     pub fn update_systray() -> Result<()> {
-        let app_handle = Self::global().app_handle.lock();
+        let app_handle = Self::global().app_handle.lock().clone();
         if app_handle.is_none() {
             bail!("update_systray unhandled error");
         }
@@ -67,7 +67,7 @@ impl Handle {
 
     /// update the system tray state
     pub fn update_systray_part() -> Result<()> {
-        let app_handle = Self::global().app_handle.lock();
+        let app_handle = Self::global().app_handle.lock().clone();
         if app_handle.is_none() {
             bail!("update_systray unhandled error");
         }

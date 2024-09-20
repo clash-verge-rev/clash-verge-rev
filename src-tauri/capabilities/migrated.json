@@ -11,6 +11,11 @@
       "identifier": "fs:scope",
       "allow": ["$APPDATA/**", "$RESOURCE/../**", "**"]
     },
+    "fs:allow-write-file",
+    {
+      "identifier": "fs:scope",
+      "allow": ["$APPDATA/**", "$RESOURCE/../**", "**"]
+    },
     "core:window:allow-create",
     "core:window:allow-center",
     "core:window:allow-request-user-attention",
