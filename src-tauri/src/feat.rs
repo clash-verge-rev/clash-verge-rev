@@ -162,7 +162,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     #[cfg(target_os = "macos")]
     let tray_icon = patch.tray_icon;
     #[cfg(not(target_os = "macos"))]
-    let tray_icon = None;
+    let tray_icon: Option<String> = None;
     let common_tray_icon = patch.common_tray_icon;
     let sysproxy_tray_icon = patch.sysproxy_tray_icon;
     let tun_tray_icon = patch.tun_tray_icon;
