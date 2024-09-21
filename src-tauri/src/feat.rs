@@ -110,6 +110,7 @@ pub fn quit() {
         let _ = resolve::save_window_size_position(&app_handle, true);
         resolve::resolve_reset();
         app_handle.exit(0);
+        std::process::exit(0);
     }
 }
 
