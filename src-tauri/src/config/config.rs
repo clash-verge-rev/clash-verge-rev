@@ -95,6 +95,7 @@ impl Config {
         Ok(())
     }
 
+    #[allow(unused)]
     pub fn reload() -> Result<()> {
         let clash_config = Self::clash();
         let verge_config = Self::verge();
