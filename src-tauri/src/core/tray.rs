@@ -22,9 +22,29 @@ pub struct Tray {}
 impl Tray {
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
         let tray = app_handle.tray_by_id("main").unwrap();
+        #[cfg(not(target_os = "macos"))]
+        let _ = tray.set_show_menu_on_left_click(false);
+
         tray.on_tray_icon_event(|tray, event| {
             let tray_event = { Config::verge().latest().tray_event.clone() };
             let tray_event: String = tray_event.unwrap_or("main_window".into());
+
+            #[cfg(target_os = "macos")]
+            if let TrayIconEvent::Click {
+                button: MouseButton::Right,
+                ..
+            } = event
+            {
+                let app = tray.app_handle();
+                match tray_event.as_str() {
+                    "system_proxy" => feat::toggle_system_proxy(),
+                    "tun_mode" => feat::toggle_tun_mode(),
+                    "main_window" => resolve::create_window(app),
+                    _ => {}
+                }
+            }
+
+            #[cfg(not(target_os = "macos"))]
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 ..
