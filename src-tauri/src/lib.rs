@@ -135,9 +135,6 @@ pub fn run() {
         .expect("error while running tauri application");
 
     app.run(|app_handle, e| match e {
-        tauri::RunEvent::ExitRequested { api, .. } => {
-            api.prevent_exit();
-        }
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
                 match event {

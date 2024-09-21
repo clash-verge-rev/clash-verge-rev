@@ -428,7 +428,6 @@ fn on_menu_event(app_handle: &AppHandle, event: MenuEvent) {
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => tauri::process::restart(&app_handle.env()),
         "quit" => {
-            println!("quit");
             feat::quit();
         }
         _ => {}
