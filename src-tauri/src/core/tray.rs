@@ -10,7 +10,7 @@ use crate::{
 use anyhow::Result;
 use tauri::{
     menu::CheckMenuItem,
-    tray::{MouseButton, MouseButtonState, TrayIconEvent},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
 use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
@@ -20,46 +20,47 @@ use tauri::{AppHandle, Manager};
 pub struct Tray {}
 
 impl Tray {
-    pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
-        let tray = app_handle.tray_by_id("main").unwrap();
+    pub fn create_systray(app_handle: &AppHandle) -> Result<()> {
+        let _ = TrayIconBuilder::with_id("main")
+            .on_tray_icon_event(|tray, event| {
+                let tray_event = { Config::verge().latest().tray_event.clone() };
+                let tray_event: String = tray_event.unwrap_or("main_window".into());
 
-        tray.on_tray_icon_event(|tray, event| {
-            let tray_event = { Config::verge().latest().tray_event.clone() };
-            let tray_event: String = tray_event.unwrap_or("main_window".into());
-
-            #[cfg(target_os = "macos")]
-            if let TrayIconEvent::Click {
-                button: MouseButton::Right,
-                button_state: MouseButtonState::Down,
-                ..
-            } = event
-            {
-                let app = tray.app_handle();
-                match tray_event.as_str() {
-                    "system_proxy" => feat::toggle_system_proxy(),
-                    "tun_mode" => feat::toggle_tun_mode(),
-                    "main_window" => resolve::create_window(app),
-                    _ => {}
+                #[cfg(target_os = "macos")]
+                if let TrayIconEvent::Click {
+                    button: MouseButton::Right,
+                    button_state: MouseButtonState::Down,
+                    ..
+                } = event
+                {
+                    let app = tray.app_handle();
+                    match tray_event.as_str() {
+                        "system_proxy" => feat::toggle_system_proxy(),
+                        "tun_mode" => feat::toggle_tun_mode(),
+                        "main_window" => resolve::create_window(app),
+                        _ => {}
+                    }
                 }
-            }
 
-            #[cfg(not(target_os = "macos"))]
-            if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Down,
-                ..
-            } = event
-            {
-                let app = tray.app_handle();
-                match tray_event.as_str() {
-                    "system_proxy" => feat::toggle_system_proxy(),
-                    "tun_mode" => feat::toggle_tun_mode(),
-                    "main_window" => resolve::create_window(app),
-                    _ => {}
+                #[cfg(not(target_os = "macos"))]
+                if let TrayIconEvent::Click {
+                    button: MouseButton::Left,
+                    button_state: MouseButtonState::Down,
+                    ..
+                } = event
+                {
+                    let app = tray.app_handle();
+                    match tray_event.as_str() {
+                        "system_proxy" => feat::toggle_system_proxy(),
+                        "tun_mode" => feat::toggle_tun_mode(),
+                        "main_window" => resolve::create_window(app),
+                        _ => {}
+                    }
                 }
-            }
-        });
-        tray.on_menu_event(on_menu_event);
+            })
+            .on_menu_event(on_menu_event)
+            .menu_on_left_click(false)
+            .build(app_handle);
 
         Ok(())
     }
