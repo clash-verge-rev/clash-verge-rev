@@ -63,7 +63,6 @@ impl Tray {
                 let _ = tray.set_visible(true);
             }
         });
-        println!("{:?}", tray.id());
         tray.on_menu_event(on_menu_event);
         Ok(())
     }
