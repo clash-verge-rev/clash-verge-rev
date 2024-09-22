@@ -239,9 +239,8 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             hotkey::Hotkey::global().update(hotkeys)?;
         }
 
-        if language.is_some() {
-            handle::Handle::update_systray()?;
-        } else if system_proxy.is_some()
+        if language.is_some()
+            || system_proxy.is_some()
             || tun_mode.is_some()
             || common_tray_icon.is_some()
             || sysproxy_tray_icon.is_some()
