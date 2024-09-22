@@ -56,15 +56,6 @@ impl Handle {
         }
     }
 
-    pub fn update_systray() -> Result<()> {
-        let app_handle = Self::global().app_handle.lock().clone();
-        if app_handle.is_none() {
-            bail!("update_systray unhandled error");
-        }
-        Tray::update_systray(app_handle.as_ref().unwrap())?;
-        Ok(())
-    }
-
     /// update the system tray state
     pub fn update_systray_part() -> Result<()> {
         let app_handle = Self::global().app_handle.lock().clone();
