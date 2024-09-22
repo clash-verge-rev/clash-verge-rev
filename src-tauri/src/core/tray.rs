@@ -10,7 +10,7 @@ use crate::{
 use anyhow::Result;
 use tauri::{
     menu::CheckMenuItem,
-    tray::{MouseButton, TrayIconEvent},
+    tray::{MouseButton, MouseButtonState, TrayIconEvent},
 };
 use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
@@ -22,8 +22,6 @@ pub struct Tray {}
 impl Tray {
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
         let tray = app_handle.tray_by_id("main").unwrap();
-        #[cfg(not(target_os = "macos"))]
-        let _ = tray.set_show_menu_on_left_click(false);
 
         tray.on_tray_icon_event(|tray, event| {
             let tray_event = { Config::verge().latest().tray_event.clone() };
@@ -32,6 +30,7 @@ impl Tray {
             #[cfg(target_os = "macos")]
             if let TrayIconEvent::Click {
                 button: MouseButton::Right,
+                button_state: MouseButtonState::Down,
                 ..
             } = event
             {
@@ -47,6 +46,7 @@ impl Tray {
             #[cfg(not(target_os = "macos"))]
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
+                button_state: MouseButtonState::Down,
                 ..
             } = event
             {
