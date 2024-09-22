@@ -85,7 +85,7 @@ pub async fn resolve_setup(app: &mut App) {
     server::embed_server(app.app_handle());
 
     log::trace!("init system tray");
-    log_err!(tray::Tray::update_systray(&app.app_handle()));
+    log_err!(tray::Tray::create_systray(&app.app_handle()));
 
     let silent_start = { Config::verge().data().enable_silent_start };
     if !silent_start.unwrap_or(false) {
