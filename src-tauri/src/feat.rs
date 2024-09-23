@@ -10,22 +10,18 @@ use crate::log_err;
 use crate::utils::resolve;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 // 打开面板
 pub fn open_or_close_dashboard() {
-    let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock().clone();
-    if let Some(app_handle) = app_handle.as_ref() {
-        if let Some(window) = app_handle.get_webview_window("main") {
-            if let Ok(true) = window.is_focused() {
-                let _ = window.close();
-                return;
-            }
+    if let Some(window) = handle::Handle::global().get_window() {
+        if let Ok(true) = window.is_focused() {
+            let _ = window.close();
+            return;
         }
-        resolve::create_window(app_handle);
     }
+    resolve::create_window();
 }
 
 // 重启clash
@@ -104,14 +100,11 @@ pub fn toggle_tun_mode() {
 }
 
 pub fn quit() {
-    let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock().clone();
-    if let Some(app_handle) = app_handle.as_ref() {
-        let _ = resolve::save_window_size_position(&app_handle, true);
-        resolve::resolve_reset();
-        app_handle.exit(0);
-        std::process::exit(0);
-    }
+    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+    let _ = resolve::save_window_size_position(true);
+    resolve::resolve_reset();
+    app_handle.exit(0);
+    std::process::exit(0);
 }
 
 /// 修改clash的订阅
@@ -319,7 +312,8 @@ async fn update_core_config() -> Result<()> {
 }
 
 /// copy env variable
-pub fn copy_clash_env(app_handle: &AppHandle) {
+pub fn copy_clash_env() {
+    let app_handle = handle::Handle::global().app_handle().unwrap();
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
     let http_proxy = format!("http://127.0.0.1:{}", port);
     let socks5_proxy = format!("socks5://127.0.0.1:{}", port);

@@ -14,8 +14,8 @@ type CmdResult<T = ()> = Result<T, String>;
 use tauri::Manager;
 
 #[tauri::command]
-pub fn copy_clash_env(app_handle: tauri::AppHandle) -> CmdResult {
-    feat::copy_clash_env(&app_handle);
+pub fn copy_clash_env() -> CmdResult {
+    feat::copy_clash_env();
     Ok(())
 }
 

@@ -133,7 +133,7 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
 
-    app.run(|app_handle, e| match e {
+    app.run(|_, e| match e {
         tauri::RunEvent::ExitRequested { api, .. } => {
             api.prevent_exit();
         }
@@ -141,13 +141,13 @@ pub fn run() {
             if label == "main" {
                 match event {
                     tauri::WindowEvent::Destroyed => {
-                        let _ = resolve::save_window_size_position(app_handle, true);
+                        let _ = resolve::save_window_size_position(true);
                     }
                     tauri::WindowEvent::CloseRequested { .. } => {
-                        let _ = resolve::save_window_size_position(app_handle, true);
+                        let _ = resolve::save_window_size_position(true);
                     }
                     tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
-                        let _ = resolve::save_window_size_position(app_handle, false);
+                        let _ = resolve::save_window_size_position(false);
                     }
                     tauri::WindowEvent::Focused(true) => {
                         #[cfg(target_os = "macos")]

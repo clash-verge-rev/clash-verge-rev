@@ -44,7 +44,7 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(init::init_config());
     log_err!(init::init_resources());
     log_err!(init::init_scheme());
-    log_err!(init::startup_script(app.app_handle()).await);
+    log_err!(init::startup_script().await);
     // 处理随机端口
     let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
 
@@ -78,25 +78,25 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(Config::init_config().await);
 
     log::trace!("launch core");
-    log_err!(CoreManager::global().init(app.app_handle()));
+    log_err!(CoreManager::global().init());
 
     // setup a simple http server for singleton
     log::trace!("launch embed server");
-    server::embed_server(app.app_handle());
+    server::embed_server();
 
     log::trace!("init system tray");
-    log_err!(tray::Tray::create_systray(&app.app_handle()));
+    log_err!(tray::Tray::create_systray());
 
     let silent_start = { Config::verge().data().enable_silent_start };
     if !silent_start.unwrap_or(false) {
-        create_window(&app.app_handle());
+        create_window();
     }
 
     log_err!(sysopt::Sysopt::global().init_launch());
     log_err!(sysopt::Sysopt::global().init_sysproxy());
 
     log_err!(handle::Handle::update_systray_part());
-    log_err!(hotkey::Hotkey::global().init(app.app_handle()));
+    log_err!(hotkey::Hotkey::global().init());
     log_err!(timer::Timer::global().init());
 }
 
@@ -110,8 +110,10 @@ pub fn resolve_reset() {
 }
 
 /// create main window
-pub fn create_window(app_handle: &AppHandle) {
-    if let Some(window) = app_handle.get_webview_window("main") {
+pub fn create_window() {
+    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+
+    if let Some(window) = handle::Handle::global().get_window() {
         trace_err!(window.unminimize(), "set win unminimize");
         trace_err!(window.show(), "set win visible");
         trace_err!(window.set_focus(), "set win focus");
@@ -119,7 +121,7 @@ pub fn create_window(app_handle: &AppHandle) {
     }
 
     let mut builder = tauri::WebviewWindowBuilder::new(
-        app_handle,
+        &app_handle,
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
     )
@@ -208,7 +210,8 @@ pub fn create_window(app_handle: &AppHandle) {
 }
 
 /// save window size and position
-pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> Result<()> {
+pub fn save_window_size_position(save_to_file: bool) -> Result<()> {
+    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
     let verge = Config::verge();
     let mut verge = verge.latest();
 
@@ -235,6 +238,8 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
     log::info!("received deep link: {}", param);
+
+    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
 
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param
@@ -269,35 +274,31 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                     .decode_utf8_lossy()
                     .to_string();
 
-                let handle = handle::Handle::global();
-                let app_handle = handle.app_handle.lock().clone();
-                if let Some(app_handle) = app_handle.as_ref() {
-                    create_window(app_handle);
-                    match PrfItem::from_url(url.as_ref(), name, None, None).await {
-                        Ok(item) => {
-                            let uid = item.uid.clone().unwrap();
-                            let _ = wrap_err!(Config::profiles().data().append_item(item));
-                            app_handle
-                                .notification()
-                                .builder()
-                                .title("Clash Verge")
-                                .body("Import profile success")
-                                .show()
-                                .unwrap();
+                create_window();
+                match PrfItem::from_url(url.as_ref(), name, None, None).await {
+                    Ok(item) => {
+                        let uid = item.uid.clone().unwrap();
+                        let _ = wrap_err!(Config::profiles().data().append_item(item));
+                        app_handle
+                            .notification()
+                            .builder()
+                            .title("Clash Verge")
+                            .body("Import profile success")
+                            .show()
+                            .unwrap();
 
-                            handle::Handle::notice_message("import_sub_url::ok", uid);
-                        }
-                        Err(e) => {
-                            app_handle
-                                .notification()
-                                .builder()
-                                .title("Clash Verge")
-                                .body(format!("Import profile failed: {e}"))
-                                .show()
-                                .unwrap();
-                            handle::Handle::notice_message("import_sub_url::error", e.to_string());
-                            bail!("Failed to add subscriptions: {e}");
-                        }
+                        handle::Handle::notice_message("import_sub_url::ok", uid);
+                    }
+                    Err(e) => {
+                        app_handle
+                            .notification()
+                            .builder()
+                            .title("Clash Verge")
+                            .body(format!("Import profile failed: {e}"))
+                            .show()
+                            .unwrap();
+                        handle::Handle::notice_message("import_sub_url::error", e.to_string());
+                        bail!("Failed to add subscriptions: {e}");
                     }
                 }
             }
