@@ -56,7 +56,5 @@ fn test_merge() -> anyhow::Result<()> {
 
     let result = serde_yaml::to_string(&use_merge(merge, config))?;
 
-    println!("{result}");
-
     Ok(())
 }

@@ -7,7 +7,7 @@ use once_cell::sync::OnceCell;
 use percent_encoding::percent_decode_str;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
-use tauri::{App, AppHandle, Manager};
+use tauri::{App, Manager};
 
 use url::Url;
 //#[cfg(not(target_os = "linux"))]
@@ -39,6 +39,7 @@ pub async fn resolve_setup(app: &mut App) {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
     let version = app.package_info().version.to_string();
+
     handle::Handle::global().init(app.app_handle());
     VERSION.get_or_init(|| version.clone());
     log_err!(init::init_config());
@@ -111,7 +112,7 @@ pub fn resolve_reset() {
 
 /// create main window
 pub fn create_window() {
-    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = handle::Handle::global().app_handle().unwrap();
 
     if let Some(window) = handle::Handle::global().get_window() {
         trace_err!(window.unminimize(), "set win unminimize");
@@ -211,7 +212,7 @@ pub fn create_window() {
 
 /// save window size and position
 pub fn save_window_size_position(save_to_file: bool) -> Result<()> {
-    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = handle::Handle::global().app_handle().unwrap();
     let verge = Config::verge();
     let mut verge = verge.latest();
 
@@ -239,7 +240,7 @@ pub fn save_window_size_position(save_to_file: bool) -> Result<()> {
 pub async fn resolve_scheme(param: String) -> Result<()> {
     log::info!("received deep link: {}", param);
 
-    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = handle::Handle::global().app_handle().unwrap();
 
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param

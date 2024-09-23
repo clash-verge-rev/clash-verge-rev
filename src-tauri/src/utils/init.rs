@@ -11,7 +11,6 @@ use log4rs::encode::pattern::PatternEncoder;
 use std::fs::{self, DirEntry};
 use std::path::PathBuf;
 use std::str::FromStr;
-use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
 
 /// initialize this instance's log file
@@ -299,7 +298,7 @@ pub fn init_scheme() -> Result<()> {
 }
 
 pub async fn startup_script() -> Result<()> {
-    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = handle::Handle::global().app_handle().unwrap();
 
     let script_path = {
         let verge = Config::verge();

@@ -23,7 +23,7 @@ pub struct Tray {}
 
 impl Tray {
     pub fn create_systray() -> Result<()> {
-        let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global().app_handle().unwrap();
         let tray_incon_id = TrayIconId::new("main");
         let tray = app_handle.tray_by_id(&tray_incon_id).unwrap();
 
@@ -66,7 +66,7 @@ impl Tray {
     }
 
     pub fn update_part() -> Result<()> {
-        let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global().app_handle().unwrap();
         let use_zh = { Config::verge().latest().language == Some("zh".into()) };
         let version = VERSION.get().unwrap();
         let mode = {

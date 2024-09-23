@@ -10,7 +10,6 @@ use crate::log_err;
 use crate::utils::resolve;
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
-use tauri::AppHandle;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 // 打开面板
@@ -100,7 +99,7 @@ pub fn toggle_tun_mode() {
 }
 
 pub fn quit() {
-    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = handle::Handle::global().app_handle().unwrap();
     let _ = resolve::save_window_size_position(true);
     resolve::resolve_reset();
     app_handle.exit(0);

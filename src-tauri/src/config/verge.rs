@@ -7,9 +7,6 @@ use serde::{Deserialize, Serialize};
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVerge {
-    /// app listening port for app singleton
-    pub app_singleton_port: Option<u16>,
-
     /// app log level
     /// silent | error | warn | info | debug | trace
     pub app_log_level: Option<String>,
@@ -330,11 +327,7 @@ impl IVerge {
         const SERVER_PORT: u16 = 33331;
         #[cfg(feature = "verge-dev")]
         const SERVER_PORT: u16 = 11233;
-
-        match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
-            Ok(config) => config.app_singleton_port.unwrap_or(SERVER_PORT),
-            Err(_) => SERVER_PORT, // 这里就不log错误了
-        }
+        SERVER_PORT
     }
 
     /// 获取日志等级
