@@ -6,7 +6,6 @@ use crate::log_err;
 use anyhow::{bail, Result};
 use port_scanner::local_port_available;
 use std::convert::Infallible;
-use tauri::AppHandle;
 use warp::Filter;
 
 #[derive(serde::Deserialize, Debug)]
@@ -42,13 +41,12 @@ pub async fn check_singleton() -> Result<()> {
 
 /// The embed server only be used to implement singleton process
 /// maybe it can be used as pac server later
-pub fn embed_server(app_handle: &AppHandle) {
+pub fn embed_server() {
     let port = IVerge::get_singleton_port();
 
-    let handle = app_handle.clone();
     tauri::async_runtime::spawn(async move {
         let visible = warp::path!("commands" / "visible").map(move || {
-            resolve::create_window(&handle);
+            resolve::create_window();
             "ok"
         });
 

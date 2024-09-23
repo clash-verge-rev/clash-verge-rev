@@ -1,4 +1,5 @@
 use crate::config::*;
+use crate::core::handle;
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use chrono::{Local, TimeZone};
@@ -297,7 +298,9 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 
-pub async fn startup_script(app_handle: &AppHandle) -> Result<()> {
+pub async fn startup_script() -> Result<()> {
+    let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+
     let script_path = {
         let verge = Config::verge();
         let verge = verge.latest();

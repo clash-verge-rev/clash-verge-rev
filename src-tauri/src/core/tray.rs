@@ -17,14 +17,17 @@ use tauri::{
     Wry,
 };
 use tauri::{AppHandle, Manager};
+
+use super::handle;
 pub struct Tray {}
 
 impl Tray {
-    pub fn create_systray(app_handle: &AppHandle) -> Result<()> {
+    pub fn create_systray() -> Result<()> {
+        let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
         let tray_incon_id = TrayIconId::new("main");
         let tray = app_handle.tray_by_id(&tray_incon_id).unwrap();
 
-        tray.on_tray_icon_event(|tray, event| {
+        tray.on_tray_icon_event(|_, event| {
             let tray_event = { Config::verge().latest().tray_event.clone() };
             let tray_event: String = tray_event.unwrap_or("main_window".into());
 
@@ -35,11 +38,10 @@ impl Tray {
                 ..
             } = event
             {
-                let app = tray.app_handle();
                 match tray_event.as_str() {
                     "system_proxy" => feat::toggle_system_proxy(),
                     "tun_mode" => feat::toggle_tun_mode(),
-                    "main_window" => resolve::create_window(app),
+                    "main_window" => resolve::create_window(),
                     _ => {}
                 }
             }
@@ -67,7 +69,8 @@ impl Tray {
         Ok(())
     }
 
-    pub fn update_part(app_handle: &AppHandle) -> Result<()> {
+    pub fn update_part() -> Result<()> {
+        let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
         let use_zh = { Config::verge().latest().language == Some("zh".into()) };
         let version = VERSION.get().unwrap();
         let mode = {
@@ -91,7 +94,7 @@ impl Tray {
         let tray = app_handle.tray_by_id("main").unwrap();
 
         let _ = tray.set_menu(Some(create_tray_menu(
-            app_handle,
+            &app_handle,
             Some(mode.as_str()),
             *system_proxy,
             *tun_mode,
@@ -421,10 +424,10 @@ fn on_menu_event(app_handle: &AppHandle, event: MenuEvent) {
             println!("change mode to: {}", mode);
             feat::change_clash_mode(mode.into());
         }
-        "open_window" => resolve::create_window(app_handle),
+        "open_window" => resolve::create_window(),
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(),
-        "copy_env" => feat::copy_clash_env(app_handle),
+        "copy_env" => feat::copy_clash_env(),
         "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
         "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
         "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),

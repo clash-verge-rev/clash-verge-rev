@@ -8,7 +8,6 @@ use parking_lot::Mutex;
 use serde_yaml::Mapping;
 use std::{sync::Arc, time::Duration};
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
-use tauri::AppHandle;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
@@ -16,7 +15,6 @@ use tokio::time::sleep;
 
 #[derive(Debug)]
 pub struct CoreManager {
-    app_handle: Arc<Mutex<Option<AppHandle>>>,
     sidecar: Arc<Mutex<Option<CommandChild>>>,
     #[allow(unused)]
     use_service_mode: Arc<Mutex<bool>>,
@@ -27,14 +25,12 @@ impl CoreManager {
         static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
 
         CORE_MANAGER.get_or_init(|| CoreManager {
-            app_handle: Arc::new(Mutex::new(None)),
             sidecar: Arc::new(Mutex::new(None)),
             use_service_mode: Arc::new(Mutex::new(false)),
         })
     }
 
-    pub fn init(&self, app_handle: &AppHandle) -> Result<()> {
-        *self.app_handle.lock() = Some(app_handle.clone());
+    pub fn init(&self) -> Result<()> {
         tauri::async_runtime::spawn(async {
             log::trace!("run core start");
             // 启动clash
@@ -69,29 +65,24 @@ impl CoreManager {
 
         let test_dir = dirs::app_home_dir()?.join("test");
         let test_dir = dirs::path_to_str(&test_dir)?;
-        let app_handle_option = {
-            let lock = self.app_handle.lock();
-            lock.as_ref().cloned()
-        };
+        let app_handle = handle::Handle::global().app_handle().unwrap();
 
-        if let Some(app_handle) = app_handle_option {
-            let output = app_handle
-                .shell()
-                .sidecar(clash_core)?
-                .args(["-t", "-d", test_dir, "-f", config_path])
-                .output()
-                .await?;
+        let output = app_handle
+            .shell()
+            .sidecar(clash_core)?
+            .args(["-t", "-d", test_dir, "-f", config_path])
+            .output()
+            .await?;
 
-            if !output.status.success() {
-                let stdout = String::from_utf8(output.stdout).unwrap_or_default();
-                let error = clash_api::parse_check_output(stdout.clone());
-                let error = match !error.is_empty() {
-                    true => error,
-                    false => stdout.clone(),
-                };
-                Logger::global().set_log(stdout.clone());
-                bail!("{error}");
-            }
+        if !output.status.success() {
+            let stdout = String::from_utf8(output.stdout).unwrap_or_default();
+            let error = clash_api::parse_check_output(stdout.clone());
+            let error = match !error.is_empty() {
+                true => error,
+                false => stdout.clone(),
+            };
+            Logger::global().set_log(stdout.clone());
+            bail!("{error}");
         }
 
         Ok(())
@@ -173,39 +164,37 @@ impl CoreManager {
 
         let args = vec!["-d", app_dir, "-f", config_path];
 
-        let app_handle = self.app_handle.lock();
+        let app_handle = handle::Handle::global().app_handle().unwrap();
 
-        if let Some(app_handle) = app_handle.as_ref() {
-            let cmd = app_handle.shell().sidecar(clash_core)?;
-            let (mut rx, _) = cmd.args(args).spawn()?;
+        let cmd = app_handle.shell().sidecar(clash_core)?;
+        let (mut rx, _) = cmd.args(args).spawn()?;
 
-            tauri::async_runtime::spawn(async move {
-                while let Some(event) = rx.recv().await {
-                    match event {
-                        CommandEvent::Stdout(line) => {
-                            let line = String::from_utf8(line).unwrap_or_default();
-                            log::info!(target: "app", "[mihomo]: {line}");
-                            Logger::global().set_log(line);
-                        }
-                        CommandEvent::Stderr(err) => {
-                            let err = String::from_utf8(err).unwrap_or_default();
-                            log::error!(target: "app", "[mihomo]: {err}");
-                            Logger::global().set_log(err);
-                        }
-                        CommandEvent::Error(err) => {
-                            log::error!(target: "app", "[mihomo]: {err}");
-                            Logger::global().set_log(err);
-                        }
-                        CommandEvent::Terminated(_) => {
-                            log::info!(target: "app", "mihomo core terminated");
-                            let _ = CoreManager::global().recover_core();
-                            break;
-                        }
-                        _ => {}
+        tauri::async_runtime::spawn(async move {
+            while let Some(event) = rx.recv().await {
+                match event {
+                    CommandEvent::Stdout(line) => {
+                        let line = String::from_utf8(line).unwrap_or_default();
+                        log::info!(target: "app", "[mihomo]: {line}");
+                        Logger::global().set_log(line);
                     }
+                    CommandEvent::Stderr(err) => {
+                        let err = String::from_utf8(err).unwrap_or_default();
+                        log::error!(target: "app", "[mihomo]: {err}");
+                        Logger::global().set_log(err);
+                    }
+                    CommandEvent::Error(err) => {
+                        log::error!(target: "app", "[mihomo]: {err}");
+                        Logger::global().set_log(err);
+                    }
+                    CommandEvent::Terminated(_) => {
+                        log::info!(target: "app", "mihomo core terminated");
+                        let _ = CoreManager::global().recover_core();
+                        break;
+                    }
+                    _ => {}
                 }
-            });
-        }
+            }
+        });
 
         Ok(())
     }

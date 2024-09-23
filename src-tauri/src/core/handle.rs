@@ -1,6 +1,6 @@
 use super::tray::Tray;
 use crate::log_err;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::sync::Arc;
@@ -24,10 +24,12 @@ impl Handle {
         *self.app_handle.lock() = Some(app_handle.clone());
     }
 
+    pub fn app_handle(&self) -> Option<AppHandle> {
+        self.app_handle.lock().clone()
+    }
+
     pub fn get_window(&self) -> Option<WebviewWindow> {
-        self.app_handle
-            .lock()
-            .clone()
+        self.app_handle()
             .as_ref()
             .and_then(|a| a.get_webview_window("main"))
     }
@@ -59,11 +61,7 @@ impl Handle {
 
     /// update the system tray state
     pub fn update_systray_part() -> Result<()> {
-        let app_handle = Self::global().app_handle.lock().clone();
-        if app_handle.is_none() {
-            bail!("update_systray unhandled error");
-        }
-        Tray::update_part(app_handle.as_ref().unwrap())?;
+        Tray::update_part()?;
         Ok(())
     }
 }
