@@ -2,13 +2,13 @@ use super::tray::Tray;
 use crate::log_err;
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
+use parking_lot::RwLock;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 #[derive(Debug, Default, Clone)]
 pub struct Handle {
-    pub app_handle: Arc<Mutex<Option<AppHandle>>>,
+    pub app_handle: Arc<RwLock<Option<AppHandle>>>,
 }
 
 impl Handle {
@@ -16,16 +16,17 @@ impl Handle {
         static HANDLE: OnceCell<Handle> = OnceCell::new();
 
         HANDLE.get_or_init(|| Handle {
-            app_handle: Arc::new(Mutex::new(None)),
+            app_handle: Arc::new(RwLock::new(None)),
         })
     }
 
     pub fn init(&self, app_handle: &AppHandle) {
-        *self.app_handle.lock() = Some(app_handle.clone());
+        let mut handle = self.app_handle.write();
+        *handle = Some(app_handle.clone());
     }
 
     pub fn app_handle(&self) -> Option<AppHandle> {
-        self.app_handle.lock().clone()
+        self.app_handle.read().clone()
     }
 
     pub fn get_window(&self) -> Option<WebviewWindow> {

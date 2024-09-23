@@ -44,39 +44,31 @@ pub fn app_home_dir() -> Result<PathBuf> {
             .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
         return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
     }
-    let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock().clone();
+    let app_handle = handle::Handle::global().app_handle().unwrap();
 
-    if let Some(app_handle) = app_handle.as_ref() {
-        match app_handle.path().data_dir() {
-            Ok(dir) => {
-                return Ok(dir.join(APP_ID));
-            }
-            Err(e) => {
-                log::error!("Failed to get the app home directory: {}", e);
-                return Err(anyhow::anyhow!("Failed to get the app homedirectory"));
-            }
+    match app_handle.path().data_dir() {
+        Ok(dir) => {
+            return Ok(dir.join(APP_ID));
+        }
+        Err(e) => {
+            log::error!("Failed to get the app home directory: {}", e);
+            return Err(anyhow::anyhow!("Failed to get the app homedirectory"));
         }
     }
-    Err(anyhow::anyhow!("failed to get the app home dir"))
 }
 
 /// get the resources dir
 pub fn app_resources_dir() -> Result<PathBuf> {
-    let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock().clone();
-    if let Some(app_handle) = app_handle.as_ref() {
-        match app_handle.path().resource_dir() {
-            Ok(dir) => {
-                return Ok(dir.join("resources"));
-            }
-            Err(e) => {
-                log::error!("Failed to get the resource directory: {}", e);
-                return Err(anyhow::anyhow!("Failed to get the resource directory"));
-            }
-        };
+    let app_handle = handle::Handle::global().app_handle().unwrap();
+    match app_handle.path().resource_dir() {
+        Ok(dir) => {
+            return Ok(dir.join("resources"));
+        }
+        Err(e) => {
+            log::error!("Failed to get the resource directory: {}", e);
+            return Err(anyhow::anyhow!("Failed to get the resource directory"));
+        }
     };
-    Err(anyhow::anyhow!("failed to get the resource dir"))
 }
 
 /// profiles dir

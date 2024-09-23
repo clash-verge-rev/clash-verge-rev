@@ -138,9 +138,5 @@ fn test_parse_check_output() {
     let res2 = parse_check_output(str2.into());
     let res3 = parse_check_output(str3.into());
 
-    println!("res1: {res1}");
-    println!("res2: {res2}");
-    println!("res3: {res3}");
-
     assert_eq!(res1, res3);
 }

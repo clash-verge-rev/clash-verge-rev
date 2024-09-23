@@ -105,7 +105,5 @@ fn test_script() {
 
     let config_str = serde_yaml::to_string(&config).unwrap();
 
-    println!("{config_str}");
-
     dbg!(results);
 }

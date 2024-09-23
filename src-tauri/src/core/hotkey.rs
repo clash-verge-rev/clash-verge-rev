@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
-use tauri::{AppHandle, Manager};
+use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
@@ -46,7 +46,7 @@ impl Hotkey {
     }
 
     pub fn register(&self, hotkey: &str, func: &str) -> Result<()> {
-        let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global().app_handle().unwrap();
         let manager = app_handle.global_shortcut();
 
         if manager.is_registered(hotkey) {
@@ -83,7 +83,7 @@ impl Hotkey {
     }
 
     pub fn unregister(&self, hotkey: &str) -> Result<()> {
-        let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global().app_handle().unwrap();
         let manager = app_handle.global_shortcut();
         manager.unregister(hotkey)?;
 
@@ -158,7 +158,7 @@ impl Hotkey {
 
 impl Drop for Hotkey {
     fn drop(&mut self) {
-        let app_handle: AppHandle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global().app_handle().unwrap();
         if let Err(e) = app_handle.global_shortcut().unregister_all() {
             log::error!("Error unregistering all hotkeys: {:?}", e);
         }
