@@ -59,7 +59,7 @@ impl Tray {
                 match tray_event.as_str() {
                     "system_proxy" => feat::toggle_system_proxy(),
                     "tun_mode" => feat::toggle_tun_mode(),
-                    "main_window" => resolve::create_window(app),
+                    "main_window" => resolve::create_window(),
                     _ => {}
                 }
                 let _ = tray.set_visible(true);
