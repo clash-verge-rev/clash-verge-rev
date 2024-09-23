@@ -294,14 +294,13 @@ impl Sysopt {
         })()
         .unwrap_or(app_path);
 
-        // fix #403
         #[cfg(target_os = "linux")]
         let app_path = {
             use crate::core::handle::Handle;
             use tauri::Manager;
 
-            let handle = Handle::global();
-            match handle.app_handle.lock().as_ref() {
+            let app_handle = Handle::global().app_handle();
+            match app_handle {
                 Some(app_handle) => {
                     let appimage = app_handle.env().appimage;
                     appimage
