@@ -332,7 +332,7 @@ pub async fn startup_script() -> Result<()> {
     app_handle
         .shell()
         .command(shell_type)
-        .current_dir(working_dir.to_path_buf())
+        .current_dir(working_dir)
         .args(&[script_path])
         .output()
         .await?;

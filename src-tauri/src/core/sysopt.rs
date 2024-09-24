@@ -66,12 +66,10 @@ fn get_bypass() -> String {
     #[cfg(not(target_os = "windows"))]
     let bypass = if custom_bypass.is_empty() {
         DEFAULT_BYPASS.to_string()
+    } else if use_default {
+        format!("{},{}", DEFAULT_BYPASS, custom_bypass)
     } else {
-        if use_default {
-            format!("{},{}", DEFAULT_BYPASS, custom_bypass)
-        } else {
-            custom_bypass
-        }
+        custom_bypass
     };
 
     bypass
