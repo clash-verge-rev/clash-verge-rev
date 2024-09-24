@@ -135,7 +135,7 @@ fn test_parse_check_output() {
     "#;
 
     let res1 = parse_check_output(str1.into());
-    let res2 = parse_check_output(str2.into());
+    // let res2 = parse_check_output(str2.into());
     let res3 = parse_check_output(str3.into());
 
     assert_eq!(res1, res3);
