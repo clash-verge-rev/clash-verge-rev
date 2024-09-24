@@ -110,7 +110,7 @@ impl Hotkey {
         Ok(())
     }
 
-    fn get_map_from_vec(hotkeys: &Vec<String>) -> HashMap<&str, &str> {
+    fn get_map_from_vec(hotkeys: &[String]) -> HashMap<&str, &str> {
         let mut map = HashMap::new();
 
         hotkeys.iter().for_each(|hotkey| {
