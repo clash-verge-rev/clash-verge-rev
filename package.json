@@ -3,8 +3,8 @@
   "version": "2.0.0",
   "license": "GPL-3.0-only",
   "scripts": {
-    "dev": "RUST_BACKTRACE=1 tauri dev",
-    "dev:diff": "RUST_BACKTRACE=1 tauri dev -f verge-dev",
+    "dev": "cross-env RUST_BACKTRACE=1 tauri dev",
+    "dev:diff": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
     "build": "tauri build",
     "tauri": "tauri",
     "web:dev": "vite",
