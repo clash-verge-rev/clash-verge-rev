@@ -184,12 +184,10 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             update_core_config().await?;
         }
         #[cfg(not(target_os = "windows"))]
-        if redir_enabled.is_some() || redir_port.is_some() {
-            if !generated {
-                Config::generate().await?;
-                CoreManager::global().run_core().await?;
-                generated = true;
-            }
+        if (redir_enabled.is_some() || redir_port.is_some()) && !generated {
+            Config::generate().await?;
+            CoreManager::global().run_core().await?;
+            generated = true;
         }
         #[cfg(target_os = "linux")]
         if tproxy_enabled.is_some() || tproxy_port.is_some() {
@@ -199,16 +197,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
                 generated = true;
             }
         }
-        if socks_enabled.is_some()
+        if (socks_enabled.is_some()
             || http_enabled.is_some()
             || socks_port.is_some()
-            || http_port.is_some()
-            || mixed_port.is_some()
-        {
-            if !generated {
-                Config::generate().await?;
-                CoreManager::global().run_core().await?;
-            }
+            || http_port.is_some() || mixed_port.is_some()) && !generated {
+            Config::generate().await?;
+            CoreManager::global().run_core().await?;
         }
         if auto_launch.is_some() {
             sysopt::Sysopt::global().update_launch()?;

@@ -337,7 +337,7 @@ pub fn get_network_interfaces() -> Vec<String> {
     for (interface_name, _) in &networks {
         result.push(interface_name.clone());
     }
-    return result;
+    result
 }
 
 #[tauri::command]

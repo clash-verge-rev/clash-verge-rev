@@ -137,7 +137,7 @@ pub async fn install_service(passwd: String) -> Result<()> {
     .output()?;
     let output = sudo(
         &passwd,
-        format!("{}", installer_path.to_string_lossy().replace(" ", "\\ ")),
+        installer_path.to_string_lossy().replace(" ", "\\ ").to_string(),
     )
     .output()?;
 
@@ -244,7 +244,7 @@ pub async fn uninstall_service(passwd: String) -> Result<()> {
     .output()?;
     let output = sudo(
         &passwd,
-        format!("{}", uninstaller_path.to_string_lossy().replace(" ", "\\ ")),
+        uninstaller_path.to_string_lossy().replace(" ", "\\ ").to_string(),
     )
     .output()?;
 
