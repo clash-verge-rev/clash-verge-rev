@@ -202,9 +202,7 @@ export const useCustomTheme = () => {
     // isAppearanceTransition return true in new webkit version on arch linux, but it not actually work. so we deside to enable it only on windows.
     if (!isAppearanceTransition || getSystem() !== "windows") {
       setMode(isDark ? "light" : "dark");
-      setTimeout(() => {
-        patchVerge({ theme_mode: vergeThemeMode });
-      }, 800);
+      patchVerge({ theme_mode: vergeThemeMode });
       return;
     }
 
@@ -218,9 +216,7 @@ export const useCustomTheme = () => {
     const transition = document.startViewTransition(() => {
       flushSync(() => {
         setMode(isDark ? "light" : "dark");
-        setTimeout(() => {
-          patchVerge({ theme_mode: vergeThemeMode });
-        }, 800);
+        patchVerge({ theme_mode: vergeThemeMode });
         document.documentElement.className = isDark ? "light" : "dark";
       });
     });
