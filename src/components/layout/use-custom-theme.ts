@@ -5,6 +5,7 @@ import {
   useThemeMode,
   useThemeSettings,
 } from "@/services/states";
+import getSystem from "@/utils/get-system";
 import { alpha, createTheme, Shadows, Theme } from "@mui/material";
 import { enUS, zhCN } from "@mui/x-data-grid/locales";
 import { appWindow } from "@tauri-apps/api/window";
@@ -198,7 +199,8 @@ export const useCustomTheme = () => {
     // @ts-ignore
     // prettier-ignore
     const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!isAppearanceTransition) {
+    // isAppearanceTransition return true in new webkit version on arch linux, but it not actually work. so we deside to enable it only on windows.
+    if (!isAppearanceTransition || getSystem() !== "windows") {
       setMode(isDark ? "light" : "dark");
       setTimeout(() => {
         patchVerge({ theme_mode: vergeThemeMode });
