@@ -372,7 +372,7 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 
 #[tauri::command]
 pub fn exit_app() {
-    feat::quit();
+    feat::quit(Some(0));
 }
 
 pub mod service {

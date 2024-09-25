@@ -60,7 +60,8 @@ impl Hotkey {
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
             "toggle_system_proxy" => feat::toggle_system_proxy,
             "toggle_tun_mode" => feat::toggle_tun_mode,
-            "quit" => feat::quit,
+            "quit" => || feat::quit(Some(0)),
+
             _ => bail!("invalid function \"{func}\""),
         };
 

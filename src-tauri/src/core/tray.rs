@@ -431,7 +431,7 @@ fn on_menu_event(app_handle: &AppHandle, event: MenuEvent) {
         "restart_app" => tauri::process::restart(&app_handle.env()),
         "quit" => {
             println!("quit");
-            feat::quit();
+            feat::quit(Some(0));
         }
         _ => {}
     }
