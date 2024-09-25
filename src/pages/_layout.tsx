@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes, useNavigate } from "react-router-dom";
 import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
-import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";

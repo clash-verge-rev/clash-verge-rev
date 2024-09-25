@@ -47,15 +47,15 @@ import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { throttle } from "lodash-es";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
-import { listen } from "@tauri-apps/api/event";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { useLocation } from "react-router-dom";
+import { useListen } from "@/hooks/use-listen";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
   const location = useLocation();
-
+  const { addListener } = useListen();
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
   const [activatings, setActivatings] = useState<string[]>([]);
@@ -69,7 +69,7 @@ const ProfilePage = () => {
   const { current } = location.state || {};
 
   useEffect(() => {
-    const unlisten = listen("tauri://file-drop", async (event) => {
+    const unlisten = addListener("tauri://file-drop", async (event) => {
       const fileList = event.payload as string[];
       for (let file of fileList) {
         if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
