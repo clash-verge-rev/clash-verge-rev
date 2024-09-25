@@ -39,8 +39,8 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-const TypeDiv = styled("div")(({ theme }) => ({
-  display: "flex",
+const TypeDiv = styled("span")(({ theme }) => ({
+  display: "inline-block",
   alignItems: "center",
   justifyContent: "center",
   width: "fit-content",
@@ -273,6 +273,7 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
                   sx={{
                     backgroundColor: "var(--background-color-alpha)",
                     mb: 1,
+                    padding: "4px 10px",
                     borderRadius: "6px",
                   }}
                   key={file.href}>
