@@ -27,6 +27,7 @@ import "dayjs/locale/zh-cn";
 import { getPortableFlag } from "@/services/cmds";
 import React from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
+
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
 
@@ -48,13 +49,6 @@ const Layout = () => {
   if (!routersEles) return null;
 
   useEffect(() => {
-    window.addEventListener("keydown", (e) => {
-      // macOS有cmd+w
-      if (e.key === "Escape" && OS !== "macos") {
-        appWindow.close();
-      }
-    });
-
     listen("verge://refresh-clash-config", async () => {
       // the clash info may be updated
       await getAxios(true);
