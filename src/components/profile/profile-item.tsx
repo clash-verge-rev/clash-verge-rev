@@ -204,17 +204,7 @@ export const ProfileItem = (props: Props) => {
     }
   });
 
-  const urlModeMenu = (
-    hasHome
-      ? [
-          {
-            label: "Home",
-            icon: <Home fontSize="small" color="primary" />,
-            handler: onOpenHome,
-          },
-        ]
-      : []
-  ).concat([
+  const urlModeMenu = [
     {
       label: "Select",
       icon: <CheckCircle fontSize="small" color="primary" />,
@@ -253,7 +243,16 @@ export const ProfileItem = (props: Props) => {
         setConfirmOpen(true);
       },
     },
-  ]);
+  ];
+
+  if (hasHome) {
+    urlModeMenu.splice(1, 0, {
+      label: "Home",
+      icon: <Home fontSize="small" color="primary" />,
+      handler: onOpenHome,
+    });
+  }
+
   const fileModeMenu = [
     {
       label: "Select",
