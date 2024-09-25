@@ -20,7 +20,7 @@ static TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 
 /// create backup zip file
 ///
-/// # Arguments
+/// # Args
 /// - `local_save`: save to local or not
 /// - `only_backup_profiles`: only backup profiles
 /// 

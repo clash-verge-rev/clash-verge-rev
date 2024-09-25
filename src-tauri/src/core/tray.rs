@@ -229,7 +229,7 @@ impl Tray {
                     direct_menu.set_title(t!("Direct Mode ✔", "直连模式 ✔"))?;
                 }
             }
-            _ => (),
+            _ => {},
         }
 
         let system_proxy_menu = tray.get_item("system_proxy");

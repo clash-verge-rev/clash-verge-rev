@@ -34,7 +34,7 @@ impl VergeLog {
 
     /// create log4rs config
     /// 
-    /// # Aruguments:
+    /// # Args:
     /// - `log_level`: log level
     /// - `log_file`: log file path, if None, use default log file path
     /// 
@@ -48,10 +48,6 @@ impl VergeLog {
         if !log_dir.exists() {
             let _ = fs::create_dir_all(&log_dir);
         }
-
-        // if log_level == LevelFilter::Off {
-        //     return None;
-        // }
 
         let real_log_file = log_file.map_or_else(
             || {
