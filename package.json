@@ -85,7 +85,7 @@
     "sass": "1.79.3",
     "terser": "5.33.0",
     "typescript": "5.6.2",
-    "vite": "5.4.7",
+    "vite": "5.4.8",
     "vite-plugin-monaco-editor": "1.1.0",
     "vite-plugin-svgr": "4.2.0"
   },
