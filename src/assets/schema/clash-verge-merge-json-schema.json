@@ -6665,7 +6665,7 @@
             "markdownDescription": "默认使用MD5(`url`)作为文件名。内核工作目录的相对路径(如果想保存到任意位置,配置环境变量`SKIP_SAFE_PATH_CHECK=1`)"
           },
           "format": {
-            "enum": ["yaml", "text"],
+            "enum": ["yaml", "text", "mrs"],
             "markdownEnumDescriptions": ["YAML格式", "普通文本格式"],
             "title": "provider文件格式",
             "description": "provider文件格式",
