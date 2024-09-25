@@ -98,12 +98,12 @@ pub fn toggle_tun_mode() {
     });
 }
 
-pub fn quit() {
+pub fn quit(code: Option<i32>) {
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let _ = resolve::save_window_size_position(true);
     resolve::resolve_reset();
-    app_handle.exit(0);
-    std::process::exit(0);
+    app_handle.exit(code.unwrap_or(0));
+    //std::process::exit(0);
 }
 
 /// 修改clash的订阅
@@ -200,7 +200,10 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if (socks_enabled.is_some()
             || http_enabled.is_some()
             || socks_port.is_some()
-            || http_port.is_some() || mixed_port.is_some()) && !generated {
+            || http_port.is_some()
+            || mixed_port.is_some())
+            && !generated
+        {
             Config::generate().await?;
             CoreManager::global().run_core().await?;
         }
