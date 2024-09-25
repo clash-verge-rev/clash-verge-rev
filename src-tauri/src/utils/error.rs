@@ -19,6 +19,11 @@ pub fn redirect_panic_to_log() {
             &format!("{:?}", payload)
         };
 
+        //TODO skip this error
+        if payload.contains("PostMessage failed ; is the messages queue full?") {
+            return;
+        }
+
         let location = panic_info
             .location()
             .map(|l| l.to_string())
