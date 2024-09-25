@@ -1,3 +1,4 @@
+import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
 import { createContextState } from "foxact/create-context-state";
 import { useLocalStorage } from "foxact/use-local-storage";
 
@@ -9,25 +10,12 @@ interface ThemeSettings {
   light: IVergeConfig["light_theme_setting"];
   dark: IVergeConfig["dark_theme_setting"];
 }
-const defaultThemeSettings: ThemeSettings = { light: {}, dark: {} };
+const defaultThemeSettings: ThemeSettings = {
+  light: { ...defaultTheme },
+  dark: { ...defaultDarkTheme },
+};
 export const useThemeSettings = () =>
   useLocalStorage<ThemeSettings>("theme_settings", defaultThemeSettings, {
-    serializer: JSON.stringify,
-    deserializer: JSON.parse,
-  });
-
-export interface WebDavConfig {
-  url: string;
-  username: string;
-  password: string;
-}
-const defaultWebDavConfig: WebDavConfig = {
-  url: "",
-  username: "",
-  password: "",
-};
-export const useWebDavConfig = () =>
-  useLocalStorage<WebDavConfig>("webdav_config", defaultWebDavConfig, {
     serializer: JSON.stringify,
     deserializer: JSON.parse,
   });

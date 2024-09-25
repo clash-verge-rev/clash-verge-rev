@@ -365,3 +365,9 @@ interface IWebDavListFile {
   content_type: string;
   tag: string;
 }
+
+interface IWebDavConfig {
+  url: string;
+  username: string;
+  password: string;
+}

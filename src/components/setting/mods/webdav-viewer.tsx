@@ -8,7 +8,6 @@ import {
   restartApp,
   updateWebDavInfo,
 } from "@/services/cmds";
-import { WebDavConfig } from "@/services/states";
 import { sleep } from "@/utils";
 import {
   Backup,
@@ -67,14 +66,14 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
   const [backupFiles, setBackupFiles] = useState<IWebDavListFile[]>([]);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { register, handleSubmit, formState, reset } = useForm<WebDavConfig>({
+  const { register, handleSubmit, formState, reset } = useForm<IWebDavConfig>({
     defaultValues: {
       url: webdav_url,
       username: webdav_username,
       password: webdav_password,
     },
   });
-  const onSubmit = async (data: WebDavConfig) => {
+  const onSubmit = async (data: IWebDavConfig) => {
     setBackupFiles([]);
     try {
       await patchVerge({
