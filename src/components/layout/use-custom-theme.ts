@@ -8,11 +8,8 @@ import {
 import { alpha, createTheme, Shadows, Theme } from "@mui/material";
 import { enUS, zhCN } from "@mui/x-data-grid/locales";
 import { appWindow } from "@tauri-apps/api/window";
-import { MouseEvent, useEffect, useMemo } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo } from "react";
 import { flushSync } from "react-dom";
-
-/// use verge's theme mode when first loading the app interface
-let firstLoadThemeByVerge = false;
 
 /**
  * custom theme
@@ -24,26 +21,46 @@ export const useCustomTheme = () => {
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
   const [themeSettings, setThemeSettings] = useThemeSettings();
+
+  const themeSettingHasChanges = useCallback(
+    (
+      lightSettings: IVergeConfig["light_theme_setting"],
+      darkSettings: IVergeConfig["dark_theme_setting"],
+    ): boolean => {
+      const originLightSettings = themeSettings.light!;
+      const originDarkSettings = themeSettings.dark!;
+      for (const key in lightSettings) {
+        const lightKey = key as keyof IVergeConfig["light_theme_setting"];
+        if (lightSettings[lightKey] !== originLightSettings[lightKey]) {
+          return true;
+        }
+      }
+      for (const key in darkSettings) {
+        const darkKey = key as keyof IVergeConfig["dark_theme_setting"];
+        if (darkSettings[darkKey] !== originDarkSettings[darkKey]) {
+          return true;
+        }
+      }
+      return false;
+    },
+    [themeSettings],
+  );
+
   useEffect(() => {
-    // TODO: temporary solutions to ensure that the theme is loaded correctly
-    if (themeSettings.light?.primary_color) return;
-    setThemeSettings({
-      light: light_theme_setting ?? {},
-      dark: dark_theme_setting ?? {},
-    });
+    if (!light_theme_setting || !dark_theme_setting) return;
+    if (themeSettingHasChanges(light_theme_setting, dark_theme_setting)) {
+      setThemeSettings({
+        light: light_theme_setting,
+        dark: dark_theme_setting,
+      });
+    }
   }, [light_theme_setting, dark_theme_setting]);
 
-  // This effect ensures that the verge's theme mode is used when the application interface is first loaded
   useEffect(() => {
     if (!theme_mode) return;
     const themeMode = ["light", "dark", "system"].includes(theme_mode!)
       ? theme_mode!
       : "light";
-    if (firstLoadThemeByVerge) {
-      // first load theme mode by verge, no need to set theme mode again
-      return;
-    }
-    firstLoadThemeByVerge = true;
     if (themeMode !== "system") {
       setMode(themeMode);
       return;
@@ -65,7 +82,6 @@ export const useCustomTheme = () => {
     try {
       theme = createTheme(
         {
-          cssVariables: true,
           breakpoints: {
             values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
           },
@@ -87,7 +103,6 @@ export const useCustomTheme = () => {
           },
           shadows: Array(25).fill("none") as Shadows,
           typography: {
-            // todo
             fontFamily: setting.font_family
               ? `${setting.font_family}, ${dt.font_family}`
               : dt.font_family,
@@ -99,7 +114,6 @@ export const useCustomTheme = () => {
       // fix #294
       theme = createTheme(
         {
-          cssVariables: true,
           breakpoints: {
             values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
           },
@@ -227,5 +241,6 @@ export const useCustomTheme = () => {
       );
     });
   };
+
   return { theme, toggleTheme };
 };
