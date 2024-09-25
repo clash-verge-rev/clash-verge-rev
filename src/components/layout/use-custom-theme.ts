@@ -160,7 +160,7 @@ export const useCustomTheme = () => {
       document.head.appendChild(style!);
     }
     if (style) {
-      style.innerHTML = setting.css_injection || "";
+      style.innerHTML = setting?.css_injection || "";
     }
 
     // update svg icon

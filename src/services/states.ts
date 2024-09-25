@@ -1,4 +1,3 @@
-import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
 import { createContextState } from "foxact/create-context-state";
 import { useLocalStorage } from "foxact/use-local-storage";
 
@@ -11,8 +10,8 @@ interface ThemeSettings {
   dark: IVergeConfig["dark_theme_setting"];
 }
 const defaultThemeSettings: ThemeSettings = {
-  light: { ...defaultTheme },
-  dark: { ...defaultDarkTheme },
+  light: {},
+  dark: {},
 };
 export const useThemeSettings = () =>
   useLocalStorage<ThemeSettings>("theme_settings", defaultThemeSettings, {

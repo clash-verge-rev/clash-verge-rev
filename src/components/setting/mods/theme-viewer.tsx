@@ -122,15 +122,15 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       contentSx={{ width: 400, maxHeight: 600, overflow: "auto", pb: 0 }}
       onClose={() => {
         setThemeSettings({
-          light: light_theme_setting,
-          dark: dark_theme_setting,
+          light: light_theme_setting ?? {},
+          dark: dark_theme_setting ?? {},
         });
         setOpen(false);
       }}
       onCancel={() => {
         setThemeSettings({
-          light: light_theme_setting,
-          dark: dark_theme_setting,
+          light: light_theme_setting ?? {},
+          dark: dark_theme_setting ?? {},
         });
         setOpen(false);
       }}
