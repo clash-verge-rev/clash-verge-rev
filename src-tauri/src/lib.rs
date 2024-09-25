@@ -142,10 +142,8 @@ pub fn run() {
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
                 match event {
-                    tauri::WindowEvent::Destroyed => {
-                        let _ = resolve::save_window_size_position(true);
-                    }
                     tauri::WindowEvent::CloseRequested { .. } => {
+                        println!("closing window...");
                         let _ = resolve::save_window_size_position(true);
                     }
                     tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
