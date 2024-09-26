@@ -79,7 +79,7 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(Config::init_config().await);
 
     log::trace!("launch core");
-    log_err!(CoreManager::global().init());
+    log_err!(CoreManager::global().init().await);
 
     // setup a simple http server for singleton
     log::trace!("launch embed server");

@@ -26,7 +26,7 @@ pub fn open_or_close_dashboard() {
 // 重启clash
 pub fn restart_clash_core() {
     tauri::async_runtime::spawn(async {
-        match CoreManager::global().run_core().await {
+        match CoreManager::global().restart_core().await {
             Ok(_) => {
                 handle::Handle::refresh_clash();
                 handle::Handle::notice_message("set_config::ok", "ok");
@@ -112,7 +112,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         // 激活订阅
         if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
             Config::generate().await?;
-            CoreManager::global().run_core().await?;
+            CoreManager::global().restart_core().await?;
             handle::Handle::refresh_clash();
         }
 
@@ -141,6 +141,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 /// 一般都是一个个的修改
 pub async fn patch_verge(patch: IVerge) -> Result<()> {
     Config::verge().draft().patch_config(patch.clone());
+
     let tun_mode = patch.enable_tun_mode;
     let auto_launch = patch.enable_auto_launch;
     let system_proxy = patch.enable_system_proxy;
@@ -168,6 +169,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let socks_port = patch.verge_socks_port;
     let http_enabled = patch.verge_http_enabled;
     let http_port = patch.verge_port;
+
     let res = {
         let service_mode = patch.enable_service_mode;
         let mut generated = false;
@@ -175,7 +177,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
             if !generated {
                 Config::generate().await?;
-                CoreManager::global().run_core().await?;
+                CoreManager::global().restart_core().await?;
                 generated = true;
             }
         } else if tun_mode.is_some() {
@@ -184,14 +186,15 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         #[cfg(not(target_os = "windows"))]
         if (redir_enabled.is_some() || redir_port.is_some()) && !generated {
             Config::generate().await?;
-            CoreManager::global().run_core().await?;
+            CoreManager::global().restart_core().await?;
             generated = true;
         }
+
         #[cfg(target_os = "linux")]
         if tproxy_enabled.is_some() || tproxy_port.is_some() {
             if !generated {
                 Config::generate().await?;
-                CoreManager::global().run_core().await?;
+                CoreManager::global().restart_core().await?;
                 generated = true;
             }
         }
@@ -203,7 +206,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             && !generated
         {
             Config::generate().await?;
-            CoreManager::global().run_core().await?;
+            CoreManager::global().restart_core().await?;
         }
         if auto_launch.is_some() {
             sysopt::Sysopt::global().update_launch()?;
@@ -243,11 +246,11 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         Ok(()) => {
             Config::verge().apply();
             Config::verge().data().save_file()?;
-            Ok(())
+            return Ok(());
         }
         Err(err) => {
             Config::verge().discard();
-            Err(err)
+            return Err(err);
         }
     }
 }
