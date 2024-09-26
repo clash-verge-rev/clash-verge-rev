@@ -185,7 +185,7 @@ pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
 /// restart the sidecar
 #[tauri::command]
 pub async fn restart_sidecar() -> CmdResult {
-    wrap_err!(CoreManager::global().run_core().await)
+    wrap_err!(CoreManager::global().restart_core().await)
 }
 
 /// get the system proxy
