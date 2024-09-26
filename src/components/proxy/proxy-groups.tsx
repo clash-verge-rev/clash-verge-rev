@@ -12,7 +12,6 @@ import delayManager from "@/services/delay";
 import { ChevronRight } from "@mui/icons-material";
 import { Box, Link, List, ListItem } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
-import { max, toArray } from "lodash-es";
 import { useRef, useState } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { BaseEmpty } from "../base";
@@ -36,6 +35,8 @@ export const ProxyGroups = (props: Props) => {
   const timeout = verge?.default_latency_timeout || 5000;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+
+  const [open, setOpen] = useState(false);
 
   // 切换分组的节点代理
   const handleChangeProxy = useMemoizedFn(
@@ -143,18 +144,6 @@ export const ProxyGroups = (props: Props) => {
     }
   });
 
-  const sidebarWidth =
-    max(
-      renderList
-        .filter((item) => item.type === 0)
-        .flatMap((item) => {
-          const width = toArray(item.key).length * 16;
-          return width <= 200 ? width : 200;
-        }),
-    ) ?? 64;
-  const [groupWidth, setGroupWidth] = useState(0);
-  const open = groupWidth !== 0;
-
   return (
     <Box display={"flex"} flexDirection={"row"} width={"100%"} height={"100%"}>
       <Box position={"relative"}>
@@ -165,12 +154,11 @@ export const ProxyGroups = (props: Props) => {
               bgcolor: palette.background.paper,
             }),
             {
-              width: `${groupWidth}px`,
+              width: open ? "fit-content" : 0,
+              maxWidth: "180px",
               height: "calc(100% - 20px)",
-              marginLeft: open ? "5px" : 0,
               overflow: "auto",
               cursor: "pointer",
-              transition: "all 0.2s",
               "&::-webkit-scrollbar": {
                 width: "0px",
               },
@@ -181,8 +169,15 @@ export const ProxyGroups = (props: Props) => {
             .map((group) => (
               <ListItem
                 key={group.key}
-                sx={{ textAlign: "center", fontSize: "14px" }}>
+                sx={{
+                  textAlign: "center",
+                  fontSize: "14px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}>
                 <Link
+                  sx={{ ":hover": { color: "secondary.main" } }}
                   underline="hover"
                   onClick={() => handleGroupLocation(group.key)}>
                   {group.group.name}
@@ -243,7 +238,7 @@ export const ProxyGroups = (props: Props) => {
                 cursor: "pointer",
               }}
               onClick={() => {
-                setGroupWidth((prev) => (prev === 0 ? sidebarWidth : 0));
+                setOpen((pre) => !pre);
               }}>
               <ChevronRight
                 sx={{
