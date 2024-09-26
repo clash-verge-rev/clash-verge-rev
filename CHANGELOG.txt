@@ -1,3 +1,7 @@
+> [!Important]
+> 此版本大幅修改了Clash Verge Service, 安装此版本前，请先卸载旧版本 Clash Verge Service.
+> 另外，此版本 APP ID 已更改，所有数据的路径都会改变，请自行备份配置文件.
+
 ### ✨ Features
 - 支持 webdav 备份
 - 服务模式支持日志输出
@@ -6,17 +10,28 @@
 - `pnpm check` 支持 `--alpha` 参数来下载 alpha 版本的 Clash Verge Service
 - 更好看和强大的增强脚本 (Script) 的控制台界面
 - 支持增强脚本 (Script) 保存前的运行检查
+- 规则合集 schema 的 format 字段支持 `mrs` 文件类型
+- 订阅配置文件右键菜单中的第一项始终为“使用”
+- `pnpm check` 支持下载 ASN.mmdb 文件
 
 ### 🚀 Performance Improvements
 - 优化内核停止逻辑
 - 仅当主题颜色设置初始化或改变时才存储到 LocalStorage
+- 从 webdav 恢复配置时，仅需要重启应用
+- 切换主题时，立即执行更改应用的配置文件操作
 
 ### 🐛 Bug Fixes
 - 延迟测试返回数据解析失败
 - 节点延迟排序错误
 - 连接界面本地语言错误
-- 内核未运行时，主窗口未渲染显示
+- 内核未运行时，主窗口无法渲染显示
 - 使用 framer-motion 替换 react-transition-group 的动画
 - 修改 Clash Verge Service 的 API 调用为 RESTful API 的风格
-- 增强脚本 (Script) 的控制台界面尝试拖动会导致代理链拖动排序的错误
+- 尝试拖动增强脚本 (Script) 的控制台界面操作会导致代理链拖动排序
+- mrs 文件类型的规则合集内容无需进行解析展示
+- 超量使用的订阅流量进度条显示错误
+- 移除未使用的 LocalStorage 对象
+- Linux 上切换主题动画卡顿失效
+- 修改外部控制器后，websocket 连接失败，导致流量图显/内容使用/连接信息/日志信息数据获取失败
+
 - 工作流中使用 rust 稳定版

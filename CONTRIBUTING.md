@@ -30,11 +30,20 @@ pnpm i
 You have two options for downloading the clash binary:
 
 - Automatically download it via the provided script:
+
   ```shell
-  pnpm run check
+  pnpm check
+
   # Use '--force' to force update to the latest version
-  # pnpm run check --force
+  pnpm check --force
+
+  # Use '--alpha' to download alpha version of Clash Verge Service
+  pnpm check --alpha
+
+  # Also, you can use '--alpha' and '--force' together
+  pnpm check --alpha --force
   ```
+
 - Manually download it from the [Clash Meta release](https://github.com/MetaCubeX/Clash.Meta/releases). After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).
 
 ### Run the Development Server
