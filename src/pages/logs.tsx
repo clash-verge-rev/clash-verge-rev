@@ -16,11 +16,13 @@ import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
-import { mutate } from "swr";
 
 const LogPage = () => {
   const { t } = useTranslation();
-  const { data: logData = [] } = useLogData();
+  const {
+    getClashLogHook: { data: logData = [] },
+    refreshGetClashLog,
+  } = useLogData();
   const [enableLog, setEnableLog] = useEnableLog();
   const { theme } = useCustomTheme();
   const isDark = theme.palette.mode === "dark";
@@ -59,7 +61,7 @@ const LogPage = () => {
             variant="contained"
             // useSWRSubscription adds a prefix "$sub$" to the cache key
             // https://github.com/vercel/swr/blob/1585a3e37d90ad0df8097b099db38f1afb43c95d/src/subscription/index.ts#L37
-            onClick={() => mutate("$sub$getClashLog", [])}>
+            onClick={() => refreshGetClashLog()}>
             {t("Clear")}
           </Button>
         </Box>

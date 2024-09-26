@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
 import { getClashLogs } from "../services/cmds";
 import { useEnableLog } from "../services/states";
@@ -18,7 +19,7 @@ export const useLogData = () => {
       ? `getClashLog-${clashInfo.server}-${clashInfo.secret}-${enableLog}`
       : null;
 
-  return useSWRSubscription<ILogItem[], any, string | null>(
+  const getClashLogHook = useSWRSubscription<ILogItem[], any, string | null>(
     subscriptClashLogKey,
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
@@ -59,4 +60,10 @@ export const useLogData = () => {
       keepPreviousData: true,
     },
   );
+
+  const refreshGetClashLog = () => {
+    mutate(`$sub$${subscriptClashLogKey}`, []);
+  };
+
+  return { getClashLogHook, refreshGetClashLog };
 };
