@@ -67,10 +67,7 @@ pub fn init_resources() -> Result<()> {
         let _ = fs::create_dir_all(&backup_dir);
     }
 
-    #[cfg(target_os = "windows")]
-    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
-    #[cfg(not(target_os = "windows"))]
-    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
+    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat", "ASN.mmdb"];
 
     // copy the resource file
     // if the source file is newer than the destination file, copy it over

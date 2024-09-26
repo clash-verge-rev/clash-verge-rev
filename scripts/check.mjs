@@ -396,8 +396,6 @@ const resolveServicePermission = async () => {
 // clash-verge-service
 const GET_LATEST_RELEASE_API =
   "https://api.github.com/repos/oomeow/clash-verge-service/releases/latest";
-const GET_ALL_RELEASE_API =
-  "https://api.github.com/repos/oomeow/clash-verge-service/releases";
 
 async function getLatestClashVergeServices() {
   const response = await fetch(GET_LATEST_RELEASE_API);
@@ -413,15 +411,6 @@ async function getLatestClashVergeServices() {
 }
 
 function getAlphaClashVergeServices() {
-  // const response = await fetch({ url: GET_ALL_RELEASE_API, method: "GET", });
-  // const json = await response.json();
-  // const list = Object.values(json);
-  // log_info(`All Clash Verge Service version: `, list);
-  // const alphaVersion = list.find((item) => item.tag_name === "alpha");
-  // const version = alphaVersion.tag_name;
-  // log_info(`Latest Clash Verge Service version: ${version}`);
-  // const assets = alphaVersion.assets;
-  // const downloadItem = assets.find((item) => item.name.includes(SIDECAR_HOST));
   const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
   const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/alpha/${fileName}`;
   return {
@@ -481,45 +470,14 @@ const resolveClashVergeService = async () => {
   }
 };
 
-/**
- * main
- */
-// const SERVICE_URL = `https://github.com/oomeow/clash-verge-service/releases/download/${SIDECAR_HOST}`;
-
-// const resolveService = () => {
-//   let ext = platform === "win32" ? ".exe" : "";
-//   resolveResource({
-//     file: "clash-verge-service" + ext,
-//     downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
-//   });
-// };
-
-// const resolveInstall = () => {
-//   let ext = platform === "win32" ? ".exe" : "";
-//   resolveResource({
-//     file: "install-service" + ext,
-//     downloadURL: `${SERVICE_URL}/install-service${ext}`,
-//   });
-// };
-
-// const resolveUninstall = () => {
-//   let ext = platform === "win32" ? ".exe" : "";
-//   resolveResource({
-//     file: "uninstall-service" + ext,
-//     downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
-//   });
-// };
-
 const resolveSetDnsScript = () =>
   resolveResource({
     file: "set_dns.sh",
-    // downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/set_dns.sh`,
     localPath: path.join(cwd, "scripts/set_dns.sh"),
   });
 const resolveUnSetDnsScript = () =>
   resolveResource({
     file: "unset_dns.sh",
-    // downloadURL: `https://github.com/clash-verge-rev/set-dns-script/releases/download/script/unset_dns.sh`,
     localPath: path.join(cwd, "scripts/unset_dns.sh"),
   });
 const resolveMmdb = () =>
@@ -537,6 +495,11 @@ const resolveGeoIP = () =>
     file: "geoip.dat",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat`,
   });
+const resolveASN = () =>
+  resolveResource({
+    file: "ASN.mmdb",
+    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb`,
+  });
 const resolveEnableLoopback = () =>
   resolveResource({
     file: "enableLoopback.exe",
@@ -544,7 +507,6 @@ const resolveEnableLoopback = () =>
   });
 
 const tasks = [
-  // { name: "clash", func: resolveClash, retry: 5 },
   {
     name: "verge-mihomo-alpha",
     func: () =>
@@ -559,14 +521,12 @@ const tasks = [
   },
   { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
   { name: "clash-verge-service", func: resolveClashVergeService, retry: 5 },
-  // { name: "service", func: resolveService, retry: 5 },
-  // { name: "install", func: resolveInstall, retry: 5 },
-  // { name: "uninstall", func: resolveUninstall, retry: 5 },
   { name: "set_dns_script", func: resolveSetDnsScript, retry: 5 },
   { name: "unset_dns_script", func: resolveUnSetDnsScript, retry: 5 },
   { name: "mmdb", func: resolveMmdb, retry: 5 },
   { name: "geosite", func: resolveGeosite, retry: 5 },
   { name: "geoip", func: resolveGeoIP, retry: 5 },
+  { name: "asn", func: resolveASN, retry: 5 },
   {
     name: "enableLoopback",
     func: resolveEnableLoopback,
