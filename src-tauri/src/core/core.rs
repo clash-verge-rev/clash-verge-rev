@@ -144,7 +144,7 @@ impl CoreManager {
         let app_dir = dirs::path_to_str(&app_dir)?;
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
-        let mut clash_core = clash_core.unwrap_or("verge-mihomo".into());
+        let clash_core = clash_core.unwrap_or("verge-mihomo".into());
 
         let config_path = dirs::path_to_str(&config_path)?;
 
