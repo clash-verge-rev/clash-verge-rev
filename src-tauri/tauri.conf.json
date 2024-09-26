@@ -13,7 +13,7 @@
   "tauri": {
     "bundle": {
       "active": true,
-      "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+      "identifier": "io.github.oomeow.clash-verge-rev",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

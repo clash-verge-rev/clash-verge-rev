@@ -280,8 +280,11 @@ impl IProfiles {
     }
 
     pub fn set_rule_providers_path(&mut self, path: HashMap<String, PathBuf>) -> Result<()> {
-        let current = self.current.as_ref().unwrap();
-        let current = current.clone();
+        let current = self.current.as_ref();
+        if current.is_none() {
+            bail!("failed to get the current profile");
+        }
+        let current = current.unwrap().clone();
         let mut items = self.items.take().unwrap_or_default();
         for item in items.iter_mut() {
             if item.uid == Some(current.clone()) {
