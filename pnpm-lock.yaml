@@ -175,8 +175,8 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(prettier@3.3.3)
       react-devtools:
-        specifier: 5.3.1
-        version: 5.3.1
+        specifier: 6.0.0
+        version: 6.0.0
       sass:
         specifier: 1.79.3
         version: 1.79.3
@@ -3002,11 +3002,11 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  react-devtools-core@5.3.1:
-    resolution: {integrity: sha512-7FSb9meX0btdBQLwdFOwt6bGqvRPabmVMMslv8fgoSPqXyuGpgQe36kx8gR86XPw7aV1yVouTp6fyZ0EH+NfUw==}
+  react-devtools-core@6.0.0:
+    resolution: {integrity: sha512-VmW+VhR9mR2difSed80BNpYLkYyWYzsZgdLPlakoFPYGiD7fwC36tp4HLw45N4sRqY+Te6ZWD9MVSex8d4gFxg==}
 
-  react-devtools@5.3.1:
-    resolution: {integrity: sha512-RcSV/u+lPChcTB+A4fij0xkE204yzKdAsGUFy6+DrfUzWSawB+cu0n3WLmJcJXQ/VnmjSUlIrqmVLicRhT/gLA==}
+  react-devtools@6.0.0:
+    resolution: {integrity: sha512-FqHzVpsWddE5j0BtvjPiPGYiXWDat5EQWGl2oG8xVQs2zJ1KH0zHcu5a7ZdGVgKJWGvYl731J0/k/oOtFSiWfg==}
     hasBin: true
 
   react-dom@18.3.1:
@@ -5222,7 +5222,7 @@ snapshots:
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 16.18.108
+      '@types/node': 22.5.4
       '@types/responselike': 1.0.3
 
   '@types/cli-color@2.0.6': {}
@@ -5295,7 +5295,7 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 16.18.108
+      '@types/node': 22.5.4
 
   '@types/sortablejs@1.15.8': {}
 
@@ -5305,7 +5305,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 16.18.108
+      '@types/node': 22.5.4
     optional: true
 
   '@ungap/structured-clone@1.2.0': {}
@@ -6815,7 +6815,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  react-devtools-core@5.3.1:
+  react-devtools-core@6.0.0:
     dependencies:
       shell-quote: 1.8.1
       ws: 7.5.10
@@ -6823,13 +6823,13 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  react-devtools@5.3.1:
+  react-devtools@6.0.0:
     dependencies:
       cross-spawn: 5.1.0
       electron: 23.3.13
       internal-ip: 6.2.0
       minimist: 1.2.8
-      react-devtools-core: 5.3.1
+      react-devtools-core: 6.0.0
       update-notifier: 2.5.0
     transitivePeerDependencies:
       - bufferutil
