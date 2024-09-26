@@ -13,8 +13,13 @@ export const useLogData = () => {
   const [enableLog] = useEnableLog();
   !enableLog || !clashInfo;
 
-  return useSWRSubscription<ILogItem[], any, "getClashLog" | null>(
-    enableLog && clashInfo ? "getClashLog" : null,
+  const subscriptClashLogKey =
+    enableLog && clashInfo
+      ? `getClashLog-${clashInfo.server}-${clashInfo.secret}-${enableLog}`
+      : null;
+
+  return useSWRSubscription<ILogItem[], any, string | null>(
+    subscriptClashLogKey,
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
 

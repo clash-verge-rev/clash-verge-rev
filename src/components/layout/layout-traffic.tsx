@@ -1,22 +1,22 @@
-import { useRef } from "react";
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import { Notice } from "@/components/base";
+import { useClashInfo } from "@/hooks/use-clash";
+import { useLogData } from "@/hooks/use-log-data";
+import { useVerge } from "@/hooks/use-verge";
+import { useVisibility } from "@/hooks/use-visibility";
+import parseTraffic from "@/utils/parse-traffic";
+import { createSockette } from "@/utils/websocket";
 import {
   ArrowDownward,
   ArrowUpward,
   MemoryOutlined,
 } from "@mui/icons-material";
-import { useClashInfo } from "@/hooks/use-clash";
-import { useVerge } from "@/hooks/use-verge";
-import { TrafficGraph, type TrafficRef } from "./traffic-graph";
-import { useLogData } from "@/hooks/use-log-data";
-import { useVisibility } from "@/hooks/use-visibility";
-import parseTraffic from "@/utils/parse-traffic";
-import useSWRSubscription from "swr/subscription";
-import { createSockette } from "@/utils/websocket";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { invoke } from "@tauri-apps/api";
-import { Notice } from "@/components/base";
 import { t } from "i18next";
 import { debounce } from "lodash-es";
+import { useRef } from "react";
+import useSWRSubscription from "swr/subscription";
+import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 
 interface MemoryUsage {
   inuse: number;
@@ -38,13 +38,17 @@ export const LayoutTraffic = () => {
   // useSWRSubscription auto deduplicates to one subscription per key per entire app
   // So we can simply invoke it here acting as preconnect
   useLogData();
+  const subscriptionTrafficKey =
+    clashInfo && pageVisible
+      ? `getRealtimeTraffic-${clashInfo?.server}-${clashInfo?.secret}-${pageVisible}`
+      : null;
 
   const { data: traffic = { up: 0, down: 0 } } = useSWRSubscription<
     ITrafficItem,
     any,
-    "getRealtimeTraffic" | null
+    string | null
   >(
-    clashInfo && pageVisible ? "getRealtimeTraffic" : null,
+    subscriptionTrafficKey,
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
 
@@ -77,12 +81,16 @@ export const LayoutTraffic = () => {
 
   const displayMemory = verge?.enable_memory_usage ?? true;
 
+  const subscriptionMemoryKey =
+    clashInfo && pageVisible && displayMemory
+      ? `getRealtimeMemory-${clashInfo?.server}-${clashInfo?.secret}-${pageVisible}`
+      : null;
   const { data: memory = { inuse: 0 } } = useSWRSubscription<
     MemoryUsage,
     any,
-    "getRealtimeMemory" | null
+    string | null
   >(
-    clashInfo && pageVisible && displayMemory ? "getRealtimeMemory" : null,
+    subscriptionMemoryKey,
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
 

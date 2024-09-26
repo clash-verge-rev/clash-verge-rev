@@ -56,11 +56,15 @@ const ConnectionsPage = () => {
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   };
 
+  const subscriptConnKey = clashInfo
+    ? `getClashConnections-${clashInfo.server}-${clashInfo.secret}`
+    : null;
+
   const { data: connData = initConn } = useSWRSubscription<
     IConnections,
     any,
-    "getClashConnections" | null
-  >(clashInfo ? "getClashConnections" : null, (_key, { next }) => {
+    string | null
+  >(subscriptConnKey, (_key, { next }) => {
     const { server = "", secret = "" } = clashInfo!;
 
     const s = createSockette(
