@@ -100,10 +100,8 @@ pub fn toggle_tun_mode() {
 
 pub fn quit(code: Option<i32>) {
     let app_handle = handle::Handle::global().app_handle().unwrap();
-    let _ = resolve::save_window_size_position(true);
     resolve::resolve_reset();
     app_handle.exit(code.unwrap_or(0));
-    //std::process::exit(0);
 }
 
 /// 修改clash的订阅
