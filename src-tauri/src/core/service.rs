@@ -1,5 +1,4 @@
-use crate::config::{Config, IVerge};
-use crate::core::handle;
+use crate::config::Config;
 use crate::utils::dirs;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
