@@ -123,6 +123,7 @@ impl Tray {
                 .add_item(open_core_dir)
                 .add_item(open_logs_dir),
         );
+        let open_devtools = CustomMenuItem::new("open_devtools", t!("Open DevTools", "打开开发者工具"));
         let restart_clash = CustomMenuItem::new("restart_clash", t!("Restart Clash", "重启 Clash"));
         let restart_app = CustomMenuItem::new("restart_app", t!("Restart", "重启应用"));
         let app_version =
@@ -130,11 +131,11 @@ impl Tray {
         let more = SystemTraySubmenu::new(
             t!("More", "更多"),
             SystemTrayMenu::new()
+                .add_item(open_devtools)
                 .add_item(restart_clash)
                 .add_item(restart_app)
                 .add_item(app_version),
         );
-        let open_devtools = CustomMenuItem::new("open_devtools", t!("Open DevTools", "打开开发者工具"));
         let quit = CustomMenuItem::new("quit", t!("Quit", "退出"));
         let separator = SystemTrayMenuItem::Separator;
 
@@ -153,8 +154,6 @@ impl Tray {
             .add_item(copy_env)
             .add_submenu(open_dir)
             .add_submenu(more)
-            .add_native_item(separator.clone())
-            .add_item(open_devtools)
             .add_native_item(separator)
             .add_item(quit)
     }
@@ -354,9 +353,9 @@ impl Tray {
                 "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
                 "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
                 "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
+                "open_devtools" => cmds::open_devtools(app_handle.clone()),
                 "restart_clash" => feat::restart_clash_core(),
                 "restart_app" => cmds::restart_app(app_handle.clone()),
-                "open_devtools" => cmds::open_devtools(app_handle.clone()),
                 "quit" => cmds::exit_app(app_handle.clone()),
                 _ => {}
             },
