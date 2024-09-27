@@ -181,7 +181,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
                 generated = true;
             }
         } else if tun_mode.is_some() {
-            update_core_config().await?;
+            update_core_config(false).await?;
         }
         #[cfg(not(target_os = "windows"))]
         if (redir_enabled.is_some() || redir_port.is_some()) && !generated {
@@ -287,22 +287,26 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
     };
 
     if should_update {
-        update_core_config().await?;
+        update_core_config(true).await?;
     }
 
     Ok(())
 }
 
 /// 更新订阅
-async fn update_core_config() -> Result<()> {
+async fn update_core_config(notice: bool) -> Result<()> {
     match CoreManager::global().update_config().await {
         Ok(_) => {
             handle::Handle::refresh_clash();
-            handle::Handle::notice_message("set_config::ok", "ok");
+            if notice {
+                handle::Handle::notice_message("set_config::ok", "ok");
+            }
             Ok(())
         }
         Err(err) => {
-            handle::Handle::notice_message("set_config::error", format!("{err}"));
+            if notice {
+                handle::Handle::notice_message("set_config::error", format!("{err}"));
+            }
             Err(err)
         }
     }
