@@ -137,7 +137,10 @@ pub async fn install_service(passwd: String) -> Result<()> {
     .output()?;
     let output = sudo(
         &passwd,
-        installer_path.to_string_lossy().replace(" ", "\\ ").to_string(),
+        installer_path
+            .to_string_lossy()
+            .replace(" ", "\\ ")
+            .to_string(),
     )
     .output()?;
 
@@ -244,7 +247,10 @@ pub async fn uninstall_service(passwd: String) -> Result<()> {
     .output()?;
     let output = sudo(
         &passwd,
-        uninstaller_path.to_string_lossy().replace(" ", "\\ ").to_string(),
+        uninstaller_path
+            .to_string_lossy()
+            .replace(" ", "\\ ")
+            .to_string(),
     )
     .output()?;
 
@@ -285,21 +291,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     }
 
     let clash_core = { Config::verge().latest().clash_core.clone() };
-    let mut clash_core = clash_core.unwrap_or("verge-mihomo".into());
-
-    // compatibility
-    if clash_core.contains("clash") {
-        clash_core = "verge-mihomo".to_string();
-        Config::verge().draft().patch_config(IVerge {
-            clash_core: Some("verge-mihomo".to_string()),
-            ..IVerge::default()
-        });
-        Config::verge().apply();
-        match Config::verge().data().save_file() {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
-        }
-    }
+    let clash_core = clash_core.unwrap_or("verge-mihomo".into());
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let clash_bin = format!("{clash_core}{bin_ext}");
