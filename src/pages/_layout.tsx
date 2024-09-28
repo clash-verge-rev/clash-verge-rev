@@ -21,7 +21,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import i18next from "i18next";
 import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,22 +33,6 @@ export let portableFlag = false;
 dayjs.extend(relativeTime);
 const OS = getSystem();
 let keepUIActive = false;
-
-const show = {
-  x: [-25, 0],
-  opacity: 1,
-  display: "block",
-  transition: { duration: 0.6 },
-};
-
-const hide = {
-  x: 20,
-  opacity: 0,
-  transition: { duration: 0.3 },
-  transitionEnd: {
-    display: "none",
-  },
-};
 
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -201,22 +185,23 @@ const Layout = () => {
                 <AppNameSvg />
               </div>
               <UpdateButton className="the-newbtn" />
-              <motion.div>
+              <AnimatePresence>
                 <motion.button
-                  animate={isDark ? show : hide}
+                  key={isDark ? "dark" : "light"}
+                  initial={{ x: -25, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: 20, opacity: 0 }}
+                  transition={{ duration: 0.5 }}
                   className="switch-theme-btn"
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => toggleTheme(e, "light")}>
-                  <DarkMode fontSize="inherit" />
+                  // whileTap={{ scale: 0.9 }}
+                  onClick={(e) => toggleTheme(e, isDark ? "light" : "dark")}>
+                  {isDark ? (
+                    <DarkMode fontSize="inherit" />
+                  ) : (
+                    <LightMode fontSize="inherit" />
+                  )}
                 </motion.button>
-                <motion.button
-                  animate={isDark ? hide : show}
-                  className="switch-theme-btn"
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => toggleTheme(e, "dark")}>
-                  <LightMode fontSize="inherit" />
-                </motion.button>
-              </motion.div>
+              </AnimatePresence>
             </div>
 
             <List className="the-menu">
