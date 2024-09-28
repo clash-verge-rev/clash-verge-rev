@@ -88,13 +88,9 @@ impl CoreManager {
         log_err!(clash_api::patch_configs(&disable).await);
 
         // 服务模式
-        let service_enable = { Config::verge().latest().enable_service_mode };
-        let service_enable = service_enable.unwrap_or(false);
-        if service_enable {
-            log::debug!(target: "app", "stop the core by service");
-            log_err!(service::stop_core_by_service().await);
-            return Ok(());
-        }
+        log::debug!(target: "app", "stop the core by service");
+        log_err!(service::stop_core_by_service().await);
+
         kill_processes_by_name(clash_core.as_str());
         *running = false;
 
