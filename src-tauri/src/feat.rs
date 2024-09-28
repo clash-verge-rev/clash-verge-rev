@@ -170,46 +170,42 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let http_enabled = patch.verge_http_enabled;
     let http_port = patch.verge_port;
 
-    let res = {
+    let res: std::result::Result<(), anyhow::Error> = {
+        let mut should_restart_core = false;
+        let mut should_update_clash_config = false;
+        let mut should_update_launch = false;
+        let mut should_update_sysproxy = false;
+        let mut should_update_guard_proxy = false;
+        let mut should_update_systray_part = false;
+
         let service_mode = patch.enable_service_mode;
-        let mut generated = false;
         if service_mode.is_some() {
-            log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
-            if !generated {
-                Config::generate().await?;
-                CoreManager::global().restart_core().await?;
-                generated = true;
-            }
-        } else if tun_mode.is_some() {
-            update_core_config(false).await?;
+            should_restart_core = true;
         }
+
+        if tun_mode.is_some() {
+            should_update_clash_config = true;
+        }
+
         #[cfg(not(target_os = "windows"))]
-        if (redir_enabled.is_some() || redir_port.is_some()) && !generated {
-            Config::generate().await?;
-            CoreManager::global().restart_core().await?;
-            generated = true;
+        if redir_enabled.is_some() || redir_port.is_some() {
+            should_restart_core = true;
         }
 
         #[cfg(target_os = "linux")]
         if tproxy_enabled.is_some() || tproxy_port.is_some() {
-            if !generated {
-                Config::generate().await?;
-                CoreManager::global().restart_core().await?;
-                generated = true;
-            }
+            should_restart_core = true;
         }
-        if (socks_enabled.is_some()
+        if socks_enabled.is_some()
             || http_enabled.is_some()
             || socks_port.is_some()
             || http_port.is_some()
-            || mixed_port.is_some())
-            && !generated
+            || mixed_port.is_some()
         {
-            Config::generate().await?;
-            CoreManager::global().restart_core().await?;
+            should_restart_core = true;
         }
         if auto_launch.is_some() {
-            sysopt::Sysopt::global().update_launch()?;
+            should_update_launch = true;
         }
         if system_proxy.is_some()
             || proxy_bypass.is_some()
@@ -217,16 +213,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             || pac.is_some()
             || pac_content.is_some()
         {
-            sysopt::Sysopt::global().update_sysproxy()?;
-            sysopt::Sysopt::global().guard_proxy();
+            should_update_sysproxy = true;
+            should_update_guard_proxy = true;
         }
 
         if let Some(true) = patch.enable_proxy_guard {
-            sysopt::Sysopt::global().guard_proxy();
-        }
-
-        if let Some(hotkeys) = patch.hotkeys {
-            hotkey::Hotkey::global().update(hotkeys)?;
+            should_update_guard_proxy = true;
         }
 
         if language.is_some()
@@ -237,6 +229,31 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             || tun_tray_icon.is_some()
             || tray_icon.is_some()
         {
+            should_update_systray_part = true;
+        }
+        if should_restart_core {
+            Config::generate().await?;
+            CoreManager::global().restart_core().await?;
+        }
+        if should_update_clash_config {
+            update_core_config(false).await?;
+        }
+        if should_update_launch {
+            sysopt::Sysopt::global().update_launch()?;
+        }
+
+        if should_update_sysproxy {
+            sysopt::Sysopt::global().update_sysproxy()?;
+        }
+        if should_update_guard_proxy {
+            sysopt::Sysopt::global().guard_proxy();
+        }
+
+        if let Some(hotkeys) = patch.hotkeys {
+            hotkey::Hotkey::global().update(hotkeys)?;
+        }
+
+        if should_update_systray_part {
             handle::Handle::update_systray_part()?;
         }
 
@@ -246,6 +263,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         Ok(()) => {
             Config::verge().apply();
             Config::verge().data().save_file()?;
+
             return Ok(());
         }
         Err(err) => {
