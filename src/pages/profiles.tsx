@@ -499,27 +499,29 @@ const ProfilePage = () => {
               onImport();
             }
           }}
-          InputProps={{
-            sx: { pr: 1 },
-            endAdornment: !url ? (
-              <IconButton
-                size="small"
-                color="primary"
-                sx={{ p: 0.5 }}
-                title={t("Paste")}
-                onClick={() => onCopyLink()}>
-                <ContentPasteRounded fontSize="inherit" />
-              </IconButton>
-            ) : (
-              <IconButton
-                size="small"
-                color="primary"
-                sx={{ p: 0.5 }}
-                title={t("Clear")}
-                onClick={() => setUrl("")}>
-                <ClearRounded fontSize="inherit" />
-              </IconButton>
-            ),
+          slotProps={{
+            input: {
+              sx: { pr: 1 },
+              endAdornment: !url ? (
+                <IconButton
+                  size="small"
+                  color="primary"
+                  sx={{ p: 0.5 }}
+                  title={t("Paste")}
+                  onClick={() => onCopyLink()}>
+                  <ContentPasteRounded fontSize="inherit" />
+                </IconButton>
+              ) : (
+                <IconButton
+                  size="small"
+                  color="primary"
+                  sx={{ p: 0.5 }}
+                  title={t("Clear")}
+                  onClick={() => setUrl("")}>
+                  <ClearRounded fontSize="inherit" />
+                </IconButton>
+              ),
+            },
           }}
         />
         <LoadingButton

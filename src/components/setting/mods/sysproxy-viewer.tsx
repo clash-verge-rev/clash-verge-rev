@@ -7,10 +7,15 @@ import {
   SwitchLovely,
 } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import { getAutotemProxy, getSystemProxy } from "@/services/cmds";
-import getSystem from "@/utils/get-system";
-import { InfoRounded } from "@mui/icons-material";
 import {
+  getAutotemProxy,
+  getDefaultBypass,
+  getSystemProxy,
+} from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+import { Add, InfoRounded, Remove, RotateLeft } from "@mui/icons-material";
+import {
+  Box,
   Button,
   IconButton,
   Input,
@@ -24,7 +29,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
@@ -33,40 +38,43 @@ const DEFAULT_PAC = `function FindProxyForURL(url, host) {
 
 /** NO_PROXY validation */
 
-// *., cdn*., *, etc.
-const domain_subdomain_part = String.raw`(?:[a-z0-9\-\*]+\.|\*)*`;
-// .*, .cn, .moe, .co*, *
-const domain_tld_part = String.raw`(?:\w{2,64}\*?|\*)`;
-// *epicgames*, *skk.moe, *.skk.moe, skk.*, sponsor.cdn.skk.moe, *.*, etc.
-// also matches 192.168.*, 10.*, 127.0.0.*, etc. (partial ipv4)
-const rDomainSimple = domain_subdomain_part + domain_tld_part;
+// // *., cdn*., *, etc.
+// const domain_subdomain_part = String.raw`(?:[a-z0-9\-\*]+\.|\*)*`;
+// // .*, .cn, .moe, .co*, *
+// const domain_tld_part = String.raw`(?:\w{2,64}\*?|\*)`;
+// // *epicgames*, *skk.moe, *.skk.moe, skk.*, sponsor.cdn.skk.moe, *.*, etc.
+// // also matches 192.168.*, 10.*, 127.0.0.*, etc. (partial ipv4)
+// const rDomainSimple = domain_subdomain_part + domain_tld_part;
 
-const ipv4_part = String.raw`\d{1,3}`;
-// 127.0.0.1 (full ipv4)
-const rIPv4 = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`;
-// const rIPv4Partial = String.raw`${ipv4_part}\.(?:(?:${ipv4_part}|\*)\.){0,2}\.\*`;
+// const ipv4_part = String.raw`\d{1,3}`;
+// // 127.0.0.1 (full ipv4)
+// const rIPv4 = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`;
+// // const rIPv4Partial = String.raw`${ipv4_part}\.(?:(?:${ipv4_part}|\*)\.){0,2}\.\*`;
 
-const ipv6_part = "(?:[a-fA-F0-9:])+";
-const rIPv6 = `(?:${ipv6_part}:+)+${ipv6_part}`;
+// const ipv6_part = "(?:[a-fA-F0-9:])+";
+// const rIPv6 = `(?:${ipv6_part}:+)+${ipv6_part}`;
 
-const rLocal = `localhost|<local>|localdomain`;
-const rValidPart = `${rDomainSimple}|${rIPv4}|${rIPv6}|${rLocal}`;
+// const rLocal = `localhost|<local>|localdomain`;
+// const rValidPart = `${rDomainSimple}|${rIPv4}|${rIPv6}|${rLocal}`;
 
-const getValidReg = (isWindows: boolean) => {
-  const separator = isWindows ? ";" : ",";
-  const rValid = String.raw`^(${rValidPart})(?:${separator}\s?(${rValidPart}))*${separator}?$`;
+// const getValidReg = (isWindows: boolean) => {
+//   const separator = isWindows ? ";" : ",";
+//   const rValid = String.raw`^(${rValidPart})(?:${separator}\s?(${rValidPart}))*${separator}?$`;
 
-  return new RegExp(rValid);
-};
+//   return new RegExp(rValid);
+// };
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const isWindows = getSystem() === "windows";
-  const validReg = useMemo(() => getValidReg(isWindows), [isWindows]);
+  const separator = isWindows ? ";" : ",";
+  // const validReg = useMemo(() => getValidReg(isWindows), [isWindows]);
 
   const [open, setOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const { verge, patchVerge } = useVerge();
+  const [bypass, setBypass] = useState<string[]>([]);
+  const [bypassInput, setBypassInput] = useState("");
 
   type SysProxy = Awaited<ReturnType<typeof getSystemProxy>>;
   const [sysproxy, setSysproxy] = useState<SysProxy>();
@@ -85,7 +93,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [value, setValue] = useState({
     guard: enable_proxy_guard,
-    bypass: system_proxy_bypass,
     duration: proxy_guard_duration ?? 10,
     pac: proxy_auto_config,
     pac_content: pac_file_content ?? DEFAULT_PAC,
@@ -96,15 +103,20 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setValue({
         guard: enable_proxy_guard,
-        bypass: system_proxy_bypass,
         duration: proxy_guard_duration ?? 10,
         pac: proxy_auto_config,
         pac_content: pac_file_content ?? DEFAULT_PAC,
       });
-      getSystemProxy().then((p) => setSysproxy(p));
+      getSystemProxy().then((p) => {
+        setSysproxy(p);
+        setBypass(p.bypass.split(separator) ?? []);
+      });
       getAutotemProxy().then((p) => setAutoproxy(p));
     },
-    close: () => setOpen(false),
+    close: () => {
+      setOpen(false);
+      setBypass(sysproxy?.bypass.split(separator) ?? []);
+    },
   }));
 
   const onSave = useLockFn(async () => {
@@ -121,18 +133,15 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (value.duration !== proxy_guard_duration) {
       patch.proxy_guard_duration = value.duration;
     }
-    if (value.bypass !== system_proxy_bypass) {
-      patch.system_proxy_bypass = value.bypass;
+    const bypassStr = bypass.join(separator);
+    if (bypassStr !== system_proxy_bypass) {
+      patch.system_proxy_bypass = bypassStr;
     }
     if (value.pac !== proxy_auto_config) {
       patch.proxy_auto_config = value.pac;
     }
     if (value.pac_content !== pac_file_content) {
       patch.pac_file_content = value.pac_content;
-    }
-    if (value.bypass && !validReg.test(value.bypass)) {
-      Notice.error(t("Invalid Bypass Format"));
-      return;
     }
     try {
       await patchVerge(patch);
@@ -149,8 +158,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       contentSx={{ width: 450, maxHeight: 565 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
+      onClose={() => {
+        setOpen(false);
+        setBypass(sysproxy?.bypass.split(separator) ?? []);
+      }}
+      onCancel={() => {
+        setOpen(false);
+        setBypass(sysproxy?.bypass.split(separator) ?? []);
+      }}
       onOk={onSave}>
       <List>
         <BaseFieldset label={t("Current System Proxy")} padding="15px 10px">
@@ -218,8 +233,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             size="small"
             value={value.duration}
             sx={{ width: 100 }}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">s</InputAdornment>,
+            slotProps={{
+              input: {
+                endAdornment: <InputAdornment position="end">s</InputAdornment>,
+              },
             }}
             onChange={(e) => {
               setValue((v) => ({
@@ -231,32 +248,98 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
         {!value.pac && (
           <>
-            <ListItemText primary={t("Proxy Bypass")} />
+            <ListItem sx={{ padding: "5px 2px" }}>
+              <ListItemText
+                primary={
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    {t("Proxy Bypass")}
+                    <Tooltip title={t("Reset Default Bypass")}>
+                      <IconButton
+                        disabled={!enabled}
+                        color="primary"
+                        size="small"
+                        onClick={async () => {
+                          const defaultBypass = await getDefaultBypass();
+                          setBypass(defaultBypass.split(separator));
+                        }}>
+                        <RotateLeft fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                }
+              />
+            </ListItem>
             <TextField
-              error={value.bypass ? !validReg.test(value.bypass) : false}
               disabled={!enabled}
               size="small"
               autoComplete="off"
-              multiline
-              rows={4}
               sx={{ width: "100%" }}
-              value={value.bypass}
+              value={bypassInput}
               onChange={(e) => {
-                setValue((v) => ({ ...v, bypass: e.target.value }));
+                const value = e.target.value;
+                setBypassInput(value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (bypassInput.trim().length > 0) {
+                    if (bypass.includes(bypassInput)) {
+                      setBypassInput("");
+                      Notice.info(t("Duplicate Bypass"));
+                    } else {
+                      setBypass((v) => [...v, bypassInput.trim()]);
+                      setBypassInput("");
+                    }
+                  }
+                }
+              }}
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <IconButton
+                      disabled={!enabled}
+                      color="primary"
+                      size="small"
+                      onClick={() => {
+                        if (bypassInput.trim().length > 0) {
+                          if (bypass.includes(bypassInput)) {
+                            setBypassInput("");
+                            Notice.info(t("Duplicate Bypass"));
+                          } else {
+                            setBypass((v) => [...v, bypassInput.trim()]);
+                            setBypassInput("");
+                          }
+                        }
+                      }}>
+                      <Add fontSize="inherit" />
+                    </IconButton>
+                  ),
+                },
               }}
             />
-            <ListItemText primary={t("Bypass")} />
-            <FlexBox>
-              <TextField
-                disabled={true}
-                size="small"
-                autoComplete="off"
-                multiline
-                rows={4}
-                sx={{ width: "100%" }}
-                value={sysproxy?.bypass || "-"}
-              />
-            </FlexBox>
+            {bypass?.map((item) => {
+              return (
+                <ListItem
+                  key={item}
+                  sx={{
+                    padding: "8px",
+                    bgcolor: "var(--background-color-alpha)",
+                    margin: "5px 0",
+                  }}>
+                  <ListItemText primary={item} />
+                  {!["localhost", "127.0.0.1"].includes(item) && (
+                    <IconButton
+                      disabled={!enabled}
+                      size="small"
+                      color="warning"
+                      onClick={() => {
+                        setBypass((v) => v.filter((i) => i !== item));
+                      }}>
+                      <Remove fontSize="inherit" />
+                    </IconButton>
+                  )}
+                </ListItem>
+              );
+            })}
           </>
         )}
         {value.pac && (

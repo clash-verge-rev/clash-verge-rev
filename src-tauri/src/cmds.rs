@@ -42,6 +42,11 @@ pub fn get_template(scope: String, language: String) -> CmdResult<String> {
 }
 
 #[tauri::command]
+pub fn get_default_bypass() -> CmdResult<String> {
+    Ok(sysopt::get_default_bypass())
+}
+
+#[tauri::command]
 pub async fn enhance_profiles() -> CmdResult {
     wrap_err!(CoreManager::global().update_config().await)?;
     handle::Handle::refresh_clash();
@@ -360,6 +365,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
     }
     Ok(icon_path.to_string_lossy().to_string())
 }
+
 #[tauri::command]
 pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
     let file_path = std::path::Path::new(&path);

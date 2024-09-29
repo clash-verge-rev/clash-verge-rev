@@ -39,6 +39,10 @@ export async function getTemplate(scope: string, language: string) {
   return invoke<string>("get_template", { scope, language });
 }
 
+export async function getDefaultBypass() {
+  return invoke<string>("get_default_bypass");
+}
+
 export async function enhanceProfiles() {
   return invoke<void>("enhance_profiles");
 }

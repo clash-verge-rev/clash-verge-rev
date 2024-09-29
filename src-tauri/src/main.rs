@@ -75,6 +75,7 @@ fn main() -> std::io::Result<()> {
         .invoke_handler(tauri::generate_handler![
             // common
             cmds::get_sys_proxy,
+            cmds::get_default_bypass,
             cmds::get_auto_proxy,
             cmds::open_app_dir,
             cmds::open_logs_dir,

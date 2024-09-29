@@ -147,7 +147,7 @@
   "Proxy Guard": "系统代理守卫",
   "Proxy Guard Info": "开启以防止其他软件修改操作系统的代理设置",
   "Guard Duration": "代理守卫间隔",
-  "Proxy Bypass": "代理绕过设置：",
+  "Proxy Bypass": "代理绕过设置",
   "Bypass": "当前绕过：",
   "Use PAC Mode": "使用PAC模式",
   "PAC Script Content": "PAC脚本内容",
@@ -295,6 +295,8 @@
   "Unified Delay Info": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
   "Flush Fake-IP Cache": "清除 Fake-IP 缓存",
   "Fake-IP Cache Flushed": "Fake-IP 缓存已清除",
+  "Duplicate Bypass": "重复的代理绕过",
+  "Reset Default Bypass": "重置为默认代理绕过",
 
   "WebDav Backup": "WebDav 备份",
   "Backup": "备份",

@@ -236,10 +236,12 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                   field.onChange(e);
                 }}
                 label={t("Update Interval")}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">mins</InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">mins</InputAdornment>
+                    ),
+                  },
                 }}
               />
             )}

@@ -103,78 +103,80 @@ export const BaseSearchBox = (props: SearchProps) => {
         onChange={(e) => {
           setFilterText(() => e.target.value);
         }}
-        InputProps={{
-          endAdornment: (
-            <Box display="flex">
-              {filterText !== "" && (
-                <Tooltip title={t("Clear")}>
+        slotProps={{
+          input: {
+            endAdornment: (
+              <Box display="flex">
+                {filterText !== "" && (
+                  <Tooltip title={t("Clear")}>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      sx={{ p: 0.5 }}
+                      onClick={() => setFilterText("")}>
+                      <ClearRounded fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <Tooltip title={t("Match Case")}>
                   <IconButton
                     size="small"
-                    color="primary"
                     sx={{ p: 0.5 }}
-                    onClick={() => setFilterText("")}>
-                    <ClearRounded fontSize="inherit" />
+                    color={searchOptions.matchCase ? "primary" : "default"}
+                    onClick={() => {
+                      setSearchOptions((pre) => ({
+                        ...pre,
+                        matchCase: !pre.matchCase,
+                      }));
+                    }}>
+                    <SvgIcon
+                      fontSize="inherit"
+                      component={matchCaseIcon}
+                      {...iconStyle}
+                    />
                   </IconButton>
                 </Tooltip>
-              )}
-              <Tooltip title={t("Match Case")}>
-                <IconButton
-                  size="small"
-                  sx={{ p: 0.5 }}
-                  color={searchOptions.matchCase ? "primary" : "default"}
-                  onClick={() => {
-                    setSearchOptions((pre) => ({
-                      ...pre,
-                      matchCase: !pre.matchCase,
-                    }));
-                  }}>
-                  <SvgIcon
-                    fontSize="inherit"
-                    component={matchCaseIcon}
-                    {...iconStyle}
-                  />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t("Match Whole Word")}>
-                <IconButton
-                  size="small"
-                  sx={{ p: 0.5 }}
-                  color={searchOptions.matchWholeWord ? "primary" : "default"}
-                  onClick={() => {
-                    setSearchOptions((pre) => ({
-                      ...pre,
-                      matchWholeWord: !pre.matchWholeWord,
-                    }));
-                  }}>
-                  <SvgIcon
-                    fontSize="inherit"
-                    component={matchWholeWordIcon}
-                    {...iconStyle}
-                  />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t("Use Regular Expression")}>
-                <IconButton
-                  size="small"
-                  sx={{ p: 0.5 }}
-                  color={
-                    searchOptions.useRegularExpression ? "primary" : "default"
-                  }
-                  onClick={() => {
-                    setSearchOptions((pre) => ({
-                      ...pre,
-                      useRegularExpression: !pre.useRegularExpression,
-                    }));
-                  }}>
-                  <SvgIcon
-                    fontSize="inherit"
-                    component={useRegularExpressionIcon}
-                    {...iconStyle}
-                  />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          ),
+                <Tooltip title={t("Match Whole Word")}>
+                  <IconButton
+                    size="small"
+                    sx={{ p: 0.5 }}
+                    color={searchOptions.matchWholeWord ? "primary" : "default"}
+                    onClick={() => {
+                      setSearchOptions((pre) => ({
+                        ...pre,
+                        matchWholeWord: !pre.matchWholeWord,
+                      }));
+                    }}>
+                    <SvgIcon
+                      fontSize="inherit"
+                      component={matchWholeWordIcon}
+                      {...iconStyle}
+                    />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={t("Use Regular Expression")}>
+                  <IconButton
+                    size="small"
+                    sx={{ p: 0.5 }}
+                    color={
+                      searchOptions.useRegularExpression ? "primary" : "default"
+                    }
+                    onClick={() => {
+                      setSearchOptions((pre) => ({
+                        ...pre,
+                        useRegularExpression: !pre.useRegularExpression,
+                      }));
+                    }}>
+                    <SvgIcon
+                      fontSize="inherit"
+                      component={useRegularExpressionIcon}
+                      {...iconStyle}
+                    />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            ),
+          },
         }}
       />
     </Tooltip>

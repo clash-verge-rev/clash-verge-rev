@@ -41,31 +41,20 @@ static DEFAULT_BYPASS: &str = "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172
 static DEFAULT_BYPASS: &str =
     "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 
-fn get_bypass() -> String {
-    let bypass = DEFAULT_BYPASS.to_string();
+pub fn get_default_bypass() -> String {
+    DEFAULT_BYPASS.to_string()
+}
 
+fn get_bypass() -> String {
     let res = {
         let verge = Config::verge();
         let verge = verge.latest();
         verge.system_proxy_bypass.clone()
     };
-    let custom_bypass = match res {
-        Some(bypass) => bypass,
-        None => "".to_string(),
+    let bypass = match res {
+        Some(custom_bypass) => custom_bypass,
+        None => DEFAULT_BYPASS.to_string(),
     };
-    #[cfg(target_os = "windows")]
-    let bypass = if custom_bypass.is_empty() {
-        bypass
-    } else {
-        format!("{};{}", bypass, custom_bypass)
-    };
-    #[cfg(not(target_os = "windows"))]
-    let bypass = if custom_bypass.is_empty() {
-        bypass
-    } else {
-        format!("{},{}", bypass, custom_bypass)
-    };
-
     bypass
 }
 
