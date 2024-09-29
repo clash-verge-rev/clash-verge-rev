@@ -86,7 +86,10 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Service Mode")}>
+      <SettingItem
+        label={t("Service Mode")}
+        extra={<TooltipIcon title={t("Service Mode Info")} />}
+      >
         <ServiceSwitcher
           status={serviceStatus ?? "unknown"}
           mutate={mutateServiceStatus}
