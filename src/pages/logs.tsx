@@ -20,7 +20,7 @@ import { Virtuoso } from "react-virtuoso";
 const LogPage = () => {
   const { t } = useTranslation();
   const {
-    getClashLogHook: { data: logData = [] },
+    response: { data: logData = [] },
     refreshGetClashLog,
   } = useLogData();
   const [enableLog, setEnableLog] = useEnableLog();

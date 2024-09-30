@@ -5,7 +5,8 @@ import SettingVerge from "@/components/setting/setting-verge";
 import { openWebUrl } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import { GitHub, HelpOutlineSharp } from "@mui/icons-material";
-import { Box, ButtonGroup, Grid, IconButton } from "@mui/material";
+import { Box, ButtonGroup, IconButton } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 
@@ -50,7 +51,7 @@ const SettingPage = () => {
       }>
       <div style={{ padding: "0 10px" }}>
         <Grid container spacing={{ xs: 1.5, lg: 1.5 }}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box
               sx={{
                 borderRadius: 2,
@@ -67,7 +68,7 @@ const SettingPage = () => {
               <SettingClash onError={onError} />
             </Box>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box
               sx={{
                 borderRadius: 2,

@@ -93,8 +93,9 @@ export const TestItem = (props: Props) => {
   }, []);
 
   return (
-    <Box sx={{ width: "100%", ...sx }}>
+    <Box sx={{ width: "100%" }}>
       <TestDiv
+        sx={{ ...sx }}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });

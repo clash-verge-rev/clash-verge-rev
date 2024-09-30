@@ -19,7 +19,7 @@ export const useLogData = () => {
       ? `getClashLog-${clashInfo.server}-${clashInfo.secret}-${enableLog}`
       : null;
 
-  const getClashLogHook = useSWRSubscription<ILogItem[], any, string | null>(
+  const response = useSWRSubscription<ILogItem[], any, string | null>(
     subscriptClashLogKey,
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
@@ -65,5 +65,5 @@ export const useLogData = () => {
     mutate(`$sub$${subscriptClashLogKey}`, []);
   };
 
-  return { getClashLogHook, refreshGetClashLog };
+  return { response, refreshGetClashLog };
 };

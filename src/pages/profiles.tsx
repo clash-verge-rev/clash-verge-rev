@@ -581,7 +581,7 @@ const ProfilePage = () => {
                     <ProfileItem
                       sx={{
                         ...(draggingProfileItem?.uid === item.uid && {
-                          "& > .MuiBox-root": {
+                          "& > div": {
                             backgroundColor: "var(--background-color-alpha)",
                           },
                         }),
@@ -683,7 +683,7 @@ const ProfilePage = () => {
                       <ProfileMore
                         sx={{
                           ...(draggingChainItem?.uid === item.uid && {
-                            "& > .MuiBox-root": {
+                            "& > div": {
                               backgroundColor: "var(--background-color-alpha)",
                             },
                           }),
@@ -728,7 +728,7 @@ const ProfilePage = () => {
                       <ProfileMore
                         sx={{
                           ...(draggingChainItem?.uid === item.uid && {
-                            "& > .MuiBox-root": {
+                            "& > div": {
                               backgroundColor: "var(--background-color-alpha)",
                             },
                           }),

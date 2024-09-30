@@ -209,12 +209,9 @@ const TestPage = () => {
                     }}>
                     <TestItem
                       sx={{
-                        "& > .MuiBox-root": {
-                          bgcolor:
-                            draggingTestItem?.uid === item.uid
-                              ? "var(--background-color-alpha)"
-                              : "",
-                        },
+                        ...(draggingTestItem?.uid === item.uid && {
+                          bgcolor: "var(--background-color-alpha)",
+                        }),
                       }}
                       id={item.uid}
                       isDragging={draggingTestItem ? true : false}

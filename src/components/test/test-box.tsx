@@ -4,8 +4,6 @@ export const TestDiv = styled("div")(({ theme, "aria-selected": selected }) => {
   const { mode, primary, text } = theme.palette;
   const key = `${mode}-${!!selected}`;
 
-  const backgroundColor = mode === "light" ? "#ffffff" : "#282A36";
-
   const color = {
     "light-true": text.secondary,
     "light-false": text.secondary,
@@ -30,7 +28,10 @@ export const TestDiv = styled("div")(({ theme, "aria-selected": selected }) => {
     boxShadow: theme.shadows[2],
     padding: "8px 16px",
     boxSizing: "border-box",
-    backgroundColor,
+    backgroundColor: "#ffffff",
+    ...theme.applyStyles("dark", {
+      backgroundColor: "#282A36",
+    }),
     color,
     "& h2": { color: h2color },
   };
