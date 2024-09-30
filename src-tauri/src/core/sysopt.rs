@@ -339,18 +339,10 @@ impl Sysopt {
     /// read config from file directly
     pub fn guard_proxy(&self) {
         use tokio::time::{sleep, Duration};
-
         let guard_state = self.guard_state.clone();
 
         tauri::async_runtime::spawn(async move {
-            // if it is running, exit
-            let mut state = guard_state.lock().await;
-            if *state {
-                return;
-            }
-            *state = true;
-            drop(state);
-
+            let _ = guard_state.lock().await;
             // default duration is 10s
             let mut wait_secs = 10u64;
 
@@ -402,10 +394,6 @@ impl Sysopt {
                     log_err!(sysproxy.set_system_proxy());
                 }
             }
-
-            let mut state = guard_state.lock().await;
-            *state = false;
-            drop(state);
         });
     }
 }
