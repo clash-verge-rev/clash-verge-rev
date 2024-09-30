@@ -160,14 +160,10 @@ impl Sysopt {
             )
         };
         if pac && (cur_autoproxy.is_none() || old_autoproxy.is_none()) {
-            drop(cur_autoproxy);
-            drop(old_autoproxy);
             return self.init_sysproxy();
         }
 
         if !pac && (cur_sysproxy.is_none() || old_sysproxy.is_none()) {
-            drop(cur_sysproxy);
-            drop(old_sysproxy);
             return self.init_sysproxy();
         }
 
