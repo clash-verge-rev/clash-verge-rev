@@ -67,6 +67,16 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         let newList;
         let uid;
 
+        if (form.icon && form.icon.startsWith("<svg")) {
+          const doc = new DOMParser().parseFromString(
+            form.icon,
+            "image/svg+xml"
+          );
+          if (doc.querySelector("parsererror")) {
+            throw new Error("`Icon`svg format error");
+          }
+        }
+
         if (openType === "new") {
           uid = nanoid();
           const item = { ...form, uid };
