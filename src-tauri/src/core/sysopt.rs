@@ -10,25 +10,13 @@ use std::env::current_exe;
 use std::sync::Arc;
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::async_runtime::Mutex as TokioMutex;
+use tokio::time::{sleep, Duration};
 
 pub struct Sysopt {
-    /// current system proxy setting
-    cur_sysproxy: Arc<Mutex<Option<Sysproxy>>>,
-
-    /// record the original system proxy
-    /// recover it when exit
-    old_sysproxy: Arc<Mutex<Option<Sysproxy>>>,
-
-    /// current auto proxy setting
-    cur_autoproxy: Arc<Mutex<Option<Autoproxy>>>,
-
-    /// record the original auto proxy
-    /// recover it when exit
-    old_autoproxy: Arc<Mutex<Option<Autoproxy>>>,
-
+    update_sysproxy: Arc<TokioMutex<bool>>,
+    reset_sysproxy: Arc<TokioMutex<bool>>,
     /// helps to auto launch the app
     auto_launch: Arc<Mutex<Option<AutoLaunch>>>,
-
     /// record whether the guard async is running or not
     guard_state: Arc<TokioMutex<bool>>,
 }
@@ -78,19 +66,23 @@ fn get_bypass() -> String {
 impl Sysopt {
     pub fn global() -> &'static Sysopt {
         static SYSOPT: OnceCell<Sysopt> = OnceCell::new();
-
         SYSOPT.get_or_init(|| Sysopt {
-            cur_sysproxy: Arc::new(Mutex::new(None)),
-            old_sysproxy: Arc::new(Mutex::new(None)),
-            cur_autoproxy: Arc::new(Mutex::new(None)),
-            old_autoproxy: Arc::new(Mutex::new(None)),
+            update_sysproxy: Arc::new(TokioMutex::new(false)),
+            reset_sysproxy: Arc::new(TokioMutex::new(false)),
             auto_launch: Arc::new(Mutex::new(None)),
             guard_state: Arc::new(TokioMutex::new(false)),
         })
     }
 
+    pub fn init_guard_sysproxy(&self) -> Result<()> {
+        self.guard_proxy();
+        Ok(())
+    }
+
     /// init the sysproxy
-    pub fn init_sysproxy(&self) -> Result<()> {
+    pub fn update_sysproxy(&self) -> Result<()> {
+        let _ = self.update_sysproxy.lock();
+
         let port = Config::verge()
             .latest()
             .verge_mixed_port
@@ -105,6 +97,11 @@ impl Sysopt {
                 verge.proxy_auto_config.unwrap_or(false),
             )
         };
+
+        if enable == false {
+            return Ok(());
+        }
+
         let mut sys = Sysproxy {
             enable,
             host: String::from("127.0.0.1"),
@@ -117,141 +114,32 @@ impl Sysopt {
         };
         if pac {
             sys.enable = false;
-            let old = Sysproxy::get_system_proxy().ok();
+            auto.enable = true;
             sys.set_system_proxy()?;
-            *self.old_sysproxy.lock() = old;
-            *self.cur_sysproxy.lock() = Some(sys);
-
-            let old = Autoproxy::get_auto_proxy().ok();
             auto.set_auto_proxy()?;
-            *self.old_autoproxy.lock() = old;
-            *self.cur_autoproxy.lock() = Some(auto);
         } else {
             auto.enable = false;
-            let old = Autoproxy::get_auto_proxy().ok();
+            sys.enable = true;
             auto.set_auto_proxy()?;
-            *self.old_autoproxy.lock() = old;
-            *self.cur_autoproxy.lock() = Some(auto);
-
-            let old = Sysproxy::get_system_proxy().ok();
             sys.set_system_proxy()?;
-            *self.old_sysproxy.lock() = old;
-            *self.cur_sysproxy.lock() = Some(sys);
         }
 
         // run the system proxy guard
-        self.guard_proxy();
-        Ok(())
-    }
-
-    /// update the system proxy
-    pub fn update_sysproxy(&self) -> Result<()> {
-        let mut cur_sysproxy = self.cur_sysproxy.lock();
-        let old_sysproxy = self.old_sysproxy.lock();
-        let mut cur_autoproxy = self.cur_autoproxy.lock();
-        let old_autoproxy = self.old_autoproxy.lock();
-
-        let (enable, pac) = {
-            let verge = Config::verge();
-            let verge = verge.latest();
-            (
-                verge.enable_system_proxy.unwrap_or(false),
-                verge.proxy_auto_config.unwrap_or(false),
-            )
-        };
-        if pac && (cur_autoproxy.is_none() || old_autoproxy.is_none()) {
-            return self.init_sysproxy();
-        }
-
-        if !pac && (cur_sysproxy.is_none() || old_sysproxy.is_none()) {
-            return self.init_sysproxy();
-        }
-
-        let port = Config::verge()
-            .latest()
-            .verge_mixed_port
-            .unwrap_or(Config::clash().data().get_mixed_port());
-        let pac_port = IVerge::get_singleton_port();
-
-        let mut sysproxy = cur_sysproxy.take().unwrap();
-        sysproxy.bypass = get_bypass();
-        sysproxy.port = port;
-
-        let mut autoproxy = cur_autoproxy.take().unwrap();
-        autoproxy.url = format!("http://127.0.0.1:{pac_port}/commands/pac");
-
-        if pac {
-            sysproxy.enable = false;
-            sysproxy.set_system_proxy()?;
-            *cur_sysproxy = Some(sysproxy);
-            autoproxy.enable = enable;
-            autoproxy.set_auto_proxy()?;
-            *cur_autoproxy = Some(autoproxy);
-        } else {
-            autoproxy.enable = false;
-            autoproxy.set_auto_proxy()?;
-            *cur_autoproxy = Some(autoproxy);
-            sysproxy.enable = enable;
-            sysproxy.set_system_proxy()?;
-            *cur_sysproxy = Some(sysproxy);
-        }
-
+        //self.guard_proxy();
         Ok(())
     }
 
     /// reset the sysproxy
     pub fn reset_sysproxy(&self) -> Result<()> {
-        let mut cur_sysproxy = self.cur_sysproxy.lock();
-        let mut old_sysproxy = self.old_sysproxy.lock();
-        let mut cur_autoproxy = self.cur_autoproxy.lock();
-        let mut old_autoproxy = self.old_autoproxy.lock();
+        let _ = self.reset_sysproxy.lock();
+        //直接关闭所有代理
+        let mut sysproxy: Sysproxy = Sysproxy::get_system_proxy()?;
+        sysproxy.enable = false;
+        sysproxy.set_system_proxy()?;
 
-        let cur_sysproxy = cur_sysproxy.take();
-        let cur_autoproxy = cur_autoproxy.take();
-
-        if let Some(mut old) = old_sysproxy.take() {
-            // 如果原代理和当前代理 端口一致，就disable关闭，否则就恢复原代理设置
-            // 当前没有设置代理的时候，不确定旧设置是否和当前一致，全关了
-            let port_same = cur_sysproxy.map_or(true, |cur| old.port == cur.port);
-
-            if old.enable && port_same {
-                old.enable = false;
-                log::info!(target: "app", "reset proxy by disabling the original proxy");
-            } else {
-                log::info!(target: "app", "reset proxy to the original proxy");
-            }
-
-            old.set_system_proxy()?;
-        } else if let Some(mut cur @ Sysproxy { enable: true, .. }) = cur_sysproxy {
-            // 没有原代理，就按现在的代理设置disable即可
-            log::info!(target: "app", "reset proxy by disabling the current proxy");
-            cur.enable = false;
-            cur.set_system_proxy()?;
-        } else {
-            log::info!(target: "app", "reset proxy with no action");
-        }
-
-        if let Some(mut old) = old_autoproxy.take() {
-            // 如果原代理和当前代理 URL一致，就disable关闭，否则就恢复原代理设置
-            // 当前没有设置代理的时候，不确定旧设置是否和当前一致，全关了
-            let url_same = cur_autoproxy.map_or(true, |cur| old.url == cur.url);
-
-            if old.enable && url_same {
-                old.enable = false;
-                log::info!(target: "app", "reset proxy by disabling the original proxy");
-            } else {
-                log::info!(target: "app", "reset proxy to the original proxy");
-            }
-
-            old.set_auto_proxy()?;
-        } else if let Some(mut cur @ Autoproxy { enable: true, .. }) = cur_autoproxy {
-            // 没有原代理，就按现在的代理设置disable即可
-            log::info!(target: "app", "reset proxy by disabling the current proxy");
-            cur.enable = false;
-            cur.set_auto_proxy()?;
-        } else {
-            log::info!(target: "app", "reset proxy with no action");
-        }
+        let mut autoproxy = Autoproxy::get_auto_proxy()?;
+        autoproxy.enable = false;
+        autoproxy.set_auto_proxy()?;
 
         Ok(())
     }
@@ -319,10 +207,6 @@ impl Sysopt {
     pub fn update_launch(&self) -> Result<()> {
         let auto_launch = self.auto_launch.lock();
 
-        if auto_launch.is_none() {
-            drop(auto_launch);
-            return self.init_launch();
-        }
         let enable = { Config::verge().latest().enable_auto_launch };
         let enable = enable.unwrap_or(false);
         let auto_launch = auto_launch.as_ref().unwrap();
@@ -335,14 +219,9 @@ impl Sysopt {
         Ok(())
     }
 
-    /// launch a system proxy guard
-    /// read config from file directly
-    pub fn guard_proxy(&self) {
-        use tokio::time::{sleep, Duration};
-        let guard_state = self.guard_state.clone();
-
+    fn guard_proxy(&self) {
+        let _ = self.guard_state.lock();
         tauri::async_runtime::spawn(async move {
-            let _ = guard_state.lock().await;
             // default duration is 10s
             let mut wait_secs = 10u64;
 
@@ -362,13 +241,27 @@ impl Sysopt {
 
                 // stop loop
                 if !enable || !guard {
-                    break;
+                    continue;
                 }
 
                 // update duration
                 wait_secs = guard_duration;
 
                 log::debug!(target: "app", "try to guard the system proxy");
+
+                let sysproxy = Sysproxy::get_system_proxy();
+                let autoproxy = Autoproxy::get_auto_proxy();
+                if !sysproxy.is_ok() || !autoproxy.is_ok() {
+                    log::error!(target: "app", "failed to get the system proxy");
+                    continue;
+                }
+
+                let sysproxy_enable = sysproxy.ok().map(|s| s.enable).unwrap_or(false);
+                let autoproxy_enable = autoproxy.ok().map(|s| s.enable).unwrap_or(false);
+
+                if sysproxy_enable || autoproxy_enable {
+                    continue;
+                }
 
                 let port = {
                     Config::verge()
