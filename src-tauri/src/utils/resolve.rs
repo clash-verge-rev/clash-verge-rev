@@ -94,7 +94,8 @@ pub async fn resolve_setup(app: &mut App) {
     }
 
     log_err!(sysopt::Sysopt::global().init_launch());
-    log_err!(sysopt::Sysopt::global().init_sysproxy());
+    log_err!(sysopt::Sysopt::global().update_sysproxy());
+    log_err!(sysopt::Sysopt::global().init_guard_sysproxy());
 
     log_err!(handle::Handle::update_systray_part());
     log_err!(hotkey::Hotkey::global().init());

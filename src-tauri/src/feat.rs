@@ -175,7 +175,6 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         let mut should_update_clash_config = false;
         let mut should_update_launch = false;
         let mut should_update_sysproxy = false;
-        let mut should_update_guard_proxy = false;
         let mut should_update_systray_part = false;
 
         let service_mode = patch.enable_service_mode;
@@ -214,11 +213,6 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             || pac_content.is_some()
         {
             should_update_sysproxy = true;
-            should_update_guard_proxy = true;
-        }
-
-        if let Some(true) = patch.enable_proxy_guard {
-            should_update_guard_proxy = true;
         }
 
         if language.is_some()
@@ -244,9 +238,6 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
 
         if should_update_sysproxy {
             sysopt::Sysopt::global().update_sysproxy()?;
-        }
-        if should_update_guard_proxy {
-            sysopt::Sysopt::global().guard_proxy();
         }
 
         if let Some(hotkeys) = patch.hotkeys {
