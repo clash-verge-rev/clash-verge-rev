@@ -98,34 +98,80 @@ impl Sysopt {
             )
         };
 
-        if enable == false {
-            return Ok(());
+        #[cfg(not(target_os = "windows"))]
+        {
+            let mut sys = Sysproxy {
+                enable,
+                host: String::from("127.0.0.1"),
+                port,
+                bypass: get_bypass(),
+            };
+            let mut auto = Autoproxy {
+                enable,
+                url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
+            };
+            if pac {
+                sys.enable = false;
+                auto.enable = true;
+                sys.set_system_proxy()?;
+                auto.set_auto_proxy()?;
+            } else {
+                auto.enable = false;
+                sys.enable = true;
+                auto.set_auto_proxy()?;
+                sys.set_system_proxy()?;
+            }
+        }
+        #[cfg(target_os = "windows")]
+        {
+            if !enable {
+                return self.reset_sysproxy();
+            }
+            use crate::core::handle::Handle;
+            use crate::utils::dirs;
+            use anyhow::bail;
+            use tauri_plugin_shell::ShellExt;
+
+            let app_handle = Handle::global().app_handle().unwrap();
+
+            let binary_path = dirs::app_resources_dir()?;
+            let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
+
+            if !sysproxy_exe.exists() {
+                bail!("sysproxy.exe not found");
+            }
+
+            let shell = app_handle.shell();
+            let output = if pac {
+                let address = format!("http://{}:{}/pac", "127.0.0.1", port);
+                let output = tauri::async_runtime::block_on(async move {
+                    shell
+                        .command(sysproxy_exe.as_path().to_str().unwrap())
+                        .args(["opac", address.as_str()])
+                        .output()
+                        .await
+                        .unwrap()
+                });
+                output
+            } else {
+                let address = format!("{}:{}", "127.0.0.1", port);
+                let bypass = get_bypass();
+                let output = tauri::async_runtime::block_on(async move {
+                    shell
+                        .command(sysproxy_exe.as_path().to_str().unwrap())
+                        .args(["global", address.as_str(), bypass.as_ref()])
+                        .output()
+                        .await
+                        .unwrap()
+                });
+                output
+            };
+
+            if !output.status.success() {
+                bail!("sysproxy exe run failed");
+            }
         }
 
-        let mut sys = Sysproxy {
-            enable,
-            host: String::from("127.0.0.1"),
-            port,
-            bypass: get_bypass(),
-        };
-        let mut auto = Autoproxy {
-            enable,
-            url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
-        };
-        if pac {
-            sys.enable = false;
-            auto.enable = true;
-            sys.set_system_proxy()?;
-            auto.set_auto_proxy()?;
-        } else {
-            auto.enable = false;
-            sys.enable = true;
-            auto.set_auto_proxy()?;
-            sys.set_system_proxy()?;
-        }
-
-        // run the system proxy guard
-        //self.guard_proxy();
         Ok(())
     }
 
@@ -133,13 +179,46 @@ impl Sysopt {
     pub fn reset_sysproxy(&self) -> Result<()> {
         let _ = self.reset_sysproxy.lock();
         //直接关闭所有代理
-        let mut sysproxy: Sysproxy = Sysproxy::get_system_proxy()?;
-        sysproxy.enable = false;
-        sysproxy.set_system_proxy()?;
+        #[cfg(not(target_os = "windows"))]
+        {
+            let mut sysproxy: Sysproxy = Sysproxy::get_system_proxy()?;
+            let mut autoproxy = Autoproxy::get_auto_proxy()?;
+            sysproxy.enable = false;
+            autoproxy.enable = false;
+            autoproxy.set_auto_proxy()?;
+            sysproxy.set_system_proxy()?;
+        }
 
-        let mut autoproxy = Autoproxy::get_auto_proxy()?;
-        autoproxy.enable = false;
-        autoproxy.set_auto_proxy()?;
+        #[cfg(target_os = "windows")]
+        {
+            use crate::core::handle::Handle;
+            use crate::utils::dirs;
+            use anyhow::bail;
+            use tauri_plugin_shell::ShellExt;
+
+            let app_handle = Handle::global().app_handle().unwrap();
+
+            let binary_path = dirs::app_resources_dir()?;
+            let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
+
+            if !sysproxy_exe.exists() {
+                bail!("sysproxy.exe not found");
+            }
+
+            let shell = app_handle.shell();
+            let output = tauri::async_runtime::block_on(async move {
+                shell
+                    .command(sysproxy_exe.as_path().to_str().unwrap())
+                    .args(["set", "1"])
+                    .output()
+                    .await
+                    .unwrap()
+            });
+
+            if !output.status.success() {
+                bail!("sysproxy exe run failed");
+            }
+        }
 
         Ok(())
     }
