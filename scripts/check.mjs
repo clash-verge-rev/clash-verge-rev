@@ -422,6 +422,12 @@ const resolveEnableLoopback = () =>
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`,
   });
 
+const resolveWinSysproxy = () =>
+  resolveResource({
+    file: "sysproxy.exe",
+    downloadURL: `https://github.com/clash-verge-rev/sysproxy/releases/download/${arch}/sysproxy.exe`,
+  });
+
 const tasks = [
   // { name: "clash", func: resolveClash, retry: 5 },
   {
@@ -454,6 +460,12 @@ const tasks = [
     func: resolveServicePermission,
     retry: 1,
     unixOnly: true,
+  },
+  {
+    name: "windows-sysproxy",
+    func: resolveWinSysproxy,
+    retry: 5,
+    winOnly: true,
   },
 ];
 
