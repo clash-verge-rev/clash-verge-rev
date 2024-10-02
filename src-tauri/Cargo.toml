@@ -36,7 +36,7 @@ window-shadows = { version = "0.2.2" }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
-sysproxy = { git = "https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "main" }
 tauri = { version = "2.0.0-rc", features = [
     "protocol-asset",
     "devtools",
