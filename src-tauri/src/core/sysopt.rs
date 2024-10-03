@@ -134,9 +134,8 @@ impl Sysopt {
 
             let app_handle = Handle::global().app_handle().unwrap();
 
-            let binary_path = dirs::app_resources_dir()?;
+            let binary_path = dirs::service_path()?;
             let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
-
             if !sysproxy_exe.exists() {
                 bail!("sysproxy.exe not found");
             }
@@ -198,7 +197,7 @@ impl Sysopt {
 
             let app_handle = Handle::global().app_handle().unwrap();
 
-            let binary_path = dirs::app_resources_dir()?;
+            let binary_path = dirs::service_path()?;
             let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
 
             if !sysproxy_exe.exists() {
