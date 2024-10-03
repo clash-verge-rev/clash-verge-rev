@@ -94,7 +94,7 @@ pub async fn resolve_setup(app: &mut App) {
     }
 
     log_err!(sysopt::Sysopt::global().init_launch());
-    log_err!(sysopt::Sysopt::global().update_sysproxy());
+    log_err!(sysopt::Sysopt::global().update_sysproxy().await);
     log_err!(sysopt::Sysopt::global().init_guard_sysproxy());
 
     log_err!(handle::Handle::update_systray_part());
@@ -104,8 +104,8 @@ pub async fn resolve_setup(app: &mut App) {
 
 /// reset system proxy
 pub fn resolve_reset() {
-    log_err!(sysopt::Sysopt::global().reset_sysproxy());
     tauri::async_runtime::block_on(async move {
+        log_err!(sysopt::Sysopt::global().reset_sysproxy().await);
         log_err!(CoreManager::global().stop_core().await);
         log_err!(service::unset_dns_by_service().await);
     });

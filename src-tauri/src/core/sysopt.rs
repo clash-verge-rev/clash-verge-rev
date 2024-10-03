@@ -80,7 +80,7 @@ impl Sysopt {
     }
 
     /// init the sysproxy
-    pub fn update_sysproxy(&self) -> Result<()> {
+    pub async fn update_sysproxy(&self) -> Result<()> {
         let _ = self.update_sysproxy.lock();
 
         let port = Config::verge()
@@ -125,7 +125,7 @@ impl Sysopt {
         #[cfg(target_os = "windows")]
         {
             if !enable {
-                return self.reset_sysproxy();
+                return self.reset_sysproxy().await;
             }
             use crate::core::handle::Handle;
             use crate::utils::dirs;
@@ -143,26 +143,22 @@ impl Sysopt {
             let shell = app_handle.shell();
             let output = if pac {
                 let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
-                let output = tauri::async_runtime::block_on(async move {
-                    shell
-                        .command(sysproxy_exe.as_path().to_str().unwrap())
-                        .args(["opac", address.as_str()])
-                        .output()
-                        .await
-                        .unwrap()
-                });
+                let output = shell
+                    .command(sysproxy_exe.as_path().to_str().unwrap())
+                    .args(["opac", address.as_str()])
+                    .output()
+                    .await
+                    .unwrap();
                 output
             } else {
                 let address = format!("{}:{}", "127.0.0.1", port);
                 let bypass = get_bypass();
-                let output = tauri::async_runtime::block_on(async move {
-                    shell
-                        .command(sysproxy_exe.as_path().to_str().unwrap())
-                        .args(["global", address.as_str(), bypass.as_ref()])
-                        .output()
-                        .await
-                        .unwrap()
-                });
+                let output = shell
+                    .command(sysproxy_exe.as_path().to_str().unwrap())
+                    .args(["global", address.as_str(), bypass.as_ref()])
+                    .output()
+                    .await
+                    .unwrap();
                 output
             };
 
@@ -175,7 +171,7 @@ impl Sysopt {
     }
 
     /// reset the sysproxy
-    pub fn reset_sysproxy(&self) -> Result<()> {
+    pub async fn reset_sysproxy(&self) -> Result<()> {
         let _ = self.reset_sysproxy.lock();
         //直接关闭所有代理
         #[cfg(not(target_os = "windows"))]
@@ -205,14 +201,12 @@ impl Sysopt {
             }
 
             let shell = app_handle.shell();
-            let output = tauri::async_runtime::block_on(async move {
-                shell
-                    .command(sysproxy_exe.as_path().to_str().unwrap())
-                    .args(["set", "1"])
-                    .output()
-                    .await
-                    .unwrap()
-            });
+            let output = shell
+                .command(sysproxy_exe.as_path().to_str().unwrap())
+                .args(["set", "1"])
+                .output()
+                .await
+                .unwrap();
 
             if !output.status.success() {
                 bail!("sysproxy exe run failed");
