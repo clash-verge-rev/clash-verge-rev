@@ -342,22 +342,65 @@ impl Sysopt {
                         .unwrap_or(Config::clash().data().get_mixed_port())
                 };
                 let pac_port = IVerge::get_singleton_port();
-                if pac {
-                    let autoproxy = Autoproxy {
-                        enable: true,
-                        url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
-                    };
-                    log_err!(autoproxy.set_auto_proxy());
-                } else {
-                    let sysproxy = Sysproxy {
-                        enable: true,
-                        host: "127.0.0.1".into(),
-                        port,
-                        bypass: get_bypass(),
-                    };
+                #[cfg(not(target_os = "windows"))]
+                {
+                    if pac {
+                        let autoproxy = Autoproxy {
+                            enable: true,
+                            url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
+                        };
+                        log_err!(autoproxy.set_auto_proxy());
+                    } else {
+                        let sysproxy = Sysproxy {
+                            enable: true,
+                            host: "127.0.0.1".into(),
+                            port,
+                            bypass: get_bypass(),
+                        };
 
-                    log_err!(sysproxy.set_system_proxy());
+                        log_err!(sysproxy.set_system_proxy());
+                    }
                 }
+
+                // #[cfg(target_os = "windows")]
+                {
+                    use crate::core::handle::Handle;
+                    use crate::utils::dirs;
+                    use tauri_plugin_shell::ShellExt;
+
+                    let app_handle = Handle::global().app_handle().unwrap();
+
+                    let binary_path = dirs::service_path().unwrap();
+                    let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
+                    if !sysproxy_exe.exists() {
+                        break;
+                    }
+
+                    let shell = app_handle.shell();
+                    let output = if pac {
+                        let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
+                        let output = shell
+                            .command(sysproxy_exe.as_path().to_str().unwrap())
+                            .args(["opac", address.as_str()])
+                            .output()
+                            .await
+                            .unwrap();
+                        output
+                    } else {
+                        let address = format!("{}:{}", "127.0.0.1", port);
+                        let bypass = get_bypass();
+                        let output = shell
+                            .command(sysproxy_exe.as_path().to_str().unwrap())
+                            .args(["global", address.as_str(), bypass.as_ref()])
+                            .output()
+                            .await
+                            .unwrap();
+                        output
+                    };
+                    if !output.status.success() {
+                        break;
+                    }
+                };
             }
         });
     }
