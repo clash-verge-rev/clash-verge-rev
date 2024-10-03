@@ -143,7 +143,7 @@ impl Sysopt {
 
             let shell = app_handle.shell();
             let output = if pac {
-                let address = format!("http://{}:{}/pac", "127.0.0.1", port);
+                let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
                 let output = tauri::async_runtime::block_on(async move {
                     shell
                         .command(sysproxy_exe.as_path().to_str().unwrap())
