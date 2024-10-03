@@ -237,7 +237,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         }
 
         if should_update_sysproxy {
-            sysopt::Sysopt::global().update_sysproxy()?;
+            sysopt::Sysopt::global().update_sysproxy().await?;
         }
 
         if let Some(hotkeys) = patch.hotkeys {
