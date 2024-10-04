@@ -5,7 +5,9 @@ use crate::utils::dirs;
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
+use std::ffi::OsStr;
 use std::{sync::Arc, time::Duration};
+use sysinfo::ProcessesToUpdate;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
@@ -251,10 +253,11 @@ fn kill_processes_by_name(process_name: &str) {
         RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
     );
 
-    system.refresh_processes();
+    system.refresh_processes(ProcessesToUpdate::All);
+    let process_name = OsStr::new(process_name);
     let procs = system.processes_by_name(process_name);
     for proc in procs {
-        log::debug!(target: "app", "Killing process: {}", proc.name());
+        log::debug!(target: "app", "Killing process: {:?}", proc.name());
         proc.kill();
     }
 }
