@@ -320,7 +320,7 @@ async function downloadFile(url, path) {
   const buffer = await response.arrayBuffer();
   await fsp.writeFile(path, new Uint8Array(buffer));
 
-  log_success(`download finished: ${file}`);
+  log_success(`download finished: ${url}`);
 }
 
 // SimpleSC.dll
