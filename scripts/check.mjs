@@ -7,6 +7,7 @@ import AdmZip from "adm-zip";
 import fetch from "node-fetch";
 import proxyAgent from "https-proxy-agent";
 import { execSync } from "child_process";
+import { log_info, log_debug, log_error, log_success } from "./utils.mjs";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
@@ -92,9 +93,9 @@ async function getLatestAlphaVersion() {
     });
     let v = await response.text();
     META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
-    console.log(`Latest alpha version: ${META_ALPHA_VERSION}`);
+    log_info(`Latest alpha version: ${META_ALPHA_VERSION}`);
   } catch (error) {
-    console.error("Error fetching latest alpha version:", error.message);
+    log_error("Error fetching latest alpha version:", error.message);
     process.exit(1);
   }
 }
@@ -139,9 +140,9 @@ async function getLatestReleaseVersion() {
     });
     let v = await response.text();
     META_VERSION = v.trim(); // Trim to remove extra whitespaces
-    console.log(`Latest release version: ${META_VERSION}`);
+    log_info(`Latest release version: ${META_VERSION}`);
   } catch (error) {
-    console.error("Error fetching latest release version:", error.message);
+    log_error("Error fetching latest release version:", error.message);
     process.exit(1);
   }
 }
@@ -222,11 +223,11 @@ async function resolveSidecar(binInfo) {
     if (zipFile.endsWith(".zip")) {
       const zip = new AdmZip(tempZip);
       zip.getEntries().forEach((entry) => {
-        console.log(`[DEBUG]: "${name}" entry name`, entry.entryName);
+        log_debug(`"${name}" entry name`, entry.entryName);
       });
       zip.extractAllTo(tempDir, true);
       await fsp.rename(tempExe, sidecarPath);
-      console.log(`[INFO]: "${name}" unzip finished`);
+      log_success(`unzip finished: "${name}"`);
     } else if (zipFile.endsWith(".tgz")) {
       // tgz
       await fsp.mkdir(tempDir, { recursive: true });
@@ -236,14 +237,14 @@ async function resolveSidecar(binInfo) {
         //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
       });
       const files = await fsp.readdir(tempDir);
-      console.log(`[DEBUG]: "${name}" files in tempDir:`, files);
+      log_debug(`"${name}" files in tempDir:`, files);
       const extractedFile = files.find((file) => file.startsWith("虚空终端-"));
       if (extractedFile) {
         const extractedFilePath = path.join(tempDir, extractedFile);
         await fsp.rename(extractedFilePath, sidecarPath);
-        console.log(`[INFO]: "${name}" file renamed to "${sidecarPath}"`);
+        log_success(`"${name}" file renamed to "${sidecarPath}"`);
         execSync(`chmod 755 ${sidecarPath}`);
-        console.log(`[INFO]: "${name}" chmod binary finished`);
+        log_success(`chmod binary finished: "${name}"`);
       } else {
         throw new Error(`Expected file not found in ${tempDir}`);
       }
@@ -253,16 +254,16 @@ async function resolveSidecar(binInfo) {
       const writeStream = fs.createWriteStream(sidecarPath);
       await new Promise((resolve, reject) => {
         const onError = (error) => {
-          console.error(`[ERROR]: "${name}" gz failed:`, error.message);
+          log_error(`"${name}" gz failed:`, error.message);
           reject(error);
         };
         readStream
           .pipe(zlib.createGunzip().on("error", onError))
           .pipe(writeStream)
           .on("finish", () => {
-            console.log(`[INFO]: "${name}" gunzip finished`);
+            log_success(`chmod binary finished: "${name}"`);
             execSync(`chmod 755 ${sidecarPath}`);
-            console.log(`[INFO]: "${name}" chmod binary finished`);
+            log_success(`chmod binary finished: "${name}"`);
             resolve();
           })
           .on("error", onError);
@@ -292,7 +293,7 @@ async function resolveResource(binInfo) {
   await fsp.mkdir(resDir, { recursive: true });
   await downloadFile(downloadURL, targetPath);
 
-  console.log(`[INFO]: ${file} finished`);
+  log_success(`${file} finished`);
 }
 
 /**
@@ -319,7 +320,7 @@ async function downloadFile(url, path) {
   const buffer = await response.arrayBuffer();
   await fsp.writeFile(path, new Uint8Array(buffer));
 
-  console.log(`[INFO]: download finished "${url}"`);
+  log_success(`download finished: ${file}`);
 }
 
 // SimpleSC.dll
@@ -344,11 +345,11 @@ const resolvePlugin = async () => {
     }
     const zip = new AdmZip(tempZip);
     zip.getEntries().forEach((entry) => {
-      console.log(`[DEBUG]: "SimpleSC" entry name`, entry.entryName);
+      log_debug(`"SimpleSC" entry name`, entry.entryName);
     });
     zip.extractAllTo(tempDir, true);
     await fsp.cp(tempDll, pluginPath, { recursive: true, force: true });
-    console.log(`[INFO]: "SimpleSC" unzip finished`);
+    log_success(`unzip finished: "SimpleSC"`);
   } finally {
     await fsp.rm(tempDir, { recursive: true, force: true });
   }
@@ -366,7 +367,7 @@ const resolveServicePermission = async () => {
     const targetPath = path.join(resDir, f);
     if (fs.existsSync(targetPath)) {
       execSync(`chmod 755 ${targetPath}`);
-      console.log(`[INFO]: "${targetPath}" chmod finished`);
+      log_success(`chmod finished: "${f}"`);
     }
   }
 };
@@ -481,7 +482,7 @@ async function runTask() {
       await task.func();
       break;
     } catch (err) {
-      console.error(`[ERROR]: task::${task.name} try ${i} ==`, err.message);
+      log_error(`task::${task.name} try ${i} ==`, err.message);
       if (i === task.retry - 1) throw err;
     }
   }

@@ -40,6 +40,7 @@
     "@types/json-schema": "^7.0.15",
     "ahooks": "^3.8.0",
     "axios": "^1.7.2",
+    "cli-color": "^2.0.4",
     "dayjs": "1.11.5",
     "foxact": "^0.2.35",
     "i18next": "^23.11.5",
