@@ -30,7 +30,6 @@ static DEFAULT_BYPASS: &str =
     "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 
 fn get_bypass() -> String {
-    // let bypass = DEFAULT_BYPASS.to_string();
     let use_default = Config::verge().latest().use_default_bypass.unwrap_or(true);
     let res = {
         let verge = Config::verge();
@@ -41,17 +40,7 @@ fn get_bypass() -> String {
         Some(bypass) => bypass,
         None => "".to_string(),
     };
-    #[cfg(target_os = "windows")]
-    let bypass = if custom_bypass.is_empty() {
-        DEFAULT_BYPASS.to_string()
-    } else {
-        if use_default {
-            format!("{};{}", DEFAULT_BYPASS, custom_bypass)
-        } else {
-            custom_bypass
-        }
-    };
-    #[cfg(not(target_os = "windows"))]
+
     let bypass = if custom_bypass.is_empty() {
         DEFAULT_BYPASS.to_string()
     } else if use_default {
@@ -59,7 +48,6 @@ fn get_bypass() -> String {
     } else {
         custom_bypass
     };
-
     bypass
 }
 
