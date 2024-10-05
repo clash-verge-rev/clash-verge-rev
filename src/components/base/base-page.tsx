@@ -1,4 +1,4 @@
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { cn } from "@/utils";
 import { Typography } from "@mui/material";
 import React, { ReactNode } from "react";
 import { BaseErrorBoundary } from "./base-error-boundary";
@@ -13,15 +13,12 @@ interface Props {
 
 export const BasePage: React.FC<Props> = (props) => {
   const { title, header, contentStyle, full, children } = props;
-  const { theme } = useCustomTheme();
-
-  const isDark = theme.palette.mode === "dark";
 
   return (
     <BaseErrorBoundary>
-      <div className="base-page">
+      <div className="w-full h-full">
         <div
-          className="base-header"
+          className="flex justify-between px-2 h-[50px]"
           data-tauri-drag-region="true"
           style={{ userSelect: "none" }}>
           <Typography
@@ -34,16 +31,14 @@ export const BasePage: React.FC<Props> = (props) => {
         </div>
 
         <div
-          className={full ? "base-container no-padding" : "base-container"}
-          style={{ backgroundColor: isDark ? "#1e1f27" : "#ffffff" }}>
+          className={"h-[calc(100%-50px)] w-full bg-white dark:bg-[#1e1f27]"}>
           <div
-            className="base-section"
-            style={{
-              backgroundColor: isDark ? "#1e1f27" : "var(--background-color)",
-            }}>
-            <div className="base-content" style={contentStyle}>
-              {children}
-            </div>
+            className={cn(
+              "bg-[--background-color] dark:bg-[#1e1f27] px-2",
+              full && "p-0",
+            )}
+            style={contentStyle}>
+            {children}
           </div>
         </div>
       </div>

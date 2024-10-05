@@ -77,6 +77,8 @@ export const useCustomTheme = () => {
   const theme = useMemo(() => {
     const setting = themeSettings[mode]!;
     const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
+    const isDark = mode === "dark";
+
     const muiDataGridLocale = language === "zh" ? zhCN : enUS;
 
     let theme: Theme;
@@ -135,11 +137,12 @@ export const useCustomTheme = () => {
     }
 
     // css
-    const backgroundColor = mode === "light" ? "#f0f0f0" : "#2e303d";
-    const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
-    const scrollColor = mode === "light" ? "#90939980" : "#54545480";
-    const dividerColor =
-      mode === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)";
+    const backgroundColor = isDark ? "#2e303d" : "#f0f0f0";
+    const selectColor = isDark ? "#d5d5d5" : "#f5f5f5";
+    const scrollColor = isDark ? "#54545480" : "#90939980";
+    const dividerColor = isDark
+      ? "rgba(255, 255, 255, 0.06)"
+      : "rgba(0, 0, 0, 0.06)";
 
     const rootEle = document.documentElement;
     rootEle.style.setProperty("--divider-color", dividerColor);
@@ -176,6 +179,13 @@ export const useCustomTheme = () => {
       }
     }, 0);
 
+    // init current theme
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
     return theme;
   }, [mode, themeSettings, language]);
 
@@ -202,6 +212,11 @@ export const useCustomTheme = () => {
     // isAppearanceTransition return true in new webkit version on arch linux, but it not actually work. so we deside to enable it only on windows.
     if (!isAppearanceTransition || getSystem() !== "windows") {
       setMode(isDark ? "light" : "dark");
+      if (isDark) {
+        document.documentElement.classList.remove("dark");
+      } else {
+        document.documentElement.classList.add("dark");
+      }
       patchVerge({ theme_mode: vergeThemeMode });
       return;
     }
@@ -216,8 +231,12 @@ export const useCustomTheme = () => {
     const transition = document.startViewTransition(() => {
       flushSync(() => {
         setMode(isDark ? "light" : "dark");
+        if (isDark) {
+          document.documentElement.classList.remove("dark");
+        } else {
+          document.documentElement.classList.add("dark");
+        }
         patchVerge({ theme_mode: vergeThemeMode });
-        document.documentElement.className = isDark ? "light" : "dark";
       });
     });
     transition.ready.then(() => {

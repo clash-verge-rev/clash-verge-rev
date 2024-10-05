@@ -10,7 +10,6 @@ import {
 } from "@/components/connection/connection-detail";
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useClashInfo } from "@/hooks/use-clash";
 import { closeAllConnections } from "@/services/api";
 import { useConnectionSetting } from "@/services/states";
@@ -35,8 +34,6 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ConnectionsPage = () => {
   const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
-  const { theme } = useCustomTheme();
-  const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
 
@@ -203,12 +200,15 @@ const ConnectionsPage = () => {
 
       <Box
         height="calc(100% - 65px)"
-        sx={{
+        sx={(theme) => ({
           userSelect: "text",
           margin: "10px",
           borderRadius: "8px",
-          bgcolor: isDark ? "#282a36" : "#ffffff",
-        }}>
+          bgcolor: "#ffffff",
+          ...theme.applyStyles("dark", {
+            bgcolor: "#282a36",
+          }),
+        })}>
         {filterConn.length === 0 ? (
           <BaseEmpty text={t("No Connections")} />
         ) : isTableLayout ? (

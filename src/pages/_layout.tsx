@@ -1,10 +1,8 @@
-import AppNameSvg from "@/assets/image/clash_verge.svg?react";
-import LogoSvg from "@/assets/image/logo.svg?react";
 import { Notice } from "@/components/base";
 import { LayoutControl } from "@/components/layout/layout-control";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
-import { UpdateButton } from "@/components/layout/update-button";
+import { LogoTitle } from "@/components/layout/logo-title";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
@@ -12,8 +10,8 @@ import LoadingPage from "@/pages/loading";
 import { getAxios } from "@/services/api";
 import { getPortableFlag } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
+import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
-import { DarkMode, LightMode } from "@mui/icons-material";
 import { List, Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
@@ -21,7 +19,6 @@ import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { AnimatePresence, motion } from "framer-motion";
 import i18next from "i18next";
 import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -150,7 +147,13 @@ const Layout = () => {
         <Paper
           square
           elevation={0}
-          className={`${OS} layout`}
+          className={cn(
+            "w-screen h-screen flex overflow-hidden",
+            OS === "linux" &&
+              !enable_system_title &&
+              "w-[calc(100vw-4px)] h-[calc(100vh-4px)] border-2 border-[--divider-color] border-solid rounded-md",
+            isMaximized && "rounded-none",
+          )}
           onContextMenu={(e) => {
             // only prevent it on Windows
             const validList = ["input", "textarea"];
@@ -164,47 +167,15 @@ const Layout = () => {
             ) {
               e.preventDefault();
             }
-          }}
-          sx={[
-            ({ palette }) => ({
-              bgcolor: palette.background.paper,
-              ...(OS === "linux" &&
-                !enable_system_title && {
-                  borderRadius: `${isMaximized ? 0 : "6px"}`,
-                  border: "2px solid var(--divider-color)",
-                  width: "calc(100vw - 4px)",
-                  height: "calc(100vh - 4px)",
-                }),
-            }),
-          ]}>
+          }}>
           <div
-            className={`layout__left ${enable_system_title && "system-title"}`}>
-            <div className="logo-wrap" data-tauri-drag-region="true">
-              <div className="the-logo">
-                <LogoSvg style={{ width: "50px", marginRight: "5px" }} />
-                <AppNameSvg />
-              </div>
-              <UpdateButton className="the-newbtn" />
-              <AnimatePresence>
-                <motion.button
-                  key={isDark ? "dark" : "light"}
-                  initial={{ x: -25, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 20, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="switch-theme-btn"
-                  // whileTap={{ scale: 0.9 }}
-                  onClick={(e) => toggleTheme(e, isDark ? "light" : "dark")}>
-                  {isDark ? (
-                    <DarkMode fontSize="inherit" />
-                  ) : (
-                    <LightMode fontSize="inherit" />
-                  )}
-                </motion.button>
-              </AnimatePresence>
-            </div>
+            className={cn(
+              "flex flex-grow-0 flex-shrink-0 basis-[200px] flex-col pt-2",
+              !enable_system_title && "pt-4",
+            )}>
+            <LogoTitle />
 
-            <List className="the-menu">
+            <List className="flex-auto overflow-y-auto box-border">
               {routers.map((router) => (
                 <LayoutItem
                   key={router.label}
@@ -215,19 +186,17 @@ const Layout = () => {
               ))}
             </List>
 
-            <div className="the-traffic">
+            <div className="flex flex-grow-0 flex-shrink-0 items-center basis-[160px] px-4">
               <LayoutTraffic />
             </div>
           </div>
 
-          <div
-            className={`layout__right ${enable_system_title && "system-title"}`}>
+          <div className="flex flex-col w-full h-full">
             {!enable_system_title && (
-              <div className="the-bar">
+              <div className="basis-8 flex flex-grow-0 flex-shrink-0 justify-end box-border z-10">
                 <div
-                  className="the-dragbar"
-                  data-tauri-drag-region="true"
-                  style={{ width: "100%" }}></div>
+                  className="w-full mt-1"
+                  data-tauri-drag-region="true"></div>
                 {OS !== "macos" && (
                   <LayoutControl
                     maximized={isMaximized}
@@ -237,22 +206,11 @@ const Layout = () => {
               </div>
             )}
 
-            <div className="the-content">
+            <div className="flex-auto pr-1 py-1 overflow-auto">
               <Suspense fallback={<LoadingPage />}>
                 <Outlet />
               </Suspense>
             </div>
-            {/* when proxies page expanded item too musch, this transition will slowly */}
-            {/* <TransitionGroup className="the-content">
-              <CSSTransition
-                key={location.pathname}
-                timeout={300}
-                classNames="page">
-                <Suspense fallback={<LoadingPage />}>
-                  <Outlet />
-                </Suspense>
-              </CSSTransition>
-            </TransitionGroup> */}
           </div>
         </Paper>
       </ThemeProvider>

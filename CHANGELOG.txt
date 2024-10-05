@@ -1,18 +1,20 @@
-> [!Important]
-> 此版本大幅修改了Clash Verge Service, 安装此版本前，请先卸载旧版本 Clash Verge Service.
-> 另外，此版本 APP ID 已更改，所有数据的路径都会改变，请自行备份配置文件.
+### ⚠️ Breaking Changes
+- 此版本大幅修改了Clash Verge Service, 安装此版本前，请先卸载旧版本 Clash Verge Service.
+- 另外，此版本 APP ID 已更改，所有数据的路径都会改变，请自行备份配置文件.
 
 ### ✨ Features
 - 支持 webdav 备份
 - 服务模式支持日志输出
 - 支持应用运行时动态修改 APP 日志级别
-- 设置 `pnpm check` 的任务失败重试间隔为 1 秒
+- `pnpm check` 的任务失败重试间隔为 1 秒
 - `pnpm check` 支持 `--alpha` 参数来下载 alpha 版本的 Clash Verge Service
 - 更好看和强大的增强脚本 (Script) 的控制台界面
 - 支持增强脚本 (Script) 保存前的运行检查
-- 规则合集 schema 的 format 字段支持 `mrs` 文件类型
+- 脚本 schema 的 format 字段值添加 `mrs` 文件类型
 - 订阅配置文件右键菜单中的第一项始终为“使用”
 - `pnpm check` 支持下载 ASN.mmdb 文件
+- 调整添加/删除系统代理绕过规则时的 UI 交互
+- 添加 tailwindcss 库并重新调整部分样式
 
 ### 🚀 Performance Improvements
 - 优化内核停止逻辑
@@ -33,5 +35,6 @@
 - 移除未使用的 LocalStorage 对象
 - Linux 上切换主题动画卡顿失效
 - 修改外部控制器后，websocket 连接失败，导致流量图显/内容使用/连接信息/日志信息数据获取失败
+- 监听 `document.body` 的尺寸在窗口重新打开时可能为 0, 导致代理页面节点渲染列数错误
 
 - 工作流中使用 rust 稳定版

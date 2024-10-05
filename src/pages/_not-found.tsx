@@ -11,7 +11,7 @@ export const NotFountPage = () => {
         height: "100%",
       }}>
       <h1>Oops!</h1>
-      <p style={{ color: "#888" }}> Not Found</p>
+      <p style={{ color: "#888" }}>Not Found</p>
     </Box>
   );
 };

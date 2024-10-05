@@ -3,9 +3,11 @@
 
 import "@/assets/styles/index.scss";
 import { BaseErrorBoundary } from "@/components/base";
+import "@/index.css";
 import router from "@/pages/_routers";
 import "@/services/i18n";
 import { ResizeObserver } from "@juggle/resize-observer";
+import { StyledEngineProvider } from "@mui/material";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
@@ -64,11 +66,13 @@ const contexts = [
 ];
 
 createRoot(container).render(
-  <React.StrictMode>
-    <ComposeContextProvider contexts={contexts}>
-      <BaseErrorBoundary>
-        <RouterProvider router={router} />
-      </BaseErrorBoundary>
-    </ComposeContextProvider>
-  </React.StrictMode>,
+  <StyledEngineProvider injectFirst>
+    <React.StrictMode>
+      <ComposeContextProvider contexts={contexts}>
+        <BaseErrorBoundary>
+          <RouterProvider router={router} />
+        </BaseErrorBoundary>
+      </ComposeContextProvider>
+    </React.StrictMode>
+  </StyledEngineProvider>,
 );

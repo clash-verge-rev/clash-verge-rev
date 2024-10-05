@@ -4,7 +4,6 @@ import {
   BaseSearchBox,
   BaseStyledSelect,
 } from "@/components/base";
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import LogItem from "@/components/log/log-item";
 import { useLogData } from "@/hooks/use-log-data";
 import { useEnableLog } from "@/services/states";
@@ -24,8 +23,6 @@ const LogPage = () => {
     refreshGetClashLog,
   } = useLogData();
   const [enableLog, setEnableLog] = useEnableLog();
-  const { theme } = useCustomTheme();
-  const isDark = theme.palette.mode === "dark";
   const [logState, setLogState] = useState("all");
   const [match, setMatch] = useState(() => (_: string) => true);
 
@@ -88,12 +85,15 @@ const LogPage = () => {
 
       <Box
         height="calc(100% - 65px)"
-        sx={{
+        sx={(theme) => ({
           pt: 1,
           margin: "10px",
           borderRadius: "8px",
-          bgcolor: isDark ? "#282a36" : "#ffffff",
-        }}>
+          bgcolor: "#ffffff",
+          ...theme.applyStyles("dark", {
+            bgcolor: "#282a36",
+          }),
+        })}>
         {filterLogs.length > 0 ? (
           <Virtuoso
             initialTopMostItemIndex={999}
