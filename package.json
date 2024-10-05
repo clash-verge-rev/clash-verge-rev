@@ -83,7 +83,7 @@
     "node-fetch": "3.3.2",
     "postcss": "8.4.47",
     "prettier": "3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.8",
+    "prettier-plugin-tailwindcss": "0.6.8",
     "pretty-quick": "4.0.0",
     "react-devtools": "6.0.0",
     "sass": "1.79.4",
