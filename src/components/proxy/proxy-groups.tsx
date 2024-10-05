@@ -225,18 +225,7 @@ export const ProxyGroups = (props: Props) => {
               }),
             ]}>
             <div
-              className="side-btn"
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "20px",
-                height: "80px",
-                padding: "0",
-                transition: "all 0.2s",
-                transform: "perspective(11px) rotateY(5deg)",
-                cursor: "pointer",
-              }}
+              className="side-btn flex h-20 w-5 cursor-pointer items-center justify-center bg-[--primary-main] p-0"
               onClick={() => {
                 setOpen((pre) => !pre);
               }}>
@@ -247,17 +236,7 @@ export const ProxyGroups = (props: Props) => {
                 }}
               />
             </div>
-            <div
-              className="side-border"
-              style={{
-                position: "absolute",
-                width: 3,
-                left: 0,
-                top: 0,
-                bottom: 0,
-                zIndex: 999,
-                transition: "all 0.2s",
-              }}></div>
+            <div className="side-border absolute bottom-0 left-0 top-0 z-50 w-1"></div>
           </Box>
         </Box>
         <Virtuoso

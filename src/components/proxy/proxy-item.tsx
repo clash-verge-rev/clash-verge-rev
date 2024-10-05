@@ -84,9 +84,7 @@ export const ProxyItem = (props: Props) => {
         onClick={() => onClick?.(proxy.name)}
         sx={[
           { borderRadius: 1 },
-          ({ palette: { mode, primary } }) => {
-            const bgcolor = mode === "light" ? "#ffffff" : "#24252f";
-            const selectColor = mode === "light" ? primary.main : primary.light;
+          (theme) => {
             const showDelay = delay > 0;
 
             return {
@@ -96,13 +94,17 @@ export const ProxyItem = (props: Props) => {
               "&.Mui-selected": {
                 width: `calc(100% + 3px)`,
                 marginLeft: `-3px`,
-                borderLeft: `3px solid ${selectColor}`,
-                bgcolor:
-                  mode === "light"
-                    ? alpha(primary.main, 0.15)
-                    : alpha(primary.main, 0.35),
+                bgcolor: alpha(theme.palette.primary.main, 0.15),
+                borderLeft: `3px solid ${theme.palette.primary.main}`,
+                ...theme.applyStyles("dark", {
+                  bgcolor: alpha(theme.palette.primary.main, 0.35),
+                  borderLeft: `3px solid ${theme.palette.primary.light}`,
+                }),
               },
-              backgroundColor: bgcolor,
+              backgroundColor: "#ffffff",
+              ...theme.applyStyles("dark", {
+                backgroundColor: "#24252f",
+              }),
               transition: "background-color 0s",
               marginBottom: "8px",
               height: "40px",
@@ -112,25 +114,29 @@ export const ProxyItem = (props: Props) => {
         <ListItemText
           title={proxy.name}
           secondary={
-            <>
-              <span
-                style={{
-                  display: "inline-block",
-                  marginRight: "8px",
-                  fontSize: "14px",
-                  color: "text.primary",
-                }}>
-                {proxy.name}
-                {showType && proxy.now && ` - ${proxy.now}`}
-              </span>
-              {showType && !!proxy.provider && (
-                <TypeSpan>{proxy.provider}</TypeSpan>
-              )}
-              {showType && <TypeSpan>{proxy.type}</TypeSpan>}
-              {showType && proxy.udp && <TypeSpan>UDP</TypeSpan>}
-              {showType && proxy.xudp && <TypeSpan>XUDP</TypeSpan>}
-              {showType && proxy.tfo && <TypeSpan>TFO</TypeSpan>}
-            </>
+            <div className="flex items-center">
+              <div className="line-clamp-1">
+                <span
+                  style={{
+                    display: "inline-block",
+                    marginRight: "8px",
+                    fontSize: "14px",
+                    color: "text.primary",
+                  }}>
+                  {proxy.name}
+                  {showType && proxy.now && ` - ${proxy.now}`}
+                </span>
+              </div>
+              <div className="flex flex-nowrap">
+                {showType && !!proxy.provider && (
+                  <TypeSpan>{proxy.provider}</TypeSpan>
+                )}
+                {showType && <TypeSpan>{proxy.type}</TypeSpan>}
+                {showType && proxy.udp && <TypeSpan>UDP</TypeSpan>}
+                {showType && proxy.xudp && <TypeSpan>XUDP</TypeSpan>}
+                {showType && proxy.tfo && <TypeSpan>TFO</TypeSpan>}
+              </div>
+            </div>
           }
         />
 

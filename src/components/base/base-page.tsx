@@ -18,7 +18,7 @@ export const BasePage: React.FC<Props> = (props) => {
     <BaseErrorBoundary>
       <div className="h-full w-full">
         <div
-          className="flex h-[50px] justify-between px-2"
+          className="flex h-[50px] items-center justify-between px-2"
           data-tauri-drag-region="true"
           style={{ userSelect: "none" }}>
           <Typography
