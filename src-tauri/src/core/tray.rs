@@ -197,10 +197,22 @@ fn create_tray_menu(
         "规则模式"
     };
 
+    let rule_mode_text_en = if mode == "rule" {
+        "✓ Rule Mode"
+    } else {
+        "Rule Mode"
+    };
+
     let global_mode_text = if mode == "global" {
         "✓ 全局模式"
     } else {
         "全局模式"
+    };
+
+    let global_mode_text_en = if mode == "global" {
+        "✓ Global Mode"
+    } else {
+        "Global Mode"
     };
 
     let direct_mode_text = if mode == "direct" {
@@ -209,10 +221,22 @@ fn create_tray_menu(
         "直连模式"
     };
 
+    let direct_mode_text_en = if mode == "direct" {
+        "✓ Direct Mode"
+    } else {
+        "Direct Mode"
+    };
+
     let system_proxy_text = if system_proxy_enabled {
         "✓ 系统代理"
     } else {
         "系统代理"
+    };
+
+    let system_proxy_text_en = if system_proxy_enabled {
+        "✓ System Proxy"
+    } else {
+        "System Proxy"
     };
 
     let tun_mode_text = if tun_mode_enabled {
@@ -221,10 +245,16 @@ fn create_tray_menu(
         "Tun 模式"
     };
 
+    let tun_mode_text_en = if tun_mode_enabled {
+        "✓ Tun Mode"
+    } else {
+        "Tun Mode"
+    };
+
     let restart_clash = &MenuItem::with_id(
         app_handle,
         "restart_clash",
-        t!("Restart App", "重启 Clash", use_zh),
+        t!("Restart Clash", "重启 Clash", use_zh),
         true,
         None::<&str>,
     )
@@ -264,7 +294,7 @@ fn create_tray_menu(
             &MenuItem::with_id(
                 app_handle,
                 "rule_mode",
-                t!("Rule Mode", rule_mode_text, use_zh),
+                t!(rule_mode_text_en, rule_mode_text, use_zh),
                 true,
                 None::<&str>,
             )
@@ -274,7 +304,7 @@ fn create_tray_menu(
             &MenuItem::with_id(
                 app_handle,
                 "global_mode",
-                t!("Global Mode", global_mode_text, use_zh),
+                t!(global_mode_text_en, global_mode_text, use_zh),
                 true,
                 None::<&str>,
             )
@@ -284,7 +314,7 @@ fn create_tray_menu(
             &MenuItem::with_id(
                 app_handle,
                 "direct_mode",
-                t!("Direct Mode", direct_mode_text, use_zh),
+                t!(direct_mode_text_en, direct_mode_text, use_zh),
                 true,
                 None::<&str>,
             )
@@ -295,7 +325,7 @@ fn create_tray_menu(
             &MenuItem::with_id(
                 app_handle,
                 "system_proxy",
-                t!("System Proxy", system_proxy_text, use_zh),
+                t!(system_proxy_text_en, system_proxy_text, use_zh),
                 true,
                 None::<&str>,
             )
@@ -305,7 +335,7 @@ fn create_tray_menu(
             &MenuItem::with_id(
                 app_handle,
                 "tun_mode",
-                t!("TUN Mode", tun_mode_text, use_zh),
+                t!(tun_mode_text_en, tun_mode_text, use_zh),
                 true,
                 None::<&str>,
             )
