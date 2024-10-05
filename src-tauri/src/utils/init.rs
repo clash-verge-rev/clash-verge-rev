@@ -44,21 +44,9 @@ fn init_log() -> Result<()> {
 
     let log_more = log_level == LevelFilter::Trace || log_level == LevelFilter::Debug;
 
-    #[cfg(feature = "verge-dev")]
-    {
-        logger_builder = logger_builder.appenders(["file", "stdout"]);
-        if log_more {
-            root_builder = root_builder.appenders(["file", "stdout"]);
-        } else {
-            root_builder = root_builder.appenders(["stdout"]);
-        }
-    }
-    #[cfg(not(feature = "verge-dev"))]
-    {
-        logger_builder = logger_builder.appenders(["file"]);
-        if log_more {
-            root_builder = root_builder.appenders(["file"]);
-        }
+    logger_builder = logger_builder.appenders(["file"]);
+    if log_more {
+        root_builder = root_builder.appenders(["file"]);
     }
 
     let (config, _) = log4rs::config::Config::builder()
