@@ -67,20 +67,9 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => {
-            if (serviceStatus !== "active") {
-              onChangeData({ enable_tun_mode: false });
-            } else {
-              onChangeData({ enable_tun_mode: e });
-            }
+            onChangeData({ enable_tun_mode: e });
           }}
-          onGuard={(e) => {
-            if (serviceStatus !== "active" && e) {
-              Notice.error(t("Please Enable Service Mode"));
-              return Promise.resolve();
-            } else {
-              return patchVerge({ enable_tun_mode: e });
-            }
-          }}
+          onGuard={(e) => patchVerge({ enable_tun_mode: e })}
         >
           <Switch edge="end" />
         </GuardState>

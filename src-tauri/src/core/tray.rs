@@ -364,51 +364,25 @@ fn create_tray_menu(
     .unwrap();
 
     let separator = &PredefinedMenuItem::separator(app_handle).unwrap();
-    let enable = {
-        Config::verge()
-            .latest()
-            .enable_service_mode
-            .unwrap_or(false)
-    };
 
-    let menu = if enable {
-        tauri::menu::MenuBuilder::new(app_handle)
-            .items(&[
-                open_window,
-                separator,
-                rule_mode,
-                global_mode,
-                direct_mode,
-                separator,
-                system_proxy,
-                tun_mode,
-                copy_env,
-                open_dir,
-                more,
-                separator,
-                quit,
-            ])
-            .build()
-            .unwrap()
-    } else {
-        tauri::menu::MenuBuilder::new(app_handle)
-            .items(&[
-                open_window,
-                separator,
-                rule_mode,
-                global_mode,
-                direct_mode,
-                separator,
-                system_proxy,
-                copy_env,
-                open_dir,
-                more,
-                separator,
-                quit,
-            ])
-            .build()
-            .unwrap()
-    };
+    let menu = tauri::menu::MenuBuilder::new(app_handle)
+        .items(&[
+            open_window,
+            separator,
+            rule_mode,
+            global_mode,
+            direct_mode,
+            separator,
+            system_proxy,
+            tun_mode,
+            copy_env,
+            open_dir,
+            more,
+            separator,
+            quit,
+        ])
+        .build()
+        .unwrap();
 
     Ok(menu)
 }

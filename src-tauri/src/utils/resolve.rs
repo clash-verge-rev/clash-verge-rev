@@ -107,7 +107,6 @@ pub fn resolve_reset() {
     tauri::async_runtime::block_on(async move {
         log_err!(sysopt::Sysopt::global().reset_sysproxy().await);
         log_err!(CoreManager::global().stop_core().await);
-        log_err!(service::unset_dns_by_service().await);
     });
 }
 
