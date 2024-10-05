@@ -6,7 +6,6 @@ import { routers } from "@/pages/_routers";
 import { cn } from "@/utils";
 import { List } from "@mui/material";
 import { t } from "i18next";
-import { useEffect, useState } from "react";
 
 interface Props {
   enableSystemTitle: boolean;
@@ -14,16 +13,8 @@ interface Props {
 
 export const Sidebar = (props: Props) => {
   const { enableSystemTitle } = props;
-  const [open, setOpen] = useState(true);
   const { size } = useWindowSize();
-
-  useEffect(() => {
-    if (size.width < 700) {
-      setOpen(false);
-    } else {
-      setOpen(true);
-    }
-  }, [size.width]);
+  const open = size.width >= 700;
 
   return (
     <div
