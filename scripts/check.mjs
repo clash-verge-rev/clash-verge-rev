@@ -261,7 +261,6 @@ async function resolveSidecar(binInfo) {
           .pipe(zlib.createGunzip().on("error", onError))
           .pipe(writeStream)
           .on("finish", () => {
-            log_success(`chmod binary finished: "${name}"`);
             execSync(`chmod 755 ${sidecarPath}`);
             log_success(`chmod binary finished: "${name}"`);
             resolve();
