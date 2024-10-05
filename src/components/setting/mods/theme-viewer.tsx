@@ -49,8 +49,8 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
     const value = e.target.value as string;
     setThemeSettings((t: any) => {
       return themeMode === "light"
-        ? { ...t, light: { ...t.light, [field]: value.trim() } }
-        : { ...t, dark: { ...t.dark, [field]: value.trim() } };
+        ? { ...t, light: { ...t.light, [field]: value } }
+        : { ...t, dark: { ...t.dark, [field]: value } };
     });
   };
 

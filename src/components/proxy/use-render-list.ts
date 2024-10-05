@@ -38,7 +38,7 @@ export const useRenderList = (mode: string) => {
     if (size.width > 1450) col = 4;
     else if (size.width > 1024) col = 3;
     else if (size.width > 900) col = 2;
-    else if (size.width >= 600) col = 2;
+    else if (size.width >= 700) col = 2;
     else col = 1;
   }
 

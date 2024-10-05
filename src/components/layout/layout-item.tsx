@@ -1,19 +1,23 @@
+import { useVerge } from "@/hooks/use-verge";
+import { cn } from "@/utils";
 import {
   alpha,
+  Box,
+  IconButton,
   ListItem,
   ListItemButton,
-  ListItemText,
-  ListItemIcon,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import { useMatch, useResolvedPath, useNavigate } from "react-router-dom";
-import { useVerge } from "@/hooks/use-verge";
+import { useMatch, useNavigate, useResolvedPath } from "react-router-dom";
 interface Props {
   to: string;
   children: string;
   icon: React.ReactNode[];
+  open: boolean;
 }
 export const LayoutItem = (props: Props) => {
-  const { to, children, icon } = props;
+  const { to, children, icon, open } = props;
   const { verge } = useVerge();
   const { menu_icon } = verge ?? {};
   const resolved = useResolvedPath(to);
@@ -21,55 +25,78 @@ export const LayoutItem = (props: Props) => {
   const navigate = useNavigate();
 
   return (
-    <ListItem sx={{ py: 0.5, maxWidth: 250, mx: "auto", padding: "4px 0px" }}>
-      <ListItemButton
-        selected={!!match}
-        sx={[
-          {
-            borderRadius: 2,
-            marginLeft: 1.25,
-            paddingLeft: 1,
-            paddingRight: 1,
-            marginRight: 1.25,
-            "& .MuiListItemText-primary": {
-              color: "text.primary",
-              fontWeight: "700",
+    <Tooltip title={!open ? children : ""} placement="right">
+      <ListItem sx={{ py: 0.5, padding: "4px 0px" }}>
+        <ListItemButton
+          selected={!!match}
+          sx={[
+            {
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 10px",
+              padding: "8px 6px",
             },
-            "& .MuiListItemIcon-root": {
-              color: "text.primary",
+            (theme) => {
+              const color = theme.palette.primary.main;
+              return {
+                "& .MuiListItemText-primary": {
+                  color: theme.palette.text.primary,
+                  fontWeight: "700",
+                },
+                "& .MuiListItemIcon-root": {
+                  color: theme.palette.text.primary,
+                },
+                // 涟漪效果颜色
+                "& .MuiTouchRipple-root .MuiTouchRipple-rippleVisible": {
+                  color,
+                },
+                "&.Mui-selected": { bgcolor: alpha(color, 0.25) },
+                ...theme.applyStyles("dark", {
+                  "&.Mui-selected": { bgcolor: alpha(color, 0.35) },
+                }),
+                "&.Mui-selected:hover": { bgcolor: alpha(color, 0.25) },
+                ...theme.applyStyles("dark", {
+                  "&.Mui-selected:hover": { bgcolor: alpha(color, 0.35) },
+                }),
+                "&.Mui-selected .MuiListItemText-primary": { color },
+                "&.Mui-selected .MuiListItemIcon-root": { color },
+              };
             },
-          },
-          ({ palette: { mode, primary } }) => {
-            const bgcolor =
-              mode === "light"
-                ? alpha(primary.main, 0.25)
-                : alpha(primary.main, 0.35);
-            const color = primary.main;
-            return {
-              // 涟漪效果颜色
-              "& .MuiTouchRipple-root .MuiTouchRipple-rippleVisible": {
-                color: primary.main,
-              },
-              "&.Mui-selected": { bgcolor },
-              "&.Mui-selected:hover": { bgcolor },
-              "&.Mui-selected .MuiListItemText-primary": { color },
-              "&.Mui-selected .MuiListItemIcon-root": { color },
-            };
-          },
-        ]}
-        onClick={() => navigate(to)}>
-        {(menu_icon === "monochrome" || !menu_icon) && (
-          <ListItemIcon sx={{ marginLeft: "6px" }}>{icon[0]}</ListItemIcon>
-        )}
-        {menu_icon === "colorful" && <ListItemIcon>{icon[1]}</ListItemIcon>}
-        <ListItemText
-          sx={{
-            textAlign: "center",
-            marginLeft: menu_icon === "disable" ? "" : "-35px",
-          }}
-          primary={children}
-        />
-      </ListItemButton>
-    </ListItem>
+          ]}
+          onClick={() => navigate(to)}>
+          <div
+            className={cn("flex items-center text-center", { "w-full": open })}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                width: "100%",
+              }}>
+              {(!menu_icon || menu_icon === "monochrome") && (
+                <IconButton
+                  sx={{ color: match ? "primary.main" : "text.primary" }}
+                  size="small">
+                  {icon[0]}
+                </IconButton>
+              )}
+              {menu_icon === "colorful" && (
+                <IconButton className="m-0 p-0" size="small">
+                  {icon[1]}
+                </IconButton>
+              )}
+              {open && (
+                <Typography
+                  sx={{ color: match ? "primary.main" : "text.primary" }}
+                  className="w-full font-bold">
+                  {children}
+                </Typography>
+              )}
+            </Box>
+          </div>
+        </ListItemButton>
+      </ListItem>
+    </Tooltip>
   );
 };

@@ -1,8 +1,6 @@
 import { Notice } from "@/components/base";
 import { LayoutControl } from "@/components/layout/layout-control";
-import { LayoutItem } from "@/components/layout/layout-item";
-import { LayoutTraffic } from "@/components/layout/layout-traffic";
-import { LogoTitle } from "@/components/layout/logo-title";
+import { Sidebar } from "@/components/layout/sidebar";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
@@ -12,7 +10,7 @@ import { getPortableFlag } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
-import { List, Paper, ThemeProvider } from "@mui/material";
+import { Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import dayjs from "dayjs";
@@ -24,7 +22,6 @@ import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
-import { routers } from "./_routers";
 
 export let portableFlag = false;
 dayjs.extend(relativeTime);
@@ -147,13 +144,11 @@ const Layout = () => {
         <Paper
           square
           elevation={0}
-          className={cn(
-            "w-screen h-screen flex overflow-hidden",
-            OS === "linux" &&
-              !enable_system_title &&
-              "w-[calc(100vw-4px)] h-[calc(100vh-4px)] border-2 border-[--divider-color] border-solid rounded-md",
-            isMaximized && "rounded-none",
-          )}
+          className={cn("flex h-screen w-screen overflow-hidden", {
+            "h-[calc(100vh-4px)] w-[calc(100vw-4px)] rounded-md border-2 border-solid border-[--divider-color]":
+              OS === "linux" && !enable_system_title,
+            "rounded-none": isMaximized,
+          })}
           onContextMenu={(e) => {
             // only prevent it on Windows
             const validList = ["input", "textarea"];
@@ -168,34 +163,13 @@ const Layout = () => {
               e.preventDefault();
             }
           }}>
-          <div
-            className={cn(
-              "flex flex-grow-0 flex-shrink-0 basis-[200px] flex-col pt-2",
-              !enable_system_title && "pt-4",
-            )}>
-            <LogoTitle />
+          <Sidebar enableSystemTitle={!!enable_system_title} />
 
-            <List className="flex-auto overflow-y-auto box-border">
-              {routers.map((router) => (
-                <LayoutItem
-                  key={router.label}
-                  to={router.path}
-                  icon={router.icon}>
-                  {t(router.label)}
-                </LayoutItem>
-              ))}
-            </List>
-
-            <div className="flex flex-grow-0 flex-shrink-0 items-center basis-[160px] px-4">
-              <LayoutTraffic />
-            </div>
-          </div>
-
-          <div className="flex flex-col w-full h-full">
+          <div className="flex h-full w-full flex-col">
             {!enable_system_title && (
-              <div className="basis-8 flex flex-grow-0 flex-shrink-0 justify-end box-border z-10">
+              <div className="z-10 box-border flex flex-shrink-0 flex-grow-0 basis-8 justify-end">
                 <div
-                  className="w-full mt-1"
+                  className="mt-1 w-full"
                   data-tauri-drag-region="true"></div>
                 {OS !== "macos" && (
                   <LayoutControl
@@ -206,7 +180,7 @@ const Layout = () => {
               </div>
             )}
 
-            <div className="flex-auto pr-1 py-1 overflow-auto">
+            <div className="flex-auto overflow-auto py-1 pr-1">
               <Suspense fallback={<LoadingPage />}>
                 <Outlet />
               </Suspense>

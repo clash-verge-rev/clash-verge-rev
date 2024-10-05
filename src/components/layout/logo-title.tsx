@@ -3,23 +3,33 @@ import LogoSvg from "@/assets/image/logo.svg?react";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useThemeMode } from "@/services/states";
+import { cn } from "@/utils";
 import { DarkMode, LightMode } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 
-export const LogoTitle = () => {
+interface Props {
+  open: boolean;
+}
+
+export const LogoTitle = (props: Props) => {
+  const { open } = props;
   const { toggleTheme } = useCustomTheme();
   const mode = useThemeMode();
   const isDark = mode === "dark";
 
   return (
     <div
-      className="flex flex-grow-0 flex-shrink-0 py-2 relative w-full box-border"
+      className="relative box-border flex w-full flex-shrink-0 flex-grow-0 py-2"
       data-tauri-drag-region="true">
       <div className="flex items-center justify-around px-5">
-        <LogoSvg className="w-16 mr-1 h-full fill-[--primary-main]" />
-        <AppNameSvg className="w-full h-full fill-[--primary-main]" />
+        <LogoSvg className="mr-1 h-full w-16 fill-[--primary-main]" />
+        {open && <AppNameSvg className="h-full w-full fill-[--primary-main]" />}
       </div>
-      <UpdateButton className="absolute top-0 left-16 scale-75" />
+      <UpdateButton
+        className={cn("absolute left-0 top-0 scale-[0.7]", {
+          "left-16 top-0 scale-75": open,
+        })}
+      />
       <AnimatePresence>
         <motion.button
           key={isDark ? "dark" : "light"}
@@ -27,17 +37,17 @@ export const LogoTitle = () => {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 20, opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="absolute top-0 right-2 w-[30px] h-[30px] bg-transparent border-none cursor-pointer"
+          className="absolute right-2 top-0 h-[30px] w-[30px] cursor-pointer border-none bg-transparent"
           onClick={(e) => toggleTheme(e, isDark ? "light" : "dark")}>
           {isDark ? (
             <DarkMode
               fontSize="inherit"
-              className="w-full h-full fill-[--primary-main]"
+              className="h-full w-full fill-[--primary-main]"
             />
           ) : (
             <LightMode
               fontSize="inherit"
-              className="w-full h-full fill-[--primary-main]"
+              className="h-full w-full fill-[--primary-main]"
             />
           )}
         </motion.button>
