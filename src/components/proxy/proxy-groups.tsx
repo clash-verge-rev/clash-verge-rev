@@ -12,7 +12,7 @@ import {
 import delayManager from "@/services/delay";
 import { cn } from "@/utils";
 import { ChevronRight } from "@mui/icons-material";
-import { Container } from "@mui/material";
+import { Box } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { useRef, useState } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
@@ -151,7 +151,7 @@ export const ProxyGroups = (props: Props) => {
     .map((item) => item.key);
 
   return (
-    <Container disableGutters className="relative flex h-full w-full">
+    <Box className="relative flex h-full w-full">
       <div
         className={cn("absolute bottom-0 left-0 top-0 z-10 w-6", {
           "w-fit": open,
@@ -200,7 +200,7 @@ export const ProxyGroups = (props: Props) => {
           </div>
         </div>
       </div>
-      <Container disableGutters>
+      <Box className="h-full w-full">
         <Virtuoso
           ref={virtuosoRef}
           style={{ height: "calc(100% - 8px)" }}
@@ -218,7 +218,7 @@ export const ProxyGroups = (props: Props) => {
             />
           )}
         />
-      </Container>
-    </Container>
+      </Box>
+    </Box>
   );
 };
