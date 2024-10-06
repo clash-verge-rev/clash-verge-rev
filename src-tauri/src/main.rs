@@ -19,7 +19,7 @@ use std::{
     backtrace::{Backtrace, BacktraceStatus},
     time::Duration,
 };
-use tauri::{api, SystemTray};
+use tauri::api;
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -63,8 +63,8 @@ fn main() -> std::io::Result<()> {
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
-        .system_tray(SystemTray::new())
-        .on_system_tray_event(core::tray::Tray::on_system_tray_event)
+        // .system_tray(SystemTray::new())
+        // .on_system_tray_event(core::tray::Tray::on_system_tray_event)
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -171,7 +171,9 @@ fn main() -> std::io::Result<()> {
             cmds::create_and_upload_backup,
             cmds::list_backup,
             cmds::download_backup_and_reload,
-            cmds::delete_backup
+            cmds::delete_backup,
+            // tray
+            cmds::set_tray_visible
         ]);
 
     #[cfg(target_os = "macos")]

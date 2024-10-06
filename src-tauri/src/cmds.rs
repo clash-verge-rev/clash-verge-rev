@@ -18,6 +18,7 @@ use std::{
 };
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::{api, Manager};
+use tray::Tray;
 type CmdResult<T = ()> = Result<T, String>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -562,4 +563,9 @@ pub async fn download_backup_and_reload(file_name: String) -> CmdResult {
 #[tauri::command]
 pub async fn delete_backup(file_name: String) -> CmdResult {
     wrap_err!(WebDav::delete_file(file_name).await)
+}
+
+#[tauri::command]
+pub async fn set_tray_visible(app_handle: tauri::AppHandle, visible: bool) -> CmdResult {
+    wrap_err!(Tray::set_tray_visible(&app_handle, visible))
 }

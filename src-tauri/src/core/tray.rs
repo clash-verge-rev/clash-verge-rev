@@ -6,9 +6,11 @@ use crate::{
 };
 use anyhow::Result;
 use tauri::{
-    AppHandle, CustomMenuItem, Icon, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
-    SystemTraySubmenu,
+    AppHandle, CustomMenuItem, Icon, SystemTray, SystemTrayEvent, SystemTrayMenu,
+    SystemTrayMenuItem, SystemTraySubmenu,
 };
+
+const TRAY_ID: &str = "verge_tray";
 
 pub struct Tray {}
 
@@ -123,7 +125,8 @@ impl Tray {
                 .add_item(open_core_dir)
                 .add_item(open_logs_dir),
         );
-        let open_devtools = CustomMenuItem::new("open_devtools", t!("Open DevTools", "打开开发者工具"));
+        let open_devtools =
+            CustomMenuItem::new("open_devtools", t!("Open DevTools", "打开开发者工具"));
         let restart_clash = CustomMenuItem::new("restart_clash", t!("Restart Clash", "重启 Clash"));
         let restart_app = CustomMenuItem::new("restart_app", t!("Restart", "重启应用"));
         let app_version =
@@ -158,18 +161,58 @@ impl Tray {
             .add_item(quit)
     }
 
+    pub fn init(app_handle: &AppHandle) -> Result<()> {
+        let mut tray = SystemTray::new()
+            .with_id(TRAY_ID)
+            .with_menu(Self::tray_menu(app_handle));
+        let app_handle_ = app_handle.clone();
+        tray = tray.on_event(move |event| Self::on_system_tray_event(&app_handle_, event));
+        tray.build(app_handle)?;
+        Self::update_systray(app_handle)?;
+        Ok(())
+    }
+
+    pub fn destroy_tray(app_handle: &AppHandle) -> Result<()> {
+        if let Some(tray) = app_handle.tray_handle_by_id(TRAY_ID) {
+            tray.destroy()?;
+        }
+        Ok(())
+    }
+
+    /// There is some bug in Linux: Tray cannot be created when opening then hiding then reopening it by clicking the switch button
+    pub fn set_tray_visible(app_handle: &AppHandle, visible: bool) -> Result<()> {
+        if visible {
+            Self::destroy_tray(app_handle)?;
+            Self::init(app_handle)?;
+        } else {
+            Self::destroy_tray(app_handle)?;
+        }
+        Ok(())
+    }
+
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
+        let enable_tray = Config::verge().latest().enable_tray.unwrap_or(true);
+        if !enable_tray {
+            return Ok(());
+        }
         app_handle
-            .tray_handle()
-            .set_menu(Tray::tray_menu(app_handle))?;
-        Tray::update_part(app_handle)?;
+            .tray_handle_by_id(TRAY_ID)
+            .expect("tray not found")
+            .set_menu(Self::tray_menu(app_handle))?;
+        Self::update_part(app_handle)?;
         Ok(())
     }
 
     pub fn update_part(app_handle: &AppHandle) -> Result<()> {
-        let tray = app_handle.tray_handle();
         let verge = Config::verge().latest().clone();
         let clash = Config::clash().latest().clone();
+        let enable_tray = verge.enable_tray.unwrap_or(true);
+        if !enable_tray {
+            return Ok(());
+        }
+        let tray = app_handle
+            .tray_handle_by_id(TRAY_ID)
+            .expect("tray not found");
         let zh = verge.language == Some("zh".into());
         macro_rules! t {
             ($en: expr, $zh: expr) => {
@@ -231,7 +274,7 @@ impl Tray {
                     direct_menu.set_title(t!("Direct Mode ✔", "直连模式 ✔"))?;
                 }
             }
-            _ => {},
+            _ => {}
         }
 
         let system_proxy_menu = tray.get_item("system_proxy");

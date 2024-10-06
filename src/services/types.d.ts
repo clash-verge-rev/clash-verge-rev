@@ -283,6 +283,7 @@ interface IVergeConfig {
   webdav_url?: string;
   webdav_username?: string;
   webdav_password?: string;
+  enable_tray?: boolean;
 }
 
 type IClashConfigValue = any;

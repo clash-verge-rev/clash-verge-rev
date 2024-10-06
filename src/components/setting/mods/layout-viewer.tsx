@@ -219,6 +219,21 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           </GuardState>
         </Item>
 
+        {OS === "windows" && (
+          <Item>
+            <ListItemText primary={t("Tray")} />
+            <GuardState
+              value={verge?.enable_tray ?? true}
+              valueProps="checked"
+              onCatch={onError}
+              onFormat={onSwitchFormat}
+              onChange={(e) => onChangeData({ enable_tray: e })}
+              onGuard={(e) => patchVerge({ enable_tray: e })}>
+              <SwitchLovely edge="end" />
+            </GuardState>
+          </Item>
+        )}
+
         {OS === "macos" && (
           <Item>
             <ListItemText primary={t("Tray Icon")} />

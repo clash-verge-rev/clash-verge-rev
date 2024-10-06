@@ -409,6 +409,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let sysproxy_tray_icon = patch.sysproxy_tray_icon;
     let tun_tray_icon = patch.tun_tray_icon;
     let log_level = patch.app_log_level;
+    let enable_tray = patch.enable_tray;
     let res = {
         if log_level.is_some() {
             let log_level = Config::verge().latest().get_log_level();
@@ -453,6 +454,10 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         #[cfg(target_os = "macos")]
         if tray_icon.is_some() {
             handle::Handle::update_systray_part()?;
+        }
+
+        if enable_tray.is_some() {
+            handle::Handle::set_tray_visible(enable_tray.unwrap())?;
         }
 
         <Result<()>>::Ok(())

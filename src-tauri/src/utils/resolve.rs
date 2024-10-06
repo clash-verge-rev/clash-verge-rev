@@ -53,8 +53,11 @@ pub async fn resolve_setup(app_handle: &AppHandle) {
     log::trace!("launch embed server");
     server::embed_server(app_handle.app_handle());
 
-    log::trace!("init system tray");
-    log_err!(tray::Tray::update_systray(&app_handle.app_handle()));
+    let enable_tray = Config::verge().latest().enable_tray.unwrap_or(true);
+    if enable_tray {
+        log::trace!("init system tray");
+        log_err!(tray::Tray::init(&app_handle.app_handle()));
+    }
 
     log_err!(sysopt::Sysopt::global().init_launch());
     log_err!(sysopt::Sysopt::global().init_sysproxy());

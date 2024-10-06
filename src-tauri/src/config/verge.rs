@@ -152,6 +152,9 @@ pub struct IVerge {
     pub webdav_username: Option<String>,
     /// webdav password
     pub webdav_password: Option<String>,
+
+    /// enable tray
+    pub enable_tray: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -223,6 +226,7 @@ impl IVerge {
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
             auto_log_clean: Some(3),
+            enable_tray: Some(true),
             ..Self::default()
         }
     }
@@ -293,6 +297,7 @@ impl IVerge {
         patch!(webdav_url);
         patch!(webdav_username);
         patch!(webdav_password);
+        patch!(enable_tray);
     }
 
     /// 在初始化前尝试拿到单例端口的值

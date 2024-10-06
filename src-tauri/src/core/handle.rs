@@ -1,6 +1,6 @@
 use super::tray::Tray;
 use crate::log_err;
-use anyhow::{bail, Result};
+use anyhow::{bail, Ok, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::sync::Arc;
@@ -75,4 +75,12 @@ impl Handle {
         Ok(())
     }
 
+    pub fn set_tray_visible(visible: bool) -> Result<()> {
+        let app_handle = Self::global().app_handle.lock();
+        if app_handle.is_none() {
+            bail!("set_tray_visible unhandled error");
+        }
+        Tray::set_tray_visible(app_handle.as_ref().unwrap(), visible)?;
+        Ok(())
+    }
 }
