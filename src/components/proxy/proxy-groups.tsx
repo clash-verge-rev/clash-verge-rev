@@ -1,3 +1,4 @@
+import { ProxyGroupSidebar } from "@/components/proxy/proxy-group-sidebar";
 import { ProxyRender } from "@/components/proxy/proxy-render";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
@@ -9,8 +10,9 @@ import {
   updateProxy,
 } from "@/services/api";
 import delayManager from "@/services/delay";
+import { cn } from "@/utils";
 import { ChevronRight } from "@mui/icons-material";
-import { Box, Link, List, ListItem } from "@mui/material";
+import { Container } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { useRef, useState } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
@@ -144,88 +146,39 @@ export const ProxyGroups = (props: Props) => {
     }
   });
 
+  const groupNameList = renderList
+    .filter((item) => item.type === 0)
+    .map((item) => item.key);
+
   return (
-    <Box display={"flex"} flexDirection={"row"} width={"100%"} height={"100%"}>
-      <Box position={"relative"}>
-        <List
-          dense
-          sx={[
-            ({ palette }) => ({
-              bgcolor: palette.background.paper,
-            }),
-            {
-              width: open ? "fit-content" : 0,
-              maxWidth: "180px",
-              height: "calc(100% - 20px)",
-              overflow: "auto",
-              cursor: "pointer",
-              "&::-webkit-scrollbar": {
-                width: "0px",
-              },
-            },
-          ]}>
-          {renderList
-            .filter((item) => item.type === 0)
-            .map((group) => (
-              <ListItem
-                key={group.key}
-                sx={{
-                  textAlign: "center",
-                  fontSize: "14px",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}>
-                <Link
-                  sx={{ ":hover": { color: "secondary.main" } }}
-                  underline="hover"
-                  onClick={() => handleGroupLocation(group.key)}>
-                  {group.group.name}
-                </Link>
-              </ListItem>
-            ))}
-        </List>
-      </Box>
-      <Box flexGrow={1} height={"100%"} position={"relative"}>
-        <Box
-          sx={{
-            width: "20px",
-            borderRadius: "0",
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            zIndex: 999,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
+    <Container disableGutters className="relative flex h-full w-full">
+      <div
+        className={cn("absolute bottom-0 left-0 top-0 z-10 w-6", {
+          "w-fit": open,
+        })}>
+        <div
+          className={cn("relative flex h-full w-full")}
+          onMouseLeave={() => {
+            setOpen(false);
           }}>
-          <Box
-            sx={[
-              {
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              },
-              ({ palette }) => ({
-                "& .side-btn": {
-                  opacity: open ? 1 : 0,
-                  backgroundColor: open ? palette.primary.main : "transparent",
-                },
-                "&:hover .side-btn": {
-                  opacity: 1,
-                  backgroundColor: palette.primary.main,
-                },
-                "& .side-border": {
-                  backgroundColor: open ? palette.primary.main : "transparent",
-                },
-                "&:hover .side-border": {
-                  backgroundColor: palette.primary.main,
-                },
-              }),
-            ]}>
+          <ProxyGroupSidebar
+            className={cn("w-0 max-w-[200px] p-0 transition-all duration-200", {
+              "w-fit px-2 py-4": open,
+            })}
+            groupNameList={groupNameList}
+            onClickGroupName={(groupName) => {
+              handleGroupLocation(groupName);
+              setOpen(false);
+            }}
+          />
+          <div className="relative flex w-fit items-center bg-transparent">
             <div
-              className="side-btn flex h-20 w-5 cursor-pointer items-center justify-center bg-[--primary-main] p-0"
+              className={cn(
+                "peer flex h-16 w-5 cursor-pointer items-center justify-center bg-primary p-0 opacity-0 transition-all duration-200 hover:opacity-100",
+                {
+                  "opacity-100": open,
+                },
+              )}
               onClick={() => {
                 setOpen((pre) => !pre);
               }}>
@@ -233,12 +186,21 @@ export const ProxyGroups = (props: Props) => {
                 sx={{
                   color: "white",
                   transform: open ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s",
                 }}
               />
             </div>
-            <div className="side-border absolute bottom-0 left-0 top-0 z-50 w-1"></div>
-          </Box>
-        </Box>
+            <div
+              className={cn(
+                "absolute bottom-0 left-0 top-0 z-10 w-1 transition-all duration-200 peer-hover:bg-primary",
+                {
+                  "bg-primary": open,
+                },
+              )}></div>
+          </div>
+        </div>
+      </div>
+      <Container disableGutters>
         <Virtuoso
           ref={virtuosoRef}
           style={{ height: "calc(100% - 8px)" }}
@@ -256,7 +218,7 @@ export const ProxyGroups = (props: Props) => {
             />
           )}
         />
-      </Box>
-    </Box>
+      </Container>
+    </Container>
   );
 };

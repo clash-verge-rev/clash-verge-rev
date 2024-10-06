@@ -7,7 +7,27 @@ export default {
   ],
   darkMode: "class",
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: "var(--mui-palette-primary-main)",
+        secondary: "var(--mui-palette-secondary-main)",
+        error: "var(--mui-palette-error-main)",
+      },
+      textColor: {
+        primary: "var(--mui-palette-text-primary)",
+        secondary: "var(--mui-palette-text-secondary)",
+      },
+      backgroundColor: {
+        primary: "var(--mui-palette-primary-main)",
+        alpha: "var(--background-color-alpha)",
+        comment: "#f0f0f0",
+        "dark-comment": "#2e303d",
+      },
+      divideColor: {
+        primary: "rgba(0, 0, 0, 0.06)",
+        "dark-primary": "rgba(255, 255, 255, 0.06)",
+      },
+    },
   },
   plugins: [],
   corePlugins: {

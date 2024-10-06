@@ -85,6 +85,7 @@ export const useCustomTheme = () => {
     try {
       theme = createTheme(
         {
+          cssVariables: true,
           breakpoints: {
             values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
           },
@@ -117,6 +118,7 @@ export const useCustomTheme = () => {
       // fix #294
       theme = createTheme(
         {
+          cssVariables: true,
           breakpoints: {
             values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
           },
