@@ -14,7 +14,11 @@ use crate::{
     config::Config,
     utils::{init, resolve, server},
 };
-use std::{thread::sleep, time::Duration};
+use core::CoreManager;
+use std::{
+    backtrace::{Backtrace, BacktraceStatus},
+    time::Duration,
+};
 use tauri::{api, SystemTray};
 
 fn main() -> std::io::Result<()> {
@@ -25,6 +29,37 @@ fn main() -> std::io::Result<()> {
     }
 
     crate::log_err!(init::init_config());
+
+    std::panic::set_hook(Box::new(move |panic_info| {
+        let payload = panic_info.payload();
+
+        let payload = if let Some(s) = payload.downcast_ref::<&str>() {
+            &**s
+        } else if let Some(s) = payload.downcast_ref::<String>() {
+            s
+        } else {
+            &format!("{:?}", payload)
+        };
+
+        let location = panic_info
+            .location()
+            .map(|l| l.to_string())
+            .unwrap_or("unknown location".to_string());
+
+        let backtrace = Backtrace::capture();
+        let backtrace = if backtrace.status() == BacktraceStatus::Captured {
+            &format!("stack backtrace:\n{}", backtrace)
+        } else {
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+        };
+
+        log::error!("panicked at {}:\n{}\n{}", location, payload, backtrace);
+        let task = std::thread::spawn(|| {
+            let _ = CoreManager::global().stop_core();
+        });
+        let _ = task.join();
+        std::process::exit(1);
+    }));
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
@@ -64,7 +99,7 @@ fn main() -> std::io::Result<()> {
                 // initialize your app here instead of sleeping :
                 resolve::resolve_setup(&app_handle).await;
                 // wait 2 seconds for clash core to init profile
-                sleep(Duration::from_secs(2));
+                std::thread::sleep(Duration::from_secs(2));
                 // create main window
                 if !silent_start {
                     resolve::create_window(&app_handle);
