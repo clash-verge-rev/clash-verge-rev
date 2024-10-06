@@ -541,14 +541,7 @@ const ProfilePage = () => {
           {t("New")}
         </Button>
       </Stack>
-      <Box
-        sx={{
-          pt: 1,
-          mb: 0.5,
-          px: "10px",
-          height: "calc(100% - 68px)",
-          overflowY: "auto",
-        }}>
+      <Box sx={{ px: "10px" }}>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -567,7 +560,7 @@ const ProfilePage = () => {
           onDragCancel={() => setDraggingProfileItem(null)}>
           <Box sx={{ width: "100%" }}>
             <SortableContext items={profileList.map((item) => item.uid)}>
-              <Box sx={{ display: "flex", flexWrap: "wrap", mr: "5px" }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap" }}>
                 {profileList.map((item) => (
                   <DraggableItem
                     key={item.uid}
@@ -665,7 +658,7 @@ const ProfilePage = () => {
               }}
               onDragEnd={(e) => handleChainDragEnd(e)}
               onDragCancel={() => setDraggingChainItem(null)}>
-              <Box sx={{ display: "flex", flexWrap: "wrap", mr: "5px" }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap" }}>
                 <SortableContext
                   items={enableChains.map((item) => item.uid)}
                   strategy={rectSortingStrategy}>
