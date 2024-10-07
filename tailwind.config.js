@@ -7,6 +7,13 @@ export default {
   ],
   darkMode: "class",
   theme: {
+    screens: {
+      xs: "0px",
+      sm: "650px",
+      md: "900px",
+      lg: "1200px",
+      xl: "1536px",
+    },
     extend: {
       colors: {
         primary: "var(--mui-palette-primary-main)",
