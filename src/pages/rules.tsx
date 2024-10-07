@@ -132,19 +132,21 @@ const RulesPage = () => {
       }>
       <Box
         sx={{
-          pt: "6px",
-          mb: "6px",
+          mb: "10px",
+          pt: "10px",
           mx: "10px",
           height: "36px",
           display: "flex",
           alignItems: "center",
+          boxSizing: "border-box",
         }}>
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
       <Box
-        height={"calc(100% - 54px)"}
+        height={"calc(100% - 56px)"}
         sx={{
+          boxSizing: "border-box",
           marginLeft: "10px",
           borderRadius: "8px",
         }}>

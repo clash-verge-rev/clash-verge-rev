@@ -65,12 +65,13 @@ const LogPage = () => {
       }>
       <Box
         sx={{
-          pt: 1,
-          mb: 0.5,
+          mb: "10px",
+          pt: "10px",
           mx: "10px",
           height: "36px",
           display: "flex",
           alignItems: "center",
+          boxSizing: "border-box",
         }}>
         <BaseStyledSelect
           value={logState}
@@ -84,10 +85,11 @@ const LogPage = () => {
       </Box>
 
       <Box
-        height="calc(100% - 65px)"
+        height="calc(100% - 56px)"
         sx={(theme) => ({
-          pt: 1,
-          margin: "10px",
+          py: "6px",
+          mx: "10px",
+          boxSizing: "border-box",
           borderRadius: "8px",
           bgcolor: "#ffffff",
           ...theme.applyStyles("dark", {

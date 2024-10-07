@@ -26,7 +26,7 @@ const SettingPage = () => {
   return (
     <BasePage
       title={t("Settings")}
-      contentStyle={{ height: "100%", overflow: "auto" }}
+      contentStyle={{ height: "100%" }}
       header={
         <ButtonGroup variant="contained" aria-label="Basic button group">
           <IconButton
@@ -45,7 +45,7 @@ const SettingPage = () => {
           </IconButton>
         </ButtonGroup>
       }>
-      <div className="py-2">
+      <div className="box-border py-2">
         <Grid container spacing={{ xs: 1.5, lg: 1.5 }}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Box

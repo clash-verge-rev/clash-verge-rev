@@ -14,18 +14,17 @@ interface Props {
 export const Sidebar = (props: Props) => {
   const { enableSystemTitle } = props;
   const { size } = useWindowSize();
-  const open = size.width >= 700;
+  const open = size.width >= 650;
 
   return (
     <div
       className={cn(
-        "flex flex-shrink-0 flex-grow-0 basis-[200px] flex-col border-b-0 border-l-0 border-r border-t-0 border-solid border-[--divider-color] pt-2 transition-all duration-300",
+        "flex flex-shrink-0 flex-grow-0 flex-col border-b-0 border-l-0 border-r border-t-0 border-solid border-[--divider-color] pt-2 transition-all duration-300 xs:basis-[110px] sm:basis-[200px]",
         {
           "pt-4": !enableSystemTitle,
-          "basis-[64px]": !open,
         },
       )}>
-      <LogoTitle open={open} />
+      <LogoTitle />
 
       <List className="box-border flex-auto overflow-y-auto">
         {routers.map((router) => (
@@ -39,11 +38,9 @@ export const Sidebar = (props: Props) => {
         ))}
       </List>
 
-      {open && (
-        <div className="flex flex-shrink-0 flex-grow-0 basis-[160px] items-center px-4">
-          <LayoutTraffic />
-        </div>
-      )}
+      <div className="flex flex-shrink-0 flex-grow-0 basis-[160px] items-center px-4 xs:hidden sm:block">
+        <LayoutTraffic />
+      </div>
     </div>
   );
 };

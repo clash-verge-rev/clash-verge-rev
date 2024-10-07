@@ -7,12 +7,7 @@ import { cn } from "@/utils";
 import { DarkMode, LightMode } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 
-interface Props {
-  open: boolean;
-}
-
-export const LogoTitle = (props: Props) => {
-  const { open } = props;
+export const LogoTitle = () => {
   const { toggleTheme } = useCustomTheme();
   const mode = useThemeMode();
   const isDark = mode === "dark";
@@ -23,7 +18,7 @@ export const LogoTitle = (props: Props) => {
       data-tauri-drag-region="true">
       <div className="flex items-center justify-around px-5">
         <LogoSvg className="mr-1 h-full w-16 fill-[--primary-main]" />
-        {open && <AppNameSvg className="h-full w-full fill-[--primary-main]" />}
+        <AppNameSvg className="hidden h-full w-full fill-[--primary-main] sm:block" />
       </div>
       <UpdateButton
         className={cn("absolute left-0 top-0 scale-[0.7]", {

@@ -176,12 +176,13 @@ const ConnectionsPage = () => {
       }>
       <Box
         sx={{
-          pt: 1,
-          mb: 0.5,
+          mb: "10px",
+          pt: "10px",
           mx: "10px",
           height: "36px",
           display: "flex",
           alignItems: "center",
+          boxSizing: "border-box",
           userSelect: "text",
         }}>
         {!isTableLayout && (
@@ -199,11 +200,12 @@ const ConnectionsPage = () => {
       </Box>
 
       <Box
-        height="calc(100% - 65px)"
+        height="calc(100% - 56px)"
         sx={(theme) => ({
           userSelect: "text",
           margin: "10px",
           borderRadius: "8px",
+          boxSizing: "border-box",
           bgcolor: "#ffffff",
           ...theme.applyStyles("dark", {
             bgcolor: "#282a36",

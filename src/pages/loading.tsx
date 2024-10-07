@@ -3,15 +3,8 @@ import { ClimbingBoxLoader } from "react-spinners";
 
 export default function LoadingPage() {
   return (
-    <Box
-      height={"100%"}
-      width={"100%"}
-      display={"flex"}
-      flexDirection={"column"}
-      justifyContent={"center"}
-      alignItems={"center"}
-      sx={{ bgcolor: "var(--background-color)" }}>
-      <Typography variant="h4" sx={{ color: "var(--primary-main)" }}>
+    <Box className="flex h-full w-full flex-col items-center justify-center bg-comment">
+      <Typography className="text-primary-main" variant="h4">
         Loading...
       </Typography>
       <ClimbingBoxLoader color="var(--primary-main)" />

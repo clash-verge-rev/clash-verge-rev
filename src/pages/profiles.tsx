@@ -69,15 +69,7 @@ interface ActivatingProfile {
 
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
   return [...new Array(20)].map((_, index) => (
-    <i
-      key={index}
-      style={{
-        display: "flex",
-        flexGrow: "1",
-        margin: "0 5px",
-        width: "260px",
-        height: "0",
-      }}></i>
+    <i key={index} className="mx-[5px] my-0 flex h-0 w-[260px] flex-grow"></i>
   ));
 });
 
@@ -446,7 +438,7 @@ const ProfilePage = () => {
     <BasePage
       full
       title={t("Profiles")}
-      contentStyle={{ height: "100%" }}
+      // contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton
@@ -482,12 +474,13 @@ const ProfilePage = () => {
         direction="row"
         spacing={1}
         sx={{
-          pt: 1,
-          mb: 0.5,
+          mb: "10px",
+          pt: "10px",
           mx: "10px",
           height: "36px",
           display: "flex",
           alignItems: "center",
+          boxSizing: "border-box",
         }}>
         <BaseStyledTextField
           value={url}
@@ -558,7 +551,7 @@ const ProfilePage = () => {
           }}
           onDragEnd={(e) => handleProfileDragEnd(e)}
           onDragCancel={() => setDraggingProfileItem(null)}>
-          <Box sx={{ width: "100%" }}>
+          <Box>
             <SortableContext items={profileList.map((item) => item.uid)}>
               <Box sx={{ display: "flex", flexWrap: "wrap" }}>
                 {profileList.map((item) => (

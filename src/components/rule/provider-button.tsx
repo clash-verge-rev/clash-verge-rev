@@ -124,6 +124,7 @@ export const ProviderButton = () => {
         <List sx={{ py: 0, minHeight: 250 }}>
           {entries.map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
+            const error = errorItems?.includes(key);
             return (
               <ListItem
                 sx={{
@@ -137,10 +138,18 @@ export const ProviderButton = () => {
                   sx={{ px: 1 }}
                   primary={
                     <Box display={"flex"} alignItems={"center"}>
-                      {errorItems?.includes(key) && (
-                        <Error fontSize="small" sx={{ margin: 0 }} />
+                      {error && (
+                        <Error
+                          color="error"
+                          fontSize="small"
+                          sx={{ marginRight: "8px" }}
+                        />
                       )}
-                      <Typography variant="h6" noWrap title={key}>
+                      <Typography
+                        variant="h6"
+                        color={error ? "error" : "inherit"}
+                        noWrap
+                        title={key}>
                         {key}
                       </Typography>
                       <TypeSpan sx={{ marginLeft: "8px" }}>

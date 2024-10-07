@@ -7,7 +7,6 @@ import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 import TestSvg from "@/assets/image/itemicon/test.svg?react";
 import { BaseErrorBoundary } from "@/components/base";
 import Layout from "@/pages/_layout";
-import { NotFountPage } from "@/pages/_not-found";
 import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
 import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
@@ -18,7 +17,6 @@ import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
 import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
-// const LoadingPage = lazy(() => import("./loading"));
 const ProxiesPage = lazy(() => import("./proxies"));
 const ProfilesPage = lazy(() => import("./profiles"));
 const ConnectionsPage = lazy(() => import("./connections"));
@@ -26,6 +24,7 @@ const RulesPage = lazy(() => import("./rules"));
 const LogsPage = lazy(() => import("./logs"));
 const TestPage = lazy(() => import("./test"));
 const SettingsPage = lazy(() => import("./settings"));
+const NotFountPage = lazy(() => import("./not_found"));
 
 export const routers = [
   {

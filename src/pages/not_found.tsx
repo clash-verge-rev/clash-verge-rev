@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 
-export const NotFountPage = () => {
+const NotFountPage = () => {
   return (
     <Box
       sx={{
@@ -15,3 +15,5 @@ export const NotFountPage = () => {
     </Box>
   );
 };
+
+export default NotFountPage;
