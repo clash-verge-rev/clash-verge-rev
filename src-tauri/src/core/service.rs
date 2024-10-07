@@ -4,9 +4,8 @@ use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::time::Duration;
 use std::{env::current_exe, process::Command as StdCommand};
-use tokio::time::sleep;
+use tokio::time::Duration;
 
 // Windows only
 
@@ -268,6 +267,7 @@ pub async fn check_service() -> Result<JsonResponse> {
     let url = format!("{SERVICE_URL}/get_clash");
     let response = reqwest::ClientBuilder::new()
         .no_proxy()
+        .timeout(Duration::from_secs(3))
         .build()?
         .get(url)
         .send()
@@ -282,13 +282,6 @@ pub async fn check_service() -> Result<JsonResponse> {
 
 /// start the clash by service
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
-    let status = check_service().await?;
-
-    if status.code == 0 {
-        stop_core_by_service().await?;
-        sleep(Duration::from_secs(1)).await;
-    }
-
     let clash_core = { Config::verge().latest().clash_core.clone() };
     let clash_core = clash_core.unwrap_or("verge-mihomo".into());
 
@@ -313,20 +306,14 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     map.insert("log_file", log_path);
 
     let url = format!("{SERVICE_URL}/start_clash");
-    let res = reqwest::ClientBuilder::new()
+    let _ = reqwest::ClientBuilder::new()
         .no_proxy()
         .build()?
         .post(url)
         .json(&map)
         .send()
-        .await?
-        .json::<JsonResponse>()
         .await
         .context("failed to connect to the Clash Verge Service")?;
-
-    if res.code != 0 {
-        bail!(res.msg);
-    }
 
     Ok(())
 }
@@ -334,19 +321,13 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 /// stop the clash by service
 pub(super) async fn stop_core_by_service() -> Result<()> {
     let url = format!("{SERVICE_URL}/stop_clash");
-    let res = reqwest::ClientBuilder::new()
+    let _ = reqwest::ClientBuilder::new()
         .no_proxy()
         .build()?
         .post(url)
         .send()
-        .await?
-        .json::<JsonResponse>()
         .await
         .context("failed to connect to the Clash Verge Service")?;
-
-    if res.code != 0 {
-        bail!(res.msg);
-    }
 
     Ok(())
 }
