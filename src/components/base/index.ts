@@ -12,3 +12,4 @@ export { BaseStyledSelect } from "./base-styled-select";
 export { BaseStyledTextField } from "./base-styled-text-field";
 export { Switch } from "./base-switch";
 export { SwitchLovely } from "./base-switch-lovely";
+export { TailwindIndicator } from "./tailwind-indicator";

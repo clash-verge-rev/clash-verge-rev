@@ -1,4 +1,4 @@
-import { Notice } from "@/components/base";
+import { Notice, TailwindIndicator } from "@/components/base";
 import { LayoutControl } from "@/components/layout/layout-control";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
@@ -144,7 +144,7 @@ const Layout = () => {
         <Paper
           square
           elevation={0}
-          className={cn("flex h-screen w-screen overflow-hidden", {
+          className={cn("relative flex h-screen w-screen overflow-hidden", {
             "h-[calc(100vh-4px)] w-[calc(100vw-4px)] rounded-md border-2 border-solid border-[--divider-color]":
               OS === "linux" && !enable_system_title,
             "rounded-none": isMaximized,
@@ -185,6 +185,8 @@ const Layout = () => {
                 <Outlet />
               </Suspense>
             </div>
+
+            <TailwindIndicator />
           </div>
         </Paper>
       </ThemeProvider>
