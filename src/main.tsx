@@ -1,7 +1,6 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-svgr/client" />
 
-import "@/assets/styles/index.scss";
 import { BaseErrorBoundary } from "@/components/base";
 import "@/index.css";
 import router from "@/pages/_routers";
@@ -66,13 +65,13 @@ const contexts = [
 ];
 
 createRoot(container).render(
-  <StyledEngineProvider injectFirst>
-    <React.StrictMode>
+  <React.StrictMode>
+    <StyledEngineProvider injectFirst>
       <ComposeContextProvider contexts={contexts}>
         <BaseErrorBoundary>
           <RouterProvider router={router} />
         </BaseErrorBoundary>
       </ComposeContextProvider>
-    </React.StrictMode>
-  </StyledEngineProvider>,
+    </StyledEngineProvider>
+  </React.StrictMode>,
 );

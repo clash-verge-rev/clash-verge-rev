@@ -1,8 +1,19 @@
 import { alpha, styled } from "@mui/material";
 
-export const TestDiv = styled("div")(({ theme, "aria-selected": selected }) => {
+export const TestDiv = styled("div")(({
+  theme,
+  "aria-label": label,
+  "aria-selected": selected,
+}) => {
   const { mode, primary, text } = theme.palette;
   const key = `${mode}-${!!selected}`;
+  const isDragging = label === "dragging";
+
+  const bgcolor = isDragging
+    ? "var(--background-color-alpha)"
+    : mode === "light"
+      ? "#ffffff"
+      : "#282A36";
 
   const color = {
     "light-true": text.secondary,
@@ -28,10 +39,7 @@ export const TestDiv = styled("div")(({ theme, "aria-selected": selected }) => {
     boxShadow: theme.shadows[2],
     padding: "8px 16px",
     boxSizing: "border-box",
-    backgroundColor: "#ffffff",
-    ...theme.applyStyles("dark", {
-      backgroundColor: "#282A36",
-    }),
+    backgroundColor: bgcolor,
     color,
     "& h2": { color: h2color },
   };

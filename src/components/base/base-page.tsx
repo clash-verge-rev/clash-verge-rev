@@ -16,7 +16,7 @@ export const BasePage: React.FC<Props> = (props) => {
 
   return (
     <BaseErrorBoundary>
-      <div className="h-full w-full xs:max-w-[calc(100vw-120px)] sm:max-w-[calc(100vw-210px)]">
+      <div className="h-full w-full">
         <div
           className="flex h-[50px] items-center justify-between px-2"
           data-tauri-drag-region="true"
@@ -34,7 +34,7 @@ export const BasePage: React.FC<Props> = (props) => {
           className={"h-[calc(100%-50px)] w-full bg-white dark:bg-[#1e1f27]"}>
           <div
             className={cn(
-              "box-border h-full w-full overflow-auto bg-[--background-color] px-2 dark:bg-[#1e1f27]",
+              "box-border h-full w-full overflow-auto bg-comment px-2 dark:bg-[#1e1f27]",
               {
                 "p-0": full,
               },

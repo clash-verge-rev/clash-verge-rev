@@ -95,6 +95,7 @@ export const TestItem = (props: Props) => {
   return (
     <Box sx={{ width: "100%" }}>
       <TestDiv
+        aria-label={isDragging ? "dragging" : "test"}
         sx={{ ...sx }}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
@@ -143,13 +144,13 @@ export const TestItem = (props: Props) => {
           }}>
           {delay === -2 && (
             <Widget>
-              <BaseLoading />
+              <BaseLoading className="h-5" />
             </Widget>
           )}
 
           {delay === -1 && (
             <Widget
-              className="the-check"
+              className="h-5"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -165,7 +166,7 @@ export const TestItem = (props: Props) => {
           {delay >= 0 && (
             // 显示延迟
             <Widget
-              className="the-delay"
+              className="h-5"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

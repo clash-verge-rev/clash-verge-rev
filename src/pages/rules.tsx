@@ -144,9 +144,10 @@ const RulesPage = () => {
       </Box>
 
       <Box
-        height={"calc(100% - 56px)"}
+        height={"calc(100% - 50px)"}
         sx={{
           boxSizing: "border-box",
+          mb: "4px",
           marginLeft: "10px",
           borderRadius: "8px",
         }}>

@@ -25,7 +25,7 @@ export const LayoutItem = (props: Props) => {
   const navigate = useNavigate();
 
   return (
-    <Tooltip title={!open ? children : ""} placement="right">
+    <Tooltip title={!open ? children : null} placement="right">
       <ListItem sx={{ py: 0.5, padding: "4px 0px" }}>
         <ListItemButton
           selected={!!match}

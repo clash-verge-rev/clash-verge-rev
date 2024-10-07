@@ -1,11 +1,10 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { useForm, Controller } from "react-hook-form";
-import { TextField } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, Notice } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
+import { TextField } from "@mui/material";
 import { nanoid } from "nanoid";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   onChange: (uid: string, patch?: Partial<IVergeTestItem>) => void;
@@ -24,7 +23,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
   const [loading, setLoading] = useState(false);
   const { verge, patchVerge } = useVerge();
   const testList = verge?.test_list ?? [];
-  const { control, watch, register, ...formIns } = useForm<IVergeTestItem>({
+  const { setValue, register, handleSubmit, reset } = useForm<IVergeTestItem>({
     defaultValues: {
       name: "",
       icon: "",
@@ -50,7 +49,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
     edit: (item) => {
       if (item) {
         Object.entries(item).forEach(([key, value]) => {
-          formIns.setValue(key as any, value);
+          setValue(key as any, value);
         });
       }
       setOpenType("edit");
@@ -58,41 +57,39 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
     },
   }));
 
-  const handleOk = useLockFn(
-    formIns.handleSubmit(async (form) => {
-      setLoading(true);
-      try {
-        if (!form.name) throw new Error("`Name` should not be null");
-        if (!form.url) throw new Error("`Url` should not be null");
-        let newList;
-        let uid;
+  const onSubmit = async (data: IVergeTestItem) => {
+    setLoading(true);
+    try {
+      if (!data.name) throw new Error("`Name` should not be null");
+      if (!data.url) throw new Error("`Url` should not be null");
+      let newList;
+      let uid;
 
-        if (openType === "new") {
-          uid = nanoid();
-          const item = { ...form, uid };
-          newList = [...testList, item];
-          await patchVerge({ test_list: newList });
-          props.onChange(uid);
-        } else {
-          if (!form.uid) throw new Error("UID not found");
-          uid = form.uid;
+      if (openType === "new") {
+        uid = nanoid();
+        const item = { ...data, uid };
+        newList = [...testList, item];
+        await patchVerge({ test_list: newList });
+        props.onChange(uid);
+      } else {
+        if (!data.uid) throw new Error("UID not found");
+        uid = data.uid;
 
-          await patchTestList(uid, form);
-          props.onChange(uid, form);
-        }
-        setOpen(false);
-        setLoading(false);
-        setTimeout(() => formIns.reset(), 500);
-      } catch (err: any) {
-        Notice.error(err.message || err.toString());
-        setLoading(false);
+        await patchTestList(uid, data);
+        props.onChange(uid, data);
       }
-    }),
-  );
+      setOpen(false);
+      setLoading(false);
+      setTimeout(() => reset(), 500);
+    } catch (err: any) {
+      Notice.error(err.message || err.toString());
+      setLoading(false);
+    }
+  };
 
   const handleClose = () => {
     setOpen(false);
-    setTimeout(() => formIns.reset(), 500);
+    setTimeout(() => reset(), 500);
   };
 
   const text = {
@@ -113,41 +110,13 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       cancelBtn={t("Cancel")}
       onClose={handleClose}
       onCancel={handleClose}
-      onOk={handleOk}
+      onOk={handleSubmit(onSubmit)}
       loading={loading}>
-      <Controller
-        name="name"
-        control={control}
-        render={({ field }) => (
-          <TextField {...text} {...field} label={t("Name")} />
-        )}
-      />
-      <Controller
-        name="icon"
-        control={control}
-        render={({ field }) => (
-          <TextField
-            {...text}
-            {...field}
-            multiline
-            maxRows={5}
-            label={t("Icon")}
-          />
-        )}
-      />
-      <Controller
-        name="url"
-        control={control}
-        render={({ field }) => (
-          <TextField
-            {...text}
-            {...field}
-            multiline
-            maxRows={3}
-            label={t("Test URL")}
-          />
-        )}
-      />
+      <form>
+        <TextField {...text} {...register("name")} label={t("Name")} />
+        <TextField {...text} {...register("icon")} label={t("Icon")} />
+        <TextField {...text} {...register("url")} label={t("Test URL")} />
+      </form>
     </BaseDialog>
   );
 });

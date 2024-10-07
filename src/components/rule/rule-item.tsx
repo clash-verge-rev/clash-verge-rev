@@ -63,10 +63,7 @@ export const RuleItem = (props: Props) => {
     <Card
       sx={[
         {
-          margin: "6px 6px 0 0",
-          "& ::-webkit-scrollbar": {
-            width: "5px",
-          },
+          marginBottom: "6px",
           backgroundImage: "none",
         },
         ({ palette: { mode, primary } }) => {
@@ -75,7 +72,6 @@ export const RuleItem = (props: Props) => {
             bgcolor,
             "& ::-webkit-scrollbar-thumb": {
               backgroundColor: alpha(primary.main, 0.35),
-              borderRadius: "2px",
             },
           };
         },

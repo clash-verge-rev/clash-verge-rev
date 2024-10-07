@@ -148,6 +148,7 @@ export const ConnectionTable = (props: Props) => {
 
   return (
     <DataGrid
+      className="xs:max-w-[calc(100vw-150px)] sm:max-w-[calc(100vw-240px)]"
       hideFooter
       disableDensitySelector
       disableColumnMenu

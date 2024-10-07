@@ -37,9 +37,9 @@ const LoadingItem = styled("div")(({ theme }) => ({
   background: theme.palette.text.secondary,
 }));
 
-export const BaseLoading = () => {
+export const BaseLoading = ({ className }: { className?: string }) => {
   return (
-    <Loading>
+    <Loading className={className}>
       <LoadingItem />
       <LoadingItem />
       <LoadingItem />

@@ -565,19 +565,12 @@ const ProfilePage = () => {
                       margin: "5px",
                     }}>
                     <ProfileItem
-                      sx={{
-                        ...(draggingProfileItem?.uid === item.uid && {
-                          "& > div": {
-                            backgroundColor: "var(--background-color-alpha)",
-                          },
-                        }),
-                      }}
                       selected={
                         (activating.profile === "" &&
                           profiles.current === item.uid) ||
                         activating.profile === item.uid
                       }
-                      isDragging={draggingProfileItem ? true : false}
+                      isDragging={draggingProfileItem?.uid === item.uid}
                       activating={
                         activating.profile === item.uid ||
                         (profiles.current === item.uid &&
@@ -627,7 +620,7 @@ const ProfilePage = () => {
               variant="middle"
               flexItem
               sx={{
-                width: `calc(100% - 32px)`,
+                width: "calc(100% - 32px)",
                 my: 1,
                 borderColor: dividercolor,
               }}>
@@ -667,18 +660,11 @@ const ProfilePage = () => {
                         margin: "5px",
                       }}>
                       <ProfileMore
-                        sx={{
-                          ...(draggingChainItem?.uid === item.uid && {
-                            "& > div": {
-                              backgroundColor: "var(--background-color-alpha)",
-                            },
-                          }),
-                        }}
                         selected={
                           !!chain.includes(item.uid) ||
                           activating.chain === item.uid
                         }
-                        isDragging={draggingChainItem ? true : false}
+                        isDragging={draggingChainItem?.uid === item.uid}
                         itemData={item}
                         enableNum={chain.length || 0}
                         logInfo={chainLogs[item.uid]}
@@ -712,15 +698,8 @@ const ProfilePage = () => {
                         margin: "5px",
                       }}>
                       <ProfileMore
-                        sx={{
-                          ...(draggingChainItem?.uid === item.uid && {
-                            "& > div": {
-                              backgroundColor: "var(--background-color-alpha)",
-                            },
-                          }),
-                        }}
                         selected={!!chain.includes(item.uid)}
-                        isDragging={draggingChainItem ? true : false}
+                        isDragging={draggingChainItem?.uid === item.uid}
                         itemData={item}
                         enableNum={chain.length || 0}
                         logInfo={chainLogs[item.uid]}

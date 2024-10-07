@@ -182,8 +182,8 @@ const ConnectionsPage = () => {
           height: "36px",
           display: "flex",
           alignItems: "center",
-          boxSizing: "border-box",
           userSelect: "text",
+          boxSizing: "border-box",
         }}>
         {!isTableLayout && (
           <BaseStyledSelect
@@ -200,16 +200,17 @@ const ConnectionsPage = () => {
       </Box>
 
       <Box
-        height="calc(100% - 56px)"
+        height="calc(100% - 50px)"
         sx={(theme) => ({
           userSelect: "text",
-          margin: "10px",
+          mx: "10px",
+          mb: "4px",
           borderRadius: "8px",
-          boxSizing: "border-box",
           bgcolor: "#ffffff",
           ...theme.applyStyles("dark", {
             bgcolor: "#282a36",
           }),
+          boxSizing: "border-box",
         })}>
         {filterConn.length === 0 ? (
           <BaseEmpty text={t("No Connections")} />

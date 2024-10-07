@@ -205,9 +205,9 @@ export const ProfileMore = (props: Props) => {
         ...sx,
       }}>
       <ProfileDiv
+        aria-label={isDragging ? "dragging" : "script"}
         aria-selected={selected}
         onDoubleClick={() => onEditFile()}
-        // onClick={() => onSelect(false)}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });

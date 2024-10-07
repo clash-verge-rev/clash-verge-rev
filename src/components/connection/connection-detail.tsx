@@ -25,6 +25,7 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
 
     const onClose = () => setOpen(false);
 
+    // TODO: snackbar content style
     return (
       <Snackbar
         autoHideDuration={6000}

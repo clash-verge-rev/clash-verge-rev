@@ -85,16 +85,17 @@ const LogPage = () => {
       </Box>
 
       <Box
-        height="calc(100% - 56px)"
+        height="calc(100% - 50px)"
         sx={(theme) => ({
-          py: "6px",
+          pb: "6px",
+          mb: "4px",
           mx: "10px",
-          boxSizing: "border-box",
           borderRadius: "8px",
           bgcolor: "#ffffff",
           ...theme.applyStyles("dark", {
             bgcolor: "#282a36",
           }),
+          boxSizing: "border-box",
         })}>
         {filterLogs.length > 0 ? (
           <Virtuoso

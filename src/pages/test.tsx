@@ -27,15 +27,7 @@ import youtube from "@/assets/image/test/youtube.svg?raw";
 
 const FlexDecorationItems = memo(function FlexDecorationItems() {
   return [...new Array(20)].map((_, index) => (
-    <i
-      key={index}
-      style={{
-        display: "flex",
-        flexGrow: "1",
-        margin: "0 5px",
-        width: "180px",
-        height: "0",
-      }}></i>
+    <i key={index} className="mx-[5px] my-0 flex h-0 w-[180px] flex-grow"></i>
   ));
 });
 
@@ -104,13 +96,6 @@ const TestPage = () => {
     mutateVerge({ ...verge, test_list: newList }, false);
   };
 
-  // const reorder = (list: any[], startIndex: number, endIndex: number) => {
-  //   const result = Array.from(list);
-  //   const [removed] = result.splice(startIndex, 1);
-  //   result.splice(endIndex, 0, removed);
-  //   return result;
-  // };
-
   const getIndex = (id: UniqueIdentifier | undefined) => {
     if (id) {
       return sortableTestList.findIndex((x) => x.uid === id.toString());
@@ -170,12 +155,7 @@ const TestPage = () => {
           </Button>
         </Box>
       }>
-      <Box
-        sx={{
-          pt: 1.25,
-          mb: 0.5,
-          px: "5px",
-        }}>
+      <Box sx={{ pt: "5px", px: "5px" }}>
         <DndContext
           sensors={sensors}
           // onDragStart={(event) => {}}
@@ -208,13 +188,8 @@ const TestPage = () => {
                       width: "180px",
                     }}>
                     <TestItem
-                      sx={{
-                        ...(draggingTestItem?.uid === item.uid && {
-                          bgcolor: "var(--background-color-alpha)",
-                        }),
-                      }}
                       id={item.uid}
-                      isDragging={draggingTestItem ? true : false}
+                      isDragging={draggingTestItem?.uid === item.uid}
                       itemData={item}
                       onEdit={() => viewerRef.current?.edit(item)}
                       onDelete={onDeleteTestListItem}

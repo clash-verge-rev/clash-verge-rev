@@ -1,3 +1,81 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: "twemoji mozilla";
+    src: url("../fonts/Twemoji.Mozilla.ttf");
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+      "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+      "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  /* scrollbar */
+  /* width */
+  ::-webkit-scrollbar {
+    @apply h-[5px] w-[5px];
+  }
+
+  /* Track */
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-[5px] bg-gray-400;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-main;
+  }
+
+  :root {
+    --primary-main: #5b5c9d;
+    --text-primary: #1f1f1f;
+    --selection-color: #f5f5f5;
+    --scroller-color: #8c8c8c;
+    --background-color: #f5f5f5;
+    --background-color-alpha: rgba(24, 103, 192, 0.1);
+    --border-radius: 6px;
+  }
+
+  ::selection {
+    color: var(--selection-color);
+    background-color: var(--primary-main);
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-old(root) {
+    z-index: 9999;
+  }
+
+  ::view-transition-new(root) {
+    z-index: 1;
+  }
+
+  .dark::view-transition-old(root) {
+    z-index: 1;
+  }
+
+  .dark::view-transition-new(root) {
+    z-index: 9999;
+  }
+}

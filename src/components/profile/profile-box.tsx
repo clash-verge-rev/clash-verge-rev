@@ -2,12 +2,18 @@ import { alpha, styled } from "@mui/material";
 
 export const ProfileDiv = styled("div")(({
   theme,
+  "aria-label": label,
   "aria-selected": selected,
 }) => {
   const { mode, primary, text } = theme.palette;
   const key = `${mode}-${!!selected}`;
+  const isDragging = label === "dragging";
 
-  const unselectedbackgroundColor = mode === "light" ? "#ffffff" : "#282A36";
+  const unselectedbackgroundColor = isDragging
+    ? "var(--background-color-alpha)"
+    : mode === "light"
+      ? "#ffffff"
+      : "#282A36";
   const selectedBackgroundColor =
     mode === "light" ? alpha(primary.main, 0.25) : alpha(primary.main, 0.35);
 
@@ -29,7 +35,6 @@ export const ProfileDiv = styled("div")(({
     "light-true": {
       borderLeft: `3px solid ${primary.main}`,
       width: "100%",
-      // marginLeft: `-3px`,
     },
     "light-false": {
       width: "100%",
@@ -37,7 +42,6 @@ export const ProfileDiv = styled("div")(({
     "dark-true": {
       borderLeft: `3px solid ${primary.main}`,
       width: "100%",
-      // marginLeft: `-3px`,
     },
     "dark-false": {
       width: "100%",

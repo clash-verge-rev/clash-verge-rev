@@ -300,6 +300,7 @@ export const ProfileItem = (props: Props) => {
         ...sx,
       }}>
       <ProfileDiv
+        aria-label={isDragging ? "dragging" : "profile"}
         aria-selected={selected}
         onClick={() => onSelect(false)}
         onContextMenu={(event) => {

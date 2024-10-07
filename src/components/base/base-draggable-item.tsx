@@ -4,17 +4,15 @@ import { CSS } from "@dnd-kit/utilities";
 import { Box, SxProps } from "@mui/material";
 import React from "react";
 
-export const DraggableItem = ({
-  id,
-  sx,
-  data,
-  children,
-}: {
+interface DraggableItemProps {
   id: string;
   sx?: SxProps;
   data?: Data;
   children: React.ReactNode;
-}) => {
+}
+
+export const DraggableItem = (props: DraggableItemProps) => {
+  const { id, sx, data, children } = props;
   const { attributes, setNodeRef, listeners, transform, transition } =
     useSortable({ id, data });
 
