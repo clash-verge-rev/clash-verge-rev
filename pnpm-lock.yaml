@@ -202,8 +202,8 @@ importers:
         specifier: 5.34.1
         version: 5.34.1
       typescript:
-        specifier: 5.6.2
-        version: 5.6.2
+        specifier: 5.6.3
+        version: 5.6.3
       vite:
         specifier: 5.4.8
         version: 5.4.8(@types/node@22.5.4)(sass@1.79.4)(terser@5.34.1)
@@ -212,7 +212,7 @@ importers:
         version: 1.1.0(monaco-editor@0.52.0)
       vite-plugin-svgr:
         specifier: 4.2.0
-        version: 4.2.0(rollup@4.21.3)(typescript@5.6.2)(vite@5.4.8(@types/node@22.5.4)(sass@1.79.4)(terser@5.34.1))
+        version: 4.2.0(rollup@4.21.3)(typescript@5.6.3)(vite@5.4.8(@types/node@22.5.4)(sass@1.79.4)(terser@5.34.1))
 
 packages:
 
@@ -3750,8 +3750,8 @@ packages:
   types-pac@1.0.3:
     resolution: {integrity: sha512-MF2UAZGvGMOM+vHi9Zj/LvQqdNN1m1xSB+PjAW9B/GvFqaB4GwR18YaIbGIGDRTW/J8iqFXQHLZd5eJVtho46w==}
 
-  typescript@5.6.2:
-    resolution: {integrity: sha512-NW8ByodCSNCwZeghjN3o+JX5OFH0Ojg6sadjEKY4huZ52TqbJTJnDo5+Tw98lSy63NZvi4n+ez5m2u5d4PkZyw==}
+  typescript@5.6.3:
+    resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -5554,12 +5554,12 @@ snapshots:
       '@svgr/babel-plugin-transform-react-native-svg': 8.1.0(@babel/core@7.25.2)
       '@svgr/babel-plugin-transform-svg-component': 8.0.0(@babel/core@7.25.2)
 
-  '@svgr/core@8.1.0(typescript@5.6.2)':
+  '@svgr/core@8.1.0(typescript@5.6.3)':
     dependencies:
       '@babel/core': 7.25.2
       '@svgr/babel-preset': 8.1.0(@babel/core@7.25.2)
       camelcase: 6.3.0
-      cosmiconfig: 8.3.6(typescript@5.6.2)
+      cosmiconfig: 8.3.6(typescript@5.6.3)
       snake-case: 3.0.4
     transitivePeerDependencies:
       - supports-color
@@ -5570,11 +5570,11 @@ snapshots:
       '@babel/types': 7.25.6
       entities: 4.5.0
 
-  '@svgr/plugin-jsx@8.1.0(@svgr/core@8.1.0(typescript@5.6.2))':
+  '@svgr/plugin-jsx@8.1.0(@svgr/core@8.1.0(typescript@5.6.3))':
     dependencies:
       '@babel/core': 7.25.2
       '@svgr/babel-preset': 8.1.0(@babel/core@7.25.2)
-      '@svgr/core': 8.1.0(typescript@5.6.2)
+      '@svgr/core': 8.1.0(typescript@5.6.3)
       '@svgr/hast-util-to-babel-ast': 8.0.0
       svg-parser: 2.0.4
     transitivePeerDependencies:
@@ -6112,14 +6112,14 @@ snapshots:
       yaml: 1.10.2
     optional: true
 
-  cosmiconfig@8.3.6(typescript@5.6.2):
+  cosmiconfig@8.3.6(typescript@5.6.3):
     dependencies:
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
-      typescript: 5.6.2
+      typescript: 5.6.3
 
   create-error-class@3.0.2:
     dependencies:
@@ -7895,7 +7895,7 @@ snapshots:
 
   types-pac@1.0.3: {}
 
-  typescript@5.6.2: {}
+  typescript@5.6.3: {}
 
   undici-types@6.19.8: {}
 
@@ -8002,11 +8002,11 @@ snapshots:
     dependencies:
       monaco-editor: 0.52.0
 
-  vite-plugin-svgr@4.2.0(rollup@4.21.3)(typescript@5.6.2)(vite@5.4.8(@types/node@22.5.4)(sass@1.79.4)(terser@5.34.1)):
+  vite-plugin-svgr@4.2.0(rollup@4.21.3)(typescript@5.6.3)(vite@5.4.8(@types/node@22.5.4)(sass@1.79.4)(terser@5.34.1)):
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.21.3)
-      '@svgr/core': 8.1.0(typescript@5.6.2)
-      '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0(typescript@5.6.2))
+      '@svgr/core': 8.1.0(typescript@5.6.3)
+      '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0(typescript@5.6.3))
       vite: 5.4.8(@types/node@22.5.4)(sass@1.79.4)(terser@5.34.1)
     transitivePeerDependencies:
       - rollup
