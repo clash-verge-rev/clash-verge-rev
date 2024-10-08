@@ -47,32 +47,7 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(init::init_scheme());
     log_err!(init::startup_script().await);
     // 处理随机端口
-    let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
-
-    let mut port = Config::verge()
-        .latest()
-        .verge_mixed_port
-        .unwrap_or(Config::clash().data().get_mixed_port());
-
-    if enable_random_port {
-        port = find_unused_port().unwrap_or(
-            Config::verge()
-                .latest()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().data().get_mixed_port()),
-        );
-    }
-
-    Config::verge().data().patch_config(IVerge {
-        verge_mixed_port: Some(port),
-        ..IVerge::default()
-    });
-    let _ = Config::verge().data().save_file();
-    let mut mapping = Mapping::new();
-    mapping.insert("mixed-port".into(), port.into());
-    Config::clash().data().patch_config(mapping);
-    let _ = Config::clash().data().save_config();
-
+    log_err!(resolve_random_port_config());
     // 启动核心
     log::trace!("init config");
 
@@ -307,5 +282,34 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
         }
     }
 
+    Ok(())
+}
+
+fn resolve_random_port_config() -> Result<()> {
+    let verge_config = Config::verge();
+    let clash_config = Config::clash();
+    let enable_random_port = verge_config.latest().enable_random_port.unwrap_or(false);
+
+    let default_port = verge_config
+        .latest()
+        .verge_mixed_port
+        .unwrap_or(clash_config.data().get_mixed_port());
+
+    let port = if enable_random_port {
+        find_unused_port().unwrap_or(default_port)
+    } else {
+        default_port
+    };
+
+    verge_config.data().patch_config(IVerge {
+        verge_mixed_port: Some(port),
+        ..IVerge::default()
+    });
+    verge_config.data().save_file()?;
+
+    let mut mapping = Mapping::new();
+    mapping.insert("mixed-port".into(), port.into());
+    clash_config.data().patch_config(mapping);
+    clash_config.data().save_config()?;
     Ok(())
 }
