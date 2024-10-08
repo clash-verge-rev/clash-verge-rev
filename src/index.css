@@ -34,7 +34,7 @@
 
   /* Handle */
   ::-webkit-scrollbar-thumb {
-    @apply rounded-[5px] bg-gray-400;
+    @apply rounded-[5px] bg-gray-400 dark:bg-gray-500;
   }
 
   /* Handle on hover */
