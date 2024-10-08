@@ -5,7 +5,7 @@
 @layer base {
   @font-face {
     font-family: "twemoji mozilla";
-    src: url("../fonts/Twemoji.Mozilla.ttf");
+    src: url("./assets/fonts/Twemoji.Mozilla.ttf");
   }
 
   body {
