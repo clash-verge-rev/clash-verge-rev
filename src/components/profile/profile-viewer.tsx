@@ -156,159 +156,166 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         onCancel={handleClose}
         onOk={handleOk}
         loading={loading}>
-        <Controller
-          name="type"
-          control={control}
-          render={({ field }) => (
-            <ButtonGroup
-              size="small"
-              fullWidth
-              aria-label="profile type button group">
-              {["remote", "local", "script", "merge"].map((type) => (
-                <Button
-                  key={type}
-                  variant={formType === type ? "contained" : "outlined"}
-                  onClick={() => field.onChange(type)}>
-                  {t(type)}
-                </Button>
-              ))}
-            </ButtonGroup>
-          )}
-        />
-
-        <Controller
-          name="name"
-          control={control}
-          render={({ field }) => (
-            <TextField {...text} {...field} label={t("Name")} />
-          )}
-        />
-
-        <Controller
-          name="desc"
-          control={control}
-          render={({ field }) => (
-            <TextField {...text} {...field} label={t("Descriptions")} />
-          )}
-        />
-
-        {isRemote && (
-          <>
-            <Controller
-              name="url"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...text}
-                  {...field}
-                  multiline
-                  label={t("Subscription URL")}
-                />
-              )}
-            />
-
-            <Controller
-              name="option.user_agent"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...text}
-                  {...field}
-                  placeholder={`clash-verge/v${version}`}
-                  label="User Agent"
-                />
-              )}
-            />
-          </>
-        )}
-
-        {(isRemote || isLocal) && (
+        <form>
           <Controller
-            name="option.update_interval"
+            name="type"
             control={control}
             render={({ field }) => (
-              <TextField
-                {...text}
-                {...field}
-                onChange={(e) => {
-                  e.target.value = e.target.value
-                    ?.replace(/\D/, "")
-                    .slice(0, 10);
-                  field.onChange(e);
-                }}
-                label={t("Update Interval")}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position="end">mins</InputAdornment>
-                    ),
-                  },
-                }}
-              />
+              <ButtonGroup
+                size="small"
+                fullWidth
+                aria-label="profile type button group">
+                {["remote", "local", "script", "merge"].map((type) => (
+                  <Button
+                    key={type}
+                    variant={formType === type ? "contained" : "outlined"}
+                    onClick={() => field.onChange(type)}>
+                    {t(type)}
+                  </Button>
+                ))}
+              </ButtonGroup>
             )}
           />
-        )}
 
-        {isLocal && openType === "new" && (
-          <FileInput
-            onChange={(file, val) => {
-              if (!formIns.getValues("name")) {
-                const name = file.name.substring(0, file.name.lastIndexOf("."));
-                formIns.setValue("name", name);
-              }
-              fileDataRef.current = val;
-            }}
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <TextField {...text} {...field} label={t("Name")} />
+            )}
           />
-        )}
 
-        {isRemote && (
-          <>
+          <Controller
+            name="desc"
+            control={control}
+            render={({ field }) => (
+              <TextField {...text} {...field} label={t("Descriptions")} />
+            )}
+          />
+
+          {isRemote && (
+            <>
+              <Controller
+                name="url"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...text}
+                    {...field}
+                    multiline
+                    label={t("Subscription URL")}
+                  />
+                )}
+              />
+
+              <Controller
+                name="option.user_agent"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...text}
+                    {...field}
+                    placeholder={`clash-verge/v${version}`}
+                    label="User Agent"
+                  />
+                )}
+              />
+            </>
+          )}
+
+          {(isRemote || isLocal) && (
             <Controller
-              name="option.with_proxy"
+              name="option.update_interval"
               control={control}
               render={({ field }) => (
-                <StyledDiv>
-                  <InputLabel>{t("Use System Proxy")}</InputLabel>
-                  <SwitchLovely
-                    checked={field.value}
-                    {...field}
-                    color="primary"
-                  />
-                </StyledDiv>
+                <TextField
+                  {...text}
+                  {...field}
+                  onChange={(e) => {
+                    e.target.value = e.target.value
+                      ?.replace(/\D/, "")
+                      .slice(0, 10);
+                    field.onChange(e);
+                  }}
+                  label={t("Update Interval")}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">mins</InputAdornment>
+                      ),
+                    },
+                  }}
+                />
               )}
             />
+          )}
 
-            <Controller
-              name="option.self_proxy"
-              control={control}
-              render={({ field }) => (
-                <StyledDiv>
-                  <InputLabel>{t("Use Clash Proxy")}</InputLabel>
-                  <SwitchLovely
-                    checked={field.value}
-                    {...field}
-                    color="primary"
-                  />
-                </StyledDiv>
-              )}
+          {isLocal && openType === "new" && (
+            <FileInput
+              onChange={(file, val) => {
+                if (!formIns.getValues("name")) {
+                  const name = file.name.substring(
+                    0,
+                    file.name.lastIndexOf("."),
+                  );
+                  formIns.setValue("name", name);
+                }
+                fileDataRef.current = val;
+              }}
             />
+          )}
 
-            <Controller
-              name="option.danger_accept_invalid_certs"
-              control={control}
-              render={({ field }) => (
-                <StyledDiv>
-                  <InputLabel>{t("Accept Invalid Certs (Danger)")}</InputLabel>
-                  <SwitchLovely
-                    checked={field.value}
-                    {...field}
-                    color="primary"
-                  />
-                </StyledDiv>
-              )}
-            />
-          </>
-        )}
+          {isRemote && (
+            <>
+              <Controller
+                name="option.with_proxy"
+                control={control}
+                render={({ field }) => (
+                  <StyledDiv>
+                    <InputLabel>{t("Use System Proxy")}</InputLabel>
+                    <SwitchLovely
+                      checked={field.value}
+                      {...field}
+                      color="primary"
+                    />
+                  </StyledDiv>
+                )}
+              />
+
+              <Controller
+                name="option.self_proxy"
+                control={control}
+                render={({ field }) => (
+                  <StyledDiv>
+                    <InputLabel>{t("Use Clash Proxy")}</InputLabel>
+                    <SwitchLovely
+                      checked={field.value}
+                      {...field}
+                      color="primary"
+                    />
+                  </StyledDiv>
+                )}
+              />
+
+              <Controller
+                name="option.danger_accept_invalid_certs"
+                control={control}
+                render={({ field }) => (
+                  <StyledDiv>
+                    <InputLabel>
+                      {t("Accept Invalid Certs (Danger)")}
+                    </InputLabel>
+                    <SwitchLovely
+                      checked={field.value}
+                      {...field}
+                      color="primary"
+                    />
+                  </StyledDiv>
+                )}
+              />
+            </>
+          )}
+        </form>
       </BaseDialog>
     );
   },

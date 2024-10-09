@@ -20,6 +20,7 @@ export const ProxyGroupSidebar = (props: Props) => {
       }}>
       {groupNameList.map((name) => (
         <Link
+          key={name}
           underline="hover"
           className="cursor-pointer text-primary hover:text-secondary"
           onClick={() => onClickGroupName && onClickGroupName(name)}>
