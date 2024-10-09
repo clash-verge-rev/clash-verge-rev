@@ -26,32 +26,42 @@ pub struct JsonResponse {
     pub data: Option<ResponseBody>,
 }
 
-#[cfg(not(target_os = "windows"))]
-pub fn sudo(passwd: &String, cmd: String) -> StdCommand {
-    let shell = format!("echo \"{}\" | sudo -S {}", passwd, cmd);
-    let mut command = StdCommand::new("bash");
-    command.arg("-c").arg(shell);
-    command
-}
-
 /// Install the Clash Verge Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 ///
 #[cfg(target_os = "windows")]
-pub async fn install_service(_passwd: String) -> Result<()> {
+pub async fn reinstall_service(_passwd: String) -> Result<()> {
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
 
     let binary_path = dirs::service_path()?;
     let install_path = binary_path.with_file_name("install-service.exe");
+    let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
 
     if !install_path.exists() {
         bail!("installer exe not found");
     }
 
+    if !uninstall_path.exists() {
+        bail!("uninstaller exe not found");
+    }
+
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
+    let status = match level {
+        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
+        _ => StdCommand::new(uninstall_path)
+            .creation_flags(0x08000000)
+            .status()?,
+    };
+
+    if !status.success() {
+        bail!(
+            "failed to uninstall service with status {}",
+            status.code().unwrap()
+        );
+    }
 
     let status = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).status()?,
@@ -71,45 +81,52 @@ pub async fn install_service(_passwd: String) -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn install_service(passwd: String) -> Result<()> {
+pub async fn reinstall_service(passwd: String) -> Result<()> {
     use users::get_effective_uid;
 
     let binary_path = dirs::service_path()?;
     let installer_path = binary_path.with_file_name("install-service");
+    let uninstaller_path = binary_path.with_file_name("uninstall-service");
+
     if !installer_path.exists() {
         bail!("installer not found");
     }
 
-    let output = match get_effective_uid() {
-        0 => {
-            StdCommand::new("chmod")
-                .arg("+x")
-                .arg(installer_path.clone())
-                .output()?;
-            StdCommand::new("chmod")
-                .arg("+x")
-                .arg(binary_path)
-                .output()?;
-            StdCommand::new(installer_path.clone()).output()?
-        }
-        _ => {
-            sudo(
-                &passwd,
-                format!("chmod +x {}", installer_path.to_string_lossy()),
-            )
-            .output()?;
-            sudo(
-                &passwd,
-                format!("chmod +x {}", binary_path.to_string_lossy()),
-            )
-            .output()?;
-            sudo(&passwd, format!("{}", installer_path.to_string_lossy())).output()?
-        }
+    if !uninstaller_path.exists() {
+        bail!("uninstaller not found");
+    }
+
+    let elevator = crate::utils::help::linux_elevator();
+    let status = match get_effective_uid() {
+        0 => StdCommand::new(uninstaller_path).status()?,
+        _ => StdCommand::new(elevator)
+            .arg("sh")
+            .arg("-c")
+            .arg(uninstaller_path)
+            .status()?,
     };
-    if !output.status.success() {
+
+    if !status.success() {
         bail!(
-            "failed to install service with error: {}",
-            String::from_utf8_lossy(&output.stderr)
+            "failed to install service with status {}",
+            status.code().unwrap()
+        );
+    }
+
+    let elevator = crate::utils::help::linux_elevator();
+    let status = match get_effective_uid() {
+        0 => StdCommand::new(installer_path).status()?,
+        _ => StdCommand::new(elevator)
+            .arg("sh")
+            .arg("-c")
+            .arg(installer_path)
+            .status()?,
+    };
+
+    if !status.success() {
+        bail!(
+            "failed to install service with status {}",
+            status.code().unwrap()
         );
     }
 
@@ -117,38 +134,35 @@ pub async fn install_service(passwd: String) -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn install_service(passwd: String) -> Result<()> {
+pub async fn reinstall_service() -> Result<()> {
     let binary_path = dirs::service_path()?;
     let installer_path = binary_path.with_file_name("install-service");
+    let uninstall_path = binary_path.with_file_name("uninstall-service");
 
     if !installer_path.exists() {
         bail!("installer not found");
     }
 
-    sudo(
-        &passwd,
-        format!(
-            "chmod +x {}",
-            installer_path.to_string_lossy().replace(" ", "\\ ")
-        ),
-    )
-    .output()?;
-    let output = sudo(
-        &passwd,
-        installer_path
-            .to_string_lossy()
-            .replace(" ", "\\ ")
-            .to_string(),
-    )
-    .output()?;
-
-    if !output.status.success() {
-        bail!(
-            "failed to install service with error: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
+    if !uninstall_path.exists() {
+        bail!("uninstaller not found");
     }
 
+    let install_shell: String = installer_path.to_string_lossy().replace(" ", "\\\\ ");
+    let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\\\ ");
+    let command = format!(
+        r#"do shell script "{uninstall_shell} && {install_shell}" with administrator privileges"#
+    );
+
+    let status = StdCommand::new("osascript")
+        .args(vec!["-e", &command])
+        .status()?;
+
+    if !status.success() {
+        bail!(
+            "failed to install service with status {}",
+            status.code().unwrap()
+        );
+    }
     Ok(())
 }
 /// Uninstall the Clash Verge Service
@@ -180,82 +194,6 @@ pub async fn uninstall_service(_passwd: String) -> Result<()> {
         bail!(
             "failed to uninstall service with status {}",
             status.code().unwrap()
-        );
-    }
-
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-pub async fn uninstall_service(passwd: String) -> Result<()> {
-    use users::get_effective_uid;
-
-    let binary_path = dirs::service_path()?;
-    let uninstaller_path = binary_path.with_file_name("uninstall-service");
-
-    if !uninstaller_path.exists() {
-        bail!("uninstaller not found");
-    }
-
-    let output = match get_effective_uid() {
-        0 => {
-            StdCommand::new("chmod")
-                .arg("+x")
-                .arg(uninstaller_path.clone())
-                .output()?;
-            StdCommand::new(uninstaller_path.clone()).output()?
-        }
-        _ => {
-            sudo(
-                &passwd,
-                format!("chmod +x {}", uninstaller_path.to_string_lossy()),
-            )
-            .output()?;
-
-            sudo(&passwd, format!("{}", uninstaller_path.to_string_lossy())).output()?
-        }
-    };
-
-    if !output.status.success() {
-        bail!(
-            "failed to install service with error: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-
-    Ok(())
-}
-
-#[cfg(target_os = "macos")]
-pub async fn uninstall_service(passwd: String) -> Result<()> {
-    let binary_path = dirs::service_path()?;
-    let uninstaller_path = binary_path.with_file_name("uninstall-service");
-
-    if !uninstaller_path.exists() {
-        bail!("uninstaller not found");
-    }
-
-    sudo(
-        &passwd,
-        format!(
-            "chmod +x {}",
-            uninstaller_path.to_string_lossy().replace(" ", "\\ ")
-        ),
-    )
-    .output()?;
-    let output = sudo(
-        &passwd,
-        uninstaller_path
-            .to_string_lossy()
-            .replace(" ", "\\ ")
-            .to_string(),
-    )
-    .output()?;
-
-    if !output.status.success() {
-        bail!(
-            "failed to uninstall service with error: {}",
-            String::from_utf8_lossy(&output.stderr)
         );
     }
 

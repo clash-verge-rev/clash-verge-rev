@@ -56,10 +56,6 @@ pub struct IVerge {
     /// clash tun mode
     pub enable_tun_mode: Option<bool>,
 
-    /// windows service mode
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub enable_service_mode: Option<bool>,
-
     /// can the app auto startup
     pub enable_auto_launch: Option<bool>,
 
@@ -279,7 +275,6 @@ impl IVerge {
         patch!(tun_tray_icon);
 
         patch!(enable_tun_mode);
-        patch!(enable_service_mode);
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_random_port);
