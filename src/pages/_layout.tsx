@@ -10,7 +10,7 @@ import { getPortableFlag } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
-import { Paper, ThemeProvider } from "@mui/material";
+import { CssBaseline, Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import dayjs from "dayjs";
@@ -141,11 +141,12 @@ const Layout = () => {
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
       <ThemeProvider theme={theme}>
+        <CssBaseline />
         <Paper
           square
           elevation={0}
           className={cn("relative flex h-screen w-screen overflow-hidden", {
-            "h-[calc(100vh-4px)] w-[calc(100vw-4px)] rounded-md border-2 border-solid border-[--divider-color]":
+            "rounded-md border-2 border-solid border-[--divider-color]":
               OS === "linux" && !enable_system_title,
             "rounded-none": isMaximized,
           })}

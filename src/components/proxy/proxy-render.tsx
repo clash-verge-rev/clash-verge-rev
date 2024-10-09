@@ -78,9 +78,8 @@ const ProxyItemMiniCol = memo(function ProxyItemMiniCol(props: ProxyColProps) {
         height: 56,
         display: "grid",
         gap: 1,
-        pl: 2,
-        pr: 2,
-        pb: 1,
+        px: 2,
+        mb: 1,
         gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
       }}>
       {proxyCol?.map((proxy) => (
