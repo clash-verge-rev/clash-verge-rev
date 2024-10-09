@@ -141,16 +141,16 @@ export const TestItem = (props: Props) => {
             justifyContent: "center",
             marginTop: "8px",
             color: "primary.main",
+            height: "25px",
           }}>
           {delay === -2 && (
             <Widget>
-              <BaseLoading className="h-5" />
+              <BaseLoading />
             </Widget>
           )}
 
           {delay === -1 && (
             <Widget
-              className="h-5"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -166,7 +166,6 @@ export const TestItem = (props: Props) => {
           {delay >= 0 && (
             // 显示延迟
             <Widget
-              className="h-5"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
