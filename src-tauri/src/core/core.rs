@@ -6,7 +6,6 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
 use std::{sync::Arc, time::Duration};
-use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 use tokio::sync::Mutex;
 use tokio::time::sleep;
@@ -14,7 +13,6 @@ use tokio::time::sleep;
 #[derive(Debug)]
 pub struct CoreManager {
     running: Arc<Mutex<bool>>,
-    sidecar: Arc<Mutex<Option<CommandChild>>>,
 }
 
 impl CoreManager {
@@ -22,7 +20,6 @@ impl CoreManager {
         static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
         CORE_MANAGER.get_or_init(|| CoreManager {
             running: Arc::new(Mutex::new(false)),
-            sidecar: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -75,6 +72,7 @@ impl CoreManager {
             log::debug!("core is not running");
             return Ok(());
         }
+        println!("stop core");
 
         // 关闭tun模式
         let mut disable = Mapping::new();
@@ -84,22 +82,18 @@ impl CoreManager {
         log::debug!(target: "app", "disable tun mode");
         log_err!(clash_api::patch_configs(&disable).await);
 
-        if let Some(sidecar) = self.sidecar.lock().await.take() {
-            let _ = sidecar.kill();
-        } else {
-            // 服务模式
-            if service::check_service().await.is_ok() {
-                log::debug!(target: "app", "stop the core by service");
-                log_err!(service::stop_core_by_service().await);
-            }
+        // 服务模式
+        if service::check_service().await.is_ok() {
+            log::debug!(target: "app", "stop the core by service");
+            service::stop_core_by_service().await?;
         }
         *running = false;
-
         Ok(())
     }
 
     /// 启动核心
     pub async fn start_core(&self) -> Result<()> {
+        println!("start core");
         let mut running = self.running.lock().await;
         if *running {
             log::debug!("core is running");
@@ -107,62 +101,13 @@ impl CoreManager {
         }
 
         let config_path = Config::generate_file(ConfigType::Run)?;
-        let clash_core = { Config::verge().latest().clash_core.clone() };
-        let clash_core = clash_core.unwrap_or("verge-mihomo".into());
-        // 服务模式
-        let service_enable = { Config::verge().latest().enable_service_mode };
-        let service_enable = service_enable.unwrap_or(false);
 
+        // 服务模式
         if service::check_service().await.is_ok() {
             log::debug!(target: "app", "try to run core in service mode");
-            if service_enable {
-                service::run_core_by_service(&config_path).await?;
-                let mut sidecar = self.sidecar.lock().await;
-                if sidecar.is_some() {
-                    sidecar.take();
-                }
-                *running = true;
-                return Ok(());
-            }
+            service::run_core_by_service(&config_path).await?;
+            *running = true;
         }
-
-        let app_dir = dirs::app_home_dir()?;
-        let app_dir = dirs::path_to_str(&app_dir)?;
-        let config_path = dirs::path_to_str(&config_path)?;
-        let args = vec!["-d", app_dir, "-f", config_path];
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        let cmd = app_handle.shell().sidecar(clash_core)?;
-        let (mut rx, cmd_child) = cmd.args(args).spawn()?;
-        let mut sidecar = self.sidecar.lock().await;
-
-        *sidecar = Some(cmd_child);
-
-        tauri::async_runtime::spawn(async move {
-            while let Some(event) = rx.recv().await {
-                match event {
-                    CommandEvent::Stdout(line) => {
-                        let line = String::from_utf8(line).unwrap_or_default();
-                        log::info!(target: "app", "[mihomo]: {line}");
-                        Logger::global().set_log(line);
-                    }
-                    CommandEvent::Stderr(err) => {
-                        let err = String::from_utf8(err).unwrap_or_default();
-                        log::error!(target: "app", "[mihomo]: {err}");
-                        Logger::global().set_log(err);
-                    }
-                    CommandEvent::Error(err) => {
-                        log::error!(target: "app", "[mihomo]: {err}");
-                        Logger::global().set_log(err);
-                    }
-                    CommandEvent::Terminated(_) => {
-                        log::info!(target: "app", "mihomo core terminated");
-                        break;
-                    }
-                    _ => {}
-                }
-            }
-        });
-        *running = true;
         Ok(())
     }
 

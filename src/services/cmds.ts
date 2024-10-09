@@ -200,15 +200,6 @@ export async function checkService() {
     return "uninstall";
   }
 }
-
-export async function installService(passwd: string) {
-  return invoke<void>("install_service", { passwd });
-}
-
-export async function uninstallService(passwd: string) {
-  return invoke<void>("uninstall_service", { passwd });
-}
-
 export async function invoke_uwp_tool() {
   return invoke<void>("invoke_uwp_tool").catch((err) =>
     Notice.error(err?.message || err.toString(), 1500)

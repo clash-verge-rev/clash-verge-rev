@@ -177,11 +177,6 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         let mut should_update_sysproxy = false;
         let mut should_update_systray_part = false;
 
-        let service_mode = patch.enable_service_mode;
-        if service_mode.is_some() {
-            should_restart_core = true;
-        }
-
         if tun_mode.is_some() {
             should_update_clash_config = true;
         }

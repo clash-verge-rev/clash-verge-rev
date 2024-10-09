@@ -7,7 +7,6 @@ import { useVerge } from "@/hooks/use-verge";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { GuardState } from "./mods/guard-state";
-import { ServiceSwitcher } from "./mods/service-switcher";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import { TunViewer } from "./mods/tun-viewer";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
@@ -67,37 +66,15 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => {
-            if (serviceStatus !== "active") {
-              onChangeData({ enable_tun_mode: false });
-            } else {
-              onChangeData({ enable_tun_mode: e });
-            }
+            onChangeData({ enable_tun_mode: e });
           }}
           onGuard={(e) => {
-            if (serviceStatus !== "active" && e) {
-              Notice.error(t("Please Enable Service Mode"));
-              return Promise.resolve();
-            } else {
-              return patchVerge({ enable_tun_mode: e });
-            }
+            return patchVerge({ enable_tun_mode: e });
           }}
         >
           <Switch edge="end" />
         </GuardState>
       </SettingItem>
-
-      <SettingItem
-        label={t("Service Mode")}
-        extra={<TooltipIcon title={t("Service Mode Info")} />}
-      >
-        <ServiceSwitcher
-          status={serviceStatus ?? "unknown"}
-          mutate={mutateServiceStatus}
-          patchVerge={patchVerge}
-          onChangeData={onChangeData}
-        />
-      </SettingItem>
-
       <SettingItem
         label={t("System Proxy")}
         extra={
