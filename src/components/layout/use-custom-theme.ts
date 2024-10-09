@@ -80,62 +80,82 @@ export const useCustomTheme = () => {
     const isDark = mode === "dark";
 
     const muiDataGridLocale = language === "zh" ? zhCN : enUS;
+    const rootElement = document.getElementById("root");
+
+    const defaultThemeObj = {
+      cssVariables: true,
+      breakpoints: {
+        values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
+      },
+      palette: {
+        mode,
+        primary: { main: dt.primary_color },
+        secondary: { main: dt.secondary_color },
+        info: { main: dt.info_color },
+        error: { main: dt.error_color },
+        warning: { main: dt.warning_color },
+        success: { main: dt.success_color },
+        text: { primary: dt.primary_text, secondary: dt.secondary_text },
+      },
+      typography: { fontFamily: dt.font_family },
+      // All `Portal`-related components need to have the the main app wrapper element as a container
+      // so that the are in the subtree under the element used in the `important` option of the Tailwind's config.
+      components: {
+        MuiPopover: {
+          defaultProps: {
+            container: rootElement,
+          },
+        },
+        MuiPopper: {
+          defaultProps: {
+            container: rootElement,
+          },
+        },
+        MuiDialog: {
+          defaultProps: {
+            container: rootElement,
+          },
+        },
+        MuiModal: {
+          defaultProps: {
+            container: rootElement,
+          },
+        },
+      },
+    };
+
+    const customThemeObj = {
+      ...defaultThemeObj,
+      palette: {
+        ...defaultThemeObj.palette,
+        primary: { main: setting.primary_color || dt.primary_color },
+        secondary: { main: setting.secondary_color || dt.secondary_color },
+        info: { main: setting.info_color || dt.info_color },
+        error: { main: setting.error_color || dt.error_color },
+        warning: { main: setting.warning_color || dt.warning_color },
+        success: { main: setting.success_color || dt.success_color },
+        text: {
+          primary: setting.primary_text || dt.primary_text,
+          secondary: setting.secondary_text || dt.secondary_text,
+        },
+        background: {
+          paper: dt.background_color,
+        },
+      },
+      shadows: Array(25).fill("none") as Shadows,
+      typography: {
+        fontFamily: setting.font_family
+          ? `${setting.font_family}, ${dt.font_family}`
+          : dt.font_family,
+      },
+    };
 
     let theme: Theme;
     try {
-      theme = createTheme(
-        {
-          cssVariables: true,
-          breakpoints: {
-            values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
-          },
-          palette: {
-            mode,
-            primary: { main: setting.primary_color || dt.primary_color },
-            secondary: { main: setting.secondary_color || dt.secondary_color },
-            info: { main: setting.info_color || dt.info_color },
-            error: { main: setting.error_color || dt.error_color },
-            warning: { main: setting.warning_color || dt.warning_color },
-            success: { main: setting.success_color || dt.success_color },
-            text: {
-              primary: setting.primary_text || dt.primary_text,
-              secondary: setting.secondary_text || dt.secondary_text,
-            },
-            background: {
-              paper: dt.background_color,
-            },
-          },
-          shadows: Array(25).fill("none") as Shadows,
-          typography: {
-            fontFamily: setting.font_family
-              ? `${setting.font_family}, ${dt.font_family}`
-              : dt.font_family,
-          },
-        },
-        muiDataGridLocale,
-      );
+      theme = createTheme(customThemeObj, muiDataGridLocale);
     } catch {
       // fix #294
-      theme = createTheme(
-        {
-          cssVariables: true,
-          breakpoints: {
-            values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
-          },
-          palette: {
-            mode,
-            primary: { main: dt.primary_color },
-            secondary: { main: dt.secondary_color },
-            info: { main: dt.info_color },
-            error: { main: dt.error_color },
-            warning: { main: dt.warning_color },
-            success: { main: dt.success_color },
-            text: { primary: dt.primary_text, secondary: dt.secondary_text },
-          },
-          typography: { fontFamily: dt.font_family },
-        },
-        muiDataGridLocale,
-      );
+      theme = createTheme(defaultThemeObj, muiDataGridLocale);
     }
 
     // css
