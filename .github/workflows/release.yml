@@ -82,6 +82,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-for-linux:
+    runs-on: ${{ matrix.os }}
+    outputs:
+      VERSION: ${{ steps.get_version.outputs.VERSION }}
     strategy:
       fail-fast: false
       matrix:
@@ -94,7 +97,6 @@ jobs:
             target: aarch64-unknown-linux-gnu
           - os: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
-    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
@@ -109,35 +111,15 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Get Version
+        id: get_version
         run: |
           sudo apt-get update
           sudo apt-get install jq
-          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
+          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> "$GITHUB_OUTPUT"
 
       - name: Generate Changelog
         run: |
           cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
-          ## 我应该下载哪个版本？
-
-          ### MacOS (提示文件损坏或开发者无法验证请查看下面FAQ)
-          - MacOS intel芯片: x64.dmg
-          - MacOS apple M芯片: aarch64.dmg
-
-          ### Linux
-          - Linux 64位: amd64.deb/amd64.AppImage/amd64.rpm
-          - Linux 32位: i386.deb/i386.rmp
-          - Linux arm64架构: arm64.deb/arm64.rpm
-          - Linux armv7架构: armhf.deb/armhf.rpm
-
-          ### Windows (Win7 用户请查看下面FAQ中的解决方案)
-          #### 正常版本(推荐)
-          - 64位: x64-setup.exe
-          - 32位: x86-setup.exe
-          - arm64架构: arm64-setup.exe
-          #### 便携版(不推荐使用，无法自动更新)
-          - 64位: x64_portable.zip
-          - 32位: x86_portable.zip
-          - arm64架构: arm64_portable.zip
 
           [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
 
@@ -254,17 +236,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
 
-      - name: Get Version
+      - name: Update Checksums
         run: |
-          sudo apt-get update
-          sudo apt-get install jq
-          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
+          echo "version: ${{ needs.release-for-linux.outputs.VERSION }}"
+          wget https://github.com/oomeow/clash-verge-rev/releases/download/v${{ needs.release-for-linux.outputs.VERSION }}/clash-verge_${{ needs.release-for-linux.outputs.VERSION }}_amd64.deb -O amd64.deb
+          wget https://github.com/oomeow/clash-verge-rev/releases/download/v${{ needs.release-for-linux.outputs.VERSION }}/clash-verge_${{ needs.release-for-linux.outputs.VERSION }}_arm64.deb -O arm64.deb
+          sed -i "s/sha256sums_x86_64=.*/sha256sums_x86_64=(\"$(sha256sum ./amd64.deb | awk '{print $1}')\")/" archbuild/release/PKGBUILD
+          sed -i "s/sha256sums_aarch64=.*/sha256sums_aarch64=(\"$(sha256sum ./arm64.deb | awk '{print $1}')\")/" archbuild/release/PKGBUILD
 
       - name: Makepkg Build and Check
         id: makepkg
         uses: edlanglois/pkgbuild-action@v1
         with:
-          pkgdir: ${{ github.workspace }}/archbuild/release
+          pkgdir: archbuild/release
 
       - name: Print Package Files
         run: |
@@ -274,8 +258,8 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
         with:
-          tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
+          tag_name: v${{ needs.release-for-linux.outputs.VERSION }}
+          name: "Clash Verge Rev v${{ needs.release-for-linux.outputs.VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           files: ${{ steps.makepkg.outputs.pkgfile0 }}
 

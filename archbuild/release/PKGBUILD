@@ -14,8 +14,8 @@ conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "
 source_x86_64=("${_pkgname}-${pkgver}-x86_64.deb::${url}/releases/download/v${pkgver}/clash-verge_${pkgver}_amd64.deb")
 source_aarch64=("${_pkgname}-${pkgver}-aarch64.deb::${url}/releases/download/v${pkgver}/clash-verge_${pkgver}_arm64.deb")
 
-sha512sums_x86_64=('SKIP')
-sha512sums_aarch64=('SKIP')
+sha256sums_x86_64=('81e72af54c806d2c57c6774192f5e972f9a768954e177e5a137157b2910d25f3')
+sha256sums_aarch64=('2113ae2f22b1f85477850fcd02ae6a7ed9894c1091776ddc7abf88d0671b4242')
 
 package() {
 	tar xpf data.tar.gz -C ${pkgdir}
