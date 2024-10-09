@@ -72,7 +72,6 @@ impl CoreManager {
             log::debug!("core is not running");
             return Ok(());
         }
-        println!("stop core");
 
         // 关闭tun模式
         let mut disable = Mapping::new();
@@ -93,7 +92,6 @@ impl CoreManager {
 
     /// 启动核心
     pub async fn start_core(&self) -> Result<()> {
-        println!("start core");
         let mut running = self.running.lock().await;
         if *running {
             log::debug!("core is running");

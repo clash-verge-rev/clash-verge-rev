@@ -150,7 +150,7 @@ pub async fn reinstall_service() -> Result<()> {
     let install_shell: String = installer_path.to_string_lossy().replace(" ", "\\\\ ");
     let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\\\ ");
     let command = format!(
-        r#"do shell script "{uninstall_shell} && {install_shell}" with administrator privileges"#
+        r#"do shell script "sudo {uninstall_shell} && sudo {install_shell}" with administrator privileges"#
     );
 
     let status = StdCommand::new("osascript")
