@@ -6,6 +6,7 @@ import {
   useSetLoadingCache,
   useThemeMode,
 } from "@/services/states";
+import { cn } from "@/utils";
 import parseTraffic from "@/utils/parse-traffic";
 import {
   CheckCircle,
@@ -31,7 +32,6 @@ import {
   SxProps,
   Typography,
 } from "@mui/material";
-import { open } from "@tauri-apps/api/shell";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -204,85 +204,56 @@ export const ProfileItem = (props: Props) => {
     }
   });
 
-  const urlModeMenu = [
+  const menus = [
     {
       label: "Select",
-      icon: <CheckCircle fontSize="small" color="primary" />,
+      icon: <CheckCircle fontSize="small" />,
       handler: onForceSelect,
     },
     {
       label: "Edit Info",
-      icon: <EditNote fontSize="small" color="primary" />,
+      icon: <EditNote fontSize="small" />,
       handler: onEditInfo,
     },
     {
       label: "Edit File",
-      icon: <Edit fontSize="small" color="primary" />,
+      icon: <Edit fontSize="small" />,
       handler: onEditFile,
     },
     {
       label: "Open File",
-      icon: <FileOpen fontSize="small" color="primary" />,
+      icon: <FileOpen fontSize="small" />,
       handler: onOpenFile,
     },
     {
+      label: "Delete",
+      icon: <Delete fontSize="small" color="error" />,
+      handler: () => {
+        setAnchorEl(null);
+        setConfirmOpen(true);
+      },
+    },
+  ];
+
+  if (hasUrl) {
+    menus.splice(4, 0, {
       label: "Update",
-      icon: <Refresh fontSize="small" color="primary" />,
+      icon: <Refresh fontSize="small" />,
       handler: () => onUpdate(0),
-    },
-    {
-      label: "Update(Proxy)",
-      icon: <CloudSync fontSize="small" color="primary" />,
-      handler: () => onUpdate(2),
-    },
-    {
-      label: "Delete",
-      icon: <Delete fontSize="small" color="error" />,
-      handler: () => {
-        setAnchorEl(null);
-        setConfirmOpen(true);
-      },
-    },
-  ];
-
-  if (hasHome) {
-    urlModeMenu.splice(1, 0, {
-      label: "Home",
-      icon: <Home fontSize="small" color="primary" />,
-      handler: onOpenHome,
     });
+    menus.splice(5, 0, {
+      label: "Update(Proxy)",
+      icon: <CloudSync fontSize="small" />,
+      handler: () => onUpdate(2),
+    });
+    if (hasHome) {
+      menus.splice(1, 0, {
+        label: "Home",
+        icon: <Home fontSize="small" />,
+        handler: onOpenHome,
+      });
+    }
   }
-
-  const fileModeMenu = [
-    {
-      label: "Select",
-      icon: <CheckCircle fontSize="small" color="primary" />,
-      handler: onForceSelect,
-    },
-    {
-      label: "Edit Info",
-      icon: <EditNote fontSize="small" color="primary" />,
-      handler: onEditInfo,
-    },
-    {
-      label: "Edit File",
-      icon: <Edit fontSize="small" color="primary" />,
-      handler: onEditFile,
-    },
-    {
-      label: "Open File",
-      icon: <FileOpen fontSize="small" color="primary" />,
-      handler: onOpenFile,
-    },
-    {
-      label: "Delete",
-      icon: <Delete fontSize="small" color="error" />,
-      handler: () => {
-        setAnchorEl(null);
-        setConfirmOpen(true);
-      },
-    },
-  ];
 
   const boxStyle = {
     height: 26,
@@ -416,30 +387,31 @@ export const ProfileItem = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        MenuListProps={{ sx: { py: 0.5 } }}
+        MenuListProps={{
+          sx: {
+            py: 0.5,
+            border: "1px solid var(--divider-color)",
+          },
+        }}
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
         }}>
-        {(hasUrl ? urlModeMenu : fileModeMenu).map((item) => (
+        {menus.map((item) => (
           <MenuItem
             key={item.label}
             onClick={item.handler}
-            sx={[
-              {
-                minWidth: 120,
-              },
-              (theme) => {
-                return {
-                  ...(item.label === "Delete" && {
-                    color: theme.palette.error.main,
-                  }),
-                };
-              },
-            ]}
+            sx={{ minWidth: 120 }}
             dense>
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText>{t(item.label)}</ListItemText>
+            <ListItemIcon className="text-primary-main">
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText
+              className={cn("text-primary-main", {
+                "text-error-main": item.label === "Delete",
+              })}>
+              {t(item.label)}
+            </ListItemText>
           </MenuItem>
         ))}
       </Menu>

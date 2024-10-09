@@ -5,6 +5,7 @@ import { LogViewer } from "@/components/profile/log-viewer";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
+import { cn } from "@/utils";
 import {
   Block,
   CheckCircle,
@@ -118,29 +119,29 @@ export const ProfileMore = (props: Props) => {
 
   const hasError = !!logInfo.find((e) => e.exception);
 
-  const enableMenu = [
+  const menus = [
     {
-      label: "Disable",
-      icon: <Block fontSize="small" color="primary" />,
+      label: "Enable",
+      icon: <CheckCircle fontSize="small" />,
       handler: fnWrapper(async () => {
         setToggling(true);
-        await onDisable();
+        await onEnable();
         setToggling(false);
       }),
     },
     {
       label: "Edit Info",
-      icon: <EditNote fontSize="small" color="primary" />,
+      icon: <EditNote fontSize="small" />,
       handler: onEditInfo,
     },
     {
       label: "Edit File",
-      icon: <Edit fontSize="small" color="primary" />,
+      icon: <Edit fontSize="small" />,
       handler: onEditFile,
     },
     {
       label: "Open File",
-      icon: <FileOpen fontSize="small" color="primary" />,
+      icon: <FileOpen fontSize="small" />,
       handler: onOpenFile,
     },
     {
@@ -153,40 +154,17 @@ export const ProfileMore = (props: Props) => {
     },
   ];
 
-  const disableMenu = [
-    {
-      label: "Enable",
-      icon: <CheckCircle fontSize="small" color="primary" />,
+  if (selected) {
+    menus.splice(0, 1, {
+      label: "Disable",
+      icon: <Block fontSize="small" />,
       handler: fnWrapper(async () => {
         setToggling(true);
-        await onEnable();
+        await onDisable();
         setToggling(false);
       }),
-    },
-    {
-      label: "Edit Info",
-      icon: <EditNote fontSize="small" color="primary" />,
-      handler: onEditInfo,
-    },
-    {
-      label: "Edit File",
-      icon: <Edit fontSize="small" color="primary" />,
-      handler: onEditFile,
-    },
-    {
-      label: "Open File",
-      icon: <FileOpen fontSize="small" color="primary" />,
-      handler: onOpenFile,
-    },
-    {
-      label: "Delete",
-      icon: <Delete fontSize="small" color="error" />,
-      handler: () => {
-        setAnchorEl(null);
-        setConfirmOpen(true);
-      },
-    },
-  ];
+    });
+  }
 
   const boxStyle = {
     height: 26,
@@ -297,30 +275,33 @@ export const ProfileMore = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        MenuListProps={{ sx: { py: 0.5 } }}
+        MenuListProps={{
+          sx: {
+            py: 0.5,
+            border: "1px solid var(--divider-color)",
+          },
+        }}
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
         }}>
-        {(selected ? enableMenu : disableMenu)
+        {menus
           .filter((item: any) => item.show !== false)
           .map((item) => (
             <MenuItem
               key={item.label}
               onClick={() => item.handler()}
-              sx={[
-                { minWidth: 120 },
-                (theme) => {
-                  return {
-                    ...(item.label === "Delete" && {
-                      color: theme.palette.error.main,
-                    }),
-                  };
-                },
-              ]}
+              sx={{ minWidth: 120 }}
               dense>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText>{t(item.label)}</ListItemText>
+              <ListItemIcon className="text-primary-main">
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                className={cn("text-primary-main", {
+                  "text-error-main": item.label === "Delete",
+                })}>
+                {t(item.label)}
+              </ListItemText>
             </MenuItem>
           ))}
       </Menu>
