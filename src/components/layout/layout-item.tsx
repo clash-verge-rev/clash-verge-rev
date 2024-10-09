@@ -26,7 +26,7 @@ export const LayoutItem = (props: Props) => {
 
   return (
     <Tooltip title={!open ? children : null} placement="right">
-      <ListItem sx={{ py: 0.5, padding: "4px 0px" }}>
+      <ListItem sx={{ py: 0.5, padding: "4px 0px", height: "60px" }}>
         <ListItemButton
           selected={!!match}
           sx={[
@@ -88,8 +88,12 @@ export const LayoutItem = (props: Props) => {
               )}
               {open && (
                 <Typography
-                  sx={{ color: match ? "primary.main" : "text.primary" }}
-                  className="w-full font-bold">
+                  sx={{
+                    color: match ? "primary.main" : "text.primary",
+                    width: "100%",
+                    fontWeight: "bold",
+                    py: menu_icon === "disable" ? "5px" : 0,
+                  }}>
                   {children}
                 </Typography>
               )}
