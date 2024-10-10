@@ -49,19 +49,12 @@ pub async fn reinstall_service() -> Result<()> {
 
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
-    let status = match level {
+    let _ = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
         _ => StdCommand::new(uninstall_path)
             .creation_flags(0x08000000)
             .status()?,
     };
-
-    if !status.success() {
-        bail!(
-            "failed to uninstall service with status {}",
-            status.code().unwrap()
-        );
-    }
 
     let status = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).status()?,
@@ -97,7 +90,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     let elevator = crate::utils::help::linux_elevator();
-    let status = match get_effective_uid() {
+    let _ = match get_effective_uid() {
         0 => StdCommand::new(uninstaller_path).status()?,
         _ => StdCommand::new(elevator)
             .arg("sh")
@@ -105,13 +98,6 @@ pub async fn reinstall_service() -> Result<()> {
             .arg(uninstaller_path)
             .status()?,
     };
-
-    if !status.success() {
-        bail!(
-            "failed to install service with status {}",
-            status.code().unwrap()
-        );
-    }
 
     let elevator = crate::utils::help::linux_elevator();
     let status = match get_effective_uid() {
