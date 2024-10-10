@@ -94,6 +94,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
     );
   };
 
+  // TODO: once click to change both(light/dark) theme settings
   return (
     <BaseDialog
       open={open}

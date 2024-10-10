@@ -1,6 +1,6 @@
 ### ⚠️ Breaking Changes
-- 此版本大幅修改了Clash Verge Service, 安装此版本前，请先卸载旧版本 Clash Verge Service.
-- 另外，此版本 APP ID 已更改，所有数据的路径都会改变，请自行备份配置文件.
+- 重构 Clash Verge Service 一部分功能, 安装此版本前，请先卸载旧版本的服务模式.
+- 更改应用的 appid、identify 以及 aur 构建包名，将导致原先所有数据的存储路径都会改变，请自行备份原来的配置文件.
 
 ### ✨ Features
 - 支持 webdav 备份
@@ -8,26 +8,27 @@
 - 支持应用运行时动态修改 APP 日志级别
 - `pnpm check` 的任务失败重试间隔为 1 秒
 - `pnpm check` 支持 `--alpha` 参数来下载 alpha 版本的 Clash Verge Service
-- 更好看和强大的增强脚本 (Script) 的控制台界面
+- `pnpm check` 添加对 ASN.mmdb 文件下载
+- 新的增强脚本 (Script) 的控制台界面
 - 支持增强脚本 (Script) 保存前的运行检查
-- 脚本 schema 的 format 字段值添加 `mrs` 文件类型
 - 订阅配置文件右键菜单中的第一项始终为“使用”
-- `pnpm check` 支持下载 ASN.mmdb 文件
-- 调整添加/删除系统代理绕过规则时的 UI 交互
-- 添加 tailwindcss 库并重新调整部分样式
+- 脚本 schema 的 format 字段值添加 `mrs` 文件类型
+- 菜单侧边栏支持小窗口收缩
+- windows 支持系统托盘图标隐藏
 
 ### 🚀 Performance Improvements
 - 优化内核停止逻辑
 - 仅当主题颜色设置初始化或改变时才存储到 LocalStorage
-- 从 webdav 恢复配置时，仅需要重启应用
-- 切换主题时，立即执行更改应用的配置文件操作
+- 切换界面主题时，同时更改应用的主题配置
+- 集成 framer motion 库, 优化大部分动画效果
+- 集成 tailwindcss 库, 优化大部分样式布局
+- ci 工作流优化
 
 ### 🐛 Bug Fixes
 - 延迟测试返回数据解析失败
 - 节点延迟排序错误
 - 连接界面本地语言错误
 - 内核未运行时，主窗口无法渲染显示
-- 使用 framer-motion 替换 react-transition-group 的动画
 - 修改 Clash Verge Service 的 API 调用为 RESTful API 的风格
 - 尝试拖动增强脚本 (Script) 的控制台界面操作会导致代理链拖动排序
 - mrs 文件类型的规则合集内容无需进行解析展示
@@ -35,6 +36,5 @@
 - 移除未使用的 LocalStorage 对象
 - Linux 上切换主题动画卡顿失效
 - 修改外部控制器后，websocket 连接失败，导致流量图显/内容使用/连接信息/日志信息数据获取失败
-- 监听 `document.body` 的尺寸在窗口重新打开时可能为 0, 导致代理页面节点渲染列数错误
+- useWindowsSize 的 hook 的初始值为 0, 导致代理页面节点渲染列数错误
 
-- 工作流中使用 rust 稳定版
