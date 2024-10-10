@@ -7,7 +7,6 @@ import { useVisibility } from "@/hooks/use-visibility";
 import LoadingPage from "@/pages/loading";
 import { getAxios } from "@/services/api";
 import { getPortableFlag } from "@/services/cmds";
-import { useThemeMode } from "@/services/states";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
 import { CssBaseline, Paper, ThemeProvider } from "@mui/material";
@@ -31,14 +30,12 @@ let keepUIActive = false;
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
-  const { theme, toggleTheme } = useCustomTheme();
+  const { theme } = useCustomTheme();
   const visible = useVisibility();
-  const mode = useThemeMode();
 
   const { verge } = useVerge();
   const { language, start_page, enable_system_title, enable_keep_ui_active } =
     verge || {};
-  const isDark = mode === "dark";
   keepUIActive = enable_keep_ui_active ?? false;
   const navigate = useNavigate();
 

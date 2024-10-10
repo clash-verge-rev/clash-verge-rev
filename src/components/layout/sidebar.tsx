@@ -49,7 +49,7 @@ export const Sidebar = (props: Props) => {
 
       <div
         className={cn(
-          "flex flex-shrink-0 flex-grow-0 basis-[160px] items-center px-4",
+          "flex flex-shrink-0 flex-grow-0 items-center justify-center px-4 py-2",
           {
             hidden: !open,
           },

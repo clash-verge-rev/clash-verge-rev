@@ -6,7 +6,6 @@ import {
   ListItem,
   ListItemButton,
   Tooltip,
-  Typography,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useMatch, useNavigate, useResolvedPath } from "react-router-dom";
@@ -72,7 +71,7 @@ export const LayoutItem = (props: Props) => {
           <div
             className={cn("flex items-center text-center", { "w-full": open })}>
             <div className="flex w-full items-center justify-center">
-              <motion.div layout className={cn({ "relative left-4": open })}>
+              <motion.div layout className={cn({ "mr-8": open })}>
                 {enableMenuIcon && menu_icon === "monochrome" && (
                   <IconButton
                     sx={{ color: match ? "primary.main" : "text.primary" }}
@@ -87,22 +86,17 @@ export const LayoutItem = (props: Props) => {
                 )}
               </motion.div>
               {(open || !enableMenuIcon) && (
-                <motion.div
+                <motion.span
                   layout
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="w-full">
-                  <Typography
-                    sx={{
-                      color: match ? "primary.main" : "text.primary",
-                      width: "100%",
-                      fontWeight: "bold",
-                      py: menu_icon === "disable" ? "5px" : 0,
-                    }}>
-                    {children}
-                  </Typography>
-                </motion.div>
+                  className={cn("font-bold", {
+                    "text-primary-main": match,
+                    "text-text": !match,
+                  })}>
+                  {children}
+                </motion.span>
               )}
             </div>
           </div>

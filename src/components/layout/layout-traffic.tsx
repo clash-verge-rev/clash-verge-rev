@@ -145,7 +145,10 @@ export const LayoutTraffic = () => {
   }, 500);
 
   return (
-    <Box position="relative" onClick={trafficRef.current?.toggleStyle}>
+    <Box
+      width={"100%"}
+      position="relative"
+      onClick={trafficRef.current?.toggleStyle}>
       {trafficGraph && pageVisible && (
         <div style={{ width: "100%", height: 60, marginBottom: 6 }}>
           <TrafficGraph ref={trafficRef} />
