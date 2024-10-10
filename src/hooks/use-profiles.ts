@@ -24,7 +24,7 @@ export const useProfiles = () => {
     }
   };
 
-  // 根据selected的节点选择
+  // 根据 selected 的节点选择
   const activateSelected = async () => {
     const proxiesData = await getProxies();
     const profileData = await getProfiles();

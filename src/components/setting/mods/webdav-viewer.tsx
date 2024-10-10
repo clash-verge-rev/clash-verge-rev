@@ -1,14 +1,15 @@
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
 import {
   createAndUploadBackup,
   deleteBackup,
   downloadBackupAndReload,
+  getVergeConfig,
   listBackup,
-  restartApp,
   updateWebDavInfo,
 } from "@/services/cmds";
-import { sleep } from "@/utils";
+import { useSetThemeMode } from "@/services/states";
 import {
   Backup,
   Check,
@@ -33,6 +34,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { emit } from "@tauri-apps/api/event";
+import { appWindow } from "@tauri-apps/api/window";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
@@ -54,6 +57,9 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { verge, patchVerge } = useVerge();
+  const setMode = useSetThemeMode();
+  const { activateSelected } = useProfiles();
+
   const {
     webdav_url = "",
     webdav_username = "",
@@ -139,28 +145,23 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       setApplyingFile(file.filename);
       await downloadBackupAndReload(file.filename);
-      await sleep(1000);
-      Notice.success(
-        `Backup ${file.filename} applied successfully, will restart app soon`,
-      );
       setApplyingFile("");
-      await sleep(1000);
-      restartApp();
-
-      // TODO: follow code need to handle websocket error bug when controller port or secret changed, so comment it
-
-      // const verge = await getVergeConfig();
-      // const mode = verge.theme_mode;
-      // if (mode) {
-      //   if (mode === "system") {
-      //     const theme = (await appWindow.theme()) ?? "light";
-      //     setMode(theme);
-      //   } else {
-      //     setMode(mode);
-      //   }
-      // }
+      // apply theme mode
+      const verge = await getVergeConfig();
+      const mode = verge.theme_mode;
+      if (mode) {
+        if (mode === "system") {
+          const theme = (await appWindow.theme()) ?? "light";
+          setMode(theme);
+        } else {
+          setMode(mode);
+        }
+      }
       // emit reload all event
-      // emit("verge://reload-all");
+      emit("verge://reload-all");
+      setTimeout(() => {
+        activateSelected();
+      }, 2000);
     } catch (e) {
       Notice.error(`Failed to apply backup, error: ${e}`);
       setApplyingFile("");

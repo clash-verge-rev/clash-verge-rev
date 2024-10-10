@@ -124,7 +124,7 @@ impl CoreManager {
         }
 
         if enable {
-            // 服务模式启动失败就直接运行sidecar
+            // 服务模式启动失败就直接运行 sidecar
             log::debug!(target: "app", "try to run core in service mode");
             let res = service::run_core_by_service(&config_path).await;
             match res {
@@ -152,19 +152,7 @@ impl CoreManager {
         let app_dir = dirs::path_to_str(&app_dir)?;
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let clash_core = clash_core.unwrap_or("verge-mihomo".into());
-        // compatibility
-        // if clash_core.contains("clash") {
-        //     clash_core = "verge-mihomo".to_string();
-        //     Config::verge().draft().patch_config(IVerge {
-        //         clash_core: Some("verge-mihomo".to_string()),
-        //         ..IVerge::default()
-        //     });
-        //     Config::verge().apply();
-        //     match Config::verge().data().save_file() {
-        //         Ok(_) => handle::Handle::refresh_verge(),
-        //         Err(err) => log::error!(target: "app", "{err}"),
-        //     }
-        // }
+
         let config_path = dirs::path_to_str(&config_path)?;
         let args = vec!["-d", app_dir, "-f", config_path];
 

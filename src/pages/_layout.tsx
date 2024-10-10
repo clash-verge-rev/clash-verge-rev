@@ -70,12 +70,20 @@ const Layout = () => {
 
     const unlistenReloadAll = listen("verge://reload-all", async () => {
       mutate("getVergeConfig");
-      mutate("getProxies");
-      mutate("getVersion");
       mutate("getClashConfig");
       mutate("getClashInfo");
+
+      mutate("getProfiles");
+      mutate("getRuntimeLogs");
       mutate("getRuntimeConfig");
       mutate("getProxyProviders");
+      mutate("getProxies");
+
+      mutate("getRules");
+      mutate("getRuleProviders");
+
+      mutate("checkService");
+      mutate("getVersion");
     });
 
     const unlistenRefreshClash = listen(

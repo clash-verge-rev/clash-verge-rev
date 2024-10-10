@@ -60,7 +60,7 @@ export const ProxyGroups = (props: Props) => {
         });
       }
 
-      // 保存到selected中
+      // 保存到 selected 中
       if (!current) return;
       if (!current.selected) current.selected = [];
 

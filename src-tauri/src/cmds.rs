@@ -554,14 +554,13 @@ pub async fn download_backup_and_reload(file_name: String) -> CmdResult {
     // extract zip file
     let mut zip = zip::ZipArchive::new(fs::File::open(backup_archive).unwrap()).unwrap();
     zip.extract(dirs::app_home_dir().unwrap()).unwrap();
-    // TODO: reload config, Front-end problems must be solved, like websocket connection change and so on
-    // if let Err(e) = Config::reload() {
-    //     log::error!(target: "app", "download backup file success, but reload config failed. error: {e:?}");
-    //     return Err(format!(
-    //         "download backup file success, but reload config failed. error: {:?}",
-    //         e
-    //     ));
-    // }
+    if let Err(e) = Config::reload() {
+        log::error!(target: "app", "download backup file success, but reload config failed. error: {e:?}");
+        return Err(format!(
+            "download backup file success, but reload config failed. error: {:?}",
+            e
+        ));
+    }
     Ok(())
 }
 

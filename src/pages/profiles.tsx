@@ -278,7 +278,7 @@ const ProfilePage = () => {
   const onSelect = useMemoizedFn(
     useLockFn(async (current: string, force: boolean) => {
       if (!force && current === profiles.current) return;
-      // 避免大多数情况下loading态闪烁
+      // 避免大多数情况下 loading 态闪烁
       const reset = setTimeout(
         () =>
           setActivating((o) => ({ profile: current, chain: o?.chain ?? "" })),
