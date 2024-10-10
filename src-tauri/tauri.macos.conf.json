@@ -6,7 +6,7 @@
       "iconAsTemplate": true
     },
     "bundle": {
-      "identifier": "io.github.oomeow.clash-verge-rev",
+      "identifier": "io.github.oomeow.clash-verge-self",
       "targets": ["app", "dmg", "updater"],
       "macOS": {
         "frameworks": [],

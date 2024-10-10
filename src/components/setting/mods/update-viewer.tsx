@@ -1,16 +1,16 @@
-import useSWR from "swr";
-import { forwardRef, useImperativeHandle, useState, useMemo } from "react";
-import { useLockFn } from "ahooks";
-import { Box, LinearProgress, Button } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { relaunch } from "@tauri-apps/api/process";
-import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
-import { useUpdateState, useSetUpdateState } from "@/services/states";
-import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
 import { portableFlag } from "@/pages/_layout";
+import { useSetUpdateState, useUpdateState } from "@/services/states";
+import { Box, Button, LinearProgress } from "@mui/material";
+import { Event, listen, UnlistenFn } from "@tauri-apps/api/event";
+import { relaunch } from "@tauri-apps/api/process";
 import { open as openUrl } from "@tauri-apps/api/shell";
+import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
+import useSWR from "swr";
 
 let eventListener: UnlistenFn | null = null;
 
@@ -98,7 +98,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
               size="small"
               onClick={() => {
                 openUrl(
-                  `https://github.com/oomeow/clash-verge-rev/releases/tag/v${updateInfo?.manifest?.version}`,
+                  `https://github.com/oomeow/clash-verge-self/releases/tag/v${updateInfo?.manifest?.version}`,
                 );
               }}>
               {t("Go to Release Page")}

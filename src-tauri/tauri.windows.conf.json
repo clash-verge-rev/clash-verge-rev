@@ -5,7 +5,7 @@
       "iconPath": "icons/tray-icon.png"
     },
     "bundle": {
-      "identifier": "io.github.oomeow.clash-verge-rev",
+      "identifier": "io.github.oomeow.clash-verge-self",
       "targets": ["nsis", "updater"],
       "windows": {
         "certificateThumbprint": null,

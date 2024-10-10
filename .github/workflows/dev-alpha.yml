@@ -239,8 +239,8 @@ jobs:
       - name: Update Checksums
         run: |
           echo "version: ${{ needs.alpha-for-linux.outputs.VERSION }}"
-          wget https://github.com/oomeow/clash-verge-rev/releases/download/alpha/clash-verge_${{ needs.alpha-for-linux.outputs.VERSION }}_amd64.deb -O amd64.deb
-          wget https://github.com/oomeow/clash-verge-rev/releases/download/alpha/clash-verge_${{ needs.alpha-for-linux.outputs.VERSION }}_arm64.deb -O arm64.deb
+          wget https://github.com/oomeow/clash-verge-self/releases/download/alpha/clash-verge_${{ needs.alpha-for-linux.outputs.VERSION }}_amd64.deb -O amd64.deb
+          wget https://github.com/oomeow/clash-verge-self/releases/download/alpha/clash-verge_${{ needs.alpha-for-linux.outputs.VERSION }}_arm64.deb -O arm64.deb
           sed -i "s/sha256sums_x86_64=.*/sha256sums_x86_64=(\"$(sha256sum ./amd64.deb | awk '{print $1}')\")/" archbuild/alpha/PKGBUILD
           sed -i "s/sha256sums_aarch64=.*/sha256sums_aarch64=(\"$(sha256sum ./arm64.deb | awk '{print $1}')\")/" archbuild/alpha/PKGBUILD
 

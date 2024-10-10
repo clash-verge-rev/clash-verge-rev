@@ -16,7 +16,7 @@ const SettingPage = () => {
   };
 
   const openGithubRepo = useLockFn(() => {
-    return openWebUrl("https://github.com/oomeow/clash-verge-rev");
+    return openWebUrl("https://github.com/oomeow/clash-verge-self");
   });
 
   const openGithubDoc = useLockFn(() => {
@@ -39,7 +39,7 @@ const SettingPage = () => {
           <IconButton
             size="medium"
             color="inherit"
-            title="@oomeow/clash-verge-rev"
+            title="@oomeow/clash-verge-self"
             onClick={openGithubRepo}>
             <GitHub fontSize="inherit" />
           </IconButton>

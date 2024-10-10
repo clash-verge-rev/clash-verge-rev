@@ -12,9 +12,14 @@ use std::{
 use zip::write::SimpleFileOptions;
 
 #[cfg(not(feature = "verge-dev"))]
-static BACKUP_DIR: &str = "clash-verge-rev";
+static BACKUP_DIR: &str = "clash-verge-self";
+#[cfg(not(feature = "verge-dev"))]
+static OLD_BACKUP_DIR: &str = "clash-verge-rev";
+
 #[cfg(feature = "verge-dev")]
-static BACKUP_DIR: &str = "clash-verge-rev-dev";
+static BACKUP_DIR: &str = "clash-verge-rev-self";
+#[cfg(feature = "verge-dev")]
+static OLD_BACKUP_DIR: &str = "clash-verge-rev-dev";
 
 static TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 
@@ -23,7 +28,7 @@ static TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 /// # Args
 /// - `local_save`: save to local or not
 /// - `only_backup_profiles`: only backup profiles
-/// 
+///
 /// # Return
 /// - `Result<(String, PathBuf), Box<dyn std::error::Error>>`: backup file name and path
 ///     - `String`: backup file name
@@ -95,6 +100,26 @@ impl WebDav {
         let username = verge.webdav_username.unwrap_or("".to_string());
         let password = verge.webdav_password.unwrap_or("".to_string());
         self.update_webdav_info(url, username, password).await?;
+
+        tauri::async_runtime::spawn(async move {
+            let cur_backup_files = Self::list_file_by_path(BACKUP_DIR).await.unwrap();
+            let old_backup_files = Self::list_file_by_path(OLD_BACKUP_DIR).await.unwrap();
+            for old_file in old_backup_files {
+                let old_file_name = old_file.href.split("/").last().unwrap();
+                if cur_backup_files
+                    .iter()
+                    .find(|f| f.href.split("/").last().unwrap() == old_file_name)
+                    .is_none()
+                {
+                    log::info!("migrate old webdav backup file: {}", old_file_name);
+                    let client = Self::global().get_client().unwrap();
+                    let from_path = format!("{}/{}", OLD_BACKUP_DIR, old_file_name);
+                    let to_path = format!("{}/{}", BACKUP_DIR, old_file_name);
+                    let _ = client.mv(&from_path, &to_path).await;
+                }
+            }
+        });
+
         Ok(())
     }
 
@@ -108,11 +133,13 @@ impl WebDav {
             .set_host(url.clone())
             .set_auth(reqwest_dav::Auth::Basic(username.clone(), password.clone()))
             .build()?;
-        client.mkcol(BACKUP_DIR).await.unwrap_or_default();
+        client.mkcol(BACKUP_DIR).await?;
+
         *self.host.lock() = url;
         *self.username.lock() = username;
         *self.password.lock() = password;
-        *self.client.lock() = Some(client);
+        *self.client.lock() = Some(client.clone());
+
         Ok(())
     }
 
@@ -124,11 +151,11 @@ impl WebDav {
         Ok(self.client.lock().clone().unwrap())
     }
 
-    pub async fn list_file() -> Result<Vec<ListFile>, Box<dyn std::error::Error>> {
+    pub async fn list_file_by_path(
+        path: &str,
+    ) -> Result<Vec<ListFile>, Box<dyn std::error::Error>> {
         let client = Self::global().get_client()?;
-        let files = client
-            .list(BACKUP_DIR, reqwest_dav::Depth::Number(1))
-            .await?;
+        let files = client.list(path, reqwest_dav::Depth::Number(1)).await?;
         let mut final_files = Vec::new();
         for file in files {
             if let ListEntity::File(file) = file {
@@ -136,6 +163,11 @@ impl WebDav {
             }
         }
         Ok(final_files.clone())
+    }
+
+    pub async fn list_file() -> Result<Vec<ListFile>, Box<dyn std::error::Error>> {
+        let files = Self::list_file_by_path(BACKUP_DIR).await?;
+        Ok(files)
     }
 
     pub async fn download_file(

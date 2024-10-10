@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://github.com/clash-verge-rev/clash-verge-rev/schemas/clash-verge-merge-json-schema.json",
+  "$id": "https://github.com/oomeow/clash-verge-self/schemas/clash-verge-merge-json-schema.json",
   "type": "object",
   "title": "Clash Verge Merge Config",
   "additionalProperties": true,

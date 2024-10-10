@@ -13,7 +13,7 @@
   "tauri": {
     "bundle": {
       "active": true,
-      "identifier": "io.github.oomeow.clash-verge-rev",
+      "identifier": "io.github.oomeow.clash-verge-self",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -33,8 +33,8 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://mirror.ghproxy.com/https://github.com/oomeow/clash-verge-rev/releases/download/updater/update-proxy.json",
-        "https://github.com/oomeow/clash-verge-rev/releases/download/updater/update.json"
+        "https://mirror.ghproxy.com/https://github.com/oomeow/clash-verge-self/releases/download/updater/update-proxy.json",
+        "https://github.com/oomeow/clash-verge-self/releases/download/updater/update.json"
       ],
       "dialog": false,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRGQ0QyMTIyRTRERTY0MzAKUldRd1pON2tJaUhOVDBuWXQ1NVY0dlNXWkZ2RlZCMmtIYkhqR2pxS3FsMlNERkUycEVBaFlvQm8K"

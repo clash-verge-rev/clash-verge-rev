@@ -1,19 +1,19 @@
 # Maintainer: oomeow <oomeow@outlook.com>
 
-pkgname=clash-verge-rev-alpha-bin
-_pkgname=clash-verge-rev
+pkgname=clash-verge-self-alpha-bin
+_pkgname=clash-verge-self
 pkgver=1.6.8
 pkgrel=1
 pkgdesc="Continuation of Clash Verge | A Clash Meta GUI based on Tauri"
-arch=('x86_64' 'aarch64')
-url="https://github.com/oomeow/clash-verge-rev"
+arch=('x86_64')
+url="https://github.com/oomeow/clash-verge-self"
 license=('GPL3')
 depends=('webkit2gtk' 'gtk3' 'libayatana-appindicator')
-conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "clash-verge" "clash-verge-bin" "clash-nyanpasu" "clash-nyanpasu-bin" "clash-nyanpasu-git" "clash-meta")
+conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "clash-verge-rev" "clash-verge-rev-alpha" "clash-verge-rev-alpha-bin" "clash-verge" "clash-verge-bin" "clash-nyanpasu" "clash-nyanpasu-bin" "clash-nyanpasu-git" "clash-meta")
 
 source_x86_64=("clash-verge_${pkgver}_amd64.deb")
 
-sha256sums_x86_64=("dd7ec1343a1521c32a8f40402ebcdf3db09c42bd98a804668997fd534ad4b914")
+sha256sums_x86_64=("c80e2b5d5ea3a0d610fecf04a5525f41ded8853b559e0a9784c5dad36cb31d3d")
 
 package() {
 	tar xpf data.tar.gz -C ${pkgdir}
