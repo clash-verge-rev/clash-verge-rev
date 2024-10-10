@@ -100,6 +100,7 @@ impl Config {
         let verge_config = Self::verge();
         let profiles_config = Self::profiles();
         let runtime_config = Self::runtime();
+        // TODO: check some config is changed witch need restart app
         // discard all config draft
         clash_config.discard();
         verge_config.discard();

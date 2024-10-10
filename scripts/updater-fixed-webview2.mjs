@@ -1,5 +1,5 @@
+import { context, getOctokit } from "@actions/github";
 import fetch from "node-fetch";
-import { getOctokit, context } from "@actions/github";
 import { resolveUpdateLog } from "./updatelog.mjs";
 
 const UPDATE_TAG_NAME = "updater";
@@ -99,8 +99,7 @@ async function resolveUpdater() {
 
   Object.entries(updateDataNew.platforms).forEach(([key, value]) => {
     if (value.url) {
-      updateDataNew.platforms[key].url =
-        "https://mirror.ghproxy.com/" + value.url;
+      updateDataNew.platforms[key].url = "https://ghp.ci/" + value.url;
     } else {
       console.log(`[Error]: updateDataNew.platforms.${key} is null`);
     }
