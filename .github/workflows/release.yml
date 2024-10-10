@@ -70,7 +70,7 @@ jobs:
           # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: v__VERSION__
-          releaseName: "Clash Verge Rev v__VERSION__"
+          releaseName: "Clash Verge Self v__VERSION__"
           releaseBody: "More new features are now supported."
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
@@ -130,7 +130,7 @@ jobs:
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
         with:
           tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
+          name: "Clash Verge Self v${{env.VERSION}}"
           body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
@@ -139,7 +139,7 @@ jobs:
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
         with:
           tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
+          name: "Clash Verge Self v${{env.VERSION}}"
           body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
@@ -217,7 +217,7 @@ jobs:
   #       uses: softprops/action-gh-release@a74c6b72af54cfa997e81df42d94703d6313a2d0 # v2
   #       with:
   #         tag_name: v${{steps.build.outputs.appVersion}}
-  #         name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
+  #         name: "Clash Verge Self v${{steps.build.outputs.appVersion}}"
   #         token: ${{ secrets.GITHUB_TOKEN }}
   #         files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
@@ -259,7 +259,7 @@ jobs:
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
         with:
           tag_name: v${{ needs.release-for-linux.outputs.VERSION }}
-          name: "Clash Verge Rev v${{ needs.release-for-linux.outputs.VERSION }}"
+          name: "Clash Verge Self v${{ needs.release-for-linux.outputs.VERSION }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           files: ${{ steps.makepkg.outputs.pkgfile0 }}
 

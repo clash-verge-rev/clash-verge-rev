@@ -1,4 +1,4 @@
-name: Dev Test Build
+name: PR Test Build
 
 on:
   pull_request:

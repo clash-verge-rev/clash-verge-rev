@@ -13,7 +13,7 @@ conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "
 
 source_x86_64=("clash-verge_${pkgver}_amd64.deb")
 
-sha256sums_x86_64=("92a1f99877688903a454bd65125fd8301564bc83205054d4d1242d8d6b50a913")
+sha256sums_x86_64=("d294291cd4c71754dc078b0a1bb6bc6b9edd4e1f09bebdb7d47d6b03578cfbb3")
 
 package() {
 	tar xpf data.tar.gz -C ${pkgdir}

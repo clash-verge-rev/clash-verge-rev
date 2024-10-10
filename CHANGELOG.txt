@@ -1,6 +1,9 @@
+> [!Important]
+> 安装此版本前，请先卸载旧版本的服务模式，另外此版本所有的数据存放路径都将改变，请自行备份订阅配置文件
+
 ### ⚠️ Breaking Changes
-- 重构 Clash Verge Service 一部分功能, 安装此版本前，请先卸载旧版本的服务模式.
-- 更改应用的 appid、identify 以及 aur 构建包名，将导致原先所有数据的存储路径都会改变，请自行备份原来的配置文件.
+- 重构 Clash Verge Service 一部分功能
+- 更改应用的 appid、identify 以及 aur 构建包名
 
 ### ✨ Features
 - 支持 webdav 备份
