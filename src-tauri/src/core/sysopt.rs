@@ -18,7 +18,7 @@ pub struct Sysopt {
     /// helps to auto launch the app
     auto_launch: Arc<Mutex<Option<AutoLaunch>>>,
     /// record whether the guard async is running or not
-    guard_state: Arc<TokioMutex<bool>>,
+    guard_state: Arc<Mutex<bool>>,
 }
 
 #[cfg(target_os = "windows")]
@@ -41,7 +41,6 @@ fn get_bypass() -> String {
         None => "".to_string(),
     };
 
-    
     if custom_bypass.is_empty() {
         DEFAULT_BYPASS.to_string()
     } else if use_default {
@@ -58,7 +57,7 @@ impl Sysopt {
             update_sysproxy: Arc::new(TokioMutex::new(false)),
             reset_sysproxy: Arc::new(TokioMutex::new(false)),
             auto_launch: Arc::new(Mutex::new(None)),
-            guard_state: Arc::new(TokioMutex::new(false)),
+            guard_state: Arc::new(false.into()),
         })
     }
 
@@ -69,7 +68,7 @@ impl Sysopt {
 
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
-        let _ = self.update_sysproxy.lock();
+        let _lock = self.update_sysproxy.lock().await;
 
         let port = Config::verge()
             .latest()
@@ -160,7 +159,7 @@ impl Sysopt {
 
     /// reset the sysproxy
     pub async fn reset_sysproxy(&self) -> Result<()> {
-        let _ = self.reset_sysproxy.lock();
+        let _lock = self.reset_sysproxy.lock().await;
         //直接关闭所有代理
         #[cfg(not(target_os = "windows"))]
         {
@@ -280,7 +279,8 @@ impl Sysopt {
     }
 
     fn guard_proxy(&self) {
-        let _ = self.guard_state.lock();
+        let _lock = self.guard_state.lock();
+
         tauri::async_runtime::spawn(async move {
             // default duration is 10s
             let mut wait_secs = 10u64;
@@ -367,7 +367,7 @@ impl Sysopt {
                     let shell = app_handle.shell();
                     let output = if pac {
                         let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
-                        
+
                         shell
                             .command(sysproxy_exe.as_path().to_str().unwrap())
                             .args(["opac", address.as_str()])
@@ -377,7 +377,7 @@ impl Sysopt {
                     } else {
                         let address = format!("{}:{}", "127.0.0.1", port);
                         let bypass = get_bypass();
-                        
+
                         shell
                             .command(sysproxy_exe.as_path().to_str().unwrap())
                             .args(["global", address.as_str(), bypass.as_ref()])
