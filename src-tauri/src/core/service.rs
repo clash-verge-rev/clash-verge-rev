@@ -30,7 +30,7 @@ pub struct JsonResponse {
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 ///
 #[cfg(target_os = "windows")]
-pub async fn reinstall_service(_passwd: String) -> Result<()> {
+pub async fn reinstall_service() -> Result<()> {
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
@@ -81,7 +81,7 @@ pub async fn reinstall_service(_passwd: String) -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn reinstall_service(passwd: String) -> Result<()> {
+pub async fn reinstall_service() -> Result<()> {
     use users::get_effective_uid;
 
     let binary_path = dirs::service_path()?;
@@ -163,40 +163,6 @@ pub async fn reinstall_service() -> Result<()> {
             status.code().unwrap()
         );
     }
-    Ok(())
-}
-/// Uninstall the Clash Verge Service
-/// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
-#[cfg(target_os = "windows")]
-pub async fn uninstall_service(_passwd: String) -> Result<()> {
-    use deelevate::{PrivilegeLevel, Token};
-    use runas::Command as RunasCommand;
-    use std::os::windows::process::CommandExt;
-
-    let binary_path = dirs::service_path()?;
-    let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
-
-    if !uninstall_path.exists() {
-        bail!("uninstaller exe not found");
-    }
-
-    let token = Token::with_current_process()?;
-    let level = token.privilege_level()?;
-
-    let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
-        _ => StdCommand::new(uninstall_path)
-            .creation_flags(0x08000000)
-            .status()?,
-    };
-
-    if !status.success() {
-        bail!(
-            "failed to uninstall service with status {}",
-            status.code().unwrap()
-        );
-    }
-
     Ok(())
 }
 
