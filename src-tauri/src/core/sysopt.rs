@@ -41,14 +41,14 @@ fn get_bypass() -> String {
         None => "".to_string(),
     };
 
-    let bypass = if custom_bypass.is_empty() {
+    
+    if custom_bypass.is_empty() {
         DEFAULT_BYPASS.to_string()
     } else if use_default {
         format!("{},{}", DEFAULT_BYPASS, custom_bypass)
     } else {
         custom_bypass
-    };
-    bypass
+    }
 }
 
 impl Sysopt {
@@ -311,7 +311,7 @@ impl Sysopt {
 
                 let sysproxy = Sysproxy::get_system_proxy();
                 let autoproxy = Autoproxy::get_auto_proxy();
-                if !sysproxy.is_ok() || !autoproxy.is_ok() {
+                if sysproxy.is_err() || autoproxy.is_err() {
                     log::error!(target: "app", "failed to get the system proxy");
                     continue;
                 }
@@ -367,23 +367,23 @@ impl Sysopt {
                     let shell = app_handle.shell();
                     let output = if pac {
                         let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
-                        let output = shell
+                        
+                        shell
                             .command(sysproxy_exe.as_path().to_str().unwrap())
                             .args(["opac", address.as_str()])
                             .output()
                             .await
-                            .unwrap();
-                        output
+                            .unwrap()
                     } else {
                         let address = format!("{}:{}", "127.0.0.1", port);
                         let bypass = get_bypass();
-                        let output = shell
+                        
+                        shell
                             .command(sysproxy_exe.as_path().to_str().unwrap())
                             .args(["global", address.as_str(), bypass.as_ref()])
                             .output()
                             .await
-                            .unwrap();
-                        output
+                            .unwrap()
                     };
                     if !output.status.success() {
                         break;
