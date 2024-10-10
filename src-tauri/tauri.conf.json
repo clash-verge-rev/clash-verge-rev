@@ -23,7 +23,7 @@
         "icons/icon.ico"
       ],
       "resources": ["resources"],
-      "publisher": "Clash Verge Rev",
+      "publisher": "Clash Verge Self",
       "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
       "copyright": "GNU General Public License v3.0",
       "category": "DeveloperTool",

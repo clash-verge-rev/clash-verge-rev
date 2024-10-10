@@ -1,6 +1,6 @@
 # CONTRIBUTING
 
-Thank you for your interest in contributing to Clash Verge Rev! This document provides guidelines and instructions to help you set up your development environment and start contributing.
+Thank you for your interest in contributing to Clash Verge Self! This document provides guidelines and instructions to help you set up your development environment and start contributing.
 
 ## Development Setup
 
