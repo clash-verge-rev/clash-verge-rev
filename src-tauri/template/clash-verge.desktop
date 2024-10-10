@@ -2,6 +2,7 @@
 Categories={{{categories}}}
 Comment={{{comment}}}
 Exec={{{exec}}} %u
+StartupWMClass={{{exec}}}
 Icon={{{icon}}}
 Name={{{name}}}
 Terminal=false
