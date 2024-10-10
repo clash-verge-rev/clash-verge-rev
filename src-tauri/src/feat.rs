@@ -250,11 +250,11 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             Config::verge().apply();
             Config::verge().data().save_file()?;
 
-            return Ok(());
+            Ok(())
         }
         Err(err) => {
             Config::verge().discard();
-            return Err(err);
+            Err(err)
         }
     }
 }

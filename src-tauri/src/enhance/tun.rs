@@ -26,5 +26,5 @@ pub async fn use_tun(mut config: Mapping) -> Mapping {
     });
     revise!(tun_val, "enable", true);
     revise!(config, "tun", tun_val);
-    return config;
+    config
 }
