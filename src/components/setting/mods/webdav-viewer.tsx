@@ -1,6 +1,7 @@
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
+import { closeAllConnections } from "@/services/api";
 import {
   createAndUploadBackup,
   deleteBackup,
@@ -10,6 +11,7 @@ import {
   updateWebDavInfo,
 } from "@/services/cmds";
 import { useSetThemeMode } from "@/services/states";
+import { sleep } from "@/utils";
 import {
   Backup,
   Check,
@@ -145,6 +147,7 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       setApplyingFile(file.filename);
       await downloadBackupAndReload(file.filename);
+      await sleep(1000);
       setApplyingFile("");
       // apply theme mode
       const verge = await getVergeConfig();
@@ -159,6 +162,7 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
       }
       // emit reload all event
       emit("verge://reload-all");
+      await closeAllConnections();
       setTimeout(() => {
         activateSelected();
       }, 2000);
