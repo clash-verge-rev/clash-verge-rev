@@ -2,13 +2,13 @@ import { useVerge } from "@/hooks/use-verge";
 import { cn } from "@/utils";
 import {
   alpha,
-  Box,
   IconButton,
   ListItem,
   ListItemButton,
   Tooltip,
   Typography,
 } from "@mui/material";
+import { motion } from "framer-motion";
 import { useMatch, useNavigate, useResolvedPath } from "react-router-dom";
 interface Props {
   to: string;
@@ -23,9 +23,12 @@ export const LayoutItem = (props: Props) => {
   const resolved = useResolvedPath(to);
   const match = useMatch({ path: resolved.pathname, end: true });
   const navigate = useNavigate();
+  const enableMenuIcon = menu_icon && menu_icon !== "disable";
 
   return (
-    <Tooltip title={!open ? children : null} placement="right">
+    <Tooltip
+      title={enableMenuIcon && !open ? children : null}
+      placement="right">
       <ListItem sx={{ py: 0.5, padding: "4px 0px", height: "60px" }}>
         <ListItemButton
           selected={!!match}
@@ -68,36 +71,40 @@ export const LayoutItem = (props: Props) => {
           onClick={() => navigate(to)}>
           <div
             className={cn("flex items-center text-center", { "w-full": open })}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                width: "100%",
-              }}>
-              {(!menu_icon || menu_icon === "monochrome") && (
-                <IconButton
-                  sx={{ color: match ? "primary.main" : "text.primary" }}
-                  size="small">
-                  {icon[0]}
-                </IconButton>
+            <div className="flex w-full items-center justify-center">
+              <motion.div layout className={cn({ "relative left-4": open })}>
+                {enableMenuIcon && menu_icon === "monochrome" && (
+                  <IconButton
+                    sx={{ color: match ? "primary.main" : "text.primary" }}
+                    size="small">
+                    {icon[0]}
+                  </IconButton>
+                )}
+                {enableMenuIcon && menu_icon === "colorful" && (
+                  <IconButton className="m-0 p-0" size="small">
+                    {icon[1]}
+                  </IconButton>
+                )}
+              </motion.div>
+              {(open || !enableMenuIcon) && (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="w-full">
+                  <Typography
+                    sx={{
+                      color: match ? "primary.main" : "text.primary",
+                      width: "100%",
+                      fontWeight: "bold",
+                      py: menu_icon === "disable" ? "5px" : 0,
+                    }}>
+                    {children}
+                  </Typography>
+                </motion.div>
               )}
-              {menu_icon === "colorful" && (
-                <IconButton className="m-0 p-0" size="small">
-                  {icon[1]}
-                </IconButton>
-              )}
-              {open && (
-                <Typography
-                  sx={{
-                    color: match ? "primary.main" : "text.primary",
-                    width: "100%",
-                    fontWeight: "bold",
-                    py: menu_icon === "disable" ? "5px" : 0,
-                  }}>
-                  {children}
-                </Typography>
-              )}
-            </Box>
+            </div>
           </div>
         </ListItemButton>
       </ListItem>

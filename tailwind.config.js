@@ -29,12 +29,11 @@ export default {
       },
       backgroundColor: {
         primary: "var(--mui-palette-primary-main)",
-        alpha: "var(--background-color-alpha)",
+        "primary-alpha": "var(--background-color-alpha)",
         comment: "var(--background-color)",
       },
       divideColor: {
-        primary: "rgba(0, 0, 0, 0.06)",
-        "dark-primary": "rgba(255, 255, 255, 0.06)",
+        primary: "var(--divide-color)",
       },
     },
   },

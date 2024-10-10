@@ -1,12 +1,17 @@
 import { appWindow } from "@tauri-apps/api/window";
+import { useLocalStorage } from "foxact/use-local-storage";
 import debounce from "lodash-es/debounce";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export const useWindowSize = () => {
-  const [size, setSize] = useState({
-    width: document.body.clientWidth,
-    height: document.body.clientHeight,
-  });
+  const [size, setSize] = useLocalStorage(
+    "window-size",
+    { height: 642, width: 800 },
+    {
+      serializer: JSON.stringify,
+      deserializer: JSON.parse,
+    },
+  );
 
   useEffect(() => {
     appWindow.innerSize().then((windowSize) => {
