@@ -358,7 +358,7 @@ interface IEnhancedResult {
   error?: string;
 }
 
-interface IWebDavListFile {
+interface IWebDavFile {
   filename: string;
   href: string;
   last_modified: string;

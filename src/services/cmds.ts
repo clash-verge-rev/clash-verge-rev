@@ -338,7 +338,7 @@ export async function createAndUploadBackup(
 }
 
 export async function listBackup() {
-  let list: IWebDavListFile[] = await invoke<IWebDavListFile[]>("list_backup");
+  let list: IWebDavFile[] = await invoke<IWebDavFile[]>("list_backup");
   list.map((item) => {
     item.filename = item.href.split("/").pop() as string;
   });
