@@ -6,13 +6,13 @@ import {
 } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
-import { closeAllConnections } from "@/services/api";
 import {
   createAndUploadBackup,
   deleteBackup,
   downloadBackupAndReload,
   getVergeConfig,
   listBackup,
+  restartApp,
   updateWebDavInfo,
 } from "@/services/cmds";
 import { useSetThemeMode } from "@/services/states";
@@ -40,7 +40,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { emit } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window";
 import { useLockFn } from "ahooks";
 import dayjs, { Dayjs } from "dayjs";
@@ -201,12 +200,19 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
           setMode(mode);
         }
       }
+      Notice.success(
+        `Backup ${file.filename} applied successfully, will restart app soon`,
+      );
+      await sleep(2000);
+      // TODO: activate selected proxy group node after restart App
+      restartApp();
+
       // emit reload all event
-      emit("verge://reload-all");
-      await closeAllConnections();
-      setTimeout(() => {
-        activateSelected();
-      }, 2000);
+      // emit("verge://reload-all");
+      // await closeAllConnections();
+      // setTimeout(async () => {
+      //   await activateSelected();
+      // }, 2000);
     } catch (e) {
       Notice.error(`Failed to apply backup, error: ${e}`);
       setApplyingFile("");

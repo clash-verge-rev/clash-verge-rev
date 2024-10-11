@@ -1,5 +1,6 @@
 use super::{Draft, IClashConfig, IProfiles, IRuntime, IVerge};
 use crate::{
+    core::service,
     enhance, feat,
     utils::{dirs, help},
 };
@@ -95,12 +96,18 @@ impl Config {
         Ok(())
     }
 
-    pub fn reload() -> Result<()> {
+    /// reload config from file
+    ///
+    /// if config need restart app, return true
+    pub async fn reload() -> Result<()> {
         let clash_config = Self::clash();
         let verge_config = Self::verge();
         let profiles_config = Self::profiles();
         let runtime_config = Self::runtime();
-        // TODO: check some config is changed witch need restart app
+
+        // need to resolve auto launch file
+        let old_enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);
+
         // discard all config draft
         clash_config.discard();
         verge_config.discard();
@@ -111,10 +118,40 @@ impl Config {
         *verge_config.data() = Draft::from(IVerge::new()).data().clone();
         *profiles_config.data() = Draft::from(IProfiles::new()).data().clone();
         *runtime_config.data() = Draft::from(IRuntime::new()).data().clone();
+
         // generate runtime config
         Self::init_config()?;
-        // restart clash core
-        feat::restart_clash_core();
+
+        let enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);
+
+        // resolve auto launch file
+        if old_enable_auto_launch != enable_auto_launch {
+            feat::patch_verge(IVerge {
+                enable_auto_launch: Some(enable_auto_launch),
+                ..IVerge::default()
+            })
+            .await?;
+        }
+
+        // Check if Clash Verge Service is installed and patch configuration values ​​if not
+        let enable_service_mode = verge_config.latest().enable_service_mode.unwrap_or(false);
+        if enable_service_mode {
+            if let Err(_) = service::check_service().await {
+                feat::patch_verge(IVerge {
+                    enable_service_mode: Some(false),
+                    ..IVerge::default()
+                })
+                .await?;
+            }
+        }
+
+        // resolve config settings
+        let verge_config_ = verge_config.latest().clone();
+        feat::resolve_config_settings(verge_config_).await?;
+
+        // restart clash code
+        // feat::restart_clash_core();
+
         Ok(())
     }
 }

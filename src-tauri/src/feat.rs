@@ -397,6 +397,21 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 pub async fn patch_verge(patch: IVerge) -> Result<()> {
     Config::verge().draft().patch_config(patch.clone());
 
+    let res = resolve_config_settings(patch).await;
+    match res {
+        Ok(()) => {
+            Config::verge().apply();
+            Config::verge().data().save_file()?;
+            Ok(())
+        }
+        Err(err) => {
+            Config::verge().discard();
+            Err(err)
+        }
+    }
+}
+
+pub async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     let auto_launch = patch.enable_auto_launch;
     let system_proxy = patch.enable_system_proxy;
     let pac = patch.proxy_auto_config;
@@ -410,69 +425,52 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let tun_tray_icon = patch.tun_tray_icon;
     let log_level = patch.app_log_level;
     let enable_tray = patch.enable_tray;
-    let res = {
-        if log_level.is_some() {
-            let log_level = Config::verge().latest().get_log_level();
-            VergeLog::update_log_level(log_level)?;
-        }
-        let service_mode = patch.enable_service_mode;
-
-        if service_mode.is_some() {
-            log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
-            Config::generate()?;
-            CoreManager::global().run_core().await?;
-        }
-        if auto_launch.is_some() {
-            sysopt::Sysopt::global().update_launch()?;
-        }
-        if system_proxy.is_some()
-            || proxy_bypass.is_some()
-            || pac.is_some()
-            || pac_content.is_some()
-        {
-            sysopt::Sysopt::global().update_sysproxy()?;
-        }
-
-        if let Some(true) = patch.enable_proxy_guard {
-            sysopt::Sysopt::global().guard_proxy();
-        }
-
-        if let Some(hotkeys) = patch.hotkeys {
-            hotkey::Hotkey::global().update(hotkeys)?;
-        }
-
-        if language.is_some() {
-            handle::Handle::update_systray()?;
-        } else if system_proxy.is_some()
-            || common_tray_icon.is_some()
-            || sysproxy_tray_icon.is_some()
-            || tun_tray_icon.is_some()
-            || service_mode.is_some()
-        {
-            handle::Handle::update_systray_part()?;
-        }
-        #[cfg(target_os = "macos")]
-        if tray_icon.is_some() {
-            handle::Handle::update_systray_part()?;
-        }
-
-        if enable_tray.is_some() {
-            handle::Handle::set_tray_visible(enable_tray.unwrap())?;
-        }
-
-        <Result<()>>::Ok(())
-    };
-    match res {
-        Ok(()) => {
-            Config::verge().apply();
-            Config::verge().data().save_file()?;
-            Ok(())
-        }
-        Err(err) => {
-            Config::verge().discard();
-            Err(err)
-        }
+    if log_level.is_some() {
+        let log_level = Config::verge().latest().get_log_level();
+        VergeLog::update_log_level(log_level)?;
     }
+    let service_mode = patch.enable_service_mode;
+
+    if service_mode.is_some() {
+        log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
+        Config::generate()?;
+        CoreManager::global().run_core().await?;
+    }
+    if auto_launch.is_some() {
+        sysopt::Sysopt::global().update_launch()?;
+    }
+    if system_proxy.is_some() || proxy_bypass.is_some() || pac.is_some() || pac_content.is_some() {
+        sysopt::Sysopt::global().update_sysproxy()?;
+    }
+
+    if let Some(true) = patch.enable_proxy_guard {
+        sysopt::Sysopt::global().guard_proxy();
+    }
+
+    if let Some(hotkeys) = patch.hotkeys {
+        hotkey::Hotkey::global().update(hotkeys)?;
+    }
+
+    if language.is_some() {
+        handle::Handle::update_systray()?;
+    } else if system_proxy.is_some()
+        || common_tray_icon.is_some()
+        || sysproxy_tray_icon.is_some()
+        || tun_tray_icon.is_some()
+        || service_mode.is_some()
+    {
+        handle::Handle::update_systray_part()?;
+    }
+    #[cfg(target_os = "macos")]
+    if tray_icon.is_some() {
+        handle::Handle::update_systray_part()?;
+    }
+
+    if enable_tray.is_some() {
+        handle::Handle::set_tray_visible(enable_tray.unwrap())?;
+    }
+
+    Ok(())
 }
 
 /// 更新某个profile
