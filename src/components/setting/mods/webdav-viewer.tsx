@@ -1,4 +1,9 @@
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import {
+  BaseDialog,
+  DialogRef,
+  Notice,
+  ScrollableText,
+} from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
 import { closeAllConnections } from "@/services/api";
@@ -26,14 +31,11 @@ import { LoadingButton } from "@mui/lab";
 import {
   Box,
   Checkbox,
+  Chip,
   Divider,
   FormControlLabel,
   IconButton,
   InputAdornment,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   styled,
   TextField,
   Typography,
@@ -311,23 +313,12 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
         </Divider>
         <Box>
           {backupFiles.length > 0 ? (
-            <List>
+            <div>
               {backupFiles.map((file) => (
-                <ListItem
-                  sx={{
-                    backgroundColor: "var(--background-color-alpha)",
-                    mb: 1,
-                    padding: "4px 10px",
-                    borderRadius: "6px",
-                  }}
+                <div
+                  className="my-2 flex items-center justify-between rounded-md bg-primary-alpha px-2 py-1"
                   key={file.href}>
-                  <ListItemIcon
-                    sx={{
-                      height: "50px",
-                      p: 1,
-                      mr: 1,
-                      "& svg": { width: "100%", height: "100%" },
-                    }}>
+                  <div className="mr-2 flex-shrink-0 flex-grow-0 basis-10 p-1 *:h-full *:w-full">
                     {file.platform === "windows" ? (
                       <WindowsIcon />
                     ) : file.platform === "linux" ? (
@@ -335,18 +326,31 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
                     ) : (
                       <MacIcon />
                     )}
-                  </ListItemIcon>
-                  <ListItemText
-                    sx={{ wordBreak: "break-all", mr: 1 }}
-                    primary={file.filename}
-                    secondary={
-                      <TypeDiv>
-                        {file.type === "profiles"
-                          ? "Profiles"
-                          : "Config + Profiles"}
-                      </TypeDiv>
-                    }
-                  />
+                  </div>
+                  <div className="mr-2 flex flex-grow flex-col justify-center space-y-2 py-1">
+                    <div className="inline-block h-5 w-full">
+                      <ScrollableText>{file.filename}</ScrollableText>
+                    </div>
+                    <div>
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        color="primary"
+                        label={
+                          file.type === "profiles"
+                            ? "Profiles"
+                            : "Config + Profiles"
+                        }
+                      />
+                      {!file.allowApply && (
+                        <ScrollableText>
+                          <p className="m-0 !mt-1 p-0 font-bold text-error-main">
+                            Platform does not match
+                          </p>
+                        </ScrollableText>
+                      )}
+                    </div>
+                  </div>
                   <LoadingButton
                     sx={{ mr: 1, minWidth: "80px" }}
                     disabled={applyingFile === file.filename}
@@ -372,9 +376,9 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
                     startIcon={<Check />}>
                     {t("Apply")}
                   </LoadingButton>
-                </ListItem>
+                </div>
               ))}
-            </List>
+            </div>
           ) : (
             <Box
               sx={{

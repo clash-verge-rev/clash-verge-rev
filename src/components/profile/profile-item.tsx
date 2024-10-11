@@ -1,4 +1,4 @@
-import { Notice } from "@/components/base";
+import { Notice, ScrollableText } from "@/components/base";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { deleteProfile, updateProfile, viewProfile } from "@/services/cmds";
 import {
@@ -284,14 +284,14 @@ export const ProfileItem = (props: Props) => {
           <Box
             sx={{
               position: "absolute",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
               zIndex: 10,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
               borderRadius: "8px",
               backdropFilter: "blur(2px)",
             }}>
@@ -303,11 +303,16 @@ export const ProfileItem = (props: Props) => {
             <Typography
               width="calc(100% - 36px)"
               sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
-              variant="h6"
-              component="h2"
+              // variant="h6"
+              // component="h2"
               noWrap
               title={name}>
-              {name}
+              <ScrollableText
+                className={cn("text-primary", {
+                  "text-primary-main": selected,
+                })}>
+                {name}
+              </ScrollableText>
             </Typography>
           </Box>
 

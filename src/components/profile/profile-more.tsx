@@ -1,6 +1,6 @@
 import JSIcon from "@/assets/image/js.svg?react";
 import YamlIcon from "@/assets/image/yaml.svg?react";
-import { Notice } from "@/components/base";
+import { Notice, ScrollableText } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { viewProfile } from "@/services/cmds";
@@ -220,7 +220,12 @@ export const ProfileMore = (props: Props) => {
             component="h2"
             noWrap
             title={itemData.name}>
-            {itemData.name}
+            <ScrollableText
+              className={cn("text-primary", {
+                "text-primary-main": selected,
+              })}>
+              {itemData.name}
+            </ScrollableText>
           </Typography>
 
           {type === "script" ? (
