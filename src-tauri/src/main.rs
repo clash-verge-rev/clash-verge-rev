@@ -19,7 +19,7 @@ use std::{
     backtrace::{Backtrace, BacktraceStatus},
     time::Duration,
 };
-use tauri::api;
+use tauri::api::dialog::{blocking::MessageDialogBuilder, MessageDialogButtons, MessageDialogKind};
 
 fn main() -> std::io::Result<()> {
     // 单例检测
@@ -54,11 +54,20 @@ fn main() -> std::io::Result<()> {
         };
 
         log::error!("panicked at {}:\n{}\n{}", location, payload, backtrace);
-        let task = std::thread::spawn(|| {
-            let _ = CoreManager::global().stop_core();
-        });
-        let _ = task.join();
-        std::process::exit(1);
+        let status = MessageDialogBuilder::new(
+            "Panick Info",
+            format!("{}\n{}\n{}", location, payload, backtrace),
+        )
+        .kind(MessageDialogKind::Error)
+        .buttons(MessageDialogButtons::OkWithLabel("Confirm".to_string()))
+        .show();
+        if status {
+            let task = std::thread::spawn(|| {
+                let _ = CoreManager::global().stop_core();
+            });
+            let _ = task.join();
+            std::process::exit(1);
+        }
     }));
 
     #[allow(unused_mut)]
@@ -206,7 +215,7 @@ fn main() -> std::io::Result<()> {
         }
         tauri::RunEvent::Updater(tauri::UpdaterEvent::Downloaded) => {
             resolve::resolve_reset();
-            api::process::kill_children();
+            tauri::api::process::kill_children();
         }
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
