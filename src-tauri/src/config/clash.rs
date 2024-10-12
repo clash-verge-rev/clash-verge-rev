@@ -32,13 +32,12 @@ impl IClashTemp {
     pub fn template() -> Self {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
+        tun.insert("enable".into(), false.into());
         tun.insert("stack".into(), "gvisor".into());
-        tun.insert("device".into(), "Mihomo".into());
         tun.insert("auto-route".into(), true.into());
         tun.insert("strict-route".into(), false.into());
         tun.insert("auto-detect-interface".into(), true.into());
         tun.insert("dns-hijack".into(), vec!["any:53"].into());
-        tun.insert("mtu".into(), 1500.into());
         #[cfg(not(target_os = "windows"))]
         map.insert("redir-port".into(), 7895.into());
         #[cfg(target_os = "linux")]
