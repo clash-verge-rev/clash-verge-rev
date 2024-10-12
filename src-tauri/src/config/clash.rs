@@ -51,7 +51,6 @@ impl IClashTemp {
         map.insert("external-controller".into(), "127.0.0.1:9097".into());
         let mut cors_map = Mapping::new();
         cors_map.insert("allow-private-network".into(), true.into());
-        cors_map.insert("allow-private-network".into(), true.into());
         cors_map.insert("allow-origins".into(), vec!["*"].into());
         map.insert("secret".into(), "".into());
         map.insert("tun".into(), tun.into());
