@@ -1,7 +1,7 @@
 > [!Important]
 > 安装此版本前，请先卸载旧版本的服务模式，另外此版本所有的数据存放路径都将改变，请自行备份订阅配置文件
 
-### ⚠️ Breaking Changes
+### 🚨 Breaking Changes
 - 重构 Clash Verge Service 一部分功能
 - 更改应用的 appid、identify 以及 aur 构建包名
 
@@ -18,11 +18,13 @@
 - 脚本 schema 的 format 字段值添加 `mrs` 文件类型
 - 菜单侧边栏支持小窗口收缩
 - windows 支持系统托盘图标隐藏
+- 捕获显示崩溃错误信息
 
 ### 🚀 Performance Improvements
 - 优化内核停止逻辑
 - 仅当主题颜色设置初始化或改变时才存储到 LocalStorage
 - 切换界面主题时，同时更改应用的主题配置
+- 切换系统标题栏无需重启应用
 - 集成 framer motion 库, 优化大部分动画效果
 - 集成 tailwindcss 库, 优化大部分样式布局
 - ci 工作流优化
@@ -40,4 +42,5 @@
 - Linux 上切换主题动画卡顿失效
 - 修改外部控制器后，websocket 连接失败，导致流量图显/内容使用/连接信息/日志信息数据获取失败
 - useWindowsSize 的 hook 的初始值为 0, 导致代理页面节点渲染列数错误
+- github 代理地址
 
