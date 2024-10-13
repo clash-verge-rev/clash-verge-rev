@@ -221,7 +221,7 @@ interface IVergeConfig {
   tun_tray_icon?: boolean;
   enable_tun_mode?: boolean;
   enable_auto_launch?: boolean;
-  enable_system_title?: boolean;
+  enable_system_title_bar?: boolean;
   enable_keep_ui_active?: boolean;
   enable_splashscreen?: boolean;
   enable_service_mode?: boolean;
@@ -371,4 +371,10 @@ interface IWebDavConfig {
   url: string;
   username: string;
   password: string;
+}
+
+enum RestartAppReason {
+  Manual = "manual",
+  ApplyBackup = "applyBackup",
+  enableSystemTitle = "enableSystemTitle",
 }

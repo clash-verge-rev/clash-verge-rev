@@ -1,8 +1,7 @@
 import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
-import { ConfirmViewer } from "@/components/profile/confirm-viewer";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { useVerge } from "@/hooks/use-verge";
-import { copyIconFile, getAppDir, restartApp } from "@/services/cmds";
+import { copyIconFile, getAppDir } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import { InfoRounded } from "@mui/icons-material";
 import {
@@ -20,6 +19,7 @@ import { open as openDialog } from "@tauri-apps/api/dialog";
 import { exists } from "@tauri-apps/api/fs";
 import { join } from "@tauri-apps/api/path";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { appWindow } from "@tauri-apps/api/window";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -33,14 +33,13 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const [commonIcon, setCommonIcon] = useState("");
   const [sysproxyIcon, setSysproxyIcon] = useState("");
   const [tunIcon, setTunIcon] = useState("");
-  const { enable_system_title, enable_keep_ui_active, enable_splashscreen } =
-    verge || {};
+  const {
+    enable_system_title_bar,
+    enable_keep_ui_active,
+    enable_splashscreen,
+  } = verge || {};
   const systemOS = getSystem();
   const show_title_setting = systemOS === "linux" || systemOS === "windows";
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [enableSystemTitle, setEnableSystemTitle] = useState(
-    enable_system_title ?? false,
-  );
   useEffect(() => {
     initIconPath();
   }, []);
@@ -108,41 +107,21 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
         </Item>
         {show_title_setting && (
           <Item>
-            <ListItemText primary={t("System Title")} />
-            <Tooltip title={t("App Title Info")} placement="top">
-              <IconButton color="inherit" size="small">
-                <InfoRounded
-                  fontSize="inherit"
-                  style={{ cursor: "pointer", opacity: 0.75 }}
-                />
-              </IconButton>
-            </Tooltip>
+            <ListItemText primary={t("System Title Bar")} />
             <GuardState
-              value={enable_system_title ?? false}
+              value={enable_system_title_bar ?? false}
               valueProps="checked"
               onCatch={onError}
               onFormat={onSwitchFormat}
-              onChange={(e) => {
-                setConfirmOpen(true);
-                setEnableSystemTitle(e);
+              onChange={(e) => onChangeData({ enable_system_title_bar: e })}
+              onGuard={async (e) => {
+                await patchVerge({ enable_system_title_bar: e });
+                await appWindow.setDecorations(e);
               }}>
               <SwitchLovely edge="end" />
             </GuardState>
           </Item>
         )}
-
-        <ConfirmViewer
-          title={t("Confirm restart")}
-          message={t("Restart App Message")}
-          open={confirmOpen}
-          onClose={() => setConfirmOpen(false)}
-          onConfirm={async () => {
-            onChangeData({ enable_system_title: enableSystemTitle });
-            await patchVerge({ enable_system_title: enableSystemTitle });
-            setConfirmOpen(false);
-            restartApp();
-          }}
-        />
 
         <Item>
           <ListItemText primary={t("Keep UI Active")} />

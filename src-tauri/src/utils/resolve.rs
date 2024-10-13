@@ -104,7 +104,7 @@ pub fn create_window(app_handle: &AppHandle) {
     {
         let decoration = Config::verge()
             .latest()
-            .enable_system_title
+            .enable_system_title_bar
             .unwrap_or(false);
         builder = builder.decorations(decoration);
     }

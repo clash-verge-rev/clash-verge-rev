@@ -425,11 +425,12 @@ pub async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     let tun_tray_icon = patch.tun_tray_icon;
     let log_level = patch.app_log_level;
     let enable_tray = patch.enable_tray;
+    let service_mode = patch.enable_service_mode;
+
     if log_level.is_some() {
         let log_level = Config::verge().latest().get_log_level();
         VergeLog::update_log_level(log_level)?;
     }
-    let service_mode = patch.enable_service_mode;
 
     if service_mode.is_some() {
         log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());

@@ -34,8 +34,12 @@ const Layout = () => {
   const visible = useVisibility();
 
   const { verge } = useVerge();
-  const { language, start_page, enable_system_title, enable_keep_ui_active } =
-    verge || {};
+  const {
+    language,
+    start_page,
+    enable_system_title_bar,
+    enable_keep_ui_active,
+  } = verge || {};
   keepUIActive = enable_keep_ui_active ?? false;
   const navigate = useNavigate();
 
@@ -152,7 +156,7 @@ const Layout = () => {
           elevation={0}
           className={cn("relative flex h-screen w-screen overflow-hidden", {
             "rounded-md border-2 border-solid border-[--divider-color]":
-              OS === "linux" && !enable_system_title,
+              OS === "linux" && !enable_system_title_bar,
             "rounded-none": isMaximized,
           })}
           onContextMenu={(e) => {
@@ -169,10 +173,10 @@ const Layout = () => {
               e.preventDefault();
             }
           }}>
-          <Sidebar enableSystemTitle={!!enable_system_title} />
+          <Sidebar enableSystemTitleBar={!!enable_system_title_bar} />
 
           <div className="flex h-full w-full flex-col">
-            {!enable_system_title && (
+            {!enable_system_title_bar && (
               <div className="z-10 box-border flex flex-shrink-0 flex-grow-0 basis-8 justify-end">
                 <div
                   className="mt-1 w-full"
