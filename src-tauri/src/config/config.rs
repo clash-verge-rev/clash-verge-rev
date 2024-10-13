@@ -146,11 +146,11 @@ impl Config {
         }
 
         // resolve config settings
-        let verge_config_ = verge_config.latest().clone();
-        feat::resolve_config_settings(verge_config_).await?;
+        // let verge_config_ = verge_config.latest().clone();
+        // feat::resolve_config_settings(verge_config_).await?;
 
         // restart clash code
-        // feat::restart_clash_core();
+        feat::restart_clash_core();
 
         Ok(())
     }

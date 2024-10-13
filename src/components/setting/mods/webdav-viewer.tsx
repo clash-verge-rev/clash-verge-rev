@@ -6,6 +6,7 @@ import {
 } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
+import { closeAllConnections } from "@/services/api";
 import {
   createAndUploadBackup,
   deleteBackup,
@@ -162,7 +163,6 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
         } as BackupFile;
       })
       .sort((a, b) => (a.backupTime.isAfter(b.backupTime) ? -1 : 1));
-    console.log(backupFiles);
     setBackupFiles(backupFiles);
   };
 
@@ -203,16 +203,16 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
       Notice.success(
         `Backup ${file.filename} applied successfully, will restart app soon`,
       );
-      await sleep(2000);
+      // await sleep(2000);
       // TODO: activate selected proxy group node after restart App
-      restartApp();
 
       // emit reload all event
       // emit("verge://reload-all");
-      // await closeAllConnections();
-      // setTimeout(async () => {
-      //   await activateSelected();
-      // }, 2000);
+      await closeAllConnections();
+      setTimeout(async () => {
+        await activateSelected();
+        restartApp();
+      }, 2000);
     } catch (e) {
       Notice.error(`Failed to apply backup, error: ${e}`);
       setApplyingFile("");
