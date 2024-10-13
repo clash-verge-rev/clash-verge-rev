@@ -215,11 +215,11 @@ export const ProfileMore = (props: Props) => {
           alignItems="center"
           mb={0.5}>
           <Typography
+            title={itemData.name}
             width="calc(100% - 52px)"
-            variant="h6"
-            component="h2"
-            noWrap
-            title={itemData.name}>
+            height={"26px"}
+            sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
+            noWrap>
             <ScrollableText
               className={cn("text-primary", {
                 "text-primary-main": selected,

@@ -73,10 +73,13 @@ export const ScrollableText = (props: ScrollableTextProps) => {
 
   return (
     <div
-      className={cn("flex select-text items-center justify-center", className)}>
+      className={cn(
+        "flex h-full min-h-6 select-text items-center justify-center",
+        className,
+      )}>
       <div
         ref={containerRef}
-        className="relative h-full min-h-6 w-full overflow-hidden"
+        className="relative h-full w-full overflow-hidden"
         aria-label="Scrolling text container">
         <motion.div
           ref={textRef}
