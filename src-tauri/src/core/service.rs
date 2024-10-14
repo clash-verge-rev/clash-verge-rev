@@ -26,9 +26,6 @@ pub struct JsonResponse {
     pub data: Option<ResponseBody>,
 }
 
-/// Install the Clash Verge Service
-/// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
-///
 #[cfg(target_os = "windows")]
 pub async fn reinstall_service() -> Result<()> {
     use deelevate::{PrivilegeLevel, Token};
@@ -74,38 +71,41 @@ pub async fn reinstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn reinstall_service() -> Result<()> {
+pub async fn reinstall_service1() -> Result<()> {
     use users::get_effective_uid;
 
     let binary_path = dirs::service_path()?;
-    let installer_path = binary_path.with_file_name("install-service");
-    let uninstaller_path = binary_path.with_file_name("uninstall-service");
+    let install_path = binary_path.with_file_name("install-service");
+    let uninstall_path = binary_path.with_file_name("uninstall-service");
 
-    if !installer_path.exists() {
+    if !install_path.exists() {
         bail!("installer not found");
     }
 
-    if !uninstaller_path.exists() {
+    if !uninstall_path.exists() {
         bail!("uninstaller not found");
     }
 
+    let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
+    let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
+
     let elevator = crate::utils::help::linux_elevator();
     let _ = match get_effective_uid() {
-        0 => StdCommand::new(uninstaller_path).status()?,
+        0 => StdCommand::new(uninstall_path).status()?,
         _ => StdCommand::new(elevator)
             .arg("sh")
             .arg("-c")
-            .arg(uninstaller_path)
+            .arg(uninstall_shell)
             .status()?,
     };
 
     let elevator = crate::utils::help::linux_elevator();
     let status = match get_effective_uid() {
-        0 => StdCommand::new(installer_path).status()?,
+        0 => StdCommand::new(install_shell).status()?,
         _ => StdCommand::new(elevator)
             .arg("sh")
             .arg("-c")
-            .arg(installer_path)
+            .arg(install_shell)
             .status()?,
     };
 
@@ -122,10 +122,10 @@ pub async fn reinstall_service() -> Result<()> {
 #[cfg(target_os = "macos")]
 pub async fn reinstall_service() -> Result<()> {
     let binary_path = dirs::service_path()?;
-    let installer_path = binary_path.with_file_name("install-service");
+    let install_path = binary_path.with_file_name("install-service");
     let uninstall_path = binary_path.with_file_name("uninstall-service");
 
-    if !installer_path.exists() {
+    if !install_path.exists() {
         bail!("installer not found");
     }
 
@@ -133,8 +133,8 @@ pub async fn reinstall_service() -> Result<()> {
         bail!("uninstaller not found");
     }
 
-    let install_shell: String = installer_path.to_string_lossy().replace(" ", "\\\\ ");
-    let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\\\ ");
+    let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
+    let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
     let command = format!(
         r#"do shell script "sudo {uninstall_shell} && sudo {install_shell}" with administrator privileges"#
     );
