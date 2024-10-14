@@ -196,7 +196,7 @@ impl Tray {
             "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
             t!("SysProxy", "系统代理", use_zh),
             switch_map[system_proxy],
-            t!("TUN", "Tun模式", use_zh),
+            t!("TUN", "Tun(虚拟网卡)模式", use_zh),
             switch_map[tun_mode],
             t!("Profile", "当前订阅", use_zh),
             current_profile_name
@@ -267,7 +267,7 @@ fn create_tray_menu(
     let tun_mode = &CheckMenuItem::with_id(
         app_handle,
         "tun_mode",
-        t!("TUN Mode", "Tun 模式", use_zh),
+        t!("TUN Mode", "Tun(虚拟网卡)模式", use_zh),
         true,
         tun_mode_enabled,
         None::<&str>,

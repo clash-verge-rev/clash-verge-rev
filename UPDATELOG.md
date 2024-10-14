@@ -7,21 +7,35 @@
 
 ### Features
 
-- Meta(mihomo)内核升级 1.18.8
+- Meta(mihomo)内核升级 1.18.9
+- Win 下的系统代理替换为 Shadowsocks/CFW/v2rayN 等成熟的 sysproxy.exe 方案，解决拨号/VPN 环境下无法设置系统代理的问题
+- 服务模式改进为启动软件时自动安装，TUN 模式可自由开启不再限制于服务模式
 - Mac 下可用 URL Scheme 导入订阅
+- 可使用 Ctrl(cmd)+Q 快捷键退出程序
 - 成功导入订阅的提示消息
 - 能自动选中新导入的订阅
+- 日志加入颜色区分
 - 改进多处文本表述
+- 加入图标 svg 格式检测
+- 增加更多 app 调试日志
 
 ### Performance
 
-- 优化内核启动逻辑
+- 优化及重构内核启动管理逻辑
 - 优化 TUN 启动逻辑
+- 重构和优化 app_handle
+- 重构系统代理绕过逻辑
 - 移除无用的 PID 创建逻辑
 
 ### Bugs Fixes
 
 - 修复已有多个订阅导入新订阅会跳选订阅的问题
+- 修复 Linux wayland 下任务栏图标缺失的问题
+- 移除多余退出变量和钩子
+
+### 已知问题
+
+- 由于[Tauri 底层依赖库 bug](https://github.com/tauri-apps/tauri/issues/10546)，在测试节点连通性时关闭窗口会导致程序崩溃；在底层 bug 未修复前，暂时屏蔽窗口关闭功能。
 
 ---
 
