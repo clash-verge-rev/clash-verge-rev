@@ -4,7 +4,7 @@ on: workflow_dispatch
 permissions: write-all
 jobs:
   release-update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
@@ -28,7 +28,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # release-update-for-fixed-webview2:
-  #   runs-on: ubuntu-latest
+  #   runs-on: ubuntu-22.04
   #   steps:
   #     - name: Checkout repository
   #       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4

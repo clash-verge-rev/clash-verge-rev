@@ -87,21 +87,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   alpha-for-linux:
-    runs-on: ${{ matrix.os }}
-    outputs:
-      VERSION: ${{ steps.get_version.outputs.VERSION }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: i686-unknown-linux-gnu
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: armv7-unknown-linux-gnueabihf
+    outputs:
+      VERSION: ${{ steps.get_version.outputs.VERSION }}
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
@@ -231,7 +231,7 @@ jobs:
     needs: [alpha-for-linux]
     strategy:
       fail-fast: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
@@ -266,7 +266,7 @@ jobs:
 
   update_tag:
     name: Update tag
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [alpha, pkgbuild]
     steps:
       - name: Checkout repository
