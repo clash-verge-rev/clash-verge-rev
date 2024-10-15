@@ -299,19 +299,18 @@ export const ProfileItem = (props: Props) => {
           </Box>
         )}
         <Box position="relative">
-          <Typography
-            width="calc(100% - 36px)"
-            height={"26px"}
-            sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
-            noWrap
-            title={name}>
-            <ScrollableText
-              className={cn("text-primary", {
-                "text-primary-main": selected,
-              })}>
-              {name}
+          <div className="w-[calc(100%-36px)]">
+            <ScrollableText>
+              <Typography
+                sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
+                variant="h6"
+                component="h2"
+                noWrap
+                title={name}>
+                {name}
+              </Typography>
             </ScrollableText>
-          </Typography>
+          </div>
 
           {/* only if has url can it be updated */}
           {hasUrl && (

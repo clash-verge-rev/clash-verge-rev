@@ -7,7 +7,7 @@ export { BaseFieldset } from "./base-fieldset";
 export { BaseLoading } from "./base-loading";
 export { Notice } from "./base-notice";
 export { BasePage } from "./base-page";
-export { ScrollableText } from "./base-scroller-text";
+export { ScrollableText } from "./base-scrollable-text";
 export { BaseSearchBox } from "./base-search-box";
 export { BaseStyledSelect } from "./base-styled-select";
 export { BaseStyledTextField } from "./base-styled-text-field";

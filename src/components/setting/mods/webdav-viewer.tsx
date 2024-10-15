@@ -39,6 +39,7 @@ import {
   InputAdornment,
   styled,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { appWindow } from "@tauri-apps/api/window";
@@ -314,9 +315,11 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
             </LoadingButton>
           </form>
         </Box>
+
         <Divider variant="middle" flexItem sx={{ mt: 1 }}>
           {t("Backup Files")}
         </Divider>
+
         <Box>
           {backupFiles.length > 0 ? (
             <div>
@@ -324,19 +327,17 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
                 <div
                   className="my-2 flex items-center justify-between rounded-md bg-primary-alpha px-2 py-1"
                   key={file.href}>
-                  <div className="mr-2 flex-shrink-0 flex-grow-0 basis-10 p-1 *:h-full *:w-full">
+                  <div className="mr-2 flex-shrink-0 flex-grow-0 basis-10 p-1">
                     {file.platform === "windows" ? (
-                      <WindowsIcon />
+                      <WindowsIcon className="h-full w-full" />
                     ) : file.platform === "linux" ? (
-                      <LinuxIcon />
+                      <LinuxIcon className="h-full w-full" />
                     ) : (
-                      <MacIcon />
+                      <MacIcon className="h-full w-full" />
                     )}
                   </div>
-                  <div className="mr-2 flex flex-grow flex-col justify-center space-y-2 py-1">
-                    <div className="inline-block h-5 w-full">
-                      <ScrollableText>{file.filename}</ScrollableText>
-                    </div>
+                  <div className="mr-2 flex flex-grow flex-col justify-center space-y-2 overflow-hidden py-1">
+                    <ScrollableText>{file.filename}</ScrollableText>
                     <div>
                       <Chip
                         size="small"
@@ -348,13 +349,6 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
                             : "Config + Profiles"
                         }
                       />
-                      {!file.allowApply && (
-                        <ScrollableText>
-                          <p className="m-0 !mt-1 p-0 font-bold text-error-main">
-                            Platform does not match
-                          </p>
-                        </ScrollableText>
-                      )}
                     </div>
                   </div>
                   <LoadingButton
@@ -369,19 +363,26 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
                     startIcon={<Delete />}>
                     {t("Delete")}
                   </LoadingButton>
-                  <LoadingButton
-                    sx={{ minWidth: "80px" }}
-                    disabled={
-                      !file.allowApply || deletingFile === file.filename
-                    }
-                    loading={applyingFile === file.filename}
-                    onClick={() => handleApplyBackup(file)}
-                    variant="contained"
-                    size="small"
-                    loadingPosition="start"
-                    startIcon={<Check />}>
-                    {t("Apply")}
-                  </LoadingButton>
+                  <Tooltip
+                    title={
+                      !file.allowApply ? t("Platform does not match") : null
+                    }>
+                    <div>
+                      <LoadingButton
+                        sx={{ minWidth: "80px" }}
+                        disabled={
+                          !file.allowApply || deletingFile === file.filename
+                        }
+                        loading={applyingFile === file.filename}
+                        onClick={() => handleApplyBackup(file)}
+                        variant="contained"
+                        size="small"
+                        loadingPosition="start"
+                        startIcon={<Check />}>
+                        {t("Apply")}
+                      </LoadingButton>
+                    </div>
+                  </Tooltip>
                 </div>
               ))}
             </div>

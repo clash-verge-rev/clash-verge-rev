@@ -214,19 +214,17 @@ export const ProfileMore = (props: Props) => {
           justifyContent="space-between"
           alignItems="center"
           mb={0.5}>
-          <Typography
-            title={itemData.name}
-            width="calc(100% - 52px)"
-            height={"26px"}
-            sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
-            noWrap>
-            <ScrollableText
-              className={cn("text-primary", {
-                "text-primary-main": selected,
-              })}>
-              {itemData.name}
+          <div className="w-[calc(100%-52px)]">
+            <ScrollableText>
+              <Typography
+                title={itemData.name}
+                variant="h6"
+                component="h2"
+                noWrap>
+                {itemData.name}
+              </Typography>
             </ScrollableText>
-          </Typography>
+          </div>
 
           {type === "script" ? (
             <JSIcon width={25} height={25} fill="var(--primary-main)" />
