@@ -13,19 +13,16 @@ export default {
     extend: {
       colors: {
         "primary-main": "var(--mui-palette-primary-main)",
+        "primary-alpha": "var(--background-color-alpha)",
         "secondary-main": "var(--mui-palette-secondary-main)",
         "error-main": "var(--mui-palette-error-main)",
       },
       textColor: {
-        "primary-main": "var(--mui-palette-primary-main)",
-        "secondary-main": "var(--mui-palette-secondary-main)",
-        "error-main": "var(--mui-palette-error-main)",
         primary: "var(--mui-palette-text-primary)",
         secondary: "var(--mui-palette-text-secondary)",
       },
       backgroundColor: {
         primary: "var(--mui-palette-primary-main)",
-        "primary-alpha": "var(--background-color-alpha)",
         comment: "var(--background-color)",
       },
       divideColor: {

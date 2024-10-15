@@ -24,7 +24,7 @@ use tauri::api::dialog::{blocking::MessageDialogBuilder, MessageDialogButtons, M
 fn main() -> std::io::Result<()> {
     // 单例检测
     if server::check_singleton().is_err() {
-        println!("app exists");
+        log::info!("app exists");
         return Ok(());
     }
 
@@ -55,7 +55,7 @@ fn main() -> std::io::Result<()> {
 
         log::error!("panicked at {}:\n{}\n{}", location, payload, backtrace);
         let status = MessageDialogBuilder::new(
-            "Panick Info",
+            "Panic Info",
             format!("{}\n{}\n{}", location, payload, backtrace),
         )
         .kind(MessageDialogKind::Error)
