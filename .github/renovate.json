@@ -11,6 +11,10 @@
       "labels": ["github-actions"],
       "semanticCommitType": "ci",
       "semanticCommitScope": "action"
+    },
+    {
+      "matchPackageNames": ["react-devtools"],
+      "allowedVersions": "<6.0.0"
     }
   ]
 }
