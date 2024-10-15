@@ -87,7 +87,7 @@
     "pretty-quick": "4.0.0",
     "react-devtools": "5.3.2",
     "sass": "1.79.5",
-    "tailwind-merge": "2.5.3",
+    "tailwind-merge": "2.5.4",
     "tailwindcss": "3.4.13",
     "terser": "5.34.1",
     "typescript": "5.6.3",
