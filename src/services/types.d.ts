@@ -372,9 +372,3 @@ interface IWebDavConfig {
   username: string;
   password: string;
 }
-
-enum RestartAppReason {
-  Manual = "manual",
-  ApplyBackup = "applyBackup",
-  enableSystemTitle = "enableSystemTitle",
-}

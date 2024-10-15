@@ -14,6 +14,7 @@ import React, { ReactNode, useState } from "react";
 interface ItemProps {
   label: ReactNode;
   disabled?: boolean;
+  expand?: boolean;
   extra?: ReactNode;
   children?: ReactNode;
   secondary?: ReactNode;
@@ -21,7 +22,8 @@ interface ItemProps {
 }
 
 export const SettingItem: React.FC<ItemProps> = (props) => {
-  const { label, disabled, extra, children, secondary, onClick } = props;
+  const { label, expand, disabled, extra, children, secondary, onClick } =
+    props;
   const clickable = !!onClick;
 
   const primary = (
@@ -44,13 +46,20 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
   };
 
   return clickable ? (
-    <ListItem disablePadding>
+    <ListItem
+      disablePadding
+      sx={{ ...(expand && { bgcolor: "var(--background-color-alpha)" }) }}>
       <ListItemButton onClick={handleClick} disabled={isLoading || disabled}>
         <ListItemText primary={primary} secondary={secondary} />
         {isLoading ? (
           <CircularProgress color="inherit" size={20} />
         ) : (
-          <ChevronRightRounded />
+          <ChevronRightRounded
+            sx={{
+              transform: expand ? "rotate(90deg)" : "rotate(0)",
+              transition: "all 0.2s",
+            }}
+          />
         )}
       </ListItemButton>
     </ListItem>

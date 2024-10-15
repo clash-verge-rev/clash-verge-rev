@@ -5,40 +5,26 @@ import {
   ScrollableText,
 } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
-import { useVerge } from "@/hooks/use-verge";
 import { closeAllConnections } from "@/services/api";
 import {
-  createAndUploadBackup,
   deleteBackup,
   downloadBackupAndReload,
   getVergeConfig,
   listBackup,
   restartApp,
-  updateWebDavInfo,
 } from "@/services/cmds";
 import { useSetThemeMode } from "@/services/states";
 import { sleep } from "@/utils";
 import getSystem from "@/utils/get-system";
-import {
-  Backup,
-  Check,
-  Delete,
-  InboxRounded,
-  Save,
-  Visibility,
-  VisibilityOff,
-} from "@mui/icons-material";
+import { Check, Delete, InboxRounded } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import {
   Box,
-  Checkbox,
   Chip,
-  Divider,
+  FormControl,
   FormControlLabel,
-  IconButton,
-  InputAdornment,
-  styled,
-  TextField,
+  Radio,
+  RadioGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -53,22 +39,10 @@ import {
   useImperativeHandle,
   useState,
 } from "react";
-import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 dayjs.extend(customParseFormat);
 const OS = getSystem();
-
-const TypeDiv = styled("span")(({ theme }) => ({
-  display: "inline-block",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "fit-content",
-  padding: "2px 5px",
-  borderRadius: 4,
-  backgroundColor: theme.palette.primary.main,
-  color: theme.palette.primary.contrastText,
-}));
 
 type BackupFile = IWebDavFile & {
   platform: string;
@@ -80,60 +54,22 @@ type BackupFile = IWebDavFile & {
 export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const { verge, patchVerge } = useVerge();
   const setMode = useSetThemeMode();
   const { activateSelected } = useProfiles();
 
-  const {
-    webdav_url = "",
-    webdav_username = "",
-    webdav_password = "",
-  } = verge || {};
-  const [isBackingUp, setIsBackingUp] = useState(false);
   const [deletingFile, setDeletingFile] = useState("");
   const [applyingFile, setApplyingFile] = useState("");
-  const [onlyBackupProfiles, setOnlyBackupProfiles] = useState(false);
   const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);
-  const [showPassword, setShowPassword] = useState(false);
-
-  const { register, handleSubmit, formState, reset } = useForm<IWebDavConfig>({
-    defaultValues: {
-      url: webdav_url,
-      username: webdav_username,
-      password: webdav_password,
-    },
-  });
-  const onSubmit = async (data: IWebDavConfig) => {
-    setBackupFiles([]);
-    try {
-      await patchVerge({
-        webdav_url: data.url,
-        webdav_username: data.username,
-        webdav_password: data.password,
-      });
-      await updateWebDavInfo(data.url, data.username, data.password);
-      await getAllBackupFiles();
-      Notice.success("WebDAV info updated successfully");
-    } catch (e) {
-      Notice.error(`Failed to connect to WebDAV server, error: ${e}`);
-    }
-  };
+  const [filter, setFilter] = useState<"all" | "profiles">("all");
+  const filterBackupFiles = backupFiles.filter((item) => item.type === filter);
+  console.log("filter", filter, filterBackupFiles);
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      reset({
-        url: webdav_url,
-        username: webdav_username,
-        password: webdav_password,
-      });
+      getAllBackupFiles();
       setOpen(true);
     },
     close: () => {
-      reset({
-        url: webdav_url,
-        username: webdav_username,
-        password: webdav_password,
-      });
       setOpen(false);
     },
   }));
@@ -172,7 +108,7 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
       setDeletingFile(file.filename);
       await deleteBackup(file.filename);
       await getAllBackupFiles();
-      Notice.success(`Backup ${file.filename} deleted successfully`);
+      Notice.success(`Deleted successfully`);
     } catch (e) {
       Notice.error(`Failed to delete backup, error: ${e}`);
     } finally {
@@ -201,9 +137,7 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
           setMode(mode);
         }
       }
-      Notice.success(
-        `Backup ${file.filename} applied successfully, will restart app soon`,
-      );
+      Notice.success("Apply successfully, will restart app soon");
       // await sleep(2000);
       // TODO: activate selected proxy group node after restart App
 
@@ -224,182 +158,121 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={
-        <Box display="flex" justifyContent="space-between">
-          {t("WebDav Backup")}
-          <Box>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={onlyBackupProfiles}
-                  onChange={(e) => setOnlyBackupProfiles(e.target.checked)}
+        <div className="flex items-center justify-between">
+          {t("Backup Files")}
+          <div>
+            <FormControl>
+              <RadioGroup
+                row
+                aria-labelledby="demo-radio-buttons-group-label"
+                value={filter}
+                name="radio-buttons-group"
+                onChange={(e) => {
+                  let value = (e.target as HTMLInputElement).value;
+                  if (value === "profiles") {
+                    setFilter("profiles");
+                  } else if (value === "all") {
+                    setFilter("all");
+                  }
+                }}>
+                <FormControlLabel
+                  value="all"
+                  control={<Radio />}
+                  label="Config + Profiles"
                 />
-              }
-              label={t("Only Backup Profiles")}
-            />
-            <LoadingButton
-              variant="contained"
-              size="small"
-              loading={isBackingUp}
-              onClick={async () => {
-                try {
-                  setIsBackingUp(true);
-                  await createAndUploadBackup(false, onlyBackupProfiles);
-                  await getAllBackupFiles();
-                  Notice.success(t("Backup successfully"));
-                } catch (e) {
-                  Notice.error(`Failed to backup, error: ${e}`);
-                } finally {
-                  setIsBackingUp(false);
-                }
-              }}
-              loadingPosition="start"
-              startIcon={<Backup />}>
-              {t("Backup")}
-            </LoadingButton>
-          </Box>
-        </Box>
+                <FormControlLabel
+                  value="profiles"
+                  control={<Radio />}
+                  label="Profiles"
+                />
+              </RadioGroup>
+            </FormControl>
+          </div>
+        </div>
       }
       disableOk
       cancelBtn={t("Back")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}>
       <Box>
-        <Box sx={{ padding: 1 }}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-              sx={{ marginBottom: 2 }}
-              fullWidth
-              label={t("WebDav URL")}
-              {...register("url")}
-            />
-            <TextField
-              sx={{ marginBottom: 2 }}
-              fullWidth
-              label={t("WebDav Username")}
-              {...register("username")}
-            />
-            <TextField
-              type={showPassword ? "text" : "password"}
-              sx={{ marginBottom: 2 }}
-              fullWidth
-              label={t("WebDav Password")}
-              {...register("password")}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment sx={{ mr: 1 }} position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={() => setShowPassword((pre) => !pre)}
-                        edge="end">
-                        {showPassword ? (
-                          <VisibilityOff color="primary" fontSize="small" />
-                        ) : (
-                          <Visibility color="primary" fontSize="small" />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-            <LoadingButton
-              type="submit"
-              variant="contained"
-              fullWidth
-              loading={formState.isSubmitting}
-              loadingPosition="start"
-              startIcon={<Save />}
-              disabled={!formState.isValid}>
-              {t("Save")}
-            </LoadingButton>
-          </form>
-        </Box>
-
-        <Divider variant="middle" flexItem sx={{ mt: 1 }}>
-          {t("Backup Files")}
-        </Divider>
-
-        <Box>
-          {backupFiles.length > 0 ? (
-            <div>
-              {backupFiles.map((file) => (
-                <div
-                  className="my-2 flex items-center justify-between rounded-md bg-primary-alpha px-2 py-1"
-                  key={file.href}>
-                  <div className="mr-2 flex-shrink-0 flex-grow-0 basis-10 p-1">
-                    {file.platform === "windows" ? (
-                      <WindowsIcon className="h-full w-full" />
-                    ) : file.platform === "linux" ? (
-                      <LinuxIcon className="h-full w-full" />
-                    ) : (
-                      <MacIcon className="h-full w-full" />
-                    )}
-                  </div>
-                  <div className="mr-2 flex flex-grow flex-col justify-center space-y-2 overflow-hidden py-1">
-                    <ScrollableText>{file.filename}</ScrollableText>
-                    <div>
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        color="primary"
-                        label={
-                          file.type === "profiles"
-                            ? "Profiles"
-                            : "Config + Profiles"
-                        }
-                      />
-                    </div>
-                  </div>
-                  <LoadingButton
-                    sx={{ mr: 1, minWidth: "80px" }}
-                    disabled={applyingFile === file.filename}
-                    loading={deletingFile === file.filename}
-                    onClick={() => handleDeleteBackup(file)}
-                    variant="contained"
-                    color="error"
-                    size="small"
-                    loadingPosition="start"
-                    startIcon={<Delete />}>
-                    {t("Delete")}
-                  </LoadingButton>
-                  <Tooltip
-                    title={
-                      !file.allowApply ? t("Platform does not match") : null
-                    }>
-                    <div>
-                      <LoadingButton
-                        sx={{ minWidth: "80px" }}
-                        disabled={
-                          !file.allowApply || deletingFile === file.filename
-                        }
-                        loading={applyingFile === file.filename}
-                        onClick={() => handleApplyBackup(file)}
-                        variant="contained"
-                        size="small"
-                        loadingPosition="start"
-                        startIcon={<Check />}>
-                        {t("Apply")}
-                      </LoadingButton>
-                    </div>
-                  </Tooltip>
+        {filterBackupFiles.length > 0 ? (
+          <div>
+            {filterBackupFiles.map((file) => (
+              <div
+                className="my-2 flex items-center justify-between rounded-md bg-primary-alpha px-2 py-1"
+                key={file.href}>
+                <div className="mr-2 flex-shrink-0 flex-grow-0 basis-10 p-1">
+                  {file.platform === "windows" ? (
+                    <WindowsIcon className="h-full w-full" />
+                  ) : file.platform === "linux" ? (
+                    <LinuxIcon className="h-full w-full" />
+                  ) : (
+                    <MacIcon className="h-full w-full" />
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100px",
-              }}>
-              <InboxRounded sx={{ fontSize: "4em" }} />
-              <Typography sx={{ fontSize: "1.25em" }}>Empty</Typography>
-            </Box>
-          )}
-        </Box>
+                <div className="mr-2 flex flex-grow flex-col justify-center space-y-2 overflow-hidden py-1">
+                  <ScrollableText>{file.filename}</ScrollableText>
+                  <div>
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      label={
+                        file.type === "profiles"
+                          ? "Profiles"
+                          : "Config + Profiles"
+                      }
+                    />
+                  </div>
+                </div>
+                <LoadingButton
+                  sx={{ mr: 1, minWidth: "80px" }}
+                  disabled={applyingFile === file.filename}
+                  loading={deletingFile === file.filename}
+                  onClick={() => handleDeleteBackup(file)}
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  loadingPosition="start"
+                  startIcon={<Delete />}>
+                  {t("Delete")}
+                </LoadingButton>
+                <Tooltip
+                  title={
+                    !file.allowApply ? t("Platform does not match") : null
+                  }>
+                  <div>
+                    <LoadingButton
+                      sx={{ minWidth: "80px" }}
+                      disabled={
+                        !file.allowApply || deletingFile === file.filename
+                      }
+                      loading={applyingFile === file.filename}
+                      onClick={() => handleApplyBackup(file)}
+                      variant="contained"
+                      size="small"
+                      loadingPosition="start"
+                      startIcon={<Check />}>
+                      {t("Apply")}
+                    </LoadingButton>
+                  </div>
+                </Tooltip>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100px",
+            }}>
+            <InboxRounded sx={{ fontSize: "4em" }} />
+            <Typography sx={{ fontSize: "1.25em" }}>Empty</Typography>
+          </Box>
+        )}
       </Box>
     </BaseDialog>
   );

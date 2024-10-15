@@ -528,7 +528,7 @@ pub async fn update_webdav_info(url: String, username: String, password: String)
         Ok(_) => Ok(()),
         Err(e) => {
             log::error!(target: "app", "update webdav info failed. error: {e:?}");
-            Err(format!("update webdav info failed."))
+            Err(format!("update webdav info failed. {:?}", e))
         }
     }
 }
