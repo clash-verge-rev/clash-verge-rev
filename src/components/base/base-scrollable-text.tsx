@@ -37,7 +37,9 @@ export const ScrollableText = ({
     return () => window.removeEventListener("resize", updateWidths);
   }, [children]);
 
-  const duration = textWidth / speed;
+  const duration = firstDisplay
+    ? textWidth / speed
+    : (textWidth + containerWidth) / speed;
 
   return (
     <div className="relative w-full overflow-hidden">
