@@ -98,7 +98,7 @@ impl Sysopt {
                 url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
             };
 
-            if !sys_enable && !pac_enable {
+            if !sys_enable {
                 sys.set_system_proxy()?;
                 auto.set_auto_proxy()?;
                 return Ok(());
@@ -122,7 +122,7 @@ impl Sysopt {
         }
         #[cfg(target_os = "windows")]
         {
-            if !enable {
+            if !sys_enable {
                 return self.reset_sysproxy().await;
             }
             use crate::core::handle::Handle;
@@ -139,7 +139,7 @@ impl Sysopt {
             }
 
             let shell = app_handle.shell();
-            let output = if pac {
+            let output = if pac_enable {
                 let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
