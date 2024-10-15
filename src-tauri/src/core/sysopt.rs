@@ -76,7 +76,7 @@ impl Sysopt {
             .unwrap_or(Config::clash().data().get_mixed_port());
         let pac_port = IVerge::get_singleton_port();
 
-        let (enable, pac) = {
+        let (sys_enable, pac_enable) = {
             let verge = Config::verge();
             let verge = verge.latest();
             (
@@ -88,25 +88,36 @@ impl Sysopt {
         #[cfg(not(target_os = "windows"))]
         {
             let mut sys = Sysproxy {
-                enable,
+                enable: false,
                 host: String::from("127.0.0.1"),
                 port,
                 bypass: get_bypass(),
             };
             let mut auto = Autoproxy {
-                enable,
+                enable: false,
                 url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
             };
-            if pac {
+
+            if !sys_enable && !pac_enable {
+                sys.set_system_proxy()?;
+                auto.set_auto_proxy()?;
+                return Ok(());
+            }
+
+            if pac_enable {
                 sys.enable = false;
                 auto.enable = true;
                 sys.set_system_proxy()?;
                 auto.set_auto_proxy()?;
-            } else {
+                return Ok(());
+            }
+
+            if sys_enable {
                 auto.enable = false;
                 sys.enable = true;
                 auto.set_auto_proxy()?;
                 sys.set_system_proxy()?;
+                return Ok(());
             }
         }
         #[cfg(target_os = "windows")]
