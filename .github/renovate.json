@@ -7,7 +7,7 @@
   "automerge": true,
   "packageRules": [
     {
-      "matchDepTypes": ["action"],
+      "matchManagers": ["github-actions"],
       "labels": ["github-actions"],
       "semanticCommitType": "ci",
       "semanticCommitScope": "action"
@@ -15,6 +15,11 @@
     {
       "matchPackageNames": ["react-devtools"],
       "allowedVersions": "<6.0.0"
+    },
+    {
+      "matchDatasources": ["github-runners"],
+      "matchPackageNames": ["ubuntu"],
+      "versioning": "22.04"
     }
   ]
 }
