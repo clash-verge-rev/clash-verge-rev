@@ -71,7 +71,7 @@ pub async fn reinstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn reinstall_service1() -> Result<()> {
+pub async fn reinstall_service() -> Result<()> {
     use users::get_effective_uid;
 
     let binary_path = dirs::service_path()?;
