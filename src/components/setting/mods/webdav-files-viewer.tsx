@@ -154,6 +154,7 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
 
     return (
       <BaseDialog
+        contentSx={{ minWidth: 500 }}
         open={open}
         title={
           <div className="flex items-center justify-between">

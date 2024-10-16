@@ -117,8 +117,14 @@ const SettingVerge = ({ onError }: Props) => {
         webdav_url: data.url,
         webdav_username: data.username,
         webdav_password: data.password,
-      }).catch(() => reset());
-      await updateWebDavInfo(data.url, data.username, data.password);
+      });
+      if (
+        webdav_url !== data.url ||
+        webdav_username !== data.username ||
+        webdav_password !== data.password
+      ) {
+        await updateWebDavInfo(data.url, data.username, data.password);
+      }
       await webDavRef.current?.getAllBackupFiles();
       webDavRef.current?.open();
     } catch (e) {

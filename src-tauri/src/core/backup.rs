@@ -129,6 +129,7 @@ impl WebDav {
         username: String,
         password: String,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        *self.client.lock() = None;
         let client = reqwest_dav::ClientBuilder::new()
             .set_host(url.clone())
             .set_auth(reqwest_dav::Auth::Basic(username.clone(), password.clone()))
@@ -145,8 +146,11 @@ impl WebDav {
 
     fn get_client(&self) -> Result<reqwest_dav::Client, Box<dyn std::error::Error>> {
         if self.client.lock().is_none() {
-            log::error!("Web dav client is not initialized");
-            return Err("Web dav client is not initialized".into());
+            let msg =
+                "Unable to create web dav client, please make sure the webdav config is correct"
+                    .to_string();
+            log::error!(target: "app","{}",msg);
+            return Err(msg.into());
         }
         Ok(self.client.lock().clone().unwrap())
     }
