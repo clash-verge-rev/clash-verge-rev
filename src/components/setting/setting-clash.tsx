@@ -39,7 +39,7 @@ interface Props {
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
 
-  const { clash, version, mutateClash, patchClash } = useClash();
+  const { clash, version, patchClash } = useClash();
   const { verge, mutateVerge, patchVerge } = useVerge();
   const { serviceStatus, mutateCheckService } = useService();
 
@@ -66,9 +66,6 @@ const SettingClash = ({ onError }: Props) => {
   const serviceRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
-  const onChangeData = (patch: Partial<IConfigData>) => {
-    mutateClash((old) => ({ ...(old! || {}), ...patch }), false);
-  };
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };

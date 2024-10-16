@@ -1,23 +1,26 @@
 import dayjs from "dayjs";
+import { useMemo } from "react";
 import { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
 import { getClashLogs } from "../services/cmds";
 import { useEnableLog } from "../services/states";
 import { createSockette } from "../utils/websocket";
-import { useClashInfo } from "./use-clash";
+import { useClash, useClashInfo } from "./use-clash";
 
 const MAX_LOG_NUM = 1000;
 
 export const useLogData = () => {
   const { clashInfo } = useClashInfo();
+  const { clash } = useClash();
+  const { "log-level": logLevel } = clash || {};
 
   const [enableLog] = useEnableLog();
   !enableLog || !clashInfo;
 
-  const subscriptClashLogKey =
-    enableLog && clashInfo
-      ? `getClashLog-${clashInfo.server}-${clashInfo.secret}-${enableLog}`
-      : null;
+  const subscriptClashLogKey = useMemo(() => {
+    if (!enableLog || !clashInfo || !clash) return null;
+    return `getClashLog-${clashInfo.server}-${clashInfo.secret}-${enableLog}-${logLevel}`;
+  }, [clashInfo, enableLog, logLevel]);
 
   const response = useSWRSubscription<ILogItem[], any, string | null>(
     subscriptClashLogKey,
@@ -31,7 +34,7 @@ export const useLogData = () => {
       );
 
       const s = createSockette(
-        `ws://${server}/logs?token=${encodeURIComponent(secret)}`,
+        `ws://${server}/logs?token=${encodeURIComponent(secret)}&level=${logLevel}`,
         {
           onmessage(event) {
             const data = JSON.parse(event.data) as ILogItem;
