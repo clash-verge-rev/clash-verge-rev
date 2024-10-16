@@ -54,10 +54,8 @@ export default defineConfig({
     legacy({
       renderLegacyChunks: false,
       modernTargets: ["edge>=109", "safari>=13"],
-      modernPolyfills: true,
+      modernPolyfills: ["es.object.has-own", "web.structured-clone"],
       additionalModernPolyfills: [
-        "core-js/modules/es.object.has-own.js",
-        "core-js/modules/web.structured-clone.js",
         path.resolve("./src/polyfills/matchMedia.js"),
         path.resolve("./src/polyfills/WeakRef.js"),
         path.resolve("./src/polyfills/RegExp.js"),

@@ -58,7 +58,6 @@ jobs:
       - name: Tauri build
         uses: tauri-apps/tauri-action@8c3e0753aa015d00d03631d6d4f64ad59489251d # v0
         env:
-          # NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -104,7 +103,6 @@ jobs:
       - name: Build for Linux
         uses: ./.github/build-for-linux
         env:
-          # NODE_OPTIONS: "--max_old_space_size=4096"
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
@@ -199,7 +197,6 @@ jobs:
   #       id: build
   #       uses: tauri-apps/tauri-action@41242bd545b6d1310ffc1685fb8bb87e97f0b748 # v0
   #       env:
-  #         # NODE_OPTIONS: "--max_old_space_size=4096"
   #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   #         TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
   #         TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
