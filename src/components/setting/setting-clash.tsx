@@ -6,6 +6,7 @@ import { useService } from "@/hooks/use-service";
 import { useVerge } from "@/hooks/use-verge";
 import { flushFakeipCache, updateGeoData } from "@/services/api";
 import { invoke_uwp_tool } from "@/services/cmds";
+import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
   InfoRounded,
@@ -64,6 +65,8 @@ const SettingClash = ({ onError }: Props) => {
   const coreRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
   const serviceRef = useRef<DialogRef>(null);
+
+  const [clashLog, setClashLog] = useClashLog();
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
@@ -217,7 +220,10 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           // onChange={(e) => onChangeData({ "log-level": e })}
-          onGuard={(e) => patchClash({ "log-level": e })}>
+          onGuard={(e) => {
+            setClashLog((pre: any) => ({ ...pre, logLevel: e }));
+            return patchClash({ "log-level": e });
+          }}>
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="debug">Debug</MenuItem>
             <MenuItem value="info">Info</MenuItem>

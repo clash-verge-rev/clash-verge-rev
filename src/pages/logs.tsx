@@ -6,7 +6,7 @@ import {
 } from "@/components/base";
 import LogItem from "@/components/log/log-item";
 import { useLogData } from "@/hooks/use-log-data";
-import { useEnableLog } from "@/services/states";
+import { useClashLog } from "@/services/states";
 import {
   PauseCircleOutlineRounded,
   PlayCircleOutlineRounded,
@@ -22,9 +22,9 @@ const LogPage = () => {
     response: { data: logData = [] },
     refreshGetClashLog,
   } = useLogData();
-  const [enableLog, setEnableLog] = useEnableLog();
-  const [logState, setLogState] = useState("all");
+  const [clashLog, setClashLog] = useClashLog();
   const [match, setMatch] = useState(() => (_: string) => true);
+  const logState = clashLog.logFilter;
 
   const filterLogs = useMemo(() => {
     return logData.filter(
@@ -45,8 +45,10 @@ const LogPage = () => {
             title={t("Pause")}
             size="small"
             color="inherit"
-            onClick={() => setEnableLog((e) => !e)}>
-            {enableLog ? (
+            onClick={() =>
+              setClashLog((pre: any) => ({ ...pre, enable: !pre.enable }))
+            }>
+            {clashLog.enable ? (
               <PauseCircleOutlineRounded />
             ) : (
               <PlayCircleOutlineRounded />
@@ -75,7 +77,9 @@ const LogPage = () => {
         }}>
         <BaseStyledSelect
           value={logState}
-          onChange={(e) => setLogState(e.target.value)}>
+          onChange={(e) =>
+            setClashLog((pre: any) => ({ ...pre, logFilter: e.target.value }))
+          }>
           <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="inf">INFO</MenuItem>
           <MenuItem value="warn">WARN</MenuItem>

@@ -19,7 +19,21 @@ export const useThemeSettings = () =>
     deserializer: JSON.parse,
   });
 
-export const useEnableLog = () => useLocalStorage("enable-log", true);
+interface IClashLog {
+  enable: boolean;
+  logLevel: "debug" | "info" | "warning" | "error" | "silent";
+  logFilter: "all" | "inf" | "warn" | "err";
+}
+const defaultClashLog: IClashLog = {
+  enable: true,
+  logLevel: "info",
+  logFilter: "all",
+};
+export const useClashLog = () =>
+  useLocalStorage<IClashLog>("clash-log", defaultClashLog, {
+    serializer: JSON.stringify,
+    deserializer: JSON.parse,
+  });
 
 interface IConnectionSetting {
   layout: "table" | "list";

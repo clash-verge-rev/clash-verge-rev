@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
 import { getClashLogs } from "../services/cmds";
-import { useEnableLog } from "../services/states";
+import { useClashLog } from "../services/states";
 import { createSockette } from "../utils/websocket";
 import { useClash, useClashInfo } from "./use-clash";
 
@@ -14,8 +14,8 @@ export const useLogData = () => {
   const { clash } = useClash();
   const { "log-level": logLevel } = clash || {};
 
-  const [enableLog] = useEnableLog();
-  !enableLog || !clashInfo;
+  const [clashLog] = useClashLog();
+  const enableLog = clashLog.enable;
 
   const subscriptClashLogKey = useMemo(() => {
     if (!enableLog || !clashInfo || !clash) return null;

@@ -43,6 +43,7 @@ const LogItem = (props: Props) => {
   let msg = value.payload;
 
   msg = msg.replaceAll("-->", " ⇢ ");
+  msg = msg.replaceAll("->", " ⇢ ");
   if (value.type.toLowerCase() === "info") {
     msg = msg.replaceAll(" using ", " ⇢ using ");
     msg = msg.replaceAll(" match ", " ⇢ match ");
