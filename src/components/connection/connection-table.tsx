@@ -1,4 +1,3 @@
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { deleteConnection } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
 import { truncateStr } from "@/utils/truncate-str";
@@ -22,9 +21,6 @@ interface Props {
 export const ConnectionTable = (props: Props) => {
   const { t } = useTranslation();
   const { connections, onShowDetail } = props;
-
-  const { theme } = useCustomTheme();
-  const isDark = theme.palette.mode === "dark";
 
   const Toolbar = () => (
     <div style={{ margin: "5px" }}>
@@ -151,13 +147,20 @@ export const ConnectionTable = (props: Props) => {
       slots={{ toolbar: Toolbar }}
       onRowClick={(e) => onShowDetail(e.row.connectionData)}
       density="compact"
-      sx={{
-        border: "none",
-        "div:focus": { outline: "none !important" },
-        "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
-          backgroundColor: isDark ? "#282a36" : "#ffffff",
-        },
-      }}
+      sx={[
+        (theme) => ({
+          border: "none",
+          "div:focus": { outline: "none !important" },
+          "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
+            backgroundColor: "#ffffff",
+          },
+          ...theme.applyStyles("dark", {
+            "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
+              backgroundColor: "#282a36",
+            },
+          }),
+        }),
+      ]}
       columnVisibilityModel={columnVisible}
       onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
     />

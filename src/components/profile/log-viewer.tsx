@@ -3,7 +3,6 @@ import { LogMessage } from "@/components/profile/profile-more";
 import { useThemeMode } from "@/services/states";
 import { Drawer } from "@mui/material";
 import { Console } from "console-feed";
-import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -15,7 +14,7 @@ export const LogViewer = (props: Props) => {
   const { open, logInfo, onClose } = props;
   const themeMode = useThemeMode();
 
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
   const isDarkMode = themeMode === "dark";
 
   return (

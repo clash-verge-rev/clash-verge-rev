@@ -1,6 +1,5 @@
 import { useVerge } from "@/hooks/use-verge";
 import { downloadIconCache } from "@/services/cmds";
-import { useThemeMode } from "@/services/states";
 import {
   ExpandLessRounded,
   ExpandMoreRounded,
@@ -103,9 +102,6 @@ export const ProxyRender = (props: RenderProps) => {
   const { type, group, headState, proxy } = item;
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;
-  const mode = useThemeMode();
-  const isDark = mode === "dark" ? true : false;
-  const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
   const [iconCachePath, setIconCachePath] = useState("");
 
   useEffect(() => {
@@ -129,13 +125,18 @@ export const ProxyRender = (props: RenderProps) => {
     return (
       <ListItemButton
         dense
-        style={{
-          background: itembackgroundcolor,
-          height: "70px",
-          margin: "8px 8px 0",
-          borderRadius: "8px",
-          transition: "background-color 0s",
-        }}
+        sx={[
+          (theme) => ({
+            background: "#ffffff",
+            ...theme.applyStyles("dark", {
+              background: "#282A36",
+            }),
+            height: "70px",
+            margin: "8px 8px 0",
+            borderRadius: "8px",
+            transition: "background-color 0s",
+          }),
+        ]}
         onClick={() => onHeadState(group.name, { open: !headState?.open })}>
         {enable_group_icon &&
           group.icon &&

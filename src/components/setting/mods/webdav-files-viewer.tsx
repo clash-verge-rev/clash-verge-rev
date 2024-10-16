@@ -62,7 +62,6 @@ export const WebDavViewer = forwardRef<DialogRef>((props, ref) => {
   const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);
   const [filter, setFilter] = useState<"all" | "profiles">("all");
   const filterBackupFiles = backupFiles.filter((item) => item.type === filter);
-  console.log("filter", filter, filterBackupFiles);
 
   useImperativeHandle(ref, () => ({
     open: () => {
