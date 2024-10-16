@@ -41,7 +41,6 @@ export const ConnectionTable = (props: Props) => {
     {
       field: "actions",
       type: "actions",
-      // headerName: `${t("Actions")}`,
       width: 50,
       cellClassName: "actions",
       getActions: ({ id }) => {
@@ -56,7 +55,46 @@ export const ConnectionTable = (props: Props) => {
         ];
       },
     },
+    { field: "type", headerName: t("Type"), flex: 160, minWidth: 100 },
     { field: "host", headerName: t("Host"), flex: 220, minWidth: 220 },
+    {
+      field: "ulSpeed",
+      headerName: t("UL Speed"),
+      width: 80,
+      align: "center",
+      headerAlign: "center",
+      valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
+    },
+    {
+      field: "dlSpeed",
+      headerName: t("DL Speed"),
+      width: 80,
+      align: "center",
+      headerAlign: "center",
+      valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
+    },
+    { field: "chains", headerName: t("Chains"), flex: 260, minWidth: 260 },
+    { field: "rule", headerName: t("Rule"), flex: 300, minWidth: 230 },
+    { field: "process", headerName: t("Process"), flex: 240, minWidth: 120 },
+    { field: "source", headerName: t("Source"), flex: 200, minWidth: 130 },
+    {
+      field: "destinationIP",
+      headerName: t("Destination IP"),
+      flex: 200,
+      minWidth: 130,
+    },
+    {
+      field: "time",
+      headerName: t("Time"),
+      flex: 120,
+      minWidth: 100,
+      align: "right",
+      headerAlign: "right",
+      sortComparator: (v1, v2) => {
+        return new Date(v2).getTime() - new Date(v1).getTime();
+      },
+      valueFormatter: (value) => dayjs(value).fromNow(),
+    },
     {
       field: "upload",
       headerName: t("Uploaded"),
@@ -73,50 +111,6 @@ export const ConnectionTable = (props: Props) => {
       headerAlign: "center",
       valueFormatter: (value) => parseTraffic(value).join(" "),
     },
-    {
-      field: "ulSpeed",
-      headerName: t("UL Speed"),
-      width: 120,
-      align: "center",
-      headerAlign: "center",
-      valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
-    },
-    {
-      field: "dlSpeed",
-      headerName: t("DL Speed"),
-      width: 120,
-      align: "center",
-      headerAlign: "center",
-      valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
-    },
-    { field: "chains", headerName: t("Chains"), flex: 360, minWidth: 360 },
-    { field: "rule", headerName: t("Rule"), flex: 300, minWidth: 250 },
-    {
-      field: "process",
-      headerName: t("Process"),
-      flex: 240,
-      minWidth: 120,
-    },
-    {
-      field: "time",
-      headerName: t("Time"),
-      flex: 120,
-      minWidth: 100,
-      align: "right",
-      headerAlign: "right",
-      sortComparator: (v1, v2) => {
-        return new Date(v2).getTime() - new Date(v1).getTime();
-      },
-      valueFormatter: (value) => dayjs(value).fromNow(),
-    },
-    { field: "source", headerName: t("Source"), flex: 200, minWidth: 130 },
-    {
-      field: "destinationIP",
-      headerName: t("Destination IP"),
-      flex: 200,
-      minWidth: 130,
-    },
-    { field: "type", headerName: t("Type"), flex: 160, minWidth: 100 },
   ];
 
   const connRows = useMemo(() => {
@@ -139,7 +133,7 @@ export const ConnectionTable = (props: Props) => {
         time: each.start,
         source: `${metadata.sourceIP}:${metadata.sourcePort}`,
         destinationIP: metadata.destinationIP,
-        type: `${metadata.type}(${metadata.network})`,
+        type: `${metadata.type} (${metadata.network})`,
 
         connectionData: each,
       };
