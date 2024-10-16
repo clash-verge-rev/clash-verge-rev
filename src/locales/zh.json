@@ -195,7 +195,7 @@
   "System Setting": "系统设置",
   "Tun Mode": "Tun(虚拟网卡)模式",
   "Reset to Default": "重置为默认值",
-  "Tun Mode Info": "Tun(虚拟网卡)模式接管系统所有流量，启用时不用打开系统代理",
+  "Tun Mode Info": "Tun(虚拟网卡)模式接管系统所有流量，启用时无须打开系统代理",
   "Stack": "Tun 模式堆栈",
   "System and Mixed Can Only be Used in Service Mode": "System 和 Mixed 只能在服务模式下使用",
   "Device": "Tun 网卡名称",
