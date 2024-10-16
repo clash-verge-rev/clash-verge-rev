@@ -16,6 +16,7 @@ import {
 } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import {
+  Check,
   CloudUpload,
   Refresh,
   Visibility,
@@ -99,37 +100,47 @@ const SettingVerge = ({ onError }: Props) => {
 
   const [expand, setExpand] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { register, handleSubmit, getValues, reset } = useForm<IWebDavConfig>({
+  const { register, handleSubmit, watch, reset } = useForm<IWebDavConfig>({
     defaultValues: {
       url: webdav_url,
       username: webdav_username,
       password: webdav_password,
     },
   });
+
+  // web dav setting
+  const [saving, setSaving] = useState(false);
   const [onlyBackupProfiles, setOnlyBackupProfiles] = useState(false);
   const [loadingBackupFiles, setLoadingBackupFiles] = useState(false);
   const [startingBackup, setStartingBackup] = useState(false);
 
+  const url = watch("url");
+  const username = watch("username");
+  const password = watch("password");
+  const webdavChanged =
+    webdav_url !== url ||
+    webdav_username !== username ||
+    webdav_password !== password;
+
   const onSubmit = async (data: IWebDavConfig) => {
     try {
-      setLoadingBackupFiles(true);
-      await patchVerge({
-        webdav_url: data.url,
-        webdav_username: data.username,
-        webdav_password: data.password,
-      });
-      if (
-        webdav_url !== data.url ||
-        webdav_username !== data.username ||
-        webdav_password !== data.password
-      ) {
+      if (webdavChanged) {
+        setSaving(true);
+        await patchVerge({
+          webdav_url: data.url,
+          webdav_username: data.username,
+          webdav_password: data.password,
+        });
         await updateWebDavInfo(data.url, data.username, data.password);
+      } else {
+        setLoadingBackupFiles(true);
+        await webDavRef.current?.getAllBackupFiles();
+        webDavRef.current?.open();
       }
-      await webDavRef.current?.getAllBackupFiles();
-      webDavRef.current?.open();
     } catch (e) {
       Notice.error(`Failed to connect to WebDAV server, ${e}`);
     } finally {
+      setSaving(false);
       setLoadingBackupFiles(false);
     }
   };
@@ -297,11 +308,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem
         onClick={() => {
-          if (
-            (expand && webdav_url !== getValues("url")) ||
-            webdav_username !== getValues("username") ||
-            webdav_password !== getValues("password")
-          ) {
+          if (expand && webdavChanged) {
             reset();
           }
           setExpand(!expand);
@@ -381,26 +388,41 @@ const SettingVerge = ({ onError }: Props) => {
             />
           </div>
           <div className="flex w-full items-center justify-around space-x-4 pb-4 pt-2">
-            <LoadingButton
-              loading={loadingBackupFiles}
-              startIcon={<Refresh />}
-              loadingPosition="start"
-              type="submit"
-              size="small"
-              fullWidth
-              variant="contained">
-              {t("Recovery")}
-            </LoadingButton>
-            <LoadingButton
-              loading={startingBackup}
-              startIcon={<CloudUpload />}
-              loadingPosition="start"
-              size="small"
-              fullWidth
-              variant="contained"
-              onClick={() => handleBackup()}>
-              {t("Backup")}
-            </LoadingButton>
+            {webdavChanged ? (
+              <LoadingButton
+                loading={saving}
+                startIcon={<Check />}
+                loadingPosition="start"
+                type="submit"
+                size="small"
+                fullWidth
+                variant="contained">
+                {t("Save")}
+              </LoadingButton>
+            ) : (
+              <>
+                <LoadingButton
+                  loading={loadingBackupFiles}
+                  startIcon={<Refresh />}
+                  loadingPosition="start"
+                  type="submit"
+                  size="small"
+                  fullWidth
+                  variant="contained">
+                  {t("Recovery")}
+                </LoadingButton>
+                <LoadingButton
+                  loading={startingBackup}
+                  startIcon={<CloudUpload />}
+                  loadingPosition="start"
+                  size="small"
+                  fullWidth
+                  variant="contained"
+                  onClick={() => handleBackup()}>
+                  {t("Backup")}
+                </LoadingButton>
+              </>
+            )}
           </div>
         </form>
       </Collapse>

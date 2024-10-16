@@ -134,12 +134,13 @@ impl WebDav {
             .set_host(url.clone())
             .set_auth(reqwest_dav::Auth::Basic(username.clone(), password.clone()))
             .build()?;
-        client.mkcol(BACKUP_DIR).await?;
 
         *self.host.lock() = url;
         *self.username.lock() = username;
         *self.password.lock() = password;
         *self.client.lock() = Some(client.clone());
+
+        client.mkcol(BACKUP_DIR).await?;
 
         Ok(())
     }
