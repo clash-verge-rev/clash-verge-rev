@@ -32,6 +32,10 @@ impl VergeLog {
         })
     }
 
+    pub fn get_log_file(&self) -> Option<String> {
+        self.log_file.lock().clone()
+    }
+
     /// create log4rs config
     /// 
     /// # Args:

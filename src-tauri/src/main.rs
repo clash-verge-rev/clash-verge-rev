@@ -14,7 +14,7 @@ use crate::{
     config::Config,
     utils::{init, resolve, server},
 };
-use core::CoreManager;
+use core::{verge_log::VergeLog, CoreManager};
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
     time::Duration,
@@ -54,12 +54,18 @@ fn main() -> std::io::Result<()> {
         };
 
         log::error!("panicked at {}:\n{}\n{}", location, payload, backtrace);
+        let limit_backtrace = backtrace.lines().take(10).collect::<Vec<_>>().join("\n");
+        let log_file = VergeLog::global().get_log_file().unwrap_or("".to_string());
+        let backtrace_in_dialog = format!(
+            "{}\n......\n\n More panic info in log file\n {}",
+            limit_backtrace, log_file
+        );
         let status = MessageDialogBuilder::new(
             "Panic Info",
-            format!("{}\n{}\n{}", location, payload, backtrace),
+            format!("{}\n{}\n{}", location, payload, backtrace_in_dialog),
         )
         .kind(MessageDialogKind::Error)
-        .buttons(MessageDialogButtons::OkWithLabel("Confirm".to_string()))
+        .buttons(MessageDialogButtons::OkWithLabel("Exit App".to_string()))
         .show();
         if status {
             let task = std::thread::spawn(|| {
