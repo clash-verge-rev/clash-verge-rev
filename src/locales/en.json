@@ -195,7 +195,7 @@
   "System Setting": "System Setting",
   "Tun Mode": "Tun (Virtual NIC) Mode",
   "Reset to Default": "Reset to Default",
-  "Tun Mode Info": "Tun (Virtual NIC) mode: Captures all system traffic, and when enabled, there is no need to activate the system proxy.",
+  "Tun Mode Info": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
   "Stack": "Tun Stack",
   "System and Mixed Can Only be Used in Service Mode": "System and Mixed Can Only be Used in Service Mode",
   "Device": "Device Name",
