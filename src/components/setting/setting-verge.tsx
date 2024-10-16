@@ -1,5 +1,8 @@
 import { DialogRef, Notice } from "@/components/base";
-import { WebDavViewer } from "@/components/setting/mods/webdav-files-viewer";
+import {
+  WebDavFilesViewer,
+  WebDavFilesViewerRef,
+} from "@/components/setting/mods/webdav-files-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { routers } from "@/pages/_routers";
 import {
@@ -75,7 +78,7 @@ const SettingVerge = ({ onError }: Props) => {
   const themeRef = useRef<DialogRef>(null);
   const layoutRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
-  const webDavRef = useRef<DialogRef>(null);
+  const webDavRef = useRef<WebDavFilesViewerRef>(null);
 
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -116,6 +119,7 @@ const SettingVerge = ({ onError }: Props) => {
         webdav_password: data.password,
       }).catch(() => reset());
       await updateWebDavInfo(data.url, data.username, data.password);
+      await webDavRef.current?.getAllBackupFiles();
       webDavRef.current?.open();
     } catch (e) {
       Notice.error(`Failed to connect to WebDAV server, ${e}`);
@@ -144,7 +148,7 @@ const SettingVerge = ({ onError }: Props) => {
       <MiscViewer ref={miscRef} />
       <LayoutViewer ref={layoutRef} />
       <UpdateViewer ref={updateRef} />
-      <WebDavViewer ref={webDavRef} />
+      <WebDavFilesViewer ref={webDavRef} />
 
       <SettingItem label={t("Language")}>
         <GuardState
