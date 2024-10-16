@@ -12,8 +12,8 @@ import {
 } from "@mui/icons-material";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { invoke } from "@tauri-apps/api";
+import { useLockFn } from "ahooks";
 import { t } from "i18next";
-import { debounce } from "lodash-es";
 import { useRef } from "react";
 import useSWRSubscription from "swr/subscription";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
@@ -123,7 +123,7 @@ export const LayoutTraffic = () => {
   const [inuse, inuseUnit] = parseTraffic(memory.inuse);
 
   const iconStyle: any = {
-    sx: { mr: "8px", fontSize: 16 },
+    sx: { fontSize: 16 },
   };
   const valStyle: any = {
     component: "span",
@@ -139,16 +139,13 @@ export const LayoutTraffic = () => {
     sx: { flex: "0 1 27px", userSelect: "none" },
   };
 
-  const restartClashCore = debounce(async () => {
+  const restartClashCore = useLockFn(async () => {
     await invoke("restart_clash");
     Notice.success(t("Clash Core Restarted"));
-  }, 500);
+  });
 
   return (
-    <Box
-      width={"100%"}
-      position="relative"
-      onClick={trafficRef.current?.toggleStyle}>
+    <Box width={"100%"} onClick={trafficRef.current?.toggleStyle}>
       {trafficGraph && pageVisible && (
         <div style={{ width: "100%", height: 60, marginBottom: 6 }}>
           <TrafficGraph ref={trafficRef} />

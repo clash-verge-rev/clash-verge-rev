@@ -14,16 +14,14 @@ export const LogoTitle = ({ open }: { open: boolean }) => {
 
   return (
     <div
-      className="relative box-border flex w-full flex-shrink-0 flex-grow-0 py-2"
+      className="relative box-border flex w-full flex-shrink-0 flex-grow-0 pt-2"
       data-tauri-drag-region="true">
       <div className="flex items-center justify-around px-5">
         <div>
           <LogoSvg
             className={cn(
-              "mr-1 h-full w-12 fill-[--primary-main] transition-all duration-200",
-              {
-                "w-16": !open,
-              },
+              "mr-1 h-full w-12 fill-primary-main transition-all duration-200",
+              { "w-16": !open },
             )}
           />
         </div>
