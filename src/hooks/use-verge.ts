@@ -6,6 +6,7 @@ export const useVerge = () => {
   const { data: verge, mutate: mutateVerge } = useSWR(
     "getVergeConfig",
     getVergeConfig,
+    { suspense: true },
   );
   const [themeSettings, setThemeSettings] = useThemeSettings();
 
