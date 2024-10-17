@@ -10,6 +10,7 @@ import {
   alpha,
   createTheme,
   CssVarsThemeOptions,
+  Shadows,
   Theme,
   ThemeOptions,
 } from "@mui/material";
@@ -128,6 +129,13 @@ export const useCustomTheme = () => {
           defaultProps: {
             container: rootElement,
           },
+          styleOverrides: {
+            paper: {
+              boxShadow: isDark
+                ? "0 0 10px rgba(0, 0, 0, 0.6)"
+                : "0 0 10px rgba(0, 0, 0, 0.2)",
+            },
+          },
         },
         MuiPopper: {
           defaultProps: {
@@ -165,7 +173,7 @@ export const useCustomTheme = () => {
           paper: dt.background_color,
         },
       },
-      // shadows: Array(25).fill("none") as Shadows,
+      shadows: Array(25).fill("none") as Shadows,
       typography: {
         fontFamily: setting.font_family
           ? `${setting.font_family}, ${dt.font_family}`
