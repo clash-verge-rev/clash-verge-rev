@@ -87,7 +87,7 @@
     "prettier-plugin-tailwindcss": "0.6.8",
     "pretty-quick": "4.0.0",
     "react-devtools": "5.3.2",
-    "sass": "1.80.1",
+    "sass": "1.80.2",
     "tailwind-merge": "2.5.4",
     "tailwindcss": "3.4.14",
     "terser": "5.36.0",
