@@ -136,8 +136,6 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
           }
         }
         Notice.success("Apply successfully, will restart app soon");
-        // await sleep(2000);
-        // TODO: activate selected proxy group node after restart App
 
         // emit reload all event
         // emit("verge://reload-all");
@@ -154,8 +152,8 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
 
     return (
       <BaseDialog
-        contentSx={{ minWidth: 500 }}
         open={open}
+        fullWidth
         title={
           <div className="flex items-center justify-between">
             {t("Backup Files")}
@@ -177,12 +175,12 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
                   <FormControlLabel
                     value="all"
                     control={<Radio />}
-                    label="Config + Profiles"
+                    label={t("BK_All")}
                   />
                   <FormControlLabel
                     value="profiles"
                     control={<Radio />}
-                    label="Profiles"
+                    label={t("BK_Profiles")}
                   />
                 </RadioGroup>
               </FormControl>
@@ -218,10 +216,13 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
                         color="primary"
                         label={
                           file.type === "profiles"
-                            ? "Profiles"
-                            : "Config + Profiles"
+                            ? t("BK_Profiles")
+                            : t("BK_All")
                         }
                       />
+                      <span className="ml-4 text-xs text-gray-500 dark:text-gray-400">
+                        {file.backupTime.fromNow()}
+                      </span>
                     </div>
                   </div>
                   <LoadingButton

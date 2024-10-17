@@ -304,5 +304,7 @@
   "WebDav Username": "WebDav 用户名",
   "WebDav Password": "WebDav 密码",
   "Backup Files": "备份文件列表",
-  "Apply": "应用"
+  "Apply": "应用",
+  "BK_All": "配置 + 订阅",
+  "BK_Profiles": "订阅"
 }

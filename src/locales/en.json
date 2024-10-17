@@ -292,5 +292,19 @@
   "Unified Delay": "Unified Delay",
   "Unified Delay Info": "When unified delay is turned on, two delay tests will be performed to eliminate the delay differences between different types of nodes caused by connection handshakes, etc",
   "Flush Fake-IP Cache": "Flush Fake-IP Cache",
-  "Fake-IP Cache Flushed": "Fake-IP Cache Flushed"
+  "Fake-IP Cache Flushed": "Fake-IP Cache Flushed",
+  "Duplicate Bypass": "Duplicate Bypass",
+  "Reset Default Bypass": "Reset Default Bypass",
+
+  "WebDav Backup": "WebDav Backup",
+  "Recovery": "Recovery",
+  "Backup": "Backup",
+  "Only Backup Profiles": "Only Backup Profiles",
+  "WebDav URL": "WebDav URL",
+  "WebDav Username": "WebDav Username",
+  "WebDav Password": "WebDav Password",
+  "Backup Files": "Backup Files",
+  "Apply": "Apply",
+  "BK_All": "Config + Profiles",
+  "BK_Profiles": "Profiles"
 }

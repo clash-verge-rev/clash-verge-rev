@@ -13,6 +13,7 @@ import { ReactNode } from "react";
 interface Props {
   title: ReactNode;
   open: boolean;
+  fullWidth?: boolean;
   okBtn?: ReactNode;
   cancelBtn?: ReactNode;
   disableOk?: boolean;
@@ -34,6 +35,7 @@ export interface DialogRef {
 export const BaseDialog: React.FC<Props> = (props) => {
   const {
     open,
+    fullWidth = false,
     title,
     children,
     okBtn,
@@ -46,7 +48,7 @@ export const BaseDialog: React.FC<Props> = (props) => {
   } = props;
 
   return (
-    <Dialog open={open} onClose={props.onClose}>
+    <Dialog open={open} onClose={props.onClose} fullWidth={fullWidth}>
       <DialogTitle>{title}</DialogTitle>
 
       <DialogContent sx={contentSx}>{children}</DialogContent>

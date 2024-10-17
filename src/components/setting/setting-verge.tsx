@@ -138,7 +138,7 @@ const SettingVerge = ({ onError }: Props) => {
         webDavRef.current?.open();
       }
     } catch (e) {
-      Notice.error(`Failed to connect to WebDAV server, ${e}`);
+      Notice.error(`Failed to connect to WebDAV server.\n ${e}`, 3000);
     } finally {
       setSaving(false);
       setLoadingBackupFiles(false);
@@ -151,7 +151,7 @@ const SettingVerge = ({ onError }: Props) => {
       await createAndUploadBackup(false, onlyBackupProfiles);
       Notice.success(t("Backup successfully"));
     } catch (e) {
-      Notice.error(`Failed to backup, ${e}`);
+      Notice.error(`Failed to backup.\n ${e}`, 3000);
     } finally {
       setStartingBackup(false);
     }
@@ -320,7 +320,7 @@ const SettingVerge = ({ onError }: Props) => {
       <Collapse in={expand} timeout={"auto"} unmountOnExit>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="w-full rounded-md bg-primary-alpha px-2">
+          className="w-full bg-primary-alpha px-2">
           <TextField
             label={t("WebDav URL")}
             {...register("url")}

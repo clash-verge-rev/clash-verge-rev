@@ -8,7 +8,7 @@ interface ScrollingTextProps {
 
 export const ScrollableText = ({
   children,
-  speed = 50,
+  speed = 30,
 }: ScrollingTextProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);

@@ -78,22 +78,19 @@ export const RuleItem = (props: Props) => {
       ]}>
       <ListItemButton
         sx={[
-          ({ palette: { mode, primary } }) => {
-            const bgcolor =
-              mode === "light"
-                ? alpha(primary.main, 0.25)
-                : alpha(primary.main, 0.35);
-            return {
-              ...(expanded && {
-                bgcolor,
-                "&:hover": { bgcolor },
-                borderBottom: "1px solid var(--divider-color)",
-                "& .MuiTypography-root, & .MuiIconButton-root ": {
-                  color: primary.main,
+          (theme) => ({
+            ...(expanded && {
+              bgcolor: alpha(theme.palette.primary.main, 0.25),
+              "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.25) },
+              ...theme.applyStyles("dark", {
+                bgcolor: alpha(theme.palette.primary.main, 0.35),
+                "&:hover": {
+                  bgcolor: alpha(theme.palette.primary.main, 0.35),
                 },
               }),
-            };
-          },
+              borderBottom: "1px solid var(--divider-color)",
+            }),
+          }),
         ]}
         onClick={() => {
           if (value.type === "RuleSet") {
@@ -143,11 +140,9 @@ export const RuleItem = (props: Props) => {
           timeout={0}
           unmountOnExit
           sx={[
-            ({ palette: { primary } }) => {
-              return {
-                bgcolor: alpha(primary.main, 0.15),
-              };
-            },
+            ({ palette: { primary } }) => ({
+              bgcolor: alpha(primary.main, 0.15),
+            }),
           ]}>
           <Box
             sx={{
