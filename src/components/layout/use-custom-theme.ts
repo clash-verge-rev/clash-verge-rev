@@ -6,7 +6,13 @@ import {
   useThemeSettings,
 } from "@/services/states";
 import getSystem from "@/utils/get-system";
-import { alpha, createTheme, Theme } from "@mui/material";
+import {
+  alpha,
+  createTheme,
+  CssVarsThemeOptions,
+  Theme,
+  ThemeOptions,
+} from "@mui/material";
 import { enUS, zhCN } from "@mui/x-data-grid/locales";
 import { appWindow } from "@tauri-apps/api/window";
 import { MouseEvent, useCallback, useEffect, useMemo } from "react";
@@ -15,6 +21,23 @@ import { flushSync } from "react-dom";
 /**
  * custom theme
  */
+type CustomThemeOptions = Omit<ThemeOptions, "components"> &
+  Pick<
+    CssVarsThemeOptions,
+    "defaultColorScheme" | "colorSchemes" | "components"
+  > & {
+    cssVariables?:
+      | boolean
+      | Pick<
+          CssVarsThemeOptions,
+          | "colorSchemeSelector"
+          | "rootSelector"
+          | "disableCssColorScheme"
+          | "cssVarPrefix"
+          | "shouldSkipGeneratingVar"
+        >;
+  };
+
 export const useCustomTheme = () => {
   const { verge, patchVerge } = useVerge();
   const { theme_mode, light_theme_setting, dark_theme_setting, language } =
@@ -82,7 +105,7 @@ export const useCustomTheme = () => {
     const muiDataGridLocale = language === "zh" ? zhCN : enUS;
     const rootElement = document.getElementById("root");
 
-    const defaultThemeObj = {
+    const defaultThemeObj: CustomThemeOptions = {
       cssVariables: true,
       breakpoints: {
         values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
@@ -124,7 +147,7 @@ export const useCustomTheme = () => {
       },
     };
 
-    const customThemeObj = {
+    const customThemeObj: CustomThemeOptions = {
       ...defaultThemeObj,
       palette: {
         ...defaultThemeObj.palette,

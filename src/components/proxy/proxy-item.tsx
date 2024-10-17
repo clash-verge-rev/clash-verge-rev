@@ -82,35 +82,32 @@ export const ProxyItem = (props: Props) => {
         dense
         selected={selected}
         onClick={() => onClick?.(proxy.name)}
-        sx={[
-          { borderRadius: 1 },
-          (theme) => {
-            const showDelay = delay > 0;
-
-            return {
-              "&:hover .the-check": { display: !showDelay ? "block" : "none" },
-              "&:hover .the-delay": { display: showDelay ? "block" : "none" },
-              "&:hover .the-icon": { display: "none" },
-              "&.Mui-selected": {
-                width: `calc(100% + 3px)`,
-                marginLeft: `-3px`,
-                bgcolor: alpha(theme.palette.primary.main, 0.15),
-                borderLeft: `3px solid ${theme.palette.primary.main}`,
-                ...theme.applyStyles("dark", {
-                  bgcolor: alpha(theme.palette.primary.main, 0.35),
-                  borderLeft: `3px solid ${theme.palette.primary.light}`,
-                }),
-              },
-              backgroundColor: "#ffffff",
+        sx={(theme) => {
+          const showDelay = delay > 0;
+          return {
+            borderRadius: 1,
+            "&:hover .the-check": { display: !showDelay ? "block" : "none" },
+            "&:hover .the-delay": { display: showDelay ? "block" : "none" },
+            "&:hover .the-icon": { display: "none" },
+            "&.Mui-selected": {
+              width: `calc(100% + 3px)`,
+              marginLeft: `-3px`,
+              bgcolor: alpha(theme.palette.primary.main, 0.15),
+              borderLeft: `3px solid ${theme.palette.primary.main}`,
               ...theme.applyStyles("dark", {
-                backgroundColor: "#24252f",
+                bgcolor: alpha(theme.palette.primary.main, 0.35),
+                borderLeft: `3px solid ${theme.palette.primary.light}`,
               }),
-              transition: "background-color 0s",
-              marginBottom: "8px",
-              height: "40px",
-            };
-          },
-        ]}>
+            },
+            backgroundColor: "#ffffff",
+            ...theme.applyStyles("dark", {
+              backgroundColor: "#24252f",
+            }),
+            transition: "background-color 0s",
+            marginBottom: "8px",
+            height: "40px",
+          };
+        }}>
         <ListItemText
           title={proxy.name}
           secondary={

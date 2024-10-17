@@ -77,21 +77,19 @@ export const RuleItem = (props: Props) => {
         },
       ]}>
       <ListItemButton
-        sx={[
-          (theme) => ({
-            ...(expanded && {
-              bgcolor: alpha(theme.palette.primary.main, 0.25),
-              "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.25) },
-              ...theme.applyStyles("dark", {
+        sx={(theme) => ({
+          ...(expanded && {
+            bgcolor: alpha(theme.palette.primary.main, 0.25),
+            "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.25) },
+            ...theme.applyStyles("dark", {
+              bgcolor: alpha(theme.palette.primary.main, 0.35),
+              "&:hover": {
                 bgcolor: alpha(theme.palette.primary.main, 0.35),
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.primary.main, 0.35),
-                },
-              }),
-              borderBottom: "1px solid var(--divider-color)",
+              },
             }),
+            borderBottom: "1px solid var(--divider-color)",
           }),
-        ]}
+        })}
         onClick={() => {
           if (value.type === "RuleSet") {
             onExpand(expanded);

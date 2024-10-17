@@ -147,20 +147,18 @@ export const ConnectionTable = (props: Props) => {
       slots={{ toolbar: Toolbar }}
       onRowClick={(e) => onShowDetail(e.row.connectionData)}
       density="compact"
-      sx={[
-        (theme) => ({
-          border: "none",
-          "div:focus": { outline: "none !important" },
+      sx={(theme) => ({
+        border: "none",
+        "div:focus": { outline: "none !important" },
+        "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
+          backgroundColor: "#ffffff",
+        },
+        ...theme.applyStyles("dark", {
           "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
-            backgroundColor: "#ffffff",
+            backgroundColor: "#282a36",
           },
-          ...theme.applyStyles("dark", {
-            "& .MuiDataGrid-container--top .MuiDataGrid-columnHeader": {
-              backgroundColor: "#282a36",
-            },
-          }),
         }),
-      ]}
+      })}
       columnVisibilityModel={columnVisible}
       onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
     />

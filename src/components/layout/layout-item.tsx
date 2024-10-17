@@ -32,42 +32,38 @@ export const LayoutItem = (props: Props) => {
       <ListItem sx={{ py: 0.5, padding: "4px 0px", height: "60px" }}>
         <ListItemButton
           selected={!!match}
-          sx={[
-            {
+          sx={(theme) => {
+            const color = theme.palette.primary.main;
+            return {
               borderRadius: 2,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 10px",
               padding: "8px 6px",
-            },
-            (theme) => {
-              const color = theme.palette.primary.main;
-              return {
-                "& .MuiListItemText-primary": {
-                  color: theme.palette.text.primary,
-                  fontWeight: "700",
-                },
-                "& .MuiListItemIcon-root": {
-                  color: theme.palette.text.primary,
-                },
-                // 涟漪效果颜色
-                "& .MuiTouchRipple-root .MuiTouchRipple-rippleVisible": {
-                  color,
-                },
-                "&.Mui-selected": { bgcolor: alpha(color, 0.25) },
-                ...theme.applyStyles("dark", {
-                  "&.Mui-selected": { bgcolor: alpha(color, 0.35) },
-                }),
-                "&.Mui-selected:hover": { bgcolor: alpha(color, 0.25) },
-                ...theme.applyStyles("dark", {
-                  "&.Mui-selected:hover": { bgcolor: alpha(color, 0.35) },
-                }),
-                "&.Mui-selected .MuiListItemText-primary": { color },
-                "&.Mui-selected .MuiListItemIcon-root": { color },
-              };
-            },
-          ]}
+              "& .MuiListItemText-primary": {
+                color: theme.palette.text.primary,
+                fontWeight: "700",
+              },
+              "& .MuiListItemIcon-root": {
+                color: theme.palette.text.primary,
+              },
+              // 涟漪效果颜色
+              "& .MuiTouchRipple-root .MuiTouchRipple-rippleVisible": {
+                color,
+              },
+              "&.Mui-selected": { bgcolor: alpha(color, 0.25) },
+              ...theme.applyStyles("dark", {
+                "&.Mui-selected": { bgcolor: alpha(color, 0.35) },
+              }),
+              "&.Mui-selected:hover": { bgcolor: alpha(color, 0.25) },
+              ...theme.applyStyles("dark", {
+                "&.Mui-selected:hover": { bgcolor: alpha(color, 0.35) },
+              }),
+              "&.Mui-selected .MuiListItemText-primary": { color },
+              "&.Mui-selected .MuiListItemIcon-root": { color },
+            };
+          }}
           onClick={() => navigate(to)}>
           <div
             className={cn("flex items-center text-center", { "w-full": open })}>
