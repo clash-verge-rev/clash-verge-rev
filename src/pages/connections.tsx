@@ -170,7 +170,9 @@ const ConnectionsPage = () => {
           </IconButton>
 
           <Button size="small" variant="contained" onClick={onCloseAll}>
-            <span style={{ whiteSpace: "nowrap" }}>{t("Close All")}</span>
+            <span style={{ whiteSpace: "nowrap" }}>
+              {t("Close All")} {filterConn.length}
+            </span>
           </Button>
         </Box>
       }>
