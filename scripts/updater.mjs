@@ -6,9 +6,7 @@ const UPDATE_TAG_NAME = "updater";
 const UPDATE_JSON_FILE = "update.json";
 const UPDATE_JSON_PROXY = "update-proxy.json";
 
-/// generate update.json
-/// upload to update tag's release asset
-async function resolveUpdater() {
+export async function getLatestTag() {
   if (process.env.GITHUB_TOKEN === undefined) {
     throw new Error("GITHUB_TOKEN is required");
   }
@@ -27,6 +25,14 @@ async function resolveUpdater() {
 
   console.log(tag);
   console.log();
+
+  return tag;
+}
+
+/// generate update.json
+/// upload to update tag's release asset
+async function resolveUpdater() {
+  const tag = await getLatestTag();
 
   const { data: latestRelease } = await github.rest.repos.getReleaseByTag({
     ...options,

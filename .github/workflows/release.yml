@@ -127,8 +127,8 @@ jobs:
         if: startsWith(matrix.target, 'x86_64')
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
         with:
-          tag_name: v${{env.VERSION}}
-          name: "Clash Verge Self v${{env.VERSION}}"
+          tag_name: v${{steps.get_version.outputs.VERSION}}
+          name: "Clash Verge Self v${{steps.get_version.outputs.VERSION}}"
           body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
@@ -136,8 +136,8 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
         with:
-          tag_name: v${{env.VERSION}}
-          name: "Clash Verge Self v${{env.VERSION}}"
+          tag_name: v${{steps.get_version.outputs.VERSION}}
+          name: "Clash Verge Self v${{steps.get_version.outputs.VERSION}}"
           body_path: ${{ github.workspace }}/CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
@@ -281,9 +281,19 @@ jobs:
         run: pnpm i
 
       - name: Release updater file
-        run: pnpm updater
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pnpm updater
+          pnpm updatelog
+      - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git commit -am "docs: update CHANGELOG.txt and UPDATELOG.md"
+          git push origin dev
 
   # release-update-for-fixed-webview2:
   #   runs-on: ubuntu-22.04
