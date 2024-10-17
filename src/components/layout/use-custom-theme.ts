@@ -6,7 +6,7 @@ import {
   useThemeSettings,
 } from "@/services/states";
 import getSystem from "@/utils/get-system";
-import { alpha, createTheme, Shadows, Theme } from "@mui/material";
+import { alpha, createTheme, Theme } from "@mui/material";
 import { enUS, zhCN } from "@mui/x-data-grid/locales";
 import { appWindow } from "@tauri-apps/api/window";
 import { MouseEvent, useCallback, useEffect, useMemo } from "react";
@@ -142,7 +142,7 @@ export const useCustomTheme = () => {
           paper: dt.background_color,
         },
       },
-      shadows: Array(25).fill("none") as Shadows,
+      // shadows: Array(25).fill("none") as Shadows,
       typography: {
         fontFamily: setting.font_family
           ? `${setting.font_family}, ${dt.font_family}`

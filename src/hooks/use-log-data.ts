@@ -5,20 +5,18 @@ import useSWRSubscription from "swr/subscription";
 import { getClashLogs } from "../services/cmds";
 import { useClashLog } from "../services/states";
 import { createSockette } from "../utils/websocket";
-import { useClash, useClashInfo } from "./use-clash";
+import { useClashInfo } from "./use-clash";
 
 const MAX_LOG_NUM = 1000;
 
 export const useLogData = () => {
   const { clashInfo } = useClashInfo();
-  const { clash } = useClash();
-  const { "log-level": logLevel } = clash || {};
-
   const [clashLog] = useClashLog();
   const enableLog = clashLog.enable;
+  const logLevel = clashLog.logLevel;
 
   const subscriptClashLogKey = useMemo(() => {
-    if (!enableLog || !clashInfo || !clash) return null;
+    if (!enableLog || !clashInfo) return null;
     return `getClashLog-${clashInfo.server}-${clashInfo.secret}-${enableLog}-${logLevel}`;
   }, [clashInfo, enableLog, logLevel]);
 

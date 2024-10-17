@@ -388,12 +388,7 @@ export const ProfileItem = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        MenuListProps={{
-          sx: {
-            py: 0.5,
-            border: "1px solid var(--divider-color)",
-          },
-        }}
+        MenuListProps={{ sx: { py: 0.5 } }}
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
