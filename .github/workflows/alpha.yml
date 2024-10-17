@@ -243,7 +243,7 @@ jobs:
 
       - name: Makepkg Build and Check
         id: makepkg
-        uses: Pinghigh/pkgbuild-action@v5.1
+        uses: Pinghigh/pkgbuild-action@862e6ea8b422a28602c3e20c6a30849da9e94fba # v5.1
         with:
           pkgdir: archbuild/alpha
 
