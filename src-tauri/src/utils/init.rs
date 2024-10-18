@@ -182,6 +182,7 @@ pub fn init_resources() -> Result<()> {
     let app_dir = dirs::app_home_dir()?;
     let test_dir = app_dir.join("test");
     let res_dir = dirs::app_resources_dir()?;
+    log::info!("app_dir: {app_dir:?}, test_dir: {test_dir:?}, res_dir: {res_dir:?}");
 
     if !app_dir.exists() {
         let _ = fs::create_dir_all(&app_dir);
