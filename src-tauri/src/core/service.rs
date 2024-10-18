@@ -28,6 +28,8 @@ pub struct JsonResponse {
 
 #[cfg(target_os = "windows")]
 pub async fn reinstall_service() -> Result<()> {
+    log::info!(target:"app", "reinstall service");
+
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
@@ -37,11 +39,11 @@ pub async fn reinstall_service() -> Result<()> {
     let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
 
     if !install_path.exists() {
-        bail!("installer exe not found");
+        bail!(format!("installer not found: {install_path:?}"));
     }
 
     if !uninstall_path.exists() {
-        bail!("uninstaller exe not found");
+        bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
 
     let token = Token::with_current_process()?;
@@ -78,16 +80,14 @@ pub async fn reinstall_service() -> Result<()> {
     let install_path = binary_path.with_file_name("install-service");
     let uninstall_path = binary_path.with_file_name("uninstall-service");
 
-    log::debug!(target:"app", "{}", install_shell.clone());
-
     if !install_path.exists() {
-        bail!("installer not found");
+        bail!(format!("installer not found: {install_path:?}"));
     }
 
-    log::debug!(target:"app", "{}", uninstall_shell.clone());
+    log::debug!(target:"app", "{}", .clone());
 
     if !uninstall_path.exists() {
-        bail!("uninstaller not found");
+        bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
 
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
@@ -126,6 +126,8 @@ pub async fn reinstall_service() -> Result<()> {
 
 #[cfg(target_os = "macos")]
 pub async fn reinstall_service() -> Result<()> {
+    log::info!(target:"app", "reinstall service");
+
     let binary_path = dirs::service_path()?;
     let install_path = binary_path.with_file_name("install-service");
     let uninstall_path = binary_path.with_file_name("uninstall-service");
@@ -137,8 +139,6 @@ pub async fn reinstall_service() -> Result<()> {
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
-
-    log::info!(target:"app", "reinstall service");
 
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
     let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
