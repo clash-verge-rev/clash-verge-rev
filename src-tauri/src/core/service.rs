@@ -136,6 +136,8 @@ pub async fn reinstall_service() -> Result<()> {
         bail!("uninstaller not found");
     }
 
+    log::info!(target:"app", "reinstall service");
+
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
     let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
     let command = format!(

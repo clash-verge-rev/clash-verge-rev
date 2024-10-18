@@ -58,6 +58,10 @@ pub fn run() {
             }
             tauri::async_runtime::block_on(async move {
                 resolve::resolve_setup(app).await;
+                if core::service::check_service().await.is_err() {
+                    log_err!(core::service::reinstall_service().await);
+                    std::thread::sleep(std::time::Duration::from_millis(1000));
+                }
                 #[cfg(not(target_os = "macos"))]
                 {
                     let argvs: Vec<String> = std::env::args().collect();
