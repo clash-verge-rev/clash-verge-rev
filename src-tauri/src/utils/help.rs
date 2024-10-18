@@ -105,7 +105,7 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-//#[cfg(target_os = "linux")]
+#[cfg(target_os = "linux")]
 pub fn linux_elevator() -> String {
     use std::process::Command;
     match Command::new("which").arg("sudo").output() {
