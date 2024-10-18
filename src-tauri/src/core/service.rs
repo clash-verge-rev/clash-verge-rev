@@ -84,8 +84,6 @@ pub async fn reinstall_service() -> Result<()> {
         bail!(format!("installer not found: {install_path:?}"));
     }
 
-    log::debug!(target:"app", "{}", .clone());
-
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
