@@ -44,9 +44,13 @@ pub async fn resolve_setup(app: &mut App) {
     VERSION.get_or_init(|| version.clone());
 
     if service::check_service().await.is_err() {
+        log::info!("bbbbbbbb");
+
         log_err!(service::reinstall_service().await);
         //延迟启动，避免闪屏
         std::thread::sleep(std::time::Duration::from_millis(1000));
+    } else {
+        log::info!("aaaaaaaa");
     }
 
     log_err!(init::init_config());
