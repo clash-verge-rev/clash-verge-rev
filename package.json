@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 tauri dev",
     "dev:diff": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
-    "build": "tauri build",
+    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
     "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsc && vite build",
