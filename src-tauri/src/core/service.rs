@@ -129,11 +129,11 @@ pub async fn reinstall_service() -> Result<()> {
     let uninstall_path = binary_path.with_file_name("uninstall-service");
 
     if !install_path.exists() {
-        bail!("installer not found");
+        bail!(format!("installer not found: {install_path:?}"));
     }
 
     if !uninstall_path.exists() {
-        bail!("uninstaller not found");
+        bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
 
     log::info!(target:"app", "reinstall service");

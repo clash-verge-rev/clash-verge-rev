@@ -193,10 +193,20 @@ pub fn init_resources() -> Result<()> {
         let _ = fs::create_dir_all(&res_dir);
     }
 
+    //target_os = "windows" and "macos"
+    #[cfg(target_os = "macos")]
+    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
     #[cfg(target_os = "windows")]
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
-    #[cfg(not(target_os = "windows"))]
-    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
+    #[cfg(target_os = "linux")]
+    let file_list = [
+        "Country.mmdb",
+        "geoip.dat",
+        "geosite.dat",
+        "clash-verge-service",
+        "install-service",
+        "uninstall-service",
+    ];
 
     // copy the resource file
     // if the source file is newer than the destination file, copy it over
