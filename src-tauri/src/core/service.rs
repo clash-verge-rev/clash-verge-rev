@@ -89,8 +89,10 @@ pub async fn reinstall_service() -> Result<()> {
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
     let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
 
+    log::error!("{}", install_shell.clone());
+    log::error!("{}", uninstall_shell.clone());
     let elevator = crate::utils::help::linux_elevator();
-    let _ = match get_effective_uid() {
+    let status = match get_effective_uid() {
         0 => StdCommand::new(uninstall_path).status()?,
         _ => StdCommand::new(elevator)
             .arg("sh")
@@ -98,6 +100,7 @@ pub async fn reinstall_service() -> Result<()> {
             .arg(uninstall_shell)
             .status()?,
     };
+    log::error!("status code:{}", status.code().unwrap());
 
     let elevator = crate::utils::help::linux_elevator();
     let status = match get_effective_uid() {

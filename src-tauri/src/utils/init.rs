@@ -182,7 +182,6 @@ pub fn init_resources() -> Result<()> {
     let app_dir = dirs::app_home_dir()?;
     let test_dir = app_dir.join("test");
     let res_dir = dirs::app_resources_dir()?;
-    log::info!("app_dir: {app_dir:?}, test_dir: {test_dir:?}, res_dir: {res_dir:?}");
 
     if !app_dir.exists() {
         let _ = fs::create_dir_all(&app_dir);
@@ -205,12 +204,13 @@ pub fn init_resources() -> Result<()> {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
         let test_dest_path = test_dir.join(file);
+        println!("src_path: {src_path:?}, dest_path: {dest_path:?}");
 
         let handle_copy = |dest: &PathBuf| {
             match fs::copy(&src_path, dest) {
                 Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
                 Err(err) => {
-                    log::error!(target: "app", "failed to copy resources '{file}', {err}")
+                    log::error!(target: "app", "failed to copy resources '{file}' to '{dest:?}', {err}")
                 }
             };
         };
