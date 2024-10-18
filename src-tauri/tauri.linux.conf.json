@@ -19,13 +19,10 @@
         "obsoletes": ["clash-verge"]
       }
     },
-    "resources": [
+    "externalBin": [
       "./resources/clash-verge-service",
       "./resources/install-service",
-      "./resources/uninstall-service",
-      "./resources/geoip.dat",
-      "./resources/geosite.dat",
-      "./resources/Country.mmdb"
+      "./resources/uninstall-service"
     ]
   },
   "app": {
