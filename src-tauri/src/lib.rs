@@ -58,6 +58,7 @@ pub fn run() {
             }
             tauri::async_runtime::block_on(async move {
                 resolve::resolve_setup(app).await;
+
                 #[cfg(not(target_os = "macos"))]
                 {
                     let argvs: Vec<String> = std::env::args().collect();

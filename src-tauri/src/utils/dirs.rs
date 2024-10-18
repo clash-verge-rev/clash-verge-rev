@@ -47,11 +47,9 @@ pub fn app_home_dir() -> Result<PathBuf> {
     let app_handle = handle::Handle::global().app_handle().unwrap();
 
     match app_handle.path().data_dir() {
-        Ok(dir) => {
-            Ok(dir.join(APP_ID))
-        }
+        Ok(dir) => Ok(dir.join(APP_ID)),
         Err(e) => {
-            log::error!("Failed to get the app home directory: {}", e);
+            log::error!(target:"app", "Failed to get the app home directory: {}", e);
             Err(anyhow::anyhow!("Failed to get the app homedirectory"))
         }
     }
@@ -61,11 +59,9 @@ pub fn app_home_dir() -> Result<PathBuf> {
 pub fn app_resources_dir() -> Result<PathBuf> {
     let app_handle = handle::Handle::global().app_handle().unwrap();
     match app_handle.path().resource_dir() {
-        Ok(dir) => {
-            Ok(dir.join("resources"))
-        }
+        Ok(dir) => Ok(dir.join("resources")),
         Err(e) => {
-            log::error!("Failed to get the resource directory: {}", e);
+            log::error!(target:"app", "Failed to get the resource directory: {}", e);
             Err(anyhow::anyhow!("Failed to get the resource directory"))
         }
     }

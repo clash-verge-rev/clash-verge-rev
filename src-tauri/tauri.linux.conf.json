@@ -18,7 +18,14 @@
         "conflicts": ["clash-verge"],
         "obsoletes": ["clash-verge"]
       }
-    }
+    },
+    "externalBin": [
+      "./resources/clash-verge-service",
+      "./resources/install-service",
+      "./resources/uninstall-service",
+      "./sidecar/verge-mihomo",
+      "./sidecar/verge-mihomo-alpha"
+    ]
   },
   "app": {
     "trayIcon": {
