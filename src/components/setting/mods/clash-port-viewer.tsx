@@ -102,7 +102,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("Clash Port")}
-      contentSx={{ width: 300 }}
+      contentStyle={{ width: 300 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}

@@ -46,7 +46,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("External Controller")}
-      contentSx={{ width: 400 }}
+      contentStyle={{ width: 400 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}

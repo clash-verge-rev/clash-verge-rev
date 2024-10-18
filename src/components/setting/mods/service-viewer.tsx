@@ -77,8 +77,8 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("Service Mode")}
-      contentSx={{ width: 360, userSelect: "text" }}
-      disableFooter
+      contentStyle={{ width: 360, userSelect: "text" }}
+      hideFooter
       onClose={() => setOpen(false)}>
       <Box display="flex" flexDirection={"row"} gap={1}>
         {state === "active" || state === "installed" ? (

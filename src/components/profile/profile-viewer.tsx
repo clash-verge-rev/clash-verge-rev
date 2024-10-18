@@ -9,7 +9,6 @@ import {
   styled,
   TextField,
 } from "@mui/material";
-import { version } from "@root/package.json";
 import { useLockFn } from "ahooks";
 import {
   forwardRef,
@@ -17,6 +16,7 @@ import {
   useImperativeHandle,
   useRef,
   useState,
+  version,
 } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -144,12 +144,10 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     const isRemote = formType === "remote";
     const isLocal = formType === "local";
 
-    // TODO: In the total TextFild component and use TailwindCSS, the styles of the 3rd and 4th components always display errors, it is a bug of MUI?
     return (
       <BaseDialog
         open={open}
         title={openType === "new" ? t("Create Profile") : t("Edit Profile")}
-        contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
         okBtn={t("Save")}
         cancelBtn={t("Cancel")}
         onClose={handleClose}
@@ -176,7 +174,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               </ButtonGroup>
             )}
           />
-
           <Controller
             name="name"
             control={control}
@@ -184,7 +181,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               <TextField {...text} {...field} label={t("Name")} />
             )}
           />
-
           <Controller
             name="desc"
             control={control}
@@ -192,7 +188,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               <TextField {...text} {...field} label={t("Descriptions")} />
             )}
           />
-
           {isRemote && (
             <>
               <Controller
@@ -207,7 +202,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                   />
                 )}
               />
-
               <Controller
                 name="option.user_agent"
                 control={control}
@@ -222,7 +216,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               />
             </>
           )}
-
           {(isRemote || isLocal) && (
             <Controller
               name="option.update_interval"
@@ -249,7 +242,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               )}
             />
           )}
-
           {isLocal && openType === "new" && (
             <FileInput
               onChange={(file, val) => {
@@ -264,7 +256,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               }}
             />
           )}
-
           {isRemote && (
             <>
               <Controller
@@ -281,7 +272,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                   </StyledDiv>
                 )}
               />
-
               <Controller
                 name="option.self_proxy"
                 control={control}
@@ -296,7 +286,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                   </StyledDiv>
                 )}
               />
-
               <Controller
                 name="option.danger_accept_invalid_certs"
                 control={control}

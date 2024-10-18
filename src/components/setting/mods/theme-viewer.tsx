@@ -121,7 +121,6 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       }
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
-      contentSx={{ width: 400, maxHeight: 600, overflow: "auto", pb: 0 }}
       onClose={() => {
         setThemeSettings({
           light: light_theme_setting ?? {},

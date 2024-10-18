@@ -1,6 +1,6 @@
 import mergeSchema from "@/assets/schema/clash-verge-merge-json-schema.json";
 import metaSchema from "@/assets/schema/meta-json-schema.json";
-import { Notice } from "@/components/base";
+import { BaseDialog, Notice } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { LogMessage } from "@/components/profile/profile-more";
 import { useWindowSize } from "@/hooks/use-window-size";
@@ -18,17 +18,7 @@ import {
   RadioButtonUnchecked,
   Terminal,
 } from "@mui/icons-material";
-import {
-  Badge,
-  BadgeProps,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Fab,
-  styled,
-} from "@mui/material";
+import { Badge, BadgeProps, IconButton, styled, Tooltip } from "@mui/material";
 import { useLockFn } from "ahooks";
 import * as monaco from "monaco-editor";
 import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
@@ -113,7 +103,7 @@ export const ProfileEditorViewer = (props: Props) => {
         fetchContent = Promise.resolve(property);
         break;
     }
-    fetchContent.then((data) => {
+    fetchContent.then(async (data) => {
       const dom = editorDomRef.current;
 
       if (!dom) return;
@@ -122,7 +112,7 @@ export const ProfileEditorViewer = (props: Props) => {
 
       const uri = monaco.Uri.parse(`${nanoid()}.${scope}.${language}`);
       const model = monaco.editor.createModel(data, language, uri);
-      instanceRef.current = monaco.editor.create(editorDomRef.current, {
+      instanceRef.current = monaco.editor.create(dom, {
         model: model,
         language: language,
         tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进大小
@@ -225,33 +215,51 @@ export const ProfileEditorViewer = (props: Props) => {
 
   return (
     <>
-      <Dialog
+      <BaseDialog
         open={open}
+        title={title ?? t("Edit File")}
+        fullWidth
+        cancelBtn={t("Cancel")}
+        okBtn={t("Save")}
+        okDisabled={isScriptMerge && !scriptChecked}
         onClose={() => {
           setScriptChecked(false);
           onClose();
         }}
-        maxWidth="xl"
-        fullWidth>
-        <DialogTitle>{title ?? t("Edit File")}</DialogTitle>
+        onCancel={() => {
+          setScriptChecked(false);
+          onClose();
+        }}
+        onOk={() => {
+          if (readOnly) {
+            Notice.info(t("ReadOnlyMessage"));
+            return;
+          }
+          if (!scriptChecked) {
+            setScriptChecked(true);
+            return;
+          } else {
+            onSave();
+          }
+        }}
+        contentStyle={{
+          height: `${size.height - 100}px`,
+          userSelect: "text",
+        }}>
+        <div className="flex h-full overflow-hidden">
+          <div
+            className="h-full flex-auto overflow-y-auto"
+            ref={editorDomRef}
+          />
 
-        <DialogContent
-          sx={{
-            width: "94%",
-            height: `${size.height - 200}px`,
-            pb: 1,
-            userSelect: "text",
-            overflow: "hidden",
-          }}>
-          <div style={{ width: "100%", height: "100%" }} ref={editorDomRef} />
           {isScriptMerge && (
-            <>
-              {logs.length > 0 && (
-                <Fab
+            <div className="flex flex-shrink-0 flex-grow-0 basis-16 flex-col items-center justify-end space-y-2">
+              <Tooltip title={t("Console")} placement="left">
+                <IconButton
                   aria-label="terminal"
                   size="medium"
-                  onClick={() => setLogOpen(true)}
-                  sx={{ position: "absolute", bottom: "145px", right: "90px" }}>
+                  color="primary"
+                  onClick={() => setLogOpen(true)}>
                   {hasError ? (
                     <Badge color="error" variant="dot">
                       <Terminal color="error" fontSize="medium" />
@@ -261,116 +269,51 @@ export const ProfileEditorViewer = (props: Props) => {
                       <Terminal color="primary" fontSize="medium" />
                     </StyledBadge>
                   )}
-                </Fab>
-              )}
-              <Fab
-                aria-label="test"
-                color={
-                  scriptChecked ? (hasError ? "error" : "success") : "inherit"
-                }
-                size="medium"
-                sx={{ position: "absolute", bottom: "80px", right: "90px" }}
-                onClick={async () => {
-                  setLogs([]);
-                  const value = instanceRef.current?.getValue();
-                  if (value == undefined) return;
-
-                  const result = await testMergeChain(property, value);
-                  const currentLogs = result.logs[property];
-                  setLogs(currentLogs);
-                  setScriptChecked(true);
-                  if (currentLogs[0].exception) {
-                    Notice.error("This script has errors, please fix it.");
-                  } else {
-                    Notice.success("This script is working correctly.");
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={t("Run Check")} placement="left">
+                <IconButton
+                  aria-label="test"
+                  color={
+                    scriptChecked ? (hasError ? "error" : "success") : "inherit"
                   }
-                  // if (currentLogs.length > 0) {
-                  //   setTimeout(() => {
-                  //     setLogOpen(true);
-                  //   }, 500);
-                  // }
-                }}>
-                {scriptChecked ? (
-                  hasError ? (
-                    <ErrorOutline fontSize="medium" />
+                  size="medium"
+                  sx={{}}
+                  onClick={async () => {
+                    setLogs([]);
+                    const value = instanceRef.current?.getValue();
+                    if (value == undefined) return;
+
+                    const result = await testMergeChain(property, value);
+                    const currentLogs = result.logs[property];
+                    setLogs(currentLogs);
+                    setScriptChecked(true);
+                    if (currentLogs[0].exception) {
+                      Notice.error("This script has errors, please fix it.");
+                    } else {
+                      Notice.success("This script is working correctly.");
+                    }
+                  }}>
+                  {scriptChecked ? (
+                    hasError ? (
+                      <ErrorOutline fontSize="medium" />
+                    ) : (
+                      <CheckCircleOutline fontSize="medium" />
+                    )
                   ) : (
-                    <CheckCircleOutline fontSize="medium" />
-                  )
-                ) : (
-                  <RadioButtonUnchecked fontSize="medium" />
-                )}
-              </Fab>
-            </>
+                    <RadioButtonUnchecked fontSize="medium" />
+                  )}
+                </IconButton>
+              </Tooltip>
+            </div>
           )}
-        </DialogContent>
-
-        <DialogActions>
-          {/* {isEnhanceProfile && (
-            <>
-              <LoadingButton
-                variant="contained"
-                loading={false}
-                onClick={async () => {
-                  const result = await getPreMergeResult(property);
-                  console.log("pre-merge result", result.config);
-                  instanceRef.current?.setValue(result.config);
-                }}>
-                {t("Preview pre-merge")}
-              </LoadingButton>
-              <LoadingButton
-                variant="contained"
-                loading={false}
-                onClick={async () => {
-                  const content = instanceRef.current?.getValue();
-                  if (content == undefined) return;
-                  const result = await testMergeChain(property, content);
-                  console.log("cur-merge result", result.config);
-                  instanceRef.current?.setValue(result.config);
-                }}>
-                {t("Preview current-merge")}
-              </LoadingButton>
-              <LoadingButton
-                variant="contained"
-                loading={false}
-                onClick={async () => {
-                  setLogs([]);
-                  const value = instanceRef.current?.getValue();
-                  if (value == undefined) return;
-
-                  const result = await testMergeChain(property, value);
-                  const currentLogs = result.logs[property];
-                  setLogs(currentLogs);
-                  if (currentLogs.length > 0) {
-                    setLogOpen(true);
-                  }
-                }}>
-                {t("Test")}
-              </LoadingButton>
-            </>
-          )} */}
-          <Button
-            onClick={() => {
-              setScriptChecked(false);
-              onClose();
-            }}
-            variant={readOnly ? "contained" : "outlined"}>
-            {t("Cancel")}
-          </Button>
-          {readOnly ? null : (
-            <Button
-              onClick={onSave}
-              disabled={isScriptMerge ? !scriptChecked || hasError : false}
-              variant="contained">
-              {t("Save")}
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
-      <LogViewer
-        open={logOpen}
-        logInfo={logs}
-        onClose={() => setLogOpen(false)}
-      />
+        </div>
+        <LogViewer
+          open={logOpen}
+          logInfo={logs}
+          onClose={() => setLogOpen(false)}
+        />
+      </BaseDialog>
     </>
   );
 };

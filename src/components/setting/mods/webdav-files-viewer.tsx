@@ -187,7 +187,7 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
             </div>
           </div>
         }
-        disableOk
+        hideOkBtn
         cancelBtn={t("Back")}
         onClose={() => setOpen(false)}
         onCancel={() => setOpen(false)}>

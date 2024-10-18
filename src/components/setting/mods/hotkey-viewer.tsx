@@ -1,9 +1,9 @@
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
+import { styled, Typography } from "@mui/material";
+import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLockFn } from "ahooks";
-import { styled, Typography } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { HotkeyInput } from "./hotkey-input";
 
 const ItemWrapper = styled("div")`
@@ -80,7 +80,6 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("Hotkey Setting")}
-      contentSx={{ width: 450, maxHeight: 330 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}

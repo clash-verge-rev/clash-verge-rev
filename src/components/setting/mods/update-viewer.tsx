@@ -106,7 +106,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
           </Box>
         </Box>
       }
-      contentSx={{ minWidth: 360, maxWidth: 400, height: "50vh" }}
+      contentStyle={{ minWidth: 360, maxWidth: 400 }}
       okBtn={t("Update")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}

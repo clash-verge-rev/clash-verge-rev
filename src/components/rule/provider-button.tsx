@@ -116,8 +116,8 @@ export const ProviderButton = () => {
             </Button>
           </Box>
         }
-        contentSx={{ width: 400 }}
-        disableOk
+        contentStyle={{ width: 400 }}
+        hideOkBtn
         cancelBtn={t("Cancel")}
         onClose={() => setOpen(false)}
         onCancel={() => setOpen(false)}>

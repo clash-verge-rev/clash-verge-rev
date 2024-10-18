@@ -134,15 +134,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
           </Box>
         </Box>
       }
-      contentSx={{
-        pb: 0,
-        width: 400,
-        height: 180,
-        overflowY: "auto",
-        userSelect: "text",
-        marginTop: "-8px",
-      }}
-      disableOk
+      hideOkBtn
       cancelBtn={t("Back")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}>

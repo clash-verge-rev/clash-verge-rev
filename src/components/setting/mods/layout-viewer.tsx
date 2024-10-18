@@ -87,8 +87,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("Layout Setting")}
-      contentSx={{ width: 450 }}
-      disableOk
+      contentStyle={{ width: 450 }}
+      hideOkBtn
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}>

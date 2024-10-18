@@ -1,25 +1,21 @@
+import { cn } from "@/utils";
 import { LoadingButton } from "@mui/lab";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  type SxProps,
-  type Theme,
-} from "@mui/material";
-import { ReactNode } from "react";
+import { Button } from "@mui/material";
+import { AnimatePresence, motion } from "framer-motion";
+import { t } from "i18next";
+import { CSSProperties, ReactNode } from "react";
 
-interface Props {
+interface AnimatedDialogProps {
   title: ReactNode;
   open: boolean;
   fullWidth?: boolean;
   okBtn?: ReactNode;
+  okDisabled?: boolean;
   cancelBtn?: ReactNode;
-  disableOk?: boolean;
-  disableCancel?: boolean;
-  disableFooter?: boolean;
-  contentSx?: SxProps<Theme>;
+  hideOkBtn?: boolean;
+  hideCancelBtn?: boolean;
+  hideFooter?: boolean;
+  contentStyle?: CSSProperties;
   children?: ReactNode;
   loading?: boolean;
   onOk?: () => void;
@@ -32,44 +28,79 @@ export interface DialogRef {
   close: () => void;
 }
 
-export const BaseDialog: React.FC<Props> = (props) => {
+export const BaseDialog = (props: AnimatedDialogProps) => {
   const {
+    title,
     open,
     fullWidth = false,
-    title,
+    okBtn = t("Confirm"),
+    okDisabled = false,
+    cancelBtn = t("Cancel"),
+    hideOkBtn = false,
+    hideCancelBtn = false,
+    hideFooter = false,
+    contentStyle,
     children,
-    okBtn,
-    cancelBtn,
-    contentSx,
-    disableCancel,
-    disableOk,
-    disableFooter,
     loading,
+    onOk,
+    onCancel,
+    onClose,
   } = props;
-
   return (
-    <Dialog open={open} onClose={props.onClose} fullWidth={fullWidth}>
-      <DialogTitle>{title}</DialogTitle>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.1 }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={onClose}
+          className="fixed inset-0 z-50 flex h-dvh items-center justify-center bg-black bg-opacity-50">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundImage: "var(--mui-overlays-24)",
+              ...contentStyle,
+            }}
+            className={cn(
+              "inline-flex max-h-[calc(100%-100px)] w-full max-w-md flex-col rounded-[4px] bg-[var(--mui-palette-background-paper)] text-primary shadow-xl",
+              { "max-w-[calc(100%-100px)]": fullWidth },
+            )}>
+            <div className="my-4 px-6 text-xl font-bold">{title}</div>
 
-      <DialogContent sx={contentSx}>{children}</DialogContent>
+            <div
+              className={cn("h-full overflow-y-auto px-6", {
+                "mb-6": hideFooter,
+              })}>
+              {children}
+            </div>
 
-      {!disableFooter && (
-        <DialogActions>
-          {!disableCancel && (
-            <Button variant="outlined" onClick={props.onCancel}>
-              {cancelBtn}
-            </Button>
-          )}
-          {!disableOk && (
-            <LoadingButton
-              loading={loading}
-              variant="contained"
-              onClick={props.onOk}>
-              {okBtn}
-            </LoadingButton>
-          )}
-        </DialogActions>
+            {!hideFooter && (
+              <div className="my-4 flex justify-end space-x-2 px-6">
+                {!hideCancelBtn && (
+                  <Button variant="outlined" onClick={onCancel}>
+                    {cancelBtn}
+                  </Button>
+                )}
+                {!hideOkBtn && (
+                  <LoadingButton
+                    disabled={okDisabled}
+                    loading={loading}
+                    variant="contained"
+                    onClick={onOk}>
+                    {okBtn}
+                  </LoadingButton>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
       )}
-    </Dialog>
+    </AnimatePresence>
   );
 };

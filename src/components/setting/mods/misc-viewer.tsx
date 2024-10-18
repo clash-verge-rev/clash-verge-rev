@@ -67,7 +67,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("Miscellaneous")}
-      contentSx={{ width: 450 }}
+      contentStyle={{ width: 450 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}

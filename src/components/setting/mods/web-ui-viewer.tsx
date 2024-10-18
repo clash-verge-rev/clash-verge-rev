@@ -90,15 +90,14 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
           </Button>
         </Box>
       }
-      contentSx={{
+      contentStyle={{
         width: 450,
         height: 300,
-        pb: 1,
         overflowY: "auto",
         userSelect: "text",
       }}
       cancelBtn={t("Back")}
-      disableOk
+      hideOkBtn
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}>
       {!editing && webUIList.length === 0 && (

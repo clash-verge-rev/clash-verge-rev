@@ -155,7 +155,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("System Proxy Setting")}
-      contentSx={{ width: 450, maxHeight: 565 }}
+      contentStyle={{ width: 450 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => {

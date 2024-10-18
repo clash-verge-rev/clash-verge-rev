@@ -122,7 +122,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         </Box>
       }
       loading={isLoading}
-      contentSx={{ width: 450 }}
+      contentStyle={{ width: 450 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}

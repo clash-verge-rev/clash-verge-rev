@@ -105,7 +105,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
     <BaseDialog
       open={open}
       title={openType === "new" ? t("Create Test") : t("Edit Test")}
-      contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
+      contentStyle={{ width: 375 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={handleClose}
