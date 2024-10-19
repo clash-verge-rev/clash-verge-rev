@@ -13,8 +13,7 @@ import delayManager from "@/services/delay";
 import { cn } from "@/utils";
 import { Box } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
-import { AnimatePresence, motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
@@ -37,8 +36,6 @@ export const ProxyGroups = (props: Props) => {
   const timeout = verge?.default_latency_timeout || 5000;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
-
-  const [open, setOpen] = useState(false);
 
   // 切换分组的节点代理
   const handleChangeProxy = useMemoizedFn(
@@ -152,31 +149,6 @@ export const ProxyGroups = (props: Props) => {
 
   return (
     <Box className="relative flex h-full w-full">
-      <div
-        className={cn("absolute bottom-0 left-0 top-0 z-10 w-6", {
-          "w-fit": open,
-        })}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setTimeout(() => setOpen(false), 200)}>
-        <AnimatePresence mode="popLayout">
-          {open && (
-            <motion.div
-              initial={{ x: -200, opacity: 0.6 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -200, opacity: 0.6 }}
-              className="h-full border-0 border-r-2 border-solid border-primary-main">
-              <ProxyGroupSidebar
-                className={cn("w-0 max-w-[200px] p-0", { "w-fit p-4": open })}
-                groupNameList={groupNameList}
-                onClickGroupName={(groupName) => {
-                  handleGroupLocation(groupName);
-                  setOpen(false);
-                }}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
       <Box className="h-full w-full">
         <Virtuoso
           ref={virtuosoRef}
@@ -184,18 +156,36 @@ export const ProxyGroups = (props: Props) => {
           totalCount={renderList.length}
           increaseViewportBy={256}
           itemContent={(index) => (
-            <ProxyRender
-              key={renderList[index].key}
-              item={renderList[index]}
-              indent={mode === "rule" || mode === "script"}
-              onLocation={handleLocation}
-              onCheckAll={handleCheckAll}
-              onHeadState={onHeadState}
-              onChangeProxy={handleChangeProxy}
-            />
+            <div className="pr-6">
+              <ProxyRender
+                key={renderList[index].key}
+                item={renderList[index]}
+                indent={mode === "rule" || mode === "script"}
+                onLocation={handleLocation}
+                onCheckAll={handleCheckAll}
+                onHeadState={onHeadState}
+                onChangeProxy={handleChangeProxy}
+              />
+            </div>
           )}
         />
       </Box>
+
+      <div
+        className={cn(
+          "absolute bottom-0 right-2 top-0 z-10 h-full w-6",
+          "hover:w-fit hover:min-w-[100px]",
+        )}>
+        <div className="absolute bottom-2 right-0 top-2 flex w-full items-center justify-center hover:shadow-2xl">
+          <ProxyGroupSidebar
+            className="no-scrollbar h-full w-full rounded-lg p-1"
+            groupNameList={groupNameList}
+            onClickGroupName={(groupName) => {
+              handleGroupLocation(groupName);
+            }}
+          />
+        </div>
+      </div>
     </Box>
   );
 };

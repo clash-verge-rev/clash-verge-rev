@@ -1,5 +1,6 @@
 import { cn } from "@/utils";
 import { Link } from "@mui/material";
+import { useState } from "react";
 
 interface Props {
   groupNameList: string[];
@@ -9,22 +10,22 @@ interface Props {
 
 export const ProxyGroupSidebar = (props: Props) => {
   const { groupNameList, onClickGroupName, className } = props;
+  const [open, setOpen] = useState(false);
   return (
     <div
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
       className={cn(
-        "box-border flex h-full w-full flex-col items-center gap-2 overflow-auto scroll-smooth bg-white p-4 text-center text-sm dark:bg-[#282A36]",
+        "box-border flex h-full w-full flex-col items-center justify-center overflow-y-auto scroll-smooth bg-white p-4 text-start text-sm dark:bg-[#282A36]",
         className,
-      )}
-      style={{
-        scrollbarWidth: "thin",
-      }}>
+      )}>
       {groupNameList.map((name) => (
         <Link
           key={name}
           underline="hover"
-          className="cursor-pointer text-primary hover:text-secondary"
+          className="line-clamp-1 cursor-pointer text-primary hover:text-secondary"
           onClick={() => onClickGroupName && onClickGroupName(name)}>
-          {name}
+          {open ? name : [...name][0]}
         </Link>
       ))}
     </div>

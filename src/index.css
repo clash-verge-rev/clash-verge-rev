@@ -43,6 +43,10 @@
     @apply bg-primary-main;
   }
 
+  .no-scrollbar::-webkit-scrollbar {
+    @apply hidden;
+  }
+
   :root {
     --primary-main: #5b5c9d;
     --text-primary: #1f1f1f;
