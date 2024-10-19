@@ -154,6 +154,7 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
       <BaseDialog
         open={open}
         fullWidth
+        contentStyle={{ width: 600 }}
         title={
           <div className="flex items-center justify-between">
             {t("Backup Files")}
