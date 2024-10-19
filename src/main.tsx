@@ -1,6 +1,3 @@
-/// <reference types="vite/client" />
-/// <reference types="vite-plugin-svgr/client" />
-
 import { BaseErrorBoundary } from "@/components/base";
 import "@/index.css";
 import router from "@/pages/_routers";
