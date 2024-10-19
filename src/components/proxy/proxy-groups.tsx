@@ -11,9 +11,9 @@ import {
 } from "@/services/api";
 import delayManager from "@/services/delay";
 import { cn } from "@/utils";
-import { ChevronRight } from "@mui/icons-material";
 import { Box } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { BaseEmpty } from "../base";
@@ -155,50 +155,27 @@ export const ProxyGroups = (props: Props) => {
       <div
         className={cn("absolute bottom-0 left-0 top-0 z-10 w-6", {
           "w-fit": open,
-        })}>
-        <div
-          className={cn("relative flex h-full w-full")}
-          onMouseLeave={() => {
-            setOpen(false);
-          }}>
-          <ProxyGroupSidebar
-            className={cn("w-0 max-w-[200px] p-0 transition-all duration-200", {
-              "w-fit px-2 py-4": open,
-            })}
-            groupNameList={groupNameList}
-            onClickGroupName={(groupName) => {
-              handleGroupLocation(groupName);
-              setOpen(false);
-            }}
-          />
-          <div className="relative flex w-fit items-center bg-transparent">
-            <div
-              className={cn(
-                "peer flex h-16 w-5 cursor-pointer items-center justify-center bg-primary p-0 opacity-0 transition-all duration-200 hover:opacity-100",
-                {
-                  "opacity-100": open,
-                },
-              )}
-              onClick={() => {
-                setOpen((pre) => !pre);
-              }}>
-              <ChevronRight
-                sx={{
-                  color: "white",
-                  transform: open ? "rotate(180deg)" : "rotate(0deg)",
-                  transition: "transform 0.2s",
+        })}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setTimeout(() => setOpen(false), 200)}>
+        <AnimatePresence mode="popLayout">
+          {open && (
+            <motion.div
+              initial={{ x: -200, opacity: 0.6 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -200, opacity: 0.6 }}
+              className="h-full border-0 border-r-2 border-solid border-primary-main">
+              <ProxyGroupSidebar
+                className={cn("w-0 max-w-[200px] p-0", { "w-fit p-4": open })}
+                groupNameList={groupNameList}
+                onClickGroupName={(groupName) => {
+                  handleGroupLocation(groupName);
+                  setOpen(false);
                 }}
               />
-            </div>
-            <div
-              className={cn(
-                "absolute bottom-0 left-0 top-0 z-10 w-1 transition-all duration-200 peer-hover:bg-primary",
-                {
-                  "bg-primary": open,
-                },
-              )}></div>
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       <Box className="h-full w-full">
         <Virtuoso
