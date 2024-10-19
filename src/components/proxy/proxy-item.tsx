@@ -111,8 +111,8 @@ export const ProxyItem = (props: Props) => {
         <ListItemText
           title={proxy.name}
           secondary={
-            <div className="flex items-center">
-              <div className="line-clamp-1">
+            <span className="flex items-center">
+              <span className="line-clamp-1">
                 <span
                   style={{
                     display: "inline-block",
@@ -123,8 +123,8 @@ export const ProxyItem = (props: Props) => {
                   {proxy.name}
                   {showType && proxy.now && ` - ${proxy.now}`}
                 </span>
-              </div>
-              <div className="flex flex-nowrap">
+              </span>
+              <span className="flex flex-nowrap">
                 {showType && !!proxy.provider && (
                   <TypeSpan>{proxy.provider}</TypeSpan>
                 )}
@@ -132,8 +132,8 @@ export const ProxyItem = (props: Props) => {
                 {showType && proxy.udp && <TypeSpan>UDP</TypeSpan>}
                 {showType && proxy.xudp && <TypeSpan>XUDP</TypeSpan>}
                 {showType && proxy.tfo && <TypeSpan>TFO</TypeSpan>}
-              </div>
-            </div>
+              </span>
+            </span>
           }
         />
 
