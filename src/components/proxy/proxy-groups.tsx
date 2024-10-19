@@ -10,7 +10,6 @@ import {
   updateProxy,
 } from "@/services/api";
 import delayManager from "@/services/delay";
-import { cn } from "@/utils";
 import { Box } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { useRef } from "react";
@@ -149,38 +148,31 @@ export const ProxyGroups = (props: Props) => {
 
   return (
     <Box className="relative flex h-full w-full">
-      <Box className="h-full w-full">
+      <Box className="h-full w-full pr-6">
         <Virtuoso
           ref={virtuosoRef}
           style={{ height: "calc(100% - 8px)" }}
           totalCount={renderList.length}
           increaseViewportBy={256}
           itemContent={(index) => (
-            <div className="pr-6">
-              <ProxyRender
-                key={renderList[index].key}
-                item={renderList[index]}
-                indent={mode === "rule" || mode === "script"}
-                onLocation={handleLocation}
-                onCheckAll={handleCheckAll}
-                onHeadState={onHeadState}
-                onChangeProxy={handleChangeProxy}
-              />
-            </div>
+            <ProxyRender
+              key={renderList[index].key}
+              item={renderList[index]}
+              indent={mode === "rule" || mode === "script"}
+              onLocation={handleLocation}
+              onCheckAll={handleCheckAll}
+              onHeadState={onHeadState}
+              onChangeProxy={handleChangeProxy}
+            />
           )}
         />
       </Box>
 
-      <div
-        className={cn(
-          "absolute bottom-0 right-2 top-0 z-10 h-full w-6",
-          "hover:w-fit hover:min-w-[100px]",
-        )}>
-        <div className="absolute bottom-2 right-0 top-2 flex w-full items-center justify-center hover:shadow-2xl">
+      <div className="absolute bottom-0 right-0 top-0 z-10 mr-0 w-6 bg-transparent hover:w-[120px]">
+        <div className="flex h-full w-full items-center justify-center hover:shadow-2xl">
           <ProxyGroupSidebar
-            className="no-scrollbar h-full w-full rounded-lg p-1"
             groupNameList={groupNameList}
-            onClickGroupName={(groupName) => {
+            onGroupNameClick={(groupName) => {
               handleGroupLocation(groupName);
             }}
           />

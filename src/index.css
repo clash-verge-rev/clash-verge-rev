@@ -47,6 +47,10 @@
     @apply hidden;
   }
 
+  .scrollbar::-webkit-scrollbar {
+    @apply block;
+  }
+
   :root {
     --primary-main: #5b5c9d;
     --text-primary: #1f1f1f;

@@ -34,10 +34,8 @@ export const BasePage: React.FC<Props> = (props) => {
           className={"h-[calc(100%-50px)] w-full bg-white dark:bg-[#1e1f27]"}>
           <div
             className={cn(
-              "box-border h-full w-full overflow-auto bg-comment px-2 dark:bg-[#1e1f27]",
-              {
-                "p-0": full,
-              },
+              "h-full w-full overflow-auto bg-comment px-2 dark:bg-[#1e1f27]",
+              { "p-0": full },
             )}
             style={contentStyle}>
             {children}
