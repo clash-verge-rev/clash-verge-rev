@@ -158,7 +158,7 @@ pub fn run() {
                             log_err!(hotkey::Hotkey::global().register("Control+Q", "quit"));
                         };
                     }
-                    tauri::WindowEvent::Focused(false) => {
+                    tauri::WindowEvent::Destroyed => {
                         #[cfg(target_os = "macos")]
                         {
                             log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
