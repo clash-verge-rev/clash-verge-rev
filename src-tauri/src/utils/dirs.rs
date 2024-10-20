@@ -89,7 +89,7 @@ pub fn profiles_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(target_os = "macos")]
 pub fn service_path() -> Result<PathBuf> {
     Ok(app_resources_dir()?.join("clash-verge-service"))
 }
