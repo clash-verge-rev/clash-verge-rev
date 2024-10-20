@@ -6387,7 +6387,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-clipboard-manager"
 version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#3fd283121f5ee739ac8a5149fa7e7520f992aeb0"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
 dependencies = [
  "arboard",
  "image",
@@ -6447,8 +6447,8 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-dialog"
-version = "2.0.2"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#3fd283121f5ee739ac8a5149fa7e7520f992aeb0"
+version = "2.0.1"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
 dependencies = [
  "log",
  "raw-window-handle 0.6.2",
@@ -6464,8 +6464,8 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-fs"
-version = "2.0.2"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#3fd283121f5ee739ac8a5149fa7e7520f992aeb0"
+version = "2.0.1"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
 dependencies = [
  "anyhow",
  "dunce",
@@ -6500,7 +6500,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-notification"
 version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#3fd283121f5ee739ac8a5149fa7e7520f992aeb0"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
 dependencies = [
  "log",
  "notify-rust",
@@ -6518,7 +6518,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-process"
 version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#3fd283121f5ee739ac8a5149fa7e7520f992aeb0"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
 dependencies = [
  "tauri",
  "tauri-plugin",
@@ -6526,8 +6526,8 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-shell"
-version = "2.0.2"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#3fd283121f5ee739ac8a5149fa7e7520f992aeb0"
+version = "2.0.1"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
 dependencies = [
  "encoding_rs",
  "log",
