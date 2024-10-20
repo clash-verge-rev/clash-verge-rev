@@ -294,7 +294,9 @@ const ProfilePage = () => {
         Notice.error(err?.message || err.toString(), 4000);
       } finally {
         clearTimeout(reset);
-        setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
+        setTimeout(() => {
+          setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
+        }, 500);
       }
     }),
   );
