@@ -95,7 +95,7 @@ pub async fn reinstall_service() -> Result<()> {
     let elevator = crate::utils::help::linux_elevator();
     let status = match get_effective_uid() {
         0 => StdCommand::new(uninstall_shell).status()?,
-        _ => StdCommand::new(elevator)
+        _ => StdCommand::new(elevator.clone())
             .arg("sh")
             .arg("-c")
             .arg(uninstall_shell)
@@ -105,7 +105,7 @@ pub async fn reinstall_service() -> Result<()> {
 
     let status = match get_effective_uid() {
         0 => StdCommand::new(install_shell).status()?,
-        _ => StdCommand::new(elevator)
+        _ => StdCommand::new(elevator.clone())
             .arg("sh")
             .arg("-c")
             .arg(install_shell)
