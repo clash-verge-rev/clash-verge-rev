@@ -103,7 +103,6 @@ pub async fn reinstall_service() -> Result<()> {
     };
     log::info!(target:"app", "status code:{}", status.code().unwrap());
 
-    let elevator = crate::utils::help::linux_elevator();
     let status = match get_effective_uid() {
         0 => StdCommand::new(install_shell).status()?,
         _ => StdCommand::new(elevator)
