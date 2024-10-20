@@ -161,7 +161,7 @@ impl Drop for Hotkey {
     fn drop(&mut self) {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         if let Err(e) = app_handle.global_shortcut().unregister_all() {
-            log::error!("Error unregistering all hotkeys: {:?}", e);
+            log::error!(target:"app", "Error unregistering all hotkeys: {:?}", e);
         }
     }
 }

@@ -195,8 +195,10 @@ pub fn init_resources() -> Result<()> {
 
     #[cfg(target_os = "windows")]
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
+    #[cfg(target_os = "linux")]
+    let file_list: [&str; 0] = [];
 
     // copy the resource file
     // if the source file is newer than the destination file, copy it over
@@ -204,12 +206,13 @@ pub fn init_resources() -> Result<()> {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
         let test_dest_path = test_dir.join(file);
+        log::info!(target: "app", "src_path: {src_path:?}, dest_path: {dest_path:?}");
 
         let handle_copy = |dest: &PathBuf| {
             match fs::copy(&src_path, dest) {
                 Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
                 Err(err) => {
-                    log::error!(target: "app", "failed to copy resources '{file}', {err}")
+                    log::error!(target: "app", "failed to copy resources '{file}' to '{dest:?}', {err}")
                 }
             };
         };
