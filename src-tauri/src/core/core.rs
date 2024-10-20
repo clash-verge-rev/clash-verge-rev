@@ -83,7 +83,7 @@ impl CoreManager {
 
         // 服务模式
         if service::check_service().await.is_ok() {
-            log::debug!(target: "app", "stop the core by service");
+            log::info!(target: "app", "stop the core by service");
             service::stop_core_by_service().await?;
         }
         *running = false;
@@ -94,7 +94,7 @@ impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
         let mut running = self.running.lock().await;
         if *running {
-            log::debug!("core is running");
+            log::info!("core is running");
             return Ok(());
         }
 
@@ -102,7 +102,7 @@ impl CoreManager {
 
         // 服务模式
         if service::check_service().await.is_ok() {
-            log::debug!(target: "app", "try to run core in service mode");
+            log::info!(target: "app", "try to run core in service mode");
             service::run_core_by_service(&config_path).await?;
             *running = true;
         }
@@ -126,7 +126,7 @@ impl CoreManager {
             bail!("invalid clash core name \"{clash_core}\"");
         }
 
-        log::debug!(target: "app", "change core to `{clash_core}`");
+        log::info!(target: "app", "change core to `{clash_core}`");
 
         Config::verge().draft().clash_core = Some(clash_core);
 

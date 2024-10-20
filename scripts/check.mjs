@@ -8,6 +8,7 @@ import fetch from "node-fetch";
 import proxyAgent from "https-proxy-agent";
 import { execSync } from "child_process";
 import { log_info, log_debug, log_error, log_success } from "./utils.mjs";
+import { glob } from "glob";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
@@ -357,16 +358,19 @@ const resolvePlugin = async () => {
 // service chmod
 const resolveServicePermission = async () => {
   const serviceExecutables = [
-    "clash-verge-service",
-    "install-service",
-    "uninstall-service",
+    "clash-verge-service*",
+    "install-service*",
+    "uninstall-service*",
   ];
   const resDir = path.join(cwd, "src-tauri/resources");
   for (let f of serviceExecutables) {
-    const targetPath = path.join(resDir, f);
-    if (fs.existsSync(targetPath)) {
-      execSync(`chmod 755 ${targetPath}`);
-      log_success(`chmod finished: "${f}"`);
+    // 使用glob模块来处理通配符
+    const files = glob.sync(path.join(resDir, f));
+    for (let filePath of files) {
+      if (fs.existsSync(filePath)) {
+        execSync(`chmod 755 ${filePath}`);
+        log_success(`chmod finished: "${filePath}"`);
+      }
     }
   }
 };
@@ -374,29 +378,32 @@ const resolveServicePermission = async () => {
 /**
  * main
  */
-
 const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () => {
   let ext = platform === "win32" ? ".exe" : "";
+  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
-    file: "clash-verge-service" + ext,
+    file: "clash-verge-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
   });
 };
 
 const resolveInstall = () => {
   let ext = platform === "win32" ? ".exe" : "";
+  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
-    file: "install-service" + ext,
+    file: "install-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/install-service${ext}`,
   });
 };
 
 const resolveUninstall = () => {
   let ext = platform === "win32" ? ".exe" : "";
+  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
+
   resolveResource({
-    file: "uninstall-service" + ext,
+    file: "uninstall-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
   });
 };

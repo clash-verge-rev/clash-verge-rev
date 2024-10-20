@@ -43,12 +43,6 @@ pub async fn resolve_setup(app: &mut App) {
     handle::Handle::global().init(app.app_handle());
     VERSION.get_or_init(|| version.clone());
 
-    if service::check_service().await.is_err() {
-        log_err!(service::reinstall_service().await);
-        //延迟启动，避免闪屏
-        std::thread::sleep(std::time::Duration::from_millis(1000));
-    }
-
     log_err!(init::init_config());
     log_err!(init::init_resources());
     log_err!(init::init_scheme());
@@ -56,18 +50,22 @@ pub async fn resolve_setup(app: &mut App) {
     // 处理随机端口
     log_err!(resolve_random_port_config());
     // 启动核心
-    log::trace!("init config");
-
+    log::trace!(target:"app", "init config");
     log_err!(Config::init_config().await);
 
-    log::trace!("launch core");
+    if service::check_service().await.is_err() {
+        log_err!(service::reinstall_service().await);
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+    }
+
+    log::trace!(target: "app", "launch core");
     log_err!(CoreManager::global().init().await);
 
     // setup a simple http server for singleton
-    log::trace!("launch embed server");
+    log::trace!(target: "app", "launch embed server");
     server::embed_server();
 
-    log::trace!("init system tray");
+    log::trace!(target: "app", "init system tray");
     log_err!(tray::Tray::create_systray());
 
     let silent_start = { Config::verge().data().enable_silent_start };
@@ -160,7 +158,7 @@ pub fn create_window() {
                 .latest()
                 .window_is_maximized
                 .unwrap_or(false);
-            log::trace!("try to calculate the monitor size");
+            log::trace!(target:"app", "try to calculate the monitor size");
             let center = (|| -> Result<bool> {
                 let mut center = false;
                 let monitor = win.current_monitor()?.ok_or(anyhow::anyhow!(""))?;
@@ -220,7 +218,7 @@ pub fn save_window_size_position(save_to_file: bool) -> Result<()> {
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
-    log::info!("received deep link: {}", param);
+    log::info!(target:"app", "received deep link: {}", param);
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
 
