@@ -297,7 +297,8 @@ jobs:
           git checkout -b $BRANCH
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
-          git commit -am "docs: update CHANGELOG.txt and UPDATELOG.md"
+          git add CHANGELOG.txt UPDATELOG.md
+          git commit -m "docs: update CHANGELOG.txt and UPDATELOG.md"
           git push --set-upstream origin $BRANCH
 
           gh label create "$LABEL" \
