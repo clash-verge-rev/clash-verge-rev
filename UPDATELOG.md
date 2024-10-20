@@ -1,8 +1,13 @@
 ## v2.0.0
 
+### Notice
+
+- 由于更改了服务安装逻辑，Mac/Linux 首次安装需要输入 2 遍系统密码卸载和安装服务，以后可以丝滑使用 tun(虚拟网卡)模式
+
 ### Breaking changes
 
 - 重大框架升级：使用 Tauri 2.0（巨量改进与性能提升）
+- 强烈建议完全删除 1.x 老版本再安装此版本
 - 敬请测试，出现 bug 到 issues 中提出
 
 ### Features
@@ -30,12 +35,9 @@
 ### Bugs Fixes
 
 - 修复已有多个订阅导入新订阅会跳选订阅的问题
+- 修复多个 Linux 下的 bug, Tun 模式在 Linux 下目前工作正常
 - 修复 Linux wayland 下任务栏图标缺失的问题
 - 移除多余退出变量和钩子
-
-### 已知问题
-
-- 由于[Tauri 底层依赖库 bug](https://github.com/tauri-apps/tauri/issues/10546)，在测试节点连通性时关闭窗口会导致程序崩溃；在底层 bug 未修复前，暂时屏蔽窗口关闭功能。
 
 ---
 
