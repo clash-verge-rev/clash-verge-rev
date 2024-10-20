@@ -34,7 +34,7 @@ export const LogoTitle = ({ open }: { open: boolean }) => {
         </div>
       </div>
       <UpdateButton
-        className={cn("absolute left-0 top-0 scale-[0.7]", {
+        className={cn("absolute left-0 top-0 z-50 scale-[0.7] cursor-pointer", {
           "left-16 top-0 scale-75": open,
         })}
       />
