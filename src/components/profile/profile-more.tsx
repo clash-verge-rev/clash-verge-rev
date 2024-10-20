@@ -200,6 +200,7 @@ export const ProfileMore = (props: Props) => {
               bottom: 0,
               left: 0,
               right: 0,
+              zIndex: 10,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
