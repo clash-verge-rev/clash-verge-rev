@@ -253,7 +253,7 @@ export const ProfileEditorViewer = (props: Props) => {
           />
 
           {isScriptMerge && (
-            <div className="flex flex-shrink-0 flex-grow-0 basis-16 flex-col items-center justify-end space-y-2">
+            <div className="flex flex-shrink-0 flex-grow-0 basis-14 flex-col items-center justify-end space-y-2">
               <Tooltip title={t("Console")} placement="left">
                 <IconButton
                   aria-label="terminal"

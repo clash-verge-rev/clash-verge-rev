@@ -281,6 +281,7 @@
   "Expire Time": "Expire Time",
   "Used / Total": "Used / Total",
   "Console": "Console",
+  "Run Check": "Run Check",
   "Expand All": "Expand All",
   "Collapse All": "Collapse All",
   "Update Rule Provider Error": "[ {{name}} ] Update Failed: {{errorMsg}}",
@@ -304,6 +305,9 @@
   "WebDav Username": "WebDav Username",
   "WebDav Password": "WebDav Password",
   "Backup Files": "Backup Files",
+  "WebDav Connection Failed": "WebDav , {{error}}",
+  "Backup Failed": "备份失败, {{error}}",
+  "Backup Successful": "备份成功",
   "Apply": "Apply",
   "BK_All": "Config + Profiles",
   "BK_Profiles": "Profiles"

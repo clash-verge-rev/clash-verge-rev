@@ -137,8 +137,8 @@ const SettingVerge = ({ onError }: Props) => {
         await webDavRef.current?.getAllBackupFiles();
         webDavRef.current?.open();
       }
-    } catch (e) {
-      Notice.error(`Failed to connect to WebDAV server.\n ${e}`, 3000);
+    } catch (e: any) {
+      Notice.error(t("WebDav Connection Failed", { error: e }), 3000);
     } finally {
       setSaving(false);
       setLoadingBackupFiles(false);
@@ -149,9 +149,9 @@ const SettingVerge = ({ onError }: Props) => {
     try {
       setStartingBackup(true);
       await createAndUploadBackup(false, onlyBackupProfiles);
-      Notice.success(t("Backup successfully"));
+      Notice.success(t("Backup Successful"));
     } catch (e) {
-      Notice.error(`Failed to backup.\n ${e}`, 3000);
+      Notice.error(t("Backup Failed", { error: e }), 3000);
     } finally {
       setStartingBackup(false);
     }

@@ -281,6 +281,7 @@
   "Expire Time": "过期时间",
   "Used / Total": "已使用 / 总共",
   "Console": "控制台",
+  "Run Check": "运行检查",
   "Expand All": "全部展开",
   "Collapse All": "全部折叠",
   "Update Rule Provider Error": "[ {{name}} ] 更新失败：{{errorMsg}}",
@@ -304,6 +305,9 @@
   "WebDav Username": "WebDav 用户名",
   "WebDav Password": "WebDav 密码",
   "Backup Files": "备份文件列表",
+  "WebDav Connection Failed": "WebDav 连接失败, {{error}}",
+  "Backup Failed": "备份失败, {{error}}",
+  "Backup Successful": "备份成功",
   "Apply": "应用",
   "BK_All": "配置 + 订阅",
   "BK_Profiles": "订阅"
