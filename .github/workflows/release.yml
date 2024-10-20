@@ -280,12 +280,12 @@ jobs:
       - name: Pnpm install
         run: pnpm i
 
-      - name: Release updater file & Update log
+      - name: Update changelog & Release updater file
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pnpm updater
           pnpm updater --changelog
+          pnpm updater
 
       - name: Create Pull Request
         env:

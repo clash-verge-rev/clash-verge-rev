@@ -261,7 +261,7 @@ export async function resolveUpdateLog(tag) {
 
 export async function updateUpdateLog() {
   const tag = await getLatestTag();
-  const tagTitle = `## v${tag}`;
+  const tagTitle = `## ${tag.name}`;
   // write all change log content to update log file
   const changeLogContent = await fs
     .readFile(change_log_file)
