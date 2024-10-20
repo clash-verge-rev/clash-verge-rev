@@ -297,6 +297,9 @@
   "Duplicate Bypass": "重复的代理绕过",
   "Reset Default Bypass": "重置为默认代理绕过",
 
+  "Script Run Check Failed": "脚本运行检查失败, 请检查脚本是否正确",
+  "Script Run Check Successful": "脚本运行检查成功, 可正常运行",
+
   "WebDav Backup": "WebDav 备份",
   "Recovery": "恢复",
   "Backup": "备份",

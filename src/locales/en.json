@@ -297,6 +297,9 @@
   "Duplicate Bypass": "Duplicate Bypass",
   "Reset Default Bypass": "Reset Default Bypass",
 
+  "Script Run Check Failed": "Script run check failed, Please check the script content is correct",
+  "Script Run Check Successful": "Script run check successful, This script can be run normally",
+
   "WebDav Backup": "WebDav Backup",
   "Recovery": "Recovery",
   "Backup": "Backup",

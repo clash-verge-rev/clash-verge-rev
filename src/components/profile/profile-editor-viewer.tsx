@@ -213,6 +213,7 @@ export const ProfileEditorViewer = (props: Props) => {
     }
   });
 
+  // TODO: The run check method blocks the rendering and needs to be troubleshot to find out what's wrong.
   return (
     <>
       <BaseDialog
@@ -221,39 +222,34 @@ export const ProfileEditorViewer = (props: Props) => {
         fullWidth
         cancelBtn={t("Cancel")}
         okBtn={t("Save")}
+        hideOkBtn={readOnly}
         okDisabled={isScriptMerge && !scriptChecked}
         onClose={() => {
+          setLogs(logInfo ?? []);
           setScriptChecked(false);
           onClose();
         }}
         onCancel={() => {
+          setLogs(logInfo ?? []);
           setScriptChecked(false);
           onClose();
         }}
         onOk={() => {
-          if (readOnly) {
-            Notice.info(t("ReadOnlyMessage"));
+          if (isScriptMerge && hasError) {
+            Notice.error(t("Script Run Check Failed"));
             return;
           }
-          if (!scriptChecked) {
-            setScriptChecked(true);
-            return;
-          } else {
-            onSave();
-          }
+          onSave();
         }}
         contentStyle={{
           height: `${size.height - 100}px`,
           userSelect: "text",
         }}>
         <div className="flex h-full overflow-hidden">
-          <div
-            className="h-full flex-auto overflow-y-auto"
-            ref={editorDomRef}
-          />
+          <div className="h-full w-full" ref={editorDomRef} />
 
           {isScriptMerge && (
-            <div className="flex flex-shrink-0 flex-grow-0 basis-14 flex-col items-center justify-end space-y-2">
+            <div className="flex w-14 flex-col items-center justify-end space-y-2">
               <Tooltip title={t("Console")} placement="left">
                 <IconButton
                   aria-label="terminal"
@@ -280,7 +276,6 @@ export const ProfileEditorViewer = (props: Props) => {
                   size="medium"
                   sx={{}}
                   onClick={async () => {
-                    setLogs([]);
                     const value = instanceRef.current?.getValue();
                     if (value == undefined) return;
 
@@ -288,10 +283,10 @@ export const ProfileEditorViewer = (props: Props) => {
                     const currentLogs = result.logs[property];
                     setLogs(currentLogs);
                     setScriptChecked(true);
-                    if (currentLogs[0].exception) {
-                      Notice.error("This script has errors, please fix it.");
+                    if (currentLogs[0]?.exception) {
+                      Notice.error(t("Script Run Check Failed"));
                     } else {
-                      Notice.success("This script is working correctly.");
+                      Notice.success(t("Script Run Check Successful"));
                     }
                   }}>
                   {scriptChecked ? (
