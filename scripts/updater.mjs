@@ -1,4 +1,5 @@
 import { context, getOctokit } from "@actions/github";
+import fs from "fs-extra";
 import fetch from "node-fetch";
 import path from "path";
 
