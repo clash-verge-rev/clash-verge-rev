@@ -143,7 +143,7 @@ impl Sysopt {
                 let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
-                    .args(["opac", address.as_str()])
+                    .args(["pac", address.as_str()])
                     .output()
                     .await
                     .unwrap();
@@ -361,7 +361,7 @@ impl Sysopt {
                     }
                 }
 
-                // #[cfg(target_os = "windows")]
+                #[cfg(target_os = "windows")]
                 {
                     use crate::core::handle::Handle;
                     use crate::utils::dirs;
@@ -381,7 +381,7 @@ impl Sysopt {
 
                         shell
                             .command(sysproxy_exe.as_path().to_str().unwrap())
-                            .args(["opac", address.as_str()])
+                            .args(["pac", address.as_str()])
                             .output()
                             .await
                             .unwrap()
