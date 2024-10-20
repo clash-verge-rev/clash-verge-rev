@@ -11,13 +11,15 @@ use std::{
 };
 use zip::write::SimpleFileOptions;
 
+// new backup dir
 #[cfg(not(feature = "verge-dev"))]
 static BACKUP_DIR: &str = "clash-verge-self";
+#[cfg(feature = "verge-dev")]
+static BACKUP_DIR: &str = "clash-verge-self-dev";
+
+// old backup dir
 #[cfg(not(feature = "verge-dev"))]
 static OLD_BACKUP_DIR: &str = "clash-verge-rev";
-
-#[cfg(feature = "verge-dev")]
-static BACKUP_DIR: &str = "clash-verge-rev-self";
 #[cfg(feature = "verge-dev")]
 static OLD_BACKUP_DIR: &str = "clash-verge-rev-dev";
 
