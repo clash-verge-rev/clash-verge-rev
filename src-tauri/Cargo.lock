@@ -6387,7 +6387,8 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-clipboard-manager"
 version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78b7d556886c15849198c0948fd7f4c880492f0461539176da0a8a70272e2904"
 dependencies = [
  "arboard",
  "image",
@@ -6402,7 +6403,8 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-deep-link"
 version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#3fd283121f5ee739ac8a5149fa7e7520f992aeb0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31a9b5725027c6e9e075b06cb2d5c2cd3b5c29daa8012b404e1ff755cc56082f"
 dependencies = [
  "dunce",
  "log",
@@ -6447,8 +6449,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-dialog"
-version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ff33d09331cc22bf4771a2633b62afc1038e36273eef22bff12f53d33decd91"
 dependencies = [
  "log",
  "raw-window-handle 0.6.2",
@@ -6464,8 +6467,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-fs"
-version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16d0816b27207c29aaff632c73b702785140cf16fe6150c201a2720245b8ea88"
 dependencies = [
  "anyhow",
  "dunce",
@@ -6500,7 +6504,8 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-notification"
 version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef492a2d19b6376bb4c9e0c4fab3f3bf8a220ea112d24f35027b737ff55de20c"
 dependencies = [
  "log",
  "notify-rust",
@@ -6518,7 +6523,8 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-process"
 version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae06a00087c148962a52814a2d7265b1a0505bced5ffb74f8c284a5f96a4d03d"
 dependencies = [
  "tauri",
  "tauri-plugin",
@@ -6526,8 +6532,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-shell"
-version = "2.0.1"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#cfd48b3b2ec0fccfc162197518694ed59ceda22c"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ad7880c5586b6b2104be451e3d7fc0f3800c84bda69e9ba81c828f87cb34267"
 dependencies = [
  "encoding_rs",
  "log",

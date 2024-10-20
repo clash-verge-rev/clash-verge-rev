@@ -45,13 +45,13 @@ tauri = { version = "2.0.0-rc", features = [
     "image-png",
 ] }
 network-interface = { version = "2.0.0", features = ["serde"] }
-tauri-plugin-shell = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
-tauri-plugin-dialog = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
-tauri-plugin-fs = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
-tauri-plugin-notification = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
-tauri-plugin-process = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
-tauri-plugin-clipboard-manager = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
-tauri-plugin-deep-link = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
+tauri-plugin-shell = "2.0.2"
+tauri-plugin-dialog = "2.0.2"
+tauri-plugin-fs = "2.0.2"
+tauri-plugin-notification = "2.0.1"
+tauri-plugin-process = "2.0.1"
+tauri-plugin-clipboard-manager = "2.0.1"
+tauri-plugin-deep-link = "2.0.1"
 tauri-plugin-devtools = "2.0.0-rc"
 url = "2.5.2"
 [target.'cfg(windows)'.dependencies]
