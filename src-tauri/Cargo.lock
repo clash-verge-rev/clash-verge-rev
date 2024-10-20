@@ -779,6 +779,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "brotli"
+version = "7.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc97b8f16f944bba54f0433f07e30be199b6dc2bd25937444bbad560bcea29bd"
+dependencies = [
+ "alloc-no-stdlib",
+ "alloc-stdlib",
+ "brotli-decompressor",
+]
+
+[[package]]
 name = "brotli-decompressor"
 version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6333,7 +6344,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95d7443dd4f0b597704b6a14b964ee2ed16e99928d8e6292ae9825f09fbcd30e"
 dependencies = [
  "base64 0.22.1",
- "brotli",
+ "brotli 6.0.0",
  "ico",
  "json-patch",
  "plist",
@@ -6602,9 +6613,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime-wry"
-version = "2.1.1"
+version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1431602bcc71f2f840ad623915c9842ecc32999b867c4a787d975a17a9625cc6"
+checksum = "62fa2068e8498ad007b54d5773d03d57c3ff6dd96f8c8ce58beff44d0d5e0d30"
 dependencies = [
  "gtk",
  "http 1.1.0",
@@ -6629,11 +6640,11 @@ dependencies = [
 
 [[package]]
 name = "tauri-utils"
-version = "2.0.1"
+version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c38b0230d6880cf6dd07b6d7dd7789a0869f98ac12146e0d18d1c1049215a045"
+checksum = "1fc65d6f5c54e56b66258948a6d9e47a82ea41f4b5a7612bfbdd1634c2913ed0"
 dependencies = [
- "brotli",
+ "brotli 7.0.0",
  "cargo_metadata",
  "ctor",
  "dunce",
