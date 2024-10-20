@@ -108,7 +108,7 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
 #[cfg(target_os = "linux")]
 pub fn linux_elevator() -> String {
     use std::process::Command;
-    match Command::new("which").arg("sudo").output() {
+    match Command::new("which").arg("pkexec").output() {
         Ok(output) => {
             if !output.stdout.is_empty() {
                 // Convert the output to a string slice
