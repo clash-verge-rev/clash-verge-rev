@@ -37,11 +37,11 @@ impl VergeLog {
     }
 
     /// create log4rs config
-    /// 
+    ///
     /// # Args:
     /// - `log_level`: log level
     /// - `log_file`: log file path, if None, use default log file path
-    /// 
+    ///
     /// # Returns:
     /// - `Option<log4rs::config::Config>`: log4rs config
     fn create_log_config(
@@ -197,8 +197,10 @@ impl VergeLog {
         }
 
         let service_log_dir = log_dir.join("service");
-        for file in fs::read_dir(service_log_dir)?.flatten() {
-            let _ = process_file(file);
+        if service_log_dir.exists() {
+            for file in fs::read_dir(service_log_dir)?.flatten() {
+                let _ = process_file(file);
+            }
         }
 
         Ok(())
