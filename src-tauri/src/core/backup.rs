@@ -98,9 +98,13 @@ impl WebDav {
 
     pub async fn init(&self) -> Result<(), Box<dyn std::error::Error>> {
         let verge = Config::verge().latest().clone();
-        let url = verge.webdav_url.unwrap_or("".to_string());
-        let username = verge.webdav_username.unwrap_or("".to_string());
-        let password = verge.webdav_password.unwrap_or("".to_string());
+        if verge.webdav_url.is_none() || verge.webdav_username.is_none() || verge.webdav_password.is_none() {
+            log::trace!(target: "app", "webdav info config is empty, skip init webdav");
+            return Ok(());
+        }
+        let url = verge.webdav_url.unwrap_or_default();
+        let username = verge.webdav_username.unwrap_or_default();
+        let password = verge.webdav_password.unwrap_or_default();
         self.update_webdav_info(url, username, password).await?;
 
         tauri::async_runtime::spawn(async move {
