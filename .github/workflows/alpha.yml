@@ -283,7 +283,7 @@ jobs:
 
       - name: Generate Changelog
         run: |
-          cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
+          cat >> ${{ github.workspace }}/CHANGELOG.md << 'EOF'
 
           [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
 
@@ -295,7 +295,7 @@ jobs:
         with:
           tag_name: alpha
           name: "Clash Verge Self Alpha"
-          body_path: ${{ github.workspace }}/CHANGELOG.txt
+          body_path: ${{ github.workspace }}/CHANGELOG.md
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true

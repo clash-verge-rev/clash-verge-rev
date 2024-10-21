@@ -12,7 +12,7 @@ const UPDATE_JSON_FILE = "update.json";
 const UPDATE_JSON_PROXY = "update-proxy.json";
 
 // log file
-const CHANGE_LOG = "CHANGELOG.txt";
+const CHANGE_LOG = "CHANGELOG.md";
 const UPDATE_LOG = "UPDATELOG.md";
 const update_log_file = path.join(cwd, UPDATE_LOG);
 const change_log_file = path.join(cwd, CHANGE_LOG);

@@ -117,7 +117,7 @@ jobs:
 
       - name: Generate Changelog
         run: |
-          cat >> ${{ github.workspace }}/CHANGELOG.txt << 'EOF'
+          cat >> ${{ github.workspace }}/CHANGELOG.md << 'EOF'
 
           [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
 
@@ -129,7 +129,7 @@ jobs:
         with:
           tag_name: v${{steps.get_version.outputs.VERSION}}
           name: "Clash Verge Self v${{steps.get_version.outputs.VERSION}}"
-          body_path: ${{ github.workspace }}/CHANGELOG.txt
+          body_path: ${{ github.workspace }}/CHANGELOG.md
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
@@ -138,7 +138,7 @@ jobs:
         with:
           tag_name: v${{steps.get_version.outputs.VERSION}}
           name: "Clash Verge Self v${{steps.get_version.outputs.VERSION}}"
-          body_path: ${{ github.workspace }}/CHANGELOG.txt
+          body_path: ${{ github.workspace }}/CHANGELOG.md
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -297,8 +297,8 @@ jobs:
           git checkout -b $BRANCH
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
-          git add CHANGELOG.txt UPDATELOG.md
-          git commit -m "docs: update CHANGELOG.txt and UPDATELOG.md"
+          git add CHANGELOG.md UPDATELOG.md
+          git commit -m "docs: update CHANGELOG.md and UPDATELOG.md"
           git push --set-upstream origin $BRANCH
 
           gh label create "$LABEL" \
@@ -308,7 +308,7 @@ jobs:
 
           gh pr create \
             --title "Release Changelog update" \
-            --body "Current pull request contains patched \`CHANGELOG.txt\` and \`UPDATELOG.md\` files." \
+            --body "Current pull request contains patched \`CHANGELOG.md\` and \`UPDATELOG.md\` files." \
             --label "$LABEL" \
             --head $BRANCH
 
