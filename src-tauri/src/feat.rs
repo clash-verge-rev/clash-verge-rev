@@ -16,7 +16,7 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 pub fn open_or_close_dashboard() {
     if let Some(window) = handle::Handle::global().get_window() {
         if let Ok(true) = window.is_focused() {
-            let _ = window.close();
+            let _ = window.minimize();
             return;
         }
     }
