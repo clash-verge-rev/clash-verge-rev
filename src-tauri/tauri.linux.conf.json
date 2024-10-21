@@ -9,14 +9,16 @@
         "desktopTemplate": "./template/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
-        "replaces": ["clash-verge"]
+        "replaces": ["clash-verge"],
+        "postInstallScript": "../../../packages/linux/post-install.sh"
       },
       "rpm": {
         "depends": ["openssl"],
         "desktopTemplate": "./template/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
-        "obsoletes": ["clash-verge"]
+        "obsoletes": ["clash-verge"],
+        "postInstallScript": "../../../packages/linux/post-install.sh"
       }
     },
     "externalBin": [
