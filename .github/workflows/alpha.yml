@@ -235,7 +235,7 @@ jobs:
           cat > release.txt << 'EOF'
           ## 我应该下载哪个版本？
 
-          ### MacOS (提示文件损坏或开发者无法验证请查看下面FAQ)
+          ### MacOS
           - MacOS intel芯片: x64.dmg
           - MacOS apple M芯片: aarch64.dmg
 
@@ -245,20 +245,18 @@ jobs:
           ### Windows (Win7 用户请查看下面FAQ中的解决方案)
           #### 正常版本(推荐)
           - 64位: x64-setup.exe
-          - 32位: x86-setup.exe
           - arm64架构: arm64-setup.exe
-          #### 便携版(不推荐使用，无法自动更新)
-          - 64位: x64_portable.zip
-          - 32位: x86_portable.zip
-          - arm64架构: arm64_portable.zip
-          #### 内置Webview2版(体积较大，仅在企业版系统或Win7无法安装webview2时使用)
+          #### 便携版问题很多不再提供
+          #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
           - 64位: x64_fixed_webview2-setup.exe
-          - 32位: x86_fixed_webview2-setup.exe
           - arm64架构: arm64_fixed_webview2-setup.exe
 
           ### FAQ
 
-          - [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
+          - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
+
+          ### 稳定机场VPN推荐
+          - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
           Created at  ${{ env.BUILDTIME }}.
           EOF
