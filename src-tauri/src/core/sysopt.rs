@@ -140,7 +140,7 @@ impl Sysopt {
 
             let shell = app_handle.shell();
             let output = if pac_enable {
-                let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
+                let address = format!("http://{}:{}/commands/pac", "127.0.0.1", pac_port);
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
                     .args(["pac", address.as_str()])
@@ -377,7 +377,7 @@ impl Sysopt {
 
                     let shell = app_handle.shell();
                     let output = if pac {
-                        let address = format!("http://{}:{}/pac", "127.0.0.1", pac_port);
+                        let address = format!("http://{}:{}/commands/pac", "127.0.0.1", pac_port);
 
                         shell
                             .command(sysproxy_exe.as_path().to_str().unwrap())
