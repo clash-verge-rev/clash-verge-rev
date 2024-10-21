@@ -1,5 +1,5 @@
 import { cn } from "@/utils";
-import { Link, Tooltip } from "@mui/material";
+import { Link, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 
 interface Props {
@@ -27,7 +27,9 @@ export const ProxyGroupSidebar = (props: Props) => {
               underline="hover"
               className="line-clamp-1 cursor-pointer text-primary hover:text-secondary"
               onClick={() => onGroupNameClick && onGroupNameClick(name)}>
-              {open ? name : [...name][0]}
+              <Typography variant="body2">
+                {open ? name : [...name][0]}
+              </Typography>
             </Link>
           </Tooltip>
         ))}
