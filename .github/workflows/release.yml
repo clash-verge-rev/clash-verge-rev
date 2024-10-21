@@ -291,8 +291,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          VERSION="${{ needs.release-for-linux.outputs.VERSION }}"
+          BRANCH="changelog-update-$VERSION"
           LABEL="release changelog"
-          BRANCH=release-update
 
           git checkout -b $BRANCH
           git config user.email "action@github.com"
@@ -302,13 +303,14 @@ jobs:
           git push --set-upstream origin $BRANCH
 
           gh label create "$LABEL" \
+            --color "C5DEF5" \
             --description "Pull requests with release changelog update" \
             --force \
             || true
 
           gh pr create \
             --title "Release Changelog update" \
-            --body "Current pull request contains patched \`CHANGELOG.md\` and \`UPDATELOG.md\` files." \
+            --body "Current pull request contains patched \`CHANGELOG.md\` and \`UPDATELOG.md\` files for the \`$VERSION\` version." \
             --label "$LABEL" \
             --head $BRANCH
 
