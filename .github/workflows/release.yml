@@ -229,6 +229,8 @@ jobs:
     strategy:
       fail-fast: false
     runs-on: ubuntu-22.04
+    outputs:
+      VERSION: ${{ needs.release-for-linux.outputs.VERSION }}
     steps:
       - name: Checkout
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4
@@ -291,7 +293,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ needs.release-for-linux.outputs.VERSION }}"
+          VERSION="${{ needs.pkgbuild.outputs.VERSION }}"
           BRANCH="changelog-update-$VERSION"
           LABEL="release changelog"
 
