@@ -206,7 +206,7 @@ pub fn init_resources() -> Result<()> {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
         let test_dest_path = test_dir.join(file);
-        log::info!(target: "app", "src_path: {src_path:?}, dest_path: {dest_path:?}");
+        log::debug!(target: "app", "src_path: {src_path:?}, dest_path: {dest_path:?}");
 
         let handle_copy = |dest: &PathBuf| {
             match fs::copy(&src_path, dest) {

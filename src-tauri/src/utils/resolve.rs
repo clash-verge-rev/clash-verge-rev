@@ -54,8 +54,16 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(Config::init_config().await);
 
     if service::check_service().await.is_err() {
-        log_err!(service::reinstall_service().await);
-        std::thread::sleep(std::time::Duration::from_millis(1000));
+        match service::reinstall_service().await {
+            Ok(_) => {
+                log::info!(target:"app", "install service susccess.");
+                std::thread::sleep(std::time::Duration::from_millis(1000));
+            }
+            Err(e) => {
+                log::error!(target: "app", "{e:?}");
+                app.app_handle().exit(-1);
+            }
+        }
     }
 
     log::trace!(target: "app", "launch core");

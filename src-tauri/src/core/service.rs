@@ -138,11 +138,13 @@ pub async fn reinstall_service() -> Result<()> {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
 
-    let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
-    let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
+    let install_shell: String = install_path.to_string_lossy().into_owned();
+    let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
     let command = format!(
-        r#"do shell script "sudo {uninstall_shell} && sudo {install_shell}" with administrator privileges"#
+        r#"do shell script "sudo '{uninstall_shell}' && sudo '{install_shell}'" with administrator privileges"#
     );
+
+    log::debug!(target: "app", "command: {}", command);
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])
