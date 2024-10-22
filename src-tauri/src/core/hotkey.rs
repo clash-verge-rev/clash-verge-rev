@@ -79,7 +79,7 @@ impl Hotkey {
             }
         });
 
-        log::info!(target: "app", "register hotkey {hotkey} {func}");
+        log::debug!(target: "app", "register hotkey {hotkey} {func}");
         Ok(())
     }
 
@@ -88,7 +88,7 @@ impl Hotkey {
         let manager = app_handle.global_shortcut();
         manager.unregister(hotkey)?;
 
-        log::info!(target: "app", "unregister hotkey {hotkey}");
+        log::debug!(target: "app", "unregister hotkey {hotkey}");
         Ok(())
     }
 
