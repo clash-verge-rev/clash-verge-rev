@@ -1,6 +1,6 @@
 import { cn } from "@/utils";
 import { Link, Tooltip, Typography } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 interface Props {
   groupNameList: string[];
@@ -8,9 +8,27 @@ interface Props {
   className?: string;
 }
 
+type GroupName = {
+  name: string;
+  shortName: string;
+};
+
 export const ProxyGroupSidebar = (props: Props) => {
   const { groupNameList, onGroupNameClick, className } = props;
   const [open, setOpen] = useState(false);
+  const groupNameListWithShortName: GroupName[] = useMemo(() => {
+    return groupNameList.map((name) => {
+      let shortName = name.substring(0, 4);
+      const regex = RegExp(/^.*[\u4e00-\u9fa5a-zA-Z0-9\s]+$/);
+      if (regex.test(shortName)) {
+        shortName = name.substring(0, 2);
+        if (regex.test(shortName)) {
+          shortName = name.substring(0, 1);
+        }
+      }
+      return { name, shortName };
+    });
+  }, [groupNameList]);
 
   return (
     <div
@@ -21,14 +39,14 @@ export const ProxyGroupSidebar = (props: Props) => {
         className,
       )}>
       <div className="no-scrollbar hover:scrollbar w-full space-y-2 overflow-auto px-1 py-2">
-        {groupNameList.map((name) => (
-          <Tooltip title={name} key={name} placement="left">
+        {groupNameListWithShortName.map((item) => (
+          <Tooltip title={item.name} key={item.name} placement="left">
             <Link
               underline="hover"
               className="line-clamp-1 cursor-pointer text-primary hover:text-secondary"
-              onClick={() => onGroupNameClick && onGroupNameClick(name)}>
+              onClick={() => onGroupNameClick && onGroupNameClick(item.name)}>
               <Typography variant="body2">
-                {open ? name : [...name][0]}
+                {open ? item.name : item.shortName}
               </Typography>
             </Link>
           </Tooltip>
