@@ -34,7 +34,7 @@ export const LogoTitle = ({ open }: { open: boolean }) => {
         </div>
       </div>
       <UpdateButton
-        className={cn("absolute left-0 top-0 z-50 scale-[0.7] cursor-pointer", {
+        className={cn("absolute left-0 top-0 z-10 scale-[0.7] cursor-pointer", {
           "left-16 top-0 scale-75": open,
         })}
       />
@@ -45,7 +45,7 @@ export const LogoTitle = ({ open }: { open: boolean }) => {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 20, opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="absolute right-2 top-0 z-50 h-[30px] w-[30px] cursor-pointer border-none bg-transparent"
+          className="absolute right-2 top-0 z-10 h-[30px] w-[30px] cursor-pointer border-none bg-transparent"
           onClick={(e) => toggleTheme(e, isDark ? "light" : "dark")}>
           {isDark ? (
             <DarkMode

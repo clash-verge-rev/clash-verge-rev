@@ -2,12 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  @font-face {
-    font-family: "twemoji mozilla";
-    src: url("./assets/fonts/Twemoji.Mozilla.ttf");
-  }
+@font-face {
+  font-family: "twemoji mozilla";
+  src: url("./assets/fonts/Twemoji.Mozilla.ttf");
+}
 
+@layer base {
   body {
     margin: 0;
     padding: 0;
