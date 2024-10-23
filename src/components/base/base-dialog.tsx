@@ -58,9 +58,9 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
           onClick={onClose}
           className="fixed inset-0 z-50 flex h-dvh items-center justify-center bg-black bg-opacity-50">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.1 }}
             onClick={(e) => e.stopPropagation()}
             style={{

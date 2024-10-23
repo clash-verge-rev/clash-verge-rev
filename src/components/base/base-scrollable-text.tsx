@@ -68,8 +68,7 @@ export const ScrollableText = ({
             ) {
               setFirstDisplay(false);
             }
-          }}
-          onAnimationComplete={(definition) => {}}>
+          }}>
           {children}
         </motion.div>
       </div>
