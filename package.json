@@ -90,7 +90,7 @@
     "tailwindcss": "3.4.14",
     "terser": "5.36.0",
     "typescript": "5.6.3",
-    "vite": "5.4.9",
+    "vite": "5.4.10",
     "vite-plugin-monaco-editor": "1.1.0",
     "vite-plugin-svgr": "4.2.0"
   },
