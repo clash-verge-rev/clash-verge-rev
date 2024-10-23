@@ -121,10 +121,6 @@ export const ProxyGroups = (props: Props) => {
     return <BaseEmpty text={t("clash_mode_direct")} />;
   }
 
-  if (mode === "global") {
-    return <BaseEmpty text={t("clash_mode_global")} />;
-  }
-
   return (
     <Virtuoso
       ref={virtuosoRef}
