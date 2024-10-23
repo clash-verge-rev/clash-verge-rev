@@ -66,7 +66,7 @@ const ProfilePage = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  const { current } = location.state || {};
+  const { stateCurrent } = location.state || {};
 
   useEffect(() => {
     const unlisten = addListener("tauri://file-drop", async (event) => {
@@ -135,23 +135,8 @@ const ProfilePage = () => {
       Notice.success(t("Profile Imported Successfully"));
       setUrl("");
       setLoading(false);
-
-      getProfiles().then(async (newProfiles) => {
-        mutate("getProfiles", newProfiles);
-
-        const remoteItem = newProfiles.items?.find((e) => e.type === "remote");
-
-        const itemsCount = newProfiles.items?.filter(
-          (e) => e.type === "remote" || e.type === "local"
-        ).length as number;
-
-        if (remoteItem && (itemsCount == 1 || !newProfiles.current)) {
-          const current = remoteItem.uid;
-          await patchProfiles({ current });
-          mutateLogs();
-          setTimeout(() => activateSelected(), 2000);
-        }
-      });
+      mutateProfiles();
+      await onEnhance(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
       setLoading(false);
@@ -171,9 +156,8 @@ const ProfilePage = () => {
     }
   };
 
-  const activateProfile = async (profile: string) => {
+  const activateProfile = async (profile: string, notifySuccess: boolean) => {
     // 避免大多数情况下loading态闪烁
-
     const reset = setTimeout(() => {
       setActivatings((prev) => [...prev, profile]);
     }, 100);
@@ -183,7 +167,9 @@ const ProfilePage = () => {
       await mutateLogs();
       closeAllConnections();
       await activateSelected();
-      Notice.success(t("Profile Switched"), 1000);
+      if (notifySuccess) {
+        Notice.success(t("Profile Switched"), 1000);
+      }
     } catch (err: any) {
       Notice.error(err?.message || err.toString(), 4000);
     } finally {
@@ -193,24 +179,25 @@ const ProfilePage = () => {
   };
   const onSelect = useLockFn(async (current: string, force: boolean) => {
     if (!force && current === profiles.current) return;
-    await activateProfile(current);
+    await activateProfile(current, true);
   });
 
   useEffect(() => {
     (async () => {
-      if (current && current !== profiles.current) {
-        console.log("current:", current);
-        await activateProfile(current);
+      if (stateCurrent && stateCurrent !== profiles.current) {
+        await activateProfile(stateCurrent, false);
       }
     })();
-  }, current);
+  }, stateCurrent);
 
-  const onEnhance = useLockFn(async () => {
+  const onEnhance = useLockFn(async (notifySuccess: boolean) => {
     setActivatings(currentActivatings());
     try {
       await enhanceProfiles();
       mutateLogs();
-      Notice.success(t("Profile Reactivated"), 1000);
+      if (notifySuccess) {
+        Notice.success(t("Profile Reactivated"), 1000);
+      }
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
     } finally {
@@ -225,7 +212,7 @@ const ProfilePage = () => {
       await deleteProfile(uid);
       mutateProfiles();
       mutateLogs();
-      current && (await onEnhance());
+      current && (await onEnhance(false));
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     } finally {
@@ -302,7 +289,7 @@ const ProfilePage = () => {
             size="small"
             color="primary"
             title={t("Reactivate Profiles")}
-            onClick={onEnhance}
+            onClick={() => onEnhance(true)}
           >
             <LocalFireDepartmentRounded />
           </IconButton>
@@ -401,7 +388,7 @@ const ProfilePage = () => {
                       onEdit={() => viewerRef.current?.edit(item)}
                       onSave={async (prev, curr) => {
                         if (prev !== curr && profiles.current === item.uid) {
-                          await onEnhance();
+                          await onEnhance(false);
                         }
                       }}
                       onDelete={() => onDelete(item.uid)}
@@ -424,7 +411,7 @@ const ProfilePage = () => {
                 id="Merge"
                 onSave={async (prev, curr) => {
                   if (prev !== curr) {
-                    await onEnhance();
+                    await onEnhance(false);
                   }
                 }}
               />
@@ -435,7 +422,7 @@ const ProfilePage = () => {
                 logInfo={chainLogs["Script"]}
                 onSave={async (prev, curr) => {
                   if (prev !== curr) {
-                    await onEnhance();
+                    await onEnhance(false);
                   }
                 }}
               />
@@ -444,7 +431,13 @@ const ProfilePage = () => {
         </Box>
       </Box>
 
-      <ProfileViewer ref={viewerRef} onChange={() => mutateProfiles()} />
+      <ProfileViewer
+        ref={viewerRef}
+        onChange={async () => {
+          mutateProfiles();
+          await onEnhance(false);
+        }}
+      />
       <ConfigViewer ref={configRef} />
     </BasePage>
   );
