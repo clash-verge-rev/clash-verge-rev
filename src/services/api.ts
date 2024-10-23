@@ -64,7 +64,7 @@ export const updateGeoData = async () => {
 /// Upgrade clash core
 export const upgradeCore = async () => {
   const instance = await getAxios();
-  return instance.post("/upgrade");
+  return instance.post("/upgrade", {}, { timeout: 0 });
 };
 
 /// Get current rules
