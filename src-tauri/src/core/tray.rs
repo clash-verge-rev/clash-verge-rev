@@ -1,7 +1,8 @@
 use crate::{
     cmds,
     config::Config,
-    feat, t,
+    core::CoreManager,
+    feat, log_err, t,
     utils::{
         dirs,
         resolve::{self, VERSION},
@@ -330,7 +331,7 @@ fn create_tray_menu(
     let restart_app = &MenuItem::with_id(
         app_handle,
         "restart_app",
-        t!("Restart App", "重启Verge", use_zh),
+        t!("Restart App", "重启App", use_zh),
         true,
         None::<&str>,
     )
@@ -401,7 +402,15 @@ fn on_menu_event(app_handle: &AppHandle, event: MenuEvent) {
         "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
         "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
         "restart_clash" => feat::restart_clash_core(),
-        "restart_app" => tauri::process::restart(&app_handle.env()),
+        "restart_app" => {
+            tauri::async_runtime::block_on(async move {
+                log_err!(CoreManager::global().stop_core().await);
+            });
+            resolve::resolve_reset();
+            //睡1秒再重启
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            tauri::process::restart(&app_handle.env());
+        }
         "quit" => {
             println!("quit");
             feat::quit(Some(0));
