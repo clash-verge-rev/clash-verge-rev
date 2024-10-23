@@ -11,7 +11,7 @@ import {
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
 import { useClashInfo } from "@/hooks/use-clash";
-import { closeAllConnections } from "@/services/api";
+import { closeAllConnections, deleteConnection } from "@/services/api";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
 import { createSockette } from "@/utils/websocket";
@@ -131,7 +131,13 @@ const ConnectionsPage = () => {
     return [connections, download, upload];
   }, [connData, match, curOrderOpt]);
 
-  const onCloseAll = useLockFn(closeAllConnections);
+  const onCloseAll = useLockFn(async () => {
+    if (filterConn.length === connData.connections.length) {
+      await closeAllConnections();
+    } else {
+      filterConn.forEach(async (conn) => await deleteConnection(conn.id));
+    }
+  });
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
 
