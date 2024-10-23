@@ -59,7 +59,7 @@ export const ProxyRender = (props: RenderProps) => {
     return url.substring(url.lastIndexOf("/") + 1);
   }
 
-  if (type === 0 && !group.hidden) {
+  if (type === 0) {
     return (
       <ListItemButton
         dense
@@ -125,7 +125,7 @@ export const ProxyRender = (props: RenderProps) => {
     );
   }
 
-  if (type === 1 && !group.hidden) {
+  if (type === 1) {
     return (
       <ProxyHead
         sx={{ pl: 2, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
@@ -139,7 +139,7 @@ export const ProxyRender = (props: RenderProps) => {
     );
   }
 
-  if (type === 2 && !group.hidden) {
+  if (type === 2) {
     return (
       <ProxyItem
         group={group}
@@ -152,7 +152,7 @@ export const ProxyRender = (props: RenderProps) => {
     );
   }
 
-  if (type === 3 && !group.hidden) {
+  if (type === 3) {
     return (
       <Box
         sx={{
@@ -170,7 +170,7 @@ export const ProxyRender = (props: RenderProps) => {
     );
   }
 
-  if (type === 4 && !group.hidden) {
+  if (type === 4) {
     const proxyColItemsMemo = useMemo(() => {
       return proxyCol?.map((proxy) => (
         <ProxyItemMini
