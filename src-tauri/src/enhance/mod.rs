@@ -259,9 +259,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             });
     }
 
-    if enable_tun {
-        config = use_tun(config).await;
-    }
+    config = use_tun(config, enable_tun).await;
     config = use_sort(config);
 
     let mut exists_set = HashSet::new();
