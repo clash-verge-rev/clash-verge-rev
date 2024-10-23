@@ -18,13 +18,13 @@ macro_rules! append {
     };
 }
 
-pub async fn use_tun(mut config: Mapping) -> Mapping {
+pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
     let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
-    revise!(tun_val, "enable", true);
+    revise!(tun_val, "enable", enable);
     revise!(config, "tun", tun_val);
     config
 }
