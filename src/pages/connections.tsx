@@ -114,7 +114,7 @@ const ConnectionsPage = () => {
     };
   });
 
-  const [filterConn, download, upload] = useMemo(() => {
+  const [filterConn] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
     let connections = connData.connections.filter((conn) =>
       match(conn.metadata.host || conn.metadata.destinationIP || ""),
@@ -122,13 +122,7 @@ const ConnectionsPage = () => {
 
     if (orderFunc) connections = orderFunc(connections);
 
-    let download = 0;
-    let upload = 0;
-    connections.forEach((x) => {
-      download += x.download;
-      upload += x.upload;
-    });
-    return [connections, download, upload];
+    return [connections];
   }, [connData, match, curOrderOpt]);
 
   const onCloseAll = useLockFn(async () => {
@@ -149,10 +143,10 @@ const ConnectionsPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ mx: 1 }}>
-            {t("Downloaded")}: {parseTraffic(download)}
+            {t("Total Downloaded")}: {parseTraffic(connData.downloadTotal)}
           </Box>
           <Box sx={{ mx: 1 }}>
-            {t("Uploaded")}: {parseTraffic(upload)}
+            {t("Total Uploaded")}: {parseTraffic(connData.uploadTotal)}
           </Box>
           <IconButton
             color="inherit"
