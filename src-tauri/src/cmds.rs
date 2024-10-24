@@ -49,7 +49,7 @@ pub fn get_default_bypass() -> CmdResult<String> {
 
 #[tauri::command]
 pub async fn enhance_profiles() -> CmdResult {
-    wrap_err!(CoreManager::global().update_config().await)?;
+    wrap_err!(CoreManager::global().update_config(false).await)?;
     handle::Handle::refresh_clash();
     Ok(())
 }
@@ -78,9 +78,10 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
-    let should_update = wrap_err!({ Config::profiles().data().delete_item(index) })?;
-    if should_update {
-        wrap_err!(CoreManager::global().update_config().await)?;
+    let restart_core = wrap_err!({ Config::profiles().data().delete_item(index) })?;
+    // the current profile is deleted, need to restart the core to apply new current profile
+    if restart_core {
+        wrap_err!(CoreManager::global().update_config(true).await)?;
         handle::Handle::refresh_clash();
     }
 
@@ -90,9 +91,9 @@ pub async fn delete_profile(index: String) -> CmdResult {
 /// 修改profiles的
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
-    wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
+    let restart_core = wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
 
-    match CoreManager::global().update_config().await {
+    match CoreManager::global().update_config(restart_core).await {
         Ok(_) => {
             handle::Handle::refresh_clash();
             let _ = handle::Handle::update_systray_part();

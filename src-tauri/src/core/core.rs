@@ -7,10 +7,13 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
+use std::path::PathBuf;
 use std::{sync::Arc, time::Duration};
 use sysinfo::System;
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tokio::time::sleep;
+
+use super::verge_log::VergeLog;
 
 #[derive(Debug)]
 pub struct CoreManager {
@@ -125,8 +128,21 @@ impl CoreManager {
 
         if enable {
             // 服务模式启动失败就直接运行 sidecar
-            log::debug!(target: "app", "try to run core in service mode");
-            let res = service::run_core_by_service(&config_path).await;
+            // log::debug!(target: "app", "try to run core in service mode");
+            let verge_log = VergeLog::global();
+            let log_path = match verge_log.get_service_log_file() {
+                Some(log_path) => {
+                    log::info!("service log file: {log_path}");
+                    log_path
+                }
+                None => {
+                    let log_path = verge_log.create_service_log_file()?;
+                    log::info!("service log file: {log_path}");
+                    log_path
+                }
+            };
+
+            let res = service::run_core_by_service(&config_path, &PathBuf::from(log_path)).await;
             match res {
                 Ok(_) => return Ok(()),
                 Err(err) => {
@@ -136,6 +152,7 @@ impl CoreManager {
                 }
             }
         } else {
+            VergeLog::global().reset_service_log_file();
             // service mode is disable, patch the config: disable tun mode
             Config::clash()
                 .latest()
@@ -287,14 +304,20 @@ impl CoreManager {
 
     /// 更新proxies那些
     /// 如果涉及端口和外部控制则需要重启
-    pub async fn update_config(&self) -> Result<()> {
-        log::debug!(target: "app", "try to update clash config");
+    pub async fn update_config(&self, restart_core: bool) -> Result<()> {
+        log::debug!(target: "app", "try to update clash config, restart core: {restart_core}");
 
         // 更新订阅
         Config::generate()?;
 
         // 检查订阅是否正常
         self.check_config()?;
+
+        // 是否需要重启核心
+        if restart_core {
+            self.run_core().await?;
+            return Ok(());
+        }
 
         // 更新运行时订阅
         let path = Config::generate_file(ConfigType::Run)?;

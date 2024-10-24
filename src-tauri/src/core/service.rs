@@ -278,7 +278,7 @@ pub async fn check_service() -> Result<JsonResponse> {
 }
 
 /// start the clash by service
-pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
+pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBuf) -> Result<()> {
     check_service().await?;
     stop_core_by_service().await?;
 
@@ -293,9 +293,6 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     let config_dir = dirs::app_home_dir()?;
     let config_dir = dirs::path_to_str(&config_dir)?;
 
-    let log_path = dirs::service_log_file()?;
-    let log_path = dirs::path_to_str(&log_path)?;
-
     let config_file = dirs::path_to_str(config_file)?;
 
     let mut map = HashMap::new();
@@ -303,6 +300,9 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     map.insert("bin_path", bin_path);
     map.insert("config_dir", config_dir);
     map.insert("config_file", config_file);
+
+    // let log_path = dirs::service_log_file()?;
+    let log_path = dirs::path_to_str(&log_path)?;
     map.insert("log_file", log_path);
 
     let url = format!("{SERVICE_URL}/clash");

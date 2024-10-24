@@ -21,6 +21,7 @@ use crate::utils::dirs;
 pub struct VergeLog {
     log_handle: Arc<Mutex<Option<Handle>>>,
     log_file: Arc<Mutex<Option<String>>>,
+    service_log_file: Arc<Mutex<Option<String>>>,
 }
 
 impl VergeLog {
@@ -29,11 +30,20 @@ impl VergeLog {
         VERGE_LOG.get_or_init(|| VergeLog {
             log_handle: Arc::new(Mutex::new(None)),
             log_file: Arc::new(Mutex::new(None)),
+            service_log_file: Arc::new(Mutex::new(None)),
         })
     }
 
     pub fn get_log_file(&self) -> Option<String> {
         self.log_file.lock().clone()
+    }
+
+    pub fn get_service_log_file(&self) -> Option<String> {
+        self.service_log_file.lock().clone()
+    }
+
+    pub fn reset_service_log_file(&self) {
+        *self.service_log_file.lock() = None;
     }
 
     /// create log4rs config
@@ -104,6 +114,13 @@ impl VergeLog {
             .logger(logger_builder.additive(false).build("app", log_level))
             .build_lossy(root_builder.build(log_level));
         Some(config)
+    }
+
+    pub fn create_service_log_file(&self) -> Result<String> {
+        let service_log_file = dirs::service_log_file()?;
+        let service_log_file = service_log_file.to_string_lossy().to_string();
+        *self.service_log_file.lock() = Some(service_log_file.clone());
+        Ok(service_log_file)
     }
 
     pub fn init(&self) -> Result<()> {
