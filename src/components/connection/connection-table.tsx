@@ -56,7 +56,7 @@ export const ConnectionTable = (props: Props) => {
     {
       field: "ulSpeed",
       headerName: t("UL Speed"),
-      width: 80,
+      width: 100,
       align: "center",
       headerAlign: "center",
       valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
@@ -64,7 +64,7 @@ export const ConnectionTable = (props: Props) => {
     {
       field: "dlSpeed",
       headerName: t("DL Speed"),
-      width: 80,
+      width: 100,
       align: "center",
       headerAlign: "center",
       valueFormatter: (value) => parseTraffic(value).join(" ") + "/s",
@@ -72,12 +72,28 @@ export const ConnectionTable = (props: Props) => {
     { field: "chains", headerName: t("Chains"), flex: 260, minWidth: 260 },
     { field: "rule", headerName: t("Rule"), flex: 300, minWidth: 230 },
     { field: "process", headerName: t("Process"), flex: 240, minWidth: 120 },
-    { field: "source", headerName: t("Source"), flex: 200, minWidth: 130 },
+    { field: "source", headerName: t("Source"), flex: 200, minWidth: 150 },
     {
       field: "destinationIP",
       headerName: t("Destination IP"),
       flex: 200,
-      minWidth: 130,
+      minWidth: 150,
+    },
+    {
+      field: "upload",
+      headerName: t("Uploaded"),
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+      valueFormatter: (value) => parseTraffic(value).join(" "),
+    },
+    {
+      field: "download",
+      headerName: t("Downloaded"),
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+      valueFormatter: (value) => parseTraffic(value).join(" "),
     },
     {
       field: "time",
@@ -90,22 +106,6 @@ export const ConnectionTable = (props: Props) => {
         return new Date(v2).getTime() - new Date(v1).getTime();
       },
       valueFormatter: (value) => dayjs(value).fromNow(),
-    },
-    {
-      field: "upload",
-      headerName: t("Uploaded"),
-      width: 88,
-      align: "center",
-      headerAlign: "center",
-      valueFormatter: (value) => parseTraffic(value).join(" "),
-    },
-    {
-      field: "download",
-      headerName: t("Downloaded"),
-      width: 88,
-      align: "center",
-      headerAlign: "center",
-      valueFormatter: (value) => parseTraffic(value).join(" "),
     },
   ];
 
