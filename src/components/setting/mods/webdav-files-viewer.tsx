@@ -5,7 +5,6 @@ import {
   ScrollableText,
 } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
-import { closeAllConnections } from "@/services/api";
 import {
   deleteBackup,
   downloadBackupAndReload,
@@ -104,21 +103,15 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
         setDeletingFile(file.filename);
         await deleteBackup(file.filename);
         await getAllBackupFiles();
-        Notice.success(`Deleted successfully`);
+        Notice.success(t("Delete Backup Successful"));
       } catch (e) {
-        Notice.error(`Failed to delete backup, error: ${e}`);
+        Notice.error(t("Delete Backup Failed", { error: e }));
       } finally {
         setDeletingFile("");
       }
     };
 
     const handleApplyBackup = useLockFn(async (file: BackupFile) => {
-      if (!file.allowApply) {
-        Notice.error(
-          "This backup is not compatible with your current platform",
-        );
-        return;
-      }
       try {
         setApplyingFile(file.filename);
         await downloadBackupAndReload(file.filename);
@@ -135,17 +128,16 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
             setMode(mode);
           }
         }
-        Notice.success("Apply successfully, will restart app soon");
+        Notice.success(t("Apply Backup Successful"));
 
         // emit reload all event
         // emit("verge://reload-all");
-        await closeAllConnections();
-        setTimeout(async () => {
-          await activateSelected();
-          restartApp();
-        }, 2000);
+        await sleep(1000);
+        await activateSelected();
+        await sleep(1000);
+        restartApp();
       } catch (e) {
-        Notice.error(`Failed to apply backup, error: ${e}`);
+        Notice.error(t("Apply Backup Failed"));
         setApplyingFile("");
       }
     });

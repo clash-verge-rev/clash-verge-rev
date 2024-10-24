@@ -311,9 +311,13 @@
   "WebDav Password": "WebDav 密码",
   "Backup Files": "备份文件列表",
   "WebDav Connection Failed": "WebDav 连接失败, {{error}}",
-  "Backup Failed": "备份失败, {{error}}",
   "Backup Successful": "备份成功",
+  "Backup Failed": "备份失败, {{error}}",
+  "Delete Backup Successful": "删除备份成功",
+  "Delete Backup Failed": "删除备份失败, {{error}}",
   "Apply": "应用",
+  "Apply Backup Successful": "应用备份成功, 即将重启应用",
+  "Apply Backup Failed": "应用备份失败, {{error}}",
   "BK_All": "配置 + 订阅",
   "BK_Profiles": "订阅"
 }

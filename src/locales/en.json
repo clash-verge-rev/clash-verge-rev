@@ -310,10 +310,14 @@
   "WebDav Username": "WebDav Username",
   "WebDav Password": "WebDav Password",
   "Backup Files": "Backup Files",
-  "WebDav Connection Failed": "WebDav , {{error}}",
-  "Backup Failed": "备份失败, {{error}}",
-  "Backup Successful": "备份成功",
+  "WebDav Connection Failed": "WebDav Connection Failed, {{error}}",
+  "Backup Successful": "Backup Successful",
+  "Backup Failed": "Backup Failed, {{error}}",
+  "Delete Backup Successful": "Delete Backup Successful",
+  "Delete Backup Failed": "Delete Backup Failed, {{error}}",
   "Apply": "Apply",
+  "Apply Backup Successful": "Apply Backup Successful, Will Restart App Soon",
+  "Apply Backup Failed": "Apply Backup Failed, {{error}}",
   "BK_All": "Config + Profiles",
   "BK_Profiles": "Profiles"
 }
