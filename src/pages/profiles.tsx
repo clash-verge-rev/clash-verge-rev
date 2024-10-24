@@ -66,7 +66,7 @@ const ProfilePage = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  const { stateCurrent } = location.state || {};
+  const { current } = location.state || {};
 
   useEffect(() => {
     const unlisten = addListener("tauri://file-drop", async (event) => {
@@ -184,11 +184,12 @@ const ProfilePage = () => {
 
   useEffect(() => {
     (async () => {
-      if (stateCurrent && stateCurrent !== profiles.current) {
-        await activateProfile(stateCurrent, false);
+      if (current) {
+        mutateProfiles();
+        await activateProfile(current, false);
       }
     })();
-  }, stateCurrent);
+  }, current);
 
   const onEnhance = useLockFn(async (notifySuccess: boolean) => {
     setActivatings(currentActivatings());
