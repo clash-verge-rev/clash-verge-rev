@@ -1,12 +1,12 @@
 use super::{Draft, IClashConfig, IProfiles, IRuntime, IVerge};
 use crate::{
-    core::service,
+    core::{clash_api, service},
     enhance, feat,
     utils::{dirs, help},
 };
 use anyhow::{anyhow, Result};
 use once_cell::sync::OnceCell;
-use std::{env::temp_dir, path::PathBuf};
+use std::{env::temp_dir, path::PathBuf, time::Duration};
 
 pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
 pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
@@ -151,6 +151,20 @@ impl Config {
 
         // restart clash code
         feat::restart_clash_core();
+        std::thread::sleep(Duration::from_secs(2));
+        // check clash core run status
+        for i in 1..=5 {
+            if i == 5 {
+                log::debug!(target: "app", "check clash core run status when reload config: failed.");
+                return Err(anyhow!("Clash Core Restart Failed"));
+            }
+            if clash_api::get_configs().await.is_ok() {
+                log::debug!(target: "app","check clash core run status when reload config: successful.");
+                break;
+            }
+            log::debug!(target: "app","check clash core run status when reload config: failed, retry {} times, sleep 1s", i);
+            std::thread::sleep(Duration::from_secs(1));
+        }
 
         Ok(())
     }
