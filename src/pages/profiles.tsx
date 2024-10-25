@@ -68,7 +68,7 @@ interface ActivatingProfile {
 }
 
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
-  return [...new Array(20)].map((_, index) => (
+  return [...Array(20)].map((_, index) => (
     <i key={index} className="mx-[5px] my-0 flex h-0 w-[260px] flex-grow"></i>
   ));
 });

@@ -11,23 +11,35 @@ export const ScrollableText = ({
   speed = 30,
 }: ScrollingTextProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const initTextRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
+
+  const [loopNum, setLoopNum] = useState(1);
   const [containerWidth, setContainerWidth] = useState(0);
   const [textWidth, setTextWidth] = useState(0);
   const [shouldScroll, setShouldScroll] = useState(false);
-  const [firstDisplay, setFirstDisplay] = useState(true);
 
   useEffect(() => {
-    if (!firstDisplay) {
-      setFirstDisplay(true);
-    }
     const updateWidths = () => {
+      if (initTextRef.current && containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        const initTextWidth = initTextRef.current.offsetWidth;
+        const shouldScroll = initTextWidth > containerWidth;
+        setShouldScroll(shouldScroll);
+      }
       if (containerRef.current && textRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
         const textWidth = textRef.current.offsetWidth;
         setContainerWidth(containerWidth);
         setTextWidth(textWidth);
-        setShouldScroll(textWidth > containerWidth);
+        const shouldScroll = textWidth > containerWidth;
+        setShouldScroll(shouldScroll);
+        if (shouldScroll) {
+          const repeats = Math.ceil(containerWidth / textWidth) + 1;
+          setLoopNum(repeats);
+        } else {
+          setLoopNum(1);
+        }
       }
     };
 
@@ -35,11 +47,7 @@ export const ScrollableText = ({
     window.addEventListener("resize", updateWidths);
 
     return () => window.removeEventListener("resize", updateWidths);
-  }, [children]);
-
-  const duration = firstDisplay
-    ? textWidth / speed
-    : (textWidth + containerWidth) / speed;
+  }, [children, shouldScroll]);
 
   return (
     <div className="relative w-full overflow-hidden">
@@ -47,29 +55,27 @@ export const ScrollableText = ({
         ref={containerRef}
         className="relative overflow-hidden whitespace-nowrap">
         <motion.div
-          ref={textRef}
           className={"inline-block"}
           animate={{
-            x: shouldScroll
-              ? [firstDisplay ? 0 : containerWidth, -textWidth]
-              : [0, 0],
+            x: shouldScroll ? [0, -textWidth] : [0, 0],
           }}
           transition={{
-            duration: duration,
+            duration: shouldScroll ? textWidth / speed : 0,
             ease: "linear",
             repeat: shouldScroll ? Infinity : 0,
-            delay: firstDisplay ? 1 : 0,
-          }}
-          onUpdate={(v) => {
-            if (
-              firstDisplay &&
-              textWidth !== 0 &&
-              (v["x"] as number) <= -textWidth + 5
-            ) {
-              setFirstDisplay(false);
-            }
+            delay: 1,
           }}>
-          {children}
+          {shouldScroll ? (
+            [...Array(loopNum)].map((_, index) => (
+              <div ref={textRef} key={index} className="inline-block pr-10">
+                {children}
+              </div>
+            ))
+          ) : (
+            <div ref={initTextRef} className="inline-block">
+              {children}
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
