@@ -24,7 +24,23 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
+    let dns_key = Value::from("dns");
+    let dns_val = config.get(&dns_key);
+    let mut dns_val = dns_val.map_or(Mapping::new(), |val| {
+        val.as_mapping().cloned().unwrap_or(Mapping::new())
+    });
+
+    if enable {
+        revise!(dns_val, "enable", true);
+        revise!(dns_val, "ip-v6", true);
+        revise!(dns_val, "enhanced-mode", "fake-ip");
+        revise!(dns_val, "fake-ip-range", "10.96.0.0/16");
+    } else {
+        revise!(dns_val, "enhanced-mode", "redir-host");
+    }
+
     revise!(tun_val, "enable", enable);
     revise!(config, "tun", tun_val);
+    revise!(config, "dns", dns_val);
     config
 }
