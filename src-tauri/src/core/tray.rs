@@ -87,6 +87,7 @@ impl Tray {
         let sysproxy_tray_icon = verge.sysproxy_tray_icon.as_ref().unwrap_or(&false);
         let tun_tray_icon = verge.tun_tray_icon.as_ref().unwrap_or(&false);
         let tray = app_handle.tray_by_id("main").unwrap();
+        #[cfg(target_os = "macos")]
         let tray_icon = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
 
         let _ = tray.set_menu(Some(create_tray_menu(
