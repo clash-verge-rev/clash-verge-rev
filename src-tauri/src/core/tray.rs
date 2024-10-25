@@ -177,6 +177,8 @@ impl Tray {
             if use_custom_icon {
                 let _ = tray.set_icon_as_template(false);
                 let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&indication_icon)?));
+            } else {
+                let _ = tray.set_icon_as_template(true);
             }
         }
 
