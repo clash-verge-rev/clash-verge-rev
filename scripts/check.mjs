@@ -282,12 +282,12 @@ async function resolveSidecar(binInfo) {
 const resolveSetDnsScript = () =>
   resolveResource({
     file: "set_dns.sh",
-    localPath: path.join(cwd, "scripts/set_dns.sh"),
+    localPath: path.join(cwd, "scripts/darwin/set_dns.sh"),
   });
 const resolveUnSetDnsScript = () =>
   resolveResource({
     file: "unset_dns.sh",
-    localPath: path.join(cwd, "scripts/unset_dns.sh"),
+    localPath: path.join(cwd, "scripts/darwin/unset_dns.sh"),
   });
 
 /**
