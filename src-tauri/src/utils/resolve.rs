@@ -62,7 +62,7 @@ pub async fn resolve_setup(app: &mut App) {
                 #[cfg(target_os = "macos")]
                 {
                     let mut service_runing = false;
-                    for _ in 0..20 {
+                    for _ in 0..40 {
                         if service::check_service().await.is_ok() {
                             service_runing = true;
                             break;
