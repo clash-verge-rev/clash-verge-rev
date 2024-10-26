@@ -279,27 +279,50 @@ async function resolveSidecar(binInfo) {
   }
 }
 
+const resolveSetDnsScript = () =>
+  resolveResource({
+    file: "set_dns.sh",
+    localPath: path.join(cwd, "scripts/set_dns.sh"),
+  });
+const resolveUnSetDnsScript = () =>
+  resolveResource({
+    file: "unset_dns.sh",
+    localPath: path.join(cwd, "scripts/unset_dns.sh"),
+  });
+
 /**
  * download the file to the resources dir
  */
 async function resolveResource(binInfo) {
-  const { file, downloadURL } = binInfo;
+  const { file, downloadURL, localPath } = binInfo;
 
   const resDir = path.join(cwd, "src-tauri/resources");
   const targetPath = path.join(resDir, file);
 
   if (!FORCE && fs.existsSync(targetPath)) return;
 
-  await fsp.mkdir(resDir, { recursive: true });
-  await downloadFile(downloadURL, targetPath);
+  if (downloadURL) {
+    await fsp.mkdir(resDir, { recursive: true });
+    await downloadFile(downloadURL, targetPath);
+  }
+
+  if (localPath) {
+    await fs.copyFile(localPath, targetPath, (err) => {
+      if (err) {
+        console.error("Error copying file:", err);
+      } else {
+        console.log("File was copied successfully");
+      }
+    });
+    log_debug(`copy file finished: "${localPath}"`);
+  }
 
   log_success(`${file} finished`);
 }
 
 /**
  * download file and save to `path`
- */
-async function downloadFile(url, path) {
+ */ async function downloadFile(url, path) {
   const options = {};
 
   const httpProxy =
@@ -474,6 +497,18 @@ const tasks = [
     retry: 5,
     winOnly: true,
   },
+  {
+    name: "set_dns_script",
+    func: resolveSetDnsScript,
+    retry: 5,
+    macosOnly: true,
+  },
+  {
+    name: "unset_dns_script",
+    func: resolveUnSetDnsScript,
+    retry: 5,
+    macosOnly: true,
+  },
 ];
 
 async function runTask() {
@@ -482,6 +517,7 @@ async function runTask() {
   if (task.winOnly && platform !== "win32") return runTask();
   if (task.linuxOnly && platform !== "linux") return runTask();
   if (task.unixOnly && platform === "win32") return runTask();
+  if (task.macosOnly && platform !== "darwin") return runTask();
 
   for (let i = 0; i < task.retry; i++) {
     try {
