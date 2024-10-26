@@ -3,7 +3,16 @@
   "identifier": "io.github.clash-verge-rev.clash-verge-rev",
   "bundle": {
     "targets": ["app", "dmg"],
-    "resources": ["resources"],
+    "resources": [
+      "resources/clash-verge-service",
+      "resources/install-service",
+      "resources/uninstall-service",
+      "resources/geoip.dat",
+      "resources/geosite.dat",
+      "resources/Country.mmdb",
+      "resources/set_dns.sh",
+      "resources/unset_dns.sh"
+    ],
     "macOS": {
       "frameworks": [],
       "minimumSystemVersion": "10.15",
