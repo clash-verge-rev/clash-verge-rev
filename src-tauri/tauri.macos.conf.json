@@ -3,7 +3,7 @@
   "identifier": "io.github.clash-verge-rev.clash-verge-rev",
   "bundle": {
     "targets": ["app", "dmg"],
-    "resources": ["resources/set_dns.sh", "resources/unset_dns.sh"],
+    "resources": ["resources"],
     "macOS": {
       "frameworks": [],
       "minimumSystemVersion": "10.15",
