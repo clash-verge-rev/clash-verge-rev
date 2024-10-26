@@ -10,14 +10,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [
-      "resources/clash-verge-service",
-      "resources/install-service",
-      "resources/uninstall-service",
-      "resources/geoip.dat",
-      "resources/geosite.dat",
-      "resources/Country.mmdb"
-    ],
+    "resources": ["resources"],
     "publisher": "Clash Verge Rev",
     "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
     "copyright": "GNU General Public License v3.0",
