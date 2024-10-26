@@ -57,7 +57,25 @@ pub async fn resolve_setup(app: &mut App) {
         match service::reinstall_service().await {
             Ok(_) => {
                 log::info!(target:"app", "install service susccess.");
+                #[cfg(not(target_os = "macos"))]
                 std::thread::sleep(std::time::Duration::from_millis(1000));
+                #[cfg(target_os = "macos")]
+                {
+                    let mut service_runing = false;
+                    for _ in 0..20 {
+                        if service::check_service().await.is_ok() {
+                            service_runing = true;
+                            break;
+                        } else {
+                            log::warn!(target: "app", "service not runing, sleep 500ms and check again.");
+                            std::thread::sleep(std::time::Duration::from_millis(500));
+                        }
+                    }
+                    if !service_runing {
+                        log::error!(target: "app", "service not runing. exit");
+                        app.app_handle().exit(-2);
+                    }
+                }
             }
             Err(e) => {
                 log::error!(target: "app", "{e:?}");
