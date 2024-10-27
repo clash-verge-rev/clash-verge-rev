@@ -97,6 +97,7 @@ impl Tray {
             *tun_mode,
         )?));
 
+        #[cfg(target_os = "macos")]
         let mut use_custom_icon = false;
         #[allow(unused)]
         let mut indication_icon = if *system_proxy {
@@ -120,7 +121,10 @@ impl Tray {
                 } else if png_path.exists() {
                     icon = std::fs::read(png_path).unwrap();
                 }
-                use_custom_icon = true;
+                #[cfg(target_os = "macos")]
+                {
+                    use_custom_icon = true;
+                }
             }
             icon
         } else if *tun_mode {
@@ -144,7 +148,10 @@ impl Tray {
                 } else if png_path.exists() {
                     icon = std::fs::read(png_path).unwrap();
                 }
-                use_custom_icon = true;
+                #[cfg(target_os = "macos")]
+                {
+                    use_custom_icon = true;
+                }
             }
             icon
         } else {
@@ -168,7 +175,10 @@ impl Tray {
                 } else if png_path.exists() {
                     icon = std::fs::read(png_path).unwrap();
                 }
-                use_custom_icon = true;
+                #[cfg(target_os = "macos")]
+                {
+                    use_custom_icon = true;
+                }
             }
             icon
         };
