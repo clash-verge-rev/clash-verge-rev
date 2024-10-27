@@ -101,6 +101,11 @@ pub fn toggle_tun_mode() {
 pub fn quit(code: Option<i32>) {
     let app_handle = handle::Handle::global().app_handle().unwrap();
     resolve::resolve_reset();
+    #[cfg(target_os = "macos")]
+    tauri::async_runtime::block_on(async {
+        resolve::restore_public_dns().await;
+    });
+
     app_handle.exit(code.unwrap_or(0));
 }
 
