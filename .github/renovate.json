@@ -4,7 +4,7 @@
   "dependencyDashboard": true,
   "baseBranches": ["dev"],
   "labels": ["dependencies"],
-  "automerge": true,
+  "automerge": false,
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
