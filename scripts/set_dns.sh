@@ -49,10 +49,9 @@ hardware_port=$(networksetup -listallhardwareports | awk -v dev="$nic" '
 
 original_dns=$(networksetup -getdnsservers "$hardware_port")
 
-if [ ${#original_dns} -gt 15 ]; then
-    echo "Empty" >original_dns.txt
-else
-    echo $original_dns >original_dns.txt
+if [ ${#original_dns} -le 15 ]; then
+    if [ -n "$original_dns" ]; then
+        echo $original_dns >original_dns.txt
+        networksetup -setdnsservers "$hardware_port" "$1"
+    fi
 fi
-
-networksetup -setdnsservers "$hardware_port" "$1"

@@ -15,8 +15,6 @@ hardware_port=$(networksetup -listallhardwareports | awk -v dev="$nic" '
 
 if [ -f original_dns.txt ]; then
     original_dns=$(cat original_dns.txt)
-else
-    original_dns=$(networksetup -getdnsservers "$hardware_port")
+    networksetup -setdnsservers "$hardware_port" $original_dns
+    rm -rf original_dns.txt
 fi
-
-networksetup -setdnsservers "$hardware_port" $original_dns
