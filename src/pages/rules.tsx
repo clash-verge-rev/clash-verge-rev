@@ -7,13 +7,13 @@ import { getRules } from "@/services/api";
 import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { BaseSearchBox } from "@/components/base/base-search-box";
+import { useTheme } from "@mui/material/styles";
 
 const RulesPage = () => {
   const { t } = useTranslation();
   const { data = [] } = useSWR("getRules", getRules);
-  const { theme } = useCustomTheme();
+  const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
 

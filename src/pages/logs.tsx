@@ -10,7 +10,7 @@ import { useLogData } from "@/hooks/use-log-data";
 import { useEnableLog } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { useTheme } from "@mui/material/styles";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import { mutate } from "swr";
@@ -19,7 +19,7 @@ const LogPage = () => {
   const { t } = useTranslation();
   const { data: logData = [] } = useLogData();
   const [enableLog, setEnableLog] = useEnableLog();
-  const { theme } = useCustomTheme();
+  const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [logState, setLogState] = useState("all");
   const [match, setMatch] = useState(() => (_: string) => true);
