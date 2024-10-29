@@ -16,7 +16,6 @@ import iconDark from "@/assets/image/icon_dark.svg?react";
 import { useThemeMode } from "@/services/states";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
-import { LayoutControl } from "@/components/layout/layout-control";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
@@ -131,14 +130,6 @@ const Layout = () => {
             ({ palette }) => ({
               bgcolor: palette.background.paper,
             }),
-            OS === "linux"
-              ? {
-                  borderRadius: "8px",
-                  border: "2px solid var(--divider-color)",
-                  width: "calc(100vw - 4px)",
-                  height: "calc(100vh - 4px)",
-                }
-              : {},
           ]}
         >
           <div className="layout__left">
@@ -184,17 +175,6 @@ const Layout = () => {
           </div>
 
           <div className="layout__right">
-            {
-              <div className="the-bar">
-                <div
-                  className="the-dragbar"
-                  data-tauri-drag-region="true"
-                  style={{ width: "100%" }}
-                ></div>
-                {OS !== "macos" && <LayoutControl />}
-              </div>
-            }
-
             <TransitionGroup className="the-content">
               <CSSTransition
                 key={location.pathname}

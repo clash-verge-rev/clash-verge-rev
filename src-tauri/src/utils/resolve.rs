@@ -164,7 +164,7 @@ pub fn create_window() {
     };
     #[cfg(target_os = "windows")]
     let window = builder
-        .decorations(false)
+        .decorations(true)
         .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
         .transparent(true)
         .visible(false)
@@ -176,7 +176,7 @@ pub fn create_window() {
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .build();
     #[cfg(target_os = "linux")]
-    let window = builder.decorations(false).transparent(true).build();
+    let window = builder.decorations(true).transparent(true).build();
 
     match window {
         Ok(win) => {
