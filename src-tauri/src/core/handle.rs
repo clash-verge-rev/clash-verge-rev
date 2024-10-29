@@ -30,9 +30,12 @@ impl Handle {
     }
 
     pub fn get_window(&self) -> Option<WebviewWindow> {
-        self.app_handle()
-            .as_ref()
-            .and_then(|a| a.get_webview_window("main"))
+        let app_handle = self.app_handle().unwrap();
+        let window: Option<WebviewWindow> = app_handle.get_webview_window("main");
+        if window.is_none() {
+            log::debug!(target:"app", "main window not found");
+        }
+        window
     }
 
     pub fn refresh_clash() {
