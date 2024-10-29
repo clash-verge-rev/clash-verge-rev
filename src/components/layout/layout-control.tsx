@@ -95,7 +95,7 @@ export const LayoutControl = () => {
           svg: { transform: "scale(1.05)" },
           ":hover": { bgcolor: "#ff000090" },
         }}
-        onClick={() => appWindow.hide()}
+        onClick={() => appWindow.close()}
       >
         <CloseRounded fontSize="small" />
       </Button>
