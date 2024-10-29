@@ -141,8 +141,11 @@ pub fn run() {
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
                 match event {
-                    tauri::WindowEvent::CloseRequested { .. } => {
+                    tauri::WindowEvent::CloseRequested { api, .. } => {
                         println!("closing window...");
+                        api.prevent_close();
+                        let window = core::handle::Handle::global().get_window().unwrap();
+                        log_err!(window.minimize());
                         let _ = resolve::save_window_size_position(true);
                     }
                     tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
