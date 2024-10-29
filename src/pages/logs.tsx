@@ -52,15 +52,19 @@ const LogPage = () => {
             )}
           </IconButton>
 
-          <Button
-            size="small"
-            variant="contained"
-            // useSWRSubscription adds a prefix "$sub$" to the cache key
-            // https://github.com/vercel/swr/blob/1585a3e37d90ad0df8097b099db38f1afb43c95d/src/subscription/index.ts#L37
-            onClick={() => mutate("$sub$getClashLog", [])}
-          >
-            {t("Clear")}
-          </Button>
+          {enableLog === true && (
+            <Button
+              size="small"
+              variant="contained"
+              // useSWRSubscription adds a prefix "$sub$" to the cache key
+              // https://github.com/vercel/swr/blob/1585a3e37d90ad0df8097b099db38f1afb43c95d/src/subscription/index.ts#L37
+              onClick={() => {
+                mutate("$sub$getClashLog", []);
+              }}
+            >
+              {t("Clear")}
+            </Button>
+          )}
         </Box>
       }
     >
@@ -94,7 +98,7 @@ const LogPage = () => {
           bgcolor: isDark ? "#282a36" : "#ffffff",
         }}
       >
-        {filterLogs.length > 0 ? (
+        {filterLogs.length > 0 && enableLog === true ? (
           <Virtuoso
             initialTopMostItemIndex={999}
             data={filterLogs}
