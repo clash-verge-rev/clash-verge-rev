@@ -146,7 +146,7 @@ pub fn run() {
                         let _ = resolve::save_window_size_position(true);
                         api.prevent_close();
                         let window = core::handle::Handle::global().get_window().unwrap();
-                        log_err!(window.minimize());
+                        log_err!(window.hide());
                     }
                     tauri::WindowEvent::Focused(true) => {
                         #[cfg(target_os = "macos")]
