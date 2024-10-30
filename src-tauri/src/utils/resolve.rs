@@ -121,7 +121,6 @@ pub fn create_window() {
     let app_handle = handle::Handle::global().app_handle().unwrap();
 
     if let Some(window) = handle::Handle::global().get_window() {
-        trace_err!(window.unminimize(), "set win unminimize");
         trace_err!(window.show(), "set win visible");
         trace_err!(window.set_focus(), "set win focus");
         return;
