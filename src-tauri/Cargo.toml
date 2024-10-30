@@ -54,6 +54,7 @@ tauri-plugin-clipboard-manager = "2.0.1"
 tauri-plugin-deep-link = "2.0.1"
 tauri-plugin-devtools = "2.0.0-rc"
 url = "2.5.2"
+tauri-plugin-persisted-scope = "2.0.3"
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
 deelevate = "0.2.0"
