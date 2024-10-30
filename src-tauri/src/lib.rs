@@ -41,6 +41,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_persisted_scope::init())
         .setup(|app| {
             #[cfg(target_os = "linux")]
             {
@@ -143,7 +144,6 @@ pub fn run() {
                 match event {
                     tauri::WindowEvent::CloseRequested { api, .. } => {
                         println!("closing window...");
-                        let _ = resolve::save_window_size_position(true);
                         api.prevent_close();
                         let window = core::handle::Handle::global().get_window().unwrap();
                         log_err!(window.hide());
