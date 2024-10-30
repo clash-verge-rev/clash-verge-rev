@@ -24,7 +24,13 @@ body:
     id: description
     attributes:
       label: 问题描述 / Describe the bug
-      description: 详细清晰地描述你遇到的问题 / A clear and concise description of what the bug is
+      description: 详细清晰地描述你遇到的问题，并配合截图 / Describe the problem you encountered in detail and clearly, and provide screenshots
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 软件版本 / Verge Version
+      description: 请提供Verge的具体版本，如果是alpha版本，请注明下载时间(精确到小时分钟) / Please provide the specific version of Verge. If it is an alpha version, please indicate the download time (accurate to hours and minutes)
     validations:
       required: true
   - type: textarea
@@ -51,6 +57,6 @@ body:
   - type: textarea
     attributes:
       label: 日志 / Log
-      description: 请提供完整或相关部分的Debug日志 / Please provide the complete or relevant part of the Debug log
+      description: 请提供完整或相关部分的Debug日志（请在“软件左侧菜单”->“设置”->“日志等级”调整到debug，Verge错误请把“杂项设置”->“app日志等级”调整到debug/trace，并重启Verge生效。日志文件在“软件左侧菜单”->“设置”->“日志目录”下） / Please provide a complete or relevant part of the Debug log (please adjust the "Log level" to debug in "Software left menu" -> "Settings" -> "Log level". If there is a Verge error, please adjust "Miscellaneous settings" -> "app log level" to trace, and restart Verge to take effect. The log file is under "Software left menu" -> "Settings" -> "Log directory")
     validations:
       required: true
