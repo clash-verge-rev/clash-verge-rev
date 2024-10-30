@@ -85,7 +85,7 @@ impl Config {
     pub fn generate_file(typ: ConfigType) -> Result<PathBuf> {
         let path = match typ {
             ConfigType::Run => dirs::app_home_dir()?.join(RUNTIME_CONFIG),
-            ConfigType::Check => temp_dir().join(CHECK_CONFIG),
+            ConfigType::Check => dirs::app_home_dir()?.join(CHECK_CONFIG),
         };
 
         let runtime = Config::runtime();
