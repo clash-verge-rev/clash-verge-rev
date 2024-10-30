@@ -143,13 +143,10 @@ pub fn run() {
                 match event {
                     tauri::WindowEvent::CloseRequested { api, .. } => {
                         println!("closing window...");
+                        let _ = resolve::save_window_size_position(true);
                         api.prevent_close();
                         let window = core::handle::Handle::global().get_window().unwrap();
                         log_err!(window.minimize());
-                        let _ = resolve::save_window_size_position(true);
-                    }
-                    tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
-                        let _ = resolve::save_window_size_position(false);
                     }
                     tauri::WindowEvent::Focused(true) => {
                         #[cfg(target_os = "macos")]
