@@ -8,6 +8,7 @@ use percent_encoding::percent_decode_str;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::{App, Manager};
+use tauri_plugin_window_state::{StateFlags, WindowExt};
 
 use url::Url;
 //#[cfg(not(target_os = "linux"))]
@@ -143,22 +144,26 @@ pub fn create_window() {
         .transparent(true)
         .inner_size(800.0, 636.0)
         .visible(false)
-        .build();
+        .build().unwrap();
 
     #[cfg(target_os = "macos")]
-    let _ = builder
+    let window = builder
         .decorations(true)
         .hidden_title(true)
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .inner_size(800.0, 642.0)
-        .build();
+        .build()
+        .unwrap();
 
     #[cfg(target_os = "linux")]
-    let _ = builder
+    let window = builder
         .decorations(false)
         .transparent(true)
         .inner_size(800.0, 642.0)
-        .build();
+        .build()
+        .unwrap();
+
+    let _ = window.restore_state(StateFlags::all());
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
