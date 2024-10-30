@@ -9,6 +9,7 @@ use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
 #[cfg(target_os = "macos")]
 use tauri::Listener;
+use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 pub fn run() {
     // 单例检测
@@ -32,6 +33,7 @@ pub fn run() {
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_process::init())
@@ -41,6 +43,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(|app| {
             #[cfg(target_os = "linux")]
             {
@@ -144,6 +147,8 @@ pub fn run() {
                     tauri::WindowEvent::CloseRequested { api, .. } => {
                         println!("closing window...");
                         api.prevent_close();
+                        let app_hanele = core::handle::Handle::global().app_handle().unwrap();
+                        let _ = app_hanele.save_window_state(StateFlags::default());
                         let window = core::handle::Handle::global().get_window().unwrap();
                         log_err!(window.hide());
                     }
