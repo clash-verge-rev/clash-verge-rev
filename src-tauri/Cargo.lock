@@ -557,15 +557,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
-name = "bincode"
-version = "1.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
-dependencies = [
- "serde",
-]
-
-[[package]]
 name = "bit_field"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1019,7 +1010,6 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-global-shortcut",
  "tauri-plugin-notification",
- "tauri-plugin-persisted-scope",
  "tauri-plugin-process",
  "tauri-plugin-shell",
  "tauri-plugin-updater",
@@ -6550,22 +6540,6 @@ dependencies = [
  "thiserror",
  "time",
  "url",
-]
-
-[[package]]
-name = "tauri-plugin-persisted-scope"
-version = "2.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae4f33cca1496783c6115c14c9b282f928683920babeeae5c52df8ca3628001b"
-dependencies = [
- "aho-corasick",
- "bincode",
- "log",
- "serde",
- "serde_json",
- "tauri",
- "tauri-plugin-fs",
- "thiserror",
 ]
 
 [[package]]

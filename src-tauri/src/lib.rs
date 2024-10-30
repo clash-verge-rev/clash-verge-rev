@@ -41,7 +41,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_persisted_scope::init())
         .setup(|app| {
             #[cfg(target_os = "linux")]
             {
