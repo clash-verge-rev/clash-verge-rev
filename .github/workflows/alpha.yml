@@ -144,7 +144,6 @@ jobs:
       - name: 'Setup for linux'
         run: |-
           sudo ls -lR /etc/apt/
-          echo "-------------"
           
           cat > /tmp/sources.list << EOF
           deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy main multiverse universe restricted
@@ -161,14 +160,6 @@ jobs:
           sudo mv /etc/apt/sources.list /etc/apt/sources.list.default
           sudo mv /tmp/sources.list /etc/apt/sources.list
 
-          echo "-------------"
-          echo /etc/apt/sources.list && cat /etc/apt/sources.list
-          echo "-------------"
-          echo /etc/apt/apt-mirrors.txt && cat /etc/apt/apt-mirrors.txt
-          echo "-------------"
-          echo /etc/apt/sources.list.d/ports.list && cat /etc/apt/sources.list.d/ports.list || true
-          echo "-------------"
-
           sudo dpkg --add-architecture ${{ matrix.arch }}
           sudo apt update
 
@@ -178,8 +169,6 @@ jobs:
             libssl-dev:${{ matrix.arch }} \
             patchelf:${{ matrix.arch }} \
             librsvg2-dev:${{ matrix.arch }}
-
-          echo 'ok'
 
       - name: 'Install aarch64 tools'
         if: matrix.target == 'aarch64-unknown-linux-gnu'
