@@ -28,6 +28,8 @@ jobs:
             target: aarch64-apple-darwin
           - os: macos-latest
             target: x86_64-apple-darwin
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -46,6 +48,12 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           cache-on-failure: true
+      
+      - name: Install dependencies (ubuntu only)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -90,26 +98,107 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  alpha-for-linux:
+  alpha-for-linux-arm:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-22.04
+            target: aarch64-unknown-linux-gnu
+            arch: arm64
+          - os: ubuntu-22.04
+            target: armv7-unknown-linux-gnueabihf
+            arch: armhf
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add Rust Target
+        run: rustup target add ${{ matrix.target }}
+      
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-all-crates: true
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Pnpm install and check
+        run: |
+          pnpm i
+          pnpm check ${{ matrix.target }}
+
+      - name: 'Setup for linux'
+        run: |-
+          sudo ls -lR /etc/apt/
+          
+          cat > /tmp/sources.list << EOF
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy main multiverse universe restricted
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-security main multiverse universe restricted
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-updates main multiverse universe restricted
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-backports main multiverse universe restricted
+
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy main multiverse universe restricted
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main multiverse universe restricted
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main multiverse universe restricted
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main multiverse universe restricted
+          EOF
+
+          sudo mv /etc/apt/sources.list /etc/apt/sources.list.default
+          sudo mv /tmp/sources.list /etc/apt/sources.list
+
+          sudo dpkg --add-architecture ${{ matrix.arch }}
+          sudo apt update
+
+          sudo apt install -y \
+            libwebkit2gtk-4.1-dev:${{ matrix.arch }} \
+            libayatana-appindicator3-dev:${{ matrix.arch }} \
+            libssl-dev:${{ matrix.arch }} \
+            patchelf:${{ matrix.arch }} \
+            librsvg2-dev:${{ matrix.arch }}
+
+      - name: 'Install aarch64 tools'
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt install -y \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu
+
+      - name: 'Install armv7 tools'
+        if: matrix.target == 'armv7-unknown-linux-gnueabihf'
+        run: |
+          sudo apt install -y \
+            gcc-arm-linux-gnueabihf \
+            g++-arm-linux-gnueabihf
+      
       - name: Build for Linux
-        uses: ./.github/build-for-linux
+        run: |
+          export PKG_CONFIG_ALLOW_CROSS=1
+          if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
+            export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig/:$PKG_CONFIG_PATH
+            export PKG_CONFIG_SYSROOT_DIR=/usr/aarch64-linux-gnu/
+          elif [ "${{ matrix.target }}" == "armv7-unknown-linux-gnueabihf" ]; then
+            export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig/:$PKG_CONFIG_PATH
+            export PKG_CONFIG_SYSROOT_DIR=/usr/arm-linux-gnueabihf/
+          fi
+          pnpm build --target ${{ matrix.target }}
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-        with:
-          target: ${{ matrix.target }}
 
       - name: Get Version
         run: |
@@ -214,7 +303,7 @@ jobs:
   update_tag:
     name: Update tag
     runs-on: ubuntu-latest
-    needs: [alpha, alpha-for-linux, alpha-for-fixed-webview2]
+    needs: [alpha, alpha-for-linux-arm, alpha-for-fixed-webview2]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -241,6 +330,8 @@ jobs:
 
           ### Linux
           - Linux 64位: amd64.deb/amd64.rpm
+          - Linux arm64 architecture: arm64.deb/aarch64.rpm
+          - Linux armv7架构: armhf.deb/armhfp.rpm
 
           ### Windows (Win7 用户请查看下面FAQ中的解决方案)
           #### 正常版本(推荐)
