@@ -100,7 +100,7 @@ impl Tray {
         #[cfg(target_os = "macos")]
         let mut use_custom_icon = false;
         #[allow(unused)]
-        let mut indication_icon = if *system_proxy {
+        let mut indication_icon = if *system_proxy && !*tun_mode {
             #[cfg(target_os = "macos")]
             let mut icon = match tray_icon.as_str() {
                 "colorful" => {
