@@ -6,7 +6,7 @@
     "linux": {
       "deb": {
         "depends": ["openssl"],
-        "desktopTemplate": "./template/clash-verge.desktop",
+        "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
         "replaces": ["clash-verge"],
@@ -15,12 +15,12 @@
       },
       "rpm": {
         "depends": ["openssl"],
-        "desktopTemplate": "./template/clash-verge.desktop",
+        "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
         "obsoletes": ["clash-verge"],
-        "postInstallScript": "../packages/linux/post-install.sh",
-        "preRemoveScript": "../packages/linux/pre-remove.sh"
+        "postInstallScript": "./packages/linux/post-install.sh",
+        "preRemoveScript": "./packages/linux/pre-remove.sh"
       }
     },
     "externalBin": [

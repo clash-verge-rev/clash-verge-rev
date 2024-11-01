@@ -1,6 +1,6 @@
 ; This file is copied from https://github.com/tauri-apps/tauri/blob/tauri-v1.5/tooling/bundler/src/bundle/windows/templates/installer.nsi
 ; and edit to fit the needs of the project. the latest tauri 2.x has a different base nsi script.
-
+RequestExecutionLevel admin
 Unicode true
 ; Set the compression algorithm. Default is LZMA.
 !if "{{compression}}" == ""
@@ -690,7 +690,7 @@ SectionEnd
 
 Section Install
   SetOutPath $INSTDIR
-
+  nsExec::Exec 'netsh int tcp res'
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
   ; Copy main executable
