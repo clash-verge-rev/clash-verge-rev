@@ -23,6 +23,22 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
 ### 安装说明和常见问题，请到[文档页](https://clash-verge-rev.github.io/)查看：[Doc](https://clash-verge-rev.github.io/)
 
+### Important Note on Antivirus Software
+
+Some antivirus software may falsely identify Clash Verge Rev as a potential threat. This is a known issue with many open-source projects. If you encounter this problem:
+
+1. Verify the authenticity of the installer:
+   - Download only from the official [GitHub release page](https://github.com/clash-verge-rev/clash-verge-rev/releases).
+   - Check the SHA256 hash of the downloaded file against the one provided in the release notes.
+
+2. If your antivirus software blocks the installer, consider temporarily disabling it during installation.
+
+3. You may need to add an exception for Clash Verge Rev in your antivirus software.
+
+4. If problems persist, please open an issue on our GitHub page with details about your antivirus software and the specific error messages you receive.
+
+We are continuously working to reduce false positives, but your understanding and patience are appreciated.
+
 ---
 
 ### TG Group: [@clash_verge_rev](https://t.me/clash_verge_rev)
