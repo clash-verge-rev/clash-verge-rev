@@ -121,7 +121,12 @@ pub fn resolve_reset() {
 pub fn create_window() {
     let app_handle = handle::Handle::global().app_handle().unwrap();
 
+   // 是否开启tauri窗口装饰
+   #[cfg(not(target_os = "macos"))]
+   let enable_decoration = !{ Config::verge().data().enable_draw_title_bar }.unwrap();
+
     if let Some(window) = handle::Handle::global().get_window() {
+        trace_err!(window.set_decorations(enable_decoration), "set win decorations");
         trace_err!(window.show(), "set win visible");
         trace_err!(window.set_focus(), "set win focus");
         return;
@@ -139,7 +144,7 @@ pub fn create_window() {
 
     #[cfg(target_os = "windows")]
     let window = builder
-        .decorations(false)
+        .decorations(enable_decoration)
         .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
         .transparent(true)
         .inner_size(800.0, 636.0)
@@ -157,7 +162,7 @@ pub fn create_window() {
 
     #[cfg(target_os = "linux")]
     let window = builder
-        .decorations(false)
+        .decorations(enable_decoration)
         .transparent(true)
         .inner_size(800.0, 642.0)
         .build()

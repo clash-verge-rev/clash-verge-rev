@@ -10,6 +10,8 @@ import { GuardState } from "./mods/guard-state";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import { TunViewer } from "./mods/tun-viewer";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import getSystem from "@/utils/get-system";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -38,12 +40,16 @@ const SettingSystem = ({ onError }: Props) => {
     enable_auto_launch,
     enable_silent_start,
     enable_system_proxy,
+    enable_draw_title_bar,
   } = verge ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
+
+  const OS = getSystem();
+  const appWindow = getCurrentWebviewWindow();
 
   return (
     <SettingList title={t("System Setting")}>
@@ -127,6 +133,27 @@ const SettingSystem = ({ onError }: Props) => {
           <Switch edge="end" />
         </GuardState>
       </SettingItem>
+
+      {OS !== "macos" && (
+        <SettingItem
+          label={t("Use Draw Title Bar")}
+          extra={<TooltipIcon title={t("Use Draw Title Bar Info")} />}
+        >
+          <GuardState
+            value={enable_draw_title_bar ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => {
+              onChangeData({ enable_draw_title_bar: e });
+              appWindow.setDecorations(!e);
+            }}
+            onGuard={(e) => patchVerge({ enable_draw_title_bar: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </SettingItem>
+      )}
     </SettingList>
   );
 };

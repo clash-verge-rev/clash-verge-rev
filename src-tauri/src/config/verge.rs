@@ -62,6 +62,9 @@ pub struct IVerge {
     /// not show the window on launch
     pub enable_silent_start: Option<bool>,
 
+    /// switch draw or system title bar
+    pub enable_draw_title_bar: Option<bool>,
+
     /// set system proxy
     pub enable_system_proxy: Option<bool>,
 
@@ -205,6 +208,8 @@ impl IVerge {
             tun_tray_icon: Some(false),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
+            #[cfg(not(target_os = "macos"))]
+            enable_draw_title_bar: Some(true),
             enable_system_proxy: Some(false),
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
@@ -269,6 +274,8 @@ impl IVerge {
         patch!(enable_tun_mode);
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
+        #[cfg(not(target_os = "macos"))]
+        patch!(enable_draw_title_bar);
         patch!(enable_random_port);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);

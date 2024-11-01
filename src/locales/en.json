@@ -237,6 +237,8 @@
   "Auto Launch": "Auto Launch",
   "Silent Start": "Silent Start",
   "Silent Start Info": "Start the program in background mode without displaying the panel",
+  "Use Draw Title Bar": "Use Drawn Title Bar",
+  "Use Draw Title Bar Info": "Use the drawn title bar instead of the system title bar",
   "TG Channel": "Telegram Channel",
   "Manual": "Manual",
   "Github Repo": "Github Repo",

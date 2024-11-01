@@ -33,7 +33,6 @@ pub fn run() {
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
-        .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_process::init())
@@ -43,7 +42,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+            .with_state_flags(StateFlags::all() & !StateFlags::DECORATIONS)
+            .build()
+        )
         .setup(|app| {
             #[cfg(target_os = "linux")]
             {
@@ -124,8 +127,33 @@ pub fn run() {
             cmds::service::check_service,
             // clash api
             cmds::clash_api_get_proxy_delay
-        ]);
+        ])
+        .on_window_event(|window, event| match event {
 
+            // 保持APP后台运行
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                window.hide().unwrap();
+                api.prevent_close();
+            }
+
+            // 窗口失焦保存窗口的状态信息
+            tauri::WindowEvent::Focused(focused) => {
+                if *focused {
+                    return;
+                }
+                // println!("save window state ...");
+
+                let app_hanele: tauri::AppHandle = core::handle::Handle::global().app_handle().unwrap();
+                match app_hanele.save_window_state(StateFlags::all()){
+                    Ok(_) => {}
+                    Err(e) => {
+                        println!("save window state failed: {}", e);
+                    }
+                };
+            }
+
+            _ => {}
+          });
     #[cfg(debug_assertions)]
     {
         builder = builder.plugin(devtools);
@@ -141,51 +169,47 @@ pub fn run() {
                 api.prevent_exit();
             }
         }
+
         tauri::RunEvent::WindowEvent { label, event, .. } => {
-            if label == "main" {
-                match event {
-                    tauri::WindowEvent::CloseRequested { api, .. } => {
-                        println!("closing window...");
-                        api.prevent_close();
-                        let app_hanele = core::handle::Handle::global().app_handle().unwrap();
-                        let _ = app_hanele.save_window_state(StateFlags::default());
-                        let window = core::handle::Handle::global().get_window().unwrap();
-                        log_err!(window.hide());
-                    }
-                    tauri::WindowEvent::Focused(true) => {
-                        #[cfg(target_os = "macos")]
-                        {
-                            log_err!(hotkey::Hotkey::global().register("CMD+Q", "quit"));
-                        }
+            if label != "main" {
+                return;
+            }
 
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            log_err!(hotkey::Hotkey::global().register("Control+Q", "quit"));
-                        };
+            match event {
+                tauri::WindowEvent::Focused(true) => {
+                    #[cfg(target_os = "macos")]
+                    {
+                        log_err!(hotkey::Hotkey::global().register("CMD+Q", "quit"));
                     }
-                    tauri::WindowEvent::Focused(false) => {
-                        #[cfg(target_os = "macos")]
-                        {
-                            log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
-                        }
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
-                        };
-                    }
-                    tauri::WindowEvent::Destroyed => {
-                        #[cfg(target_os = "macos")]
-                        {
-                            log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
-                        }
 
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
-                        };
-                    }
-                    _ => {}
+                    #[cfg(not(target_os = "macos"))]
+                    {
+                        log_err!(hotkey::Hotkey::global().register("Control+Q", "quit"));
+                    };
+
                 }
+                tauri::WindowEvent::Focused(false) => {
+                    #[cfg(target_os = "macos")]
+                    {
+                        log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
+                    }
+                    #[cfg(not(target_os = "macos"))]
+                    {
+                        log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
+                    };
+                }
+                tauri::WindowEvent::Destroyed => {
+                    #[cfg(target_os = "macos")]
+                    {
+                        log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
+                    }
+
+                    #[cfg(not(target_os = "macos"))]
+                    {
+                        log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
+                    };
+                }
+                _ => {}
             }
         }
         _ => {}

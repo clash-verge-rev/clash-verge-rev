@@ -237,6 +237,8 @@
   "Auto Launch": "开机自启",
   "Silent Start": "静默启动",
   "Silent Start Info": "程序启动时以后台模式运行，不显示程序面板",
+  "Use Draw Title Bar": "使用绘制的标题栏",
+  "Use Draw Title Bar Info": "开启后将使用软件绘制的标题栏和边框",
   "TG Channel": "Telegram 频道",
   "Manual": "使用手册",
   "Github Repo": "GitHub 项目地址",

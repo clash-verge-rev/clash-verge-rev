@@ -42,7 +42,7 @@ const Layout = () => {
   const { theme } = useCustomTheme();
 
   const { verge } = useVerge();
-  const { language, start_page } = verge || {};
+  const { language, start_page, enable_draw_title_bar } = verge || {};
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
@@ -106,6 +106,15 @@ const Layout = () => {
     }
   }, [language, start_page]);
 
+  const logoStyle = {
+    paddingTop: enable_draw_title_bar ? "30px" : "16px",
+    marginTop: enable_draw_title_bar ? "10px" : "0px",
+  };
+
+  const rightContentStyle = {
+    top: enable_draw_title_bar ? "24px" : "3px",
+  };
+
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
       <ThemeProvider theme={theme}>
@@ -131,7 +140,7 @@ const Layout = () => {
             ({ palette }) => ({
               bgcolor: palette.background.paper,
             }),
-            OS === "linux"
+            OS === "linux" && enable_draw_title_bar
               ? {
                   borderRadius: "8px",
                   border: "2px solid var(--divider-color)",
@@ -142,7 +151,11 @@ const Layout = () => {
           ]}
         >
           <div className="layout__left">
-            <div className="the-logo" data-tauri-drag-region="true">
+            <div
+              className="the-logo"
+              data-tauri-drag-region="true"
+              style={logoStyle}
+            >
               <div
                 style={{
                   height: "27px",
@@ -184,18 +197,18 @@ const Layout = () => {
           </div>
 
           <div className="layout__right">
-            {
+            {enable_draw_title_bar && (
               <div className="the-bar">
                 <div
                   className="the-dragbar"
                   data-tauri-drag-region="true"
                   style={{ width: "100%" }}
                 ></div>
-                {OS !== "macos" && <LayoutControl />}
+                <LayoutControl />
               </div>
-            }
+            )}
 
-            <TransitionGroup className="the-content">
+            <TransitionGroup className="the-content" style={rightContentStyle}>
               <CSSTransition
                 key={location.pathname}
                 timeout={300}

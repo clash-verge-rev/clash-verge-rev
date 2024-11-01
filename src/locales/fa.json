@@ -235,6 +235,8 @@
   "Auto Launch": "راه‌اندازی خودکار",
   "Silent Start": "شروع بی‌صدا",
   "Silent Start Info": "برنامه را در حالت پس‌زمینه بدون نمایش پانل اجرا کنید",
+  "Use Draw Title Bar": "Use drawn title bar",
+  "Use Draw Title Bar Info": "Use the drawn title bar instead of the system title bar",
   "Clash Setting": "تنظیمات Clash",
   "Allow Lan": "اجازه LAN",
   "Network Interface": "رابط شبکه",

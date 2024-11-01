@@ -235,6 +235,8 @@
   "Auto Launch": "Автозапуск",
   "Silent Start": "Тихий запуск",
   "Silent Start Info": "Запускать программу в фоновом режиме без отображения панели",
+  "Use Draw Title Bar": "Use drawn title bar",
+  "Use Draw Title Bar Info": "Use the drawn title bar instead of the system title bar",
   "TG Channel": "Канал Telegram",
   "Manual": "Документация",
   "Github Repo": "GitHub репозиторий",
