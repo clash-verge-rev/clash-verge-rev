@@ -97,9 +97,6 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
-      meta-json-schema:
-        specifier: 1.18.6
-        version: 1.18.6
       monaco-editor:
         specifier: ^0.49.0
         version: 0.49.0
@@ -197,6 +194,9 @@ importers:
       husky:
         specifier: ^7.0.4
         version: 7.0.4
+      meta-json-schema:
+        specifier: ^1.18.9
+        version: 1.18.9
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
@@ -3591,10 +3591,10 @@ packages:
         integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==,
       }
 
-  meta-json-schema@1.18.6:
+  meta-json-schema@1.18.9:
     resolution:
       {
-        integrity: sha512-HMDu+1lcVsgEsa4kPlyo2ZNgOEbaQJhOzU4ll4qJahwx5TIw8NkcbXgxnKEW6NieqL4AOWWtoNgw3EKeuHg4+A==,
+        integrity: sha512-ZBHy12UTzDc72bYAcsAuO8czVk3/L/4PdY7o/XYWeRqKDoikzg+tvYNifdUw+7HjfDbwNaa1U2WYKtfEDYzcsg==,
       }
 
   micromark-core-commonmark@2.0.1:
@@ -7196,7 +7196,7 @@ snapshots:
 
   merge-stream@2.0.0: {}
 
-  meta-json-schema@1.18.6: {}
+  meta-json-schema@1.18.9: {}
 
   micromark-core-commonmark@2.0.1:
     dependencies:
