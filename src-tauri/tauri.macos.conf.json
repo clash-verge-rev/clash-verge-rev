@@ -34,7 +34,8 @@
   "app": {
     "trayIcon": {
       "iconPath": "icons/tray-icon-mono.ico",
-      "iconAsTemplate": true
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
     }
   }
 }
