@@ -139,7 +139,10 @@ pub fn run() {
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             if code.is_none() {
                 api.prevent_exit();
+                return;
             }
+            let app_hanele = core::handle::Handle::global().app_handle().unwrap();
+            let _ = app_hanele.save_window_state(StateFlags::default());
         }
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
@@ -147,10 +150,8 @@ pub fn run() {
                     tauri::WindowEvent::CloseRequested { api, .. } => {
                         println!("closing window...");
                         api.prevent_close();
-                        let app_hanele = core::handle::Handle::global().app_handle().unwrap();
-                        let _ = app_hanele.save_window_state(StateFlags::default());
                         let window = core::handle::Handle::global().get_window().unwrap();
-                        log_err!(window.hide());
+                        let _ = window.hide();
                     }
                     tauri::WindowEvent::Focused(true) => {
                         #[cfg(target_os = "macos")]
