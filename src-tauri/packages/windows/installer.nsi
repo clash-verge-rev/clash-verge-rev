@@ -692,7 +692,7 @@ SectionEnd
   app_check_done:
 !macroend
 
-Section VSRuntime
+Section "Check and Install VS Runtime"
     ; Set default values for x86
     StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
     StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
@@ -703,29 +703,35 @@ Section VSRuntime
         StrCpy $VC_REDIST_EXE "vc_redist.x64.exe"
     ${EndIf}
 
-    ; 检查注册表项是否存在（示例路径，需根据实际情况调整）
-    ReadRegDWORD $1 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\$0" "Installed"
-    IfErrors 0 +2
-    StrCpy $1 0
-
-    ; 如果未安装（$1 = 0），下载并安装
-    ${If} $1 == 0
-        MessageBox MB_OK "Visual Studio Runtime is not installed. Installing now..."
-        
-        ; 下载文件
-        nsisdl::download "$VC_REDIST_URL" "$TEMP\$VC_REDIST_EXE"
-        Pop $0 ; 获取下载结果
-        StrCmp $0 "success" +2
-            MessageBox MB_OK "Download failed. Please check your internet connection." IDOK Done
-
-        ; 安装运行库
-        ExecWait '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
-    ${Else}
-        MessageBox MB_OK "Visual Studio Runtime is already installed."
+    ; 检查运行库文件是否存在
+    ; 对于 64 位系统，检查 32 位运行时文件
+    ${If} ${Is64Bit}
+        IfFileExists "$WINDIR\SysWOW64\msvcp140.dll" AlreadyInstalled
     ${EndIf}
+    
+    ; 对于 32 位系统，或者 64 位系统的 64 位运行时
+    IfFileExists "$SYSDIR\msvcp140.dll" AlreadyInstalled
+
+    ; 如果文件不存在，进行安装
+    MessageBox MB_OK "Visual Studio Runtime is not installed. Installing now..."
+    
+    ; 下载文件
+    nsisdl::download "$VC_REDIST_URL" "$TEMP\$VC_REDIST_EXE"
+    Pop $0 ; 获取下载结果
+    StrCmp $0 "success" +2
+        MessageBox MB_OK "Download failed. Please check your internet connection." IDOK Done
+
+    ; 安装运行库
+    ExecWait '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
+    
+    Goto Done
+
+    AlreadyInstalled:
+    MessageBox MB_OK "Visual Studio Runtime is already installed."
 
     Done:
 SectionEnd
+
 
 Section Install
   SetOutPath $INSTDIR
