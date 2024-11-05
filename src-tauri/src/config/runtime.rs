@@ -19,7 +19,7 @@ impl IRuntime {
     // 这里只更改 allow-lan | ipv6 | log-level | tun
     pub fn patch_config(&mut self, patch: Mapping) {
         if let Some(config) = self.config.as_mut() {
-            ["allow-lan", "ipv6", "log-level"]
+            ["allow-lan", "ipv6", "log-level", "unified-delay"]
                 .into_iter()
                 .for_each(|key| {
                     if let Some(value) = patch.get(key).to_owned() {

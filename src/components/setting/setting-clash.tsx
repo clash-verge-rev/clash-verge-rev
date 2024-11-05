@@ -34,7 +34,12 @@ const SettingClash = ({ onError }: Props) => {
   const { clash, version, mutateClash, patchClash } = useClash();
   const { verge, mutateVerge, patchVerge } = useVerge();
 
-  const { ipv6, "allow-lan": allowLan, "log-level": logLevel } = clash ?? {};
+  const {
+    ipv6,
+    "allow-lan": allowLan,
+    "log-level": logLevel,
+    "unified-delay": unifiedDelay,
+  } = clash ?? {};
 
   const { enable_random_port = false, verge_mixed_port } = verge ?? {};
 
@@ -101,6 +106,19 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ ipv6: e })}
           onGuard={(e) => patchClash({ ipv6: e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem label={t("Unified Delay")}>
+        <GuardState
+          value={unifiedDelay ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ "unified-delay": e })}
+          onGuard={(e) => patchClash({ "unified-delay": e })}
         >
           <Switch edge="end" />
         </GuardState>

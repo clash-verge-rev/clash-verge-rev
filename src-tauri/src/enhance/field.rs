@@ -1,7 +1,7 @@
 use serde_yaml::{Mapping, Value};
 use std::collections::HashSet;
 
-pub const HANDLE_FIELDS: [&str; 11] = [
+pub const HANDLE_FIELDS: [&str; 12] = [
     "mode",
     "redir-port",
     "tproxy-port",
@@ -13,6 +13,7 @@ pub const HANDLE_FIELDS: [&str; 11] = [
     "ipv6",
     "external-controller",
     "secret",
+    "unified-delay",
 ];
 
 pub const DEFAULT_FIELDS: [&str; 5] = [

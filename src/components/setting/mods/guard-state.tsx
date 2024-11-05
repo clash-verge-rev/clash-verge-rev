@@ -41,7 +41,6 @@ export function GuardState<T>(props: Props<T>) {
   childProps[onChangeProps] = async (...args: any[]) => {
     // 多次操作无效
     if (lockRef.current) return;
-
     lockRef.current = true;
 
     try {

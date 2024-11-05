@@ -32,6 +32,7 @@ interface IConfigData {
   "tproxy-port": number;
   "external-controller": string;
   secret: string;
+  "unified-delay": boolean;
   tun: {
     stack: string;
     device: string;
