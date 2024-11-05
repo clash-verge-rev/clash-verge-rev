@@ -16,6 +16,8 @@ Unicode true
 !include "StrFunc.nsh"
 !include "Win\COM.nsh"
 !include "Win\Propkey.nsh"
+!include "WinVer.nsh"
+!include "LogicLib.nsh"
 !addplugindir "$%AppData%\Local\NSIS\"
 ${StrCase}
 ${StrLoc}
@@ -570,6 +572,41 @@ FunctionEnd
     ${EndIf}
   ${EndIf}
 !macroend
+
+Section VSRuntime
+    ; Set default values for x86
+    StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
+    StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
+
+    ${If} ${Is64Bit}
+        ; Update values for x64
+        StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+        StrCpy $VC_REDIST_EXE "vc_redist.x64.exe"
+    ${EndIf}
+
+    ; 检查注册表项是否存在（示例路径，需根据实际情况调整）
+    ReadRegDWORD $1 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\$0" "Installed"
+    IfErrors 0 +2
+    StrCpy $1 0
+
+    ; 如果未安装（$1 = 0），下载并安装
+    ${If} $1 == 0
+        MessageBox MB_OK "Visual Studio Runtime is not installed. Installing now..."
+        
+        ; 下载文件
+        nsisdl::download "$VC_REDIST_URL" "$TEMP\$VC_REDIST_EXE"
+        Pop $0 ; 获取下载结果
+        StrCmp $0 "success" +2
+            MessageBox MB_OK "Download failed. Please check your internet connection." IDOK Done
+
+        ; 安装运行库
+        ExecWait '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
+    ${Else}
+        MessageBox MB_OK "Visual Studio Runtime is already installed."
+    ${EndIf}
+
+    Done:
+SectionEnd
 
 Section EarlyChecks
   ; Abort silent installer if downgrades is disabled
