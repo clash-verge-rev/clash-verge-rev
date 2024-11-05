@@ -1,11 +1,19 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { TextField, Select, MenuItem, Typography } from "@mui/material";
+import {
+  TextField,
+  Select,
+  MenuItem,
+  Typography,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
 
 import {
   SettingsRounded,
   ShuffleRounded,
   LanRounded,
+  InfoRounded,
 } from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
@@ -111,7 +119,16 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Unified Delay")}>
+      <SettingItem
+        label={t("Unified Delay")}
+        extra={
+          <Tooltip title={t("Unified Delay Info")} placement="top">
+            <IconButton color="inherit" size="small">
+              <InfoRounded fontSize="inherit" sx={{ opacity: 0.75 }} />
+            </IconButton>
+          </Tooltip>
+        }
+      >
         <GuardState
           value={unifiedDelay ?? false}
           valueProps="checked"
