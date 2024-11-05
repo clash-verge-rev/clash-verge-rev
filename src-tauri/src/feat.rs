@@ -119,13 +119,14 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             Config::generate().await?;
             CoreManager::global().restart_core().await?;
             handle::Handle::refresh_clash();
-        }
+        } else {
+            if patch.get("mode").is_some() {
+                log_err!(handle::Handle::update_systray_part());
+            }
 
-        if patch.get("mode").is_some() {
-            log_err!(handle::Handle::update_systray_part());
+            Config::runtime().latest().patch_config(patch);
+            update_core_config(false).await?;
         }
-
-        Config::runtime().latest().patch_config(patch);
 
         <Result<()>>::Ok(())
     };

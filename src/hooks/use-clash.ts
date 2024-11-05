@@ -1,6 +1,6 @@
 import useSWR, { mutate } from "swr";
 import { useLockFn } from "ahooks";
-import { getAxios, getVersion, updateConfigs } from "@/services/api";
+import { getAxios, getVersion } from "@/services/api";
 import {
   getClashInfo,
   patchClashConfig,
@@ -19,7 +19,6 @@ export const useClash = () => {
   );
 
   const patchClash = useLockFn(async (patch: Partial<IConfigData>) => {
-    await updateConfigs(patch);
     await patchClashConfig(patch);
     mutateClash();
   });

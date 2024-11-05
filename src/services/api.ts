@@ -49,12 +49,6 @@ export const getClashConfig = async () => {
   return instance.get("/configs") as Promise<IConfigData>;
 };
 
-/// Update current configs
-export const updateConfigs = async (config: Partial<IConfigData>) => {
-  const instance = await getAxios();
-  return instance.patch("/configs", config);
-};
-
 /// Update geo data
 export const updateGeoData = async () => {
   const instance = await getAxios();
