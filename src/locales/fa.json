@@ -242,6 +242,7 @@
   "Mac Address": "آدرس MAC",
   "IPv6": "IPv6",
   "Unified Delay": "معادلDELAY",
+  "Unified Delay Info": "معادلDELAY را فعال کنید تا ترافیک شبکه به سرعت رسید",
   "Log Level": "سطح لاگ",
   "Port Config": "پیکربندی پورت",
   "Random Port": "پورت تصادفی",
