@@ -692,7 +692,10 @@ SectionEnd
   app_check_done:
 !macroend
 
-Section "Check and Install VS Runtime"
+Var VC_REDIST_URL
+Var VC_REDIST_EXE
+
+Section CheckAndInstallVSRuntime
     ; Set default values for x86
     StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
     StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
