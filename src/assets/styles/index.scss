@@ -43,9 +43,9 @@ body {
   overflow: hidden;
 }
 
-@import "./layout.scss";
-@import "./page.scss";
-@import "./font.scss";
+@use "./layout.scss";
+@use "./page.scss";
+@use "./font.scss";
 
 // @media (prefers-color-scheme: dark) {
 //   :root {
