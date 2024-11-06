@@ -1,6 +1,7 @@
 ; This file is copied from https://github.com/tauri-apps/tauri/blob/tauri-v1.5/tooling/bundler/src/bundle/windows/templates/installer.nsi
 ; and edit to fit the needs of the project. the latest tauri 2.x has a different base nsi script.
 RequestExecutionLevel admin
+
 Unicode true
 ; Set the compression algorithm. Default is LZMA.
 !if "{{compression}}" == ""
@@ -573,8 +574,6 @@ FunctionEnd
   ${EndIf}
 !macroend
 
-
-
 Section EarlyChecks
   ; Abort silent installer if downgrades is disabled
   !if "${ALLOWDOWNGRADES}" == "false"
@@ -692,6 +691,8 @@ SectionEnd
   app_check_done:
 !macroend
 
+
+
 Var VC_REDIST_URL
 Var VC_REDIST_EXE
 
@@ -700,40 +701,33 @@ Section CheckAndInstallVSRuntime
     StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
     StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
 
-    ${If} ${Is64Bit}
+    ${If} ${RunningX64}
         ; Update values for x64
         StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x64.exe"
         StrCpy $VC_REDIST_EXE "vc_redist.x64.exe"
     ${EndIf}
 
-    ; 检查运行库文件是否存在
-    ; 对于 64 位系统，检查 32 位运行时文件
-    ${If} ${Is64Bit}
-        IfFileExists "$WINDIR\SysWOW64\msvcp140.dll" AlreadyInstalled
+  
+    ${If} ${RunningX64}
+        IfFileExists "$WINDIR\SysWOW64\msvcp140.dll" Done
     ${EndIf}
     
-    ; 对于 32 位系统，或者 64 位系统的 64 位运行时
-    IfFileExists "$SYSDIR\msvcp140.dll" AlreadyInstalled
+    IfFileExists "$SYSDIR\msvcp140.dll" Done
 
     ; 如果文件不存在，进行安装
-    MessageBox MB_OK "Visual Studio Runtime is not installed. Installing now..."
-    
     ; 下载文件
     nsisdl::download "$VC_REDIST_URL" "$TEMP\$VC_REDIST_EXE"
     Pop $0 ; 获取下载结果
     StrCmp $0 "success" +2
-        MessageBox MB_OK "Download failed. Please check your internet connection." IDOK Done
+        ; 下载失败时，直接跳转到结束
+        Goto Done
 
     ; 安装运行库
-    ExecWait '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
+    nsExec::Exec '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
     
-    Goto Done
-
-    AlreadyInstalled:
-    MessageBox MB_OK "Visual Studio Runtime is already installed."
-
     Done:
 SectionEnd
+
 
 
 Section Install
