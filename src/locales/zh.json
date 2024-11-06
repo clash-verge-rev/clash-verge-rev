@@ -247,6 +247,7 @@
   "Mac Address": "MAC 地址",
   "IPv6": "IPv6",
   "Unified Delay": "统一延时",
+  "Unified Delay Info": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
   "Log Level": "日志等级",
   "Port Config": "端口设置",
   "Random Port": "随机端口",
