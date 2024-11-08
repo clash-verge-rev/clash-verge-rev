@@ -11,6 +11,7 @@ use serde_yaml::Mapping;
 use std::collections::{HashMap, VecDeque};
 use sysproxy::{Autoproxy, Sysproxy};
 type CmdResult<T = ()> = Result<T, String>;
+use reqwest_dav::list_cmd::ListFile;
 use tauri::Manager;
 
 #[tauri::command]
@@ -373,6 +374,37 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 #[tauri::command]
 pub async fn exit_app() {
     feat::quit(Some(0));
+}
+
+#[tauri::command]
+pub async fn save_webdav_config(url: String, username: String, password: String) -> CmdResult<()> {
+    let patch = IVerge {
+        webdav_url: Some(url),
+        webdav_username: Some(username),
+        webdav_password: Some(password),
+        ..IVerge::default()
+    };
+    Config::verge().draft().patch_config(patch.clone());
+    Config::verge().apply();
+    Config::verge()
+        .data()
+        .save_file()
+        .map_err(|err| err.to_string())?;
+    backup::WebDavClient::global().reset();
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn create_webdav_backup() -> CmdResult<()> {
+    feat::create_backup_and_upload_webdav()
+        .await
+        .map_err(|err| err.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_webdav_backup() -> CmdResult<Vec<ListFile>> {
+    feat::list_wevdav_backup().await.map_err(|e| e.to_string())
 }
 
 pub mod service {

@@ -6,14 +6,19 @@ use tauri::Manager;
 
 #[cfg(not(feature = "verge-dev"))]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
+#[cfg(not(feature = "verge-dev"))]
+pub static BACKUP_DIR: &str = "clash-verge-rev-backup";
+
 #[cfg(feature = "verge-dev")]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev.dev";
+#[cfg(feature = "verge-dev")]
+pub static BACKUP_DIR: &str = "clash-verge-rev-backup-dev";
 
 pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 
-static CLASH_CONFIG: &str = "config.yaml";
-static VERGE_CONFIG: &str = "verge.yaml";
-static PROFILE_YAML: &str = "profiles.yaml";
+pub static CLASH_CONFIG: &str = "config.yaml";
+pub static VERGE_CONFIG: &str = "verge.yaml";
+pub static PROFILE_YAML: &str = "profiles.yaml";
 
 /// init portable flag
 pub fn init_portable_flag() -> Result<()> {
