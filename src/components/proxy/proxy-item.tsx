@@ -127,6 +127,8 @@ export const ProxyItem = (props: Props) => {
               {showType && proxy.udp && <TypeBox>UDP</TypeBox>}
               {showType && proxy.xudp && <TypeBox>XUDP</TypeBox>}
               {showType && proxy.tfo && <TypeBox>TFO</TypeBox>}
+              {showType && proxy.mptcp && <TypeBox>MPTCP</TypeBox>}
+              {showType && proxy.smux && <TypeBox>SMUX</TypeBox>}
             </>
           }
         />
