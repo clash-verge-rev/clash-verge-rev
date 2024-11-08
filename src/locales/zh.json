@@ -332,6 +332,7 @@
   "clash_mode_direct": "直连模式",
   "toggle_system_proxy": "打开/关闭系统代理",
   "toggle_tun_mode": "打开/关闭 Tun 模式",
+  "Backup Setting": "备份设置",
   "Runtime Config": "当前配置",
   "Open Conf Dir": "配置目录",
   "Open Core Dir": "内核目录",

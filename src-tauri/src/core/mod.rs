@@ -1,3 +1,4 @@
+pub mod backup;
 pub mod clash_api;
 #[allow(clippy::module_inception)]
 mod core;

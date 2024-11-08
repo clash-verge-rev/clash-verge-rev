@@ -236,3 +236,26 @@ export async function getNetworkInterfaces() {
 export async function getNetworkInterfacesInfo() {
   return invoke<INetworkInterface[]>("get_network_interfaces_info");
 }
+
+export async function createWebdavBackup() {
+  return invoke<void>("create_webdav_backup");
+}
+export async function saveWebdavConfig(
+  url: string,
+  username: string,
+  password: String
+) {
+  return invoke<void>("save_webdav_config", {
+    url,
+    username,
+    password,
+  });
+}
+
+export async function listWebDavBackup() {
+  let list: IWebDavFile[] = await invoke<IWebDavFile[]>("list_webdav_backup");
+  list.map((item) => {
+    item.filename = item.href.split("/").pop() as string;
+  });
+  return list;
+}

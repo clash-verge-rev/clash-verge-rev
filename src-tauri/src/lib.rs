@@ -123,7 +123,11 @@ pub fn run() {
             // service mode
             cmds::service::check_service,
             // clash api
-            cmds::clash_api_get_proxy_delay
+            cmds::clash_api_get_proxy_delay,
+            // backup
+            cmds::create_webdav_backup,
+            cmds::save_webdav_config,
+            cmds::list_webdav_backup,
         ]);
 
     #[cfg(debug_assertions)]

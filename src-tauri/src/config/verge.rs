@@ -147,6 +147,10 @@ pub struct IVerge {
     pub verge_port: Option<u16>,
 
     pub verge_http_enabled: Option<bool>,
+
+    pub webdav_url: Option<String>,
+    pub webdav_username: Option<String>,
+    pub webdav_password: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -304,6 +308,10 @@ impl IVerge {
         patch!(proxy_layout_column);
         patch!(test_list);
         patch!(auto_log_clean);
+
+        patch!(webdav_url);
+        patch!(webdav_username);
+        patch!(webdav_password);
     }
 
     /// 在初始化前尝试拿到单例端口的值
