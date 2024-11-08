@@ -4,11 +4,14 @@ import {
   useState,
   useRef,
   SVGProps,
+  useCallback,
+  useMemo,
+  memo,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { Typography } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormRegister } from "react-hook-form";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { isValidUrl } from "@/utils/helper";
@@ -53,6 +56,36 @@ type BackupFile = IWebDavFile & {
   allow_apply: boolean;
 };
 
+interface BackupTableProps {
+  datasource: BackupFile[];
+  page: number;
+  rowsPerPage: number;
+  onPageChange: (event: any, newPage: number) => void;
+  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  totalCount: number;
+}
+
+interface WebDAVConfigFormProps {
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  initialValues: Partial<IWebDavConfig>;
+  urlRef: React.RefObject<HTMLInputElement>;
+  usernameRef: React.RefObject<HTMLInputElement>;
+  passwordRef: React.RefObject<HTMLInputElement>;
+  showPassword: boolean;
+  onShowPasswordClick: () => void;
+  webdavChanged: boolean;
+  webdavUrl: string | undefined | null;
+  webdavUsername: string | undefined | null;
+  webdavPassword: string | undefined | null;
+  handleBackup: () => Promise<void>;
+  register: UseFormRegister<IWebDavConfig>;
+}
+
+// 将魔法数字和配置提取为常量
+const DEFAULT_ROWS_PER_PAGE = 5;
+const DATE_FORMAT = "YYYY-MM-DD_HH-mm-ss";
+const FILENAME_PATTERN = /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}/;
+
 export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -62,13 +95,16 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
   const [showPassword, setShowPassword] = useState(false);
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [backupState, setBackupState] = useState({
+    files: [] as BackupFile[],
+    page: 0,
+    rowsPerPage: DEFAULT_ROWS_PER_PAGE,
+    isLoading: false,
+  });
 
   const OS = getSystem();
   const urlRef = useRef<HTMLInputElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
   const { register, handleSubmit, watch } = useForm<IWebDavConfig>({
     defaultValues: {
       url: webdav_url,
@@ -96,34 +132,36 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
   }));
 
   // Handle page change
-  const handleChangePage = (
-    _: React.MouseEvent<HTMLButtonElement> | null,
-    page: number
-  ) => {
-    console.log(page);
-    setPage(page);
-  };
+  const handleChangePage = useCallback(
+    (_: React.MouseEvent<HTMLButtonElement> | null, page: number) => {
+      setBackupState((prev) => ({ ...prev, page }));
+    },
+    []
+  );
 
   // Handle rows per page change
-  const handleChangeRowsPerPage = (event: any) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to the first page
-  };
+  const handleChangeRowsPerPage = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setBackupState((prev) => ({
+        ...prev,
+        rowsPerPage: parseInt(event.target.value, 10),
+        page: 0,
+      }));
+    },
+    []
+  );
 
-  const fetchAndSetBackupFiles = () => {
-    setIsLoading(true); // Assuming setIsLoading is defined in your component or context to manage loading state
-
-    getAllBackupFiles()
-      .then((files: BackupFile[]) => {
-        console.log(files);
-        setBackupFiles(files); // Assuming setBackupFiles is a state setter function in your component or context
-      })
-      .catch((e) => {
-        console.error(e);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+  const fetchAndSetBackupFiles = async () => {
+    try {
+      setBackupState((prev) => ({ ...prev, isLoading: true }));
+      const files = await getAllBackupFiles();
+      setBackupState((prev) => ({ ...prev, files }));
+    } catch (error) {
+      console.error("Failed to fetch backup files:", error);
+      Notice.error(t("Failed to fetch backup files"));
+    } finally {
+      setBackupState((prev) => ({ ...prev, isLoading: false }));
+    }
   };
 
   const checkForm = () => {
@@ -132,21 +170,21 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
     const url = urlRef.current?.value;
 
     if (!url) {
-      Notice.error(t("Webdav url cannot be empty"));
+      Notice.error(t("WebDAV URL Required"));
       urlRef.current?.focus();
       return;
     } else if (!isValidUrl(url)) {
-      Notice.error(t("Webdav address must be url"));
+      Notice.error(t("Invalid WebDAV URL"));
       urlRef.current?.focus();
       return;
     }
     if (!username) {
-      Notice.error(t("Username cannot be empty"));
+      Notice.error(t("Username Required"));
       usernameRef.current?.focus();
       return;
     }
     if (!password) {
-      Notice.error(t("Password cannot be empty"));
+      Notice.error(t("Password Required"));
       passwordRef.current?.focus();
       return;
     }
@@ -154,7 +192,7 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
 
   const submit = async (data: IWebDavConfig) => {
     checkForm();
-    setIsLoading(true);
+    setBackupState((prev) => ({ ...prev, isLoading: true }));
     await saveWebdavConfig(data.url, data.username, data.password)
       .then(() => {
         mutateVerge(
@@ -165,36 +203,34 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
           },
           false
         );
-        Notice.success(t("Webdav Config Saved Successfully"), 1500);
+        Notice.success(t("WebDAV Config Saved"));
       })
       .catch((e) => {
-        Notice.error(t("Webdav Config Save Failed", { error: e }), 3000);
+        Notice.error(t("WebDAV Config Save Failed", { error: e }), 3000);
       })
       .finally(() => {
-        setIsLoading(false);
+        setBackupState((prev) => ({ ...prev, isLoading: false }));
         fetchAndSetBackupFiles();
       });
   };
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
+  const handleClickShowPassword = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
 
   const handleBackup = useLockFn(async () => {
-    checkForm();
-    setIsLoading(true);
-    await createWebdavBackup()
-      .then(() => {
-        Notice.success(t("Backup Successfully"), 1500);
-      })
-      .finally(() => {
-        setIsLoading(false);
-        fetchAndSetBackupFiles();
-      })
-      .catch((e) => {
-        console.log(e, "backup failed");
-        Notice.error(t("Backup Failed", { error: e }), 3000);
-      });
+    try {
+      checkForm();
+      setBackupState((prev) => ({ ...prev, isLoading: true }));
+      await createWebdavBackup();
+      Notice.success(t("Backup Created"));
+      await fetchAndSetBackupFiles();
+    } catch (error) {
+      console.error("Backup failed:", error);
+      Notice.error(t("Backup Failed", { error }));
+    } finally {
+      setBackupState((prev) => ({ ...prev, isLoading: false }));
+    }
   });
 
   const getAllBackupFiles = async () => {
@@ -202,10 +238,8 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
     return files
       .map((file) => {
         const platform = file.filename.split("-")[0];
-        const fileBackupTimeStr = file.filename.match(
-          /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}/
-        )!;
-        const backupTime = dayjs(fileBackupTimeStr[0], "YYYY-MM-DD_HH-mm-ss");
+        const fileBackupTimeStr = file.filename.match(FILENAME_PATTERN)!;
+        const backupTime = dayjs(fileBackupTimeStr[0], DATE_FORMAT);
         const allowApply = OS === platform;
         return {
           ...file,
@@ -217,10 +251,17 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
       .sort((a, b) => (a.backup_time.isAfter(b.backup_time) ? -1 : 1));
   };
 
-  const datasource = backupFiles.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const datasource = useMemo(() => {
+    return backupState.files.slice(
+      backupState.page * backupState.rowsPerPage,
+      backupState.page * backupState.rowsPerPage + backupState.rowsPerPage
+    );
+  }, [backupState.files, backupState.page, backupState.rowsPerPage]);
+
+  const onFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSubmit(submit)(e);
+  };
 
   return (
     <BaseDialog
@@ -234,206 +275,260 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
     >
       <Box sx={{ maxWidth: 800 }}>
-        <BaseLoadingOverlay isLoading={isLoading} />
+        <BaseLoadingOverlay isLoading={backupState.isLoading} />
         <Paper elevation={2} sx={{ padding: 2 }}>
-          <form onSubmit={handleSubmit(submit)}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={9}>
-                <Grid container spacing={2}>
-                  {/* WebDAV Server Address */}
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="WebDAV Server URL"
-                      variant="outlined"
-                      size="small"
-                      {...register("url")}
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      inputRef={urlRef}
-                    />
-                  </Grid>
-
-                  {/* Username and Password */}
-                  <Grid item xs={6}>
-                    <TextField
-                      label="Username"
-                      variant="outlined"
-                      size="small"
-                      {...register("username")}
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      inputRef={usernameRef}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      label="Password"
-                      type={showPassword ? "text" : "password"}
-                      variant="outlined"
-                      size="small"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      inputRef={passwordRef}
-                      {...register("password")}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={handleClickShowPassword}
-                              edge="end"
-                            >
-                              {showPassword ? (
-                                <VisibilityOff />
-                              ) : (
-                                <Visibility />
-                              )}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-              </Grid>
-
-              <Grid item xs={12} sm={3}>
-                <Stack
-                  direction="column"
-                  justifyContent="center"
-                  alignItems="stretch"
-                  sx={{ height: "100%" }}
-                >
-                  {webdavChanged ||
-                  webdav_url === null ||
-                  webdav_username == null ||
-                  webdav_password == null ? (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      sx={{ height: "100%" }}
-                      type="submit"
-                    >
-                      Save
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      color="success"
-                      sx={{ height: "100%" }}
-                      onClick={handleBackup}
-                      type="button"
-                    >
-                      Backup
-                    </Button>
-                  )}
-                </Stack>
-              </Grid>
-            </Grid>
-          </form>
+          <WebDAVConfigForm
+            onSubmit={onFormSubmit}
+            initialValues={{
+              url: webdav_url,
+              username: webdav_username,
+              password: webdav_password,
+            }}
+            urlRef={urlRef}
+            usernameRef={usernameRef}
+            passwordRef={passwordRef}
+            showPassword={showPassword}
+            onShowPasswordClick={handleClickShowPassword}
+            webdavChanged={webdavChanged}
+            webdavUrl={webdav_url}
+            webdavUsername={webdav_username}
+            webdavPassword={webdav_password}
+            handleBackup={handleBackup}
+            register={register}
+          />
           <Divider sx={{ marginY: 2 }} />
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>文件名称</TableCell>
-                  <TableCell>时间</TableCell>
-                  <TableCell align="right">操作</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {datasource.length > 0 ? (
-                  datasource?.map((file, index) => (
-                    <TableRow key={index}>
-                      <TableCell component="th" scope="row">
-                        {file.platform === "windows" ? (
-                          <WindowsIcon className="h-full w-full" />
-                        ) : file.platform === "linux" ? (
-                          <LinuxIcon className="h-full w-full" />
-                        ) : (
-                          <MacIcon className="h-full w-full" />
-                        )}
-                        {file.filename}
-                      </TableCell>
-                      <TableCell align="center">
-                        {file.backup_time.fromNow()}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                          }}
-                        >
-                          <IconButton
-                            color="secondary"
-                            aria-label="delete"
-                            size="small"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                          <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={{ mx: 1, height: 24 }}
-                          />
-
-                          <IconButton
-                            color="primary"
-                            aria-label="restore"
-                            size="small"
-                          >
-                            <RestoreIcon />
-                          </IconButton>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} align="center">
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          height: 150,
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          color="textSecondary"
-                          align="center"
-                        >
-                          暂无备份
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-            <TablePagination
-              rowsPerPageOptions={[]}
-              component="div"
-              count={backupFiles.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              labelRowsPerPage=""
-            />
-          </TableContainer>
+          <BackupTable
+            datasource={datasource}
+            page={backupState.page}
+            rowsPerPage={backupState.rowsPerPage}
+            onPageChange={(_, page) => handleChangePage(null, page)}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            totalCount={backupState.files.length}
+          />
         </Paper>
       </Box>
     </BaseDialog>
   );
 });
+
+const BackupTable = memo(
+  ({
+    datasource,
+    page,
+    rowsPerPage,
+    onPageChange,
+    onRowsPerPageChange,
+    totalCount,
+  }: BackupTableProps) => {
+    const { t } = useTranslation();
+    return (
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>{t("Filename")}</TableCell>
+              <TableCell>{t("Time")}</TableCell>
+              <TableCell align="right">{t("Actions")}</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {datasource.length > 0 ? (
+              datasource?.map((file, index) => (
+                <TableRow key={index}>
+                  <TableCell component="th" scope="row">
+                    {file.platform === "windows" ? (
+                      <WindowsIcon className="h-full w-full" />
+                    ) : file.platform === "linux" ? (
+                      <LinuxIcon className="h-full w-full" />
+                    ) : (
+                      <MacIcon className="h-full w-full" />
+                    )}
+                    {file.filename}
+                  </TableCell>
+                  <TableCell align="center">
+                    {file.backup_time.fromNow()}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <IconButton
+                        color="secondary"
+                        aria-label={t("Delete")}
+                        size="small"
+                        title={t("Delete Backup")}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={{ mx: 1, height: 24 }}
+                      />
+                      <IconButton
+                        color="primary"
+                        aria-label={t("Restore")}
+                        size="small"
+                        title={t("Restore Backup")}
+                      >
+                        <RestoreIcon />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: 150,
+                    }}
+                  >
+                    <Typography
+                      variant="body1"
+                      color="textSecondary"
+                      align="center"
+                    >
+                      {t("No Backups")}
+                    </Typography>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        <TablePagination
+          rowsPerPageOptions={[]}
+          component="div"
+          count={totalCount}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={onPageChange}
+          onRowsPerPageChange={onRowsPerPageChange}
+          labelRowsPerPage={t("Rows per page")}
+        />
+      </TableContainer>
+    );
+  }
+);
+
+const WebDAVConfigForm = memo(
+  ({
+    onSubmit,
+    initialValues,
+    urlRef,
+    usernameRef,
+    passwordRef,
+    showPassword,
+    onShowPasswordClick,
+    webdavChanged,
+    webdavUrl,
+    webdavUsername,
+    webdavPassword,
+    handleBackup,
+    register,
+  }: WebDAVConfigFormProps) => {
+    const { t } = useTranslation();
+    return (
+      <form onSubmit={onSubmit}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={9}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label={t("WebDAV Server URL")}
+                  variant="outlined"
+                  size="small"
+                  {...register("url")}
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  inputRef={urlRef}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label={t("Username")}
+                  variant="outlined"
+                  size="small"
+                  {...register("username")}
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  inputRef={usernameRef}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label={t("Password")}
+                  type={showPassword ? "text" : "password"}
+                  variant="outlined"
+                  size="small"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  inputRef={passwordRef}
+                  {...register("password")}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={onShowPasswordClick} edge="end">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            <Stack
+              direction="column"
+              justifyContent="center"
+              alignItems="stretch"
+              sx={{ height: "100%" }}
+            >
+              {webdavChanged ||
+              webdavUrl === null ||
+              webdavUsername == null ||
+              webdavPassword == null ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ height: "100%" }}
+                  type="submit"
+                >
+                  {t("Save")}
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  color="success"
+                  sx={{ height: "100%" }}
+                  onClick={handleBackup}
+                  type="button"
+                >
+                  {t("Backup")}
+                </Button>
+              )}
+            </Stack>
+          </Grid>
+        </Grid>
+      </form>
+    );
+  }
+);
 
 export function LinuxIcon(props: SVGProps<SVGSVGElement>) {
   return (
