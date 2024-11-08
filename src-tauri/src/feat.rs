@@ -404,31 +404,23 @@ pub async fn test_delay(url: String) -> Result<u32> {
 }
 
 pub async fn create_backup_and_upload_webdav() -> Result<()> {
-    if let Err(err) = async {
-        let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
-            log::error!(target: "app", "Failed to create backup: {:#?}", err);
-            err
-        })?;
+    let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
+        log::error!(target: "app", "Failed to create backup: {:#?}", err);
+        err
+    })?;
 
-        backup::WebDavClient::global()
-            .upload(temp_file_path.clone(), file_name)
-            .await
-            .map_err(|err| {
-                log::error!(target: "app", "Failed to upload to WebDAV: {:#?}", err);
-                err
-            })?;
-
-        std::fs::remove_file(&temp_file_path).map_err(|err| {
-            log::warn!(target: "app", "Failed to remove temp file: {:#?}", err);
-            err
-        })?;
-
-        Ok(())
-    }
-    .await
+    if let Err(err) = backup::WebDavClient::global()
+        .upload(temp_file_path.clone(), file_name)
+        .await
     {
+        log::error!(target: "app", "Failed to upload to WebDAV: {:#?}", err);
         return Err(err);
     }
+
+    if let Err(err) = std::fs::remove_file(&temp_file_path) {
+        log::warn!(target: "app", "Failed to remove temp file: {:#?}", err);
+    }
+
     Ok(())
 }
 
