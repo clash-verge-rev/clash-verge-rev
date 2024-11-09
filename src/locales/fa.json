@@ -386,10 +386,14 @@
   "Password Required": "رمز عبور نمی‌تواند خالی باشد",
   "Failed to Fetch Backups": "دریافت فایل‌های پشتیبان ناموفق بود",
   "WebDAV Config Saved": "پیکربندی WebDAV با موفقیت ذخیره شد",
-  "WebDAV Config Save Failed": "ذخیره پیکربندی WebDAV ناموفق بود",
+  "WebDAV Config Save Failed": "خطا در ذخیره تنظیمات WebDAV: {{error}}",
   "Backup Created": "پشتیبان‌گیری با موفقیت ایجاد شد",
-  "Backup Failed": "ایجاد پشتیبان ناموفق بود",
+  "Backup Failed": "خطا در پشتیبان‌گیری: {{error}}",
   "Delete Backup": "حذف پشتیبان",
   "Restore Backup": "بازیابی پشتیبان",
-  "Backup Time": "زمان پشتیبان‌گیری"
+  "Backup Time": "زمان پشتیبان‌گیری",
+  "Confirm to delete this backup file?": "آیا از حذف این فایل پشتیبان اطمینان دارید؟",
+  "Confirm to restore this backup file?": "آیا از بازیابی این فایل پشتیبان اطمینان دارید؟",
+  "Restore Success, App will restart in 1s": "بازیابی با موفقیت انجام شد، برنامه در 1 ثانیه راه‌اندازی مجدد می‌شود",
+  "Failed to fetch backup files": "دریافت فایل‌های پشتیبان ناموفق بود"
 }

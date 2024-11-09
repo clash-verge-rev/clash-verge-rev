@@ -40,14 +40,27 @@ impl WebDavClient {
             let url = verge.webdav_url.unwrap_or_default();
             let username = verge.webdav_username.unwrap_or_default();
             let password = verge.webdav_password.unwrap_or_default();
-
+            let url = url.trim_end_matches('/');
             let client = reqwest_dav::ClientBuilder::new()
+                .set_agent(
+                    reqwest::Client::builder()
+                        .danger_accept_invalid_certs(true)
+                        .build()
+                        .unwrap(),
+                )
                 .set_host(url.to_owned())
                 .set_auth(reqwest_dav::Auth::Basic(
                     username.to_owned(),
                     password.to_owned(),
                 ))
                 .build()?;
+            if let Err(_) = client
+                .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0))
+                .await
+            {
+                client.mkcol(dirs::BACKUP_DIR).await?;
+            }
+
             *self.client.lock() = Some(client.clone());
         }
         Ok(self.client.lock().clone().unwrap())
@@ -61,10 +74,6 @@ impl WebDavClient {
 
     pub async fn upload(&self, file_path: PathBuf, file_name: String) -> Result<(), Error> {
         let client = self.get_client().await?;
-        if client.get(dirs::BACKUP_DIR).await.is_err() {
-            client.mkcol(dirs::BACKUP_DIR).await?;
-        }
-
         let webdav_path: String = format!("{}/{}", dirs::BACKUP_DIR, file_name);
         client
             .put(webdav_path.as_ref(), fs::read(file_path)?)
@@ -72,7 +81,16 @@ impl WebDavClient {
         Ok(())
     }
 
-    pub async fn list_files(&self) -> Result<Vec<ListFile>, Error> {
+    pub async fn download(&self, filename: String, storage_path: PathBuf) -> Result<(), Error> {
+        let client = self.get_client().await?;
+        let path = format!("{}/{}", dirs::BACKUP_DIR, filename);
+        let response = client.get(&path.as_str()).await?;
+        let content = response.bytes().await?;
+        fs::write(&storage_path, &content)?;
+        Ok(())
+    }
+
+    pub async fn list(&self) -> Result<Vec<ListFile>, Error> {
         let client = self.get_client().await?;
         let files = client
             .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(1))
@@ -84,6 +102,13 @@ impl WebDavClient {
             }
         }
         Ok(final_files)
+    }
+
+    pub async fn delete(&self, file_name: String) -> Result<(), Error> {
+        let client = self.get_client().await?;
+        let path = format!("{}/{}", dirs::BACKUP_DIR, file_name);
+        client.delete(&path).await?;
+        Ok(())
     }
 }
 
@@ -109,8 +134,17 @@ pub fn create_backup() -> Result<(String, PathBuf), Error> {
     }
     zip.start_file(dirs::CLASH_CONFIG, options)?;
     zip.write_all(fs::read(dirs::clash_path()?)?.as_slice())?;
+
+    let mut verge_config: serde_json::Value =
+        serde_yaml::from_str(&fs::read_to_string(dirs::verge_path()?)?)?;
+    if let Some(obj) = verge_config.as_object_mut() {
+        obj.remove("webdav_username");
+        obj.remove("webdav_password");
+        obj.remove("webdav_url");
+    }
     zip.start_file(dirs::VERGE_CONFIG, options)?;
-    zip.write_all(fs::read(dirs::verge_path()?)?.as_slice())?;
+    zip.write_all(serde_yaml::to_string(&verge_config)?.as_bytes())?;
+
     zip.start_file(dirs::PROFILE_YAML, options)?;
     zip.write_all(fs::read(dirs::profiles_path()?)?.as_slice())?;
     zip.finish()?;

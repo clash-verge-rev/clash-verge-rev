@@ -17,7 +17,7 @@ import {
   ListItemButton,
   ListItemText,
 } from "@mui/material";
-import { changeClashCore, restartSidecar } from "@/services/cmds";
+import { changeClashCore, restartCore } from "@/services/cmds";
 import { closeAllConnections, upgradeCore } from "@/services/api";
 
 const VALID_CORE = [
@@ -59,7 +59,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onRestart = useLockFn(async () => {
     try {
-      await restartSidecar();
+      await restartCore();
       Notice.success(t(`Clash Core Restarted`), 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());

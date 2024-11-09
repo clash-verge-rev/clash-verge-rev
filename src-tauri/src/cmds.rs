@@ -185,7 +185,7 @@ pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
 
 /// restart the sidecar
 #[tauri::command]
-pub async fn restart_sidecar() -> CmdResult {
+pub async fn restart_core() -> CmdResult {
     wrap_err!(CoreManager::global().restart_core().await)
 }
 
@@ -396,15 +396,28 @@ pub async fn save_webdav_config(url: String, username: String, password: String)
 
 #[tauri::command]
 pub async fn create_webdav_backup() -> CmdResult<()> {
-    feat::create_backup_and_upload_webdav()
-        .await
-        .map_err(|err| err.to_string())?;
-    Ok(())
+    wrap_err!(feat::create_backup_and_upload_webdav().await)
 }
 
 #[tauri::command]
 pub async fn list_webdav_backup() -> CmdResult<Vec<ListFile>> {
-    feat::list_wevdav_backup().await.map_err(|e| e.to_string())
+    wrap_err!(feat::list_wevdav_backup().await)
+}
+
+#[tauri::command]
+pub async fn delete_webdav_backup(filename: String) -> CmdResult<()> {
+    wrap_err!(feat::delete_webdav_backup(filename).await)
+}
+
+#[tauri::command]
+pub async fn restore_webdav_backup(filename: String) -> CmdResult<()> {
+    wrap_err!(feat::restore_webdav_backup(filename).await)
+}
+
+#[tauri::command]
+pub async fn restart_app() -> CmdResult<()> {
+    feat::restart_app();
+    Ok(())
 }
 
 pub mod service {

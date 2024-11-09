@@ -7,10 +7,13 @@
 use crate::config::*;
 use crate::core::*;
 use crate::log_err;
+use crate::utils::dirs::app_home_dir;
 use crate::utils::resolve;
 use anyhow::{bail, Result};
 use reqwest_dav::list_cmd::ListFile;
 use serde_yaml::{Mapping, Value};
+use std::fs;
+use tauri::Manager;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 // 打开面板
@@ -37,6 +40,18 @@ pub fn restart_clash_core() {
                 log::error!(target:"app", "{err}");
             }
         }
+    });
+}
+
+pub fn restart_app() {
+    tauri::async_runtime::spawn_blocking(|| {
+        tauri::async_runtime::block_on(async {
+            log_err!(CoreManager::global().stop_core().await);
+        });
+        resolve::resolve_reset();
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        tauri::process::restart(&app_handle.env());
     });
 }
 
@@ -425,11 +440,37 @@ pub async fn create_backup_and_upload_webdav() -> Result<()> {
 }
 
 pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
+    backup::WebDavClient::global().list().await.map_err(|err| {
+        log::error!(target: "app", "Failed to list WebDAV backup files: {:#?}", err);
+        err
+    })
+}
+
+pub async fn delete_webdav_backup(filename: String) -> Result<()> {
     backup::WebDavClient::global()
-        .list_files()
+        .delete(filename)
         .await
         .map_err(|err| {
-            log::error!(target: "app", "Failed to list WebDAV backup files: {:#?}", err);
+            log::error!(target: "app", "Failed to delete WebDAV backup file: {:#?}", err);
             err
         })
+}
+
+pub async fn restore_webdav_backup(filename: String) -> Result<()> {
+    let backup_storage_path = app_home_dir().unwrap().join(&filename);
+    backup::WebDavClient::global()
+        .download(filename, backup_storage_path.clone())
+        .await
+        .map_err(|err| {
+            log::error!(target: "app", "Failed to download WebDAV backup file: {:#?}", err);
+            err
+        })?;
+
+    // extract zip file
+    let mut zip = zip::ZipArchive::new(fs::File::open(backup_storage_path.clone())?)?;
+    zip.extract(app_home_dir()?)?;
+
+    // 最后删除临时文件
+    fs::remove_file(backup_storage_path)?;
+    Ok(())
 }

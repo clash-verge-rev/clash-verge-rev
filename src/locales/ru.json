@@ -386,10 +386,14 @@
   "Password Required": "Пароль не может быть пустым",
   "Failed to Fetch Backups": "Не удалось получить файлы резервных копий",
   "WebDAV Config Saved": "Конфигурация WebDAV успешно сохранена",
-  "WebDAV Config Save Failed": "Не удалось сохранить конфигурацию WebDAV",
+  "WebDAV Config Save Failed": "Не удалось сохранить конфигурацию WebDAV: {{error}}",
   "Backup Created": "Резервная копия успешно создана",
-  "Backup Failed": "Не удалось создать резервную копию",
+  "Backup Failed": "Ошибка резервного копирования: {{error}}",
   "Delete Backup": "Удалить резервную копию",
   "Restore Backup": "Восстановить резервную копию",
-  "Backup Time": "Время резервного копирования"
+  "Backup Time": "Время резервного копирования",
+  "Confirm to delete this backup file?": "Вы уверены, что хотите удалить этот файл резервной копии?",
+  "Confirm to restore this backup file?": "Вы уверены, что хотите восстановить этот файл резервной копии?",
+  "Restore Success, App will restart in 1s": "Восстановление успешно выполнено, приложение перезапустится через 1 секунду",
+  "Failed to fetch backup files": "Не удалось получить файлы резервных копий"
 }
