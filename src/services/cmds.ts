@@ -141,8 +141,12 @@ export async function changeClashCore(clashCore: string) {
   return invoke<any>("change_clash_core", { clashCore });
 }
 
-export async function restartSidecar() {
-  return invoke<void>("restart_sidecar");
+export async function restartCore() {
+  return invoke<void>("restart_core");
+}
+
+export async function restartApp() {
+  return invoke<void>("restart_app");
 }
 
 export async function getAppDir() {
@@ -240,6 +244,15 @@ export async function getNetworkInterfacesInfo() {
 export async function createWebdavBackup() {
   return invoke<void>("create_webdav_backup");
 }
+
+export async function deleteWebdavBackup(filename: string) {
+  return invoke<void>("delete_webdav_backup", { filename });
+}
+
+export async function restoreWebDavBackup(filename: string) {
+  return invoke<void>("restore_webdav_backup", { filename });
+}
+
 export async function saveWebdavConfig(
   url: string,
   username: string,

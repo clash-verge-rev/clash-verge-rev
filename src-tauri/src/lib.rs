@@ -84,7 +84,8 @@ pub fn run() {
             cmds::get_portable_flag,
             cmds::get_network_interfaces,
             // cmds::kill_sidecar,
-            cmds::restart_sidecar,
+            cmds::restart_core,
+            cmds::restart_app,
             // clash
             cmds::get_clash_info,
             cmds::get_clash_logs,
@@ -128,6 +129,8 @@ pub fn run() {
             cmds::create_webdav_backup,
             cmds::save_webdav_config,
             cmds::list_webdav_backup,
+            cmds::delete_webdav_backup,
+            cmds::restore_webdav_backup,
         ]);
 
     #[cfg(debug_assertions)]

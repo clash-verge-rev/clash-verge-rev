@@ -1,14 +1,14 @@
 use crate::{
     cmds,
     config::Config,
-    core::CoreManager,
-    feat, log_err, t,
+    feat, t,
     utils::{
         dirs,
         resolve::{self, VERSION},
     },
 };
 use anyhow::Result;
+use tauri::AppHandle;
 use tauri::{
     menu::CheckMenuItem,
     tray::{MouseButton, MouseButtonState, TrayIconEvent, TrayIconId},
@@ -17,7 +17,6 @@ use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     Wry,
 };
-use tauri::{AppHandle, Manager};
 
 use super::handle;
 pub struct Tray {}
@@ -408,7 +407,7 @@ fn create_tray_menu(
     Ok(menu)
 }
 
-fn on_menu_event(app_handle: &AppHandle, event: MenuEvent) {
+fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     match event.id.as_ref() {
         mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
             let mode = &mode[0..mode.len() - 5];
@@ -423,15 +422,7 @@ fn on_menu_event(app_handle: &AppHandle, event: MenuEvent) {
         "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
         "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
         "restart_clash" => feat::restart_clash_core(),
-        "restart_app" => {
-            tauri::async_runtime::block_on(async move {
-                log_err!(CoreManager::global().stop_core().await);
-            });
-            resolve::resolve_reset();
-            //睡1秒再重启
-            std::thread::sleep(std::time::Duration::from_secs(1));
-            tauri::process::restart(&app_handle.env());
-        }
+        "restart_app" => feat::restart_app(),
         "quit" => {
             println!("quit");
             feat::quit(Some(0));

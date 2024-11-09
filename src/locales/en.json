@@ -386,10 +386,14 @@
   "Password Required": "Password cannot be empty",
   "Failed to Fetch Backups": "Failed to fetch backup files",
   "WebDAV Config Saved": "WebDAV configuration saved successfully",
-  "WebDAV Config Save Failed": "Failed to save WebDAV configuration",
+  "WebDAV Config Save Failed": "Failed to save WebDAV configuration: {{error}}",
   "Backup Created": "Backup created successfully",
-  "Backup Failed": "Failed to create backup",
+  "Backup Failed": "Backup failed: {{error}}",
   "Delete Backup": "Delete Backup",
   "Restore Backup": "Restore Backup",
-  "Backup Time": "Backup Time"
+  "Backup Time": "Backup Time",
+  "Confirm to delete this backup file?": "Confirm to delete this backup file?",
+  "Confirm to restore this backup file?": "Confirm to restore this backup file?",
+  "Restore Success, App will restart in 1s": "Restore Success, App will restart in 1s",
+  "Failed to fetch backup files": "Failed to fetch backup files"
 }
