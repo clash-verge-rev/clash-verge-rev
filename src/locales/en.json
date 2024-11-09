@@ -390,5 +390,6 @@
   "Backup Created": "Backup created successfully",
   "Backup Failed": "Failed to create backup",
   "Delete Backup": "Delete Backup",
-  "Restore Backup": "Restore Backup"
+  "Restore Backup": "Restore Backup",
+  "Backup Time": "Backup Time"
 }
