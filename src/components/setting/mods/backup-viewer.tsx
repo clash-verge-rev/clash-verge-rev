@@ -327,7 +327,7 @@ const BackupTable = memo(
           <TableHead>
             <TableRow>
               <TableCell>{t("Filename")}</TableCell>
-              <TableCell>{t("Time")}</TableCell>
+              <TableCell>{t("Backup Time")}</TableCell>
               <TableCell align="right">{t("Actions")}</TableCell>
             </TableRow>
           </TableHead>

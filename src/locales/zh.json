@@ -390,5 +390,6 @@
   "Backup Created": "备份创建成功",
   "Backup Failed": "备份创建失败",
   "Delete Backup": "删除备份",
-  "Restore Backup": "恢复备份"
+  "Restore Backup": "恢复备份",
+  "Backup Time": "备份时间"
 }
