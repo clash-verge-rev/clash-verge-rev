@@ -332,7 +332,7 @@
   "clash_mode_direct": "حالت مستقیم",
   "toggle_system_proxy": "فعال/غیرفعال کردن پراکسی سیستم",
   "toggle_tun_mode": "فعال/غیرفعال کردن حالت Tun",
-  "Backup Setting": "تنظیمات پشتیبان",
+  "Backup Setting": "تنظیمات پشتیبان گیری Webdav",
   "Runtime Config": "پیکربندی زمان اجرا",
   "Open Conf Dir": "باز کردن پوشه برنامه",
   "Open Core Dir": "باز کردن پوشه هسته",

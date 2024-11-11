@@ -332,7 +332,7 @@
   "clash_mode_direct": "Direct Mode",
   "toggle_system_proxy": "Enable/Disable System Proxy",
   "toggle_tun_mode": "Enable/Disable Tun Mode",
-  "Backup Setting": "Backup Setting",
+  "Backup Setting": "Webdav Backup Setting",
   "Runtime Config": "Runtime Config",
   "Open Conf Dir": "Open Conf Dir",
   "Open Core Dir": "Open Core Dir",
