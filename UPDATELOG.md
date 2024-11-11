@@ -13,7 +13,7 @@
 
 ### Features
 
-- Meta(mihomo)内核升级 1.18.9
+- Meta(mihomo)内核升级 1.18.10
 - Win 下的系统代理替换为 Shadowsocks/CFW/v2rayN 等成熟的 sysproxy.exe 方案，解决拨号/VPN 环境下无法设置系统代理的问题
 - 服务模式改进为启动软件时自动安装，TUN 模式可自由开启不再限制于服务模式
 - Mac 下可用 URL Scheme 导入订阅
@@ -25,6 +25,9 @@
 - 加入图标 svg 格式检测
 - 增加更多 app 调试日志
 - 添加 MacOS 下白色桌面的 tray 黑色配色（但会代理系统代理、tun 模式图标失效的问题）
+- 增加 Webdav 备份功能
+- 添加统一延迟的设置开关
+- 添加 Windows 下自动检测并下载 vc runtime 的功能
 
 ### Performance
 
