@@ -10,7 +10,7 @@ type Props = {
 };
 
 export const BaseFieldset: React.FC<Props> = (props: Props) => {
-  const Fieldset = styled(Box)(() => ({
+  const Fieldset = styled(Box)<{ component?: string }>(() => ({
     position: "relative",
     border: "1px solid #bbb",
     borderRadius: "5px",
