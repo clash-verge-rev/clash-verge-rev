@@ -239,7 +239,9 @@ const Widget = styled(Box)(({ theme: { typography } }) => ({
   borderRadius: "4px",
 }));
 
-const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
+const TypeBox = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "component",
+})<{ component?: React.ElementType }>(({ theme: { palette, typography } }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: "text.secondary",
