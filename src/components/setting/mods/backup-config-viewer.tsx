@@ -8,7 +8,8 @@ import { useLockFn } from "ahooks";
 import {
   TextField,
   Button,
-  Grid,
+  Grid2,
+  Box,
   Stack,
   IconButton,
   InputAdornment,
@@ -125,10 +126,10 @@ export const BackupConfigViewer = memo(
 
     return (
       <form onSubmit={(e) => e.preventDefault()}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={9}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
+        <Grid2 container spacing={2}>
+          <Grid2 size={{ xs: 12, sm: 9 }}>
+            <Grid2 container spacing={2}>
+              <Grid2 size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={t("WebDAV Server URL")}
@@ -140,8 +141,8 @@ export const BackupConfigViewer = memo(
                   spellCheck="false"
                   inputRef={urlRef}
                 />
-              </Grid>
-              <Grid item xs={6}>
+              </Grid2>
+              <Grid2 size={{ xs: 6 }}>
                 <TextField
                   label={t("Username")}
                   variant="outlined"
@@ -152,8 +153,8 @@ export const BackupConfigViewer = memo(
                   spellCheck="false"
                   inputRef={usernameRef}
                 />
-              </Grid>
-              <Grid item xs={6}>
+              </Grid2>
+              <Grid2 size={{ xs: 6 }}>
                 <TextField
                   label={t("Password")}
                   type={showPassword ? "text" : "password"}
@@ -177,10 +178,10 @@ export const BackupConfigViewer = memo(
                     ),
                   }}
                 />
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={12} sm={3}>
+              </Grid2>
+            </Grid2>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 3 }}>
             <Stack
               direction="column"
               justifyContent="center"
@@ -212,8 +213,8 @@ export const BackupConfigViewer = memo(
                 </Button>
               )}
             </Stack>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </form>
     );
   }
