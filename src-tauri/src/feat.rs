@@ -15,6 +15,7 @@ use serde_yaml::{Mapping, Value};
 use std::fs;
 use tauri::Manager;
 use tauri_plugin_clipboard_manager::ClipboardExt;
+use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 // 打开面板
 pub fn open_or_close_dashboard() {
@@ -51,6 +52,7 @@ pub fn restart_app() {
         resolve::resolve_reset();
         let app_handle = handle::Handle::global().app_handle().unwrap();
         std::thread::sleep(std::time::Duration::from_secs(1));
+        let _ = app_handle.save_window_state(StateFlags::default());
         tauri::process::restart(&app_handle.env());
     });
 }
