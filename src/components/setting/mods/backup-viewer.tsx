@@ -71,7 +71,6 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
       .map((file) => {
         const platform = file.filename.split("-")[0];
         const fileBackupTimeStr = file.filename.match(FILENAME_PATTERN)!;
-        console.log(file, fileBackupTimeStr);
 
         if (fileBackupTimeStr === null) {
           return null;
