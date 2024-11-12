@@ -120,6 +120,9 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
             onSaveSuccess={async () => {
               fetchAndSetBackupFiles();
             }}
+            onRefresh={async () => {
+              fetchAndSetBackupFiles();
+            }}
             onInit={async () => {
               fetchAndSetBackupFiles();
             }}
