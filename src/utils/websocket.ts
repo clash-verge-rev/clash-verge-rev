@@ -23,8 +23,10 @@ export const createSockette = (
       remainRetryCount -= 1;
 
       if (remainRetryCount >= 0) {
-        this.close();
-        this.reconnect();
+        if (this instanceof Sockette) {
+          this.close();
+          this.reconnect();
+        }
       } else {
         opt.onerror?.call(this, ev);
       }
