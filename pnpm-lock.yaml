@@ -26,8 +26,8 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       "@mui/icons-material":
-        specifier: ^5.16.7
-        version: 5.16.7(@mui/material@6.1.6(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.12)(react@18.3.1)
+        specifier: ^6.1.6
+        version: 6.1.6(@mui/material@6.1.6(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.12)(react@18.3.1)
       "@mui/lab":
         specifier: 5.0.0-alpha.149
         version: 5.0.0-alpha.149(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react@18.3.1))(@mui/material@6.1.6(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -98,11 +98,11 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       monaco-editor:
-        specifier: ^0.49.0
-        version: 0.49.0
+        specifier: ^0.52.0
+        version: 0.52.0
       monaco-yaml:
         specifier: ^5.2.3
-        version: 5.2.3(monaco-editor@0.49.0)
+        version: 5.2.3(monaco-editor@0.52.0)
       nanoid:
         specifier: ^5.0.8
         version: 5.0.8
@@ -116,20 +116,20 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
       react-error-boundary:
-        specifier: ^3.1.4
-        version: 3.1.4(react@18.3.1)
+        specifier: ^4.1.2
+        version: 4.1.2(react@18.3.1)
       react-hook-form:
         specifier: ^7.53.2
         version: 7.53.2(react@18.3.1)
       react-i18next:
-        specifier: ^13.5.0
-        version: 13.5.0(i18next@23.16.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^15.1.1
+        version: 15.1.1(i18next@23.16.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-markdown:
         specifier: ^9.0.1
         version: 9.0.1(@types/react@18.3.12)(react@18.3.1)
       react-monaco-editor:
-        specifier: ^0.55.0
-        version: 0.55.0(@types/react@18.3.12)(monaco-editor@0.49.0)(react@18.3.1)
+        specifier: ^0.56.2
+        version: 0.56.2(@types/react@18.3.12)(monaco-editor@0.52.0)(react@18.3.1)
       react-router-dom:
         specifier: ^6.28.0
         version: 6.28.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -146,8 +146,8 @@ importers:
         specifier: ^2.2.5
         version: 2.2.5(react@18.3.1)
       tar:
-        specifier: ^6.2.1
-        version: 6.2.1
+        specifier: ^7.4.3
+        version: 7.4.3
       types-pac:
         specifier: ^1.0.3
         version: 1.0.3
@@ -220,7 +220,7 @@ importers:
         version: 5.4.11(@types/node@20.14.10)(sass@1.80.6)(terser@5.36.0)
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
-        version: 1.1.0(monaco-editor@0.49.0)
+        version: 1.1.0(monaco-editor@0.52.0)
       vite-plugin-svgr:
         specifier: ^4.3.0
         version: 4.3.0(rollup@4.25.0)(typescript@5.6.3)(vite@5.4.11(@types/node@20.14.10)(sass@1.80.6)(terser@5.36.0))
@@ -1401,6 +1401,13 @@ packages:
       }
     engines: { node: ">=12" }
 
+  "@isaacs/fs-minipass@4.0.1":
+    resolution:
+      {
+        integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==,
+      }
+    engines: { node: ">=18.0.0" }
+
   "@jridgewell/gen-mapping@0.3.5":
     resolution:
       {
@@ -1466,16 +1473,16 @@ packages:
         integrity: sha512-nz1SlR9TdBYYPz4qKoNasMPRiGb4PaIHFkzLzhju0YVYS5QSuFF2+n7CsiHMIDcHv3piPu/xDWI53ruhOqvZwQ==,
       }
 
-  "@mui/icons-material@5.16.7":
+  "@mui/icons-material@6.1.6":
     resolution:
       {
-        integrity: sha512-UrGwDJCXEszbDI7yV047BYU5A28eGJ79keTCP4cc74WyncuVrnurlmIRxaHL8YK+LI1Kzq+/JM52IAkNnv4u+Q==,
+        integrity: sha512-5r9urIL2lxXb/sPN3LFfFYEibsXJUb986HhhIeu1gOcte460pwdSiEhBSxkAuyT8Dj7jvu9MjqSBmSumQELo8A==,
       }
-    engines: { node: ">=12.0.0" }
+    engines: { node: ">=14.0.0" }
     peerDependencies:
-      "@mui/material": ^5.0.0
-      "@types/react": ^17.0.0 || ^18.0.0
-      react: ^17.0.0 || ^18.0.0
+      "@mui/material": ^6.1.6
+      "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       "@types/react":
         optional: true
@@ -1894,6 +1901,13 @@ packages:
         integrity: sha512-6DqaCO73ihyM2AJ2Vl4QQGmmU3MoD4hFh0RFRzxPdLkSLfE0QMEyDfaojE/R3KbsL1UP4VQyJA2clwX4agSTBw==,
       }
     engines: { node: ">=18" }
+
+  "@pkgjs/parseargs@0.11.0":
+    resolution:
+      {
+        integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==,
+      }
+    engines: { node: ">=14" }
 
   "@popperjs/core@2.11.8":
     resolution:
@@ -2703,12 +2717,12 @@ packages:
       }
     engines: { node: ">= 14.16.0" }
 
-  chownr@2.0.0:
+  chownr@3.0.0:
     resolution:
       {
-        integrity: sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==,
+        integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==,
       }
-    engines: { node: ">=10" }
+    engines: { node: ">=18" }
 
   cli-color@2.0.4:
     resolution:
@@ -3130,13 +3144,6 @@ packages:
       react:
         optional: true
 
-  fs-minipass@2.1.0:
-    resolution:
-      {
-        integrity: sha512-V/JgOLFCS+R6Vcq0slCuaeWEdNC3ouDlJMNIsacH2VtALiu9mV4LPrHc5cDl8k5aw6J8jwgWWpiTo5RYhmIzvg==,
-      }
-    engines: { node: ">= 8" }
-
   fsevents@2.3.3:
     resolution:
       {
@@ -3164,6 +3171,13 @@ packages:
         integrity: sha512-nBF+F1rAZVCu/p7rjzgA+Yb4lfYXrpl7a6VmJrU8wF9I1CKvP/QwPNZHnOlwbTkY6dvtFIzFMSyQXbLoTQPRpA==,
       }
     engines: { node: ">=8" }
+
+  glob@10.4.5:
+    resolution:
+      {
+        integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==,
+      }
+    hasBin: true
 
   glob@11.0.0:
     resolution:
@@ -3375,6 +3389,12 @@ packages:
         integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==,
       }
 
+  jackspeak@3.4.3:
+    resolution:
+      {
+        integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==,
+      }
+
   jackspeak@4.0.2:
     resolution:
       {
@@ -3484,6 +3504,12 @@ packages:
     resolution:
       {
         integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==,
+      }
+
+  lru-cache@10.4.3:
+    resolution:
+      {
+        integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==,
       }
 
   lru-cache@11.0.2:
@@ -3746,19 +3772,12 @@ packages:
       }
     engines: { node: 20 || >=22 }
 
-  minipass@3.3.6:
+  minimatch@9.0.5:
     resolution:
       {
-        integrity: sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw==,
+        integrity: sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==,
       }
-    engines: { node: ">=8" }
-
-  minipass@5.0.0:
-    resolution:
-      {
-        integrity: sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ==,
-      }
-    engines: { node: ">=8" }
+    engines: { node: ">=16 || 14 >=14.17" }
 
   minipass@7.1.2:
     resolution:
@@ -3767,25 +3786,25 @@ packages:
       }
     engines: { node: ">=16 || 14 >=14.17" }
 
-  minizlib@2.1.2:
+  minizlib@3.0.1:
     resolution:
       {
-        integrity: sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==,
+        integrity: sha512-umcy022ILvb5/3Djuu8LWeqUa8D68JaBzlttKeMWen48SjabqS3iY5w/vzeMzMUNhLDifyhbOwKDSznB1vvrwg==,
       }
-    engines: { node: ">= 8" }
+    engines: { node: ">= 18" }
 
-  mkdirp@1.0.4:
+  mkdirp@3.0.1:
     resolution:
       {
-        integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==,
+        integrity: sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg==,
       }
     engines: { node: ">=10" }
     hasBin: true
 
-  monaco-editor@0.49.0:
+  monaco-editor@0.52.0:
     resolution:
       {
-        integrity: sha512-2I8/T3X/hLxB2oPHgqcNYUVdA/ZEFShT7IAujifIPMfKkNbLOqY8XCoyHCXrsdjb36dW9MwoTwBCFpXKMwNwaQ==,
+        integrity: sha512-OeWhNpABLCeTqubfqLMXGsqf6OmPU6pHM85kF3dhy6kq5hnhuVS1p3VrEW/XhWHc71P2tHyS5JFySD8mgs1crw==,
       }
 
   monaco-languageserver-types@0.4.0:
@@ -4001,6 +4020,13 @@ packages:
         integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==,
       }
 
+  path-scurry@1.11.1:
+    resolution:
+      {
+        integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==,
+      }
+    engines: { node: ">=16 || 14 >=14.18" }
+
   path-scurry@2.0.0:
     resolution:
       {
@@ -4107,12 +4133,11 @@ packages:
     peerDependencies:
       react: ^18.3.1
 
-  react-error-boundary@3.1.4:
+  react-error-boundary@4.1.2:
     resolution:
       {
-        integrity: sha512-uM9uPzZJTF6wRQORmSrvOIgt4lJ9MC1sNgEOj2XGsDTRE4kmpWxg7ENK9EWNKJRMAOY9z0MuF4yIfl6gp4sotA==,
+        integrity: sha512-GQDxZ5Jd+Aq/qUxbCm1UtzmL/s++V7zKgE8yMktJiCQXCCFZnMZh9ng+6/Ne6PjNSXH0L9CjeOEREfRnq6Duag==,
       }
-    engines: { node: ">=10", npm: ">=6" }
     peerDependencies:
       react: ">=16.13.1"
 
@@ -4131,10 +4156,10 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
 
-  react-i18next@13.5.0:
+  react-i18next@15.1.1:
     resolution:
       {
-        integrity: sha512-CFJ5NDGJ2MUyBohEHxljOq/39NQ972rh1ajnadG9BjTk+UXbHLq4z5DKEbEQBDoIhUmmbuS/fIMJKo6VOax1HA==,
+        integrity: sha512-R/Vg9wIli2P3FfeI8o1eNJUJue5LWpFsQePCHdQDmX0Co3zkr6kdT8gAseb/yGeWbNz1Txc4bKDQuZYsC0kQfw==,
       }
     peerDependencies:
       i18next: ">= 23.2.3"
@@ -4168,14 +4193,14 @@ packages:
       "@types/react": ">=18"
       react: ">=18"
 
-  react-monaco-editor@0.55.0:
+  react-monaco-editor@0.56.2:
     resolution:
       {
-        integrity: sha512-GdEP0Q3Rn1dczfKEEyY08Nes5plWwIYU4sWRBQO0+jsQWQsKMHKCC6+hPRwR7G/4aA3V/iU9jSmWPzVJYMVFSQ==,
+        integrity: sha512-Tp5U3QF9h92Cuf0eIhGd8Jyef8tPMlEJC2Dk1GeuR/hj6WoFn8AgjVX/2dv+3l5DvpMUpAECcFarc3eFKTBZ5w==,
       }
     peerDependencies:
       "@types/react": ">=16 <= 18"
-      monaco-editor: ^0.44.0
+      monaco-editor: ^0.52.0
       react: ">=16 <= 18"
 
   react-refresh@0.14.2:
@@ -4317,6 +4342,13 @@ packages:
     resolution:
       {
         integrity: sha512-oKWePCxqpd6FlLvGV1VU0x7bkPmmCNolxzjMf4NczoDnQcIWrAF+cPtZn5i6n+RfD2d9i0tzpKnG6Yk168yIyw==,
+      }
+    hasBin: true
+
+  rimraf@5.0.10:
+    resolution:
+      {
+        integrity: sha512-l0OE8wL34P4nJH/H2ffoaniAokM2qSmrtXHmlpvYr5AVVX8msAyW0l8NVJFDxlSK4u3Uh/f41cQheDVdnYijwQ==,
       }
     hasBin: true
 
@@ -4529,12 +4561,12 @@ packages:
         integrity: sha512-Nk8c4lXvMB98MtbmjX7JwJRgJOL8fluecYCfCeYBznwmpOs8Bf15hLM6z4z71EDAhQVrQrI+wt1aLWSXZq+hXA==,
       }
 
-  tar@6.2.1:
+  tar@7.4.3:
     resolution:
       {
-        integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==,
+        integrity: sha512-5S7Va8hKfV7W5U6g3aYxXmlPoZVAwUMy9AOKyF2fVuZa2UD3qZjg578OrLRt8PcNN1PleVaL/5/yYATNL0ICUw==,
       }
-    engines: { node: ">=10" }
+    engines: { node: ">=18" }
 
   terser@5.36.0:
     resolution:
@@ -4862,11 +4894,12 @@ packages:
         integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==,
       }
 
-  yallist@4.0.0:
+  yallist@5.0.0:
     resolution:
       {
-        integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==,
+        integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==,
       }
+    engines: { node: ">=18" }
 
   yaml@1.10.2:
     resolution:
@@ -5781,6 +5814,10 @@ snapshots:
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
 
+  "@isaacs/fs-minipass@4.0.1":
+    dependencies:
+      minipass: 7.1.2
+
   "@jridgewell/gen-mapping@0.3.5":
     dependencies:
       "@jridgewell/set-array": 1.2.1
@@ -5821,7 +5858,7 @@ snapshots:
 
   "@mui/core-downloads-tracker@6.1.6": {}
 
-  "@mui/icons-material@5.16.7(@mui/material@6.1.6(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.12)(react@18.3.1)":
+  "@mui/icons-material@6.1.6(@mui/material@6.1.6(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.12)(react@18.3.1)":
     dependencies:
       "@babel/runtime": 7.26.0
       "@mui/material": 6.1.6(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@emotion/styled@11.13.0(@emotion/react@11.13.3(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -6142,6 +6179,9 @@ snapshots:
   "@peggyjs/from-mem@1.3.4":
     dependencies:
       semver: 7.6.3
+
+  "@pkgjs/parseargs@0.11.0":
+    optional: true
 
   "@popperjs/core@2.11.8": {}
 
@@ -6587,7 +6627,7 @@ snapshots:
     dependencies:
       readdirp: 4.0.2
 
-  chownr@2.0.0: {}
+  chownr@3.0.0: {}
 
   cli-color@2.0.4:
     dependencies:
@@ -6846,10 +6886,6 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  fs-minipass@2.1.0:
-    dependencies:
-      minipass: 3.3.6
-
   fsevents@2.3.3:
     optional: true
 
@@ -6860,6 +6896,15 @@ snapshots:
   get-stream@5.2.0:
     dependencies:
       pump: 3.0.2
+
+  glob@10.4.5:
+    dependencies:
+      foreground-child: 3.3.0
+      jackspeak: 3.4.3
+      minimatch: 9.0.5
+      minipass: 7.1.2
+      package-json-from-dist: 1.0.1
+      path-scurry: 1.11.1
 
   glob@11.0.0:
     dependencies:
@@ -6978,6 +7023,12 @@ snapshots:
 
   isexe@2.0.0: {}
 
+  jackspeak@3.4.3:
+    dependencies:
+      "@isaacs/cliui": 8.0.2
+    optionalDependencies:
+      "@pkgjs/parseargs": 0.11.0
+
   jackspeak@4.0.2:
     dependencies:
       "@isaacs/cliui": 8.0.2
@@ -7021,6 +7072,8 @@ snapshots:
   lower-case@2.0.2:
     dependencies:
       tslib: 2.8.1
+
+  lru-cache@10.4.3: {}
 
   lru-cache@11.0.2: {}
 
@@ -7293,22 +7346,20 @@ snapshots:
     dependencies:
       brace-expansion: 2.0.1
 
-  minipass@3.3.6:
+  minimatch@9.0.5:
     dependencies:
-      yallist: 4.0.0
-
-  minipass@5.0.0: {}
+      brace-expansion: 2.0.1
 
   minipass@7.1.2: {}
 
-  minizlib@2.1.2:
+  minizlib@3.0.1:
     dependencies:
-      minipass: 3.3.6
-      yallist: 4.0.0
+      minipass: 7.1.2
+      rimraf: 5.0.10
 
-  mkdirp@1.0.4: {}
+  mkdirp@3.0.1: {}
 
-  monaco-editor@0.49.0: {}
+  monaco-editor@0.52.0: {}
 
   monaco-languageserver-types@0.4.0:
     dependencies:
@@ -7322,18 +7373,18 @@ snapshots:
 
   monaco-types@0.1.0: {}
 
-  monaco-worker-manager@2.0.1(monaco-editor@0.49.0):
+  monaco-worker-manager@2.0.1(monaco-editor@0.52.0):
     dependencies:
-      monaco-editor: 0.49.0
+      monaco-editor: 0.52.0
 
-  monaco-yaml@5.2.3(monaco-editor@0.49.0):
+  monaco-yaml@5.2.3(monaco-editor@0.52.0):
     dependencies:
       jsonc-parser: 3.3.1
-      monaco-editor: 0.49.0
+      monaco-editor: 0.52.0
       monaco-languageserver-types: 0.4.0
       monaco-marker-data-provider: 1.2.4
       monaco-types: 0.1.0
-      monaco-worker-manager: 2.0.1(monaco-editor@0.49.0)
+      monaco-worker-manager: 2.0.1(monaco-editor@0.52.0)
       path-browserify: 1.0.1
       prettier: 2.8.8
       vscode-languageserver-textdocument: 1.0.12
@@ -7429,6 +7480,11 @@ snapshots:
 
   path-parse@1.0.7: {}
 
+  path-scurry@1.11.1:
+    dependencies:
+      lru-cache: 10.4.3
+      minipass: 7.1.2
+
   path-scurry@2.0.0:
     dependencies:
       lru-cache: 11.0.2
@@ -7491,7 +7547,7 @@ snapshots:
       react: 18.3.1
       scheduler: 0.23.2
 
-  react-error-boundary@3.1.4(react@18.3.1):
+  react-error-boundary@4.1.2(react@18.3.1):
     dependencies:
       "@babel/runtime": 7.26.0
       react: 18.3.1
@@ -7502,7 +7558,7 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  react-i18next@13.5.0(i18next@23.16.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-i18next@15.1.1(i18next@23.16.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       "@babel/runtime": 7.26.0
       html-parse-stringify: 3.0.1
@@ -7532,10 +7588,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  react-monaco-editor@0.55.0(@types/react@18.3.12)(monaco-editor@0.49.0)(react@18.3.1):
+  react-monaco-editor@0.56.2(@types/react@18.3.12)(monaco-editor@0.52.0)(react@18.3.1):
     dependencies:
       "@types/react": 18.3.12
-      monaco-editor: 0.49.0
+      monaco-editor: 0.52.0
       prop-types: 15.8.1
       react: 18.3.1
 
@@ -7628,6 +7684,10 @@ snapshots:
       is-core-module: 2.15.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
+
+  rimraf@5.0.10:
+    dependencies:
+      glob: 10.4.5
 
   rollup@4.25.0:
     dependencies:
@@ -7750,14 +7810,14 @@ snapshots:
 
   systemjs@6.15.1: {}
 
-  tar@6.2.1:
+  tar@7.4.3:
     dependencies:
-      chownr: 2.0.0
-      fs-minipass: 2.1.0
-      minipass: 5.0.0
-      minizlib: 2.1.2
-      mkdirp: 1.0.4
-      yallist: 4.0.0
+      "@isaacs/fs-minipass": 4.0.1
+      chownr: 3.0.0
+      minipass: 7.1.2
+      minizlib: 3.0.1
+      mkdirp: 3.0.1
+      yallist: 5.0.0
 
   terser@5.36.0:
     dependencies:
@@ -7865,9 +7925,9 @@ snapshots:
       "@types/unist": 3.0.3
       vfile-message: 4.0.2
 
-  vite-plugin-monaco-editor@1.1.0(monaco-editor@0.49.0):
+  vite-plugin-monaco-editor@1.1.0(monaco-editor@0.52.0):
     dependencies:
-      monaco-editor: 0.49.0
+      monaco-editor: 0.52.0
 
   vite-plugin-svgr@4.3.0(rollup@4.25.0)(typescript@5.6.3)(vite@5.4.11(@types/node@20.14.10)(sass@1.80.6)(terser@5.36.0)):
     dependencies:
@@ -7935,7 +7995,7 @@ snapshots:
 
   yallist@3.1.1: {}
 
-  yallist@4.0.0: {}
+  yallist@5.0.0: {}
 
   yaml@1.10.2: {}
 
