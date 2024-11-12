@@ -1,7 +1,7 @@
 import fs from "fs";
 import fsp from "fs/promises";
 import zlib from "zlib";
-import tar from "tar";
+import { extract } from "tar";
 import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
@@ -232,7 +232,7 @@ async function resolveSidecar(binInfo) {
     } else if (zipFile.endsWith(".tgz")) {
       // tgz
       await fsp.mkdir(tempDir, { recursive: true });
-      await tar.extract({
+      await extract({
         cwd: tempDir,
         file: tempZip,
         //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
