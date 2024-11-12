@@ -21,6 +21,7 @@ import { saveWebdavConfig, createWebdavBackup } from "@/services/cmds";
 export interface BackupConfigViewerProps {
   onBackupSuccess: () => Promise<void>;
   onSaveSuccess: () => Promise<void>;
+  onRefresh: () => Promise<void>;
   onInit: () => Promise<void>;
   setLoading: (loading: boolean) => void;
 }
@@ -29,6 +30,7 @@ export const BackupConfigViewer = memo(
   ({
     onBackupSuccess,
     onSaveSuccess,
+    onRefresh,
     onInit,
     setLoading,
   }: BackupConfigViewerProps) => {
@@ -186,14 +188,14 @@ export const BackupConfigViewer = memo(
           <Grid2 size={{ xs: 12, sm: 3 }}>
             <Stack
               direction="column"
-              justifyContent="center"
+              justifyContent="space-between"
               alignItems="stretch"
               sx={{ height: "100%" }}
             >
               {webdavChanged ||
               webdav_url === null ||
-              webdav_username == null ||
-              webdav_password == null ? (
+              webdav_username === null ||
+              webdav_password === null ? (
                 <Button
                   variant="contained"
                   color={"primary"}
@@ -204,15 +206,25 @@ export const BackupConfigViewer = memo(
                   {t("Save")}
                 </Button>
               ) : (
-                <Button
-                  variant="contained"
-                  color="success"
-                  sx={{ height: "100%" }}
-                  onClick={handleBackup}
-                  type="button"
-                >
-                  {t("Backup")}
-                </Button>
+                <>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={handleBackup}
+                    type="button"
+                    size="large"
+                  >
+                    {t("Backup")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={onRefresh}
+                    type="button"
+                    size="large"
+                  >
+                    {t("Refresh")}
+                  </Button>
+                </>
               )}
             </Stack>
           </Grid2>
