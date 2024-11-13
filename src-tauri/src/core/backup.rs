@@ -54,9 +54,11 @@ impl WebDavClient {
                     password.to_owned(),
                 ))
                 .build()?;
-            if let Err(_) = client
+
+            if (client
                 .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0))
-                .await
+                .await)
+                .is_err()
             {
                 client.mkcol(dirs::BACKUP_DIR).await?;
             }
