@@ -84,7 +84,7 @@ impl WebDavClient {
     pub async fn download(&self, filename: String, storage_path: PathBuf) -> Result<(), Error> {
         let client = self.get_client().await?;
         let path = format!("{}/{}", dirs::BACKUP_DIR, filename);
-        let response = client.get(&path.as_str()).await?;
+        let response = client.get(path.as_str()).await?;
         let content = response.bytes().await?;
         fs::write(&storage_path, &content)?;
         Ok(())
