@@ -10,7 +10,7 @@ edition = "2021"
 build = "build.rs"
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-rc", features = [] }
+tauri-build = { version = "2.0.3", features = [] }
 
 [dependencies]
 warp = "0.3"
