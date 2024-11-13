@@ -244,6 +244,12 @@ const SettingVerge = ({ onError }: Props) => {
       <SettingItem
         onClick={() => backupRef.current?.open()}
         label={t("Backup Setting")}
+        extra={
+          <TooltipIcon
+            title={t("Backup Setting Info")}
+            sx={{ opacity: "0.7" }}
+          />
+        }
       />
 
       <SettingItem
