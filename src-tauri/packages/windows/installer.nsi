@@ -697,33 +697,26 @@ Var VC_REDIST_URL
 Var VC_REDIST_EXE
 
 Section CheckAndInstallVSRuntime
-    ; Set default values for x86
-    StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
-    StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
-
-    ${If} ${RunningX64}
-        ; Update values for x64
+    ${If} ${IsNativeARM64}
+        StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
+        StrCpy $VC_REDIST_EXE "vc_redist.arm64.exe"
+        IfFileExists "$SYSDIR\msvcp140.dll" Done
+    ${ElseIf} ${RunningX64}
         StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x64.exe"
         StrCpy $VC_REDIST_EXE "vc_redist.x64.exe"
-    ${EndIf}
-
-  
-    ${If} ${RunningX64}
         IfFileExists "$WINDIR\SysWOW64\msvcp140.dll" Done
+    ${Else}
+        StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
+        StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
+        IfFileExists "$SYSDIR\msvcp140.dll" Done
     ${EndIf}
-    
-    IfFileExists "$SYSDIR\msvcp140.dll" Done
 
-    ; 如果文件不存在，进行安装
-    ; 下载文件
+    ; 下载并安装VC运行库
     nsisdl::download "$VC_REDIST_URL" "$TEMP\$VC_REDIST_EXE"
-    Pop $0 ; 获取下载结果
-    StrCmp $0 "success" +2
-        ; 下载失败时，直接跳转到结束
-        Goto Done
-
-    ; 安装运行库
-    nsExec::Exec '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
+    Pop $0
+    ${If} $0 == "success"
+        nsExec::Exec '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
+    ${EndIf}
     
     Done:
 SectionEnd
