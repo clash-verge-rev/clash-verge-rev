@@ -21,7 +21,7 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 pub fn open_or_close_dashboard() {
     if let Some(window) = handle::Handle::global().get_window() {
         if let Ok(true) = window.is_focused() {
-            let _ = window.minimize();
+            let _ = window.hide();
             return;
         }
     }
