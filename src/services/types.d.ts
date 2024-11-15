@@ -56,6 +56,8 @@ interface IProxyItem {
   udp: boolean;
   xudp: boolean;
   tfo: boolean;
+  mptcp: boolean;
+  smux: boolean;
   history: {
     time: string;
     delay: number;
@@ -468,6 +470,7 @@ interface IProxyVlessConfig extends IProxyBaseConfig {
   fingerprint?: string;
   servername?: string;
   "client-fingerprint"?: ClientFingerprint;
+  smux?: boolean;
 }
 // vmess
 interface IProxyVmessConfig extends IProxyBaseConfig {
@@ -496,6 +499,7 @@ interface IProxyVmessConfig extends IProxyBaseConfig {
   "global-padding"?: boolean;
   "authenticated-length"?: boolean;
   "client-fingerprint"?: ClientFingerprint;
+  smux?: boolean;
 }
 interface WireGuardPeerOptions {
   server?: string;
@@ -604,6 +608,7 @@ interface IProxyShadowsocksConfig extends IProxyBaseConfig {
   "udp-over-tcp"?: boolean;
   "udp-over-tcp-version"?: number;
   "client-fingerprint"?: ClientFingerprint;
+  smux?: boolean;
 }
 // shadowsocksR
 interface IProxyshadowsocksRConfig extends IProxyBaseConfig {
