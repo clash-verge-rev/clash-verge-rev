@@ -49,7 +49,6 @@ impl Hotkey {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let manager = app_handle.global_shortcut();
 
-        dbg!(&hotkey);
         if manager.is_registered(hotkey) {
             manager.unregister(hotkey)?;
         }
