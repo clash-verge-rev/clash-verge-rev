@@ -23,7 +23,8 @@
   "app": {
     "trayIcon": {
       "iconPath": "icons/tray-icon.ico",
-      "iconAsTemplate": true
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
     },
     "windows": []
   }
