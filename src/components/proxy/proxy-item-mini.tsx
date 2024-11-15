@@ -160,6 +160,16 @@ export const ProxyItemMini = (props: Props) => {
                 TFO
               </TypeBox>
             )}
+            {proxy.mptcp && (
+              <TypeBox color="text.secondary" component="span">
+                MPTCP
+              </TypeBox>
+            )}
+            {proxy.smux && (
+              <TypeBox color="text.secondary" component="span">
+                SMUX
+              </TypeBox>
+            )}
           </Box>
         )}
       </Box>
