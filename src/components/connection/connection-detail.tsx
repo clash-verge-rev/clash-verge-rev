@@ -30,6 +30,7 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         open={open}
         onClose={onClose}
+        sx={{ maxWidth: "520px" }}
         message={
           detail ? (
             <InnerConnectionDetail data={detail} onClose={onClose} />
