@@ -45,11 +45,11 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(|app| {
-            // #[cfg(target_os = "linux")]
-            // {
-            //     use tauri_plugin_deep_link::DeepLinkExt;
-            //     app.deep_link().register_all()?;
-            // }
+            #[cfg(target_os = "linux")]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                log_err!(app.deep_link().register_all());
+            }
             #[cfg(target_os = "macos")]
             {
                 app.listen("deep-link://new-url", |event| {
