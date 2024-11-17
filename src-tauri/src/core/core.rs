@@ -1,5 +1,5 @@
 use crate::config::*;
-use crate::core::{clash_api, handle, logger::Logger, service};
+use crate::core::{clash_api, handle, service};
 use crate::log_err;
 use crate::utils::dirs;
 use anyhow::{bail, Result};
@@ -43,23 +43,12 @@ impl CoreManager {
         let test_dir = dirs::path_to_str(&test_dir)?;
         let app_handle = handle::Handle::global().app_handle().unwrap();
 
-        let output = app_handle
+        let _ = app_handle
             .shell()
             .sidecar(clash_core)?
             .args(["-t", "-d", test_dir, "-f", config_path])
             .output()
             .await?;
-
-        if !output.status.success() {
-            let stdout = String::from_utf8(output.stdout).unwrap_or_default();
-            let error = clash_api::parse_check_output(stdout.clone());
-            let error = match !error.is_empty() {
-                true => error,
-                false => stdout.clone(),
-            };
-            Logger::global().set_log(stdout.clone());
-            bail!("{error}");
-        }
 
         Ok(())
     }
@@ -135,9 +124,6 @@ impl CoreManager {
         Config::generate().await?;
 
         self.check_config().await?;
-
-        // 清掉旧日志
-        Logger::global().clear_log();
 
         match self.restart_core().await {
             Ok(_) => {

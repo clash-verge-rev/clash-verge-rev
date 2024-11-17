@@ -8,7 +8,7 @@ use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use sysproxy::{Autoproxy, Sysproxy};
 type CmdResult<T = ()> = Result<T, String>;
 use reqwest_dav::list_cmd::ListFile;
@@ -214,11 +214,6 @@ pub fn get_auto_proxy() -> CmdResult<Mapping> {
     map.insert("url".into(), current.url.into());
 
     Ok(map)
-}
-
-#[tauri::command]
-pub fn get_clash_logs() -> CmdResult<VecDeque<String>> {
-    Ok(logger::Logger::global().get_log())
 }
 
 #[tauri::command]

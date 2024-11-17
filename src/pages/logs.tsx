@@ -6,7 +6,7 @@ import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { useLogData } from "@/hooks/use-log-data";
+import { useLogData, LogLevel } from "@/hooks/use-log-data";
 import { useEnableLog } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
@@ -17,19 +17,19 @@ import { mutate } from "swr";
 
 const LogPage = () => {
   const { t } = useTranslation();
-  const { data: logData = [] } = useLogData();
   const [enableLog, setEnableLog] = useEnableLog();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
-  const [logState, setLogState] = useState("all");
+  const [logState, setLogState] = useState<LogLevel>("info");
   const [match, setMatch] = useState(() => (_: string) => true);
+  const { data: logData } = useLogData(logState);
 
   const filterLogs = useMemo(() => {
-    return logData.filter(
-      (data) =>
-        (logState === "all" ? true : data.type.includes(logState)) &&
-        match(data.payload)
-    );
+    return logData
+      ? logData.filter(
+          (data) => data.type.includes(logState) && match(data.payload)
+        )
+      : [];
   }, [logData, logState, match]);
 
   return (
@@ -80,12 +80,12 @@ const LogPage = () => {
       >
         <BaseStyledSelect
           value={logState}
-          onChange={(e) => setLogState(e.target.value)}
+          onChange={(e) => setLogState(e.target.value as LogLevel)}
         >
-          <MenuItem value="all">ALL</MenuItem>
-          <MenuItem value="inf">INFO</MenuItem>
-          <MenuItem value="warn">WARN</MenuItem>
-          <MenuItem value="err">ERROR</MenuItem>
+          <MenuItem value="info">INFO</MenuItem>
+          <MenuItem value="warning">WARN</MenuItem>
+          <MenuItem value="error">ERROR</MenuItem>
+          <MenuItem value="debug">DEBUG</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>

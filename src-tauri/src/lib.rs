@@ -88,7 +88,6 @@ pub fn run() {
             cmds::restart_app,
             // clash
             cmds::get_clash_info,
-            cmds::get_clash_logs,
             cmds::patch_clash_config,
             cmds::change_clash_core,
             cmds::get_runtime_config,
