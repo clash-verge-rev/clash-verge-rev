@@ -6,7 +6,7 @@ import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { useLogData, LogLevel } from "@/hooks/use-log-data";
+import { useLogData, LogLevel, clearLogs } from "@/hooks/use-log-data";
 import { useEnableLog } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
@@ -22,7 +22,7 @@ const LogPage = () => {
   const isDark = theme.palette.mode === "dark";
   const [logState, setLogState] = useState<LogLevel>("info");
   const [match, setMatch] = useState(() => (_: string) => true);
-  const { data: logData } = useLogData(logState);
+  const logData = useLogData(logState);
 
   const filterLogs = useMemo(() => {
     return logData
@@ -56,10 +56,8 @@ const LogPage = () => {
             <Button
               size="small"
               variant="contained"
-              // useSWRSubscription adds a prefix "$sub$" to the cache key
-              // https://github.com/vercel/swr/blob/1585a3e37d90ad0df8097b099db38f1afb43c95d/src/subscription/index.ts#L37
               onClick={() => {
-                mutate("$sub$getClashLog", []);
+                clearLogs(logState);
               }}
             >
               {t("Clear")}

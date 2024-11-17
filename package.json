@@ -65,7 +65,8 @@
     "sockette": "^2.0.6",
     "swr": "^2.2.5",
     "tar": "^7.4.3",
-    "types-pac": "^1.0.3"
+    "types-pac": "^1.0.3",
+    "zustand": "^5.0.1"
   },
   "devDependencies": {
     "@actions/github": "^5.1.1",
