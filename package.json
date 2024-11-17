@@ -99,5 +99,6 @@
     "singleQuote": false,
     "endOfLine": "lf"
   },
+  "type": "module",
   "packageManager": "pnpm@9.1.4"
 }
