@@ -58,6 +58,8 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
       setBackupFiles(files);
       setTotal(files.length);
     } catch (error) {
+      setBackupFiles([]);
+      setTotal(0);
       console.error(error);
       // Notice.error(t("Failed to fetch backup files"));
     } finally {
