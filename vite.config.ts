@@ -43,6 +43,13 @@ export default defineConfig({
       "@root": path.resolve("."),
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern-compiler",
+      },
+    },
+  },
   define: {
     OS_PLATFORM: `"${process.platform}"`,
   },
