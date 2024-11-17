@@ -83,7 +83,7 @@ const LogPage = () => {
           onChange={(e) => setLogState(e.target.value as LogLevel)}
         >
           <MenuItem value="info">INFO</MenuItem>
-          <MenuItem value="warning">WARN</MenuItem>
+          <MenuItem value="warning">WARNING</MenuItem>
           <MenuItem value="error">ERROR</MenuItem>
           <MenuItem value="debug">DEBUG</MenuItem>
         </BaseStyledSelect>
