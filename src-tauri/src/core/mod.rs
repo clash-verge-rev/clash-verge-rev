@@ -4,7 +4,6 @@ pub mod clash_api;
 mod core;
 pub mod handle;
 pub mod hotkey;
-pub mod logger;
 pub mod service;
 pub mod sysopt;
 pub mod timer;
