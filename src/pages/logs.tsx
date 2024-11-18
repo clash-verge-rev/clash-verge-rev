@@ -103,7 +103,7 @@ const LogPage = () => {
           bgcolor: isDark ? "#282a36" : "#ffffff",
         }}
       >
-        {filterLogs.length > 0 && enableLog === true ? (
+        {filterLogs.length > 0 ? (
           <Virtuoso
             initialTopMostItemIndex={999}
             data={filterLogs}
