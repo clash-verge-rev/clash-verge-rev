@@ -8,7 +8,6 @@ import {
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
-import { useLogData } from "@/hooks/use-log-data";
 import { useVisibility } from "@/hooks/use-visibility";
 import parseTraffic from "@/utils/parse-traffic";
 import useSWRSubscription from "swr/subscription";
@@ -38,11 +37,6 @@ export const LayoutTraffic = () => {
     isDebugEnabled().then((flag) => setIsDebug(flag));
     return () => {};
   }, [isDebug]);
-
-  // https://swr.vercel.app/docs/subscription#deduplication
-  // useSWRSubscription auto deduplicates to one subscription per key per entire app
-  // So we can simply invoke it here acting as preconnect
-  useLogData();
 
   const { data: traffic = { up: 0, down: 0 } } = useSWRSubscription<
     ITrafficItem,
