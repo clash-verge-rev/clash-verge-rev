@@ -15,7 +15,6 @@ import LogItem from "@/components/log/log-item";
 import { useTheme } from "@mui/material/styles";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
-import { mutate } from "swr";
 
 const LogPage = () => {
   const { t } = useTranslation();
