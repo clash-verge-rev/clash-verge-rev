@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
+import { useLocalStorage } from "foxact/use-local-storage";
+
 import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
@@ -20,17 +22,20 @@ const LogPage = () => {
   const [enableLog, setEnableLog] = useEnableLog();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
-  const [logState, setLogState] = useState<LogLevel>("info");
+  const [logLevel, setLogLevel] = useLocalStorage<LogLevel>(
+    "log-level",
+    "info"
+  );
   const [match, setMatch] = useState(() => (_: string) => true);
-  const logData = useLogData(logState);
+  const logData = useLogData(logLevel);
 
   const filterLogs = useMemo(() => {
     return logData
       ? logData.filter(
-          (data) => data.type.includes(logState) && match(data.payload)
+          (data) => data.type.includes(logLevel) && match(data.payload)
         )
       : [];
-  }, [logData, logState, match]);
+  }, [logData, logLevel, match]);
 
   return (
     <BasePage
@@ -57,7 +62,7 @@ const LogPage = () => {
               size="small"
               variant="contained"
               onClick={() => {
-                clearLogs(logState);
+                clearLogs(logLevel);
               }}
             >
               {t("Clear")}
@@ -77,8 +82,8 @@ const LogPage = () => {
         }}
       >
         <BaseStyledSelect
-          value={logState}
-          onChange={(e) => setLogState(e.target.value as LogLevel)}
+          value={logLevel}
+          onChange={(e) => setLogLevel(e.target.value as LogLevel)}
         >
           <MenuItem value="info">INFO</MenuItem>
           <MenuItem value="warning">WARNING</MenuItem>
