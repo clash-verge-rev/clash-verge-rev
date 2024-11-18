@@ -27,6 +27,7 @@ const LogPage = () => {
   );
   const [match, setMatch] = useState(() => (_: string) => true);
   const logData = useLogData(logLevel);
+  const [searchText, setSearchText] = useState("");
 
   const filterLogs = useMemo(() => {
     return logData
@@ -92,7 +93,12 @@ const LogPage = () => {
           <MenuItem value="error">ERROR</MenuItem>
           <MenuItem value="debug">DEBUG</MenuItem>
         </BaseStyledSelect>
-        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
+        <BaseSearchBox
+          onSearch={(matcher, state) => {
+            setMatch(() => matcher);
+            setSearchText(state.text);
+          }}
+        />
       </Box>
 
       <Box
@@ -107,7 +113,9 @@ const LogPage = () => {
           <Virtuoso
             initialTopMostItemIndex={999}
             data={filterLogs}
-            itemContent={(index, item) => <LogItem value={item} />}
+            itemContent={(index, item) => (
+              <LogItem value={item} searchText={searchText} />
+            )}
             followOutput={"smooth"}
           />
         ) : (
