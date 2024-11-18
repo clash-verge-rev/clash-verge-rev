@@ -8,7 +8,7 @@
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
     "tauri": "tauri",
     "web:dev": "vite",
-    "web:build": "tsc && vite build",
+    "web:build": "tsc --noEmit && vite build",
     "web:serve": "vite preview",
     "check": "node scripts/check.mjs",
     "updater": "node scripts/updater.mjs",
