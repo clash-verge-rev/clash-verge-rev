@@ -7,7 +7,7 @@ import { create } from "zustand";
 
 const MAX_LOG_NUM = 1000;
 
-export type LogLevel = "warning" | "info" | "debug" | "error";
+export type LogLevel = "warning" | "info" | "debug" | "error" | "all";
 
 interface ILogItem {
   time?: string;
@@ -23,7 +23,11 @@ const buildWSUrl = (server: string, secret: string, logLevel: LogLevel) => {
   if (secret) {
     params.append("token", encodeURIComponent(secret));
   }
-  params.append("level", logLevel);
+  if (logLevel === "all") {
+    params.append("level", "debug");
+  } else {
+    params.append("level", logLevel);
+  }
   const queryString = params.toString();
   return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 };
@@ -41,12 +45,13 @@ const useLogStore = create<LogStore>(
       info: [],
       debug: [],
       error: [],
+      all: [],
     },
     clearLogs: (level?: LogLevel) =>
       set((state: LogStore) => ({
         logs: level
           ? { ...state.logs, [level]: [] }
-          : { warning: [], info: [], debug: [], error: [] },
+          : { warning: [], info: [], debug: [], error: [], all: [] },
       })),
     appendLog: (level: LogLevel, log: ILogItem) =>
       set((state: LogStore) => {
@@ -57,7 +62,7 @@ const useLogStore = create<LogStore>(
             : [...currentLogs, log];
         return { logs: { ...state.logs, [level]: newLogs } };
       }),
-  })
+  }),
 );
 
 export const useLogData = (logLevel: LogLevel) => {

@@ -22,16 +22,18 @@ const LogPage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [logLevel, setLogLevel] = useLocalStorage<LogLevel>(
-    "log-level",
-    "info"
+    "log:log-level",
+    "info",
   );
   const [match, setMatch] = useState(() => (_: string) => true);
   const logData = useLogData(logLevel);
 
   const filterLogs = useMemo(() => {
     return logData
-      ? logData.filter(
-          (data) => data.type.includes(logLevel) && match(data.payload)
+      ? logData.filter((data) =>
+          logLevel === "all"
+            ? match(data.payload)
+            : data.type.includes(logLevel) && match(data.payload),
         )
       : [];
   }, [logData, logLevel, match]);
@@ -84,6 +86,7 @@ const LogPage = () => {
           value={logLevel}
           onChange={(e) => setLogLevel(e.target.value as LogLevel)}
         >
+          <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="info">INFO</MenuItem>
           <MenuItem value="warning">WARNING</MenuItem>
           <MenuItem value="error">ERROR</MenuItem>
