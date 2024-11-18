@@ -15,6 +15,7 @@ import LogItem from "@/components/log/log-item";
 import { useTheme } from "@mui/material/styles";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
+import { SearchState } from "@/components/base/base-search-box";
 
 const LogPage = () => {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ const LogPage = () => {
   );
   const [match, setMatch] = useState(() => (_: string) => true);
   const logData = useLogData(logLevel);
-  const [searchText, setSearchText] = useState("");
+  const [searchState, setSearchState] = useState<SearchState>();
 
   const filterLogs = useMemo(() => {
     return logData
@@ -96,7 +97,7 @@ const LogPage = () => {
         <BaseSearchBox
           onSearch={(matcher, state) => {
             setMatch(() => matcher);
-            setSearchText(state.text);
+            setSearchState(state);
           }}
         />
       </Box>
@@ -114,7 +115,7 @@ const LogPage = () => {
             initialTopMostItemIndex={999}
             data={filterLogs}
             itemContent={(index, item) => (
-              <LogItem value={item} searchText={searchText} />
+              <LogItem value={item} searchState={searchState} />
             )}
             followOutput={"smooth"}
           />
