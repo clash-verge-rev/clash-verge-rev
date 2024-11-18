@@ -1,4 +1,4 @@
-import useSWRSubscription from "swr/subscription";
+import { useEffect } from "react";
 import { useEnableLog } from "../services/states";
 import { createSockette } from "../utils/websocket";
 import { useClashInfo } from "./use-clash";
@@ -9,7 +9,6 @@ const MAX_LOG_NUM = 1000;
 
 export type LogLevel = "warning" | "info" | "debug" | "error";
 
-// 添加 ILogItem 接口定义
 interface ILogItem {
   time?: string;
   type: string;
@@ -66,28 +65,31 @@ export const useLogData = (logLevel: LogLevel) => {
   const [enableLog] = useEnableLog();
   const { logs, appendLog } = useLogStore();
 
-  useSWRSubscription<ILogItem[], any, [string, LogLevel] | null>(
-    enableLog && clashInfo ? ["getClashLog", logLevel] : null,
-    (_key, { next }) => {
-      const { server = "", secret = "" } = clashInfo!;
+  useEffect(() => {
+    if (!enableLog || !clashInfo) return;
 
-      const s = createSockette(buildWSUrl(server, secret, logLevel), {
-        onmessage(event) {
-          const data = JSON.parse(event.data) as ILogItem;
-          const time = dayjs().format("MM-DD HH:mm:ss");
-          appendLog(logLevel, { ...data, time });
-        },
-        onerror(event) {
-          this.close();
-          next(event);
-        },
-      });
+    const { server = "", secret = "" } = clashInfo;
+    const wsUrl = buildWSUrl(server, secret, logLevel);
 
-      return () => {
-        s.close();
-      };
-    }
-  );
+    let isActive = true;
+    const socket = createSockette(wsUrl, {
+      onmessage(event) {
+        if (!isActive) return;
+        const data = JSON.parse(event.data) as ILogItem;
+        const time = dayjs().format("MM-DD HH:mm:ss");
+        appendLog(logLevel, { ...data, time });
+      },
+      onerror() {
+        if (!isActive) return;
+        socket.close();
+      },
+    });
+
+    return () => {
+      isActive = false;
+      socket.close();
+    };
+  }, [clashInfo, enableLog, logLevel]);
 
   return logs[logLevel];
 };
