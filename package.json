@@ -69,7 +69,7 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
-    "@actions/github": "^5.1.1",
+    "@actions/github": "^6.0.0",
     "@tauri-apps/cli": "2.1.0",
     "@types/js-cookie": "^3.0.6",
     "@types/js-yaml": "^4.0.9",
@@ -81,13 +81,13 @@
     "@vitejs/plugin-react": "^4.3.3",
     "adm-zip": "^0.5.16",
     "cross-env": "^7.0.3",
-    "https-proxy-agent": "^5.0.1",
-    "husky": "^7.0.4",
+    "https-proxy-agent": "^7.0.5",
+    "husky": "^9.1.7",
     "meta-json-schema": "^1.18.10",
     "node-fetch": "^3.3.2",
-    "prettier": "^2.8.8",
-    "pretty-quick": "^3.3.1",
-    "sass": "^1.80.6",
+    "prettier": "^3.3.3",
+    "pretty-quick": "^4.0.0",
+    "sass": "^1.81.0",
     "terser": "^5.36.0",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
@@ -101,5 +101,5 @@
     "endOfLine": "lf"
   },
   "type": "module",
-  "packageManager": "pnpm@9.1.4"
+  "packageManager": "pnpm@9.13.2"
 }
