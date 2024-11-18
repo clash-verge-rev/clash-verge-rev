@@ -1,4 +1,5 @@
 import { styled, Box } from "@mui/material";
+import { SearchState } from "@/components/base/base-search-box";
 
 const Item = styled(Box)(({ theme: { palette, typography } }) => ({
   padding: "8px 0",
@@ -41,24 +42,41 @@ const Item = styled(Box)(({ theme: { palette, typography } }) => ({
 
 interface Props {
   value: ILogItem;
-  searchText?: string;
+  searchState?: SearchState;
 }
 
-const LogItem = ({ value, searchText }: Props) => {
+const LogItem = ({ value, searchState }: Props) => {
   const renderHighlightText = (text: string) => {
-    if (!searchText?.trim()) return text;
+    if (!searchState?.text.trim()) return text;
 
     try {
-      const parts = text.split(new RegExp(`(${searchText})`, "gi"));
-      return parts.map((part, index) =>
-        part.toLowerCase() === searchText.toLowerCase() ? (
+      const searchText = searchState.text;
+      let pattern: string;
+
+      if (searchState.useRegularExpression) {
+        try {
+          new RegExp(searchText);
+          pattern = searchText;
+        } catch {
+          pattern = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+      } else {
+        const escaped = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        pattern = searchState.matchWholeWord ? `\\b${escaped}\\b` : escaped;
+      }
+
+      const flags = searchState.matchCase ? "g" : "gi";
+      const parts = text.split(new RegExp(`(${pattern})`, flags));
+
+      return parts.map((part, index) => {
+        return index % 2 === 1 ? (
           <span key={index} className="highlight">
             {part}
           </span>
         ) : (
           part
-        ),
-      );
+        );
+      });
     } catch {
       return text;
     }
