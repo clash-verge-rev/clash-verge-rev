@@ -32,14 +32,37 @@ const Item = styled(Box)(({ theme: { palette, typography } }) => ({
     color: palette.text.primary,
     overflowWrap: "anywhere",
   },
+  "& .highlight": {
+    backgroundColor: palette.mode === "dark" ? "#ffeb3b40" : "#ffeb3b90",
+    borderRadius: 2,
+    padding: "0 2px",
+  },
 }));
 
 interface Props {
   value: ILogItem;
+  searchText?: string;
 }
 
-const LogItem = (props: Props) => {
-  const { value } = props;
+const LogItem = ({ value, searchText }: Props) => {
+  const renderHighlightText = (text: string) => {
+    if (!searchText?.trim()) return text;
+
+    try {
+      const parts = text.split(new RegExp(`(${searchText})`, "gi"));
+      return parts.map((part, index) =>
+        part.toLowerCase() === searchText.toLowerCase() ? (
+          <span key={index} className="highlight">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      );
+    } catch {
+      return text;
+    }
+  };
 
   return (
     <Item>
@@ -50,7 +73,7 @@ const LogItem = (props: Props) => {
         </span>
       </div>
       <div>
-        <span className="data">{value.payload}</span>
+        <span className="data">{renderHighlightText(value.payload)}</span>
       </div>
     </Item>
   );
