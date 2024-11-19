@@ -120,11 +120,6 @@ pub fn quit(code: Option<i32>) {
     let app_handle = handle::Handle::global().app_handle().unwrap();
     handle::Handle::global().set_is_exiting();
     resolve::resolve_reset();
-    #[cfg(target_os = "macos")]
-    tauri::async_runtime::block_on(async {
-        resolve::restore_public_dns().await;
-    });
-
     log_err!(handle::Handle::global().get_window().unwrap().close());
     log_err!(app_handle.save_window_state(StateFlags::default()));
     app_handle.exit(code.unwrap_or(0));
