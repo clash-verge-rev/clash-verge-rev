@@ -21,8 +21,8 @@ function is_valid_ipv4() {
 # 验证IPv6地址格式
 function is_valid_ipv6() {
     local ip=$1
-    if [[ ! $ip =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]] && \
-       [[ ! $ip =~ ^(([0-9a-fA-F]{0,4}:){0,7}:|(:[0-9a-fA-F]{0,4}:){0,6}:[0-9a-fA-F]{0,4})$ ]]; then
+    if [[ ! $ip =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]] &&
+        [[ ! $ip =~ ^(([0-9a-fA-F]{0,4}:){0,7}:|(:[0-9a-fA-F]{0,4}:){0,6}:[0-9a-fA-F]{0,4})$ ]]; then
         return 1
     fi
     return 0
@@ -59,8 +59,8 @@ done
 
 # 更新DNS设置
 if [ "$is_valid_dns" = false ]; then
-    echo "empty" > original_dns.txt
+    echo "empty" >original_dns.txt
 else
-    echo "$original_dns" > original_dns.txt
+    echo "$original_dns" >original_dns.txt
 fi
 networksetup -setdnsservers "$hardware_port" "$1"
