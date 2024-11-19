@@ -77,20 +77,17 @@ where
     D: Deserializer<'a>,
 {
     // 如果反序列化字符串失败，返回默认值
-    println!("deserialize_encrypted");
     let encrypted = match String::deserialize(deserializer) {
         Ok(s) => s,
         Err(_) => return Ok(T::default()),
     };
 
-    println!("encrypted: {}", encrypted);
     // 如果解密失败，返回默认值
     let decrypted_string = match decrypt_data(&encrypted) {
         Ok(data) => data,
         Err(_) => return Ok(T::default()),
     };
-    println!("decrypted_string: {}", decrypted_string);
-    // 如果 JSON 解析失败，返回默认值
+prin    // 如果 JSON 解析失败，返回默认值
     match serde_json::from_str(&decrypted_string) {
         Ok(value) => Ok(value),
         Err(_) => Ok(T::default()),
