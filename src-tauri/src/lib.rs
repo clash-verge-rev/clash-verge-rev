@@ -4,11 +4,11 @@ mod core;
 mod enhance;
 mod feat;
 mod utils;
-
 use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
 #[cfg(target_os = "macos")]
 use tauri::Listener;
+use tauri_plugin_autostart::MacosLauncher;
 
 pub fn run() {
     // 单例检测
@@ -32,6 +32,10 @@ pub fn run() {
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())

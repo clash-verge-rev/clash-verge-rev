@@ -8,6 +8,7 @@
     "updater:default",
     "deep-link:default",
     "window-state:default",
-    "window-state:default"
+    "window-state:default",
+    "autostart:default"
   ]
 }
