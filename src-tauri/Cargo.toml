@@ -55,6 +55,10 @@ tauri-plugin-devtools = "2.0.0-rc"
 url = "2.5.2"
 zip = "2.2.0"
 reqwest_dav = "0.1.14"
+aes-gcm = { version = "0.10.3", features = ["std"] }
+base64 = "0.22.1"
+getrandom = "0.2"
+
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
 deelevate = "0.2.0"

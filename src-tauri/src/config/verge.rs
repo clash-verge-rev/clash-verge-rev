@@ -1,4 +1,5 @@
 use crate::config::DEFAULT_PAC;
+use crate::config::{deserialize_encrypted, serialize_encrypted};
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use log::LevelFilter;
@@ -148,8 +149,28 @@ pub struct IVerge {
 
     pub verge_http_enabled: Option<bool>,
 
+    /// WebDAV 配置 (加密存储)
+    #[serde(
+        serialize_with = "serialize_encrypted",
+        deserialize_with = "deserialize_encrypted",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub webdav_url: Option<String>,
+
+    /// WebDAV 用户名 (加密存储)
+    #[serde(
+        serialize_with = "serialize_encrypted",
+        deserialize_with = "deserialize_encrypted",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub webdav_username: Option<String>,
+
+    /// WebDAV 密码 (加密存储)
+    #[serde(
+        serialize_with = "serialize_encrypted",
+        deserialize_with = "deserialize_encrypted",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub webdav_password: Option<String>,
 }
 
