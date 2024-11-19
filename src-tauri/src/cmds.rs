@@ -367,7 +367,7 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub async fn exit_app() {
+pub fn exit_app() {
     feat::quit(Some(0));
 }
 
