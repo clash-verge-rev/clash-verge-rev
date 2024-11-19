@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@tauri-apps/plugin-autostart": "^2.0.0-rc"
+  }
+}

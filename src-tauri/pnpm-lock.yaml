@@ -1,0 +1,32 @@
+lockfileVersion: "9.0"
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+  .:
+    dependencies:
+      "@tauri-apps/plugin-autostart":
+        specifier: ^2.0.0-rc
+        version: 2.0.0
+
+packages:
+  "@tauri-apps/api@2.0.3":
+    resolution:
+      {
+        integrity: sha512-840qk6n8rbXBXMA5/aAgTYsg5JAubKO0nXw5wf7IzGnUuYKGbB4oFBIZtXOIWy+E0kNTDI3qhq5iqsoMJfwp8g==,
+      }
+
+  "@tauri-apps/plugin-autostart@2.0.0":
+    resolution:
+      {
+        integrity: sha512-NEwOQWVasZ8RczXkMLNJokRDujneuMH/UFA5t84DLkbNZUmiD3G7HZWhgSd1YQ0BFU9h9w+h2B/py3y6bzWg4Q==,
+      }
+
+snapshots:
+  "@tauri-apps/api@2.0.3": {}
+
+  "@tauri-apps/plugin-autostart@2.0.0":
+    dependencies:
+      "@tauri-apps/api": 2.0.3

@@ -100,7 +100,6 @@ pub async fn resolve_setup(app: &mut App) {
         create_window();
     }
 
-    log_err!(sysopt::Sysopt::global().init_launch());
     log_err!(sysopt::Sysopt::global().update_sysproxy().await);
     log_err!(sysopt::Sysopt::global().init_guard_sysproxy());
 
