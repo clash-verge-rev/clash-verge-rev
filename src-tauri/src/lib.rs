@@ -151,6 +151,9 @@ pub fn run() {
             if label == "main" {
                 match event {
                     tauri::WindowEvent::CloseRequested { api, .. } => {
+                        if core::handle::Handle::global().is_exiting() {
+                            return;
+                        }
                         println!("closing window...");
                         api.prevent_close();
                         let window = core::handle::Handle::global().get_window().unwrap();
