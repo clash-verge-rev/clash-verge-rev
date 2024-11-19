@@ -115,7 +115,7 @@ pub fn resolve_reset() {
         log_err!(sysopt::Sysopt::global().reset_sysproxy().await);
         log_err!(CoreManager::global().stop_core().await);
         #[cfg(target_os = "macos")]
-        resolve::restore_public_dns().await;
+        restore_public_dns().await;
     });
 }
 
