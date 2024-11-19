@@ -9,7 +9,6 @@ use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
 #[cfg(target_os = "macos")]
 use tauri::Listener;
-use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 pub fn run() {
     // 单例检测
@@ -147,8 +146,6 @@ pub fn run() {
                 api.prevent_exit();
                 return;
             }
-            let app_hanele = core::handle::Handle::global().app_handle().unwrap();
-            let _ = app_hanele.save_window_state(StateFlags::default());
         }
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
