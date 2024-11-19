@@ -124,6 +124,7 @@ pub fn quit(code: Option<i32>) {
         resolve::restore_public_dns().await;
     });
 
+    log_err!(app_handle.save_window_state(StateFlags::default()));
     app_handle.exit(code.unwrap_or(0));
 }
 
