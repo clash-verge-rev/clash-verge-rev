@@ -87,7 +87,7 @@ where
         Ok(data) => data,
         Err(_) => return Ok(T::default()),
     };
-prin    // 如果 JSON 解析失败，返回默认值
+    // 如果 JSON 解析失败，返回默认值
     match serde_json::from_str(&decrypted_string) {
         Ok(value) => Ok(value),
         Err(_) => Ok(T::default()),
