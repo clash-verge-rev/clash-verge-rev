@@ -169,8 +169,10 @@ pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
 }
 
 #[tauri::command]
-pub fn get_verge_config() -> CmdResult<IVerge> {
-    Ok(Config::verge().data().clone())
+pub fn get_verge_config() -> CmdResult<IVergeResponse> {
+    let verge = Config::verge();
+    let verge_data = verge.data().clone();
+    Ok(IVergeResponse::from(verge_data))
 }
 
 #[tauri::command]

@@ -58,6 +58,14 @@ export const BackupConfigViewer = memo(
       webdav_username !== username ||
       webdav_password !== password;
 
+    console.log(
+      "webdavChanged",
+      webdavChanged,
+      webdav_url,
+      webdav_username,
+      webdav_password,
+    );
+
     const handleClickShowPassword = () => {
       setShowPassword((prev) => !prev);
     };
@@ -98,12 +106,14 @@ export const BackupConfigViewer = memo(
       checkForm();
       try {
         setLoading(true);
-        await saveWebdavConfig(data.url, data.username, data.password).then(
-          () => {
-            Notice.success(t("WebDAV Config Saved"));
-            onSaveSuccess();
-          }
-        );
+        await saveWebdavConfig(
+          data.url.trim(),
+          data.username.trim(),
+          data.password.trim(),
+        ).then(() => {
+          Notice.success(t("WebDAV Config Saved"));
+          onSaveSuccess();
+        });
       } catch (error) {
         Notice.error(t("WebDAV Config Save Failed", { error }), 3000);
       } finally {
@@ -193,9 +203,9 @@ export const BackupConfigViewer = memo(
               sx={{ height: "100%" }}
             >
               {webdavChanged ||
-              webdav_url === null ||
-              webdav_username === null ||
-              webdav_password === null ? (
+              webdav_url === undefined ||
+              webdav_username === undefined ||
+              webdav_password === undefined ? (
                 <Button
                   variant="contained"
                   color={"primary"}
@@ -231,5 +241,5 @@ export const BackupConfigViewer = memo(
         </Grid2>
       </form>
     );
-  }
+  },
 );

@@ -116,7 +116,7 @@ pub struct IVerge {
     /// proxy 页面布局 列数
     pub proxy_layout_column: Option<i32>,
 
-    /// 测试网站列表
+    /// 测试站列表
     pub test_list: Option<Vec<IVergeTestItem>>,
 
     /// 日志清理
@@ -153,7 +153,8 @@ pub struct IVerge {
     #[serde(
         serialize_with = "serialize_encrypted",
         deserialize_with = "deserialize_encrypted",
-        skip_serializing_if = "Option::is_none"
+        skip_serializing_if = "Option::is_none",
+        default
     )]
     pub webdav_url: Option<String>,
 
@@ -161,7 +162,8 @@ pub struct IVerge {
     #[serde(
         serialize_with = "serialize_encrypted",
         deserialize_with = "deserialize_encrypted",
-        skip_serializing_if = "Option::is_none"
+        skip_serializing_if = "Option::is_none",
+        default
     )]
     pub webdav_username: Option<String>,
 
@@ -169,7 +171,8 @@ pub struct IVerge {
     #[serde(
         serialize_with = "serialize_encrypted",
         deserialize_with = "deserialize_encrypted",
-        skip_serializing_if = "Option::is_none"
+        skip_serializing_if = "Option::is_none",
+        default
     )]
     pub webdav_password: Option<String>,
 }
@@ -254,6 +257,9 @@ impl IVerge {
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
             auto_log_clean: Some(3),
+            webdav_url: None,
+            webdav_username: None,
+            webdav_password: None,
             ..Self::default()
         }
     }
@@ -358,6 +364,127 @@ impl IVerge {
             }
         } else {
             LevelFilter::Info
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct IVergeResponse {
+    pub app_log_level: Option<String>,
+    pub language: Option<String>,
+    pub theme_mode: Option<String>,
+    pub tray_event: Option<String>,
+    pub env_type: Option<String>,
+    pub start_page: Option<String>,
+    pub startup_script: Option<String>,
+    pub traffic_graph: Option<bool>,
+    pub enable_memory_usage: Option<bool>,
+    pub enable_group_icon: Option<bool>,
+    pub common_tray_icon: Option<bool>,
+    #[cfg(target_os = "macos")]
+    pub tray_icon: Option<String>,
+    pub menu_icon: Option<String>,
+    pub sysproxy_tray_icon: Option<bool>,
+    pub tun_tray_icon: Option<bool>,
+    pub enable_tun_mode: Option<bool>,
+    pub enable_auto_launch: Option<bool>,
+    pub enable_silent_start: Option<bool>,
+    pub enable_system_proxy: Option<bool>,
+    pub enable_proxy_guard: Option<bool>,
+    pub use_default_bypass: Option<bool>,
+    pub system_proxy_bypass: Option<String>,
+    pub proxy_guard_duration: Option<u64>,
+    pub proxy_auto_config: Option<bool>,
+    pub pac_file_content: Option<String>,
+    pub theme_setting: Option<IVergeTheme>,
+    pub web_ui_list: Option<Vec<String>>,
+    pub clash_core: Option<String>,
+    pub hotkeys: Option<Vec<String>>,
+    pub auto_close_connection: Option<bool>,
+    pub auto_check_update: Option<bool>,
+    pub default_latency_test: Option<String>,
+    pub default_latency_timeout: Option<i32>,
+    pub enable_builtin_enhanced: Option<bool>,
+    pub proxy_layout_column: Option<i32>,
+    pub test_list: Option<Vec<IVergeTestItem>>,
+    pub auto_log_clean: Option<i32>,
+    pub enable_random_port: Option<bool>,
+    #[cfg(not(target_os = "windows"))]
+    pub verge_redir_port: Option<u16>,
+    #[cfg(not(target_os = "windows"))]
+    pub verge_redir_enabled: Option<bool>,
+    #[cfg(target_os = "linux")]
+    pub verge_tproxy_port: Option<u16>,
+    #[cfg(target_os = "linux")]
+    pub verge_tproxy_enabled: Option<bool>,
+    pub verge_mixed_port: Option<u16>,
+    pub verge_socks_port: Option<u16>,
+    pub verge_socks_enabled: Option<bool>,
+    pub verge_port: Option<u16>,
+    pub verge_http_enabled: Option<bool>,
+    pub webdav_url: Option<String>,
+    pub webdav_username: Option<String>,
+    pub webdav_password: Option<String>,
+}
+
+impl From<IVerge> for IVergeResponse {
+    fn from(verge: IVerge) -> Self {
+        Self {
+            app_log_level: verge.app_log_level,
+            language: verge.language,
+            theme_mode: verge.theme_mode,
+            tray_event: verge.tray_event,
+            env_type: verge.env_type,
+            start_page: verge.start_page,
+            startup_script: verge.startup_script,
+            traffic_graph: verge.traffic_graph,
+            enable_memory_usage: verge.enable_memory_usage,
+            enable_group_icon: verge.enable_group_icon,
+            common_tray_icon: verge.common_tray_icon,
+            #[cfg(target_os = "macos")]
+            tray_icon: verge.tray_icon,
+            menu_icon: verge.menu_icon,
+            sysproxy_tray_icon: verge.sysproxy_tray_icon,
+            tun_tray_icon: verge.tun_tray_icon,
+            enable_tun_mode: verge.enable_tun_mode,
+            enable_auto_launch: verge.enable_auto_launch,
+            enable_silent_start: verge.enable_silent_start,
+            enable_system_proxy: verge.enable_system_proxy,
+            enable_proxy_guard: verge.enable_proxy_guard,
+            use_default_bypass: verge.use_default_bypass,
+            system_proxy_bypass: verge.system_proxy_bypass,
+            proxy_guard_duration: verge.proxy_guard_duration,
+            proxy_auto_config: verge.proxy_auto_config,
+            pac_file_content: verge.pac_file_content,
+            theme_setting: verge.theme_setting,
+            web_ui_list: verge.web_ui_list,
+            clash_core: verge.clash_core,
+            hotkeys: verge.hotkeys,
+            auto_close_connection: verge.auto_close_connection,
+            auto_check_update: verge.auto_check_update,
+            default_latency_test: verge.default_latency_test,
+            default_latency_timeout: verge.default_latency_timeout,
+            enable_builtin_enhanced: verge.enable_builtin_enhanced,
+            proxy_layout_column: verge.proxy_layout_column,
+            test_list: verge.test_list,
+            auto_log_clean: verge.auto_log_clean,
+            enable_random_port: verge.enable_random_port,
+            #[cfg(not(target_os = "windows"))]
+            verge_redir_port: verge.verge_redir_port,
+            #[cfg(not(target_os = "windows"))]
+            verge_redir_enabled: verge.verge_redir_enabled,
+            #[cfg(target_os = "linux")]
+            verge_tproxy_port: verge.verge_tproxy_port,
+            #[cfg(target_os = "linux")]
+            verge_tproxy_enabled: verge.verge_tproxy_enabled,
+            verge_mixed_port: verge.verge_mixed_port,
+            verge_socks_port: verge.verge_socks_port,
+            verge_socks_enabled: verge.verge_socks_enabled,
+            verge_port: verge.verge_port,
+            verge_http_enabled: verge.verge_http_enabled,
+            webdav_url: verge.webdav_url,
+            webdav_username: verge.webdav_username,
+            webdav_password: verge.webdav_password,
         }
     }
 }
