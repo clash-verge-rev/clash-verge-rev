@@ -417,16 +417,6 @@ pub async fn restart_app() -> CmdResult<()> {
     Ok(())
 }
 
-pub mod service {
-    use super::*;
-    use crate::core::service;
-
-    #[tauri::command]
-    pub async fn check_service() -> CmdResult<service::JsonResponse> {
-        wrap_err!(service::check_service().await)
-    }
-}
-
 #[cfg(not(windows))]
 pub mod uwp {
     use super::*;
