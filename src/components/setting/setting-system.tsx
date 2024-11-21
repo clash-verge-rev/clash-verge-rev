@@ -2,7 +2,6 @@ import useSWR from "swr";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsRounded } from "@mui/icons-material";
-import { checkService } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
@@ -19,16 +18,6 @@ const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { verge, mutateVerge, patchVerge } = useVerge();
-  // service mode
-  const { data: serviceStatus, mutate: mutateServiceStatus } = useSWR(
-    "checkService",
-    checkService,
-    {
-      revalidateIfStale: false,
-      shouldRetryOnError: false,
-      focusThrottleInterval: 36e5, // 1 hour
-    }
-  );
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
