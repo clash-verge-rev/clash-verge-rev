@@ -123,8 +123,6 @@ pub fn run() {
             cmds::delete_profile,
             cmds::read_profile_file,
             cmds::save_profile_file,
-            // service mode
-            cmds::service::check_service,
             // clash api
             cmds::clash_api_get_proxy_delay,
             // backup
