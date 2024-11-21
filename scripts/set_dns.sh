@@ -59,8 +59,8 @@ done
 
 # 更新DNS设置
 if [ "$is_valid_dns" = false ]; then
-    echo "empty" >original_dns.txt
+    echo "empty" >.original_dns.txt
 else
-    echo "$original_dns" >original_dns.txt
+    echo "$original_dns" >.original_dns.txt
 fi
 networksetup -setdnsservers "$hardware_port" "$1"
