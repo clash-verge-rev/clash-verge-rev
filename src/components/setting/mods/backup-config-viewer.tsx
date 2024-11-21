@@ -109,7 +109,7 @@ export const BackupConfigViewer = memo(
         await saveWebdavConfig(
           data.url.trim(),
           data.username.trim(),
-          data.password.trim(),
+          data.password,
         ).then(() => {
           Notice.success(t("WebDAV Config Saved"));
           onSaveSuccess();
