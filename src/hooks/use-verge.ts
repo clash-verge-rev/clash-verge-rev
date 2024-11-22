@@ -6,7 +6,6 @@ export const useVerge = () => {
     "getVergeConfig",
     async () => {
       const config = await getVergeConfig();
-      console.log("Received verge config:", config);
       return config;
     },
   );
