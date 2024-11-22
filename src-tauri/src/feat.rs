@@ -123,11 +123,9 @@ pub fn quit(code: Option<i32>) {
     log_err!(handle::Handle::global().get_window().unwrap().close());
     match app_handle.save_window_state(StateFlags::all()) {
         Ok(_) => {
-            println!("window state saved successfully");
             log::info!(target: "app", "window state saved successfully");
         }
         Err(e) => {
-            println!("failed to save window state: {}", e);
             log::error!(target: "app", "failed to save window state: {}", e);
         }
     };
