@@ -178,7 +178,7 @@ pub fn create_window() {
                 }))
                 .unwrap();
 
-            #[cfg(not(target_os = "macos"))]
+            #[cfg(not(target_os = "windows"))]
             window
                 .set_size(tauri::Size::Physical(tauri::PhysicalSize {
                     width: 800,
