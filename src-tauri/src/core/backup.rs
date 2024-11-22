@@ -45,7 +45,7 @@ impl WebDavClient {
                 .set_agent(
                     reqwest::Client::builder()
                         .danger_accept_invalid_certs(true)
-                        .timeout(std::time::Duration::from_secs(5))
+                        .timeout(std::time::Duration::from_secs(3))
                         .build()
                         .unwrap(),
                 )
