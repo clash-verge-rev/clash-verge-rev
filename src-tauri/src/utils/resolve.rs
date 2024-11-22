@@ -141,9 +141,9 @@ pub fn create_window() {
     #[cfg(target_os = "windows")]
     let window = builder
         .decorations(false)
+        .maximizable(true)
         .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
         .transparent(true)
-        .inner_size(800.0, 636.0)
         .visible(false)
         .build().unwrap();
 
@@ -152,7 +152,6 @@ pub fn create_window() {
         .decorations(true)
         .hidden_title(true)
         .title_bar_style(tauri::TitleBarStyle::Overlay)
-        .inner_size(800.0, 642.0)
         .build()
         .unwrap();
 
@@ -160,11 +159,9 @@ pub fn create_window() {
     let window = builder
         .decorations(false)
         .transparent(true)
-        .inner_size(800.0, 642.0)
         .build()
         .unwrap();
 
-    println!("restore window state");
     match window.restore_state(StateFlags::all()) {
         Ok(_) => {
             println!("window state restored successfully");
@@ -173,6 +170,21 @@ pub fn create_window() {
         Err(e) => {
             println!("failed to restore window state: {}", e);
             log::error!(target: "app", "failed to restore window state: {}", e);
+            #[cfg(target_os = "windows")]
+            window
+                .set_size(tauri::Size::Physical(tauri::PhysicalSize {
+                    width: 800,
+                    height: 636,
+                }))
+                .unwrap();
+
+            #[cfg(not(target_os = "macos"))]
+            window
+                .set_size(tauri::Size::Physical(tauri::PhysicalSize {
+                    width: 800,
+                    height: 642,
+                }))
+                .unwrap();
         }
     };
 }
