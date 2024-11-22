@@ -164,7 +164,17 @@ pub fn create_window() {
         .build()
         .unwrap();
 
-    let _ = window.restore_state(StateFlags::all());
+    println!("restore window state");
+    match window.restore_state(StateFlags::all()) {
+        Ok(_) => {
+            println!("window state restored successfully");
+            log::info!(target: "app", "window state restored successfully");
+        }
+        Err(e) => {
+            println!("failed to restore window state: {}", e);
+            log::error!(target: "app", "failed to restore window state: {}", e);
+        }
+    };
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
