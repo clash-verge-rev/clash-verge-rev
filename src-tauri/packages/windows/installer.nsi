@@ -862,6 +862,10 @@ Section Uninstall
     Delete "$INSTDIR\\{{this}}"
   {{/each}}
 
+  ; Delete clash-verge.desktop
+  IfFileExists "$INSTDIR\Clash Verge.exe" 0 +2
+    Delete "$INSTDIR\Clash Verge.exe"
+
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"
 
