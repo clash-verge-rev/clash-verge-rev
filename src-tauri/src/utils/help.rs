@@ -101,7 +101,15 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 /// open file
 /// use vscode by default
 pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
-    app.shell().open(path.to_string_lossy(), None).unwrap();
+    #[cfg(target_os = "macos")]
+    let code = "Visual Studio Code";
+    #[cfg(not(target_os = "macos"))]
+    let code = "code";
+    if let Err(err) = open::with(&path.as_os_str(), code) {
+        log::error!(target: "app", "Can not open file with VS code, {}", err);
+        // default open
+        app.shell().open(path.to_string_lossy(), None)?;
+    };
     Ok(())
 }
 
