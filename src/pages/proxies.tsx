@@ -3,11 +3,7 @@ import { useEffect } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Box, Button, ButtonGroup } from "@mui/material";
-import {
-  closeAllConnections,
-  getClashConfig,
-  updateConfigs,
-} from "@/services/api";
+import { closeAllConnections, getClashConfig } from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { BasePage } from "@/components/base";
@@ -19,7 +15,7 @@ const ProxyPage = () => {
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
-    getClashConfig
+    getClashConfig,
   );
 
   const { verge } = useVerge();
@@ -33,7 +29,6 @@ const ProxyPage = () => {
     if (mode !== curMode && verge?.auto_close_connection) {
       closeAllConnections();
     }
-    await updateConfigs({ mode });
     await patchClashConfig({ mode });
     mutateClash();
   });

@@ -160,6 +160,16 @@ export const ProxyItemMini = (props: Props) => {
                 TFO
               </TypeBox>
             )}
+            {proxy.mptcp && (
+              <TypeBox color="text.secondary" component="span">
+                MPTCP
+              </TypeBox>
+            )}
+            {proxy.smux && (
+              <TypeBox color="text.secondary" component="span">
+                SMUX
+              </TypeBox>
+            )}
           </Box>
         )}
       </Box>
@@ -239,7 +249,9 @@ const Widget = styled(Box)(({ theme: { typography } }) => ({
   borderRadius: "4px",
 }));
 
-const TypeBox = styled(Box)(({ theme: { palette, typography } }) => ({
+const TypeBox = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "component",
+})<{ component?: React.ElementType }>(({ theme: { palette, typography } }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: "text.secondary",

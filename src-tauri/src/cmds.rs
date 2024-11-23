@@ -2,20 +2,21 @@ use crate::{
     config::*,
     core::*,
     feat,
-    utils::{dirs, help, resolve},
+    utils::{dirs, help},
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use sysproxy::{Autoproxy, Sysproxy};
 type CmdResult<T = ()> = Result<T, String>;
+use reqwest_dav::list_cmd::ListFile;
 use tauri::Manager;
 
 #[tauri::command]
-pub fn copy_clash_env(app_handle: tauri::AppHandle) -> CmdResult {
-    feat::copy_clash_env(&app_handle);
+pub fn copy_clash_env() -> CmdResult {
+    feat::copy_clash_env();
     Ok(())
 }
 
@@ -168,8 +169,10 @@ pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
 }
 
 #[tauri::command]
-pub fn get_verge_config() -> CmdResult<IVerge> {
-    Ok(Config::verge().data().clone())
+pub fn get_verge_config() -> CmdResult<IVergeResponse> {
+    let verge = Config::verge();
+    let verge_data = verge.data().clone();
+    Ok(IVergeResponse::from(verge_data))
 }
 
 #[tauri::command]
@@ -184,8 +187,8 @@ pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
 
 /// restart the sidecar
 #[tauri::command]
-pub async fn restart_sidecar() -> CmdResult {
-    wrap_err!(CoreManager::global().run_core().await)
+pub async fn restart_core() -> CmdResult {
+    wrap_err!(CoreManager::global().restart_core().await)
 }
 
 /// get the system proxy
@@ -213,11 +216,6 @@ pub fn get_auto_proxy() -> CmdResult<Mapping> {
     map.insert("url".into(), current.url.into());
 
     Ok(map)
-}
-
-#[tauri::command]
-pub fn get_clash_logs() -> CmdResult<VecDeque<String>> {
-    Ok(logger::Logger::global().get_log())
 }
 
 #[tauri::command]
@@ -337,7 +335,7 @@ pub fn get_network_interfaces() -> Vec<String> {
     for (interface_name, _) in &networks {
         result.push(interface_name.clone());
     }
-    return result;
+    result
 }
 
 #[tauri::command]
@@ -371,31 +369,52 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub fn exit_app(app_handle: tauri::AppHandle) {
-    let _ = resolve::save_window_size_position(&app_handle, true);
-    resolve::resolve_reset();
-    app_handle.exit(0);
-    std::process::exit(0);
+pub fn exit_app() {
+    feat::quit(Some(0));
 }
 
-pub mod service {
-    use super::*;
-    use crate::core::service;
+#[tauri::command]
+pub async fn save_webdav_config(url: String, username: String, password: String) -> CmdResult<()> {
+    let patch = IVerge {
+        webdav_url: Some(url),
+        webdav_username: Some(username),
+        webdav_password: Some(password),
+        ..IVerge::default()
+    };
+    Config::verge().draft().patch_config(patch.clone());
+    Config::verge().apply();
+    Config::verge()
+        .data()
+        .save_file()
+        .map_err(|err| err.to_string())?;
+    backup::WebDavClient::global().reset();
+    Ok(())
+}
 
-    #[tauri::command]
-    pub async fn check_service() -> CmdResult<service::JsonResponse> {
-        wrap_err!(service::check_service().await)
-    }
+#[tauri::command]
+pub async fn create_webdav_backup() -> CmdResult<()> {
+    wrap_err!(feat::create_backup_and_upload_webdav().await)
+}
 
-    #[tauri::command]
-    pub async fn install_service(passwd: String) -> CmdResult {
-        wrap_err!(service::install_service(passwd).await)
-    }
+#[tauri::command]
+pub async fn list_webdav_backup() -> CmdResult<Vec<ListFile>> {
+    wrap_err!(feat::list_wevdav_backup().await)
+}
 
-    #[tauri::command]
-    pub async fn uninstall_service(passwd: String) -> CmdResult {
-        wrap_err!(service::uninstall_service(passwd).await)
-    }
+#[tauri::command]
+pub async fn delete_webdav_backup(filename: String) -> CmdResult<()> {
+    wrap_err!(feat::delete_webdav_backup(filename).await)
+}
+
+#[tauri::command]
+pub async fn restore_webdav_backup(filename: String) -> CmdResult<()> {
+    wrap_err!(feat::restore_webdav_backup(filename).await)
+}
+
+#[tauri::command]
+pub async fn restart_app() -> CmdResult<()> {
+    feat::restart_app();
+    Ok(())
 }
 
 #[cfg(not(windows))]

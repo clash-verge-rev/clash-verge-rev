@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "active": true,
-    "longDescription": "A Clash Meta GUI based on tauri.",
+    "longDescription": "Clash Verge Rev",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -15,7 +15,7 @@
     "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
     "copyright": "GNU General Public License v3.0",
     "category": "DeveloperTool",
-    "shortDescription": "A Clash Meta GUI based on tauri.",
+    "shortDescription": "Clash Verge Rev",
     "createUpdaterArtifacts": "v1Compatible"
   },
   "build": {
@@ -34,6 +34,11 @@
         "https://download.clashverge.dev/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
         "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json"
       ]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["clash", "clash-verge"]
+      }
     }
   },
   "app": {
@@ -44,7 +49,6 @@
         "enable": true
       },
       "csp": null
-    },
-    "windows": []
+    }
   }
 }

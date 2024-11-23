@@ -4,6 +4,7 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useSetThemeMode, useThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
+import { useTheme } from "@mui/material/styles";
 const appWindow = getCurrentWebviewWindow();
 
 /**
@@ -103,7 +104,7 @@ export const useCustomTheme = () => {
     rootEle.style.setProperty("--primary-main", theme.palette.primary.main);
     rootEle.style.setProperty(
       "--background-color-alpha",
-      alpha(theme.palette.primary.main, 0.1)
+      alpha(theme.palette.primary.main, 0.1),
     );
 
     // inject css

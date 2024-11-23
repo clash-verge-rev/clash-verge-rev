@@ -25,7 +25,7 @@ export const useRenderList = (mode: string) => {
   const { data: proxiesData, mutate: mutateProxies } = useSWR(
     "getProxies",
     getProxies,
-    { refreshInterval: 45000 }
+    { refreshInterval: 45000 },
   );
 
   const { verge } = useVerge();
@@ -78,7 +78,7 @@ export const useRenderList = (mode: string) => {
           group.all,
           group.name,
           headState.filterText,
-          headState.sortType
+          headState.sortType,
         );
 
         ret.push({ type: 1, key: `head-${group.name}`, group, headState });
@@ -97,7 +97,7 @@ export const useRenderList = (mode: string) => {
               headState,
               col,
               proxyCol,
-            }))
+            })),
           );
         }
 
@@ -108,14 +108,14 @@ export const useRenderList = (mode: string) => {
             group,
             proxy,
             headState,
-          }))
+          })),
         );
       }
       return ret;
     });
 
     if (!useRule) return retList.slice(1);
-    return retList;
+    return retList.filter((item) => item.group.hidden === false);
   }, [headStates, proxiesData, mode, col]);
 
   return {

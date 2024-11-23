@@ -1,5 +1,6 @@
 ; This file is copied from https://github.com/tauri-apps/tauri/blob/tauri-v1.5/tooling/bundler/src/bundle/windows/templates/installer.nsi
 ; and edit to fit the needs of the project. the latest tauri 2.x has a different base nsi script.
+RequestExecutionLevel admin
 
 Unicode true
 ; Set the compression algorithm. Default is LZMA.
@@ -16,6 +17,8 @@ Unicode true
 !include "StrFunc.nsh"
 !include "Win\COM.nsh"
 !include "Win\Propkey.nsh"
+!include "WinVer.nsh"
+!include "LogicLib.nsh"
 !addplugindir "$%AppData%\Local\NSIS\"
 ${StrCase}
 ${StrLoc}
@@ -688,9 +691,41 @@ SectionEnd
   app_check_done:
 !macroend
 
+
+
+Var VC_REDIST_URL
+Var VC_REDIST_EXE
+
+Section CheckAndInstallVSRuntime
+    ${If} ${IsNativeARM64}
+        StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
+        StrCpy $VC_REDIST_EXE "vc_redist.arm64.exe"
+        IfFileExists "$SYSDIR\msvcp140.dll" Done
+    ${ElseIf} ${RunningX64}
+        StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+        StrCpy $VC_REDIST_EXE "vc_redist.x64.exe"
+        IfFileExists "$WINDIR\SysWOW64\msvcp140.dll" Done
+    ${Else}
+        StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
+        StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
+        IfFileExists "$SYSDIR\msvcp140.dll" Done
+    ${EndIf}
+
+    ; 下载并安装VC运行库
+    nsisdl::download "$VC_REDIST_URL" "$TEMP\$VC_REDIST_EXE"
+    Pop $0
+    ${If} $0 == "success"
+        nsExec::Exec '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
+    ${EndIf}
+    
+    Done:
+SectionEnd
+
+
+
 Section Install
   SetOutPath $INSTDIR
-
+  nsExec::Exec 'netsh int tcp res'
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
   ; Copy main executable

@@ -1,4 +1,5 @@
 use crate::config::*;
+use crate::core::handle;
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use chrono::{Local, TimeZone};
@@ -10,7 +11,6 @@ use log4rs::encode::pattern::PatternEncoder;
 use std::fs::{self, DirEntry};
 use std::path::PathBuf;
 use std::str::FromStr;
-use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
 
 /// initialize this instance's log file
@@ -44,21 +44,9 @@ fn init_log() -> Result<()> {
 
     let log_more = log_level == LevelFilter::Trace || log_level == LevelFilter::Debug;
 
-    #[cfg(feature = "verge-dev")]
-    {
-        logger_builder = logger_builder.appenders(["file", "stdout"]);
-        if log_more {
-            root_builder = root_builder.appenders(["file", "stdout"]);
-        } else {
-            root_builder = root_builder.appenders(["stdout"]);
-        }
-    }
-    #[cfg(not(feature = "verge-dev"))]
-    {
-        logger_builder = logger_builder.appenders(["file"]);
-        if log_more {
-            root_builder = root_builder.appenders(["file"]);
-        }
+    logger_builder = logger_builder.appenders(["file"]);
+    if log_more {
+        root_builder = root_builder.appenders(["file"]);
     }
 
     let (config, _) = log4rs::config::Config::builder()
@@ -207,8 +195,10 @@ pub fn init_resources() -> Result<()> {
 
     #[cfg(target_os = "windows")]
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
+    #[cfg(target_os = "linux")]
+    let file_list: [&str; 0] = [];
 
     // copy the resource file
     // if the source file is newer than the destination file, copy it over
@@ -216,12 +206,13 @@ pub fn init_resources() -> Result<()> {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
         let test_dest_path = test_dir.join(file);
+        log::debug!(target: "app", "src_path: {src_path:?}, dest_path: {dest_path:?}");
 
         let handle_copy = |dest: &PathBuf| {
             match fs::copy(&src_path, dest) {
                 Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
                 Err(err) => {
-                    log::error!(target: "app", "failed to copy resources '{file}', {err}")
+                    log::error!(target: "app", "failed to copy resources '{file}' to '{dest:?}', {err}")
                 }
             };
         };
@@ -297,7 +288,9 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 
-pub async fn startup_script(app_handle: &AppHandle) -> Result<()> {
+pub async fn startup_script() -> Result<()> {
+    let app_handle = handle::Handle::global().app_handle().unwrap();
+
     let script_path = {
         let verge = Config::verge();
         let verge = verge.latest();
@@ -330,7 +323,7 @@ pub async fn startup_script(app_handle: &AppHandle) -> Result<()> {
     app_handle
         .shell()
         .command(shell_type)
-        .current_dir(working_dir.to_path_buf())
+        .current_dir(working_dir)
         .args(&[script_path])
         .output()
         .await?;

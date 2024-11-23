@@ -5,7 +5,7 @@ const [ThemeModeProvider, useThemeMode, useSetThemeMode] = createContextState<
   "light" | "dark"
 >("light");
 
-export const useEnableLog = () => useLocalStorage("enable-log", true);
+export const useEnableLog = () => useLocalStorage("enable-log", false);
 
 interface IConnectionSetting {
   layout: "table" | "list";
@@ -20,7 +20,7 @@ export const useConnectionSetting = () =>
     {
       serializer: JSON.stringify,
       deserializer: JSON.parse,
-    }
+    },
   );
 
 // save the state of each profile item loading

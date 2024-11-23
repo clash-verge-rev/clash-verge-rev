@@ -1,4 +1,5 @@
-import fs from "fs-extra";
+import fs from "fs";
+import fsp from "fs/promises";
 import path from "path";
 
 const UPDATE_LOG = "UPDATELOG.md";
@@ -12,11 +13,11 @@ export async function resolveUpdateLog(tag) {
 
   const file = path.join(cwd, UPDATE_LOG);
 
-  if (!(await fs.pathExists(file))) {
+  if (!fs.existsSync(file)) {
     throw new Error("could not found UPDATELOG.md");
   }
 
-  const data = await fs.readFile(file).then((d) => d.toString("utf8"));
+  const data = await fsp.readFile(file, "utf-8");
 
   const map = {};
   let p = "";

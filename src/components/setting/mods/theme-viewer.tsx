@@ -28,7 +28,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   useImperativeHandle(ref, () => ({
     open: () => {
       setOpen(true);
-      setTheme({ ...theme_setting } || {});
+      setTheme({ ...theme_setting });
     },
     close: () => setOpen(false),
   }));

@@ -6,7 +6,7 @@ import Sockette, { type SocketteOptions } from "sockette";
 export const createSockette = (
   url: string,
   opt: SocketteOptions,
-  maxError = 10
+  maxError = 10,
 ) => {
   let remainRetryCount = maxError;
 
@@ -23,8 +23,10 @@ export const createSockette = (
       remainRetryCount -= 1;
 
       if (remainRetryCount >= 0) {
-        this.close();
-        this.reconnect();
+        if (this instanceof Sockette) {
+          this.close();
+          this.reconnect();
+        }
       } else {
         opt.onerror?.call(this, ev);
       }

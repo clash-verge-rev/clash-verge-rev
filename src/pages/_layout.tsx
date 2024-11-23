@@ -4,9 +4,8 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useRoutes } from "react-router-dom";
+import { useLocation, useRoutes, useNavigate } from "react-router-dom";
 import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
-import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
@@ -25,9 +24,10 @@ import getSystem from "@/utils/get-system";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import { getPortableFlag } from "@/services/cmds";
-import { useNavigate } from "react-router-dom";
 import React from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
+import { useListen } from "@/hooks/use-listen";
+
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
 
@@ -46,17 +46,13 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
+  const { addListener, setupCloseListener } = useListen();
   if (!routersEles) return null;
 
-  useEffect(() => {
-    window.addEventListener("keydown", (e) => {
-      // macOS有cmd+w
-      if (e.key === "Escape" && OS !== "macos") {
-        appWindow.close();
-      }
-    });
+  setupCloseListener();
 
-    listen("verge://refresh-clash-config", async () => {
+  useEffect(() => {
+    addListener("verge://refresh-clash-config", async () => {
       // the clash info may be updated
       await getAxios(true);
       mutate("getProxies");
@@ -66,12 +62,21 @@ const Layout = () => {
     });
 
     // update the verge config
-    listen("verge://refresh-verge-config", () => mutate("getVergeConfig"));
+    addListener("verge://refresh-verge-config", () => mutate("getVergeConfig"));
 
     // 设置提示监听
-    listen("verge://notice-message", ({ payload }) => {
+    addListener("verge://notice-message", ({ payload }) => {
       const [status, msg] = payload as [string, string];
       switch (status) {
+        case "import_sub_url::ok":
+          navigate("/profile", { state: { current: msg } });
+
+          Notice.success(t("Import Subscription Successful"));
+          break;
+        case "import_sub_url::error":
+          navigate("/profile");
+          Notice.error(msg);
+          break;
         case "set_config::ok":
           Notice.success(t("Clash Config Updated"));
           break;
