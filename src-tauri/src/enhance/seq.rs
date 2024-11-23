@@ -12,7 +12,7 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
     let append = seq_map.append;
     let delete = seq_map.delete;
 
-    let origin_seq = config.get(&name).map_or(Sequence::default(), |val| {
+    let origin_seq = config.get(name).map_or(Sequence::default(), |val| {
         val.as_sequence().unwrap_or(&Sequence::default()).clone()
     });
     let mut seq = origin_seq.clone();
@@ -23,7 +23,7 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
         if let Some(name) = if item.is_string() {
             Some(item)
         } else {
-            item.get("name").map(|y| y.clone())
+            item.get("name").cloned()
         } {
             delete_names.push(name.clone());
         }
@@ -34,7 +34,7 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
         } else {
             x.get("name")
         } {
-            !delete_names.contains(&x_name)
+            !delete_names.contains(x_name)
         } else {
             true
         }
@@ -51,5 +51,5 @@ pub fn use_seq(seq_map: SeqMap, config: Mapping, name: &str) -> Mapping {
 
     let mut config = config.clone();
     config.insert(Value::from(name), Value::from(seq));
-    return config;
+    config
 }

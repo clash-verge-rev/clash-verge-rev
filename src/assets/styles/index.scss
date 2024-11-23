@@ -1,3 +1,7 @@
+@use "./layout.scss";
+@use "./page.scss";
+@use "./font.scss";
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
@@ -42,10 +46,6 @@ body {
 body {
   overflow: hidden;
 }
-
-@import "./layout.scss";
-@import "./page.scss";
-@import "./font.scss";
 
 // @media (prefers-color-scheme: dark) {
 //   :root {

@@ -7,20 +7,19 @@ import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
 import matchWholeWordIcon from "@/assets/image/component/match_whole_word.svg?react";
 import useRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
 
+export type SearchState = {
+  text: string;
+  matchCase: boolean;
+  matchWholeWord: boolean;
+  useRegularExpression: boolean;
+};
+
 type SearchProps = {
   placeholder?: string;
   matchCase?: boolean;
   matchWholeWord?: boolean;
   useRegularExpression?: boolean;
-  onSearch: (
-    match: (content: string) => boolean,
-    state: {
-      text: string;
-      matchCase: boolean;
-      matchWholeWord: boolean;
-      useRegularExpression: boolean;
-    }
-  ) => void;
+  onSearch: (match: (content: string) => boolean, state: SearchState) => void;
 };
 
 export const BaseSearchBox = styled((props: SearchProps) => {
@@ -28,10 +27,10 @@ export const BaseSearchBox = styled((props: SearchProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [matchCase, setMatchCase] = useState(props.matchCase ?? false);
   const [matchWholeWord, setMatchWholeWord] = useState(
-    props.matchWholeWord ?? false
+    props.matchWholeWord ?? false,
   );
   const [useRegularExpression, setUseRegularExpression] = useState(
-    props.useRegularExpression ?? false
+    props.useRegularExpression ?? false,
   );
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -60,7 +59,7 @@ export const BaseSearchBox = styled((props: SearchProps) => {
         matchCase,
         matchWholeWord,
         useRegularExpression,
-      }
+      },
     );
   };
 

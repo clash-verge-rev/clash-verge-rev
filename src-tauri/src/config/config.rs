@@ -6,7 +6,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use once_cell::sync::OnceCell;
-use std::{env::temp_dir, path::PathBuf};
+use std::path::PathBuf;
 
 pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
 pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
@@ -85,7 +85,7 @@ impl Config {
     pub fn generate_file(typ: ConfigType) -> Result<PathBuf> {
         let path = match typ {
             ConfigType::Run => dirs::app_home_dir()?.join(RUNTIME_CONFIG),
-            ConfigType::Check => temp_dir().join(CHECK_CONFIG),
+            ConfigType::Check => dirs::app_home_dir()?.join(CHECK_CONFIG),
         };
 
         let runtime = Config::runtime();

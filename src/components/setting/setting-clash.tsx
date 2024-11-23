@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { TextField, Select, MenuItem, Typography } from "@mui/material";
-
 import {
   SettingsRounded,
   ShuffleRounded,
@@ -34,7 +33,12 @@ const SettingClash = ({ onError }: Props) => {
   const { clash, version, mutateClash, patchClash } = useClash();
   const { verge, mutateVerge, patchVerge } = useVerge();
 
-  const { ipv6, "allow-lan": allowLan, "log-level": logLevel } = clash ?? {};
+  const {
+    ipv6,
+    "allow-lan": allowLan,
+    "log-level": logLevel,
+    "unified-delay": unifiedDelay,
+  } = clash ?? {};
 
   const { enable_random_port = false, verge_mixed_port } = verge ?? {};
 
@@ -106,10 +110,36 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Log Level")}>
+      <SettingItem
+        label={t("Unified Delay")}
+        extra={
+          <TooltipIcon
+            title={t("Unified Delay Info")}
+            sx={{ opacity: "0.7" }}
+          />
+        }
+      >
+        <GuardState
+          value={unifiedDelay ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ "unified-delay": e })}
+          onGuard={(e) => patchClash({ "unified-delay": e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t("Log Level")}
+        extra={
+          <TooltipIcon title={t("Log Level Info")} sx={{ opacity: "0.7" }} />
+        }
+      >
         <GuardState
           // clash premium 2022.08.26 值为warn
-          value={logLevel === "warn" ? "warning" : logLevel ?? "info"}
+          value={logLevel === "warn" ? "warning" : (logLevel ?? "info")}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ "log-level": e })}
@@ -135,7 +165,7 @@ const SettingClash = ({ onError }: Props) => {
             onClick={() => {
               Notice.success(
                 t("Restart Application to Apply Modifications"),
-                1000
+                1000,
               );
               onChangeVerge({ enable_random_port: !enable_random_port });
               patchVerge({ enable_random_port: !enable_random_port });

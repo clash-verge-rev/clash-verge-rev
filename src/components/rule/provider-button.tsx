@@ -32,7 +32,7 @@ export const ProviderButton = () => {
 
   const hasProvider = Object.keys(data || {}).length > 0;
   const [updating, setUpdating] = useState(
-    Object.keys(data || {}).map(() => false)
+    Object.keys(data || {}).map(() => false),
   );
 
   const setUpdatingAt = (status: boolean, index: number) => {
@@ -162,7 +162,9 @@ export const ProviderButton = () => {
     </>
   );
 };
-const TypeBox = styled(Box)(({ theme }) => ({
+const TypeBox = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "component",
+})<{ component?: React.ElementType }>(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.secondary.main, 0.5),
@@ -174,7 +176,9 @@ const TypeBox = styled(Box)(({ theme }) => ({
   lineHeight: 1.25,
 }));
 
-const StyledTypeBox = styled(Box)(({ theme }) => ({
+const StyledTypeBox = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "component",
+})<{ component?: React.ElementType }>(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.primary.main, 0.5),

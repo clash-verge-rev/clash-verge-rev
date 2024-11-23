@@ -54,9 +54,7 @@ fn test_merge() -> anyhow::Result<()> {
     let merge = serde_yaml::from_str::<Mapping>(merge)?;
     let config = serde_yaml::from_str::<Mapping>(config)?;
 
-    let result = serde_yaml::to_string(&use_merge(merge, config))?;
-
-    println!("{result}");
+    let _ = serde_yaml::to_string(&use_merge(merge, config))?;
 
     Ok(())
 }

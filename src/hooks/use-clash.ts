@@ -1,6 +1,6 @@
 import useSWR, { mutate } from "swr";
 import { useLockFn } from "ahooks";
-import { getAxios, getVersion, updateConfigs } from "@/services/api";
+import { getAxios, getVersion } from "@/services/api";
 import {
   getClashInfo,
   patchClashConfig,
@@ -10,16 +10,15 @@ import {
 export const useClash = () => {
   const { data: clash, mutate: mutateClash } = useSWR(
     "getRuntimeConfig",
-    getRuntimeConfig
+    getRuntimeConfig,
   );
 
   const { data: versionData, mutate: mutateVersion } = useSWR(
     "getVersion",
-    getVersion
+    getVersion,
   );
 
   const patchClash = useLockFn(async (patch: Partial<IConfigData>) => {
-    await updateConfigs(patch);
     await patchClashConfig(patch);
     mutateClash();
   });
@@ -27,8 +26,8 @@ export const useClash = () => {
   const version = versionData?.premium
     ? `${versionData.version} Premium`
     : versionData?.meta
-    ? `${versionData.version} Mihomo`
-    : versionData?.version || "-";
+      ? `${versionData.version} Mihomo`
+      : versionData?.version || "-";
 
   return {
     clash,
@@ -42,7 +41,7 @@ export const useClash = () => {
 export const useClashInfo = () => {
   const { data: clashInfo, mutate: mutateInfo } = useSWR(
     "getClashInfo",
-    getClashInfo
+    getClashInfo,
   );
 
   const patchInfo = async (
@@ -57,7 +56,7 @@ export const useClashInfo = () => {
         | "external-controller"
         | "secret"
       >
-    >
+    >,
   ) => {
     const hasInfo =
       patch["redir-port"] != null ||

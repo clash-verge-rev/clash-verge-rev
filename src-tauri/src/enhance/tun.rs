@@ -1,4 +1,3 @@
-use crate::{core::service, log_err};
 use serde_yaml::{Mapping, Value};
 
 macro_rules! revise {
@@ -9,6 +8,7 @@ macro_rules! revise {
 }
 
 // if key not exists then append value
+#[allow(unused_macros)]
 macro_rules! append {
     ($map: expr, $key: expr, $val: expr) => {
         let ret_key = Value::String($key.into());
@@ -21,58 +21,33 @@ macro_rules! append {
 pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
-
-    if !enable && tun_val.is_none() {
-        return config;
-    }
-
     let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
-
-    revise!(tun_val, "enable", enable);
-
-    revise!(config, "tun", tun_val);
-
-    if enable {
-        log_err!(service::set_dns_by_service().await);
-        use_dns_for_tun(config)
-    } else {
-        log_err!(service::unset_dns_by_service().await);
-        config
-    }
-}
-
-fn use_dns_for_tun(mut config: Mapping) -> Mapping {
     let dns_key = Value::from("dns");
     let dns_val = config.get(&dns_key);
-
     let mut dns_val = dns_val.map_or(Mapping::new(), |val| {
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
 
-    // 开启tun将同时开启dns
-    revise!(dns_val, "enable", true);
+    if enable {
+        revise!(dns_val, "enable", true);
+        revise!(dns_val, "ipv6", true);
+        revise!(dns_val, "enhanced-mode", "fake-ip");
+        revise!(dns_val, "fake-ip-range", "10.96.0.0/16");
+        #[cfg(target_os = "macos")]
+        {
+            crate::utils::resolve::restore_public_dns().await;
+            crate::utils::resolve::set_public_dns("10.96.0.2".to_string()).await;
+        }
+    } else {
+        revise!(dns_val, "enhanced-mode", "redir-host");
+        #[cfg(target_os = "macos")]
+        crate::utils::resolve::restore_public_dns().await;
+    }
 
-    append!(dns_val, "enhanced-mode", "fake-ip");
-    append!(dns_val, "fake-ip-range", "198.18.0.1/16");
-    append!(
-        dns_val,
-        "nameserver",
-        vec!["114.114.114.114", "223.5.5.5", "8.8.8.8"]
-    );
-    append!(dns_val, "fallback", vec![] as Vec<&str>);
-
-    #[cfg(target_os = "windows")]
-    append!(
-        dns_val,
-        "fake-ip-filter",
-        vec![
-            "dns.msftncsi.com",
-            "www.msftncsi.com",
-            "www.msftconnecttest.com"
-        ]
-    );
+    revise!(tun_val, "enable", enable);
+    revise!(config, "tun", tun_val);
     revise!(config, "dns", dns_val);
     config
 }

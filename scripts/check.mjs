@@ -1,11 +1,14 @@
-import fs from "fs-extra";
+import fs from "fs";
+import fsp from "fs/promises";
 import zlib from "zlib";
-import tar from "tar";
+import { extract } from "tar";
 import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
 import proxyAgent from "https-proxy-agent";
 import { execSync } from "child_process";
+import { log_info, log_debug, log_error, log_success } from "./utils.mjs";
+import { glob } from "glob";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
@@ -91,9 +94,9 @@ async function getLatestAlphaVersion() {
     });
     let v = await response.text();
     META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
-    console.log(`Latest alpha version: ${META_ALPHA_VERSION}`);
+    log_info(`Latest alpha version: ${META_ALPHA_VERSION}`);
   } catch (error) {
-    console.error("Error fetching latest alpha version:", error.message);
+    log_error("Error fetching latest alpha version:", error.message);
     process.exit(1);
   }
 }
@@ -138,9 +141,9 @@ async function getLatestReleaseVersion() {
     });
     let v = await response.text();
     META_VERSION = v.trim(); // Trim to remove extra whitespaces
-    console.log(`Latest release version: ${META_VERSION}`);
+    log_info(`Latest release version: ${META_VERSION}`);
   } catch (error) {
-    console.error("Error fetching latest release version:", error.message);
+    log_error("Error fetching latest release version:", error.message);
     process.exit(1);
   }
 }
@@ -150,13 +153,13 @@ async function getLatestReleaseVersion() {
  */
 if (!META_MAP[`${platform}-${arch}`]) {
   throw new Error(
-    `clash meta alpha unsupported platform "${platform}-${arch}"`
+    `clash meta alpha unsupported platform "${platform}-${arch}"`,
   );
 }
 
 if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
   throw new Error(
-    `clash meta alpha unsupported platform "${platform}-${arch}"`
+    `clash meta alpha unsupported platform "${platform}-${arch}"`,
   );
 }
 
@@ -205,44 +208,44 @@ async function resolveSidecar(binInfo) {
   const sidecarDir = path.join(cwd, "src-tauri", "sidecar");
   const sidecarPath = path.join(sidecarDir, targetFile);
 
-  await fs.mkdirp(sidecarDir);
-  if (!FORCE && (await fs.pathExists(sidecarPath))) return;
+  await fsp.mkdir(sidecarDir, { recursive: true });
+  if (!FORCE && fs.existsSync(sidecarPath)) return;
 
   const tempDir = path.join(TEMP_DIR, name);
   const tempZip = path.join(tempDir, zipFile);
   const tempExe = path.join(tempDir, exeFile);
 
-  await fs.mkdirp(tempDir);
+  await fsp.mkdir(tempDir, { recursive: true });
   try {
-    if (!(await fs.pathExists(tempZip))) {
+    if (!fs.existsSync(tempZip)) {
       await downloadFile(downloadURL, tempZip);
     }
 
     if (zipFile.endsWith(".zip")) {
       const zip = new AdmZip(tempZip);
       zip.getEntries().forEach((entry) => {
-        console.log(`[DEBUG]: "${name}" entry name`, entry.entryName);
+        log_debug(`"${name}" entry name`, entry.entryName);
       });
       zip.extractAllTo(tempDir, true);
-      await fs.rename(tempExe, sidecarPath);
-      console.log(`[INFO]: "${name}" unzip finished`);
+      await fsp.rename(tempExe, sidecarPath);
+      log_success(`unzip finished: "${name}"`);
     } else if (zipFile.endsWith(".tgz")) {
       // tgz
-      await fs.mkdirp(tempDir);
-      await tar.extract({
+      await fsp.mkdir(tempDir, { recursive: true });
+      await extract({
         cwd: tempDir,
         file: tempZip,
         //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
       });
-      const files = await fs.readdir(tempDir);
-      console.log(`[DEBUG]: "${name}" files in tempDir:`, files);
+      const files = await fsp.readdir(tempDir);
+      log_debug(`"${name}" files in tempDir:`, files);
       const extractedFile = files.find((file) => file.startsWith("虚空终端-"));
       if (extractedFile) {
         const extractedFilePath = path.join(tempDir, extractedFile);
-        await fs.rename(extractedFilePath, sidecarPath);
-        console.log(`[INFO]: "${name}" file renamed to "${sidecarPath}"`);
+        await fsp.rename(extractedFilePath, sidecarPath);
+        log_success(`"${name}" file renamed to "${sidecarPath}"`);
         execSync(`chmod 755 ${sidecarPath}`);
-        console.log(`[INFO]: "${name}" chmod binary finished`);
+        log_success(`chmod binary finished: "${name}"`);
       } else {
         throw new Error(`Expected file not found in ${tempDir}`);
       }
@@ -252,16 +255,15 @@ async function resolveSidecar(binInfo) {
       const writeStream = fs.createWriteStream(sidecarPath);
       await new Promise((resolve, reject) => {
         const onError = (error) => {
-          console.error(`[ERROR]: "${name}" gz failed:`, error.message);
+          log_error(`"${name}" gz failed:`, error.message);
           reject(error);
         };
         readStream
           .pipe(zlib.createGunzip().on("error", onError))
           .pipe(writeStream)
           .on("finish", () => {
-            console.log(`[INFO]: "${name}" gunzip finished`);
             execSync(`chmod 755 ${sidecarPath}`);
-            console.log(`[INFO]: "${name}" chmod binary finished`);
+            log_success(`chmod binary finished: "${name}"`);
             resolve();
           })
           .on("error", onError);
@@ -269,35 +271,58 @@ async function resolveSidecar(binInfo) {
     }
   } catch (err) {
     // 需要删除文件
-    await fs.remove(sidecarPath);
+    await fsp.rm(sidecarPath, { recursive: true, force: true });
     throw err;
   } finally {
     // delete temp dir
-    await fs.remove(tempDir);
+    await fsp.rm(tempDir, { recursive: true, force: true });
   }
 }
+
+const resolveSetDnsScript = () =>
+  resolveResource({
+    file: "set_dns.sh",
+    localPath: path.join(cwd, "scripts/set_dns.sh"),
+  });
+const resolveUnSetDnsScript = () =>
+  resolveResource({
+    file: "unset_dns.sh",
+    localPath: path.join(cwd, "scripts/unset_dns.sh"),
+  });
 
 /**
  * download the file to the resources dir
  */
 async function resolveResource(binInfo) {
-  const { file, downloadURL } = binInfo;
+  const { file, downloadURL, localPath } = binInfo;
 
   const resDir = path.join(cwd, "src-tauri/resources");
   const targetPath = path.join(resDir, file);
 
-  if (!FORCE && (await fs.pathExists(targetPath))) return;
+  if (!FORCE && fs.existsSync(targetPath)) return;
 
-  await fs.mkdirp(resDir);
-  await downloadFile(downloadURL, targetPath);
+  if (downloadURL) {
+    await fsp.mkdir(resDir, { recursive: true });
+    await downloadFile(downloadURL, targetPath);
+  }
 
-  console.log(`[INFO]: ${file} finished`);
+  if (localPath) {
+    await fs.copyFile(localPath, targetPath, (err) => {
+      if (err) {
+        console.error("Error copying file:", err);
+      } else {
+        console.log("File was copied successfully");
+      }
+    });
+    log_debug(`copy file finished: "${localPath}"`);
+  }
+
+  log_success(`${file} finished`);
 }
 
 /**
  * download file and save to `path`
- */
-async function downloadFile(url, path) {
+ */ async function downloadFile(url, path) {
   const options = {};
 
   const httpProxy =
@@ -316,9 +341,9 @@ async function downloadFile(url, path) {
     headers: { "Content-Type": "application/octet-stream" },
   });
   const buffer = await response.arrayBuffer();
-  await fs.writeFile(path, new Uint8Array(buffer));
+  await fsp.writeFile(path, new Uint8Array(buffer));
 
-  console.log(`[INFO]: download finished "${url}"`);
+  log_success(`download finished: ${url}`);
 }
 
 // SimpleSC.dll
@@ -329,43 +354,46 @@ const resolvePlugin = async () => {
   const tempDir = path.join(TEMP_DIR, "SimpleSC");
   const tempZip = path.join(
     tempDir,
-    "NSIS_Simple_Service_Plugin_Unicode_1.30.zip"
+    "NSIS_Simple_Service_Plugin_Unicode_1.30.zip",
   );
   const tempDll = path.join(tempDir, "SimpleSC.dll");
   const pluginDir = path.join(process.env.APPDATA, "Local/NSIS");
   const pluginPath = path.join(pluginDir, "SimpleSC.dll");
-  await fs.mkdirp(pluginDir);
-  await fs.mkdirp(tempDir);
-  if (!FORCE && (await fs.pathExists(pluginPath))) return;
+  await fsp.mkdir(pluginDir, { recursive: true });
+  await fsp.mkdir(tempDir, { recursive: true });
+  if (!FORCE && fs.existsSync(pluginPath)) return;
   try {
-    if (!(await fs.pathExists(tempZip))) {
+    if (!fs.existsSync(tempZip)) {
       await downloadFile(url, tempZip);
     }
     const zip = new AdmZip(tempZip);
     zip.getEntries().forEach((entry) => {
-      console.log(`[DEBUG]: "SimpleSC" entry name`, entry.entryName);
+      log_debug(`"SimpleSC" entry name`, entry.entryName);
     });
     zip.extractAllTo(tempDir, true);
-    await fs.copyFile(tempDll, pluginPath);
-    console.log(`[INFO]: "SimpleSC" unzip finished`);
+    await fsp.cp(tempDll, pluginPath, { recursive: true, force: true });
+    log_success(`unzip finished: "SimpleSC"`);
   } finally {
-    await fs.remove(tempDir);
+    await fsp.rm(tempDir, { recursive: true, force: true });
   }
 };
 
 // service chmod
 const resolveServicePermission = async () => {
   const serviceExecutables = [
-    "clash-verge-service",
-    "install-service",
-    "uninstall-service",
+    "clash-verge-service*",
+    "install-service*",
+    "uninstall-service*",
   ];
   const resDir = path.join(cwd, "src-tauri/resources");
   for (let f of serviceExecutables) {
-    const targetPath = path.join(resDir, f);
-    if (await fs.pathExists(targetPath)) {
-      execSync(`chmod 755 ${targetPath}`);
-      console.log(`[INFO]: "${targetPath}" chmod finished`);
+    // 使用glob模块来处理通配符
+    const files = glob.sync(path.join(resDir, f));
+    for (let filePath of files) {
+      if (fs.existsSync(filePath)) {
+        execSync(`chmod 755 ${filePath}`);
+        log_success(`chmod finished: "${filePath}"`);
+      }
     }
   }
 };
@@ -373,29 +401,32 @@ const resolveServicePermission = async () => {
 /**
  * main
  */
-
 const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () => {
   let ext = platform === "win32" ? ".exe" : "";
+  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
-    file: "clash-verge-service" + ext,
+    file: "clash-verge-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
   });
 };
 
 const resolveInstall = () => {
   let ext = platform === "win32" ? ".exe" : "";
+  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
-    file: "install-service" + ext,
+    file: "install-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/install-service${ext}`,
   });
 };
 
 const resolveUninstall = () => {
   let ext = platform === "win32" ? ".exe" : "";
+  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
+
   resolveResource({
-    file: "uninstall-service" + ext,
+    file: "uninstall-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
   });
 };
@@ -419,6 +450,12 @@ const resolveEnableLoopback = () =>
   resolveResource({
     file: "enableLoopback.exe",
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`,
+  });
+
+const resolveWinSysproxy = () =>
+  resolveResource({
+    file: "sysproxy.exe",
+    downloadURL: `https://github.com/clash-verge-rev/sysproxy/releases/download/${arch}/sysproxy.exe`,
   });
 
 const tasks = [
@@ -454,6 +491,24 @@ const tasks = [
     retry: 1,
     unixOnly: true,
   },
+  {
+    name: "windows-sysproxy",
+    func: resolveWinSysproxy,
+    retry: 5,
+    winOnly: true,
+  },
+  {
+    name: "set_dns_script",
+    func: resolveSetDnsScript,
+    retry: 5,
+    macosOnly: true,
+  },
+  {
+    name: "unset_dns_script",
+    func: resolveUnSetDnsScript,
+    retry: 5,
+    macosOnly: true,
+  },
 ];
 
 async function runTask() {
@@ -462,13 +517,14 @@ async function runTask() {
   if (task.winOnly && platform !== "win32") return runTask();
   if (task.linuxOnly && platform !== "linux") return runTask();
   if (task.unixOnly && platform === "win32") return runTask();
+  if (task.macosOnly && platform !== "darwin") return runTask();
 
   for (let i = 0; i < task.retry; i++) {
     try {
       await task.func();
       break;
     } catch (err) {
-      console.error(`[ERROR]: task::${task.name} try ${i} ==`, err.message);
+      log_error(`task::${task.name} try ${i} ==`, err.message);
       if (i === task.retry - 1) throw err;
     }
   }

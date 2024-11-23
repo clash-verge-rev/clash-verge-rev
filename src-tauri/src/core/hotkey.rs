@@ -1,14 +1,13 @@
+use crate::core::handle;
 use crate::{config::Config, feat, log_err};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
-use tauri::AppHandle;
-use tauri_plugin_global_shortcut::GlobalShortcutExt;
-
+use tauri::Manager;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
-    app_handle: Arc<Mutex<Option<AppHandle>>>,
 }
 
 impl Hotkey {
@@ -17,12 +16,10 @@ impl Hotkey {
 
         HOTKEY.get_or_init(|| Hotkey {
             current: Arc::new(Mutex::new(Vec::new())),
-            app_handle: Arc::new(Mutex::new(None)),
         })
     }
 
-    pub fn init(&self, app_handle: &AppHandle) -> Result<()> {
-        *self.app_handle.lock() = Some(app_handle.clone());
+    pub fn init(&self) -> Result<()> {
         let verge = Config::verge();
 
         if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
@@ -48,12 +45,9 @@ impl Hotkey {
         Ok(())
     }
 
-    fn register(&self, hotkey: &str, func: &str) -> Result<()> {
-        let app_handle = self.app_handle.lock();
-        if app_handle.is_none() {
-            bail!("failed to get the hotkey manager");
-        }
-        let manager = app_handle.as_ref().unwrap().global_shortcut();
+    pub fn register(&self, hotkey: &str, func: &str) -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let manager = app_handle.global_shortcut();
 
         if manager.is_registered(hotkey) {
             manager.unregister(hotkey)?;
@@ -66,23 +60,35 @@ impl Hotkey {
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
             "toggle_system_proxy" => feat::toggle_system_proxy,
             "toggle_tun_mode" => feat::toggle_tun_mode,
+            "quit" => || feat::quit(Some(0)),
+
             _ => bail!("invalid function \"{func}\""),
         };
 
-        let _ = manager.on_shortcut(hotkey, move |_, _, _| f());
-        log::info!(target: "app", "register hotkey {hotkey} {func}");
+        let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey, event| {
+            if event.state == ShortcutState::Pressed {
+                if hotkey.key == Code::KeyQ {
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        if window.is_focused().unwrap_or(false) {
+                            f();
+                        }
+                    }
+                } else {
+                    f();
+                }
+            }
+        });
+
+        log::debug!(target: "app", "register hotkey {hotkey} {func}");
         Ok(())
     }
 
-    fn unregister(&self, hotkey: &str) -> Result<()> {
-        let app_handle = self.app_handle.lock();
-        if app_handle.is_none() {
-            bail!("failed to get the hotkey manager");
-        }
-        let manager = app_handle.as_ref().unwrap().global_shortcut();
+    pub fn unregister(&self, hotkey: &str) -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let manager = app_handle.global_shortcut();
         manager.unregister(hotkey)?;
 
-        log::info!(target: "app", "unregister hotkey {hotkey}");
+        log::debug!(target: "app", "unregister hotkey {hotkey}");
         Ok(())
     }
 
@@ -105,7 +111,7 @@ impl Hotkey {
         Ok(())
     }
 
-    fn get_map_from_vec(hotkeys: &Vec<String>) -> HashMap<&str, &str> {
+    fn get_map_from_vec(hotkeys: &[String]) -> HashMap<&str, &str> {
         let mut map = HashMap::new();
 
         hotkeys.iter().for_each(|hotkey| {
@@ -153,10 +159,9 @@ impl Hotkey {
 
 impl Drop for Hotkey {
     fn drop(&mut self) {
-        if let Some(app_handle) = self.app_handle.lock().as_ref() {
-            if let Err(e) = app_handle.global_shortcut().unregister_all() {
-                log::error!("Error unregistering all hotkeys: {:?}", e);
-            }
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        if let Err(e) = app_handle.global_shortcut().unregister_all() {
+            log::error!(target:"app", "Error unregistering all hotkeys: {:?}", e);
         }
     }
 }

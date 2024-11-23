@@ -23,6 +23,7 @@ import { ThemeViewer } from "./mods/theme-viewer";
 import { GuardState } from "./mods/guard-state";
 import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
+import { BackupViewer } from "./mods/backup-viewer";
 import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
@@ -52,6 +53,7 @@ const SettingVerge = ({ onError }: Props) => {
   const themeRef = useRef<DialogRef>(null);
   const layoutRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
+  const backupRef = useRef<DialogRef>(null);
 
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -83,6 +85,7 @@ const SettingVerge = ({ onError }: Props) => {
       <MiscViewer ref={miscRef} />
       <LayoutViewer ref={layoutRef} />
       <UpdateViewer ref={updateRef} />
+      <BackupViewer ref={backupRef} />
 
       <SettingItem label={t("Language")}>
         <GuardState
@@ -194,9 +197,9 @@ const SettingVerge = ({ onError }: Props) => {
                         },
                       ],
                     });
-                    if (selected?.path.length) {
-                      onChangeData({ startup_script: `${selected.path}` });
-                      patchVerge({ startup_script: `${selected.path}` });
+                    if (selected) {
+                      onChangeData({ startup_script: `${selected}` });
+                      patchVerge({ startup_script: `${selected}` });
                     }
                   }}
                 >
@@ -239,11 +242,22 @@ const SettingVerge = ({ onError }: Props) => {
       />
 
       <SettingItem
+        onClick={() => backupRef.current?.open()}
+        label={t("Backup Setting")}
+        extra={
+          <TooltipIcon
+            title={t("Backup Setting Info")}
+            sx={{ opacity: "0.7" }}
+          />
+        }
+      />
+
+      <SettingItem
         onClick={() => configRef.current?.open()}
         label={t("Runtime Config")}
       />
 
-      <SettingItem onClick={openAppDir} label={t("Open App Dir")} />
+      <SettingItem onClick={openAppDir} label={t("Open Conf Dir")} />
 
       <SettingItem onClick={openCoreDir} label={t("Open Core Dir")} />
 

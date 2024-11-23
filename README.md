@@ -25,7 +25,7 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
 ---
 
-### TG Group: [@clash_verge_rev](https://t.me/clash_verge_rev)
+### TG 频道: [@clash_verge_rev](https://t.me/clash_verge_re)
 
 ## Promotion
 

@@ -1,5 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
   "bundle": {
     "targets": ["nsis"],
     "windows": {
@@ -15,14 +16,16 @@
         "installerIcon": "icons/icon.ico",
         "languages": ["SimpChinese", "English"],
         "installMode": "perMachine",
-        "template": "./template/installer.nsi"
+        "template": "./packages/windows/installer.nsi"
       }
     }
   },
   "app": {
     "trayIcon": {
       "iconPath": "icons/tray-icon.ico",
-      "iconAsTemplate": true
-    }
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
+    },
+    "windows": []
   }
 }
