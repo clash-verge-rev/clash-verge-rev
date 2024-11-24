@@ -697,25 +697,62 @@ Var VC_REDIST_URL
 Var VC_REDIST_EXE
 
 Section CheckAndInstallVSRuntime
+    ; 检查是否已安装 Visual C++ Redistributable
     ${If} ${IsNativeARM64}
         StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
         StrCpy $VC_REDIST_EXE "vc_redist.arm64.exe"
-        IfFileExists "$SYSDIR\msvcp140.dll" Done
+        
+        ; 检查关键DLL
+        IfFileExists "$SYSDIR\vcruntime140.dll" 0 checkInstall
+        IfFileExists "$SYSDIR\msvcp140.dll" Done checkInstall
+        
     ${ElseIf} ${RunningX64}
         StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x64.exe"
         StrCpy $VC_REDIST_EXE "vc_redist.x64.exe"
-        IfFileExists "$WINDIR\SysWOW64\msvcp140.dll" Done
+        
+        ; 检查关键DLL
+        IfFileExists "$SYSDIR\vcruntime140.dll" 0 checkInstall
+        IfFileExists "$SYSDIR\msvcp140.dll" Done checkInstall
+        
     ${Else}
         StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
         StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
-        IfFileExists "$SYSDIR\msvcp140.dll" Done
+        
+        ; 检查关键DLL
+        IfFileExists "$SYSDIR\vcruntime140.dll" 0 checkInstall  
+        IfFileExists "$SYSDIR\msvcp140.dll" Done checkInstall
     ${EndIf}
 
-    ; 下载并安装VC运行库
+    checkInstall:
+    ; 检查注册表
+    ${If} ${RunningX64}
+        SetRegView 64
+        ReadRegDword $R0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\${ARCH}" "Installed"
+        ${If} $R0 == "1"
+            Goto Done
+        ${EndIf}
+    ${Else}
+        ReadRegDword $R0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x86" "Installed"
+        ${If} $R0 == "1"
+            Goto Done
+        ${EndIf}
+    ${EndIf}
+
+    ; 如果没有安装,则下载并安装
+    DetailPrint "正在下载 Visual C++ Redistributable..."
     nsisdl::download "$VC_REDIST_URL" "$TEMP\$VC_REDIST_EXE"
     Pop $0
     ${If} $0 == "success"
-        nsExec::Exec '"$TEMP\$VC_REDIST_EXE" /quiet /norestart'
+        DetailPrint "正在安装 Visual C++ Redistributable..."
+        ExecWait '"$TEMP\$VC_REDIST_EXE" /quiet /norestart' $0
+        ${If} $0 == 0
+            DetailPrint "Visual C++ Redistributable 安装成功"
+        ${Else}
+            DetailPrint "Visual C++ Redistributable 安装失败"
+        ${EndIf}
+        Delete "$TEMP\$VC_REDIST_EXE"
+    ${Else}
+        DetailPrint "Visual C++ Redistributable 下载失败"
     ${EndIf}
     
     Done:
