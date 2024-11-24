@@ -728,6 +728,12 @@ Section Install
   nsExec::Exec 'netsh int tcp res'
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
+
+  ; Delete old files before installation
+    ; Delete clash-verge.desktop
+  IfFileExists "$INSTDIR\Clash Verge.exe" 0 +2
+    Delete "$INSTDIR\Clash Verge.exe"
+  
   ; Copy main executable
   File "${MAINBINARYSRCPATH}"
 
