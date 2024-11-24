@@ -99,17 +99,41 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 }
 
 /// open file
-/// use vscode by default
+/// try to use vscode first, if not found then use system default app
 pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
     #[cfg(target_os = "macos")]
     let code = "Visual Studio Code";
     #[cfg(not(target_os = "macos"))]
     let code = "code";
-    if let Err(err) = open::with(&path.as_os_str(), code) {
-        log::error!(target: "app", "Can not open file with VS code, {}", err);
-        // default open
-        app.shell().open(path.to_string_lossy(), None)?;
+
+    #[cfg(target_os = "windows")]
+    let vscode_exists = {
+        use std::process::Command;
+        Command::new("where").arg("code").output().is_ok()
     };
+
+    #[cfg(target_os = "macos")]
+    let vscode_exists = {
+        use std::process::Command;
+        Command::new("which").arg("code").output().is_ok()
+    };
+
+    #[cfg(target_os = "linux")]
+    let vscode_exists = {
+        use std::process::Command;
+        Command::new("which").arg("code").output().is_ok()
+    };
+
+    // 如果 VS Code 存在就用它打开，否则用系统默认程序
+    if vscode_exists {
+        if let Err(err) = open::with(&path.as_os_str(), code) {
+            log::error!(target: "app", "Failed to open with VS Code: {}", err);
+            app.shell().open(path.to_string_lossy(), None)?;
+        }
+    } else {
+        app.shell().open(path.to_string_lossy(), None)?;
+    }
+
     Ok(())
 }
 
