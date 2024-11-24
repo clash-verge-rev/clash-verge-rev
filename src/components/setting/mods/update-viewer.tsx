@@ -79,7 +79,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       },
     );
     try {
-      await updateInfo.install();
+      await updateInfo.downloadAndInstall();
       await relaunch();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
