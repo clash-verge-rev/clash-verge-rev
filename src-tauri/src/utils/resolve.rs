@@ -37,7 +37,7 @@ pub fn find_unused_port() -> Result<u16> {
 /// handle something when start app
 pub async fn resolve_setup(app: &mut App) {
     error::redirect_panic_to_log();
-    #[cfg(target_os = "macos")]
+    // #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
     let version = app.package_info().version.to_string();
 
