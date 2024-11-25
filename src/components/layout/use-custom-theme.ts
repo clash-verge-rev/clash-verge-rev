@@ -90,7 +90,7 @@ export const useCustomTheme = () => {
     }
 
     // css
-    const backgroundColor = mode === "light" ? "#f0f0f0" : "#2e303d";
+    const backgroundColor = mode === "light" ? "#ECECEC" : "#2e303d";
     const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
     const scrollColor = mode === "light" ? "#90939980" : "#54545480";
     const dividerColor =
