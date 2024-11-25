@@ -4,7 +4,6 @@ use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf, str::FromStr};
-use tauri_plugin_shell::ShellExt;
 
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
@@ -99,41 +98,8 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 }
 
 /// open file
-/// try to use vscode first, if not found then use system default app
-pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
-    #[cfg(target_os = "macos")]
-    let code = "Visual Studio Code";
-    #[cfg(not(target_os = "macos"))]
-    let code = "code";
-
-    #[cfg(target_os = "windows")]
-    let vscode_exists = {
-        use std::process::Command;
-        Command::new("where").arg("code").output().is_ok()
-    };
-
-    #[cfg(target_os = "macos")]
-    let vscode_exists = {
-        use std::process::Command;
-        Command::new("which").arg("code").output().is_ok()
-    };
-
-    #[cfg(target_os = "linux")]
-    let vscode_exists = {
-        use std::process::Command;
-        Command::new("which").arg("code").output().is_ok()
-    };
-
-    // 如果 VS Code 存在就用它打开，否则用系统默认程序
-    if vscode_exists {
-        if let Err(err) = app.shell().open(&path.as_os_str(), code) {
-            log::error!(target: "app", "Failed to open with VS Code: {}", err);
-            app.shell().open(path.to_string_lossy(), None)?;
-        }
-    } else {
-        app.shell().open(path.to_string_lossy(), None)?;
-    }
-
+pub fn open_file(_: tauri::AppHandle, path: PathBuf) -> Result<()> {
+    open::that_detached(&path.as_os_str())?;
     Ok(())
 }
 
