@@ -1,7 +1,7 @@
 import useSWR, { mutate } from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, Grid, IconButton, Stack, Divider } from "@mui/material";
+import { Box, Button, IconButton, Stack, Divider, Grid2 } from "@mui/material";
 import {
   DndContext,
   closestCenter,
@@ -372,14 +372,14 @@ const ProfilePage = () => {
           onDragEnd={onDragEnd}
         >
           <Box sx={{ mb: 1.5 }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
+            <Grid2 container spacing={{ xs: 1, lg: 1 }}>
               <SortableContext
                 items={profileItems.map((x) => {
                   return x.uid;
                 })}
               >
                 {profileItems.map((item) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={item.file}>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
                     <ProfileItem
                       id={item.uid}
                       selected={profiles.current === item.uid}
@@ -394,10 +394,10 @@ const ProfilePage = () => {
                       }}
                       onDelete={() => onDelete(item.uid)}
                     />
-                  </Grid>
+                  </Grid2>
                 ))}
               </SortableContext>
-            </Grid>
+            </Grid2>
           </Box>
         </DndContext>
         <Divider
@@ -406,8 +406,8 @@ const ProfilePage = () => {
           sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
         ></Divider>
         <Box sx={{ mt: 1.5 }}>
-          <Grid container spacing={{ xs: 1, lg: 1 }}>
-            <Grid item xs={12} sm={6} md={6} lg={6}>
+          <Grid2 container spacing={{ xs: 1, lg: 1 }}>
+            <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
               <ProfileMore
                 id="Merge"
                 onSave={async (prev, curr) => {
@@ -416,8 +416,8 @@ const ProfilePage = () => {
                   }
                 }}
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={6} lg={6}>
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
               <ProfileMore
                 id="Script"
                 logInfo={chainLogs["Script"]}
@@ -427,8 +427,8 @@ const ProfilePage = () => {
                   }
                 }}
               />
-            </Grid>
-          </Grid>
+            </Grid2>
+          </Grid2>
         </Box>
       </Box>
 
