@@ -16,6 +16,12 @@
       "identifier": "fs:scope",
       "allow": ["$APPDATA/**", "$RESOURCE/../**", "**"]
     },
+    "fs:allow-app-read",
+    "fs:allow-app-read-recursive",
+    "fs:allow-appcache-read",
+    "fs:allow-appcache-read-recursive",
+    "fs:allow-appconfig-read",
+    "fs:allow-appconfig-read-recursive",
     "core:window:allow-create",
     "core:window:allow-center",
     "core:window:allow-request-user-attention",

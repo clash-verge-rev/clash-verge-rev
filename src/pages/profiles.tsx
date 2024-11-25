@@ -2,6 +2,7 @@ import useSWR, { mutate } from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Box, Button, IconButton, Stack, Divider, Grid2 } from "@mui/material";
+import { FileDropEvent, getCurrent } from "@tauri-apps/plugin-window";
 import {
   DndContext,
   closestCenter,
@@ -25,7 +26,6 @@ import {
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
-  getProfiles,
   importProfile,
   enhanceProfiles,
   getRuntimeLogs,
@@ -45,12 +45,14 @@ import { ProfileMore } from "@/components/profile/profile-more";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
-import { throttle } from "lodash-es";
+import { add, throttle } from "lodash-es";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { useLocation } from "react-router-dom";
 import { useListen } from "@/hooks/use-listen";
+import { listen } from "@tauri-apps/api/event";
+import { TauriEvent } from "@tauri-apps/api/event";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -69,30 +71,42 @@ const ProfilePage = () => {
   const { current } = location.state || {};
 
   useEffect(() => {
-    const unlisten = addListener("tauri://file-drop", async (event) => {
-      const fileList = event.payload as string[];
-      for (let file of fileList) {
-        if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-          Notice.error(t("Only YAML Files Supported"));
-          continue;
-        }
-        const item = {
-          type: "local",
-          name: file.split(/\/|\\/).pop() ?? "New Profile",
-          desc: "",
-          url: "",
-          option: {
-            with_proxy: false,
-            self_proxy: false,
-          },
-        } as IProfileItem;
-        let data = await readTextFile(file);
-        await createProfile(item, data);
-        await mutateProfiles();
-      }
-    });
+    const handleFileDrop = async () => {
+      const unlisten = await addListener(
+        TauriEvent.DRAG_DROP,
+        async (event: any) => {
+          console.log("文件拖放事件:", event);
+          const paths = event.payload.paths;
+
+          for (let file of paths) {
+            if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
+              Notice.error(t("Only YAML Files Supported"));
+              continue;
+            }
+            const item = {
+              type: "local",
+              name: file.split(/\/|\\/).pop() ?? "New Profile",
+              desc: "",
+              url: "",
+              option: {
+                with_proxy: false,
+                self_proxy: false,
+              },
+            } as IProfileItem;
+            let data = await readTextFile(file);
+            await createProfile(item, data);
+            await mutateProfiles();
+          }
+        },
+      );
+
+      return unlisten;
+    };
+
+    const unsubscribe = handleFileDrop();
+
     return () => {
-      unlisten.then((fn) => fn());
+      unsubscribe.then((cleanup) => cleanup());
     };
   }, []);
 
