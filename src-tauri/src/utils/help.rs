@@ -126,7 +126,7 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
 
     // 如果 VS Code 存在就用它打开，否则用系统默认程序
     if vscode_exists {
-        if let Err(err) = open::with(&path.as_os_str(), code) {
+        if let Err(err) = app.shell().open(&path.as_os_str(), code) {
             log::error!(target: "app", "Failed to open with VS Code: {}", err);
             app.shell().open(path.to_string_lossy(), None)?;
         }
