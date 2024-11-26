@@ -148,7 +148,7 @@ pub fn create_window() {
         }).join().unwrap()
     }.unwrap();
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
     let window = tauri::WebviewWindowBuilder::new(
         &app_handle,
         "main".to_string(),
@@ -160,6 +160,13 @@ pub fn create_window() {
     .min_inner_size(600.0, 520.0)
     .build()
     .unwrap();
+
+    #[cfg(target_os = "linux")]
+    let window = builder
+        .decorations(false)
+        .transparent(true)
+        .build()
+        .unwrap();
 
     match window.restore_state(StateFlags::all()) {
         Ok(_) => {
