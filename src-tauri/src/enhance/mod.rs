@@ -60,6 +60,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         global_merge,
         global_script,
         profile_name,
+        dns_enhanced_mode,
     ) = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
@@ -130,6 +131,13 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             .and_then(|item| item.name.clone())
             .unwrap_or_default();
 
+        let dns_enhanced_mode = current
+            .get("dns")
+            .and_then(|val| val.get("enhanced-mode"))
+            .and_then(|val| val.as_str())
+            .unwrap_or("redir-host")
+            .to_string();
+
         (
             current,
             merge,
@@ -140,6 +148,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             global_merge,
             global_script,
             name,
+            dns_enhanced_mode,
         )
     };
 
@@ -259,7 +268,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             });
     }
 
-    config = use_tun(config, enable_tun).await;
+    config = use_tun(config, enable_tun, dns_enhanced_mode).await;
     config = use_sort(config);
 
     let mut exists_set = HashSet::new();
