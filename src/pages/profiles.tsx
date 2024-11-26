@@ -1,8 +1,7 @@
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Box, Button, IconButton, Stack, Divider, Grid2 } from "@mui/material";
-import { FileDropEvent, getCurrent } from "@tauri-apps/plugin-window";
 import {
   DndContext,
   closestCenter,
@@ -75,7 +74,6 @@ const ProfilePage = () => {
       const unlisten = await addListener(
         TauriEvent.DRAG_DROP,
         async (event: any) => {
-          console.log("文件拖放事件:", event);
           const paths = event.payload.paths;
 
           for (let file of paths) {
@@ -131,9 +129,7 @@ const ProfilePage = () => {
 
     const type1 = ["local", "remote"];
 
-    const profileItems = items.filter((i) => i && type1.includes(i.type!));
-
-    return profileItems;
+    return items.filter((i) => i && type1.includes(i.type!));
   }, [profiles]);
 
   const currentActivatings = () => {
