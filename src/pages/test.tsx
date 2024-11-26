@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVerge } from "@/hooks/use-verge";
 import { Box, Button } from "@mui/material";
 import Grid2 from "@mui/material/Grid2";
@@ -22,6 +22,7 @@ import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
 import { TestItem } from "@/components/test/test-item";
 import { emit } from "@tauri-apps/api/event";
 import { nanoid } from "nanoid";
+import { ScrollTopButton } from "@/components/layout/scroll-top-button";
 
 // test icons
 import apple from "@/assets/image/test/apple.svg?raw";
@@ -121,6 +122,19 @@ const TestPage = () => {
   }, [verge]);
 
   const viewerRef = useRef<TestViewerRef>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTop = () => {
+    containerRef.current?.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const handleScroll = (e: any) => {
+    setShowScrollTop(e.target.scrollTop > 100);
+  };
 
   return (
     <BasePage
@@ -146,10 +160,15 @@ const TestPage = () => {
       }
     >
       <Box
+        ref={containerRef}
+        onScroll={handleScroll}
         sx={{
           pt: 1.25,
           mb: 0.5,
           px: "10px",
+          height: "calc(100vh - 100px)",
+          overflow: "auto",
+          position: "relative",
         }}
       >
         <DndContext
@@ -182,6 +201,17 @@ const TestPage = () => {
             </Grid2>
           </Box>
         </DndContext>
+
+        <ScrollTopButton
+          onClick={scrollToTop}
+          show={showScrollTop}
+          sx={{
+            position: "absolute",
+            bottom: "20px",
+            left: "20px",
+            zIndex: 1000,
+          }}
+        />
       </Box>
       <TestViewer ref={viewerRef} onChange={onTestListItemChange} />
     </BasePage>
