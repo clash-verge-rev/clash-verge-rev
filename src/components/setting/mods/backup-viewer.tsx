@@ -104,14 +104,14 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={t("Backup Setting")}
-      contentSx={{ width: 600, maxHeight: 800 }}
+      // contentSx={{ width: 600, maxHeight: 800 }}
       okBtn={t("")}
       cancelBtn={t("Close")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       disableOk
     >
-      <Box sx={{ maxWidth: 800 }}>
+      <Box>
         <BaseLoadingOverlay isLoading={isLoading} />
         <Paper elevation={2} sx={{ padding: 2 }}>
           <BackupConfigViewer
