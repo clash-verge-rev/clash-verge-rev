@@ -162,11 +162,15 @@ pub fn create_window() {
     .unwrap();
 
     #[cfg(target_os = "linux")]
-    let window = builder
-        .decorations(false)
-        .transparent(true)
-        .build()
-        .unwrap();
+    let window = tauri::WebviewWindowBuilder::new(
+        &app_handle,
+        "main".to_string(),
+        tauri::WebviewUrl::App("index.html".into()),
+    )
+    .decorations(false)
+    .transparent(true)
+    .build()
+    .unwrap();
 
     match window.restore_state(StateFlags::all()) {
         Ok(_) => {
