@@ -146,6 +146,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     let mut result_map = HashMap::new(); // 保存脚本日志
     let mut exists_keys = use_keys(&config); // 保存出现过的keys
 
+    config = use_tun(config, enable_tun).await;
+
     // 全局Merge和Script
     if let ChainType::Merge(merge) = global_merge.data {
         exists_keys.extend(use_keys(&merge));
@@ -259,7 +261,6 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             });
     }
 
-    config = use_tun(config, enable_tun).await;
     config = use_sort(config);
 
     let mut exists_set = HashSet::new();
