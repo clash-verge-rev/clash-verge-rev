@@ -1,16 +1,15 @@
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, Stack, Divider, Grid2 } from "@mui/material";
-import { FileDropEvent, getCurrent } from "@tauri-apps/plugin-window";
+import { Box, Button, Divider, Grid2, IconButton, Stack } from "@mui/material";
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -26,13 +25,13 @@ import {
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
-  importProfile,
+  createProfile,
+  deleteProfile,
   enhanceProfiles,
   getRuntimeLogs,
-  deleteProfile,
-  updateProfile,
+  importProfile,
   reorderProfile,
-  createProfile,
+  updateProfile,
 } from "@/services/cmds";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import { closeAllConnections } from "@/services/api";
@@ -45,13 +44,12 @@ import { ProfileMore } from "@/components/profile/profile-more";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
-import { add, throttle } from "lodash-es";
+import { throttle } from "lodash-es";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { useLocation } from "react-router-dom";
 import { useListen } from "@/hooks/use-listen";
-import { listen } from "@tauri-apps/api/event";
 import { TauriEvent } from "@tauri-apps/api/event";
 
 const ProfilePage = () => {
@@ -72,35 +70,30 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const handleFileDrop = async () => {
-      const unlisten = await addListener(
-        TauriEvent.DRAG_DROP,
-        async (event: any) => {
-          console.log("文件拖放事件:", event);
-          const paths = event.payload.paths;
+      return await addListener(TauriEvent.DRAG_DROP, async (event: any) => {
+        console.log("文件拖放事件:", event);
+        const paths = event.payload.paths;
 
-          for (let file of paths) {
-            if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-              Notice.error(t("Only YAML Files Supported"));
-              continue;
-            }
-            const item = {
-              type: "local",
-              name: file.split(/\/|\\/).pop() ?? "New Profile",
-              desc: "",
-              url: "",
-              option: {
-                with_proxy: false,
-                self_proxy: false,
-              },
-            } as IProfileItem;
-            let data = await readTextFile(file);
-            await createProfile(item, data);
-            await mutateProfiles();
+        for (let file of paths) {
+          if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
+            Notice.error(t("Only YAML Files Supported"));
+            continue;
           }
-        },
-      );
-
-      return unlisten;
+          const item = {
+            type: "local",
+            name: file.split(/\/|\\/).pop() ?? "New Profile",
+            desc: "",
+            url: "",
+            option: {
+              with_proxy: false,
+              self_proxy: false,
+            },
+          } as IProfileItem;
+          let data = await readTextFile(file);
+          await createProfile(item, data);
+          await mutateProfiles();
+        }
+      });
     };
 
     const unsubscribe = handleFileDrop();
@@ -131,9 +124,7 @@ const ProfilePage = () => {
 
     const type1 = ["local", "remote"];
 
-    const profileItems = items.filter((i) => i && type1.includes(i.type!));
-
-    return profileItems;
+    return items.filter((i) => i && type1.includes(i.type!));
   }, [profiles]);
 
   const currentActivatings = () => {
@@ -149,7 +140,7 @@ const ProfilePage = () => {
       Notice.success(t("Profile Imported Successfully"));
       setUrl("");
       setLoading(false);
-      mutateProfiles();
+      await mutateProfiles();
       await onEnhance(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());
@@ -165,7 +156,7 @@ const ProfilePage = () => {
     if (over) {
       if (active.id !== over.id) {
         await reorderProfile(active.id.toString(), over.id.toString());
-        mutateProfiles();
+        await mutateProfiles();
       }
     }
   };
@@ -179,7 +170,7 @@ const ProfilePage = () => {
     try {
       await patchProfiles({ current: profile });
       await mutateLogs();
-      closeAllConnections();
+      await closeAllConnections();
       await activateSelected();
       if (notifySuccess) {
         Notice.success(t("Profile Switched"), 1000);
@@ -199,7 +190,7 @@ const ProfilePage = () => {
   useEffect(() => {
     (async () => {
       if (current) {
-        mutateProfiles();
+        await mutateProfiles();
         await activateProfile(current, false);
       }
     })();
@@ -209,7 +200,7 @@ const ProfilePage = () => {
     setActivatings(currentActivatings());
     try {
       await enhanceProfiles();
-      mutateLogs();
+      await mutateLogs();
       if (notifySuccess) {
         Notice.success(t("Profile Reactivated"), 1000);
       }
