@@ -138,7 +138,8 @@ pub fn create_window() {
                 tauri::WebviewUrl::App("index.html".into()),
             )
             .visible(false)
-            .min_inner_size(600.0, 520.0)
+            .inner_size(890.0, 700.0)
+            .min_inner_size(620.0, 550.0)
             .decorations(false)
             .maximizable(true)
             .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
@@ -171,7 +172,7 @@ pub fn create_window() {
                 window.clone().on_window_event(move |_event| {
                     let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
                         width: 800,
-                        height: 636,
+                        height: 642,
                     }));
                 });
             }
