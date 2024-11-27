@@ -21,7 +21,7 @@ const buildWSUrl = (server: string, secret: string, logLevel: LogLevel) => {
   const params = new URLSearchParams();
 
   if (secret) {
-    params.append("token", encodeURIComponent(secret));
+    params.append("token", secret);
   }
   if (logLevel === "all") {
     params.append("level", "debug");

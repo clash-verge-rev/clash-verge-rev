@@ -209,7 +209,12 @@ const SettingClash = ({ onError }: Props) => {
         <SettingItem
           onClick={invoke_uwp_tool}
           label={t("Open UWP tool")}
-          extra={<TooltipIcon title={t("Open UWP tool Info")} />}
+          extra={
+            <TooltipIcon
+              title={t("Open UWP tool Info")}
+              sx={{ opacity: "0.7" }}
+            />
+          }
         />
       )}
 

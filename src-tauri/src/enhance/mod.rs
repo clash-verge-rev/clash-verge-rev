@@ -60,6 +60,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         global_merge,
         global_script,
         profile_name,
+        dns,
     ) = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
@@ -130,6 +131,10 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             .and_then(|item| item.name.clone())
             .unwrap_or_default();
 
+        let dns = current.get("dns").map_or(Mapping::new(), |val| {
+            val.as_mapping().cloned().unwrap_or(Mapping::new())
+        });
+
         (
             current,
             merge,
@@ -140,6 +145,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             global_merge,
             global_script,
             name,
+            dns,
         )
     };
 

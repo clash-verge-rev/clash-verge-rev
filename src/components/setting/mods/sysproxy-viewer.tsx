@@ -166,8 +166,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                   ? t("Enabled")
                   : t("Disabled")
                 : sysproxy?.enable
-                ? t("Enabled")
-                : t("Disabled")}
+                  ? t("Enabled")
+                  : t("Disabled")}
             </Typography>
           </FlexBox>
           {!value.pac && (
@@ -202,7 +202,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             primary={t("Proxy Guard")}
             sx={{ maxWidth: "fit-content" }}
           />
-          <TooltipIcon title={t("Proxy Guard Info")} />
+          <TooltipIcon title={t("Proxy Guard Info")} sx={{ opacity: "0.7" }} />
           <Switch
             edge="end"
             disabled={!enabled}

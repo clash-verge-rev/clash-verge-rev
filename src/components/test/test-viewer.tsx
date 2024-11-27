@@ -64,10 +64,15 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       try {
         if (!form.name) throw new Error("`Name` should not be null");
         if (!form.url) throw new Error("`Url` should not be null");
+
         let newList;
         let uid;
 
         if (form.icon && form.icon.startsWith("<svg")) {
+          // 移除 icon 中的注释
+          if (form.icon) {
+            form.icon = form.icon.replace(/<!--[\s\S]*?-->/g, "");
+          }
           const doc = new DOMParser().parseFromString(
             form.icon,
             "image/svg+xml",

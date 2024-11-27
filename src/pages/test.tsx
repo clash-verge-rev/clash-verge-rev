@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVerge } from "@/hooks/use-verge";
-import { Box, Button, Grid } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import Grid2 from "@mui/material/Grid2";
 import {
   DndContext,
   closestCenter,
@@ -21,6 +22,7 @@ import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
 import { TestItem } from "@/components/test/test-item";
 import { emit } from "@tauri-apps/api/event";
 import { nanoid } from "nanoid";
+import { ScrollTopButton } from "@/components/layout/scroll-top-button";
 
 // test icons
 import apple from "@/assets/image/test/apple.svg?raw";
@@ -34,7 +36,7 @@ const TestPage = () => {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
   const { verge, mutateVerge, patchVerge } = useVerge();
 
@@ -68,7 +70,7 @@ const TestPage = () => {
 
   const onTestListItemChange = (
     uid: string,
-    patch?: Partial<IVergeTestItem>
+    patch?: Partial<IVergeTestItem>,
   ) => {
     if (patch) {
       const newList = testList.map((x) => {
@@ -120,6 +122,19 @@ const TestPage = () => {
   }, [verge]);
 
   const viewerRef = useRef<TestViewerRef>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTop = () => {
+    containerRef.current?.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const handleScroll = (e: any) => {
+    setShowScrollTop(e.target.scrollTop > 100);
+  };
 
   return (
     <BasePage
@@ -145,10 +160,15 @@ const TestPage = () => {
       }
     >
       <Box
+        ref={containerRef}
+        onScroll={handleScroll}
         sx={{
           pt: 1.25,
           mb: 0.5,
           px: "10px",
+          height: "calc(100vh - 100px)",
+          overflow: "auto",
+          position: "relative",
         }}
       >
         <DndContext
@@ -157,26 +177,41 @@ const TestPage = () => {
           onDragEnd={onDragEnd}
         >
           <Box sx={{ mb: 4.5 }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
+            <Grid2 container spacing={{ xs: 1, lg: 1 }}>
               <SortableContext
                 items={testList.map((x) => {
                   return x.uid;
                 })}
               >
                 {testList.map((item) => (
-                  <Grid item xs={6} sm={4} md={3} lg={2} key={item.uid}>
+                  <Grid2
+                    component={"div"}
+                    size={{ xs: 6, lg: 2, sm: 4, md: 3 }}
+                    key={item.uid}
+                  >
                     <TestItem
                       id={item.uid}
                       itemData={item}
                       onEdit={() => viewerRef.current?.edit(item)}
                       onDelete={onDeleteTestListItem}
                     />
-                  </Grid>
+                  </Grid2>
                 ))}
               </SortableContext>
-            </Grid>
+            </Grid2>
           </Box>
         </DndContext>
+
+        <ScrollTopButton
+          onClick={scrollToTop}
+          show={showScrollTop}
+          sx={{
+            position: "absolute",
+            bottom: "20px",
+            left: "20px",
+            zIndex: 1000,
+          }}
+        />
       </Box>
       <TestViewer ref={viewerRef} onChange={onTestListItemChange} />
     </BasePage>

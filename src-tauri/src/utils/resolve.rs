@@ -128,63 +128,56 @@ pub fn create_window() {
         return;
     }
 
-    let builder = tauri::WebviewWindowBuilder::new(
+    #[cfg(target_os = "windows")]
+    let window = {
+        let app_handle = app_handle.clone();
+        std::thread::spawn(move || {
+            tauri::WebviewWindowBuilder::new(
+                &app_handle,
+                "main".to_string(),
+                tauri::WebviewUrl::App("index.html".into()),
+            )
+            .title("Clash Verge")
+            .visible(false)
+            .inner_size(890.0, 700.0)
+            .min_inner_size(620.0, 550.0)
+            .decorations(false)
+            .maximizable(true)
+            .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
+            .transparent(true)
+            .build()
+        }).join().unwrap()
+    }.unwrap();
+
+    #[cfg(target_os = "macos")]
+    let window = tauri::WebviewWindowBuilder::new(
+        &app_handle,
+        "main".to_string(),
+        tauri::WebviewUrl::App("index.html".into()),
+    )
+    .decorations(true)
+    .hidden_title(true)
+    .title_bar_style(tauri::TitleBarStyle::Overlay)
+    .inner_size(890.0, 700.0)
+    .min_inner_size(620.0, 550.0)
+    .build()
+    .unwrap();
+
+    #[cfg(target_os = "linux")]
+    let window = tauri::WebviewWindowBuilder::new(
         &app_handle,
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
     )
     .title("Clash Verge")
-    .visible(false)
-    .fullscreen(false)
-    .min_inner_size(600.0, 520.0);
+    .decorations(false)
+    .inner_size(890.0, 700.0)
+    .min_inner_size(620.0, 550.0)
+    .transparent(true)
+    .build()
+    .unwrap();
 
-    #[cfg(target_os = "windows")]
-    let window = builder
-        .decorations(false)
-        .maximizable(true)
-        .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
-        .transparent(true)
-        .visible(false)
-        .build().unwrap();
-
-    #[cfg(target_os = "macos")]
-    let window = builder
-        .decorations(true)
-        .hidden_title(true)
-        .title_bar_style(tauri::TitleBarStyle::Overlay)
-        .build()
-        .unwrap();
-
-    #[cfg(target_os = "linux")]
-    let window = builder
-        .decorations(false)
-        .transparent(true)
-        .build()
-        .unwrap();
-
-    match window.restore_state(StateFlags::all()) {
-        Ok(_) => {
-            log::info!(target: "app", "window state restored successfully");
-        }
-        Err(e) => {
-            log::error!(target: "app", "failed to restore window state: {}", e);
-            #[cfg(target_os = "windows")]
-            window
-                .set_size(tauri::Size::Physical(tauri::PhysicalSize {
-                    width: 800,
-                    height: 636,
-                }))
-                .unwrap();
-
-            #[cfg(not(target_os = "windows"))]
-            window
-                .set_size(tauri::Size::Physical(tauri::PhysicalSize {
-                    width: 800,
-                    height: 642,
-                }))
-                .unwrap();
-        }
-    };
+    log_err!(window.restore_state(StateFlags::all()));
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
