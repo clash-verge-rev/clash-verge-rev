@@ -766,6 +766,23 @@ Section Install
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
 
+  ; 清理旧版本的自启动注册表项
+  DetailPrint "Cleaning old auto-launch registry entries..."
+  
+  ; 只需要清理这个路径即可，因为旧版本只在这里添加了自启动项
+  StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Run"
+  
+  SetRegView 64  
+  ReadRegStr $R2 HKCU "$R1" "Clash Verge"
+  ${If} $R2 != ""
+    DeleteRegValue HKCU "$R1" "Clash Verge"
+  ${EndIf}
+  
+  ReadRegStr $R2 HKLM "$R1" "Clash Verge"
+  ${If} $R2 != ""
+    DeleteRegValue HKLM "$R1" "Clash Verge"
+  ${EndIf}
+
   ; Delete old files before installation
     ; Delete clash-verge.desktop
   IfFileExists "$INSTDIR\Clash Verge.exe" 0 +2
