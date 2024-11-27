@@ -33,7 +33,7 @@ impl IClashTemp {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
         tun.insert("enable".into(), false.into());
-        tun.insert("stack".into(), "gvisor".into());
+        tun.insert("stack".into(), "mixed".into());
         tun.insert("auto-route".into(), true.into());
         tun.insert("strict-route".into(), false.into());
         tun.insert("auto-detect-interface".into(), true.into());
