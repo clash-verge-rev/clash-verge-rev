@@ -158,7 +158,8 @@ pub fn create_window() {
     .decorations(true)
     .hidden_title(true)
     .title_bar_style(tauri::TitleBarStyle::Overlay)
-    .min_inner_size(600.0, 520.0)
+    .inner_size(890.0, 700.0)
+    .min_inner_size(620.0, 550.0)
     .build()
     .unwrap();
 
@@ -170,7 +171,8 @@ pub fn create_window() {
     )
     .title("Clash Verge")
     .decorations(false)
-    .min_inner_size(600.0, 520.0)
+    .inner_size(890.0, 700.0)
+    .min_inner_size(620.0, 550.0)
     .transparent(true)
     .build()
     .unwrap();
@@ -185,8 +187,8 @@ pub fn create_window() {
             {
                 window.clone().on_window_event(move |_event| {
                     let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
-                        width: 800,
-                        height: 642,
+                        width: 890,
+                        height: 700,
                     }));
                 });
             }
@@ -194,8 +196,8 @@ pub fn create_window() {
             #[cfg(not(target_os = "windows"))]
             window
                 .set_size(tauri::Size::Physical(tauri::PhysicalSize {
-                    width: 800,
-                    height: 642,
+                    width: 890,
+                    height: 700,
                 }))
                 .unwrap();
         }
