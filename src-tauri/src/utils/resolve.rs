@@ -177,31 +177,7 @@ pub fn create_window() {
     .build()
     .unwrap();
 
-    match window.restore_state(StateFlags::all()) {
-        Ok(_) => {
-            log::info!(target: "app", "window state restored successfully");
-        }
-        Err(e) => {
-            log::error!(target: "app", "failed to restore window state: {}", e);
-            #[cfg(target_os = "windows")]
-            {
-                window.clone().on_window_event(move |_event| {
-                    let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
-                        width: 890,
-                        height: 700,
-                    }));
-                });
-            }
-
-            #[cfg(not(target_os = "windows"))]
-            window
-                .set_size(tauri::Size::Physical(tauri::PhysicalSize {
-                    width: 890,
-                    height: 700,
-                }))
-                .unwrap();
-        }
-    };
+    log_err!(window.restore_state(StateFlags::all()));
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
