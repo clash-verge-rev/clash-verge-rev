@@ -137,6 +137,7 @@ pub fn create_window() {
                 "main".to_string(),
                 tauri::WebviewUrl::App("index.html".into()),
             )
+            .title("Clash Verge")
             .visible(false)
             .inner_size(890.0, 700.0)
             .min_inner_size(620.0, 550.0)
@@ -167,7 +168,9 @@ pub fn create_window() {
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
     )
+    .title("Clash Verge")
     .decorations(false)
+    .min_inner_size(600.0, 520.0)
     .transparent(true)
     .build()
     .unwrap();
