@@ -18,7 +18,7 @@ macro_rules! append {
     };
 }
 
-pub async fn use_tun(mut config: Mapping, enable: bool, origin_enhanced_mode: String) -> Mapping {
+pub async fn use_tun(mut config: Mapping, enable: bool, origin_dns_val: Mapping) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
     let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
@@ -41,7 +41,42 @@ pub async fn use_tun(mut config: Mapping, enable: bool, origin_enhanced_mode: St
             crate::utils::resolve::set_public_dns("8.8.8.8".to_string()).await;
         }
     } else {
-        revise!(dns_val, "enhanced-mode", origin_enhanced_mode.as_str());
+        revise!(
+            dns_val,
+            "enable",
+            origin_dns_val
+                .get("enable")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true)
+        );
+
+        revise!(
+            dns_val,
+            "ipv6",
+            origin_dns_val
+                .get("ipv6")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true)
+        );
+
+        revise!(
+            dns_val,
+            "enhanced-mode",
+            origin_dns_val
+                .get("enhanced-mode")
+                .and_then(|v| v.as_str())
+                .unwrap_or("redir-host")
+        );
+
+        revise!(
+            dns_val,
+            "fake-ip-range",
+            origin_dns_val
+                .get("fake-ip-range")
+                .and_then(|v| v.as_str())
+                .unwrap_or("198.18.0.1/16")
+        );
+
         #[cfg(target_os = "macos")]
         crate::utils::resolve::restore_public_dns().await;
     }
