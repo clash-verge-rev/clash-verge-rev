@@ -766,13 +766,13 @@ Section Install
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
 
-  ; 清理旧版本的自启动注册表项
-  DetailPrint "Cleaning old auto-launch registry entries..."
-  
-  ; 只需要清理这个路径即可，因为旧版本只在这里添加了自启动项
+  ; 清理自启动注册表项
+  DetailPrint "Cleaning auto-launch registry entries..."
+
   StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Run"
   
   SetRegView 64  
+  ; 清理旧版本的注册表项 (Clash Verge)
   ReadRegStr $R2 HKCU "$R1" "Clash Verge"
   ${If} $R2 != ""
     DeleteRegValue HKCU "$R1" "Clash Verge"
@@ -781,6 +781,17 @@ Section Install
   ReadRegStr $R2 HKLM "$R1" "Clash Verge"
   ${If} $R2 != ""
     DeleteRegValue HKLM "$R1" "Clash Verge"
+  ${EndIf}
+
+  ; 清理新版本的注册表项 (clash-verge)
+  ReadRegStr $R2 HKCU "$R1" "clash-verge"
+  ${If} $R2 != ""
+    DeleteRegValue HKCU "$R1" "clash-verge"
+  ${EndIf}
+  
+  ReadRegStr $R2 HKLM "$R1" "clash-verge"
+  ${If} $R2 != ""
+    DeleteRegValue HKLM "$R1" "clash-verge"
   ${EndIf}
 
   ; Delete old files before installation
@@ -908,6 +919,35 @@ Section Uninstall
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
   !insertmacro RemoveVergeService
+
+  ; 清理自启动注册表项
+  DetailPrint "Cleaning auto-launch registry entries..."
+  
+  StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Run"
+  
+  SetRegView 64
+  ; 清理旧版本的注册表项 (Clash Verge)
+  ReadRegStr $R2 HKCU "$R1" "Clash Verge"
+  ${If} $R2 != ""
+    DeleteRegValue HKCU "$R1" "Clash Verge"
+  ${EndIf}
+  
+  ReadRegStr $R2 HKLM "$R1" "Clash Verge"
+  ${If} $R2 != ""
+    DeleteRegValue HKLM "$R1" "Clash Verge"
+  ${EndIf}
+
+  ; 清理新版本的注册表项 (clash-verge)
+  ReadRegStr $R2 HKCU "$R1" "clash-verge"
+  ${If} $R2 != ""
+    DeleteRegValue HKCU "$R1" "clash-verge"
+  ${EndIf}
+  
+  ReadRegStr $R2 HKLM "$R1" "clash-verge"
+  ${If} $R2 != ""
+    DeleteRegValue HKLM "$R1" "clash-verge"
+  ${EndIf}
+
   ; Delete the app directory and its content from disk
   ; Copy main executable
   Delete "$INSTDIR\${MAINBINARYNAME}.exe"
