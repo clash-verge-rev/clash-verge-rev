@@ -8,7 +8,6 @@ use percent_encoding::percent_decode_str;
 use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::{App, Manager};
-use tauri_plugin_window_state::{StateFlags, WindowExt};
 
 use url::Url;
 //#[cfg(not(target_os = "linux"))]
@@ -128,8 +127,9 @@ pub fn create_window() {
         return;
     }
 
+    println!("create window");
     #[cfg(target_os = "windows")]
-    let window = {
+    let _ = {
         let app_handle = app_handle.clone();
         std::thread::spawn(move || {
             tauri::WebviewWindowBuilder::new(
@@ -150,7 +150,7 @@ pub fn create_window() {
     }.unwrap();
 
     #[cfg(target_os = "macos")]
-    let window = tauri::WebviewWindowBuilder::new(
+    let _ = tauri::WebviewWindowBuilder::new(
         &app_handle,
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
@@ -164,7 +164,7 @@ pub fn create_window() {
     .unwrap();
 
     #[cfg(target_os = "linux")]
-    let window = tauri::WebviewWindowBuilder::new(
+    let _ = tauri::WebviewWindowBuilder::new(
         &app_handle,
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
@@ -176,8 +176,6 @@ pub fn create_window() {
     .transparent(true)
     .build()
     .unwrap();
-
-    log_err!(window.restore_state(StateFlags::all()));
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
