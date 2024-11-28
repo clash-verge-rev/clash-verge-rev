@@ -184,12 +184,8 @@ impl Tray {
 
         #[cfg(target_os = "macos")]
         {
-            if use_custom_icon {
-                let _ = tray.set_icon_as_template(false);
-                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&indication_icon)?));
-            } else {
-                let _ = tray.set_icon_as_template(true);
-            }
+            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&indication_icon)?));
+            let _ = tray.set_icon_as_template(!use_custom_icon);
         }
 
         #[cfg(not(target_os = "macos"))]
