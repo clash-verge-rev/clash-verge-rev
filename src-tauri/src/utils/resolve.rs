@@ -127,7 +127,6 @@ pub fn create_window() {
         return;
     }
 
-    println!("create window");
     #[cfg(target_os = "windows")]
     let _ = {
         let app_handle = app_handle.clone();
