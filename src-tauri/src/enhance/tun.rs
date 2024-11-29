@@ -29,10 +29,12 @@ pub async fn use_tun(mut config: Mapping, enable: bool, origin_dns_val: Mapping)
     let mut dns_val = dns_val.map_or(Mapping::new(), |val| {
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
+    let ipv6_key = Value::from("ipv6");
+    let ipv6_val = config.get(&ipv6_key).and_then(|v| v.as_bool()).unwrap_or(false);
 
     if enable {
         revise!(dns_val, "enable", true);
-        revise!(dns_val, "ipv6", true);
+        revise!(dns_val, "ipv6", ipv6_val);
         revise!(dns_val, "enhanced-mode", "fake-ip");
         revise!(dns_val, "fake-ip-range", "198.18.0.1/16");
         #[cfg(target_os = "macos")]
@@ -50,14 +52,7 @@ pub async fn use_tun(mut config: Mapping, enable: bool, origin_dns_val: Mapping)
                 .unwrap_or(true)
         );
 
-        revise!(
-            dns_val,
-            "ipv6",
-            origin_dns_val
-                .get("ipv6")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(true)
-        );
+        revise!(dns_val, "ipv6", ipv6_val);
 
         revise!(
             dns_val,
