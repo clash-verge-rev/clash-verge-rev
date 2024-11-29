@@ -319,6 +319,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
                 handle::Handle::refresh_clash();
             }
             Err(err) => {
+                handle::Handle::notice_message("set_config::error", format!("{err}"));
                 log::error!(target: "app", "{err}");
             }
         }

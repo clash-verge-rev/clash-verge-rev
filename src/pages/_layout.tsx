@@ -77,6 +77,9 @@ const Layout = () => {
           navigate("/profile");
           Notice.error(msg);
           break;
+        case "set_config::error":
+          Notice.error(msg);
+          break;
         default:
           break;
       }
