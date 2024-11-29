@@ -30,7 +30,10 @@ pub async fn use_tun(mut config: Mapping, enable: bool, origin_dns_val: Mapping)
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
     let ipv6_key = Value::from("ipv6");
-    let ipv6_val = config.get(&ipv6_key).and_then(|v| v.as_bool()).unwrap_or(false);
+    let ipv6_val = config
+        .get(&ipv6_key)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
 
     if enable {
         revise!(dns_val, "enable", true);

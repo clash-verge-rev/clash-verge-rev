@@ -77,12 +77,6 @@ const Layout = () => {
           navigate("/profile");
           Notice.error(msg);
           break;
-        case "set_config::ok":
-          Notice.success(t("Clash Config Updated"));
-          break;
-        case "set_config::error":
-          Notice.error(msg);
-          break;
         default:
           break;
       }
