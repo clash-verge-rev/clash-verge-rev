@@ -137,16 +137,14 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
             Config::generate().await?;
             CoreManager::global().restart_core().await?;
-            handle::Handle::refresh_clash();
         } else {
             if patch.get("mode").is_some() {
                 log_err!(handle::Handle::update_systray_part());
             }
-
             Config::runtime().latest().patch_config(patch);
-            update_core_config(false).await?;
+            CoreManager::global().update_config().await?;
         }
-
+        handle::Handle::refresh_clash();
         <Result<()>>::Ok(())
     };
     match res {
@@ -246,11 +244,11 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             should_update_systray_part = true;
         }
         if should_restart_core {
-            Config::generate().await?;
             CoreManager::global().restart_core().await?;
         }
         if should_update_clash_config {
-            update_core_config(false).await?;
+            CoreManager::global().update_config().await?;
+            handle::Handle::refresh_clash();
         }
         if should_update_launch {
             sysopt::Sysopt::global().update_launch()?;
@@ -316,29 +314,17 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
     };
 
     if should_update {
-        update_core_config(true).await?;
+        match CoreManager::global().update_config().await {
+            Ok(_) => {
+                handle::Handle::refresh_clash();
+            }
+            Err(err) => {
+                log::error!(target: "app", "{err}");
+            }
+        }
     }
 
     Ok(())
-}
-
-/// 更新订阅
-async fn update_core_config(notice: bool) -> Result<()> {
-    match CoreManager::global().update_config().await {
-        Ok(_) => {
-            handle::Handle::refresh_clash();
-            if notice {
-                handle::Handle::notice_message("set_config::ok", "ok");
-            }
-            Ok(())
-        }
-        Err(err) => {
-            if notice {
-                handle::Handle::notice_message("set_config::error", format!("{err}"));
-            }
-            Err(err)
-        }
-    }
 }
 
 /// copy env variable
