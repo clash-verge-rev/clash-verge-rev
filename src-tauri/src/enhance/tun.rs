@@ -38,7 +38,7 @@ pub async fn use_tun(mut config: Mapping, enable: bool, origin_dns_val: Mapping)
         #[cfg(target_os = "macos")]
         {
             crate::utils::resolve::restore_public_dns().await;
-            crate::utils::resolve::set_public_dns("8.8.8.8".to_string()).await;
+            crate::utils::resolve::set_public_dns("223.6.6.6".to_string()).await;
         }
     } else {
         revise!(
