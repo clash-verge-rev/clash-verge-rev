@@ -96,16 +96,11 @@ impl Tray {
             *tun_mode,
         )?));
 
-        #[cfg(target_os = "macos")]
-        let mut use_custom_icon = false;
         #[allow(unused)]
         let mut indication_icon = if *system_proxy && !*tun_mode {
             #[cfg(target_os = "macos")]
             let mut icon = match tray_icon.as_str() {
-                "colorful" => {
-                    use_custom_icon = true;
-                    include_bytes!("../../icons/tray-icon-sys.ico").to_vec()
-                }
+                "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
                 _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
             };
 
@@ -120,19 +115,12 @@ impl Tray {
                 } else if png_path.exists() {
                     icon = std::fs::read(png_path).unwrap();
                 }
-                #[cfg(target_os = "macos")]
-                {
-                    use_custom_icon = true;
-                }
             }
             icon
         } else if *tun_mode {
             #[cfg(target_os = "macos")]
             let mut icon = match tray_icon.as_str() {
-                "colorful" => {
-                    use_custom_icon = true;
-                    include_bytes!("../../icons/tray-icon-tun.ico").to_vec()
-                }
+                "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
                 _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
             };
 
@@ -147,19 +135,12 @@ impl Tray {
                 } else if png_path.exists() {
                     icon = std::fs::read(png_path).unwrap();
                 }
-                #[cfg(target_os = "macos")]
-                {
-                    use_custom_icon = true;
-                }
             }
             icon
         } else {
             #[cfg(target_os = "macos")]
             let mut icon = match tray_icon.as_str() {
-                "colorful" => {
-                    use_custom_icon = true;
-                    include_bytes!("../../icons/tray-icon.ico").to_vec()
-                }
+                "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
                 _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
             };
 
@@ -174,18 +155,16 @@ impl Tray {
                 } else if png_path.exists() {
                     icon = std::fs::read(png_path).unwrap();
                 }
-                #[cfg(target_os = "macos")]
-                {
-                    use_custom_icon = true;
-                }
             }
             icon
         };
 
         #[cfg(target_os = "macos")]
         {
+            let is_template = crate::utils::help::is_monochrome_image_from_bytes(&indication_icon)
+                .unwrap_or(false);
             let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&indication_icon)?));
-            let _ = tray.set_icon_as_template(!use_custom_icon);
+            let _ = tray.set_icon_as_template(is_template);
         }
 
         #[cfg(not(target_os = "macos"))]
