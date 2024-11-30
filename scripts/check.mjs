@@ -488,8 +488,8 @@ const tasks = [
   {
     name: "service_chmod",
     func: resolveServicePermission,
-    retry: 1,
-    unixOnly: true,
+    retry: 5,
+    unixOnly: platform === "linux" || platform === "darwin",
   },
   {
     name: "windows-sysproxy",
@@ -514,10 +514,10 @@ const tasks = [
 async function runTask() {
   const task = tasks.shift();
   if (!task) return;
-  if (task.winOnly && platform !== "win32") return runTask();
-  if (task.linuxOnly && platform !== "linux") return runTask();
   if (task.unixOnly && platform === "win32") return runTask();
+  if (task.winOnly && platform !== "win32") return runTask();
   if (task.macosOnly && platform !== "darwin") return runTask();
+  if (task.linuxOnly && platform !== "linux") return runTask();
 
   for (let i = 0; i < task.retry; i++) {
     try {
