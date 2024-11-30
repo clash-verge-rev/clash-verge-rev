@@ -532,4 +532,3 @@ async function runTask() {
 }
 
 runTask();
-runTask();
