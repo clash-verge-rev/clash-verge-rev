@@ -257,7 +257,16 @@ const SettingVerge = ({ onError }: Props) => {
         label={t("Runtime Config")}
       />
 
-      <SettingItem onClick={openAppDir} label={t("Open Conf Dir")} />
+      <SettingItem
+        onClick={openAppDir}
+        label={t("Open Conf Dir")}
+        extra={
+          <TooltipIcon
+            title={t("Open Conf Dir Info")}
+            sx={{ opacity: "0.7" }}
+          />
+        }
+      />
 
       <SettingItem onClick={openCoreDir} label={t("Open Core Dir")} />
 
