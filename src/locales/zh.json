@@ -229,6 +229,7 @@
   "Proxy Guard Info": "开启以防止其他软件修改操作系统的代理设置",
   "Guard Duration": "代理守卫间隔",
   "Always use Default Bypass": "始终使用默认绕过",
+  "Use Bypass Check": "启用代理绕过检查",
   "Proxy Bypass": "代理绕过设置：",
   "Bypass": "当前绕过：",
   "Use PAC Mode": "使用PAC模式",
