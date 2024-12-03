@@ -723,6 +723,7 @@ interface IVergeConfig {
   verge_socks_enabled?: boolean;
   verge_http_enabled?: boolean;
   enable_proxy_guard?: boolean;
+  enable_bypass_check?: boolean;
   use_default_bypass?: boolean;
   proxy_guard_duration?: number;
   system_proxy_bypass?: string;
