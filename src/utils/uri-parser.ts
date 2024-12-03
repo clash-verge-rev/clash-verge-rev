@@ -36,7 +36,7 @@ export default function parseUri(uri: string): IProxyConfig {
 
 function getIfNotBlank(
   value: string | undefined,
-  dft?: string
+  dft?: string,
 ): string | undefined {
   return value && value.trim() !== "" ? value : dft;
 }
@@ -180,7 +180,7 @@ function URI_SS(line: string): IProxyShadowsocksConfig {
         if (v2rayPlugin) {
           proxy.plugin = "v2ray-plugin";
           proxy["plugin-opts"] = JSON.parse(
-            decodeBase64OrOriginal(v2rayPlugin)
+            decodeBase64OrOriginal(v2rayPlugin),
           );
         }
       }
@@ -193,7 +193,7 @@ function URI_SS(line: string): IProxyShadowsocksConfig {
   const portIdx = serverAndPort?.lastIndexOf(":") ?? 0;
   proxy.server = serverAndPort?.substring(0, portIdx) ?? "";
   proxy.port = parseInt(
-    `${serverAndPort?.substring(portIdx + 1)}`.match(/\d+/)?.[0] ?? ""
+    `${serverAndPort?.substring(portIdx + 1)}`.match(/\d+/)?.[0] ?? "",
   );
   const userInfo = userInfoStr.match(/(^.*?):(.*$)/);
   proxy.cipher = getCipher(userInfo?.[1]);
@@ -252,7 +252,7 @@ function URI_SSR(line: string): IProxyshadowsocksRConfig {
   const serverAndPort = line.substring(0, splitIdx);
   const server = serverAndPort.substring(0, serverAndPort.lastIndexOf(":"));
   const port = parseInt(
-    serverAndPort.substring(serverAndPort.lastIndexOf(":") + 1)
+    serverAndPort.substring(serverAndPort.lastIndexOf(":") + 1),
   );
 
   let params = line
@@ -284,12 +284,12 @@ function URI_SSR(line: string): IProxyshadowsocksRConfig {
     ...proxy,
     name: other_params.remarks
       ? decodeBase64OrOriginal(other_params.remarks).trim()
-      : proxy.server ?? "",
+      : (proxy.server ?? ""),
     "protocol-param": getIfNotBlank(
-      decodeBase64OrOriginal(other_params.protoparam || "").replace(/\s/g, "")
+      decodeBase64OrOriginal(other_params.protoparam || "").replace(/\s/g, ""),
     ),
     "obfs-param": getIfNotBlank(
-      decodeBase64OrOriginal(other_params.obfsparam || "").replace(/\s/g, "")
+      decodeBase64OrOriginal(other_params.obfsparam || "").replace(/\s/g, ""),
     ),
   };
   return proxy;
@@ -330,7 +330,7 @@ function URI_VMESS(line: string): IProxyVmessConfig {
         proxy["ws-opts"] = {
           path:
             (getIfNotBlank(params["obfs-path"]) || '"/"').match(
-              /^"(.*)"$/
+              /^"(.*)"$/,
             )?.[1] || "/",
           headers: {
             Host:
@@ -492,6 +492,9 @@ function URI_VMESS(line: string): IProxyVmessConfig {
   }
 }
 
+/**
+ * VLess URL Decode.
+ */
 function URI_VLESS(line: string): IProxyVlessConfig {
   line = line.split("vless://")[1];
   let isShadowrocket;
@@ -571,9 +574,11 @@ function URI_VLESS(line: string): IProxyVlessConfig {
 
   if (params.headerType === "http") {
     proxy.network = "http";
-  } else {
+  } else if (params.type === "ws") {
     proxy.network = "ws";
     httpupgrade = true;
+  } else {
+    proxy.network = "tcp";
   }
   if (!proxy.network && isShadowrocket && params.obfs) {
     switch (params.type) {
@@ -619,7 +624,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
       opts["v2ray-http-upgrade-fast-open"] = true;
     }
     if (Object.keys(opts).length > 0) {
-      proxy[`${proxy.network}-opts`] = opts;
+      proxy[`ws-opts`] = opts;
     }
   }
 
@@ -631,7 +636,6 @@ function URI_VLESS(line: string): IProxyVlessConfig {
       proxy.servername = Array.isArray(httpHost) ? httpHost[0] : httpHost;
     }
   }
-
   return proxy;
 }
 
