@@ -1,7 +1,13 @@
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
+import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseFieldset } from "@/components/base/base-fieldset";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { EditorViewer } from "@/components/profile/editor-viewer";
+import { useVerge } from "@/hooks/use-verge";
+import { getAutotemProxy, getSystemProxy } from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+import { EditRounded } from "@mui/icons-material";
 import {
+  Button,
   InputAdornment,
   List,
   ListItem,
@@ -9,16 +15,10 @@ import {
   styled,
   TextField,
   Typography,
-  Button,
 } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { getSystemProxy, getAutotemProxy } from "@/services/cmds";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
-import { EditRounded } from "@mui/icons-material";
-import { EditorViewer } from "@/components/profile/editor-viewer";
-import { BaseFieldset } from "@/components/base/base-fieldset";
-import getSystem from "@/utils/get-system";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { useLockFn } from "ahooks";
+import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY 127.0.0.1:%mixed-port%; SOCKS5 127.0.0.1:%mixed-port%; DIRECT;";
 }`;
@@ -76,6 +76,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     proxy_auto_config,
     pac_file_content,
     enable_proxy_guard,
+    enable_bypass_check,
     use_default_bypass,
     system_proxy_bypass,
     proxy_guard_duration,
@@ -84,6 +85,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const [value, setValue] = useState({
     guard: enable_proxy_guard,
     bypass: system_proxy_bypass,
+    bypass_check: enable_bypass_check ?? true,
     duration: proxy_guard_duration ?? 10,
     use_default: use_default_bypass ?? true,
     pac: proxy_auto_config,
@@ -96,6 +98,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       setValue({
         guard: enable_proxy_guard,
         bypass: system_proxy_bypass,
+        bypass_check: enable_bypass_check ?? true,
         duration: proxy_guard_duration ?? 10,
         use_default: use_default_bypass ?? true,
         pac: proxy_auto_config,
@@ -124,6 +127,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (value.bypass !== system_proxy_bypass) {
       patch.system_proxy_bypass = value.bypass;
     }
+    if (value.bypass_check !== enable_bypass_check) {
+      patch.enable_bypass_check = value.bypass_check;
+    }
     if (value.pac !== proxy_auto_config) {
       patch.proxy_auto_config = value.pac;
     }
@@ -133,7 +139,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (value.pac_content !== pac_file_content) {
       patch.pac_file_content = value.pac_content;
     }
-    if (value.bypass && !validReg.test(value.bypass)) {
+    if (value.bypass && value.bypass_check && !validReg.test(value.bypass)) {
       Notice.error(t("Invalid Bypass Format"));
       return;
     }
@@ -243,11 +249,26 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           </ListItem>
         )}
         {!value.pac && (
+          <ListItem sx={{ padding: "5px 2px" }}>
+            <ListItemText primary={t("Use Bypass Check")} />
+            <Switch
+              edge="end"
+              disabled={!enabled}
+              checked={value.bypass_check}
+              onChange={(_, e) => setValue((v) => ({ ...v, bypass_check: e }))}
+            />
+          </ListItem>
+        )}
+        {!value.pac && (
           <>
             <ListItemText primary={t("Proxy Bypass")} />
             <TextField
               autoComplete="new-password"
-              error={value.bypass ? !validReg.test(value.bypass) : false}
+              error={
+                value.bypass && value.bypass_check
+                  ? !validReg.test(value.bypass)
+                  : false
+              }
               disabled={!enabled}
               size="small"
               multiline
