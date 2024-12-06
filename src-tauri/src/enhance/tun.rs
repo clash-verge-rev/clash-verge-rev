@@ -39,7 +39,7 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
         revise!(dns_val, "enable", true);
         revise!(dns_val, "ipv6", ipv6_val);
         revise!(dns_val, "enhanced-mode", "fake-ip");
-        revise!(dns_val, "fake-ip-range", "198.18.0.1/16");
+        revise!(dns_val, "fake-ip-range", "172.29.0.1/16");
         #[cfg(target_os = "macos")]
         {
             crate::utils::resolve::restore_public_dns().await;
@@ -72,7 +72,7 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             dns_val
                 .get("fake-ip-range")
                 .and_then(|v| v.as_str())
-                .unwrap_or("198.18.0.1/16")
+                .unwrap_or("172.29.0.1/16")
         );
 
         #[cfg(target_os = "macos")]
