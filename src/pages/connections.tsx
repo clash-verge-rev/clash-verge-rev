@@ -20,6 +20,7 @@ import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import useSWRSubscription from "swr/subscription";
 import { createSockette } from "@/utils/websocket";
 import { useTheme } from "@mui/material/styles";
+import { useVisibility } from "@/hooks/use-visibility";
 
 const initConn: IConnections = {
   uploadTotal: 0,
@@ -32,7 +33,7 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ConnectionsPage = () => {
   const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
-
+  const pageVisible = useVisibility();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
@@ -58,58 +59,60 @@ const ConnectionsPage = () => {
     IConnections,
     any,
     "getClashConnections" | null
-  >(clashInfo ? "getClashConnections" : null, (_key, { next }) => {
-    const { server = "", secret = "" } = clashInfo!;
+  >(
+    clashInfo && pageVisible ? "getClashConnections" : null,
+    (_key, { next }) => {
+      const { server = "", secret = "" } = clashInfo!;
+      const s = createSockette(
+        `ws://${server}/connections?token=${encodeURIComponent(secret)}`,
+        {
+          onmessage(event) {
+            // meta v1.15.0 出现 data.connections 为 null 的情况
+            const data = JSON.parse(event.data) as IConnections;
+            // 尽量与前一次 connections 的展示顺序保持一致
+            next(null, (old = initConn) => {
+              const oldConn = old.connections;
+              const maxLen = data.connections?.length;
 
-    const s = createSockette(
-      `ws://${server}/connections?token=${encodeURIComponent(secret)}`,
-      {
-        onmessage(event) {
-          // meta v1.15.0 出现 data.connections 为 null 的情况
-          const data = JSON.parse(event.data) as IConnections;
-          // 尽量与前一次 connections 的展示顺序保持一致
-          next(null, (old = initConn) => {
-            const oldConn = old.connections;
-            const maxLen = data.connections?.length;
+              const connections: IConnectionsItem[] = [];
 
-            const connections: IConnectionsItem[] = [];
+              const rest = (data.connections || []).filter((each) => {
+                const index = oldConn.findIndex((o) => o.id === each.id);
 
-            const rest = (data.connections || []).filter((each) => {
-              const index = oldConn.findIndex((o) => o.id === each.id);
+                if (index >= 0 && index < maxLen) {
+                  const old = oldConn[index];
+                  each.curUpload = each.upload - old.upload;
+                  each.curDownload = each.download - old.download;
 
-              if (index >= 0 && index < maxLen) {
-                const old = oldConn[index];
-                each.curUpload = each.upload - old.upload;
-                each.curDownload = each.download - old.download;
+                  connections[index] = each;
+                  return false;
+                }
+                return true;
+              });
 
-                connections[index] = each;
-                return false;
+              for (let i = 0; i < maxLen; ++i) {
+                if (!connections[i] && rest.length > 0) {
+                  connections[i] = rest.shift()!;
+                  connections[i].curUpload = 0;
+                  connections[i].curDownload = 0;
+                }
               }
-              return true;
+
+              return { ...data, connections };
             });
-
-            for (let i = 0; i < maxLen; ++i) {
-              if (!connections[i] && rest.length > 0) {
-                connections[i] = rest.shift()!;
-                connections[i].curUpload = 0;
-                connections[i].curDownload = 0;
-              }
-            }
-
-            return { ...data, connections };
-          });
+          },
+          onerror(event) {
+            next(event);
+          },
         },
-        onerror(event) {
-          next(event);
-        },
-      },
-      3,
-    );
+        3,
+      );
 
-    return () => {
-      s.close();
-    };
-  });
+      return () => {
+        s.close();
+      };
+    },
+  );
 
   const [filterConn, download, upload] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
