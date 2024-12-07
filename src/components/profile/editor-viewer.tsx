@@ -106,7 +106,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
   };
 
   const editorDidMount = async (
-    editor: monaco.editor.IStandaloneCodeEditor
+    editor: monaco.editor.IStandaloneCodeEditor,
   ) => {
     editorRef.current = editor;
 
@@ -203,7 +203,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
             fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
               getSystem() === "windows" ? ", twemoji mozilla" : ""
             }`,
-            fontLigatures: true, // 连字符
+            fontLigatures: false, // 连字符
             smoothScrolling: true, // 平滑滚动
           }}
           editorWillMount={editorWillMount}

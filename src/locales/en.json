@@ -229,6 +229,7 @@
   "Proxy Guard Info": "Enable to prevent other software from modifying the operating system's proxy settings",
   "Guard Duration": "Guard Duration",
   "Always use Default Bypass": "Always use Default Bypass",
+  "Use Bypass Check": "Use Bypass Check",
   "Proxy Bypass": "Proxy Bypass Settings: ",
   "Bypass": "Bypass: ",
   "Use PAC Mode": "Use PAC Mode",
