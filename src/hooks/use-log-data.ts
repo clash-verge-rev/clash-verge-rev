@@ -4,6 +4,7 @@ import { createSockette } from "../utils/websocket";
 import { useClashInfo } from "./use-clash";
 import dayjs from "dayjs";
 import { create } from "zustand";
+import { useVisibility } from "./use-visibility";
 
 const MAX_LOG_NUM = 1000;
 
@@ -69,9 +70,10 @@ export const useLogData = (logLevel: LogLevel) => {
   const { clashInfo } = useClashInfo();
   const [enableLog] = useEnableLog();
   const { logs, appendLog } = useLogStore();
+  const pageVisible = useVisibility();
 
   useEffect(() => {
-    if (!enableLog || !clashInfo) return;
+    if (!enableLog || !clashInfo || !pageVisible) return;
 
     const { server = "", secret = "" } = clashInfo;
     const wsUrl = buildWSUrl(server, secret, logLevel);
