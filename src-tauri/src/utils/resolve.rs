@@ -220,6 +220,8 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                     Ok(item) => {
                         let uid = item.uid.clone().unwrap();
                         let _ = wrap_err!(Config::profiles().data().append_item(item));
+                        handle::Handle::notice_message("import_sub_url::ok", uid);
+
                         app_handle
                             .notification()
                             .builder()
@@ -227,10 +229,9 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                             .body("Import profile success")
                             .show()
                             .unwrap();
-
-                        handle::Handle::notice_message("import_sub_url::ok", uid);
                     }
                     Err(e) => {
+                        handle::Handle::notice_message("import_sub_url::error", e.to_string());
                         app_handle
                             .notification()
                             .builder()
@@ -238,8 +239,6 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                             .body(format!("Import profile failed: {e}"))
                             .show()
                             .unwrap();
-                        handle::Handle::notice_message("import_sub_url::error", e.to_string());
-                        bail!("Failed to add subscriptions: {e}");
                     }
                 }
             }

@@ -6,9 +6,8 @@ mod feat;
 mod utils;
 use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
-#[cfg(target_os = "macos")]
-use tauri::Listener;
 use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_deep_link::DeepLinkExt;
 
 pub fn run() {
     // 单例检测
@@ -48,30 +47,22 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(|app| {
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 log_err!(app.deep_link().register_all());
             }
-            #[cfg(target_os = "macos")]
-            {
-                app.listen("deep-link://new-url", |event| {
-                    tauri::async_runtime::spawn(async move {
-                        let payload = event.payload();
-                        log_err!(resolve_scheme(payload.to_owned()).await);
-                    });
+
+            app.deep_link().on_open_url(|event| {
+                tauri::async_runtime::spawn(async move {
+                    if let Some(url) = event.urls().first() {
+                        log_err!(resolve_scheme(url.to_string()).await);
+                    }
                 });
-            }
+            });
+
             tauri::async_runtime::block_on(async move {
                 resolve::resolve_setup(app).await;
-
-                #[cfg(not(target_os = "macos"))]
-                {
-                    let argvs: Vec<String> = std::env::args().collect();
-                    if argvs.len() > 1 {
-                        log_err!(resolve_scheme(argvs[1].to_owned()).await);
-                    }
-                }
             });
 
             Ok(())
@@ -86,7 +77,6 @@ pub fn run() {
             cmds::open_core_dir,
             cmds::get_portable_flag,
             cmds::get_network_interfaces,
-            // cmds::kill_sidecar,
             cmds::restart_core,
             cmds::restart_app,
             // clash
@@ -109,7 +99,6 @@ pub fn run() {
             cmds::open_devtools,
             cmds::exit_app,
             cmds::get_network_interfaces_info,
-            // cmds::update_hotkeys,
             // profile
             cmds::get_profiles,
             cmds::enhance_profiles,
