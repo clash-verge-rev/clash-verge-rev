@@ -285,6 +285,7 @@
   "Tray Click Event": "Событие щелчка в лотке",
   "Show Main Window": "Показать главное окно",
   "Copy Env Type": "Скопировать тип Env",
+  "Copy Env": "Скопировать Env",
   "Copy Success": "Скопировано",
   "Start Page": "Главная страница",
   "Startup Script": "Скрипт запуска",
