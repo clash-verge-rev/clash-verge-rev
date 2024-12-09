@@ -15,9 +15,14 @@ use reqwest_dav::list_cmd::ListFile;
 use tauri::Manager;
 
 #[tauri::command]
-pub fn copy_clash_env() -> CmdResult {
-    feat::copy_clash_env();
-    Ok(())
+pub fn copy_clash_env(addr: String) -> CmdResult {
+    if addr.is_empty() {
+        feat::copy_clash_env(None);
+        Ok(())
+    } else {
+        feat::copy_clash_env(Some(addr));
+        Ok(())
+    }
 }
 
 #[tauri::command]

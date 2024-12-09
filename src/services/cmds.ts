@@ -2,8 +2,8 @@ import dayjs from "dayjs";
 import { invoke } from "@tauri-apps/api/core";
 import { Notice } from "@/components/base";
 
-export async function copyClashEnv() {
-  return invoke<void>("copy_clash_env");
+export async function copyClashEnv(addr: string = "127.0.0.1") {
+  return invoke<void>("copy_clash_env", { addr: addr });
 }
 
 export async function getProfiles() {
