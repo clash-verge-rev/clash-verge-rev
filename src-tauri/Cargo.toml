@@ -45,13 +45,13 @@ tauri = { version = "2.1.1", features = [
     "image-png",
 ] }
 network-interface = { version = "2.0.0", features = ["serde"] }
-tauri-plugin-shell = "2.0.2"
-tauri-plugin-dialog = "2.0.2"
-tauri-plugin-fs = "2.0.2"
-tauri-plugin-notification = "2.0.1"
-tauri-plugin-process = "2.0.1"
-tauri-plugin-clipboard-manager = "2.0.1"
-tauri-plugin-deep-link = "2.0.2"
+tauri-plugin-shell = "2.2.0"
+tauri-plugin-dialog = "2.2.0"
+tauri-plugin-fs = "2.2.0"
+tauri-plugin-notification = "2.2.0"
+tauri-plugin-process = "2.2.0"
+tauri-plugin-clipboard-manager = "2.2.0"
+tauri-plugin-deep-link = "2.2.0"
 tauri-plugin-devtools = "2.0.0-rc"
 url = "2.5.2"
 zip = "2.2.0"
@@ -71,10 +71,10 @@ url = "2.5.2"
 users = "0.11.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-autostart = "2.0.1"
-tauri-plugin-global-shortcut = "2.0.1"
-tauri-plugin-updater = "2.0.2"
-tauri-plugin-window-state = "2.0.2"
+tauri-plugin-autostart = "2.2.0"
+tauri-plugin-global-shortcut = "2.2.0"
+tauri-plugin-updater = "2.2.0"
+tauri-plugin-window-state = "2.2.0"
 #openssl
 
 [features]
