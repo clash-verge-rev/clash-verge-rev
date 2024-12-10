@@ -1,7 +1,7 @@
 {
   "millis": "毫秒",
-  "mins": "分钟",
   "seconds": "秒",
+  "mins": "分钟",
   "Back": "返回",
   "Close": "关闭",
   "Cancel": "取消",
@@ -337,8 +337,8 @@
   "Backup Setting": "备份设置",
   "Backup Setting Info": "支持WebDAV备份配置文件",
   "Runtime Config": "当前配置",
-  "Open Conf Dir Info": "如果软件运行异常，!备份!并删除此文件夹下的所有文件，重启软件",
   "Open Conf Dir": "配置目录",
+  "Open Conf Dir Info": "如果软件运行异常，!备份!并删除此文件夹下的所有文件，重启软件",
   "Open Core Dir": "内核目录",
   "Open Logs Dir": "日志目录",
   "Check for Updates": "检查更新",
