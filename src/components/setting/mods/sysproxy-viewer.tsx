@@ -76,7 +76,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     proxy_auto_config,
     pac_file_content,
     enable_proxy_guard,
-    enable_bypass_check,
     use_default_bypass,
     system_proxy_bypass,
     proxy_guard_duration,
@@ -85,12 +84,21 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const [value, setValue] = useState({
     guard: enable_proxy_guard,
     bypass: system_proxy_bypass,
-    bypass_check: enable_bypass_check ?? true,
     duration: proxy_guard_duration ?? 10,
     use_default: use_default_bypass ?? true,
     pac: proxy_auto_config,
     pac_content: pac_file_content ?? DEFAULT_PAC,
   });
+
+  const defaultBypass = () => {
+    if (isWindows) {
+      return "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>";
+    }
+    if (getSystem() === "linux") {
+      return "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1";
+    }
+    return "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
+  };
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -98,7 +106,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       setValue({
         guard: enable_proxy_guard,
         bypass: system_proxy_bypass,
-        bypass_check: enable_bypass_check ?? true,
         duration: proxy_guard_duration ?? 10,
         use_default: use_default_bypass ?? true,
         pac: proxy_auto_config,
@@ -115,6 +122,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       Notice.error(t("Proxy Daemon Duration Cannot be Less than 1 Second"));
       return;
     }
+    if (value.bypass && !validReg.test(value.bypass)) {
+      Notice.error(t("Invalid Bypass Format"));
+      return;
+    }
 
     const patch: Partial<IVergeConfig> = {};
 
@@ -127,9 +138,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (value.bypass !== system_proxy_bypass) {
       patch.system_proxy_bypass = value.bypass;
     }
-    if (value.bypass_check !== enable_bypass_check) {
-      patch.enable_bypass_check = value.bypass_check;
-    }
+
     if (value.pac !== proxy_auto_config) {
       patch.proxy_auto_config = value.pac;
     }
@@ -139,10 +148,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (value.pac_content !== pac_file_content) {
       patch.pac_file_content = value.pac_content;
     }
-    if (value.bypass && value.bypass_check && !validReg.test(value.bypass)) {
-      Notice.error(t("Invalid Bypass Format"));
-      return;
-    }
+
     try {
       await patchVerge(patch);
       setOpen(false);
@@ -247,26 +253,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             />
           </ListItem>
         )}
-        {!value.pac && (
-          <ListItem sx={{ padding: "5px 2px" }}>
-            <ListItemText primary={t("Use Bypass Check")} />
-            <Switch
-              edge="end"
-              disabled={!enabled}
-              checked={value.bypass_check}
-              onChange={(_, e) => setValue((v) => ({ ...v, bypass_check: e }))}
-            />
-          </ListItem>
-        )}
+
         {!value.pac && !value.use_default && (
           <>
             <ListItemText primary={t("Proxy Bypass")} />
             <TextField
-              error={
-                value.bypass && value.bypass_check
-                  ? !validReg.test(value.bypass)
-                  : false
-              }
+              error={value.bypass ? !validReg.test(value.bypass) : false}
               disabled={!enabled}
               size="small"
               multiline
@@ -277,6 +269,11 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 setValue((v) => ({ ...v, bypass: e.target.value }));
               }}
             />
+          </>
+        )}
+
+        {!value.pac && value.use_default && (
+          <>
             <ListItemText primary={t("Bypass")} />
             <FlexBox>
               <TextField
@@ -285,11 +282,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 multiline
                 rows={4}
                 sx={{ width: "100%" }}
-                value={sysproxy?.bypass || "-"}
+                value={defaultBypass()}
               />
             </FlexBox>
           </>
         )}
+
         {value.pac && (
           <>
             <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
