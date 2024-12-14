@@ -329,11 +329,12 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
 }
 
 /// copy env variable
-pub fn copy_clash_env() {
+pub fn copy_clash_env(addr: Option<String>) {
+    let addr = addr.unwrap_or_else(|| "127.0.0.1".to_string());
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
-    let http_proxy = format!("http://127.0.0.1:{}", port);
-    let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
+    let http_proxy = format!("http://{}:{}", addr, port);
+    let socks5_proxy = format!("socks5://{}:{}", addr, port);
 
     let sh =
         format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");

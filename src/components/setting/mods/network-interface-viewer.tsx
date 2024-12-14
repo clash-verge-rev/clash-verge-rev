@@ -1,9 +1,9 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
-import { getNetworkInterfacesInfo } from "@/services/cmds";
+import { copyClashEnv, getNetworkInterfacesInfo } from "@/services/cmds";
 import { alpha, Box, Button, Chip, IconButton } from "@mui/material";
-import { ContentCopyRounded } from "@mui/icons-material";
+import { ContentCopyRounded, ContentCopyTwoTone } from "@mui/icons-material";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
@@ -66,7 +66,7 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                         label={t("Ip Address")}
                         content={address.V4.ip}
                       />
-                    )
+                    ),
                 )}
                 <AddressDisplay
                   label={t("Mac Address")}
@@ -84,7 +84,7 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                         label={t("Ip Address")}
                         content={address.V6.ip}
                       />
-                    )
+                    ),
                 )}
                 <AddressDisplay
                   label={t("Mac Address")}
@@ -133,6 +133,22 @@ const AddressDisplay = (props: { label: string; content: string }) => {
         >
           <ContentCopyRounded sx={{ fontSize: "18px" }} />
         </IconButton>
+
+        {props.label === t("Ip Address") && (
+          <>
+            {t("Copy Env")}
+            <IconButton
+              size="small"
+              onClick={() => {
+                copyClashEnv(props.content);
+                // invoke<void>("copy_clash_env", { addr: props.content });
+                Notice.success(t("Copy Success"));
+              }}
+            >
+              <ContentCopyTwoTone sx={{ fontSize: "18px" }} />
+            </IconButton>
+          </>
+        )}
       </Box>
     </Box>
   );
