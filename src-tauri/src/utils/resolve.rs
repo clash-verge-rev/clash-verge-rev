@@ -1,7 +1,7 @@
 use crate::config::IVerge;
 use crate::utils::error;
 use crate::{config::Config, config::PrfItem, core::*, utils::init, utils::server};
-use crate::{log_err, trace_err, wrap_err};
+use crate::{log_err, wrap_err};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use percent_encoding::percent_decode_str;
@@ -122,16 +122,13 @@ pub fn create_window() {
     let app_handle = handle::Handle::global().app_handle().unwrap();
 
     if let Some(window) = handle::Handle::global().get_window() {
-        trace_err!(window.show(), "set win visible");
-        trace_err!(window.set_focus(), "set win focus");
+        let _ = window.show();
+        let _ = window.set_focus();
         return;
     }
 
     #[cfg(target_os = "windows")]
-    let _ = {
-        let app_handle = app_handle.clone();
-        std::thread::spawn(move || {
-            tauri::WebviewWindowBuilder::new(
+    let _ = tauri::WebviewWindowBuilder::new(
                 &app_handle,
                 "main".to_string(),
                 tauri::WebviewUrl::App("index.html".into()),
@@ -144,9 +141,7 @@ pub fn create_window() {
             .maximizable(true)
             .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
             .transparent(true)
-            .build()
-        }).join().unwrap()
-    }.unwrap();
+            .build();
 
     #[cfg(target_os = "macos")]
     let _ = tauri::WebviewWindowBuilder::new(
