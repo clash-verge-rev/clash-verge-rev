@@ -122,6 +122,9 @@ pub fn create_window() {
     let app_handle = handle::Handle::global().app_handle().unwrap();
 
     if let Some(window) = handle::Handle::global().get_window() {
+        if window.is_minimized().unwrap_or(false) {
+            let _ = window.unminimize();
+        }
         let _ = window.show();
         let _ = window.set_focus();
         return;
