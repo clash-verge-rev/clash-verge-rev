@@ -76,7 +76,9 @@ pub fn change_clash_mode(mode: String) {
 
                 if Config::clash().data().save_config().is_ok() {
                     handle::Handle::refresh_clash();
-                    log_err!(handle::Handle::update_systray_part());
+                    log_err!(handle::Handle::update_systray_menu());
+                    #[cfg(target_os = "macos")]
+                    log_err!(handle::Handle::update_systray_icon());
                 }
             }
             Err(err) => log::error!(target: "app", "{err}"),
@@ -139,7 +141,9 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             CoreManager::global().restart_core().await?;
         } else {
             if patch.get("mode").is_some() {
-                log_err!(handle::Handle::update_systray_part());
+                log_err!(handle::Handle::update_systray_menu());
+                #[cfg(target_os = "macos")]
+                log_err!(handle::Handle::update_systray_icon());
             }
             Config::runtime().latest().patch_config(patch);
             CoreManager::global().update_config().await?;
@@ -198,7 +202,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         let mut should_update_clash_config = false;
         let mut should_update_launch = false;
         let mut should_update_sysproxy = false;
-        let mut should_update_systray_part = false;
+        let mut should_update_systray_icon = false;
 
         if tun_mode.is_some() {
             should_update_clash_config = true;
@@ -241,7 +245,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             || tun_tray_icon.is_some()
             || tray_icon.is_some()
         {
-            should_update_systray_part = true;
+            should_update_systray_icon = true;
         }
         if should_restart_core {
             CoreManager::global().restart_core().await?;
@@ -262,8 +266,8 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             hotkey::Hotkey::global().update(hotkeys)?;
         }
 
-        if should_update_systray_part {
-            handle::Handle::update_systray_part()?;
+        if should_update_systray_icon {
+            handle::Handle::update_systray_icon()?;
         }
 
         <Result<()>>::Ok(())

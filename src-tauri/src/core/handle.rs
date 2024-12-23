@@ -71,6 +71,21 @@ impl Handle {
         Ok(())
     }
 
+    pub fn update_systray_menu() -> Result<()> {
+        Tray::update_menu()?;
+        Ok(())
+    }
+
+    pub fn update_systray_icon() -> Result<()> {
+        Tray::update_icon()?;
+        Ok(())
+    }
+
+    pub fn update_systray_tooltip() -> Result<()> {
+        Tray::update_tooltip()?;
+        Ok(())
+    }
+
     pub fn set_is_exiting(&self) {
         let mut is_exiting = self.is_exiting.write();
         *is_exiting = true;
