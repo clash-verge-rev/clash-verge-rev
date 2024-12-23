@@ -1,11 +1,10 @@
+#[cfg(not(target_os = "macos"))]
+use crate::utils::dirs;
 use crate::{
     cmds,
     config::Config,
     feat, t,
-    utils::{
-        dirs,
-        resolve::{self, VERSION},
-    },
+    utils::resolve::{self, VERSION},
 };
 use anyhow::Result;
 use tauri::AppHandle;
@@ -65,10 +64,13 @@ impl Tray {
         Ok(())
     }
 
-    pub fn update_part() -> Result<()> {
+    /// 更新托盘菜单
+    pub fn update_menu() -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
-        let use_zh = { Config::verge().latest().language == Some("zh".into()) };
-        let version = VERSION.get().unwrap();
+        let verge = Config::verge().latest().clone();
+        let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
+        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+
         let mode = {
             Config::clash()
                 .latest()
@@ -79,96 +81,130 @@ impl Tray {
                 .to_owned()
         };
 
-        let verge = Config::verge().latest().clone();
-        let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
-        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        let common_tray_icon = verge.common_tray_icon.as_ref().unwrap_or(&false);
-        let sysproxy_tray_icon = verge.sysproxy_tray_icon.as_ref().unwrap_or(&false);
-        let tun_tray_icon = verge.tun_tray_icon.as_ref().unwrap_or(&false);
         let tray = app_handle.tray_by_id("main").unwrap();
-        #[cfg(target_os = "macos")]
-        let tray_icon = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
-
         let _ = tray.set_menu(Some(create_tray_menu(
             &app_handle,
             Some(mode.as_str()),
             *system_proxy,
             *tun_mode,
         )?));
+        Ok(())
+    }
 
-        #[allow(unused)]
-        let mut indication_icon = if *system_proxy && !*tun_mode {
+    /// 更新托盘图标
+    pub fn update_icon() -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let verge = Config::verge().latest().clone();
+        let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
+        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        #[cfg(not(target_os = "macos"))]
+        {
+            let common_tray_icon = verge.common_tray_icon.as_ref().unwrap_or(&false);
+            let sysproxy_tray_icon = verge.sysproxy_tray_icon.as_ref().unwrap_or(&false);
+            let tun_tray_icon = verge.tun_tray_icon.as_ref().unwrap_or(&false);
+        }
+        let tray = app_handle.tray_by_id("main").unwrap();
+
+        #[cfg(target_os = "macos")]
+        let tray_icon = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
+
+        let icon_bytes = if *system_proxy && !*tun_mode {
             #[cfg(target_os = "macos")]
-            let mut icon = match tray_icon.as_str() {
-                "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
-            };
-
-            #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon-sys.ico").to_vec();
-            if *sysproxy_tray_icon {
-                let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                let png_path = icon_dir_path.join("sysproxy.png");
-                let ico_path = icon_dir_path.join("sysproxy.ico");
-                if ico_path.exists() {
-                    icon = std::fs::read(ico_path).unwrap();
-                } else if png_path.exists() {
-                    icon = std::fs::read(png_path).unwrap();
-                }
+            {
+                let icon = match tray_icon.as_str() {
+                    "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
+                    _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
+                };
+                icon
             }
-            icon
+            #[cfg(not(target_os = "macos"))]
+            {
+                let mut icon = include_bytes!("../../icons/tray-icon-sys.ico").to_vec();
+                if *sysproxy_tray_icon {
+                    let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                    let png_path = icon_dir_path.join("sysproxy.png");
+                    let ico_path = icon_dir_path.join("sysproxy.ico");
+                    if ico_path.exists() {
+                        icon = std::fs::read(ico_path).unwrap();
+                    } else if png_path.exists() {
+                        icon = std::fs::read(png_path).unwrap();
+                    }
+                }
+                icon
+            }
         } else if *tun_mode {
             #[cfg(target_os = "macos")]
-            let mut icon = match tray_icon.as_str() {
-                "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
-            };
-
-            #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon-tun.ico").to_vec();
-            if *tun_tray_icon {
-                let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                let png_path = icon_dir_path.join("tun.png");
-                let ico_path = icon_dir_path.join("tun.ico");
-                if ico_path.exists() {
-                    icon = std::fs::read(ico_path).unwrap();
-                } else if png_path.exists() {
-                    icon = std::fs::read(png_path).unwrap();
-                }
+            {
+                let icon = match tray_icon.as_str() {
+                    "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
+                    _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
+                };
+                icon
             }
-            icon
+            #[cfg(not(target_os = "macos"))]
+            {
+                let mut icon = include_bytes!("../../icons/tray-icon-tun.ico").to_vec();
+                if *tun_tray_icon {
+                    let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                    let png_path = icon_dir_path.join("tun.png");
+                    let ico_path = icon_dir_path.join("tun.ico");
+                    if ico_path.exists() {
+                        icon = std::fs::read(ico_path).unwrap();
+                    } else if png_path.exists() {
+                        icon = std::fs::read(png_path).unwrap();
+                    }
+                }
+                icon
+            }
         } else {
             #[cfg(target_os = "macos")]
-            let mut icon = match tray_icon.as_str() {
-                "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
-            };
-
-            #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon.ico").to_vec();
-            if *common_tray_icon {
-                let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                let png_path = icon_dir_path.join("common.png");
-                let ico_path = icon_dir_path.join("common.ico");
-                if ico_path.exists() {
-                    icon = std::fs::read(ico_path).unwrap();
-                } else if png_path.exists() {
-                    icon = std::fs::read(png_path).unwrap();
-                }
+            {
+                let icon = match tray_icon.as_str() {
+                    "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
+                    _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
+                };
+                icon
             }
-            icon
+            #[cfg(not(target_os = "macos"))]
+            {
+                let mut icon = include_bytes!("../../icons/tray-icon.ico").to_vec();
+                if *common_tray_icon {
+                    let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                    let png_path = icon_dir_path.join("common.png");
+                    let ico_path = icon_dir_path.join("common.ico");
+                    if ico_path.exists() {
+                        icon = std::fs::read(ico_path).unwrap();
+                    } else if png_path.exists() {
+                        icon = std::fs::read(png_path).unwrap();
+                    }
+                }
+                icon
+            }
         };
 
         #[cfg(target_os = "macos")]
         {
-            let is_template = crate::utils::help::is_monochrome_image_from_bytes(&indication_icon)
-                .unwrap_or(false);
-            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&indication_icon)?));
+            let is_template =
+                crate::utils::help::is_monochrome_image_from_bytes(&icon_bytes).unwrap_or(false);
+            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
             let _ = tray.set_icon_as_template(is_template);
         }
 
         #[cfg(not(target_os = "macos"))]
-        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&indication_icon)?));
+        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
+
+        Ok(())
+    }
+
+    /// 更新托盘提示
+    pub fn update_tooltip() -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let use_zh = { Config::verge().latest().language == Some("zh".into()) };
+        let version = VERSION.get().unwrap();
+
+        let verge = Config::verge().latest().clone();
+        let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
+        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
         let switch_map = {
             let mut map = std::collections::HashMap::new();
@@ -188,6 +224,7 @@ impl Tray {
             };
         };
 
+        let tray = app_handle.tray_by_id("main").unwrap();
         let _ = tray.set_tooltip(Some(&format!(
             "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
             t!("SysProxy", "系统代理", use_zh),
@@ -197,6 +234,13 @@ impl Tray {
             t!("Profile", "当前订阅", use_zh),
             current_profile_name
         )));
+        Ok(())
+    }
+
+    pub fn update_part() -> Result<()> {
+        Self::update_menu()?;
+        Self::update_icon()?;
+        Self::update_tooltip()?;
         Ok(())
     }
 }
