@@ -1,4 +1,3 @@
-#[cfg(not(target_os = "macos"))]
 use crate::utils::dirs;
 use crate::{
     cmds,
@@ -97,12 +96,11 @@ impl Tray {
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        #[cfg(not(target_os = "macos"))]
-        {
-            let common_tray_icon = verge.common_tray_icon.as_ref().unwrap_or(&false);
-            let sysproxy_tray_icon = verge.sysproxy_tray_icon.as_ref().unwrap_or(&false);
-            let tun_tray_icon = verge.tun_tray_icon.as_ref().unwrap_or(&false);
-        }
+
+        let common_tray_icon = verge.common_tray_icon.as_ref().unwrap_or(&false);
+        let sysproxy_tray_icon = verge.sysproxy_tray_icon.as_ref().unwrap_or(&false);
+        let tun_tray_icon = verge.tun_tray_icon.as_ref().unwrap_or(&false);
+
         let tray = app_handle.tray_by_id("main").unwrap();
 
         #[cfg(target_os = "macos")]
@@ -110,76 +108,64 @@ impl Tray {
 
         let icon_bytes = if *system_proxy && !*tun_mode {
             #[cfg(target_os = "macos")]
-            {
-                let icon = match tray_icon.as_str() {
-                    "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
-                    _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
-                };
-                icon
-            }
+            let mut icon = match tray_icon.as_str() {
+                "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
+                _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
+            };
+
             #[cfg(not(target_os = "macos"))]
-            {
-                let mut icon = include_bytes!("../../icons/tray-icon-sys.ico").to_vec();
-                if *sysproxy_tray_icon {
-                    let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                    let png_path = icon_dir_path.join("sysproxy.png");
-                    let ico_path = icon_dir_path.join("sysproxy.ico");
-                    if ico_path.exists() {
-                        icon = std::fs::read(ico_path).unwrap();
-                    } else if png_path.exists() {
-                        icon = std::fs::read(png_path).unwrap();
-                    }
+            let mut icon = include_bytes!("../../icons/tray-icon-sys.ico").to_vec();
+            if *sysproxy_tray_icon {
+                let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                let png_path = icon_dir_path.join("sysproxy.png");
+                let ico_path = icon_dir_path.join("sysproxy.ico");
+                if ico_path.exists() {
+                    icon = std::fs::read(ico_path).unwrap();
+                } else if png_path.exists() {
+                    icon = std::fs::read(png_path).unwrap();
                 }
-                icon
             }
+            icon
         } else if *tun_mode {
             #[cfg(target_os = "macos")]
-            {
-                let icon = match tray_icon.as_str() {
-                    "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
-                    _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
-                };
-                icon
-            }
+            let mut icon = match tray_icon.as_str() {
+                "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
+                _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
+            };
+
             #[cfg(not(target_os = "macos"))]
-            {
-                let mut icon = include_bytes!("../../icons/tray-icon-tun.ico").to_vec();
-                if *tun_tray_icon {
-                    let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                    let png_path = icon_dir_path.join("tun.png");
-                    let ico_path = icon_dir_path.join("tun.ico");
-                    if ico_path.exists() {
-                        icon = std::fs::read(ico_path).unwrap();
-                    } else if png_path.exists() {
-                        icon = std::fs::read(png_path).unwrap();
-                    }
+            let mut icon = include_bytes!("../../icons/tray-icon-tun.ico").to_vec();
+            if *tun_tray_icon {
+                let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                let png_path = icon_dir_path.join("tun.png");
+                let ico_path = icon_dir_path.join("tun.ico");
+                if ico_path.exists() {
+                    icon = std::fs::read(ico_path).unwrap();
+                } else if png_path.exists() {
+                    icon = std::fs::read(png_path).unwrap();
                 }
-                icon
             }
+            icon
         } else {
             #[cfg(target_os = "macos")]
-            {
-                let icon = match tray_icon.as_str() {
-                    "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
-                    _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
-                };
-                icon
-            }
+            let mut icon = match tray_icon.as_str() {
+                "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
+                _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
+            };
+
             #[cfg(not(target_os = "macos"))]
-            {
-                let mut icon = include_bytes!("../../icons/tray-icon.ico").to_vec();
-                if *common_tray_icon {
-                    let icon_dir_path = dirs::app_home_dir()?.join("icons");
-                    let png_path = icon_dir_path.join("common.png");
-                    let ico_path = icon_dir_path.join("common.ico");
-                    if ico_path.exists() {
-                        icon = std::fs::read(ico_path).unwrap();
-                    } else if png_path.exists() {
-                        icon = std::fs::read(png_path).unwrap();
-                    }
+            let mut icon = include_bytes!("../../icons/tray-icon.ico").to_vec();
+            if *common_tray_icon {
+                let icon_dir_path = dirs::app_home_dir()?.join("icons");
+                let png_path = icon_dir_path.join("common.png");
+                let ico_path = icon_dir_path.join("common.ico");
+                if ico_path.exists() {
+                    icon = std::fs::read(ico_path).unwrap();
+                } else if png_path.exists() {
+                    icon = std::fs::read(png_path).unwrap();
                 }
-                icon
             }
+            icon
         };
 
         #[cfg(target_os = "macos")]
