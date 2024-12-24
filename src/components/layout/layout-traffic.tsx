@@ -48,7 +48,7 @@ export const LayoutTraffic = () => {
       const { server = "", secret = "" } = clashInfo!;
 
       const s = createSockette(
-        `ws://${server}/traffic?token=${encodeURIComponent(secret)}`,
+        `ws://${server}${secret ? `/traffic?token=${encodeURIComponent(secret)}` : "/traffic"}`,
         {
           onmessage(event) {
             const data = JSON.parse(event.data) as ITrafficItem;
@@ -86,7 +86,7 @@ export const LayoutTraffic = () => {
       const { server = "", secret = "" } = clashInfo!;
 
       const s = createSockette(
-        `ws://${server}/memory?token=${encodeURIComponent(secret)}`,
+        `ws://${server}${secret ? `/memory?token=${encodeURIComponent(secret)}` : "/memory"}`,
         {
           onmessage(event) {
             const data = JSON.parse(event.data) as MemoryUsage;
