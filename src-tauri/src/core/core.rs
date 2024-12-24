@@ -76,7 +76,6 @@ impl CoreManager {
             service::stop_core_by_service().await?;
         }
         *running = false;
-
         Ok(())
     }
 
@@ -96,6 +95,7 @@ impl CoreManager {
             service::run_core_by_service(&config_path).await?;
             *running = true;
         }
+
         Ok(())
     }
 

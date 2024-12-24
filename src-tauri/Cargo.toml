@@ -36,7 +36,9 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", rev = "3d748b5" }
-image = "0.25.5"
+image = "0.24"
+imageproc = "0.23"
+rusttype = "0.9"
 tauri = { version = "2.1.1", features = [
     "protocol-asset",
     "devtools",
@@ -59,6 +61,8 @@ reqwest_dav = "0.1.14"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
 getrandom = "0.2"
+tokio-tungstenite = "0.26.1"
+futures = "0.3"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"

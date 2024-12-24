@@ -156,17 +156,20 @@ impl IClashTemp {
     }
 
     pub fn guard_mixed_port(config: &Mapping) -> u16 {
-        let mut port = config
-            .get("mixed-port")
+        let raw_value = config.get("mixed-port");
+
+        let mut port = raw_value
             .and_then(|value| match value {
                 Value::String(val_str) => val_str.parse().ok(),
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
             .unwrap_or(7897);
+
         if port == 0 {
             port = 7897;
         }
+
         port
     }
 
