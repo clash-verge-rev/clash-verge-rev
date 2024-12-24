@@ -95,8 +95,32 @@ export const updateProxy = async (group: string, proxy: string) => {
 // get proxy
 export const getProxiesInner = async () => {
   const instance = await getAxios();
-  const response = await instance.get<any, any>("/proxies");
-  return (response?.proxies || {}) as Record<string, IProxyItem>;
+  const response = await instance.get<
+    any,
+    { proxies: Record<string, IProxyItem> }
+  >("/proxies");
+  console.log(
+    "Proxy names:",
+    Object.values(response?.proxies || {}).map(
+      (proxy: IProxyItem) => proxy.name,
+    ),
+  );
+
+  let filteredProxies = Object.entries(response?.proxies || {}).reduce(
+    (acc, [key, proxy]) => {
+      if (!proxy.name.includes(`香港`)) {
+        if (proxy.name === "Auto" && proxy.all) {
+          proxy.all = proxy.all.filter((name) => !name.includes(`香港`));
+        }
+        acc[key] = proxy;
+      }
+      return acc;
+    },
+    {} as Record<string, IProxyItem>,
+  );
+
+  console.log(filteredProxies);
+  return filteredProxies;
 };
 
 /// Get the Proxy information
