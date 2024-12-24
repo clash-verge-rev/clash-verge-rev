@@ -152,6 +152,7 @@ interface IClashInfo {
   port?: number; // clash http port
   server?: string; // external-controller
   secret?: string;
+  verge?: IVergeConfig;
 }
 
 interface IProfileItem {
@@ -728,6 +729,7 @@ interface IVergeConfig {
   system_proxy_bypass?: string;
   web_ui_list?: string[];
   hotkeys?: string[];
+  proxy_filter_keywords?: string;
   theme_setting?: {
     primary_color?: string;
     secondary_color?: string;

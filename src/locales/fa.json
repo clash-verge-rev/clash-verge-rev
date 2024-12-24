@@ -397,5 +397,7 @@
   "Confirm to delete this backup file?": "آیا از حذف این فایل پشتیبان اطمینان دارید؟",
   "Confirm to restore this backup file?": "آیا از بازیابی این فایل پشتیبان اطمینان دارید؟",
   "Restore Success, App will restart in 1s": "بازیابی با موفقیت انجام شد، برنامه در 1 ثانیه راه‌اندازی مجدد می‌شود",
-  "Failed to fetch backup files": "دریافت فایل‌های پشتیبان ناموفق بود"
+  "Failed to fetch backup files": "دریافت فایل‌های پشتیبان ناموفق بود",
+  "Proxy Filter Keywords": "فیلتر کلمات کلیدی پراکسی",
+  "Use comma to separate multiple keywords": "فیلتر کردن پراکسی‌ها بر اساس کلمات کلیدی نام آن‌ها، برای چندین کلمه کلیدی از ویرگول استفاده کنید"
 }

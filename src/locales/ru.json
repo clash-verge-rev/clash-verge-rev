@@ -397,5 +397,7 @@
   "Confirm to delete this backup file?": "Вы уверены, что хотите удалить этот файл резервной копии?",
   "Confirm to restore this backup file?": "Вы уверены, что хотите восстановить этот файл резервной копии?",
   "Restore Success, App will restart in 1s": "Восстановление успешно выполнено, приложение перезапустится через 1 секунду",
-  "Failed to fetch backup files": "Не удалось получить файлы резервных копий"
+  "Failed to fetch backup files": "Не удалось получить файлы резервных копий",
+  "Proxy Filter Keywords": "Ключевые слова фильтрации прокси",
+  "Use comma to separate multiple keywords": "Фильтрация прокси-серверов по ключевым словам в их названиях, используйте запятую для разделения нескольких ключевых слов"
 }

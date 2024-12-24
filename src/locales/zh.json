@@ -397,5 +397,7 @@
   "Confirm to delete this backup file?": "确认删除此备份文件吗？",
   "Confirm to restore this backup file?": "确认恢复此 份文件吗？",
   "Restore Success, App will restart in 1s": "恢复成功，应用将在1秒后重启",
-  "Failed to fetch backup files": "获取备份文件失败"
+  "Failed to fetch backup files": "获取备份文件失败",
+  "Proxy Filter Keywords": "代理服务器过滤关键词",
+  "Use comma to separate multiple keywords": "根据代理服务器名称关键词过滤代理服务器，使用逗号分隔多个关键词。"
 }

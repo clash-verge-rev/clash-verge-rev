@@ -395,5 +395,7 @@
   "Confirm to delete this backup file?": "Confirm to delete this backup file?",
   "Confirm to restore this backup file?": "Confirm to restore this backup file?",
   "Restore Success, App will restart in 1s": "Restore Success, App will restart in 1s",
-  "Failed to fetch backup files": "Failed to fetch backup files"
+  "Failed to fetch backup files": "Failed to fetch backup files",
+  "Proxy Filter Keywords": "Proxy Filter Keywords",
+  "Use comma to separate multiple keywords": "Filter proxy servers based on the keyword.Use comma to separate multiple keywords. "
 }

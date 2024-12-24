@@ -1,7 +1,14 @@
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Button, MenuItem, Select, Input, Typography } from "@mui/material";
+import {
+  Button,
+  MenuItem,
+  Select,
+  Input,
+  Typography,
+  TextField,
+} from "@mui/material";
 import {
   exitApp,
   openAppDir,
@@ -24,6 +31,7 @@ import { GuardState } from "./mods/guard-state";
 import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import { BackupViewer } from "./mods/backup-viewer";
+import { ProxyFilterViewer } from "./mods/proxy-filter-viewer";
 import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
@@ -46,6 +54,7 @@ const SettingVerge = ({ onError }: Props) => {
     env_type,
     startup_script,
     start_page,
+    proxy_filter_keywords = "",
   } = verge ?? {};
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
@@ -54,6 +63,7 @@ const SettingVerge = ({ onError }: Props) => {
   const layoutRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
   const backupRef = useRef<DialogRef>(null);
+  const proxyFilterRef = useRef<DialogRef>(null);
 
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -86,6 +96,7 @@ const SettingVerge = ({ onError }: Props) => {
       <LayoutViewer ref={layoutRef} />
       <UpdateViewer ref={updateRef} />
       <BackupViewer ref={backupRef} />
+      <ProxyFilterViewer ref={proxyFilterRef} />
 
       <SettingItem label={t("Language")}>
         <GuardState
@@ -169,6 +180,40 @@ const SettingVerge = ({ onError }: Props) => {
             })}
           </Select>
         </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t("Proxy Filter Keywords")}
+        extra={
+          <TooltipIcon
+            title={t("Use comma to separate multiple keywords")}
+            sx={{ opacity: "0.7" }}
+          />
+        }
+      >
+        <Input
+          value={proxy_filter_keywords}
+          disabled
+          sx={{ width: 200 }}
+          placeholder="e.g. 香港,HK,Hong Kong"
+          endAdornment={
+            <>
+              <Button onClick={() => proxyFilterRef.current?.open()}>
+                {t("Edit")}
+              </Button>
+              {proxy_filter_keywords && (
+                <Button
+                  onClick={async () => {
+                    onChangeData({ proxy_filter_keywords: "" });
+                    patchVerge({ proxy_filter_keywords: "" });
+                  }}
+                >
+                  {t("Clear")}
+                </Button>
+              )}
+            </>
+          }
+        />
       </SettingItem>
 
       <SettingItem label={t("Startup Script")}>

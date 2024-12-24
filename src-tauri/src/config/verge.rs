@@ -41,6 +41,9 @@ pub struct IVerge {
     /// common tray icon
     pub common_tray_icon: Option<bool>,
 
+    /// proxy filter keywords
+    pub proxy_filter_keywords: Option<String>,
+
     /// tray icon
     #[cfg(target_os = "macos")]
     pub tray_icon: Option<String>,
@@ -321,6 +324,7 @@ impl IVerge {
         patch!(proxy_guard_duration);
         patch!(proxy_auto_config);
         patch!(pac_file_content);
+        patch!(proxy_filter_keywords);
 
         patch!(theme_setting);
         patch!(web_ui_list);
@@ -381,6 +385,7 @@ pub struct IVergeResponse {
     pub enable_memory_usage: Option<bool>,
     pub enable_group_icon: Option<bool>,
     pub common_tray_icon: Option<bool>,
+    pub proxy_filter_keywords: Option<String>,
     #[cfg(target_os = "macos")]
     pub tray_icon: Option<String>,
     pub menu_icon: Option<String>,
@@ -441,6 +446,7 @@ impl From<IVerge> for IVergeResponse {
             enable_memory_usage: verge.enable_memory_usage,
             enable_group_icon: verge.enable_group_icon,
             common_tray_icon: verge.common_tray_icon,
+            proxy_filter_keywords: verge.proxy_filter_keywords,
             #[cfg(target_os = "macos")]
             tray_icon: verge.tray_icon,
             menu_icon: verge.menu_icon,

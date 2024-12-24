@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { getClashInfo } from "./cmds";
+import { getClashInfo, getVergeConfig } from "./cmds";
 
 let axiosIns: AxiosInstance = null!;
 
@@ -106,11 +106,30 @@ export const getProxiesInner = async () => {
     ),
   );
 
+  // Get verge config directly
+  const verge = await getVergeConfig();
+  const filterKeywords =
+    verge?.proxy_filter_keywords
+      ?.split(",")
+      .map((k: string) => k.trim())
+      .filter(Boolean) || [];
+  console.log("filterKeywords:", filterKeywords);
   let filteredProxies = Object.entries(response?.proxies || {}).reduce(
     (acc, [key, proxy]) => {
-      if (!proxy.name.includes(`香港`)) {
+      const shouldFilter =
+        filterKeywords.length > 0 &&
+        filterKeywords.some((keyword: string) =>
+          proxy.name.toLowerCase().includes(keyword.toLowerCase()),
+        );
+
+      if (!shouldFilter) {
         if (proxy.all) {
-          proxy.all = proxy.all.filter((name) => !name.includes(`香港`));
+          proxy.all = proxy.all.filter(
+            (name: string) =>
+              !filterKeywords.some((keyword: string) =>
+                name.toLowerCase().includes(keyword.toLowerCase()),
+              ),
+          );
         }
         acc[key] = proxy;
       }
