@@ -109,7 +109,7 @@ export const getProxiesInner = async () => {
   let filteredProxies = Object.entries(response?.proxies || {}).reduce(
     (acc, [key, proxy]) => {
       if (!proxy.name.includes(`香港`)) {
-        if (proxy.name === "Auto" && proxy.all) {
+        if (proxy.all) {
           proxy.all = proxy.all.filter((name) => !name.includes(`香港`));
         }
         acc[key] = proxy;
@@ -119,7 +119,7 @@ export const getProxiesInner = async () => {
     {} as Record<string, IProxyItem>,
   );
 
-  console.log(filteredProxies);
+  console.log("filteredProxies:", filteredProxies);
   return filteredProxies;
 };
 

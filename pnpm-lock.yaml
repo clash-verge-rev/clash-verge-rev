@@ -109,6 +109,9 @@ importers:
       peggy:
         specifier: ^4.1.1
         version: 4.1.1
+      proxy-agent:
+        specifier: ^6.5.0
+        version: 6.5.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1160,6 +1163,7 @@ packages:
     resolution:
       {
         integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==,
+        tarball: https://registry.npmmirror.com/@esbuild/aix-ppc64/-/aix-ppc64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [ppc64]
@@ -1169,6 +1173,7 @@ packages:
     resolution:
       {
         integrity: sha512-c0uX9VAUBQ7dTDCjq+wdyGLowMdtR/GoC2U5IYk/7D1H1JYC0qseD7+11iMP2mRLN9RcCMRcjC4YMclCzGwS/A==,
+        tarball: https://registry.npmmirror.com/@esbuild/android-arm64/-/android-arm64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [arm64]
@@ -1178,6 +1183,7 @@ packages:
     resolution:
       {
         integrity: sha512-vCPvzSjpPHEi1siZdlvAlsPxXl7WbOVUBBAowWug4rJHb68Ox8KualB+1ocNvT5fjv6wpkX6o/iEpbDrf68zcg==,
+        tarball: https://registry.npmmirror.com/@esbuild/android-arm/-/android-arm-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [arm]
@@ -1187,6 +1193,7 @@ packages:
     resolution:
       {
         integrity: sha512-D7aPRUUNHRBwHxzxRvp856rjUHRFW1SdQATKXH2hqA0kAZb1hKmi02OpYRacl0TxIGz/ZmXWlbZgjwWYaCakTA==,
+        tarball: https://registry.npmmirror.com/@esbuild/android-x64/-/android-x64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [x64]
@@ -1196,6 +1203,7 @@ packages:
     resolution:
       {
         integrity: sha512-DwqXqZyuk5AiWWf3UfLiRDJ5EDd49zg6O9wclZ7kUMv2WRFr4HKjXp/5t8JZ11QbQfUS6/cRCKGwYhtNAY88kQ==,
+        tarball: https://registry.npmmirror.com/@esbuild/darwin-arm64/-/darwin-arm64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [arm64]
@@ -1205,6 +1213,7 @@ packages:
     resolution:
       {
         integrity: sha512-se/JjF8NlmKVG4kNIuyWMV/22ZaerB+qaSi5MdrXtd6R08kvs2qCN4C09miupktDitvh8jRFflwGFBQcxZRjbw==,
+        tarball: https://registry.npmmirror.com/@esbuild/darwin-x64/-/darwin-x64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [x64]
@@ -1214,6 +1223,7 @@ packages:
     resolution:
       {
         integrity: sha512-5JcRxxRDUJLX8JXp/wcBCy3pENnCgBR9bN6JsY4OmhfUtIHe3ZW0mawA7+RDAcMLrMIZaf03NlQiX9DGyB8h4g==,
+        tarball: https://registry.npmmirror.com/@esbuild/freebsd-arm64/-/freebsd-arm64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [arm64]
@@ -1223,6 +1233,7 @@ packages:
     resolution:
       {
         integrity: sha512-J95kNBj1zkbMXtHVH29bBriQygMXqoVQOQYA+ISs0/2l3T9/kj42ow2mpqerRBxDJnmkUDCaQT/dfNXWX/ZZCQ==,
+        tarball: https://registry.npmmirror.com/@esbuild/freebsd-x64/-/freebsd-x64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [x64]
@@ -1232,6 +1243,7 @@ packages:
     resolution:
       {
         integrity: sha512-ibKvmyYzKsBeX8d8I7MH/TMfWDXBF3db4qM6sy+7re0YXya+K1cem3on9XgdT2EQGMu4hQyZhan7TeQ8XkGp4Q==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-arm64/-/linux-arm64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [arm64]
@@ -1241,6 +1253,7 @@ packages:
     resolution:
       {
         integrity: sha512-bPb5AHZtbeNGjCKVZ9UGqGwo8EUu4cLq68E95A53KlxAPRmUyYv2D6F0uUI65XisGOL1hBP5mTronbgo+0bFcA==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-arm/-/linux-arm-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [arm]
@@ -1250,6 +1263,7 @@ packages:
     resolution:
       {
         integrity: sha512-YvjXDqLRqPDl2dvRODYmmhz4rPeVKYvppfGYKSNGdyZkA01046pLWyRKKI3ax8fbJoK5QbxblURkwK/MWY18Tg==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-ia32/-/linux-ia32-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [ia32]
@@ -1259,6 +1273,7 @@ packages:
     resolution:
       {
         integrity: sha512-uHf1BmMG8qEvzdrzAqg2SIG/02+4/DHB6a9Kbya0XDvwDEKCoC8ZRWI5JJvNdUjtciBGFQ5PuBlpEOXQj+JQSg==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-loong64/-/linux-loong64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [loong64]
@@ -1268,6 +1283,7 @@ packages:
     resolution:
       {
         integrity: sha512-IajOmO+KJK23bj52dFSNCMsz1QP1DqM6cwLUv3W1QwyxkyIWecfafnI555fvSGqEKwjMXVLokcV5ygHW5b3Jbg==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-mips64el/-/linux-mips64el-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [mips64el]
@@ -1277,6 +1293,7 @@ packages:
     resolution:
       {
         integrity: sha512-1hHV/Z4OEfMwpLO8rp7CvlhBDnjsC3CttJXIhBi+5Aj5r+MBvy4egg7wCbe//hSsT+RvDAG7s81tAvpL2XAE4w==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-ppc64/-/linux-ppc64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [ppc64]
@@ -1286,6 +1303,7 @@ packages:
     resolution:
       {
         integrity: sha512-2HdXDMd9GMgTGrPWnJzP2ALSokE/0O5HhTUvWIbD3YdjME8JwvSCnNGBnTThKGEB91OZhzrJ4qIIxk/SBmyDDA==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-riscv64/-/linux-riscv64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [riscv64]
@@ -1295,6 +1313,7 @@ packages:
     resolution:
       {
         integrity: sha512-zus5sxzqBJD3eXxwvjN1yQkRepANgxE9lgOW2qLnmr8ikMTphkjgXu1HR01K4FJg8h1kEEDAqDcZQtbrRnB41A==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-s390x/-/linux-s390x-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [s390x]
@@ -1304,6 +1323,7 @@ packages:
     resolution:
       {
         integrity: sha512-1rYdTpyv03iycF1+BhzrzQJCdOuAOtaqHTWJZCWvijKD2N5Xu0TtVC8/+1faWqcP9iBCWOmjmhoH94dH82BxPQ==,
+        tarball: https://registry.npmmirror.com/@esbuild/linux-x64/-/linux-x64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [x64]
@@ -1313,6 +1333,7 @@ packages:
     resolution:
       {
         integrity: sha512-Woi2MXzXjMULccIwMnLciyZH4nCIMpWQAs049KEeMvOcNADVxo0UBIQPfSmxB3CWKedngg7sWZdLvLczpe0tLg==,
+        tarball: https://registry.npmmirror.com/@esbuild/netbsd-x64/-/netbsd-x64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [x64]
@@ -1322,6 +1343,7 @@ packages:
     resolution:
       {
         integrity: sha512-HLNNw99xsvx12lFBUwoT8EVCsSvRNDVxNpjZ7bPn947b8gJPzeHWyNVhFsaerc0n3TsbOINvRP2byTZ5LKezow==,
+        tarball: https://registry.npmmirror.com/@esbuild/openbsd-x64/-/openbsd-x64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [x64]
@@ -1331,6 +1353,7 @@ packages:
     resolution:
       {
         integrity: sha512-6+gjmFpfy0BHU5Tpptkuh8+uw3mnrvgs+dSPQXQOv3ekbordwnzTVEb4qnIvQcYXq6gzkyTnoZ9dZG+D4garKg==,
+        tarball: https://registry.npmmirror.com/@esbuild/sunos-x64/-/sunos-x64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [x64]
@@ -1340,6 +1363,7 @@ packages:
     resolution:
       {
         integrity: sha512-Z0gOTd75VvXqyq7nsl93zwahcTROgqvuAcYDUr+vOv8uHhNSKROyU961kgtCD1e95IqPKSQKH7tBTslnS3tA8A==,
+        tarball: https://registry.npmmirror.com/@esbuild/win32-arm64/-/win32-arm64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [arm64]
@@ -1349,6 +1373,7 @@ packages:
     resolution:
       {
         integrity: sha512-SWXFF1CL2RVNMaVs+BBClwtfZSvDgtL//G/smwAc5oVK/UPu2Gu9tIaRgFmYFFKrmg3SyAjSrElf0TiJ1v8fYA==,
+        tarball: https://registry.npmmirror.com/@esbuild/win32-ia32/-/win32-ia32-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [ia32]
@@ -1358,6 +1383,7 @@ packages:
     resolution:
       {
         integrity: sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw==,
+        tarball: https://registry.npmmirror.com/@esbuild/win32-x64/-/win32-x64-0.21.5.tgz,
       }
     engines: { node: ">=12" }
     cpu: [x64]
@@ -1798,6 +1824,7 @@ packages:
     resolution:
       {
         integrity: sha512-qlX4eS28bUcQCdribHkg/herLe+0A9RyYC+mm2PXpncit8z5b3nSqGVzMNR3CmtAOgRutiZ02eIJJgP/b1iEFQ==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-android-arm64/-/watcher-android-arm64-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [arm64]
@@ -1807,6 +1834,7 @@ packages:
     resolution:
       {
         integrity: sha512-hyZ3TANnzGfLpRA2s/4U1kbw2ZI4qGxaRJbBH2DCSREFfubMswheh8TeiC1sGZ3z2jUf3s37P0BBlrD3sjVTUw==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-darwin-arm64/-/watcher-darwin-arm64-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [arm64]
@@ -1816,6 +1844,7 @@ packages:
     resolution:
       {
         integrity: sha512-9rhlwd78saKf18fT869/poydQK8YqlU26TMiNg7AIu7eBp9adqbJZqmdFOsbZ5cnLp5XvRo9wcFmNHgHdWaGYA==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-darwin-x64/-/watcher-darwin-x64-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [x64]
@@ -1825,6 +1854,7 @@ packages:
     resolution:
       {
         integrity: sha512-syvfhZzyM8kErg3VF0xpV8dixJ+RzbUaaGaeb7uDuz0D3FK97/mZ5AJQ3XNnDsXX7KkFNtyQyFrXZzQIcN49Tw==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-freebsd-x64/-/watcher-freebsd-x64-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [x64]
@@ -1834,60 +1864,73 @@ packages:
     resolution:
       {
         integrity: sha512-0VQY1K35DQET3dVYWpOaPFecqOT9dbuCfzjxoQyif1Wc574t3kOSkKevULddcR9znz1TcklCE7Ht6NIxjvTqLA==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-linux-arm-glibc/-/watcher-linux-arm-glibc-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   "@parcel/watcher-linux-arm-musl@2.5.0":
     resolution:
       {
         integrity: sha512-6uHywSIzz8+vi2lAzFeltnYbdHsDm3iIB57d4g5oaB9vKwjb6N6dRIgZMujw4nm5r6v9/BQH0noq6DzHrqr2pA==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-linux-arm-musl/-/watcher-linux-arm-musl-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [arm]
     os: [linux]
+    libc: [musl]
 
   "@parcel/watcher-linux-arm64-glibc@2.5.0":
     resolution:
       {
         integrity: sha512-BfNjXwZKxBy4WibDb/LDCriWSKLz+jJRL3cM/DllnHH5QUyoiUNEp3GmL80ZqxeumoADfCCP19+qiYiC8gUBjA==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-linux-arm64-glibc/-/watcher-linux-arm64-glibc-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@parcel/watcher-linux-arm64-musl@2.5.0":
     resolution:
       {
         integrity: sha512-S1qARKOphxfiBEkwLUbHjCY9BWPdWnW9j7f7Hb2jPplu8UZ3nes7zpPOW9bkLbHRvWM0WDTsjdOTUgW0xLBN1Q==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-linux-arm64-musl/-/watcher-linux-arm64-musl-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@parcel/watcher-linux-x64-glibc@2.5.0":
     resolution:
       {
         integrity: sha512-d9AOkusyXARkFD66S6zlGXyzx5RvY+chTP9Jp0ypSTC9d4lzyRs9ovGf/80VCxjKddcUvnsGwCHWuF2EoPgWjw==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-linux-x64-glibc/-/watcher-linux-x64-glibc-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@parcel/watcher-linux-x64-musl@2.5.0":
     resolution:
       {
         integrity: sha512-iqOC+GoTDoFyk/VYSFHwjHhYrk8bljW6zOhPuhi5t9ulqiYq1togGJB5e3PwYVFFfeVgc6pbz3JdQyDoBszVaA==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-linux-x64-musl/-/watcher-linux-x64-musl-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@parcel/watcher-win32-arm64@2.5.0":
     resolution:
       {
         integrity: sha512-twtft1d+JRNkM5YbmexfcH/N4znDtjgysFaV9zvZmmJezQsKpkfLYJ+JFV3uygugK6AtIM2oADPkB2AdhBrNig==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-win32-arm64/-/watcher-win32-arm64-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [arm64]
@@ -1897,6 +1940,7 @@ packages:
     resolution:
       {
         integrity: sha512-+rgpsNRKwo8A53elqbbHXdOMtY/tAtTzManTWShB5Kk54N8Q9mzNWV7tV+IbGueCbcj826MfWGU3mprWtuf1TA==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-win32-ia32/-/watcher-win32-ia32-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [ia32]
@@ -1906,6 +1950,7 @@ packages:
     resolution:
       {
         integrity: sha512-lPrxve92zEHdgeff3aiu4gDOIt4u7sJYha6wbdEZDCDUhtjTsOMiaJzG5lMY4GkWH8p0fMmO2Ppq5G5XXG+DQw==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher-win32-x64/-/watcher-win32-x64-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
     cpu: [x64]
@@ -1915,6 +1960,7 @@ packages:
     resolution:
       {
         integrity: sha512-i0GV1yJnm2n3Yq1qw6QrUrd/LI9bE8WEBOTtOkpCXHHdyN3TAGgqAK/DAT05z4fq2x04cARXt2pDmjWjL92iTQ==,
+        tarball: https://registry.npmmirror.com/@parcel/watcher/-/watcher-2.5.0.tgz,
       }
     engines: { node: ">= 10.0.0" }
 
@@ -1929,6 +1975,7 @@ packages:
     resolution:
       {
         integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==,
+        tarball: https://registry.npmmirror.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz,
       }
     engines: { node: ">=14" }
 
@@ -1961,6 +2008,7 @@ packages:
     resolution:
       {
         integrity: sha512-CC/ZqFZwlAIbU1wUPisHyV/XRc5RydFrNLtgl3dGYskdwPZdt4HERtKm50a/+DtTlKeCq9IXFEWR+P6blwjqBA==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.25.0.tgz,
       }
     cpu: [arm]
     os: [android]
@@ -1969,6 +2017,7 @@ packages:
     resolution:
       {
         integrity: sha512-/Y76tmLGUJqVBXXCfVS8Q8FJqYGhgH4wl4qTA24E9v/IJM0XvJCGQVSW1QZ4J+VURO9h8YCa28sTFacZXwK7Rg==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-android-arm64/-/rollup-android-arm64-4.25.0.tgz,
       }
     cpu: [arm64]
     os: [android]
@@ -1977,6 +2026,7 @@ packages:
     resolution:
       {
         integrity: sha512-YVT6L3UrKTlC0FpCZd0MGA7NVdp7YNaEqkENbWQ7AOVOqd/7VzyHpgIpc1mIaxRAo1ZsJRH45fq8j4N63I/vvg==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.25.0.tgz,
       }
     cpu: [arm64]
     os: [darwin]
@@ -1985,6 +2035,7 @@ packages:
     resolution:
       {
         integrity: sha512-ZRL+gexs3+ZmmWmGKEU43Bdn67kWnMeWXLFhcVv5Un8FQcx38yulHBA7XR2+KQdYIOtD0yZDWBCudmfj6lQJoA==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-darwin-x64/-/rollup-darwin-x64-4.25.0.tgz,
       }
     cpu: [x64]
     os: [darwin]
@@ -1993,6 +2044,7 @@ packages:
     resolution:
       {
         integrity: sha512-xpEIXhiP27EAylEpreCozozsxWQ2TJbOLSivGfXhU4G1TBVEYtUPi2pOZBnvGXHyOdLAUUhPnJzH3ah5cqF01g==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-freebsd-arm64/-/rollup-freebsd-arm64-4.25.0.tgz,
       }
     cpu: [arm64]
     os: [freebsd]
@@ -2001,6 +2053,7 @@ packages:
     resolution:
       {
         integrity: sha512-sC5FsmZGlJv5dOcURrsnIK7ngc3Kirnx3as2XU9uER+zjfyqIjdcMVgzy4cOawhsssqzoAX19qmxgJ8a14Qrqw==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-freebsd-x64/-/rollup-freebsd-x64-4.25.0.tgz,
       }
     cpu: [x64]
     os: [freebsd]
@@ -2009,78 +2062,97 @@ packages:
     resolution:
       {
         integrity: sha512-uD/dbLSs1BEPzg564TpRAQ/YvTnCds2XxyOndAO8nJhaQcqQGFgv/DAVko/ZHap3boCvxnzYMa3mTkV/B/3SWA==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-arm-gnueabihf/-/rollup-linux-arm-gnueabihf-4.25.0.tgz,
       }
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-arm-musleabihf@4.25.0":
     resolution:
       {
         integrity: sha512-ZVt/XkrDlQWegDWrwyC3l0OfAF7yeJUF4fq5RMS07YM72BlSfn2fQQ6lPyBNjt+YbczMguPiJoCfaQC2dnflpQ==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-arm-musleabihf/-/rollup-linux-arm-musleabihf-4.25.0.tgz,
       }
     cpu: [arm]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-linux-arm64-gnu@4.25.0":
     resolution:
       {
         integrity: sha512-qboZ+T0gHAW2kkSDPHxu7quaFaaBlynODXpBVnPxUgvWYaE84xgCKAPEYE+fSMd3Zv5PyFZR+L0tCdYCMAtG0A==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-arm64-gnu/-/rollup-linux-arm64-gnu-4.25.0.tgz,
       }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-arm64-musl@4.25.0":
     resolution:
       {
         integrity: sha512-ndWTSEmAaKr88dBuogGH2NZaxe7u2rDoArsejNslugHZ+r44NfWiwjzizVS1nUOHo+n1Z6qV3X60rqE/HlISgw==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-arm64-musl/-/rollup-linux-arm64-musl-4.25.0.tgz,
       }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-linux-powerpc64le-gnu@4.25.0":
     resolution:
       {
         integrity: sha512-BVSQvVa2v5hKwJSy6X7W1fjDex6yZnNKy3Kx1JGimccHft6HV0THTwNtC2zawtNXKUu+S5CjXslilYdKBAadzA==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-powerpc64le-gnu/-/rollup-linux-powerpc64le-gnu-4.25.0.tgz,
       }
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-riscv64-gnu@4.25.0":
     resolution:
       {
         integrity: sha512-G4hTREQrIdeV0PE2JruzI+vXdRnaK1pg64hemHq2v5fhv8C7WjVaeXc9P5i4Q5UC06d/L+zA0mszYIKl+wY8oA==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-riscv64-gnu/-/rollup-linux-riscv64-gnu-4.25.0.tgz,
       }
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-s390x-gnu@4.25.0":
     resolution:
       {
         integrity: sha512-9T/w0kQ+upxdkFL9zPVB6zy9vWW1deA3g8IauJxojN4bnz5FwSsUAD034KpXIVX5j5p/rn6XqumBMxfRkcHapQ==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-s390x-gnu/-/rollup-linux-s390x-gnu-4.25.0.tgz,
       }
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-x64-gnu@4.25.0":
     resolution:
       {
         integrity: sha512-ThcnU0EcMDn+J4B9LD++OgBYxZusuA7iemIIiz5yzEcFg04VZFzdFjuwPdlURmYPZw+fgVrFzj4CA64jSTG4Ig==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.25.0.tgz,
       }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-x64-musl@4.25.0":
     resolution:
       {
         integrity: sha512-zx71aY2oQxGxAT1JShfhNG79PnjYhMC6voAjzpu/xmMjDnKNf6Nl/xv7YaB/9SIa9jDYf8RBPWEnjcdlhlv1rQ==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.25.0.tgz,
       }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-win32-arm64-msvc@4.25.0":
     resolution:
       {
         integrity: sha512-JT8tcjNocMs4CylWY/CxVLnv8e1lE7ff1fi6kbGocWwxDq9pj30IJ28Peb+Y8yiPNSF28oad42ApJB8oUkwGww==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-win32-arm64-msvc/-/rollup-win32-arm64-msvc-4.25.0.tgz,
       }
     cpu: [arm64]
     os: [win32]
@@ -2089,6 +2161,7 @@ packages:
     resolution:
       {
         integrity: sha512-dRLjLsO3dNOfSN6tjyVlG+Msm4IiZnGkuZ7G5NmpzwF9oOc582FZG05+UdfTbz5Jd4buK/wMb6UeHFhG18+OEg==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-win32-ia32-msvc/-/rollup-win32-ia32-msvc-4.25.0.tgz,
       }
     cpu: [ia32]
     os: [win32]
@@ -2097,6 +2170,7 @@ packages:
     resolution:
       {
         integrity: sha512-/RqrIFtLB926frMhZD0a5oDa4eFIbyNEwLLloMTEjmqfwZWXywwVVOVmwTsuyhC9HKkVEZcOOi+KV4U9wmOdlg==,
+        tarball: https://registry.npmmirror.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.25.0.tgz,
       }
     cpu: [x64]
     os: [win32]
@@ -2215,6 +2289,7 @@ packages:
     resolution:
       {
         integrity: sha512-ESc6J6CE8hl1yKH2vJ+ALF+thq4Be+DM1mvmTyUCQObvezNCNhzfS6abIUd3ou4x5RGH51ouiANeT3wekU6dCw==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-darwin-arm64/-/cli-darwin-arm64-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [arm64]
@@ -2224,6 +2299,7 @@ packages:
     resolution:
       {
         integrity: sha512-TasHS442DFs8cSH2eUQzuDBXUST4ECjCd0yyP+zZzvAruiB0Bg+c8A+I/EnqCvBQ2G2yvWLYG8q/LI7c87A5UA==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-darwin-x64/-/cli-darwin-x64-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [x64]
@@ -2233,6 +2309,7 @@ packages:
     resolution:
       {
         integrity: sha512-aP7ZBGNL4ny07Cbb6kKpUOSrmhcIK2KhjviTzYlh+pPhAptxnC78xQGD3zKQkTi2WliJLPmBYbOHWWQa57lQ9w==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-arm-gnueabihf/-/cli-linux-arm-gnueabihf-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [arm]
@@ -2242,42 +2319,51 @@ packages:
     resolution:
       {
         integrity: sha512-ZTdgD5gLeMCzndMT2f358EkoYkZ5T+Qy6zPzU+l5vv5M7dHVN9ZmblNAYYXmoOuw7y+BY4X/rZvHV9pcGrcanQ==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-arm64-gnu/-/cli-linux-arm64-gnu-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@tauri-apps/cli-linux-arm64-musl@2.1.0":
     resolution:
       {
         integrity: sha512-NzwqjUCilhnhJzusz3d/0i0F1GFrwCQbkwR6yAHUxItESbsGYkZRJk0yMEWkg3PzFnyK4cWTlQJMEU52TjhEzA==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-arm64-musl/-/cli-linux-arm64-musl-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@tauri-apps/cli-linux-x64-gnu@2.1.0":
     resolution:
       {
         integrity: sha512-TyiIpMEtZxNOQmuFyfJwaaYbg3movSthpBJLIdPlKxSAB2BW0VWLY3/ZfIxm/G2YGHyREkjJvimzYE0i37PnMA==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-x64-gnu/-/cli-linux-x64-gnu-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@tauri-apps/cli-linux-x64-musl@2.1.0":
     resolution:
       {
         integrity: sha512-/dQd0TlaxBdJACrR72DhynWftzHDaX32eBtS5WBrNJ+nnNb+znM3gON6nJ9tSE9jgDa6n1v2BkI/oIDtypfUXw==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-x64-musl/-/cli-linux-x64-musl-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@tauri-apps/cli-win32-arm64-msvc@2.1.0":
     resolution:
       {
         integrity: sha512-NdQJO7SmdYqOcE+JPU7bwg7+odfZMWO6g8xF9SXYCMdUzvM2Gv/AQfikNXz5yS7ralRhNFuW32i5dcHlxh4pDg==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-win32-arm64-msvc/-/cli-win32-arm64-msvc-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [arm64]
@@ -2287,6 +2373,7 @@ packages:
     resolution:
       {
         integrity: sha512-f5h8gKT/cB8s1ticFRUpNmHqkmaLutT62oFDB7N//2YTXnxst7EpMIn1w+QimxTvTk2gcx6EcW6bEk/y2hZGzg==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-win32-ia32-msvc/-/cli-win32-ia32-msvc-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [ia32]
@@ -2296,6 +2383,7 @@ packages:
     resolution:
       {
         integrity: sha512-P/+LrdSSb5Xbho1LRP4haBjFHdyPdjWvGgeopL96OVtrFpYnfC+RctB45z2V2XxqFk3HweDDxk266btjttfjGw==,
+        tarball: https://registry.npmmirror.com/@tauri-apps/cli-win32-x64-msvc/-/cli-win32-x64-msvc-2.1.0.tgz,
       }
     engines: { node: ">= 10" }
     cpu: [x64]
@@ -2355,6 +2443,13 @@ packages:
     resolution:
       {
         integrity: sha512-N0cl71g7RPr7zK2Fe5aoIwzw14NcdLcz7XMGFWZVjprsqgDRWoxbnUkknyCQMZthjhGkppCd/wN2MIsUz+eAhQ==,
+      }
+
+  "@tootallnate/quickjs-emscripten@0.23.0":
+    resolution:
+      {
+        integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==,
+        tarball: https://registry.npmmirror.com/@tootallnate/quickjs-emscripten/-/quickjs-emscripten-0.23.0.tgz,
       }
 
   "@types/babel__core@7.20.5":
@@ -2451,6 +2546,7 @@ packages:
     resolution:
       {
         integrity: sha512-MdiXf+nDuMvY0gJKxyfZ7/6UFsETO7mGKF54MVD/ekJS6HdFtpZFBgrh6Pseu64XTb2MLyFPlbW6hj8HYRQNOQ==,
+        tarball: https://registry.npmmirror.com/@types/node/-/node-20.14.10.tgz,
       }
 
   "@types/parse-json@4.0.2":
@@ -2542,6 +2638,14 @@ packages:
       }
     engines: { node: ">= 14" }
 
+  agent-base@7.1.3:
+    resolution:
+      {
+        integrity: sha512-jRR5wdylq8CkOe6hei19GGZnxM6rBGwFl3Bg0YItGDimvjGtAvdZk4Pu6Cl4u4Igsws4a1fd1Vq3ezrhn4KmFw==,
+        tarball: https://registry.npmmirror.com/agent-base/-/agent-base-7.1.3.tgz,
+      }
+    engines: { node: ">= 14" }
+
   ahooks@3.8.1:
     resolution:
       {
@@ -2555,6 +2659,7 @@ packages:
     resolution:
       {
         integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==,
+        tarball: https://registry.npmmirror.com/ansi-regex/-/ansi-regex-5.0.1.tgz,
       }
     engines: { node: ">=8" }
 
@@ -2569,6 +2674,7 @@ packages:
     resolution:
       {
         integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==,
+        tarball: https://registry.npmmirror.com/ansi-styles/-/ansi-styles-4.3.0.tgz,
       }
     engines: { node: ">=8" }
 
@@ -2584,6 +2690,14 @@ packages:
       {
         integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==,
       }
+
+  ast-types@0.13.4:
+    resolution:
+      {
+        integrity: sha512-x1FCFnFifvYDDzTaLII71vG5uvDwgtmDTEVWAxrgeiR8VjMONcCXJx7E+USjDtHlwFmt9MysbqgF9b9Vjr6w+w==,
+        tarball: https://registry.npmmirror.com/ast-types/-/ast-types-0.13.4.tgz,
+      }
+    engines: { node: ">=4" }
 
   asynckit@0.4.0:
     resolution:
@@ -2639,6 +2753,14 @@ packages:
       {
         integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==,
       }
+
+  basic-ftp@5.0.5:
+    resolution:
+      {
+        integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==,
+        tarball: https://registry.npmmirror.com/basic-ftp/-/basic-ftp-5.0.5.tgz,
+      }
+    engines: { node: ">=10.0.0" }
 
   before-after-hook@2.2.3:
     resolution:
@@ -2771,6 +2893,7 @@ packages:
     resolution:
       {
         integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==,
+        tarball: https://registry.npmmirror.com/color-convert/-/color-convert-2.0.1.tgz,
       }
     engines: { node: ">=7.0.0" }
 
@@ -2778,6 +2901,7 @@ packages:
     resolution:
       {
         integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==,
+        tarball: https://registry.npmmirror.com/color-name/-/color-name-1.1.4.tgz,
       }
 
   combined-stream@1.0.8:
@@ -2884,6 +3008,14 @@ packages:
       }
     engines: { node: ">= 12" }
 
+  data-uri-to-buffer@6.0.2:
+    resolution:
+      {
+        integrity: sha512-7hvf7/GW8e86rW0ptuwS3OcBGDjIi6SZva7hCyWC0yYry2cOPmLIjXAUHI6DK2HsnwJd9ifmt57i8eV2n4YNpw==,
+        tarball: https://registry.npmmirror.com/data-uri-to-buffer/-/data-uri-to-buffer-6.0.2.tgz,
+      }
+    engines: { node: ">= 14" }
+
   dayjs@1.11.13:
     resolution:
       {
@@ -2907,6 +3039,14 @@ packages:
       {
         integrity: sha512-O8x12RzrUF8xyVcY0KJowWsmaJxQbmy0/EtnNtHRpsOcT7dFk5W598coHqBVpmWo1oQQfsCqfCmkZN5DJrZVdg==,
       }
+
+  degenerator@5.0.1:
+    resolution:
+      {
+        integrity: sha512-TllpMR/t0M5sqCXfj85i4XaAzxmS5tVA16dqvdkMwGmzI+dXLXnw3J+3Vdv7VKw+ThlTMboK6i9rnZ6Nntj5CQ==,
+        tarball: https://registry.npmmirror.com/degenerator/-/degenerator-5.0.1.tgz,
+      }
+    engines: { node: ">= 14" }
 
   delayed-stream@1.0.0:
     resolution:
@@ -2970,6 +3110,7 @@ packages:
     resolution:
       {
         integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==,
+        tarball: https://registry.npmmirror.com/emoji-regex/-/emoji-regex-8.0.0.tgz,
       }
 
   emoji-regex@9.2.2:
@@ -3039,12 +3180,38 @@ packages:
       }
     engines: { node: ">=10" }
 
+  escodegen@2.1.0:
+    resolution:
+      {
+        integrity: sha512-2NlIDTwUWJN0mRPQOdtQBzbUHvdGY2P1VXSyU83Q3xKxM7WHX2Ql8dKq782Q9TgQUNOLEzEYu9bzLNj1q88I5w==,
+        tarball: https://registry.npmmirror.com/escodegen/-/escodegen-2.1.0.tgz,
+      }
+    engines: { node: ">=6.0" }
+    hasBin: true
+
   esniff@2.0.1:
     resolution:
       {
         integrity: sha512-kTUIGKQ/mDPFoJ0oVfcmyJn4iBDRptjNVIzwIFR7tqWXdVI9xfA2RMwY/gbSpJG3lkdWNEjLap/NqVHZiJsdfg==,
       }
     engines: { node: ">=0.10" }
+
+  esprima@4.0.1:
+    resolution:
+      {
+        integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==,
+        tarball: https://registry.npmmirror.com/esprima/-/esprima-4.0.1.tgz,
+      }
+    engines: { node: ">=4" }
+    hasBin: true
+
+  estraverse@5.3.0:
+    resolution:
+      {
+        integrity: sha512-MMdARuVEQziNTeJD8DgMqmhwR11BRQ/cBP+pLtYdSTnf3MIO8fFeiINEbX36ZdNlfU/7A9f3gUw49B3oQsvwBA==,
+        tarball: https://registry.npmmirror.com/estraverse/-/estraverse-5.3.0.tgz,
+      }
+    engines: { node: ">=4.0" }
 
   estree-util-is-identifier-name@3.0.0:
     resolution:
@@ -3165,6 +3332,7 @@ packages:
     resolution:
       {
         integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==,
+        tarball: https://registry.npmmirror.com/fsevents/-/fsevents-2.3.3.tgz,
       }
     engines: { node: ^8.16.0 || ^10.6.0 || >=11.0.0 }
     os: [darwin]
@@ -3188,6 +3356,14 @@ packages:
         integrity: sha512-ts6Wi+2j3jQjqi70w5AlN8DFnkSwC+MqmxEzdEALB2qXZYV3X/b1CTfgPLGJNMeAWxdPfU8FO1ms3NUfaHCPYg==,
       }
     engines: { node: ">=10" }
+
+  get-uri@6.0.4:
+    resolution:
+      {
+        integrity: sha512-E1b1lFFLvLgak2whF2xDBcOy6NLVGZBqqjJjsIhvopKfWWEi64pLVTWWehV8KlLerZkfNTA95sTe2OdJKm1OzQ==,
+        tarball: https://registry.npmmirror.com/get-uri/-/get-uri-6.0.4.tgz,
+      }
+    engines: { node: ">= 14" }
 
   glob@10.4.5:
     resolution:
@@ -3248,10 +3424,26 @@ packages:
         integrity: sha512-ol6UPyBWqsrO6EJySPz2O7ZSr856WDrEzM5zMqp+FJJLGMW35cLYmmZnl0vztAZxRUoNZJFTCohfjuIJ8I4QBQ==,
       }
 
+  http-proxy-agent@7.0.2:
+    resolution:
+      {
+        integrity: sha512-T1gkAiYYDWYx3V5Bmyu7HcfcvL7mUrTWiM6yOfa3PIphViJ/gFPbvidQ+veqSOHci/PxBcDabeUNCzpOODJZig==,
+        tarball: https://registry.npmmirror.com/http-proxy-agent/-/http-proxy-agent-7.0.2.tgz,
+      }
+    engines: { node: ">= 14" }
+
   https-proxy-agent@7.0.5:
     resolution:
       {
         integrity: sha512-1e4Wqeblerz+tMKPIq2EMGiiWW1dIjZOksyHWSUm1rmuvw/how9hBHZ38lAGj5ID4Ik6EdkOw7NmWPy6LAwalw==,
+      }
+    engines: { node: ">= 14" }
+
+  https-proxy-agent@7.0.6:
+    resolution:
+      {
+        integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==,
+        tarball: https://registry.npmmirror.com/https-proxy-agent/-/https-proxy-agent-7.0.6.tgz,
       }
     engines: { node: ">= 14" }
 
@@ -3308,6 +3500,14 @@ packages:
         integrity: sha512-7m1vEcPCxXYI8HqnL8CKI6siDyD+eIWSwgB3DZA+ZTogxk9I4CDnj4wilt9x/+/QbHI4YG5YZNmC6458/e9Ktg==,
       }
 
+  ip-address@9.0.5:
+    resolution:
+      {
+        integrity: sha512-zHtQzGojZXTwZTHQqra+ETKd4Sn3vgi7uBmlPoXVWZqYvuKmtI0l/VZTjqGmJY9x88GGOaZ9+G9ES8hC4T4X8g==,
+        tarball: https://registry.npmmirror.com/ip-address/-/ip-address-9.0.5.tgz,
+      }
+    engines: { node: ">= 12" }
+
   is-alphabetical@2.0.1:
     resolution:
       {
@@ -3350,6 +3550,7 @@ packages:
     resolution:
       {
         integrity: sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==,
+        tarball: https://registry.npmmirror.com/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz,
       }
     engines: { node: ">=8" }
 
@@ -3437,6 +3638,13 @@ packages:
         integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==,
       }
     hasBin: true
+
+  jsbn@1.1.0:
+    resolution:
+      {
+        integrity: sha512-4bYVV3aAMtDTTu4+xsDYa6sy9GyJ69/amsu9sYF2zqjiEoZA5xJi3BrfX3uY+/IekIu7MwdObdbDWpoZdBv3/A==,
+        tarball: https://registry.npmmirror.com/jsbn/-/jsbn-1.1.0.tgz,
+      }
 
   jsesc@3.0.2:
     resolution:
@@ -3534,6 +3742,14 @@ packages:
       {
         integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==,
       }
+
+  lru-cache@7.18.3:
+    resolution:
+      {
+        integrity: sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==,
+        tarball: https://registry.npmmirror.com/lru-cache/-/lru-cache-7.18.3.tgz,
+      }
+    engines: { node: ">=12" }
 
   lru-queue@0.1.0:
     resolution:
@@ -3880,6 +4096,14 @@ packages:
     engines: { node: ^18 || >=20 }
     hasBin: true
 
+  netmask@2.0.2:
+    resolution:
+      {
+        integrity: sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==,
+        tarball: https://registry.npmmirror.com/netmask/-/netmask-2.0.2.tgz,
+      }
+    engines: { node: ">= 0.4.0" }
+
   next-tick@1.1.0:
     resolution:
       {
@@ -3958,6 +4182,22 @@ packages:
         integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==,
       }
     engines: { node: ">=10" }
+
+  pac-proxy-agent@7.1.0:
+    resolution:
+      {
+        integrity: sha512-Z5FnLVVZSnX7WjBg0mhDtydeRZ1xMcATZThjySQUHqr+0ksP8kqaw23fNKkaaN/Z8gwLUs/W7xdl0I75eP2Xyw==,
+        tarball: https://registry.npmmirror.com/pac-proxy-agent/-/pac-proxy-agent-7.1.0.tgz,
+      }
+    engines: { node: ">= 14" }
+
+  pac-resolver@7.0.1:
+    resolution:
+      {
+        integrity: sha512-5NPgf87AT2STgwa2ntRMr45jTKrYBGkVU36yT0ig/n/GMAa3oPqhZfIQ2kMEimReg0+t9kZViDVZ83qfVUlckg==,
+        tarball: https://registry.npmmirror.com/pac-resolver/-/pac-resolver-7.0.1.tgz,
+      }
+    engines: { node: ">= 14" }
 
   package-json-from-dist@1.0.1:
     resolution:
@@ -4111,6 +4351,14 @@ packages:
       {
         integrity: sha512-PgTgs/BlvHxOu8QuEN7wi5A0OmXaBcHpmCSTehcs6Uuu9IkDIEo13Hy7n898RHfrQ49vKCoGeWZSaAK01nwVig==,
       }
+
+  proxy-agent@6.5.0:
+    resolution:
+      {
+        integrity: sha512-TmatMXdr2KlRiA2CyDu8GqR8EjahTG3aY3nXjdzFyoZbmB8hrBsTyMezhULIXKnC0jpfjlmiZ3+EaCzoInSu/A==,
+        tarball: https://registry.npmmirror.com/proxy-agent/-/proxy-agent-6.5.0.tgz,
+      }
+    engines: { node: ">= 14" }
 
   proxy-from-env@1.1.0:
     resolution:
@@ -4422,6 +4670,14 @@ packages:
       }
     engines: { node: ">=14" }
 
+  smart-buffer@4.2.0:
+    resolution:
+      {
+        integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==,
+        tarball: https://registry.npmmirror.com/smart-buffer/-/smart-buffer-4.2.0.tgz,
+      }
+    engines: { node: ">= 6.0.0", npm: ">= 3.0.0" }
+
   snake-case@3.0.4:
     resolution:
       {
@@ -4433,6 +4689,22 @@ packages:
       {
         integrity: sha512-W6iG8RGV6Zife3Cj+FhuyHV447E6fqFM2hKmnaQrTvg3OydINV3Msj3WPFbX76blUlUxvQSMMMdrJxce8NqI5Q==,
       }
+
+  socks-proxy-agent@8.0.5:
+    resolution:
+      {
+        integrity: sha512-HehCEsotFqbPW9sJ8WVYB6UbmIMv7kUUORIF2Nncq4VQvBfNBLibW9YZR5dlYCSUhwcD628pRllm7n+E+YTzJw==,
+        tarball: https://registry.npmmirror.com/socks-proxy-agent/-/socks-proxy-agent-8.0.5.tgz,
+      }
+    engines: { node: ">= 14" }
+
+  socks@2.8.3:
+    resolution:
+      {
+        integrity: sha512-l5x7VUUWbjVFbafGLxPWkYsHIhEvmF85tbIeFZWc8ZPtoMyybuEhL7Jye/ooC4/d48FgOjSJXgsF/AJPYCW8Zw==,
+        tarball: https://registry.npmmirror.com/socks/-/socks-2.8.3.tgz,
+      }
+    engines: { node: ">= 10.0.0", npm: ">= 3.0.0" }
 
   source-map-generator@0.8.0:
     resolution:
@@ -4474,10 +4746,18 @@ packages:
         integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==,
       }
 
+  sprintf-js@1.1.3:
+    resolution:
+      {
+        integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==,
+        tarball: https://registry.npmmirror.com/sprintf-js/-/sprintf-js-1.1.3.tgz,
+      }
+
   string-width@4.2.3:
     resolution:
       {
         integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==,
+        tarball: https://registry.npmmirror.com/string-width/-/string-width-4.2.3.tgz,
       }
     engines: { node: ">=8" }
 
@@ -4498,6 +4778,7 @@ packages:
     resolution:
       {
         integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==,
+        tarball: https://registry.npmmirror.com/strip-ansi/-/strip-ansi-6.0.1.tgz,
       }
     engines: { node: ">=8" }
 
@@ -4632,6 +4913,7 @@ packages:
     resolution:
       {
         integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==,
+        tarball: https://registry.npmmirror.com/undici-types/-/undici-types-5.26.5.tgz,
       }
 
   undici@5.28.4:
@@ -4847,6 +5129,7 @@ packages:
     resolution:
       {
         integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==,
+        tarball: https://registry.npmmirror.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz,
       }
     engines: { node: ">=10" }
 
@@ -6391,6 +6674,8 @@ snapshots:
     dependencies:
       "@tauri-apps/api": 2.1.1
 
+  "@tootallnate/quickjs-emscripten@0.23.0": {}
+
   "@types/babel__core@7.20.5":
     dependencies:
       "@babel/parser": 7.26.2
@@ -6508,6 +6793,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  agent-base@7.1.3: {}
+
   ahooks@3.8.1(react@18.3.1):
     dependencies:
       "@babel/runtime": 7.26.0
@@ -6532,6 +6819,10 @@ snapshots:
   ansi-styles@6.2.1: {}
 
   argparse@2.0.1: {}
+
+  ast-types@0.13.4:
+    dependencies:
+      tslib: 2.8.1
 
   asynckit@0.4.0: {}
 
@@ -6576,6 +6867,8 @@ snapshots:
   bail@2.0.2: {}
 
   balanced-match@1.0.2: {}
+
+  basic-ftp@5.0.5: {}
 
   before-after-hook@2.2.3: {}
 
@@ -6698,6 +6991,8 @@ snapshots:
 
   data-uri-to-buffer@4.0.1: {}
 
+  data-uri-to-buffer@6.0.2: {}
+
   dayjs@1.11.13: {}
 
   debug@4.3.7:
@@ -6707,6 +7002,12 @@ snapshots:
   decode-named-character-reference@1.0.2:
     dependencies:
       character-entities: 2.0.2
+
+  degenerator@5.0.1:
+    dependencies:
+      ast-types: 0.13.4
+      escodegen: 2.1.0
+      esprima: 4.0.1
 
   delayed-stream@1.0.0: {}
 
@@ -6800,12 +7101,24 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
+  escodegen@2.1.0:
+    dependencies:
+      esprima: 4.0.1
+      estraverse: 5.3.0
+      esutils: 2.0.3
+    optionalDependencies:
+      source-map: 0.6.1
+
   esniff@2.0.1:
     dependencies:
       d: 1.0.2
       es5-ext: 0.10.64
       event-emitter: 0.3.5
       type: 2.7.3
+
+  esprima@4.0.1: {}
+
+  estraverse@5.3.0: {}
 
   estree-util-is-identifier-name@3.0.0: {}
 
@@ -6886,6 +7199,14 @@ snapshots:
 
   get-stream@6.0.1: {}
 
+  get-uri@6.0.4:
+    dependencies:
+      basic-ftp: 5.0.5
+      data-uri-to-buffer: 6.0.2
+      debug: 4.3.7
+    transitivePeerDependencies:
+      - supports-color
+
   glob@10.4.5:
     dependencies:
       foreground-child: 3.3.0
@@ -6944,9 +7265,23 @@ snapshots:
 
   html-url-attributes@3.0.1: {}
 
+  http-proxy-agent@7.0.2:
+    dependencies:
+      agent-base: 7.1.3
+      debug: 4.3.7
+    transitivePeerDependencies:
+      - supports-color
+
   https-proxy-agent@7.0.5:
     dependencies:
       agent-base: 7.1.1
+      debug: 4.3.7
+    transitivePeerDependencies:
+      - supports-color
+
+  https-proxy-agent@7.0.6:
+    dependencies:
+      agent-base: 7.1.3
       debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
@@ -6971,6 +7306,11 @@ snapshots:
   inline-style-parser@0.2.4: {}
 
   intersection-observer@0.12.2: {}
+
+  ip-address@9.0.5:
+    dependencies:
+      jsbn: 1.1.0
+      sprintf-js: 1.1.3
 
   is-alphabetical@2.0.1: {}
 
@@ -7030,6 +7370,8 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
+  jsbn@1.1.0: {}
+
   jsesc@3.0.2: {}
 
   json-parse-even-better-errors@2.3.1: {}
@@ -7067,6 +7409,8 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lru-cache@7.18.3: {}
 
   lru-queue@0.1.0:
     dependencies:
@@ -7387,6 +7731,8 @@ snapshots:
 
   nanoid@5.0.8: {}
 
+  netmask@2.0.2: {}
+
   next-tick@1.1.0: {}
 
   no-case@3.0.4:
@@ -7428,6 +7774,24 @@ snapshots:
   p-locate@5.0.0:
     dependencies:
       p-limit: 3.1.0
+
+  pac-proxy-agent@7.1.0:
+    dependencies:
+      "@tootallnate/quickjs-emscripten": 0.23.0
+      agent-base: 7.1.3
+      debug: 4.3.7
+      get-uri: 6.0.4
+      http-proxy-agent: 7.0.2
+      https-proxy-agent: 7.0.6
+      pac-resolver: 7.0.1
+      socks-proxy-agent: 8.0.5
+    transitivePeerDependencies:
+      - supports-color
+
+  pac-resolver@7.0.1:
+    dependencies:
+      degenerator: 5.0.1
+      netmask: 2.0.2
 
   package-json-from-dist@1.0.1: {}
 
@@ -7516,6 +7880,19 @@ snapshots:
       react-is: 16.13.1
 
   property-information@6.5.0: {}
+
+  proxy-agent@6.5.0:
+    dependencies:
+      agent-base: 7.1.3
+      debug: 4.3.7
+      http-proxy-agent: 7.0.2
+      https-proxy-agent: 7.0.6
+      lru-cache: 7.18.3
+      pac-proxy-agent: 7.1.0
+      proxy-from-env: 1.1.0
+      socks-proxy-agent: 8.0.5
+    transitivePeerDependencies:
+      - supports-color
 
   proxy-from-env@1.1.0: {}
 
@@ -7721,12 +8098,27 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
+  smart-buffer@4.2.0: {}
+
   snake-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
       tslib: 2.8.1
 
   sockette@2.0.6: {}
+
+  socks-proxy-agent@8.0.5:
+    dependencies:
+      agent-base: 7.1.3
+      debug: 4.3.7
+      socks: 2.8.3
+    transitivePeerDependencies:
+      - supports-color
+
+  socks@2.8.3:
+    dependencies:
+      ip-address: 9.0.5
+      smart-buffer: 4.2.0
 
   source-map-generator@0.8.0: {}
 
@@ -7742,6 +8134,8 @@ snapshots:
   source-map@0.6.1: {}
 
   space-separated-tokens@2.0.2: {}
+
+  sprintf-js@1.1.3: {}
 
   string-width@4.2.3:
     dependencies:

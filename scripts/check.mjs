@@ -5,7 +5,7 @@ import { extract } from "tar";
 import path from "path";
 import AdmZip from "adm-zip";
 import fetch from "node-fetch";
-import proxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { execSync } from "child_process";
 import { log_info, log_debug, log_error, log_success } from "./utils.mjs";
 import { glob } from "glob";
@@ -85,7 +85,7 @@ async function getLatestAlphaVersion() {
     process.env.https_proxy;
 
   if (httpProxy) {
-    options.agent = proxyAgent(httpProxy);
+    options.agent = new HttpsProxyAgent(httpProxy);
   }
   try {
     const response = await fetch(META_ALPHA_VERSION_URL, {
@@ -132,7 +132,7 @@ async function getLatestReleaseVersion() {
     process.env.https_proxy;
 
   if (httpProxy) {
-    options.agent = proxyAgent(httpProxy);
+    options.agent = new HttpsProxyAgent(httpProxy);
   }
   try {
     const response = await fetch(META_VERSION_URL, {
@@ -332,7 +332,7 @@ async function resolveResource(binInfo) {
     process.env.https_proxy;
 
   if (httpProxy) {
-    options.agent = proxyAgent(httpProxy);
+    options.agent = new HttpsProxyAgent(httpProxy);
   }
 
   const response = await fetch(url, {
