@@ -21,7 +21,7 @@ const SettingPage = () => {
   });
 
   const toGithubDoc = useLockFn(() => {
-    return openWebUrl("https://clash-verge-rev.github.io/index.html");
+    return openWebUrl("https://www.clashverge.dev/index.html");
   });
 
   const toTelegramChannel = useLockFn(() => {
