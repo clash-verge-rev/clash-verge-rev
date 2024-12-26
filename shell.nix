@@ -23,5 +23,7 @@ pkgs.mkShell {
     pango
     webkitgtk_4_1
     openssl
+    gobject-introspection # gobject-2.0.pc
+    libappindicator-gtk3 # App Indicator
   ];
 }
