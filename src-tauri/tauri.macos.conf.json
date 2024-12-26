@@ -9,7 +9,7 @@
       "minimumSystemVersion": "10.15",
       "exceptionDomain": "",
       "signingIdentity": null,
-      "entitlements": null,
+      "entitlements": "packages/macos/entitlements.plist",
       "dmg": {
         "background": "images/background.png",
         "appPosition": {
