@@ -9,6 +9,9 @@ default-run = "clash-verge"
 edition = "2021"
 build = "build.rs"
 
+[package.metadata.bundle]
+identifier = "io.github.clash-verge-rev.clash-verge-rev"
+
 [build-dependencies]
 tauri-build = { version = "2.0.3", features = [] }
 
