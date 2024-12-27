@@ -400,6 +400,7 @@ const ProfilePage = () => {
                       onEdit={() => viewerRef.current?.edit(item)}
                       onSave={async (prev, curr) => {
                         if (prev !== curr && profiles.current === item.uid) {
+                          await onEnhance(false);
                           await restartCore();
                           Notice.success(t("Clash Core Restarted"), 1000);
                         }
