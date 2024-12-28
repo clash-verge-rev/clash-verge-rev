@@ -59,6 +59,7 @@ reqwest_dav = "0.1.14"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
 getrandom = "0.2"
+sys-locale = "0.3.1"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"

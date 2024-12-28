@@ -1,6 +1,7 @@
 use crate::config::DEFAULT_PAC;
 use crate::config::{deserialize_encrypted, serialize_encrypted};
 use crate::utils::{dirs, help};
+use crate::utils::i18n;
 use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
@@ -202,6 +203,21 @@ pub struct IVergeTheme {
 }
 
 impl IVerge {
+    fn get_system_language() -> String {
+        let sys_lang = sys_locale::get_locale()
+            .unwrap_or_else(|| String::from("en"))
+            .to_lowercase();
+        
+        let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
+        let supported_languages = i18n::get_supported_languages();
+        
+        if supported_languages.contains(&lang_code.to_string()) {
+            lang_code.to_string()
+        } else {
+            String::from("en")
+        }
+    }
+
     pub fn new() -> Self {
         match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
             Ok(config) => config,
@@ -215,7 +231,7 @@ impl IVerge {
     pub fn template() -> Self {
         Self {
             clash_core: Some("verge-mihomo".into()),
-            language: Some("zh".into()),
+            language: Some(Self::get_system_language()),
             theme_mode: Some("system".into()),
             #[cfg(not(target_os = "windows"))]
             env_type: Some("bash".into()),
