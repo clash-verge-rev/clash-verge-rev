@@ -323,7 +323,7 @@ fn create_tray_menu(
     let app_version = &MenuItem::with_id(
         app_handle,
         "app_version",
-        format!("Version {version}"),
+        format!("{} {version}", t("Verge Version")),
         true,
         None::<&str>,
     ).unwrap();
@@ -339,7 +339,7 @@ fn create_tray_menu(
     let quit = &MenuItem::with_id(
         app_handle,
         "quit",
-        t("Quit"),
+        t("Exit"),
         true,
         Some("CmdOrControl+Q"),
     ).unwrap();
