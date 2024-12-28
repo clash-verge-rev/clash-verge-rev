@@ -8,15 +8,14 @@ import tt from "@/locales/tt.json";
 import id from "@/locales/id.json";
 import ar from "@/locales/ar.json";
 
-const resources = {
-  en: { translation: en },
-  ru: { translation: ru },
-  zh: { translation: zh },
-  fa: { translation: fa },
-  tt: { translation: tt },
-  id: { translation: id },
-  ar: { translation: ar },
-};
+export const languages = { en, ru, zh, fa, tt, id, ar };
+
+const resources = Object.fromEntries(
+  Object.entries(languages).map(([key, value]) => [
+    key,
+    { translation: value },
+  ]),
+);
 
 i18n.use(initReactI18next).init({
   resources,
