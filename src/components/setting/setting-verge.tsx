@@ -100,7 +100,9 @@ const SettingVerge = ({ onError }: Props) => {
             <MenuItem value="en">English</MenuItem>
             <MenuItem value="ru">Русский</MenuItem>
             <MenuItem value="fa">فارسی</MenuItem>
+            <MenuItem value="id">Bahasa Indonesia</MenuItem>
             <MenuItem value="tt">Татар</MenuItem>
+            <MenuItem value="ar">العربية</MenuItem>
           </Select>
         </GuardState>
       </SettingItem>
