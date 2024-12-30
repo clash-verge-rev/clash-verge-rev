@@ -1,14 +1,17 @@
-use crate::core::clash_api::get_traffic_ws_url;
-use crate::utils::help::format_bytes_speed;
-use anyhow::Result;
-use futures::Stream;
-use image::{ImageBuffer, Rgba};
-use imageproc::drawing::draw_text_mut;
-use parking_lot::Mutex;
-use rusttype::{Font, Scale};
-use std::io::Cursor;
-use std::sync::Arc;
-use tokio_tungstenite::tungstenite::Message;
+#[cfg(target_os = "macos")]
+use {
+    crate::core::clash_api::get_traffic_ws_url,
+    crate::utils::help::format_bytes_speed,
+    anyhow::Result,
+    futures::Stream,
+    image::{ImageBuffer, Rgba},
+    imageproc::drawing::draw_text_mut,
+    parking_lot::Mutex,
+    rusttype::{Font, Scale},
+    std::io::Cursor,
+    std::sync::Arc,
+    tokio_tungstenite::tungstenite::Message,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Rate {
@@ -16,11 +19,13 @@ pub struct Rate {
     pub down: u64,
 }
 
+#[cfg(target_os = "macos")]
 #[derive(Debug, Clone)]
 pub struct SpeedRate {
     rate: Arc<Mutex<(Rate, Rate)>>,
 }
 
+#[cfg(target_os = "macos")]
 impl SpeedRate {
     pub fn new() -> Self {
         Self {
@@ -28,7 +33,6 @@ impl SpeedRate {
         }
     }
 
-    /// 更新流量数据并返回变化后的速率（如果有变化）
     pub fn update_and_check_changed(&self, up: u64, down: u64) -> Option<Rate> {
         let mut rates = self.rate.lock();
         let (current, previous) = &mut *rates;
@@ -44,14 +48,12 @@ impl SpeedRate {
         }
     }
 
-    // 获取当前的速率
     pub fn get_curent_rate(&self) -> Option<Rate> {
         let rates = self.rate.lock();
         let (current, _) = &*rates;
         Some(current.clone())
     }
 
-    /// 在图标上添加速率显示
     pub fn add_speed_text(icon: Vec<u8>, rate: Option<Rate>) -> Result<Vec<u8>> {
         let rate = rate.unwrap_or(Rate { up: 0, down: 0 });
         let img = image::load_from_memory(&icon)?;
@@ -140,11 +142,14 @@ impl SpeedRate {
     }
 }
 
+#[cfg(target_os = "macos")]
 #[derive(Debug, Clone)]
 pub struct Traffic {
     pub up: u64,
     pub down: u64,
 }
+
+#[cfg(target_os = "macos")]
 impl Traffic {
     pub async fn get_traffic_stream() -> Result<impl Stream<Item = Result<Traffic, anyhow::Error>>>
     {

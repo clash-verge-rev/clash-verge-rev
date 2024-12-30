@@ -123,6 +123,7 @@ pub fn parse_check_output(log: String) -> String {
     log
 }
 
+#[cfg(target_os = "macos")]
 pub fn get_traffic_ws_url() -> Result<String> {
     let (url, _) = clash_client_info()?;
     let ws_url = url.replace("http://", "ws://") + "/traffic";
