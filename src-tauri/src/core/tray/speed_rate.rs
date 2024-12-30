@@ -66,7 +66,7 @@ impl SpeedRate {
         // 修改颜色和阴影参数
         let text_color = Rgba([255u8, 255u8, 255u8, 255u8]); // 纯白色
         let shadow_color = Rgba([0u8, 0u8, 0u8, 180u8]); // 半透明黑色阴影
-        let base_size = (height as f32 * 0.5) as f32;
+        let base_size = height as f32 * 0.5;
         let scale = Scale::uniform(base_size);
 
         let up_text = format_bytes_speed(rate.up);

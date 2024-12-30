@@ -135,7 +135,6 @@ pub fn run() {
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             if code.is_none() {
                 api.prevent_exit();
-                return;
             }
         }
         tauri::RunEvent::WindowEvent { label, event, .. } => {

@@ -173,7 +173,7 @@ impl WebDavClient {
             Ok::<Vec<ListFile>, Error>(final_files)
         };
 
-        Ok(timeout(Duration::from_secs(TIMEOUT_LIST), fut).await??)
+        timeout(Duration::from_secs(TIMEOUT_LIST), fut).await?
     }
 
     pub async fn delete(&self, file_name: String) -> Result<(), Error> {
