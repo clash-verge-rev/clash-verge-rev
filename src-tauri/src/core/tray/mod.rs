@@ -1,3 +1,7 @@
+pub mod speed_rate;
+use speed_rate::Rate;
+pub use speed_rate::{SpeedRate, Traffic};
+
 use crate::utils::dirs;
 use crate::{
     cmds,
@@ -6,6 +10,10 @@ use crate::{
     utils::resolve::{self, VERSION},
 };
 use anyhow::Result;
+use futures::StreamExt;
+use once_cell::sync::OnceCell;
+use parking_lot::{Mutex, RwLock};
+use std::sync::Arc;
 use tauri::AppHandle;
 use tauri::{
     menu::CheckMenuItem,
@@ -15,12 +23,33 @@ use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     Wry,
 };
+use tokio::sync::broadcast;
 
 use super::handle;
-pub struct Tray {}
+pub struct Tray {
+    pub speed_rate: Arc<Mutex<Option<SpeedRate>>>,
+    #[cfg(target_os = "macos")]
+    shutdown_tx: Arc<RwLock<Option<broadcast::Sender<()>>>>,
+}
 
 impl Tray {
-    pub fn create_systray() -> Result<()> {
+    pub fn global() -> &'static Tray {
+        static TRAY: OnceCell<Tray> = OnceCell::new();
+
+        TRAY.get_or_init(|| Tray {
+            speed_rate: Arc::new(Mutex::new(None)),
+            #[cfg(target_os = "macos")]
+            shutdown_tx: Arc::new(RwLock::new(None)),
+        })
+    }
+
+    pub fn init(&self) -> Result<()> {
+        let mut speed_rate = self.speed_rate.lock();
+        *speed_rate = Some(SpeedRate::new());
+        Ok(())
+    }
+
+    pub fn create_systray(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let tray_incon_id = TrayIconId::new("main");
         let tray = app_handle.tray_by_id(&tray_incon_id).unwrap();
@@ -64,7 +93,7 @@ impl Tray {
     }
 
     /// 更新托盘菜单
-    pub fn update_menu() -> Result<()> {
+    pub fn update_menu(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -91,7 +120,7 @@ impl Tray {
     }
 
     /// 更新托盘图标
-    pub fn update_icon() -> Result<()> {
+    pub fn update_icon(&self, rate: Option<Rate>) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -109,12 +138,12 @@ impl Tray {
         let icon_bytes = if *system_proxy && !*tun_mode {
             #[cfg(target_os = "macos")]
             let mut icon = match tray_icon.as_str() {
-                "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
+                "colorful" => include_bytes!("../../../icons/tray-icon-sys.ico").to_vec(),
+                _ => include_bytes!("../../../icons/tray-icon-sys-mono.ico").to_vec(),
             };
 
             #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon-sys.ico").to_vec();
+            let mut icon = include_bytes!("../../../icons/tray-icon-sys.ico").to_vec();
             if *sysproxy_tray_icon {
                 let icon_dir_path = dirs::app_home_dir()?.join("icons");
                 let png_path = icon_dir_path.join("sysproxy.png");
@@ -129,8 +158,8 @@ impl Tray {
         } else if *tun_mode {
             #[cfg(target_os = "macos")]
             let mut icon = match tray_icon.as_str() {
-                "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
+                "colorful" => include_bytes!("../../../icons/tray-icon-tun.ico").to_vec(),
+                _ => include_bytes!("../../../icons/tray-icon-tun-mono.ico").to_vec(),
             };
 
             #[cfg(not(target_os = "macos"))]
@@ -149,8 +178,8 @@ impl Tray {
         } else {
             #[cfg(target_os = "macos")]
             let mut icon = match tray_icon.as_str() {
-                "colorful" => include_bytes!("../../icons/tray-icon.ico").to_vec(),
-                _ => include_bytes!("../../icons/tray-icon-mono.ico").to_vec(),
+                "colorful" => include_bytes!("../../../icons/tray-icon.ico").to_vec(),
+                _ => include_bytes!("../../../icons/tray-icon-mono.ico").to_vec(),
             };
 
             #[cfg(not(target_os = "macos"))]
@@ -172,6 +201,14 @@ impl Tray {
         {
             let is_template =
                 crate::utils::help::is_monochrome_image_from_bytes(&icon_bytes).unwrap_or(false);
+            // 如果rate为None，获取当前速率
+            let rate = rate.or_else(|| {
+                self.speed_rate
+                    .lock()
+                    .as_ref()
+                    .and_then(|speed_rate| speed_rate.get_curent_rate())
+            });
+            let icon_bytes = SpeedRate::add_speed_text(icon_bytes, rate)?;
             let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
             let _ = tray.set_icon_as_template(is_template);
         }
@@ -183,7 +220,7 @@ impl Tray {
     }
 
     /// 更新托盘提示
-    pub fn update_tooltip() -> Result<()> {
+    pub fn update_tooltip(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let use_zh = { Config::verge().latest().language == Some("zh".into()) };
         let version = VERSION.get().unwrap();
@@ -223,11 +260,54 @@ impl Tray {
         Ok(())
     }
 
-    pub fn update_part() -> Result<()> {
-        Self::update_menu()?;
-        Self::update_icon()?;
-        Self::update_tooltip()?;
+    pub fn update_part(&self) -> Result<()> {
+        self.update_menu()?;
+        self.update_icon(None)?;
+        self.update_tooltip()?;
         Ok(())
+    }
+
+    /// 订阅流量数据
+    #[cfg(target_os = "macos")]
+    pub async fn subscribe_traffic(&self) -> Result<()> {
+        log::info!(target: "app", "subscribe traffic");
+        let (shutdown_tx, shutdown_rx) = broadcast::channel(1);
+        *self.shutdown_tx.write() = Some(shutdown_tx);
+
+        let speed_rate = Arc::clone(&self.speed_rate);
+
+        tauri::async_runtime::spawn(async move {
+            let mut shutdown = shutdown_rx;
+            if let Ok(mut stream) = Traffic::get_traffic_stream().await {
+                loop {
+                    tokio::select! {
+                        Some(traffic) = stream.next() => {
+                            if let Ok(traffic) = traffic {
+                                let guard = speed_rate.lock();
+                                if let Some(sr) = guard.as_ref() {
+                                    if let Some(rate) = sr.update_and_check_changed(traffic.up, traffic.down) {
+                                        let _ = Tray::global().update_icon(Some(rate));
+                                    }
+                                }
+                            }
+                        }
+                        _ = shutdown.recv() => break,
+                    }
+                }
+            }
+        });
+
+        Ok(())
+    }
+
+    /// 取消订阅 traffic 数据
+    #[cfg(target_os = "macos")]
+    #[allow(unused)]
+    pub fn unsubscribe_traffic(&self) {
+        log::info!(target: "app", "unsubscribe traffic");
+        if let Some(tx) = self.shutdown_tx.write().take() {
+            drop(tx); // 发送端被丢弃时会自动发送关闭信号
+        }
     }
 }
 

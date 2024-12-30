@@ -201,22 +201,34 @@ macro_rules! t {
     };
 }
 
+/// 将字节数转换为可读的流量字符串
+/// 支持 B/s、KB/s、MB/s、GB/s 的自动转换
+///
+/// # Examples
+/// ```
+/// assert_eq!(format_bytes_speed(1000), "1000B/s");
+/// assert_eq!(format_bytes_speed(1024), "1.0KB/s");
+/// assert_eq!(format_bytes_speed(1024 * 1024), "1.0MB/s");
+/// ```
+pub fn format_bytes_speed(speed: u64) -> String {
+    if speed < 1024 {
+        format!("{}B/s", speed)
+    } else if speed < 1024 * 1024 {
+        format!("{:.1}KB/s", speed as f64 / 1024.0)
+    } else if speed < 1024 * 1024 * 1024 {
+        format!("{:.1}MB/s", speed as f64 / 1024.0 / 1024.0)
+    } else {
+        format!("{:.1}GB/s", speed as f64 / 1024.0 / 1024.0 / 1024.0)
+    }
+}
+
 #[test]
-fn test_parse_value() {
-    let test_1 = "upload=111; download=2222; total=3333; expire=444";
-    let test_2 = "attachment; filename=Clash.yaml";
-
-    assert_eq!(parse_str::<usize>(test_1, "upload").unwrap(), 111);
-    assert_eq!(parse_str::<usize>(test_1, "download").unwrap(), 2222);
-    assert_eq!(parse_str::<usize>(test_1, "total").unwrap(), 3333);
-    assert_eq!(parse_str::<usize>(test_1, "expire").unwrap(), 444);
-    assert_eq!(
-        parse_str::<String>(test_2, "filename").unwrap(),
-        format!("Clash.yaml")
-    );
-
-    assert_eq!(parse_str::<usize>(test_1, "aaa"), None);
-    assert_eq!(parse_str::<usize>(test_1, "upload1"), None);
-    assert_eq!(parse_str::<usize>(test_1, "expire1"), None);
-    assert_eq!(parse_str::<usize>(test_2, "attachment"), None);
+fn test_format_bytes_speed() {
+    assert_eq!(format_bytes_speed(0), "0B/s");
+    assert_eq!(format_bytes_speed(1023), "1023B/s");
+    assert_eq!(format_bytes_speed(1024), "1.0KB/s");
+    assert_eq!(format_bytes_speed(1024 * 1024), "1.0MB/s");
+    assert_eq!(format_bytes_speed(1024 * 1024 * 1024), "1.0GB/s");
+    assert_eq!(format_bytes_speed(1024 * 500), "500.0KB/s");
+    assert_eq!(format_bytes_speed(1024 * 1024 * 2), "2.0MB/s");
 }

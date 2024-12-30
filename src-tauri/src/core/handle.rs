@@ -1,6 +1,4 @@
-use super::tray::Tray;
 use crate::log_err;
-use anyhow::Result;
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use std::sync::Arc;
@@ -63,27 +61,6 @@ impl Handle {
         if let Some(window) = Self::global().get_window() {
             log_err!(window.emit("verge://notice-message", (status.into(), msg.into())));
         }
-    }
-
-    /// update the system tray state
-    pub fn update_systray_part() -> Result<()> {
-        Tray::update_part()?;
-        Ok(())
-    }
-
-    pub fn update_systray_menu() -> Result<()> {
-        Tray::update_menu()?;
-        Ok(())
-    }
-
-    pub fn update_systray_icon() -> Result<()> {
-        Tray::update_icon()?;
-        Ok(())
-    }
-
-    pub fn update_systray_tooltip() -> Result<()> {
-        Tray::update_tooltip()?;
-        Ok(())
     }
 
     pub fn set_is_exiting(&self) {

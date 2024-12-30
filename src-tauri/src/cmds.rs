@@ -73,7 +73,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
     match CoreManager::global().update_config().await {
         Ok(_) => {
             handle::Handle::refresh_clash();
-            let _ = handle::Handle::update_systray_tooltip();
+            let _ = tray::Tray::global().update_tooltip();
             Config::profiles().apply();
             wrap_err!(Config::profiles().data().save_file())?;
             Ok(())
