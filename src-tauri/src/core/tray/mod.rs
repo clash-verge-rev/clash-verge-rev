@@ -1,7 +1,6 @@
-pub mod speed_rate;
-use speed_rate::Rate;
-pub use speed_rate::{SpeedRate, Traffic};
+use once_cell::sync::OnceCell;
 
+pub mod speed_rate;
 use crate::utils::dirs;
 use crate::{
     cmds,
@@ -10,42 +9,57 @@ use crate::{
     utils::resolve::{self, VERSION},
 };
 use anyhow::Result;
+#[cfg(target_os = "macos")]
 use futures::StreamExt;
-use once_cell::sync::OnceCell;
-use parking_lot::{Mutex, RwLock};
+#[cfg(target_os = "macos")]
+use parking_lot::Mutex;
+#[cfg(target_os = "macos")]
+use parking_lot::RwLock;
+use speed_rate::Rate;
+#[cfg(target_os = "macos")]
+pub use speed_rate::{SpeedRate, Traffic};
+#[cfg(target_os = "macos")]
 use std::sync::Arc;
+use tauri::menu::CheckMenuItem;
 use tauri::AppHandle;
 use tauri::{
-    menu::CheckMenuItem,
-    tray::{MouseButton, MouseButtonState, TrayIconEvent, TrayIconId},
-};
-use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
+    tray::{MouseButton, MouseButtonState, TrayIconEvent, TrayIconId},
     Wry,
 };
+#[cfg(target_os = "macos")]
 use tokio::sync::broadcast;
 
 use super::handle;
+#[cfg(target_os = "macos")]
 pub struct Tray {
     pub speed_rate: Arc<Mutex<Option<SpeedRate>>>,
-    #[cfg(target_os = "macos")]
     shutdown_tx: Arc<RwLock<Option<broadcast::Sender<()>>>>,
 }
+
+#[cfg(not(target_os = "macos"))]
+pub struct Tray {}
 
 impl Tray {
     pub fn global() -> &'static Tray {
         static TRAY: OnceCell<Tray> = OnceCell::new();
 
-        TRAY.get_or_init(|| Tray {
+        #[cfg(target_os = "macos")]
+        return TRAY.get_or_init(|| Tray {
             speed_rate: Arc::new(Mutex::new(None)),
-            #[cfg(target_os = "macos")]
             shutdown_tx: Arc::new(RwLock::new(None)),
-        })
+        });
+
+        #[cfg(not(target_os = "macos"))]
+        return TRAY.get_or_init(|| Tray {});
     }
 
     pub fn init(&self) -> Result<()> {
-        let mut speed_rate = self.speed_rate.lock();
-        *speed_rate = Some(SpeedRate::new());
+        #[cfg(target_os = "macos")]
+        {
+            let mut speed_rate = self.speed_rate.lock();
+            *speed_rate = Some(SpeedRate::new());
+        }
         Ok(())
     }
 
@@ -120,6 +134,7 @@ impl Tray {
     }
 
     /// 更新托盘图标
+    #[allow(unused_variables)]
     pub fn update_icon(&self, rate: Option<Rate>) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let verge = Config::verge().latest().clone();
@@ -163,7 +178,7 @@ impl Tray {
             };
 
             #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon-tun.ico").to_vec();
+            let mut icon = include_bytes!("../../../icons/tray-icon-tun.ico").to_vec();
             if *tun_tray_icon {
                 let icon_dir_path = dirs::app_home_dir()?.join("icons");
                 let png_path = icon_dir_path.join("tun.png");
@@ -183,7 +198,7 @@ impl Tray {
             };
 
             #[cfg(not(target_os = "macos"))]
-            let mut icon = include_bytes!("../../icons/tray-icon.ico").to_vec();
+            let mut icon = include_bytes!("../../../icons/tray-icon.ico").to_vec();
             if *common_tray_icon {
                 let icon_dir_path = dirs::app_home_dir()?.join("icons");
                 let png_path = icon_dir_path.join("common.png");
@@ -302,7 +317,6 @@ impl Tray {
 
     /// 取消订阅 traffic 数据
     #[cfg(target_os = "macos")]
-    #[allow(unused)]
     pub fn unsubscribe_traffic(&self) {
         log::info!(target: "app", "unsubscribe traffic");
         if let Some(tx) = self.shutdown_tx.write().take() {

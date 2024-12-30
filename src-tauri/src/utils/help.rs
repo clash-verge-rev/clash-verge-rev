@@ -210,6 +210,7 @@ macro_rules! t {
 /// assert_eq!(format_bytes_speed(1024), "1.0KB/s");
 /// assert_eq!(format_bytes_speed(1024 * 1024), "1.0MB/s");
 /// ```
+#[cfg(target_os = "macos")]
 pub fn format_bytes_speed(speed: u64) -> String {
     if speed < 1024 {
         format!("{}B/s", speed)
