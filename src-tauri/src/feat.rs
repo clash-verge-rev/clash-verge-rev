@@ -76,9 +76,9 @@ pub fn change_clash_mode(mode: String) {
 
                 if Config::clash().data().save_config().is_ok() {
                     handle::Handle::refresh_clash();
-                    log_err!(handle::Handle::update_systray_menu());
+                    log_err!(tray::Tray::global().update_menu());
                     #[cfg(target_os = "macos")]
-                    log_err!(handle::Handle::update_systray_icon());
+                    log_err!(tray::Tray::global().update_icon(None));
                 }
             }
             Err(err) => log::error!(target: "app", "{err}"),
@@ -141,9 +141,9 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             CoreManager::global().restart_core().await?;
         } else {
             if patch.get("mode").is_some() {
-                log_err!(handle::Handle::update_systray_menu());
+                log_err!(tray::Tray::global().update_menu());
                 #[cfg(target_os = "macos")]
-                log_err!(handle::Handle::update_systray_icon());
+                log_err!(tray::Tray::global().update_icon(None));
             }
             Config::runtime().latest().patch_config(patch);
             CoreManager::global().update_config().await?;
@@ -267,7 +267,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         }
 
         if should_update_systray_icon {
-            handle::Handle::update_systray_icon()?;
+            tray::Tray::global().update_icon(None)?;
         }
 
         <Result<()>>::Ok(())
