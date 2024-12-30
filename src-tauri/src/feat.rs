@@ -475,9 +475,9 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
 
     log_err!(
         patch_verge(IVerge {
-            webdav_url: webdav_url,
-            webdav_username: webdav_username,
-            webdav_password: webdav_password,
+            webdav_url,
+            webdav_username,
+            webdav_password,
             ..IVerge::default()
         })
         .await
