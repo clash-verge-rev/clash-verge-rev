@@ -5,6 +5,12 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Rate {
+    pub up: u64,
+    pub down: u64,
+}
+
 /// PUT /configs
 /// path 是绝对路径
 pub async fn put_configs(path: &str) -> Result<()> {

@@ -1,31 +1,20 @@
-#[cfg(target_os = "macos")]
-use {
-    crate::core::clash_api::get_traffic_ws_url,
-    crate::utils::help::format_bytes_speed,
-    anyhow::Result,
-    futures::Stream,
-    image::{ImageBuffer, Rgba},
-    imageproc::drawing::draw_text_mut,
-    parking_lot::Mutex,
-    rusttype::{Font, Scale},
-    std::io::Cursor,
-    std::sync::Arc,
-    tokio_tungstenite::tungstenite::Message,
-};
+use crate::core::clash_api::{get_traffic_ws_url, Rate};
+use crate::utils::help::format_bytes_speed;
+use anyhow::Result;
+use futures::Stream;
+use image::{ImageBuffer, Rgba};
+use imageproc::drawing::draw_text_mut;
+use parking_lot::Mutex;
+use rusttype::{Font, Scale};
+use std::io::Cursor;
+use std::sync::Arc;
+use tokio_tungstenite::tungstenite::Message;
 
-#[derive(Debug, Clone, Default, PartialEq)]
-pub struct Rate {
-    pub up: u64,
-    pub down: u64,
-}
-
-#[cfg(target_os = "macos")]
 #[derive(Debug, Clone)]
 pub struct SpeedRate {
     rate: Arc<Mutex<(Rate, Rate)>>,
 }
 
-#[cfg(target_os = "macos")]
 impl SpeedRate {
     pub fn new() -> Self {
         Self {
@@ -142,14 +131,12 @@ impl SpeedRate {
     }
 }
 
-#[cfg(target_os = "macos")]
 #[derive(Debug, Clone)]
 pub struct Traffic {
     pub up: u64,
     pub down: u64,
 }
 
-#[cfg(target_os = "macos")]
 impl Traffic {
     pub async fn get_traffic_stream() -> Result<impl Stream<Item = Result<Traffic, anyhow::Error>>>
     {
