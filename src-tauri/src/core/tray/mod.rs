@@ -1,6 +1,7 @@
 use once_cell::sync::OnceCell;
-
+#[cfg(target_os = "macos")]
 pub mod speed_rate;
+use crate::core::clash_api::Rate;
 use crate::utils::dirs;
 use crate::{
     cmds,
@@ -15,7 +16,6 @@ use futures::StreamExt;
 use parking_lot::Mutex;
 #[cfg(target_os = "macos")]
 use parking_lot::RwLock;
-use speed_rate::Rate;
 #[cfg(target_os = "macos")]
 pub use speed_rate::{SpeedRate, Traffic};
 #[cfg(target_os = "macos")]
