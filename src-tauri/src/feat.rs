@@ -203,6 +203,8 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         let mut should_update_launch = false;
         let mut should_update_sysproxy = false;
         let mut should_update_systray_icon = false;
+        let mut should_update_hotkey = false;
+        let mut should_update_systray_menu = false;
 
         if tun_mode.is_some() {
             should_update_clash_config = true;
@@ -247,6 +249,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         {
             should_update_systray_icon = true;
         }
+
+        if patch.hotkeys.is_some() {
+            should_update_hotkey = true;
+            should_update_systray_menu = true;
+        }
+
         if should_restart_core {
             CoreManager::global().restart_core().await?;
         }
@@ -262,8 +270,11 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             sysopt::Sysopt::global().update_sysproxy().await?;
         }
 
-        if let Some(hotkeys) = patch.hotkeys {
-            hotkey::Hotkey::global().update(hotkeys)?;
+        if should_update_hotkey {
+            hotkey::Hotkey::global().update(patch.hotkeys.unwrap())?;
+        }
+
+        if should_update_systray_menu {
             tray::Tray::global().update_menu()?;
         }
 
