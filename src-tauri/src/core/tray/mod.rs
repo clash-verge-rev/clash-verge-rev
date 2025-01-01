@@ -334,13 +334,29 @@ fn create_tray_menu(
     let mode = mode.unwrap_or("");
     let use_zh = { Config::verge().latest().language == Some("zh".into()) };
     let version = VERSION.get().unwrap();
+    let hotkeys = Config::verge()
+        .latest()
+        .hotkeys
+        .as_ref()
+        .map(|h| {
+            h.iter()
+                .filter_map(|item| {
+                    let mut parts = item.split(',');
+                    match (parts.next(), parts.next()) {
+                        (Some(func), Some(key)) => Some((func.to_string(), key.to_string())),
+                        _ => None,
+                    }
+                })
+                .collect::<std::collections::HashMap<String, String>>()
+        })
+        .unwrap_or_default();
 
     let open_window = &MenuItem::with_id(
         app_handle,
         "open_window",
         t!("Dashboard", "打开面板", use_zh),
         true,
-        None::<&str>,
+        hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
     )
     .unwrap();
 
@@ -350,7 +366,7 @@ fn create_tray_menu(
         t!("Rule Mode", "规则模式", use_zh),
         true,
         mode == "rule",
-        None::<&str>,
+        hotkeys.get("clash_mode_rule").map(|s| s.as_str()),
     )
     .unwrap();
 
@@ -360,7 +376,7 @@ fn create_tray_menu(
         t!("Global Mode", "全局模式", use_zh),
         true,
         mode == "global",
-        None::<&str>,
+        hotkeys.get("clash_mode_global").map(|s| s.as_str()),
     )
     .unwrap();
 
@@ -370,7 +386,7 @@ fn create_tray_menu(
         t!("Direct Mode", "直连模式", use_zh),
         true,
         mode == "direct",
-        None::<&str>,
+        hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
     )
     .unwrap();
 
@@ -380,7 +396,7 @@ fn create_tray_menu(
         t!("System Proxy", "系统代理", use_zh),
         true,
         system_proxy_enabled,
-        None::<&str>,
+        hotkeys.get("toggle_system_proxy").map(|s| s.as_str()),
     )
     .unwrap();
 
@@ -390,7 +406,7 @@ fn create_tray_menu(
         t!("TUN Mode", "Tun模式", use_zh),
         true,
         tun_mode_enabled,
-        None::<&str>,
+        hotkeys.get("toggle_tun_mode").map(|s| s.as_str()),
     )
     .unwrap();
 
