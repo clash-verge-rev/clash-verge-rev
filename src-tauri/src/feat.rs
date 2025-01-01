@@ -264,6 +264,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
 
         if let Some(hotkeys) = patch.hotkeys {
             hotkey::Hotkey::global().update(hotkeys)?;
+            tray::Tray::global().update_menu()?;
         }
 
         if should_update_systray_icon {
