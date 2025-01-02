@@ -1,3 +1,4 @@
+use super::tray::Tray;
 use crate::config::*;
 use crate::core::{clash_api, handle, service};
 use crate::log_err;
@@ -93,8 +94,12 @@ impl CoreManager {
         if service::check_service().await.is_ok() {
             log::info!(target: "app", "try to run core in service mode");
             service::run_core_by_service(&config_path).await?;
-            *running = true;
         }
+        // 流量订阅
+        #[cfg(target_os = "macos")]
+        log_err!(Tray::global().subscribe_traffic().await);
+
+        *running = true;
 
         Ok(())
     }

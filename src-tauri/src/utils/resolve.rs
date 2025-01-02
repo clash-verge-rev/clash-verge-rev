@@ -106,10 +106,6 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(tray::Tray::global().update_part());
     log_err!(hotkey::Hotkey::global().init());
     log_err!(timer::Timer::global().init());
-
-    // 流量订阅
-    #[cfg(target_os = "macos")]
-    log_err!(tray::Tray::global().subscribe_traffic().await);
 }
 
 /// reset system proxy
