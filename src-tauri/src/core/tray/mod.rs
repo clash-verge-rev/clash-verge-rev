@@ -35,6 +35,7 @@ use super::handle;
 pub struct Tray {
     pub speed_rate: Arc<Mutex<Option<SpeedRate>>>,
     shutdown_tx: Arc<RwLock<Option<broadcast::Sender<()>>>>,
+    is_subscribed: Arc<RwLock<bool>>,
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -48,6 +49,7 @@ impl Tray {
         return TRAY.get_or_init(|| Tray {
             speed_rate: Arc::new(Mutex::new(None)),
             shutdown_tx: Arc::new(RwLock::new(None)),
+            is_subscribed: Arc::new(RwLock::new(false)),
         });
 
         #[cfg(not(target_os = "macos"))]
@@ -286,27 +288,48 @@ impl Tray {
     #[cfg(target_os = "macos")]
     pub async fn subscribe_traffic(&self) -> Result<()> {
         log::info!(target: "app", "subscribe traffic");
+
+        // 如果已经订阅，先取消订阅
+        if *self.is_subscribed.read() {
+            self.unsubscribe_traffic();
+        }
+
         let (shutdown_tx, shutdown_rx) = broadcast::channel(1);
         *self.shutdown_tx.write() = Some(shutdown_tx);
+        *self.is_subscribed.write() = true;
 
         let speed_rate = Arc::clone(&self.speed_rate);
+        let is_subscribed = Arc::clone(&self.is_subscribed);
 
         tauri::async_runtime::spawn(async move {
             let mut shutdown = shutdown_rx;
-            if let Ok(mut stream) = Traffic::get_traffic_stream().await {
-                loop {
-                    tokio::select! {
-                        Some(traffic) = stream.next() => {
-                            if let Ok(traffic) = traffic {
-                                let guard = speed_rate.lock();
-                                if let Some(sr) = guard.as_ref() {
-                                    if let Some(rate) = sr.update_and_check_changed(traffic.up, traffic.down) {
-                                        let _ = Tray::global().update_icon(Some(rate));
+
+            'outer: loop {
+                match Traffic::get_traffic_stream().await {
+                    Ok(mut stream) => loop {
+                        tokio::select! {
+                            Some(traffic) = stream.next() => {
+                                if let Ok(traffic) = traffic {
+                                    let guard = speed_rate.lock();
+                                    if let Some(sr) = guard.as_ref() {
+                                        if let Some(rate) = sr.update_and_check_changed(traffic.up, traffic.down) {
+                                            let _ = Tray::global().update_icon(Some(rate));
+                                        }
                                     }
                                 }
                             }
+                            _ = shutdown.recv() => break 'outer,
                         }
-                        _ = shutdown.recv() => break,
+                    },
+                    Err(e) => {
+                        log::error!(target: "app", "Failed to get traffic stream: {}", e);
+                        // 如果获取流失败，等待一段时间后重试
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+
+                        // 检查是否应该继续重试
+                        if !*is_subscribed.read() {
+                            break;
+                        }
                     }
                 }
             }
@@ -319,8 +342,9 @@ impl Tray {
     #[cfg(target_os = "macos")]
     pub fn unsubscribe_traffic(&self) {
         log::info!(target: "app", "unsubscribe traffic");
+        *self.is_subscribed.write() = false;
         if let Some(tx) = self.shutdown_tx.write().take() {
-            drop(tx); // 发送端被丢弃时会自动发送关闭信号
+            drop(tx);
         }
     }
 }
