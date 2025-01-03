@@ -21,7 +21,9 @@ pub async fn put_configs(path: &str) -> Result<()> {
     match response.status().as_u16() {
         204 => Ok(()),
         status => {
-            bail!("failed to put configs with status \"{status}\"")
+            let body = response.text().await?;
+           // print!("failed to put configs with status \"{}\"\n{}\n{}", status, url, body);
+            bail!("failed to put configs with status \"{status}\"\n{url}\n{body}");
         }
     }
 }
