@@ -66,6 +66,7 @@ base64 = "0.22.1"
 getrandom = "0.2"
 tokio-tungstenite = "0.26.1"
 futures = "0.3"
+sys-locale = "0.3.1"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"

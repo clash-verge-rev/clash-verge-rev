@@ -28,12 +28,26 @@ import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { ContentCopyRounded } from "@mui/icons-material";
+import { languages } from "@/services/i18n";
 
 interface Props {
   onError?: (err: Error) => void;
 }
 
 const OS = getSystem();
+
+const languageOptions = Object.entries(languages).map(([code, _]) => {
+  const labels: { [key: string]: string } = {
+    en: "English",
+    ru: "Русский",
+    zh: "中文",
+    fa: "فارسی",
+    tt: "Татар",
+    id: "Bahasa Indonesia",
+    ar: "العربية",
+  };
+  return { code, label: labels[code] };
+});
 
 const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
@@ -96,10 +110,11 @@ const SettingVerge = ({ onError }: Props) => {
           onGuard={(e) => patchVerge({ language: e })}
         >
           <Select size="small" sx={{ width: 110, "> div": { py: "7.5px" } }}>
-            <MenuItem value="zh">中文</MenuItem>
-            <MenuItem value="en">English</MenuItem>
-            <MenuItem value="ru">Русский</MenuItem>
-            <MenuItem value="fa">فارسی</MenuItem>
+            {languageOptions.map(({ code, label }) => (
+              <MenuItem key={code} value={code}>
+                {label}
+              </MenuItem>
+            ))}
           </Select>
         </GuardState>
       </SettingItem>

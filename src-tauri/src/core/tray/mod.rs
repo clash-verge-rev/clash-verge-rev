@@ -2,13 +2,14 @@ use once_cell::sync::OnceCell;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
 use crate::core::clash_api::Rate;
-use crate::utils::dirs;
 use crate::{
     cmds,
     config::Config,
-    feat, t,
-    utils::resolve::{self, VERSION},
+    feat, resolve,
+    utils::resolve::VERSION,
+    utils::{dirs, i18n::t},
 };
+
 use anyhow::Result;
 #[cfg(target_os = "macos")]
 use futures::StreamExt;
@@ -114,7 +115,6 @@ impl Tray {
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-
         let mode = {
             Config::clash()
                 .latest()
@@ -239,7 +239,6 @@ impl Tray {
     /// 更新托盘提示
     pub fn update_tooltip(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
-        let use_zh = { Config::verge().latest().language == Some("zh".into()) };
         let version = VERSION.get().unwrap();
 
         let verge = Config::verge().latest().clone();
@@ -267,11 +266,11 @@ impl Tray {
         let tray = app_handle.tray_by_id("main").unwrap();
         let _ = tray.set_tooltip(Some(&format!(
             "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
-            t!("SysProxy", "系统代理", use_zh),
+            t("SysProxy"),
             switch_map[system_proxy],
-            t!("TUN", "Tun模式", use_zh),
+            t("TUN"),
             switch_map[tun_mode],
-            t!("Profile", "当前订阅", use_zh),
+            t("Profile"),
             current_profile_name
         )));
         Ok(())
@@ -356,7 +355,6 @@ fn create_tray_menu(
     tun_mode_enabled: bool,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
-    let use_zh = { Config::verge().latest().language == Some("zh".into()) };
     let version = VERSION.get().unwrap();
     let hotkeys = Config::verge()
         .latest()
@@ -378,7 +376,7 @@ fn create_tray_menu(
     let open_window = &MenuItem::with_id(
         app_handle,
         "open_window",
-        t!("Dashboard", "打开面板", use_zh),
+        t("Dashboard"),
         true,
         hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
     )
@@ -387,7 +385,7 @@ fn create_tray_menu(
     let rule_mode = &CheckMenuItem::with_id(
         app_handle,
         "rule_mode",
-        t!("Rule Mode", "规则模式", use_zh),
+        t("Rule Mode"),
         true,
         mode == "rule",
         hotkeys.get("clash_mode_rule").map(|s| s.as_str()),
@@ -397,7 +395,7 @@ fn create_tray_menu(
     let global_mode = &CheckMenuItem::with_id(
         app_handle,
         "global_mode",
-        t!("Global Mode", "全局模式", use_zh),
+        t("Global Mode"),
         true,
         mode == "global",
         hotkeys.get("clash_mode_global").map(|s| s.as_str()),
@@ -407,7 +405,7 @@ fn create_tray_menu(
     let direct_mode = &CheckMenuItem::with_id(
         app_handle,
         "direct_mode",
-        t!("Direct Mode", "直连模式", use_zh),
+        t("Direct Mode"),
         true,
         mode == "direct",
         hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
@@ -417,7 +415,7 @@ fn create_tray_menu(
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
         "system_proxy",
-        t!("System Proxy", "系统代理", use_zh),
+        t("System Proxy"),
         true,
         system_proxy_enabled,
         hotkeys.get("toggle_system_proxy").map(|s| s.as_str()),
@@ -427,26 +425,20 @@ fn create_tray_menu(
     let tun_mode = &CheckMenuItem::with_id(
         app_handle,
         "tun_mode",
-        t!("TUN Mode", "Tun模式", use_zh),
+        t("TUN Mode"),
         true,
         tun_mode_enabled,
         hotkeys.get("toggle_tun_mode").map(|s| s.as_str()),
     )
     .unwrap();
 
-    let copy_env = &MenuItem::with_id(
-        app_handle,
-        "copy_env",
-        t!("Copy Env", "复制环境变量", use_zh),
-        true,
-        None::<&str>,
-    )
-    .unwrap();
+    let copy_env =
+        &MenuItem::with_id(app_handle, "copy_env", t("Copy Env"), true, None::<&str>).unwrap();
 
     let open_app_dir = &MenuItem::with_id(
         app_handle,
         "open_app_dir",
-        t!("Conf Dir", "配置目录", use_zh),
+        t("Conf Dir"),
         true,
         None::<&str>,
     )
@@ -455,7 +447,7 @@ fn create_tray_menu(
     let open_core_dir = &MenuItem::with_id(
         app_handle,
         "open_core_dir",
-        t!("Core Dir", "内核目录", use_zh),
+        t("Core Dir"),
         true,
         None::<&str>,
     )
@@ -464,15 +456,16 @@ fn create_tray_menu(
     let open_logs_dir = &MenuItem::with_id(
         app_handle,
         "open_logs_dir",
-        t!("Logs Dir", "日志目录", use_zh),
+        t("Logs Dir"),
         true,
         None::<&str>,
     )
     .unwrap();
+
     let open_dir = &Submenu::with_id_and_items(
         app_handle,
         "open_dir",
-        t!("Open Dir", "打开目录", use_zh),
+        t("Open Dir"),
         true,
         &[open_app_dir, open_core_dir, open_logs_dir],
     )
@@ -481,7 +474,7 @@ fn create_tray_menu(
     let restart_clash = &MenuItem::with_id(
         app_handle,
         "restart_clash",
-        t!("Restart Clash Core", "重启Clash内核", use_zh),
+        t("Restart Clash Core"),
         true,
         None::<&str>,
     )
@@ -490,7 +483,7 @@ fn create_tray_menu(
     let restart_app = &MenuItem::with_id(
         app_handle,
         "restart_app",
-        t!("Restart App", "重启App", use_zh),
+        t("Restart App"),
         true,
         None::<&str>,
     )
@@ -499,7 +492,7 @@ fn create_tray_menu(
     let app_version = &MenuItem::with_id(
         app_handle,
         "app_version",
-        format!("Version {version}"),
+        format!("{} {version}", t("Verge Version")),
         true,
         None::<&str>,
     )
@@ -508,20 +501,14 @@ fn create_tray_menu(
     let more = &Submenu::with_id_and_items(
         app_handle,
         "more",
-        t!("More", "更多", use_zh),
+        t("More"),
         true,
         &[restart_clash, restart_app, app_version],
     )
     .unwrap();
 
-    let quit = &MenuItem::with_id(
-        app_handle,
-        "quit",
-        t!("Quit", "退出", use_zh),
-        true,
-        Some("CmdOrControl+Q"),
-    )
-    .unwrap();
+    let quit =
+        &MenuItem::with_id(app_handle, "quit", t("Exit"), true, Some("CmdOrControl+Q")).unwrap();
 
     let separator = &PredefinedMenuItem::separator(app_handle).unwrap();
 
