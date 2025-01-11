@@ -208,6 +208,11 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
 
         if tun_mode.is_some() {
             should_update_clash_config = true;
+            should_update_systray_menu = true;
+            #[cfg(target_os = "macos")]
+            {
+                should_update_systray_icon = true;
+            }
         }
 
         #[cfg(not(target_os = "windows"))]
@@ -230,18 +235,21 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if auto_launch.is_some() {
             should_update_launch = true;
         }
-        if system_proxy.is_some()
-            || proxy_bypass.is_some()
-            || mixed_port.is_some()
-            || pac.is_some()
-            || pac_content.is_some()
-        {
+
+        if system_proxy.is_some() {
+            should_update_sysproxy = true;
+            should_update_systray_menu = true;
+            #[cfg(target_os = "macos")]
+            {
+                should_update_systray_icon = true;
+            }
+        }
+
+        if proxy_bypass.is_some() || pac_content.is_some() || pac.is_some() {
             should_update_sysproxy = true;
         }
 
         if language.is_some()
-            || system_proxy.is_some()
-            || tun_mode.is_some()
             || common_tray_icon.is_some()
             || sysproxy_tray_icon.is_some()
             || tun_tray_icon.is_some()
