@@ -6,37 +6,19 @@ use sys_locale;
 
 pub fn get_supported_languages() -> Vec<String> {
     let project_dir = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
-    let i18n_path = project_dir.join("src/services/i18n.ts");
+    let locales_dir = project_dir.join("src/locales");
+    let mut languages = Vec::new();
 
-    if let Ok(content) = fs::read_to_string(i18n_path) {
-        let mut languages = Vec::new();
-        for line in content.lines() {
-            if line.contains("resources = {") {
-                for line in content.lines() {
-                    if let Some(lang) = line.trim().strip_suffix(": { translation:") {
-                        let lang = lang.trim().trim_matches('"');
-                        if !lang.is_empty() {
-                            languages.push(lang.to_string());
-                        }
-                    }
-                    if line.contains("};") {
-                        break;
-                    }
+    if let Ok(entries) = fs::read_dir(locales_dir) {
+        for entry in entries.flatten() {
+            if let Some(file_name) = entry.file_name().to_str() {
+                if let Some(lang) = file_name.strip_suffix(".json") {
+                    languages.push(lang.to_string());
                 }
-                break;
             }
         }
-        if !languages.is_empty() {
-            return languages;
-        }
     }
-
-    vec![
-        "en".to_string(),
-        "ru".to_string(),
-        "zh".to_string(),
-        "fa".to_string(),
-    ]
+    languages
 }
 
 static TRANSLATIONS: Lazy<HashMap<String, Value>> = Lazy::new(|| {
@@ -44,7 +26,7 @@ static TRANSLATIONS: Lazy<HashMap<String, Value>> = Lazy::new(|| {
     let locales_dir = project_dir.join("src/locales");
     let mut translations = HashMap::new();
 
-    for lang in ["en", "ru", "zh", "fa", "tt"] {
+    for lang in get_supported_languages() {
         let file_path = locales_dir.join(format!("{}.json", lang));
         if let Ok(content) = fs::read_to_string(file_path) {
             if let Ok(json) = serde_json::from_str(&content) {
@@ -71,8 +53,8 @@ pub fn t(key: &str) -> String {
         }
     }
 
-    // Fallback to English
-    if let Some(translations) = TRANSLATIONS.get("en") {
+    // Fallback to Chinese
+    if let Some(translations) = TRANSLATIONS.get("zh") {
         if let Some(text) = translations.get(key) {
             if let Some(text) = text.as_str() {
                 return text.to_string();
@@ -85,15 +67,15 @@ pub fn t(key: &str) -> String {
 
 fn get_system_language() -> String {
     let sys_lang = sys_locale::get_locale()
-        .unwrap_or_else(|| String::from("en"))
+        .unwrap_or_else(|| String::from("zh"))
         .to_lowercase();
 
-    let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
+    let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("zh");
     let supported_languages = get_supported_languages();
 
     if supported_languages.contains(&lang_code.to_string()) {
         lang_code.to_string()
     } else {
-        String::from("en")
+        String::from("zh")
     }
 }

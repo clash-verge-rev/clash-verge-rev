@@ -249,8 +249,10 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             should_update_sysproxy = true;
         }
 
-        if language.is_some()
-            || common_tray_icon.is_some()
+        if language.is_some() {
+            should_update_systray_menu = true;
+        }
+        if common_tray_icon.is_some()
             || sysproxy_tray_icon.is_some()
             || tun_tray_icon.is_some()
             || tray_icon.is_some()
