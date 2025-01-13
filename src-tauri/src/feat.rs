@@ -194,6 +194,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let socks_port = patch.verge_socks_port;
     let http_enabled = patch.verge_http_enabled;
     let http_port = patch.verge_port;
+    let enable_tray_speed = patch.enable_tray_speed;
 
     let res: std::result::Result<(), anyhow::Error> = {
         let mut should_restart_core = false;
@@ -258,6 +259,10 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if patch.hotkeys.is_some() {
             should_update_hotkey = true;
             should_update_systray_menu = true;
+        }
+
+        if enable_tray_speed.is_some() {
+            should_update_systray_icon = true;
         }
 
         if should_restart_core {
