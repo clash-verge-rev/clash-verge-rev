@@ -398,6 +398,34 @@ const resolveServicePermission = async () => {
   }
 };
 
+// 在 resolveResource 函数后添加新函数
+async function resolveLocales() {
+  const srcLocalesDir = path.join(cwd, "src/locales");
+  const targetLocalesDir = path.join(cwd, "src-tauri/resources/locales");
+
+  try {
+    // 确保目标目录存在
+    await fsp.mkdir(targetLocalesDir, { recursive: true });
+
+    // 读取所有语言文件
+    const files = await fsp.readdir(srcLocalesDir);
+
+    // 复制每个文件
+    for (const file of files) {
+      const srcPath = path.join(srcLocalesDir, file);
+      const targetPath = path.join(targetLocalesDir, file);
+
+      await fsp.copyFile(srcPath, targetPath);
+      log_success(`Copied locale file: ${file}`);
+    }
+
+    log_success("All locale files copied successfully");
+  } catch (err) {
+    log_error("Error copying locale files:", err.message);
+    throw err;
+  }
+}
+
 /**
  * main
  */
@@ -508,6 +536,11 @@ const tasks = [
     func: resolveUnSetDnsScript,
     retry: 5,
     macosOnly: true,
+  },
+  {
+    name: "locales",
+    func: resolveLocales,
+    retry: 2,
   },
 ];
 
