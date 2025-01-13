@@ -8,6 +8,7 @@ import {
   styled,
   ListItem,
   ListItemText,
+  Box,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
@@ -160,6 +161,21 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
                 <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>
                 <MenuItem value="colorful">{t("Colorful")}</MenuItem>
               </Select>
+            </GuardState>
+          </Item>
+        )}
+        {OS === "macos" && (
+          <Item>
+            <ListItemText primary={t("Enable Tray Speed")} />
+            <GuardState
+              value={verge?.enable_tray_speed ?? true}
+              valueProps="checked"
+              onCatch={onError}
+              onFormat={onSwitchFormat}
+              onChange={(e) => onChangeData({ enable_tray_speed: e })}
+              onGuard={(e) => patchVerge({ enable_tray_speed: e })}
+            >
+              <Switch edge="end" />
             </GuardState>
           </Item>
         )}

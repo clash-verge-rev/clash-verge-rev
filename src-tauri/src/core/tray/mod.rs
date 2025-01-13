@@ -216,16 +216,22 @@ impl Tray {
 
         #[cfg(target_os = "macos")]
         {
+            let enable_tray_speed = Config::verge().latest().enable_tray_speed.unwrap_or(true);
             let is_template =
                 crate::utils::help::is_monochrome_image_from_bytes(&icon_bytes).unwrap_or(false);
-            // 如果rate为None，获取当前速率
-            let rate = rate.or_else(|| {
-                self.speed_rate
-                    .lock()
-                    .as_ref()
-                    .and_then(|speed_rate| speed_rate.get_curent_rate())
-            });
-            let icon_bytes = SpeedRate::add_speed_text(icon_bytes, rate)?;
+
+            let icon_bytes = if enable_tray_speed {
+                let rate = rate.or_else(|| {
+                    self.speed_rate
+                        .lock()
+                        .as_ref()
+                        .and_then(|speed_rate| speed_rate.get_curent_rate())
+                });
+                SpeedRate::add_speed_text(icon_bytes, rate)?
+            } else {
+                icon_bytes
+            };
+
             let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
             let _ = tray.set_icon_as_template(is_template);
         }
