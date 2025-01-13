@@ -77,7 +77,6 @@ pub fn change_clash_mode(mode: String) {
                 if Config::clash().data().save_config().is_ok() {
                     handle::Handle::refresh_clash();
                     log_err!(tray::Tray::global().update_menu());
-                    #[cfg(target_os = "macos")]
                     log_err!(tray::Tray::global().update_icon(None));
                 }
             }
@@ -142,7 +141,6 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         } else {
             if patch.get("mode").is_some() {
                 log_err!(tray::Tray::global().update_menu());
-                #[cfg(target_os = "macos")]
                 log_err!(tray::Tray::global().update_icon(None));
             }
             Config::runtime().latest().patch_config(patch);
@@ -211,10 +209,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             should_update_clash_config = true;
             should_update_systray_menu = true;
             should_update_systray_tooltip = true;
-            #[cfg(target_os = "macos")]
-            {
-                should_update_systray_icon = true;
-            }
+            should_update_systray_icon = true;
         }
 
         #[cfg(not(target_os = "windows"))]
@@ -242,10 +237,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             should_update_sysproxy = true;
             should_update_systray_menu = true;
             should_update_systray_tooltip = true;
-            #[cfg(target_os = "macos")]
-            {
-                should_update_systray_icon = true;
-            }
+            should_update_systray_icon = true;
         }
 
         if proxy_bypass.is_some() || pac_content.is_some() || pac.is_some() {
