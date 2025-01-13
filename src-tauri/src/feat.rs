@@ -205,10 +205,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         let mut should_update_systray_icon = false;
         let mut should_update_hotkey = false;
         let mut should_update_systray_menu = false;
+        let mut should_update_systray_tooltip = false;
 
         if tun_mode.is_some() {
             should_update_clash_config = true;
             should_update_systray_menu = true;
+            should_update_systray_tooltip = true;
             #[cfg(target_os = "macos")]
             {
                 should_update_systray_icon = true;
@@ -239,6 +241,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if system_proxy.is_some() {
             should_update_sysproxy = true;
             should_update_systray_menu = true;
+            should_update_systray_tooltip = true;
             #[cfg(target_os = "macos")]
             {
                 should_update_systray_icon = true;
@@ -292,6 +295,9 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             tray::Tray::global().update_icon(None)?;
         }
 
+        if should_update_systray_tooltip {
+            tray::Tray::global().update_tooltip()?;
+        }
         <Result<()>>::Ok(())
     };
     match res {
