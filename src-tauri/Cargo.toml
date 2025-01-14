@@ -13,7 +13,7 @@ build = "build.rs"
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.0.5", features = [] }
+tauri-build = { version = "2.0.3", features = [] }
 
 [dependencies]
 warp = "0.3"
@@ -42,7 +42,7 @@ sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", rev = "3d74
 image = "0.24"
 imageproc = "0.23"
 rusttype = "0.9"
-tauri = { version = "2.2.1", features = [
+tauri = { version = "2.1.1", features = [
     "protocol-asset",
     "devtools",
     "tray-icon",
