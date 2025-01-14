@@ -316,6 +316,10 @@ impl Tray {
                             Some(traffic) = stream.next() => {
                                 if let Ok(traffic) = traffic {
                                     let guard = speed_rate.lock();
+                                    let enable_tray_speed: bool = Config::verge().latest().enable_tray_speed.unwrap_or(true);
+                                    if !enable_tray_speed {
+                                        continue;
+                                    }
                                     if let Some(sr) = guard.as_ref() {
                                         if let Some(rate) = sr.update_and_check_changed(traffic.up, traffic.down) {
                                             let _ = Tray::global().update_icon(Some(rate));
