@@ -192,7 +192,7 @@ impl Tray {
             "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
             t!("SysProxy", "系统代理", use_zh),
             switch_map[system_proxy],
-            t!("TUN", "Tun模式", use_zh),
+            t!("TUN", "TUN 模式", use_zh),
             switch_map[tun_mode],
             t!("Profile", "当前订阅", use_zh),
             current_profile_name
@@ -317,7 +317,7 @@ fn create_tray_menu(
     let restart_clash = &MenuItem::with_id(
         app_handle,
         "restart_clash",
-        t!("Restart Clash Core", "重启Clash内核", use_zh),
+        t!("Restart Clash Core", "重启 Clash 内核", use_zh),
         true,
         None::<&str>,
     )
@@ -326,7 +326,7 @@ fn create_tray_menu(
     let restart_app = &MenuItem::with_id(
         app_handle,
         "restart_app",
-        t!("Restart App", "重启App", use_zh),
+        t!("Restart App", "重启 App", use_zh),
         true,
         None::<&str>,
     )
