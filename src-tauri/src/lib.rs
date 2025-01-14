@@ -127,7 +127,6 @@ pub fn run() {
         builder = builder.plugin(devtools);
     }
 
-    #[allow(deprecated)]
     let app = builder
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
