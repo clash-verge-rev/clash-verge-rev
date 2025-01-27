@@ -2,20 +2,22 @@
 
 pkgname=clash-verge-self-alpha-bin
 _pkgname=clash-verge-self
-pkgver=1.7.1
+pkgver=2.0.0
 pkgrel=1
 pkgdesc="Continuation of Clash Verge | A Clash Meta GUI based on Tauri"
 arch=('x86_64')
 url="https://github.com/oomeow/clash-verge-self"
 license=('GPL3')
-depends=('webkit2gtk' 'gtk3' 'libayatana-appindicator')
+depends=('cairo' 'desktop-file-utils' 'gdk-pixbuf2' 'glib2' 'gtk3' 'hicolor-icon-theme' 'libsoup' 'pango' 'webkit2gtk')
+options=('!strip' '!emptydirs')
 conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "clash-verge-rev" "clash-verge-rev-alpha" "clash-verge-rev-alpha-bin" "clash-verge" "clash-verge-bin" "clash-nyanpasu" "clash-nyanpasu-bin" "clash-nyanpasu-git" "clash-meta")
+install=clash-verge.install
 
 source_x86_64=("clash-verge_${pkgver}_amd64.deb")
 
-sha256sums_x86_64=("d294291cd4c71754dc078b0a1bb6bc6b9edd4e1f09bebdb7d47d6b03578cfbb3")
+sha256sums_x86_64=("777759fcad8242a8ec0278b4e3c326031a2698b48d9973559000bd420447db73")
 
 package() {
-	tar xpf data.tar.gz -C ${pkgdir}
-	chown -R root:root ${pkgdir}
+	# Extract package data
+	tar -xz -f data.tar.gz -C "${pkgdir}"
 }

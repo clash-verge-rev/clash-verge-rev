@@ -1,0 +1,42 @@
+# system tray related
+dashboard: Dashboard
+mode.rule: Rule Mode
+mode.global: Global Mode
+mode.direct: Direct Mode
+proxy.system: System Proxy
+proxy.tun: Tun Mode
+service: Service Mode
+copy.env: Copy Env
+open.dir: Open Dir
+app.dir: App Dir
+core.dir: Core Dir
+log.dir: Log Dir
+more: More
+open.devtools: Open DevTools
+restart.clash: Restart Clash
+restart: Restart App
+quit: Quit
+current.profile: Current Profile
+
+# notification related
+disable.failed: Disabled Failed
+enable.failed: Enabled Failed
+install.failed: Install Failed
+service.install.run.failed: Install successfully, but Clash Verge Service run failed
+service.install.run.success: Clash Verge Service install and run successfully
+import.success: Import profile successfully
+import.failed: Import profile failed
+
+# dialog related
+install.service.ask: "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?"
+panic.info.title: Clash Verge Crash
+panic.info.backtrace: "stack backtrace:\n%{backtrace}"
+panic.info.display.backtrace.note: "Note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+panic.info.content: "location: %{location}:\n\n%{payload}\n\n%{limit_backtrace}...\n\nFor more panic information, check the log file:\n  %{log_file}"
+
+# error result related
+tun.busy: Tun Device Or Resource Busy
+config.parse.failed: Failed to parse config to yaml file
+config.convert.failed: Failed to convert config to yaml
+runtime.config.get.failed: Failed to get runtime config
+clash.restart.failed: Clash Core Restart Failed

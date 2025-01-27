@@ -36,12 +36,12 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2
+        uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2
         with:
           workspaces: src-tauri
 
       - name: Install Node
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
         with:
           node-version: "20"
 
@@ -56,11 +56,11 @@ jobs:
           pnpm check ${{ matrix.target }}
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@8c3e0753aa015d00d03631d6d4f64ad59489251d # v0
+        uses: tauri-apps/tauri-action@94571df7fd79dbe2aee6d279c0a6b66d086d3b3b # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
@@ -100,13 +100,70 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - name: Build for Linux
-        uses: ./.github/build-for-linux
-        env:
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add Rust Target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2
         with:
-          target: ${{ matrix.target }}
+          workspaces: src-tauri
+
+      - name: Install Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install Binstall
+        if: matrix.target != 'x86_64-unknown-linux-gnu'
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Cross
+        if: matrix.target != 'x86_64-unknown-linux-gnu'
+        run: cargo binstall -y cross
+
+      - name: Install Node
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Pnpm install and check
+        run: |
+          pnpm i
+          pnpm check ${{ matrix.target }}
+
+      - name: Tauri build (x86_64)
+        if: startsWith(matrix.target, 'x86_64')
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          pnpm build --target ${{ matrix.target }}
+
+      - name: Tauri build (other)
+        if: matrix.target != 'x86_64-unknown-linux-gnu'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          RUST_BACKTRACE: full
+        run: |
+          pnpm build -r cross --target ${{ matrix.target }} -b deb,rpm
+
+      # - name: Build for Linux
+      #   uses: ./.github/build-for-linux
+      #   env:
+      #     TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      #     TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      #   with:
+      #     target: ${{ matrix.target }}
+      #     alpha: false
 
       - name: Get Version
         id: get_version
@@ -115,26 +172,18 @@ jobs:
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> "$GITHUB_OUTPUT"
 
-      - name: Generate Changelog
-        run: |
-          cat >> ${{ github.workspace }}/CHANGELOG.md << 'EOF'
-
-          [FAQ](https://clash-verge-rev.github.io/faq/windows.html)
-
-          EOF
-
-      - name: Upload Release
-        if: startsWith(matrix.target, 'x86_64')
-        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
-        with:
-          tag_name: v${{steps.get_version.outputs.VERSION}}
-          name: "Clash Verge Self v${{steps.get_version.outputs.VERSION}}"
-          body_path: ${{ github.workspace }}/CHANGELOG.md
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
+      # - name: Upload Release
+      #   if: startsWith(matrix.target, 'x86_64')
+      #   uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
+      #   with:
+      #     tag_name: v${{steps.get_version.outputs.VERSION}}
+      #     name: "Clash Verge Self v${{steps.get_version.outputs.VERSION}}"
+      #     body_path: ${{ github.workspace }}/CHANGELOG.md
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
-        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2
         with:
           tag_name: v${{steps.get_version.outputs.VERSION}}
           name: "Clash Verge Self v${{steps.get_version.outputs.VERSION}}"
@@ -143,85 +192,6 @@ jobs:
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
-
-  # release-for-fixed-webview2:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - os: windows-latest
-  #           target: x86_64-pc-windows-msvc
-  #           arch: x64
-  #         - os: windows-latest
-  #           target: i686-pc-windows-msvc
-  #           arch: x86
-  #         - os: windows-latest
-  #           target: aarch64-pc-windows-msvc
-  #           arch: arm64
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-
-  #     - name: Add Rust Target
-  #       run: rustup target add ${{ matrix.target }}
-
-  #     - name: Rust Cache
-  #       uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2
-  #       with:
-  #         workspaces: src-tauri
-
-  #     - name: Install Node
-  #       uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
-  #       with:
-  #         node-version: "20"
-
-  #     - uses: pnpm/action-setup@v4
-  #       name: Install pnpm
-  #       with:
-  #         run_install: false
-
-  #     - name: Pnpm install and check
-  #       run: |
-  #         pnpm i
-  #         pnpm check ${{ matrix.target }}
-
-  #     - name: Download WebView2 Runtime
-  #       run: |
-  #         invoke-webrequest -uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/109.0.1518.78/Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -outfile Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab
-  #         Expand .\Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -F:* ./src-tauri
-  #         Remove-Item .\src-tauri\tauri.windows.conf.json
-  #         Rename-Item .\src-tauri\webview2.${{ matrix.arch }}.json tauri.windows.conf.json
-
-  #     - name: Tauri build
-  #       id: build
-  #       uses: tauri-apps/tauri-action@41242bd545b6d1310ffc1685fb8bb87e97f0b748 # v0
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-  #         TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-  #       with:
-  #         tauriScript: pnpm
-  #         args: --target ${{ matrix.target }}
-
-  #     - name: Rename
-  #       run: |
-  #         Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.exe' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.exe'
-  #         Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip'
-  #         Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip.sig' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip.sig'
-
-  #     - name: Upload Release
-  #       uses: softprops/action-gh-release@a74c6b72af54cfa997e81df42d94703d6313a2d0 # v2
-  #       with:
-  #         tag_name: v${{steps.build.outputs.appVersion}}
-  #         name: "Clash Verge Self v${{steps.build.outputs.appVersion}}"
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
-
-  #     - name: Portable Bundle
-  #       run: pnpm portable-fixed-webview2 ${{ matrix.target }}
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   pkgbuild:
     name: PKGBUILD for ArchLinux
@@ -239,9 +209,7 @@ jobs:
         run: |
           echo "version: ${{ needs.release-for-linux.outputs.VERSION }}"
           wget https://github.com/oomeow/clash-verge-self/releases/download/v${{ needs.release-for-linux.outputs.VERSION }}/clash-verge_${{ needs.release-for-linux.outputs.VERSION }}_amd64.deb -O amd64.deb
-          wget https://github.com/oomeow/clash-verge-self/releases/download/v${{ needs.release-for-linux.outputs.VERSION }}/clash-verge_${{ needs.release-for-linux.outputs.VERSION }}_arm64.deb -O arm64.deb
           sed -i "s/sha256sums_x86_64=.*/sha256sums_x86_64=(\"$(sha256sum ./amd64.deb | awk '{print $1}')\")/" archbuild/release/PKGBUILD
-          sed -i "s/sha256sums_aarch64=.*/sha256sums_aarch64=(\"$(sha256sum ./arm64.deb | awk '{print $1}')\")/" archbuild/release/PKGBUILD
 
       - name: Makepkg Build and Check
         id: makepkg
@@ -255,7 +223,7 @@ jobs:
           echo "Package: ${{ steps.makepkg.outputs.pkgfile0 }}"
 
       - name: Upload Release
-        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2
         with:
           tag_name: v${{ needs.release-for-linux.outputs.VERSION }}
           name: "Clash Verge Self v${{ needs.release-for-linux.outputs.VERSION }}"
@@ -270,7 +238,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Install Node
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
         with:
           node-version: "20"
 
@@ -315,28 +283,3 @@ jobs:
             --body "Current pull request contains patched \`CHANGELOG.md\` and \`UPDATELOG.md\` files for the \`$VERSION\` version." \
             --label "$LABEL" \
             --head $BRANCH
-
-  # release-update-for-fixed-webview2:
-  #   runs-on: ubuntu-22.04
-  #   needs: [release-for-fixed-webview2]
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-
-  #     - name: Install Node
-  #       uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
-  #       with:
-  #         node-version: "20"
-
-  #     - uses: pnpm/action-setup@v4
-  #       name: Install pnpm
-  #       with:
-  #         run_install: false
-
-  #     - name: Pnpm install
-  #       run: pnpm i
-
-  #     - name: Release updater file
-  #       run: pnpm updater-fixed-webview2
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,10 +1,11 @@
 use crate::config::*;
+use crate::core::handle;
 use crate::core::verge_log::VergeLog;
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use std::fs::{self};
 use std::path::PathBuf;
-use tauri::api::process::Command;
+use tauri_plugin_shell::ShellExt;
 
 /// Initialize all the config files
 /// before tauri setup
@@ -152,7 +153,7 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 
-pub fn startup_script() -> Result<()> {
+pub async fn startup_script() -> Result<()> {
     let path = {
         let verge = Config::verge();
         let verge = verge.latest();
@@ -178,15 +179,24 @@ pub fn startup_script() -> Result<()> {
             return Err(anyhow::anyhow!("script not found: {path}"));
         }
         let current_dir = current_dir.parent();
+        let app_handle = handle::Handle::global().get_app_handle()?;
         match current_dir {
             Some(dir) => {
-                let _ = Command::new(shell)
+                let _ = app_handle
+                    .shell()
+                    .command(shell)
                     .current_dir(dir.to_path_buf())
                     .args([path])
-                    .output()?;
+                    .output()
+                    .await;
             }
             None => {
-                let _ = Command::new(shell).args([path]).output()?;
+                let _ = app_handle
+                    .shell()
+                    .command(shell)
+                    .args([path])
+                    .output()
+                    .await;
             }
         }
     }

@@ -1,6 +1,11 @@
 import { Notice, ScrollableText } from "@/components/base";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
-import { deleteProfile, updateProfile, viewProfile } from "@/services/cmds";
+import {
+  deleteProfile,
+  openWebUrl,
+  updateProfile,
+  viewProfile,
+} from "@/services/cmds";
 import {
   useLoadingCache,
   useSetLoadingCache,
@@ -130,7 +135,7 @@ export const ProfileItem = (props: Props) => {
 
   const onOpenHome = () => {
     setAnchorEl(null);
-    open(itemData.home ?? "");
+    openWebUrl(itemData.home ?? "");
   };
 
   const onEditInfo = () => {

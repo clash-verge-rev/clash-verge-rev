@@ -7,8 +7,9 @@ import {
   PushPinRounded,
 } from "@mui/icons-material";
 import { Button, ButtonGroup } from "@mui/material";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useState } from "react";
+const appWindow = getCurrentWebviewWindow();
 
 interface Props {
   maximized: boolean;

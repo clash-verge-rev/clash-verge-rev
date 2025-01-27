@@ -16,7 +16,7 @@ pub const HANDLE_FIELDS: [&str; 15] = [
     "secret",
     "profile",
     "tun",
-    "dns"
+    "dns",
 ];
 
 pub const DEFAULT_FIELDS: [&str; 5] = [

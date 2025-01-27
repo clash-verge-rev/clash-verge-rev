@@ -80,12 +80,15 @@ pub async fn install_service() -> Result<()> {
 
     let binary_path = dirs::service_path()?;
     let installer_path = binary_path.with_file_name("install-service");
+    log::debug!("installer path: {}", installer_path.display());
 
     if !installer_path.exists() {
         bail!("installer not found");
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
+    log::debug!("log dir: {}", log_dir.display());
+
     let elevator = crate::utils::unix_helper::linux_elevator();
     let status = match get_effective_uid() {
         0 => StdCommand::new(installer_path)

@@ -472,38 +472,6 @@ FunctionEnd
       nsis_tauri_utils::KillProcess "verge-mihomo.exe"
     !endif
   ${EndIf}
-
-  ; Check if clash-meta-alpha.exe is running
-  !if "${INSTALLMODE}" == "currentUser"
-    nsis_tauri_utils::FindProcessCurrentUser "clash-meta-alpha.exe"
-  !else
-    nsis_tauri_utils::FindProcess "clash-meta-alpha.exe"
-  !endif
-  Pop $R0
-  ${If} $R0 = 0
-    DetailPrint "Kill clash-meta-alpha.exe..."
-    !if "${INSTALLMODE}" == "currentUser"
-      nsis_tauri_utils::KillProcessCurrentUser "clash-meta-alpha.exe"
-    !else
-      nsis_tauri_utils::KillProcess "clash-meta-alpha.exe"
-    !endif
-  ${EndIf}
-
-  ; Check if clash-meta.exe is running
-  !if "${INSTALLMODE}" == "currentUser"
-    nsis_tauri_utils::FindProcessCurrentUser "clash-meta.exe"
-  !else
-    nsis_tauri_utils::FindProcess "clash-meta.exe"
-  !endif
-  Pop $R0
-  ${If} $R0 = 0
-    DetailPrint "Kill clash-meta.exe..."
-    !if "${INSTALLMODE}" == "currentUser"
-      nsis_tauri_utils::KillProcessCurrentUser "clash-meta.exe"
-    !else
-      nsis_tauri_utils::KillProcess "clash-meta.exe"
-    !endif
-  ${EndIf}
 !macroend
 
 !macro StartVergeService

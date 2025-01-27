@@ -1,6 +1,7 @@
 import { Notice } from "@/components/base";
 import { LogMessage } from "@/components/profile/profile-more";
-import { invoke } from "@tauri-apps/api/tauri";
+import getSystem from "@/utils/get-system";
+import { invoke } from "@tauri-apps/api/core";
 import dayjs from "dayjs";
 
 export interface MergeResult {
@@ -351,4 +352,10 @@ export async function downloadBackupAndReload(fileName: string) {
 
 export async function deleteBackup(fileName: string) {
   return invoke<void>("delete_backup", { fileName });
+}
+
+export async function isWayland() {
+  const OS = getSystem();
+  if (OS !== "linux") return false;
+  return invoke<boolean>("is_wayland");
 }

@@ -14,7 +14,7 @@ pub struct IVerge {
     /// silent | error | warn | info | debug | trace
     pub app_log_level: Option<String>,
 
-    // i18n
+    // i18n (now supported): zh | en | ru | fa
     pub language: Option<String>,
 
     /// `light` or `dark` or `system`

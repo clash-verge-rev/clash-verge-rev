@@ -11,7 +11,7 @@ import {
   MemoryOutlined,
 } from "@mui/icons-material";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 import { t } from "i18next";
 import { useRef } from "react";

@@ -3,7 +3,6 @@ use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::{fs, path::PathBuf, str::FromStr};
-use tauri::{api::shell::open, Manager};
 
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
@@ -92,39 +91,42 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 
 /// open file
 /// use vscode by default
-#[cfg(not(target_os = "windows"))]
+// #[cfg(not(target_os = "windows"))]
 pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
-    #[cfg(target_os = "macos")]
-    let code = "Visual Studio Code";
-    #[cfg(not(target_os = "macos"))]
-    let code = "code";
-    let _ = match open::with(&path.as_os_str(), code) {
-        Ok(()) => Ok(()),
-        Err(err) => {
-            log::error!(target: "app", "Can not open file with VS code, {}", err);
-            // default open
-            open(&app.shell_scope(), path.to_string_lossy(), None)
-        }
-    };
+    use tauri_plugin_opener::OpenerExt;
+
+    let _ = app
+        .opener()
+        .open_path(path.to_string_lossy(), Some("code"))
+        .map_err(|_| {
+            log::info!(target: "app", "open file by vscode err, use system default to open it");
+            app.opener().open_path(path.to_string_lossy(), None::<&str>)
+        });
     Ok(())
 }
 
 /// open file
 /// use vscode by default
-#[cfg(target_os = "windows")]
-pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
-    use std::os::windows::process::CommandExt;
-    use std::process::Command;
+// #[cfg(target_os = "windows")]
+// pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
+//     use tauri_plugin_shell::ShellExt;
 
-    let output = Command::new("cmd")
-        .args(["/c", "code", &path.to_string_lossy()])
-        .creation_flags(0x08000000)
-        .output()?;
-    if !output.status.success() {
-        let _ = open(&app.shell_scope(), path.to_string_lossy(), None);
-    }
-    Ok(())
-}
+//     let shell = app.shell();
+//     let path_ = path.clone();
+//     let output = tauri::async_runtime::block_on(async move {
+//         shell
+//             .command("cmd")
+//             .args(["/c", "code", &path_.to_string_lossy()])
+//             .output()
+//             .await
+//             .unwrap()
+//     });
+
+//     if !output.status.success() {
+//         app.shell().open(path.to_string_lossy(), None)?;
+//     }
+//     Ok(())
+// }
 
 #[macro_export]
 macro_rules! error {
@@ -167,6 +169,15 @@ macro_rules! wrap_err {
             Err(err) => {
                 log::error!(target: "app", "{}", err.to_string());
                 Err(format!("{}", err.to_string()))
+            }
+        }
+    };
+    ($stat: expr, $err_str: expr) => {
+        match $stat {
+            Ok(a) => Ok(a),
+            Err(err) => {
+                log::error!(target: "app", "{}, {}", $err_str, err.to_string());
+                Err(format!("{}, {}", $err_str, err.to_string()))
             }
         }
     };

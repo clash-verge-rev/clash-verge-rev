@@ -521,8 +521,18 @@ const tasks = [
   },
   { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
   { name: "clash-verge-service", func: resolveClashVergeService, retry: 5 },
-  { name: "set_dns_script", func: resolveSetDnsScript, retry: 5 },
-  { name: "unset_dns_script", func: resolveUnSetDnsScript, retry: 5 },
+  {
+    name: "set_dns_script",
+    func: resolveSetDnsScript,
+    retry: 5,
+    macOnly: true,
+  },
+  {
+    name: "unset_dns_script",
+    func: resolveUnSetDnsScript,
+    retry: 5,
+    macOnly: true,
+  },
   { name: "mmdb", func: resolveMmdb, retry: 5 },
   { name: "geosite", func: resolveGeosite, retry: 5 },
   { name: "geoip", func: resolveGeoIP, retry: 5 },
@@ -547,6 +557,7 @@ async function runTask() {
   if (task.winOnly && platform !== "win32") return runTask();
   if (task.linuxOnly && platform !== "linux") return runTask();
   if (task.unixOnly && platform === "win32") return runTask();
+  if (task.macOnly && platform !== "darwin") return runTask();
 
   for (let i = 0; i < task.retry; i++) {
     try {

@@ -8,7 +8,10 @@ use crate::{
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use backup::WebDav;
+use mihomo::MihomoClientManager;
+use mihomo_api::model::ProxyDelay;
 use reqwest_dav::list_cmd::ListFile;
+use rust_i18n::t;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{
@@ -17,7 +20,8 @@ use std::{
     path::PathBuf,
 };
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri::{api, Manager};
+use tauri::Manager;
+use tauri_plugin_opener::OpenerExt;
 use tray::Tray;
 type CmdResult<T = ()> = Result<T, String>;
 
@@ -188,10 +192,8 @@ pub fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = runtime.latest();
     let config = runtime.config.as_ref();
     wrap_err!(config
-        .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
-        .and_then(
-            |config| serde_yaml::to_string(config).context("failed to convert config to yaml")
-        ))
+        .ok_or(anyhow::anyhow!(t!("config.parse.failed")))
+        .and_then(|config| serde_yaml::to_string(config).context(t!("config.convert.failed"))))
 }
 
 #[tauri::command]
@@ -291,27 +293,33 @@ pub fn get_clash_logs() -> CmdResult<VecDeque<String>> {
 }
 
 #[tauri::command]
-pub fn open_app_dir() -> CmdResult<()> {
+pub fn open_app_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let app_dir = wrap_err!(dirs::app_home_dir())?;
-    wrap_err!(open::that(app_dir))
+    wrap_err!(app_handle
+        .opener()
+        .open_path(app_dir.to_string_lossy(), None::<&str>))
 }
 
 #[tauri::command]
-pub fn open_core_dir() -> CmdResult<()> {
+pub fn open_core_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let core_dir = wrap_err!(tauri::utils::platform::current_exe())?;
     let core_dir = core_dir.parent().ok_or("failed to get core dir")?;
-    wrap_err!(open::that(core_dir))
+    wrap_err!(app_handle
+        .opener()
+        .open_path(core_dir.to_string_lossy(), None::<&str>))
 }
 
 #[tauri::command]
-pub fn open_logs_dir() -> CmdResult<()> {
+pub fn open_logs_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let log_dir = wrap_err!(dirs::app_logs_dir())?;
-    wrap_err!(open::that(log_dir))
+    wrap_err!(app_handle
+        .opener()
+        .open_path(log_dir.to_string_lossy(), None::<&str>))
 }
 
 #[tauri::command]
-pub fn open_web_url(url: String) -> CmdResult<()> {
-    wrap_err!(open::that(url))
+pub fn open_web_url(app_handle: tauri::AppHandle, url: String) -> CmdResult<()> {
+    wrap_err!(app_handle.opener().open_url(url, None::<&str>))
 }
 
 #[cfg(windows)]
@@ -329,12 +337,18 @@ pub mod uwp {
 pub async fn clash_api_get_proxy_delay(
     name: String,
     url: Option<String>,
-    timeout: i32,
-) -> CmdResult<clash_api::DelayRes> {
-    match clash_api::get_proxy_delay(name, url, timeout).await {
-        Ok(res) => Ok(res),
-        Err(err) => Err(err.to_string()),
-    }
+    timeout: u32,
+) -> CmdResult<ProxyDelay> {
+    let default_url = "https://www.gstatic.com/generate_204";
+    let test_url = url
+        .map(|s| if s.is_empty() { default_url.into() } else { s })
+        .unwrap_or(default_url.into());
+    wrap_err!(
+        MihomoClientManager::global()
+            .mihomo()
+            .delay_proxy_by_name(&name, &test_url, timeout)
+            .await
+    )
 }
 
 #[tauri::command]
@@ -396,13 +410,13 @@ pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
             Err(err) => Err(err.to_string()),
         }
     } else {
-        Err("file not found".to_string())
+        ret_err!("file not found");
     }
 }
 
 #[tauri::command]
 pub fn open_devtools(app_handle: tauri::AppHandle) {
-    if let Some(window) = app_handle.get_window("main") {
+    if let Some(window) = app_handle.get_webview_window("main") {
         if !window.is_devtools_open() {
             window.open_devtools();
         } else {
@@ -413,33 +427,34 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 
 #[tauri::command]
 pub fn restart_app(app_handle: tauri::AppHandle) {
-    let _ = resolve::save_window_size_position(&app_handle, true);
+    let _ = resolve::save_window_size_position(&app_handle, false);
     let _ = CoreManager::global().stop_core();
+    app_handle.cleanup_before_exit();
     app_handle.restart();
 }
 
 #[tauri::command]
 pub async fn restart_clash() -> CmdResult<()> {
-    match clash_api::restart_core().await {
-        Ok(_) => Ok(()),
-        Err(e) => Err(e.to_string()),
-    }
+    wrap_err!(MihomoClientManager::global().mihomo().restart().await)
+    // wrap_err!(clash_api::restart_core().await)
 }
 
 #[tauri::command]
 pub async fn get_clash_configs() -> CmdResult<bool> {
-    match clash_api::get_configs().await {
-        Ok(_) => Ok(true),
-        Err(e) => Err(e.to_string()),
-    }
+    wrap_err!(
+        MihomoClientManager::global()
+            .mihomo()
+            .get_base_config()
+            .await
+    )?;
+    Ok(true)
 }
 
 #[tauri::command]
 pub fn exit_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, true);
     resolve::resolve_reset();
-    api::process::kill_children();
-    app_handle.exit(0);
+    app_handle.cleanup_before_exit();
     std::process::exit(0);
 }
 
@@ -468,16 +483,20 @@ pub mod service {
         for i in 0..5 {
             if let Err(_) = service::check_service().await {
                 if i == 4 {
-                    return Err("service check failed".to_string());
+                    ret_err!("service check failed");
                 } else {
                     sleep(Duration::from_secs(1));
                 }
             };
         }
         for i in 0..5 {
-            if let Err(_) = clash_api::get_configs().await {
+            if let Err(_) = MihomoClientManager::global()
+                .mihomo()
+                .get_base_config()
+                .await
+            {
                 if i == 4 {
-                    return Err("clash check failed".to_string());
+                    ret_err!("clash check failed");
                 } else {
                     sleep(Duration::from_secs(1));
                 }
@@ -522,16 +541,12 @@ pub mod uwp {
 // web dav
 #[tauri::command]
 pub async fn update_webdav_info(url: String, username: String, password: String) -> CmdResult {
-    match WebDav::global()
-        .update_webdav_info(url, username, password)
-        .await
-    {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::error!(target: "app", "update webdav info failed. error: {e:?}");
-            Err(format!("update webdav info failed. {:?}", e))
-        }
-    }
+    wrap_err!(
+        WebDav::global()
+            .update_webdav_info(url, username, password)
+            .await,
+        "update webdav info failed."
+    )
 }
 
 #[tauri::command]
@@ -548,21 +563,17 @@ pub async fn list_backup() -> CmdResult<Vec<ListFile>> {
 #[tauri::command]
 pub async fn download_backup_and_reload(file_name: String) -> CmdResult {
     let backup_archive = dirs::backup_archive_file().unwrap();
-    if let Err(e) = WebDav::download_file(file_name, backup_archive.clone()).await {
-        log::error!(target: "app", "download backup file failed. error: {e:?}");
-        return Err(format!("download backup file failed. error: {:?}", e));
-    }
+    wrap_err!(
+        WebDav::download_file(file_name, backup_archive.clone()).await,
+        "download backup file failed."
+    )?;
     // extract zip file
     let mut zip = zip::ZipArchive::new(fs::File::open(backup_archive).unwrap()).unwrap();
     zip.extract(dirs::app_home_dir().unwrap()).unwrap();
-    if let Err(e) = Config::reload().await {
-        log::error!(target: "app", "download backup file success, but reload config failed. error: {e:?}");
-        return Err(format!(
-            "download backup file success, but reload config failed. error: {:?}",
-            e
-        ));
-    }
-    Ok(())
+    wrap_err!(
+        Config::reload().await,
+        "download backup file success, but reload config failed."
+    )
 }
 
 #[tauri::command]
@@ -573,4 +584,16 @@ pub async fn delete_backup(file_name: String) -> CmdResult {
 #[tauri::command]
 pub async fn set_tray_visible(app_handle: tauri::AppHandle, visible: bool) -> CmdResult {
     wrap_err!(Tray::set_tray_visible(&app_handle, visible))
+}
+
+#[tauri::command]
+pub fn is_wayland() -> CmdResult<bool> {
+    if cfg!(target_os = "linux") {
+        let session_type = std::env::var("XDG_SESSION_TYPE")
+            .unwrap_or("".to_string())
+            .to_lowercase();
+        Ok(session_type == "wayland")
+    } else {
+        Ok(false)
+    }
 }

@@ -316,8 +316,11 @@
   "Delete Backup Successful": "Delete Backup Successful",
   "Delete Backup Failed": "Delete Backup Failed, {{error}}",
   "Apply": "Apply",
+  "Platform Not Match": "Platform No Match",
   "Apply Backup Successful": "Apply Backup Successful, Will Restart App Soon",
   "Apply Backup Failed": "Apply Backup Failed, {{error}}",
   "BK_All": "Config + Profiles",
-  "BK_Profiles": "Profiles"
+  "BK_Profiles": "Profiles",
+
+  "App Will Be Restarted Soon": "App Will Be Restarted Soon"
 }

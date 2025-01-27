@@ -1,5 +1,5 @@
 import { useVerge } from "@/hooks/use-verge";
-import { checkUpdate } from "@tauri-apps/api/updater";
+import { check } from "@tauri-apps/plugin-updater";
 import { useRef } from "react";
 import useSWR from "swr";
 import { DialogRef } from "../base";
@@ -18,7 +18,7 @@ export const UpdateButton = (props: Props) => {
 
   const { data: updateInfo } = useSWR(
     auto_check_update || auto_check_update === null ? "checkUpdate" : null,
-    checkUpdate,
+    check,
     {
       errorRetryCount: 2,
       revalidateIfStale: false,
@@ -26,7 +26,7 @@ export const UpdateButton = (props: Props) => {
     },
   );
 
-  if (!updateInfo?.shouldUpdate) return null;
+  if (!updateInfo?.available) return null;
 
   return (
     <>

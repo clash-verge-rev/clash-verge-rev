@@ -10,7 +10,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Install Node
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
         with:
           node-version: "20"
 
@@ -26,27 +26,3 @@ jobs:
         run: pnpm updater
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # release-update-for-fixed-webview2:
-  #   runs-on: ubuntu-22.04
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-
-  #     - name: Install Node
-  #       uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
-  #       with:
-  #         node-version: "20"
-
-  #     - uses: pnpm/action-setup@v4
-  #       name: Install pnpm
-  #       with:
-  #         run_install: false
-
-  #     - name: Pnpm install
-  #       run: pnpm i
-
-  #     - name: Release updater file
-  #       run: pnpm updater-fixed-webview2
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

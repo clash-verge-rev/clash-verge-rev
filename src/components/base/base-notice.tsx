@@ -3,7 +3,8 @@ import { ReactNode, useState, useEffect } from "react";
 import { Box, IconButton, Slide, Snackbar, Typography } from "@mui/material";
 import { Close, CheckCircleRounded, ErrorRounded } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+const appWindow = getCurrentWebviewWindow();
 interface InnerProps {
   type: string;
   duration?: number;

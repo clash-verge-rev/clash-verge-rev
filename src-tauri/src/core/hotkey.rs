@@ -3,7 +3,8 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
-use tauri::{AppHandle, GlobalShortcutManager};
+use tauri::AppHandle;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
@@ -49,39 +50,38 @@ impl Hotkey {
         Ok(())
     }
 
-    fn get_manager(&self) -> Result<impl GlobalShortcutManager> {
-        let app_handle = self.app_handle.lock();
-        if app_handle.is_none() {
-            bail!("failed to get the hotkey manager");
-        }
-        Ok(app_handle.as_ref().unwrap().global_shortcut_manager())
-    }
-
     fn register(&self, hotkey: &str, func: &str) -> Result<()> {
-        let mut manager = self.get_manager()?;
+        let app_handle = self.app_handle.lock();
+        let app_handle = app_handle.as_ref().unwrap();
+        let manager = app_handle.global_shortcut();
 
-        if manager.is_registered(hotkey)? {
+        if manager.is_registered(hotkey) {
             manager.unregister(hotkey)?;
         }
-
         let f = match func.trim() {
-            "open_or_close_dashboard" => feat::open_or_close_dashboard,
+            "open_or_close_dashboard" => || feat::open_or_close_dashboard(),
             "clash_mode_rule" => || feat::change_clash_mode("rule".into()),
             "clash_mode_global" => || feat::change_clash_mode("global".into()),
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
-            "toggle_system_proxy" => feat::toggle_system_proxy,
-            "toggle_tun_mode" => feat::toggle_tun_mode,
-
+            "toggle_system_proxy" => || feat::toggle_system_proxy(),
+            "toggle_tun_mode" => || feat::toggle_tun_mode(),
             _ => bail!("invalid function \"{func}\""),
         };
 
-        manager.register(hotkey, f)?;
+        manager.on_shortcut(hotkey, move |_app, hotkey, event| {
+            if let ShortcutState::Pressed = event.state {
+                log::info!("hotkey [{}] pressed", hotkey);
+                f();
+            }
+        })?;
         log::info!(target: "app", "register hotkey {hotkey} {func}");
         Ok(())
     }
 
     fn unregister(&self, hotkey: &str) -> Result<()> {
-        self.get_manager()?.unregister(hotkey)?;
+        let app_handle = self.app_handle.lock();
+        let app_handle = app_handle.as_ref().unwrap();
+        app_handle.global_shortcut().unregister(hotkey)?;
         log::info!(target: "app", "unregister hotkey {hotkey}");
         Ok(())
     }
@@ -153,8 +153,11 @@ impl Hotkey {
 
 impl Drop for Hotkey {
     fn drop(&mut self) {
-        if let Ok(mut manager) = self.get_manager() {
-            let _ = manager.unregister_all();
+        let app_handle = self.app_handle.lock();
+        let app_handle = app_handle.as_ref().unwrap();
+        let shortcut = app_handle.global_shortcut();
+        if let Err(e) = shortcut.unregister_all() {
+            log::error!(target: "app", "unregister all hotkey error: {e}");
         }
     }
 }

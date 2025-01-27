@@ -1,20 +1,13 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "tauri": {
-    "systemTray": {
-      "iconPath": "icons/mac-tray-icon.png",
-      "iconAsTemplate": true
-    },
-    "bundle": {
-      "identifier": "io.github.oomeow.clash-verge-self",
-      "targets": ["app", "dmg", "updater"],
-      "macOS": {
-        "frameworks": [],
-        "minimumSystemVersion": "10.15",
-        "exceptionDomain": "",
-        "signingIdentity": null,
-        "entitlements": null
-      }
+  "identifier": "io.github.oomeow.clash-verge-self",
+  "bundle": {
+    "targets": ["app", "dmg"],
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "entitlements": null
     }
   }
 }

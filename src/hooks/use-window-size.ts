@@ -1,7 +1,8 @@
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useLocalStorage } from "foxact/use-local-storage";
 import debounce from "lodash-es/debounce";
 import { useEffect } from "react";
+const appWindow = getCurrentWebviewWindow();
 
 export const useWindowSize = () => {
   const [size, setSize] = useLocalStorage(

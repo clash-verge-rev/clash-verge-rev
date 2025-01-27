@@ -3,9 +3,9 @@ import { portableFlag } from "@/pages/_layout";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
 import { Box, Button, LinearProgress } from "@mui/material";
 import { Event, listen, UnlistenFn } from "@tauri-apps/api/event";
-import { relaunch } from "@tauri-apps/api/process";
-import { open as openUrl } from "@tauri-apps/api/shell";
-import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
+import { check } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,7 +22,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
 
-  const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
+  const { data: updateInfo } = useSWR("checkUpdate", check, {
     errorRetryCount: 2,
     revalidateIfStale: false,
     focusThrottleInterval: 36e5, // 1 hour
@@ -38,17 +38,17 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   }));
 
   const markdownContent = useMemo(() => {
-    if (!updateInfo?.manifest?.body) {
+    if (!updateInfo?.body) {
       return "New Version is available";
     }
-    return updateInfo?.manifest?.body;
+    return updateInfo?.body;
   }, [updateInfo]);
 
   const breakChangeFlag = useMemo(() => {
-    if (!updateInfo?.manifest?.body) {
+    if (!updateInfo?.body) {
       return false;
     }
-    return updateInfo?.manifest?.body.toLowerCase().includes("break change");
+    return updateInfo?.body.toLowerCase().includes("break change");
   }, [updateInfo]);
 
   const onUpdate = useLockFn(async () => {
@@ -56,7 +56,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       Notice.error(t("Portable Updater Error"));
       return;
     }
-    if (!updateInfo?.manifest?.body) return;
+    if (!updateInfo?.body) return;
     if (breakChangeFlag) {
       Notice.error(t("Break Change Update Error"));
       return;
@@ -77,7 +77,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       },
     );
     try {
-      await installUpdate();
+      await updateInfo.downloadAndInstall();
       await relaunch();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
@@ -91,14 +91,14 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {`New Version v${updateInfo?.manifest?.version}`}
+          {`New Version v${updateInfo?.version}`}
           <Box>
             <Button
               variant="contained"
               size="small"
               onClick={() => {
                 openUrl(
-                  `https://github.com/oomeow/clash-verge-self/releases/tag/v${updateInfo?.manifest?.version}`,
+                  `https://github.com/oomeow/clash-verge-self/releases/tag/v${updateInfo?.version}`,
                 );
               }}>
               {t("Go to Release Page")}

@@ -4,10 +4,13 @@ use crate::{
     feat,
     utils::{dirs, resolve},
 };
-use anyhow::Result;
+use anyhow::{bail, Result};
+use rust_i18n::t;
 use tauri::{
-    AppHandle, CustomMenuItem, Icon, SystemTray, SystemTrayEvent, SystemTrayMenu,
-    SystemTrayMenuItem, SystemTraySubmenu,
+    image::Image,
+    menu::{Menu, MenuBuilder, MenuEvent, MenuItemBuilder, SubmenuBuilder},
+    tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
+    AppHandle, Runtime,
 };
 
 const TRAY_ID: &str = "verge_tray";
@@ -15,7 +18,7 @@ const TRAY_ID: &str = "verge_tray";
 pub struct Tray {}
 
 impl Tray {
-    fn get_tray_icon() -> Icon {
+    fn get_tray_icon() -> Image<'static> {
         let verge = Config::verge().latest().clone();
         let clash = Config::clash().latest().clone();
         let icon_dir_path = dirs::app_home_dir().unwrap().join("icons");
@@ -34,7 +37,8 @@ impl Tray {
                     if !icon_path.exists() {
                         icon_path = icon_dir_path.join("tun.png");
                     }
-                    Icon::File(icon_path)
+                    // Icon::File(icon_path)
+                    Image::from_path(icon_path).unwrap()
                 } else {
                     #[cfg(target_os = "macos")]
                     let icon = match tray_icon.as_str() {
@@ -46,7 +50,8 @@ impl Tray {
                     };
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
-                    Icon::Raw(icon)
+                    // Icon::Raw(icon)
+                    Image::from_bytes(&icon).unwrap()
                 }
             }
             (true, _) => {
@@ -55,7 +60,8 @@ impl Tray {
                     if !icon_path.exists() {
                         icon_path = icon_dir_path.join("sysproxy.png");
                     }
-                    Icon::File(icon_path)
+                    // Icon::File(icon_path)
+                    Image::from_path(icon_path).unwrap()
                 } else {
                     #[cfg(target_os = "macos")]
                     let icon = match tray_icon.as_str() {
@@ -67,7 +73,8 @@ impl Tray {
                     };
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
-                    Icon::Raw(icon)
+                    // Icon::Raw(icon)
+                    Image::from_bytes(&icon).unwrap()
                 }
             }
             _ => {
@@ -76,7 +83,8 @@ impl Tray {
                     if !icon_path.exists() {
                         icon_path = icon_dir_path.join("common.png");
                     }
-                    Icon::File(icon_path)
+                    // Icon::File(icon_path)
+                    Image::from_path(icon_path).unwrap()
                 } else {
                     #[cfg(target_os = "macos")]
                     let icon = match tray_icon.as_str() {
@@ -86,235 +94,133 @@ impl Tray {
                     };
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon.png").to_vec();
-                    Icon::Raw(icon)
+                    // Icon::Raw(icon)
+                    Image::from_bytes(&icon).unwrap()
                 }
             }
         };
         icon
     }
 
-    pub fn tray_menu(app_handle: &AppHandle) -> SystemTrayMenu {
-        let verge = Config::verge().latest().clone();
-        let zh = verge.language == Some("zh".into());
+    pub fn tray_menu<R: Runtime>(app_handle: &AppHandle<R>) -> Result<Menu<R>> {
         let version = app_handle.package_info().version.to_string();
-        macro_rules! t {
-            ($en: expr, $zh: expr) => {
-                if zh {
-                    $zh
-                } else {
-                    $en
-                }
-            };
-        }
+        let menu = MenuBuilder::new(app_handle)
+            .text("open_window", t!("dashboard"))
+            .check("rule_mode", t!("mode.rule"))
+            .check("global_mode", t!("mode.global"))
+            .check("direct_mode", t!("mode.direct"))
+            .separator()
+            .check("system_proxy", t!("proxy.system"))
+            .check("tun_mode", t!("proxy.tun"))
+            .separator()
+            .check("service_mode", t!("service"))
+            .separator()
+            .text("copy_env", t!("copy.env"))
+            .item(
+                &SubmenuBuilder::new(app_handle, t!("open.dir"))
+                    .text("open_app_dir", t!("app.dir"))
+                    .text("open_core_dir", t!("core.dir"))
+                    .text("open_logs_dir", t!("log.dir"))
+                    .build()?,
+            )
+            .item(
+                &SubmenuBuilder::new(app_handle, t!("more"))
+                    .text("open_devtools", t!("open.devtools"))
+                    .text("restart_clash", t!("restart.clash"))
+                    .text("restart_app", t!("restart"))
+                    .item(
+                        &MenuItemBuilder::new(format!("Version: {}", version))
+                            .enabled(false)
+                            .build(app_handle)?,
+                    )
+                    // .text("app_version", format!("Version: {}", version))
+                    .build()?,
+            )
+            .separator()
+            .text("quit", t!("quit"));
 
-        let open_window = CustomMenuItem::new("open_window", t!("Dashboard", "打开面板"));
-        let rule_mode = CustomMenuItem::new("rule_mode", t!("Rule Mode", "规则模式"));
-        let global_mode = CustomMenuItem::new("global_mode", t!("Global Mode", "全局模式"));
-        let direct_mode = CustomMenuItem::new("direct_mode", t!("Direct Mode", "直连模式"));
-        let system_proxy = CustomMenuItem::new("system_proxy", t!("System Proxy", "系统代理"));
-        let tun_mode = CustomMenuItem::new("tun_mode", t!("TUN Mode", "Tun 模式"));
-        let service_mode = CustomMenuItem::new("service_mode", t!("Service Mode", "服务模式"));
-        let copy_env = CustomMenuItem::new("copy_env", t!("Copy Env", "复制环境变量"));
-        let open_app_dir = CustomMenuItem::new("open_app_dir", t!("App Dir", "应用目录"));
-        let open_core_dir = CustomMenuItem::new("open_core_dir", t!("Core Dir", "核心目录"));
-        let open_logs_dir = CustomMenuItem::new("open_logs_dir", t!("Log Dir", "日志目录"));
-        let open_dir = SystemTraySubmenu::new(
-            t!("Open Dir", "打开目录"),
-            SystemTrayMenu::new()
-                .add_item(open_app_dir)
-                .add_item(open_core_dir)
-                .add_item(open_logs_dir),
-        );
-        let open_devtools =
-            CustomMenuItem::new("open_devtools", t!("Open DevTools", "打开开发者工具"));
-        let restart_clash = CustomMenuItem::new("restart_clash", t!("Restart Clash", "重启 Clash"));
-        let restart_app = CustomMenuItem::new("restart_app", t!("Restart", "重启应用"));
-        let app_version =
-            CustomMenuItem::new("app_version", format!("Version {version}")).disabled();
-        let more = SystemTraySubmenu::new(
-            t!("More", "更多"),
-            SystemTrayMenu::new()
-                .add_item(open_devtools)
-                .add_item(restart_clash)
-                .add_item(restart_app)
-                .add_item(app_version),
-        );
-        let quit = CustomMenuItem::new("quit", t!("Quit", "退出"));
-        let separator = SystemTrayMenuItem::Separator;
-
-        SystemTrayMenu::new()
-            .add_item(open_window)
-            .add_native_item(separator.clone())
-            .add_item(rule_mode)
-            .add_item(global_mode)
-            .add_item(direct_mode)
-            .add_native_item(separator.clone())
-            .add_item(system_proxy)
-            .add_item(tun_mode)
-            .add_native_item(separator.clone())
-            .add_item(service_mode)
-            .add_native_item(separator.clone())
-            .add_item(copy_env)
-            .add_submenu(open_dir)
-            .add_submenu(more)
-            .add_native_item(separator)
-            .add_item(quit)
+        Ok(menu.build()?)
     }
 
     pub fn init(app_handle: &AppHandle) -> Result<()> {
-        let mut tray = SystemTray::new()
-            .with_id(TRAY_ID)
-            .with_menu(Self::tray_menu(app_handle));
-        let app_handle_ = app_handle.clone();
-        tray = tray.on_event(move |event| Self::on_system_tray_event(&app_handle_, event));
-        tray.build(app_handle)?;
-        Self::update_systray(app_handle)?;
-        Ok(())
-    }
+        let menu = Self::tray_menu(app_handle)?;
+        let tray = TrayIconBuilder::with_id(TRAY_ID)
+            .icon(Self::get_tray_icon())
+            .menu(&menu)
+            .show_menu_on_left_click(false)
+            .on_tray_icon_event(Self::on_click)
+            .on_menu_event(Self::on_system_tray_event)
+            .build(app_handle)?;
+        #[cfg(target_os = "macos")]
+        tray.set_icon_as_template(true)?;
 
-    pub fn destroy_tray(app_handle: &AppHandle) -> Result<()> {
-        if let Some(tray) = app_handle.tray_handle_by_id(TRAY_ID) {
-            tray.destroy()?;
+        let enable_tray = Config::verge().latest().enable_tray.unwrap_or(true);
+        if !enable_tray {
+            tray.set_visible(false)?;
         }
+        Self::update_systray(app_handle)?;
         Ok(())
     }
 
     /// There is some bug in Linux: Tray cannot be created when opening then hiding then reopening it by clicking the switch button
     pub fn set_tray_visible(app_handle: &AppHandle, visible: bool) -> Result<()> {
-        if visible {
-            Self::destroy_tray(app_handle)?;
-            Self::init(app_handle)?;
-        } else {
-            Self::destroy_tray(app_handle)?;
+        match app_handle.tray_by_id(TRAY_ID) {
+            Some(tray) => {
+                tray.set_visible(visible)?;
+                Ok(())
+            }
+            None => {
+                bail!("set tray visible failed, because tray not found")
+            }
         }
-        Ok(())
     }
 
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
         let enable_tray = Config::verge().latest().enable_tray.unwrap_or(true);
-        if !enable_tray {
-            return Ok(());
+        if enable_tray {
+            Self::update_part(app_handle)?;
         }
-        app_handle
-            .tray_handle_by_id(TRAY_ID)
-            .expect("tray not found")
-            .set_menu(Self::tray_menu(app_handle))?;
-        Self::update_part(app_handle)?;
         Ok(())
     }
 
-    pub fn update_part(app_handle: &AppHandle) -> Result<()> {
+    pub fn update_part<R: Runtime>(app_handle: &AppHandle<R>) -> Result<()> {
         let verge = Config::verge().latest().clone();
-        let clash = Config::clash().latest().clone();
         let enable_tray = verge.enable_tray.unwrap_or(true);
         if !enable_tray {
             return Ok(());
         }
-        let tray = app_handle
-            .tray_handle_by_id(TRAY_ID)
-            .expect("tray not found");
-        let zh = verge.language == Some("zh".into());
-        macro_rules! t {
-            ($en: expr, $zh: expr) => {
-                if zh {
-                    $zh
-                } else {
-                    $en
-                }
-            };
-        }
+        let clash = Config::clash().latest().clone();
         let mode = clash.get_mode();
         let sysproxy_enabled = verge.enable_system_proxy.unwrap_or(false);
         let tun_enabled = clash.get_enable_tun();
         let service_enabled = verge.enable_service_mode.unwrap_or(false);
 
-        let rule_menu = tray.get_item("rule_mode");
-        let global_menu = tray.get_item("global_mode");
-        let direct_menu = tray.get_item("direct_mode");
-        match mode.as_str() {
-            "rule" => {
-                #[cfg(not(target_os = "linux"))]
-                {
-                    rule_menu.set_selected(true)?;
-                    global_menu.set_selected(false)?;
-                    direct_menu.set_selected(false)?;
-                }
-                #[cfg(target_os = "linux")]
-                {
-                    rule_menu.set_title(t!("Rule Mode ✔", "规则模式 ✔"))?;
-                    global_menu.set_title(t!("Global Mode", "全局模式"))?;
-                    direct_menu.set_title(t!("Direct Mode", "直连模式"))?;
-                }
-            }
-            "global" => {
-                #[cfg(not(target_os = "linux"))]
-                {
-                    rule_menu.set_selected(false)?;
-                    global_menu.set_selected(true)?;
-                    direct_menu.set_selected(false)?;
-                }
-                #[cfg(target_os = "linux")]
-                {
-                    rule_menu.set_title(t!("Rule Mode", "规则模式"))?;
-                    global_menu.set_title(t!("Global Mode ✔", "全局模式 ✔"))?;
-                    direct_menu.set_title(t!("Direct Mode", "直连模式"))?;
-                }
-            }
-            "direct" => {
-                #[cfg(not(target_os = "linux"))]
-                {
-                    rule_menu.set_selected(false)?;
-                    global_menu.set_selected(false)?;
-                    direct_menu.set_selected(true)?;
-                }
-                #[cfg(target_os = "linux")]
-                {
-                    rule_menu.set_title(t!("Rule Mode", "规则模式"))?;
-                    global_menu.set_title(t!("Global Mode", "全局模式"))?;
-                    direct_menu.set_title(t!("Direct Mode ✔", "直连模式 ✔"))?;
-                }
-            }
-            _ => {}
-        }
+        let tray = app_handle.tray_by_id(TRAY_ID).expect("tray not found");
+        let menu = Self::tray_menu(app_handle)?;
 
-        let system_proxy_menu = tray.get_item("system_proxy");
-        if sysproxy_enabled {
-            #[cfg(not(target_os = "linux"))]
-            system_proxy_menu.set_selected(true)?;
-            #[cfg(target_os = "linux")]
-            system_proxy_menu.set_title(t!("System Proxy ✔", "系统代理 ✔"))?;
-        } else {
-            #[cfg(not(target_os = "linux"))]
-            system_proxy_menu.set_selected(false)?;
-            #[cfg(target_os = "linux")]
-            system_proxy_menu.set_title(t!("System Proxy", "系统代理"))?;
-        }
+        let _ = menu
+            .get("rule_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "rule").ok());
+        let _ = menu
+            .get("global_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "global").ok());
+        let _ = menu
+            .get("direct_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "direct").ok());
 
-        let tun_mode_menu = tray.get_item("tun_mode");
-        if tun_enabled {
-            #[cfg(not(target_os = "linux"))]
-            tun_mode_menu.set_selected(true)?;
-            #[cfg(target_os = "linux")]
-            tun_mode_menu.set_title(t!("TUN Mode ✔", "TUN 模式 ✔"))?;
-        } else {
-            #[cfg(not(target_os = "linux"))]
-            tun_mode_menu.set_selected(false)?;
-            #[cfg(target_os = "linux")]
-            tun_mode_menu.set_title(t!("TUN Mode", "TUN 模式"))?;
-        }
+        let _ = menu
+            .get("system_proxy")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(sysproxy_enabled).ok());
 
-        let service_mode_menu = tray.get_item("service_mode");
-        if service_enabled {
-            #[cfg(not(target_os = "linux"))]
-            service_mode_menu.set_selected(true)?;
-            #[cfg(target_os = "linux")]
-            service_mode_menu.set_title(t!("Service Mode ✔", "服务模式 ✔"))?;
-        } else {
-            #[cfg(not(target_os = "linux"))]
-            service_mode_menu.set_selected(false)?;
-            #[cfg(target_os = "linux")]
-            service_mode_menu.set_title(t!("Service Mode", "服务模式"))?;
-        }
+        let _ = menu
+            .get("tun_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(tun_enabled).ok());
+
+        let _ = menu
+            .get("service_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(service_enabled).ok());
+
+        tray.set_menu(Some(menu))?;
 
         #[cfg(target_os = "macos")]
         {
@@ -331,7 +237,7 @@ impl Tray {
         }
 
         // set tray icon
-        tray.set_icon(Self::get_tray_icon())?;
+        tray.set_icon(Some(Self::get_tray_icon()))?;
 
         #[cfg(not(target_os = "linux"))]
         {
@@ -352,56 +258,60 @@ impl Tray {
                     "OFF"
                 }
             };
-            tray.set_tooltip(&format!(
+            tray.set_tooltip(Some(&format!(
                 "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
-                t!("System Proxy", "系统代理"),
+                t!("proxy.system"),
                 switch_map(sysproxy_enabled),
-                t!("TUN Mode", "Tun 模式"),
+                t!("proxy.tun"),
                 switch_map(tun_enabled),
-                t!("Curent Profile", "当前订阅"),
+                t!("current.profile"),
                 current_profile_name
-            ))?;
+            )))?;
         }
         Ok(())
     }
 
-    pub fn on_click(app_handle: &AppHandle) {
-        let tray_event = Config::verge().latest().tray_event.clone();
-        let tray_event = tray_event.unwrap_or("main_window".into());
-        match tray_event.as_str() {
-            "system_proxy" => feat::toggle_system_proxy(),
-            "service_mode" => feat::toggle_service_mode(),
-            "tun_mode" => feat::toggle_tun_mode(),
-            "main_window" => resolve::create_window(app_handle),
+    pub fn on_click(tray: &TrayIcon, event: TrayIconEvent) {
+        let app_handle = tray.app_handle();
+        match event {
+            TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } => {
+                let tray_event = Config::verge().latest().tray_event.clone();
+                let tray_event = tray_event.unwrap_or("main_window".into());
+                match tray_event.as_str() {
+                    "system_proxy" => feat::toggle_system_proxy(),
+                    "service_mode" => feat::toggle_service_mode(),
+                    "tun_mode" => feat::toggle_tun_mode(),
+                    "main_window" => resolve::create_window(app_handle),
+                    _ => {}
+                }
+            }
             _ => {}
         }
     }
 
-    pub fn on_system_tray_event(app_handle: &AppHandle, event: SystemTrayEvent) {
-        match event {
-            #[cfg(not(target_os = "macos"))]
-            SystemTrayEvent::LeftClick { .. } => Tray::on_click(app_handle),
-            #[cfg(target_os = "macos")]
-            SystemTrayEvent::RightClick { .. } => Tray::on_click(app_handle),
-            SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-                mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
-                    let mode = &mode[0..mode.len() - 5];
-                    feat::change_clash_mode(mode.into());
-                }
-                "open_window" => resolve::create_window(app_handle),
-                "system_proxy" => feat::toggle_system_proxy(),
-                "service_mode" => feat::toggle_service_mode(),
-                "tun_mode" => feat::toggle_tun_mode(),
-                "copy_env" => feat::copy_clash_env(app_handle),
-                "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
-                "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
-                "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
-                "open_devtools" => cmds::open_devtools(app_handle.clone()),
-                "restart_clash" => feat::restart_clash_core(),
-                "restart_app" => cmds::restart_app(app_handle.clone()),
-                "quit" => cmds::exit_app(app_handle.clone()),
-                _ => {}
-            },
+    pub fn on_system_tray_event(app_handle: &AppHandle, event: MenuEvent) {
+        let app_handle_ = app_handle.clone();
+        match event.id.as_ref() {
+            mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
+                let mode = &mode[0..mode.len() - 5];
+                feat::change_clash_mode(mode.into());
+            }
+            "open_window" => resolve::create_window(app_handle),
+            "system_proxy" => feat::toggle_system_proxy(),
+            "service_mode" => feat::toggle_service_mode(),
+            "tun_mode" => feat::toggle_tun_mode(),
+            "copy_env" => feat::copy_clash_env(app_handle),
+            "open_app_dir" => crate::log_err!(cmds::open_app_dir(app_handle_)),
+            "open_core_dir" => crate::log_err!(cmds::open_core_dir(app_handle_)),
+            "open_logs_dir" => crate::log_err!(cmds::open_logs_dir(app_handle_)),
+            "open_devtools" => cmds::open_devtools(app_handle_),
+            "restart_clash" => feat::restart_clash_core(),
+            "restart_app" => cmds::restart_app(app_handle_),
+            "quit" => cmds::exit_app(app_handle_),
             _ => {}
         }
     }

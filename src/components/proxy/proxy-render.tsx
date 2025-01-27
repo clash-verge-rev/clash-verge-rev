@@ -13,7 +13,7 @@ import {
   styled,
   Typography,
 } from "@mui/material";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { useMemoizedFn } from "ahooks";
 import { memo, useEffect, useState } from "react";
 import { ProxyHead } from "./proxy-head";

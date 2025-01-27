@@ -15,9 +15,10 @@ import {
   ThemeOptions,
 } from "@mui/material";
 import { enUS, zhCN } from "@mui/x-data-grid/locales";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { MouseEvent, useCallback, useEffect, useMemo } from "react";
 import { flushSync } from "react-dom";
+const appWindow = getCurrentWebviewWindow();
 
 /**
  * custom theme

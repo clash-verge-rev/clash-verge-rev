@@ -6,9 +6,13 @@ inputs:
   target:
     required: true
     description: "Rust Target"
+  alpha:
+    required: true
+    description: "Build Alpha"
 
 runs:
   using: "docker"
   image: "Dockerfile"
   args:
     - ${{ inputs.target }}
+    - ${{ inputs.alpha }}

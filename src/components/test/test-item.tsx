@@ -13,7 +13,7 @@ import {
   styled,
 } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

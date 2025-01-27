@@ -275,15 +275,14 @@ impl Sysopt {
             use crate::core::handle::Handle;
             use tauri::Manager;
 
-            let handle = Handle::global();
-            match handle.app_handle.lock().as_ref() {
-                Some(app_handle) => {
+            match Handle::global().get_app_handle() {
+                Ok(app_handle) => {
                     let appimage = app_handle.env().appimage;
                     appimage
                         .and_then(|p| p.to_str().map(|s| s.to_string()))
                         .unwrap_or(app_path)
                 }
-                None => app_path,
+                Err(_) => app_path,
             }
         };
 

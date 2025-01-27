@@ -1,4 +1,5 @@
-pub mod clash_api;
+pub mod backup;
+pub mod mihomo;
 #[allow(clippy::module_inception)]
 mod core;
 pub mod handle;
@@ -9,8 +10,7 @@ pub mod service;
 pub mod sysopt;
 pub mod timer;
 pub mod tray;
-pub mod win_uwp;
-pub mod backup;
 pub mod verge_log;
+pub mod win_uwp;
 
 pub use self::core::*;

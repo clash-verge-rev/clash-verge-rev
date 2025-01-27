@@ -6,7 +6,7 @@ import { getCurrentProfileRuleProvidersPath } from "@/services/cmds";
 import ExpandIcon from "@mui/icons-material/Expand";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import { Box, IconButton } from "@mui/material";
-import { readTextFile } from "@tauri-apps/api/fs";
+import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";

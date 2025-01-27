@@ -51,9 +51,9 @@ import {
 } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Divider, IconButton, Stack } from "@mui/material";
-import { readText } from "@tauri-apps/api/clipboard";
-import { listen } from "@tauri-apps/api/event";
-import { readTextFile } from "@tauri-apps/api/fs";
+import { listen, TauriEvent } from "@tauri-apps/api/event";
+import { readText } from "@tauri-apps/plugin-clipboard-manager";
+import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { useLocalStorage } from "foxact/use-local-storage";
 import { throttle } from "lodash-es";
@@ -72,6 +72,10 @@ const FlexDecorationItems = memo(function FlexDecoratorItems() {
     <i key={index} className="mx-[5px] my-0 flex h-0 w-[260px] flex-grow"></i>
   ));
 });
+
+type FileDragDropPayload = {
+  paths: string[];
+};
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -146,8 +150,10 @@ const ProfilePage = () => {
   }, [regularItems, enhanceItems]);
 
   useEffect(() => {
-    const unlisten = listen("tauri://file-drop", async (event) => {
-      const fileList = event.payload as string[];
+    const unlisten = listen(TauriEvent.DRAG_DROP, async (event) => {
+      console.log("drag drop event: ", event);
+      const payload = event.payload as FileDragDropPayload;
+      const fileList = payload.paths;
       for (let file of fileList) {
         if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
           Notice.error(t("Only YAML Files Supported"));

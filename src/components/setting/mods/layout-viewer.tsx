@@ -1,10 +1,17 @@
 import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { useVerge } from "@/hooks/use-verge";
-import { copyIconFile, getAppDir } from "@/services/cmds";
+import {
+  copyIconFile,
+  getAppDir,
+  isWayland,
+  restartApp,
+} from "@/services/cmds";
+import { sleep } from "@/utils";
 import getSystem from "@/utils/get-system";
 import { InfoRounded } from "@mui/icons-material";
 import {
+  Box,
   Button,
   IconButton,
   List,
@@ -15,17 +22,19 @@ import {
   styled,
   Tooltip,
 } from "@mui/material";
-import { open as openDialog } from "@tauri-apps/api/dialog";
-import { exists } from "@tauri-apps/api/fs";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { exists } from "@tauri-apps/plugin-fs";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const OS = getSystem();
-
 export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
+  const appWindow = getCurrentWebviewWindow();
+  const OS = getSystem();
+  const show_title_setting = OS === "linux" || OS === "windows";
+
   const { t } = useTranslation();
   const { verge, patchVerge, mutateVerge } = useVerge();
 
@@ -38,9 +47,12 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
     enable_keep_ui_active,
     enable_splashscreen,
   } = verge || {};
-  const systemOS = getSystem();
-  const show_title_setting = systemOS === "linux" || systemOS === "windows";
+  const [wayland, setWayland] = useState(false);
+
   useEffect(() => {
+    isWayland().then((wayland) => {
+      setWayland(wayland);
+    });
     initIconPath();
   }, []);
 
@@ -89,9 +101,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
       title={t("Layout Setting")}
       contentStyle={{ width: 450 }}
       hideOkBtn
-      cancelBtn={t("Cancel")}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}>
+      hideCancelBtn
+      onClose={() => setOpen(false)}>
       <List>
         <Item>
           <ListItemText primary={t("Splashscreen")} />
@@ -107,7 +118,25 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
         </Item>
         {show_title_setting && (
           <Item>
-            <ListItemText primary={t("System Title Bar")} />
+            <ListItemText
+              primary={
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <span>{t("System Title Bar")}</span>
+                  {wayland && (
+                    <Tooltip
+                      title={t("Restart Application to Apply Modifications")}
+                      placement="top">
+                      <IconButton color="inherit" size="small">
+                        <InfoRounded
+                          fontSize="inherit"
+                          style={{ cursor: "pointer", opacity: 0.75 }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
+              }
+            />
             <GuardState
               value={enable_system_title_bar ?? false}
               valueProps="checked"
@@ -116,7 +145,13 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               onChange={(e) => onChangeData({ enable_system_title_bar: e })}
               onGuard={async (e) => {
                 await patchVerge({ enable_system_title_bar: e });
-                await appWindow.setDecorations(e);
+                if (await isWayland()) {
+                  Notice.info(t("App Will Be Restarted Soon"));
+                  await sleep(1000);
+                  restartApp();
+                } else {
+                  await appWindow.setDecorations(e);
+                }
               }}>
               <SwitchLovely edge="end" />
             </GuardState>
@@ -124,15 +159,21 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
         )}
 
         <Item>
-          <ListItemText primary={t("Keep UI Active")} />
-          <Tooltip title={t("Keep UI Active Info")} placement="top">
-            <IconButton color="inherit" size="small">
-              <InfoRounded
-                fontSize="inherit"
-                style={{ cursor: "pointer", opacity: 0.75 }}
-              />
-            </IconButton>
-          </Tooltip>
+          <ListItemText
+            primary={
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <span>{t("Keep UI Active")}</span>
+                <Tooltip title={t("Keep UI Active Info")} placement="top">
+                  <IconButton color="inherit" size="small">
+                    <InfoRounded
+                      fontSize="inherit"
+                      style={{ cursor: "pointer", opacity: 0.75 }}
+                    />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            }
+          />
           <GuardState
             value={enable_keep_ui_active ?? false}
             valueProps="checked"
@@ -198,20 +239,18 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           </GuardState>
         </Item>
 
-        {OS === "windows" && (
-          <Item>
-            <ListItemText primary={t("Tray")} />
-            <GuardState
-              value={verge?.enable_tray ?? true}
-              valueProps="checked"
-              onCatch={onError}
-              onFormat={onSwitchFormat}
-              onChange={(e) => onChangeData({ enable_tray: e })}
-              onGuard={(e) => patchVerge({ enable_tray: e })}>
-              <SwitchLovely edge="end" />
-            </GuardState>
-          </Item>
-        )}
+        <Item>
+          <ListItemText primary={t("Tray")} />
+          <GuardState
+            value={verge?.enable_tray ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_tray: e })}
+            onGuard={(e) => patchVerge({ enable_tray: e })}>
+            <SwitchLovely edge="end" />
+          </GuardState>
+        </Item>
 
         {OS === "macos" && (
           <Item>

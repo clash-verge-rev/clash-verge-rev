@@ -1,4 +1,5 @@
 use crate::{config::Config, utils::dirs};
+use anyhow::{bail, Error};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest_dav::list_cmd::{ListEntity, ListFile};
@@ -38,7 +39,7 @@ static TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 pub fn create_backup(
     local_save: bool,
     only_backup_profiles: bool,
-) -> Result<(String, PathBuf), Box<dyn std::error::Error>> {
+) -> Result<(String, PathBuf), Error> {
     let now = chrono::Local::now().format(TIME_FORMAT_PATTERN).to_string();
 
     let mut zip_file_name = format!("{}-backup-{}.zip", OS, now);
@@ -56,12 +57,13 @@ pub fn create_backup(
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
     if let Ok(entries) = fs::read_dir(dirs::app_profiles_dir()?) {
         for entry in entries {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            if path.is_file() {
-                let backup_path = format!("profiles/{}", entry.file_name().to_str().unwrap());
-                zip.start_file(backup_path, options)?;
-                zip.write_all(fs::read(path).unwrap().as_slice())?;
+            if let Ok(entry) = entry {
+                let path = entry.path();
+                if path.is_file() {
+                    let backup_path = format!("profiles/{}", entry.file_name().to_str().unwrap());
+                    zip.start_file(backup_path, options)?;
+                    zip.write_all(fs::read(path).unwrap().as_slice())?;
+                }
             }
         }
     }
@@ -78,9 +80,6 @@ pub fn create_backup(
 }
 
 pub struct WebDav {
-    host: Arc<Mutex<String>>,
-    username: Arc<Mutex<String>>,
-    password: Arc<Mutex<String>>,
     client: Arc<Mutex<Option<reqwest_dav::Client>>>,
 }
 
@@ -89,16 +88,16 @@ impl WebDav {
         static WEBDAV: OnceCell<WebDav> = OnceCell::new();
 
         WEBDAV.get_or_init(|| WebDav {
-            host: Arc::new(Mutex::new("".to_string())),
-            username: Arc::new(Mutex::new("".to_string())),
-            password: Arc::new(Mutex::new("".to_string())),
             client: Arc::new(Mutex::new(None)),
         })
     }
 
-    pub async fn init(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn init(&self) -> Result<(), Error> {
         let verge = Config::verge().latest().clone();
-        if verge.webdav_url.is_none() || verge.webdav_username.is_none() || verge.webdav_password.is_none() {
+        if verge.webdav_url.is_none()
+            || verge.webdav_username.is_none()
+            || verge.webdav_password.is_none()
+        {
             log::trace!(target: "app", "webdav info config is empty, skip init webdav");
             return Ok(());
         }
@@ -108,20 +107,37 @@ impl WebDav {
         self.update_webdav_info(url, username, password).await?;
 
         tauri::async_runtime::spawn(async move {
-            let cur_backup_files = Self::list_file_by_path(BACKUP_DIR).await.unwrap();
-            let old_backup_files = Self::list_file_by_path(OLD_BACKUP_DIR).await.unwrap();
+            let cur_backup_files = Self::list_file_by_path(BACKUP_DIR)
+                .await
+                .unwrap_or_default();
+            let old_backup_files = Self::list_file_by_path(OLD_BACKUP_DIR)
+                .await
+                .unwrap_or_default();
             for old_file in old_backup_files {
-                let old_file_name = old_file.href.split("/").last().unwrap();
-                if cur_backup_files
-                    .iter()
-                    .find(|f| f.href.split("/").last().unwrap() == old_file_name)
-                    .is_none()
-                {
-                    log::info!("migrate old webdav backup file: {}", old_file_name);
-                    let client = Self::global().get_client().unwrap();
-                    let from_path = format!("{}/{}", OLD_BACKUP_DIR, old_file_name);
-                    let to_path = format!("{}/{}", BACKUP_DIR, old_file_name);
-                    let _ = client.mv(&from_path, &to_path).await;
+                let old_file_name = old_file.href.split("/").last();
+                if let Some(old_file_name) = old_file_name {
+                    if cur_backup_files
+                        .iter()
+                        .find(|f| {
+                            let file_name = f.href.split("/").last();
+                            file_name.is_some() && file_name.unwrap() == old_file_name
+                        })
+                        .is_none()
+                    {
+                        log::info!("migrate old webdav backup file: {}", old_file_name);
+                        let client = Self::global().get_client();
+                        if let Ok(client) = client {
+                            let from_path = format!("{}/{}", OLD_BACKUP_DIR, old_file_name);
+                            let to_path = format!("{}/{}", BACKUP_DIR, old_file_name);
+                            let _ = client.mv(&from_path, &to_path).await.map_err(|e| {
+                                let msg = format!(
+                                    "move file {} to {} failed, error: {}",
+                                    from_path, to_path, e
+                                );
+                                log::error!(target: "app","{}",msg);
+                            });
+                        }
+                    }
                 }
             }
         });
@@ -134,37 +150,29 @@ impl WebDav {
         url: String,
         username: String,
         password: String,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Error> {
         *self.client.lock() = None;
         let client = reqwest_dav::ClientBuilder::new()
             .set_host(url.clone())
             .set_auth(reqwest_dav::Auth::Basic(username.clone(), password.clone()))
             .build()?;
-
-        *self.host.lock() = url;
-        *self.username.lock() = username;
-        *self.password.lock() = password;
         *self.client.lock() = Some(client.clone());
-
         client.mkcol(BACKUP_DIR).await?;
-
         Ok(())
     }
 
-    fn get_client(&self) -> Result<reqwest_dav::Client, Box<dyn std::error::Error>> {
-        if self.client.lock().is_none() {
-            let msg =
-                "Unable to create web dav client, please make sure the webdav config is correct"
-                    .to_string();
-            log::error!(target: "app","{}",msg);
-            return Err(msg.into());
+    fn get_client(&self) -> Result<reqwest_dav::Client, Error> {
+        match self.client.lock().clone() {
+            Some(client) => Ok(client),
+            None => {
+                let msg = "Unable to create web dav client, please make sure the webdav config is correct";
+                log::error!(target: "app","{}",msg);
+                bail!(msg)
+            }
         }
-        Ok(self.client.lock().clone().unwrap())
     }
 
-    pub async fn list_file_by_path(
-        path: &str,
-    ) -> Result<Vec<ListFile>, Box<dyn std::error::Error>> {
+    pub async fn list_file_by_path(path: &str) -> Result<Vec<ListFile>, Error> {
         let client = Self::global().get_client()?;
         let files = client.list(path, reqwest_dav::Depth::Number(1)).await?;
         let mut final_files = Vec::new();
@@ -176,15 +184,16 @@ impl WebDav {
         Ok(final_files.clone())
     }
 
-    pub async fn list_file() -> Result<Vec<ListFile>, Box<dyn std::error::Error>> {
-        let files = Self::list_file_by_path(BACKUP_DIR).await?;
+    pub async fn list_file() -> Result<Vec<ListFile>, Error> {
+        let path = format!("{}/", BACKUP_DIR);
+        let files = Self::list_file_by_path(&path).await?;
         Ok(files)
     }
 
     pub async fn download_file(
         webdav_file_name: String,
         storage_path: PathBuf,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Error> {
         let client = Self::global().get_client()?;
         let path = format!("{}/{}", BACKUP_DIR, webdav_file_name);
         let response = client.get(&path.as_str()).await?;
@@ -193,17 +202,14 @@ impl WebDav {
         Ok(())
     }
 
-    pub async fn upload_file(
-        file_path: PathBuf,
-        webdav_file_name: String,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn upload_file(file_path: PathBuf, webdav_file_name: String) -> Result<(), Error> {
         let client = Self::global().get_client()?;
         let web_dav_path = format!("{}/{}", BACKUP_DIR, webdav_file_name);
         client.put(&web_dav_path, fs::read(file_path)?).await?;
         Ok(())
     }
 
-    pub async fn delete_file(file_name: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn delete_file(file_name: String) -> Result<(), Error> {
         let client = Self::global().get_client()?;
         let path = format!("{}/{}", BACKUP_DIR, file_name);
         client.delete(&path).await?;
@@ -211,18 +217,23 @@ impl WebDav {
     }
 }
 
-#[tokio::test]
-/// cargo test -- --show-output test_webdav
-async fn test_webdav() {
-    let _ = WebDav::global()
-        .update_webdav_info(
-            "https://dav.jianguoyun.com/dav/".to_string(),
-            "test".to_string(),
-            "test".to_string(),
-        )
-        .await;
-    let files = WebDav::list_file().await.unwrap();
-    for file in files {
-        println!("file: {:?}", file);
+#[cfg(test)]
+mod test {
+    use crate::core::backup::WebDav;
+
+    #[tokio::test]
+    /// cargo test -- --show-output test_webdav
+    async fn test_webdav() {
+        let _ = WebDav::global()
+            .update_webdav_info(
+                "https://dav.jianguoyun.com/dav/".to_string(),
+                "test".to_string(),
+                "test".to_string(),
+            )
+            .await;
+        let files = WebDav::list_file().await.unwrap();
+        for file in files {
+            println!("file: {:?}", file);
+        }
     }
 }

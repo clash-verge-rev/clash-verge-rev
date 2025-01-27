@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "splashscreen-capabilities",
+  "description": "Splashscreen capabilities",
+  "local": true,
+  "windows": ["splashscreen"],
+  "permissions": ["core:default", "notification:default"]
+}

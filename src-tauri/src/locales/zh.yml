@@ -1,0 +1,42 @@
+# 系统托盘相关
+dashboard: 打开面板
+mode.rule: 规则模式
+mode.global: 全局模式
+mode.direct: 直连模式
+proxy.system: 系统代理
+proxy.tun: Tun 代理
+service: 服务模式
+copy.env: 复制环境变量
+open.dir: 打开目录
+app.dir: 应用目录
+core.dir: 内核目录
+log.dir: 日志目录
+more: 更多
+open.devtools: 打开开发者工具
+restart.clash: 重启 Clash
+restart: 重启应用
+quit: 退出
+current.profile: 当前订阅
+
+# notification related
+disable.failed: 禁用失败
+enable.failed: 启用失败
+install.failed: 安装失败
+service.install.run.failed: 安装成功，但 Clash Verge Service 服务启动失败
+service.install.run.success: Clash Verge Service 服务安装并启动成功
+import.success: 导入订阅文件成功
+import.failed: 导入订阅文件失败
+
+# dialog related
+install.service.ask: "Clash Verge Service 服务未安装\n是否现在安装并运行 Clash Verge Service 服务？"
+panic.info.title: Clash Verge 崩溃
+panic.info.backtrace: "堆栈回溯:\n%{backtrace}"
+panic.info.display.backtrace.note: "注：使用 `RUST_BACKTRACE=1` 环境变量运行以显示回溯"
+panic.info.content: "位置： %{location}:\n\n%{payload}\n\n%{limit_backtrace}...\n\n有关更多恐慌信息，请检查日志文件:\n  %{log_file}"
+
+# error result related
+tun.busy: Tun 设备或资源繁忙
+config.parse.failed: 无法将配置解析为 yaml 文件
+config.convert.failed: 无法将配置转换为 yaml
+runtime.config.get.failed: 无法获取运行时配置
+clash.restart.failed: Clash 核心重启失败

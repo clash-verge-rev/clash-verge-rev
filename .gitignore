@@ -10,4 +10,5 @@ scripts/_env.sh
 
 archbuild/local_build/*
 !archbuild/local_build/PKGBUILD
+!archbuild/local_build/clash-verge.install
 !archbuild/local_build/build.sh

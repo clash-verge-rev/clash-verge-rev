@@ -1,88 +1,62 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "package": {
-    "productName": "Clash Verge",
-    "version": "1.7.1"
+  "productName": "Clash Verge",
+  "mainBinaryName": "Clash Verge",
+  "version": "2.0.0",
+  "identifier": "io.github.oomeow.clash-verge-self",
+  "app": {
+    "security": {
+      "assetProtocol": {
+        "scope": ["$APPDATA/**", "$RESOURCE/../**", "$HOME/.local/**", "**"],
+        "enable": true
+      },
+      "csp": {
+        "default-src": "'self' customprotocol: asset: tauri:",
+        "connect-src": "ipc: http://ipc.localhost http: https: ws: wss:",
+        "font-src": [
+          "https://fonts.gstatic.com",
+          "tauri:",
+          "http://tauri.localhost"
+        ],
+        "img-src": "'self' asset: http://asset.localhost blob: data: http: https:",
+        "style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com",
+        "script-src": "'unsafe-eval'"
+      }
+    },
+    "windows": []
+  },
+  "bundle": {
+    "licenseFile": "../LICENSE",
+    "active": true,
+    "longDescription": "A Clash Meta GUI based on tauri.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": ["resources"],
+    "publisher": "Clash Verge Self",
+    "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
+    "copyright": "GNU General Public License v3.0",
+    "category": "DeveloperTool",
+    "shortDescription": "A Clash Meta GUI based on tauri.",
+    "createUpdaterArtifacts": true
   },
   "build": {
-    "distDir": "../dist",
-    "devPath": "http://localhost:3000/",
+    "beforeBuildCommand": "pnpm run web:build",
+    "frontendDist": "./frontend/dist",
     "beforeDevCommand": "pnpm run web:dev",
-    "beforeBuildCommand": "pnpm run web:build"
+    "devUrl": "http://localhost:3000/"
   },
-  "tauri": {
-    "bundle": {
-      "active": true,
-      "identifier": "io.github.oomeow.clash-verge-self",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "resources": ["resources"],
-      "publisher": "Clash Verge Self",
-      "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
-      "copyright": "GNU General Public License v3.0",
-      "category": "DeveloperTool",
-      "shortDescription": "A Clash Meta GUI based on tauri.",
-      "longDescription": "A Clash Meta GUI based on tauri."
-    },
+  "plugins": {
     "updater": {
-      "active": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY5REVGQ0Q1MUQ2NDhCNjYKUldSbWkyUWQxZnplK1N3aUUxbzM0TXd3NVlqbE1obXdSaVZHQ3JSTjgwUzJaZjQ1L0FFQWk0a0sK",
       "endpoints": [
         "https://ghp.ci/https://github.com/oomeow/clash-verge-self/releases/download/updater/update-proxy.json",
         "https://github.com/oomeow/clash-verge-self/releases/download/updater/update.json"
-      ],
-      "dialog": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRGQ0QyMTIyRTRERTY0MzAKUldRd1pON2tJaUhOVDBuWXQ1NVY0dlNXWkZ2RlZCMmtIYkhqR2pxS3FsMlNERkUycEVBaFlvQm8K"
-    },
-    "allowlist": {
-      "shell": {
-        "all": true
-      },
-      "window": {
-        "all": true
-      },
-      "process": {
-        "all": true
-      },
-      "globalShortcut": {
-        "all": true
-      },
-      "clipboard": {
-        "all": true
-      },
-      "notification": {
-        "all": true
-      },
-      "dialog": {
-        "all": false,
-        "open": true
-      },
-      "protocol": {
-        "asset": true,
-        "assetScope": [
-          "$APPDATA/**",
-          "$RESOURCE/../**",
-          "$HOME/.local/**",
-          "**"
-        ]
-      },
-      "path": {
-        "all": true
-      },
-      "fs": {
-        "exists": true,
-        "readFile": true,
-        "scope": ["$APPDATA/**", "$RESOURCE/../**", "$HOME/.local/**", "**"]
-      }
-    },
-    "windows": [],
-    "security": {
-      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: asset: 'unsafe-eval' 'unsafe-inline' 'self'; script-src 'unsafe-eval'"
+      ]
     }
   }
 }

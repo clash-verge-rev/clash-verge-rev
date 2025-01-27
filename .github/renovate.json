@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices", ":pinDevDependencies"],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "automerge": true,
+  "dockerfile": {
+    "ignorePaths": ["**/cross_dockerfile/**"]
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "labels": ["github-actions"],
+      "semanticCommitType": "ci",
+      "semanticCommitScope": "action"
+    },
+    {
+      "matchDatasources": ["github-runners"],
+      "matchPackageNames": ["ubuntu"],
+      "versioning": "22.04"
+    }
+  ]
+}

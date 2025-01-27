@@ -37,8 +37,8 @@ import {
   Typography,
 } from "@mui/material";
 import { version } from "@root/package.json";
-import { open } from "@tauri-apps/api/dialog";
-import { checkUpdate } from "@tauri-apps/api/updater";
+import { open } from "@tauri-apps/plugin-dialog";
+import { check } from "@tauri-apps/plugin-updater";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -87,8 +87,8 @@ const SettingVerge = ({ onError }: Props) => {
 
   const onCheckUpdate = async () => {
     try {
-      const info = await checkUpdate();
-      if (!info?.shouldUpdate) {
+      const info = await check();
+      if (!info?.available) {
         Notice.success(t("Currently on the Latest Version"));
       } else {
         updateRef.current?.open();

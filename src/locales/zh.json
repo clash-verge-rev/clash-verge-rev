@@ -316,8 +316,11 @@
   "Delete Backup Successful": "删除备份成功",
   "Delete Backup Failed": "删除备份失败, {{error}}",
   "Apply": "应用",
+  "Platform No Match": "系统平台不匹配",
   "Apply Backup Successful": "应用备份成功, 即将重启应用",
   "Apply Backup Failed": "应用备份失败, {{error}}",
   "BK_All": "配置 + 订阅",
-  "BK_Profiles": "订阅"
+  "BK_Profiles": "订阅",
+
+  "App Will Be Restarted Soon": "即将重启应用"
 }

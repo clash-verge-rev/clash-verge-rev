@@ -213,7 +213,6 @@ export const ProfileEditorViewer = (props: Props) => {
     }
   });
 
-  // TODO: The run check method blocks the rendering and needs to be troubleshot to find out what's wrong.
   return (
     <>
       <BaseDialog

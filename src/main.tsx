@@ -4,7 +4,7 @@ import router from "@/pages/_routers";
 import "@/services/i18n";
 import { ResizeObserver } from "@juggle/resize-observer";
 import { StyledEngineProvider } from "@mui/material";
-import { WebviewWindow } from "@tauri-apps/api/window";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
 import { createRoot } from "react-dom/client";
@@ -47,7 +47,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const splashscreenWindow = WebviewWindow.getByLabel("splashscreen");
+  const splashscreenWindow = await WebviewWindow.getByLabel("splashscreen");
   if (splashscreenWindow) {
     setTimeout(() => {
       splashscreenWindow.close();

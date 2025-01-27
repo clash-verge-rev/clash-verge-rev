@@ -8,28 +8,30 @@ use crate::cmds;
 use crate::config::*;
 use crate::core::*;
 use crate::log_err;
-use crate::utils::dirs::APP_ID;
 use crate::utils::resolve;
 use anyhow::{anyhow, bail, Error, Result};
+use mihomo::MihomoClientManager;
+use rust_i18n::t;
 use serde_yaml::{Mapping, Value};
-use tauri::api::dialog::blocking::MessageDialogBuilder;
-use tauri::api::dialog::{MessageDialogButtons, MessageDialogKind};
-use tauri::api::notification::Notification;
-use tauri::{AppHandle, ClipboardManager, Manager};
+use service::JsonResponse;
+use tauri::AppHandle;
+use tauri::Manager;
+use tauri_plugin_clipboard_manager::ClipboardExt;
+use tauri_plugin_dialog::MessageDialogButtons;
+use tauri_plugin_dialog::MessageDialogKind;
 use verge_log::VergeLog;
 
 // 打开面板
 pub fn open_or_close_dashboard() {
-    let handle = handle::Handle::global();
-    let app_handle = handle.app_handle.lock();
-    if let Some(app_handle) = app_handle.as_ref() {
-        if let Some(window) = app_handle.get_window("main") {
+    let app_handle = handle::Handle::global().get_app_handle();
+    if let Ok(app_handle) = app_handle {
+        if let Some(window) = app_handle.get_webview_window("main") {
             if let Ok(true) = window.is_focused() {
                 let _ = window.close();
                 return;
             }
         }
-        resolve::create_window(app_handle);
+        resolve::create_window(&app_handle);
     }
 }
 
@@ -57,7 +59,11 @@ pub fn change_clash_mode(mode: String) {
     tauri::async_runtime::spawn(async move {
         log::debug!(target: "app", "change clash mode to {mode}");
 
-        match clash_api::patch_configs(&mapping).await {
+        match MihomoClientManager::global()
+            .mihomo()
+            .patch_base_config(&mapping)
+            .await
+        {
             Ok(_) => {
                 // 更新订阅
                 Config::clash().data().patch_config(mapping);
@@ -87,6 +93,7 @@ pub fn toggle_system_proxy() {
             Ok(_) => handle::Handle::refresh_verge(),
             Err(err) => log::error!(target: "app", "{err}"),
         }
+        let _ = handle::Handle::update_systray_part();
     });
 }
 
@@ -96,49 +103,49 @@ pub fn toggle_service_mode() {
         .enable_service_mode
         .unwrap_or(false);
     let toggle_failed_msg = if enable {
-        "Disable Failed"
+        t!("disable.failed")
     } else {
-        "Enable Failed"
+        t!("enable.failed")
     };
 
     tauri::async_runtime::spawn(async move {
-        if let Ok(response) = cmds::service::check_service().await {
-            if response.code == 400 || response.code == 0 {
-                match patch_verge(IVerge {
+        match cmds::service::check_service().await {
+            Ok(JsonResponse { code: 400, .. } | JsonResponse { code: 0, .. }) => {
+                let patch = IVerge {
                     enable_service_mode: Some(!enable),
                     ..IVerge::default()
-                })
-                .await
-                {
-                    Ok(_) => handle::Handle::refresh_verge(),
-                    Err(err) => {
-                        Notification::new(APP_ID)
-                            .title("Clash Verge Service")
-                            .body(format!("{}, {}", toggle_failed_msg, err))
-                            .show()
-                            .unwrap();
-                        log::error!(target: "app", "{err}")
-                    }
+                };
+                if let Err(err) = patch_verge(patch).await {
+                    let _ = handle::Handle::notification(
+                        "Clash Verge Service",
+                        format!("{}, {}", toggle_failed_msg, err),
+                    );
+                    log::error!(target: "app", "{err}")
+                } else {
+                    handle::Handle::refresh_verge()
                 }
-            } else {
-                Notification::new(APP_ID)
-                    .title("Clash Verge Service")
-                    .body(format!("{}, {}", toggle_failed_msg, response.msg))
-                    .show()
-                    .unwrap();
             }
-        } else {
-            let status = MessageDialogBuilder::new(
-                    "Install And Run Clash Verge Service",
-                    "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?",
+            Ok(response) => {
+                let _ = handle::Handle::notification(
+                    "Clash Verge Service",
+                    format!("{}, {}", toggle_failed_msg, response.msg),
+                );
+            }
+            Err(err) => {
+                log::error!(target: "app", "toggle service mode failed: {err}");
+                let status = handle::Handle::show_block_dialog(
+                    "Clash Verge Service",
+                    t!("install.service.ask"),
+                    MessageDialogKind::Info,
+                    MessageDialogButtons::OkCancel,
                 )
-                .kind(MessageDialogKind::Info)
-                .buttons(MessageDialogButtons::OkCancel)
-                .show();
-            if status {
-                let _ = install_and_run_service().await;
+                .unwrap_or(false);
+                if status {
+                    let _ = install_and_run_service().await;
+                }
             }
         }
+        let _ = handle::Handle::update_systray_part();
     });
 }
 
@@ -146,9 +153,9 @@ pub fn toggle_service_mode() {
 pub fn toggle_tun_mode() {
     let enable = Config::clash().data().get_enable_tun();
     let toggle_failed_msg = if enable {
-        "Disable Failed"
+        t!("disable.failed")
     } else {
-        "Enable Failed"
+        t!("enable.failed")
     };
 
     let mut tun = Mapping::new();
@@ -157,114 +164,97 @@ pub fn toggle_tun_mode() {
     tun.insert("tun".into(), tun_val.into());
 
     tauri::async_runtime::spawn(async move {
-        if let Ok(response) = cmds::service::check_service().await {
-            if response.code == 0 {
-                match patch_clash(tun).await {
-                    Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
-                    Err(err) => {
-                        log::error!(target: "app", "{err}")
-                    }
-                }
-            } else if response.code == 400 {
+        match cmds::service::check_service().await {
+            Ok(JsonResponse { code: 0, .. }) => match patch_clash(tun).await {
+                Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
+                Err(err) => log::error!(target: "app", "toggle tun mode failed: {err}"),
+            },
+            Ok(JsonResponse { code: 400, .. }) => {
                 // service installed but no enable, need to patch verge to enable service mode
-                match patch_verge(IVerge {
+                if let Err(err) = patch_verge(IVerge {
                     enable_service_mode: Some(true),
                     ..IVerge::default()
                 })
                 .await
                 {
-                    Ok(_) => {
-                        let _ = cmds::service::check_service_and_clash().await;
-                        handle::Handle::refresh_verge();
-                        match patch_clash(tun).await {
-                            Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
-                            Err(err) => log::error!(target: "app", "{err}"),
-                        }
-                    }
-                    Err(err) => {
-                        Notification::new(APP_ID)
-                            .title("Tun Mode")
-                            .body(format!("{}, {}", toggle_failed_msg, err))
-                            .show()
-                            .unwrap();
+                    let _ = handle::Handle::notification(
+                        "Tun Mode",
+                        format!("{}, {}", toggle_failed_msg, err),
+                    );
+                } else {
+                    let _ = cmds::service::check_service_and_clash().await;
+                    handle::Handle::refresh_verge();
+                    match patch_clash(tun).await {
+                        Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
+                        Err(err) => log::error!(target: "app", "{err}"),
                     }
                 }
-            } else {
-                Notification::new(APP_ID)
-                    .title("Tun Mode")
-                    .body(format!("{}, {}", toggle_failed_msg, response.msg))
-                    .show()
-                    .unwrap();
             }
-        } else {
-            let status = MessageDialogBuilder::new(
-                    "Install And Run Clash Verge Service",
-                    "Clash Verge Service not installed.\nDo you want to install and run Clash Verge Service right now?",
+            Ok(response) => {
+                let _ = handle::Handle::notification(
+                    "Tun Mode",
+                    format!("{}, {}", toggle_failed_msg, response.msg),
+                );
+            }
+            Err(err) => {
+                log::error!(target: "app", "toggle service mode failed: {err}");
+                let status = handle::Handle::show_block_dialog(
+                    "Clash Verge Service",
+                    t!("install.service.ask"),
+                    MessageDialogKind::Info,
+                    MessageDialogButtons::OkCancel,
                 )
-                .kind(MessageDialogKind::Info)
-                .buttons(MessageDialogButtons::OkCancel)
-                .show();
-            if status {
-                let _ = install_and_run_service().await;
-                if let Err(err) = cmds::service::check_service_and_clash().await {
-                    Notification::new(APP_ID)
-                        .title("Tun Mode")
-                        .body(format!("{}, {}", toggle_failed_msg, err))
-                        .show()
-                        .unwrap();
-                } else {
-                    if let Err(err) = patch_clash(tun).await {
-                        Notification::new(APP_ID)
-                            .title("Tun Mode")
-                            .body(format!("{}, {}", toggle_failed_msg, err))
-                            .show()
-                            .unwrap();
-                        log::error!(target: "app", "{err}")
-                    } else {
-                        log::info!(target: "app", "change tun mode to {:?}", !enable);
+                .unwrap_or(false);
+                if status {
+                    if let Ok(_) = install_and_run_service().await {
+                        if let Err(err) = cmds::service::check_service_and_clash().await {
+                            let _ = handle::Handle::notification(
+                                "Tun Mode",
+                                format!("{}, {}", toggle_failed_msg, err),
+                            );
+                        } else {
+                            if let Err(err) = patch_clash(tun).await {
+                                let _ = handle::Handle::notification(
+                                    "Tun Mode",
+                                    format!("{}, {}", toggle_failed_msg, err),
+                                );
+                                log::error!(target: "app", "{err}")
+                            } else {
+                                log::info!(target: "app", "change tun mode to {:?}", !enable);
+                            }
+                        }
                     }
                 }
             }
         }
+
+        let _ = handle::Handle::update_systray_part();
     });
 }
 
 async fn install_and_run_service() -> Result<()> {
-    let title = "Clash Verge Service";
-
     if let Err(err) = cmds::service::install_service().await {
-        Notification::new(APP_ID)
-            .title(title)
-            .body(format!("Install failed, {err}"))
-            .show()
-            .unwrap();
-        Err(anyhow!(err))
-    } else {
-        if let Err(err) = patch_verge(IVerge {
-            enable_service_mode: Some(true),
-            ..IVerge::default()
-        })
-        .await
-        {
-            Notification::new(APP_ID)
-                .title(title)
-                .body(format!(
-                    "Install successfully, but Clash Verge Service run failed, {}",
-                    err
-                ))
-                .show()
-                .unwrap();
-            Err(err)
-        } else {
-            Notification::new(APP_ID)
-                .title(title)
-                .body("Install and run Clash Verge Service successfully")
-                .show()
-                .unwrap();
-            handle::Handle::refresh_verge();
-            Ok(())
-        }
+        handle::Handle::notification(
+            "Clash Verge Service",
+            format!("{}, {}", t!("install.failed"), err),
+        )?;
+        return Err(anyhow!(err));
     }
+    if let Err(err) = patch_verge(IVerge {
+        enable_service_mode: Some(true),
+        ..IVerge::default()
+    })
+    .await
+    {
+        handle::Handle::notification(
+            "Clash Verge Service",
+            format!("{}, {}", t!("service.install.run.failed"), err),
+        )?;
+        return Err(anyhow!(err));
+    }
+    handle::Handle::notification("Clash Verge Service", t!("service.install.run.success"))?;
+    handle::Handle::refresh_verge();
+    Ok(())
 }
 
 /// 修改clash的订阅
@@ -285,7 +275,10 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         tmp_map.insert("socks-port".into(), 0.into());
         tmp_map.insert("redir-port".into(), 0.into());
         tmp_map.insert("tproxy-port".into(), 0.into());
-        let _ = clash_api::patch_configs(&tmp_map).await?;
+        let _ = MihomoClientManager::global()
+            .mihomo()
+            .patch_base_config(&tmp_map)
+            .await;
         // clash config
         Config::clash().latest().patch_config(tmp_map);
         Config::clash().latest().save_config()?;
@@ -322,20 +315,27 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 let value = clash_config_mapping.get(key).unwrap();
 
                 mapping.insert(key.into(), value.clone().into());
-                let _ = clash_api::patch_configs(&mapping).await?;
+                let _ = MihomoClientManager::global()
+                    .mihomo()
+                    .patch_base_config(&mapping)
+                    .await;
 
                 // handle tun config
                 if key == "tun" {
-                    let clash_basic_configs = clash_api::get_configs().await?;
+                    let clash_basic_configs = MihomoClientManager::global()
+                        .mihomo()
+                        .get_base_config()
+                        .await?;
                     let tun_enable = value
                         .as_mapping()
                         .unwrap()
                         .get("enable")
                         .map_or(false, |val| val.as_bool().unwrap_or(false));
-                    let tun_enable_by_api = clash_basic_configs
-                        .tun
-                        .get("enable")
-                        .map_or(false, |val| val.as_bool().unwrap_or(false));
+                    let tun_enable_by_api = clash_basic_configs.tun.enable;
+                    // let tun_enable_by_api = clash_basic_configs
+                    //     .tun
+                    //     .get("enable")
+                    //     .map_or(false, |val| val.as_bool().unwrap_or(false));
                     if tun_enable == tun_enable_by_api {
                         handle::Handle::update_systray_part()?;
                     } else {
@@ -351,7 +351,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         }
 
         if update_tun_failed {
-            <Result<(), Error>>::Err(anyhow!("Tun Device Or Resource Busy"))
+            <Result<(), Error>>::Err(anyhow!(t!("tun.busy")))
         } else {
             // 重新载入订阅
             if patch.get("unified-delay").is_some() {
@@ -394,7 +394,30 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
 /// 修改verge的订阅
 /// 一般都是一个个的修改
-pub async fn patch_verge(patch: IVerge) -> Result<()> {
+pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
+    // handle window size when toggle system title bar enable on linux wayland
+    let enable_system_title_bar = patch.enable_system_title_bar;
+    if let Some(system_title_bar) = enable_system_title_bar {
+        if cmds::is_wayland().unwrap_or(false) {
+            let verge = Config::verge();
+            let verge = verge.latest().clone();
+            let verge_size_position = verge.window_size_position;
+            if let Some(size_position) = verge_size_position {
+                let mut w = size_position[0];
+                let mut h = size_position[1];
+                let x = size_position[2];
+                let y = size_position[3];
+                if system_title_bar {
+                    w = w + 90.;
+                    h = h + 90.;
+                } else {
+                    w = w - 90.;
+                    h = h - 90.;
+                }
+                patch.window_size_position = Some(vec![w, h, x, y]);
+            }
+        }
+    }
     Config::verge().draft().patch_config(patch.clone());
 
     let res = resolve_config_settings(patch).await;
@@ -453,6 +476,7 @@ pub async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     }
 
     if language.is_some() {
+        rust_i18n::set_locale(language.unwrap().as_str());
         handle::Handle::update_systray()?;
     } else if system_proxy.is_some()
         || common_tray_icon.is_some()
@@ -539,7 +563,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     let cmd: String = format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}");
     let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
 
-    let mut cliboard = app_handle.clipboard_manager();
+    let cliboard = app_handle.clipboard();
 
     let env_type = { Config::verge().latest().env_type.clone() };
     let env_type = match env_type {

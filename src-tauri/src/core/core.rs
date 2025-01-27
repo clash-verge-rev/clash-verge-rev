@@ -1,5 +1,6 @@
 use crate::config::*;
-use crate::core::{clash_api, handle, logger::Logger, service};
+use crate::core::mihomo::MihomoClientManager;
+use crate::core::{mihomo, handle, logger::Logger, service};
 use crate::log_err;
 use crate::utils::dirs;
 use crate::utils::resolve::find_unused_port;
@@ -10,7 +11,8 @@ use serde_yaml::Mapping;
 use std::path::PathBuf;
 use std::{sync::Arc, time::Duration};
 use sysinfo::System;
-use tauri::api::process::{Command, CommandChild, CommandEvent};
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
 
 use super::verge_log::VergeLog;
@@ -64,7 +66,7 @@ impl CoreManager {
     }
 
     /// 检查订阅是否正确
-    pub fn check_config(&self) -> Result<()> {
+    pub async fn check_config(&self) -> Result<()> {
         let config_path = Config::generate_file(ConfigType::Check)?;
         let config_path = dirs::path_to_str(&config_path)?;
 
@@ -73,18 +75,22 @@ impl CoreManager {
 
         let app_dir = dirs::app_home_dir()?;
         let app_dir = dirs::path_to_str(&app_dir)?;
-
-        let output = Command::new_sidecar(clash_core)?
+        let app_handle = handle::Handle::global().get_app_handle()?;
+        let output = app_handle
+            .shell()
+            .sidecar(clash_core)?
             .args(["-t", "-d", app_dir, "-f", config_path])
-            .output()?;
+            .output()
+            .await?;
 
         if !output.status.success() {
-            let error = clash_api::parse_check_output(output.stdout.clone());
+            let stdout = String::from_utf8_lossy(&output.stdout.clone()).into_owned();
+            let error = mihomo::parse_check_output(stdout.clone());
             let error = match !error.is_empty() {
                 true => error,
-                false => output.stdout.clone(),
+                false => stdout.clone(),
             };
-            Logger::global().set_log(output.stdout);
+            Logger::global().set_log(stdout);
             bail!("{error}");
         }
 
@@ -105,7 +111,10 @@ impl CoreManager {
             self.sidecar.lock().take();
             // 关闭 tun 模式
             log::debug!(target: "app", "disable tun mode");
-            let _ = clash_api::patch_configs(&disable).await;
+            let _ = MihomoClientManager::global()
+                .mihomo()
+                .patch_base_config(&disable)
+                .await;
         }
 
         if *self.use_service_mode.lock() {
@@ -173,7 +182,8 @@ impl CoreManager {
         let config_path = dirs::path_to_str(&config_path)?;
         let args = vec!["-d", app_dir, "-f", config_path];
 
-        let cmd = Command::new_sidecar(clash_core)?;
+        let app_handle = handle::Handle::global().get_app_handle()?;
+        let cmd = app_handle.shell().sidecar(clash_core)?;
         let (mut rx, cmd_child) = cmd.args(args).spawn()?;
         {
             let mut sidecar = self.sidecar.lock();
@@ -183,10 +193,12 @@ impl CoreManager {
             while let Some(event) = rx.recv().await {
                 match event {
                     CommandEvent::Stdout(line) => {
+                        let line = String::from_utf8(line).unwrap_or_default();
                         log::info!(target: "app", "[mihomo]: {line}");
                         Logger::global().set_log(line);
                     }
                     CommandEvent::Stderr(err) => {
+                        let err = String::from_utf8(err).unwrap_or_default();
                         log::error!(target: "app", "[mihomo]: {err}");
                         Logger::global().set_log(err);
                     }
@@ -241,7 +253,10 @@ impl CoreManager {
             tun.insert("enable".into(), false.into());
             disable.insert("tun".into(), tun.into());
             log::debug!(target: "app", "disable tun mode");
-            let _ = clash_api::patch_configs(&disable).await;
+            let _ = MihomoClientManager::global()
+                .mihomo()
+                .patch_base_config(&disable)
+                .await;
         });
 
         if *self.use_service_mode.lock() {
@@ -281,7 +296,7 @@ impl CoreManager {
         Config::verge().draft().clash_core = Some(clash_core);
         // 更新订阅
         Config::generate()?;
-        self.check_config()?;
+        self.check_config().await?;
         // 清掉旧日志
         Logger::global().clear_log();
 
@@ -311,7 +326,7 @@ impl CoreManager {
         Config::generate()?;
 
         // 检查订阅是否正常
-        self.check_config()?;
+        self.check_config().await?;
 
         // 是否需要重启核心
         if restart_core {
@@ -325,7 +340,11 @@ impl CoreManager {
 
         // 发送请求 发送5次
         for i in 0..5 {
-            match clash_api::put_configs(path).await {
+            match MihomoClientManager::global()
+                .mihomo()
+                .reload_config(true, path)
+                .await
+            {
                 Ok(_) => break,
                 Err(err) => {
                     if i < 4 {
