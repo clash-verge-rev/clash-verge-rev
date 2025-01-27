@@ -2,7 +2,7 @@ name: Alpha Build
 
 on:
   push:
-    branches: [migrate-tauri-v2]
+    branches: [dev]
     tags-ignore: [updater, alpha]
   workflow_dispatch:
 
