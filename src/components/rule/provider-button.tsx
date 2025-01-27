@@ -127,12 +127,15 @@ export const ProviderButton = () => {
             const error = errorItems?.includes(key);
             return (
               <ListItem
-                sx={{
-                  p: 0,
-                  borderRadius: "10px",
-                  border: "solid 2px var(--divider-color)",
+                sx={(theme) => ({
+                  p: 1,
+                  borderRadius: "6px",
+                  bgcolor: "white",
                   mb: 1,
-                }}
+                  ...theme.applyStyles("dark", {
+                    bgcolor: "#282A36",
+                  }),
+                })}
                 key={key}>
                 <ListItemText
                   sx={{ px: 1 }}
@@ -194,7 +197,7 @@ const TypeSpan = styled("span")(({ theme }) => ({
   borderColor: alpha(theme.palette.secondary.main, 0.5),
   color: alpha(theme.palette.secondary.main, 0.8),
   borderRadius: 4,
-  fontSize: 10,
+  fontSize: 12,
   marginRight: "4px",
   padding: "0 2px",
   lineHeight: 1.25,
