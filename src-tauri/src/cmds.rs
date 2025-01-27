@@ -231,6 +231,11 @@ pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
 }
 
 #[tauri::command]
+pub async fn check_port_available(port: u16) -> CmdResult<bool> {
+    Ok(port_scanner::local_port_available(port))
+}
+
+#[tauri::command]
 pub fn get_verge_config() -> CmdResult<IVerge> {
     Ok(Config::verge().data().clone())
 }

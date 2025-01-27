@@ -262,7 +262,7 @@
   "Proxy Daemon Duration Cannot be Less than 1 Second": "Продолжительность работы прокси-демона не может быть меньше 1 секунды",
   "Invalid Bypass Format": "Неверный формат обхода",
   "Clash Port Modified": "Clash порт изменен",
-  "Port Conflict": "Конфликт портов",
+  "Port Conflict": "{{portName}} Конфликт портов",
   "Restart Application to Apply Modifications": "Чтобы изменения вступили в силу, необходимо перезапустить приложение",
   "External Controller Address Modified": "Изменен адрес внешнего контроллера",
   "Permissions Granted Successfully for _clash Core": "Разрешения успешно предоставлены для ядра {{core}}",

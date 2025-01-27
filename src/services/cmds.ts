@@ -188,6 +188,10 @@ export async function patchClashConfig(payload: Partial<IConfigData>) {
   return invoke<void>("patch_clash_config", { payload });
 }
 
+export async function checkPortAvailable(port: number) {
+  return invoke<boolean>("check_port_available", { port });
+}
+
 export async function getVergeConfig() {
   return invoke<IVergeConfig>("get_verge_config");
 }

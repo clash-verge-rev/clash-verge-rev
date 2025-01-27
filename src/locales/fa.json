@@ -254,7 +254,7 @@
   "Proxy Daemon Duration Cannot be Less than 1 Second": "مدت زمان دیمن پراکسی نمی‌تواند کمتر از 1 ثانیه باشد",
   "Invalid Bypass Format": "فرمت عبور نامعتبر است",
   "Clash Port Modified": "پورت Clash تغییر یافت",
-  "Port Conflict": "تعارض پورت",
+  "Port Conflict": "{{portName}} تعارض پورت",
   "Restart Application to Apply Modifications": "راه‌اندازی مجدد برنامه برای اعمال تغییرات",
   "External Controller Address Modified": "آدرس کنترل‌کننده خارجی تغییر یافت",
   "Permissions Granted Successfully for _clash Core": "مجوزها با موفقیت برای هسته {{core}} اعطا شد",

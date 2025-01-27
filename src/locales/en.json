@@ -264,7 +264,7 @@
   "Proxy Daemon Duration Cannot be Less than 1 Second": "Proxy Daemon Duration Cannot be Less than 1 Second",
   "Invalid Bypass Format": "Invalid Bypass Format",
   "Clash Port Modified": "Clash Port Modified",
-  "Port Conflict": "Port Conflict",
+  "Port Conflict": "{{portName}} Port Conflict",
   "Restart Application to Apply Modifications": "Restart Application to Apply Modifications",
   "External Controller Address Modified": "External Controller Address Modified",
   "Permissions Granted Successfully for _clash Core": "Permissions Granted Successfully for {{core}} Core",

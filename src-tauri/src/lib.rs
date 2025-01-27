@@ -180,6 +180,7 @@ pub fn run() -> Result<()> {
             cmds::get_clash_info,
             cmds::get_clash_logs,
             cmds::patch_clash_config,
+            cmds::check_port_available,
             cmds::change_clash_core,
             cmds::get_runtime_config,
             cmds::get_runtime_yaml,

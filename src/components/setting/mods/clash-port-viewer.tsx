@@ -1,5 +1,6 @@
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
+import { checkPortAvailable } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
 import { useLockFn } from "ahooks";
@@ -81,13 +82,38 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       const updatePorts: Record<string, number> = {};
       if (OS !== "windows") {
+        const res = await checkPortAvailable(redirPort);
+        if (!res) {
+          Notice.error(t("Port Conflict", { portName: "redir port" }), 4000);
+          return;
+        }
         updatePorts["redir-port"] = redirPort;
       }
       if (OS === "linux") {
+        const res = await checkPortAvailable(tproxyPort);
+        if (!res) {
+          Notice.error(t("Port Conflict", { portName: "tproxy port" }), 4000);
+          return;
+        }
         updatePorts["tproxy-port"] = tproxyPort;
       }
+      let res = await checkPortAvailable(mixedPort);
+      if (!res) {
+        Notice.error(t("Port Conflict", { portName: "mixed port" }), 4000);
+        return;
+      }
       updatePorts["mixed-port"] = mixedPort;
+      res = await checkPortAvailable(socksPort);
+      if (!res) {
+        Notice.error(t("Port Conflict", { portName: "socks port" }), 4000);
+        return;
+      }
       updatePorts["socks-port"] = socksPort;
+      res = await checkPortAvailable(port);
+      if (!res) {
+        Notice.error(t("Port Conflict", { portName: "port" }), 4000);
+        return;
+      }
       updatePorts["port"] = port;
       await patchInfo(updatePorts);
       await mutate("getRuntimeConfig");
