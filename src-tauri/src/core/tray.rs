@@ -1,6 +1,6 @@
 use crate::{
     cmds,
-    config::Config,
+    config::{Config, IProfiles},
     feat,
     utils::{dirs, resolve},
 };
@@ -8,10 +8,12 @@ use anyhow::{bail, Result};
 use rust_i18n::t;
 use tauri::{
     image::Image,
-    menu::{Menu, MenuBuilder, MenuEvent, MenuItemBuilder, SubmenuBuilder},
+    menu::{CheckMenuItem, Menu, MenuBuilder, MenuEvent, MenuItemBuilder, SubmenuBuilder},
     tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
     AppHandle, Runtime,
 };
+
+use super::handle;
 
 const TRAY_ID: &str = "verge_tray";
 
@@ -104,6 +106,25 @@ impl Tray {
 
     pub fn tray_menu<R: Runtime>(app_handle: &AppHandle<R>) -> Result<Menu<R>> {
         let version = app_handle.package_info().version.to_string();
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
+        let current = profiles.get_current().unwrap_or_default();
+        let profiles_items = profiles.get_profiles().unwrap();
+        let mut switch_menu = SubmenuBuilder::new(app_handle, t!("profiles.switch"));
+        for prf_item in profiles_items {
+            let uid = prf_item.uid.unwrap();
+            let name = prf_item.name.unwrap();
+            if current == uid {
+                let checkmenu =
+                    CheckMenuItem::with_id(app_handle, uid, name, true, true, None::<&str>)?;
+                switch_menu = switch_menu.item(&checkmenu);
+            } else {
+                let checkmenu =
+                    CheckMenuItem::with_id(app_handle, uid, name, true, false, None::<&str>)?;
+                switch_menu = switch_menu.item(&checkmenu);
+            }
+        }
+
         let menu = MenuBuilder::new(app_handle)
             .text("open_window", t!("dashboard"))
             .check("rule_mode", t!("mode.rule"))
@@ -112,6 +133,8 @@ impl Tray {
             .separator()
             .check("system_proxy", t!("proxy.system"))
             .check("tun_mode", t!("proxy.tun"))
+            .separator()
+            .item(&switch_menu.build()?)
             .separator()
             .check("service_mode", t!("service"))
             .separator()
@@ -295,6 +318,12 @@ impl Tray {
 
     pub fn on_system_tray_event(app_handle: &AppHandle, event: MenuEvent) {
         let app_handle_ = app_handle.clone();
+        let config_profiles = Config::profiles().latest().clone();
+        let profiles = config_profiles.get_profiles().unwrap();
+        let profiles_uids: Vec<String> = profiles
+            .iter()
+            .map(|item| item.uid.clone().unwrap_or_default())
+            .collect();
         match event.id.as_ref() {
             mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
                 let mode = &mode[0..mode.len() - 5];
@@ -302,8 +331,40 @@ impl Tray {
             }
             "open_window" => resolve::create_window(app_handle),
             "system_proxy" => feat::toggle_system_proxy(),
-            "service_mode" => feat::toggle_service_mode(),
             "tun_mode" => feat::toggle_tun_mode(),
+            profile if profiles_uids.contains(&profile.to_string()) => {
+                let clicked_profile = profile.to_string();
+                let current = config_profiles.get_current().unwrap_or_default();
+                if current != clicked_profile {
+                    tauri::async_runtime::spawn(async move {
+                        match cmds::patch_profiles_config(IProfiles {
+                            current: Some(clicked_profile),
+                            chain: None,
+                            items: None,
+                        })
+                        .await
+                        {
+                            Ok(_) => {
+                                let _ = handle::Handle::notification(
+                                    t!("profiles.switch"),
+                                    t!("profiles.switch.success"),
+                                );
+                                log::info!(target: "app", "switch profile sucessfully");
+                            }
+                            Err(e) => {
+                                let _ = handle::Handle::notification(
+                                    t!("profiles.switch"),
+                                    t!("profiles.switch.failed"),
+                                );
+                                log::error!(target: "app", "failed to switch profile, error: {:?}", e);
+                            }
+                        }
+                    });
+                } else {
+                    let _ = Self::update_systray(&app_handle);
+                }
+            }
+            "service_mode" => feat::toggle_service_mode(),
             "copy_env" => feat::copy_clash_env(app_handle),
             "open_app_dir" => crate::log_err!(cmds::open_app_dir(app_handle_)),
             "open_core_dir" => crate::log_err!(cmds::open_core_dir(app_handle_)),

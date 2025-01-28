@@ -104,6 +104,15 @@ impl IProfiles {
         self.items.as_ref()
     }
 
+    pub fn get_profiles(&self) -> Result<Vec<PrfItem>> {
+        let items = self.items.clone().unwrap_or(Vec::<PrfItem>::new());
+        let profiles: Vec<PrfItem> = items
+            .into_iter()
+            .filter(|o| o.itype == Some("remote".into()) || o.itype == Some("local".into()))
+            .collect();
+        Ok(profiles)
+    }
+
     /// find the item by the uid
     pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
         if let Some(items) = self.items.as_ref() {

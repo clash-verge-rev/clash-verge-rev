@@ -17,6 +17,9 @@ restart.clash: 重启 Clash
 restart: 重启应用
 quit: 退出
 current.profile: 当前订阅
+profiles.switch: 切换订阅
+profiles.switch.success: 切换订阅成功
+profiles.switch.failed: 切换订阅失败
 
 # notification related
 disable.failed: 禁用失败
