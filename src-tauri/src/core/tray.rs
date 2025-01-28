@@ -349,7 +349,7 @@ impl Tray {
                                     t!("profiles.switch"),
                                     t!("profiles.switch.success"),
                                 );
-                                log::info!(target: "app", "switch profile sucessfully");
+                                log::info!(target: "app", "switch profile successfully");
                             }
                             Err(e) => {
                                 let _ = handle::Handle::notification(
