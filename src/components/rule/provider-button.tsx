@@ -118,9 +118,8 @@ export const ProviderButton = () => {
         }
         contentStyle={{ width: 400 }}
         hideOkBtn
-        cancelBtn={t("Cancel")}
-        onClose={() => setOpen(false)}
-        onCancel={() => setOpen(false)}>
+        hideCancelBtn
+        onClose={() => setOpen(false)}>
         <List sx={{ py: 0, minHeight: 250 }}>
           {entries.map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
