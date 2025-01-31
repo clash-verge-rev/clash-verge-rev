@@ -61,23 +61,27 @@ pub async fn enhance_profiles() -> CmdResult {
 #[tauri::command]
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
-    wrap_err!(Config::profiles().data().append_item(item))
+    wrap_err!(Config::profiles().data().append_item(item))?;
+    wrap_err!(handle::Handle::update_systray_part())
 }
 
 #[tauri::command]
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
-    wrap_err!(Config::profiles().data().reorder(active_id, over_id))
+    wrap_err!(Config::profiles().data().reorder(active_id, over_id))?;
+    wrap_err!(handle::Handle::update_systray_part())
 }
 
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
     let item = wrap_err!(PrfItem::from(item, file_data).await)?;
-    wrap_err!(Config::profiles().data().append_item(item))
+    wrap_err!(Config::profiles().data().append_item(item))?;
+    wrap_err!(handle::Handle::update_systray_part())
 }
 
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    wrap_err!(feat::update_profile(index, option).await)
+    wrap_err!(feat::update_profile(index, option).await)?;
+    wrap_err!(handle::Handle::update_systray_part())
 }
 
 #[tauri::command]
@@ -88,8 +92,7 @@ pub async fn delete_profile(index: String) -> CmdResult {
         wrap_err!(CoreManager::global().update_config(true).await)?;
         handle::Handle::refresh_clash();
     }
-
-    Ok(())
+    wrap_err!(handle::Handle::update_systray_part())
 }
 
 /// 修改profiles的
