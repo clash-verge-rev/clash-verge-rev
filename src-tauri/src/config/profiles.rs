@@ -1,5 +1,8 @@
 use super::prfitem::PrfItem;
-use crate::utils::{dirs, help};
+use crate::{
+    config::ProfileType,
+    utils::{dirs, help},
+};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
@@ -108,7 +111,12 @@ impl IProfiles {
         let items = self.items.clone().unwrap_or(Vec::<PrfItem>::new());
         let profiles: Vec<PrfItem> = items
             .into_iter()
-            .filter(|o| o.itype == Some("remote".into()) || o.itype == Some("local".into()))
+            .filter(|o| {
+                matches!(
+                    o.itype,
+                    Some(ProfileType::Remote) | Some(ProfileType::Local)
+                )
+            })
             .collect();
         Ok(profiles)
     }

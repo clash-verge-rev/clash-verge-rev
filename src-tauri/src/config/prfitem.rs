@@ -15,7 +15,7 @@ pub struct PrfItem {
     /// profile item type
     /// enum value: remote | local | script | merge
     #[serde(rename = "type")]
-    pub itype: Option<String>,
+    pub itype: Option<ProfileType>,
 
     /// profile name
     pub name: Option<String>,
@@ -57,6 +57,15 @@ pub struct PrfItem {
     /// profile rule providers path
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rule_providers_path: Option<HashMap<String, PathBuf>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ProfileType {
+    Remote,
+    Local,
+    Merge,
+    Script,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -126,8 +135,8 @@ impl PrfItem {
             bail!("type should not be null");
         }
 
-        match item.itype.unwrap().as_str() {
-            "remote" => {
+        match item.itype.unwrap() {
+            ProfileType::Remote => {
                 if item.url.is_none() {
                     bail!("url should not be null");
                 }
@@ -136,22 +145,21 @@ impl PrfItem {
                 let desc = item.desc;
                 PrfItem::from_url(url, name, desc, item.option).await
             }
-            "local" => {
+            ProfileType::Local => {
                 let name = item.name.unwrap_or("Local File".into());
                 let desc = item.desc.unwrap_or("".into());
                 PrfItem::from_local(name, desc, file_data)
             }
-            "merge" => {
+            ProfileType::Merge => {
                 let name = item.name.unwrap_or("Merge".into());
                 let desc = item.desc.unwrap_or("".into());
                 PrfItem::from_merge(name, desc)
             }
-            "script" => {
+            ProfileType::Script => {
                 let name = item.name.unwrap_or("Script".into());
                 let desc = item.desc.unwrap_or("".into());
                 PrfItem::from_script(name, desc)
             }
-            typ => bail!("invalid profile item type \"{typ}\""),
         }
     }
 
@@ -163,7 +171,7 @@ impl PrfItem {
 
         Ok(PrfItem {
             uid: Some(uid),
-            itype: Some("local".into()),
+            itype: Some(ProfileType::Local),
             name: Some(name),
             desc: Some(desc),
             file: Some(file),
@@ -327,7 +335,7 @@ impl PrfItem {
 
         Ok(PrfItem {
             uid: Some(uid),
-            itype: Some("remote".into()),
+            itype: Some(ProfileType::Remote),
             name: Some(name),
             desc,
             file: Some(file),
@@ -350,7 +358,7 @@ impl PrfItem {
 
         Ok(PrfItem {
             uid: Some(uid),
-            itype: Some("merge".into()),
+            itype: Some(ProfileType::Merge),
             name: Some(name),
             desc: Some(desc),
             file: Some(file),
@@ -373,7 +381,7 @@ impl PrfItem {
 
         Ok(PrfItem {
             uid: Some(uid),
-            itype: Some("script".into()),
+            itype: Some(ProfileType::Script),
             name: Some(name),
             desc: Some(desc),
             file: Some(file),

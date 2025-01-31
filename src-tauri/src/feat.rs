@@ -505,7 +505,10 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         let item = profiles.get_item(&uid)?;
-        let is_remote = item.itype.as_ref().map_or(false, |s| s == "remote");
+        let is_remote = item
+            .itype
+            .as_ref()
+            .map_or(false, |s| *s == ProfileType::Remote);
 
         if !is_remote {
             None // 直接更新

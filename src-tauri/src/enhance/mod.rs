@@ -10,6 +10,7 @@ use self::merge::*;
 use self::script::*;
 use self::tun::*;
 use crate::config::Config;
+use crate::config::ProfileType;
 use crate::utils::dirs::app_home_dir;
 use anyhow::bail;
 use anyhow::Result;
@@ -248,9 +249,9 @@ pub fn test_merge_chain(modified_chain_id: String, content: String) -> Result<Me
     let mut exists_keys = use_keys(&config); // 保存出现过的keys
 
     let profile_item = profiles.get_item(&modified_chain_id)?;
-    let chain_type = profile_item.itype.as_ref().unwrap().as_str();
+    let chain_type = profile_item.itype.as_ref().unwrap();
     match chain_type {
-        "merge" => {
+        ProfileType::Merge => {
             let yaml_content = serde_yaml::from_str::<Value>(&content)
                 .unwrap()
                 .as_mapping()
@@ -258,7 +259,7 @@ pub fn test_merge_chain(modified_chain_id: String, content: String) -> Result<Me
                 .clone();
             config = use_merge(yaml_content, config.to_owned());
         }
-        "script" => {
+        ProfileType::Script => {
             let mut logs = vec![];
             match use_script(content, config.to_owned()) {
                 Ok((res_config, res_logs)) => {

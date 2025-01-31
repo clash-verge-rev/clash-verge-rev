@@ -1,5 +1,5 @@
 use crate::{
-    config::PrfItem,
+    config::{PrfItem, ProfileType},
     utils::{dirs, help},
 };
 use serde_yaml::Mapping;
@@ -27,7 +27,7 @@ pub enum ChainSupport {
 
 impl From<&PrfItem> for Option<ChainItem> {
     fn from(item: &PrfItem) -> Self {
-        let itype = item.itype.as_ref()?.as_str();
+        let itype = item.itype.as_ref()?;
         let file = item.file.clone()?;
         let uid = item.uid.clone().unwrap_or("".into());
         let path = dirs::app_profiles_dir().ok()?.join(file);
@@ -37,11 +37,11 @@ impl From<&PrfItem> for Option<ChainItem> {
         }
 
         match itype {
-            "script" => Some(ChainItem {
+            ProfileType::Script => Some(ChainItem {
                 uid,
                 data: ChainType::Script(fs::read_to_string(path).ok()?),
             }),
-            "merge" => Some(ChainItem {
+            ProfileType::Merge => Some(ChainItem {
                 uid,
                 data: ChainType::Merge(help::read_merge_mapping(&path).ok()?),
             }),
