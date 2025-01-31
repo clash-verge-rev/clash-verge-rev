@@ -63,7 +63,7 @@ pub async fn resolve_setup(app_handle: &AppHandle) {
     log::trace!("init mihomo api client");
     log_err!(MihomoClientManager::global().init());
 
-    let argvs: Vec<String> = std::env::args().collect();
+    let argvs = std::env::args().collect::<Vec<String>>();
     if argvs.len() > 1 {
         let param = argvs[1].as_str();
         if param.starts_with("clash:") {

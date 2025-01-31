@@ -25,7 +25,7 @@ pub fn check_singleton() -> Result<()> {
                 .await?;
 
             if &resp == "ok" {
-                let argvs: Vec<String> = std::env::args().collect();
+                let argvs = std::env::args().collect::<Vec<String>>();
                 if argvs.len() > 1 {
                     let param = argvs[1].as_str();
                     if param.starts_with("clash:") {

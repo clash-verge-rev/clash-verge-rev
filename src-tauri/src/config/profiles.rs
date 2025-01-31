@@ -109,7 +109,7 @@ impl IProfiles {
 
     pub fn get_profiles(&self) -> Result<Vec<PrfItem>> {
         let items = self.items.clone().unwrap_or(Vec::<PrfItem>::new());
-        let profiles: Vec<PrfItem> = items
+        let profiles = items
             .into_iter()
             .filter(|o| {
                 matches!(
@@ -117,7 +117,7 @@ impl IProfiles {
                     Some(ProfileType::Remote) | Some(ProfileType::Local)
                 )
             })
-            .collect();
+            .collect::<Vec<PrfItem>>();
         Ok(profiles)
     }
 

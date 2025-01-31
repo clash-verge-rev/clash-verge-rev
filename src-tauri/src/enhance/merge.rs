@@ -31,7 +31,7 @@ pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
 
     let mut config = config.as_mapping().unwrap().clone();
     let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
-    let merge = use_filter(merge, &merge_list.collect());
+    let merge = use_filter(merge, &merge_list.collect::<Vec<String>>());
 
     ["rules", "proxies", "proxy-groups"]
         .iter()
@@ -81,7 +81,7 @@ fn test_merge() -> anyhow::Result<()> {
       - 1111
     rules:
       - replace
-    proxy-groups: 
+    proxy-groups:
       - 123781923810
     tun:
       enable: true

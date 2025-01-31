@@ -19,10 +19,10 @@ static BACKUP_DIR: &str = "clash-verge-self";
 static BACKUP_DIR: &str = "clash-verge-self-dev";
 
 // old backup dir
-#[cfg(not(feature = "verge-dev"))]
-static OLD_BACKUP_DIR: &str = "clash-verge-rev";
-#[cfg(feature = "verge-dev")]
-static OLD_BACKUP_DIR: &str = "clash-verge-rev-dev";
+// #[cfg(not(feature = "verge-dev"))]
+// static OLD_BACKUP_DIR: &str = "clash-verge-rev";
+// #[cfg(feature = "verge-dev")]
+// static OLD_BACKUP_DIR: &str = "clash-verge-rev-dev";
 
 static TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 
@@ -106,41 +106,41 @@ impl WebDav {
         let password = verge.webdav_password.unwrap_or_default();
         self.update_webdav_info(url, username, password).await?;
 
-        tauri::async_runtime::spawn(async move {
-            let cur_backup_files = Self::list_file_by_path(BACKUP_DIR)
-                .await
-                .unwrap_or_default();
-            let old_backup_files = Self::list_file_by_path(OLD_BACKUP_DIR)
-                .await
-                .unwrap_or_default();
-            for old_file in old_backup_files {
-                let old_file_name = old_file.href.split("/").last();
-                if let Some(old_file_name) = old_file_name {
-                    if cur_backup_files
-                        .iter()
-                        .find(|f| {
-                            let file_name = f.href.split("/").last();
-                            file_name.is_some() && file_name.unwrap() == old_file_name
-                        })
-                        .is_none()
-                    {
-                        log::info!("migrate old webdav backup file: {}", old_file_name);
-                        let client = Self::global().get_client();
-                        if let Ok(client) = client {
-                            let from_path = format!("{}/{}", OLD_BACKUP_DIR, old_file_name);
-                            let to_path = format!("{}/{}", BACKUP_DIR, old_file_name);
-                            let _ = client.mv(&from_path, &to_path).await.map_err(|e| {
-                                let msg = format!(
-                                    "move file {} to {} failed, error: {}",
-                                    from_path, to_path, e
-                                );
-                                log::error!(target: "app","{}",msg);
-                            });
-                        }
-                    }
-                }
-            }
-        });
+        // tauri::async_runtime::spawn(async move {
+        //     let cur_backup_files = Self::list_file_by_path(BACKUP_DIR)
+        //         .await
+        //         .unwrap_or_default();
+        //     let old_backup_files = Self::list_file_by_path(OLD_BACKUP_DIR)
+        //         .await
+        //         .unwrap_or_default();
+        //     for old_file in old_backup_files {
+        //         let old_file_name = old_file.href.split("/").last();
+        //         if let Some(old_file_name) = old_file_name {
+        //             if cur_backup_files
+        //                 .iter()
+        //                 .find(|f| {
+        //                     let file_name = f.href.split("/").last();
+        //                     file_name.is_some() && file_name.unwrap() == old_file_name
+        //                 })
+        //                 .is_none()
+        //             {
+        //                 log::info!("migrate old webdav backup file: {}", old_file_name);
+        //                 let client = Self::global().get_client();
+        //                 if let Ok(client) = client {
+        //                     let from_path = format!("{}/{}", OLD_BACKUP_DIR, old_file_name);
+        //                     let to_path = format!("{}/{}", BACKUP_DIR, old_file_name);
+        //                     let _ = client.mv(&from_path, &to_path).await.map_err(|e| {
+        //                         let msg = format!(
+        //                             "move file {} to {} failed, error: {}",
+        //                             from_path, to_path, e
+        //                         );
+        //                         log::error!(target: "app","{}",msg);
+        //                     });
+        //                 }
+        //             }
+        //         }
+        //     }
+        // });
 
         Ok(())
     }
@@ -217,23 +217,18 @@ impl WebDav {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::core::backup::WebDav;
-
-    #[tokio::test]
-    /// cargo test -- --show-output test_webdav
-    async fn test_webdav() {
-        let _ = WebDav::global()
-            .update_webdav_info(
-                "https://dav.jianguoyun.com/dav/".to_string(),
-                "test".to_string(),
-                "test".to_string(),
-            )
-            .await;
-        let files = WebDav::list_file().await.unwrap();
-        for file in files {
-            println!("file: {:?}", file);
-        }
+#[tokio::test]
+/// cargo test -- --show-output test_webdav
+async fn test_webdav() {
+    let _ = WebDav::global()
+        .update_webdav_info(
+            "https://dav.jianguoyun.com/dav/".to_string(),
+            "test".to_string(),
+            "test".to_string(),
+        )
+        .await;
+    let files = WebDav::list_file().await.unwrap();
+    for file in files {
+        println!("file: {:?}", file);
     }
 }

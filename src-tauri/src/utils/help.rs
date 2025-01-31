@@ -79,7 +79,7 @@ pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
 /// get the last part of the url, if not found, return empty string
 pub fn get_last_part_and_decode(url: &str) -> Option<String> {
     let path = url.split('?').next().unwrap_or(""); // Splits URL and takes the path part
-    let segments: Vec<&str> = path.split('/').collect();
+    let segments = path.split('/').collect::<Vec<&str>>();
     let last_segment = segments.last()?;
 
     Some(

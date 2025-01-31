@@ -27,7 +27,7 @@ impl MihomoClientManager {
         let secret = clash.secret.unwrap_or_default();
         let mut mihomo = self.mihomo.lock();
         mihomo.set_external_host(external_host);
-        mihomo.set_external_port(external_port.parse().unwrap());
+        mihomo.set_external_port(external_port.parse::<u32>().unwrap());
         mihomo.set_secret(secret);
         Ok(())
     }
@@ -42,7 +42,7 @@ impl MihomoClientManager {
         let mut mihomo = self.mihomo.lock();
         let (host, port) = external_controller.split_once(':').unwrap();
         mihomo.set_external_host(host);
-        mihomo.set_external_port(port.parse().unwrap());
+        mihomo.set_external_port(port.parse::<u32>().unwrap());
     }
 
     pub fn set_secret(&self, secret: &str) {
@@ -52,16 +52,16 @@ impl MihomoClientManager {
 }
 
 /// 缩短clash的日志
-#[allow(dead_code)]
-pub fn parse_log(log: String) -> String {
-    if log.starts_with("time=") && log.len() > 33 {
-        return (log[33..]).to_owned();
-    }
-    if log.len() > 9 {
-        return (log[9..]).to_owned();
-    }
-    log
-}
+// #[allow(dead_code)]
+// pub fn parse_log(log: String) -> String {
+//     if log.starts_with("time=") && log.len() > 33 {
+//         return (log[33..]).to_owned();
+//     }
+//     if log.len() > 9 {
+//         return (log[9..]).to_owned();
+//     }
+//     log
+// }
 
 /// 缩短clash -t的错误输出
 /// 仅适配 clash p核 8-26、clash meta 1.13.1

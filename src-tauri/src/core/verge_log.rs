@@ -172,7 +172,7 @@ impl VergeLog {
 
         // %Y-%m-%d to NaiveDateTime
         let parse_time_str = |s: &str| {
-            let sa: Vec<&str> = s.split('-').collect();
+            let sa = s.split('-').collect::<Vec<&str>>();
             if sa.len() != 4 {
                 return Err(anyhow::anyhow!("invalid time str"));
             }

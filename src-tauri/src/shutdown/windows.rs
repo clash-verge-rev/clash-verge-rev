@@ -56,7 +56,7 @@ unsafe extern "system" fn shutdown_proc(
 fn encode_wide<S: AsRef<std::ffi::OsStr>>(string: S) -> Vec<u16> {
     std::os::windows::prelude::OsStrExt::encode_wide(string.as_ref())
         .chain(std::iter::once(0))
-        .collect()
+        .collect::<Vec<u16>>()
 }
 
 fn get_instance_handle() -> windows_sys::Win32::Foundation::HMODULE {

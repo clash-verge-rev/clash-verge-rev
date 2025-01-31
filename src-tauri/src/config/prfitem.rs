@@ -57,6 +57,10 @@ pub struct PrfItem {
     /// profile rule providers path
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rule_providers_path: Option<HashMap<String, PathBuf>>,
+
+    /// TODO: chain of current profile
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chain: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -183,6 +187,7 @@ impl PrfItem {
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
             rule_providers_path: None,
+            chain: None,
         })
     }
 
@@ -204,8 +209,8 @@ impl PrfItem {
 
         let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
-        // 使用软件自己的代理
         if self_proxy {
+            // 使用软件自己的代理
             let port = Config::clash().latest().get_mixed_port();
 
             let proxy_scheme = format!("http://127.0.0.1:{port}");
@@ -219,9 +224,8 @@ impl PrfItem {
             if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
                 builder = builder.proxy(proxy);
             }
-        }
-        // 使用系统代理
-        else if with_proxy {
+        } else if with_proxy {
+            // 使用系统代理
             if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
                 let proxy_scheme = format!("http://{}:{}", p.host, p.port);
 
@@ -288,9 +292,7 @@ impl PrfItem {
                     },
                 }
             }
-            None => Some(
-                crate::utils::help::get_last_part_and_decode(url).unwrap_or("Remote File".into()),
-            ),
+            None => Some(help::get_last_part_and_decode(url).unwrap_or("Remote File".into())),
         };
         let option = match update_interval {
             Some(val) => Some(PrfOption {
@@ -347,6 +349,7 @@ impl PrfItem {
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(data.into()),
             rule_providers_path: None,
+            chain: None,
         })
     }
 
@@ -370,6 +373,7 @@ impl PrfItem {
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_MERGE.into()),
             rule_providers_path: None,
+            chain: None,
         })
     }
 
@@ -393,6 +397,7 @@ impl PrfItem {
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
             rule_providers_path: None,
+            chain: None,
         })
     }
 

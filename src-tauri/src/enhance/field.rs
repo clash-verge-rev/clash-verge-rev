@@ -62,9 +62,15 @@ pub fn use_sort(config: Mapping) -> Mapping {
         }
     });
 
-    let supported_keys: HashSet<&str> = HANDLE_FIELDS.into_iter().chain(DEFAULT_FIELDS).collect();
+    let supported_keys = HANDLE_FIELDS
+        .into_iter()
+        .chain(DEFAULT_FIELDS)
+        .collect::<HashSet<&str>>();
 
-    let config_keys: HashSet<&str> = config.keys().filter_map(|e| e.as_str()).collect();
+    let config_keys = config
+        .keys()
+        .filter_map(|e| e.as_str())
+        .collect::<HashSet<&str>>();
 
     config_keys.difference(&supported_keys).for_each(|&key| {
         let key = Value::from(key);
@@ -91,5 +97,5 @@ pub fn use_keys(config: &Mapping) -> Vec<String> {
             s.make_ascii_lowercase();
             s
         })
-        .collect()
+        .collect::<Vec<String>>()
 }

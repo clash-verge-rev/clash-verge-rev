@@ -320,10 +320,10 @@ impl Tray {
         let app_handle_ = app_handle.clone();
         let config_profiles = Config::profiles().latest().clone();
         let profiles = config_profiles.get_profiles().unwrap();
-        let profiles_uids: Vec<String> = profiles
+        let profiles_uids = profiles
             .iter()
             .map(|item| item.uid.clone().unwrap_or_default())
-            .collect();
+            .collect::<Vec<String>>();
         match event.id.as_ref() {
             mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
                 let mode = &mode[0..mode.len() - 5];

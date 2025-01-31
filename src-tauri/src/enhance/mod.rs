@@ -171,7 +171,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
     let mut exists_set = HashSet::new();
     exists_set.extend(exists_keys);
-    exists_keys = exists_set.into_iter().collect();
+    exists_keys = exists_set.into_iter().collect::<Vec<String>>();
 
     (config, exists_keys, result_map)
 }
