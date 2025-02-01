@@ -16,7 +16,29 @@ env:
   RUST_BACKTRACE: short
 
 jobs:
+  delete-release-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old release assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ github.token }}
+          tag: alpha
+          fail-if-no-assets: false
+          fail-if-no-release: false
+          assets: |
+            *.rpm
+            *.deb
+            *.zst
+            *.dmg
+            *.exe
+            *.gz
+            *.sig
+            *.zip
+            *.json
+
   alpha:
+    needs: [delete-release-assets]
     strategy:
       fail-fast: false
       matrix:
@@ -85,6 +107,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   alpha-for-linux:
+    needs: [delete-release-assets]
     strategy:
       fail-fast: false
       matrix:
