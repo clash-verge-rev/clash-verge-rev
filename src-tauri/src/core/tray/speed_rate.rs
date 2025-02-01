@@ -48,16 +48,13 @@ impl SpeedRate {
         let img = image::load_from_memory(&icon)?;
         let (width, height) = (img.width(), img.height());
 
-        let mut image = ImageBuffer::new((width as f32 * 4.0) as u32, height);
-        image::imageops::replace(&mut image, &img, 0, 0);
-
         let font =
-            Font::try_from_bytes(include_bytes!("../../../assets/fonts/SFCompact.ttf")).unwrap();
+            Font::try_from_bytes(include_bytes!("../../../assets/fonts/FiraCode-Medium.ttf")).unwrap();
 
         // 修改颜色和阴影参数
         let text_color = Rgba([255u8, 255u8, 255u8, 255u8]); // 纯白色
-        let shadow_color = Rgba([0u8, 0u8, 0u8, 180u8]); // 半透明黑色阴影
-        let base_size = height as f32 * 0.5;
+        let shadow_color = Rgba([0u8, 0u8, 0u8, 120u8]); // 降低阴影不透明度
+        let base_size = height as f32 * 0.6; // 保持字体大小
         let scale = Scale::uniform(base_size);
 
         let up_text = format_bytes_speed(rate.up);
@@ -76,20 +73,32 @@ impl SpeedRate {
             .last()
             .unwrap_or(0.0);
 
-        let right_margin = 8;
-        let canvas_width = width * 4;
-        let up_x = canvas_width as f32 - up_width - right_margin as f32;
-        let down_x = canvas_width as f32 - down_width - right_margin as f32;
+        let icon_text_gap = 40; // 图标和文字之间的间隔
+        
+        // 计算所需的总宽度：图标宽度 + 间隔 + 最大文本宽度
+        let max_text_width = up_width.max(down_width);
+        let total_width = width as f32 + icon_text_gap as f32 + max_text_width;
+        
+        let mut image = ImageBuffer::new(total_width.ceil() as u32, height);
+        // 将图标绘制在最左边
+        image::imageops::replace(&mut image, &img, 0_i64, 0_i64);
+
+        // 计算文字的起始x坐标（图标宽度 + 间隔）
+        let text_start_x = width as i32 + icon_text_gap as i32;
 
         // 添加阴影效果
-        let shadow_offset = 1; // 阴影偏移量
+        let shadow_offset = 1;
+
+        // 计算垂直位置
+        let up_y = 0; // 上行速率紧贴顶部
+        let down_y = height as i32 - base_size as i32; // 下行速率紧贴底部
 
         // 绘制上行速率（先画阴影，再画文字）
         draw_text_mut(
             &mut image,
             shadow_color,
-            up_x as i32 + shadow_offset,
-            1 + shadow_offset,
+            text_start_x + shadow_offset,
+            up_y + shadow_offset,
             scale,
             &font,
             &up_text,
@@ -97,8 +106,8 @@ impl SpeedRate {
         draw_text_mut(
             &mut image,
             text_color,
-            up_x as i32,
-            1,
+            text_start_x,
+            up_y,
             scale,
             &font,
             &up_text,
@@ -108,8 +117,8 @@ impl SpeedRate {
         draw_text_mut(
             &mut image,
             shadow_color,
-            down_x as i32 + shadow_offset,
-            height as i32 - (base_size as i32) - 1 + shadow_offset,
+            text_start_x + shadow_offset,
+            down_y + shadow_offset,
             scale,
             &font,
             &down_text,
@@ -117,8 +126,8 @@ impl SpeedRate {
         draw_text_mut(
             &mut image,
             text_color,
-            down_x as i32,
-            height as i32 - (base_size as i32) - 1,
+            text_start_x,
+            down_y,
             scale,
             &font,
             &down_text,
