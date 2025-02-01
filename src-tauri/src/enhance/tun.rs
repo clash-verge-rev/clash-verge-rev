@@ -36,14 +36,30 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
         .unwrap_or(false);
 
     if enable {
-        revise!(dns_val, "enable", true);
-        revise!(dns_val, "ipv6", ipv6_val);
-        revise!(dns_val, "enhanced-mode", "fake-ip");
-        revise!(dns_val, "fake-ip-range", "172.29.0.1/16");
-        #[cfg(target_os = "macos")]
-        {
-            crate::utils::resolve::restore_public_dns().await;
-            crate::utils::resolve::set_public_dns("223.6.6.6".to_string()).await;
+        // 检查现有的 enhanced-mode 设置
+        let current_mode = dns_val
+            .get(&Value::from("enhanced-mode"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("fake-ip");
+
+        // 只有当 enhanced-mode 是 fake-ip 或未设置时才修改 DNS 配置
+        if current_mode == "fake-ip" || !dns_val.contains_key(&Value::from("enhanced-mode")) {
+            revise!(dns_val, "enable", true);
+            revise!(dns_val, "ipv6", ipv6_val);
+            
+            if !dns_val.contains_key(&Value::from("enhanced-mode")) {
+                revise!(dns_val, "enhanced-mode", "fake-ip");
+            }
+            
+            if !dns_val.contains_key(&Value::from("fake-ip-range")) {
+                revise!(dns_val, "fake-ip-range", "198.18.0.1/16");
+            }
+
+            #[cfg(target_os = "macos")]
+            {
+                crate::utils::resolve::restore_public_dns().await;
+                crate::utils::resolve::set_public_dns("223.6.6.6".to_string()).await;
+            }
         }
     } else {
         revise!(
@@ -72,7 +88,7 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             dns_val
                 .get("fake-ip-range")
                 .and_then(|v| v.as_str())
-                .unwrap_or("172.29.0.1/16")
+                .unwrap_or("198.18.0.1/16")
         );
 
         #[cfg(target_os = "macos")]
