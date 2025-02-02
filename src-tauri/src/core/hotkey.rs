@@ -65,9 +65,11 @@ impl Hotkey {
             _ => bail!("invalid function \"{func}\""),
         };
 
+        let is_quit = func.trim() == "quit";
+
         let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey, event| {
             if event.state == ShortcutState::Pressed {
-                if hotkey.key == Code::KeyQ {
+                if hotkey.key == Code::KeyQ && is_quit {
                     if let Some(window) = app_handle.get_webview_window("main") {
                         if window.is_focused().unwrap_or(false) {
                             f();
