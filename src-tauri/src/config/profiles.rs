@@ -71,7 +71,6 @@ impl IProfiles {
         if let Some(current) = patch.current {
             let items = self.items.as_ref().unwrap();
             let some_uid = Some(current);
-
             if items.iter().any(|e| e.uid == some_uid) {
                 self.current = some_uid;
             }
@@ -463,6 +462,50 @@ impl IProfiles {
                 None
             }
             _ => None,
+        }
+    }
+
+    /// 获取current指向的groups名称
+    pub fn current_groups_name(&self) -> Option<String> {
+        match (self.current.as_ref(), self.items.as_ref()) {
+            (Some(current), Some(items)) => {
+                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
+                    return item.name.clone();
+                }
+                None
+            }
+            _ => None,
+        }
+    }
+
+    /// 判断groups是否是current指向的
+    pub fn is_current_groups(&self, groups: &str) -> bool {
+        match self.current_groups_name() {
+            Some(current_groups_name) => current_groups_name == groups,
+            None => false,
+        }
+    }
+
+    /// 根据groups名称获取uid
+    pub fn get_groups_uid(&self, groups: &str) -> Option<String> {
+        match self.items.as_ref() {
+            Some(items) => {
+                for item in items.iter() {
+                    if item.name.as_ref() == Some(&groups.to_string()) {
+                        return item.uid.clone();
+                    }
+                }
+                None
+            }
+            None => None,
+        }
+    }
+
+    /// 获取items所有的groups名称
+    pub fn all_groups_names(&self) -> Option<Vec<String>> {
+        match self.items.as_ref() {
+            Some(items) => Some(items.iter().filter_map(|e| e.name.clone()).collect()),
+            None => None,
         }
     }
 }

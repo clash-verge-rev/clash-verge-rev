@@ -4,6 +4,7 @@
 //! - timer 定时器
 //! - cmds 页面调用
 //!
+use crate::cmds;
 use crate::config::*;
 use crate::core::*;
 use crate::log_err;
@@ -98,6 +99,19 @@ pub fn toggle_system_proxy() {
         .await
         {
             Ok(_) => handle::Handle::refresh_verge(),
+            Err(err) => log::error!(target: "app", "{err}"),
+        }
+    });
+}
+
+// 切换代理组
+pub fn toggle_proxy_group(group_name: String) {
+    tauri::async_runtime::spawn(async move {
+        match cmds::patch_profiles_config_by_group(group_name).await {
+            Ok(_) => {
+                let _ = tray::Tray::global().update_menu();
+                handle::Handle::refresh_verge();
+            },
             Err(err) => log::error!(target: "app", "{err}"),
         }
     });
