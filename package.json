@@ -78,7 +78,7 @@
     "@types/react-dom": "18.3.5",
     "@types/react-transition-group": "4.4.12",
     "@types/sortablejs": "1.15.8",
-    "@vitejs/plugin-legacy": "6.0.0",
+    "@vitejs/plugin-legacy": "6.0.1",
     "@vitejs/plugin-react": "4.3.4",
     "adm-zip": "0.5.16",
     "autoprefixer": "10.4.20",
