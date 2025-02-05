@@ -22,6 +22,7 @@ pub fn copy_clash_env() -> CmdResult {
 
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
+    let _ = tray::Tray::global().update_menu();
     Ok(Config::profiles().data().clone())
 }
 
@@ -62,7 +63,6 @@ pub async fn delete_profile(index: String) -> CmdResult {
         wrap_err!(CoreManager::global().update_config().await)?;
         handle::Handle::refresh_clash();
     }
-
     Ok(())
 }
 
@@ -70,7 +70,6 @@ pub async fn delete_profile(index: String) -> CmdResult {
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
     wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
-
     match CoreManager::global().update_config().await {
         Ok(_) => {
             handle::Handle::refresh_clash();
@@ -85,6 +84,14 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
             Err(format!("{err}"))
         }
     }
+}
+
+/// 根据profile name修改profiles
+#[tauri::command]
+pub async fn patch_profiles_config_by_profile_name(profile_name: String) -> CmdResult {
+    let profile_id = Config::profiles().data().get_profile_uid(&profile_name);
+    let profiles = IProfiles{current: profile_id, items: None};
+    patch_profiles_config(profiles).await
 }
 
 /// 修改某个profile item的

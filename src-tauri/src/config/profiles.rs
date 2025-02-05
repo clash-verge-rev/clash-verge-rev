@@ -71,7 +71,6 @@ impl IProfiles {
         if let Some(current) = patch.current {
             let items = self.items.as_ref().unwrap();
             let some_uid = Some(current);
-
             if items.iter().any(|e| e.uid == some_uid) {
                 self.current = some_uid;
             }
@@ -463,6 +462,52 @@ impl IProfiles {
                 None
             }
             _ => None,
+        }
+    }
+
+    /// 获取current指向的profile名称
+    pub fn current_profile_name(&self) -> Option<String> {
+        match (self.current.as_ref(), self.items.as_ref()) {
+            (Some(current), Some(items)) => {
+                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
+                    return item.name.clone();
+                }
+                None
+            }
+            _ => None,
+        }
+    }
+
+    /// 判断profile是否是current指向的
+    pub fn is_current_profile(&self, profile_name: &str) -> bool {
+        match self.current_profile_name() {
+            Some(current_profile_name) => current_profile_name == profile_name,
+            None => false,
+        }
+    }
+
+    /// 根据profile名称获取uid
+    pub fn get_profile_uid(&self, profile_name: &str) -> Option<String> {
+        match self.items.as_ref() {
+            Some(items) => {
+                for item in items.iter() {
+                    if item.name.as_ref() == Some(&profile_name.to_string()) {
+                        return item.uid.clone();
+                    }
+                }
+                None
+            }
+            None => None,
+        }
+    }
+
+
+    /// 获取所有的profiles称
+    pub fn all_profile_names(&self) -> Option<Vec<String>> {
+        log::info!(target: "app", "{:?}", self.get_items());
+        match self.items.as_ref() {
+            Some(items) => Some(items.iter().filter_map(|e| e.name.clone()).collect()),
+            None => None,
         }
     }
 }

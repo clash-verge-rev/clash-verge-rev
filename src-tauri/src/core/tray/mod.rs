@@ -21,7 +21,7 @@ use parking_lot::RwLock;
 pub use speed_rate::{SpeedRate, Traffic};
 #[cfg(target_os = "macos")]
 use std::sync::Arc;
-use tauri::menu::CheckMenuItem;
+use tauri::menu::{CheckMenuItem, IsMenuItem};
 use tauri::AppHandle;
 use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
@@ -124,6 +124,10 @@ impl Tray {
                 .unwrap_or("rule")
                 .to_owned()
         };
+        let profile_names = Config::profiles()
+            .data()
+            .all_profile_names()
+            .unwrap_or(Vec::new());
 
         let tray = app_handle.tray_by_id("main").unwrap();
         let _ = tray.set_menu(Some(create_tray_menu(
@@ -131,6 +135,7 @@ impl Tray {
             Some(mode.as_str()),
             *system_proxy,
             *tun_mode,
+            profile_names,
         )?));
         Ok(())
     }
@@ -363,6 +368,7 @@ fn create_tray_menu(
     mode: Option<&str>,
     system_proxy_enabled: bool,
     tun_mode_enabled: bool,
+    profile_names: Vec<String>,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
     let version = VERSION.get().unwrap();
@@ -421,6 +427,33 @@ fn create_tray_menu(
         hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
     )
     .unwrap();
+
+    let profile_menu_items: Vec<CheckMenuItem<Wry>> = profile_names
+        .iter()
+        .map(|item| {
+        let is_current_profile = Config::profiles().data().is_current_profile(item);
+        CheckMenuItem::with_id(
+            app_handle,
+            &format!("profiles_{}", item),
+            t(&item),
+            true,
+            is_current_profile,
+            None::<&str>,
+        )
+        .unwrap()
+    }).collect();
+    let profile_menu_items: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
+        .iter()
+        .map(|item| item as &dyn IsMenuItem<Wry>)
+        .collect();
+
+    let profiles = &Submenu::with_id_and_items(
+        app_handle, 
+        "profiles", 
+        t("Profiles"),
+        true, 
+        &profile_menu_items,
+    ).unwrap();
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
@@ -530,6 +563,8 @@ fn create_tray_menu(
             global_mode,
             direct_mode,
             separator,
+            profiles,
+            separator,
             system_proxy,
             tun_mode,
             copy_env,
@@ -562,6 +597,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "quit" => {
             println!("quit");
             feat::quit(Some(0));
+        },
+        id if id.starts_with("profiles_") => {
+            let profile_name = &id["profiles_".len()..];
+            feat::toggle_proxy_profile(profile_name.into());
         }
         _ => {}
     }
