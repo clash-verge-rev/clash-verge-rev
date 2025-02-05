@@ -76,7 +76,7 @@ importers:
         version: 1.11.13
       foxact:
         specifier: ^0.2.41
-        version: 0.2.43(react@18.3.1)
+        version: 0.2.44(react@18.3.1)
       framer-motion:
         specifier: ^12.0.0
         version: 12.1.0(@emotion/is-prop-valid@1.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2439,8 +2439,8 @@ packages:
     resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
     engines: {node: '>=12.20.0'}
 
-  foxact@0.2.43:
-    resolution: {integrity: sha512-ZwLEW3l2jhC1ZJmrMs+l9WUFca1jtRDNnXKrZqq+rNvKfIHGyw0u8Ab8iwZPYPDb+B9C6NponyXInWYbVAcGLA==}
+  foxact@0.2.44:
+    resolution: {integrity: sha512-+dBx0dXnfTDuYrDIDXYVeQw+Dw6YEDwyZwvmkycCuzP78rWfE7xBSzlEIX46ge14hD4DZ3i2tTEE3SoDTAVihA==}
     peerDependencies:
       react: '*'
     peerDependenciesMeta:
@@ -6497,7 +6497,7 @@ snapshots:
     dependencies:
       fetch-blob: 3.2.0
 
-  foxact@0.2.43(react@18.3.1):
+  foxact@0.2.44(react@18.3.1):
     dependencies:
       client-only: 0.0.1
       server-only: 0.0.1
