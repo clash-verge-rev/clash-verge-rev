@@ -25,7 +25,11 @@ export const useRenderList = (mode: string) => {
   const { data: proxiesData, mutate: mutateProxies } = useSWR(
     "getProxies",
     getProxies,
-    { refreshInterval: 45000 },
+    {
+      refreshInterval: 2000,
+      dedupingInterval: 1000,
+      revalidateOnFocus: false,
+    },
   );
 
   const { verge } = useVerge();
