@@ -115,9 +115,6 @@ export const ConnectionTable = (props: Props) => {
       sx={{
         border: "none",
         "div:focus": { outline: "none !important" },
-        "& div[aria-rowindex]": {
-          backgroundColor: `${backgroundColor} !important`,
-        },
       }}
       columnVisibilityModel={columnVisible}
       onColumnVisibilityModelChange={(e) => setColumnVisible(e)}
