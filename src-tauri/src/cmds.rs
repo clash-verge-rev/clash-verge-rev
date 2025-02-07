@@ -88,9 +88,8 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
 
 /// 根据profile name修改profiles
 #[tauri::command]
-pub async fn patch_profiles_config_by_profile_name(profile_name: String) -> CmdResult {
-    let profile_id = Config::profiles().data().get_profile_uid(&profile_name);
-    let profiles = IProfiles{current: profile_id, items: None};
+pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult {
+    let profiles = IProfiles{current: Some(profile_index), items: None};
     patch_profiles_config(profiles).await
 }
 
