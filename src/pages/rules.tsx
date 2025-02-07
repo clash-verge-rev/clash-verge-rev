@@ -39,7 +39,12 @@ const RulesPage = () => {
     <BasePage
       full
       title={t("Rules")}
-      contentStyle={{ height: "100%" }}
+      contentStyle={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "auto",
+      }}
       header={
         <Box display="flex" alignItems="center" gap={1}>
           <ProviderButton />
@@ -59,34 +64,27 @@ const RulesPage = () => {
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
-      <Box
-        height="calc(100% - 65px)"
-        sx={{
-          margin: "10px",
-          borderRadius: "8px",
-          bgcolor: isDark ? "#282a36" : "#ffffff",
-          position: "relative",
-        }}
-      >
-        {rules.length > 0 ? (
-          <>
-            <Virtuoso
-              ref={virtuosoRef}
-              data={rules}
-              itemContent={(index, item) => (
-                <RuleItem index={index + 1} value={item} />
-              )}
-              followOutput={"smooth"}
-              scrollerRef={(ref) => {
-                if (ref) ref.addEventListener("scroll", handleScroll);
-              }}
-            />
-            <ScrollTopButton onClick={scrollToTop} show={showScrollTop} />
-          </>
-        ) : (
-          <BaseEmpty />
-        )}
-      </Box>
+      {rules.length > 0 ? (
+        <>
+          <Virtuoso
+            ref={virtuosoRef}
+            data={rules}
+            style={{
+              flex: 1,
+            }}
+            itemContent={(index, item) => (
+              <RuleItem index={index + 1} value={item} />
+            )}
+            followOutput={"smooth"}
+            scrollerRef={(ref) => {
+              if (ref) ref.addEventListener("scroll", handleScroll);
+            }}
+          />
+          <ScrollTopButton onClick={scrollToTop} show={showScrollTop} />
+        </>
+      ) : (
+        <BaseEmpty />
+      )}
     </BasePage>
   );
 };

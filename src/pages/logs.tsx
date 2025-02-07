@@ -44,7 +44,12 @@ const LogPage = () => {
     <BasePage
       full
       title={t("Logs")}
-      contentStyle={{ height: "100%" }}
+      contentStyle={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "auto",
+      }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
@@ -102,27 +107,21 @@ const LogPage = () => {
         />
       </Box>
 
-      <Box
-        height="calc(100% - 65px)"
-        sx={{
-          margin: "10px",
-          borderRadius: "8px",
-          bgcolor: isDark ? "#282a36" : "#ffffff",
-        }}
-      >
-        {filterLogs.length > 0 ? (
-          <Virtuoso
-            initialTopMostItemIndex={999}
-            data={filterLogs}
-            itemContent={(index, item) => (
-              <LogItem value={item} searchState={searchState} />
-            )}
-            followOutput={"smooth"}
-          />
-        ) : (
-          <BaseEmpty />
-        )}
-      </Box>
+      {filterLogs.length > 0 ? (
+        <Virtuoso
+          initialTopMostItemIndex={999}
+          data={filterLogs}
+          style={{
+            flex: 1,
+          }}
+          itemContent={(index, item) => (
+            <LogItem value={item} searchState={searchState} />
+          )}
+          followOutput={"smooth"}
+        />
+      ) : (
+        <BaseEmpty />
+      )}
     </BasePage>
   );
 };

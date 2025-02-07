@@ -139,7 +139,15 @@ const ConnectionsPage = () => {
     <BasePage
       full
       title={<span style={{ whiteSpace: "nowrap" }}>{t("Connections")}</span>}
-      contentStyle={{ height: "100%" }}
+      contentStyle={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "auto",
+        //    margin: "0 10px",
+        //  backgroundColor: isDark ? "#282a36" : "#ffffff",
+        borderRadius: "8px",
+      }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ mx: 1 }}>
@@ -185,6 +193,10 @@ const ConnectionsPage = () => {
           display: "flex",
           alignItems: "center",
           userSelect: "text",
+          //     backgroundColor: isDark ? "#282a36" : "#ffffff",
+          position: "sticky",
+          top: 0,
+          zIndex: 2,
         }}
       >
         {!isTableLayout && (
@@ -202,34 +214,29 @@ const ConnectionsPage = () => {
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
-      <Box
-        height="calc(100% - 65px)"
-        sx={{
-          userSelect: "text",
-          margin: "10px",
-          borderRadius: "8px",
-          bgcolor: isDark ? "#282a36" : "#ffffff",
-        }}
-      >
-        {filterConn.length === 0 ? (
-          <BaseEmpty />
-        ) : isTableLayout ? (
-          <ConnectionTable
-            connections={filterConn}
-            onShowDetail={(detail) => detailRef.current?.open(detail)}
-          />
-        ) : (
-          <Virtuoso
-            data={filterConn}
-            itemContent={(_, item) => (
-              <ConnectionItem
-                value={item}
-                onShowDetail={() => detailRef.current?.open(item)}
-              />
-            )}
-          />
-        )}
-      </Box>
+      {filterConn.length === 0 ? (
+        <BaseEmpty />
+      ) : isTableLayout ? (
+        <ConnectionTable
+          connections={filterConn}
+          onShowDetail={(detail) => detailRef.current?.open(detail)}
+        />
+      ) : (
+        <Virtuoso
+          style={{
+            flex: 1,
+            //    backgroundColor: isDark ? "#282a36" : "#ffffff",
+            borderRadius: "8px",
+          }}
+          data={filterConn}
+          itemContent={(_, item) => (
+            <ConnectionItem
+              value={item}
+              onShowDetail={() => detailRef.current?.open(item)}
+            />
+          )}
+        />
+      )}
       <ConnectionDetail ref={detailRef} />
     </BasePage>
   );
