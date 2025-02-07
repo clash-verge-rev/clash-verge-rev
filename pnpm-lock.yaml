@@ -91,7 +91,7 @@ importers:
         version: 0.52.2
       monaco-yaml:
         specifier: ^5.2.3
-        version: 5.3.0(monaco-editor@0.52.2)
+        version: 5.3.1(monaco-editor@0.52.2)
       nanoid:
         specifier: ^5.0.8
         version: 5.0.9
@@ -3084,8 +3084,8 @@ packages:
     peerDependencies:
       monaco-editor: '>=0.30.0'
 
-  monaco-yaml@5.3.0:
-    resolution: {integrity: sha512-BxRgK21kBMx5JpP+LAXsME4TTCtkIDiOJkvuCH2XOdxwKYIYahDWA29OoavbmzsuYDFbEeSTnqsYjLQtdis2CQ==}
+  monaco-yaml@5.3.1:
+    resolution: {integrity: sha512-1MN8i1Tnc8d8RugQGqv5jp+Ce2xtNhrnbm0ZZbe5ceExj9C2PkKZfHJhY9kbdUS4G7xSVwKlVdMTmLlStepOtw==}
     peerDependencies:
       monaco-editor: '>=0.36'
 
@@ -7318,7 +7318,7 @@ snapshots:
     dependencies:
       monaco-editor: 0.52.2
 
-  monaco-yaml@5.3.0(monaco-editor@0.52.2):
+  monaco-yaml@5.3.1(monaco-editor@0.52.2):
     dependencies:
       jsonc-parser: 3.3.1
       monaco-editor: 0.52.2
