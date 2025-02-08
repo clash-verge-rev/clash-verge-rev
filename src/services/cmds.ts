@@ -91,6 +91,10 @@ export async function patchClashConfig(payload: Partial<IConfigData>) {
   return invoke<void>("patch_clash_config", { payload });
 }
 
+export async function patchClashMode(payload: String) {
+  return invoke<void>("patch_clash_mode", { payload });
+}
+
 export async function getVergeConfig() {
   return invoke<IVergeConfig>("get_verge_config");
 }

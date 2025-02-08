@@ -66,7 +66,6 @@ pub fn restart_app() {
 pub fn change_clash_mode(mode: String) {
     let mut mapping = Mapping::new();
     mapping.insert(Value::from("mode"), mode.clone().into());
-
     tauri::async_runtime::spawn(async move {
         log::debug!(target: "app", "change clash mode to {mode}");
 
