@@ -98,6 +98,9 @@ pub struct IVerge {
     /// hotkey map
     /// format: {func},{key}
     pub hotkeys: Option<Vec<String>>,
+    
+    /// enable global hotkey
+    pub enable_global_hotkey: Option<bool>,
 
     /// 切换代理时自动关闭连接
     pub auto_close_connection: Option<bool>,
@@ -279,6 +282,7 @@ impl IVerge {
             webdav_username: None,
             webdav_password: None,
             enable_tray_speed: Some(true),
+            enable_global_hotkey: Some(true),
             ..Self::default()
         }
     }
@@ -345,6 +349,7 @@ impl IVerge {
         patch!(web_ui_list);
         patch!(clash_core);
         patch!(hotkeys);
+        patch!(enable_global_hotkey);
 
         patch!(auto_close_connection);
         patch!(auto_check_update);
@@ -411,6 +416,7 @@ pub struct IVergeResponse {
     pub enable_silent_start: Option<bool>,
     pub enable_system_proxy: Option<bool>,
     pub enable_proxy_guard: Option<bool>,
+    pub enable_global_hotkey: Option<bool>,
     pub use_default_bypass: Option<bool>,
     pub system_proxy_bypass: Option<String>,
     pub proxy_guard_duration: Option<u64>,
@@ -472,6 +478,7 @@ impl From<IVerge> for IVergeResponse {
             enable_silent_start: verge.enable_silent_start,
             enable_system_proxy: verge.enable_system_proxy,
             enable_proxy_guard: verge.enable_proxy_guard,
+            enable_global_hotkey: verge.enable_global_hotkey,
             use_default_bypass: verge.use_default_bypass,
             system_proxy_bypass: verge.system_proxy_bypass,
             proxy_guard_duration: verge.proxy_guard_duration,

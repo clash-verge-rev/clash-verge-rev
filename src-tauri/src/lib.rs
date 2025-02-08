@@ -6,6 +6,7 @@ mod feat;
 mod utils;
 use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
+use config::Config;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
 
@@ -159,6 +160,12 @@ pub fn run() {
                         {
                             log_err!(hotkey::Hotkey::global().register("Control+Q", "quit"));
                         };
+                        {   
+                            let is_enable_global_hotkey = { Config::verge().draft().enable_global_hotkey }.unwrap();
+                            if !is_enable_global_hotkey {
+                                log_err!(hotkey::Hotkey::global().init())
+                            }
+                        }
                     }
                     tauri::WindowEvent::Focused(false) => {
                         #[cfg(target_os = "macos")]
@@ -169,6 +176,14 @@ pub fn run() {
                         {
                             log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
                         };
+                        {   
+                            let is_enable_global_hotkey = { Config::verge().draft().enable_global_hotkey }.unwrap();
+                            if !is_enable_global_hotkey {
+                                log_err!(hotkey::Hotkey::global().reset())
+                            } else {
+                                log_err!(hotkey::Hotkey::global().init())
+                            }
+                        }
                     }
                     tauri::WindowEvent::Destroyed => {
                         #[cfg(target_os = "macos")]

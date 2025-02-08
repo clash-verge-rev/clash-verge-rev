@@ -328,6 +328,7 @@
   "Default Latency Test Info": "仅用于 HTTP 客户端请求测试，不会对配置文件产生影响",
   "Default Latency Timeout": "测试超时时间",
   "Hotkey Setting": "热键设置",
+  "Enable Global Hotkey": "启用全局热键",
   "open_or_close_dashboard": "打开/关闭面板",
   "clash_mode_rule": "规则模式",
   "clash_mode_global": "全局模式",

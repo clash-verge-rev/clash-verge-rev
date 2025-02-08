@@ -45,6 +45,13 @@ impl Hotkey {
         Ok(())
     }
 
+    pub fn reset(&self) -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let manager = app_handle.global_shortcut();
+        manager.unregister_all()?;
+        Ok(())
+    }
+
     pub fn register(&self, hotkey: &str, func: &str) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let manager = app_handle.global_shortcut();
@@ -76,7 +83,17 @@ impl Hotkey {
                         }
                     }
                 } else {
-                    f();
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        let is_enable_global_hotkey = { Config::verge().latest().enable_global_hotkey} .unwrap();
+                        let is_visible = window.is_visible().unwrap_or(false);
+                        let is_focused = window.is_focused().unwrap_or(false);
+
+                        if is_enable_global_hotkey {
+                            f();
+                        } else if is_focused && is_visible {
+                            f();
+                        }
+                    }
                 }
             }
         });
@@ -89,7 +106,6 @@ impl Hotkey {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let manager = app_handle.global_shortcut();
         manager.unregister(hotkey)?;
-
         log::debug!(target: "app", "unregister hotkey {hotkey}");
         Ok(())
     }
