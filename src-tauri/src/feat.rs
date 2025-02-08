@@ -209,10 +209,12 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let http_enabled = patch.verge_http_enabled;
     let http_port = patch.verge_port;
     let enable_tray_speed = patch.enable_tray_speed;
+    let enable_global_hotkey = patch.enable_global_hotkey;
 
     let res: std::result::Result<(), anyhow::Error> = {
         let mut should_restart_core = false;
         let mut should_update_clash_config = false;
+        let mut should_update_verge_config = false;
         let mut should_update_launch = false;
         let mut should_update_sysproxy = false;
         let mut should_update_systray_icon = false;
@@ -226,12 +228,13 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
             should_update_systray_tooltip = true;
             should_update_systray_icon = true;
         }
-
+        if enable_global_hotkey.is_some() {
+            should_update_verge_config = true;
+        }
         #[cfg(not(target_os = "windows"))]
         if redir_enabled.is_some() || redir_port.is_some() {
             should_restart_core = true;
         }
-
         #[cfg(target_os = "linux")]
         if tproxy_enabled.is_some() || tproxy_port.is_some() {
             should_restart_core = true;
@@ -285,6 +288,10 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if should_update_clash_config {
             CoreManager::global().update_config().await?;
             handle::Handle::refresh_clash();
+        }
+        if should_update_verge_config {
+            Config::verge().draft().enable_global_hotkey = enable_global_hotkey;
+            handle::Handle::refresh_verge();
         }
         if should_update_launch {
             sysopt::Sysopt::global().update_launch()?;
