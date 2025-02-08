@@ -105,9 +105,9 @@ pub fn toggle_system_proxy() {
 }
 
 // 切换代理文件
-pub fn toggle_proxy_profile(profile_name: String) {
+pub fn toggle_proxy_profile(profile_index: String) {
     tauri::async_runtime::spawn(async move {
-        match cmds::patch_profiles_config_by_profile_name(profile_name).await {
+        match cmds::patch_profiles_config_by_profile_index(profile_index).await {
             Ok(_) => {
                 let _ = tray::Tray::global().update_menu();
                 handle::Handle::refresh_verge();

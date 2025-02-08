@@ -124,9 +124,9 @@ impl Tray {
                 .unwrap_or("rule")
                 .to_owned()
         };
-        let profile_names = Config::profiles()
+        let profile_uid_and_name = Config::profiles()
             .data()
-            .all_profile_names()
+            .all_profile_uid_and_name()
             .unwrap_or(Vec::new());
 
         let tray = app_handle.tray_by_id("main").unwrap();
@@ -135,7 +135,7 @@ impl Tray {
             Some(mode.as_str()),
             *system_proxy,
             *tun_mode,
-            profile_names,
+            profile_uid_and_name,
         )?));
         Ok(())
     }
@@ -368,7 +368,7 @@ fn create_tray_menu(
     mode: Option<&str>,
     system_proxy_enabled: bool,
     tun_mode_enabled: bool,
-    profile_names: Vec<String>,
+    profile_uid_and_name: Vec<(String, String)>,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
     let version = VERSION.get().unwrap();
@@ -388,6 +388,25 @@ fn create_tray_menu(
                 .collect::<std::collections::HashMap<String, String>>()
         })
         .unwrap_or_default();
+    
+    let profile_menu_items: Vec<CheckMenuItem<Wry>> = profile_uid_and_name
+        .iter()
+        .map(|(profile_uid, profile_name)| {
+        let is_current_profile = Config::profiles().data().is_current_profile_index(profile_uid.to_string());
+        CheckMenuItem::with_id(
+            app_handle,
+            &format!("profiles_{}", profile_uid),
+            t(&profile_name),
+            true,
+            is_current_profile,
+            None::<&str>,
+        )
+        .unwrap()
+    }).collect();
+    let profile_menu_items: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
+        .iter()
+        .map(|item| item as &dyn IsMenuItem<Wry>)
+        .collect();
 
     let open_window = &MenuItem::with_id(
         app_handle,
@@ -427,25 +446,6 @@ fn create_tray_menu(
         hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
     )
     .unwrap();
-
-    let profile_menu_items: Vec<CheckMenuItem<Wry>> = profile_names
-        .iter()
-        .map(|item| {
-        let is_current_profile = Config::profiles().data().is_current_profile(item);
-        CheckMenuItem::with_id(
-            app_handle,
-            &format!("profiles_{}", item),
-            t(&item),
-            true,
-            is_current_profile,
-            None::<&str>,
-        )
-        .unwrap()
-    }).collect();
-    let profile_menu_items: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
-        .iter()
-        .map(|item| item as &dyn IsMenuItem<Wry>)
-        .collect();
 
     let profiles = &Submenu::with_id_and_items(
         app_handle, 
@@ -599,8 +599,8 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             feat::quit(Some(0));
         },
         id if id.starts_with("profiles_") => {
-            let profile_name = &id["profiles_".len()..];
-            feat::toggle_proxy_profile(profile_name.into());
+            let profile_index = &id["profiles_".len()..];
+            feat::toggle_proxy_profile(profile_index.into());
         }
         _ => {}
     }
