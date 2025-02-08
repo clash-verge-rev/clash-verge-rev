@@ -121,7 +121,7 @@ importers:
         version: 0.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-virtuoso:
         specifier: ^4.12.0
-        version: 4.12.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 4.12.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       sockette:
         specifier: ^2.0.6
         version: 2.0.6
@@ -3514,9 +3514,8 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
 
-  react-virtuoso@4.12.4:
-    resolution: {integrity: sha512-SybXyLjCHbv5nQV9AkyP+MKCNsnK6h5tHWx2zt9vTs4MvrPzykq4k37LrL5UqK2Ou5MUk1htoUZCbrDB0V2nLg==}
-    engines: {node: '22'}
+  react-virtuoso@4.12.5:
+    resolution: {integrity: sha512-YeCbRRsC9CLf0buD0Rct7WsDbzf+yBU1wGbo05/XjbcN2nJuhgh040m3y3+6HVogTZxEqVm45ac9Fpae4/MxRQ==}
     peerDependencies:
       react: '>=16 || >=17 || >= 18 || >= 19'
       react-dom: '>=16 || >=17 || >= 18 || >=19'
@@ -7685,7 +7684,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  react-virtuoso@4.12.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-virtuoso@4.12.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
