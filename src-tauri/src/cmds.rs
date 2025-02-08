@@ -176,6 +176,12 @@ pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
 }
 
 #[tauri::command]
+pub async fn patch_clash_mode(payload: String) -> CmdResult {
+    Ok(feat::change_clash_mode(payload))
+}
+
+
+#[tauri::command]
 pub fn get_verge_config() -> CmdResult<IVergeResponse> {
     let verge = Config::verge();
     let verge_data = verge.data().clone();

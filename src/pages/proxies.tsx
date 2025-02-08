@@ -4,7 +4,7 @@ import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { closeAllConnections, getClashConfig } from "@/services/api";
-import { patchClashConfig } from "@/services/cmds";
+import { patchClashConfig, patchClashMode } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { BasePage } from "@/components/base";
 import { ProxyGroups } from "@/components/proxy/proxy-groups";
@@ -29,7 +29,7 @@ const ProxyPage = () => {
     if (mode !== curMode && verge?.auto_close_connection) {
       closeAllConnections();
     }
-    await patchClashConfig({ mode });
+    await patchClashMode(mode);
     mutateClash();
   });
 

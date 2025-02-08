@@ -83,6 +83,7 @@ pub fn run() {
             // clash
             cmds::get_clash_info,
             cmds::patch_clash_config,
+            cmds::patch_clash_mode,
             cmds::change_clash_core,
             cmds::get_runtime_config,
             cmds::get_runtime_yaml,
