@@ -70,7 +70,7 @@ importers:
         version: 1.7.9
       console-feed:
         specifier: ^3.6.0
-        version: 3.6.0(jquery@3.7.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 3.8.0(jquery@3.7.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       dayjs:
         specifier: 1.11.13
         version: 1.11.13
@@ -2144,10 +2144,10 @@ packages:
     resolution: {integrity: sha512-nlOhI4+fdzoK5xmJ+NY+1gZK56bwEaWZr8fYuXohZ9Vkc1o3a4T/R3M+yE/w7x/ZVJ1zF8c+oaOvF0dztdUgmA==}
     engines: {node: '>=4'}
 
-  console-feed@3.6.0:
-    resolution: {integrity: sha512-eeMvRE2YkkLKhDJ16P5qEaM92tVLSI1DwqMBD5v7cmcvrU1WRGoKh4xpOAkzCqK3y/mAkqsMa8dDEafNi1uJ3w==}
+  console-feed@3.8.0:
+    resolution: {integrity: sha512-H7d5dbVOmsujpMdI252RGHKxGwTybRI9o1aDUe2xDeVC63Koqh/QC7Rvo48EYcU3aMCM4OgWHKKISsZ2dMLX7w==}
     peerDependencies:
-      react: ^15.x || ^16.x || ^17.x || ^18.x
+      react: ^15.x || ^16.x || ^17.x || ^18.x || ^19.x
 
   convert-source-map@1.9.0:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
@@ -4269,14 +4269,14 @@ snapshots:
   '@babel/helper-member-expression-to-functions@7.25.9':
     dependencies:
       '@babel/traverse': 7.25.9
-      '@babel/types': 7.26.0
+      '@babel/types': 7.26.7
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helper-module-imports@7.25.9':
     dependencies:
-      '@babel/traverse': 7.25.9
-      '@babel/types': 7.26.0
+      '@babel/traverse': 7.26.7
+      '@babel/types': 7.26.7
     transitivePeerDependencies:
       - supports-color
 
@@ -4300,7 +4300,7 @@ snapshots:
 
   '@babel/helper-optimise-call-expression@7.25.9':
     dependencies:
-      '@babel/types': 7.26.0
+      '@babel/types': 7.26.7
 
   '@babel/helper-plugin-utils@7.25.9': {}
 
@@ -4341,7 +4341,7 @@ snapshots:
     dependencies:
       '@babel/template': 7.25.9
       '@babel/traverse': 7.25.9
-      '@babel/types': 7.26.0
+      '@babel/types': 7.26.7
     transitivePeerDependencies:
       - supports-color
 
@@ -5993,7 +5993,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.26.7
       cosmiconfig: 6.0.0
-      resolve: 1.22.9
+      resolve: 1.22.10
 
   babel-plugin-macros@3.1.0:
     dependencies:
@@ -6213,7 +6213,7 @@ snapshots:
       write-file-atomic: 2.4.3
       xdg-basedir: 3.0.0
 
-  console-feed@3.6.0(jquery@3.7.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  console-feed@3.8.0(jquery@3.7.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@emotion/core': 10.3.1(react@18.3.1)
       '@emotion/styled': 10.3.0(@emotion/core@10.3.1(react@18.3.1))(react@18.3.1)
@@ -6242,7 +6242,7 @@ snapshots:
   cosmiconfig@6.0.0:
     dependencies:
       '@types/parse-json': 4.0.2
-      import-fresh: 3.3.0
+      import-fresh: 3.3.1
       parse-json: 5.2.0
       path-type: 4.0.0
       yaml: 1.10.2
@@ -6814,7 +6814,6 @@ snapshots:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
-    optional: true
 
   import-lazy@2.1.0: {}
 
