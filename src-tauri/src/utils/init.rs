@@ -15,19 +15,21 @@ use tauri_plugin_shell::ShellExt;
 
 /// initialize this instance's log file
 fn init_log() -> Result<()> {
+    println!("Starting log initialization...");
+
     let log_dir = dirs::app_logs_dir()?;
     if !log_dir.exists() {
+        println!("Creating log directory: {:?}", log_dir);
         let _ = fs::create_dir_all(&log_dir);
     }
 
     let log_level = Config::verge().data().get_log_level();
+    println!("Current log level: {:?}", log_level);
+    
     if log_level == LevelFilter::Off {
+        println!("Logging is disabled");
         return Ok(());
     }
-
-    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-    let log_file = format!("{}.log", local_time);
-    let log_file = log_dir.join(log_file);
 
     let log_pattern = match log_level {
         LevelFilter::Trace => "{d(%Y-%m-%d %H:%M:%S)} {l} [{M}] - {m}{n}",
@@ -35,27 +37,45 @@ fn init_log() -> Result<()> {
     };
 
     let encode = Box::new(PatternEncoder::new(log_pattern));
-
     let stdout = ConsoleAppender::builder().encoder(encode.clone()).build();
+
+    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
+    let log_file = format!("{}.log", local_time);
+    let log_file = log_dir.join(log_file);
+    println!("Log file path: {:?}", log_file);
+    
     let tofile = FileAppender::builder().encoder(encode).build(log_file)?;
 
     let mut logger_builder = Logger::builder();
     let mut root_builder = Root::builder();
 
     let log_more = log_level == LevelFilter::Trace || log_level == LevelFilter::Debug;
-
-    logger_builder = logger_builder.appenders(["file"]);
+    logger_builder = logger_builder.appenders(["stdout", "file"]);
+    root_builder = root_builder.appender("stdout");
     if log_more {
-        root_builder = root_builder.appenders(["file"]);
+        root_builder = root_builder.appender("file");
     }
 
-    let (config, _) = log4rs::config::Config::builder()
+    println!("Building log config...");
+    let config = log4rs::config::Config::builder()
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
         .appender(Appender::builder().build("file", Box::new(tofile)))
         .logger(logger_builder.additive(false).build("app", log_level))
-        .build_lossy(root_builder.build(log_level));
+        .build(root_builder.build(log_level))
+        .map_err(|e| anyhow::anyhow!("Failed to build log config: {}", e))?;
 
-    log4rs::init_config(config)?;
+    println!("Initializing log config...");
+    match log4rs::init_config(config) {
+        Ok(_) => println!("Log system initialized successfully"),
+        Err(e) => println!("Failed to initialize log system: {}", e),
+    }
+
+    // 测试日志系统
+    log::error!(target: "app", "Test error log message");
+    log::warn!(target: "app", "Test warning log message");
+    log::info!(target: "app", "Test info log message");
+    log::debug!(target: "app", "Test debug log message");
+    log::trace!(target: "app", "Test trace log message");
 
     Ok(())
 }
