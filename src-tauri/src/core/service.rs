@@ -161,20 +161,49 @@ pub async fn reinstall_service() -> Result<()> {
 
 /// check the windows service status
 pub async fn check_service() -> Result<JsonResponse> {
+    log::info!(target: "app", "Checking service status");
+    println!("Checking service status");
+    
     let url = format!("{SERVICE_URL}/get_clash");
-    let response = reqwest::ClientBuilder::new()
+    log::debug!(target: "app", "Sending request to {}", url);
+    println!("Sending request to {}", url);
+    
+    let client = reqwest::ClientBuilder::new()
         .no_proxy()
         .timeout(Duration::from_secs(3))
-        .build()?
-        .get(url)
-        .send()
-        .await
-        .context("failed to connect to the Clash Verge Service")?
-        .json::<JsonResponse>()
-        .await
-        .context("failed to parse the Clash Verge Service response")?;
-
-    Ok(response)
+        .build()?;
+    
+    // 重试3次
+    for i in 0..3 {
+        match client.get(&url).send().await {
+            Ok(resp) => {
+                match resp.json::<JsonResponse>().await {
+                    Ok(json) => {
+                        log::info!(target: "app", "Service check response: {:?}", json);
+                        println!("Service check response: {:?}", json);
+                        return Ok(json);
+                    }
+                    Err(e) => {
+                        log::error!(target: "app", "Failed to parse service response (attempt {}): {}", i + 1, e);
+                        println!("Failed to parse service response (attempt {}): {}", i + 1, e);
+                        if i == 2 {
+                            return Err(e.into());
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                log::error!(target: "app", "Failed to connect to service (attempt {}): {}", i + 1, e);
+                println!("Failed to connect to service (attempt {}): {}", i + 1, e);
+                if i == 2 {
+                    return Err(e.into());
+                }
+            }
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+    }
+    
+    bail!("Failed to check service after 3 attempts")
 }
 
 /// start the clash by service
@@ -219,14 +248,32 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 
 /// stop the clash by service
 pub(super) async fn stop_core_by_service() -> Result<()> {
+    log::info!(target: "app", "Attempting to stop core through service");
+    
     let url = format!("{SERVICE_URL}/stop_clash");
-    let _ = reqwest::ClientBuilder::new()
+    let client = reqwest::ClientBuilder::new()
         .no_proxy()
-        .build()?
-        .post(url)
-        .send()
-        .await
-        .context("failed to connect to the Clash Verge Service")?;
-
-    Ok(())
+        .timeout(Duration::from_secs(3))
+        .build()?;
+    
+    // 重试2次
+    for i in 0..2 {
+        match client.post(&url).send().await {
+            Ok(_) => {
+                log::info!(target: "app", "Successfully sent stop request to service");
+                // 等待服务停止
+                tokio::time::sleep(Duration::from_millis(500)).await;
+                return Ok(());
+            }
+            Err(e) => {
+                log::error!(target: "app", "Failed to send stop request (attempt {}): {}", i + 1, e);
+                if i == 1 {
+                    return Err(e.into());
+                }
+            }
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+    }
+    
+    bail!("Failed to stop service after 2 attempts")
 }
