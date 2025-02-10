@@ -5,7 +5,6 @@ use sysinfo::{Pid, System, Signal};
 use crate::utils::dirs;
 use std::time::Duration;
 
-const TERM_WAIT: Duration = Duration::from_millis(500);
 const KILL_WAIT: Duration = Duration::from_millis(500);
 const FINAL_WAIT: Duration = Duration::from_millis(1000);
 
@@ -23,68 +22,49 @@ impl ProcessLock {
     }
 
     fn is_target_process(process_name: &str) -> bool {
-        (process_name.contains("mihomo") || process_name.contains("clash")) 
-            && !process_name.contains("clash-verge") 
-            && !process_name.contains("clash.meta")
+        let name = process_name.to_lowercase();
+        (name.contains("mihomo") || name.contains("clash")) 
+            && !name.contains("clash-verge") 
+            && !name.contains("clash.meta")
     }
 
     fn kill_process(pid: Pid, process: &sysinfo::Process) -> bool {
         let process_name = process.name().to_string_lossy().to_lowercase();
         let process_pid = pid.as_u32();
         
-        println!("Terminating clash core process (PID: {}, Name: {})", process_pid, process_name);
-        log::info!(target: "app", "Terminating clash core process (PID: {}, Name: {})", process_pid, process_name);
+        println!("Force killing process (PID: {}, Name: {})", process_pid, process_name);
+        log::info!(target: "app", "Force killing process (PID: {}, Name: {})", process_pid, process_name);
         
-        // 首先尝试正常终止
+        // 直接使用 SIGKILL 强制终止
         #[cfg(not(target_os = "windows"))]
         {
-            println!("Sending SIGTERM to process {}", process_pid);
-            log::info!(target: "app", "Sending SIGTERM to process {}", process_pid);
-            let _ = process.kill_with(Signal::Term);
+            println!("Sending SIGKILL to process {}", process_pid);
+            log::info!(target: "app", "Sending SIGKILL to process {}", process_pid);
+            let _ = process.kill_with(Signal::Kill);
         }
         #[cfg(target_os = "windows")]
         {
-            println!("Killing process {}", process_pid);
-            log::info!(target: "app", "Killing process {}", process_pid);
+            println!("Force killing process {}", process_pid);
+            log::info!(target: "app", "Force killing process {}", process_pid);
             process.kill();
         }
         
-        std::thread::sleep(TERM_WAIT);
+        std::thread::sleep(KILL_WAIT);
         
         // 检查进程是否还在运行
-        let mut new_sys = System::new();
-        new_sys.refresh_all();
-        if let Some(p) = new_sys.process(pid) {
-            println!("Process {} still running, trying force kill", process_pid);
-            log::info!(target: "app", "Process {} still running, trying force kill", process_pid);
-            
-            #[cfg(not(target_os = "windows"))]
-            {
-                println!("Sending SIGKILL to process {}", process_pid);
-                log::info!(target: "app", "Sending SIGKILL to process {}", process_pid);
-                let _ = p.kill_with(Signal::Kill);
-            }
-            #[cfg(target_os = "windows")]
-            {
-                println!("Force killing process {}", process_pid);
-                log::info!(target: "app", "Force killing process {}", process_pid);
-                p.kill();
-            }
-            
-            std::thread::sleep(KILL_WAIT);
-            
-            // 再次检查进程是否存在
-            new_sys.refresh_all();
-            if new_sys.process(pid).is_some() {
-                println!("Failed to terminate process {}", process_pid);
-                log::error!(target: "app", "Failed to terminate process {}", process_pid);
-                return false;
-            }
+        let mut sys = System::new();
+        sys.refresh_all();
+        
+        let is_terminated = sys.process(pid).is_none();
+        if !is_terminated {
+            println!("Failed to terminate process {}", process_pid);
+            log::error!(target: "app", "Failed to terminate process {}", process_pid);
+        } else {
+            println!("Process {} has been terminated", process_pid);
+            log::info!(target: "app", "Process {} has been terminated", process_pid);
         }
         
-        println!("Process {} has been terminated", process_pid);
-        log::info!(target: "app", "Process {} has been terminated", process_pid);
-        true
+        is_terminated
     }
 
     fn kill_other_processes(include_current: bool) -> Result<()> {
@@ -95,48 +75,48 @@ impl ProcessLock {
         sys.refresh_all();
         
         let current_pid = std::process::id();
-        println!("Current process ID: {}", current_pid);
-        log::info!(target: "app", "Current process ID: {}", current_pid);
-        
-        let mut killed = false;
         let mut failed_kills = Vec::new();
         
-        for (pid, process) in sys.processes() {
-            let process_name = process.name().to_string_lossy().to_lowercase();
-            
-            if Self::is_target_process(&process_name) {
+        // 收集需要终止的进程
+        let target_processes: Vec<_> = sys.processes()
+            .iter()
+            .filter(|(pid, process)| {
                 let process_pid = pid.as_u32();
-                if include_current || process_pid != current_pid {
-                    if !Self::kill_process(*pid, process) {
-                        failed_kills.push((process_pid, process_name.clone()));
-                    }
-                    killed = true;
-                }
+                let process_name = process.name().to_string_lossy();
+                
+                Self::is_target_process(&process_name) && 
+                (include_current || process_pid != current_pid)
+            })
+            .collect();
+        
+        // 如果没有目标进程，直接返回
+        if target_processes.is_empty() {
+            println!("No target processes found");
+            log::info!(target: "app", "No target processes found");
+            return Ok(());
+        }
+        
+        // 终止进程
+        for (pid, process) in target_processes {
+            if !Self::kill_process(*pid, process) {
+                failed_kills.push((pid.as_u32(), process.name().to_string_lossy().to_string()));
             }
         }
         
-        if killed {
-            std::thread::sleep(FINAL_WAIT);
-            
-            // 最终检查
-            let mut final_sys = System::new();
-            final_sys.refresh_all();
-            
-            let remaining: Vec<_> = final_sys.processes()
-                .iter()
-                .filter(|(_, process)| {
-                    let name = process.name().to_string_lossy().to_lowercase();
-                    Self::is_target_process(&name)
-                })
-                .map(|(pid, process)| {
-                    (pid.as_u32(), process.name().to_string_lossy().to_string())
-                })
-                .collect();
-            
-            if !remaining.is_empty() {
-                log::error!(target: "app", "Failed to terminate some processes: {:?}", remaining);
-                bail!("Failed to terminate processes: {:?}", remaining);
-            }
+        // 最终检查
+        std::thread::sleep(FINAL_WAIT);
+        sys.refresh_all();
+        
+        let remaining: Vec<_> = sys.processes()
+            .iter()
+            .filter(|(_, process)| Self::is_target_process(&process.name().to_string_lossy()))
+            .map(|(pid, process)| (pid.as_u32(), process.name().to_string_lossy().to_string()))
+            .collect();
+        
+        if !remaining.is_empty() {
+            println!("Failed to terminate processes: {:?}", remaining);
+            log::error!(target: "app", "Failed to terminate processes: {:?}", remaining);
+            bail!("Failed to terminate processes: {:?}", remaining);
         }
         
         println!("Process cleanup completed");
@@ -181,7 +161,6 @@ impl ProcessLock {
 
 impl Drop for ProcessLock {
     fn drop(&mut self) {
-        // 只在 PID 文件还存在时执行释放
         if self.pid_file.exists() {
             println!("ProcessLock being dropped");
             log::info!(target: "app", "ProcessLock being dropped");
