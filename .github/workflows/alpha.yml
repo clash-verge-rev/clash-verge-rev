@@ -70,6 +70,15 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
+      - name: Prepare Updater Files
+        run: |
+          mkdir -p updater
+          echo '{
+            "version": "'$(cat package.json | jq -r .version)'",
+            "notes": "More new features are now supported.",
+            "pub_date": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"
+          }' > updater/update.json
+
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
