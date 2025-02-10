@@ -162,7 +162,7 @@ pub fn run() {
                             log_err!(hotkey::Hotkey::global().register("Control+Q", "quit"));
                         };
                         {   
-                            let is_enable_global_hotkey = { Config::verge().draft().enable_global_hotkey }.unwrap();
+                            let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
                             if !is_enable_global_hotkey {
                                 log_err!(hotkey::Hotkey::global().init())
                             }
@@ -178,11 +178,9 @@ pub fn run() {
                             log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
                         };
                         {   
-                            let is_enable_global_hotkey = { Config::verge().draft().enable_global_hotkey }.unwrap();
+                            let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
                             if !is_enable_global_hotkey {
                                 log_err!(hotkey::Hotkey::global().reset())
-                            } else {
-                                log_err!(hotkey::Hotkey::global().init())
                             }
                         }
                     }
