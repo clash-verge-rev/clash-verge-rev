@@ -326,6 +326,7 @@
   "Default Latency Test Info": "يُستخدم فقط لاختبار طلب HTTP العميل. لن يؤثر على ملف التكوين",
   "Default Latency Timeout": "مهلة التأخير الافتراضية",
   "Hotkey Setting": "إعدادات الاختصارات",
+  "Enable Global Hotkey": "تمكين مفتاح التشغيل السريع العالمي",
   "open_or_close_dashboard": "فتح/إغلاق لوحة التحكم",
   "clash_mode_rule": "وضع القواعد",
   "clash_mode_global": "الوضع العالمي",
