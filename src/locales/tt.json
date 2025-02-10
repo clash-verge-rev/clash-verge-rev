@@ -327,6 +327,7 @@
   "Default Latency Test Info": "Бу фәкать клиентның HTTP сораулары тесты өчен кулланыла, конфигурация файлына йогынты ясамый",
   "Default Latency Timeout": "Тоткарлануның стандарт таймауты",
   "Hotkey Setting": "Клавиатура төймәләре (hotkey) көйләүләре",
+  "Enable Global Hotkey": "Глобаль Хоткейны кушу",
   "open_or_close_dashboard": "Панельне ачу/ябу",
   "clash_mode_rule": "Кагыйдәләр режимы",
   "clash_mode_global": "Глобаль режим",

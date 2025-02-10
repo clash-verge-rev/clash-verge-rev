@@ -328,6 +328,7 @@
   "Default Latency Test Info": "Используется только для тестирования HTTP-запросов клиента и не влияет на файл конфигурации",
   "Default Latency Timeout": "Таймаут задержки по умолчанию",
   "Hotkey Setting": "Настройки клавиатурных сокращений",
+  "Enable Global Hotkey": "Включить глобальную горячую клавишу",
   "open_or_close_dashboard": "Открыть/Закрыть панель управления",
   "clash_mode_rule": "Режим правил",
   "clash_mode_global": "Глобальный режим",
