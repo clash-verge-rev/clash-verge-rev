@@ -359,6 +359,7 @@
   "Default Latency Test Info": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi",
   "Default Latency Timeout": "Waktu Habis Latensi Default",
   "Hotkey Setting": "Pengaturan Pintasan",
+  "Enable Global Hotkey": "Aktifkan Hotkey Global",
   "open_or_close_dashboard": "Buka/Tutup Dasbor",
   "clash_mode_rule": "Mode Aturan",
   "clash_mode_global": "Mode Global",

@@ -328,6 +328,7 @@
   "Default Latency Test Info": "فقط برای تست درخواست‌های کلاینت HTTP استفاده می‌شود و بر فایل پیکربندی تأثیری نخواهد داشت",
   "Default Latency Timeout": "زمان انتظار تأخیر پیش‌فرض",
   "Hotkey Setting": "تنظیمات کلیدهای میانبر",
+  "Enable Global Hotkey": "فعال کردن کلید میانبر سراسری",
   "open_or_close_dashboard": "باز/بستن داشبورد",
   "clash_mode_rule": "حالت قانون",
   "clash_mode_global": "حالت جهانی",

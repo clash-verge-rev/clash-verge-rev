@@ -328,6 +328,7 @@
   "Default Latency Test Info": "Used for HTTP client request testing only and won't make a difference to the configuration file",
   "Default Latency Timeout": "Default Latency Timeout",
   "Hotkey Setting": "Hotkey Setting",
+  "Enable Global Hotkey": "Enable Global Hotkey",
   "open_or_close_dashboard": "Open/Close Dashboard",
   "clash_mode_rule": "Rule Mode",
   "clash_mode_global": "Global Mode",
