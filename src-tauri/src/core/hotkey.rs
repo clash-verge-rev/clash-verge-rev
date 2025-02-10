@@ -84,7 +84,7 @@ impl Hotkey {
                     }
                 } else {
                     if let Some(window) = app_handle.get_webview_window("main") {
-                        let is_enable_global_hotkey = { Config::verge().latest().enable_global_hotkey} .unwrap();
+                        let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
                         let is_visible = window.is_visible().unwrap_or(false);
                         let is_focused = window.is_focused().unwrap_or(false);
 
