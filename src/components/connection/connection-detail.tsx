@@ -51,8 +51,8 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
   const chains = [...data.chains].reverse().join(" / ");
   const rule = rulePayload ? `${data.rule}(${rulePayload})` : data.rule;
   const host = metadata.host
-    ? `${metadata.host}:${metadata.destinationPort}`
-    : `${metadata.destinationIP}:${metadata.destinationPort}`;
+    ? `${metadata.host}:${metadata.remoteDestination}`
+    : `${metadata.remoteDestination}:${metadata.destinationPort}`;
 
   const information = [
     { label: t("Host"), value: host },
@@ -79,7 +79,8 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
       label: t("Source"),
       value: `${metadata.sourceIP}:${metadata.sourcePort}`,
     },
-    { label: t("Destination IP"), value: metadata.destinationIP },
+    { label: t("Destination"), value: metadata.remoteDestination },
+    { label: t("DestinationPort"), value: `${metadata.destinationPort}` },
     { label: t("Type"), value: `${metadata.type}(${metadata.network})` },
   ];
 
