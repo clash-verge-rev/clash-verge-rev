@@ -33,7 +33,8 @@
   },
   "app": {
     "trayIcon": {
-      "iconPath": "icons/tray-icon.ico"
+      "iconPath": "icons/tray-icon.ico",
+      "iconAsTemplate": true
     }
   }
 }
