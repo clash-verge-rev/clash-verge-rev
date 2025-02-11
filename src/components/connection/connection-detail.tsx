@@ -80,6 +80,7 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
       value: `${metadata.sourceIP}:${metadata.sourcePort}`,
     },
     { label: t("Destination"), value: metadata.remoteDestination },
+    { label: t("DestinationPort"), value: `${metadata.destinationPort}` },
     { label: t("Type"), value: `${metadata.type}(${metadata.network})` },
   ];
 

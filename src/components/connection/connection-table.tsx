@@ -98,7 +98,7 @@ export const ConnectionTable = (props: Props) => {
         process: truncateStr(metadata.process || metadata.processPath),
         time: each.start,
         source: `${metadata.sourceIP}:${metadata.sourcePort}`,
-        remoteDestination: metadata.remoteDestination,
+        remoteDestination: `${metadata.remoteDestination}:${metadata.destinationPort}`,
         type: `${metadata.type}(${metadata.network})`,
         connectionData: each,
       };

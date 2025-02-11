@@ -179,6 +179,7 @@
   "Time": "Время подключения",
   "Source": "Исходный адрес",
   "Destination": "IP-адрес назначения",
+  "DestinationPort": "Целевой порт",
   "Close Connection": "Закрыть соединение",
   "Rules": "Правила",
   "Rule Provider": "Провайдер правило",

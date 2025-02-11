@@ -179,6 +179,7 @@
   "Time": "الوقت",
   "Source": "المصدر",
   "Destination": "عنوان IP الوجهة",
+  "DestinationPort": "ميناء الوجهة",
   "Close Connection": "إغلاق الاتصال",
   "Rules": "القواعد",
   "Rule Provider": "مزود القواعد",

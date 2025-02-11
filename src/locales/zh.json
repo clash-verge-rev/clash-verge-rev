@@ -179,6 +179,7 @@
   "Time": "连接时间",
   "Source": "源地址",
   "Destination": "目标地址",
+  "DestinationPort": "目标端口",
   "Close Connection": "关闭连接",
   "Rules": "规则",
   "Rule Provider": "规则集合",

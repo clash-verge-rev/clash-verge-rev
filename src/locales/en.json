@@ -179,6 +179,7 @@
   "Time": "Time",
   "Source": "Source",
   "Destination": "Destination IP",
+  "DestinationPort": "Destination Port",
   "Close Connection": "Close Connection",
   "Rules": "Rules",
   "Rule Provider": "Rule Provider",

@@ -179,6 +179,7 @@
   "Time": "Тоташу вакыты",
   "Source": "Чыганак адресы",
   "Destination": "Максат IP-адресы",
+  "DestinationPort": "Барасы порты",
   "Close Connection": "Тоташуны ябу",
   "Rules": "Кагыйдәләр",
   "Rule Provider": "Кагыйдә провайдеры",

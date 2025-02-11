@@ -179,6 +179,7 @@
   "Time": "زمان",
   "Source": "منبع",
   "Destination": "آدرس IP مقصد",
+  "DestinationPort": "بندر هدف",
   "Close Connection": "بستن اتصال",
   "Rules": "قوانین",
   "Rule Provider": "تأمین‌کننده قانون",
