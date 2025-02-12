@@ -246,6 +246,7 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     let proxy_bypass = patch.system_proxy_bypass;
     let language = patch.language;
     let mixed_port = patch.verge_mixed_port;
+    let lite_mode = patch.enable_lite_mode;
     #[cfg(target_os = "macos")]
     let tray_icon = patch.tray_icon;
     #[cfg(not(target_os = "macos"))]
@@ -373,6 +374,23 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
         if should_update_systray_tooltip {
             tray::Tray::global().update_tooltip()?;
         }
+
+        // 处理轻量模式切换
+        if lite_mode.is_some() {
+            if let Some(window) = handle::Handle::global().get_window() {
+                if lite_mode.unwrap() {
+                    // 完全退出 webview 进程
+                    window.close()?;  // 先关闭窗口
+                    let app_handle = handle::Handle::global().app_handle().unwrap();
+                    if let Some(webview) = app_handle.get_webview_window("main") {
+                        webview.destroy()?;  // 销毁 webview 进程
+                    }
+                } else {
+                    resolve::create_window();  // 重新创建窗口
+                }
+            }
+        }
+
         <Result<()>>::Ok(())
     };
     match res {

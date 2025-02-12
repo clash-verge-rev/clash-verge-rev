@@ -27,6 +27,7 @@ import { getPortableFlag } from "@/services/cmds";
 import React from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 import { useListen } from "@/hooks/use-listen";
+import { listen } from "@tauri-apps/api/event";
 
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
@@ -91,6 +92,24 @@ const Layout = () => {
       await appWindow.show();
       await appWindow.setFocus();
     }, 50);
+
+    // 监听窗口显示/隐藏事件
+    const setupListeners = async () => {
+      const unlisten1 = await listen("verge://hide-window", () => {
+        appWindow.hide();
+      });
+
+      const unlisten2 = await listen("verge://show-window", () => {
+        appWindow.show();
+      });
+
+      return () => {
+        unlisten1();
+        unlisten2();
+      };
+    };
+
+    setupListeners();
   }, []);
 
   useEffect(() => {
