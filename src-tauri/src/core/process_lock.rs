@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use std::fs;
 use std::path::PathBuf;
-use sysinfo::{Pid, System, Signal};
+use sysinfo::{Pid, System};
 use crate::utils::dirs;
 use std::time::Duration;
 
