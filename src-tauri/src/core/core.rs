@@ -1,4 +1,3 @@
-use super::tray::Tray;
 use crate::config::*;
 use crate::core::{clash_api, handle, service};
 use crate::log_err;

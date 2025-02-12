@@ -14,11 +14,12 @@ use anyhow::{bail, Result};
 use reqwest_dav::list_cmd::ListFile;
 use serde_yaml::{Mapping, Value};
 use std::fs;
-use tauri::{Manager, tray::TrayIcon};
+use tauri::Manager;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 // 打开面板
+#[allow(dead_code)]
 pub fn open_or_close_dashboard() {
     println!("Attempting to open/close dashboard");
     log::info!(target: "app", "Attempting to open/close dashboard");

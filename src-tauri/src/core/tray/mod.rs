@@ -79,10 +79,10 @@ impl Tray {
         )?;
 
         // 使用 TrayIconBuilder 构建托盘
-        let tray = tauri::tray::TrayIconBuilder::<Wry>::with_id(TrayIconId::new("main"))
+        let _tray = tauri::tray::TrayIconBuilder::<Wry>::with_id(TrayIconId::new("main"))
             .menu(&initial_menu)  // 先设置菜单
             .show_menu_on_left_click(false)  // 再禁用左键菜单
-            .on_tray_icon_event(move |tray, event| {
+            .on_tray_icon_event(move |_tray, event| {
                 // 处理左键点击事件
                 if let TrayIconEvent::Click {
                     button,
@@ -96,7 +96,7 @@ impl Tray {
                             #[cfg(target_os = "macos")]
                             {
                                 // 确保菜单不会显示
-                                let _ = tray.set_show_menu_on_left_click(false);
+                                let _ = _tray.set_show_menu_on_left_click(false);
                             }
 
                             // 获取并执行自定义事件
