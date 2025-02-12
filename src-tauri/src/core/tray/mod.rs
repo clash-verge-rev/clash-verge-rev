@@ -68,7 +68,6 @@ impl Tray {
 
     pub fn create_systray(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
-        let tray_incon_id = TrayIconId::new("main");
 
         // 创建初始菜单
         let initial_menu = create_tray_menu(
@@ -80,7 +79,7 @@ impl Tray {
         )?;
 
         // 使用 TrayIconBuilder 构建托盘
-        let _tray = tauri::tray::TrayIconBuilder::<Wry>::with_id(tray_incon_id)
+        let tray = tauri::tray::TrayIconBuilder::<Wry>::with_id(TrayIconId::new("main"))
             .menu(&initial_menu)  // 先设置菜单
             .show_menu_on_left_click(false)  // 再禁用左键菜单
             .on_tray_icon_event(move |tray, event| {

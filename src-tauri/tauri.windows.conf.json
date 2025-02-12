@@ -19,12 +19,5 @@
         "template": "./packages/windows/installer.nsi"
       }
     }
-  },
-  "app": {
-    "windows": [],
-    "trayIcon": {
-      "iconPath": "icons/tray-icon.ico",
-      "iconAsTemplate": true
-    }
   }
 }

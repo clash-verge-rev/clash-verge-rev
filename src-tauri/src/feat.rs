@@ -14,7 +14,7 @@ use anyhow::{bail, Result};
 use reqwest_dav::list_cmd::ListFile;
 use serde_yaml::{Mapping, Value};
 use std::fs;
-use tauri::Manager;
+use tauri::{Manager, tray::TrayIcon};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
@@ -146,9 +146,14 @@ pub fn quit(code: Option<i32>) {
         let _ = window.close();
     }
     
+    // 移除系统托盘图标
+    if let Some(tray) = app_handle.tray_by_id("main") {
+        let _ = tray.set_icon(None);
+    }
+    
     // 后台执行所有清理工作
     let app_handle_clone = app_handle.clone();
-    tauri::async_runtime::spawn(async move {
+    tauri::async_runtime::block_on(async move {
         // 1. 发送停止内核指令
         let _ = CoreManager::global().stop_core().await;
         
@@ -162,7 +167,7 @@ pub fn quit(code: Option<i32>) {
         log::info!(target: "app", "Cleanup tasks completed in background");
     });
     
-    // 主线程立即退出
+    // 主线程退出
     println!("Exiting application with code: {:?}", code);
     log::info!(target: "app", "Exiting application with code: {:?}", code);
     app_handle.exit(code.unwrap_or(0));
