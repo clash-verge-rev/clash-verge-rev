@@ -98,6 +98,7 @@ impl CoreManager {
 
     /// 启动核心
     pub async fn start_core(&self) -> Result<()> {
+        #[cfg(not(target_os = "macos"))]
         // 检查端口占用
         self.health_checker.check_ports().await?;
 
