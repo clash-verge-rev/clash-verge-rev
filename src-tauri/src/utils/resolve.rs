@@ -95,16 +95,19 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(tray::Tray::global().init());
     log_err!(tray::Tray::global().create_systray());
 
+    log_err!(sysopt::Sysopt::global().update_sysproxy().await);
+    log_err!(sysopt::Sysopt::global().init_guard_sysproxy());
+
+    // 初始化热键
+    log::trace!(target: "app", "init hotkeys");
+    log_err!(hotkey::Hotkey::global().init());
+
     let silent_start = { Config::verge().data().enable_silent_start };
     if !silent_start.unwrap_or(false) {
         create_window();
     }
 
-    log_err!(sysopt::Sysopt::global().update_sysproxy().await);
-    log_err!(sysopt::Sysopt::global().init_guard_sysproxy());
-
     log_err!(tray::Tray::global().update_part());
-    log_err!(hotkey::Hotkey::global().init());
     log_err!(timer::Timer::global().init());
 }
 
@@ -123,10 +126,18 @@ pub fn resolve_reset() {
 
 /// create main window
 pub fn create_window() {
+    println!("Starting to create window");
+    log::info!(target: "app", "Starting to create window");
+
     let app_handle = handle::Handle::global().app_handle().unwrap();
 
     if let Some(window) = handle::Handle::global().get_window() {
+        println!("Found existing window, trying to show it");
+        log::info!(target: "app", "Found existing window, trying to show it");
+
         if window.is_minimized().unwrap_or(false) {
+            println!("Window is minimized, unminimizing");
+            log::info!(target: "app", "Window is minimized, unminimizing");
             let _ = window.unminimize();
         }
         let _ = window.show();
@@ -134,14 +145,16 @@ pub fn create_window() {
         return;
     }
 
+    println!("Creating new window");
+    log::info!(target: "app", "Creating new window");
+
     #[cfg(target_os = "windows")]
-    let _ = tauri::WebviewWindowBuilder::new(
+    let window = tauri::WebviewWindowBuilder::new(
                 &app_handle,
                 "main".to_string(),
                 tauri::WebviewUrl::App("index.html".into()),
             )
             .title("Clash Verge")
-            .visible(false)
             .inner_size(890.0, 700.0)
             .min_inner_size(620.0, 550.0)
             .decorations(false)
@@ -152,7 +165,7 @@ pub fn create_window() {
             .build();
 
     #[cfg(target_os = "macos")]
-    let _ = tauri::WebviewWindowBuilder::new(
+    let window = tauri::WebviewWindowBuilder::new(
         &app_handle,
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
@@ -162,11 +175,10 @@ pub fn create_window() {
     .title_bar_style(tauri::TitleBarStyle::Overlay)
     .inner_size(890.0, 700.0)
     .min_inner_size(620.0, 550.0)
-    .build()
-    .unwrap();
+    .build();
 
     #[cfg(target_os = "linux")]
-    let _ = tauri::WebviewWindowBuilder::new(
+    let window = tauri::WebviewWindowBuilder::new(
         &app_handle,
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
@@ -176,8 +188,20 @@ pub fn create_window() {
     .inner_size(890.0, 700.0)
     .min_inner_size(620.0, 550.0)
     .transparent(true)
-    .build()
-    .unwrap();
+    .build();
+
+    match window {
+        Ok(window) => {
+            println!("Window created successfully, attempting to show");
+            log::info!(target: "app", "Window created successfully, attempting to show");
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+        Err(e) => {
+            println!("Failed to create window: {:?}", e);
+            log::error!(target: "app", "Failed to create window: {:?}", e);
+        }
+    }
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {

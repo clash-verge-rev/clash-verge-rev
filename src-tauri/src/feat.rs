@@ -20,15 +20,41 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 // 打开面板
 pub fn open_or_close_dashboard() {
+    println!("Attempting to open/close dashboard");
+    log::info!(target: "app", "Attempting to open/close dashboard");
+
     if let Some(window) = handle::Handle::global().get_window() {
+        println!("Found existing window");
+        log::info!(target: "app", "Found existing window");
+
         // 如果窗口存在，则切换其显示状态
-        if window.is_visible().unwrap_or(false) {
-            let _ = window.hide();
-        } else {
-            let _ = window.show();
-            let _ = window.set_focus();
+        match window.is_visible() {
+            Ok(visible) => {
+                println!("Window visibility status: {}", visible);
+                log::info!(target: "app", "Window visibility status: {}", visible);
+
+                if visible {
+                    println!("Attempting to hide window");
+                    log::info!(target: "app", "Attempting to hide window");
+                    let _ = window.hide();
+                } else {
+                    println!("Attempting to show and focus window");
+                    log::info!(target: "app", "Attempting to show and focus window");
+                    if window.is_minimized().unwrap_or(false) {
+                        let _ = window.unminimize();
+                    }
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+            Err(e) => {
+                println!("Failed to get window visibility: {:?}", e);
+                log::error!(target: "app", "Failed to get window visibility: {:?}", e);
+            }
         }
     } else {
+        println!("No existing window found, creating new window");
+        log::info!(target: "app", "No existing window found, creating new window");
         resolve::create_window();
     }
 }
