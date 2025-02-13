@@ -45,7 +45,7 @@ import { ProfileMore } from "@/components/profile/profile-more";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { useProfiles } from "@/hooks/use-profiles";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
-import { add, throttle } from "lodash-es";
+import { add, throttle, debounce } from "lodash-es";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
@@ -188,6 +188,7 @@ const ProfilePage = () => {
       setActivatings([]);
     }
   };
+
   const onSelect = useLockFn(async (current: string, force: boolean) => {
     if (!force && current === profiles.current) return;
     await activateProfile(current, true);
@@ -203,6 +204,8 @@ const ProfilePage = () => {
   }, current);
 
   const onEnhance = useLockFn(async (notifySuccess: boolean) => {
+    if (activatings.length > 0) return;
+
     setActivatings(currentActivatings());
     try {
       await enhanceProfiles();
@@ -213,11 +216,14 @@ const ProfilePage = () => {
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
     } finally {
-      setActivatings([]);
+      // 添加延迟以防止快速重复点击
+      setTimeout(() => setActivatings([]), 1000);
     }
   });
 
   const onDelete = useLockFn(async (uid: string) => {
+    if (activatings.length > 0) return;
+
     const current = profiles.current === uid;
     try {
       setActivatings([...(current ? currentActivatings() : []), uid]);
@@ -228,9 +234,30 @@ const ProfilePage = () => {
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     } finally {
-      setActivatings([]);
+      // 添加延迟以防止快速重复点击
+      setTimeout(() => setActivatings([]), 1000);
     }
   });
+
+  // 使用防抖包装重启函数
+  const debouncedEnhance = useMemo(
+    () =>
+      debounce((notifySuccess: boolean) => onEnhance(notifySuccess), 1000, {
+        leading: true,
+        trailing: false,
+      }),
+    [onEnhance],
+  );
+
+  // 使用防抖包装删除函数
+  const debouncedDelete = useMemo(
+    () =>
+      debounce((uid: string) => onDelete(uid), 1000, {
+        leading: true,
+        trailing: false,
+      }),
+    [onDelete],
+  );
 
   // 更新所有订阅
   const setLoadingCache = useSetLoadingCache();

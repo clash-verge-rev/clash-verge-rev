@@ -382,8 +382,27 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub fn exit_app() {
-    feat::quit(Some(0));
+pub async fn exit_app() -> CmdResult<()> {
+    log::info!(target: "app", "Exiting application");
+    
+    // 执行清理工作
+    if let Err(e) = CoreManager::global().cleanup_on_exit().await {
+        log::error!(target: "app", "Error during exit cleanup: {}", e);
+    }
+
+    // 获取app handle
+    let app_handle = handle::Handle::global().app_handle().unwrap();
+    
+    // 关闭主窗口
+    if let Some(window) = app_handle.get_webview_window("main") {
+        window.close().unwrap_or_else(|e| {
+            log::error!(target: "app", "Error closing main window: {}", e);
+        });
+    }
+
+    // 退出程序
+    app_handle.exit(0);
+    Ok(())
 }
 
 #[tauri::command]

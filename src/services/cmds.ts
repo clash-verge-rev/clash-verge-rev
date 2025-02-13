@@ -2,6 +2,32 @@ import dayjs from "dayjs";
 import { invoke } from "@tauri-apps/api/core";
 import { Notice } from "@/components/base";
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 500;
+
+async function retryInvoke<T>(
+  cmd: string,
+  args?: Record<string, any>,
+  retries: number = MAX_RETRIES,
+): Promise<T> {
+  let lastError: any;
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await invoke<T>(cmd, args);
+    } catch (err: any) {
+      lastError = err;
+      if (i < retries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError;
+}
+
 export async function copyClashEnv() {
   return invoke<void>("copy_clash_env");
 }
@@ -119,11 +145,23 @@ export async function getAutotemProxy() {
 }
 
 export async function changeClashCore(clashCore: string) {
-  return invoke<any>("change_clash_core", { clashCore });
+  try {
+    return await retryInvoke<void>("change_clash_core", { clashCore });
+  } catch (err: any) {
+    const errMsg = err?.message || err.toString();
+    Notice.error(`Failed to change core: ${errMsg}`);
+    throw err;
+  }
 }
 
 export async function restartCore() {
-  return invoke<void>("restart_core");
+  try {
+    return await retryInvoke<void>("restart_core");
+  } catch (err: any) {
+    const errMsg = err?.message || err.toString();
+    Notice.error(`Failed to restart core: ${errMsg}`);
+    throw err;
+  }
 }
 
 export async function restartApp() {

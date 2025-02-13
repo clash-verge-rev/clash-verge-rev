@@ -1,170 +1,206 @@
 use anyhow::{bail, Result};
 use std::fs;
 use std::path::PathBuf;
-use sysinfo::{Pid, System, Signal};
+use sysinfo::{Pid, System, Signal, Process};
 use crate::utils::dirs;
 use std::time::Duration;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use tokio::sync::Mutex as TokioMutex;
+use once_cell::sync::Lazy;
 
-const KILL_WAIT: Duration = Duration::from_millis(500);
-const FINAL_WAIT: Duration = Duration::from_millis(1000);
+const KILL_WAIT: Duration = Duration::from_millis(50);
+const PROCESS_CHECK_ATTEMPTS: u32 = 3;
+const MAX_CLEANUP_ATTEMPTS: u32 = 2;
+
+// 全局进程锁，确保进程操作的互斥性
+static PROCESS_OPERATION_LOCK: Lazy<TokioMutex<()>> = Lazy::new(|| TokioMutex::new(()));
 
 #[derive(Debug)]
 pub struct ProcessLock {
     pid_file: PathBuf,
+    acquired: Arc<AtomicBool>,
 }
 
 impl ProcessLock {
     pub fn new() -> Result<Self> {
         let pid_file = dirs::app_home_dir()?.join("mihomo.pid");
-        println!("Creating ProcessLock with PID file: {:?}", pid_file);
-        log::info!(target: "app", "Creating ProcessLock with PID file: {:?}", pid_file);
-        Ok(Self { pid_file })
+        Ok(Self { 
+            pid_file,
+            acquired: Arc::new(AtomicBool::new(false)),
+        })
     }
 
     fn is_target_process(process_name: &str) -> bool {
         let name = process_name.to_lowercase();
-        (name.contains("mihomo") || name.contains("clash")) 
-            && !name.contains("clash-verge") 
-            && !name.contains("clash.meta")
+        name == "verge-mihomo" || 
+        name == "verge-mihomo-alpha" || 
+        name == "verge-mihomo.exe" || 
+        name == "verge-mihomo-alpha.exe"
     }
 
-    fn kill_process(pid: Pid, process: &sysinfo::Process) -> bool {
+    async fn find_running_cores() -> Vec<(Pid, String)> {
+        let sys = System::new_all();
+        
+        sys.processes()
+            .iter()
+            .filter(|(_, process)| {
+                let name = process.name().to_string_lossy().to_lowercase();
+                Self::is_target_process(&name)
+            })
+            .map(|(pid, process)| (*pid, process.name().to_string_lossy().to_string()))
+            .collect()
+    }
+
+    async fn ensure_process_terminated(pid: Pid) -> bool {
+        for _ in 0..PROCESS_CHECK_ATTEMPTS {
+            let sys = System::new_all();
+            
+            if sys.process(pid).is_none() {
+                return true;
+            }
+            
+            tokio::time::sleep(KILL_WAIT).await;
+        }
+        false
+    }
+
+    async fn kill_process(pid: Pid, process: &Process) -> bool {
         let process_name = process.name().to_string_lossy().to_lowercase();
         let process_pid = pid.as_u32();
         
-        println!("Force killing process (PID: {}, Name: {})", process_pid, process_name);
-        log::info!(target: "app", "Force killing process (PID: {}, Name: {})", process_pid, process_name);
-        
-        // 直接使用 SIGKILL 强制终止
+        // 先尝试强制终止
         #[cfg(not(target_os = "windows"))]
         {
-            println!("Sending SIGKILL to process {}", process_pid);
-            log::info!(target: "app", "Sending SIGKILL to process {}", process_pid);
             let _ = process.kill_with(Signal::Kill);
         }
         #[cfg(target_os = "windows")]
         {
-            println!("Force killing process {}", process_pid);
-            log::info!(target: "app", "Force killing process {}", process_pid);
             process.kill();
         }
-        
-        std::thread::sleep(KILL_WAIT);
-        
-        // 检查进程是否还在运行
-        let mut sys = System::new();
-        sys.refresh_all();
-        
-        let is_terminated = sys.process(pid).is_none();
-        if !is_terminated {
-            println!("Failed to terminate process {}", process_pid);
-            log::error!(target: "app", "Failed to terminate process {}", process_pid);
-        } else {
-            println!("Process {} has been terminated", process_pid);
-            log::info!(target: "app", "Process {} has been terminated", process_pid);
+
+        // 等待进程退出
+        if Self::ensure_process_terminated(pid).await {
+            log::info!(target: "app", "Process terminated: {}({})", process_name, process_pid);
+            return true;
         }
-        
-        is_terminated
+
+        false
     }
 
-    fn kill_other_processes(include_current: bool) -> Result<()> {
-        println!("Starting process cleanup (include_current: {})", include_current);
-        log::info!(target: "app", "Starting process cleanup (include_current: {})", include_current);
+    /// 强制获取进程锁，不管当前状态如何
+    pub async fn acquire_force(&self) -> Option<Self> {
+        let _lock = PROCESS_OPERATION_LOCK.lock().await;
         
-        let mut sys = System::new();
-        sys.refresh_all();
-        
-        let current_pid = std::process::id();
-        let mut failed_kills = Vec::new();
-        
-        // 收集需要终止的进程
-        let target_processes: Vec<_> = sys.processes()
-            .iter()
-            .filter(|(pid, process)| {
-                let process_pid = pid.as_u32();
-                let process_name = process.name().to_string_lossy();
-                
-                Self::is_target_process(&process_name) && 
-                (include_current || process_pid != current_pid)
-            })
-            .collect();
-        
-        // 如果没有目标进程，直接返回
-        if target_processes.is_empty() {
-            println!("No target processes found");
-            log::info!(target: "app", "No target processes found");
+        // 强制清理所有运行中的核心进程
+        for _ in 0..MAX_CLEANUP_ATTEMPTS {
+            let running_cores = Self::find_running_cores().await;
+            if running_cores.is_empty() {
+                break;
+            }
+
+            for (pid, _) in running_cores {
+                let sys = System::new_all();
+                if let Some(process) = sys.process(pid) {
+                    let _ = Self::kill_process(pid, process).await;
+                }
+            }
+
+            tokio::time::sleep(KILL_WAIT).await;
+        }
+
+        // 删除可能存在的 PID 文件
+        if self.pid_file.exists() {
+            let _ = fs::remove_file(&self.pid_file);
+        }
+
+        // 写入新的 PID 文件
+        if let Err(e) = fs::write(&self.pid_file, std::process::id().to_string()) {
+            log::error!(target: "app", "Failed to write PID file: {}", e);
+            return None;
+        }
+
+        Some(Self {
+            pid_file: self.pid_file.clone(),
+            acquired: Arc::new(AtomicBool::new(true)),
+        })
+    }
+
+    pub async fn acquire(&self) -> Result<()> {
+        let _lock = PROCESS_OPERATION_LOCK.lock().await;
+
+        if self.acquired.load(Ordering::SeqCst) {
             return Ok(());
         }
-        
-        // 终止进程
-        for (pid, process) in target_processes {
-            if !Self::kill_process(*pid, process) {
-                failed_kills.push((pid.as_u32(), process.name().to_string_lossy().to_string()));
+
+        // 清理所有运行中的核心进程
+        let running_cores = Self::find_running_cores().await;
+        let mut failed_kills = Vec::new();
+
+        for (pid, name) in running_cores {
+            let sys = System::new_all();
+            if let Some(process) = sys.process(pid) {
+                if !Self::kill_process(pid, process).await {
+                    failed_kills.push(format!("{}({})", name, pid.as_u32()));
+                }
             }
         }
-        
-        // 最终检查
-        std::thread::sleep(FINAL_WAIT);
-        sys.refresh_all();
-        
-        let remaining: Vec<_> = sys.processes()
-            .iter()
-            .filter(|(_, process)| Self::is_target_process(&process.name().to_string_lossy()))
-            .map(|(pid, process)| (pid.as_u32(), process.name().to_string_lossy().to_string()))
-            .collect();
-        
-        if !remaining.is_empty() {
-            println!("Failed to terminate processes: {:?}", remaining);
-            log::error!(target: "app", "Failed to terminate processes: {:?}", remaining);
-            bail!("Failed to terminate processes: {:?}", remaining);
-        }
-        
-        println!("Process cleanup completed");
-        log::info!(target: "app", "Process cleanup completed");
-        Ok(())
-    }
 
-    pub fn acquire(&self) -> Result<()> {
-        println!("Attempting to acquire process lock");
-        log::info!(target: "app", "Attempting to acquire process lock");
-        
-        // 首先尝试终止其他进程
-        Self::kill_other_processes(false)?;
+        if !failed_kills.is_empty() {
+            bail!("Failed to terminate processes: {}", failed_kills.join(", "));
+        }
 
         if self.pid_file.exists() {
-            fs::remove_file(&self.pid_file)?;
+            let _ = fs::remove_file(&self.pid_file);
         }
 
         fs::write(&self.pid_file, std::process::id().to_string())?;
-        println!("Process lock acquired successfully");
-        log::info!(target: "app", "Process lock acquired successfully");
+        self.acquired.store(true, Ordering::SeqCst);
+        
         Ok(())
     }
 
-    pub fn release(&self) -> Result<()> {
-        println!("Starting release process");
-        log::info!(target: "app", "Starting release process");
-        
-        Self::kill_other_processes(true)?;
-        
-        if self.pid_file.exists() {
-            println!("Removing PID file");
-            log::info!(target: "app", "Removing PID file");
-            fs::remove_file(&self.pid_file)?;
+    pub async fn release(&self) -> Result<()> {
+        let _lock = PROCESS_OPERATION_LOCK.lock().await;
+
+        if !self.acquired.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+
+        // 清理所有运行中的核心进程
+        let running_cores = Self::find_running_cores().await;
+        let mut failed_kills = Vec::new();
+
+        for (pid, name) in running_cores {
+            let sys = System::new_all();
+            if let Some(process) = sys.process(pid) {
+                if !Self::kill_process(pid, process).await {
+                    failed_kills.push(format!("{}({})", name, pid.as_u32()));
+                }
+            }
+        }
+
+        if !failed_kills.is_empty() {
+            log::error!(target: "app", "Failed to terminate processes: {}", failed_kills.join(", "));
         }
         
-        println!("Release process completed");
-        log::info!(target: "app", "Release process completed");
+        if self.pid_file.exists() {
+            let _ = fs::remove_file(&self.pid_file);
+        }
+        
+        self.acquired.store(false, Ordering::SeqCst);
         Ok(())
     }
 }
 
 impl Drop for ProcessLock {
     fn drop(&mut self) {
-        if self.pid_file.exists() {
-            println!("ProcessLock being dropped");
-            log::info!(target: "app", "ProcessLock being dropped");
-            let _ = self.release();
+        if self.acquired.load(Ordering::SeqCst) {
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            let _ = runtime.block_on(async {
+                let _lock = PROCESS_OPERATION_LOCK.lock().await;
+                self.release().await
+            });
         }
     }
 }
