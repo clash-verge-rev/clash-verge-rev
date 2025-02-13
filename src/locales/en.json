@@ -439,5 +439,7 @@
   "Rule Mode": "Rule Mode",
   "Global Mode": "Global Mode",
   "Direct Mode": "Direct Mode",
-  "Enable Tray Speed": "Enable Tray Speed"
+  "Enable Tray Speed": "Enable Tray Speed",
+  "Lite Mode": "Lightweight Mode",
+  "Lite Mode Info": "Close the GUI and keep only the kernel running"
 }
