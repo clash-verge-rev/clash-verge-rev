@@ -432,5 +432,7 @@
   "Confirm to restore this backup file?": "Konfirmasi untuk memulihkan file cadangan ini?",
   "Restore Success, App will restart in 1s": "Pemulihan Berhasil, Aplikasi akan dimulai ulang dalam 1 detik",
   "Failed to fetch backup files": "Gagal mengambil file cadangan",
-  "Enable Tray Speed": "Aktifkan Tray Speed"
+  "Enable Tray Speed": "Aktifkan Tray Speed",
+  "Lite Mode": "Mode Ringan",
+  "Lite Mode Info": "Tutup GUI dan biarkan hanya kernel yang berjalan"
 }
