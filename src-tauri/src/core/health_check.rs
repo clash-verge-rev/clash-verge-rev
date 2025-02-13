@@ -9,23 +9,33 @@ use crate::core::service;
 use port_scanner::local_port_available;
 use std::time::Duration;
 use tokio::time::timeout;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicBool, Ordering};
 use std::sync::Arc;
 use crate::config::ConfigType;
+use tokio::sync::Mutex;
+use std::future::Future;
+use std::pin::Pin;
 
 const PORT_CHECK_TIMEOUT: Duration = Duration::from_secs(2);
 const HEALTH_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_FAILURES: u32 = 3;
+const SERVICE_TIMEOUT: Duration = Duration::from_secs(10);
+
+type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
 #[derive(Debug, Clone)]
 pub struct HealthChecker {
     failure_count: Arc<AtomicU32>,
+    process_lock: Arc<Mutex<()>>,
+    is_monitoring: Arc<AtomicBool>,
 }
 
 impl HealthChecker {
     pub fn new() -> Self {
         Self {
             failure_count: Arc::new(AtomicU32::new(0)),
+            process_lock: Arc::new(Mutex::new(())),
+            is_monitoring: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -66,11 +76,11 @@ impl HealthChecker {
 
             match Self::check_single_port(port).await {
                 Ok(_) => {
-                    log::debug!(target: "app", "{} port {} is available", port_type, port);
+                    println!("[健康检查] {} 端口 {} 可用", port_type, port);
                 }
                 Err(e) => {
-                    log::error!(target: "app", "{} port {} check failed: {}", port_type, port, e);
-                    return Err(Error::msg(format!("{} port {} is unavailable: {}", port_type, port, e)));
+                    eprintln!("[健康检查错误] {} 端口 {} 检查失败: {}", port_type, port, e);
+                    return Err(Error::msg(format!("{} 端口 {} 不可用: {}", port_type, port, e)));
                 }
             }
         }
@@ -86,104 +96,210 @@ impl HealthChecker {
                 if let Ok(pid) = body.bin_path.parse::<u32>() {
                     if let Some(process) = sys.process(Pid::from(pid as usize)) {
                         if process.name().to_string_lossy().contains("mihomo") {
+                            // 检查进程状态
+                            let status = process.status();
+                            if status.to_string().contains("Zombie") {
+                                return Err(Error::msg("进程处于僵尸状态"));
+                            }
+
                             // 检查进程CPU和内存使用
                             let cpu_usage = process.cpu_usage();
                             let memory_usage = process.memory() / 1024 / 1024; // Convert to MB
 
                             if cpu_usage > 90.0 {
-                                return Err(Error::msg(format!("Process CPU usage too high: {}%", cpu_usage)));
+                                return Err(Error::msg(format!("CPU使用率过高: {}%", cpu_usage)));
                             }
 
                             if memory_usage > 1024 { // 1GB
-                                return Err(Error::msg(format!("Process memory usage too high: {}MB", memory_usage)));
+                                return Err(Error::msg(format!("内存使用过高: {}MB", memory_usage)));
                             }
 
                             return Ok(());
                         }
                     }
+                    // 进程ID存在但找不到进程，说明进程已经退出
+                    return Err(Error::msg(format!("进程 {} 不存在", pid)));
                 }
+                // PID解析失败
+                return Err(Error::msg("无法解析进程ID"));
             }
+            // 服务返回数据为空
+            return Err(Error::msg("服务状态数据为空"));
         }
-        
-        Err(Error::msg("Process health check failed"))
+        // 服务检查失败
+        Err(Error::msg("服务检查失败"))
     }
 
     pub async fn check_service_health(&self) -> Result<()> {
-        match timeout(HEALTH_CHECK_TIMEOUT, self.check_process_health()).await {
-            Ok(result) => {
-                match result {
+        // 检查进程健康状态
+        if let Err(e) = self.check_process_health().await {
+            eprintln!("[健康检查错误] 检查失败: {}", e);
+            self.failure_count.fetch_add(1, Ordering::SeqCst);
+            let current_failures = self.failure_count.load(Ordering::SeqCst);
+            
+            if current_failures >= MAX_FAILURES {
+                println!("[健康检查警告] 达到最大失败次数({}次)，开始尝试恢复", current_failures);
+                match self.attempt_recovery().await {
                     Ok(_) => {
-                        // 重置失败计数
+                        println!("[健康检查] 服务恢复成功，重置失败计数");
                         self.failure_count.store(0, Ordering::SeqCst);
-                        Ok(())
+                        return Ok(());
                     }
                     Err(e) => {
-                        // 增加失败计数
-                        let current_failures = self.failure_count.fetch_add(1, Ordering::SeqCst);
-                        log::warn!(target: "app", "Health check failed ({}/{}): {}", current_failures + 1, MAX_FAILURES, e);
-
-                        if current_failures + 1 >= MAX_FAILURES {
-                            log::error!(target: "app", "Maximum health check failures reached, attempting recovery");
-                            self.attempt_recovery().await?;
-                            self.failure_count.store(0, Ordering::SeqCst);
-                        }
-                        
-                        Err(e)
+                        eprintln!("[健康检查错误] 服务恢复失败: {}", e);
+                        return Err(e);
                     }
                 }
+            } else {
+                println!("[健康检查警告] 服务异常 ({}/{}): {}", current_failures, MAX_FAILURES, e);
             }
-            Err(_) => {
-                let current_failures = self.failure_count.fetch_add(1, Ordering::SeqCst);
-                log::warn!(target: "app", "Health check timeout ({}/{})", current_failures + 1, MAX_FAILURES);
-                
-                if current_failures + 1 >= MAX_FAILURES {
-                    log::error!(target: "app", "Maximum health check timeouts reached, attempting recovery");
-                    self.attempt_recovery().await?;
-                    self.failure_count.store(0, Ordering::SeqCst);
+            
+            bail!("服务健康检查失败: {}", e);
+        }
+
+        // 重置失败计数
+        self.failure_count.store(0, Ordering::SeqCst);
+        Ok(())
+    }
+
+    async fn attempt_recovery(&self) -> Result<()> {
+        println!("[健康检查] 尝试恢复核心服务");
+        
+        // 检查是否是服务模式
+        let is_service_mode = service::check_service().await.is_ok();
+        
+        if is_service_mode {
+            println!("[健康检查] 以服务模式恢复");
+            
+            // 先尝试停止现有服务
+            if let Err(e) = service::stop_core_by_service().await {
+                println!("[健康检查警告] 停止服务过程中出错: {}", e);
+                // 如果停止失败，尝试强制终止
+                if let Err(e) = service::force_kill_service_process().await {
+                    eprintln!("[健康检查错误] 强制终止服务失败: {}", e);
                 }
-                
-                Err(Error::msg("Health check timeout"))
+            }
+            
+            // 等待确保进程完全终止
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            
+            // 生成新的配置文件
+            let config_path = match Config::generate_file(ConfigType::Run) {
+                Ok(path) => path,
+                Err(e) => {
+                    eprintln!("[健康检查错误] 生成配置文件失败: {}", e);
+                    return Err(e);
+                }
+            };
+            
+            // 通过服务模式重启
+            match timeout(SERVICE_TIMEOUT, service::run_core_by_service(&config_path)).await {
+                Ok(result) => {
+                    match result {
+                        Ok(_) => {
+                            println!("[健康检查] 服务恢复成功");
+                            return Ok(());
+                        }
+                        Err(e) => {
+                            eprintln!("[健康检查错误] 重启服务失败: {}", e);
+                            return Err(e);
+                        }
+                    }
+                }
+                Err(_) => {
+                    eprintln!("[健康检查错误] 服务重启超时");
+                    return Err(Error::msg("服务重启超时"));
+                }
+            }
+        } else {
+            // 非服务模式，使用 CoreManager 重启
+            println!("[健康检查] 以普通模式恢复");
+            let core_manager = crate::core::CoreManager::global();
+            match core_manager.restart_core().await {
+                Ok(_) => {
+                    println!("[健康检查] 核心服务恢复成功");
+                    Ok(())
+                }
+                Err(e) => {
+                    eprintln!("[健康检查错误] 恢复核心服务失败: {}", e);
+                    Err(e)
+                }
             }
         }
     }
 
-    async fn attempt_recovery(&self) -> Result<()> {
-        log::info!(target: "app", "Attempting service recovery");
-        
-        // 尝试重启服务
-        if let Ok(response) = service::check_service().await {
-            if let Some(body) = response.data {
-                if let Ok(pid) = body.bin_path.parse::<u32>() {
-                    let sys = System::new_all();
-                    if let Some(process) = sys.process(Pid::from(pid as usize)) {
-                        #[cfg(not(target_os = "windows"))]
-                        {
-                            log::info!(target: "app", "Sending SIGTERM to process {}", pid);
-                            let _ = process.kill_with(Signal::Term);
-                        }
-                        #[cfg(target_os = "windows")]
-                        {
-                            log::info!(target: "app", "Terminating process {}", pid);
-                            process.kill();
-                        }
-                    }
-                }
-            }
+    pub fn start_monitoring(&self) {
+        // 如果已经在监控中，就不要重复启动
+        if self.is_monitoring.load(Ordering::SeqCst) {
+            println!("[健康检查] 监控服务已在运行中");
+            return;
         }
 
-        // 等待进程完全终止
-        tokio::time::sleep(Duration::from_secs(2)).await;
+        self.is_monitoring.store(true, Ordering::SeqCst);
+        let checker = Arc::new(self.clone());
+        
+        tokio::spawn(async move {
+            println!("[健康检查] 监控服务已启动");
+            
+            // 错误恢复重试机制
+            let mut consecutive_errors = 0;
+            const MAX_CONSECUTIVE_ERRORS: u32 = 3;
+            const ERROR_RESET_INTERVAL: Duration = Duration::from_secs(300); // 5分钟无错误则重置计数
+            let mut last_error_time = None;
+            
+            while checker.is_monitoring.load(Ordering::SeqCst) {
+                // 检查是否需要重置错误计数
+                if let Some(last_time) = last_error_time {
+                    if tokio::time::Instant::now() - last_time > ERROR_RESET_INTERVAL {
+                        consecutive_errors = 0;
+                        last_error_time = None;
+                    }
+                }
 
-        // 重新启动服务
-        match timeout(
-            Duration::from_secs(30),
-            service::run_core_by_service(&Config::generate_file(ConfigType::Run)?),
-        ).await {
-            Ok(result) => result,
-            Err(_) => Err(Error::msg("Timeout while restarting service during recovery")),
-        }?;
+                // 如果连续错误太多，增加检查间隔
+                let check_interval = if consecutive_errors >= MAX_CONSECUTIVE_ERRORS {
+                    println!("[健康检查警告] 检测到频繁错误，增加检查间隔");
+                    Duration::from_secs(60) // 增加到60秒
+                } else {
+                    Duration::from_secs(30) // 正常30秒
+                };
+                
+                tokio::time::sleep(check_interval).await;
+                
+                // 获取锁来进行健康检查
+                if let Ok(lock) = checker.process_lock.try_lock() {
+                    match checker.check_service_health().await {
+                        Ok(_) => {
+                            println!("[健康检查] 检查通过");
+                            consecutive_errors = 0;
+                            last_error_time = None;
+                            // 立即释放锁
+                            drop(lock);
+                        }
+                        Err(e) => {
+                            println!("[健康检查警告] {}", e);
+                            consecutive_errors += 1;
+                            last_error_time = Some(tokio::time::Instant::now());
+                            // 错误情况下也要确保释放锁
+                            drop(lock);
+                        }
+                    }
+                } else {
+                    // 如果无法获取锁，说明可能有其他操作正在进行
+                    println!("[健康检查] 跳过本次检查：其他操作正在进行");
+                }
 
-        log::info!(target: "app", "Service recovery completed");
-        Ok(())
+                // 防止CPU占用过高
+                tokio::time::sleep(Duration::from_millis(100)).await;
+            }
+            println!("[健康检查] 监控服务已停止");
+        });
+    }
+
+    pub fn stop_monitoring(&self) {
+        if self.is_monitoring.load(Ordering::SeqCst) {
+            println!("[健康检查] 正在停止监控服务");
+            self.is_monitoring.store(false, Ordering::SeqCst);
+        }
     }
 } 

@@ -78,12 +78,17 @@ impl CoreManager {
         match timeout(CORE_STARTUP_TIMEOUT, self.start_core()).await {
             Ok(result) => {
                 log_err!(result);
-                log::info!(target: "app", "Core initialization completed");
+                println!("[核心管理] 核心初始化完成");
+                
+                // 启动健康检查监控（不需要await）
+                self.health_checker.start_monitoring();
+                println!("[核心管理] 健康检查监控已启动");
+                
                 Ok(())
             }
             Err(_) => {
-                log::error!(target: "app", "Core startup timeout");
-                bail!("Timeout while starting core");
+                println!("[核心管理错误] 核心启动超时");
+                bail!("核心启动超时");
             }
         }
     }
@@ -117,6 +122,10 @@ impl CoreManager {
 
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
+        // 先停止健康检查
+        self.health_checker.stop_monitoring();
+        println!("[核心管理] 健康检查已停止");
+
         // 获取状态锁
         let _state_lock = CORE_STATE_LOCK.lock().await;
         
@@ -194,7 +203,7 @@ impl CoreManager {
         match timeout(Duration::from_secs(5), self.health_checker.check_ports()).await {
             Ok(result) => result?,
             Err(_) => {
-                bail!("Timeout while checking ports");
+                bail!("端口检查超时");
             }
         }
 
@@ -202,32 +211,18 @@ impl CoreManager {
 
         // 服务模式
         if service::check_service().await.is_ok() {
-            log::info!(target: "app", "try to run core in service mode");
+            println!("[核心管理] 尝试以服务模式运行核心");
             match timeout(SERVICE_TIMEOUT, service::run_core_by_service(&config_path)).await {
                 Ok(result) => result?,
                 Err(_) => {
-                    bail!("Timeout while starting service");
+                    bail!("启动服务超时");
                 }
             }
         }
 
         // 启动健康检查
-        let checker = Arc::new(self.health_checker.clone());
-        tokio::spawn(async move {
-            loop {
-                sleep(Duration::from_secs(30)).await;
-                match timeout(Duration::from_secs(5), checker.check_service_health()).await {
-                    Ok(result) => {
-                        if let Err(e) = result {
-                            log::error!(target: "app", "Health check failed: {}", e);
-                        }
-                    }
-                    Err(_) => {
-                        log::error!(target: "app", "Health check timeout");
-                    }
-                }
-            }
-        });
+        self.health_checker.start_monitoring();
+        println!("[核心管理] 健康检查已启动");
 
         // 流量订阅
         #[cfg(target_os = "macos")]
@@ -254,13 +249,13 @@ impl CoreManager {
     pub async fn restart_core(&self) -> Result<()> {
         // 检查是否已经在执行操作
         if self.is_operating.load(Ordering::SeqCst) {
-            log::info!(target: "app", "Core operation already in progress, skipping restart");
+            println!("[核心管理] 已有操作正在进行，跳过重启");
             return Ok(());
         }
 
         // 检查冷却时间
         if !self.check_cooldown().await {
-            log::info!(target: "app", "Operation too frequent, skipping restart");
+            println!("[核心管理] 操作过于频繁，跳过重启");
             return Ok(());
         }
 
@@ -270,19 +265,19 @@ impl CoreManager {
         let result = async {
             // 停止当前运行的核心
             if let Err(e) = self.stop_core().await {
-                log::error!(target: "app", "Error stopping core: {}", e);
+                println!("[核心管理警告] 停止核心时出错: {}", e);
                 // 继续执行，尝试强制重启
             }
 
             // 确保进程完全清理
-            sleep(Duration::from_millis(100)).await;
+            tokio::time::sleep(Duration::from_millis(100)).await;
 
             // 强制清理所有可能的残留进程
             if let Some(process_lock) = ProcessLock::new()?.acquire_force().await {
                 *self.process_lock.lock().await = Some(process_lock);
             } else {
-                log::error!(target: "app", "Failed to acquire process lock");
-                bail!("Failed to acquire process lock");
+                println!("[核心管理错误] 无法获取进程锁");
+                bail!("无法获取进程锁");
             }
 
             // 启动新核心
@@ -290,18 +285,18 @@ impl CoreManager {
                 Ok(result) => {
                     match result {
                         Ok(_) => {
-                            log::info!(target: "app", "Core restart completed successfully");
+                            println!("[核心管理] 核心重启完成");
                             Ok(())
                         }
                         Err(e) => {
-                            log::error!(target: "app", "Failed to start core: {}", e);
-                            bail!("Failed to start core: {}", e)
+                            println!("[核心管理错误] 启动核心失败: {}", e);
+                            bail!("启动核心失败: {}", e)
                         }
                     }
                 }
                 Err(_) => {
-                    log::error!(target: "app", "Core startup timeout");
-                    bail!("Core startup timeout")
+                    println!("[核心管理错误] 核心启动超时");
+                    bail!("核心启动超时")
                 }
             }
         }.await;
