@@ -1,5 +1,5 @@
 #[cfg(not(target_os = "macos"))]
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Error};
 #[cfg(target_os = "macos")]
 use anyhow::{Result, Error};
 use sysinfo::{Pid, System, Signal};
@@ -46,17 +46,21 @@ impl HealthChecker {
 
     #[cfg(not(target_os = "macos"))]
     pub async fn check_ports(&self) -> Result<()> {
-        let verge = Config::verge();
-        let verge_config = verge.latest();
-        
-        let ports = vec![
-            (verge_config.verge_mixed_port.unwrap_or(7897), "Mixed"),
-            (verge_config.verge_socks_port.unwrap_or(7890), "Socks"),
-            (verge_config.verge_port.unwrap_or(7891), "Http"),
-        ];
+        // 只获取一次锁，读取所有需要的配置
+        let (ports, socks_enabled) = {
+            let verge = Config::verge();
+            let config = verge.latest();
+            let ports = vec![
+                (config.verge_mixed_port.unwrap_or(7897), "Mixed"),
+                (config.verge_socks_port.unwrap_or(7890), "Socks"),
+                (config.verge_port.unwrap_or(7891), "Http"),
+            ];
+            let socks_enabled = config.verge_socks_enabled.unwrap_or(true);
+            (ports, socks_enabled)
+        };
 
         for (port, port_type) in ports {
-            if port_type != "Mixed" && !verge_config.verge_socks_enabled.unwrap_or(true) {
+            if port_type != "Mixed" && !socks_enabled {
                 continue;
             }
 
