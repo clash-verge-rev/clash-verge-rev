@@ -35,6 +35,7 @@ macro_rules! draft_define {
                 })
             }
 
+            #[allow(dead_code)]
             pub fn apply(&self) -> Option<$id> {
                 let mut inner = self.inner.lock();
 
@@ -48,6 +49,7 @@ macro_rules! draft_define {
                 }
             }
 
+            #[allow(dead_code)]
             pub fn discard(&self) -> Option<$id> {
                 let mut inner = self.inner.lock();
                 inner.1.take()

@@ -11,29 +11,6 @@ pub struct Rate {
     pub down: u64,
 }
 
-/// PUT /configs
-/// path 是绝对路径
-pub async fn put_configs(path: &str) -> Result<()> {
-    let (url, headers) = clash_client_info()?;
-    let url = format!("{url}/configs?force=true");
-
-    let mut data = HashMap::new();
-    data.insert("path", path);
-
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client.put(&url).headers(headers).json(&data);
-    let response = builder.send().await?;
-
-    match response.status().as_u16() {
-        204 => Ok(()),
-        status => {
-            let body = response.text().await?;
-           // print!("failed to put configs with status \"{}\"\n{}\n{}", status, url, body);
-            bail!("failed to put configs with status \"{status}\"\n{url}\n{body}");
-        }
-    }
-}
-
 /// PATCH /configs
 pub async fn patch_configs(config: &Mapping) -> Result<()> {
     let (url, headers) = clash_client_info()?;

@@ -18,12 +18,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 const SERVICE_TIMEOUT: Duration = Duration::from_secs(5);
 const CORE_STARTUP_TIMEOUT: Duration = Duration::from_secs(10);
-const OPERATION_TIMEOUT: Duration = Duration::from_secs(3);
 const PROCESS_CLEANUP_TIMEOUT: Duration = Duration::from_secs(2);
 const RESTART_COOLDOWN: Duration = Duration::from_millis(500);
 
-// 全局操作锁，确保核心操作的互斥性
-static CORE_OPERATION_LOCK: Lazy<TokioMutex<()>> = Lazy::new(|| TokioMutex::new(()));
 // 全局状态锁，确保状态更新的互斥性
 static CORE_STATE_LOCK: Lazy<TokioMutex<()>> = Lazy::new(|| TokioMutex::new(()));
 
@@ -238,42 +235,6 @@ impl CoreManager {
 
         *self.running.lock().await = true;
         Ok(())
-    }
-
-    async fn ensure_core_stopped(&self) -> Result<()> {
-        // 停止当前运行的核心
-        self.stop_core().await?;
-
-        // 确保所有旧进程都已终止
-        if let Some(process_lock) = self.process_lock.lock().await.as_ref() {
-            match timeout(Duration::from_secs(5), process_lock.release()).await {
-                Ok(result) => result?,
-                Err(_) => {
-                    log::error!(target: "app", "Timeout while releasing process lock");
-                    bail!("Failed to release process lock");
-                }
-            }
-        }
-
-        *self.running.lock().await = false;
-        Ok(())
-    }
-
-    async fn prepare_core_start(&self) -> Result<()> {
-        // 重新初始化进程锁
-        let process_lock = ProcessLock::new()?;
-        match timeout(Duration::from_secs(10), process_lock.acquire_force()).await {
-            Ok(Some(lock)) => {
-                *self.process_lock.lock().await = Some(lock);
-                Ok(())
-            }
-            Ok(None) => {
-                bail!("Failed to acquire process lock");
-            }
-            Err(_) => {
-                bail!("Timeout while acquiring process lock");
-            }
-        }
     }
 
     async fn check_cooldown(&self) -> bool {

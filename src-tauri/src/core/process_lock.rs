@@ -126,40 +126,6 @@ impl ProcessLock {
         })
     }
 
-    pub async fn acquire(&self) -> Result<()> {
-        let _lock = PROCESS_OPERATION_LOCK.lock().await;
-
-        if self.acquired.load(Ordering::SeqCst) {
-            return Ok(());
-        }
-
-        // 清理所有运行中的核心进程
-        let running_cores = Self::find_running_cores().await;
-        let mut failed_kills = Vec::new();
-
-        for (pid, name) in running_cores {
-            let sys = System::new_all();
-            if let Some(process) = sys.process(pid) {
-                if !Self::kill_process(pid, process).await {
-                    failed_kills.push(format!("{}({})", name, pid.as_u32()));
-                }
-            }
-        }
-
-        if !failed_kills.is_empty() {
-            bail!("Failed to terminate processes: {}", failed_kills.join(", "));
-        }
-
-        if self.pid_file.exists() {
-            let _ = fs::remove_file(&self.pid_file);
-        }
-
-        fs::write(&self.pid_file, std::process::id().to_string())?;
-        self.acquired.store(true, Ordering::SeqCst);
-        
-        Ok(())
-    }
-
     pub async fn release(&self) -> Result<()> {
         let _lock = PROCESS_OPERATION_LOCK.lock().await;
 
