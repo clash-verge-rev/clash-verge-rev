@@ -709,6 +709,7 @@ interface IVergeConfig {
   tun_tray_icon?: boolean;
   enable_tray_speed?: boolean;
   enable_tun_mode?: boolean;
+  enable_lite_mode?: boolean;
   enable_auto_launch?: boolean;
   enable_silent_start?: boolean;
   enable_system_proxy?: boolean;

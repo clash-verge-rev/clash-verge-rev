@@ -1,7 +1,12 @@
+#[cfg(not(target_os = "macos"))]
 use anyhow::{bail, Result};
+#[cfg(target_os = "macos")]
+use anyhow::Result;
 use sysinfo::{Pid, System};
+#[cfg(not(target_os = "macos"))]
 use crate::config::Config;
 use crate::core::service;
+#[cfg(not(target_os = "macos"))]
 use port_scanner::local_port_available;
 
 #[derive(Debug, Clone)]
@@ -12,6 +17,7 @@ impl HealthChecker {
         Self
     }
 
+    #[cfg(not(target_os = "macos"))]
     pub async fn check_ports(&self) -> Result<()> {
         let verge = Config::verge();
         let verge_config = verge.latest();
