@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{env::current_exe, process::Command as StdCommand};
 use tokio::time::Duration;
-use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, Pid};
+use sysinfo::{ProcessesToUpdate, RefreshKind, System};
 
 // Windows only
 

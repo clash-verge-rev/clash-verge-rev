@@ -1,7 +1,9 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::fs;
 use std::path::PathBuf;
-use sysinfo::{Pid, System, Signal, Process};
+use sysinfo::{Pid, System, Process};
+#[cfg(not(target_os = "windows"))]
+use sysinfo::Signal;
 use crate::utils::dirs;
 use std::time::Duration;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -116,6 +118,51 @@ impl ProcessLock {
 
         // 写入新的 PID 文件
         if let Err(e) = fs::write(&self.pid_file, std::process::id().to_string()) {
+            log::error!(target: "app", "Failed to write PID file: {}", e);
+            return None;
+        }
+
+        Some(Self {
+            pid_file: self.pid_file.clone(),
+            acquired: Arc::new(AtomicBool::new(true)),
+        })
+    }
+
+    /// 尝试接管现有进程，不强制终止
+    pub async fn acquire_existing(&self) -> Option<Self> {
+        let _lock = PROCESS_OPERATION_LOCK.lock().await;
+        
+        // 检查是否有运行中的核心进程
+        let running_cores = Self::find_running_cores().await;
+        if running_cores.is_empty() {
+            return None;
+        }
+
+        // 检查 PID 文件
+        if self.pid_file.exists() {
+            if let Ok(content) = fs::read_to_string(&self.pid_file) {
+                if let Ok(pid) = content.trim().parse::<u32>() {
+                    // 检查 PID 文件中的进程是否存在且是目标进程
+                    let sys = System::new_all();
+                    if let Some(process) = sys.process(Pid::from_u32(pid)) {
+                        let process_name = process.name().to_string_lossy();
+                        if Self::is_target_process(&process_name) {
+                            // PID 文件有效，直接接管
+                            return Some(Self {
+                                pid_file: self.pid_file.clone(),
+                                acquired: Arc::new(AtomicBool::new(true)),
+                            });
+                        }
+                    }
+                }
+            }
+            // PID 文件无效，删除它
+            let _ = fs::remove_file(&self.pid_file);
+        }
+
+        // 写入新的 PID 文件，使用找到的第一个运行中的进程
+        let (pid, _) = running_cores[0];
+        if let Err(e) = fs::write(&self.pid_file, pid.as_u32().to_string()) {
             log::error!(target: "app", "Failed to write PID file: {}", e);
             return None;
         }

@@ -1,5 +1,6 @@
 use crate::config::*;
 use crate::core::{clash_api, handle, service};
+#[cfg(target_os = "macos")]
 use crate::core::tray::Tray;
 use crate::log_err;
 use crate::utils::dirs;
@@ -48,20 +49,38 @@ impl CoreManager {
     pub async fn init(&self) -> Result<()> {
         log::info!(target: "app", "Initializing core manager");
         
-        // 先检查和清理由 service 启动的进程
-        log::info!(target: "app", "Checking for service processes");
+        // 获取状态锁
+        let _state_lock = CORE_STATE_LOCK.lock().await;
+        
+        // 检查是否已有运行中的服务进程
         if let Ok(response) = service::check_service().await {
             if response.data.is_some() {
-                log::warn!(target: "app", "Found existing service process, attempting to clean up");
-                if let Err(e) = service::force_kill_service_process().await {
-                    log::error!(target: "app", "Failed to clean up service process: {}", e);
+                log::info!(target: "app", "Found existing service process, attempting to take control");
+                
+                // 尝试接管现有进程
+                if let Some(process_lock) = ProcessLock::new()?.acquire_existing().await {
+                    log::info!(target: "app", "Successfully took control of existing process");
+                    *self.process_lock.lock().await = Some(process_lock);
+                    *self.running.lock().await = true;
+                    
+                    // 启动健康检查监控
+                    self.health_checker.start_monitoring();
+                    println!("[核心管理] 接管现有进程并启动健康检查");
+                    
+                    return Ok(());
+                } else {
+                    log::warn!(target: "app", "Could not take control of existing process, will clean up");
+                    if let Err(e) = service::force_kill_service_process().await {
+                        log::error!(target: "app", "Failed to clean up service process: {}", e);
+                    }
                 }
+                
                 // 等待一段时间确保进程完全终止
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
         }
 
-        // 强制清理所有可能的 verge-mihomo 进程
+        // 如果没有找到服务进程或无法接管，则强制清理所有可能的 verge-mihomo 进程
         log::info!(target: "app", "Checking for zombie core processes");
         if let Some(process_lock) = ProcessLock::new()?.acquire_force().await {
             log::info!(target: "app", "Successfully cleaned up zombie processes");
@@ -198,15 +217,6 @@ impl CoreManager {
 
     /// 启动核心
     pub async fn start_core(&self) -> Result<()> {
-        #[cfg(not(target_os = "macos"))]
-        // 检查端口占用
-        match timeout(Duration::from_secs(5), self.health_checker.check_ports()).await {
-            Ok(result) => result?,
-            Err(_) => {
-                bail!("端口检查超时");
-            }
-        }
-
         let config_path = Config::generate_file(ConfigType::Run)?;
 
         // 服务模式
@@ -402,66 +412,154 @@ impl CoreManager {
     /// 更新proxies那些
     /// 如果涉及端口和外部控制则需要重启
     pub async fn update_config(&self) -> Result<()> {
-        // 检查是否已经在执行操作
-        if self.is_operating.load(Ordering::SeqCst) {
-            log::info!(target: "app", "Core operation already in progress, skipping config update");
+        // 使用状态锁确保更新操作的互斥性
+        let _state_lock = CORE_STATE_LOCK.lock().await;
+
+        // 检查操作状态
+        if !self.can_perform_operation().await {
             return Ok(());
         }
 
-        // 检查冷却时间
-        if !self.check_cooldown().await {
-            log::info!(target: "app", "Operation too frequent, skipping config update");
-            return Ok(());
-        }
+        // 设置操作状态（使用 Drop 特性自动重置）
+        let _operation_guard = OperationGuard::new(self);
 
-        // 设置操作状态
-        self.is_operating.store(true, Ordering::SeqCst);
-
+        // 执行配置更新
         let result = async {
+            // 1. 生成新配置
+            log::info!(target: "app", "Generating new configuration");
+            Config::generate().await?;
+            
+            // 2. 生成并验证配置文件
+            log::info!(target: "app", "Validating configuration");
             let config_file = Config::generate_file(ConfigType::Run)?;
-            match timeout(
-                SERVICE_TIMEOUT,
-                service::run_core_by_service(&config_file),
-            )
-            .await
-            {
+            self.check_config().await?;
+            
+            // 3. 重启服务
+            log::info!(target: "app", "Restarting service with new configuration");
+            match timeout(SERVICE_TIMEOUT, service::run_core_by_service(&config_file)).await {
                 Ok(result) => result,
-                Err(_) => bail!("timeout"),
+                Err(_) => {
+                    log::error!(target: "app", "Service restart timeout");
+                    bail!("服务重启超时")
+                }
             }
         }.await;
 
-        // 重置操作状态
-        self.is_operating.store(false, Ordering::SeqCst);
+        // 处理结果
+        if let Err(ref e) = result {
+            log::error!(target: "app", "Configuration update failed: {}", e);
+        } else {
+            log::info!(target: "app", "Configuration update completed successfully");
+        }
 
         result
+    }
+
+    /// 检查是否可以执行操作
+    async fn can_perform_operation(&self) -> bool {
+        if self.is_operating.load(Ordering::SeqCst) {
+            log::info!(target: "app", "Operation already in progress");
+            return false;
+        }
+
+        if !self.check_cooldown().await {
+            log::info!(target: "app", "Operation too frequent");
+            return false;
+        }
+
+        true
     }
 
     /// 程序退出时的清理工作
     pub async fn cleanup_on_exit(&self) -> Result<()> {
         log::info!(target: "app", "Performing cleanup on exit");
 
-        // 先尝试正常停止核心
-        if let Err(e) = self.stop_core().await {
-            log::error!(target: "app", "Error stopping core during exit: {}", e);
-        }
+        // 获取状态锁
+        let _state_lock = CORE_STATE_LOCK.lock().await;
 
-        // 确保服务进程被终止
-        if let Ok(response) = service::check_service().await {
-            if response.data.is_some() {
-                log::warn!(target: "app", "Service process still exists during exit, forcing termination");
+        // 先停止健康检查
+        self.health_checker.stop_monitoring();
+        println!("[核心管理] 健康检查已停止");
+
+        // 设置退出标志
+        *self.running.lock().await = false;
+        self.is_operating.store(false, Ordering::SeqCst);
+
+        // 尝试正常停止核心
+        let stop_result = async {
+            // 关闭tun模式
+            let mut disable = Mapping::new();
+            let mut tun = Mapping::new();
+            tun.insert("enable".into(), false.into());
+            disable.insert("tun".into(), tun.into());
+            
+            // 尝试禁用 TUN 模式，但不等待太久
+            let _ = timeout(Duration::from_secs(1), clash_api::patch_configs(&disable)).await;
+
+            // 停止服务
+            if let Err(e) = service::stop_core_by_service().await {
+                log::error!(target: "app", "Error stopping service: {}", e);
+                // 如果停止失败，尝试强制终止
                 if let Err(e) = service::force_kill_service_process().await {
-                    log::error!(target: "app", "Failed to terminate service process during exit: {}", e);
+                    log::error!(target: "app", "Failed to force kill service process: {}", e);
+                }
+            }
+
+            // 等待确保进程完全终止
+            tokio::time::sleep(Duration::from_millis(100)).await;
+
+            // 释放当前进程锁
+            if let Some(lock) = self.process_lock.lock().await.take() {
+                if let Err(e) = lock.release().await {
+                    log::error!(target: "app", "Error releasing process lock: {}", e);
+                }
+            }
+
+            // 最后一次检查并清理所有可能的残留进程
+            if let Some(process_lock) = ProcessLock::new()?.acquire_force().await {
+                log::info!(target: "app", "Successfully cleaned up remaining processes");
+                let _ = process_lock.release().await;
+            }
+
+            Ok::<(), anyhow::Error>(())
+        };
+
+        // 设置清理超时
+        match timeout(Duration::from_secs(5), stop_result).await {
+            Ok(result) => {
+                if let Err(e) = result {
+                    log::error!(target: "app", "Error during cleanup: {}", e);
+                }
+            }
+            Err(_) => {
+                log::error!(target: "app", "Cleanup timeout, forcing termination");
+                // 超时后的最后尝试
+                if let Err(e) = service::force_kill_service_process().await {
+                    log::error!(target: "app", "Final force kill attempt failed: {}", e);
                 }
             }
         }
 
-        // 强制清理所有可能的残留进程
-        if let Some(process_lock) = ProcessLock::new()?.acquire_force().await {
-            let _ = process_lock.release().await;
-        }
-
         log::info!(target: "app", "Exit cleanup completed");
         Ok(())
+    }
+}
+
+// 使用 RAII 模式管理操作状态
+struct OperationGuard<'a> {
+    core_manager: &'a CoreManager,
+}
+
+impl<'a> OperationGuard<'a> {
+    fn new(core_manager: &'a CoreManager) -> Self {
+        core_manager.is_operating.store(true, Ordering::SeqCst);
+        Self { core_manager }
+    }
+}
+
+impl<'a> Drop for OperationGuard<'a> {
+    fn drop(&mut self) {
+        self.core_manager.is_operating.store(false, Ordering::SeqCst);
     }
 }
 

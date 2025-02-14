@@ -69,19 +69,46 @@ pub async fn delete_profile(index: String) -> CmdResult {
 /// 修改profiles的
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
+    // 使用 ConfigGuard 来管理配置状态，声明为可变
+    let mut config_guard = ConfigGuard::new(Config::profiles().latest().clone());
+    
+    // 1. 应用新配置
+    log::info!(target: "app", "Applying new profile configuration");
     wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
+    
+    // 2. 尝试更新核心配置
     match CoreManager::global().update_config().await {
         Ok(_) => {
+            log::info!(target: "app", "Core configuration updated successfully");
+            
+            // 3. 更新系统状态
             handle::Handle::refresh_clash();
-            let _ = tray::Tray::global().update_tooltip();
+            if let Err(e) = tray::Tray::global().update_tooltip() {
+                log::warn!(target: "app", "Failed to update tray tooltip: {}", e);
+            }
+            
+            // 4. 保存配置
             Config::profiles().apply();
-            wrap_err!(Config::profiles().data().save_file())?;
+            wrap_err!(Config::profiles().data().save_file())
+                .map_err(|e| {
+                    log::error!(target: "app", "Failed to save profile configuration: {}", e);
+                    format!("保存配置文件失败: {}", e)
+                })?;
+            
+            // 配置更新成功，丢弃回滚状态
+            config_guard.discard();
             Ok(())
         }
         Err(err) => {
-            Config::profiles().discard();
-            log::error!(target: "app", "{err}");
-            Err(format!("{err}"))
+            log::error!(target: "app", "Failed to update core configuration: {}", err);
+            
+            // 5. 回滚配置
+            if let Err(e) = config_guard.rollback().await {
+                log::error!(target: "app", "Failed to rollback configuration: {}", e);
+                return Err(format!("配置更新失败，且无法回滚到之前的配置: {}", err));
+            }
+            
+            Err(format!("配置更新失败: {}", err))
         }
     }
 }
@@ -456,5 +483,81 @@ pub mod uwp {
     #[tauri::command]
     pub async fn invoke_uwp_tool() -> CmdResult {
         Ok(())
+    }
+}
+
+// 使用 RAII 模式管理配置状态
+struct ConfigGuard {
+    original_config: IProfiles,
+    should_rollback: std::sync::atomic::AtomicBool,
+    rollback_error: std::sync::Mutex<Option<String>>,
+}
+
+impl ConfigGuard {
+    fn new(config: IProfiles) -> Self {
+        Self {
+            original_config: config,
+            should_rollback: std::sync::atomic::AtomicBool::new(true),
+            rollback_error: std::sync::Mutex::new(None),
+        }
+    }
+    
+    fn discard(&self) {
+        self.should_rollback.store(false, std::sync::atomic::Ordering::SeqCst);
+    }
+    
+    async fn rollback(&self) -> Result<(), String> {
+        if !self.should_rollback.load(std::sync::atomic::Ordering::SeqCst) {
+            return Ok(());
+        }
+        
+        // 回滚到原始配置
+        Config::profiles().discard();
+        
+        // 尝试应用原始配置
+        if let Err(e) = Config::profiles().draft().patch_config(self.original_config.clone()) {
+            let error = format!("回滚配置失败: {}", e);
+            *self.rollback_error.lock().unwrap() = Some(error.clone());
+            return Err(error);
+        }
+        
+        Config::profiles().apply();
+        
+        // 重新应用原始配置
+        match CoreManager::global().update_config().await {
+            Ok(_) => {
+                log::info!(target: "app", "Successfully rolled back configuration");
+                Ok(())
+            }
+            Err(e) => {
+                let error = format!("回滚配置失败: {}", e);
+                *self.rollback_error.lock().unwrap() = Some(error.clone());
+                Err(error)
+            }
+        }
+    }
+}
+
+impl Drop for ConfigGuard {
+    fn drop(&mut self) {
+        if self.should_rollback.load(std::sync::atomic::Ordering::SeqCst) {
+            // 获取可能的回滚错误
+            let error = self.rollback_error.lock().unwrap().clone();
+            match error {
+                Some(err) => {
+                    log::error!(
+                        target: "app",
+                        "ConfigGuard dropped while rollback was needed, previous rollback error: {}",
+                        err
+                    );
+                }
+                None => {
+                    log::warn!(
+                        target: "app",
+                        "ConfigGuard dropped while rollback was needed, no previous rollback attempt"
+                    );
+                }
+            }
+        }
     }
 }
