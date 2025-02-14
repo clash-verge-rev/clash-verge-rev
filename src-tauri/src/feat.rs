@@ -162,41 +162,10 @@ pub fn toggle_tun_mode() {
 }
 
 pub fn quit(code: Option<i32>) {
-    println!("Starting application quit process");
-    log::info!(target: "app", "Starting application quit process");
-    
     let app_handle = handle::Handle::global().app_handle().unwrap();
     handle::Handle::global().set_is_exiting();
-    
-    // 立即关闭窗口，让用户感知到退出开始
-    if let Some(window) = handle::Handle::global().get_window() {
-        let _ = window.close();
-    }
-    
-    // 移除系统托盘图标
-    if let Some(tray) = app_handle.tray_by_id("main") {
-        let _ = tray.set_icon(None);
-    }
-    
-    // 后台执行所有清理工作
-    let app_handle_clone = app_handle.clone();
-    tauri::async_runtime::block_on(async move {
-        // 1. 发送停止内核指令
-        let _ = CoreManager::global().stop_core().await;
-        
-        // 2. 重置系统代理
-        resolve::resolve_reset();
-        
-        // 3. 保存窗口状态
-        let _ = app_handle_clone.save_window_state(StateFlags::default());
-        
-        println!("Cleanup tasks completed in background");
-        log::info!(target: "app", "Cleanup tasks completed in background");
-    });
-    
-    // 主线程退出
-    println!("Exiting application with code: {:?}", code);
-    log::info!(target: "app", "Exiting application with code: {:?}", code);
+    resolve::resolve_reset();
+    log_err!(handle::Handle::global().get_window().unwrap().close());
     app_handle.exit(code.unwrap_or(0));
 }
 

@@ -10,14 +10,10 @@ use std::{sync::Arc, time::Duration};
 use tauri_plugin_shell::ShellExt;
 use tokio::sync::Mutex;
 use tokio::time::sleep;
-use super::process_lock::ProcessLock;
-use super::health_check::HealthChecker;
 
 #[derive(Debug)]
 pub struct CoreManager {
     running: Arc<Mutex<bool>>,
-    process_lock: Arc<Mutex<Option<ProcessLock>>>,
-    health_checker: HealthChecker,
 }
 
 impl CoreManager {
@@ -25,19 +21,11 @@ impl CoreManager {
         static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
         CORE_MANAGER.get_or_init(|| CoreManager {
             running: Arc::new(Mutex::new(false)),
-            process_lock: Arc::new(Mutex::new(None)),
-            health_checker: HealthChecker::new(),
         })
     }
 
     pub async fn init(&self) -> Result<()> {
         log::trace!("run core start");
-        
-        // 初始化进程锁
-        let process_lock = ProcessLock::new()?;
-        process_lock.acquire()?;
-        *self.process_lock.lock().await = Some(process_lock);
-
         // 启动clash
         log_err!(Self::global().start_core().await);
         log::trace!("run core end");
@@ -68,39 +56,37 @@ impl CoreManager {
 
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
-        log::info!(target: "app", "Stopping core");
+        let mut running = self.running.lock().await;
+
+        if !*running {
+            log::debug!("core is not running");
+            return Ok(());
+        }
 
         // 关闭tun模式
         let mut disable = Mapping::new();
         let mut tun = Mapping::new();
         tun.insert("enable".into(), false.into());
         disable.insert("tun".into(), tun.into());
-        log::debug!(target: "app", "Disabling TUN mode");
-        let _ = clash_api::patch_configs(&disable).await;
+        log::debug!(target: "app", "disable tun mode");
+        log_err!(clash_api::patch_configs(&disable).await);
 
-        // 直接尝试停止服务，不预先检查状态
-        log::info!(target: "app", "Attempting to stop service");
-        let _ = service::stop_core_by_service().await;
-
-        // 设置运行状态
-        *self.running.lock().await = false;
-
-        // 释放进程锁
-        let mut process_lock = self.process_lock.lock().await;
-        if let Some(lock) = process_lock.take() {
-            log::info!(target: "app", "Releasing process lock");
-            let _ = lock.release();
+        // 服务模式
+        if service::check_service().await.is_ok() {
+            log::info!(target: "app", "stop the core by service");
+            service::stop_core_by_service().await?;
         }
-
-        log::info!(target: "app", "Core stopped successfully");
+        *running = false;
         Ok(())
     }
 
     /// 启动核心
     pub async fn start_core(&self) -> Result<()> {
-        #[cfg(not(target_os = "macos"))]
-        // 检查端口占用
-        self.health_checker.check_ports().await?;
+        let mut running = self.running.lock().await;
+        if *running {
+            log::info!("core is running");
+            return Ok(());
+        }
 
         let config_path = Config::generate_file(ConfigType::Run)?;
 
@@ -109,23 +95,12 @@ impl CoreManager {
             log::info!(target: "app", "try to run core in service mode");
             service::run_core_by_service(&config_path).await?;
         }
-
-        // 启动健康检查
-        let checker = Arc::new(self.health_checker.clone());
-        tokio::spawn(async move {
-            loop {
-                sleep(Duration::from_secs(30)).await;
-                if let Err(e) = checker.check_service_health().await {
-                    log::error!(target: "app", "Health check failed: {}", e);
-                }
-            }
-        });
-
         // 流量订阅
         #[cfg(target_os = "macos")]
         log_err!(Tray::global().subscribe_traffic().await);
 
-        *self.running.lock().await = true;
+        *running = true;
+
         Ok(())
     }
 
