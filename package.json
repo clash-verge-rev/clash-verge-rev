@@ -3,7 +3,7 @@
   "version": "2.0.4-alpha",
   "license": "GPL-3.0-only",
   "scripts": {
-    "dev": "cross-env RUST_BACKTRACE=1 tauri dev --features verge-dev",
+    "dev": "cross-env RUST_BACKTRACE=1 tauri dev",
     "dev:diff": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
     "tauri": "tauri",

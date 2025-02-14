@@ -9,6 +9,5 @@ pub mod sysopt;
 pub mod timer;
 pub mod tray;
 pub mod win_uwp;
-pub mod process_lock;
-pub mod health_check;
+
 pub use self::core::*;
