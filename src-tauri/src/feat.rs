@@ -181,6 +181,10 @@ pub fn quit(code: Option<i32>) {
     // 后台执行所有清理工作
     let app_handle_clone = app_handle.clone();
     tauri::async_runtime::block_on(async move {
+        // MacOS 杀死 verge-mihomo 进程
+        #[cfg(target_os = "macos")]
+        let _ = service::stop_service_by_service().await;
+        
         // 1. 发送停止内核指令
         let _ = CoreManager::global().stop_core().await;
         

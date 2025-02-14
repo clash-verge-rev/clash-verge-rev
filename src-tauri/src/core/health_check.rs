@@ -1,7 +1,4 @@
-#[cfg(not(target_os = "macos"))]
 use anyhow::{bail, Result, Error};
-#[cfg(target_os = "macos")]
-use anyhow::{Result, Error};
 use sysinfo::{Pid, System, Signal};
 use crate::config::Config;
 use crate::core::service;
