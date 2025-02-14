@@ -2,7 +2,7 @@
 use anyhow::{bail, Result, Error};
 #[cfg(target_os = "macos")]
 use anyhow::{Result, Error};
-use sysinfo::{Pid, System, Signal};
+use sysinfo::System;
 use crate::config::Config;
 use crate::core::service;
 #[cfg(not(target_os = "macos"))]
@@ -13,15 +13,10 @@ use std::sync::atomic::{AtomicU32, AtomicBool, Ordering};
 use std::sync::Arc;
 use crate::config::ConfigType;
 use tokio::sync::Mutex;
-use std::future::Future;
-use std::pin::Pin;
 
 const PORT_CHECK_TIMEOUT: Duration = Duration::from_secs(2);
-const HEALTH_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_FAILURES: u32 = 3;
 const SERVICE_TIMEOUT: Duration = Duration::from_secs(10);
-
-type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
 #[derive(Debug, Clone)]
 pub struct HealthChecker {
@@ -93,9 +88,9 @@ impl HealthChecker {
         sys.refresh_all();
         
         if let Ok(response) = service::check_service().await {
-            if let Some(body) = response.data {
+            if response.data.is_some() {
                 // 遍历所有进程查找 mihomo
-                for (pid, process) in sys.processes() {
+                for (_pid, process) in sys.processes() {
                     if process.name().to_string_lossy().contains("mihomo") {
                         // 检查进程状态
                         let status = process.status();

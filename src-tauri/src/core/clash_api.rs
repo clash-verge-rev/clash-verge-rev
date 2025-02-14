@@ -1,9 +1,8 @@
 use crate::config::Config;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Rate {

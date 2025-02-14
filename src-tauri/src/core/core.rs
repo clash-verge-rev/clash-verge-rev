@@ -1,5 +1,6 @@
 use crate::config::*;
 use crate::core::{clash_api, handle, service};
+#[cfg(target_os = "macos")]
 use crate::core::tray::Tray;
 use crate::log_err;
 use crate::utils::dirs;
@@ -52,10 +53,8 @@ impl CoreManager {
         let _state_lock = CORE_STATE_LOCK.lock().await;
         
         // 检查是否已有运行中的服务进程
-        let mut existing_service = false;
         if let Ok(response) = service::check_service().await {
-            if let Some(body) = response.data {
-                existing_service = true;
+            if response.data.is_some() {
                 log::info!(target: "app", "Found existing service process, attempting to take control");
                 
                 // 尝试接管现有进程

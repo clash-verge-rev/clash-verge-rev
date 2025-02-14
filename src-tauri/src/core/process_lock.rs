@@ -1,7 +1,9 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::fs;
 use std::path::PathBuf;
-use sysinfo::{Pid, System, Signal, Process};
+use sysinfo::{Pid, System, Process};
+#[cfg(not(target_os = "windows"))]
+use sysinfo::Signal;
 use crate::utils::dirs;
 use std::time::Duration;
 use std::sync::atomic::{AtomicBool, Ordering};
