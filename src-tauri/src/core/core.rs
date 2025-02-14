@@ -48,20 +48,40 @@ impl CoreManager {
     pub async fn init(&self) -> Result<()> {
         log::info!(target: "app", "Initializing core manager");
         
-        // 先检查和清理由 service 启动的进程
-        log::info!(target: "app", "Checking for service processes");
+        // 获取状态锁
+        let _state_lock = CORE_STATE_LOCK.lock().await;
+        
+        // 检查是否已有运行中的服务进程
+        let mut existing_service = false;
         if let Ok(response) = service::check_service().await {
-            if response.data.is_some() {
-                log::warn!(target: "app", "Found existing service process, attempting to clean up");
-                if let Err(e) = service::force_kill_service_process().await {
-                    log::error!(target: "app", "Failed to clean up service process: {}", e);
+            if let Some(body) = response.data {
+                existing_service = true;
+                log::info!(target: "app", "Found existing service process, attempting to take control");
+                
+                // 尝试接管现有进程
+                if let Some(process_lock) = ProcessLock::new()?.acquire_existing().await {
+                    log::info!(target: "app", "Successfully took control of existing process");
+                    *self.process_lock.lock().await = Some(process_lock);
+                    *self.running.lock().await = true;
+                    
+                    // 启动健康检查监控
+                    self.health_checker.start_monitoring();
+                    println!("[核心管理] 接管现有进程并启动健康检查");
+                    
+                    return Ok(());
+                } else {
+                    log::warn!(target: "app", "Could not take control of existing process, will clean up");
+                    if let Err(e) = service::force_kill_service_process().await {
+                        log::error!(target: "app", "Failed to clean up service process: {}", e);
+                    }
                 }
+                
                 // 等待一段时间确保进程完全终止
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
         }
 
-        // 强制清理所有可能的 verge-mihomo 进程
+        // 如果没有找到服务进程或无法接管，则强制清理所有可能的 verge-mihomo 进程
         log::info!(target: "app", "Checking for zombie core processes");
         if let Some(process_lock) = ProcessLock::new()?.acquire_force().await {
             log::info!(target: "app", "Successfully cleaned up zombie processes");
@@ -440,24 +460,70 @@ impl CoreManager {
     pub async fn cleanup_on_exit(&self) -> Result<()> {
         log::info!(target: "app", "Performing cleanup on exit");
 
-        // 先尝试正常停止核心
-        if let Err(e) = self.stop_core().await {
-            log::error!(target: "app", "Error stopping core during exit: {}", e);
-        }
+        // 获取状态锁
+        let _state_lock = CORE_STATE_LOCK.lock().await;
 
-        // 确保服务进程被终止
-        if let Ok(response) = service::check_service().await {
-            if response.data.is_some() {
-                log::warn!(target: "app", "Service process still exists during exit, forcing termination");
+        // 先停止健康检查
+        self.health_checker.stop_monitoring();
+        println!("[核心管理] 健康检查已停止");
+
+        // 设置退出标志
+        *self.running.lock().await = false;
+        self.is_operating.store(false, Ordering::SeqCst);
+
+        // 尝试正常停止核心
+        let stop_result = async {
+            // 关闭tun模式
+            let mut disable = Mapping::new();
+            let mut tun = Mapping::new();
+            tun.insert("enable".into(), false.into());
+            disable.insert("tun".into(), tun.into());
+            
+            // 尝试禁用 TUN 模式，但不等待太久
+            let _ = timeout(Duration::from_secs(1), clash_api::patch_configs(&disable)).await;
+
+            // 停止服务
+            if let Err(e) = service::stop_core_by_service().await {
+                log::error!(target: "app", "Error stopping service: {}", e);
+                // 如果停止失败，尝试强制终止
                 if let Err(e) = service::force_kill_service_process().await {
-                    log::error!(target: "app", "Failed to terminate service process during exit: {}", e);
+                    log::error!(target: "app", "Failed to force kill service process: {}", e);
                 }
             }
-        }
 
-        // 强制清理所有可能的残留进程
-        if let Some(process_lock) = ProcessLock::new()?.acquire_force().await {
-            let _ = process_lock.release().await;
+            // 等待确保进程完全终止
+            tokio::time::sleep(Duration::from_millis(100)).await;
+
+            // 释放当前进程锁
+            if let Some(lock) = self.process_lock.lock().await.take() {
+                if let Err(e) = lock.release().await {
+                    log::error!(target: "app", "Error releasing process lock: {}", e);
+                }
+            }
+
+            // 最后一次检查并清理所有可能的残留进程
+            if let Some(process_lock) = ProcessLock::new()?.acquire_force().await {
+                log::info!(target: "app", "Successfully cleaned up remaining processes");
+                let _ = process_lock.release().await;
+            }
+
+            Ok::<(), anyhow::Error>(())
+        };
+
+        // 设置清理超时
+        match timeout(Duration::from_secs(5), stop_result).await {
+            Ok(result) => {
+                if let Err(e) = result {
+                    log::error!(target: "app", "Error during cleanup: {}", e);
+                }
+            }
+            Err(_) => {
+                log::error!(target: "app", "Cleanup timeout, forcing termination");
+                // 超时后的最后尝试
+                if let Err(e) = service::force_kill_service_process().await {
+                    log::error!(target: "app", "Final force kill attempt failed: {}", e);
+                }
+            }
         }
 
         log::info!(target: "app", "Exit cleanup completed");

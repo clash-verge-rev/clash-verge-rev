@@ -89,44 +89,41 @@ impl HealthChecker {
     }
 
     async fn check_process_health(&self) -> Result<()> {
-        let sys = System::new_all();
+        let mut sys = System::new_all();
+        sys.refresh_all();
         
         if let Ok(response) = service::check_service().await {
             if let Some(body) = response.data {
-                if let Ok(pid) = body.bin_path.parse::<u32>() {
-                    if let Some(process) = sys.process(Pid::from(pid as usize)) {
-                        if process.name().to_string_lossy().contains("mihomo") {
-                            // 检查进程状态
-                            let status = process.status();
-                            if status.to_string().contains("Zombie") {
-                                return Err(Error::msg("进程处于僵尸状态"));
-                            }
-
-                            // 检查进程CPU和内存使用
-                            let cpu_usage = process.cpu_usage();
-                            let memory_usage = process.memory() / 1024 / 1024; // Convert to MB
-
-                            if cpu_usage > 90.0 {
-                                return Err(Error::msg(format!("CPU使用率过高: {}%", cpu_usage)));
-                            }
-
-                            if memory_usage > 1024 { // 1GB
-                                return Err(Error::msg(format!("内存使用过高: {}MB", memory_usage)));
-                            }
-
-                            return Ok(());
+                // 遍历所有进程查找 mihomo
+                for (pid, process) in sys.processes() {
+                    if process.name().to_string_lossy().contains("mihomo") {
+                        // 检查进程状态
+                        let status = process.status();
+                        if status.to_string().contains("Zombie") {
+                            return Err(Error::msg("进程处于僵尸状态"));
                         }
+
+                        // 检查进程CPU和内存使用
+                        let cpu_usage = process.cpu_usage();
+                        let memory_usage = process.memory() / 1024 / 1024; // Convert to MB
+
+                        if cpu_usage > 90.0 {
+                            return Err(Error::msg(format!("CPU使用率过高: {:.1}%", cpu_usage)));
+                        }
+
+                        if memory_usage > 1024 { // 1GB
+                            return Err(Error::msg(format!("内存使用过高: {}MB", memory_usage)));
+                        }
+
+                        // 找到正在运行的 mihomo 进程，说明服务正常
+                        return Ok(());
                     }
-                    // 进程ID存在但找不到进程，说明进程已经退出
-                    return Err(Error::msg(format!("进程 {} 不存在", pid)));
                 }
-                // PID解析失败
-                return Err(Error::msg("无法解析进程ID"));
+                // 遍历完所有进程都没找到 mihomo
+                return Err(Error::msg("未找到运行中的 mihomo 进程"));
             }
-            // 服务返回数据为空
             return Err(Error::msg("服务状态数据为空"));
         }
-        // 服务检查失败
         Err(Error::msg("服务检查失败"))
     }
 
@@ -134,11 +131,11 @@ impl HealthChecker {
         // 检查进程健康状态
         if let Err(e) = self.check_process_health().await {
             eprintln!("[健康检查错误] 检查失败: {}", e);
-            self.failure_count.fetch_add(1, Ordering::SeqCst);
-            let current_failures = self.failure_count.load(Ordering::SeqCst);
             
-            if current_failures >= MAX_FAILURES {
-                println!("[健康检查警告] 达到最大失败次数({}次)，开始尝试恢复", current_failures);
+            // 根据错误类型决定处理策略
+            if e.to_string().contains("未找到运行中的 mihomo 进程") {
+                // 进程不存在时立即尝试恢复
+                println!("[健康检查警告] 检测到进程不存在，立即尝试恢复");
                 match self.attempt_recovery().await {
                     Ok(_) => {
                         println!("[健康检查] 服务恢复成功，重置失败计数");
@@ -151,7 +148,26 @@ impl HealthChecker {
                     }
                 }
             } else {
-                println!("[健康检查警告] 服务异常 ({}/{}): {}", current_failures, MAX_FAILURES, e);
+                // 其他类型的错误（如CPU过高、内存过高等）使用累计失败计数
+                self.failure_count.fetch_add(1, Ordering::SeqCst);
+                let current_failures = self.failure_count.load(Ordering::SeqCst);
+                
+                if current_failures >= MAX_FAILURES {
+                    println!("[健康检查警告] 达到最大失败次数({}次)，开始尝试恢复", current_failures);
+                    match self.attempt_recovery().await {
+                        Ok(_) => {
+                            println!("[健康检查] 服务恢复成功，重置失败计数");
+                            self.failure_count.store(0, Ordering::SeqCst);
+                            return Ok(());
+                        }
+                        Err(e) => {
+                            eprintln!("[健康检查错误] 服务恢复失败: {}", e);
+                            return Err(e);
+                        }
+                    }
+                } else {
+                    println!("[健康检查警告] 服务异常 ({}/{}): {}", current_failures, MAX_FAILURES, e);
+                }
             }
             
             bail!("服务健康检查失败: {}", e);
