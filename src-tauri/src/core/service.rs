@@ -164,11 +164,11 @@ pub async fn reinstall_service() -> Result<()> {
 pub async fn check_service() -> Result<JsonResponse> {
     log::info!(target: "app", "Checking service status");
     println!("Checking service status");
-    
+
     let url = format!("{SERVICE_URL}/get_clash");
     log::debug!(target: "app", "Sending request to {}", url);
     println!("Sending request to {}", url);
-    
+
     let client = reqwest::ClientBuilder::new()
         .no_proxy()
         .timeout(Duration::from_secs(3))
@@ -203,7 +203,7 @@ pub async fn check_service() -> Result<JsonResponse> {
         }
         tokio::time::sleep(Duration::from_millis(500)).await;
     }
-    
+
     bail!("Failed to check service after 3 attempts")
 }
 
@@ -248,21 +248,14 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 }
 
 /// 强制终止服务管理的进程
+#[cfg(not(target_os = "macos"))]
 pub async fn force_kill_service_process() -> Result<()> {
     // 1. 先通过服务 API 获取当前管理的进程
     if let Ok(response) = check_service().await {
         if let Some(body) = response.data {
             if let Ok(pid) = body.bin_path.parse::<u32>() {
                 log::info!(target: "app", "Found service process with PID: {}", pid);
-                
-                #[cfg(target_os = "macos")]
-                {
-                    let _ = std::process::Command::new("kill")
-                        .arg("-9")
-                        .arg(pid.to_string())
-                        .output();
-                }
-                
+
                 #[cfg(target_os = "linux")]
                 {
                     let _ = std::process::Command::new("kill")
@@ -275,40 +268,30 @@ pub async fn force_kill_service_process() -> Result<()> {
                         .arg(pid.to_string())
                         .output();
                 }
-                
+
                 #[cfg(windows)]
                 {
                     let _ = std::process::Command::new("taskkill")
                         .args(["/F", "/PID", &pid.to_string()])
                         .output();
                 }
-                
+
                 log::info!(target: "app", "Sent kill signal to process {}", pid);
             }
         }
     }
 
     // 2. 扫描并清理所有可能的 verge-mihomo 进程
-    let mut system = System::new_with_specifics(
-        RefreshKind::everything()
-    );
+    let mut system = System::new_with_specifics(RefreshKind::everything());
     system.refresh_processes(ProcessesToUpdate::All, true);
-    
+
     for (pid, process) in system.processes() {
         let name = process.name().to_string_lossy().to_lowercase();
         if name.contains("verge-mihomo") {
             log::warn!(target: "app", "Found orphaned process: {} ({})", name, pid);
-            
+
             let pid_value = pid.as_u32();
-            
-            #[cfg(target_os = "macos")]
-            {
-                let _ = std::process::Command::new("kill")
-                    .arg("-9")
-                    .arg(pid_value.to_string())
-                    .output();
-            }
-            
+
             #[cfg(target_os = "linux")]
             {
                 let _ = std::process::Command::new("kill")
@@ -321,35 +304,73 @@ pub async fn force_kill_service_process() -> Result<()> {
                     .arg(pid_value.to_string())
                     .output();
             }
-            
+
             #[cfg(windows)]
             {
                 let _ = std::process::Command::new("taskkill")
                     .args(["/F", "/PID", &pid_value.to_string()])
                     .output();
             }
-            
+
             log::info!(target: "app", "Sent kill signal to orphaned process {}", pid_value);
         }
     }
 
     // 3. 等待确保进程完全终止
     std::thread::sleep(std::time::Duration::from_millis(200));
-    
+
     // 4. 再次检查确保清理完成
     system.refresh_processes(ProcessesToUpdate::All, true);
     let mut found_processes = Vec::new();
-    
+
     for (pid, process) in system.processes() {
         let name = process.name().to_string_lossy().to_lowercase();
         if name.contains("verge-mihomo") {
             found_processes.push(format!("{} ({})", name, pid));
         }
     }
-    
+
     if !found_processes.is_empty() {
         log::error!(target: "app", "Failed to clean up all processes: {}", found_processes.join(", "));
-        bail!("Failed to clean up processes: {}", found_processes.join(", "));
+        bail!(
+            "Failed to clean up processes: {}",
+            found_processes.join(", ")
+        );
+    }
+
+    Ok(())
+}
+
+/// 强制终止服务管理的进程
+#[cfg(target_os = "macos")]
+pub async fn force_kill_service_process() -> Result<()> {
+    let _ = stop_service_by_service();
+
+    let mut system = System::new_with_specifics(RefreshKind::everything());
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    system.refresh_processes(ProcessesToUpdate::All, true);
+
+    let remain_mihomo_processes = system
+        .processes()
+        .iter()
+        .filter_map(|(pid, process)| {
+            let name = process.name().to_string_lossy().to_lowercase();
+            if name.contains("verge-mihomo") {
+                Some(format!("{} ({})", name, pid))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<String>>();
+
+    log::info!(target: "app", "remain services after force kill: {:?}", remain_mihomo_processes);
+
+    if !remain_mihomo_processes.is_empty() {
+        log::error!(target: "app", "Failed to clean up all processes: {}", remain_mihomo_processes.join(", "));
+        bail!(
+            "Failed to clean up processes: {}",
+            remain_mihomo_processes.join(", ")
+        );
     }
 
     Ok(())
@@ -358,14 +379,14 @@ pub async fn force_kill_service_process() -> Result<()> {
 /// stop the clash by service
 pub(super) async fn stop_core_by_service() -> Result<()> {
     log::info!(target: "app", "Attempting to stop core through service");
-    
+
     // 1. 先尝试通过服务正常停止
     let url = format!("{SERVICE_URL}/stop_clash");
     let client = reqwest::ClientBuilder::new()
         .no_proxy()
         .timeout(Duration::from_secs(2))
         .build()?;
-    
+
     match client.post(&url).send().await {
         Ok(_) => {
             log::info!(target: "app", "Successfully sent stop request to service");
@@ -376,9 +397,39 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
             log::error!(target: "app", "Failed to send stop request: {}", e);
         }
     }
-    
+
     // 2. 强制清理所有进程
     force_kill_service_process().await?;
-    
+
+    Ok(())
+}
+
+/// stop the clash-verge-service.
+///
+/// on MacOS, this will kill all running `mihomi` processes
+/// and create a new service with a new PID.
+/// It does not REALLY kill the clash-verge-service totally.
+/// It relies on clash-verge-service running as a launchctl service.
+/// To enable this new service feature, see https://github.com/clash-verge-rev/clash-verge-service/pull/5
+/// Related build required.
+#[cfg(target_os = "macos")]
+pub async fn stop_service_by_service() -> Result<()> {
+    log::info!(target: "app", "Attempting to stop service through service");
+    let url = format!("{SERVICE_URL}/stop_service");
+    let client = reqwest::ClientBuilder::new()
+        .no_proxy()
+        .timeout(Duration::from_secs(2))
+        .build()?;
+
+    match client.post(&url).send().await {
+        Ok(_) => {
+            log::info!(target: "app", "Successfully sent stop request to service");
+            tokio::time::sleep(Duration::from_millis(200)).await;
+        }
+        Err(e) => {
+            log::error!(target: "app", "Failed to send stop request: {}", e);
+        }
+    }
+
     Ok(())
 }
