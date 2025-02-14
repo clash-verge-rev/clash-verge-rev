@@ -217,15 +217,6 @@ impl CoreManager {
 
     /// 启动核心
     pub async fn start_core(&self) -> Result<()> {
-        #[cfg(not(target_os = "macos"))]
-        // 检查端口占用
-        match timeout(Duration::from_secs(5), self.health_checker.check_ports()).await {
-            Ok(result) => result?,
-            Err(_) => {
-                bail!("端口检查超时");
-            }
-        }
-
         let config_path = Config::generate_file(ConfigType::Run)?;
 
         // 服务模式
