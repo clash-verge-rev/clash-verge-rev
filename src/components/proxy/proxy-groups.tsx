@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollTopButton } from "../layout/scroll-top-button";
 import { Box, styled } from "@mui/material";
 import { memo } from "react";
+import { createPortal } from "react-dom";
 
 // 将选择器组件抽离出来，避免主组件重渲染时重复创建样式
 const AlphabetSelector = styled(Box)(({ theme }) => ({
@@ -30,10 +31,25 @@ const AlphabetSelector = styled(Box)(({ theme }) => ({
   background: "transparent",
   zIndex: 1000,
   gap: "2px",
-  padding: "8px 4px",
-  willChange: "transform", // 优化动画性能
+  // padding: "4px 2px",
+  willChange: "transform",
+  "&:hover": {
+    background: theme.palette.background.paper,
+    boxShadow: theme.shadows[2],
+    borderRadius: "8px",
+  },
+  "& .scroll-container": {
+    overflow: "hidden",
+    maxHeight: "inherit",
+  },
+  "& .letter-container": {
+    display: "flex",
+    flexDirection: "column",
+    gap: "2px",
+    transition: "transform 0.2s ease",
+  },
   "& .letter": {
-    padding: "2px 4px",
+    padding: "1px 4px",
     fontSize: "12px",
     cursor: "pointer",
     fontFamily:
@@ -45,52 +61,40 @@ const AlphabetSelector = styled(Box)(({ theme }) => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    transition: "all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)", // 稍微加快动画速度
-    transform: "scale(1) translateZ(0)", // 开启GPU加速
-    backfaceVisibility: "hidden", // 防止闪烁
+    transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
+    transform: "scale(1) translateZ(0)",
+    backfaceVisibility: "hidden",
     borderRadius: "6px",
     "&:hover": {
       color: theme.palette.primary.main,
-      transform: "scale(1.2) translateZ(0)",
+      transform: "scale(1.4) translateZ(0)",
       backgroundColor: theme.palette.action.hover,
-      "& .tooltip": {
-        opacity: 1,
-        transform: "translateX(0) translateZ(0)",
-        visibility: "visible",
-      },
-    },
-    "&:hover ~ .letter": {
-      transform: "translateY(2px) translateZ(0)",
     },
   },
-  "& .tooltip": {
+}));
+
+// 创建一个单独的 Tooltip 组件
+const Tooltip = styled("div")(({ theme }) => ({
+  position: "fixed",
+  background: theme.palette.background.paper,
+  padding: "4px 8px",
+  borderRadius: "6px",
+  boxShadow: theme.shadows[3],
+  whiteSpace: "nowrap",
+  fontSize: "16px",
+  color: theme.palette.text.primary,
+  pointerEvents: "none",
+  "&::after": {
+    content: '""',
     position: "absolute",
-    right: "calc(100% + 8px)",
-    background: theme.palette.background.paper,
-    padding: "4px 8px",
-    borderRadius: "6px",
-    boxShadow: theme.shadows[3],
-    whiteSpace: "nowrap",
-    opacity: 0,
-    visibility: "hidden",
-    transform: "translateX(4px) translateZ(0)",
-    transition: "all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)",
-    fontSize: "12px",
-    color: theme.palette.text.primary,
-    pointerEvents: "none",
-    backfaceVisibility: "hidden",
-    "&::after": {
-      content: '""',
-      position: "absolute",
-      right: "-4px",
-      top: "50%",
-      transform: "translateY(-50%)",
-      width: 0,
-      height: 0,
-      borderTop: "4px solid transparent",
-      borderBottom: "4px solid transparent",
-      borderLeft: `4px solid ${theme.palette.background.paper}`,
-    },
+    right: "-4px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 0,
+    height: 0,
+    borderTop: "4px solid transparent",
+    borderBottom: "4px solid transparent",
+    borderLeft: `4px solid ${theme.palette.background.paper}`,
   },
 }));
 
@@ -104,12 +108,56 @@ const LetterItem = memo(
     name: string;
     onClick: (name: string) => void;
     getFirstChar: (str: string) => string;
-  }) => (
-    <div className="letter" onClick={() => onClick(name)}>
-      <span>{getFirstChar(name)}</span>
-      <div className="tooltip">{name}</div>
-    </div>
-  ),
+  }) => {
+    const [showTooltip, setShowTooltip] = useState(false);
+    const letterRef = useRef<HTMLDivElement>(null);
+    const [tooltipPosition, setTooltipPosition] = useState({
+      top: 0,
+      right: 0,
+    });
+
+    const updateTooltipPosition = useCallback(() => {
+      if (!letterRef.current) return;
+      const rect = letterRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top + rect.height / 2,
+        right: window.innerWidth - rect.left + 8,
+      });
+    }, []);
+
+    useEffect(() => {
+      if (showTooltip) {
+        updateTooltipPosition();
+      }
+    }, [showTooltip, updateTooltipPosition]);
+
+    return (
+      <>
+        <div
+          ref={letterRef}
+          className="letter"
+          onClick={() => onClick(name)}
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          <span>{getFirstChar(name)}</span>
+        </div>
+        {showTooltip &&
+          createPortal(
+            <Tooltip
+              style={{
+                top: tooltipPosition.top,
+                right: tooltipPosition.right,
+                transform: "translateY(-50%)",
+              }}
+            >
+              {name}
+            </Tooltip>,
+            document.body,
+          )}
+      </>
+    );
+  },
 );
 
 interface Props {
@@ -130,6 +178,9 @@ export const ProxyGroups = (props: Props) => {
   const scrollPositionRef = useRef<Record<string, number>>({});
   const [showScrollTop, setShowScrollTop] = useState(false);
   const scrollerRef = useRef<Element | null>(null);
+  const letterContainerRef = useRef<HTMLDivElement>(null);
+  const alphabetSelectorRef = useRef<HTMLDivElement>(null);
+  const [maxHeight, setMaxHeight] = useState("auto");
 
   // 使用useMemo缓存字母索引数据
   const { groupFirstLetters, letterIndexMap } = useMemo(() => {
@@ -332,6 +383,64 @@ export const ProxyGroups = (props: Props) => {
     }
   };
 
+  // 添加滚轮事件处理函数
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    if (!letterContainerRef.current) return;
+
+    const container = letterContainerRef.current;
+    const scrollAmount = e.deltaY;
+    const currentTransform = new WebKitCSSMatrix(container.style.transform);
+    const currentY = currentTransform.m42 || 0;
+
+    const containerHeight = container.getBoundingClientRect().height;
+    const parentHeight =
+      container.parentElement?.getBoundingClientRect().height || 0;
+    const maxScroll = Math.max(0, containerHeight - parentHeight);
+
+    let newY = currentY - scrollAmount;
+    newY = Math.min(0, Math.max(-maxScroll, newY));
+
+    container.style.transform = `translateY(${newY}px)`;
+  }, []);
+
+  // 添加和移除滚轮事件监听
+  useEffect(() => {
+    const container = letterContainerRef.current?.parentElement;
+    if (container) {
+      container.addEventListener("wheel", handleWheel, { passive: false });
+      return () => {
+        container.removeEventListener("wheel", handleWheel);
+      };
+    }
+  }, [handleWheel]);
+
+  // 添加窗口大小变化监听和最大高度计算
+  const updateMaxHeight = useCallback(() => {
+    if (!alphabetSelectorRef.current) return;
+
+    const windowHeight = window.innerHeight;
+    const bottomMargin = 60; // 底部边距
+    const topMargin = bottomMargin * 2; // 顶部边距是底部的2倍
+    const availableHeight = windowHeight - (topMargin + bottomMargin);
+
+    // 调整选择器的位置，使其偏下
+    const offsetPercentage =
+      (((topMargin - bottomMargin) / windowHeight) * 100) / 2;
+    alphabetSelectorRef.current.style.top = `calc(48% + ${offsetPercentage}vh)`;
+
+    setMaxHeight(`${availableHeight}px`);
+  }, []);
+
+  // 监听窗口大小变化
+  useEffect(() => {
+    updateMaxHeight();
+    window.addEventListener("resize", updateMaxHeight);
+    return () => {
+      window.removeEventListener("resize", updateMaxHeight);
+    };
+  }, [updateMaxHeight]);
+
   if (mode === "direct") {
     return <BaseEmpty text={t("clash_mode_direct")} />;
   }
@@ -365,15 +474,19 @@ export const ProxyGroups = (props: Props) => {
       />
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
 
-      <AlphabetSelector>
-        {groupFirstLetters.map((name) => (
-          <LetterItem
-            key={name}
-            name={name}
-            onClick={handleLetterClick}
-            getFirstChar={getFirstChar}
-          />
-        ))}
+      <AlphabetSelector ref={alphabetSelectorRef} style={{ maxHeight }}>
+        <div className="scroll-container">
+          <div ref={letterContainerRef} className="letter-container">
+            {groupFirstLetters.map((name) => (
+              <LetterItem
+                key={name}
+                name={name}
+                onClick={handleLetterClick}
+                getFirstChar={getFirstChar}
+              />
+            ))}
+          </div>
+        </div>
       </AlphabetSelector>
     </div>
   );
