@@ -88,7 +88,7 @@ export const useRenderList = (mode: string) => {
     "getProxies",
     fetchProxies,
     {
-      refreshInterval: isUserInteracting.current ? 0 : 2000,
+      refreshInterval: 2000,
       dedupingInterval: 1000,
       revalidateOnFocus: false,
       keepPreviousData: true,
@@ -102,10 +102,18 @@ export const useRenderList = (mode: string) => {
 
             const needUpdate = data.groups.some((group: IProxyGroupItem) => {
               const oldGroup = groupMap.get(group.name);
-              return !oldGroup || oldGroup.now !== group.now;
+              if (!oldGroup) return true;
+
+              return (
+                oldGroup.now !== group.now ||
+                oldGroup.type !== group.type ||
+                JSON.stringify(oldGroup.all) !== JSON.stringify(group.all)
+              );
             });
 
-            if (!needUpdate) return;
+            if (!needUpdate) {
+              return;
+            }
           } catch (e) {
             console.error("Data comparison error:", e);
             return;
@@ -263,6 +271,35 @@ export const useRenderList = (mode: string) => {
     lastRenderList.current = filteredList;
     return filteredList;
   }, [headStates, proxiesData, lastValidData, mode, col]);
+
+  // 添加滚动处理
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!isUserInteracting.current) {
+        isUserInteracting.current = true;
+
+        // 清除之前的定时器
+        if (interactionTimer.current) {
+          clearTimeout(interactionTimer.current);
+        }
+
+        // 设置新的定时器，在滚动停止后恢复刷新
+        interactionTimer.current = window.setTimeout(() => {
+          isUserInteracting.current = false;
+          // 手动触发一次更新
+          wrappedMutateProxies();
+        }, 1000) as unknown as number;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (interactionTimer.current) {
+        clearTimeout(interactionTimer.current);
+      }
+    };
+  }, [wrappedMutateProxies]);
 
   return {
     renderList,
