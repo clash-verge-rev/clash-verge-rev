@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useLockFn } from "ahooks";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import {
@@ -32,22 +32,82 @@ export const ProxyGroups = (props: Props) => {
   const timeout = verge?.default_latency_timeout || 10000;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
-
+  const scrollPositionRef = useRef<Record<string, number>>({});
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollerRef = useRef<Element | null>(null);
 
-  // 添加滚动处理函数
-  const handleScroll = (e: any) => {
-    const scrollTop = e.target.scrollTop;
-    setShowScrollTop(scrollTop > 100);
-  };
+  // 从 localStorage 恢复滚动位置
+  useEffect(() => {
+    if (renderList.length === 0) return;
+
+    try {
+      const savedPositions = localStorage.getItem("proxy-scroll-positions");
+      if (savedPositions) {
+        const positions = JSON.parse(savedPositions);
+        scrollPositionRef.current = positions;
+        const savedPosition = positions[mode];
+
+        if (savedPosition !== undefined) {
+          setTimeout(() => {
+            virtuosoRef.current?.scrollTo({
+              top: savedPosition,
+              behavior: "auto",
+            });
+          }, 100);
+        }
+      }
+    } catch (e) {
+      console.error("Error restoring scroll position:", e);
+    }
+  }, [mode, renderList]);
+
+  // 使用防抖保存滚动位置
+  const saveScrollPosition = useCallback(
+    (scrollTop: number) => {
+      try {
+        scrollPositionRef.current[mode] = scrollTop;
+        localStorage.setItem(
+          "proxy-scroll-positions",
+          JSON.stringify(scrollPositionRef.current),
+        );
+      } catch (e) {
+        console.error("Error saving scroll position:", e);
+      }
+    },
+    [mode],
+  );
+
+  // 优化滚动处理函数
+  const handleScroll = useCallback(
+    (e: any) => {
+      const scrollTop = e.target.scrollTop;
+      setShowScrollTop(scrollTop > 100);
+      saveScrollPosition(scrollTop);
+    },
+    [saveScrollPosition],
+  );
+
+  // 添加和清理滚动事件监听器
+  useEffect(() => {
+    const currentScroller = scrollerRef.current;
+    if (currentScroller) {
+      currentScroller.addEventListener("scroll", handleScroll, {
+        passive: true,
+      });
+      return () => {
+        currentScroller.removeEventListener("scroll", handleScroll);
+      };
+    }
+  }, [handleScroll]);
 
   // 滚动到顶部
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     virtuosoRef.current?.scrollTo?.({
       top: 0,
       behavior: "smooth",
     });
-  };
+    saveScrollPosition(0);
+  }, [saveScrollPosition]);
 
   // 切换分组的节点代理
   const handleChangeProxy = useLockFn(
@@ -146,25 +206,20 @@ export const ProxyGroups = (props: Props) => {
         totalCount={renderList.length}
         increaseViewportBy={256}
         scrollerRef={(ref) => {
-          if (ref) {
-            ref.addEventListener("scroll", handleScroll);
-          }
+          scrollerRef.current = ref;
         }}
         itemContent={(index) => (
-          <>
-            <ProxyRender
-              key={renderList[index].key}
-              item={renderList[index]}
-              indent={mode === "rule" || mode === "script"}
-              onLocation={handleLocation}
-              onCheckAll={handleCheckAll}
-              onHeadState={onHeadState}
-              onChangeProxy={handleChangeProxy}
-            />
-          </>
+          <ProxyRender
+            key={renderList[index].key}
+            item={renderList[index]}
+            indent={mode === "rule" || mode === "script"}
+            onLocation={handleLocation}
+            onCheckAll={handleCheckAll}
+            onHeadState={onHeadState}
+            onChangeProxy={handleChangeProxy}
+          />
         )}
       />
-
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
     </div>
   );
