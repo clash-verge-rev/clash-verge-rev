@@ -182,7 +182,11 @@ const SettingVerge = ({ onError }: Props) => {
         >
           <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
             {routers.map((page: { label: string; path: string }) => {
-              return <MenuItem value={page.path}>{t(page.label)}</MenuItem>;
+              return (
+                <MenuItem key={page.path} value={page.path}>
+                  {t(page.label)}
+                </MenuItem>
+              );
             })}
           </Select>
         </GuardState>
