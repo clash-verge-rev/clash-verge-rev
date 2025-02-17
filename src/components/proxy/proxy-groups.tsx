@@ -129,7 +129,7 @@ export const ProxyGroups = (props: Props) => {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const scrollPositionRef = useRef<Record<string, number>>({});
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const scrollerRef = useRef<HTMLElement | null>(null);
+  const scrollerRef = useRef<Element | null>(null);
 
   // 使用useMemo缓存字母索引数据
   const { groupFirstLetters, letterIndexMap } = useMemo(() => {
@@ -346,7 +346,7 @@ export const ProxyGroups = (props: Props) => {
         overscan={150}
         defaultItemHeight={56}
         scrollerRef={(ref) => {
-          scrollerRef.current = ref;
+          scrollerRef.current = ref as Element;
         }}
         components={{
           Footer: () => <div style={{ height: "16px" }} />,
@@ -384,7 +384,7 @@ function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number,
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   return (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
