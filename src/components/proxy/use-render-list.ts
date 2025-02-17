@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { getProxies } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import { filterSort } from "./use-filter-sort";
@@ -21,34 +21,148 @@ export interface IRenderItem {
   headState?: HeadState;
 }
 
+interface ProxiesData {
+  groups: IProxyGroupItem[];
+  global?: IProxyGroupItem;
+  proxies: any[];
+}
+
+// 缓存计算结果
+const groupCache = new WeakMap<ProxiesData, Map<string, IProxyGroupItem>>();
+// 用于追踪缓存的key
+const cacheKeys = new Set<ProxiesData>();
+
 export const useRenderList = (mode: string) => {
+  // 添加用户交互标记
+  const isUserInteracting = useRef(false);
+  const interactionTimer = useRef<number | null>(null);
+  // 添加上一次有效的数据缓存
+  const [lastValidData, setLastValidData] = useState<ProxiesData | null>(null);
+  // 添加刷新锁
+  const refreshLock = useRef(false);
+  const lastRenderList = useRef<IRenderItem[]>([]);
+
+  // 组件卸载时清理
+  useEffect(() => {
+    return () => {
+      if (interactionTimer.current) {
+        clearTimeout(interactionTimer.current);
+      }
+      refreshLock.current = false;
+      isUserInteracting.current = false;
+      // 清理 WeakMap 缓存
+      cacheKeys.forEach((key) => {
+        groupCache.delete(key);
+      });
+      cacheKeys.clear();
+    };
+  }, []);
+
+  // 优化数据获取函数
+  const fetchProxies = useCallback(async () => {
+    try {
+      if (isUserInteracting.current || refreshLock.current) {
+        return lastValidData;
+      }
+      const data = await getProxies();
+
+      // 预处理和缓存组数据
+      if (data && !groupCache.has(data)) {
+        const groupMap = new Map();
+        data.groups.forEach((group) => {
+          groupMap.set(group.name, group);
+        });
+        groupCache.set(data, groupMap);
+        cacheKeys.add(data);
+      }
+
+      setLastValidData(data);
+      return data;
+    } catch (error) {
+      if (lastValidData) return lastValidData;
+      throw error;
+    }
+  }, [lastValidData]);
+
   const { data: proxiesData, mutate: mutateProxies } = useSWR(
     "getProxies",
-    getProxies,
+    fetchProxies,
     {
-      refreshInterval: 2000,
+      refreshInterval: isUserInteracting.current ? 0 : 2000,
       dedupingInterval: 1000,
       revalidateOnFocus: false,
+      keepPreviousData: true,
+      onSuccess: (data) => {
+        if (!data || isUserInteracting.current) return;
+
+        if (proxiesData) {
+          try {
+            const groupMap = groupCache.get(proxiesData);
+            if (!groupMap) return;
+
+            const needUpdate = data.groups.some((group: IProxyGroupItem) => {
+              const oldGroup = groupMap.get(group.name);
+              return !oldGroup || oldGroup.now !== group.now;
+            });
+
+            if (!needUpdate) return;
+          } catch (e) {
+            console.error("Data comparison error:", e);
+            return;
+          }
+        }
+      },
     },
   );
+
+  // 优化mutateProxies包装函数
+  const wrappedMutateProxies = useCallback(async () => {
+    refreshLock.current = true;
+    isUserInteracting.current = true;
+
+    if (interactionTimer.current) {
+      clearTimeout(interactionTimer.current);
+    }
+
+    try {
+      if (!lastValidData && proxiesData) {
+        setLastValidData(proxiesData);
+      }
+      return await mutateProxies();
+    } finally {
+      interactionTimer.current = window.setTimeout(() => {
+        isUserInteracting.current = false;
+        refreshLock.current = false;
+        interactionTimer.current = null;
+      }, 2000);
+    }
+  }, [proxiesData, lastValidData, mutateProxies]);
+
+  // 确保初始数据加载后更新lastValidData
+  useEffect(() => {
+    if (proxiesData && !lastValidData) {
+      setLastValidData(proxiesData);
+    }
+  }, [proxiesData]);
 
   const { verge } = useVerge();
   const { width } = useWindowWidth();
 
-  let col = Math.floor(verge?.proxy_layout_column || 6);
-
-  // 自适应
-  if (col >= 6 || col <= 0) {
-    if (width > 1450) col = 4;
-    else if (width > 1024) col = 3;
-    else if (width > 900) col = 2;
-    else if (width >= 600) col = 2;
-    else col = 1;
-  }
+  const col = useMemo(() => {
+    const baseCol = Math.floor(verge?.proxy_layout_column || 6);
+    if (baseCol >= 6 || baseCol <= 0) {
+      if (width > 1450) return 4;
+      if (width > 1024) return 3;
+      if (width > 900) return 2;
+      if (width >= 600) return 2;
+      return 1;
+    }
+    return baseCol;
+  }, [verge?.proxy_layout_column, width]);
 
   const [headStates, setHeadState] = useHeadStateNew();
 
-  // make sure that fetch the proxies successfully
+  // 优化初始数据加载
   useEffect(() => {
     if (!proxiesData) return;
     const { groups, proxies } = proxiesData;
@@ -57,21 +171,23 @@ export const useRenderList = (mode: string) => {
       (mode === "rule" && !groups.length) ||
       (mode === "global" && proxies.length < 2)
     ) {
-      setTimeout(() => mutateProxies(), 500);
+      const timer = setTimeout(() => mutateProxies(), 500);
+      return () => clearTimeout(timer);
     }
-  }, [proxiesData, mode]);
+  }, [proxiesData, mode, mutateProxies]);
 
-  const renderList: IRenderItem[] = useMemo(() => {
-    if (!proxiesData) return [];
+  // 优化渲染列表计算
+  const renderList = useMemo(() => {
+    const currentData = proxiesData || lastValidData;
+    if (!currentData) return lastRenderList.current;
 
-    // global 和 direct 使用展开的样式
     const useRule = mode === "rule" || mode === "script";
     const renderGroups =
-      (useRule && proxiesData.groups.length
-        ? proxiesData.groups
-        : [proxiesData.global!]) || [];
+      (useRule && currentData.groups.length
+        ? currentData.groups
+        : [currentData.global!]) || [];
 
-    const retList = renderGroups.flatMap((group) => {
+    const newList = renderGroups.flatMap((group: IProxyGroupItem) => {
       const headState = headStates[group.name] || DEFAULT_STATE;
       const ret: IRenderItem[] = [
         { type: 0, key: group.name, group, headState },
@@ -89,9 +205,9 @@ export const useRenderList = (mode: string) => {
 
         if (!proxies.length) {
           ret.push({ type: 3, key: `empty-${group.name}`, group, headState });
+          return ret;
         }
 
-        // 支持多列布局
         if (col > 1) {
           return ret.concat(
             groupList(proxies, col).map((proxyCol) => ({
@@ -118,13 +234,17 @@ export const useRenderList = (mode: string) => {
       return ret;
     });
 
-    if (!useRule) return retList.slice(1);
-    return retList.filter((item) => item.group.hidden === false);
-  }, [headStates, proxiesData, mode, col]);
+    const filteredList = !useRule
+      ? newList.slice(1)
+      : newList.filter((item) => !item.group.hidden);
+
+    lastRenderList.current = filteredList;
+    return filteredList;
+  }, [headStates, proxiesData, lastValidData, mode, col]);
 
   return {
     renderList,
-    onProxies: mutateProxies,
+    onProxies: wrappedMutateProxies,
     onHeadState: setHeadState,
   };
 };
