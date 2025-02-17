@@ -118,7 +118,6 @@ impl SpeedRate {
         let icon_text_gap = 10;
         let max_text_width: f32 = 510.0;
         let text_area_start = width as i32 + icon_text_gap;
-        let text_area_width = max_text_width.ceil() as u32;
         
         // 用透明色清除文字区域
         for x in text_area_start..image.width() as i32 {

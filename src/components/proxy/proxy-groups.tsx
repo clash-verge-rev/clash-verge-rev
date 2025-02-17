@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { useLockFn } from "ahooks";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import {
@@ -16,6 +16,101 @@ import { ProxyRender } from "./proxy-render";
 import delayManager from "@/services/delay";
 import { useTranslation } from "react-i18next";
 import { ScrollTopButton } from "../layout/scroll-top-button";
+import { Box, styled } from "@mui/material";
+import { memo } from "react";
+
+// 将选择器组件抽离出来，避免主组件重渲染时重复创建样式
+const AlphabetSelector = styled(Box)(({ theme }) => ({
+  position: "fixed",
+  right: 4,
+  top: "50%",
+  transform: "translateY(-50%)",
+  display: "flex",
+  flexDirection: "column",
+  background: "transparent",
+  zIndex: 1000,
+  gap: "2px",
+  padding: "8px 4px",
+  willChange: "transform", // 优化动画性能
+  "& .letter": {
+    padding: "2px 4px",
+    fontSize: "12px",
+    cursor: "pointer",
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    color: theme.palette.text.secondary,
+    position: "relative",
+    width: "1.5em",
+    height: "1.5em",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)", // 稍微加快动画速度
+    transform: "scale(1) translateZ(0)", // 开启GPU加速
+    backfaceVisibility: "hidden", // 防止闪烁
+    borderRadius: "6px",
+    "&:hover": {
+      color: theme.palette.primary.main,
+      transform: "scale(1.2) translateZ(0)",
+      backgroundColor: theme.palette.action.hover,
+      "& .tooltip": {
+        opacity: 1,
+        transform: "translateX(0) translateZ(0)",
+        visibility: "visible",
+      },
+    },
+    "&:hover ~ .letter": {
+      transform: "translateY(2px) translateZ(0)",
+    },
+  },
+  "& .tooltip": {
+    position: "absolute",
+    right: "calc(100% + 8px)",
+    background: theme.palette.background.paper,
+    padding: "4px 8px",
+    borderRadius: "6px",
+    boxShadow: theme.shadows[3],
+    whiteSpace: "nowrap",
+    opacity: 0,
+    visibility: "hidden",
+    transform: "translateX(4px) translateZ(0)",
+    transition: "all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)",
+    fontSize: "12px",
+    color: theme.palette.text.primary,
+    pointerEvents: "none",
+    backfaceVisibility: "hidden",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      right: "-4px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      width: 0,
+      height: 0,
+      borderTop: "4px solid transparent",
+      borderBottom: "4px solid transparent",
+      borderLeft: `4px solid ${theme.palette.background.paper}`,
+    },
+  },
+}));
+
+// 抽离字母选择器子组件
+const LetterItem = memo(
+  ({
+    name,
+    onClick,
+    getFirstChar,
+  }: {
+    name: string;
+    onClick: (name: string) => void;
+    getFirstChar: (str: string) => string;
+  }) => (
+    <div className="letter" onClick={() => onClick(name)}>
+      <span>{getFirstChar(name)}</span>
+      <div className="tooltip">{name}</div>
+    </div>
+  ),
+);
 
 interface Props {
   mode: string;
@@ -34,7 +129,35 @@ export const ProxyGroups = (props: Props) => {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const scrollPositionRef = useRef<Record<string, number>>({});
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const scrollerRef = useRef<Element | null>(null);
+  const scrollerRef = useRef<HTMLElement | null>(null);
+
+  // 使用useMemo缓存字母索引数据
+  const { groupFirstLetters, letterIndexMap } = useMemo(() => {
+    const letters = new Set<string>();
+    const indexMap: Record<string, number> = {};
+
+    renderList.forEach((item, index) => {
+      if (item.type === 0) {
+        const fullName = item.group.name;
+        letters.add(fullName);
+        if (!(fullName in indexMap)) {
+          indexMap[fullName] = index;
+        }
+      }
+    });
+
+    return {
+      groupFirstLetters: Array.from(letters),
+      letterIndexMap: indexMap,
+    };
+  }, [renderList]);
+
+  // 缓存getFirstChar函数
+  const getFirstChar = useCallback((str: string) => {
+    const regex = /\p{Extended_Pictographic}|\p{L}|\p{N}|./u;
+    const match = str.match(regex);
+    return match ? match[0] : str.charAt(0);
+  }, []);
 
   // 从 localStorage 恢复滚动位置
   useEffect(() => {
@@ -77,13 +200,13 @@ export const ProxyGroups = (props: Props) => {
     [mode],
   );
 
-  // 优化滚动处理函数
+  // 优化滚动处理函数，使用防抖
   const handleScroll = useCallback(
-    (e: any) => {
+    debounce((e: any) => {
       const scrollTop = e.target.scrollTop;
       setShowScrollTop(scrollTop > 100);
       saveScrollPosition(scrollTop);
-    },
+    }, 16),
     [saveScrollPosition],
   );
 
@@ -108,6 +231,21 @@ export const ProxyGroups = (props: Props) => {
     });
     saveScrollPosition(0);
   }, [saveScrollPosition]);
+
+  // 处理字母点击，使用useCallback
+  const handleLetterClick = useCallback(
+    (name: string) => {
+      const index = letterIndexMap[name];
+      if (index !== undefined) {
+        virtuosoRef.current?.scrollToIndex({
+          index,
+          align: "start",
+          behavior: "smooth",
+        });
+      }
+    },
+    [letterIndexMap],
+  );
 
   // 切换分组的节点代理
   const handleChangeProxy = useLockFn(
@@ -226,6 +364,29 @@ export const ProxyGroups = (props: Props) => {
         )}
       />
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
+
+      <AlphabetSelector>
+        {groupFirstLetters.map((name) => (
+          <LetterItem
+            key={name}
+            name={name}
+            onClick={handleLetterClick}
+            getFirstChar={getFirstChar}
+          />
+        ))}
+      </AlphabetSelector>
     </div>
   );
 };
+
+// 简单的防抖函数
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
