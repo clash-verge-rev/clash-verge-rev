@@ -13,22 +13,46 @@ use tokio_tungstenite::tungstenite::Message;
 #[derive(Debug, Clone)]
 pub struct SpeedRate {
     rate: Arc<Mutex<(Rate, Rate)>>,
+    last_update: Arc<Mutex<std::time::Instant>>,
+    base_image: Arc<Mutex<Option<(ImageBuffer<Rgba<u8>, Vec<u8>>, u32, u32)>>>, // 存储基础图像和尺寸
 }
 
 impl SpeedRate {
     pub fn new() -> Self {
         Self {
             rate: Arc::new(Mutex::new((Rate::default(), Rate::default()))),
+            last_update: Arc::new(Mutex::new(std::time::Instant::now())),
+            base_image: Arc::new(Mutex::new(None)),
         }
     }
 
     pub fn update_and_check_changed(&self, up: u64, down: u64) -> Option<Rate> {
         let mut rates = self.rate.lock();
+        let mut last_update = self.last_update.lock();
+        let now = std::time::Instant::now();
+        
+        // 限制更新频率为每秒最多2次（500ms）
+        if now.duration_since(*last_update).as_millis() < 500 {
+            return None;
+        }
+
         let (current, previous) = &mut *rates;
+
+        // 如果速率变化不大（小于10%），则不更新
+        let should_update = {
+            let up_change = (current.up as f64 - up as f64).abs() / (current.up as f64 + 1.0);
+            let down_change = (current.down as f64 - down as f64).abs() / (current.down as f64 + 1.0);
+            up_change > 0.1 || down_change > 0.1
+        };
+
+        if !should_update {
+            return None;
+        }
 
         *previous = current.clone();
         current.up = up;
         current.down = down;
+        *last_update = now;
 
         if previous != current {
             Some(current.clone())
@@ -45,9 +69,27 @@ impl SpeedRate {
 
     pub fn add_speed_text(icon: Vec<u8>, rate: Option<Rate>) -> Result<Vec<u8>> {
         let rate = rate.unwrap_or(Rate { up: 0, down: 0 });
-        let img = image::load_from_memory(&icon)?;
-        let (width, height) = (img.width(), img.height());
+        
+        // 获取或创建基础图像
+        let base_image = {
+            let tray = Self::global();
+            let mut base = tray.base_image.lock();
+            if base.is_none() {
+                let img = image::load_from_memory(&icon)?;
+                let (width, height) = (img.width(), img.height());
+                let icon_text_gap = 10;
+                let max_text_width = 510.0;
+                let total_width = width as f32 + icon_text_gap as f32 + max_text_width;
+                
+                let mut image = ImageBuffer::new(total_width.ceil() as u32, height);
+                image::imageops::replace(&mut image, &img, 0_i64, 0_i64);
+                *base = Some((image, width, height));
+            }
+            base.clone().unwrap()
+        };
 
+        let (mut image, width, height) = base_image;
+        
         let font =
             Font::try_from_bytes(include_bytes!("../../../assets/fonts/FiraCode-Medium.ttf")).unwrap();
 
@@ -60,7 +102,7 @@ impl SpeedRate {
         let up_text = format_bytes_speed(rate.up);
         let down_text = format_bytes_speed(rate.down);
 
-        // 计算文本位置（保持不变）
+        // 计算文本宽度
         let up_width = font
             .layout(&up_text, scale, rusttype::Point { x: 0.0, y: 0.0 })
             .map(|g| g.position().x + g.unpositioned().h_metrics().advance_width)
@@ -73,31 +115,33 @@ impl SpeedRate {
             .last()
             .unwrap_or(0.0);
 
-        let icon_text_gap = 40; // 图标和文字之间的间隔
+        let icon_text_gap = 10;
+        let max_text_width: f32 = 510.0;
+        let text_area_start = width as i32 + icon_text_gap;
+        let text_area_width = max_text_width.ceil() as u32;
         
-        // 计算所需的总宽度：图标宽度 + 间隔 + 最大文本宽度
-        let max_text_width = up_width.max(down_width);
-        let total_width = width as f32 + icon_text_gap as f32 + max_text_width;
-        
-        let mut image = ImageBuffer::new(total_width.ceil() as u32, height);
-        // 将图标绘制在最左边
-        image::imageops::replace(&mut image, &img, 0_i64, 0_i64);
+        // 用透明色清除文字区域
+        for x in text_area_start..image.width() as i32 {
+            for y in 0..image.height() as i32 {
+                image.put_pixel(x as u32, y as u32, Rgba([0, 0, 0, 0]));
+            }
+        }
 
-        // 计算文字的起始x坐标（图标宽度 + 间隔）
-        let text_start_x = width as i32 + icon_text_gap as i32;
-
-        // 添加阴影效果
-        let shadow_offset = 1;
+        // 计算文字的起始x坐标，使文字右对齐
+        let text_start_x_up = (width as f32 + icon_text_gap as f32 + max_text_width - up_width).max(width as f32 + icon_text_gap as f32) as i32;
+        let text_start_x_down = (width as f32 + icon_text_gap as f32 + max_text_width - down_width).max(width as f32 + icon_text_gap as f32) as i32;
 
         // 计算垂直位置
         let up_y = 0; // 上行速率紧贴顶部
         let down_y = height as i32 - base_size as i32; // 下行速率紧贴底部
 
+        let shadow_offset = 1;
+
         // 绘制上行速率（先画阴影，再画文字）
         draw_text_mut(
             &mut image,
             shadow_color,
-            text_start_x + shadow_offset,
+            text_start_x_up + shadow_offset,
             up_y + shadow_offset,
             scale,
             &font,
@@ -106,7 +150,7 @@ impl SpeedRate {
         draw_text_mut(
             &mut image,
             text_color,
-            text_start_x,
+            text_start_x_up,
             up_y,
             scale,
             &font,
@@ -117,7 +161,7 @@ impl SpeedRate {
         draw_text_mut(
             &mut image,
             shadow_color,
-            text_start_x + shadow_offset,
+            text_start_x_down + shadow_offset,
             down_y + shadow_offset,
             scale,
             &font,
@@ -126,7 +170,7 @@ impl SpeedRate {
         draw_text_mut(
             &mut image,
             text_color,
-            text_start_x,
+            text_start_x_down,
             down_y,
             scale,
             &font,
@@ -137,6 +181,11 @@ impl SpeedRate {
         let mut cursor = Cursor::new(&mut bytes);
         image.write_to(&mut cursor, image::ImageFormat::Png)?;
         Ok(bytes)
+    }
+
+    pub fn global() -> &'static SpeedRate {
+        static INSTANCE: once_cell::sync::OnceCell<SpeedRate> = once_cell::sync::OnceCell::new();
+        INSTANCE.get_or_init(SpeedRate::new)
     }
 }
 
