@@ -204,9 +204,14 @@ export const ProxyGroups = (props: Props) => {
         ref={virtuosoRef}
         style={{ height: "calc(100% - 16px)" }}
         totalCount={renderList.length}
-        increaseViewportBy={256}
+        increaseViewportBy={{ top: 256, bottom: 256 }}
+        overscan={150}
+        defaultItemHeight={56}
         scrollerRef={(ref) => {
           scrollerRef.current = ref;
+        }}
+        components={{
+          Footer: () => <div style={{ height: "16px" }} />,
         }}
         itemContent={(index) => (
           <ProxyRender
