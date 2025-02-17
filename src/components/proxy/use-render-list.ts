@@ -117,26 +117,48 @@ export const useRenderList = (mode: string) => {
 
   // 优化mutateProxies包装函数
   const wrappedMutateProxies = useCallback(async () => {
-    refreshLock.current = true;
-    isUserInteracting.current = true;
-
     if (interactionTimer.current) {
       clearTimeout(interactionTimer.current);
     }
 
     try {
-      if (!lastValidData && proxiesData) {
+      // 立即更新本地状态以响应UI
+      if (proxiesData) {
+        const currentGroup = proxiesData.groups.find(
+          (g) => g.now !== undefined,
+        );
+        if (currentGroup) {
+          const optimisticData = { ...proxiesData };
+          setLastValidData(optimisticData);
+        }
+      }
+
+      // 执行实际的更新并等待结果
+      const result = await mutateProxies();
+
+      // 更新最新数据
+      if (result) {
+        setLastValidData(result);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Failed to update proxies:", error);
+      // 发生错误时恢复到之前的状态
+      if (proxiesData) {
         setLastValidData(proxiesData);
       }
-      return await mutateProxies();
+      throw error;
     } finally {
-      interactionTimer.current = window.setTimeout(() => {
-        isUserInteracting.current = false;
-        refreshLock.current = false;
+      // 重置状态
+      isUserInteracting.current = false;
+      refreshLock.current = false;
+      if (interactionTimer.current) {
+        clearTimeout(interactionTimer.current);
         interactionTimer.current = null;
-      }, 2000);
+      }
     }
-  }, [proxiesData, lastValidData, mutateProxies]);
+  }, [proxiesData, mutateProxies]);
 
   // 确保初始数据加载后更新lastValidData
   useEffect(() => {
