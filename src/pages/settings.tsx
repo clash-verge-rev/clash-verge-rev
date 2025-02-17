@@ -1,4 +1,11 @@
-import { Box, ButtonGroup, Grid, IconButton } from "@mui/material";
+import {
+  Box,
+  ButtonGroup,
+  Grid,
+  IconButton,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { BasePage, Notice } from "@/components/base";
@@ -30,6 +37,12 @@ const SettingPage = () => {
 
   const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
+
+  const routers = [
+    { label: "Manual", path: "manual" },
+    { label: "TG Channel", path: "telegram" },
+    { label: "Github Repo", path: "github" },
+  ];
 
   return (
     <BasePage
@@ -95,6 +108,15 @@ const SettingPage = () => {
           </Box>
         </Grid>
       </Grid>
+      <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
+        {routers.map((page: { label: string; path: string }) => {
+          return (
+            <MenuItem key={page.path} value={page.path}>
+              {t(page.label)}
+            </MenuItem>
+          );
+        })}
+      </Select>
     </BasePage>
   );
 };

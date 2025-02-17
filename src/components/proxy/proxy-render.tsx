@@ -100,7 +100,7 @@ export const ProxyRender = (props: RenderProps) => {
         <ListItemText
           primary={<StyledPrimary>{group.name}</StyledPrimary>}
           secondary={
-            <ListItemTextChild
+            <Box
               sx={{
                 overflow: "hidden",
                 display: "flex",
@@ -108,16 +108,19 @@ export const ProxyRender = (props: RenderProps) => {
                 pt: "2px",
               }}
             >
-              <Box sx={{ marginTop: "2px" }}>
+              <Box component="span" sx={{ marginTop: "2px" }}>
                 <StyledTypeBox>{group.type}</StyledTypeBox>
                 <StyledSubtitle sx={{ color: "text.secondary" }}>
                   {group.now}
                 </StyledSubtitle>
               </Box>
-            </ListItemTextChild>
+            </Box>
           }
-          secondaryTypographyProps={{
-            sx: { display: "flex", alignItems: "center", color: "#ccc" },
+          slotProps={{
+            secondary: {
+              component: "div",
+              sx: { display: "flex", alignItems: "center", color: "#ccc" },
+            },
           }}
         />
         {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
@@ -219,11 +222,7 @@ const StyledSubtitle = styled("span")`
   white-space: nowrap;
 `;
 
-const ListItemTextChild = styled("span")`
-  display: block;
-`;
-
-const StyledTypeBox = styled(ListItemTextChild)(({ theme }) => ({
+const StyledTypeBox = styled(Box)(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.primary.main, 0.5),

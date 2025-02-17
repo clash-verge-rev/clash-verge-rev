@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { useLockFn } from "ahooks";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
@@ -15,7 +15,10 @@ import {
   ConnectionDetailRef,
 } from "@/components/connection/connection-detail";
 import parseTraffic from "@/utils/parse-traffic";
-import { BaseSearchBox } from "@/components/base/base-search-box";
+import {
+  BaseSearchBox,
+  type SearchState,
+} from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import useSWRSubscription from "swr/subscription";
 import { createSockette } from "@/utils/websocket";
@@ -135,6 +138,10 @@ const ConnectionsPage = () => {
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
 
+  const handleSearch = useCallback((match: (content: string) => boolean) => {
+    setMatch(() => match);
+  }, []);
+
   return (
     <BasePage
       full
@@ -211,7 +218,7 @@ const ConnectionsPage = () => {
             ))}
           </BaseStyledSelect>
         )}
-        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
+        <BaseSearchBox onSearch={handleSearch} />
       </Box>
 
       {filterConn.length === 0 ? (
