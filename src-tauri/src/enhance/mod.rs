@@ -1,4 +1,4 @@
-mod chain;
+pub mod chain;
 pub mod field;
 mod merge;
 mod script;
@@ -10,16 +10,20 @@ use self::merge::*;
 use self::script::*;
 use self::tun::*;
 use crate::config::Config;
+use crate::config::EnableFilter;
 use crate::config::ProfileType;
-use crate::utils::dirs::app_home_dir;
+use crate::core::CoreManager;
+use crate::utils::dirs;
+use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_yaml::Mapping;
 use serde_yaml::Value;
 use std::collections::HashMap;
-use std::collections::HashSet;
 use std::path::PathBuf;
 
 type ResultLog = Vec<LogMessage>;
@@ -61,12 +65,14 @@ pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
         let format_val = rp_format.as_ref().map_or("yaml", |v| v.as_str().unwrap());
         if let Some(path) = val_map.get(&path_key) {
             let path = path.as_str().unwrap();
-            let absolute_path = app_home_dir().unwrap().join(&path);
+            let absolute_path = dirs::app_home_dir().unwrap().join(path);
             absolute_path_map.insert(name.into(), absolute_path);
         } else {
             // no path value, set default path
             let path = format!("./rules/{name}.{}", format_val);
-            let absolute_path = app_home_dir().unwrap().join(&path.trim_start_matches("./"));
+            let absolute_path = dirs::app_home_dir()
+                .unwrap()
+                .join(path.trim_start_matches("./"));
             val_map.insert(path_key, Value::from(path));
             absolute_path_map.insert(name.into(), absolute_path);
         }
@@ -78,90 +84,59 @@ pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
 
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
-pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     // config.yaml 的订阅
     let clash_config = { Config::clash().latest().0.clone() };
 
-    let (clash_core, enable_builtin) = {
-        let verge = Config::verge();
-        let verge = verge.latest();
-        (
-            verge.clash_core.clone(),
-            verge.enable_builtin_enhanced.unwrap_or(true),
-        )
-    };
     // 从profiles里拿东西
-    let (mut config, chain) = {
+    let (mut config, global_chain, profile_chain) = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
-
         let current = profiles.current_mapping().unwrap_or_default();
+        let current_uid = profiles.get_current();
 
-        let chain = match profiles.chain.as_ref() {
-            Some(chain) => chain
-                .iter()
-                .filter_map(|uid| profiles.get_item(uid).ok())
-                .filter_map(<Option<ChainItem>>::from)
-                .collect::<Vec<ChainItem>>(),
-            None => vec![],
-        };
-
-        (current, chain)
+        // chain
+        let global_chain = profiles.get_profile_chains(None, EnableFilter::Enable);
+        let profile_chain = profiles.get_profile_chains(current_uid, EnableFilter::Enable);
+        (current, global_chain, profile_chain)
     };
 
-    let mut result_map = HashMap::new(); // 保存脚本日志
-    let mut exists_keys = use_keys(&config); // 保存出现过的keys
+    // 保存脚本日志
+    let mut result_map = HashMap::new();
 
-    // 处理用户的 profile
-    chain.into_iter().for_each(|item| match item.data {
-        ChainType::Merge(merge) => {
-            exists_keys.extend(use_keys(&merge));
-            config = use_merge(merge, config.to_owned());
-        }
-        ChainType::Script(script) => {
-            let mut logs = vec![];
-
-            match use_script(script, config.to_owned()) {
-                Ok((res_config, res_logs)) => {
-                    exists_keys.extend(use_keys(&res_config));
-                    config = res_config;
-                    logs.extend(res_logs);
+    // global chain
+    for chain in global_chain {
+        match chain.excute(config.clone()) {
+            Ok(res) => {
+                config = res.config;
+                if let Some(logs) = res.logs {
+                    result_map.extend(logs);
                 }
-                Err(err) => logs.push(LogMessage {
-                    method: "error".into(),
-                    data: vec![err.to_string()],
-                    exception: Some(err.to_string()),
-                }),
             }
-
-            result_map.insert(item.uid, logs);
+            Err(e) => {
+                log::error!(target: "app", "global chain [{:?}] excute failed, error: {:?}", chain.uid, e);
+            }
         }
-    });
+    }
+
+    // profile chain
+    for chain in profile_chain {
+        match chain.excute(config.clone()) {
+            Ok(res) => {
+                config = res.config;
+                if let Some(logs) = res.logs {
+                    result_map.extend(logs);
+                }
+            }
+            Err(e) => {
+                log::error!(target: "app", "profile chain [{:?}] excute failed, error: {:?}", chain.uid, e);
+            }
+        }
+    }
 
     // 合并 verge 配置的 clash 配置
     for (key, value) in clash_config.into_iter() {
         config.insert(key, value);
-    }
-
-    // 内建脚本最后跑
-    if enable_builtin {
-        ChainItem::builtin()
-            .into_iter()
-            .filter(|(s, _)| s.is_support(clash_core.as_ref()))
-            .map(|(_, c)| c)
-            .for_each(|item| {
-                log::debug!(target: "app", "run builtin script {}", item.uid);
-                if let ChainType::Script(script) = item.data {
-                    match use_script(script, config.to_owned()) {
-                        Ok((res_config, _)) => {
-                            config = res_config;
-                        }
-                        Err(err) => {
-                            log::error!(target: "app", "builtin script error `{err}`");
-                        }
-                    }
-                }
-            });
     }
 
     let enable_tun = Config::clash().latest().get_enable_tun();
@@ -169,93 +144,118 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     config = use_sort(config);
     config = generate_rule_providers(config);
 
-    let mut exists_set = HashSet::new();
-    exists_set.extend(exists_keys);
-    exists_keys = exists_set.into_iter().collect::<Vec<String>>();
-
-    (config, exists_keys, result_map)
+    (config, result_map)
 }
 
-pub fn get_pre_merge_result(modified_chain_id: String) -> Result<MergeResult> {
+pub fn get_pre_merge_result(
+    profile_uid: Option<String>,
+    modified_uid: String,
+) -> Result<MergeResult> {
     let profiles = Config::profiles().latest().clone();
-    let mut config = profiles.current_mapping().unwrap().clone();
-    // let mut modified_chain_is_running = false;
-    let chain = match profiles.chain.as_ref() {
-        Some(chain) => {
-            let index = chain.iter().position(|v| *v == modified_chain_id);
-            let new_chain = match index {
-                Some(index) => {
-                    // modified_chain_is_running = true;
-                    chain[..index].to_vec()
+    let mut config = profiles.current_mapping()?.clone();
+    // 保存脚本日志
+    let mut result_map = HashMap::new();
+
+    match profile_uid {
+        Some(profile_uid) => {
+            // excute all enabled global chain
+            let global_chain = profiles.get_profile_chains(None, EnableFilter::Enable);
+            for chain in global_chain {
+                match chain.excute(config.clone()) {
+                    Ok(res) => {
+                        config = res.config;
+                        if let Some(logs) = res.logs {
+                            result_map.extend(logs);
+                        }
+                    }
+                    Err(e) => {
+                        log::error!(target: "app", "global chain [{:?}] excute failed, error: {:?}", chain.uid, e);
+                    }
                 }
-                None => chain.to_vec(),
-            };
-            new_chain
-                .iter()
-                .filter_map(|uid| profiles.get_item(uid).ok())
-                .filter_map(<Option<ChainItem>>::from)
-                .collect::<Vec<ChainItem>>()
-        }
-        None => vec![],
-    };
-
-    let mut result_map = HashMap::new(); // 保存脚本日志
-
-    chain.into_iter().for_each(|item| match item.data {
-        ChainType::Merge(merge) => {
-            // exists_keys.extend(use_keys(&merge));
-            config = use_merge(merge, config.to_owned());
-        }
-        ChainType::Script(script) => {
-            let mut logs = vec![];
-
-            match use_script(script, config.to_owned()) {
-                Ok((res_config, res_logs)) => {
-                    // exists_keys.extend(use_keys(&res_config));
-                    config = res_config;
-                    logs.extend(res_logs);
-                }
-                Err(err) => logs.push(LogMessage {
-                    method: "error".into(),
-                    data: vec![err.to_string()],
-                    exception: Some(err.to_string()),
-                }),
             }
-
-            result_map.insert(item.uid, logs);
+            // get new profile chain, index form 0 to modified chain index.
+            let profile_chain = {
+                let chain = profiles.get_profile_chains(Some(profile_uid), EnableFilter::Enable);
+                match chain.iter().position(|v| *v.uid == modified_uid) {
+                    Some(index) => chain[..index].to_vec(),
+                    None => chain,
+                }
+            };
+            // execute new profile chain
+            for chain in profile_chain {
+                match chain.excute(config.clone()) {
+                    Ok(res) => {
+                        config = res.config;
+                        if let Some(logs) = res.logs {
+                            result_map.extend(logs);
+                        }
+                    }
+                    Err(e) => {
+                        log::error!(target: "app", "profile chain [{:?}] excute failed, error: {:?}", chain.uid, e);
+                    }
+                }
+            }
         }
-    });
-
+        None => {
+            let global_chain = match profiles.chain.as_ref() {
+                Some(chain) => {
+                    let new_chain = match chain.iter().position(|v| *v == modified_uid) {
+                        Some(index) => chain[..index].to_vec(),
+                        None => chain.to_vec(),
+                    };
+                    new_chain
+                        .iter()
+                        .filter_map(|uid| profiles.get_item(uid).cloned().ok())
+                        .filter_map(<Option<ChainItem>>::from)
+                        .collect::<Vec<ChainItem>>()
+                }
+                None => vec![],
+            };
+            // global chain
+            for chain in global_chain {
+                match chain.excute(config.clone()) {
+                    Ok(res) => {
+                        config = res.config;
+                        if let Some(logs) = res.logs {
+                            result_map.extend(logs);
+                        }
+                    }
+                    Err(e) => {
+                        log::error!(target: "app", "global chain [{:?}] excute failed, error: {:?}", chain.uid, e);
+                    }
+                }
+            }
+        }
+    };
     // 排序
     config = use_sort(config);
-
     Ok(MergeResult {
         config,
         logs: result_map,
     })
 }
 
-pub fn test_merge_chain(modified_chain_id: String, content: String) -> Result<MergeResult> {
+pub async fn test_merge_chain(
+    profile_uid: Option<String>,
+    modified_uid: String,
+    content: String,
+) -> Result<MergeResult> {
     let profiles = Config::profiles().latest().clone();
     let running_chains = profiles.chain.clone().unwrap_or_default();
-    let should_build_final_config = running_chains[running_chains.len() - 1] == modified_chain_id;
+    let should_build_final_config = running_chains[running_chains.len() - 1] == modified_uid;
+    // 保存脚本日志
+    let mut result_map = HashMap::new();
 
-    let MergeResult {
-        mut config,
-        logs: _,
-    } = get_pre_merge_result(modified_chain_id.clone())?;
+    let MergeResult { mut config, logs } = get_pre_merge_result(profile_uid, modified_uid.clone())?;
+    result_map.extend(logs);
 
-    let mut result_map = HashMap::new(); // 保存脚本日志
-    let mut exists_keys = use_keys(&config); // 保存出现过的keys
-
-    let profile_item = profiles.get_item(&modified_chain_id)?;
+    let profile_item = profiles.get_item(&modified_uid)?;
     let chain_type = profile_item.itype.as_ref().unwrap();
     match chain_type {
         ProfileType::Merge => {
-            let yaml_content = serde_yaml::from_str::<Value>(&content)
-                .unwrap()
+            let yaml_content = serde_yaml::from_str::<Value>(&content)?
                 .as_mapping()
-                .unwrap()
+                .ok_or_else(|| anyhow!("invalid yaml content"))?
                 .clone();
             config = use_merge(yaml_content, config.to_owned());
         }
@@ -263,7 +263,6 @@ pub fn test_merge_chain(modified_chain_id: String, content: String) -> Result<Me
             let mut logs = vec![];
             match use_script(content, config.to_owned()) {
                 Ok((res_config, res_logs)) => {
-                    exists_keys.extend(use_keys(&res_config));
                     config = res_config;
                     logs.extend(res_logs);
                 }
@@ -273,42 +272,18 @@ pub fn test_merge_chain(modified_chain_id: String, content: String) -> Result<Me
                     exception: Some(err.to_string()),
                 }),
             }
-            result_map.insert(modified_chain_id.to_string(), logs);
+            result_map.insert(modified_uid.to_string(), logs);
         }
         _ => {
             bail!("unsupported chain type");
         }
     };
 
-    if should_build_final_config {
-        // 内建脚本最后跑
-        let (clash_core, enable_builtin) = {
-            let verge = Config::verge();
-            let verge = verge.latest();
-            (
-                verge.clash_core.clone(),
-                verge.enable_builtin_enhanced.unwrap_or(true),
-            )
-        };
-        if enable_builtin {
-            ChainItem::builtin()
-                .into_iter()
-                .filter(|(s, _)| s.is_support(clash_core.as_ref()))
-                .map(|(_, c)| c)
-                .for_each(|item| {
-                    if let ChainType::Script(script) = item.data {
-                        match use_script(script, config.to_owned()) {
-                            Ok((res_config, _)) => {
-                                config = res_config;
-                            }
-                            Err(err) => {
-                                log::error!(target: "app", "builtin script error `{err}`");
-                            }
-                        }
-                    }
-                });
-        }
+    let config_str = serde_yaml::to_string(&config)?;
+    let check_config = BASE64_STANDARD.encode(config_str);
+    CoreManager::global().check_config(&check_config).await?;
 
+    if should_build_final_config {
         //合并 verge 接管的配置
         let clash_config = { Config::clash().latest().0.clone() };
         for (key, value) in clash_config.into_iter() {
@@ -320,7 +295,8 @@ pub fn test_merge_chain(modified_chain_id: String, content: String) -> Result<Me
         config = use_sort(config);
         config = generate_rule_providers(config);
     }
-
+    // 排序
+    config = use_sort(config);
     Ok(MergeResult {
         config,
         logs: result_map,

@@ -18,7 +18,6 @@ import {
   CloudSync,
   Delete,
   Edit,
-  EditNote,
   FileOpen,
   Home,
   Refresh,
@@ -44,6 +43,7 @@ import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 import { ConfirmViewer } from "./confirm-viewer";
 import { ProfileDiv } from "./profile-box";
+import { LogMessage } from "./profile-more";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -56,8 +56,9 @@ interface Props {
   isDragging?: boolean;
   activating: boolean;
   itemData: IProfileItem;
+  chainLogs: Record<string, LogMessage[]>;
   onSelect: (force: boolean) => void;
-  onEdit: () => void;
+  // onEdit: () => void;
   onReactivate: () => void;
 }
 
@@ -68,8 +69,9 @@ export const ProfileItem = (props: Props) => {
     isDragging,
     activating,
     itemData,
+    chainLogs,
     onSelect,
-    onEdit,
+    // onEdit,
     onReactivate,
   } = props;
 
@@ -138,10 +140,10 @@ export const ProfileItem = (props: Props) => {
     openWebUrl(itemData.home ?? "");
   };
 
-  const onEditInfo = () => {
-    setAnchorEl(null);
-    onEdit();
-  };
+  // const onEditInfo = () => {
+  //   setAnchorEl(null);
+  //   onEdit();
+  // };
 
   const onEditFile = () => {
     setAnchorEl(null);
@@ -215,13 +217,13 @@ export const ProfileItem = (props: Props) => {
       icon: <CheckCircle fontSize="small" />,
       handler: onForceSelect,
     },
+    // {
+    //   label: "Edit Info",
+    //   icon: <EditNote fontSize="small" />,
+    //   handler: onEditInfo,
+    // },
     {
-      label: "Edit Info",
-      icon: <EditNote fontSize="small" />,
-      handler: onEditInfo,
-    },
-    {
-      label: "Edit File",
+      label: "Edit",
       icon: <Edit fontSize="small" />,
       handler: onEditFile,
     },
@@ -419,10 +421,10 @@ export const ProfileItem = (props: Props) => {
 
       <ProfileEditorViewer
         open={fileOpen}
-        mode="profile"
-        scope="clash"
+        profileItem={itemData}
+        chainLogs={chainLogs}
+        type="clash"
         language="yaml"
-        property={uid}
         onChange={() => {
           if (selected) {
             onReactivate();

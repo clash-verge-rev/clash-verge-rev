@@ -926,6 +926,7 @@ version = "2.0.0"
 dependencies = [
  "anyhow",
  "auto-launch",
+ "base64 0.22.1",
  "boa_engine",
  "chrono",
  "deelevate",

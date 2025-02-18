@@ -17,6 +17,7 @@ use crate::{
 };
 use anyhow::Result;
 use core::{handle, tray, verge_log::VergeLog};
+use once_cell::sync::OnceCell;
 use rust_i18n::t;
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
@@ -25,6 +26,8 @@ use std::{
 use utils::dirs::APP_ID;
 
 rust_i18n::i18n!("./src/locales", fallback = "en");
+
+pub static APP_VERSION: OnceCell<String> = OnceCell::new();
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<()> {
@@ -110,6 +113,11 @@ pub fn run() -> Result<()> {
 
             let app_handle = app.handle();
 
+            // app version info
+            let version = app_handle.package_info().version.to_string();
+            APP_VERSION.get_or_init(|| version.clone());
+
+            log::trace!("init handle");
             handle::Handle::global().init(app_handle.clone());
 
             log::trace!("init system tray");
@@ -185,7 +193,6 @@ pub fn run() -> Result<()> {
             cmds::change_clash_core,
             cmds::get_runtime_config,
             cmds::get_runtime_yaml,
-            cmds::get_runtime_exists,
             cmds::get_runtime_logs,
             cmds::get_pre_merge_result,
             cmds::test_merge_chain,
@@ -203,6 +210,8 @@ pub fn run() -> Result<()> {
             // cmds::update_hotkeys,
             // profile
             cmds::get_profiles,
+            cmds::get_profile,
+            cmds::get_chains,
             cmds::get_template,
             cmds::enhance_profiles,
             cmds::patch_profiles_config,

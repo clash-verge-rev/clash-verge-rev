@@ -62,6 +62,7 @@ rfd = { version = "0.15", default-features = false, features = [
   "gtk3",
   "common-controls-v6",
 ] }
+base64 = "0.22.1"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2"

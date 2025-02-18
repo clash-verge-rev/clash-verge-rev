@@ -12,7 +12,7 @@ export const FileInput = (props: Props) => {
 
   const { t } = useTranslation();
   // file input
-  const inputRef = useRef<any>();
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState("");
 
@@ -40,8 +40,7 @@ export const FileInput = (props: Props) => {
       <Button
         variant="outlined"
         sx={{ flex: "none" }}
-        onClick={() => inputRef.current?.click()}
-      >
+        onClick={() => inputRef.current?.click()}>
         {t("Choose File")}
       </Button>
 

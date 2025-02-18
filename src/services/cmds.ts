@@ -36,6 +36,14 @@ export async function getProfiles() {
   return invoke<IProfilesConfig>("get_profiles");
 }
 
+export async function getProfile(uid: string) {
+  return invoke<IProfileItem>("get_profile", { uid });
+}
+
+export async function getChains(profileUid: string | null) {
+  return invoke<IProfileItem[]>("get_chains", { profileUid });
+}
+
 export async function getTemplate(scope: string, language: string) {
   return invoke<string>("get_template", { scope, language });
 }
@@ -71,8 +79,8 @@ export async function getCurrentProfileRuleProvidersPath() {
   return invoke<Record<string, string>>("get_current_profile_rule_providers");
 }
 
-export async function saveProfileFile(index: string, fileData: string) {
-  return invoke<void>("save_profile_file", { index, fileData });
+export async function saveProfileFile(uid: string, fileData: string) {
+  return invoke<void>("save_profile_file", { uid, fileData });
 }
 
 export async function importProfile(url: string) {
@@ -98,10 +106,10 @@ export async function deleteProfile(index: string) {
 }
 
 export async function patchProfile(
-  index: string,
+  uid: string,
   profile: Partial<IProfileItem>,
 ) {
-  return invoke<void>("patch_profile", { index, profile });
+  return invoke<void>("patch_profile", { uid, profile });
 }
 
 export async function getClashInfo() {
@@ -143,12 +151,16 @@ export async function getRuntimeLogs() {
   return res;
 }
 
-export async function getPreMergeResult(modifiedChainId: string) {
+export async function getPreMergeResult(
+  profileUid: string | null,
+  modifiedUid: string,
+) {
   const res = await invoke<MergeResult>("get_pre_merge_result", {
-    modifiedChainId,
+    profileUid,
+    modifiedUid,
   });
-  if (res.logs[modifiedChainId]) {
-    res.logs[modifiedChainId].map((item) => {
+  if (res.logs[modifiedUid]) {
+    res.logs[modifiedUid].map((item) => {
       const newData = item.data.map((i) => {
         try {
           const jsonData = JSON.parse(i);
@@ -163,13 +175,18 @@ export async function getPreMergeResult(modifiedChainId: string) {
   return res;
 }
 
-export async function testMergeChain(modifiedChainId: string, content: string) {
+export async function testMergeChain(
+  profileUid: string | null,
+  modifiedUid: string,
+  content: string,
+) {
   const res = await invoke<MergeResult>("test_merge_chain", {
-    modifiedChainId,
+    profileUid,
+    modifiedUid,
     content,
   });
-  if (res.logs[modifiedChainId]) {
-    res.logs[modifiedChainId].map((item) => {
+  if (res.logs[modifiedUid]) {
+    res.logs[modifiedUid].map((item) => {
       const newData = item.data.map((i) => {
         try {
           const jsonData = JSON.parse(i);

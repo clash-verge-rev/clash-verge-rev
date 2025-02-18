@@ -1,8 +1,10 @@
+use super::handle;
 use crate::{
     cmds,
     config::{Config, IProfiles},
     feat,
     utils::{dirs, resolve},
+    APP_VERSION,
 };
 use anyhow::{bail, Result};
 use rust_i18n::t;
@@ -13,11 +15,9 @@ use tauri::{
     AppHandle, Runtime,
 };
 
-use super::handle;
-
 const TRAY_ID: &str = "verge_tray";
 
-pub struct Tray {}
+pub struct Tray;
 
 impl Tray {
     fn get_tray_icon() -> Image<'static> {
@@ -105,15 +105,15 @@ impl Tray {
     }
 
     pub fn tray_menu<R: Runtime>(app_handle: &AppHandle<R>) -> Result<Menu<R>> {
-        let version = app_handle.package_info().version.to_string();
+        let version = APP_VERSION.get().unwrap();
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         let current = profiles.get_current().unwrap_or_default();
-        let profiles_items = profiles.get_profiles().unwrap();
+        let profiles = profiles.get_profiles();
         let mut switch_menu = SubmenuBuilder::new(app_handle, t!("profiles.switch"));
-        for prf_item in profiles_items {
-            let uid = prf_item.uid.unwrap();
-            let name = prf_item.name.unwrap();
+        for profile in profiles {
+            let uid = profile.uid.unwrap();
+            let name = profile.name.unwrap();
             if current == uid {
                 let checkmenu =
                     CheckMenuItem::with_id(app_handle, uid, name, true, true, None::<&str>)?;
@@ -319,8 +319,8 @@ impl Tray {
     pub fn on_system_tray_event(app_handle: &AppHandle, event: MenuEvent) {
         let app_handle_ = app_handle.clone();
         let config_profiles = Config::profiles().latest().clone();
-        let profiles = config_profiles.get_profiles().unwrap();
-        let profiles_uids = profiles
+        let profiles = config_profiles.get_profiles();
+        let profile_uids = profiles
             .iter()
             .map(|item| item.uid.clone().unwrap_or_default())
             .collect::<Vec<String>>();
@@ -332,7 +332,7 @@ impl Tray {
             "open_window" => resolve::create_window(app_handle),
             "system_proxy" => feat::toggle_system_proxy(),
             "tun_mode" => feat::toggle_tun_mode(),
-            profile if profiles_uids.contains(&profile.to_string()) => {
+            profile if profile_uids.contains(&profile.to_string()) => {
                 let clicked_profile = profile.to_string();
                 let current = config_profiles.get_current().unwrap_or_default();
                 if current != clicked_profile {
@@ -361,7 +361,7 @@ impl Tray {
                         }
                     });
                 } else {
-                    let _ = Self::update_systray(&app_handle);
+                    let _ = Self::update_systray(app_handle);
                 }
             }
             "service_mode" => feat::toggle_service_mode(),

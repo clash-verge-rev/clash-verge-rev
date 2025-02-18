@@ -24,6 +24,9 @@ pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
 /// read mapping from yaml fix #165
 pub fn read_merge_mapping(path: &PathBuf) -> Result<Mapping> {
     let mut val: Value = read_yaml(path)?;
+    if val.is_null() {
+        return Ok(Mapping::new());
+    }
     val.apply_merge()
         .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
 
@@ -105,8 +108,8 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-/// open file
-/// use vscode by default
+// open file
+// use vscode by default
 // #[cfg(target_os = "windows")]
 // pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
 //     use tauri_plugin_shell::ShellExt;

@@ -283,6 +283,8 @@
   "Expire Time": "过期时间",
   "Used / Total": "已使用 / 总共",
   "Console": "控制台",
+  "Runtime Console": "控制台 (当前运行)",
+  "Restore Changes": "还原更改",
   "Run Check": "运行检查",
   "Expand All": "全部展开",
   "Collapse All": "全部折叠",

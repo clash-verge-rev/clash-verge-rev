@@ -1,6 +1,7 @@
 import { Notice } from "@/components/base";
 import { useWindowSize } from "@/hooks/use-window-size";
 import { getTemplate } from "@/services/cmds";
+import monaco from "@/services/monaco-config";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
@@ -11,44 +12,32 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import * as monaco from "monaco-editor";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import pac from "types-pac/pac.d.ts?raw";
 
 interface Props {
   title?: string | ReactNode;
   property: string;
   open: boolean;
-  language: "javascript" | "css";
-  scope?: "pac" | "script";
+  language: "javascript" | "css" | "yaml";
+  scope?: "pac" | "script" | "clash";
+  readonly?: boolean;
   onClose: () => void;
   onChange?: (content: string) => void;
 }
 
-// PAC definition
-monaco.languages.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
-monaco.languages.registerCompletionItemProvider("javascript", {
-  provideCompletionItems: (model, position) => ({
-    suggestions: [
-      {
-        label: "%mixed-port%",
-        kind: monaco.languages.CompletionItemKind.Text,
-        insertText: "%mixed-port%",
-        range: {
-          startLineNumber: position.lineNumber,
-          endLineNumber: position.lineNumber,
-          startColumn: model.getWordUntilPosition(position).startColumn - 1,
-          endColumn: model.getWordUntilPosition(position).endColumn - 1,
-        },
-      },
-    ],
-  }),
-});
-
 export const EditorViewer = (props: Props) => {
-  const { title, property, open, language, scope, onClose, onChange } = props;
+  const {
+    title,
+    property,
+    open,
+    language,
+    scope,
+    readonly,
+    onClose,
+    onChange,
+  } = props;
   const { t } = useTranslation();
   const editorDomRef = useRef<any>();
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -72,25 +61,24 @@ export const EditorViewer = (props: Props) => {
       instanceRef.current = monaco.editor.create(editorDomRef.current, {
         model: model,
         language: language,
-        tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进大小
+        readOnly: readonly,
+        readOnlyMessage: { value: t("ReadOnlyMessage") },
+        tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4,
         theme: themeMode === "light" ? "vs" : "vs-dark",
-        minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
-        mouseWheelZoom: true, // 按住Ctrl滚轮调节缩放比例
+        minimap: { enabled: dom.clientWidth >= 1000 },
+        mouseWheelZoom: true,
         renderValidationDecorations: "on", // 只读模式下显示校验信息
         quickSuggestions: {
           strings: true,
           comments: true,
           other: true,
         },
-        automaticLayout: true,
-        // padding: {
-        //   top: 33, // 顶部padding防止遮挡snippets
-        // },
         fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
           getSystem() === "windows" ? ", twemoji mozilla" : ""
         }`,
-        fontLigatures: true, // 连字符
-        smoothScrolling: true, // 平滑滚动
+        automaticLayout: true,
+        fontLigatures: true,
+        smoothScrolling: true,
       });
 
       if (scope && "pac" === scope) {
@@ -135,12 +123,10 @@ export const EditorViewer = (props: Props) => {
     });
 
     return () => {
-      if (instanceRef.current) {
-        instanceRef.current.dispose();
-        registerCodeLensRef.current?.dispose();
-        instanceRef.current = null;
-        registerCodeLensRef.current = null;
-      }
+      instanceRef.current?.dispose();
+      registerCodeLensRef.current?.dispose();
+      instanceRef.current = null;
+      registerCodeLensRef.current = null;
     };
   }, [open]);
 
@@ -167,12 +153,11 @@ export const EditorViewer = (props: Props) => {
 
       <DialogContent
         sx={{
-          width: "94%",
           height: `${size.height - 200}px`,
           pb: 1,
           userSelect: "text",
         }}>
-        <div style={{ width: "100%", height: "100%" }} ref={editorDomRef} />
+        <div className="h-full w-full overflow-hidden" ref={editorDomRef} />
       </DialogContent>
 
       <DialogActions>

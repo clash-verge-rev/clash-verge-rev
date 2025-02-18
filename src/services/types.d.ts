@@ -164,12 +164,18 @@ interface IProfileItem {
   name?: string;
   desc?: string;
   file?: string;
-  url?: string;
-  updated?: number;
+  // chain
+  parent?: string;
+  enable?: boolean;
+  scope?: "global" | "specific";
+  // profile
   selected?: {
     name?: string;
     now?: string;
   }[];
+  chain?: string[];
+  // remote profile
+  url?: string;
   extra?: {
     upload: number;
     download: number;
@@ -178,6 +184,7 @@ interface IProfileItem {
   };
   option?: IProfileOption;
   home?: string;
+  updated?: number;
 }
 
 interface IProfileOption {

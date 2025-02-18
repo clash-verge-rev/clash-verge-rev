@@ -86,11 +86,10 @@ impl Config {
 
     /// 生成订阅存好
     pub fn generate() -> Result<()> {
-        let (config, exists_keys, logs) = enhance::enhance();
+        let (config, logs) = enhance::enhance();
 
         *Config::runtime().draft() = IRuntime {
             config: Some(config),
-            exists_keys,
             chain_logs: logs,
         };
 
@@ -136,14 +135,12 @@ impl Config {
 
         // Check if Clash Verge Service is installed and patch configuration values ​​if not
         let enable_service_mode = verge_config.latest().enable_service_mode.unwrap_or(false);
-        if enable_service_mode {
-            if let Err(_) = service::check_service().await {
-                feat::patch_verge(IVerge {
-                    enable_service_mode: Some(false),
-                    ..IVerge::default()
-                })
-                .await?;
-            }
+        if enable_service_mode && service::check_service().await.is_err() {
+            feat::patch_verge(IVerge {
+                enable_service_mode: Some(false),
+                ..IVerge::default()
+            })
+            .await?;
         }
 
         // resolve config settings

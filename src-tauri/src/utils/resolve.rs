@@ -8,12 +8,9 @@ use crate::{
 };
 use anyhow::Result;
 use mihomo::MihomoClientManager;
-use once_cell::sync::OnceCell;
 use rust_i18n::t;
 use std::net::TcpListener;
 use tauri::{AppHandle, CloseRequestApi, Manager};
-
-pub static VERSION: OnceCell<String> = OnceCell::new();
 
 pub fn find_unused_port() -> Result<u16> {
     match TcpListener::bind("127.0.0.1:0") {
@@ -31,9 +28,6 @@ pub fn find_unused_port() -> Result<u16> {
 
 /// handle something when start app
 pub async fn resolve_setup(app_handle: &AppHandle) {
-    let version = app_handle.package_info().version.to_string();
-    VERSION.get_or_init(|| version.clone());
-
     log::trace!("init resources");
     log_err!(init::init_resources());
     log::trace!("init scheme");
@@ -173,6 +167,8 @@ pub fn create_window(app_handle: &AppHandle) {
             if center.unwrap_or(true) {
                 trace_err!(win.center(), "set win center");
             }
+            #[cfg(debug_assertions)]
+            win.open_devtools();
         }
         Err(_) => {
             log::error!("failed to create window");

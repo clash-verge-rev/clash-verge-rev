@@ -205,24 +205,20 @@ pub fn toggle_tun_mode() {
                     MessageDialogButtons::OkCancel,
                 )
                 .unwrap_or(false);
-                if status {
-                    if let Ok(_) = install_and_run_service().await {
-                        if let Err(err) = cmds::service::check_service_and_clash().await {
-                            let _ = handle::Handle::notification(
-                                "Tun Mode",
-                                format!("{}, {}", toggle_failed_msg, err),
-                            );
-                        } else {
-                            if let Err(err) = patch_clash(tun).await {
-                                let _ = handle::Handle::notification(
-                                    "Tun Mode",
-                                    format!("{}, {}", toggle_failed_msg, err),
-                                );
-                                log::error!(target: "app", "{err}")
-                            } else {
-                                log::info!(target: "app", "change tun mode to {:?}", !enable);
-                            }
-                        }
+                if status && install_and_run_service().await.is_ok() {
+                    if let Err(err) = cmds::service::check_service_and_clash().await {
+                        let _ = handle::Handle::notification(
+                            "Tun Mode",
+                            format!("{}, {}", toggle_failed_msg, err),
+                        );
+                    } else if let Err(err) = patch_clash(tun).await {
+                        let _ = handle::Handle::notification(
+                            "Tun Mode",
+                            format!("{}, {}", toggle_failed_msg, err),
+                        );
+                        log::error!(target: "app", "{err}")
+                    } else {
+                        log::info!(target: "app", "change tun mode to {:?}", !enable);
                     }
                 }
             }
@@ -314,7 +310,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 let clash_config_mapping = { Config::clash().latest().0.clone() };
                 let value = clash_config_mapping.get(key).unwrap();
 
-                mapping.insert(key.into(), value.clone().into());
+                mapping.insert(key.into(), value.clone());
                 let _ = MihomoClientManager::global()
                     .mihomo()
                     .patch_base_config(&mapping)
@@ -330,7 +326,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                         .as_mapping()
                         .unwrap()
                         .get("enable")
-                        .map_or(false, |val| val.as_bool().unwrap_or(false));
+                        .is_some_and(|val| val.as_bool().unwrap_or(false));
                     let tun_enable_by_api = clash_basic_configs.tun.enable;
                     // let tun_enable_by_api = clash_basic_configs
                     //     .tun
@@ -408,11 +404,11 @@ pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
                 let x = size_position[2];
                 let y = size_position[3];
                 if system_title_bar {
-                    w = w + 90.;
-                    h = h + 90.;
+                    w += 90.;
+                    h += 90.;
                 } else {
-                    w = w - 90.;
-                    h = h - 90.;
+                    w -= 90.;
+                    h -= 90.;
                 }
                 patch.window_size_position = Some(vec![w, h, x, y]);
             }
@@ -508,7 +504,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
         let is_remote = item
             .itype
             .as_ref()
-            .map_or(false, |s| *s == ProfileType::Remote);
+            .is_some_and(|s| *s == ProfileType::Remote);
 
         if !is_remote {
             None // 直接更新

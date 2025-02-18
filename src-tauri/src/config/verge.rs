@@ -123,9 +123,6 @@ pub struct IVerge {
     /// 默认的延迟测试超时时间
     pub default_latency_timeout: Option<i32>,
 
-    /// 是否使用内部的脚本支持，默认为真
-    pub enable_builtin_enhanced: Option<bool>,
-
     /// proxy 页面布局 列数
     pub proxy_layout_column: Option<i32>,
 
@@ -225,7 +222,6 @@ impl IVerge {
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
-            enable_builtin_enhanced: Some(true),
             auto_log_clean: Some(3),
             enable_tray: Some(true),
             ..Self::default()
@@ -289,7 +285,6 @@ impl IVerge {
         patch!(auto_check_update);
         patch!(default_latency_test);
         patch!(default_latency_timeout);
-        patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(test_list);
         patch!(auto_log_clean);

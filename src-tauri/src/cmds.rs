@@ -1,7 +1,7 @@
 use crate::{
     config::*,
     core::*,
-    enhance::{self, LogMessage, MergeResult},
+    enhance::{self, chain::ChainItem, LogMessage, MergeResult},
     feat,
     utils::{dirs, help, resolve, tmpl},
 };
@@ -34,6 +34,18 @@ pub struct CmdMergeResult {
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
     Ok(Config::profiles().data().clone())
+}
+
+#[tauri::command]
+pub fn get_profile(uid: String) -> CmdResult<PrfItem> {
+    wrap_err!(Config::profiles().data().get_item(&uid).cloned())
+}
+
+#[tauri::command]
+pub fn get_chains(profile_uid: Option<String>) -> CmdResult<Vec<ChainItem>> {
+    Ok(Config::profiles()
+        .data()
+        .get_profile_chains(profile_uid, EnableFilter::All))
 }
 
 #[tauri::command]
@@ -86,12 +98,15 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
-    let restart_core = wrap_err!({ Config::profiles().data().delete_item(index) })?;
+    let (restart_core, enhance_profile) =
+        wrap_err!({ Config::profiles().data().delete_item(index) })?;
     // the current profile is deleted, need to restart the core to apply new current profile
     if restart_core {
         wrap_err!(CoreManager::global().update_config(true).await)?;
-        handle::Handle::refresh_clash();
+    } else if enhance_profile {
+        wrap_err!(CoreManager::global().update_config(false).await)?;
     }
+    handle::Handle::refresh_clash();
     wrap_err!(handle::Handle::update_systray_part())
 }
 
@@ -118,9 +133,14 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
 
 /// 修改某个profile item的
 #[tauri::command]
-pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
-    wrap_err!(Config::profiles().data().patch_item(index, profile))?;
-    wrap_err!(timer::Timer::global().refresh_profiles())
+pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
+    wrap_err!(Config::profiles().data().patch_item(uid, profile.clone()))?;
+    wrap_err!(timer::Timer::global().refresh_profiles())?;
+    if profile.enable.is_some() {
+        wrap_err!(CoreManager::global().update_config(false).await)?;
+        handle::Handle::refresh_clash();
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -168,14 +188,13 @@ pub fn get_current_profile_rule_providers() -> CmdResult<HashMap<String, PathBuf
 }
 
 #[tauri::command]
-pub fn save_profile_file(index: String, file_data: Option<String>) -> CmdResult {
+pub fn save_profile_file(uid: String, file_data: Option<String>) -> CmdResult {
     if file_data.is_none() {
         return Ok(());
     }
-
     let profiles = Config::profiles();
     let profiles = profiles.latest();
-    let item = wrap_err!(profiles.get_item(&index))?;
+    let item = wrap_err!(profiles.get_item(&uid))?;
     wrap_err!(item.save_file(file_data.unwrap()))
 }
 
@@ -199,10 +218,10 @@ pub fn get_runtime_yaml() -> CmdResult<String> {
         .and_then(|config| serde_yaml::to_string(config).context(t!("config.convert.failed"))))
 }
 
-#[tauri::command]
-pub fn get_runtime_exists() -> CmdResult<Vec<String>> {
-    Ok(Config::runtime().latest().exists_keys.clone())
-}
+// #[tauri::command]
+// pub fn get_runtime_exists() -> CmdResult<Vec<String>> {
+//     Ok(Config::runtime().latest().exists_keys.clone())
+// }
 
 #[tauri::command]
 pub fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<LogMessage>>> {
@@ -210,22 +229,26 @@ pub fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<LogMessage>>> {
 }
 
 #[tauri::command]
-pub fn get_pre_merge_result(modified_chain_id: String) -> CmdResult<CmdMergeResult> {
-    let MergeResult { config, logs } = enhance::get_pre_merge_result(modified_chain_id).unwrap();
-    let config = serde_yaml::to_string(&config)
-        .map_err(|err| err.to_string())
-        .unwrap();
-    return Ok(CmdMergeResult { config, logs });
+pub fn get_pre_merge_result(
+    parent_uid: Option<String>,
+    modified_uid: String,
+) -> CmdResult<CmdMergeResult> {
+    let MergeResult { config, logs } =
+        wrap_err!(enhance::get_pre_merge_result(parent_uid, modified_uid))?;
+    let config = wrap_err!(serde_yaml::to_string(&config))?;
+    Ok(CmdMergeResult { config, logs })
 }
 
 #[tauri::command]
-pub fn test_merge_chain(modified_chain_id: String, content: String) -> CmdResult<CmdMergeResult> {
+pub async fn test_merge_chain(
+    profile_uid: Option<String>,
+    modified_uid: String,
+    content: String,
+) -> CmdResult<CmdMergeResult> {
     let MergeResult { config, logs } =
-        enhance::test_merge_chain(modified_chain_id, content).unwrap();
-    let config = serde_yaml::to_string(&config)
-        .map_err(|err| err.to_string())
-        .unwrap();
-    return Ok(CmdMergeResult { config, logs });
+        wrap_err!(enhance::test_merge_chain(profile_uid, modified_uid, content).await)?;
+    let config = wrap_err!(serde_yaml::to_string(&config))?;
+    Ok(CmdMergeResult { config, logs })
 }
 
 #[tauri::command]
@@ -489,7 +512,7 @@ pub mod service {
 
     pub async fn check_service_and_clash() -> CmdResult<()> {
         for i in 0..5 {
-            if let Err(_) = service::check_service().await {
+            if service::check_service().await.is_err() {
                 if i == 4 {
                     ret_err!("service check failed");
                 } else {
@@ -498,10 +521,11 @@ pub mod service {
             };
         }
         for i in 0..5 {
-            if let Err(_) = MihomoClientManager::global()
+            if MihomoClientManager::global()
                 .mihomo()
                 .get_base_config()
                 .await
+                .is_err()
             {
                 if i == 4 {
                     ret_err!("clash check failed");

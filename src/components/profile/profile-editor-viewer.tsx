@@ -1,213 +1,446 @@
-import mergeSchema from "@/assets/schema/clash-verge-merge-json-schema.json";
-import metaSchema from "@/assets/schema/meta-json-schema.json";
-import { BaseDialog, Notice } from "@/components/base";
+import {
+  BaseDialog,
+  Notice,
+  ScrollableText,
+  SwitchLovely,
+} from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { LogMessage } from "@/components/profile/profile-more";
 import { useWindowSize } from "@/hooks/use-window-size";
 import {
+  getChains,
   getTemplate,
+  patchProfile,
   readProfileFile,
   saveProfileFile,
   testMergeChain,
 } from "@/services/cmds";
+import monaco from "@/services/monaco-config";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
+  Add,
   CheckCircleOutline,
   ErrorOutline,
+  ExpandMore,
   RadioButtonUnchecked,
+  Reply,
   Terminal,
 } from "@mui/icons-material";
-import { Badge, BadgeProps, IconButton, styled, Tooltip } from "@mui/material";
+import {
+  Badge,
+  BadgeProps,
+  Button,
+  ButtonGroup,
+  Collapse,
+  Divider,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  styled,
+  TextField,
+  Tooltip,
+} from "@mui/material";
+import { getVersion } from "@tauri-apps/api/app";
 import { useLockFn } from "ahooks";
-import * as monaco from "monaco-editor";
-import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
+import { isEqual } from "lodash-es";
+import { IDisposable } from "monaco-editor";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { mutate } from "swr";
+import ProfileMoreMini from "./profile-more-mini";
+import { ProfileViewer, ProfileViewerRef } from "./profile-viewer";
 
 interface Props {
   title?: string | ReactNode;
-  mode: "profile" | "text";
-  property: string;
+  profileItem: IProfileItem;
+  chainLogs?: Record<string, LogMessage[]>;
   open: boolean;
   readOnly?: boolean;
-  language: "yaml" | "javascript" | "css";
-  scope?: "clash" | "merge" | "pac" | "script";
-  logInfo?: LogMessage[];
+  language: "yaml" | "javascript";
+  type?: "clash" | "merge" | "script";
   onClose: () => void;
-  onChange?: (content: string) => void;
+  onChange?: () => void;
 }
-
-const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
-  "& .MuiBadge-badge": {
-    right: 0,
-    top: 3,
-    border: `2px solid ${theme.palette.background.paper}`,
-    padding: "0 4px",
-  },
-}));
-
-// yaml worker
-configureMonacoYaml(monaco, {
-  validate: true,
-  enableSchemaRequest: true,
-  schemas: [
-    {
-      uri: "http://example.com/meta-json-schema.json",
-      fileMatch: ["**/*.clash.yaml"],
-      schema: metaSchema as unknown as JSONSchema,
-    },
-    {
-      uri: "http://example.com/clash-verge-merge-json-schema.json",
-      fileMatch: ["**/*.merge.yaml"],
-      schema: mergeSchema as unknown as JSONSchema,
-    },
-  ],
-});
 
 export const ProfileEditorViewer = (props: Props) => {
   const {
     title,
-    mode,
-    property,
+    profileItem,
+    chainLogs = {},
     open,
     readOnly,
     language,
-    scope,
-    logInfo,
+    type,
     onClose,
     onChange,
   } = props;
-  const isScriptMerge = mode === "profile" && scope === "script";
-  const [logOpen, setLogOpen] = useState(false);
-  const [logs, setLogs] = useState<LogMessage[]>(logInfo ?? []);
   const { t } = useTranslation();
+  const { size } = useWindowSize();
+
+  const profileUid = profileItem.uid;
+  const [editProfile, setEditProfile] = useState<IProfileItem>(profileItem);
+  const [originContent, setOriginContent] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState("");
+  const themeMode = useThemeMode();
+
+  const isScriptMerge = editProfile.type === "script";
+  const isEnhanced =
+    editProfile.type === "script" || editProfile.type === "merge";
+
+  // monaco
   const editorDomRef = useRef<any>();
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const registerCodeLensRef = useRef<any>();
-  const themeMode = useThemeMode();
-  const { size } = useWindowSize();
-  const hasError = !!logs.find((item) => item.exception);
-  const [scriptChecked, setScriptChecked] = useState(false);
+  const codeLensRef = useRef<IDisposable | null>(null);
+  let editChainCondition =
+    useRef<monaco.editor.IContextKey<boolean | undefined>>();
+  let saveChainCondition =
+    useRef<monaco.editor.IContextKey<boolean | undefined>>();
+
+  // chain
+  const [chainChecked, setChainChecked] = useState(false);
+  const [expand, setExpand] = useState(isEnhanced ? true : false);
+  const [chain, setChain] = useState<IProfileItem[]>([]);
+  const viewerRef = useRef<ProfileViewerRef>(null);
+
+  // script chain
+  const [logOpen, setLogOpen] = useState(false);
+  const [logs, setLogs] = useState<LogMessage[]>(
+    chainLogs[editProfile.uid] || [],
+  );
+  // const [logs, setLogs] = useState(chainLogs[editProfile.uid] || []);
+  const hasError = isScriptMerge && !!logs?.find((item) => item.exception);
+
+  // update profile
+  const { control, watch, register, ...formIns } = useForm<IProfileItem>({
+    defaultValues: profileItem,
+  });
+  const text = {
+    fullWidth: true,
+    size: "small",
+    margin: "dense",
+    variant: "outlined",
+    autoComplete: "off",
+    autoCorrect: "off",
+  } as const;
+  const profileName = watch("name");
+  const formType = watch("type");
+  const isRemote = formType === "remote";
 
   useEffect(() => {
-    if (!open) return;
-
-    let fetchContent;
-    switch (mode) {
-      case "profile": // profile文件
-        fetchContent = readProfileFile(property);
-        break;
-      case "text": // 文本内容
-        fetchContent = Promise.resolve(property);
-        break;
-    }
-    fetchContent.then(async (data) => {
+    if (!open || instanceRef.current) return;
+    getVersion().then((version) => {
+      setAppVersion(version);
+    });
+    refreshChain();
+    readProfileFile(profileUid).then(async (data) => {
+      if (!originContent) {
+        setOriginContent(data);
+      }
       const dom = editorDomRef.current;
-
       if (!dom) return;
-
       if (instanceRef.current) instanceRef.current.dispose();
-
-      const uri = monaco.Uri.parse(`${nanoid()}.${scope}.${language}`);
+      const uri = monaco.Uri.parse(
+        `${nanoid()}.${type}.${language}?uid=${profileUid}`,
+      );
       const model = monaco.editor.createModel(data, language, uri);
       instanceRef.current = monaco.editor.create(dom, {
         model: model,
         language: language,
-        tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进大小
+        tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4,
         theme: themeMode === "light" ? "vs" : "vs-dark",
-        minimap: { enabled: dom.clientWidth >= 1000 }, // 超过一定宽度显示minimap滚动条
-        mouseWheelZoom: true, // 按住Ctrl滚轮调节缩放比例
-        readOnly: readOnly, // 只读模式
-        readOnlyMessage: { value: t("ReadOnlyMessage") }, // 只读模式尝试编辑时的提示信息
-        renderValidationDecorations: "on", // 只读模式下显示校验信息
+        minimap: { enabled: dom.clientWidth >= 1000 },
+        mouseWheelZoom: true,
+        readOnly: readOnly,
+        readOnlyMessage: { value: t("ReadOnlyMessage") },
+        renderValidationDecorations: "on",
         quickSuggestions: {
           strings: true,
           comments: true,
           other: true,
         },
         automaticLayout: true,
-        // padding: {
-        //   top: 33, // 顶部padding防止遮挡snippets
-        // },
         fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
           getSystem() === "windows" ? ", twemoji mozilla" : ""
         }`,
-        fontLigatures: true, // 连字符
-        smoothScrolling: true, // 平滑滚动
+        fontLigatures: true,
+        smoothScrolling: true,
+      });
+
+      // 用于判断当前编辑的是否为脚本文件
+      editChainCondition.current = instanceRef.current?.createContextKey(
+        "editChain",
+        type && ["merge", "script"].includes(type),
+      );
+
+      // 用于判断当前编辑的脚本是否通过运行检测, 并且可以保存
+      saveChainCondition.current = instanceRef.current?.createContextKey(
+        "saveChain",
+        false,
+      );
+
+      // F5 快速执行脚本运行检测
+      instanceRef.current.addAction({
+        id: "runChainCheck",
+        label: "check run",
+        keybindings: [monaco.KeyCode.F5],
+        keybindingContext: "textInputFocus && editChain",
+        run: async (ed) => {
+          const chainUid = ed.getModel()?.uri.query.split("=").pop();
+          if (chainUid) {
+            await handleRunCheck(chainUid);
+          }
+        },
+      });
+
+      // Ctrl + s 保存当前编辑的配置内容
+      instanceRef.current.addAction({
+        id: "saveProfile",
+        label: "save profile",
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+        keybindingContext: "(textInputFocus && saveChain) || !editChain",
+        run: async (ed) => {
+          const currentProfileUid = ed.getModel()?.uri.query.split("=").pop();
+          const val = instanceRef.current?.getValue();
+          if (currentProfileUid && val !== undefined) {
+            await saveProfileFile(currentProfileUid, val);
+            onChange?.();
+          }
+        },
+      });
+
+      // 生成模板的命令方法
+      const generateCommand = instanceRef.current?.addCommand(
+        0,
+        (_, scope: string, language: string) => {
+          getTemplate(scope, language).then((templateContent) => {
+            instanceRef.current?.setValue(templateContent);
+            setChainChecked(false);
+          });
+        },
+        "",
+      );
+
+      // 增强脚本模板生成
+      codeLensRef.current = monaco.languages.registerCodeLensProvider(
+        ["yaml", "javascript"],
+        {
+          provideCodeLenses(model, token) {
+            const uriPath = model.uri.path;
+            if (uriPath.includes("clash.yaml")) {
+              return null;
+            }
+            const nextType = uriPath.includes("merge.yaml")
+              ? "merge"
+              : "script";
+            const nextLanguage = uriPath.includes("merge.yaml")
+              ? "yaml"
+              : "javascript";
+            return {
+              lenses: [
+                {
+                  id: "Regenerate Template Content",
+                  range: {
+                    startLineNumber: 1,
+                    startColumn: 1,
+                    endLineNumber: 2,
+                    endColumn: 1,
+                  },
+                  command: {
+                    id: generateCommand!,
+                    title: t("Regenerate Template Content"),
+                    arguments: [nextType, nextLanguage],
+                  },
+                },
+              ],
+              dispose: () => {},
+            };
+          },
+          resolveCodeLens(model, codeLens, token) {
+            return codeLens;
+          },
+        },
+      );
+
+      instanceRef.current?.onDidChangeModel((e) => {
+        const { newModelUrl } = e;
+        const isChainMerge = !!newModelUrl?.path.includes("merge.yaml");
+        const isChainScript = !!newModelUrl?.path.includes("script.js");
+        if (isChainMerge || isChainScript) {
+          editChainCondition.current?.set(true);
+        } else {
+          editChainCondition.current?.set(false);
+        }
       });
 
       instanceRef.current?.onDidChangeModelContent(() => {
-        setScriptChecked(false);
+        setChainChecked(false);
+        saveChainCondition.current?.set(false);
       });
-
-      if (scope && ["merge", "script"].includes(scope)) {
-        const generateCommand = instanceRef.current?.addCommand(
-          0,
-          () => {
-            getTemplate(scope, language).then((templateContent) => {
-              instanceRef.current?.setValue(templateContent);
-            });
-          },
-          "",
-        );
-        registerCodeLensRef.current = monaco.languages.registerCodeLensProvider(
-          ["yaml", "javascript"],
-          {
-            provideCodeLenses(model, token) {
-              return {
-                lenses: [
-                  {
-                    range: {
-                      startLineNumber: 1,
-                      startColumn: 1,
-                      endLineNumber: 2,
-                      endColumn: 1,
-                    },
-                    id: "Regenerate Template Content",
-                    command: {
-                      id: generateCommand!,
-                      title: t("Regenerate Template Content"),
-                    },
-                  },
-                ],
-                dispose: () => {},
-              };
-            },
-            resolveCodeLens(model, codeLens, token) {
-              return codeLens;
-            },
-          },
-        );
-      }
     });
 
     return () => {
-      if (instanceRef.current) {
-        instanceRef.current.dispose();
-        registerCodeLensRef.current?.dispose();
-        instanceRef.current = null;
-        registerCodeLensRef.current = null;
-      }
+      instanceRef.current?.dispose();
+      instanceRef.current = null;
+      codeLensRef.current?.dispose();
+      codeLensRef.current = null;
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!editProfile) return;
+    setLogs(chainLogs[editProfile.uid]);
+  }, [editProfile, chainLogs]);
 
   instanceRef.current?.updateOptions({
     minimap: { enabled: size.width >= 1000 },
   });
 
-  const onSave = useLockFn(async () => {
-    const value = instanceRef.current?.getValue();
+  const refreshChain = async () => {
+    let chain = await getChains(profileUid);
+    setChain(chain);
+  };
 
-    if (value == undefined) return;
-
-    try {
-      if (mode === "profile") {
-        await saveProfileFile(property, value);
+  const handleProfileSubmit = useLockFn(
+    formIns.handleSubmit(async (form) => {
+      const isSame = isEqual(form, profileItem);
+      if (isSame) {
+        return;
       }
-      onChange?.(value);
-      onClose();
+      try {
+        if (!form.type) throw new Error("`Type` should not be null");
+        if (form.type === "remote" && !form.url) {
+          throw new Error("The URL should not be null");
+        }
+        if (form.type !== "remote" && form.type !== "local") {
+          delete form.option;
+        }
+        if (form.option?.update_interval) {
+          form.option.update_interval = +form.option.update_interval;
+        } else {
+          delete form.option?.update_interval;
+        }
+        if (form.option?.user_agent === "") {
+          delete form.option.user_agent;
+        }
+        const name = form.name || `${form.type} file`;
+        const item = { ...form, name };
+
+        if (!form.uid) throw new Error("UID not found");
+        await patchProfile(form.uid, item);
+        mutate("getProfiles");
+      } catch (err: any) {
+        Notice.error(err.message || err.toString());
+      }
+    }),
+  );
+
+  const handleRunCheck = async (currentProfileUid: string) => {
+    try {
+      const value = instanceRef.current?.getValue();
+      if (value == undefined) return;
+
+      const result = await testMergeChain(
+        type === "clash" ? profileUid : null,
+        currentProfileUid,
+        value,
+      );
+      setChainChecked(true);
+      saveChainCondition.current?.set(true);
+      const currentLogs = result.logs[currentProfileUid] || [];
+      setLogs(currentLogs);
+      if (currentLogs) {
+        if (currentLogs[0]?.exception) {
+          Notice.error(t("Script Run Check Failed"));
+          return;
+        }
+      }
+      Notice.success(t("Script Run Check Successful"));
+    } catch (error: any) {
+      saveChainCondition.current?.set(false);
+      Notice.error(error);
+    }
+  };
+
+  const handleChainClick = async (item: IProfileItem) => {
+    let content = await readProfileFile(item.uid);
+    const backToOriginalProfile = editProfile.uid === item.uid;
+    if (backToOriginalProfile) {
+      // 两次点击，表示编辑初始的配置内容
+      setEditProfile(profileItem);
+      content = await readProfileFile(profileUid);
+    } else {
+      setEditProfile(item);
+    }
+    setOriginContent(content);
+    setChainChecked(false);
+    let oldModel = instanceRef.current?.getModel();
+    let newModel = null;
+    if (backToOriginalProfile) {
+      const id = nanoid();
+      let uri_str = `${id}.${type}.${language}?uid=${profileUid}`;
+      let uri = monaco.Uri.parse(uri_str);
+      newModel = monaco.editor.createModel(content, "yaml", uri);
+    } else if (item.type === "script") {
+      newModel = monaco.editor.createModel(
+        content,
+        "javascript",
+        monaco.Uri.parse(`${nanoid()}.script.js?uid=${item.uid}`),
+      );
+    } else {
+      const id = nanoid();
+      let uri_str = `${id}.${type}.${language}`;
+      if (item.uid !== profileUid) {
+        uri_str = `${id}.merge.yaml?uid=${item.uid}`;
+      }
+      let uri = monaco.Uri.parse(uri_str);
+      newModel = monaco.editor.createModel(content, "yaml", uri);
+    }
+    instanceRef.current?.setModel(newModel);
+    instanceRef.current?.focus();
+    oldModel?.dispose();
+  };
+
+  const handleChainDeleteCallBack = async (item: IProfileItem) => {
+    if (item.uid === editProfile.uid) {
+      setEditProfile(profileItem);
+      const content = await readProfileFile(profileUid);
+      setOriginContent(content);
+      setChainChecked(false);
+      let oldModel = instanceRef.current?.getModel();
+      const id = nanoid();
+      let uri_str = `${id}.${type}.${language}?uid=${profileUid}`;
+      let uri = monaco.Uri.parse(uri_str);
+      const newModel = monaco.editor.createModel(content, "yaml", uri);
+      instanceRef.current?.setModel(newModel);
+      instanceRef.current?.focus();
+      oldModel?.dispose();
+    }
+    mutate("getRuntimeLogs");
+    await refreshChain();
+  };
+
+  const onSave = useLockFn(async () => {
+    if (isScriptMerge && hasError) {
+      Notice.error(t("Script Run Check Failed"));
+      return;
+    }
+    const value = instanceRef.current?.getValue();
+    if (value == undefined) return;
+    try {
+      await handleProfileSubmit();
+      if (originContent !== value) {
+        await saveProfileFile(editProfile.uid, value);
+        onChange?.();
+      }
+      setOriginContent(value);
+      setChainChecked(false);
+      // setExpand(type !== "clash");
+      // if (profileUid === editProfile.uid) {
+      //   onClose();
+      // }
     } catch (err: any) {
       Notice.error(err.message || err.toString());
     }
@@ -218,96 +451,325 @@ export const ProfileEditorViewer = (props: Props) => {
       <BaseDialog
         open={open}
         title={title ?? t("Edit File")}
-        fullWidth
-        cancelBtn={t("Cancel")}
+        full
+        cancelBtn={t("Back")}
         okBtn={t("Save")}
         hideOkBtn={readOnly}
-        okDisabled={isScriptMerge && !scriptChecked}
+        okDisabled={isEnhanced && (!chainChecked || hasError)}
         onClose={() => {
-          setLogs(logInfo ?? []);
-          setScriptChecked(false);
+          setLogs(chainLogs[editProfile.uid] || []);
+          setChainChecked(false);
+          setEditProfile(profileItem);
+          setExpand(type !== "clash");
           onClose();
         }}
         onCancel={() => {
-          setLogs(logInfo ?? []);
-          setScriptChecked(false);
+          setLogs(chainLogs[editProfile.uid] || []);
+          setChainChecked(false);
+          setEditProfile(profileItem);
+          setExpand(type !== "clash");
           onClose();
         }}
-        onOk={() => {
-          if (isScriptMerge && hasError) {
-            Notice.error(t("Script Run Check Failed"));
-            return;
-          }
-          onSave();
-        }}
-        contentStyle={{
-          height: `${size.height - 100}px`,
-          userSelect: "text",
-        }}>
-        <div className="flex h-full overflow-hidden">
-          <div className="h-full w-full" ref={editorDomRef} />
-
-          {isScriptMerge && (
-            <div className="flex w-14 flex-col items-center justify-end space-y-2">
-              <Tooltip title={t("Console")} placement="left">
-                <IconButton
-                  aria-label="terminal"
-                  size="medium"
+        onOk={onSave}
+        contentStyle={{ userSelect: "text" }}>
+        <div className="flex h-full overflow-hidden bg-comment dark:bg-[#1e1f27]">
+          <div className="w-1/4 min-w-[260px] overflow-auto p-2">
+            <div
+              className="flex cursor-pointer items-center justify-between bg-primary-alpha p-2"
+              onClick={() => setExpand(!expand)}>
+              <ScrollableText>
+                <span className="text-md font-bold">{profileName}</span>
+              </ScrollableText>
+              <IconButton size="small">
+                <ExpandMore
+                  fontSize="inherit"
                   color="primary"
-                  onClick={() => setLogOpen(true)}>
-                  {hasError ? (
-                    <Badge color="error" variant="dot">
-                      <Terminal color="error" fontSize="medium" />
-                    </Badge>
-                  ) : (
-                    <StyledBadge badgeContent={logs.length} color="primary">
-                      <Terminal color="primary" fontSize="medium" />
-                    </StyledBadge>
-                  )}
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t("Run Check")} placement="left">
-                <IconButton
-                  aria-label="test"
-                  color={
-                    scriptChecked ? (hasError ? "error" : "success") : "inherit"
-                  }
-                  size="medium"
-                  sx={{}}
-                  onClick={async () => {
-                    const value = instanceRef.current?.getValue();
-                    if (value == undefined) return;
-
-                    const result = await testMergeChain(property, value);
-                    const currentLogs = result.logs[property];
-                    setLogs(currentLogs);
-                    setScriptChecked(true);
-                    if (currentLogs[0]?.exception) {
-                      Notice.error(t("Script Run Check Failed"));
-                    } else {
-                      Notice.success(t("Script Run Check Successful"));
-                    }
-                  }}>
-                  {scriptChecked ? (
-                    hasError ? (
-                      <ErrorOutline fontSize="medium" />
-                    ) : (
-                      <CheckCircleOutline fontSize="medium" />
-                    )
-                  ) : (
-                    <RadioButtonUnchecked fontSize="medium" />
-                  )}
-                </IconButton>
-              </Tooltip>
+                  style={{
+                    transform: expand ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.3s ease-in-out",
+                  }}
+                />
+              </IconButton>
             </div>
-          )}
+
+            <Collapse
+              in={expand}
+              timeout={"auto"}
+              unmountOnExit
+              className="mt-2">
+              <form>
+                <Controller
+                  name="type"
+                  control={control}
+                  render={({ field }) => (
+                    <ButtonGroup
+                      size="small"
+                      fullWidth
+                      disabled
+                      className="mb-2"
+                      aria-label="profile type button group">
+                      {["remote", "local", "script", "merge"].map((type) => (
+                        <Button
+                          key={type}
+                          variant={formType === type ? "contained" : "outlined"}
+                          onClick={() => field.onChange(type)}>
+                          {t(type)}
+                        </Button>
+                      ))}
+                    </ButtonGroup>
+                  )}
+                />
+                <Controller
+                  name="name"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField {...text} {...field} label={t("Name")} />
+                  )}
+                />
+                <Controller
+                  name="desc"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField {...text} {...field} label={t("Descriptions")} />
+                  )}
+                />
+                {isRemote && (
+                  <>
+                    <Controller
+                      name="url"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...text}
+                          {...field}
+                          multiline
+                          label={t("Subscription URL")}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="option.user_agent"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...text}
+                          {...field}
+                          placeholder={`clash-verge/v${appVersion}`}
+                          label="User Agent"
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="option.update_interval"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...text}
+                          {...field}
+                          onChange={(e) => {
+                            e.target.value = e.target.value
+                              ?.replace(/\D/, "")
+                              .slice(0, 10);
+                            field.onChange(e);
+                          }}
+                          label={t("Update Interval")}
+                          slotProps={{
+                            input: {
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  mins
+                                </InputAdornment>
+                              ),
+                            },
+                          }}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="option.with_proxy"
+                      control={control}
+                      render={({ field }) => (
+                        <StyledDiv>
+                          <InputLabel>{t("Use System Proxy")}</InputLabel>
+                          <SwitchLovely
+                            checked={field.value}
+                            {...field}
+                            color="primary"
+                          />
+                        </StyledDiv>
+                      )}
+                    />
+                    <Controller
+                      name="option.self_proxy"
+                      control={control}
+                      render={({ field }) => (
+                        <StyledDiv>
+                          <InputLabel>{t("Use Clash Proxy")}</InputLabel>
+                          <SwitchLovely
+                            checked={field.value}
+                            {...field}
+                            color="primary"
+                          />
+                        </StyledDiv>
+                      )}
+                    />
+                    <Controller
+                      name="option.danger_accept_invalid_certs"
+                      control={control}
+                      render={({ field }) => (
+                        <StyledDiv>
+                          <InputLabel>
+                            {t("Accept Invalid Certs (Danger)")}
+                          </InputLabel>
+                          <SwitchLovely
+                            checked={field.value}
+                            {...field}
+                            color="primary"
+                          />
+                        </StyledDiv>
+                      )}
+                    />
+                  </>
+                )}
+              </form>
+            </Collapse>
+
+            {type === "clash" && (
+              <>
+                <Divider
+                  variant="fullWidth"
+                  className="my-2 text-sm text-gray-400"
+                  flexItem>
+                  {t("Enhance Scripts")}
+                </Divider>
+                <Button
+                  size="small"
+                  variant="contained"
+                  fullWidth
+                  startIcon={<Add />}
+                  onClick={() => viewerRef.current?.create(profileUid)}>
+                  {t("Add")}
+                </Button>
+
+                <ProfileViewer
+                  ref={viewerRef}
+                  onChange={async () => await refreshChain()}
+                />
+
+                <div className="overflow-auto">
+                  {chain.map((item, index) => (
+                    <ProfileMoreMini
+                      key={index}
+                      item={item}
+                      selected={item.uid === editProfile.uid}
+                      logs={chainLogs[item.uid]}
+                      onEnableChangeCallBack={async (enabled) => {
+                        mutate("getRuntimeLogs");
+                        await refreshChain();
+                      }}
+                      onClick={async () => {
+                        await handleChainClick(item);
+                      }}
+                      onInfoChangeCallBack={refreshChain}
+                      onDeleteCallBack={async () => {
+                        await handleChainDeleteCallBack(item);
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="h-full w-full overflow-hidden" ref={editorDomRef} />
+
+          <div className="flex w-14 flex-col items-center justify-end space-y-2 px-1 pb-4">
+            <Tooltip title={t("Restore Changes")} placement="left">
+              <IconButton
+                aria-label="rollback"
+                size="medium"
+                onClick={() => {
+                  if (originContent) {
+                    instanceRef.current?.setValue(originContent);
+                  }
+                }}>
+                <Reply fontSize="medium" />
+              </IconButton>
+            </Tooltip>
+            {(isEnhanced || editProfile.uid !== profileUid) && (
+              <>
+                {isScriptMerge && (
+                  <Tooltip title={t("Console")} placement="left">
+                    <IconButton
+                      aria-label="terminal"
+                      size="medium"
+                      color="primary"
+                      onClick={() => setLogOpen(true)}>
+                      {hasError ? (
+                        <Badge color="error" variant="dot">
+                          <Terminal color="error" fontSize="medium" />
+                        </Badge>
+                      ) : (
+                        <StyledBadge
+                          badgeContent={logs?.length}
+                          color="primary">
+                          <Terminal color="primary" fontSize="medium" />
+                        </StyledBadge>
+                      )}
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <Tooltip title={t("Run Check")} placement="left">
+                  <IconButton
+                    aria-label="test"
+                    color={
+                      chainChecked
+                        ? hasError
+                          ? "error"
+                          : "success"
+                        : "inherit"
+                    }
+                    size="medium"
+                    onClick={async () => await handleRunCheck(editProfile.uid)}>
+                    {chainChecked ? (
+                      hasError ? (
+                        <ErrorOutline fontSize="medium" />
+                      ) : (
+                        <CheckCircleOutline fontSize="medium" />
+                      )
+                    ) : (
+                      <RadioButtonUnchecked fontSize="medium" />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
+          </div>
         </div>
-        <LogViewer
-          open={logOpen}
-          logInfo={logs}
-          onClose={() => setLogOpen(false)}
-        />
+        {isScriptMerge && (
+          <LogViewer
+            open={logOpen}
+            logInfo={logs || []}
+            onClose={() => setLogOpen(false)}
+          />
+        )}
       </BaseDialog>
     </>
   );
 };
+
+const StyledDiv = styled("div")(() => ({
+  margin: "8px 0 8px 8px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+}));
+
+const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
+  "& .MuiBadge-badge": {
+    right: 0,
+    top: 3,
+    border: `2px solid ${theme.palette.background.paper}`,
+    padding: "0 4px",
+  },
+}));

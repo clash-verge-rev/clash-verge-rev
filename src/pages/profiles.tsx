@@ -112,11 +112,13 @@ const ProfilePage = () => {
     const items = profiles.items || [];
     const chainIds = profiles.chain || [];
 
-    const type1 = ["local", "remote"];
-    const type2 = ["merge", "script"];
+    const type_p = ["local", "remote"];
+    const type_c = ["merge", "script"];
 
-    const regularItems = items.filter((i) => i && type1.includes(i.type!));
-    const restItems = items.filter((i) => i && type2.includes(i.type!));
+    const regularItems = items.filter((i) => i && type_p.includes(i.type!));
+    const restItems = items.filter(
+      (i) => i && type_c.includes(i.type!) && i.scope !== "specific",
+    );
     const restMap = Object.fromEntries(restItems.map((i) => [i.uid, i]));
     const enhanceItems = chainIds
       .map((i) => restMap[i]!)
@@ -151,7 +153,6 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const unlisten = listen(TauriEvent.DRAG_DROP, async (event) => {
-      console.log("drag drop event: ", event);
       const payload = event.payload as FileDragDropPayload;
       const fileList = payload.paths;
       for (let file of fileList) {
@@ -538,7 +539,7 @@ const ProfilePage = () => {
           variant="contained"
           size="small"
           sx={{ borderRadius: "6px" }}
-          onClick={() => viewerRef.current?.create()}>
+          onClick={() => viewerRef.current?.create(null)}>
           {t("New")}
         </Button>
       </Stack>
@@ -585,8 +586,9 @@ const ProfilePage = () => {
                           activating.chain !== "")
                       }
                       itemData={item}
+                      chainLogs={chainLogs}
                       onSelect={(f) => onSelect(item.uid, f)}
-                      onEdit={() => viewerRef.current?.edit(item)}
+                      // onEdit={() => viewerRef.current?.edit(item)}
                       onReactivate={() => onEnhance()}
                     />
                   </DraggableItem>
@@ -614,8 +616,9 @@ const ProfilePage = () => {
                     activating.chain !== "")
                 }
                 itemData={draggingProfileItem}
+                chainLogs={chainLogs}
                 onSelect={(f) => onSelect(draggingProfileItem.uid, f)}
-                onEdit={() => viewerRef.current?.edit(draggingProfileItem)}
+                // onEdit={() => viewerRef.current?.edit(draggingProfileItem)}
                 onReactivate={() => onEnhance()}
               />
             ) : null}
@@ -675,7 +678,7 @@ const ProfilePage = () => {
                         isDragging={draggingChainItem?.uid === item.uid}
                         itemData={item}
                         enableNum={chain.length || 0}
-                        logInfo={chainLogs[item.uid]}
+                        chainLogs={chainLogs}
                         reactivating={
                           (!!chain.includes(item.uid) &&
                             (activating.chain !== "" ||
@@ -685,7 +688,7 @@ const ProfilePage = () => {
                         onEnable={() => onEnable(item.uid)}
                         onDisable={() => onDisable(item.uid)}
                         onDelete={() => onDelete(item.uid)}
-                        onEdit={() => viewerRef.current?.edit(item)}
+                        // onEdit={() => viewerRef.current?.edit(item)}
                         onActivatedSave={() => onEnhance()}
                       />
                     </DraggableItem>
@@ -710,7 +713,7 @@ const ProfilePage = () => {
                         isDragging={draggingChainItem?.uid === item.uid}
                         itemData={item}
                         enableNum={chain.length || 0}
-                        logInfo={chainLogs[item.uid]}
+                        chainLogs={chainLogs}
                         reactivating={
                           (!!chain.includes(item.uid) &&
                             (activating.chain !== "" ||
@@ -720,7 +723,7 @@ const ProfilePage = () => {
                         onEnable={() => onEnable(item.uid)}
                         onDisable={() => onDisable(item.uid)}
                         onDelete={() => onDelete(item.uid)}
-                        onEdit={() => viewerRef.current?.edit(item)}
+                        // onEdit={() => viewerRef.current?.edit(item)}
                         onActivatedSave={() => onEnhance()}
                       />
                     </DraggableItem>
@@ -740,7 +743,7 @@ const ProfilePage = () => {
                         boxShadow: "0px 0px 10px 5px rgba(0,0,0,0.2)",
                       }}
                       enableNum={chain.length || 0}
-                      logInfo={chainLogs[draggingChainItem.uid]}
+                      chainLogs={chainLogs}
                       reactivating={
                         (!!chain.includes(draggingChainItem.uid) &&
                           (activating.chain !== "" ||
@@ -750,7 +753,7 @@ const ProfilePage = () => {
                       onEnable={() => onEnable(draggingChainItem.uid)}
                       onDisable={() => onDisable(draggingChainItem.uid)}
                       onDelete={() => onDelete(draggingChainItem.uid)}
-                      onEdit={() => viewerRef.current?.edit(draggingChainItem)}
+                      // onEdit={() => viewerRef.current?.edit(draggingChainItem)}
                       onActivatedSave={() => onEnhance()}
                     />
                   ) : null}

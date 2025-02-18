@@ -27,7 +27,7 @@ pub const DEFAULT_FIELDS: [&str; 5] = [
     "rules",
 ];
 
-pub fn use_filter(config: Mapping, filter: &Vec<String>) -> Mapping {
+pub fn use_filter(config: Mapping, filter: &[String]) -> Mapping {
     let mut ret = Mapping::new();
 
     for (key, value) in config.into_iter() {
@@ -88,14 +88,14 @@ pub fn use_sort(config: Mapping) -> Mapping {
     ret
 }
 
-pub fn use_keys(config: &Mapping) -> Vec<String> {
-    config
-        .iter()
-        .filter_map(|(key, _)| key.as_str())
-        .map(|s| {
-            let mut s = s.to_string();
-            s.make_ascii_lowercase();
-            s
-        })
-        .collect::<Vec<String>>()
-}
+// pub fn use_keys(config: &Mapping) -> Vec<String> {
+//     config
+//         .iter()
+//         .filter_map(|(key, _)| key.as_str())
+//         .map(|s| {
+//             let mut s = s.to_string();
+//             s.make_ascii_lowercase();
+//             s
+//         })
+//         .collect::<Vec<String>>()
+// }

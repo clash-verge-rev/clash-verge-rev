@@ -51,11 +51,10 @@ fn get_bypass() -> String {
         let verge = verge.latest();
         verge.system_proxy_bypass.clone()
     };
-    let bypass = match res {
+    match res {
         Some(custom_bypass) => custom_bypass,
         None => DEFAULT_BYPASS.to_string(),
-    };
-    bypass
+    }
 }
 
 impl Sysopt {

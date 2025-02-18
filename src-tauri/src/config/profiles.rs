@@ -1,12 +1,14 @@
-use super::prfitem::PrfItem;
 use crate::{
     config::ProfileType,
+    enhance::chain::{ChainItem, ScopeType},
     utils::{dirs, help},
 };
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, fs, io::Write, path::PathBuf};
+
+use super::{EnableFilter, PrfItem};
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -36,11 +38,21 @@ impl IProfiles {
                 if profiles.items.is_none() {
                     profiles.items = Some(vec![]);
                 }
+
+                let enabled_chain = profiles.chain.clone().unwrap_or_default();
                 // compatible with the old old old version
                 if let Some(items) = profiles.items.as_mut() {
                     for item in items.iter_mut() {
                         if item.uid.is_none() {
                             item.uid = Some(help::get_uid("d"));
+                        }
+                        match item.itype {
+                            Some(ProfileType::Merge) | Some(ProfileType::Script) => {
+                                let uid = item.uid.clone().unwrap();
+                                item.enable = Some(enabled_chain.contains(&uid));
+                                item.scope = Some(ScopeType::Global);
+                            }
+                            _ => {}
                         }
                     }
                 }
@@ -68,7 +80,7 @@ impl IProfiles {
         )
     }
 
-    /// 只修改 current，valid 和 chain
+    /// 只修改 current、global chain
     pub fn patch_config(&mut self, patch: IProfiles) -> Result<bool> {
         // if current profile is different, need to restart core to aviod some problems
         let mut restart_core = false;
@@ -91,8 +103,22 @@ impl IProfiles {
             }
         }
 
-        if let Some(chain) = patch.chain {
-            self.chain = Some(chain);
+        if let Some(new_chain) = patch.chain {
+            let old_chain = self.chain.clone();
+            // disable old chain
+            if let Some(old_chain) = old_chain {
+                for old_uid in old_chain {
+                    let item = self.get_mut_item(&old_uid)?;
+                    item.enable = Some(false);
+                }
+            }
+            // enable new chain
+            for new_uid in new_chain.clone() {
+                let item = self.get_mut_item(&new_uid)?;
+                item.enable = Some(true);
+            }
+
+            self.chain = Some(new_chain.clone());
         }
 
         Ok(restart_core)
@@ -102,14 +128,32 @@ impl IProfiles {
         self.current.clone()
     }
 
-    /// get items ref
-    pub fn get_items(&self) -> Option<&Vec<PrfItem>> {
-        self.items.as_ref()
+    /// find the item by the uid
+    pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
+        if let Some(items) = self.items.as_ref() {
+            for each in items.iter() {
+                if each.uid == Some(uid.clone()) {
+                    return Ok(each);
+                }
+            }
+        }
+        bail!("failed to get the profile item \"uid:{uid}\"");
     }
 
-    pub fn get_profiles(&self) -> Result<Vec<PrfItem>> {
-        let items = self.items.clone().unwrap_or(Vec::<PrfItem>::new());
-        let profiles = items
+    pub fn get_mut_item(&mut self, uid: &String) -> Result<&mut PrfItem> {
+        if let Some(items) = self.items.as_mut() {
+            for item in items.iter_mut() {
+                if item.uid == Some(uid.clone()) {
+                    return Ok(item);
+                }
+            }
+        }
+        bail!("failed to get the profile item \"uid:{uid}\"");
+    }
+
+    pub fn get_profiles(&self) -> Vec<PrfItem> {
+        let items = self.items.clone().unwrap_or_default();
+        items
             .into_iter()
             .filter(|o| {
                 matches!(
@@ -117,23 +161,32 @@ impl IProfiles {
                     Some(ProfileType::Remote) | Some(ProfileType::Local)
                 )
             })
-            .collect::<Vec<PrfItem>>();
-        Ok(profiles)
+            .collect::<Vec<PrfItem>>()
     }
 
-    /// find the item by the uid
-    pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
-        if let Some(items) = self.items.as_ref() {
-            let some_uid = Some(uid.clone());
-
-            for each in items.iter() {
-                if each.uid == some_uid {
-                    return Ok(each);
-                }
-            }
-        }
-
-        bail!("failed to get the profile item \"uid:{uid}\"");
+    // includ all enable or disable chains
+    pub fn get_profile_chains(
+        &self,
+        profile_uid: Option<String>,
+        enable_filter: EnableFilter,
+    ) -> Vec<ChainItem> {
+        let items = self.items.clone().unwrap_or_default();
+        items
+            .into_iter()
+            .filter(|o| {
+                matches!(
+                    o.itype,
+                    Some(ProfileType::Merge) | Some(ProfileType::Script)
+                )
+            })
+            .filter(|i| match enable_filter {
+                EnableFilter::All => true,
+                EnableFilter::Enable => i.enable.unwrap_or_default(),
+                EnableFilter::Disable => !i.enable.unwrap_or_default(),
+            })
+            .filter(|o| o.parent == profile_uid)
+            .filter_map(<Option<ChainItem>>::from)
+            .collect::<Vec<ChainItem>>()
     }
 
     /// append new item
@@ -158,6 +211,14 @@ impl IProfiles {
                 .with_context(|| format!("failed to create file \"{}\"", file))?
                 .write(file_data.as_bytes())
                 .with_context(|| format!("failed to write to file \"{}\"", file))?;
+        }
+
+        if let Some(parent) = item.parent.clone() {
+            let profile = self.get_mut_item(&parent)?;
+            match profile.chain.as_mut() {
+                Some(chain) => chain.push(item.uid.clone().unwrap()),
+                None => profile.chain = Some(vec![item.uid.clone().unwrap()]),
+            }
         }
 
         if self.items.is_none() {
@@ -209,6 +270,9 @@ impl IProfiles {
                 patch!(each, item, extra);
                 patch!(each, item, updated);
                 patch!(each, item, option);
+                // chain filed
+                patch!(each, item, parent);
+                patch!(each, item, enable);
 
                 self.items = Some(items);
                 return self.save_file();
@@ -227,7 +291,7 @@ impl IProfiles {
         }
 
         // find the item
-        let _ = self.get_item(&uid)?;
+        self.get_item(&uid)?;
 
         if let Some(items) = self.items.as_mut() {
             let some_uid = Some(uid.clone());
@@ -265,43 +329,48 @@ impl IProfiles {
 
     /// delete item
     /// if delete the current then return true
-    pub fn delete_item(&mut self, uid: String) -> Result<bool> {
+    pub fn delete_item(&mut self, uid: String) -> Result<(bool, bool)> {
         let current = self.current.as_ref().unwrap_or(&uid);
         let current = current.clone();
 
-        let mut items = self.items.take().unwrap_or_default();
-        let mut index = None;
+        let mut filter_uids: Vec<String> = Vec::new();
 
-        // get the index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == Some(uid.clone()) {
-                index = Some(i);
-                break;
-            }
-        }
-
-        if let Some(index) = index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(|path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let _ = fs::remove_file(path);
-                    }
+        let profile = self.get_item(&uid)?;
+        filter_uids.push(uid.clone());
+        // delete profile chain
+        if let Some(profile_chain) = profile.chain.as_ref() {
+            filter_uids.extend(profile_chain.clone());
+            profile_chain
+                .iter()
+                .filter_map(|chain_uid| self.get_item(chain_uid).ok())
+                .for_each(|o| {
+                    let _ = o.delete_file();
                 });
-            }
         }
+        // delete profile
+        profile.delete_file()?;
 
         // delete the original uid
-        if current == uid {
+        let delete_current = current == uid;
+        let delete_current_chain = profile.parent == Some(current);
+        let items = self.items.take().unwrap_or_default();
+        if delete_current {
             self.current = match !items.is_empty() {
                 true => items[0].uid.clone(),
                 false => None,
             };
         }
 
-        self.items = Some(items);
+        // generate new items
+        let new_items = items
+            .clone()
+            .into_iter()
+            .filter(|p| !filter_uids.contains(&p.uid.clone().unwrap()))
+            .collect::<Vec<PrfItem>>();
+        self.items = Some(new_items);
+
         self.save_file()?;
-        Ok(current == uid)
+        Ok((delete_current, delete_current_chain))
     }
 
     pub fn set_rule_providers_path(&mut self, path: HashMap<String, PathBuf>) -> Result<()> {
@@ -309,19 +378,18 @@ impl IProfiles {
         if current.is_none() {
             bail!("failed to get the current profile");
         }
-        let current = current.unwrap().clone();
         let mut items = self.items.take().unwrap_or_default();
         for item in items.iter_mut() {
-            if item.uid == Some(current.clone()) {
+            if item.uid.as_ref() == current {
                 item.rule_providers_path = Some(path);
                 break;
             }
         }
         self.items = Some(items);
-        return Ok(());
+        Ok(())
     }
 
-    /// 获取current指向的订阅内容
+    /// 获取 current 指向的订阅内容
     pub fn current_mapping(&self) -> Result<Mapping> {
         match (self.current.as_ref(), self.items.as_ref()) {
             (Some(current), Some(items)) => {

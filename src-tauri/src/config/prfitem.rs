@@ -1,4 +1,8 @@
-use crate::utils::{dirs, help, resolve::VERSION, tmpl};
+use crate::{
+    enhance::chain::ScopeType,
+    utils::{dirs, help, tmpl},
+    APP_VERSION,
+};
 use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -20,27 +24,52 @@ pub struct PrfItem {
     /// profile name
     pub name: Option<String>,
 
-    /// profile file
-    pub file: Option<String>,
-
     /// profile description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub desc: Option<String>,
 
-    /// source url
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
+    /// profile file
+    pub file: Option<String>,
 
+    /// the file data
+    #[serde(skip)]
+    pub file_data: Option<String>,
+
+    // =========== chain ===========
+    // this chain is belong to profile
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<String>,
+
+    // enable chain
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enable: Option<bool>,
+
+    /// scope of chain  (GLOBAL / SPECIFIC)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scope: Option<ScopeType>,
+    // =========== chain ===========
+
+    // =========== profile ===========
     /// selected information
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected: Option<Vec<PrfSelected>>,
 
+    /// profile rule providers path
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rule_providers_path: Option<HashMap<String, PathBuf>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chain: Option<Vec<String>>,
+    // =========== profile ===========
+
+    // =========== remote profile ===========
+    /// source url
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+
     /// subscription user info
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra: Option<PrfExtra>,
-
-    /// updated time
-    pub updated: Option<usize>,
 
     /// some options of the item
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -50,26 +79,31 @@ pub struct PrfItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<String>,
 
-    /// the file data
-    #[serde(skip)]
-    pub file_data: Option<String>,
-
-    /// profile rule providers path
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rule_providers_path: Option<HashMap<String, PathBuf>>,
-
-    /// TODO: chain of current profile
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub chain: Option<Vec<String>>,
+    /// updated time
+    pub updated: Option<usize>,
+    // =========== remote profile ===========
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum ProfileType {
-    Remote,
     Local,
+    Remote,
     Merge,
     Script,
+}
+
+impl Default for ProfileType {
+    fn default() -> Self {
+        Self::Local
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum EnableFilter {
+    All,
+    Enable,
+    Disable,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -157,12 +191,16 @@ impl PrfItem {
             ProfileType::Merge => {
                 let name = item.name.unwrap_or("Merge".into());
                 let desc = item.desc.unwrap_or("".into());
-                PrfItem::from_merge(name, desc)
+                let parent = item.parent;
+                let scope = item.scope.unwrap_or_default();
+                PrfItem::from_merge(parent, scope, name, desc)
             }
             ProfileType::Script => {
                 let name = item.name.unwrap_or("Script".into());
                 let desc = item.desc.unwrap_or("".into());
-                PrfItem::from_script(name, desc)
+                let parent = item.parent;
+                let scope = item.scope.unwrap_or_default();
+                PrfItem::from_script(parent, scope, name, desc)
             }
         }
     }
@@ -179,15 +217,18 @@ impl PrfItem {
             name: Some(name),
             desc: Some(desc),
             file: Some(file),
-            url: None,
+            file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
+            parent: None,
+            enable: None,
+            scope: None,
             selected: None,
+            rule_providers_path: None,
+            chain: None,
+            url: None,
             extra: None,
             option: None,
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
-            file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
-            rule_providers_path: None,
-            chain: None,
         })
     }
 
@@ -200,10 +241,10 @@ impl PrfItem {
         option: Option<PrfOption>,
     ) -> Result<PrfItem> {
         let opt_ref = option.as_ref();
-        let with_proxy = opt_ref.map_or(false, |o| o.with_proxy.unwrap_or(false));
-        let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
+        let with_proxy = opt_ref.is_some_and(|o| o.with_proxy.unwrap_or(false));
+        let self_proxy = opt_ref.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs =
-            opt_ref.map_or(false, |o| o.danger_accept_invalid_certs.unwrap_or(false));
+            opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
 
@@ -241,7 +282,7 @@ impl PrfItem {
             }
         }
 
-        let version = match VERSION.get() {
+        let version = match APP_VERSION.get() {
             Some(v) => format!("clash-verge/v{}", v),
             None => "clash-verge/unknown".to_string(),
         };
@@ -341,21 +382,29 @@ impl PrfItem {
             name: Some(name),
             desc,
             file: Some(file),
-            url: Some(url.into()),
+            file_data: Some(data.into()),
+            parent: None,
+            enable: None,
+            scope: None,
             selected: None,
+            rule_providers_path: None,
+            chain: None,
+            url: Some(url.into()),
             extra,
             option,
             home,
             updated: Some(chrono::Local::now().timestamp() as usize),
-            file_data: Some(data.into()),
-            rule_providers_path: None,
-            chain: None,
         })
     }
 
     /// ## Merge type (enhance)
     /// create the enhanced item by using `merge` rule
-    pub fn from_merge(name: String, desc: String) -> Result<PrfItem> {
+    pub fn from_merge(
+        parent: Option<String>,
+        scope: ScopeType,
+        name: String,
+        desc: String,
+    ) -> Result<PrfItem> {
         let uid = help::get_uid("m");
         let file = format!("{uid}.yaml");
 
@@ -364,22 +413,30 @@ impl PrfItem {
             itype: Some(ProfileType::Merge),
             name: Some(name),
             desc: Some(desc),
+            file_data: Some(tmpl::ITEM_MERGE.into()),
             file: Some(file),
-            url: None,
+            parent,
+            enable: Some(false),
+            scope: Some(scope),
             selected: None,
+            rule_providers_path: None,
+            chain: None,
+            url: None,
             extra: None,
             option: None,
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
-            file_data: Some(tmpl::ITEM_MERGE.into()),
-            rule_providers_path: None,
-            chain: None,
         })
     }
 
     /// ## Script type (enhance)
     /// create the enhanced item by using javascript quick.js
-    pub fn from_script(name: String, desc: String) -> Result<PrfItem> {
+    pub fn from_script(
+        parent: Option<String>,
+        scope: ScopeType,
+        name: String,
+        desc: String,
+    ) -> Result<PrfItem> {
         let uid = help::get_uid("s");
         let file = format!("{uid}.js"); // js ext
 
@@ -389,15 +446,18 @@ impl PrfItem {
             name: Some(name),
             desc: Some(desc),
             file: Some(file),
-            url: None,
-            home: None,
-            selected: None,
-            extra: None,
-            option: None,
-            updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
+            parent,
+            enable: Some(false),
+            scope: Some(scope),
+            selected: None,
             rule_providers_path: None,
             chain: None,
+            url: None,
+            extra: None,
+            option: None,
+            home: None,
+            updated: Some(chrono::Local::now().timestamp() as usize),
         })
     }
 
@@ -417,9 +477,17 @@ impl PrfItem {
         if self.file.is_none() {
             bail!("could not find the file");
         }
-
         let file = self.file.clone().unwrap();
         let path = dirs::app_profiles_dir()?.join(file);
         fs::write(path, data.as_bytes()).context("failed to save the file")
+    }
+
+    pub fn delete_file(&self) -> Result<()> {
+        if self.file.is_none() {
+            bail!("could not find the file");
+        }
+        let file = self.file.clone().unwrap();
+        let path = dirs::app_profiles_dir()?.join(file);
+        fs::remove_file(path).context("failed to delete the file")
     }
 }

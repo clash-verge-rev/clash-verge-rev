@@ -12,6 +12,7 @@ const OS = getSystem();
 interface AnimatedDialogProps {
   title: ReactNode;
   open: boolean;
+  full?: boolean;
   fullWidth?: boolean;
   okBtn?: ReactNode;
   okDisabled?: boolean;
@@ -36,6 +37,7 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
   const {
     title,
     open,
+    full = false,
     fullWidth = false,
     okBtn = t("Confirm"),
     okDisabled = false,
@@ -78,7 +80,8 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
             }}
             className={cn(
               "inline-flex max-h-[calc(100%-100px)] w-full max-w-md flex-col rounded-[4px] bg-[var(--mui-palette-background-paper)] text-primary shadow-xl",
-              { "max-w-[calc(100%-100px)]": fullWidth },
+              { "h-full max-w-[calc(100%-100px)]": fullWidth },
+              { "h-full max-h-full w-full max-w-full": full },
             )}>
             <div className="my-4 px-6 text-xl font-bold">{title}</div>
 

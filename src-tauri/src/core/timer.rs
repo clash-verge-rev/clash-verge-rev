@@ -40,28 +40,27 @@ impl Timer {
         let timer_map = self.timer_map.lock();
         let delay_timer = self.delay_timer.lock();
 
-        if let Some(items) = Config::profiles().latest().get_items() {
-            items
-                .iter()
-                .filter_map(|item| {
-                    // mins to seconds
-                    let interval = ((item.option.as_ref()?.update_interval?) as i64) * 60;
-                    let updated = item.updated? as i64;
+        let profiles = Config::profiles().latest().get_profiles();
+        profiles
+            .iter()
+            .filter_map(|item| {
+                // mins to seconds
+                let interval = ((item.option.as_ref()?.update_interval?) as i64) * 60;
+                let updated = item.updated? as i64;
 
-                    if interval > 0 && cur_timestamp - updated >= interval {
-                        Some(item)
-                    } else {
-                        None
+                if interval > 0 && cur_timestamp - updated >= interval {
+                    Some(item)
+                } else {
+                    None
+                }
+            })
+            .for_each(|item| {
+                if let Some(uid) = item.uid.as_ref() {
+                    if let Some((task_id, _)) = timer_map.get(uid) {
+                        crate::log_err!(delay_timer.advance_task(*task_id));
                     }
-                })
-                .for_each(|item| {
-                    if let Some(uid) = item.uid.as_ref() {
-                        if let Some((task_id, _)) = timer_map.get(uid) {
-                            crate::log_err!(delay_timer.advance_task(*task_id));
-                        }
-                    }
-                })
-        }
+                }
+            });
 
         Ok(())
     }
@@ -98,15 +97,14 @@ impl Timer {
     fn gen_profiles_interval(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
-        if let Some(items) = Config::profiles().latest().get_items() {
-            for item in items.iter() {
-                if item.option.is_some() {
-                    let option = item.option.as_ref().unwrap();
-                    let interval = option.update_interval.unwrap_or(0);
+        let profiles = Config::profiles().latest().get_profiles();
+        for profile in profiles.iter() {
+            if profile.option.is_some() {
+                let option = profile.option.as_ref().unwrap();
+                let interval = option.update_interval.unwrap_or(0);
 
-                    if interval > 0 {
-                        new_map.insert(item.uid.clone().unwrap(), interval);
-                    }
+                if interval > 0 {
+                    new_map.insert(profile.uid.clone().unwrap(), interval);
                 }
             }
         }

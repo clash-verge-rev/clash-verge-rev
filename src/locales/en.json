@@ -283,6 +283,8 @@
   "Expire Time": "Expire Time",
   "Used / Total": "Used / Total",
   "Console": "Console",
+  "Runtime Console": "Console (Runtime)",
+  "Restore Changes": "Restore Changes",
   "Run Check": "Run Check",
   "Expand All": "Expand All",
   "Collapse All": "Collapse All",

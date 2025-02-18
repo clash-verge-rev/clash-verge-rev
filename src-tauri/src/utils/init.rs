@@ -185,7 +185,7 @@ pub async fn startup_script() -> Result<()> {
                 let _ = app_handle
                     .shell()
                     .command(shell)
-                    .current_dir(dir.to_path_buf())
+                    .current_dir(dir)
                     .args([path])
                     .output()
                     .await;

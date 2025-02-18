@@ -11,7 +11,6 @@ import {
   CheckCircle,
   Delete,
   Edit,
-  EditNote,
   FileOpen,
   Terminal,
 } from "@mui/icons-material";
@@ -46,12 +45,12 @@ interface Props {
   isDragging?: boolean;
   itemData: IProfileItem;
   enableNum: number;
-  logInfo?: LogMessage[];
+  chainLogs?: Record<string, LogMessage[]>;
   reactivating: boolean;
   onEnable: () => Promise<void>;
   onDisable: () => Promise<void>;
   onDelete: () => Promise<void>;
-  onEdit: () => void;
+  // onEdit: () => void;
   onActivatedSave: () => void;
 }
 
@@ -71,12 +70,12 @@ export const ProfileMore = (props: Props) => {
     selected,
     isDragging,
     itemData,
-    logInfo = [],
+    chainLogs = {},
     reactivating,
     onEnable,
     onDisable,
     onDelete,
-    onEdit,
+    // onEdit,
     onActivatedSave,
   } = props;
 
@@ -93,10 +92,10 @@ export const ProfileMore = (props: Props) => {
   const [logOpen, setLogOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
 
-  const onEditInfo = () => {
-    setAnchorEl(null);
-    onEdit();
-  };
+  // const onEditInfo = () => {
+  //   setAnchorEl(null);
+  //   onEdit();
+  // };
 
   const onEditFile = () => {
     setAnchorEl(null);
@@ -117,7 +116,8 @@ export const ProfileMore = (props: Props) => {
     return fn();
   };
 
-  const hasError = !!logInfo.find((e) => e.exception);
+  const logs = chainLogs[itemData.uid] || [];
+  const hasError = !!logs.find((e) => e.exception);
 
   const menus = [
     {
@@ -129,13 +129,13 @@ export const ProfileMore = (props: Props) => {
         setToggling(false);
       }),
     },
+    // {
+    //   label: "Edit Info",
+    //   icon: <EditNote fontSize="small" />,
+    //   handler: onEditInfo,
+    // },
     {
-      label: "Edit Info",
-      icon: <EditNote fontSize="small" />,
-      handler: onEditInfo,
-    },
-    {
-      label: "Edit File",
+      label: "Edit",
       icon: <Edit fontSize="small" />,
       handler: onEditFile,
     },
@@ -254,7 +254,7 @@ export const ProfileMore = (props: Props) => {
                 color="inherit"
                 title={t("Script Console")}
                 onClick={() => setLogOpen(true)}>
-                <StyledBadge badgeContent={logInfo.length} color="primary">
+                <StyledBadge badgeContent={logs.length} color="primary">
                   <Terminal fontSize="medium" />
                 </StyledBadge>
               </IconButton>
@@ -307,11 +307,10 @@ export const ProfileMore = (props: Props) => {
 
       <ProfileEditorViewer
         open={fileOpen}
-        mode="profile"
-        scope={type === "merge" ? "merge" : "script"}
+        profileItem={itemData}
+        type={type === "merge" ? "merge" : "script"}
         language={type === "merge" ? "yaml" : "javascript"}
-        logInfo={type === "script" ? logInfo : undefined}
-        property={uid}
+        chainLogs={chainLogs}
         onChange={() => {
           if (selected) {
             onActivatedSave();
@@ -334,7 +333,7 @@ export const ProfileMore = (props: Props) => {
       {selected && (
         <LogViewer
           open={logOpen}
-          logInfo={logInfo}
+          logInfo={logs}
           onClose={() => setLogOpen(false)}
         />
       )}

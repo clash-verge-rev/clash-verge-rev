@@ -4,8 +4,8 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
-    "dev": "cross-env RUST_BACKTRACE=1 concurrently -k \"tauri dev\" \"pnpm devtools\"",
-    "dev:diff": "cross-env RUST_BACKTRACE=1 concurrently -k \"tauri dev -f verge-dev\" \"pnpm devtools\"",
+    "dev": "cross-env RUST_BACKTRACE=1 concurrently -k \"tauri dev\"",
+    "dev:diff": "cross-env RUST_BACKTRACE=1 concurrently -k \"tauri dev -f verge-dev\"",
     "build": "tauri build",
     "devtools": "pnpm react-devtools",
     "arch-build": "cd archbuild/local_build && ./build.sh",

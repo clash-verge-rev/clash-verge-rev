@@ -9,6 +9,7 @@ import {
   styled,
   TextField,
 } from "@mui/material";
+import { getVersion } from "@tauri-apps/api/app";
 import { useLockFn } from "ahooks";
 import {
   forwardRef,
@@ -16,7 +17,6 @@ import {
   useImperativeHandle,
   useRef,
   useState,
-  version,
 } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,7 @@ interface Props {
 }
 
 export interface ProfileViewerRef {
-  create: () => void;
+  create: (profileUid: string | null) => void;
   edit: (item: IProfileItem) => void;
 }
 
@@ -38,6 +38,8 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     const [open, setOpen] = useState(false);
     const [openType, setOpenType] = useState<"new" | "edit">("new");
     const [loading, setLoading] = useState(false);
+    const [appVersion, setAppVersion] = useState("");
+    const [onlyChain, setOnlyChain] = useState(false);
 
     // file input
     const fileDataRef = useRef<string | null>(null);
@@ -56,15 +58,29 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     });
 
     useImperativeHandle(ref, () => ({
-      create: () => {
+      create: (profileUid) => {
+        if (profileUid) {
+          // it means create a chain in this profile
+          formIns.setValue("parent", profileUid);
+          formIns.setValue("type", "merge");
+          formIns.setValue("scope", "specific");
+          setOnlyChain(true);
+        }
+        getVersion().then((version) => setAppVersion(version));
         setOpenType("new");
         setOpen(true);
       },
       edit: (item) => {
+        getVersion().then((version) => setAppVersion(version));
         if (item) {
           Object.entries(item).forEach(([key, value]) => {
             formIns.setValue(key as any, value);
           });
+          if (item.parent) {
+            formIns.setValue("parent", item.parent);
+            formIns.setValue("scope", "specific");
+            setOnlyChain(true);
+          }
         }
         setOpenType("edit");
         setOpen(true);
@@ -144,6 +160,31 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     const isRemote = formType === "remote";
     const isLocal = formType === "local";
 
+    let selectType = ["remote", "local", "merge", "script"];
+    if (onlyChain) {
+      selectType = ["merge", "script"];
+    }
+
+    let defaultName = "remote file";
+    switch (formType) {
+      case "remote": {
+        defaultName = "remote file";
+        break;
+      }
+      case "local": {
+        defaultName = "local file";
+        break;
+      }
+      case "merge": {
+        defaultName = "merge file";
+        break;
+      }
+      case "script": {
+        defaultName = "script file";
+        break;
+      }
+    }
+
     return (
       <BaseDialog
         open={open}
@@ -162,8 +203,9 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               <ButtonGroup
                 size="small"
                 fullWidth
+                disabled={openType === "edit"}
                 aria-label="profile type button group">
-                {["remote", "local", "script", "merge"].map((type) => (
+                {selectType.map((type) => (
                   <Button
                     key={type}
                     variant={formType === type ? "contained" : "outlined"}
@@ -178,7 +220,12 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
             name="name"
             control={control}
             render={({ field }) => (
-              <TextField {...text} {...field} label={t("Name")} />
+              <TextField
+                {...text}
+                {...field}
+                label={t("Name")}
+                placeholder={defaultName}
+              />
             )}
           />
           <Controller
@@ -188,6 +235,20 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               <TextField {...text} {...field} label={t("Descriptions")} />
             )}
           />
+          {isLocal && openType === "new" && (
+            <FileInput
+              onChange={(file, val) => {
+                if (!formIns.getValues("name")) {
+                  const name = file.name.substring(
+                    0,
+                    file.name.lastIndexOf("."),
+                  );
+                  formIns.setValue("name", name);
+                }
+                fileDataRef.current = val;
+              }}
+            />
+          )}
           {isRemote && (
             <>
               <Controller
@@ -209,55 +270,35 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                   <TextField
                     {...text}
                     {...field}
-                    placeholder={`clash-verge/v${version}`}
+                    placeholder={`clash-verge/v${appVersion}`}
                     label="User Agent"
                   />
                 )}
               />
-            </>
-          )}
-          {(isRemote || isLocal) && (
-            <Controller
-              name="option.update_interval"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...text}
-                  {...field}
-                  onChange={(e) => {
-                    e.target.value = e.target.value
-                      ?.replace(/\D/, "")
-                      .slice(0, 10);
-                    field.onChange(e);
-                  }}
-                  label={t("Update Interval")}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">mins</InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              )}
-            />
-          )}
-          {isLocal && openType === "new" && (
-            <FileInput
-              onChange={(file, val) => {
-                if (!formIns.getValues("name")) {
-                  const name = file.name.substring(
-                    0,
-                    file.name.lastIndexOf("."),
-                  );
-                  formIns.setValue("name", name);
-                }
-                fileDataRef.current = val;
-              }}
-            />
-          )}
-          {isRemote && (
-            <>
+              <Controller
+                name="option.update_interval"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...text}
+                    {...field}
+                    onChange={(e) => {
+                      e.target.value = e.target.value
+                        ?.replace(/\D/, "")
+                        .slice(0, 10);
+                      field.onChange(e);
+                    }}
+                    label={t("Update Interval")}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">mins</InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                )}
+              />
               <Controller
                 name="option.with_proxy"
                 control={control}

@@ -1,10 +1,12 @@
 use crate::config::*;
 use crate::core::mihomo::MihomoClientManager;
-use crate::core::{mihomo, handle, logger::Logger, service};
+use crate::core::{handle, logger::Logger, mihomo, service};
 use crate::log_err;
 use crate::utils::dirs;
 use crate::utils::resolve::find_unused_port;
 use anyhow::{bail, Result};
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
@@ -52,9 +54,7 @@ impl CoreManager {
                 port_mapping.insert("redir-port".into(), 0.into());
                 port_mapping.insert("tproxy-port".into(), 0.into());
                 // patch config
-                Config::clash()
-                    .latest()
-                    .patch_config(port_mapping.clone().into());
+                Config::clash().latest().patch_config(port_mapping.clone());
                 log_err!(Config::clash().latest().save_config());
                 Config::runtime().latest().patch_config(port_mapping);
             }
@@ -66,9 +66,13 @@ impl CoreManager {
     }
 
     /// 检查订阅是否正确
-    pub async fn check_config(&self) -> Result<()> {
-        let config_path = Config::generate_file(ConfigType::Check)?;
-        let config_path = dirs::path_to_str(&config_path)?;
+    ///
+    /// # Args:
+    /// - config: 配置文件内容( Base64 编码 )
+    ///
+    pub async fn check_config(&self, config: &str) -> Result<()> {
+        // let config_path = Config::generate_file(ConfigType::Check)?;
+        // let config_path = dirs::path_to_str(&config_path)?;
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let clash_core = clash_core.unwrap_or("clash".into());
@@ -79,7 +83,7 @@ impl CoreManager {
         let output = app_handle
             .shell()
             .sidecar(clash_core)?
-            .args(["-t", "-d", app_dir, "-f", config_path])
+            .args(["-t", "-d", app_dir, "-config", config])
             .output()
             .await?;
 
@@ -296,7 +300,11 @@ impl CoreManager {
         Config::verge().draft().clash_core = Some(clash_core);
         // 更新订阅
         Config::generate()?;
-        self.check_config().await?;
+        let config_path = Config::generate_file(ConfigType::Check)?;
+        let config_path = dirs::path_to_str(&config_path)?;
+        let content = std::fs::read_to_string(config_path)?;
+        let check_config = BASE64_STANDARD.encode(content);
+        self.check_config(&check_config).await?;
         // 清掉旧日志
         Logger::global().clear_log();
 
@@ -326,7 +334,11 @@ impl CoreManager {
         Config::generate()?;
 
         // 检查订阅是否正常
-        self.check_config().await?;
+        let config_path = Config::generate_file(ConfigType::Check)?;
+        let config_path = dirs::path_to_str(&config_path)?;
+        let content = std::fs::read_to_string(config_path)?;
+        let check_config = BASE64_STANDARD.encode(content);
+        self.check_config(&check_config).await?;
 
         // 是否需要重启核心
         if restart_core {

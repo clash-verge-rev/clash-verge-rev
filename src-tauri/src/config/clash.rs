@@ -147,14 +147,15 @@ impl IClashConfig {
                 Value::Mapping(val_map) => Some(val_map.clone()),
                 _ => None,
             })
-            .unwrap_or(Mapping::new());
-        *tun_val
+            .unwrap_or_default();
+        tun_val
             .get("enable")
             .and_then(|value| match value {
                 Value::Bool(val_bool) => Some(val_bool),
                 _ => None,
             })
             .unwrap_or(&false)
+            .to_owned()
     }
 
     pub fn get_mixed_port(&self) -> u16 {

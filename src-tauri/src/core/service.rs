@@ -305,7 +305,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
     map.insert("config_file", config_file);
 
     // let log_path = dirs::service_log_file()?;
-    let log_path = dirs::path_to_str(&log_path)?;
+    let log_path = dirs::path_to_str(log_path)?;
     map.insert("log_file", log_path);
 
     let url = format!("{SERVICE_URL}/clash");
