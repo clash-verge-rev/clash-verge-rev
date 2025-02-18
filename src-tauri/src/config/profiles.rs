@@ -37,8 +37,7 @@ impl IProfiles {
                 if profiles.items.is_none() {
                     profiles.items = Some(vec![]);
                 }
-
-                let enabled_chain = profiles.chain.clone().unwrap_or_default();
+                let enabled_global_chain = profiles.chain.clone().unwrap_or_default();
                 // compatible with the old old old version
                 if let Some(items) = profiles.items.as_mut() {
                     for item in items.iter_mut() {
@@ -47,9 +46,11 @@ impl IProfiles {
                         }
                         match item.itype {
                             Some(ProfileType::Merge) | Some(ProfileType::Script) => {
-                                let uid = item.uid.clone().unwrap();
-                                item.enable = Some(enabled_chain.contains(&uid));
-                                item.scope = Some(ScopeType::Global);
+                                if item.scope.is_none() {
+                                    let uid = item.uid.clone().unwrap();
+                                    item.scope = Some(ScopeType::Global);
+                                    item.enable = Some(enabled_global_chain.contains(&uid));
+                                }
                             }
                             _ => {}
                         }
@@ -391,7 +392,7 @@ impl IProfiles {
     /// 获取 current 指向的订阅内容
     pub fn current_mapping(&self) -> Result<Mapping> {
         match self.current.as_ref() {
-            Some(current) => self.get_profile_mapping(&current),
+            Some(current) => self.get_profile_mapping(current),
             None => Ok(Mapping::new()),
         }
     }
