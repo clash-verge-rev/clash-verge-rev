@@ -115,6 +115,7 @@ const LetterItem = memo(
       top: 0,
       right: 0,
     });
+    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
     const updateTooltipPosition = useCallback(() => {
       if (!letterRef.current) return;
@@ -131,14 +132,37 @@ const LetterItem = memo(
       }
     }, [showTooltip, updateTooltipPosition]);
 
+    const handleMouseEnter = useCallback(() => {
+      setShowTooltip(true);
+      // 添加 200ms 的延迟，避免鼠标快速划过时触发滚动
+      hoverTimeoutRef.current = setTimeout(() => {
+        onClick(name);
+      }, 100);
+    }, [name, onClick]);
+
+    const handleMouseLeave = useCallback(() => {
+      setShowTooltip(false);
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    }, []);
+
+    useEffect(() => {
+      return () => {
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+        }
+      };
+    }, []);
+
     return (
       <>
         <div
           ref={letterRef}
           className="letter"
           onClick={() => onClick(name)}
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           <span>{getFirstChar(name)}</span>
         </div>
