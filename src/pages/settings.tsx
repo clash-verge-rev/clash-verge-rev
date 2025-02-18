@@ -38,12 +38,6 @@ const SettingPage = () => {
   const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
 
-  const routers = [
-    { label: "Manual", path: "manual" },
-    { label: "TG Channel", path: "telegram" },
-    { label: "Github Repo", path: "github" },
-  ];
-
   return (
     <BasePage
       title={t("Settings")}
@@ -108,15 +102,6 @@ const SettingPage = () => {
           </Box>
         </Grid>
       </Grid>
-      <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
-        {routers.map((page: { label: string; path: string }) => {
-          return (
-            <MenuItem key={page.path} value={page.path}>
-              {t(page.label)}
-            </MenuItem>
-          );
-        })}
-      </Select>
     </BasePage>
   );
 };
