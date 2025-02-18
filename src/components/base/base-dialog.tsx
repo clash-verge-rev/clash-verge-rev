@@ -3,9 +3,10 @@ import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
 import { LoadingButton } from "@mui/lab";
 import { Button } from "@mui/material";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AnimatePresence, motion } from "framer-motion";
 import { t } from "i18next";
-import { CSSProperties, ReactNode } from "react";
+import { CSSProperties, ReactNode, useEffect, useRef } from "react";
 
 const OS = getSystem();
 
@@ -54,6 +55,21 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
   } = props;
   const { verge } = useVerge();
   const { enable_system_title_bar } = verge;
+  const titlebarRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!titlebarRef.current || !full) return;
+    titlebarRef.current?.addEventListener("mousedown", (e) => {
+      if (e.buttons === 1) {
+        // Primary (left) button
+        const appWindow = getCurrentWindow();
+        e.detail === 2
+          ? appWindow.toggleMaximize() // Maximize on double click
+          : appWindow.startDragging(); // Else start dragging
+      }
+    });
+  }, [titlebarRef.current, full]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -65,8 +81,12 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
           onMouseDown={(e) => e.stopPropagation()}
           onClick={onClose}
           className={cn(
-            "fixed inset-0 z-50 flex h-dvh items-center justify-center bg-black bg-opacity-50",
-            { "rounded-md": OS === "linux" && !enable_system_title_bar },
+            "fixed inset-0 z-50 flex h-dvh items-center justify-center",
+            { "bg-black bg-opacity-50": !full },
+            {
+              "rounded-md border-2 border-solid border-[--divider-color]":
+                OS === "linux" && !enable_system_title_bar,
+            },
           )}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -83,7 +103,13 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
               { "h-full max-w-[calc(100%-100px)]": fullWidth },
               { "h-full max-h-full w-full max-w-full": full },
             )}>
-            <div className="my-4 px-6 text-xl font-bold">{title}</div>
+            <div
+              ref={titlebarRef}
+              className={cn("w-full px-6 py-4 text-xl font-bold", {
+                "cursor-move": full,
+              })}>
+              {title}
+            </div>
 
             <div
               className={cn("h-full overflow-y-auto px-6", {
