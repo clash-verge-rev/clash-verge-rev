@@ -1,6 +1,5 @@
-use crate::enhance::LogMessage;
-
 use super::CLASH_BASIC_CONFIG;
+use crate::enhance::LogMessage;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Value};
 use std::collections::HashMap;

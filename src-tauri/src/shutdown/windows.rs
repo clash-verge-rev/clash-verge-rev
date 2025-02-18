@@ -1,3 +1,4 @@
+use crate::{core::handle, utils::resolve};
 use tauri::Manager;
 use windows_sys::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
@@ -7,8 +8,6 @@ use windows_sys::Win32::{
         WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT, WS_OVERLAPPED,
     },
 };
-
-use crate::{core::handle, utils::resolve};
 
 // code refer to:
 //      global-hotkey (https://github.com/tauri-apps/global-hotkey)

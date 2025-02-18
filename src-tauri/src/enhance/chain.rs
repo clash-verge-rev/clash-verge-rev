@@ -1,3 +1,4 @@
+use super::{use_merge, use_script, LogMessage};
 use crate::{
     config::{PrfItem, ProfileType},
     utils::{dirs, help},
@@ -6,8 +7,6 @@ use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, fs};
-
-use super::{use_merge, use_script, LogMessage};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

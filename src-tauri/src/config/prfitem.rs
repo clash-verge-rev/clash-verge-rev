@@ -1,3 +1,4 @@
+use super::Config;
 use crate::{
     enhance::chain::ScopeType,
     utils::{dirs, help, tmpl},
@@ -9,8 +10,6 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, fs, path::PathBuf};
 use sysproxy::Sysproxy;
-
-use super::Config;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {

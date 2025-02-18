@@ -1,11 +1,11 @@
 use crate::config::PrfOption;
-use crate::{cmds, log_err, trace_err};
 use crate::{
     config::{Config, PrfItem},
     core::*,
     utils::init,
     utils::server,
 };
+use crate::{log_err, trace_err};
 use anyhow::Result;
 use mihomo::MihomoClientManager;
 use rust_i18n::t;
@@ -93,10 +93,10 @@ pub fn create_window(app_handle: &AppHandle) {
     .maximized(verge.window_is_maximized.unwrap_or(false))
     .min_inner_size(600.0, 520.0);
 
-    let decoration = verge.enable_system_title_bar.unwrap_or(false);
+    let _decoration = verge.enable_system_title_bar.unwrap_or(false);
     #[cfg(not(target_os = "macos"))]
     {
-        builder = builder.decorations(decoration);
+        builder = builder.decorations(_decoration);
     }
 
     match verge.window_size_position {
@@ -109,8 +109,9 @@ pub fn create_window(app_handle: &AppHandle) {
             // adjust window size on wayland when it is enable decoration
             #[cfg(target_os = "linux")]
             {
+                use crate::cmds;
                 let is_wayland = cmds::is_wayland().unwrap_or(false);
-                if decoration && is_wayland {
+                if _decoration && is_wayland {
                     builder = builder
                         .inner_size(w - 90.0, h - 90.0)
                         .position(pos.0, pos.1);
@@ -138,7 +139,8 @@ pub fn create_window(app_handle: &AppHandle) {
         .build();
     #[cfg(target_os = "linux")]
     let window = {
-        let visiable = decoration && cmds::is_wayland().unwrap_or(false);
+        use crate::cmds;
+        let visiable = _decoration && cmds::is_wayland().unwrap_or(false);
         builder
             .visible(visiable)
             .shadow(true)

@@ -1,3 +1,4 @@
+use crate::utils::dirs;
 use anyhow::{Error, Result};
 use chrono::{Local, TimeZone};
 use log::LevelFilter;
@@ -14,8 +15,6 @@ use std::{
     fs::{self, DirEntry},
     sync::Arc,
 };
-
-use crate::utils::dirs;
 
 #[derive(Debug)]
 pub struct VergeLog {

@@ -153,11 +153,15 @@ pub fn get_pre_merge_result(
 ) -> Result<MergeResult> {
     let profiles = Config::profiles().latest().clone();
     let mut config = profiles.current_mapping()?.clone();
+
     // 保存脚本日志
     let mut result_map = HashMap::new();
 
     match profile_uid {
         Some(profile_uid) => {
+            // change current config mapping to profile mapping
+            config = profiles.get_profile_mapping(&profile_uid)?.clone();
+
             // excute all enabled global chain
             let global_chain = profiles.get_profile_chains(None, EnableFilter::Enable);
             for chain in global_chain {

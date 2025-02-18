@@ -1,3 +1,4 @@
+use super::{EnableFilter, PrfItem};
 use crate::{
     config::ProfileType,
     enhance::chain::{ChainItem, ScopeType},
@@ -7,8 +8,6 @@ use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, fs, io::Write, path::PathBuf};
-
-use super::{EnableFilter, PrfItem};
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -391,16 +390,26 @@ impl IProfiles {
 
     /// 获取 current 指向的订阅内容
     pub fn current_mapping(&self) -> Result<Mapping> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
+        match self.current.as_ref() {
+            Some(current) => self.get_profile_mapping(&current),
+            None => Ok(Mapping::new()),
+        }
+    }
+
+    pub fn get_profile_mapping(&self, profile_uid: &str) -> Result<Mapping> {
+        match (profile_uid, self.items.as_ref()) {
+            (profile_uid, Some(items)) => {
+                if let Some(item) = items
+                    .iter()
+                    .find(|&e| e.uid == Some(profile_uid.to_string()))
+                {
                     let file_path = match item.file.as_ref() {
                         Some(file) => dirs::app_profiles_dir()?.join(file),
                         None => bail!("failed to get the file field"),
                     };
                     return help::read_merge_mapping(&file_path);
                 }
-                bail!("failed to find the current profile \"uid:{current}\"");
+                bail!("failed to find the current profile \"uid:{profile_uid}\"");
             }
             _ => Ok(Mapping::new()),
         }

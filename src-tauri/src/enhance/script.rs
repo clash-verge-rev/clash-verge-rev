@@ -1,6 +1,5 @@
-use crate::enhance::LogMessage;
-
 use super::use_lowercase;
+use crate::enhance::LogMessage;
 use anyhow::{Error, Result};
 use serde_yaml::Mapping;
 
@@ -35,8 +34,8 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<LogMe
     }
     let _ = context.eval(Source::from_bytes(
         r#"var console = Object.freeze({
-        log(data){__verge_log__("log",JSON.stringify(data))}, 
-        info(data){__verge_log__("info",JSON.stringify(data))}, 
+        log(data){__verge_log__("log",JSON.stringify(data))},
+        info(data){__verge_log__("info",JSON.stringify(data))},
         error(data){__verge_log__("error",JSON.stringify(data))},
         debug(data){__verge_log__("debug",JSON.stringify(data))},
       });"#,

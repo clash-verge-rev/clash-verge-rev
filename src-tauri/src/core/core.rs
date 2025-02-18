@@ -1,3 +1,4 @@
+use super::verge_log::VergeLog;
 use crate::config::*;
 use crate::core::mihomo::MihomoClientManager;
 use crate::core::{handle, logger::Logger, mihomo, service};
@@ -16,8 +17,6 @@ use sysinfo::System;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
-
-use super::verge_log::VergeLog;
 
 #[derive(Debug)]
 pub struct CoreManager {
