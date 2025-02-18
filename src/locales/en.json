@@ -178,7 +178,7 @@
   "Process": "Process",
   "Time": "Time",
   "Source": "Source",
-  "Destination": "Destination IP",
+  "Destination": "Destination",
   "DestinationPort": "Destination Port",
   "Close Connection": "Close Connection",
   "Rules": "Rules",
