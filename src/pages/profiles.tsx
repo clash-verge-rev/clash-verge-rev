@@ -377,7 +377,7 @@ const ProfilePage = () => {
           sx={{
             pl: "10px",
             pr: "10px",
-            height: "95%",
+            height: "94%",
             overflowY: "auto",
           }}
         >
