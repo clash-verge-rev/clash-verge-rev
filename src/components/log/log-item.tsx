@@ -85,9 +85,9 @@ const LogItem = ({ value, searchState }: Props) => {
   return (
     <Item>
       <div>
-        <span className="time">{value.time}</span>
+        <span className="time">{renderHighlightText(value.time || "")}</span>
         <span className="type" data-type={value.type.toLowerCase()}>
-          {value.type}
+          {renderHighlightText(value.type)}
         </span>
       </div>
       <div>

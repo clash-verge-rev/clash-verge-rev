@@ -34,34 +34,25 @@ const buildWSUrl = (server: string, secret: string, logLevel: LogLevel) => {
 };
 
 interface LogStore {
-  logs: Record<LogLevel, ILogItem[]>;
-  clearLogs: (level?: LogLevel) => void;
-  appendLog: (level: LogLevel, log: ILogItem) => void;
+  logs: ILogItem[];
+  clearLogs: () => void;
+  appendLog: (log: ILogItem) => void;
 }
 
 const useLogStore = create<LogStore>(
   (set: (fn: (state: LogStore) => Partial<LogStore>) => void) => ({
-    logs: {
-      warning: [],
-      info: [],
-      debug: [],
-      error: [],
-      all: [],
-    },
-    clearLogs: (level?: LogLevel) =>
-      set((state: LogStore) => ({
-        logs: level
-          ? { ...state.logs, [level]: [] }
-          : { warning: [], info: [], debug: [], error: [], all: [] },
+    logs: [],
+    clearLogs: () =>
+      set(() => ({
+        logs: [],
       })),
-    appendLog: (level: LogLevel, log: ILogItem) =>
+    appendLog: (log: ILogItem) =>
       set((state: LogStore) => {
-        const currentLogs = state.logs[level];
         const newLogs =
-          currentLogs.length >= MAX_LOG_NUM
-            ? [...currentLogs.slice(1), log]
-            : [...currentLogs, log];
-        return { logs: { ...state.logs, [level]: newLogs } };
+          state.logs.length >= MAX_LOG_NUM
+            ? [...state.logs.slice(1), log]
+            : [...state.logs, log];
+        return { logs: newLogs };
       }),
   }),
 );
@@ -84,7 +75,7 @@ export const useLogData = (logLevel: LogLevel) => {
         if (!isActive) return;
         const data = JSON.parse(event.data) as ILogItem;
         const time = dayjs().format("MM-DD HH:mm:ss");
-        appendLog(logLevel, { ...data, time });
+        appendLog({ ...data, time });
       },
       onerror() {
         if (!isActive) return;
@@ -98,10 +89,13 @@ export const useLogData = (logLevel: LogLevel) => {
     };
   }, [clashInfo, enableLog, logLevel]);
 
-  return logs[logLevel];
+  // 根据当前选择的日志等级过滤日志
+  return logLevel === "all"
+    ? logs
+    : logs.filter((log) => log.type.toLowerCase() === logLevel);
 };
 
 // 导出清空日志的方法
-export const clearLogs = (level?: LogLevel) => {
-  useLogStore.getState().clearLogs(level);
+export const clearLogs = () => {
+  useLogStore.getState().clearLogs();
 };
