@@ -3,7 +3,6 @@ use anyhow::Result;
 use dirs::data_dir;
 use once_cell::sync::OnceCell;
 use std::path::PathBuf;
-use tauri::{utils::platform::resource_dir, Env};
 
 #[cfg(not(feature = "verge-dev"))]
 pub static APP_ID: &str = "io.github.oomeow.clash-verge-self";
@@ -53,14 +52,17 @@ pub fn app_home_dir() -> Result<PathBuf> {
 
 /// get the resources dir
 pub fn app_resources_dir() -> Result<PathBuf> {
-    let app_handle = handle::Handle::global().get_app_handle();
-    if let Ok(app_handle) = app_handle {
-        let res_dir = resource_dir(app_handle.package_info(), &Env::default())
-            .map_err(|_| anyhow::anyhow!("failed to get the resource dir"))?
-            .join("resources");
-        return Ok(res_dir);
-    };
-    Err(anyhow::anyhow!("failed to get the resource dir"))
+    use tauri::{utils::platform::resource_dir, Env};
+
+    match handle::Handle::global().get_app_handle() {
+        Ok(app_handle) => {
+            let res_dir = resource_dir(app_handle.package_info(), &Env::default())
+                .map_err(|_| anyhow::anyhow!("failed to get the resource dir"))?
+                .join("resources");
+            Ok(res_dir)
+        }
+        Err(_) => Err(anyhow::anyhow!("failed to get the resource dir")),
+    }
 }
 
 /// profiles dir
@@ -107,13 +109,10 @@ pub fn service_log_file() -> Result<PathBuf> {
     use chrono::Local;
 
     let log_dir = app_logs_dir()?.join("service");
-
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{}.log", local_time);
     let log_file = log_dir.join(log_file);
-
-    let _ = std::fs::create_dir_all(&log_dir);
-
+    std::fs::create_dir_all(&log_dir)?;
     Ok(log_file)
 }
 

@@ -6,8 +6,7 @@ use crate::log_err;
 use crate::utils::dirs;
 use crate::utils::resolve::find_unused_port;
 use anyhow::{bail, Result};
-use base64::prelude::BASE64_STANDARD;
-use base64::Engine;
+
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
@@ -65,13 +64,9 @@ impl CoreManager {
     }
 
     /// 检查订阅是否正确
-    ///
-    /// # Args:
-    /// - config: 配置文件内容( Base64 编码 )
-    ///
-    pub async fn check_config(&self, config: &str) -> Result<()> {
-        // let config_path = Config::generate_file(ConfigType::Check)?;
-        // let config_path = dirs::path_to_str(&config_path)?;
+    pub async fn check_config(&self, generate_config_type: ConfigType) -> Result<()> {
+        let config_path = Config::generate_file(generate_config_type)?;
+        let config_path = dirs::path_to_str(&config_path)?;
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let clash_core = clash_core.unwrap_or("clash".into());
@@ -82,7 +77,7 @@ impl CoreManager {
         let output = app_handle
             .shell()
             .sidecar(clash_core)?
-            .args(["-t", "-d", app_dir, "-config", config])
+            .args(["-t", "-d", app_dir, "-f", config_path])
             .output()
             .await?;
 
@@ -299,11 +294,7 @@ impl CoreManager {
         Config::verge().draft().clash_core = Some(clash_core);
         // 更新订阅
         Config::generate()?;
-        let config_path = Config::generate_file(ConfigType::Check)?;
-        let config_path = dirs::path_to_str(&config_path)?;
-        let content = std::fs::read_to_string(config_path)?;
-        let check_config = BASE64_STANDARD.encode(content);
-        self.check_config(&check_config).await?;
+        self.check_config(ConfigType::RuntimeCheck).await?;
         // 清掉旧日志
         Logger::global().clear_log();
 
@@ -333,11 +324,7 @@ impl CoreManager {
         Config::generate()?;
 
         // 检查订阅是否正常
-        let config_path = Config::generate_file(ConfigType::Check)?;
-        let config_path = dirs::path_to_str(&config_path)?;
-        let content = std::fs::read_to_string(config_path)?;
-        let check_config = BASE64_STANDARD.encode(content);
-        self.check_config(&check_config).await?;
+        self.check_config(ConfigType::RuntimeCheck).await?;
 
         // 是否需要重启核心
         if restart_core {

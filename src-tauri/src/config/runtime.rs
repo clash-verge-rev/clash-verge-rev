@@ -23,7 +23,7 @@ impl IRuntime {
                     Value::Mapping(val_map) => {
                         if let Some(config) = self.config.as_mut() {
                             let mut patch_val_map = config.get(key).map_or(Mapping::new(), |val| {
-                                val.as_mapping().cloned().unwrap_or(Mapping::new())
+                                val.as_mapping().cloned().unwrap_or_default()
                             });
                             for (k, v) in val_map.into_iter() {
                                 patch_val_map.insert(k.clone(), v.clone());

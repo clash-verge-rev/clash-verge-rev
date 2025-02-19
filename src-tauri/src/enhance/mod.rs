@@ -10,6 +10,7 @@ use self::merge::*;
 use self::script::*;
 use self::tun::*;
 use crate::config::Config;
+use crate::config::ConfigType;
 use crate::config::EnableFilter;
 use crate::config::ProfileType;
 use crate::core::CoreManager;
@@ -17,8 +18,6 @@ use crate::utils::dirs;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
-use base64::prelude::BASE64_STANDARD;
-use base64::Engine;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_yaml::Mapping;
@@ -283,9 +282,9 @@ pub async fn test_merge_chain(
         }
     };
 
-    let config_str = serde_yaml::to_string(&config)?;
-    let check_config = BASE64_STANDARD.encode(config_str);
-    CoreManager::global().check_config(&check_config).await?;
+    CoreManager::global()
+        .check_config(ConfigType::MappingCheck(config.clone()))
+        .await?;
 
     if should_build_final_config {
         //合并 verge 接管的配置
