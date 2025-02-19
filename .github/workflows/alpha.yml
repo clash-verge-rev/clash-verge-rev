@@ -58,7 +58,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -69,35 +69,6 @@ jobs:
         run: |
           pnpm i
           pnpm check ${{ matrix.target }}
-
-      - name: Prepare Updater Files
-        run: |
-          mkdir -p updater
-          # 创建 alpha 更新通道的更新文件
-          echo '{
-            "version": "'$(cat package.json | jq -r .version)'",
-            "notes": "Alpha channel update - More new features are now supported.",
-            "pub_date": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",
-            "platforms": {
-              "darwin-x86_64": {
-                "signature": "",
-                "url": "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/alpha/Clash.Verge_${VERSION}_x64.dmg"
-              },
-              "darwin-aarch64": {
-                "signature": "",
-                "url": "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/alpha/Clash.Verge_${VERSION}_aarch64.dmg"
-              },
-              "linux-x86_64": {
-                "signature": "",
-                "url": "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/alpha/clash-verge_${VERSION}_amd64.deb"
-              },
-              "windows-x86_64": {
-                "signature": "",
-                "url": "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/alpha/Clash.Verge_${VERSION}_x64-setup.exe"
-              }
-            }
-          }' > updater/update-alpha.json
-          cp updater/update-alpha.json updater/update-alpha-proxy.json
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
@@ -158,7 +129,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -247,8 +218,6 @@ jobs:
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
-            updater/update-alpha.json
-            updater/update-alpha-proxy.json
 
   alpha-for-fixed-webview2:
     strategy:
@@ -279,7 +248,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
