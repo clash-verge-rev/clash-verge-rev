@@ -90,7 +90,7 @@
     "https-proxy-agent": "7.0.6",
     "husky": "9.1.7",
     "node-fetch": "3.3.2",
-    "postcss": "8.5.2",
+    "postcss": "8.5.3",
     "prettier": "3.5.1",
     "prettier-plugin-tailwindcss": "0.6.11",
     "pretty-quick": "4.0.0",
