@@ -32,11 +32,15 @@ const LogPage = () => {
 
   const filterLogs = useMemo(() => {
     return logData
-      ? logData.filter((data) =>
-          logLevel === "all"
-            ? match(data.payload)
-            : data.type.includes(logLevel) && match(data.payload),
-        )
+      ? logData.filter((data) => {
+          // 构建完整的搜索文本，包含时间、类型和内容
+          const searchText =
+            `${data.time || ""} ${data.type} ${data.payload}`.toLowerCase();
+
+          return logLevel === "all"
+            ? match(searchText)
+            : data.type.toLowerCase() === logLevel && match(searchText);
+        })
       : [];
   }, [logData, logLevel, match]);
 
@@ -70,7 +74,7 @@ const LogPage = () => {
               size="small"
               variant="contained"
               onClick={() => {
-                clearLogs(logLevel);
+                clearLogs();
               }}
             >
               {t("Clear")}
