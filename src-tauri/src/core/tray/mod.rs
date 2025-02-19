@@ -68,64 +68,47 @@ impl Tray {
 
     pub fn create_systray(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
+        let tray_incon_id = TrayIconId::new("main");
+        let tray = app_handle.tray_by_id(&tray_incon_id).unwrap();
 
-        // 创建初始菜单
-        let initial_menu = create_tray_menu(
-            &app_handle,
-            Some("rule"),
-            false,
-            false,
-            Vec::new(),
-        )?;
+        #[cfg(target_os = "macos")]
+        tray.set_show_menu_on_left_click(false)?;
 
-        // 使用 TrayIconBuilder 构建托盘
-        let _tray = tauri::tray::TrayIconBuilder::<Wry>::with_id(TrayIconId::new("main"))
-            .menu(&initial_menu)  // 先设置菜单
-            .show_menu_on_left_click(false)  // 再禁用左键菜单
-            .on_tray_icon_event(move |_tray, event| {
-                // 处理左键点击事件
-                if let TrayIconEvent::Click {
-                    button,
-                    button_state: MouseButtonState::Down,
-                    ..
-                } = event
-                {
-                    match button {
-                        // 左键点击
-                        MouseButton::Left => {
-                            #[cfg(target_os = "macos")]
-                            {
-                                // 确保菜单不会显示
-                                let _ = _tray.set_show_menu_on_left_click(false);
-                            }
+        tray.on_tray_icon_event(|_, event| {
+            let tray_event = { Config::verge().latest().tray_event.clone() };
+            let tray_event: String = tray_event.unwrap_or("main_window".into());
 
-                            // 获取并执行自定义事件
-                            let tray_event = Config::verge()
-                                .latest()
-                                .tray_event
-                                .clone()
-                                .unwrap_or("main_window".into());
-                            
-                            match tray_event.as_str() {
-                                "system_proxy" => feat::toggle_system_proxy(),
-                                "tun_mode" => feat::toggle_tun_mode(),
-                                "main_window" => resolve::create_window(),
-                                _ => {}
-                            }
-                        }
-                        // 其他按钮点击不处理
-                        _ => {}
-                    }
+            #[cfg(target_os = "macos")]
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Down,
+                ..
+            } = event
+            {
+                match tray_event.as_str() {
+                    "system_proxy" => feat::toggle_system_proxy(),
+                    "tun_mode" => feat::toggle_tun_mode(),
+                    "main_window" => resolve::create_window(),
+                    _ => {}
                 }
-            })
-            .on_menu_event(on_menu_event)
-            .build(&app_handle)?;
+            }
 
-        // 初始化托盘状态
-        self.update_menu()?;
-        self.update_icon(None)?;
-        self.update_tooltip()?;
-
+            #[cfg(not(target_os = "macos"))]
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Down,
+                ..
+            } = event
+            {
+                match tray_event.as_str() {
+                    "system_proxy" => feat::toggle_system_proxy(),
+                    "tun_mode" => feat::toggle_tun_mode(),
+                    "main_window" => resolve::create_window(),
+                    _ => {}
+                }
+            }
+        });
+        tray.on_menu_event(on_menu_event);
         Ok(())
     }
 
