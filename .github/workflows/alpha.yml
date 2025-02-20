@@ -2,9 +2,6 @@ name: Alpha Build
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    tags-ignore: [updater, alpha]
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -327,12 +324,12 @@ jobs:
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
         shell: bash
 
-      - name: Update Tag
-        uses: richardsimko/update-tag@v1
-        with:
-          tag_name: alpha
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Update Tag
+      #   uses: richardsimko/update-tag@v1
+      #   with:
+      #     tag_name: alpha
+      # env:
+      #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
           cat > release.txt << 'EOF'
