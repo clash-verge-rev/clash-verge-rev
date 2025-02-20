@@ -97,9 +97,9 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 }
 
 #[tauri::command]
-pub async fn delete_profile(index: String) -> CmdResult {
+pub async fn delete_profile(uid: String) -> CmdResult {
     let (restart_core, enhance_profile) =
-        wrap_err!({ Config::profiles().data().delete_item(index) })?;
+        wrap_err!({ Config::profiles().data().delete_item(uid) })?;
     // the current profile is deleted, need to restart the core to apply new current profile
     if restart_core {
         wrap_err!(CoreManager::global().update_config(true).await)?;

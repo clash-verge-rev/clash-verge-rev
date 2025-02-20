@@ -88,6 +88,13 @@ const Layout = () => {
       mutate("getVersion");
     });
 
+    const unlistenRefreshProfiles = listen(
+      "verge://refresh-profiles",
+      async () => {
+        mutate("getProfiles");
+      },
+    );
+
     const unlistenRefreshClash = listen(
       "verge://refresh-clash-config",
       async () => {

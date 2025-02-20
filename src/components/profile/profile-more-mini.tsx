@@ -29,10 +29,10 @@ interface Props {
   item: IProfileItem;
   selected: boolean;
   logs?: LogMessage[];
-  onEnableChangeCallBack?: (enable: boolean) => Promise<void>;
+  onEnableChangeCallback?: (enable: boolean) => Promise<void>;
   onClick?: () => Promise<void>;
-  onInfoChangeCallBack?: () => Promise<void>;
-  onDeleteCallBack?: () => Promise<void>;
+  onInfoChangeCallback?: () => Promise<void>;
+  onDeleteCallback?: () => Promise<void>;
 }
 
 export default function ProfileMoreMini(props: Props) {
@@ -40,10 +40,10 @@ export default function ProfileMoreMini(props: Props) {
     item,
     selected,
     logs,
-    onEnableChangeCallBack,
+    onEnableChangeCallback,
     onClick,
-    onInfoChangeCallBack,
-    onDeleteCallBack,
+    onInfoChangeCallback,
+    onDeleteCallback,
   } = props;
   const viewerRef = useRef<ProfileViewerRef>(null);
   const [toggleEnabling, setToggleEnabling] = useState(false);
@@ -88,7 +88,7 @@ export default function ProfileMoreMini(props: Props) {
                   setToggleEnabling(true);
                   const nextEnable = !item.enable;
                   await patchProfile(item.uid, { ...item, enable: nextEnable });
-                  await onEnableChangeCallBack?.(nextEnable);
+                  await onEnableChangeCallback?.(nextEnable);
                 } finally {
                   setToggleEnabling(false);
                 }
@@ -173,7 +173,7 @@ export default function ProfileMoreMini(props: Props) {
               try {
                 setDeleting(true);
                 await deleteProfile(item.uid);
-                await onDeleteCallBack?.();
+                await onDeleteCallback?.();
               } finally {
                 setDeleting(false);
               }
@@ -185,7 +185,7 @@ export default function ProfileMoreMini(props: Props) {
 
       <ProfileViewer
         ref={viewerRef}
-        onChange={async () => await onInfoChangeCallBack?.()}
+        onChange={async () => await onInfoChangeCallback?.()}
       />
 
       {isScriptMerge && (

@@ -13,18 +13,17 @@ import {
 } from "@/components/profile/profile-viewer";
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { useProfiles } from "@/hooks/use-profiles";
-import { closeAllConnections } from "@/services/api";
 import {
   createProfile,
-  deleteProfile,
   enhanceProfiles,
   getProfiles,
   getRuntimeLogs,
   importProfile,
+  patchProfile,
   reorderProfile,
   updateProfile,
 } from "@/services/cmds";
-import { useSetLoadingCache, useThemeMode } from "@/services/states";
+import { useSetLoadingCache } from "@/services/states";
 import {
   closestCenter,
   defaultDropAnimationSideEffects,
@@ -33,7 +32,6 @@ import {
   DragOverlay,
   DropAnimation,
   MouseSensor,
-  UniqueIdentifier,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -55,17 +53,11 @@ import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useLockFn, useMemoizedFn } from "ahooks";
-import { useLocalStorage } from "foxact/use-local-storage";
 import { throttle } from "lodash-es";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-
-interface ActivatingProfile {
-  profile: string;
-  chain: string;
-}
 
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
   return [...Array(20)].map((_, index) => (
@@ -73,24 +65,13 @@ const FlexDecorationItems = memo(function FlexDecoratorItems() {
   ));
 });
 
-type FileDragDropPayload = {
-  paths: string[];
-};
-
 const ProfilePage = () => {
   const { t } = useTranslation();
 
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-  const [activating, setActivating] = useLocalStorage<ActivatingProfile>(
-    "activatingProfile",
-    { profile: "", chain: "" },
-    {
-      serializer: JSON.stringify,
-      deserializer: JSON.parse,
-    },
-  );
-  const [loading, setLoading] = useState(false);
+  const [activatingUids, setActivatingUids] = useState<string[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
   const {
     profiles = {},
     activateSelected,
@@ -108,23 +89,20 @@ const ProfilePage = () => {
   const configRef = useRef<DialogRef>(null);
 
   // distinguish type
-  const { regularItems, enhanceItems } = useMemo(() => {
+  const { profileItems, globalChains, enabledChainUids } = useMemo(() => {
     const items = profiles.items || [];
-    const chainIds = profiles.chain || [];
 
     const type_p = ["local", "remote"];
     const type_c = ["merge", "script"];
 
-    const regularItems = items.filter((i) => i && type_p.includes(i.type!));
-    const restItems = items.filter(
-      (i) => i && type_c.includes(i.type!) && i.scope !== "specific",
+    const profileItems = items.filter((i) => i && type_p.includes(i.type!));
+    const globalChains = items.filter(
+      (i) => i && type_c.includes(i.type!) && i.scope === "global",
     );
-    const restMap = Object.fromEntries(restItems.map((i) => [i.uid, i]));
-    const enhanceItems = chainIds
-      .map((i) => restMap[i]!)
-      .filter(Boolean)
-      .concat(restItems.filter((i) => !chainIds.includes(i.uid)));
-    return { regularItems, enhanceItems };
+    const enabledChainUids = globalChains
+      .filter((i) => i.enable)
+      .map((i) => i.uid);
+    return { profileItems, globalChains, enabledChainUids };
   }, [profiles]);
 
   // sortable
@@ -133,26 +111,16 @@ const ProfilePage = () => {
   );
   const [profileList, setProfileList] = useState<IProfileItem[]>([]);
   const [chainList, setChainList] = useState<IProfileItem[]>([]);
-  const enableChains = chainList.filter((item) => chain.includes(item.uid));
-  const disableChains = chainList.filter((item) => !chain.includes(item.uid));
   const dropAnimationConfig: DropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
       styles: { active: { opacity: "0.5" } },
     }),
   };
-  const [draggingProfileItem, setDraggingProfileItem] =
-    useState<IProfileItem | null>(null);
-  const [draggingChainItem, setDraggingChainItem] =
-    useState<IProfileItem | null>(null);
+  const [draggingItem, setDraggingItem] = useState<IProfileItem | null>(null);
   const [overItemWidth, setOverItemWidth] = useState(260);
 
   useEffect(() => {
-    setProfileList(regularItems);
-    setChainList(enhanceItems);
-  }, [regularItems, enhanceItems]);
-
-  useEffect(() => {
-    const unlisten = listen(TauriEvent.DRAG_DROP, async (event) => {
+    const dragUnlisten = listen(TauriEvent.DRAG_DROP, async (event) => {
       const payload = event.payload as FileDragDropPayload;
       const fileList = payload.paths;
       for (let file of fileList) {
@@ -178,42 +146,29 @@ const ProfilePage = () => {
         await mutateProfiles();
       }
     });
+
     return () => {
-      unlisten.then((fn) => fn());
+      dragUnlisten.then((fn) => fn());
     };
   }, []);
 
-  const getDraggingIndex = useMemoizedFn(
-    (type: "chain" | "profile", id: UniqueIdentifier | undefined) => {
-      if (id) {
-        if (type === "profile") {
-          return profileList.findIndex((item) => item.uid === id);
-        } else {
-          return chainList.findIndex((item) => item.uid === id);
-        }
-      } else {
-        return -1;
-      }
-    },
-  );
-
-  const draggingProfileIndex = getDraggingIndex(
-    "profile",
-    draggingProfileItem?.uid,
-  );
-  const draggingChainIndex = getDraggingIndex("chain", draggingChainItem?.uid);
+  useEffect(() => {
+    setProfileList(profileItems);
+    setChainList(globalChains);
+  }, [profileItems, globalChains]);
 
   const handleProfileDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
-    setDraggingProfileItem(null);
+    setDraggingItem(null);
     const { active, over } = event;
     if (over) {
-      const overIndex = getDraggingIndex("profile", over.id);
-      if (draggingProfileIndex !== overIndex) {
-        const activeId = active.id.toString();
-        const overId = over.id.toString();
-        setProfileList((items) =>
-          arrayMove(items, draggingProfileIndex, overIndex),
+      const activeId = active.id.toString();
+      const overId = over.id.toString();
+      if (activeId !== overId) {
+        const activeIndex = profileList.findIndex(
+          (item) => item.uid === activeId,
         );
+        const overIndex = profileList.findIndex((item) => item.uid === overId);
+        setProfileList((items) => arrayMove(items, activeIndex, overIndex));
         await reorderProfile(activeId, overId);
         mutateProfiles();
       }
@@ -221,46 +176,32 @@ const ProfilePage = () => {
   });
 
   const handleChainDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
-    setDraggingChainItem(null);
+    setDraggingItem(null);
     const { active, over } = event;
     if (over) {
-      // check their status type
-      const activeItemSelected = active.data.current?.activated;
-      const overItemSelected = over.data.current?.activated;
-      if (activeItemSelected !== overItemSelected) {
-        // no same type
-        return;
-      }
-      // same type, it can drag and sort
-      const overIndex = getDraggingIndex("chain", over.id);
-      if (draggingChainIndex !== overIndex) {
-        const newChainList = arrayMove(
-          chainList,
-          draggingChainIndex,
-          overIndex,
+      const activeId = active.id.toString();
+      const overId = over.id.toString();
+      if (activeId !== overId) {
+        const activeIndex = chainList.findIndex(
+          (item) => item.uid === activeId,
         );
-        if (activeItemSelected && overItemSelected) {
-          setActiveChainList(newChainList);
-        } else {
-          const activeId = active.id.toString();
-          const overId = over.id.toString();
-          setChainList(newChainList);
-          await reorderProfile(activeId, overId);
-          mutateProfiles();
-        }
+        const overIndex = chainList.findIndex((item) => item.uid === overId);
+        setChainList(arrayMove(chainList, activeIndex, overIndex));
+        await reorderProfile(activeId, overId);
+        mutateProfiles();
       }
     }
   });
 
   const onImport = useMemoizedFn(async () => {
     if (!url) return;
-    setLoading(true);
+    setImportLoading(true);
 
     try {
       await importProfile(url);
       Notice.success(t("Profile Imported Successfully"));
       setUrl("");
-      setLoading(false);
+      setImportLoading(false);
 
       getProfiles().then((newProfiles) => {
         mutate("getProfiles", newProfiles);
@@ -275,129 +216,66 @@ const ProfilePage = () => {
       });
     } catch (err: any) {
       Notice.error(err.message || err.toString());
-      setLoading(false);
+      setImportLoading(false);
     } finally {
       setDisabled(false);
-      setLoading(false);
+      setImportLoading(false);
     }
   });
 
   const onSelect = useMemoizedFn(
     useLockFn(async (current: string, force: boolean) => {
-      if (!force && current === profiles.current) return;
-      // 避免大多数情况下 loading 态闪烁
-      const reset = setTimeout(
-        () =>
-          setActivating((o) => ({ profile: current, chain: o?.chain ?? "" })),
-        100,
-      );
+      if (current === profiles.current || activatingUids.length > 0) return;
       try {
+        setActivatingUids([current, ...enabledChainUids]);
         await patchProfiles({ current });
         mutateLogs();
-        closeAllConnections();
+        // closeAllConnections();
         setTimeout(() => activateSelected(), 2000);
         Notice.success(t("Profile Switched"), 1000);
       } catch (err: any) {
         Notice.error(err?.message || err.toString(), 4000);
       } finally {
-        clearTimeout(reset);
         setTimeout(() => {
-          setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
+          setActivatingUids([]);
         }, 500);
       }
     }),
   );
 
-  const setActiveChainList = useMemoizedFn(async (newList: IProfileItem[]) => {
-    const newActiveChain = newList
-      .filter((item) => chain.includes(item.uid))
-      .map((item) => item.uid);
-    let needReactive = false;
-    for (let index = 0; index < chain.length; index++) {
-      const chainId = chain[index];
-      const newChainId = newActiveChain[index];
-      if (chainId !== newChainId) {
-        needReactive = true;
-        break;
-      }
-    }
-    if (needReactive && activating.profile === "" && activating.chain === "") {
+  const onToggleEnable = useMemoizedFn(
+    useLockFn(async (chainUid: string, enable: boolean) => {
       try {
-        setChainList(newList);
-        setActivating((o) => ({
-          profile: o?.profile ?? "",
-          chain: newActiveChain[0],
-        }));
-        await patchProfiles({ chain: newActiveChain });
+        setActivatingUids([
+          profiles.current || "",
+          chainUid,
+          ...enabledChainUids,
+        ]);
+        await patchProfile(chainUid, { enable: enable });
+        mutateProfiles();
         mutateLogs();
-        Notice.success("Refresh clash config", 1000);
-      } catch (err: any) {
-        Notice.error(err.message || err.toString());
+        Notice.success(t("Profile Switched"), 1000);
+      } catch (error) {
+        console.error(error);
       } finally {
-        setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
+        setTimeout(() => {
+          setActivatingUids([]);
+        }, 500);
       }
-    }
-  });
+    }),
+  );
 
   const onEnhance = useMemoizedFn(
     useLockFn(async () => {
       try {
-        setActivating((o) => ({
-          profile: profiles.current!,
-          chain: o?.chain ?? "",
-        }));
+        setActivatingUids([profiles.current || "", ...enabledChainUids]);
         await enhanceProfiles();
         mutateLogs();
         Notice.success(t("Profile Reactivated"), 1000);
       } catch (err: any) {
         Notice.error(err.message || err.toString(), 3000);
       } finally {
-        setActivating((o) => ({ profile: "", chain: o?.chain ?? "" }));
-      }
-    }),
-  );
-
-  const onEnable = useMemoizedFn(
-    useLockFn(async (uid: string) => {
-      if (chain.includes(uid)) return;
-      try {
-        setActivating((o) => ({ profile: o?.profile ?? "", chain: uid }));
-        const newChain = [...chain, uid];
-        await patchProfiles({ chain: newChain });
-        mutateLogs();
-      } catch (err: any) {
-        Notice.error(err?.message || err.toString());
-      } finally {
-        setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
-      }
-    }),
-  );
-
-  const onDisable = useMemoizedFn(
-    useLockFn(async (uid: string) => {
-      if (!chain.includes(uid)) return;
-      try {
-        setActivating((o) => ({ profile: o?.profile ?? "", chain: uid }));
-        const newChain = chain.filter((i) => i !== uid);
-        await patchProfiles({ chain: newChain });
-        mutateLogs();
-      } catch (err: any) {
-        Notice.error(err?.message || err.toString());
-      } finally {
-        setActivating((o) => ({ profile: o?.profile ?? "", chain: "" }));
-      }
-    }),
-  );
-
-  const onDelete = useMemoizedFn(
-    useLockFn(async (uid: string) => {
-      try {
-        await onDisable(uid);
-        await deleteProfile(uid);
-        mutateProfiles();
-        mutateLogs();
-      } catch (err: any) {
-        Notice.error(err?.message || err.toString());
+        setActivatingUids([]);
       }
     }),
   );
@@ -421,7 +299,7 @@ const ProfilePage = () => {
       return new Promise((resolve) => {
         setLoadingCache((cache) => {
           // 获取没有正在更新的订阅
-          const items = regularItems.filter(
+          const items = profileItems.filter(
             (e) => e.type === "remote" && !cache[e.uid],
           );
           const change = Object.fromEntries(items.map((e) => [e.uid, true]));
@@ -437,17 +315,11 @@ const ProfilePage = () => {
     const text = await readText();
     if (text) setUrl(text);
   });
-  const mode = useThemeMode();
-  const islight = mode === "light" ? true : false;
-  const dividercolor = islight
-    ? "rgba(0, 0, 0, 0.06)"
-    : "rgba(255, 255, 255, 0.06)";
 
   return (
     <BasePage
       full
       title={t("Profiles")}
-      // contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton
@@ -468,7 +340,8 @@ const ProfilePage = () => {
 
           <LoadingButton
             size="small"
-            loading={activating.profile !== "" || activating.chain !== ""}
+            // loading={activating.profile !== "" || activating.chain !== ""}
+            loading={activatingUids.length > 0}
             loadingPosition="end"
             variant="contained"
             color="primary"
@@ -528,7 +401,7 @@ const ProfilePage = () => {
         />
         <LoadingButton
           disabled={!url || disabled}
-          loading={loading}
+          loading={importLoading}
           variant="contained"
           size="small"
           sx={{ borderRadius: "6px" }}
@@ -555,11 +428,11 @@ const ProfilePage = () => {
                 setOverItemWidth(itemWidth);
               }
               const item = profileList.find((i) => i.uid === event.active.id)!;
-              setDraggingProfileItem(item);
+              setDraggingItem(item);
             }
           }}
           onDragEnd={(e) => handleProfileDragEnd(e)}
-          onDragCancel={() => setDraggingProfileItem(null)}>
+          onDragCancel={() => setDraggingItem(null)}>
           <Box>
             <SortableContext items={profileList.map((item) => item.uid)}>
               <Box sx={{ display: "flex", flexWrap: "wrap" }}>
@@ -575,16 +448,12 @@ const ProfilePage = () => {
                     }}>
                     <ProfileItem
                       selected={
-                        (activating.profile === "" &&
-                          profiles.current === item.uid) ||
-                        activating.profile === item.uid
+                        activatingUids.includes(item.uid) ||
+                        (activatingUids.length === 0 &&
+                          profiles.current === item.uid)
                       }
-                      isDragging={draggingProfileItem?.uid === item.uid}
-                      activating={
-                        activating.profile === item.uid ||
-                        (profiles.current === item.uid &&
-                          activating.chain !== "")
-                      }
+                      isDragging={draggingItem?.uid === item.uid}
+                      activating={activatingUids.includes(item.uid)}
                       itemData={item}
                       chainLogs={chainLogs}
                       onSelect={(f) => onSelect(item.uid, f)}
@@ -598,7 +467,7 @@ const ProfilePage = () => {
             </SortableContext>
           </Box>
           <DragOverlay dropAnimation={dropAnimationConfig}>
-            {draggingProfileItem ? (
+            {draggingItem ? (
               <ProfileItem
                 sx={{
                   width: overItemWidth,
@@ -606,18 +475,14 @@ const ProfilePage = () => {
                   boxShadow: "0px 0px 10px 5px rgba(0,0,0,0.2)",
                 }}
                 selected={
-                  (activating.profile === "" &&
-                    profiles.current === draggingProfileItem.uid) ||
-                  activating.profile === draggingProfileItem.uid
+                  activatingUids.includes(draggingItem.uid) ||
+                  (activatingUids.length === 0 &&
+                    profiles.current === draggingItem.uid)
                 }
-                activating={
-                  activating.profile === draggingProfileItem.uid ||
-                  (profiles.current === draggingProfileItem.uid &&
-                    activating.chain !== "")
-                }
-                itemData={draggingProfileItem}
+                activating={activatingUids.includes(draggingItem.uid)}
+                itemData={draggingItem}
                 chainLogs={chainLogs}
-                onSelect={(f) => onSelect(draggingProfileItem.uid, f)}
+                onSelect={(f) => onSelect(draggingItem.uid, f)}
                 // onEdit={() => viewerRef.current?.edit(draggingProfileItem)}
                 onReactivate={() => onEnhance()}
               />
@@ -630,11 +495,14 @@ const ProfilePage = () => {
             <Divider
               variant="middle"
               flexItem
-              sx={{
+              sx={(theme) => ({
                 width: "calc(100% - 32px)",
                 my: 1,
-                borderColor: dividercolor,
-              }}>
+                borderColor: "rgba(0, 0, 0, 0.06)",
+                ...theme.applyStyles("dark", {
+                  borderColor: "rgba(255, 255, 255, 0.06)",
+                }),
+              })}>
               {t("Enhance Scripts")}
             </Divider>
             <DndContext
@@ -650,16 +518,16 @@ const ProfilePage = () => {
                   const item = chainList.find(
                     (item) => item.uid === event.active.id,
                   )!;
-                  setDraggingChainItem(item);
+                  setDraggingItem(item);
                 }
               }}
               onDragEnd={(e) => handleChainDragEnd(e)}
-              onDragCancel={() => setDraggingChainItem(null)}>
+              onDragCancel={() => setDraggingItem(null)}>
               <Box sx={{ display: "flex", flexWrap: "wrap" }}>
                 <SortableContext
-                  items={enableChains.map((item) => item.uid)}
+                  items={chainList.map((item) => item.uid)}
                   strategy={rectSortingStrategy}>
-                  {enableChains.map((item) => (
+                  {chainList.map((item) => (
                     <DraggableItem
                       key={item.uid}
                       id={item.uid}
@@ -672,58 +540,15 @@ const ProfilePage = () => {
                       }}>
                       <ProfileMore
                         selected={
-                          !!chain.includes(item.uid) ||
-                          activating.chain === item.uid
+                          activatingUids.includes(item.uid) || !!item.enable
                         }
-                        isDragging={draggingChainItem?.uid === item.uid}
+                        isDragging={draggingItem?.uid === item.uid}
                         itemData={item}
-                        enableNum={chain.length || 0}
                         chainLogs={chainLogs}
-                        reactivating={
-                          (!!chain.includes(item.uid) &&
-                            (activating.chain !== "" ||
-                              activating.profile !== "")) ||
-                          activating.chain === item.uid
-                        }
-                        onEnable={() => onEnable(item.uid)}
-                        onDisable={() => onDisable(item.uid)}
-                        onDelete={() => onDelete(item.uid)}
-                        // onEdit={() => viewerRef.current?.edit(item)}
-                        onActivatedSave={() => onEnhance()}
-                      />
-                    </DraggableItem>
-                  ))}
-                </SortableContext>
-                <SortableContext
-                  items={disableChains.map((item) => item.uid)}
-                  strategy={rectSortingStrategy}>
-                  {disableChains.map((item) => (
-                    <DraggableItem
-                      key={item.uid}
-                      id={item.uid}
-                      data={{ activated: !!chain.includes(item.uid) }}
-                      sx={{
-                        display: "flex",
-                        flexGrow: 1,
-                        width: "260px",
-                        margin: "5px",
-                      }}>
-                      <ProfileMore
-                        selected={!!chain.includes(item.uid)}
-                        isDragging={draggingChainItem?.uid === item.uid}
-                        itemData={item}
-                        enableNum={chain.length || 0}
-                        chainLogs={chainLogs}
-                        reactivating={
-                          (!!chain.includes(item.uid) &&
-                            (activating.chain !== "" ||
-                              activating.profile !== "")) ||
-                          activating.chain === item.uid
-                        }
-                        onEnable={() => onEnable(item.uid)}
-                        onDisable={() => onDisable(item.uid)}
-                        onDelete={() => onDelete(item.uid)}
-                        // onEdit={() => viewerRef.current?.edit(item)}
+                        reactivating={activatingUids.includes(item.uid)}
+                        onToggleEnable={async (enable) => {
+                          onToggleEnable(item.uid, enable);
+                        }}
                         onActivatedSave={() => onEnhance()}
                       />
                     </DraggableItem>
@@ -733,27 +558,23 @@ const ProfilePage = () => {
               </Box>
               {createPortal(
                 <DragOverlay dropAnimation={dropAnimationConfig}>
-                  {draggingChainItem ? (
+                  {draggingItem ? (
                     <ProfileMore
-                      selected={!!chain.includes(draggingChainItem.uid)}
-                      itemData={draggingChainItem}
+                      selected={
+                        activatingUids.includes(draggingItem.uid) ||
+                        !!draggingItem.enable
+                      }
+                      itemData={draggingItem}
                       sx={{
                         width: overItemWidth,
                         borderRadius: "8px",
                         boxShadow: "0px 0px 10px 5px rgba(0,0,0,0.2)",
                       }}
-                      enableNum={chain.length || 0}
                       chainLogs={chainLogs}
-                      reactivating={
-                        (!!chain.includes(draggingChainItem.uid) &&
-                          (activating.chain !== "" ||
-                            activating.profile !== "")) ||
-                        activating.chain === draggingChainItem.uid
-                      }
-                      onEnable={() => onEnable(draggingChainItem.uid)}
-                      onDisable={() => onDisable(draggingChainItem.uid)}
-                      onDelete={() => onDelete(draggingChainItem.uid)}
-                      // onEdit={() => viewerRef.current?.edit(draggingChainItem)}
+                      reactivating={activatingUids.includes(draggingItem.uid)}
+                      onToggleEnable={async (enable) => {
+                        onToggleEnable(draggingItem.uid, enable);
+                      }}
                       onActivatedSave={() => onEnhance()}
                     />
                   ) : null}

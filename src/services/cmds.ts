@@ -101,8 +101,8 @@ export async function updateProfile(index: string, option?: IProfileOption) {
   return invoke<void>("update_profile", { index, option });
 }
 
-export async function deleteProfile(index: string) {
-  return invoke<void>("delete_profile", { index });
+export async function deleteProfile(uid: string) {
+  return invoke<void>("delete_profile", { uid });
 }
 
 export async function patchProfile(

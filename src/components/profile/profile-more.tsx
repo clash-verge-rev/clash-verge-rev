@@ -3,7 +3,7 @@ import YamlIcon from "@/assets/image/yaml.svg?react";
 import { Notice, ScrollableText } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
-import { viewProfile } from "@/services/cmds";
+import { deleteProfile, viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import { cn } from "@/utils";
 import {
@@ -33,6 +33,7 @@ import { Message } from "console-feed/lib/definitions/Component";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { mutate } from "swr";
 import { ConfirmViewer } from "./confirm-viewer";
 import { ProfileDiv } from "./profile-box";
 
@@ -44,13 +45,9 @@ interface Props {
   selected: boolean;
   isDragging?: boolean;
   itemData: IProfileItem;
-  enableNum: number;
   chainLogs?: Record<string, LogMessage[]>;
   reactivating: boolean;
-  onEnable: () => Promise<void>;
-  onDisable: () => Promise<void>;
-  onDelete: () => Promise<void>;
-  // onEdit: () => void;
+  onToggleEnable: (enable: boolean) => void;
   onActivatedSave: () => void;
 }
 
@@ -72,10 +69,7 @@ export const ProfileMore = (props: Props) => {
     itemData,
     chainLogs = {},
     reactivating,
-    onEnable,
-    onDisable,
-    onDelete,
-    // onEdit,
+    onToggleEnable,
     onActivatedSave,
   } = props;
 
@@ -92,11 +86,6 @@ export const ProfileMore = (props: Props) => {
   const [logOpen, setLogOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
 
-  // const onEditInfo = () => {
-  //   setAnchorEl(null);
-  //   onEdit();
-  // };
-
   const onEditFile = () => {
     setAnchorEl(null);
     setFileOpen(true);
@@ -105,7 +94,7 @@ export const ProfileMore = (props: Props) => {
   const onOpenFile = useLockFn(async () => {
     setAnchorEl(null);
     try {
-      await viewProfile(itemData.uid);
+      await viewProfile(uid);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
@@ -116,7 +105,7 @@ export const ProfileMore = (props: Props) => {
     return fn();
   };
 
-  const logs = chainLogs[itemData.uid] || [];
+  const logs = chainLogs[uid] || [];
   const hasError = !!logs.find((e) => e.exception);
 
   const menus = [
@@ -125,15 +114,10 @@ export const ProfileMore = (props: Props) => {
       icon: <CheckCircle fontSize="small" />,
       handler: fnWrapper(async () => {
         setToggling(true);
-        await onEnable();
+        onToggleEnable(true);
         setToggling(false);
       }),
     },
-    // {
-    //   label: "Edit Info",
-    //   icon: <EditNote fontSize="small" />,
-    //   handler: onEditInfo,
-    // },
     {
       label: "Edit",
       icon: <Edit fontSize="small" />,
@@ -160,7 +144,7 @@ export const ProfileMore = (props: Props) => {
       icon: <Block fontSize="small" />,
       handler: fnWrapper(async () => {
         setToggling(true);
-        await onDisable();
+        onToggleEnable(false);
         setToggling(false);
       }),
     });
@@ -184,7 +168,7 @@ export const ProfileMore = (props: Props) => {
       }}>
       <ProfileDiv
         aria-label={isDragging ? "dragging" : "script"}
-        aria-selected={selected}
+        aria-selected={selected || itemData.enable}
         onDoubleClick={() => onEditFile()}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
@@ -326,7 +310,9 @@ export const ProfileMore = (props: Props) => {
         onConfirm={async () => {
           setConfirmOpen(false);
           setToggling(true);
-          await onDelete();
+          await deleteProfile(uid);
+          mutate("getProfiles");
+          mutate("getRuntimeLogs");
           setToggling(false);
         }}
       />

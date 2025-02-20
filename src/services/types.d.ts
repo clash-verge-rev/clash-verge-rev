@@ -379,3 +379,7 @@ interface IWebDavConfig {
   username: string;
   password: string;
 }
+
+type FileDragDropPayload = {
+  paths: string[];
+};

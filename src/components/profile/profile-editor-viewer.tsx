@@ -15,7 +15,7 @@ import {
   saveProfileFile,
   testMergeChain,
 } from "@/services/cmds";
-import monaco from "@/services/monaco-config";
+import monaco from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
@@ -663,15 +663,15 @@ export const ProfileEditorViewer = (props: Props) => {
                       item={item}
                       selected={item.uid === editProfile.uid}
                       logs={chainLogs[item.uid]}
-                      onEnableChangeCallBack={async (enabled) => {
+                      onEnableChangeCallback={async (enabled) => {
                         mutate("getRuntimeLogs");
                         await refreshChain();
                       }}
                       onClick={async () => {
                         await handleChainClick(item);
                       }}
-                      onInfoChangeCallBack={refreshChain}
-                      onDeleteCallBack={async () => {
+                      onInfoChangeCallback={refreshChain}
+                      onDeleteCallback={async () => {
                         await handleChainDeleteCallBack(item);
                       }}
                     />

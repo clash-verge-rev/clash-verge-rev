@@ -349,6 +349,7 @@ impl Tray {
                                     t!("profiles.switch"),
                                     t!("profiles.switch.success"),
                                 );
+                                handle::Handle::refresh_profiles();
                                 log::info!(target: "app", "switch profile successfully");
                             }
                             Err(e) => {

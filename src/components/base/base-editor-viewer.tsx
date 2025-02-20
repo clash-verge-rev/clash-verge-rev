@@ -1,7 +1,7 @@
 import { Notice } from "@/components/base";
 import { useWindowSize } from "@/hooks/use-window-size";
 import { getTemplate } from "@/services/cmds";
-import monaco from "@/services/monaco-config";
+import monaco from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {

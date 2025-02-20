@@ -6,11 +6,7 @@ import {
   updateProfile,
   viewProfile,
 } from "@/services/cmds";
-import {
-  useLoadingCache,
-  useSetLoadingCache,
-  useThemeMode,
-} from "@/services/states";
+import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import { cn } from "@/utils";
 import parseTraffic from "@/utils/parse-traffic";
 import {
@@ -58,7 +54,6 @@ interface Props {
   itemData: IProfileItem;
   chainLogs: Record<string, LogMessage[]>;
   onSelect: (force: boolean) => void;
-  // onEdit: () => void;
   onReactivate: () => void;
 }
 
@@ -71,7 +66,6 @@ export const ProfileItem = (props: Props) => {
     itemData,
     chainLogs,
     onSelect,
-    // onEdit,
     onReactivate,
   } = props;
 
@@ -82,17 +76,13 @@ export const ProfileItem = (props: Props) => {
     setAnchorEl(null);
   }
   const [position, setPosition] = useState({ left: 0, top: 0 });
-  const loadingCache = useLoadingCache();
   const setLoadingCache = useSetLoadingCache();
 
   const { uid, name = "Profile", extra, updated = 0 } = itemData;
-
-  // local file mode
   // remote file mode
   const hasUrl = !!itemData.url;
   const hasExtra = !!extra; // only subscription url has extra info
   const hasHome = !!itemData.home; // only subscription url has home page
-
   const { upload = 0, download = 0, total = 0 } = extra ?? {};
   const from = parseUrl(itemData.url);
   const description = itemData.desc;
@@ -102,29 +92,24 @@ export const ProfileItem = (props: Props) => {
     100,
   );
 
-  const loading = loadingCache[itemData.uid] ?? false;
+  const [loading, setLoading] = useState(false);
 
   // interval update fromNow field
   const [, setRefresh] = useState({});
   useEffect(() => {
     if (!hasUrl) return;
-
     let timer: any = null;
-
     const handler = () => {
       const now = Date.now();
       const lastUpdate = updated * 1000;
       // 大于一天的不管
       if (now - lastUpdate >= 24 * 36e5) return;
-
       const wait = now - lastUpdate >= 36e5 ? 30e5 : 5e4;
-
       timer = setTimeout(() => {
         setRefresh({});
         handler();
       }, wait);
     };
-
     handler();
 
     return () => {
@@ -132,7 +117,7 @@ export const ProfileItem = (props: Props) => {
     };
   }, [hasUrl, updated]);
 
-  const [fileOpen, setFileOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const onOpenHome = () => {
@@ -140,17 +125,12 @@ export const ProfileItem = (props: Props) => {
     openWebUrl(itemData.home ?? "");
   };
 
-  // const onEditInfo = () => {
-  //   setAnchorEl(null);
-  //   onEdit();
-  // };
-
-  const onEditFile = () => {
+  const onEdit = () => {
     setAnchorEl(null);
-    setFileOpen(true);
+    setOpen(true);
   };
 
-  const onForceSelect = () => {
+  const onForceSelect = async () => {
     setAnchorEl(null);
     onSelect(true);
   };
@@ -158,7 +138,7 @@ export const ProfileItem = (props: Props) => {
   const onOpenFile = useLockFn(async () => {
     setAnchorEl(null);
     try {
-      await viewProfile(itemData.uid);
+      await viewProfile(uid);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
@@ -169,7 +149,7 @@ export const ProfileItem = (props: Props) => {
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
   const onUpdate = useLockFn(async (type: 0 | 1 | 2) => {
     setAnchorEl(null);
-    setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }));
+    setLoadingCache((cache) => ({ ...cache, [uid]: true }));
 
     const option: Partial<IProfileOption> = {};
 
@@ -189,7 +169,7 @@ export const ProfileItem = (props: Props) => {
     }
 
     try {
-      await updateProfile(itemData.uid, option);
+      await updateProfile(uid, option);
       mutate("getProfiles");
     } catch (err: any) {
       const errmsg = err?.message || err.toString();
@@ -197,14 +177,14 @@ export const ProfileItem = (props: Props) => {
         errmsg.replace(/error sending request for url (\S+?): /, ""),
       );
     } finally {
-      setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }));
+      setLoadingCache((cache) => ({ ...cache, [uid]: false }));
     }
   });
 
   const onDelete = useLockFn(async () => {
     setAnchorEl(null);
     try {
-      await deleteProfile(itemData.uid);
+      await deleteProfile(uid);
       mutate("getProfiles");
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
@@ -217,15 +197,10 @@ export const ProfileItem = (props: Props) => {
       icon: <CheckCircle fontSize="small" />,
       handler: onForceSelect,
     },
-    // {
-    //   label: "Edit Info",
-    //   icon: <EditNote fontSize="small" />,
-    //   handler: onEditInfo,
-    // },
     {
       label: "Edit",
       icon: <Edit fontSize="small" />,
-      handler: onEditFile,
+      handler: onEdit,
     },
     {
       label: "Open File",
@@ -420,7 +395,7 @@ export const ProfileItem = (props: Props) => {
       </Menu>
 
       <ProfileEditorViewer
-        open={fileOpen}
+        open={open}
         profileItem={itemData}
         chainLogs={chainLogs}
         type="clash"
@@ -430,7 +405,7 @@ export const ProfileItem = (props: Props) => {
             onReactivate();
           }
         }}
-        onClose={() => setFileOpen(false)}
+        onClose={() => setOpen(false)}
       />
       <ConfirmViewer
         title={t("Confirm deletion")}
