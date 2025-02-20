@@ -377,7 +377,7 @@ const ProfilePage = () => {
           sx={{
             pl: "10px",
             pr: "10px",
-            height: "94%",
+            height: "calc(100% - 48px)",
             overflowY: "auto",
           }}
         >
@@ -416,7 +416,7 @@ const ProfilePage = () => {
             flexItem
             sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
           ></Divider>
-          <Box sx={{ mt: 1.5 }}>
+          <Box sx={{ mt: 1.5, mb: "10px" }}>
             <Grid2 container spacing={{ xs: 1, lg: 1 }}>
               <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
                 <ProfileMore
