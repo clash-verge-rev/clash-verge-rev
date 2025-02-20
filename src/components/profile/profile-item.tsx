@@ -6,7 +6,11 @@ import {
   updateProfile,
   viewProfile,
 } from "@/services/cmds";
-import { useSetLoadingCache, useThemeMode } from "@/services/states";
+import {
+  useLoadingCache,
+  useSetLoadingCache,
+  useThemeMode,
+} from "@/services/states";
 import { cn } from "@/utils";
 import parseTraffic from "@/utils/parse-traffic";
 import {
@@ -76,6 +80,7 @@ export const ProfileItem = (props: Props) => {
     setAnchorEl(null);
   }
   const [position, setPosition] = useState({ left: 0, top: 0 });
+  const loadingCache = useLoadingCache();
   const setLoadingCache = useSetLoadingCache();
 
   const { uid, name = "Profile", extra, updated = 0 } = itemData;
@@ -92,7 +97,7 @@ export const ProfileItem = (props: Props) => {
     100,
   );
 
-  const [loading, setLoading] = useState(false);
+  const loading = loadingCache[uid] || false;
 
   // interval update fromNow field
   const [, setRefresh] = useState({});
