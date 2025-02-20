@@ -473,7 +473,7 @@ export const ProxyGroups = (props: Props) => {
     <div style={{ position: "relative", height: "100%" }}>
       <Virtuoso
         ref={virtuosoRef}
-        style={{ height: "calc(100% - 16px)" }}
+        style={{ height: "calc(100% - 14px)" }}
         totalCount={renderList.length}
         increaseViewportBy={{ top: 256, bottom: 256 }}
         overscan={150}
@@ -482,7 +482,7 @@ export const ProxyGroups = (props: Props) => {
           scrollerRef.current = ref as Element;
         }}
         components={{
-          Footer: () => <div style={{ height: "16px" }} />,
+          Footer: () => <div style={{ height: "8px" }} />,
         }}
         itemContent={(index) => (
           <ProxyRender
