@@ -35,11 +35,11 @@ pub struct PrfItem {
     pub file_data: Option<String>,
 
     // =========== chain ===========
-    // this chain is belong to profile
+    /// this chain is belong to profile
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent: Option<String>,
 
-    // enable chain
+    /// enable chain
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enable: Option<bool>,
 

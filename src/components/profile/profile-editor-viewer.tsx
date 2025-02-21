@@ -101,6 +101,7 @@ export const ProfileEditorViewer = (props: Props) => {
 
   // chain
   const [chainChecked, setChainChecked] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [expand, setExpand] = useState(isEnhanced ? true : false);
   const [chain, setChain] = useState<IProfileItem[]>([]);
   const viewerRef = useRef<ProfileViewerRef>(null);
@@ -110,7 +111,6 @@ export const ProfileEditorViewer = (props: Props) => {
   const [logs, setLogs] = useState<LogMessage[]>(
     chainLogs[editProfile.uid] || [],
   );
-  // const [logs, setLogs] = useState(chainLogs[editProfile.uid] || []);
   const hasError = isScriptMerge && !!logs?.find((item) => item.exception);
 
   // update profile
@@ -200,13 +200,20 @@ export const ProfileEditorViewer = (props: Props) => {
         id: "saveProfile",
         label: "save profile",
         keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
-        keybindingContext: "(textInputFocus && saveChain) || !editChain",
+        keybindingContext: "textInputFocus",
         run: async (ed) => {
           const currentProfileUid = ed.getModel()?.uri.query.split("=").pop();
           const val = instanceRef.current?.getValue();
-          if (currentProfileUid && val !== undefined) {
-            await saveProfileFile(currentProfileUid, val);
-            onChange?.();
+          if (currentProfileUid && val) {
+            let checkSuccess = saveChainCondition.current?.get() ?? false;
+            if (!checkSuccess) {
+              checkSuccess = await handleRunCheck(currentProfileUid);
+            }
+            if (checkSuccess) {
+              await saveProfileFile(currentProfileUid, val);
+              Notice.success(t("Save Content Successfully"), 1000);
+              onChange?.();
+            }
           }
         },
       });
@@ -340,27 +347,33 @@ export const ProfileEditorViewer = (props: Props) => {
   const handleRunCheck = async (currentProfileUid: string) => {
     try {
       const value = instanceRef.current?.getValue();
-      if (value == undefined) return;
+      if (value == undefined) return false;
 
+      setChecking(true);
       const result = await testMergeChain(
         type === "clash" ? profileUid : null,
         currentProfileUid,
         value,
       );
       setChainChecked(true);
-      saveChainCondition.current?.set(true);
       const currentLogs = result.logs[currentProfileUid] || [];
       setLogs(currentLogs);
       if (currentLogs) {
         if (currentLogs[0]?.exception) {
           Notice.error(t("Script Run Check Failed"));
-          return;
+          saveChainCondition.current?.set(false);
+          return false;
         }
       }
       Notice.success(t("Script Run Check Successful"));
+      saveChainCondition.current?.set(true);
+      return true;
     } catch (error: any) {
       saveChainCondition.current?.set(false);
       Notice.error(error);
+      return false;
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -721,6 +734,7 @@ export const ProfileEditorViewer = (props: Props) => {
                 )}
                 <Tooltip title={t("Run Check")} placement="left">
                   <IconButton
+                    loading={checking}
                     aria-label="test"
                     color={
                       chainChecked

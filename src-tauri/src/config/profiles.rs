@@ -256,11 +256,11 @@ impl IProfiles {
     }
 
     /// update the item value
-    pub fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
+    pub fn patch_item(&mut self, uid: &str, item: PrfItem) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
-            if each.uid == Some(uid.clone()) {
+            if each.uid == Some(uid.to_string()) {
                 patch!(each, item, itype);
                 patch!(each, item, name);
                 patch!(each, item, desc);

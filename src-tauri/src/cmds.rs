@@ -1,7 +1,11 @@
 use crate::{
     config::*,
     core::*,
-    enhance::{self, chain::ChainItem, LogMessage, MergeResult},
+    enhance::{
+        self,
+        chain::{ChainItem, ScopeType},
+        LogMessage, MergeResult,
+    },
     feat,
     utils::{dirs, help, resolve, tmpl},
 };
@@ -134,11 +138,26 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
 /// 修改某个profile item的
 #[tauri::command]
 pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
-    wrap_err!(Config::profiles().data().patch_item(uid, profile.clone()))?;
+    wrap_err!(Config::profiles().data().patch_item(&uid, profile.clone()))?;
     wrap_err!(timer::Timer::global().refresh_profiles())?;
     if profile.enable.is_some() {
-        wrap_err!(CoreManager::global().update_config(false).await)?;
-        handle::Handle::refresh_clash();
+        // this is a chain to toggle enable
+        let profiles = Config::profiles();
+        let profiles = profiles.latest().clone();
+        let result_item = wrap_err!(profiles.get_item(&uid))?;
+        match result_item.scope {
+            Some(ScopeType::Global) => {
+                wrap_err!(CoreManager::global().update_config(false).await)?;
+                handle::Handle::refresh_clash();
+            }
+            Some(ScopeType::Specific) => {
+                if result_item.parent == profiles.get_current() {
+                    wrap_err!(CoreManager::global().update_config(false).await)?;
+                    handle::Handle::refresh_clash();
+                }
+            }
+            None => {}
+        }
     }
     Ok(())
 }
