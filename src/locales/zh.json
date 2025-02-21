@@ -303,6 +303,7 @@
 
   "Script Run Check Failed": "脚本运行检查失败, 请检查脚本是否正确",
   "Script Run Check Successful": "脚本运行检查成功, 可正常运行",
+  "Save Content Successfully": "内容保存成功",
 
   "WebDav Backup": "WebDav 备份",
   "Recovery": "恢复",

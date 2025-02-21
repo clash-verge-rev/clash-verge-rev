@@ -202,17 +202,23 @@ export const ProfileEditorViewer = (props: Props) => {
         keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
         keybindingContext: "textInputFocus",
         run: async (ed) => {
-          const currentProfileUid = ed.getModel()?.uri.query.split("=").pop();
+          const uri = ed.getModel()?.uri;
+          const uid = uri?.query.split("=").pop();
           const val = instanceRef.current?.getValue();
-          if (currentProfileUid && val) {
-            let checkSuccess = saveChainCondition.current?.get() ?? false;
-            if (!checkSuccess) {
-              checkSuccess = await handleRunCheck(currentProfileUid);
+          if (uid && val) {
+            let checkSuccess = true;
+            if (editChainCondition.current?.get()) {
+              checkSuccess = saveChainCondition.current?.get() ?? false;
+              if (!checkSuccess) {
+                checkSuccess = await handleRunCheck(uid);
+              }
             }
             if (checkSuccess) {
-              await saveProfileFile(currentProfileUid, val);
-              Notice.success(t("Save Content Successfully"), 1000);
-              onChange?.();
+              await saveProfileFile(uid, val);
+              setTimeout(() => {
+                Notice.success(t("Save Content Successfully"), 1000);
+                onChange?.();
+              }, 1000);
             }
           }
         },
