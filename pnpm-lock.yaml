@@ -111,8 +111,8 @@ importers:
         specifier: ^15.1.1
         version: 15.4.1(i18next@24.2.2(typescript@5.7.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-markdown:
-        specifier: ^9.0.1
-        version: 9.1.0(@types/react@18.3.18)(react@18.3.1)
+        specifier: ^10.0.0
+        version: 10.0.0(@types/react@18.3.18)(react@18.3.1)
       react-router-dom:
         specifier: ^7.0.0
         version: 7.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3479,8 +3479,8 @@ packages:
   react-is@19.0.0:
     resolution: {integrity: sha512-H91OHcwjZsbq3ClIDHMzBShc1rotbfACdWENsmEf0IFvZ3FgGPtdHMcsv45bQ1hAbgdfiA8SnxTKfDS+x/8m2g==}
 
-  react-markdown@9.1.0:
-    resolution: {integrity: sha512-xaijuJB0kzGiUdG7nc2MOMDUDBWPyGAjZtUrow9XxUeua8IqeP+VlIfAZ3bphpcLTnSZXz6z9jcVC/TCwbfgdw==}
+  react-markdown@10.0.0:
+    resolution: {integrity: sha512-4mTz7Sya/YQ1jYOrkwO73VcFdkFJ8L8I9ehCxdcV0XrClHyOJGKbBk5FR4OOOG+HnyKw5u+C/Aby9TwinCteYA==}
     peerDependencies:
       '@types/react': '>=18'
       react: '>=18'
@@ -7643,7 +7643,7 @@ snapshots:
 
   react-is@19.0.0: {}
 
-  react-markdown@9.1.0(@types/react@18.3.18)(react@18.3.1):
+  react-markdown@10.0.0(@types/react@18.3.18)(react@18.3.1):
     dependencies:
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
