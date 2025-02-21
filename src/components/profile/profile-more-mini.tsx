@@ -27,9 +27,11 @@ import { ProfileViewer, ProfileViewerRef } from "./profile-viewer";
 
 interface Props {
   item: IProfileItem;
+  isDragging?: boolean;
+  reactivating?: boolean;
   selected: boolean;
   logs?: LogMessage[];
-  onEnableChangeCallback?: (enable: boolean) => Promise<void>;
+  onToggleEnableCallback?: (enable: boolean) => Promise<void>;
   onClick?: () => Promise<void>;
   onInfoChangeCallback?: () => Promise<void>;
   onDeleteCallback?: () => Promise<void>;
@@ -38,9 +40,11 @@ interface Props {
 export default function ProfileMoreMini(props: Props) {
   const {
     item,
+    isDragging,
+    reactivating,
     selected,
     logs,
-    onEnableChangeCallback,
+    onToggleEnableCallback,
     onClick,
     onInfoChangeCallback,
     onDeleteCallback,
@@ -60,17 +64,25 @@ export default function ProfileMoreMini(props: Props) {
     theme.palette.mode === "light"
       ? alpha(theme.palette.primary.main, 0.25)
       : alpha(theme.palette.primary.main, 0.35);
+  const draggingBackgroundColor =
+    theme.palette.mode === "light"
+      ? alpha(theme.palette.primary.main, 0.45)
+      : alpha(theme.palette.primary.main, 0.55);
   return (
     <>
-      <div className="my-1 flex h-[56px] w-full cursor-pointer items-center justify-between">
+      <div className="my-1 flex h-[56px] w-full cursor-pointer items-center justify-between rounded-md bg-comment">
         <div
           style={{
             backgroundColor: item.enable
-              ? selectedBackgroundColor
-              : unselectedbackgroundColor,
+              ? isDragging
+                ? draggingBackgroundColor
+                : selectedBackgroundColor
+              : isDragging
+                ? draggingBackgroundColor
+                : unselectedbackgroundColor,
           }}
           className={cn(
-            "relative flex w-full items-center justify-between overflow-hidden rounded-md p-1 shadow-sm",
+            "relative flex h-full w-full items-center justify-between overflow-hidden rounded-md p-1 shadow-sm",
             {
               "border-0 !border-l-2 border-solid border-primary-main":
                 item.enable,
@@ -88,7 +100,7 @@ export default function ProfileMoreMini(props: Props) {
                   setToggleEnabling(true);
                   const nextEnable = !item.enable;
                   await patchProfile(item.uid, { ...item, enable: nextEnable });
-                  await onEnableChangeCallback?.(nextEnable);
+                  await onToggleEnableCallback?.(nextEnable);
                 } finally {
                   setToggleEnabling(false);
                 }
@@ -145,7 +157,7 @@ export default function ProfileMoreMini(props: Props) {
             <Edit fontSize="inherit" />
           </IconButton>
 
-          {deleting && (
+          {(deleting || reactivating) && (
             <Box
               sx={{
                 position: "absolute",

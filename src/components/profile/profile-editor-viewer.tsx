@@ -1,5 +1,6 @@
 import {
   BaseDialog,
+  DraggableItem,
   Notice,
   ScrollableText,
   SwitchLovely,
@@ -8,10 +9,12 @@ import { LogViewer } from "@/components/profile/log-viewer";
 import { LogMessage } from "@/components/profile/profile-more";
 import { useWindowSize } from "@/hooks/use-window-size";
 import {
+  enhanceProfiles,
   getChains,
   getTemplate,
   patchProfile,
   readProfileFile,
+  reorderProfile,
   saveProfileFile,
   testMergeChain,
 } from "@/services/cmds";
@@ -42,7 +45,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { getVersion } from "@tauri-apps/api/app";
-import { useLockFn } from "ahooks";
+import { useLockFn, useMemoizedFn } from "ahooks";
 import { isEqual } from "lodash-es";
 import { IDisposable } from "monaco-editor";
 import { nanoid } from "nanoid";
@@ -52,6 +55,18 @@ import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 import ProfileMoreMini from "./profile-more-mini";
 import { ProfileViewer, ProfileViewerRef } from "./profile-viewer";
+import {
+  closestCenter,
+  defaultDropAnimationSideEffects,
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DropAnimation,
+  MouseSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { arrayMove, SortableContext } from "@dnd-kit/sortable";
 
 interface Props {
   title?: string | ReactNode;
@@ -104,7 +119,9 @@ export const ProfileEditorViewer = (props: Props) => {
   const [checking, setChecking] = useState(false);
   const [expand, setExpand] = useState(isEnhanced ? true : false);
   const [chain, setChain] = useState<IProfileItem[]>([]);
+  const enabledChainUids = chain.filter((i) => i.enable).map((i) => i.uid);
   const viewerRef = useRef<ProfileViewerRef>(null);
+  const [reactivating, setReactivating] = useState(false);
 
   // script chain
   const [logOpen, setLogOpen] = useState(false);
@@ -112,6 +129,47 @@ export const ProfileEditorViewer = (props: Props) => {
     chainLogs[editProfile.uid] || [],
   );
   const hasError = isScriptMerge && !!logs?.find((item) => item.exception);
+
+  // sortable
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+  );
+  // const [profileList, setProfileList] = useState<IProfileItem[]>([]);
+  // const [chainList, setChainList] = useState<IProfileItem[]>([]);
+  const dropAnimationConfig: DropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: { active: { opacity: "0.5" } },
+    }),
+  };
+  const [draggingItem, setDraggingItem] = useState<IProfileItem | null>(null);
+  const handleChainDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
+    setDraggingItem(null);
+    const { active, over } = event;
+    if (over) {
+      const activeId = active.id.toString();
+      const overId = over.id.toString();
+      if (activeId !== overId) {
+        const activeIndex = chain.findIndex((item) => item.uid === activeId);
+        const overIndex = chain.findIndex((item) => item.uid === overId);
+        const newChainList = arrayMove(chain, activeIndex, overIndex);
+        const newEnabledChainUids = newChainList
+          .filter((i) => i.enable)
+          .map((item) => item.uid);
+        const needToEnhance = !isEqual(enabledChainUids, newEnabledChainUids);
+        setChain(newChainList);
+        await reorderProfile(activeId, overId);
+        if (needToEnhance) {
+          // await onEnhance();
+          // mutate("getRuntimeLogs");
+          setReactivating(true);
+          await enhanceProfiles();
+          setReactivating(false);
+        }
+        mutate("getRuntimeLogs");
+        await refreshChain();
+      }
+    }
+  });
 
   // update profile
   const { control, watch, register, ...formIns } = useForm<IProfileItem>({
@@ -676,25 +734,69 @@ export const ProfileEditorViewer = (props: Props) => {
                 />
 
                 <div className="overflow-auto">
-                  {chain.map((item, index) => (
-                    <ProfileMoreMini
-                      key={index}
-                      item={item}
-                      selected={item.uid === editProfile.uid}
-                      logs={chainLogs[item.uid]}
-                      onEnableChangeCallback={async (enabled) => {
-                        mutate("getRuntimeLogs");
-                        await refreshChain();
-                      }}
-                      onClick={async () => {
-                        await handleChainClick(item);
-                      }}
-                      onInfoChangeCallback={refreshChain}
-                      onDeleteCallback={async () => {
-                        await handleChainDeleteCallBack(item);
-                      }}
-                    />
-                  ))}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragOver={(event) => {
+                      const { over } = event;
+                      if (over) {
+                        const item = chain.find(
+                          (i) => i.uid === event.active.id,
+                        )!;
+                        setDraggingItem(item);
+                      }
+                    }}
+                    onDragEnd={(e) => handleChainDragEnd(e)}
+                    onDragCancel={() => setDraggingItem(null)}>
+                    <SortableContext items={chain.map((i) => i.uid)}>
+                      {chain.map((item, index) => (
+                        <DraggableItem key={item.uid} id={item.uid}>
+                          <ProfileMoreMini
+                            key={item.uid}
+                            item={item}
+                            isDragging={item.uid === draggingItem?.uid}
+                            reactivating={reactivating && item.enable}
+                            selected={item.uid === editProfile.uid}
+                            logs={chainLogs[item.uid]}
+                            onToggleEnableCallback={async (enabled) => {
+                              mutate("getRuntimeLogs");
+                              await refreshChain();
+                            }}
+                            onClick={async () => {
+                              await handleChainClick(item);
+                            }}
+                            onInfoChangeCallback={refreshChain}
+                            onDeleteCallback={async () => {
+                              await handleChainDeleteCallBack(item);
+                            }}
+                          />
+                        </DraggableItem>
+                      ))}
+                    </SortableContext>
+                    <DragOverlay dropAnimation={dropAnimationConfig}>
+                      {draggingItem && (
+                        <ProfileMoreMini
+                          key={draggingItem.uid}
+                          item={draggingItem}
+                          isDragging={true}
+                          reactivating={reactivating && draggingItem.enable}
+                          selected={draggingItem.uid === editProfile.uid}
+                          logs={chainLogs[draggingItem.uid]}
+                          onToggleEnableCallback={async (enabled) => {
+                            mutate("getRuntimeLogs");
+                            await refreshChain();
+                          }}
+                          onClick={async () => {
+                            await handleChainClick(draggingItem);
+                          }}
+                          onInfoChangeCallback={refreshChain}
+                          onDeleteCallback={async () => {
+                            await handleChainDeleteCallBack(draggingItem);
+                          }}
+                        />
+                      )}
+                    </DragOverlay>
+                  </DndContext>
                 </div>
               </>
             )}

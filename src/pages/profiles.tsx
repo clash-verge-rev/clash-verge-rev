@@ -91,10 +91,8 @@ const ProfilePage = () => {
   // distinguish type
   const { profileItems, globalChains, enabledChainUids } = useMemo(() => {
     const items = profiles.items || [];
-
     const type_p = ["local", "remote"];
     const type_c = ["merge", "script"];
-
     const profileItems = items.filter((i) => i && type_p.includes(i.type!));
     const globalChains = items.filter(
       (i) => i && type_c.includes(i.type!) && i.scope === "global",
