@@ -53,7 +53,7 @@ import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useLockFn, useMemoizedFn } from "ahooks";
-import { throttle } from "lodash-es";
+import { isEqual, throttle } from "lodash-es";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -186,8 +186,16 @@ const ProfilePage = () => {
           (item) => item.uid === activeId,
         );
         const overIndex = chainList.findIndex((item) => item.uid === overId);
-        setChainList(arrayMove(chainList, activeIndex, overIndex));
+        const newChainList = arrayMove(chainList, activeIndex, overIndex);
+        const newEnabledChainUids = newChainList
+          .filter((i) => i.enable)
+          .map((item) => item.uid);
+        const needToEnhance = !isEqual(enabledChainUids, newEnabledChainUids);
+        setChainList(newChainList);
         await reorderProfile(activeId, overId);
+        if (needToEnhance) {
+          await onEnhance();
+        }
         mutateProfiles();
       }
     }
