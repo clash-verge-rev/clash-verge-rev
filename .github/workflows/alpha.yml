@@ -67,6 +67,9 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
+      - name: Alpha Version update
+        run: pnpm run fix-alpha-version
+
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
