@@ -60,6 +60,9 @@ const handleNoticeMessage = (
     case "config_validate::boot_error":
       Notice.error(t("Boot Config Validation Failed"));
       break;
+    case "config_validate::core_change":
+      Notice.error(t("Core Change Config Validation Failed"));
+      break;
     case "config_validate::error":
       Notice.error(t("Config Validation Failed"));
       break;

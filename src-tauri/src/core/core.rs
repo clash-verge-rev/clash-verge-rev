@@ -2,7 +2,7 @@ use crate::config::*;
 use crate::core::{clash_api, handle, service};
 use crate::core::tray::Tray;
 use crate::log_err;
-use crate::utils::dirs;
+use crate::utils::{dirs, help};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
@@ -29,28 +29,6 @@ impl CoreManager {
         // 启动clash
         log_err!(Self::global().start_core().await);
         log::trace!("run core end");
-        Ok(())
-    }
-
-    /// 检查订阅是否正确
-    pub async fn check_config(&self) -> Result<()> {
-        let config_path = Config::generate_file(ConfigType::Check)?;
-        let config_path = dirs::path_to_str(&config_path)?;
-
-        let clash_core = { Config::verge().latest().clash_core.clone() };
-        let clash_core = clash_core.unwrap_or("verge-mihomo".into());
-
-        let test_dir = dirs::app_home_dir()?.join("test");
-        let test_dir = dirs::path_to_str(&test_dir)?;
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-
-        let _ = app_handle
-            .shell()
-            .sidecar(clash_core)?
-            .args(["-t", "-d", test_dir, "-f", config_path])
-            .output()
-            .await?;
-
         Ok(())
     }
 
@@ -112,6 +90,23 @@ impl CoreManager {
         Ok(())
     }
 
+    /// 使用默认配置
+    pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
+        let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
+        *Config::runtime().draft() = IRuntime {
+            config: Some(Config::clash().latest().0.clone()),
+            exists_keys: vec![],
+            chain_logs: Default::default(),
+        };
+        help::save_yaml(
+            &runtime_path,
+            &Config::clash().latest().0,
+            Some("# Clash Verge Runtime"),
+        )?;
+        handle::Handle::notice_message(msg_type, msg_content);
+        Ok(())
+    }
+
     /// 切换核心
     pub async fn change_core(&self, clash_core: Option<String>) -> Result<()> {
         let clash_core = clash_core.ok_or(anyhow::anyhow!("clash core is null"))?;
@@ -122,13 +117,39 @@ impl CoreManager {
         }
 
         log::info!(target: "app", "change core to `{clash_core}`");
-
         Config::verge().draft().clash_core = Some(clash_core);
-
-        // 更新订阅
         Config::generate().await?;
 
-        self.check_config().await?;
+        // 验证配置
+        println!("[切换内核] 开始验证配置");
+        match self.validate_config().await {
+            Ok((is_valid, error_msg)) => {
+                if !is_valid {
+                    println!("[切换内核] 配置验证失败: {}", error_msg);
+                    if error_msg.is_empty() {
+                        self.use_default_config(
+                            "config_validate::core_change",
+                            "",
+                        ).await?;
+                    } else {
+                        self.use_default_config(
+                            "config_validate::stderr_error",
+                            &error_msg,
+                        ).await?;
+                    }
+                } else {
+                    println!("[切换内核] 配置验证成功");
+                    handle::Handle::notice_message("config_validate::success", "");
+                }
+            }
+            Err(err) => {
+                println!("[切换内核] 验证进程执行失败: {}", err);
+                self.use_default_config(
+                    "config_validate::process_terminated",
+                    "",
+                ).await?;
+            }
+        }
 
         match self.restart_core().await {
             Ok(_) => {
