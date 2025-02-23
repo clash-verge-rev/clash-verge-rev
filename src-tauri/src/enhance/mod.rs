@@ -154,7 +154,7 @@ pub fn get_pre_merge_result(
     let mut config = profiles.current_mapping()?.clone();
 
     // 保存脚本日志
-    let mut result_map = HashMap::new();
+    let mut script_logs = HashMap::new();
 
     match profile_uid {
         Some(profile_uid) => {
@@ -163,19 +163,8 @@ pub fn get_pre_merge_result(
 
             // excute all enabled global chain
             let global_chain = profiles.get_profile_chains(None, EnableFilter::Enable);
-            for chain in global_chain {
-                match chain.excute(config.clone()) {
-                    Ok(res) => {
-                        config = res.config;
-                        if let Some(logs) = res.logs {
-                            result_map.extend(logs);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!(target: "app", "global chain [{:?}] excute failed, error: {:?}", chain.uid, e);
-                    }
-                }
-            }
+            excute_chains(&mut config, &global_chain, &mut script_logs);
+
             // get new profile chain, index form 0 to modified chain index.
             let profile_chain = {
                 let chain = profiles.get_profile_chains(Some(profile_uid), EnableFilter::Enable);
@@ -185,19 +174,7 @@ pub fn get_pre_merge_result(
                 }
             };
             // execute new profile chain
-            for chain in profile_chain {
-                match chain.excute(config.clone()) {
-                    Ok(res) => {
-                        config = res.config;
-                        if let Some(logs) = res.logs {
-                            result_map.extend(logs);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!(target: "app", "profile chain [{:?}] excute failed, error: {:?}", chain.uid, e);
-                    }
-                }
-            }
+            excute_chains(&mut config, &profile_chain, &mut script_logs);
         }
         None => {
             let global_chain = match profiles.chain.as_ref() {
@@ -215,26 +192,14 @@ pub fn get_pre_merge_result(
                 None => vec![],
             };
             // global chain
-            for chain in global_chain {
-                match chain.excute(config.clone()) {
-                    Ok(res) => {
-                        config = res.config;
-                        if let Some(logs) = res.logs {
-                            result_map.extend(logs);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!(target: "app", "global chain [{:?}] excute failed, error: {:?}", chain.uid, e);
-                    }
-                }
-            }
+            excute_chains(&mut config, &global_chain, &mut script_logs);
         }
     };
     // 排序
     config = use_sort(config);
     Ok(MergeResult {
         config,
-        logs: result_map,
+        logs: script_logs,
     })
 }
 
@@ -292,7 +257,6 @@ pub async fn test_merge_chain(
         for (key, value) in clash_config.into_iter() {
             config.insert(key, value);
         }
-
         let enable_tun = Config::clash().latest().get_enable_tun();
         config = use_tun(config, enable_tun);
         config = use_sort(config);
@@ -304,4 +268,24 @@ pub async fn test_merge_chain(
         config,
         logs: result_map,
     })
+}
+
+fn excute_chains(
+    config: &mut Mapping,
+    chains: &Vec<ChainItem>,
+    script_logs: &mut HashMap<String, Vec<LogMessage>>,
+) {
+    for chain in chains {
+        match chain.excute(config.clone()) {
+            Ok(res) => {
+                *config = res.config;
+                if let Some(logs) = res.logs {
+                    script_logs.extend(logs);
+                }
+            }
+            Err(e) => {
+                log::error!(target: "app", "excute chain [{:?}] failed, error: {:?}", chain.uid, e);
+            }
+        }
+    }
 }

@@ -68,6 +68,7 @@ export default function ProfileMoreMini(props: Props) {
     theme.palette.mode === "light"
       ? alpha(theme.palette.primary.main, 0.45)
       : alpha(theme.palette.primary.main, 0.55);
+
   return (
     <>
       <div className="my-1 flex h-[56px] w-full cursor-pointer items-center justify-between rounded-md bg-comment">

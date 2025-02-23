@@ -67,6 +67,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext } from "@dnd-kit/sortable";
+import { useProfiles } from "@/hooks/use-profiles";
 
 interface Props {
   title?: string | ReactNode;
@@ -94,8 +95,10 @@ export const ProfileEditorViewer = (props: Props) => {
   } = props;
   const { t } = useTranslation();
   const { size } = useWindowSize();
-
+  const { current } = useProfiles();
   const profileUid = profileItem.uid;
+  const isRunningProfile = current?.uid === profileUid;
+
   const [editProfile, setEditProfile] = useState<IProfileItem>(profileItem);
   const [originContent, setOriginContent] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState("");
@@ -134,14 +137,13 @@ export const ProfileEditorViewer = (props: Props) => {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
   );
-  // const [profileList, setProfileList] = useState<IProfileItem[]>([]);
-  // const [chainList, setChainList] = useState<IProfileItem[]>([]);
   const dropAnimationConfig: DropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
       styles: { active: { opacity: "0.5" } },
     }),
   };
   const [draggingItem, setDraggingItem] = useState<IProfileItem | null>(null);
+
   const handleChainDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
     setDraggingItem(null);
     const { active, over } = event;
@@ -155,17 +157,16 @@ export const ProfileEditorViewer = (props: Props) => {
         const newEnabledChainUids = newChainList
           .filter((i) => i.enable)
           .map((item) => item.uid);
-        const needToEnhance = !isEqual(enabledChainUids, newEnabledChainUids);
+        const needToEnhance =
+          !isEqual(enabledChainUids, newEnabledChainUids) && isRunningProfile;
         setChain(newChainList);
         await reorderProfile(activeId, overId);
         if (needToEnhance) {
-          // await onEnhance();
-          // mutate("getRuntimeLogs");
           setReactivating(true);
           await enhanceProfiles();
           setReactivating(false);
+          mutate("getRuntimeLogs");
         }
-        mutate("getRuntimeLogs");
         await refreshChain();
       }
     }
@@ -272,10 +273,14 @@ export const ProfileEditorViewer = (props: Props) => {
               }
             }
             if (checkSuccess) {
+              if (isRunningProfile) {
+                setReactivating(true);
+              }
               await saveProfileFile(uid, val);
               setTimeout(() => {
                 Notice.success(t("Save Content Successfully"), 1000);
                 onChange?.();
+                setReactivating(false);
               }, 1000);
             }
           }
@@ -419,6 +424,7 @@ export const ProfileEditorViewer = (props: Props) => {
         currentProfileUid,
         value,
       );
+      setChecking(false);
       setChainChecked(true);
       const currentLogs = result.logs[currentProfileUid] || [];
       setLogs(currentLogs);
