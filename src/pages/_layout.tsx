@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes, useNavigate } from "react-router-dom";
 import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
@@ -36,91 +36,116 @@ dayjs.extend(relativeTime);
 
 const OS = getSystem();
 
+// 通知处理函数
+const handleNoticeMessage = (
+  status: string,
+  msg: string,
+  t: (key: string) => string,
+  navigate: (path: string, options?: any) => void,
+) => {
+  console.log("[通知监听] 收到消息:", status, msg);
+
+  switch (status) {
+    case "import_sub_url::ok":
+      navigate("/profile", { state: { current: msg } });
+      Notice.success(t("Import Subscription Successful"));
+      break;
+    case "import_sub_url::error":
+      navigate("/profile");
+      Notice.error(msg);
+      break;
+    case "set_config::error":
+      Notice.error(msg);
+      break;
+    case "config_validate::boot_error":
+      Notice.error(t("Boot Config Validation Failed"));
+      break;
+    case "config_validate::error":
+      Notice.error(t("Config Validation Failed"));
+      break;
+    case "config_validate::process_terminated":
+      Notice.error(t("Config Validation Process Terminated"));
+      break;
+    case "config_validate::stderr_error":
+      Notice.error(msg);
+      break;
+  }
+};
+
 const Layout = () => {
   const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
-
   const { verge } = useVerge();
-  const { language, start_page } = verge || {};
+  const { language, start_page } = verge ?? {};
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
   const { addListener, setupCloseListener } = useListen();
-  if (!routersEles) return null;
 
-  setupCloseListener();
+  const handleNotice = useCallback(
+    (payload: [string, string]) => {
+      const [status, msg] = payload;
+      handleNoticeMessage(status, msg, t, navigate);
+    },
+    [t, navigate],
+  );
 
+  // 设置监听器
   useEffect(() => {
-    addListener("verge://refresh-clash-config", async () => {
-      // the clash info may be updated
-      await getAxios(true);
-      mutate("getProxies");
-      mutate("getVersion");
-      mutate("getClashConfig");
-      mutate("getProxyProviders");
-    });
+    const listeners = [
+      // 配置更新监听
+      addListener("verge://refresh-clash-config", async () => {
+        await getAxios(true);
+        mutate("getProxies");
+        mutate("getVersion");
+        mutate("getClashConfig");
+        mutate("getProxyProviders");
+      }),
 
-    // update the verge config
-    addListener("verge://refresh-verge-config", () => mutate("getVergeConfig"));
+      // verge 配置更新监听
+      addListener("verge://refresh-verge-config", () =>
+        mutate("getVergeConfig"),
+      ),
 
-    // 设置提示监听
-    addListener("verge://notice-message", ({ payload }) => {
-      const [status, msg] = payload as [string, string];
-      switch (status) {
-        case "import_sub_url::ok":
-          navigate("/profile", { state: { current: msg } });
+      // 通知消息监听
+      addListener("verge://notice-message", ({ payload }) =>
+        handleNotice(payload as [string, string]),
+      ),
+    ];
 
-          Notice.success(t("Import Subscription Successful"));
-          break;
-        case "import_sub_url::error":
-          navigate("/profile");
-          Notice.error(msg);
-          break;
-        case "set_config::error":
-          Notice.error(msg);
-          break;
-        case "config_validate::error":
-          Notice.error(t("Config Validation Failed"));
-          break;
-        case "config_validate::process_terminated":
-          Notice.error(t("Config Validation Process Terminated"));
-          break;
-        case "config_validate::stderr_error":
-          Notice.error(msg);
-          break;
-        default:
-          break;
-      }
-    });
-
-    setTimeout(async () => {
-      portableFlag = await getPortableFlag();
-      await appWindow.unminimize();
-      await appWindow.show();
-      await appWindow.setFocus();
-    }, 50);
-
-    // 监听窗口显示/隐藏事件
-    const setupListeners = async () => {
-      const unlisten1 = await listen("verge://hide-window", () => {
-        appWindow.hide();
-      });
-
-      const unlisten2 = await listen("verge://show-window", () => {
-        appWindow.show();
-      });
+    // 设置窗口显示/隐藏监听
+    const setupWindowListeners = async () => {
+      const [hideUnlisten, showUnlisten] = await Promise.all([
+        listen("verge://hide-window", () => appWindow.hide()),
+        listen("verge://show-window", () => appWindow.show()),
+      ]);
 
       return () => {
-        unlisten1();
-        unlisten2();
+        hideUnlisten();
+        showUnlisten();
       };
     };
 
-    setupListeners();
-  }, []);
+    // 初始化
+    setupCloseListener();
+    const cleanupWindow = setupWindowListeners();
 
+    // 清理函数
+    return () => {
+      // 清理主要监听器
+      listeners.forEach((listener) => {
+        if (typeof listener.then === "function") {
+          listener.then((unlisten) => unlisten());
+        }
+      });
+      // 清理窗口监听器
+      cleanupWindow.then((cleanup) => cleanup());
+    };
+  }, [handleNotice]);
+
+  // 语言和起始页设置
   useEffect(() => {
     if (language) {
       dayjs.locale(language === "zh" ? "zh-cn" : language);
@@ -129,7 +154,9 @@ const Layout = () => {
     if (start_page) {
       navigate(start_page);
     }
-  }, [language, start_page]);
+  }, [language, start_page, navigate]);
+
+  if (!routersEles) return null;
 
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
@@ -139,23 +166,18 @@ const Layout = () => {
           elevation={0}
           className={`${OS} layout`}
           onContextMenu={(e) => {
-            // only prevent it on Windows
-            const validList = ["input", "textarea"];
-            const target = e.currentTarget;
             if (
               OS === "windows" &&
-              !(
-                validList.includes(target.tagName.toLowerCase()) ||
-                target.isContentEditable
-              )
+              !["input", "textarea"].includes(
+                e.currentTarget.tagName.toLowerCase(),
+              ) &&
+              !e.currentTarget.isContentEditable
             ) {
               e.preventDefault();
             }
           }}
           sx={[
-            ({ palette }) => ({
-              bgcolor: palette.background.paper,
-            }),
+            ({ palette }) => ({ bgcolor: palette.background.paper }),
             {
               borderRadius: "8px",
               border: "2px solid var(--divider-color)",
@@ -186,7 +208,7 @@ const Layout = () => {
                 />
                 <LogoSvg fill={isDark ? "white" : "black"} />
               </div>
-              {<UpdateButton className="the-newbtn" />}
+              <UpdateButton className="the-newbtn" />
             </div>
 
             <List className="the-menu">
@@ -207,16 +229,14 @@ const Layout = () => {
           </div>
 
           <div className="layout__right">
-            {
-              <div className="the-bar">
-                <div
-                  className="the-dragbar"
-                  data-tauri-drag-region="true"
-                  style={{ width: "100%" }}
-                ></div>
-                {OS !== "macos" && <LayoutControl />}
-              </div>
-            }
+            <div className="the-bar">
+              <div
+                className="the-dragbar"
+                data-tauri-drag-region="true"
+                style={{ width: "100%" }}
+              />
+              {OS !== "macos" && <LayoutControl />}
+            </div>
 
             <TransitionGroup className="the-content">
               <CSSTransition
