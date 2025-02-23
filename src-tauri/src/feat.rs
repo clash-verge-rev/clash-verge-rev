@@ -17,6 +17,7 @@ use std::fs;
 use tauri::Manager;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+use std::env;
 
 // 打开面板
 #[allow(dead_code)]
@@ -439,10 +440,13 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
 
 /// copy env variable
 pub fn copy_clash_env() {
+    // 从环境变量获取IP地址，默认127.0.0.1
+    let clash_verge_rev_ip = env::var("CLASH_VERGE_REV_IP").unwrap_or_else(|_| "127.0.0.1".to_string());
+    
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
-    let http_proxy = format!("http://127.0.0.1:{}", port);
-    let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
+    let http_proxy = format!("http://{clash_verge_rev_ip}:{}", port);
+    let socks5_proxy = format!("socks5://{clash_verge_rev_ip}:{}", port);
 
     let sh =
         format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
