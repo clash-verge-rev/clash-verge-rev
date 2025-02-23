@@ -94,7 +94,7 @@ importers:
         version: 5.3.1(monaco-editor@0.52.2)
       nanoid:
         specifier: ^5.0.8
-        version: 5.1.0
+        version: 5.1.2
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -3114,8 +3114,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.1.0:
-    resolution: {integrity: sha512-zDAl/llz8Ue/EblwSYwdxGBYfj46IM1dhjVi8dyp9LQffoIGxJEAHj2oeZ4uNcgycSRcQ83CnfcZqEJzVDLcDw==}
+  nanoid@5.1.2:
+    resolution: {integrity: sha512-b+CiXQCNMUGe0Ri64S9SXFcP9hogjAJ2Rd6GdVxhPLRm7mhGaM7VgOvCAJ1ZshfHbqVDI3uqTI5C8/GaKuLI7g==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -7357,7 +7357,7 @@ snapshots:
 
   nanoid@3.3.8: {}
 
-  nanoid@5.1.0: {}
+  nanoid@5.1.2: {}
 
   next-tick@1.1.0: {}
 
