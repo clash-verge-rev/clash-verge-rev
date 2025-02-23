@@ -13,6 +13,8 @@ use sysproxy::{Autoproxy, Sysproxy};
 type CmdResult<T = ()> = Result<T, String>;
 use reqwest_dav::list_cmd::ListFile;
 use tauri::Manager;
+use tauri_plugin_shell::ShellExt;
+use std::fs;
 
 #[tauri::command]
 pub fn copy_clash_env() -> CmdResult {
@@ -66,29 +68,64 @@ pub async fn delete_profile(index: String) -> CmdResult {
     Ok(())
 }
 
-/// 修改profiles的
+/// 修改profiles的配置
 #[tauri::command]
-pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
+pub async fn patch_profiles_config(
+    profiles: IProfiles
+) -> CmdResult {
+    println!("[cmd配置patch] 开始修改配置文件");
+    
+    // 保存当前配置，以便在验证失败时恢复
+    let current_profile = Config::profiles().latest().current.clone();
+    println!("[cmd配置patch] 当前配置: {:?}", current_profile);
+    
+    // 更新profiles配置
+    println!("[cmd配置patch] 正在更新配置草稿");
     wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
+    
+    // 更新配置并进行验证
     match CoreManager::global().update_config().await {
         Ok(_) => {
+            println!("[cmd配置patch] 配置更新成功");
             handle::Handle::refresh_clash();
             let _ = tray::Tray::global().update_tooltip();
             Config::profiles().apply();
             wrap_err!(Config::profiles().data().save_file())?;
+            
+            // 发送成功通知
+            handle::Handle::notice_message("operation_success", "配置patch成功");
             Ok(())
         }
         Err(err) => {
+            println!("[cmd配置patch] 更新配置失败: {}", err);
             Config::profiles().discard();
-            log::error!(target: "app", "{err}");
-            Err(format!("{err}"))
+            println!("[cmd配置patch] 错误详情: {}", err);
+            
+            // 如果验证失败，恢复到之前的配置
+            if let Some(prev_profile) = current_profile {
+                println!("[cmd配置patch] 尝试恢复到之前的配置: {}", prev_profile);
+                let restore_profiles = IProfiles {
+                    current: Some(prev_profile),
+                    items: None,
+                };
+                // 静默恢复，不触发验证
+                wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
+                Config::profiles().apply();
+                wrap_err!(Config::profiles().data().save_file())?;
+                println!("[cmd配置patch] 成功恢复到之前的配置");
+            }
+
+            Err(err.to_string())
         }
     }
 }
 
 /// 根据profile name修改profiles
 #[tauri::command]
-pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult {
+pub async fn patch_profiles_config_by_profile_index(
+    _app_handle: tauri::AppHandle,
+    profile_index: String
+) -> CmdResult {
     let profiles = IProfiles{current: Some(profile_index), items: None};
     patch_profiles_config(profiles).await
 }
@@ -97,7 +134,7 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 #[tauri::command]
 pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     wrap_err!(Config::profiles().data().patch_item(index, profile))?;
-    wrap_err!(timer::Timer::global().refresh())
+    Ok(())
 }
 
 #[tauri::command]
@@ -125,17 +162,60 @@ pub fn read_profile_file(index: String) -> CmdResult<String> {
     let data = wrap_err!(item.read_file())?;
     Ok(data)
 }
-
+/// 保存profiles的配置
 #[tauri::command]
-pub fn save_profile_file(index: String, file_data: Option<String>) -> CmdResult {
+pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdResult {
     if file_data.is_none() {
         return Ok(());
     }
 
-    let profiles = Config::profiles();
-    let profiles = profiles.latest();
-    let item = wrap_err!(profiles.get_item(&index))?;
-    wrap_err!(item.save_file(file_data.unwrap()))
+    // 在异步操作前完成所有文件操作
+    let (file_path, original_content) = {
+        let profiles = Config::profiles();
+        let profiles_guard = profiles.latest();
+        let item = wrap_err!(profiles_guard.get_item(&index))?;
+        let content = wrap_err!(item.read_file())?;
+        let path = item.file.clone().ok_or("file field is null")?;
+        let profiles_dir = wrap_err!(dirs::app_profiles_dir())?;
+        (profiles_dir.join(path), content)
+    };
+
+    // 保存新的配置文件
+    wrap_err!(fs::write(&file_path, file_data.clone().unwrap()))?;
+    
+    // 直接验证保存的配置文件
+    let clash_core = Config::verge().latest().clash_core.clone().unwrap_or("verge-mihomo".into());
+    let test_dir = wrap_err!(dirs::app_home_dir())?.join("test");
+    let test_dir = test_dir.to_string_lossy();
+    let file_path_str = file_path.to_string_lossy();
+    
+    println!("[cmd配置save] 开始验证配置文件: {}", file_path_str);
+    
+    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let output = wrap_err!(app_handle
+        .shell()
+        .sidecar(clash_core)
+        .map_err(|e| e.to_string())?
+        .args(["-t", "-d", test_dir.as_ref(), "-f", file_path_str.as_ref()])
+        .output()
+        .await)?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let error_keywords = ["FATA", "fatal", "Parse config error", "level=fatal"];
+    let has_error = !output.status.success() || error_keywords.iter().any(|&kw| stderr.contains(kw));
+
+    if has_error {
+        println!("[cmd配置save] 编辑验证失败 {}", stderr);
+        // 恢复原始配置文件
+        wrap_err!(fs::write(&file_path, original_content))?;
+        // 发送错误通知
+        handle::Handle::notice_message("config_validate::error", &*stderr);
+        return Err(format!("cmd配置save失败 {}", stderr));
+    }
+
+    println!("[cmd配置save] 验证成功");
+    handle::Handle::notice_message("operation_success", "配置更新成功");
+    Ok(())
 }
 
 #[tauri::command]

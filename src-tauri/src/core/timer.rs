@@ -1,5 +1,6 @@
 use crate::config::Config;
 use crate::feat;
+use crate::core::CoreManager;
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
@@ -172,7 +173,17 @@ impl Timer {
     /// the task runner
     async fn async_task(uid: String) {
         log::info!(target: "app", "running timer task `{uid}`");
-        crate::log_err!(feat::update_profile(uid, None).await);
+        
+        // 使用更轻量级的更新方式
+        if let Err(e) = feat::update_profile(uid.clone(), None).await {
+            log::error!(target: "app", "timer task update error: {}", e);
+            return;
+        }
+
+        // 只有更新成功后才刷新配置
+        if let Err(e) = CoreManager::global().update_config().await {
+            log::error!(target: "app", "timer task refresh error: {}", e);
+        }
     }
 }
 

@@ -435,5 +435,7 @@
   "Direct Mode": "直连模式",
   "Enable Tray Speed": "启用托盘速率",
   "Lite Mode": "轻量模式",
-  "Lite Mode Info": "关闭GUI界面，仅保留内核运行"
+  "Lite Mode Info": "关闭GUI界面，仅保留内核运行",
+  "Config Validation Failed": "订阅配置校验失败，请检查配置文件",
+  "Config Validation Process Terminated": "验证进程被终止"
 }

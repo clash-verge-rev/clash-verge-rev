@@ -145,29 +145,119 @@ impl CoreManager {
         }
     }
 
-    /// 更新proxies那些
-    /// 如果涉及端口和外部控制则需要重启
+    /// 使用子进程验证配置
+    pub async fn validate_config(&self) -> Result<(bool, String)> {
+        println!("[core配置验证] 开始验证配置");
+        
+        let config_path = Config::generate_file(ConfigType::Check)?;
+        let config_path = dirs::path_to_str(&config_path)?;
+        println!("[core配置验证] 配置文件路径: {}", config_path);
+
+        let clash_core = { Config::verge().latest().clash_core.clone() };
+        let clash_core = clash_core.unwrap_or("verge-mihomo".into());
+        println!("[core配置验证] 使用内核: {}", clash_core);
+        
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let test_dir = dirs::app_home_dir()?.join("test");
+        let test_dir = dirs::path_to_str(&test_dir)?;
+        println!("[core配置验证] 测试目录: {}", test_dir);
+
+        // 使用子进程运行clash验证配置
+        println!("[core配置验证] 运行子进程验证配置");
+        let output = app_handle
+            .shell()
+            .sidecar(clash_core)?
+            .args(["-t", "-d", test_dir, "-f", config_path])
+            .output()
+            .await?;
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        
+        // 检查进程退出状态和错误输出
+        let error_keywords = ["FATA", "fatal", "Parse config error", "level=fatal"];
+        let has_error = !output.status.success() || error_keywords.iter().any(|&kw| stderr.contains(kw));
+        
+        println!("[core配置验证] 退出状态: {:?}", output.status);
+        if !stderr.is_empty() {
+            println!("[core配置验证] 错误输出: {}", stderr);
+        }
+        if !stdout.is_empty() {
+            println!("[core配置验证] 标准输出: {}", stdout);
+        }
+
+        if has_error {
+            let error_msg = if stderr.is_empty() {
+                if let Some(code) = output.status.code() {
+                    handle::Handle::notice_message("config_validate::error", &code.to_string());
+                    String::new()
+                } else {
+                    handle::Handle::notice_message("config_validate::process_terminated", "");
+                    String::new()
+                }
+            } else {
+                handle::Handle::notice_message("config_validate::stderr_error", &*stderr);
+                String::new()
+            };
+            Ok((false, error_msg))
+        } else {
+            handle::Handle::notice_message("config_validate::success", "");
+            Ok((true, String::new()))
+        }
+    }
+
+    /// 更新proxies等配置
     pub async fn update_config(&self) -> Result<()> {
-        log::debug!(target: "app", "try to update clash config");
-        // 更新订阅
+        println!("[core配置更新] 开始更新配置");
+        
+        // 1. 先生成新的配置内容
+        println!("[core配置更新] 生成新的配置内容");
         Config::generate().await?;
+        
+        // 2. 生成临时文件并进行验证
+        println!("[core配置更新] 生成临时配置文件用于验证");
+        let temp_config = Config::generate_file(ConfigType::Check)?;
+        let temp_config = dirs::path_to_str(&temp_config)?;
+        println!("[core配置更新] 临时配置文件路径: {}", temp_config);
 
-        // 检查订阅是否正常
-        self.check_config().await?;
+        // 3. 验证配置
+        let (is_valid, error_msg) = match self.validate_config().await {
+            Ok((valid, msg)) => (valid, msg),
+            Err(e) => {
+                println!("[core配置更新] 验证过程发生错误: {}", e);
+                Config::runtime().discard(); // 验证失败时丢弃新配置
+                return Err(e);
+            }
+        };
 
-        // 更新运行时订阅
-        let path = Config::generate_file(ConfigType::Run)?;
-        let path = dirs::path_to_str(&path)?;
+        if !is_valid {
+            println!("[core配置更新] 配置验证未通过，保持当前配置不变");
+            Config::runtime().discard(); // 验证失败时丢弃新配置
+            return Err(anyhow::anyhow!(error_msg));
+        }
 
-        // 发送请求 发送5次
+        // 4. 验证通过后，生成正式的运行时配置
+        println!("[core配置更新] 验证通过，生成运行时配置");
+        let run_path = Config::generate_file(ConfigType::Run)?;
+        let run_path = dirs::path_to_str(&run_path)?;
+
+        // 5. 应用新配置
+        println!("[core配置更新] 应用新配置");
         for i in 0..10 {
-            match clash_api::put_configs(path).await {
-                Ok(_) => break,
+            match clash_api::put_configs(run_path).await {
+                Ok(_) => {
+                    println!("[core配置更新] 配置应用成功");
+                    Config::runtime().apply(); // 应用成功时保存新配置
+                    break;
+                }
                 Err(err) => {
                     if i < 9 {
+                        println!("[core配置更新] 第{}次重试应用配置", i + 1);
                         log::info!(target: "app", "{err}");
                     } else {
-                        bail!(err);
+                        println!("[core配置更新] 配置应用失败: {}", err);
+                        Config::runtime().discard(); // 应用失败时丢弃新配置
+                        return Err(err.into());
                     }
                 }
             }
