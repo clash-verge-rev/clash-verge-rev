@@ -43,7 +43,7 @@ const NoticeInner = (props: InnerProps) => {
 
     appWindow.theme().then((m) => m && setIsDark(m === "dark"));
     const unlisten = appWindow.onThemeChanged((e) =>
-      setIsDark(e.payload === "dark")
+      setIsDark(e.payload === "dark"),
     );
 
     return () => {
@@ -105,25 +105,55 @@ let parent: HTMLDivElement = null!;
 
 // @ts-ignore
 export const Notice: NoticeInstance = (props) => {
+  const { type, message, duration } = props;
+
+  // 验证必要的参数
+  if (!message) {
+    return;
+  }
+
   if (!parent) {
     parent = document.createElement("div");
+    parent.setAttribute("id", "notice-container"); // 添加 id 便于调试
     document.body.appendChild(parent);
   }
 
   const container = document.createElement("div");
   parent.appendChild(container);
+
   const root = createRoot(container);
 
   const onUnmount = () => {
     root.unmount();
-    if (parent) setTimeout(() => parent.removeChild(container), 500);
+    if (parent && container.parentNode === parent) {
+      setTimeout(() => {
+        parent.removeChild(container);
+      }, 500);
+    }
   };
 
-  root.render(<NoticeInner {...props} onClose={onUnmount} />);
+  root.render(
+    <NoticeInner
+      type={type}
+      message={message}
+      duration={duration || 1500}
+      onClose={onUnmount}
+    />,
+  );
 };
 
 (["info", "error", "success"] as const).forEach((type) => {
-  Notice[type] = (message, duration) => {
-    setTimeout(() => Notice({ type, message, duration }), 0);
+  Notice[type] = (message: ReactNode, duration?: number) => {
+    // 确保消息不为空
+    if (!message) {
+      return;
+    }
+
+    // 直接调用，不使用 setTimeout
+    Notice({
+      type,
+      message,
+      duration: duration || 1500, // 确保有默认值
+    });
   };
 });

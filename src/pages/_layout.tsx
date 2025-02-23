@@ -81,6 +81,15 @@ const Layout = () => {
         case "set_config::error":
           Notice.error(msg);
           break;
+        case "config_validate::error":
+          Notice.error(t("Config Validation Failed"));
+          break;
+        case "config_validate::process_terminated":
+          Notice.error(t("Config Validation Process Terminated"));
+          break;
+        case "config_validate::stderr_error":
+          Notice.error(msg);
+          break;
         default:
           break;
       }
