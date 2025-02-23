@@ -71,32 +71,31 @@ impl Config {
         crate::log_err!(Self::generate().await);
 
         // 生成运行时配置文件并验证
-        let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
         let config_result = Self::generate_file(ConfigType::Run);
 
         let validation_result = if let Ok(_) = config_result {
             // 验证配置文件
-            println!("[首次启动] 开始验证配置文件");
+            println!("[首次启动] 开始验证配置");
             
             match CoreManager::global().validate_config().await {
                 Ok((is_valid, error_msg)) => {
                     if !is_valid {
-                        println!("[首次启动] 配置验证失败，使用默认配置启动 {}", error_msg);
-                        // 使用默认配置
-                        *Config::runtime().draft() = IRuntime {
-                            config: Some(Config::clash().latest().0.clone()),
-                            exists_keys: vec![],
-                            chain_logs: Default::default(),
-                        };
-                        help::save_yaml(
-                            &runtime_path,
-                            &Config::clash().latest().0,
-                            Some("# Clash Verge Runtime"),
-                        )?;
-
+                        println!("[首次启动] 配置验证失败，使用默认最小配置启动{}", error_msg);
                         if error_msg.is_empty() {
+                            CoreManager::global()
+                                .use_default_config(
+                                    "config_validate::boot_error",
+                                    "",
+                                )
+                                .await?;
                             Some(("config_validate::boot_error", String::new()))
                         } else {
+                            CoreManager::global()
+                                .use_default_config(
+                                    "config_validate::stderr_error",
+                                    &error_msg,
+                                )
+                                .await?;
                             Some(("config_validate::stderr_error", error_msg))
                         }
                     } else {
@@ -105,37 +104,24 @@ impl Config {
                     }
                 }
                 Err(err) => {
-                    println!("[首次启动] 验证进程执行失败 {}", err);
-                    // 使用默认配置
-                    *Config::runtime().draft() = IRuntime {
-                        config: Some(Config::clash().latest().0.clone()),
-                        exists_keys: vec![],
-                        chain_logs: Default::default(),
-                    };
-                    help::save_yaml(
-                        &runtime_path,
-                        &Config::clash().latest().0,
-                        Some("# Clash Verge Runtime"),
-                    )?;
-                    
+                    println!("[首次启动] 验证进程执行失败: {}", err);
+                    CoreManager::global()
+                        .use_default_config(
+                            "config_validate::process_terminated",
+                            "",
+                        )
+                        .await?;
                     Some(("config_validate::process_terminated", String::new()))
                 }
             }
         } else {
             println!("[首次启动] 生成配置文件失败，使用默认配置");
-            // 如果生成失败就将默认的clash文件拿过来
-            *Config::runtime().draft() = IRuntime {
-                config: Some(Config::clash().latest().0.clone()),
-                exists_keys: vec![],
-                chain_logs: Default::default(),
-            };
-            if !runtime_path.exists() {
-                help::save_yaml(
-                    &runtime_path,
-                    &Config::clash().latest().0,
-                    Some("# Clash Verge Runtime"),
-                )?;
-            }
+            CoreManager::global()
+                .use_default_config(
+                    "config_validate::error",
+                    "",
+                )
+                .await?;
             Some(("config_validate::error", String::new()))
         };
 
