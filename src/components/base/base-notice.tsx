@@ -18,7 +18,7 @@ interface InnerProps {
 }
 
 const NoticeInner = (props: InnerProps) => {
-  const { type, message, duration = 1500, onClose } = props;
+  const { type, message, duration, onClose } = props;
   const [visible, setVisible] = useState(true);
   const [isDark, setIsDark] = useState(false);
   const { verge } = useVerge();
@@ -72,7 +72,7 @@ const NoticeInner = (props: InnerProps) => {
     <Snackbar
       open={visible}
       anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      autoHideDuration={duration}
+      autoHideDuration={duration === -1 ? null : duration || 1500}
       onClose={onAutoClose}
       message={msgElement}
       sx={{
@@ -149,11 +149,11 @@ export const Notice: NoticeInstance = (props) => {
       return;
     }
 
-    // 直接调用，不使用 setTimeout
     Notice({
       type,
       message,
-      duration: duration || 1500, // 确保有默认值
+      // 错误类型通知显示 8 秒，其他类型默认 1.5 秒
+      duration: type === "error" ? 8000 : duration || 1500,
     });
   };
 });
