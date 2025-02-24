@@ -32,12 +32,11 @@ async function updatePackageVersion(newVersion) {
   // 获取内容根目录
   const _dirname = process.cwd();
   const packageJsonPath = path.join(_dirname, "package.json");
-  // const headhash = await getLatestCommitHash();
   try {
     const data = await fs.readFile(packageJsonPath, "utf8");
     const packageJson = JSON.parse(data);
     const initversion = packageJson.version;
-    // 将第一个匹配到第一个 "alpha" => 具体的hash
+    // 将匹配到的第一个 "alpha" => 具体的hash
     const fixversion = initversion.replace("alpha", newVersion);
     packageJson.version = fixversion;
     // 写入版本号
