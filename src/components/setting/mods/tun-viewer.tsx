@@ -35,7 +35,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     open: () => {
       setOpen(true);
       setValues({
-        stack: clash?.tun.stack ?? "mixed",
+        stack: clash?.tun.stack ?? "gvisor",
         device: clash?.tun.device ?? "Mihomo",
         autoRoute: clash?.tun["auto-route"] ?? true,
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
@@ -89,7 +89,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             size="small"
             onClick={async () => {
               let tun = {
-                stack: "mixed",
+                stack: "gvisor",
                 device: "Mihomo",
                 "auto-route": true,
                 "auto-detect-interface": true,
@@ -98,7 +98,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
                 mtu: 1500,
               };
               setValues({
-                stack: "mixed",
+                stack: "gvisor",
                 device: "Mihomo",
                 autoRoute: true,
                 autoDetectInterface: true,
