@@ -443,7 +443,7 @@
   "Lite Mode": "Lightweight Mode",
   "Lite Mode Info": "Close the GUI and keep only the kernel running",
   "Config Validation Failed": "Subscription configuration validation failed. Please check the subscription configuration file; modifications have been rolled back.",
-  "Boot Config Validation Failed": "The subscription configuration validation failed. Please start with the default configuration and check the subscription configuration file.",
-  "Core Change Config Validation Failed": "Configuration validation failed when switching kernel; Please start with the default configuration and check the subscription configuration file.",
-  "Config Validation Process Terminated": "The configuration verification process has been terminated."
+  "Boot Config Validation Failed": "Boot subscription configuration validation failed. Started with the default configuration; please check the subscription configuration file.",
+  "Core Change Config Validation Failed": "Configuration validation failed when switching the kernel. Started with the default configuration; please check the subscription configuration file.",
+  "Config Validation Process Terminated": "The validation process has been terminated."
 }
