@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import {
+  ArrowDownwardOutlined,
   ArrowDownwardRounded,
+  ArrowUpwardOutlined,
   ArrowUpwardRounded,
   MemoryRounded,
 } from "@mui/icons-material";
@@ -109,9 +111,28 @@ export const LayoutTraffic = () => {
     },
   );
 
-  const [up, upUnit] = parseTraffic(traffic.up);
-  const [down, downUnit] = parseTraffic(traffic.down);
   const [inuse, inuseUnit] = parseTraffic(memory.inuse);
+
+  const [totalTraffic, setTotalTraffic] = useState({
+    download: 0,
+    upload: 0,
+    currentDown: 0,
+    currentUp: 0,
+  });
+
+  useEffect(() => {
+    setTotalTraffic((prev) => ({
+      download: prev.download + traffic.down, // Accumulate total download
+      upload: prev.upload + traffic.up, // Accumulate total upload
+      currentDown: traffic.down, // Current speed
+      currentUp: traffic.up, // Current speed
+    }));
+  }, [traffic.down, traffic.up]);
+
+  const [currentDown, currentDownUnit] = parseTraffic(totalTraffic.currentDown);
+  const [currentUp, currentUpUnit] = parseTraffic(totalTraffic.currentUp);
+  const [totalDown, totalDownUnit] = parseTraffic(totalTraffic.download);
+  const [totalUp, totalUpUnit] = parseTraffic(totalTraffic.upload);
 
   const boxStyle: any = {
     display: "flex",
@@ -149,23 +170,45 @@ export const LayoutTraffic = () => {
         <Box title={t("Upload Speed")} {...boxStyle}>
           <ArrowUpwardRounded
             {...iconStyle}
-            color={+up > 0 ? "secondary" : "disabled"}
+            color={+currentUp > 0 ? "secondary" : "disabled"}
           />
           <Typography {...valStyle} color="secondary">
-            {up}
+            {currentUp}
           </Typography>
-          <Typography {...unitStyle}>{upUnit}/s</Typography>
+          <Typography {...unitStyle}>{currentUpUnit}/s</Typography>
         </Box>
 
         <Box title={t("Download Speed")} {...boxStyle}>
           <ArrowDownwardRounded
             {...iconStyle}
-            color={+down > 0 ? "primary" : "disabled"}
+            color={+currentDown > 0 ? "primary" : "disabled"}
           />
           <Typography {...valStyle} color="primary">
-            {down}
+            {currentDown}
           </Typography>
-          <Typography {...unitStyle}>{downUnit}/s</Typography>
+          <Typography {...unitStyle}>{currentDownUnit}/s</Typography>
+        </Box>
+
+        <Box title={t("Uploaded")} {...boxStyle}>
+          <ArrowUpwardOutlined
+            {...iconStyle}
+            color={+totalUp > 0 ? "secondary" : "disabled"}
+          />
+          <Typography {...valStyle} color="secondary">
+            {totalUp}
+          </Typography>
+          <Typography {...unitStyle}>{totalUpUnit}</Typography>
+        </Box>
+
+        <Box title={t("Downloaded")} {...boxStyle}>
+          <ArrowDownwardOutlined
+            {...iconStyle}
+            color={+totalDown > 0 ? "primary" : "disabled"}
+          />
+          <Typography {...valStyle} color="primary">
+            {totalDown}
+          </Typography>
+          <Typography {...unitStyle}>{totalDownUnit}</Typography>
         </Box>
 
         {displayMemory && (
