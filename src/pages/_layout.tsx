@@ -154,10 +154,13 @@ const Layout = () => {
       dayjs.locale(language === "zh" ? "zh-cn" : language);
       i18next.changeLanguage(language);
     }
+  }, [language]);
+
+  useEffect(() => {
     if (start_page) {
-      navigate(start_page);
+      navigate(start_page, { replace: true });
     }
-  }, [language, start_page, navigate]);
+  }, [start_page]);
 
   if (!routersEles) return null;
 
