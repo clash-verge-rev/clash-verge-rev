@@ -174,11 +174,11 @@ const ProfilePage = () => {
     }, 100);
 
     try {
-      await patchProfiles({ current: profile });
+      const success = await patchProfiles({ current: profile });
       await mutateLogs();
       closeAllConnections();
       await activateSelected();
-      if (notifySuccess) {
+      if (notifySuccess && success) {
         Notice.success(t("Profile Switched"), 1000);
       }
     } catch (err: any) {

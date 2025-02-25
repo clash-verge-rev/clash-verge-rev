@@ -58,19 +58,19 @@ const handleNoticeMessage = (
       Notice.error(msg);
       break;
     case "config_validate::boot_error":
-      Notice.error(t("Boot Config Validation Failed"));
+      Notice.error(`${t("Boot Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::core_change":
-      Notice.error(t("Core Change Config Validation Failed"));
+      Notice.error(`${t("Core Change Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::error":
-      Notice.error(t("Config Validation Failed"));
+      Notice.error(`${t("Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::process_terminated":
       Notice.error(t("Config Validation Process Terminated"));
       break;
-    case "config_validate::stderr_error":
-      Notice.error(msg);
+    case "config_validate::stdout_error":
+      Notice.error(`${t("Config Validation Failed")} ${msg}`);
       break;
   }
 };
