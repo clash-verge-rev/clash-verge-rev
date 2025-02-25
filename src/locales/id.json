@@ -435,8 +435,8 @@
   "Enable Tray Speed": "Aktifkan Tray Speed",
   "Lite Mode": "Mode Ringan",
   "Lite Mode Info": "Tutup GUI dan biarkan hanya kernel yang berjalan",
-  "Config Validation Failed": "Validasi konfigurasi langganan gagal. Silakan periksa file konfigurasi langganan; perubahan telah dikembalikan.",
-  "Boot Config Validation Failed": "Validasi konfigurasi langganan gagal. Memulai dengan konfigurasi default. Silakan periksa file konfigurasi langganan.",
-  "Core Change Config Validation Failed": "Validasi konfigurasi gagal saat beralih kernel; memulai dengan konfigurasi default. Silakan periksa file konfigurasi langganan.",
-  "Config Validation Process Terminated": "Proses validasi konfigurasi telah dihentikan."
+  "Config Validation Failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
+  "Boot Config Validation Failed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
+  "Core Change Config Validation Failed": "Validasi konfigurasi saat ganti inti gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
+  "Config Validation Process Terminated": "Proses validasi dihentikan"
 }

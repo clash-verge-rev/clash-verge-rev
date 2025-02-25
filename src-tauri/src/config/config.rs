@@ -80,24 +80,11 @@ impl Config {
             match CoreManager::global().validate_config().await {
                 Ok((is_valid, error_msg)) => {
                     if !is_valid {
-                        println!("[首次启动] 配置验证失败，使用默认最小配置启动{}", error_msg);
-                        if error_msg.is_empty() {
-                            CoreManager::global()
-                                .use_default_config(
-                                    "config_validate::boot_error",
-                                    "",
-                                )
-                                .await?;
-                            Some(("config_validate::boot_error", String::new()))
-                        } else {
-                            CoreManager::global()
-                                .use_default_config(
-                                    "config_validate::stderr_error",
-                                    &error_msg,
-                                )
-                                .await?;
-                            Some(("config_validate::stderr_error", error_msg))
-                        }
+                        println!("[首次启动] 配置验证失败，使用默认最小配置启动: {}", error_msg);
+                        CoreManager::global()
+                            .use_default_config("config_validate::boot_error", &error_msg)
+                            .await?;
+                        Some(("config_validate::boot_error", error_msg))
                     } else {
                         println!("[首次启动] 配置验证成功");
                         Some(("config_validate::success", String::new()))
@@ -106,10 +93,7 @@ impl Config {
                 Err(err) => {
                     println!("[首次启动] 验证进程执行失败: {}", err);
                     CoreManager::global()
-                        .use_default_config(
-                            "config_validate::process_terminated",
-                            "",
-                        )
+                        .use_default_config("config_validate::process_terminated", "")
                         .await?;
                     Some(("config_validate::process_terminated", String::new()))
                 }
