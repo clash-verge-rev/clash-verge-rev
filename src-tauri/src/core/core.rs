@@ -240,7 +240,99 @@ impl CoreManager {
 
     /// 验证指定的配置文件
     pub async fn validate_config_file(&self, config_path: &str) -> Result<(bool, String)> {
+        // 检查文件是否存在
+        if !std::path::Path::new(config_path).exists() {
+            let error_msg = format!("File not found: {}", config_path);
+            //handle::Handle::notice_message("config_validate::file_not_found", &error_msg);
+            return Ok((false, error_msg));
+        }
+        
+        // 检查是否为脚本文件
+        let is_script = if config_path.ends_with(".js") {
+            true
+        } else {
+            match self.is_script_file(config_path) {
+                Ok(result) => result,
+                Err(err) => {
+                    // 如果无法确定文件类型，尝试使用Clash内核验证
+                    log::warn!(target: "app", "无法确定文件类型: {}, 错误: {}", config_path, err);
+                    return self.validate_config_internal(config_path).await;
+                }
+            }
+        };
+        
+        if is_script {
+            log::info!(target: "app", "检测到脚本文件，使用JavaScript验证: {}", config_path);
+            return self.validate_script_file(config_path).await;
+        }
+        
+        // 对YAML配置文件使用Clash内核验证
+        log::info!(target: "app", "使用Clash内核验证配置文件: {}", config_path);
         self.validate_config_internal(config_path).await
+    }
+
+    /// 检查文件是否为脚本文件
+    fn is_script_file(&self, path: &str) -> Result<bool> {
+        let content = match std::fs::read_to_string(path) {
+            Ok(content) => content,
+            Err(err) => {
+                log::warn!(target: "app", "无法读取文件以检测类型: {}, 错误: {}", path, err);
+                return Err(anyhow::anyhow!("Failed to read file to detect type: {}", err));
+            }
+        };
+        
+        // 检查文件前几行是否包含JavaScript特征
+        let first_lines = content.lines().take(5).collect::<String>();
+        Ok(first_lines.contains("function") || 
+           first_lines.contains("//") || 
+           first_lines.contains("/*") ||
+           first_lines.contains("import") ||
+           first_lines.contains("export") ||
+           first_lines.contains("const ") ||
+           first_lines.contains("let "))
+    }
+
+    /// 验证脚本文件语法
+    async fn validate_script_file(&self, path: &str) -> Result<(bool, String)> {
+        // 读取脚本内容
+        let content = match std::fs::read_to_string(path) {
+            Ok(content) => content,
+            Err(err) => {
+                let error_msg = format!("Failed to read script file: {}", err);
+                //handle::Handle::notice_message("config_validate::script_error", &error_msg);
+                return Ok((false, error_msg));
+            }
+        };
+        
+        log::debug!(target: "app", "验证脚本文件: {}", path);
+        
+        // 使用boa引擎进行基本语法检查
+        use boa_engine::{Context, Source};
+        
+        let mut context = Context::default();
+        let result = context.eval(Source::from_bytes(&content));
+        
+        match result {
+            Ok(_) => {
+                log::debug!(target: "app", "脚本语法验证通过: {}", path);
+                
+                // 检查脚本是否包含main函数
+                if !content.contains("function main") && !content.contains("const main") && !content.contains("let main") {
+                    let error_msg = "Script must contain a main function";
+                    log::warn!(target: "app", "脚本缺少main函数: {}", path);
+                    //handle::Handle::notice_message("config_validate::script_missing_main", error_msg);
+                    return Ok((false, error_msg.to_string()));
+                }
+                
+                Ok((true, String::new()))
+            },
+            Err(err) => {
+                let error_msg = format!("Script syntax error: {}", err);
+                log::warn!(target: "app", "脚本语法错误: {}", err);
+                //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
+                Ok((false, error_msg))
+            }
+        }
     }
 
     /// 更新proxies等配置
@@ -301,5 +393,86 @@ impl CoreManager {
                 Err(e)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::path::Path;
+    
+    async fn create_test_script() -> Result<String> {
+        let temp_dir = std::env::temp_dir();
+        let script_path = temp_dir.join("test_script.js");
+        let script_content = r#"
+        // This is a test script
+        function main(config) {
+            console.log("Testing script");
+            return config;
+        }
+        "#;
+        
+        fs::write(&script_path, script_content)?;
+        Ok(script_path.to_string_lossy().to_string())
+    }
+    
+    async fn create_invalid_script() -> Result<String> {
+        let temp_dir = std::env::temp_dir();
+        let script_path = temp_dir.join("invalid_script.js");
+        let script_content = r#"
+        // This is an invalid script
+        function main(config {  // Missing closing parenthesis
+            console.log("Testing script");
+            return config;
+        }
+        "#;
+        
+        fs::write(&script_path, script_content)?;
+        Ok(script_path.to_string_lossy().to_string())
+    }
+    
+    async fn create_no_main_script() -> Result<String> {
+        let temp_dir = std::env::temp_dir();
+        let script_path = temp_dir.join("no_main_script.js");
+        let script_content = r#"
+        // This script has no main function
+        function helper(config) {
+            console.log("Testing script");
+            return config;
+        }
+        "#;
+        
+        fs::write(&script_path, script_content)?;
+        Ok(script_path.to_string_lossy().to_string())
+    }
+    
+    #[tokio::test]
+    async fn test_validate_script_file() -> Result<()> {
+        let core_manager = CoreManager::global();
+        
+        // 测试有效脚本
+        let script_path = create_test_script().await?;
+        let result = core_manager.validate_config_file(&script_path).await?;
+        assert!(result.0, "有效脚本应该通过验证");
+        
+        // 测试无效脚本
+        let invalid_script_path = create_invalid_script().await?;
+        let result = core_manager.validate_config_file(&invalid_script_path).await?;
+        assert!(!result.0, "无效脚本不应该通过验证");
+        assert!(result.1.contains("脚本语法错误"), "无效脚本应该返回语法错误");
+        
+        // 测试缺少main函数的脚本
+        let no_main_script_path = create_no_main_script().await?;
+        let result = core_manager.validate_config_file(&no_main_script_path).await?;
+        assert!(!result.0, "缺少main函数的脚本不应该通过验证");
+        assert!(result.1.contains("缺少main函数"), "应该提示缺少main函数");
+        
+        // 清理测试文件
+        let _ = fs::remove_file(script_path);
+        let _ = fs::remove_file(invalid_script_path);
+        let _ = fs::remove_file(no_main_script_path);
+        
+        Ok(())
     }
 }

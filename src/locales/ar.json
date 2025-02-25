@@ -370,7 +370,6 @@
   "Permissions Granted Successfully for _clash Core": "تم منح الأذونات بنجاح لـ {{core}} Core",
   "Core Version Updated": "تم تحديث إصدار النواة",
   "Clash Core Restarted": "تم إعادة تشغيل نواة Clash",
-  "Switched to _clash Core": "تم التبديل إلى {{core}} Core",
   "GeoData Updated": "تم تحديث البيانات الجغرافية",
   "Currently on the Latest Version": "أنت على أحدث إصدار حاليًا",
   "Import Subscription Successful": "تم استيراد الاشتراك بنجاح",
@@ -442,5 +441,11 @@
   "Config Validation Failed": "فشل التحقق من تكوين الاشتراك، يرجى فحص ملف التكوين، تم التراجع عن التغييرات، تفاصيل الخطأ:",
   "Boot Config Validation Failed": "فشل التحقق من التكوين عند الإقلاع، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
   "Core Change Config Validation Failed": "فشل التحقق من التكوين عند تغيير النواة، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
-  "Config Validation Process Terminated": "تم إنهاء عملية التحقق"
+  "Config Validation Process Terminated": "تم إنهاء عملية التحقق",
+  "Script Syntax Error": "خطأ في بناء جملة السكريبت، تم التراجع عن التغييرات",
+  "Script Missing Main": "خطأ في السكريبت، تم التراجع عن التغييرات",
+  "File Not Found": "الملف غير موجود، تم التراجع عن التغييرات",
+  "Script File Error": "خطأ في ملف السكريبت، تم التراجع عن التغييرات",
+  "Core Changed Successfully": "تم تغيير النواة بنجاح",
+  "Failed to Change Core": "فشل تغيير النواة"
 }

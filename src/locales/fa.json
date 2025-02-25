@@ -373,7 +373,6 @@
   "Permissions Granted Successfully for _clash Core": "مجوزها با موفقیت برای هسته {{core}} اعطا شد",
   "Core Version Updated": "نسخه هسته به‌روزرسانی شد",
   "Clash Core Restarted": "هسته Clash مجدداً راه‌اندازی شد",
-  "Switched to _clash Core": "تغییر به هسته {{core}}",
   "GeoData Updated": "GeoData به‌روزرسانی شد",
   "Currently on the Latest Version": "در حال حاضر در آخرین نسخه",
   "Import Subscription Successful": "وارد کردن اشتراک با موفقیت انجام شد",
@@ -439,5 +438,11 @@
   "Config Validation Failed": "اعتبارسنجی پیکربندی اشتراک ناموفق بود، فایل پیکربندی را بررسی کنید، تغییرات برگشت داده شد، جزئیات خطا:",
   "Boot Config Validation Failed": "اعتبارسنجی پیکربندی هنگام راه‌اندازی ناموفق بود، پیکربندی پیش‌فرض استفاده شد، فایل پیکربندی را بررسی کنید، جزئیات خطا:",
   "Core Change Config Validation Failed": "اعتبارسنجی پیکربندی هنگام تغییر هسته ناموفق بود، پیکربندی پیش‌فرض استفاده شد، فایل پیکربندی را بررسی کنید، جزئیات خطا:",
-  "Config Validation Process Terminated": "فرآیند اعتبارسنجی متوقف شد"
+  "Config Validation Process Terminated": "فرآیند اعتبارسنجی متوقف شد",
+  "Script Syntax Error": "خطای نحوی اسکریپت، تغییرات برگشت داده شد",
+  "Script Missing Main": "خطای اسکریپت، تغییرات برگشت داده شد",
+  "File Not Found": "فایل یافت نشد، تغییرات برگشت داده شد",
+  "Script File Error": "خطای فایل اسکریپت، تغییرات برگشت داده شد",
+  "Core Changed Successfully": "هسته با موفقیت تغییر کرد",
+  "Failed to Change Core": "تغییر هسته ناموفق بود"
 }

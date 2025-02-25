@@ -72,6 +72,24 @@ const handleNoticeMessage = (
     case "config_validate::stdout_error":
       Notice.error(`${t("Config Validation Failed")} ${msg}`);
       break;
+    case "config_validate::script_error":
+      Notice.error(`${t("Script File Error")} ${msg}`);
+      break;
+    case "config_validate::script_syntax_error":
+      Notice.error(`${t("Script Syntax Error")} ${msg}`);
+      break;
+    case "config_validate::script_missing_main":
+      Notice.error(`${t("Script Missing Main")} ${msg}`);
+      break;
+    case "config_validate::file_not_found":
+      Notice.error(`${t("File Not Found")} ${msg}`);
+      break;
+    case "config_core::change_success":
+      Notice.success(`${t("Core Changed Successfully")}: ${msg}`);
+      break;
+    case "config_core::change_error":
+      Notice.error(`${t("Failed to Change Core")}: ${msg}`);
+      break;
   }
 };
 

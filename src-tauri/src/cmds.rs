@@ -213,7 +213,22 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
             println!("[cmd配置save] 验证失败: {}", error_msg);
             // 恢复原始配置文件
             wrap_err!(fs::write(&file_path, original_content))?;
-            handle::Handle::notice_message("config_validate::error", &error_msg.to_string()); // 保存文件弹出此提示
+            
+            // 智能判断是否为脚本错误
+            let is_script_error = file_path_str.ends_with(".js") || 
+                                error_msg.contains("Script syntax error") || 
+                                error_msg.contains("Script must contain a main function") ||
+                                error_msg.contains("Failed to read script file");
+            
+            if is_script_error {
+                // 脚本错误使用专门的通知处理
+                let result = (false, error_msg.clone());
+                handle_script_validation_notice(&result, "脚本文件");
+            } else {
+                // 普通配置错误使用一般通知
+                handle::Handle::notice_message("config_validate::error", &error_msg);
+            }
+            
             Ok(())
         }
         Err(e) => {
@@ -281,8 +296,23 @@ pub async fn patch_verge_config(payload: IVerge) -> CmdResult {
 }
 
 #[tauri::command]
-pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
-    wrap_err!(CoreManager::global().change_core(clash_core).await)
+pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {
+    log::info!(target: "app", "changing core to {clash_core}");
+    
+    match CoreManager::global().change_core(Some(clash_core.clone())).await {
+        Ok(_) => {
+            log::info!(target: "app", "core changed to {clash_core}");
+            handle::Handle::notice_message("config_core::change_success", &clash_core);
+            handle::Handle::refresh_clash();
+            Ok(None)
+        }
+        Err(err) => {
+            let error_msg = err.to_string();
+            log::error!(target: "app", "failed to change core: {error_msg}");
+            handle::Handle::notice_message("config_core::change_error", &error_msg);
+            Ok(Some(error_msg))
+        }
+    }
 }
 
 /// restart the sidecar
@@ -524,5 +554,55 @@ pub mod uwp {
     #[tauri::command]
     pub async fn invoke_uwp_tool() -> CmdResult {
         Ok(())
+    }
+}
+
+#[tauri::command]
+pub async fn script_validate_notice(status: String, msg: String) -> CmdResult {
+    handle::Handle::notice_message(&status, &msg);
+    Ok(())
+}
+
+/// 处理脚本验证相关的所有消息通知
+/// 统一通知接口，保持消息类型一致性
+pub fn handle_script_validation_notice(result: &(bool, String), file_type: &str) {
+    if !result.0 {
+        let error_msg = &result.1;
+        
+        // 根据错误消息内容判断错误类型
+        let status = if error_msg.starts_with("File not found:") {
+            "config_validate::file_not_found"
+        } else if error_msg.starts_with("Failed to read script file:") {
+            "config_validate::script_error"
+        } else if error_msg.starts_with("Script syntax error:") {
+            "config_validate::script_syntax_error"
+        } else if error_msg == "Script must contain a main function" {
+            "config_validate::script_missing_main"
+        } else {
+            // 如果是其他类型错误，作为一般脚本错误处理
+            "config_validate::script_error"
+        };
+        
+        log::warn!(target: "app", "{} 验证失败: {}", file_type, error_msg);
+        handle::Handle::notice_message(status, error_msg);
+    }
+}
+
+/// 验证指定脚本文件
+#[tauri::command]
+pub async fn validate_script_file(file_path: String) -> CmdResult<bool> {
+    log::info!(target: "app", "验证脚本文件: {}", file_path);
+    
+    match CoreManager::global().validate_config_file(&file_path).await {
+        Ok(result) => {
+            handle_script_validation_notice(&result, "脚本文件");
+            Ok(result.0)  // 返回验证结果布尔值
+        },
+        Err(e) => {
+            let error_msg = e.to_string();
+            log::error!(target: "app", "验证脚本文件过程发生错误: {}", error_msg);
+            handle::Handle::notice_message("config_validate::process_terminated", &error_msg);
+            Ok(false)
+        }
     }
 }

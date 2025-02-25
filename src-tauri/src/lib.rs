@@ -114,6 +114,9 @@ pub fn run() {
             cmds::delete_profile,
             cmds::read_profile_file,
             cmds::save_profile_file,
+            // script validation
+            cmds::script_validate_notice,
+            cmds::validate_script_file,
             // clash api
             cmds::clash_api_get_proxy_delay,
             // backup

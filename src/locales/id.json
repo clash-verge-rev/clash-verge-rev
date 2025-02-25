@@ -404,7 +404,6 @@
   "Permissions Granted Successfully for _clash Core": "Izin Berhasil Diberikan untuk Core {{core}}",
   "Core Version Updated": "Versi Core Diperbarui",
   "Clash Core Restarted": "Core Clash Dimulai Ulang",
-  "Switched to _clash Core": "Beralih ke Core {{core}}",
   "GeoData Updated": "GeoData Diperbarui",
   "Currently on the Latest Version": "Saat ini pada Versi Terbaru",
   "Import Subscription Successful": "Berlangganan Berhasil Diimpor",
@@ -438,5 +437,11 @@
   "Config Validation Failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
   "Boot Config Validation Failed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
   "Core Change Config Validation Failed": "Validasi konfigurasi saat ganti inti gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
-  "Config Validation Process Terminated": "Proses validasi dihentikan"
+  "Config Validation Process Terminated": "Proses validasi dihentikan",
+  "Script Syntax Error": "Kesalahan sintaks skrip, perubahan dibatalkan",
+  "Script Missing Main": "Kesalahan skrip, perubahan dibatalkan",
+  "File Not Found": "File tidak ditemukan, perubahan dibatalkan",
+  "Script File Error": "Kesalahan file skrip, perubahan dibatalkan",
+  "Core Changed Successfully": "Inti berhasil diubah",
+  "Failed to Change Core": "Gagal mengubah inti"
 }
