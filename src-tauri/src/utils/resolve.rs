@@ -196,6 +196,9 @@ pub fn create_window() {
             log::info!(target: "app", "Window created successfully, attempting to show");
             let _ = window.show();
             let _ = window.set_focus();
+            
+            // 设置窗口状态监控，实时保存窗口位置和大小
+            crate::feat::setup_window_state_monitor(&app_handle);
         }
         Err(e) => {
             println!("Failed to create window: {:?}", e);
