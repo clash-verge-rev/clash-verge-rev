@@ -85,8 +85,37 @@ pub fn restart_app() {
         resolve::resolve_reset();
         let app_handle = handle::Handle::global().app_handle().unwrap();
         std::thread::sleep(std::time::Duration::from_secs(1));
-        let _ = app_handle.save_window_state(StateFlags::default());
         tauri::process::restart(&app_handle.env());
+    });
+}
+
+/// 设置窗口状态监控，实时保存窗口位置和大小
+pub fn setup_window_state_monitor(app_handle: &tauri::AppHandle) {
+    let window = app_handle.get_webview_window("main").unwrap();
+    let app_handle_clone = app_handle.clone();
+    
+    // 监听窗口移动事件
+    let app_handle_move = app_handle_clone.clone();
+    window.on_window_event(move |event| {
+        match event {
+            // 窗口移动时保存状态
+            tauri::WindowEvent::Moved(_) => {
+                let _ = app_handle_move.save_window_state(StateFlags::all());
+            },
+            // 窗口调整大小时保存状态
+            tauri::WindowEvent::Resized(_) => {
+                let _ = app_handle_move.save_window_state(StateFlags::all());
+            },
+            // 其他可能改变窗口状态的事件
+            tauri::WindowEvent::ScaleFactorChanged { .. } => {
+                let _ = app_handle_move.save_window_state(StateFlags::all());
+            },
+            // 窗口关闭时保存
+            tauri::WindowEvent::CloseRequested { .. } => {
+                let _ = app_handle_move.save_window_state(StateFlags::all());
+            },
+            _ => {}
+        }
     });
 }
 
