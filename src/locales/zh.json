@@ -373,7 +373,6 @@
   "Permissions Granted Successfully for _clash Core": "{{core}} 内核授权成功",
   "Core Version Updated": "内核版本已更新",
   "Clash Core Restarted": "已重启 Clash 内核",
-  "Switched to _clash Core": "已切换至 {{core}} 内核",
   "GeoData Updated": "已更新 GeoData",
   "Currently on the Latest Version": "当前已是最新版本",
   "Import Subscription Successful": "导入订阅成功",
@@ -436,8 +435,14 @@
   "Enable Tray Speed": "启用托盘速率",
   "Lite Mode": "轻量模式",
   "Lite Mode Info": "关闭GUI界面，仅保留内核运行",
-  "Config Validation Failed": "订阅配置校验失败，请检查订阅配置文件，变更已回滚，错误详情：",
+  "Config Validation Failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
   "Boot Config Validation Failed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
   "Core Change Config Validation Failed": "切换内核时配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
-  "Config Validation Process Terminated": "验证进程被终止"
+  "Config Validation Process Terminated": "验证进程被终止",
+  "Script Syntax Error": "脚本语法错误，变更已撤销",
+  "Script Missing Main": "脚本错误，变更已撤销",
+  "File Not Found": "文件丢失，变更已撤销",
+  "Script File Error": "脚本文件错误，变更已撤销",
+  "Core Changed Successfully": "内核切换成功",
+  "Failed to Change Core": "无法切换内核"
 }

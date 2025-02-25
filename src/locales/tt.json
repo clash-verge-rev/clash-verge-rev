@@ -372,7 +372,6 @@
   "Permissions Granted Successfully for _clash Core": "{{core}} ядросы өчен рөхсәтләр бирелде",
   "Core Version Updated": "Ядро версиясе яңартылды",
   "Clash Core Restarted": "Clash ядросы яңадан башланды",
-  "Switched to _clash Core": "{{core}} ядросына күчү башкарылды",
   "GeoData Updated": "GeoData яңартылды",
   "Currently on the Latest Version": "Сездә иң соңгы версия урнаштырылган",
   "Import subscription successful": "Подписка уңышлы импортланды",
@@ -438,5 +437,11 @@
   "Config Validation Failed": "Язылу көйләү тикшерүе уңышсыз, көйләү файлын тикшерегез, үзгәрешләр кире кайтарылды, хата:",
   "Boot Config Validation Failed": "Йөкләү вакытында көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
   "Core Change Config Validation Failed": "Ядро алыштырганда көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
-  "Config Validation Process Terminated": "Тикшерү процессы туктатылды"
+  "Config Validation Process Terminated": "Тикшерү процессы туктатылды",
+  "Script Syntax Error": "Скрипт синтаксик хатасы, үзгәрешләр кире кайтарылды",
+  "Script Missing Main": "Скрипт хатасы, үзгәрешләр кире кайтарылды",
+  "File Not Found": "Файл табылмады, үзгәрешләр кире кайтарылды",
+  "Script File Error": "Скрипт файлы хатасы, үзгәрешләр кире кайтарылды",
+  "Core Changed Successfully": "Ядро уңышлы алыштырылды",
+  "Failed to Change Core": "Ядро алыштыру уңышсыз булды"
 }

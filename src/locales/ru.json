@@ -373,7 +373,6 @@
   "Permissions Granted Successfully for _clash Core": "Разрешения успешно предоставлены для ядра {{core}}",
   "Core Version Updated": "Обновлена версия ядра",
   "Clash Core Restarted": "Clash ядра перезапущено",
-  "Switched to _clash Core": "Переключено на ядра {{core}}",
   "GeoData Updated": "GeoData Обновлена",
   "Currently on the Latest Version": "В настоящее время используется последняя версия",
   "Import subscription successful": "Импорт подписки успешно",
@@ -439,5 +438,11 @@
   "Config Validation Failed": "Ошибка проверки конфигурации подписки, проверьте файл конфигурации, изменения отменены, ошибка:",
   "Boot Config Validation Failed": "Ошибка проверки конфигурации при запуске, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
   "Core Change Config Validation Failed": "Ошибка проверки конфигурации при смене ядра, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
-  "Config Validation Process Terminated": "Процесс проверки прерван"
+  "Config Validation Process Terminated": "Процесс проверки прерван",
+  "Script Syntax Error": "Ошибка синтаксиса скрипта, изменения отменены",
+  "Script Missing Main": "Ошибка скрипта, изменения отменены",
+  "File Not Found": "Файл не найден, изменения отменены",
+  "Script File Error": "Ошибка файла скрипта, изменения отменены",
+  "Core Changed Successfully": "Ядро успешно сменено",
+  "Failed to Change Core": "Не удалось сменить ядро"
 }

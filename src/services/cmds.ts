@@ -119,7 +119,7 @@ export async function getAutotemProxy() {
 }
 
 export async function changeClashCore(clashCore: string) {
-  return invoke<any>("change_clash_core", { clashCore });
+  return invoke<string | null>("change_clash_core", { clashCore });
 }
 
 export async function restartCore() {
@@ -240,4 +240,12 @@ export async function listWebDavBackup() {
     item.filename = item.href.split("/").pop() as string;
   });
   return list;
+}
+
+export async function scriptValidateNotice(status: string, msg: string) {
+  return invoke<void>("script_validate_notice", { status, msg });
+}
+
+export async function validateScriptFile(filePath: string) {
+  return invoke<boolean>("validate_script_file", { filePath });
 }

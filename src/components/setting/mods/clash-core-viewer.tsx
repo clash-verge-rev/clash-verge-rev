@@ -51,7 +51,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
         mutate("getClashConfig");
         mutate("getVersion");
       }, 100);
-      Notice.success(t("Switched to _clash Core", { core: `${core}` }), 1000);
+      // Notice.success(t("Switched to _clash Core", { core: `${core}` }), 1000);
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     }
