@@ -1,3 +1,13 @@
+pub(crate) struct Bitmap;
+
+// 全局静态常量
+static SELECT_8_LOOKUP: [u8; 256 * 8] = generate_select8_lookup();
+static MASK: [u64; 65] = generate_mask();
+static RMASK: [u64; 65] = generate_rmask();
+static MASK_UPTO: [u64; 64] = generate_mask_upto();
+static RMASK_UPTO: [u64; 64] = generate_rmask_upto();
+static BIT: [u64; 64] = generate_bit();
+
 const fn generate_select8_lookup() -> [u8; 256 * 8] {
     let mut arr = [0u8; 256 * 8];
     let mut i = 0;
@@ -67,16 +77,6 @@ const fn generate_bit() -> [u64; 64] {
     }
     arr
 }
-
-// 全局静态常量
-static SELECT_8_LOOKUP: [u8; 256 * 8] = generate_select8_lookup();
-static MASK: [u64; 65] = generate_mask();
-static RMASK: [u64; 65] = generate_rmask();
-static MASK_UPTO: [u64; 64] = generate_mask_upto();
-static RMASK_UPTO: [u64; 64] = generate_rmask_upto();
-static BIT: [u64; 64] = generate_bit();
-
-pub(crate) struct Bitmap;
 
 impl Bitmap {
     pub fn index_select_32_r64(words: &[u64]) -> (Vec<i32>, Vec<i32>) {

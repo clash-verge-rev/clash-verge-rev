@@ -1,9 +1,7 @@
-use std::io::Read;
-
+use crate::{error::RuleParseError, RuleBehavior};
 use anyhow::Result;
 use byteorder::{BigEndian, ReadBytesExt};
-
-use crate::{error::RuleParseError, RuleBehavior};
+use std::io::Read;
 
 /// MRSv1
 const MRS_MAGIC: [u8; 4] = [b'M', b'R', b'S', 1];
@@ -34,7 +32,7 @@ pub fn validate_mrs<R: Read>(
     reader.read_exact(&mut behavior)?;
     let actual_behavior = get_rule_behavior(behavior[0]);
     if actual_behavior != expected_behavior {
-        return Err(RuleParseError::BehaviorMismatch {
+        return Err(RuleParseError::RuleBehaviorMismatch {
             expected: expected_behavior,
             actual: actual_behavior,
         });

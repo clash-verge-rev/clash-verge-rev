@@ -138,7 +138,7 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
     }
     domain_set.leaves = leaves;
 
-    // label Bitmap
+    // label bitmap
     let length = reader.read_i64::<BigEndian>()?;
     if length < 0 {
         return Err(RuleParseError::InvalidLength(length));
@@ -161,6 +161,7 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
     domain_set.init();
 
     // get rules
+    let mut rules: Vec<String> = vec![];
     let keys = Arc::new(Mutex::new(Vec::new()));
     let keys_ = Arc::clone(&keys);
     domain_set.foreach(move |key| {
@@ -169,8 +170,6 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
     });
     let mut keys = keys.lock().unwrap();
     keys.sort();
-
-    let mut rules: Vec<String> = vec![];
 
     for key in keys.iter() {
         let search_str = "+.".to_string() + key;

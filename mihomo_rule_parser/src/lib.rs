@@ -75,7 +75,7 @@ impl RuleParser {
             "mrs" => RuleFormat::Mrs,
             "yaml" => RuleFormat::Yaml,
             "text" => RuleFormat::Text,
-            _ => return Err(RuleParseError::InvalidFormat),
+            _ => return Err(RuleParseError::InvalidRuleFormat),
         };
         match behavior {
             RuleBehavior::Domain => DomainParseStrategy::parse(&buf, format),
@@ -97,7 +97,7 @@ mod tests {
 
     /// Test parse domain from mrs file
     #[test]
-    fn test_parse_domain_mrs() -> Result<(), RuleParseError> {
+    fn test_domain_mrs_parse() -> Result<(), RuleParseError> {
         let home_dir = std::env::home_dir().expect("failed to get home dir");
         let file_path = home_dir.join("Downloads/aliyun.mrs");
         let buf = std::fs::read(file_path)?;
@@ -116,7 +116,7 @@ mod tests {
 
     /// Test parse ipcidr from mrs file
     #[test]
-    fn test_parse_ipcidr_mrs() -> Result<(), RuleParseError> {
+    fn test_ipcidr_mrs_parse() -> Result<(), RuleParseError> {
         let home_dir = std::env::home_dir().expect("failed to get home dir");
         let file_path = home_dir.join("Downloads/ad.mrs");
         let buf = std::fs::read(file_path)?;
@@ -135,7 +135,7 @@ mod tests {
 
     /// Test public parse method
     #[test]
-    fn test_parse() -> Result<(), RuleParseError> {
+    fn test_public_parse_method() -> Result<(), RuleParseError> {
         let home_dir = std::env::home_dir().expect("failed to get home dir");
         let file_path = home_dir.join("Downloads/ad.mrs");
         let rule_payload = RuleParser::parse(&file_path, "ipcidr", "mrs")?;
