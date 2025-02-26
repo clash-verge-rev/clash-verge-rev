@@ -261,7 +261,7 @@ const ProfilePage = () => {
         await patchProfile(chainUid, { enable: enable });
         mutateLogs();
         mutateProfiles();
-        Notice.success(t("Profile Switched"), 1000);
+        Notice.success(t("Profile Reactivated"), 1000);
       } catch (error) {
         console.error(error);
       } finally {
