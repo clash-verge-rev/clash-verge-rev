@@ -1,5 +1,6 @@
 use crate::config::*;
 use crate::core::{clash_api, handle, service};
+#[cfg(target_os = "macos")]
 use crate::core::tray::Tray;
 use crate::log_err;
 use crate::utils::{dirs, help};
