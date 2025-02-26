@@ -104,9 +104,32 @@ impl Hotkey {
                     
                     // 使用 spawn_blocking 来确保在正确的线程上执行
                     async_runtime::spawn_blocking(|| {
-                        println!("Creating window in spawn_blocking");
-                        log::info!(target: "app", "Creating window in spawn_blocking");
-                        resolve::create_window();
+                        println!("Toggle dashboard window visibility");
+                        log::info!(target: "app", "Toggle dashboard window visibility");
+                        
+                        // 检查窗口是否存在
+                        if let Some(window) = handle::Handle::global().get_window() {
+                            // 如果窗口可见，则隐藏它
+                            if window.is_visible().unwrap_or(false) {
+                                println!("Window is visible, hiding it");
+                                log::info!(target: "app", "Window is visible, hiding it");
+                                let _ = window.hide();
+                            } else {
+                                // 如果窗口不可见，则显示它
+                                println!("Window is hidden, showing it");
+                                log::info!(target: "app", "Window is hidden, showing it");
+                                if window.is_minimized().unwrap_or(false) {
+                                    let _ = window.unminimize();
+                                }
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        } else {
+                            // 如果窗口不存在，创建一个新窗口
+                            println!("Window does not exist, creating a new one");
+                            log::info!(target: "app", "Window does not exist, creating a new one");
+                            resolve::create_window();
+                        }
                     });
                     
                     println!("=== Hotkey Dashboard Window Operation End ===");
@@ -146,7 +169,23 @@ impl Hotkey {
                     // 直接执行函数，不做任何状态检查
                     println!("Executing function directly");
                     log::info!(target: "app", "Executing function directly");
-                    f();
+                    
+                    // 获取轻量模式状态和全局热键状态
+                    let is_lite_mode = Config::verge().latest().enable_lite_mode.unwrap_or(false);
+                    let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
+                    
+                    // 在轻量模式下或配置了全局热键时，始终执行热键功能
+                    if is_lite_mode || is_enable_global_hotkey {
+                        f();
+                    } else if let Some(window) = app_handle.get_webview_window("main") {
+                        // 非轻量模式且未启用全局热键时，只在窗口可见且有焦点的情况下响应热键
+                        let is_visible = window.is_visible().unwrap_or(false);
+                        let is_focused = window.is_focused().unwrap_or(false);
+                        
+                        if is_focused && is_visible {
+                            f();
+                        }
+                    }
                 }
             }
         });
