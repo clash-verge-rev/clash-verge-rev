@@ -271,9 +271,23 @@ jobs:
 
       - name: Rename
         run: |
-          Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.exe' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.exe'
-          Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip'
-          Rename-Item '.\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}-setup.nsis.zip.sig' 'Clash Verge_${{steps.build.outputs.appVersion}}_${{ matrix.arch }}_fixed_webview2-setup.nsis.zip.sig'
+          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
+          foreach ($file in $files) {
+            $newName = $file.Name -replace "-setup\.exe$", "_fixed_webview2-setup.exe"
+            Rename-Item $file.FullName $newName
+          }
+
+          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
+          foreach ($file in $files) {
+            $newName = $file.Name -replace "-setup\.nsis\.zip$", "_fixed_webview2-setup.nsis.zip"
+            Rename-Item $file.FullName $newName
+          }
+
+          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip.sig"
+          foreach ($file in $files) {
+            $newName = $file.Name -replace "-setup\.nsis\.zip\.sig$", "_fixed_webview2-setup.nsis.zip.sig"
+            Rename-Item $file.FullName $newName
+          }
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
