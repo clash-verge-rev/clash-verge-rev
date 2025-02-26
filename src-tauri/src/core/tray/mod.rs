@@ -225,23 +225,27 @@ impl Tray {
         #[cfg(target_os = "macos")]
         {
             let enable_tray_speed = Config::verge().latest().enable_tray_speed.unwrap_or(true);
-            let is_template =
-                crate::utils::help::is_monochrome_image_from_bytes(&icon_bytes).unwrap_or(false);
-
-            let icon_bytes = if enable_tray_speed {
+            let is_colorful = tray_icon == "colorful";
+            
+            // 处理图标和速率
+            let final_icon_bytes = if enable_tray_speed {
                 let rate = rate.or_else(|| {
                     self.speed_rate
                         .lock()
                         .as_ref()
                         .and_then(|speed_rate| speed_rate.get_curent_rate())
                 });
+                
+                // 使用新的方法渲染图标和速率
                 SpeedRate::add_speed_text(icon_bytes, rate)?
             } else {
                 icon_bytes
             };
 
-            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
-            let _ = tray.set_icon_as_template(is_template);
+            // 设置系统托盘图标
+            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&final_icon_bytes)?));
+            // 只对单色图标使用 template 模式
+            let _ = tray.set_icon_as_template(!is_colorful);
         }
 
         #[cfg(not(target_os = "macos"))]
