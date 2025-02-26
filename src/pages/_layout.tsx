@@ -204,9 +204,9 @@ const Layout = () => {
             ({ palette }) => ({ bgcolor: palette.background.paper }),
             {
               borderRadius: "8px",
-              border: "2px solid var(--divider-color)",
-              width: "calc(100vw - 4px)",
-              height: "calc(100vh - 4px)",
+              border: "0px solid var(--divider-color)",
+              width: "calc(100vw - 1px)",
+              height: "calc(100vh - 1px)",
             },
           ]}
         >

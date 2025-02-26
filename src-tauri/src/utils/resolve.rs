@@ -161,7 +161,7 @@ pub fn create_window() {
             .maximizable(true)
             .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
             .transparent(true)
-            .shadow(false)
+            .shadow(true)
             .build();
 
     #[cfg(target_os = "macos")]

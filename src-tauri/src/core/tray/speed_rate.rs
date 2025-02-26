@@ -78,9 +78,8 @@ impl SpeedRate {
         let is_colorful = !crate::utils::help::is_monochrome_image_from_bytes(&icon_bytes).unwrap_or(false);
         
         // 增加文本宽度和间距
-        let icon_text_gap = 80;  // 增加图标和文本之间的间距
-        let text_width = 520;    // 增加文本区域宽度，确保能显示完整
-        let total_width = icon_width + icon_text_gap + text_width;
+        let text_width = 580;    // 文本区域宽度
+        let total_width = icon_width + text_width;
         
         // 创建新的透明画布
         let mut combined_image = RgbaImage::new(total_width, icon_height);
@@ -112,11 +111,19 @@ impl SpeedRate {
         let down_text = format_bytes_speed(rate.down);
         
         // 计算文本位置，确保垂直间距合适
-        let text_x = icon_width + icon_text_gap;
-        let up_y = 0;
-        let down_y_offset = 32 as i32;
-        let down_y = icon_height as i32 - font_size as i32 + down_y_offset;  // 下行速率显示在下方
-
+        // 修改文本位置为居右显示
+        let up_text_width = imageproc::drawing::text_size(scale, &font, &up_text).0 as u32;
+        let down_text_width = imageproc::drawing::text_size(scale, &font, &down_text).0 as u32;
+        
+        // 计算右对齐的文本位置
+        let up_text_x = total_width - up_text_width;
+        let down_text_x = total_width - down_text_width;
+        
+        // 优化垂直位置，使速率显示的高度和上下间距正好等于图标大小
+        let text_height = font_size as i32;
+        let total_text_height = text_height * 2;
+        let up_y = (icon_height as i32 - total_text_height) / 2;
+        let down_y = up_y + text_height;
         
         // 绘制速率文本（先阴影后文字）
         let shadow_offset = 1;
@@ -125,7 +132,7 @@ impl SpeedRate {
         draw_text_mut(
             &mut combined_image,
             shadow_color,
-            text_x as i32 + shadow_offset,
+            up_text_x as i32 + shadow_offset,
             up_y + shadow_offset,
             scale,
             &font,
@@ -134,7 +141,7 @@ impl SpeedRate {
         draw_text_mut(
             &mut combined_image,
             text_color,
-            text_x as i32,
+            up_text_x as i32,
             up_y,
             scale,
             &font,
@@ -145,7 +152,7 @@ impl SpeedRate {
         draw_text_mut(
             &mut combined_image,
             shadow_color,
-            text_x as i32 + shadow_offset,
+            down_text_x as i32 + shadow_offset,
             down_y + shadow_offset,
             scale,
             &font,
@@ -154,7 +161,7 @@ impl SpeedRate {
         draw_text_mut(
             &mut combined_image,
             text_color,
-            text_x as i32,
+            down_text_x as i32,
             down_y,
             scale,
             &font,
