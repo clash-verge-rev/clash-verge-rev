@@ -274,6 +274,14 @@ impl CoreManager {
 
     /// 检查文件是否为脚本文件
     fn is_script_file(&self, path: &str) -> Result<bool> {
+        // 1. 先通过扩展名快速判断
+        if path.ends_with(".yaml") || path.ends_with(".yml") {
+            return Ok(false); // YAML文件不是脚本文件
+        } else if path.ends_with(".js") {
+            return Ok(true); // JS文件是脚本文件
+        }
+        
+        // 2. 读取文件内容
         let content = match std::fs::read_to_string(path) {
             Ok(content) => content,
             Err(err) => {
@@ -282,15 +290,52 @@ impl CoreManager {
             }
         };
         
-        // 检查文件前几行是否包含JavaScript特征
-        let first_lines = content.lines().take(5).collect::<String>();
-        Ok(first_lines.contains("function") || 
-           first_lines.contains("//") || 
-           first_lines.contains("/*") ||
-           first_lines.contains("import") ||
-           first_lines.contains("export") ||
-           first_lines.contains("const ") ||
-           first_lines.contains("let "))
+        // 3. 检查是否存在明显的YAML特征
+        let has_yaml_features = content.contains(": ") || 
+                               content.contains("#") || 
+                               content.contains("---") ||
+                               content.lines().any(|line| line.trim().starts_with("- "));
+                               
+        // 4. 检查是否存在明显的JS特征
+        let has_js_features = content.contains("function ") || 
+                             content.contains("const ") || 
+                             content.contains("let ") ||
+                             content.contains("var ") ||
+                             content.contains("//") ||
+                             content.contains("/*") ||
+                             content.contains("*/") ||
+                             content.contains("export ") ||
+                             content.contains("import ");
+        
+        // 5. 决策逻辑
+        if has_yaml_features && !has_js_features {
+            // 只有YAML特征，没有JS特征
+            return Ok(false);
+        } else if has_js_features && !has_yaml_features {
+            // 只有JS特征，没有YAML特征
+            return Ok(true);
+        } else if has_yaml_features && has_js_features {
+            // 两种特征都有，需要更精细判断
+            // 优先检查是否有明确的JS结构特征
+            if content.contains("function main") || 
+               content.contains("module.exports") ||
+               content.contains("export default") {
+                return Ok(true);
+            }
+            
+            // 检查冒号后是否有空格（YAML的典型特征）
+            let yaml_pattern_count = content.lines()
+                .filter(|line| line.contains(": "))
+                .count();
+                
+            if yaml_pattern_count > 2 {
+                return Ok(false); // 多个键值对格式，更可能是YAML
+            }
+        }
+        
+        // 默认情况：无法确定时，假设为非脚本文件（更安全）
+        log::debug!(target: "app", "无法确定文件类型，默认当作YAML处理: {}", path);
+        Ok(false)
     }
 
     /// 验证脚本文件语法
