@@ -445,5 +445,11 @@
   "Config Validation Failed": "Subscription configuration validation failed. Please check the subscription configuration file; modifications have been rolled back.",
   "Boot Config Validation Failed": "Boot subscription configuration validation failed. Started with the default configuration; please check the subscription configuration file.",
   "Core Change Config Validation Failed": "Configuration validation failed when switching the kernel. Started with the default configuration; please check the subscription configuration file.",
-  "Config Validation Process Terminated": "The validation process has been terminated."
+  "Config Validation Process Terminated": "The validation process has been terminated.",
+  "Script Syntax Error": "Script syntax error, changes reverted",
+  "Script Missing Main": "Script error, changes reverted",
+  "File Not Found": "File missing, changes reverted",
+  "Script File Error": "Script file error, changes reverted",
+  "Core Changed Successfully": "Core changed successfully",
+  "Failed to Change Core": "Failed to change core"
 }

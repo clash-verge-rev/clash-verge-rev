@@ -37,7 +37,7 @@
     "@tauri-apps/plugin-notification": "^2.2.1",
     "@tauri-apps/plugin-process": "^2.2.0",
     "@tauri-apps/plugin-shell": "2.2.0",
-    "@tauri-apps/plugin-updater": "2.4.0",
+    "@tauri-apps/plugin-updater": "2.3.0",
     "@types/json-schema": "^7.0.15",
     "ahooks": "^3.8.4",
     "axios": "^1.7.9",
