@@ -32,7 +32,7 @@ pub fn validate_mrs<R: Read>(
     reader.read_exact(&mut behavior)?;
     let actual_behavior = get_rule_behavior(behavior[0]);
     if actual_behavior != expected_behavior {
-        return Err(RuleParseError::RuleBehaviorMismatch {
+        return Err(RuleParseError::BehaviorMismatch {
             expected: expected_behavior,
             actual: actual_behavior,
         });

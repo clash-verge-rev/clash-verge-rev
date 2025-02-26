@@ -8,7 +8,7 @@ use std::{
 };
 
 #[derive(Debug, Default)]
-pub struct DomainSet {
+struct DomainSet {
     leaves: Vec<u64>,
     label_bit_map: Vec<u64>,
     labels: Vec<u8>,

@@ -16,9 +16,9 @@ pub enum RuleParseError {
     #[error("invalid length: {0}")]
     InvalidLength(i64),
     #[error("invalid format")]
-    InvalidRuleFormat,
+    InvalidFormat,
     #[error("behavior mismatch (expected {expected}, got {actual})")]
-    RuleBehaviorMismatch {
+    BehaviorMismatch {
         expected: RuleBehavior,
         actual: RuleBehavior,
     },

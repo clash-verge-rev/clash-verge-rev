@@ -7,7 +7,7 @@ use std::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct IpRange {
+struct IpRange {
     from: IpAddr,
     to: IpAddr,
 }
@@ -61,90 +61,90 @@ fn u128_to_ip(num: u128) -> IpAddr {
 }
 
 /// IPv4 处理
-fn ipv4_prefixes(start: Ipv4Addr, end: Ipv4Addr) -> Vec<Prefix> {
-    let mut start = u32::from(start);
-    let mut end = u32::from(end);
+fn ipv4_prefixes(from: Ipv4Addr, to: Ipv4Addr) -> Vec<Prefix> {
+    let mut from = ip_to_u32(from);
+    let mut to = ip_to_u32(to);
 
-    if start > end {
-        std::mem::swap(&mut start, &mut end);
+    if from > to {
+        std::mem::swap(&mut from, &mut to);
     }
 
     let mut cidrs = Vec::new();
 
-    while start <= end {
-        let max_prefix = 32 - start.trailing_zeros().min(31) as u8;
+    while from <= to {
+        let max_prefix = 32 - from.trailing_zeros().min(31) as u8;
         let mut prefix = max_prefix;
         let (block_start, block_size) = loop {
             let mask = u32::MAX << (32 - prefix);
-            let block_start = start & mask;
+            let block_start = from & mask;
             let block_size = 1 << (32 - prefix);
             let block_end = block_start + block_size - 1;
 
-            if block_start >= start && block_end <= end {
+            if block_start >= from && block_end <= to {
                 break (block_start, block_size);
             }
 
             prefix += 1;
             if prefix > 32 {
                 prefix = 32;
-                break (start, 1);
+                break (from, 1);
             }
         };
 
         cidrs.push(Prefix::new(u32_to_ip(block_start), prefix));
 
-        start = block_start + block_size;
+        from = block_start + block_size;
     }
 
     cidrs
 }
 
 /// IPv6 处理（128位实现）
-fn ipv6_prefixes(start: Ipv6Addr, end: Ipv6Addr) -> Vec<Prefix> {
-    let mut start = u128::from(start);
-    let mut end = u128::from(end);
+fn ipv6_prefixes(from: Ipv6Addr, to: Ipv6Addr) -> Vec<Prefix> {
+    let mut from = ip_to_u128(from);
+    let mut to = ip_to_u128(to);
 
-    if start > end {
-        std::mem::swap(&mut start, &mut end);
+    if from > to {
+        std::mem::swap(&mut from, &mut to);
     }
 
-    let mut cidrs = Vec::new();
+    let mut prefixes = Vec::new();
 
-    while start <= end {
-        let trailing_zeros = start.trailing_zeros().min(127) as u8;
+    while from <= to {
+        let trailing_zeros = from.trailing_zeros().min(127) as u8;
         let mut prefix = 128 - trailing_zeros;
         let (block_start, block_size) = loop {
             let mask = u128::MAX << (128 - prefix);
-            let block_start = start & mask;
+            let block_start = from & mask;
             let block_size = 1u128 << (128 - prefix);
             let block_end = block_start + block_size - 1;
 
-            if block_start >= start && block_end <= end {
+            if block_start >= from && block_end <= to {
                 break (block_start, block_size);
             }
 
             prefix += 1;
             if prefix > 128 {
                 prefix = 128;
-                break (start, 1);
+                break (from, 1);
             }
         };
 
-        cidrs.push(Prefix::new(u128_to_ip(block_start), prefix));
+        prefixes.push(Prefix::new(u128_to_ip(block_start), prefix));
 
-        start = block_start + block_size;
+        from = block_start + block_size;
     }
 
-    cidrs
+    prefixes
 }
 
-pub trait IpcidrTransform {
+trait IpCidrTransform {
     fn addr_from_16(a16: [u8; 16]) -> IpAddr;
     fn unmap(&self) -> IpAddr;
     fn ip_range(from: IpAddr, to: IpAddr) -> IpRange;
 }
 
-impl IpcidrTransform for IpAddr {
+impl IpCidrTransform for IpAddr {
     /// 将 16 字节数组转换为 IPv6 地址
     fn addr_from_16(a16: [u8; 16]) -> IpAddr {
         IpAddr::V6(Ipv6Addr::from(a16))

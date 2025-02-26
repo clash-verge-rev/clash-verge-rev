@@ -75,7 +75,7 @@ impl RuleParser {
             "mrs" => RuleFormat::Mrs,
             "yaml" => RuleFormat::Yaml,
             "text" => RuleFormat::Text,
-            _ => return Err(RuleParseError::InvalidRuleFormat),
+            _ => return Err(RuleParseError::InvalidFormat),
         };
         match behavior {
             RuleBehavior::Domain => DomainParseStrategy::parse(&buf, format),
