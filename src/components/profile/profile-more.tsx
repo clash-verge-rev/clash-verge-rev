@@ -48,6 +48,7 @@ interface Props {
   chainLogs?: Record<string, LogMessage[]>;
   reactivating: boolean;
   onToggleEnable: (enable: boolean) => void;
+  onDelete?: () => Promise<void>;
   onActivatedSave: () => void;
 }
 
@@ -70,6 +71,7 @@ export const ProfileMore = (props: Props) => {
     chainLogs = {},
     reactivating,
     onToggleEnable,
+    onDelete,
     onActivatedSave,
   } = props;
 
@@ -310,9 +312,7 @@ export const ProfileMore = (props: Props) => {
         onConfirm={async () => {
           setConfirmOpen(false);
           setToggling(true);
-          await deleteProfile(uid);
-          mutate("getProfiles");
-          mutate("getRuntimeLogs");
+          await onDelete?.();
           setToggling(false);
         }}
       />

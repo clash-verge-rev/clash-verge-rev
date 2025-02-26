@@ -15,6 +15,7 @@ import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { useProfiles } from "@/hooks/use-profiles";
 import {
   createProfile,
+  deleteProfile,
   enhanceProfiles,
   getProfiles,
   getRuntimeLogs,
@@ -249,7 +250,7 @@ const ProfilePage = () => {
     }),
   );
 
-  const onToggleEnable = useMemoizedFn(
+  const handleToggleEnable = useMemoizedFn(
     useLockFn(async (chainUid: string, enable: boolean) => {
       try {
         setActivatingUids([
@@ -258,8 +259,8 @@ const ProfilePage = () => {
           ...enabledChainUids,
         ]);
         await patchProfile(chainUid, { enable: enable });
-        mutateProfiles();
         mutateLogs();
+        mutateProfiles();
         Notice.success(t("Profile Switched"), 1000);
       } catch (error) {
         console.error(error);
@@ -268,6 +269,27 @@ const ProfilePage = () => {
           setActivatingUids([]);
         }, 500);
       }
+    }),
+  );
+
+  const handleChainDelete = useMemoizedFn(
+    useLockFn(async (item: IProfileItem) => {
+      if (item.enable) {
+        try {
+          setActivatingUids([
+            profiles.current || "",
+            item.uid,
+            ...enabledChainUids,
+          ]);
+          await deleteProfile(item.uid);
+          await onEnhance();
+        } catch (error: any) {
+          Notice.error(error);
+        } finally {
+          setActivatingUids([]);
+        }
+      }
+      mutateProfiles();
     }),
   );
 
@@ -553,8 +575,9 @@ const ProfilePage = () => {
                         chainLogs={chainLogs}
                         reactivating={activatingUids.includes(item.uid)}
                         onToggleEnable={async (enable) => {
-                          onToggleEnable(item.uid, enable);
+                          handleToggleEnable(item.uid, enable);
                         }}
+                        onDelete={() => handleChainDelete(item)}
                         onActivatedSave={() => onEnhance()}
                       />
                     </DraggableItem>
@@ -579,7 +602,7 @@ const ProfilePage = () => {
                       chainLogs={chainLogs}
                       reactivating={activatingUids.includes(draggingItem.uid)}
                       onToggleEnable={async (enable) => {
-                        onToggleEnable(draggingItem.uid, enable);
+                        handleToggleEnable(draggingItem.uid, enable);
                       }}
                       onActivatedSave={() => onEnhance()}
                     />

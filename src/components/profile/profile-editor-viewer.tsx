@@ -401,6 +401,9 @@ export const ProfileEditorViewer = (props: Props) => {
         if (form.option?.user_agent === "") {
           delete form.option.user_agent;
         }
+        if (profileItem.enable) {
+          form.enable = profileItem.enable;
+        }
         const name = form.name || `${form.type} file`;
         const item = { ...form, name };
 
