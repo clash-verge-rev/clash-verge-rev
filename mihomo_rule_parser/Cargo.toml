@@ -1,0 +1,16 @@
+[package]
+name = "mihomo_rule_parser"
+version = "0.1.0"
+edition = "2021"
+authors = ["oomeow"]
+description = "Mihomo Rule Parser"
+license = "MIT"
+
+[lib]
+name = "mihomo_rule_parser"
+
+[dependencies]
+anyhow = "1.0.96"
+byteorder = "1.5.0"
+thiserror = "2.0.11"
+zstd = "0.13.3"

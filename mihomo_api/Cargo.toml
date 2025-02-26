@@ -5,8 +5,8 @@ edition = "2021"
 authors = ["oomeow"]
 description = "Mihomo Api"
 license = "MIT"
-keywords = ["mihomo", "clash", "clash-meta"]
-repository = "https://github.com/oomeow/mihomo-api"
+# keywords = ["mihomo", "clash", "clash-meta"]
+# repository = "https://github.com/oomeow/mihomo-api"
 
 [lib]
 name = "mihomo_api"
