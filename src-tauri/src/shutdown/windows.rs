@@ -43,9 +43,11 @@ unsafe extern "system" fn shutdown_proc(
             log::info!("System is shutting down or user is logging off.");
         }
         WM_ENDSESSION => {
-            log::info!("Session ended, system shutting down.");
-            resolve::resolve_reset();
-            log::info!("resolved reset finished");
+            tauri::async_runtime::block_on(async move {
+                log::info!("Session ended, system shutting down.");
+                resolve::resolve_reset().await;
+                log::info!("resolved reset finished");
+            });
         }
         _ => {}
     };

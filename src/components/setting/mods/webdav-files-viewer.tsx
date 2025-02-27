@@ -121,25 +121,25 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
         await sleep(1000);
         setApplyingFile("");
         // apply theme mode
-        const verge = await getVergeConfig();
-        const mode = verge.theme_mode;
-        if (mode) {
-          if (mode === "system") {
-            const appWindow = getCurrentWebviewWindow();
-            const theme = (await appWindow.theme()) ?? "light";
-            setMode(theme);
-          } else {
-            setMode(mode);
-          }
-        }
+        // const verge = await getVergeConfig();
+        // const mode = verge.theme_mode;
+        // if (mode) {
+        //   if (mode === "system") {
+        //     const appWindow = getCurrentWebviewWindow();
+        //     const theme = (await appWindow.theme()) ?? "light";
+        //     setMode(theme);
+        //   } else {
+        //     setMode(mode);
+        //   }
+        // }
         Notice.success(t("Apply Backup Successful"));
 
         // emit reload all event
         // emit("verge://reload-all");
-        await sleep(1000);
-        await activateSelected();
-        await sleep(1000);
-        restartApp();
+        // await sleep(1000);
+        // await activateSelected();
+        // await sleep(1000);
+        // restartApp();
       } catch (e) {
         Notice.error(t("Apply Backup Failed"));
         setApplyingFile("");

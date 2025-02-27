@@ -50,12 +50,12 @@ pub async fn resolve_setup(app_handle: &AppHandle) {
     log_err!(handle::Handle::update_systray_part());
     log::trace!("init hotkey");
     log_err!(hotkey::Hotkey::global().init(app_handle.clone()));
-    log::trace!("init timer");
-    log_err!(timer::Timer::global().init());
     log::trace!("init webdav config");
     log_err!(backup::WebDav::global().init().await);
     log::trace!("init mihomo api client");
     log_err!(MihomoClientManager::global().init());
+    log::trace!("init timer");
+    log_err!(timer::Timer::global().init());
 
     let argvs = std::env::args().collect::<Vec<String>>();
     if argvs.len() > 1 {
@@ -67,9 +67,9 @@ pub async fn resolve_setup(app_handle: &AppHandle) {
 }
 
 /// reset system proxy
-pub fn resolve_reset() {
+pub async fn resolve_reset() {
     log_err!(sysopt::Sysopt::global().reset_sysproxy());
-    log_err!(CoreManager::global().stop_core());
+    log_err!(CoreManager::global().stop_core().await);
 }
 
 /// create main window

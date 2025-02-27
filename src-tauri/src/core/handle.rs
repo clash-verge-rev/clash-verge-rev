@@ -10,7 +10,7 @@ use tauri_plugin_notification::NotificationExt;
 
 #[derive(Debug, Default, Clone)]
 pub struct Handle {
-    pub app_handle: Arc<Mutex<Option<AppHandle>>>,
+    app_handle: Arc<Mutex<Option<AppHandle>>>,
 }
 
 impl Handle {

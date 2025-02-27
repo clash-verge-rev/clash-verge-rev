@@ -7,7 +7,11 @@ use crate::{
         LogMessage, MergeResult,
     },
     feat,
-    utils::{dirs, help, resolve, tmpl},
+    utils::{
+        dirs, help,
+        resolve::{self, resolve_reset},
+        tmpl,
+    },
 };
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
@@ -501,9 +505,9 @@ pub async fn get_clash_configs() -> CmdResult<bool> {
 }
 
 #[tauri::command]
-pub fn exit_app(app_handle: tauri::AppHandle) {
+pub async fn exit_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, true);
-    resolve::resolve_reset();
+    resolve::resolve_reset().await;
     app_handle.cleanup_before_exit();
     std::process::exit(0);
 }
@@ -612,19 +616,30 @@ pub async fn list_backup() -> CmdResult<Vec<ListFile>> {
 }
 
 #[tauri::command]
-pub async fn download_backup_and_reload(file_name: String) -> CmdResult {
-    let backup_archive = dirs::backup_archive_file().unwrap();
+pub async fn download_backup_and_reload(
+    app_handle: tauri::AppHandle,
+    file_name: String,
+) -> CmdResult {
+    let backup_archive = wrap_err!(dirs::backup_archive_file())?;
     wrap_err!(
         WebDav::download_file(file_name, backup_archive.clone()).await,
         "download backup file failed."
     )?;
+    let file = wrap_err!(
+        fs::File::open(backup_archive),
+        "Failed to open backup archive"
+    )?;
     // extract zip file
-    let mut zip = zip::ZipArchive::new(fs::File::open(backup_archive).unwrap()).unwrap();
-    zip.extract(dirs::app_home_dir().unwrap()).unwrap();
+    let mut zip = wrap_err!(zip::ZipArchive::new(file), "Failed to create zip archive")?;
+    wrap_err!(zip.extract(wrap_err!(dirs::app_home_dir())?))?;
     wrap_err!(
         Config::reload().await,
         "download backup file success, but reload config failed."
-    )
+    )?;
+    resolve_reset().await;
+    std::env::set_var("ApplyBackup", "true");
+    app_handle.restart();
+    // Ok(())
 }
 
 #[tauri::command]

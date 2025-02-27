@@ -242,26 +242,22 @@ impl CoreManager {
     }
 
     /// 停止核心运行
-    pub fn stop_core(&self) -> Result<()> {
+    pub async fn stop_core(&self) -> Result<()> {
         *self.need_restart_core.lock() = false;
         // 关闭tun模式
-        tauri::async_runtime::block_on(async move {
-            let mut disable = Mapping::new();
-            let mut tun = Mapping::new();
-            tun.insert("enable".into(), false.into());
-            disable.insert("tun".into(), tun.into());
-            log::debug!(target: "app", "disable tun mode");
-            let _ = MihomoClientManager::global()
-                .mihomo()
-                .patch_base_config(&disable)
-                .await;
-        });
+        let mut disable = Mapping::new();
+        let mut tun = Mapping::new();
+        tun.insert("enable".into(), false.into());
+        disable.insert("tun".into(), tun.into());
+        log::debug!(target: "app", "disable tun mode");
+        let _ = MihomoClientManager::global()
+            .mihomo()
+            .patch_base_config(&disable)
+            .await;
 
         if *self.use_service_mode.lock() {
             log::debug!(target: "app", "stop the core by service");
-            tauri::async_runtime::block_on(async move {
-                log_err!(service::stop_core_by_service().await);
-            });
+            log_err!(service::stop_core_by_service().await);
             return Ok(());
         }
 

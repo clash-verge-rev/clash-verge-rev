@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::core::mihomo::MihomoClientManager;
 use crate::feat;
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
@@ -6,8 +7,15 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tauri::{Emitter, Listener};
+
+use super::backup::ENV_APPLY_BACKUP;
+use super::handle;
 
 type TaskID = u64;
+
+const ACTIVATING_SELECTED_TASK_ID: TaskID = 0;
+const ACTIVATING_SELECTED_EVENT: &str = "activate-selected-finish";
 
 pub struct Timer {
     /// cron manager
@@ -16,7 +24,7 @@ pub struct Timer {
     /// save the current state
     timer_map: Arc<Mutex<HashMap<String, (TaskID, u64)>>>,
 
-    /// increment id
+    /// increment id, from 2, the 1 is used to activating selected task after backup file
     timer_count: Arc<Mutex<TaskID>>,
 }
 
@@ -33,13 +41,23 @@ impl Timer {
 
     /// restore timer
     pub fn init(&self) -> Result<()> {
+        self.activate_selected_task()?;
         self.refresh_profiles()?;
+
+        let app_handle = handle::Handle::global().get_app_handle()?;
+        app_handle.listen(ACTIVATING_SELECTED_EVENT, |_| {
+            log::info!("recived finish activating selected event");
+            std::env::remove_var(ENV_APPLY_BACKUP);
+            let delay_timer = Self::global().delay_timer.lock();
+            // TODO: remove error --> (Fn : `finish_task`, Without the `task_mark_ref_mut` for task_id :0)
+            //      But, this task seems to have been removed
+            let _ = delay_timer.remove_task(ACTIVATING_SELECTED_TASK_ID);
+        });
 
         let cur_timestamp = chrono::Local::now().timestamp();
 
         let timer_map = self.timer_map.lock();
         let delay_timer = self.delay_timer.lock();
-
         let profiles = Config::profiles().latest().get_profiles();
         profiles
             .iter()
@@ -65,12 +83,94 @@ impl Timer {
         Ok(())
     }
 
+    pub fn add_async_task<F, U>(&self, id: TaskID, seconds: u64, async_task: F) -> Result<()>
+    where
+        F: Fn() -> U + 'static + Send,
+        U: std::future::Future + 'static + Send,
+    {
+        let task = TaskBuilder::default()
+            .set_task_id(id)
+            .set_maximum_parallel_runnable_num(1)
+            .set_frequency_repeated_by_seconds(seconds)
+            .spawn_async_routine(async_task)
+            .context("failed to create timer task")?;
+
+        self.delay_timer
+            .lock()
+            .add_task(task)
+            .context("failed to add timer task")?;
+
+        Ok(())
+    }
+
+    fn activate_selected_task(&self) -> Result<()> {
+        if std::env::var(ENV_APPLY_BACKUP).is_err() {
+            return Ok(());
+        }
+
+        log::info!("backup file has been applied, register activating group selected task");
+        let body = move || async {
+            log::info!("starting activating selected task");
+            let current = Config::profiles().latest().get_current();
+            if current.is_none() {
+                log::info!("No current profile found");
+                return;
+            }
+            let current = current.unwrap_or_default();
+            let profiles = Config::profiles().latest().clone();
+            let mihomo = MihomoClientManager::global().mihomo();
+
+            if mihomo.get_base_config().await.is_err() {
+                log::error!("Failed to get base config");
+                return;
+            }
+            if profiles.get_item(&current).is_err() {
+                log::error!("Failed to get profile");
+                return;
+            }
+            let profile = profiles.get_item(&current).unwrap();
+            let selected = profile.selected.clone().unwrap_or_default();
+            for selected_item in selected {
+                if selected_item.now.is_none() {
+                    continue;
+                }
+                let proxy_name = selected_item.name.clone().unwrap_or_default();
+                let node = selected_item.now.clone().unwrap();
+                if mihomo
+                    .select_node_for_proxy(&proxy_name, &node)
+                    .await
+                    .is_err()
+                {
+                    if mihomo.get_proxy_by_name(&node).await.is_err() {
+                        log::error!("Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist", proxy_name, node, node);
+                        continue;
+                    }
+                    log::error!(
+                        "Failed to select node for proxy: {}, node: {}",
+                        proxy_name,
+                        node
+                    );
+                    return;
+                }
+                log::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
+                std::thread::sleep(std::time::Duration::from_millis(200));
+            }
+            let app_handle = handle::Handle::global().get_app_handle().unwrap();
+            let _ = app_handle.emit(ACTIVATING_SELECTED_EVENT, ());
+        };
+
+        // 10 seconds interval
+        self.add_async_task(ACTIVATING_SELECTED_TASK_ID, 10, body)?;
+
+        Ok(())
+    }
+
     /// Correctly update all cron tasks
     pub fn refresh_profiles(&self) -> Result<()> {
         let diff_map = self.gen_diff_profiles();
 
         let mut timer_map = self.timer_map.lock();
-        let mut delay_timer = self.delay_timer.lock();
+        let delay_timer = self.delay_timer.lock();
 
         for (uid, diff) in diff_map.into_iter() {
             match diff {
@@ -80,12 +180,12 @@ impl Timer {
                 }
                 DiffFlag::Add(tid, val) => {
                     let _ = timer_map.insert(uid.clone(), (tid, val));
-                    crate::log_err!(self.add_profiles_task(&mut delay_timer, uid, tid, val));
+                    crate::log_err!(self.add_profiles_task(&delay_timer, uid, tid, val));
                 }
                 DiffFlag::Mod(tid, val) => {
                     let _ = timer_map.insert(uid.clone(), (tid, val));
                     crate::log_err!(delay_timer.remove_task(tid));
-                    crate::log_err!(self.add_profiles_task(&mut delay_timer, uid, tid, val));
+                    crate::log_err!(self.add_profiles_task(&delay_timer, uid, tid, val));
                 }
             }
         }
@@ -147,7 +247,7 @@ impl Timer {
     /// add a cron task
     fn add_profiles_task(
         &self,
-        delay_timer: &mut DelayTimer,
+        delay_timer: &DelayTimer,
         uid: String,
         tid: TaskID,
         minutes: u64,
@@ -160,29 +260,6 @@ impl Timer {
             .spawn_async_routine(move || Self::update_profile_task(uid.to_owned()))
             .context("failed to create timer task")?;
 
-        delay_timer
-            .add_task(task)
-            .context("failed to add timer task")?;
-
-        Ok(())
-    }
-
-    #[allow(unused)]
-    pub fn add_async_task<T, S, F, U>(id: T, seconds: S, task_function: F) -> Result<()>
-    where
-        T: Into<TaskID>,
-        S: Into<u64>,
-        F: Fn() -> U + 'static + Send,
-        U: std::future::Future + 'static + Send,
-    {
-        let task = TaskBuilder::default()
-            .set_task_id(id.into())
-            .set_maximum_parallel_runnable_num(1)
-            .set_frequency_repeated_by_seconds(seconds.into())
-            .spawn_async_routine(task_function)
-            .context("failed to create timer task")?;
-
-        let delay_timer = Self::global().delay_timer.lock();
         delay_timer
             .add_task(task)
             .context("failed to add timer task")?;

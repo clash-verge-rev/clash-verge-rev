@@ -6,9 +6,9 @@ use signal_hook::{
 };
 
 pub fn register() {
-    let signals = &[SIGTERM, SIGINT, SIGHUP];
-    let mut sigs = Signals::new(signals).unwrap();
-    std::thread::spawn(move || {
+    std::thread::spawn(move || async {
+        let signals = [SIGTERM, SIGINT, SIGHUP];
+        let mut sigs = Signals::new(signals).unwrap();
         for signal in &mut sigs {
             let signal_to_str = |signal: i32| match signal {
                 SIGTERM => "SIGTERM",
@@ -17,7 +17,7 @@ pub fn register() {
                 _ => "UNKNOWN",
             };
             log::info!("Received signal {}", signal_to_str(signal));
-            resolve::resolve_reset();
+            resolve::resolve_reset().await;
             // After printing it, do whatever the signal was supposed to do in the first place
             low_level::emulate_default_handler(signal).unwrap();
         }

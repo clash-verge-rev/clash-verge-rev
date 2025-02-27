@@ -86,8 +86,8 @@ pub fn run() -> Result<()> {
             .show();
 
         // avoid window freezing, spawn a new thread to resolve reset
-        let task = std::thread::spawn(|| {
-            resolve::resolve_reset();
+        let task = std::thread::spawn(|| async {
+            resolve::resolve_reset().await;
         });
         let _ = task.join();
         let _ = handle::Handle::global()

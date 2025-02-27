@@ -14,11 +14,14 @@ use zip::write::SimpleFileOptions;
 
 // new backup dir
 #[cfg(not(feature = "verge-dev"))]
-static BACKUP_DIR: &str = "clash-verge-self";
+const BACKUP_DIR: &str = "clash-verge-self";
 #[cfg(feature = "verge-dev")]
-static BACKUP_DIR: &str = "clash-verge-self-dev";
+const BACKUP_DIR: &str = "clash-verge-self-dev";
 
-static TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
+const TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
+
+// in timer crate, used to activating proxies group selected after restart app
+pub const ENV_APPLY_BACKUP: &str = "ApplyBackup";
 
 /// create backup zip file
 ///
