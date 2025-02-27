@@ -240,12 +240,18 @@ impl CoreManager {
     }
 
     /// 验证指定的配置文件
-    pub async fn validate_config_file(&self, config_path: &str) -> Result<(bool, String)> {
+    pub async fn validate_config_file(&self, config_path: &str, is_merge_file: Option<bool>) -> Result<(bool, String)> {
         // 检查文件是否存在
         if !std::path::Path::new(config_path).exists() {
             let error_msg = format!("File not found: {}", config_path);
             //handle::Handle::notice_message("config_validate::file_not_found", &error_msg);
             return Ok((false, error_msg));
+        }
+        
+        // 如果是合并文件且不是强制验证，执行语法检查但不进行完整验证
+        if is_merge_file.unwrap_or(false) {
+            println!("[core配置验证] 检测到Merge文件，仅进行语法检查: {}", config_path);
+            return self.validate_file_syntax(config_path).await;
         }
         
         // 检查是否为脚本文件
@@ -345,7 +351,8 @@ impl CoreManager {
             Ok(content) => content,
             Err(err) => {
                 let error_msg = format!("Failed to read script file: {}", err);
-                //handle::Handle::notice_message("config_validate::script_error", &error_msg);
+                log::warn!(target: "app", "脚本语法错误: {}", err);
+                //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 return Ok((false, error_msg));
             }
         };
@@ -437,6 +444,36 @@ impl CoreManager {
                 println!("[core配置更新] 验证过程发生错误: {}", e);
                 Config::runtime().discard();
                 Err(e)
+            }
+        }
+    }
+
+    /// 只进行文件语法检查，不进行完整验证
+    async fn validate_file_syntax(&self, config_path: &str) -> Result<(bool, String)> {
+        println!("[core配置语法检查] 开始检查文件: {}", config_path);
+        
+        // 读取文件内容
+        let content = match std::fs::read_to_string(config_path) {
+            Ok(content) => content,
+            Err(err) => {
+                let error_msg = format!("Failed to read file: {}", err);
+                println!("[core配置语法检查] 无法读取文件: {}", error_msg);
+                return Ok((false, error_msg));
+            }
+        };
+        
+        // 对YAML文件尝试解析，只检查语法正确性
+        println!("[core配置语法检查] 进行YAML语法检查");
+        match serde_yaml::from_str::<serde_yaml::Value>(&content) {
+            Ok(_) => {
+                println!("[core配置语法检查] YAML语法检查通过");
+                Ok((true, String::new()))
+            },
+            Err(err) => {
+                // 使用标准化的前缀，以便错误处理函数能正确识别
+                let error_msg = format!("YAML syntax error: {}", err);
+                println!("[core配置语法检查] YAML语法错误: {}", error_msg);
+                Ok((false, error_msg))
             }
         }
     }

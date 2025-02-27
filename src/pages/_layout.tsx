@@ -84,6 +84,33 @@ const handleNoticeMessage = (
     case "config_validate::file_not_found":
       Notice.error(`${t("File Not Found")} ${msg}`);
       break;
+    case "config_validate::yaml_syntax_error":
+      Notice.error(`${t("YAML Syntax Error")} ${msg}`);
+      break;
+    case "config_validate::yaml_read_error":
+      Notice.error(`${t("YAML Read Error")} ${msg}`);
+      break;
+    case "config_validate::yaml_mapping_error":
+      Notice.error(`${t("YAML Mapping Error")} ${msg}`);
+      break;
+    case "config_validate::yaml_key_error":
+      Notice.error(`${t("YAML Key Error")} ${msg}`);
+      break;
+    case "config_validate::yaml_error":
+      Notice.error(`${t("YAML Error")} ${msg}`);
+      break;
+    case "config_validate::merge_syntax_error":
+      Notice.error(`${t("Merge File Syntax Error")} ${msg}`);
+      break;
+    case "config_validate::merge_mapping_error":
+      Notice.error(`${t("Merge File Mapping Error")} ${msg}`);
+      break;
+    case "config_validate::merge_key_error":
+      Notice.error(`${t("Merge File Key Error")} ${msg}`);
+      break;
+    case "config_validate::merge_error":
+      Notice.error(`${t("Merge File Error")} ${msg}`);
+      break;
     case "config_core::change_success":
       Notice.success(`${t("Core Changed Successfully")}: ${msg}`);
       break;
