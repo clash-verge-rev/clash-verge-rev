@@ -61,6 +61,10 @@ impl IClashConfig {
         map.insert("secret".into(), nanoid!().into());
         map.insert("tun".into(), tun.into());
         map.insert("unified-delay".into(), true.into());
+        // default store selected
+        let mut profile = Mapping::new();
+        profile.insert("store-selected".into(), true.into());
+        map.insert("profile".into(), profile.into());
 
         Self(map)
     }
