@@ -451,5 +451,18 @@
   "File Not Found": "File missing, changes reverted",
   "Script File Error": "Script file error, changes reverted",
   "Core Changed Successfully": "Core changed successfully",
-  "Failed to Change Core": "Failed to change core"
+  "Failed to Change Core": "Failed to change core",
+  "YAML Syntax Error": "YAML syntax error, changes reverted",
+  "YAML Read Error": "YAML read error, changes reverted",
+  "YAML Mapping Error": "YAML mapping error, changes reverted",
+  "YAML Key Error": "YAML key error, changes reverted",
+  "YAML Error": "YAML error, changes reverted",
+  "Merge File Syntax Error": "Merge file syntax error, changes reverted",
+  "Merge File Mapping Error": "Merge file mapping error, changes reverted",
+  "Merge File Key Error": "Merge file key error, changes reverted",
+  "Merge File Error": "Merge file error, changes reverted",
+  "Validate YAML File": "Validate YAML File",
+  "Validate Merge File": "Validate Merge File",
+  "Validation Success": "Validation Success",
+  "Validation Failed": "Validation Failed"
 }
