@@ -10,6 +10,7 @@ use tokio::time::Duration;
 // Windows only
 
 const SERVICE_URL: &str = "http://127.0.0.1:33211";
+const REQUIRED_SERVICE_VERSION: &str = "1.0.1"; // 定义所需的服务版本号
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ResponseBody {
@@ -20,10 +21,23 @@ pub struct ResponseBody {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct VersionResponse {
+    pub service: String,
+    pub version: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct JsonResponse {
     pub code: u64,
     pub msg: String,
     pub data: Option<ResponseBody>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct VersionJsonResponse {
+    pub code: u64,
+    pub msg: String,
+    pub data: Option<VersionResponse>,
 }
 
 #[cfg(target_os = "windows")]
@@ -177,8 +191,43 @@ pub async fn check_service() -> Result<JsonResponse> {
     Ok(response)
 }
 
+/// check the service version
+pub async fn check_service_version() -> Result<String> {
+    let url = format!("{SERVICE_URL}/version");
+    let response = reqwest::ClientBuilder::new()
+        .no_proxy()
+        .timeout(Duration::from_secs(3))
+        .build()?
+        .get(url)
+        .send()
+        .await
+        .context("failed to connect to the Clash Verge Service")?
+        .json::<VersionJsonResponse>()
+        .await
+        .context("failed to parse the Clash Verge Service version response")?;
+
+    match response.data {
+        Some(data) => Ok(data.version),
+        None => bail!("service version not found in response"),
+    }
+}
+
+/// check if service needs to be reinstalled
+pub async fn check_service_needs_reinstall() -> bool {
+    match check_service_version().await {
+        Ok(version) => version != REQUIRED_SERVICE_VERSION,
+        Err(_) => true, // 如果无法获取版本或服务未运行，也需要重新安装
+    }
+}
+
 /// start the clash by service
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
+    // 检查服务版本，如果不匹配则重新安装
+    if check_service_needs_reinstall().await {
+        log::info!(target: "app", "service version mismatch, reinstalling");
+        reinstall_service().await?;
+    }
+
     let clash_core = { Config::verge().latest().clash_core.clone() };
     let clash_core = clash_core.unwrap_or("verge-mihomo".into());
 
