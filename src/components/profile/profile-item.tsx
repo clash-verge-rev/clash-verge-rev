@@ -212,23 +212,15 @@ export const ProfileItem = (props: Props) => {
       icon: <FileOpen fontSize="small" />,
       handler: onOpenFile,
     },
-    {
-      label: "Delete",
-      icon: <Delete fontSize="small" color="error" />,
-      handler: () => {
-        setAnchorEl(null);
-        setConfirmOpen(true);
-      },
-    },
   ];
 
   if (hasUrl) {
-    menus.splice(4, 0, {
+    menus.push({
       label: "Update",
       icon: <Refresh fontSize="small" />,
       handler: () => onUpdate(0),
     });
-    menus.splice(5, 0, {
+    menus.push({
       label: "Update(Proxy)",
       icon: <CloudSync fontSize="small" />,
       handler: () => onUpdate(2),
@@ -241,6 +233,14 @@ export const ProfileItem = (props: Props) => {
       });
     }
   }
+  menus.push({
+    label: "Delete",
+    icon: <Delete fontSize="small" color="error" />,
+    handler: () => {
+      setAnchorEl(null);
+      setConfirmOpen(true);
+    },
+  });
 
   const boxStyle = {
     height: 26,
