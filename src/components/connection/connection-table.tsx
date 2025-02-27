@@ -138,6 +138,9 @@ export const ConnectionTable = (props: Props) => {
       const { metadata, rulePayload } = each;
       const chains = [...each.chains].reverse().join(" / ");
       const rule = rulePayload ? `${each.rule}(${rulePayload})` : each.rule;
+      const Destination = metadata.destinationIP
+        ? `${metadata.destinationIP}:${metadata.destinationPort}`
+        : `${metadata.remoteDestination}:${metadata.destinationPort}`;
       return {
         id: each.id,
         host: metadata.host
@@ -152,7 +155,7 @@ export const ConnectionTable = (props: Props) => {
         process: truncateStr(metadata.process || metadata.processPath),
         time: each.start,
         source: `${metadata.sourceIP}:${metadata.sourcePort}`,
-        remoteDestination: `${metadata.remoteDestination}:${metadata.destinationPort}`,
+        remoteDestination: Destination,
         type: `${metadata.type}(${metadata.network})`,
         connectionData: each,
       };
