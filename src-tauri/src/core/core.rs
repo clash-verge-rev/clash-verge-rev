@@ -174,6 +174,12 @@ impl CoreManager {
 
     /// 内部验证配置文件的实现
     async fn validate_config_internal(&self, config_path: &str) -> Result<(bool, String)> {
+        // 检查程序是否正在退出，如果是则跳过验证
+        if handle::Handle::global().is_exiting() {
+            println!("[core配置验证] 应用正在退出，跳过验证");
+            return Ok((true, String::new()));
+        }
+        
         println!("[core配置验证] 开始验证配置文件: {}", config_path);
         
         let clash_core = { Config::verge().latest().clash_core.clone() };
@@ -241,6 +247,12 @@ impl CoreManager {
 
     /// 验证指定的配置文件
     pub async fn validate_config_file(&self, config_path: &str, is_merge_file: Option<bool>) -> Result<(bool, String)> {
+        // 检查程序是否正在退出，如果是则跳过验证
+        if handle::Handle::global().is_exiting() {
+            println!("[core配置验证] 应用正在退出，跳过验证");
+            return Ok((true, String::new()));
+        }
+        
         // 检查文件是否存在
         if !std::path::Path::new(config_path).exists() {
             let error_msg = format!("File not found: {}", config_path);
@@ -390,6 +402,12 @@ impl CoreManager {
 
     /// 更新proxies等配置
     pub async fn update_config(&self) -> Result<(bool, String)> {
+        // 检查程序是否正在退出，如果是则跳过完整验证流程
+        if handle::Handle::global().is_exiting() {
+            println!("[core配置更新] 应用正在退出，跳过验证");
+            return Ok((true, String::new()));
+        }
+        
         println!("[core配置更新] 开始更新配置");
         
         // 1. 先生成新的配置内容
