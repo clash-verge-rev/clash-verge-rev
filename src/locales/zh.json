@@ -457,5 +457,7 @@
   "Validate YAML File": "验证YAML文件",
   "Validate Merge File": "验证覆写文件",
   "Validation Success": "验证成功",
-  "Validation Failed": "验证失败"
+  "Validation Failed": "验证失败",
+  "Verge Basic Setting": "Verge 基础设置",
+  "Verge Advanced Setting": "Verge 高级设置"
 }

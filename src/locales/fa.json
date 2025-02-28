@@ -444,5 +444,7 @@
   "File Not Found": "فایل یافت نشد، تغییرات برگشت داده شد",
   "Script File Error": "خطای فایل اسکریپت، تغییرات برگشت داده شد",
   "Core Changed Successfully": "هسته با موفقیت تغییر کرد",
-  "Failed to Change Core": "تغییر هسته ناموفق بود"
+  "Failed to Change Core": "تغییر هسته ناموفق بود",
+  "Verge Basic Setting": "تنظیمات پایه Verge",
+  "Verge Advanced Setting": "تنظیمات پیشرفته Verge"
 }

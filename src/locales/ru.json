@@ -444,5 +444,7 @@
   "File Not Found": "Файл не найден, изменения отменены",
   "Script File Error": "Ошибка файла скрипта, изменения отменены",
   "Core Changed Successfully": "Ядро успешно сменено",
-  "Failed to Change Core": "Не удалось сменить ядро"
+  "Failed to Change Core": "Не удалось сменить ядро",
+  "Verge Basic Setting": "Основные настройки Verge",
+  "Verge Advanced Setting": "Расширенные настройки Verge"
 }
