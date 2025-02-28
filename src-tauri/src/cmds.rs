@@ -334,7 +334,7 @@ pub fn get_verge_config() -> CmdResult<IVergeResponse> {
 
 #[tauri::command]
 pub async fn patch_verge_config(payload: IVerge) -> CmdResult {
-    wrap_err!(feat::patch_verge(payload).await)
+    wrap_err!(feat::patch_verge(payload, false).await)
 }
 
 #[tauri::command]
