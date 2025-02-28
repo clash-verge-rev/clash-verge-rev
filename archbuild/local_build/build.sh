@@ -15,7 +15,12 @@ DEB_FILE="${APP_NAME}_${VERSION}_amd64.deb"
 DEB_PATH="$PROJECT_ROOT_DIR/src-tauri/target/release/bundle/deb/${DEB_FILE}"
 # arch build bundle name
 ARCH_PKG_NAME=$(grep "^pkgname=" ${CURRENT_SCRIPT_DIR}/PKGBUILD | sed 's/^pkgname=//')
-ARCH_BUNDLE_NAME="${ARCH_PKG_NAME}-${VERSION}-1-x86_64.pkg.tar.zst"
+AUR_VERSION=$(echo "$VERSION" | awk -F'-' '{
+  OFS="_";
+  for (i=2; i<=NF; i++) gsub(/\./, "_", $i);
+  print $0
+}')
+ARCH_BUNDLE_NAME="${ARCH_PKG_NAME}-${AUR_VERSION}-1-x86_64.pkg.tar.zst"
 
 # readonly vars
 readonly CURRENT_SCRIPT_DIR
@@ -44,7 +49,7 @@ else
 fi
 
 # change version
-sed -i "s/pkgver=.*/pkgver=${VERSION}/" ${CURRENT_SCRIPT_DIR}/PKGBUILD
+sed -i "s/^pkgver=.*/pkgver=${AUR_VERSION}/" ${CURRENT_SCRIPT_DIR}/PKGBUILD
 # update checksums
 sed -i "s/sha256sums_x86_64=.*/sha256sums_x86_64=(\"$(sha256sum "${DEB_FILE}" | awk '{print $1}')\")/" ${CURRENT_SCRIPT_DIR}/PKGBUILD
 

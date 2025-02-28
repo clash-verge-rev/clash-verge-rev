@@ -37,10 +37,10 @@ for (const file of changeFile) {
     data = data.replace(/version = ".*"/, `version = "${version}"`);
   }
   if (data.includes("pkgver=")) {
-    data = data.replace(
-      /pkgver=\d+\.\d+\.\d+(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?/,
-      `pkgver=${version}`,
-    );
+    // 正向后行断言 (?<=)
+    const aurVersion = version.replace(/-|(?<=-.*?)\./g, "_");
+    data = data.replace(/pkgver=.*/, `pkgver=${aurVersion}`);
+    data = data.replace(/_pkgver=.*/, `_pkgver=${version}`);
   }
   fs.writeFileSync(file, data);
 }

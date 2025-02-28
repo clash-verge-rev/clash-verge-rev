@@ -394,19 +394,27 @@ const resolveServicePermission = async () => {
 };
 
 // clash-verge-service
-const GET_LATEST_RELEASE_API =
-  "https://api.github.com/repos/oomeow/clash-verge-service/releases/latest";
 
 async function getLatestClashVergeServices() {
-  const response = await fetch(GET_LATEST_RELEASE_API);
-  const json = await response.json();
-  const version = json.tag_name;
-  log_info(`Latest Clash Verge Service version: ${version}`);
-  const assets = json.assets;
-  const downloadItem = assets.find((item) => item.name.includes(SIDECAR_HOST));
+  // TODO: Github rest api are rate-limited
+  // const GET_LATEST_RELEASE_API =
+  //   "https://api.github.com/repos/oomeow/clash-verge-service/releases/latest";
+  // const response = await fetch(GET_LATEST_RELEASE_API);
+  // const json = await response.json();
+  // const version = json.tag_name;
+  // log_info(`Latest Clash Verge Service version: ${version}`);
+  // const assets = json.assets;
+  // const downloadItem = assets.find((item) => item.name.includes(SIDECAR_HOST));
+  // return {
+  //   file: downloadItem.name,
+  //   downloadURL: downloadItem.browser_download_url,
+  // };
+  const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
+  ("https://github.com/oomeow/clash-verge-service/releases/download/v1.0.1/clash-verge-service-aarch64-unknown-linux-gnu.tar.gz");
+  const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/v1.0.1/${fileName}`;
   return {
-    file: downloadItem.name,
-    downloadURL: downloadItem.browser_download_url,
+    file: fileName,
+    downloadURL: downloadURL,
   };
 }
 
