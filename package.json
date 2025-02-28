@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@actions/github": "6.0.0",
-    "@tauri-apps/cli": "2.3.0",
+    "@tauri-apps/cli": "2.3.1",
     "@types/cli-color": "2.0.6",
     "@types/fs-extra": "11.0.4",
     "@types/js-cookie": "3.0.6",
