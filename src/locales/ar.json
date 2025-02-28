@@ -447,5 +447,7 @@
   "File Not Found": "الملف غير موجود، تم التراجع عن التغييرات",
   "Script File Error": "خطأ في ملف السكريبت، تم التراجع عن التغييرات",
   "Core Changed Successfully": "تم تغيير النواة بنجاح",
-  "Failed to Change Core": "فشل تغيير النواة"
+  "Failed to Change Core": "فشل تغيير النواة",
+  "Verge Basic Setting": "الإعدادات الأساسية  Verge",
+  "Verge Advanced Setting": "الإعدادات الأساسية  Verge"
 }

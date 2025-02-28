@@ -443,5 +443,7 @@
   "File Not Found": "Файл табылмады, үзгәрешләр кире кайтарылды",
   "Script File Error": "Скрипт файлы хатасы, үзгәрешләр кире кайтарылды",
   "Core Changed Successfully": "Ядро уңышлы алыштырылды",
-  "Failed to Change Core": "Ядро алыштыру уңышсыз булды"
+  "Failed to Change Core": "Ядро алыштыру уңышсыз булды",
+  "Verge Basic Setting": "Verge Төп көйләүләр",
+  "Verge Advanced Setting": "Verge Киңәйтелгән көйләүләр"
 }
