@@ -2,8 +2,8 @@
 
 pkgname=clash-verge-self-bin
 _pkgname=clash-verge-self
-pkgver=2.0.0
-_pkgver=2.0.0
+pkgver=2.0.0_beta_1
+_pkgver=2.0.0-beta.1
 pkgrel=1
 pkgdesc="Continuation of Clash Verge | A Clash Meta GUI based on Tauri"
 arch=('x86_64')

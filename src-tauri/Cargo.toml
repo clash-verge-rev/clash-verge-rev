@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "2.0.0"
+version = "2.0.0-beta.1"
 description = "clash verge"
 authors = ["zzzgydi", "wonfen", "MystiPanda", "oomeow"]
 license = "GPL-3.0-only"
