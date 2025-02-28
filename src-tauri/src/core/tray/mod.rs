@@ -87,7 +87,7 @@ impl Tray {
             {
                 match tray_event.as_str() {
                     "system_proxy" => feat::toggle_system_proxy(),
-                    "tun_mode" => feat::toggle_tun_mode(),
+                    "tun_mode" => feat::toggle_tun_mode(None),
                     "main_window" => resolve::create_window(),
                     _ => {}
                 }
@@ -102,7 +102,7 @@ impl Tray {
             {
                 match tray_event.as_str() {
                     "system_proxy" => feat::toggle_system_proxy(),
-                    "tun_mode" => feat::toggle_tun_mode(),
+                    "tun_mode" => feat::toggle_tun_mode(None),
                     "main_window" => resolve::create_window(),
                     _ => {}
                 }
@@ -594,7 +594,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         }
         "open_window" => resolve::create_window(),
         "system_proxy" => feat::toggle_system_proxy(),
-        "tun_mode" => feat::toggle_tun_mode(),
+        "tun_mode" => feat::toggle_tun_mode(None),
         "copy_env" => feat::copy_clash_env(),
         "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
         "open_core_dir" => crate::log_err!(cmds::open_core_dir()),

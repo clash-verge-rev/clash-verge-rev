@@ -151,7 +151,7 @@ pub fn toggle_system_proxy() {
         match patch_verge(IVerge {
             enable_system_proxy: Some(!enable),
             ..IVerge::default()
-        })
+        }, false)
         .await
         {
             Ok(_) => handle::Handle::refresh_verge(),
@@ -176,7 +176,7 @@ pub fn toggle_proxy_profile(profile_index: String) {
 }
 
 // 切换tun模式
-pub fn toggle_tun_mode() {
+pub fn toggle_tun_mode(not_save_file: Option<bool>) {
     let enable = Config::verge().data().enable_tun_mode;
     let enable = enable.unwrap_or(false);
 
@@ -184,7 +184,7 @@ pub fn toggle_tun_mode() {
         match patch_verge(IVerge {
             enable_tun_mode: Some(!enable),
             ..IVerge::default()
-        })
+        }, not_save_file.unwrap_or(false))
         .await
         {
             Ok(_) => handle::Handle::refresh_verge(),
@@ -196,6 +196,7 @@ pub fn toggle_tun_mode() {
 pub fn quit(code: Option<i32>) {
     let app_handle = handle::Handle::global().app_handle().unwrap();
     handle::Handle::global().set_is_exiting();
+    toggle_tun_mode(Some(true));
     resolve::resolve_reset();
     log_err!(handle::Handle::global().get_window().unwrap().close());
     app_handle.exit(code.unwrap_or(0));
@@ -236,7 +237,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
 /// 修改verge的订阅
 /// 一般都是一个个的修改
-pub async fn patch_verge(patch: IVerge) -> Result<()> {
+pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
     Config::verge().draft().patch_config(patch.clone());
 
     let tun_mode = patch.enable_tun_mode;
@@ -397,7 +398,9 @@ pub async fn patch_verge(patch: IVerge) -> Result<()> {
     match res {
         Ok(()) => {
             Config::verge().apply();
-            Config::verge().data().save_file()?;
+            if !not_save_file {
+                Config::verge().data().save_file()?;
+            }
 
             Ok(())
         }
@@ -617,7 +620,8 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
             webdav_username,
             webdav_password,
             ..IVerge::default()
-        })
+        },
+        false)
         .await
     );
     // 最后删除临时文件
