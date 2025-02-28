@@ -443,5 +443,7 @@
   "File Not Found": "File tidak ditemukan, perubahan dibatalkan",
   "Script File Error": "Kesalahan file skrip, perubahan dibatalkan",
   "Core Changed Successfully": "Inti berhasil diubah",
-  "Failed to Change Core": "Gagal mengubah inti"
+  "Failed to Change Core": "Gagal mengubah inti",
+  "Verge Basic Setting": "Pengaturan Dasar Verge",
+  "Verge Advanced Setting": "Pengaturan Lanjutan Verge"
 }
