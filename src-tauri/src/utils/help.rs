@@ -94,7 +94,7 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 
 /// open file
 /// use vscode by default
-// #[cfg(not(target_os = "windows"))]
+#[cfg(not(target_os = "windows"))]
 pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
     use tauri_plugin_opener::OpenerExt;
 
@@ -110,26 +110,27 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
 
 // open file
 // use vscode by default
-// #[cfg(target_os = "windows")]
-// pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
-//     use tauri_plugin_shell::ShellExt;
+#[cfg(target_os = "windows")]
+pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
+    use tauri_plugin_opener::OpenerExt;
+    use tauri_plugin_shell::ShellExt;
 
-//     let shell = app.shell();
-//     let path_ = path.clone();
-//     let output = tauri::async_runtime::block_on(async move {
-//         shell
-//             .command("cmd")
-//             .args(["/c", "code", &path_.to_string_lossy()])
-//             .output()
-//             .await
-//             .unwrap()
-//     });
+    let shell = app.shell();
+    let path_ = path.clone();
+    let output = tauri::async_runtime::block_on(async move {
+        shell
+            .command("cmd")
+            .args(["/c", "code", &path_.to_string_lossy()])
+            .output()
+            .await
+            .unwrap()
+    });
 
-//     if !output.status.success() {
-//         app.shell().open(path.to_string_lossy(), None)?;
-//     }
-//     Ok(())
-// }
+    if !output.status.success() {
+        let _ = app.opener().open_path(path.to_string_lossy(), None::<&str>);
+    }
+    Ok(())
+}
 
 #[macro_export]
 macro_rules! error {
