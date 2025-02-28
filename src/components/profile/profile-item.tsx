@@ -1,11 +1,6 @@
 import { Notice, ScrollableText } from "@/components/base";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
-import {
-  deleteProfile,
-  openWebUrl,
-  updateProfile,
-  viewProfile,
-} from "@/services/cmds";
+import { openWebUrl, updateProfile, viewProfile } from "@/services/cmds";
 import {
   useLoadingCache,
   useSetLoadingCache,
@@ -58,6 +53,7 @@ interface Props {
   itemData: IProfileItem;
   chainLogs: Record<string, LogMessage[]>;
   onSelect: (force: boolean) => void;
+  onDelete: () => void;
   onReactivate: () => void;
 }
 
@@ -70,6 +66,7 @@ export const ProfileItem = (props: Props) => {
     itemData,
     chainLogs,
     onSelect,
+    onDelete,
     onReactivate,
   } = props;
 
@@ -183,16 +180,6 @@ export const ProfileItem = (props: Props) => {
       );
     } finally {
       setLoadingCache((cache) => ({ ...cache, [uid]: false }));
-    }
-  });
-
-  const onDelete = useLockFn(async () => {
-    setAnchorEl(null);
-    try {
-      await deleteProfile(uid);
-      mutate("getProfiles");
-    } catch (err: any) {
-      Notice.error(err?.message || err.toString());
     }
   });
 
@@ -418,8 +405,9 @@ export const ProfileItem = (props: Props) => {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={() => {
-          onDelete();
+          setAnchorEl(null);
           setConfirmOpen(false);
+          onDelete();
         }}
       />
     </Box>

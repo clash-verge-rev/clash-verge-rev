@@ -250,6 +250,20 @@ const ProfilePage = () => {
     }),
   );
 
+  const onDelete = useMemoizedFn(
+    useLockFn(async (uid: string) => {
+      try {
+        setActivatingUids([uid, ...enabledChainUids]);
+        await deleteProfile(uid);
+        mutateProfiles();
+      } catch (err: any) {
+        Notice.error(err?.message || err.toString());
+      } finally {
+        setActivatingUids([]);
+      }
+    }),
+  );
+
   const handleToggleEnable = useMemoizedFn(
     useLockFn(async (chainUid: string, enable: boolean) => {
       try {
@@ -485,6 +499,7 @@ const ProfilePage = () => {
                       itemData={item}
                       chainLogs={chainLogs}
                       onSelect={(f) => onSelect(item.uid, f)}
+                      onDelete={() => onDelete(item.uid)}
                       // onEdit={() => viewerRef.current?.edit(item)}
                       onReactivate={() => onEnhance()}
                     />
@@ -511,6 +526,7 @@ const ProfilePage = () => {
                 itemData={draggingItem}
                 chainLogs={chainLogs}
                 onSelect={(f) => onSelect(draggingItem.uid, f)}
+                onDelete={() => onDelete(draggingItem.uid)}
                 // onEdit={() => viewerRef.current?.edit(draggingProfileItem)}
                 onReactivate={() => onEnhance()}
               />
