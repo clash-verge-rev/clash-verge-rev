@@ -6,6 +6,13 @@
   "permissions": [
     "global-shortcut:default",
     "updater:default",
+    "dialog:default",
+    "dialog:allow-ask",
+    "dialog:allow-message",
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download-and-install",
+    "process:allow-restart",
     "deep-link:default",
     "window-state:default",
     "window-state:default",
