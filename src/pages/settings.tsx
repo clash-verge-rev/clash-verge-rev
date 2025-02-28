@@ -96,13 +96,12 @@ const SettingPage = () => {
           <Box
             sx={{
               borderRadius: 2,
+              marginBottom: 1.5,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
             }}
           >
             <SettingVergeBasic onError={onError} />
           </Box>
-        </Grid>
-        <Grid item xs={12} md={6}>
           <Box
             sx={{
               borderRadius: 2,
