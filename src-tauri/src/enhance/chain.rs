@@ -95,26 +95,28 @@ impl ChainItem {
         if !path.exists() {
             bail!("couldn't find enhance file, {:?}", self.name)
         }
-        match self.itype {
+        let res = match self.itype {
             ChainType::Merge => {
                 let content = help::read_merge_mapping(&path)?;
                 let res_config = use_merge(content, config);
-                Ok(ChainExcResult {
+                ChainExcResult {
                     config: res_config,
                     logs: None,
-                })
+                }
             }
             ChainType::Script => {
                 let content = fs::read_to_string(&path)?;
                 let (res_config, script_logs) = use_script(content, config)?;
                 let mut res_logs = HashMap::new();
                 res_logs.insert(self.uid.clone(), script_logs);
-                Ok(ChainExcResult {
+                ChainExcResult {
                     config: res_config,
                     logs: Some(res_logs),
-                })
+                }
             }
-        }
+        };
+        log::info!("chain [{}] excute finished", self.name);
+        Ok(res)
     }
 }
 

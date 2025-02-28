@@ -638,8 +638,8 @@ pub async fn download_backup_and_reload(
     )?;
     resolve_reset().await;
     std::env::set_var("ApplyBackup", "true");
+    app_handle.cleanup_before_exit();
     app_handle.restart();
-    // Ok(())
 }
 
 #[tauri::command]

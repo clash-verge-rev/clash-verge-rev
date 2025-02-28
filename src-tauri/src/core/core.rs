@@ -317,23 +317,28 @@ impl CoreManager {
         log::debug!(target: "app", "try to update clash config, restart core: {restart_core}");
 
         // 更新订阅
+        log::info!("generate enhanced config");
         Config::generate()?;
 
         // 检查订阅是否正常
+        log::info!("check config");
         self.check_config(ConfigType::RuntimeCheck).await?;
 
         // 是否需要重启核心
         if restart_core {
+            log::info!("finished update config, need to restart core");
             self.run_core().await?;
             return Ok(());
         }
 
         // 更新运行时订阅
+        log::info!("generate runtime config");
         let path = Config::generate_file(ConfigType::Run)?;
         let path = dirs::path_to_str(&path)?;
 
         // 发送请求 发送5次
         for i in 0..5 {
+            log::info!("put config to core");
             match MihomoClientManager::global()
                 .mihomo()
                 .reload_config(true, path)
@@ -351,6 +356,7 @@ impl CoreManager {
             sleep(Duration::from_millis(250)).await;
         }
 
+        log::info!("finished update config");
         Ok(())
     }
 }

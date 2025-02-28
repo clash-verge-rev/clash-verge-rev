@@ -104,6 +104,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     let mut result_map = HashMap::new();
 
     // global chain
+    log::info!("excute global chains");
     for chain in global_chain {
         match chain.excute(config.clone()) {
             Ok(res) => {
@@ -119,6 +120,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     }
 
     // profile chain
+    log::info!("excute profile chains");
     for chain in profile_chain {
         match chain.excute(config.clone()) {
             Ok(res) => {
@@ -138,9 +140,12 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
         config.insert(key, value);
     }
 
+    log::info!("setting tun");
     let enable_tun = Config::clash().latest().get_enable_tun();
     config = use_tun(config, enable_tun);
+    log::info!("sort config key");
     config = use_sort(config);
+    log::info!("generate rule providers");
     config = generate_rule_providers(config);
 
     (config, result_map)
@@ -162,10 +167,12 @@ pub fn get_pre_merge_result(
             config = profiles.get_profile_mapping(&profile_uid)?.clone();
 
             // excute all enabled global chain
+            log::info!("excute all global chains");
             let global_chain = profiles.get_profile_chains(None, EnableFilter::Enable);
             excute_chains(&mut config, &global_chain, &mut script_logs);
 
             // get new profile chain, index form 0 to modified chain index.
+            log::info!("excute profile chains until find the modified chain");
             let profile_chain = {
                 let chain = profiles.get_profile_chains(Some(profile_uid), EnableFilter::Enable);
                 match chain.iter().position(|v| *v.uid == modified_uid) {
@@ -177,6 +184,7 @@ pub fn get_pre_merge_result(
             excute_chains(&mut config, &profile_chain, &mut script_logs);
         }
         None => {
+            log::info!("excute global chains until find the modified chain");
             let global_chain = match profiles.chain.as_ref() {
                 Some(chain) => {
                     let new_chain = match chain.iter().position(|v| *v == modified_uid) {
@@ -218,6 +226,7 @@ pub async fn test_merge_chain(
     result_map.extend(logs);
 
     let profile_item = profiles.get_item(&modified_uid)?;
+    log::info!("test merge chain {}", profile_item.name.as_ref().unwrap());
     let chain_type = profile_item.itype.as_ref().unwrap();
     match chain_type {
         ProfileType::Merge => {
