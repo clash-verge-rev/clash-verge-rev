@@ -21,7 +21,8 @@
     "prepare": "husky",
     "cargo:check": "cd src-tauri && cargo check",
     "cargo:clean": "cd src-tauri && cargo clean",
-    "cargo:update": "cd src-tauri && cargo update"
+    "cargo:update": "cd src-tauri && cargo update",
+    "bump": "node scripts/bump-version.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
