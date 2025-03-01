@@ -73,7 +73,7 @@ pub fn get_default_bypass() -> CmdResult<String> {
 
 #[tauri::command]
 pub async fn enhance_profiles() -> CmdResult {
-    wrap_err!(CoreManager::global().update_config(false).await)?;
+    wrap_err!(CoreManager::global().update_config().await)?;
     handle::Handle::refresh_clash();
     Ok(())
 }
@@ -110,9 +110,9 @@ pub async fn delete_profile(uid: String) -> CmdResult {
         wrap_err!({ Config::profiles().data().delete_item(uid) })?;
     // the current profile is deleted, need to restart the core to apply new current profile
     if restart_core {
-        wrap_err!(CoreManager::global().update_config(true).await)?;
+        wrap_err!(CoreManager::global().update_config().await)?;
     } else if enhance_profile {
-        wrap_err!(CoreManager::global().update_config(false).await)?;
+        wrap_err!(CoreManager::global().update_config().await)?;
     }
     handle::Handle::refresh_clash();
     wrap_err!(handle::Handle::update_systray_part())
@@ -121,9 +121,9 @@ pub async fn delete_profile(uid: String) -> CmdResult {
 /// 修改profiles的
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
-    let restart_core = wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
+    wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
 
-    match CoreManager::global().update_config(restart_core).await {
+    match CoreManager::global().update_config().await {
         Ok(_) => {
             handle::Handle::refresh_clash();
             let _ = handle::Handle::update_systray_part();
@@ -151,12 +151,12 @@ pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
         let result_item = wrap_err!(profiles.get_item(&uid))?;
         match result_item.scope {
             Some(ScopeType::Global) => {
-                wrap_err!(CoreManager::global().update_config(false).await)?;
+                wrap_err!(CoreManager::global().update_config().await)?;
                 handle::Handle::refresh_clash();
             }
             Some(ScopeType::Specific) => {
                 if result_item.parent == profiles.get_current() {
-                    wrap_err!(CoreManager::global().update_config(false).await)?;
+                    wrap_err!(CoreManager::global().update_config().await)?;
                     handle::Handle::refresh_clash();
                 }
             }

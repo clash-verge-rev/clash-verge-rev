@@ -11,11 +11,10 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
 use std::path::PathBuf;
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 use sysinfo::System;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
-use tokio::time::sleep;
 
 #[derive(Debug)]
 pub struct CoreManager {
@@ -313,8 +312,8 @@ impl CoreManager {
 
     /// 更新proxies那些
     /// 如果涉及端口和外部控制则需要重启
-    pub async fn update_config(&self, restart_core: bool) -> Result<()> {
-        log::debug!(target: "app", "try to update clash config, restart core: {restart_core}");
+    pub async fn update_config(&self) -> Result<()> {
+        log::debug!(target: "app", "try to update clash config");
 
         // 更新订阅
         log::info!("generate enhanced config");
@@ -324,39 +323,8 @@ impl CoreManager {
         log::info!("check config");
         self.check_config(ConfigType::RuntimeCheck).await?;
 
-        // 是否需要重启核心
-        if restart_core {
-            log::info!("finished update config, need to restart core");
-            self.run_core().await?;
-            return Ok(());
-        }
-
-        // 更新运行时订阅
-        log::info!("generate runtime config");
-        let path = Config::generate_file(ConfigType::Run)?;
-        let path = dirs::path_to_str(&path)?;
-
-        // 发送请求 发送5次
-        for i in 0..5 {
-            log::info!("put config to core");
-            match MihomoClientManager::global()
-                .mihomo()
-                .reload_config(true, path)
-                .await
-            {
-                Ok(_) => break,
-                Err(err) => {
-                    if i < 4 {
-                        log::info!(target: "app", "{err}");
-                    } else {
-                        bail!(err);
-                    }
-                }
-            }
-            sleep(Duration::from_millis(250)).await;
-        }
-
-        log::info!("finished update config");
-        Ok(())
+        // 重启核心
+        log::info!("finished update config, need to restart core");
+        self.run_core().await
     }
 }

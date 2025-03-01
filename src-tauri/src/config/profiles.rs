@@ -81,9 +81,7 @@ impl IProfiles {
     }
 
     /// 只修改 current、global chain
-    pub fn patch_config(&mut self, patch: IProfiles) -> Result<bool> {
-        // if current profile is different, need to restart core to aviod some problems
-        let mut restart_core = false;
+    pub fn patch_config(&mut self, patch: IProfiles) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
@@ -91,12 +89,6 @@ impl IProfiles {
         if let Some(current) = patch.current {
             let items = self.items.as_ref().unwrap();
             let some_uid = Some(current);
-
-            // check if need to restart core
-            let current_old = self.get_current();
-            if current_old != some_uid {
-                restart_core = true;
-            }
 
             if items.iter().any(|e| e.uid == some_uid) {
                 self.current = some_uid;
@@ -121,7 +113,7 @@ impl IProfiles {
             self.chain = Some(new_chain.clone());
         }
 
-        Ok(restart_core)
+        Ok(())
     }
 
     pub fn get_current(&self) -> Option<String> {

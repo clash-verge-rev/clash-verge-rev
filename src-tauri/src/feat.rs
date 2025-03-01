@@ -538,7 +538,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
 
 /// 更新订阅
 async fn update_core_config() -> Result<()> {
-    match CoreManager::global().update_config(false).await {
+    match CoreManager::global().update_config().await {
         Ok(_) => {
             handle::Handle::refresh_clash();
             handle::Handle::notice_message("set_config::ok", "ok");
