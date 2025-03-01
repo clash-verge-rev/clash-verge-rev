@@ -33,3 +33,14 @@ body:
       description: 请描述你的功能请求的使用场景 / Please describe the use case of your feature request
     validations:
       required: true
+  - type: checkboxes
+    id: os-labels
+    attributes:
+      label: 适用系统 / Target OS
+      description: 请选择该功能适用的操作系统（至少选择一个） / Please select the operating system(s) for this feature request (select at least one)
+      options:
+        - label: windows
+        - label: macos
+        - label: linux
+    validations:
+      required: true
