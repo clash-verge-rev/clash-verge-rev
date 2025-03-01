@@ -8,7 +8,8 @@ import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { useLogData, LogLevel, clearLogs } from "@/hooks/use-log-data";
+import { LogLevel, clearLogs } from "@/hooks/use-log-data";
+import { useClashInfo } from "@/hooks/use-clash";
 import { useEnableLog } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
@@ -16,10 +17,17 @@ import { useTheme } from "@mui/material/styles";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import { SearchState } from "@/components/base/base-search-box";
+import {
+  useGlobalLogData,
+  clearGlobalLogs,
+  changeLogLevel,
+  toggleLogEnabled,
+} from "@/services/global-log-service";
 
 const LogPage = () => {
   const { t } = useTranslation();
   const [enableLog, setEnableLog] = useEnableLog();
+  const { clashInfo } = useClashInfo();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [logLevel, setLogLevel] = useLocalStorage<LogLevel>(
@@ -27,7 +35,7 @@ const LogPage = () => {
     "info",
   );
   const [match, setMatch] = useState(() => (_: string) => true);
-  const logData = useLogData(logLevel);
+  const logData = useGlobalLogData(logLevel);
   const [searchState, setSearchState] = useState<SearchState>();
 
   const filterLogs = useMemo(() => {
@@ -43,6 +51,22 @@ const LogPage = () => {
         })
       : [];
   }, [logData, logLevel, match]);
+
+  const handleLogLevelChange = (newLevel: LogLevel) => {
+    setLogLevel(newLevel);
+    if (clashInfo) {
+      const { server = "", secret = "" } = clashInfo;
+      changeLogLevel(newLevel, server, secret);
+    }
+  };
+
+  const handleToggleLog = () => {
+    if (clashInfo) {
+      const { server = "", secret = "" } = clashInfo;
+      toggleLogEnabled(server, secret);
+      setEnableLog(!enableLog);
+    }
+  };
 
   return (
     <BasePage
@@ -60,7 +84,7 @@ const LogPage = () => {
             title={t("Pause")}
             size="small"
             color="inherit"
-            onClick={() => setEnableLog((e) => !e)}
+            onClick={handleToggleLog}
           >
             {enableLog ? (
               <PauseCircleOutlineRounded />
@@ -74,7 +98,7 @@ const LogPage = () => {
               size="small"
               variant="contained"
               onClick={() => {
-                clearLogs();
+                clearGlobalLogs();
               }}
             >
               {t("Clear")}
@@ -95,7 +119,7 @@ const LogPage = () => {
       >
         <BaseStyledSelect
           value={logLevel}
-          onChange={(e) => setLogLevel(e.target.value as LogLevel)}
+          onChange={(e) => handleLogLevelChange(e.target.value as LogLevel)}
         >
           <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="info">INFO</MenuItem>
