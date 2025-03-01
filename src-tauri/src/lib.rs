@@ -204,6 +204,7 @@ pub fn run() {
         tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
             AppHandleManager::global().init(app_handle.clone());
         }
+        #[cfg(target_os = "macos")]
         tauri::RunEvent::Reopen { has_visible_windows, .. } => {
             if !has_visible_windows {
                 AppHandleManager::global().set_activation_policy_regular();
