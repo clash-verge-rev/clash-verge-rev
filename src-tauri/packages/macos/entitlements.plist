@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleIconFile</key>
+    <string>icon.icns</string>
+    <key>CFBundleName</key>
+    <string>Clash Verge</string>
+    <key>CFBundleDisplayName</key>
+    <string>Clash Verge</string>
     <key>com.apple.security.app-sandbox</key>
     <false/>
     <key>com.apple.security.application-groups</key>
@@ -10,5 +16,11 @@
     </array>
     <key>com.apple.security.inherit</key>
     <true/>
+    <key>LSUIElement</key>
+    <false/>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSRequiresAquaSystemAppearance</key>
+    <false/>
 </dict>
 </plist>
