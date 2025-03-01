@@ -3,7 +3,7 @@ use once_cell::sync::OnceCell;
 pub mod speed_rate;
 use crate::core::clash_api::Rate;
 use crate::{
-    cmds,
+    cmd,
     config::Config,
     feat, resolve,
     utils::resolve::VERSION,
@@ -596,9 +596,9 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(None),
         "copy_env" => feat::copy_clash_env(),
-        "open_app_dir" => crate::log_err!(cmds::open_app_dir()),
-        "open_core_dir" => crate::log_err!(cmds::open_core_dir()),
-        "open_logs_dir" => crate::log_err!(cmds::open_logs_dir()),
+        "open_app_dir" => crate::log_err!(cmd::open_app_dir()),
+        "open_core_dir" => crate::log_err!(cmd::open_core_dir()),
+        "open_logs_dir" => crate::log_err!(cmd::open_logs_dir()),
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
         "quit" => {
