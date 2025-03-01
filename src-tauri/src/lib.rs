@@ -10,7 +10,7 @@ use config::Config;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
 use std::sync::{Mutex, Once};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 /// A global singleton handle to the application.
 pub struct AppHandleManager {
@@ -203,6 +203,8 @@ pub fn run() {
     app.run(|app_handle, e| match e {
         tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
             AppHandleManager::global().init(app_handle.clone());
+            let main_window = AppHandleManager::global().get_handle().get_webview_window("main").unwrap();
+            let _ = main_window.set_title("Clash Verge");
         }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::Reopen { has_visible_windows, .. } => {
