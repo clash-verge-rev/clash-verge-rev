@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn test_ipcidr_mrs_parse() -> Result<(), RuleParseError> {
         let home_dir = std::env::home_dir().expect("failed to get home dir");
-        let file_path = home_dir.join("Downloads/ad.mrs");
+        let file_path = home_dir.join("Downloads/private.mrs");
         let buf = std::fs::read(file_path)?;
         let format = RuleFormat::Mrs;
         let rule_payload = IpCidrParseStrategy::parse(&buf, format)?;
@@ -156,7 +156,6 @@ mod tests {
         // domain
         // let rust_file_path = current_dir.join("domain.txt");
         // let mihomo_file_path = home_dir.join("Downloads/aliyun.txt");
-        //
         // ipcidr
         let rust_file_path = current_dir.join("ipcidr.txt");
         let mihomo_file_path = home_dir.join("Downloads/ad.txt");
@@ -195,6 +194,97 @@ mod tests {
                 i
             );
         }
+        Ok(())
+    }
+
+    /// use git clone [mihomo rules](https://github.com/MetaCubeX/meta-rules-dat) and then checkout `meta` branch
+    #[test]
+    fn check_all_mihomo_mrs() -> Result<()> {
+        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        // domain
+        let check_behavior = "domain";
+        let mrs_dir_path = home_dir.join("Downloads/meta-rules-dat/geo/geosite");
+        // ipcidr
+        // let check_behavior = "ipcidr";
+        // let mrs_dir_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip");
+
+        let mrs_dir = std::fs::read_dir(&mrs_dir_path)?;
+        let mut mrs_files = Vec::new();
+        mrs_dir
+            .into_iter()
+            .filter(|entry| {
+                let entry = entry.as_ref().expect("failed to read entry");
+                entry.path().extension().map_or(false, |ext| ext == "mrs")
+            })
+            .for_each(|entry| {
+                let entry = entry.expect("failed to read entry");
+                let path = entry.path();
+                let file_name = path.file_name().expect("failed to get file name");
+                let file_name = file_name
+                    .to_str()
+                    .expect("failed to convert file name to string");
+                mrs_files.push(file_name.to_string());
+            });
+
+        // starting check diff
+        let mut mihomo_convert_error_file = vec![];
+        for file_name in &mrs_files {
+            // use mihomo command to convert mrs files to txt files
+            let mrs_file_path = mrs_dir_path.join(file_name);
+            let txt_file_path = mrs_file_path.with_extension("txt");
+            let output = std::process::Command::new("verge-mihomo")
+                .args([
+                    "convert-ruleset",
+                    check_behavior,
+                    "mrs",
+                    &mrs_file_path.display().to_string(),
+                    &txt_file_path.display().to_string(),
+                ])
+                .output()?;
+
+            // use rust to convert mrs files to txt files
+            println!("rust parse file name: {}", file_name);
+            if !output.status.success() {
+                println!("mihomo convert error, output: {:?}", output);
+                mihomo_convert_error_file.push(file_name.clone());
+                continue;
+            }
+            let rule_payload = RuleParser::parse(&mrs_file_path, check_behavior, "mrs")?;
+
+            // check file content diff
+            let content_r_items = rule_payload.rules;
+            let content_m = std::fs::read_to_string(&txt_file_path)?;
+            let content_m_items = content_m
+                .trim()
+                .split('\n')
+                .map(|line| line.trim().to_string())
+                .collect::<Vec<String>>();
+            assert_eq!(
+                content_r_items.len(),
+                content_m_items.len(),
+                "[{}] content length is not the same between rust and mihomo cover files",
+                file_name
+            );
+            // iterate all items and compare
+            let total = content_r_items.len();
+            for i in 0..total {
+                let rust_val = &content_r_items[i];
+                let mihomo_val = &content_m_items[i];
+                assert_eq!(
+                    rust_val, mihomo_val,
+                    "the value at index {} is not the same between rust and mihomo cover files",
+                    i
+                );
+            }
+        }
+
+        if !mihomo_convert_error_file.is_empty() {
+            println!(
+                "mihomo convert error files: {:?}",
+                mihomo_convert_error_file
+            );
+        }
+
         Ok(())
     }
 }
