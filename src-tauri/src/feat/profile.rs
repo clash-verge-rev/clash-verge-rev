@@ -1,4 +1,4 @@
-use crate::cmds;
+use crate::cmd;
 use crate::config::{Config, PrfItem, PrfOption};
 use crate::core::handle;
 use crate::core::CoreManager;
@@ -9,7 +9,7 @@ use anyhow::{bail, Result};
 pub fn toggle_proxy_profile(profile_index: String) {
     tauri::async_runtime::spawn(async move {
         let app_handle = handle::Handle::global().app_handle().unwrap();
-        match cmds::patch_profiles_config_by_profile_index(app_handle, profile_index).await {
+        match cmd::patch_profiles_config_by_profile_index(app_handle, profile_index).await {
             Ok(_) => {
                 let _ = tray::Tray::global().update_menu();
             }
