@@ -3,9 +3,11 @@
   "version": "2.1.2",
   "license": "GPL-3.0-only",
   "scripts": {
-    "dev": "cross-env RUST_BACKTRACE=1 tauri dev",
+    "dev": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
+    "dev:fast": "cross-env RUST_BACKTRACE=1 tauri dev",
     "dev:diff": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
+    "build:fast": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
     "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsc --noEmit && vite build",

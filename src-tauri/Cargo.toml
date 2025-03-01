@@ -100,6 +100,23 @@ strip = true
 [profile.dev]
 incremental = true
 
+[profile.fast-release]
+inherits = "release"  # 继承 release 的配置
+panic = "abort"       # 与 release 相同
+codegen-units = 256    # 增加编译单元，提升编译速度
+lto = false           # 禁用 LTO，提升编译速度
+opt-level = 0         # 禁用优化，大幅提升编译速度
+debug = true          # 保留调试信息
+strip = false         # 不剥离符号，保留调试信息
+
+[profile.fast-dev]
+inherits = "dev"      # 继承 dev 的配置
+codegen-units = 256    # 增加编译单元，提升编译速度
+opt-level = 0         # 禁用优化，进一步提升编译速度
+incremental = true    # 启用增量编译
+debug = true          # 保留调试信息
+strip = false         # 不剥离符号，保留调试信息
+
 [lib]
 name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
