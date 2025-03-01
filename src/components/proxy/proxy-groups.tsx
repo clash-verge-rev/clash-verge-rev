@@ -490,7 +490,7 @@ export const ProxyGroups = (props: Props) => {
           scrollerRef.current = ref as Element;
         }}
         components={{
-          Footer: () => <div style={{ height: "2px" }} />,
+          Footer: () => <div style={{ height: "8px" }} />,
         }}
         // 添加平滑滚动设置
         initialScrollTop={scrollPositionRef.current[mode]}
