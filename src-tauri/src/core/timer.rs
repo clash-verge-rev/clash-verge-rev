@@ -44,7 +44,7 @@ impl Timer {
         self.activate_selected_task()?;
         self.refresh_profiles()?;
 
-        let app_handle = handle::Handle::global().get_app_handle()?;
+        let app_handle = handle::Handle::get_app_handle();
         app_handle.listen(ACTIVATING_SELECTED_EVENT, move |_| {
             log::info!("recived finish activating selected event");
             std::env::remove_var(ENV_APPLY_BACKUP);
@@ -154,9 +154,9 @@ impl Timer {
                 }
                 log::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
             }
-            let app_handle = handle::Handle::global().get_app_handle().unwrap();
+            let app_handle = handle::Handle::get_app_handle();
             let _ = app_handle.emit(ACTIVATING_SELECTED_EVENT, ());
-            crate::utils::resolve::create_window(&app_handle);
+            crate::utils::resolve::create_window();
         };
 
         self.add_async_task(ACTIVATING_SELECTED_TASK_ID, 3, body)?;

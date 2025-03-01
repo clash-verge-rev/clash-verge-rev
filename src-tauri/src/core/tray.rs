@@ -294,8 +294,7 @@ impl Tray {
         Ok(())
     }
 
-    pub fn on_click(tray: &TrayIcon, event: TrayIconEvent) {
-        let app_handle = tray.app_handle();
+    pub fn on_click(_tray: &TrayIcon, event: TrayIconEvent) {
         match event {
             TrayIconEvent::Click {
                 button: MouseButton::Left,
@@ -308,7 +307,7 @@ impl Tray {
                     "system_proxy" => feat::toggle_system_proxy(),
                     "service_mode" => feat::toggle_service_mode(),
                     "tun_mode" => feat::toggle_tun_mode(),
-                    "main_window" => resolve::create_window(app_handle),
+                    "main_window" => resolve::create_window(),
                     _ => {}
                 }
             }
@@ -329,7 +328,7 @@ impl Tray {
                 let mode = &mode[0..mode.len() - 5];
                 feat::change_clash_mode(mode.into());
             }
-            "open_window" => resolve::create_window(app_handle),
+            "open_window" => resolve::create_window(),
             "system_proxy" => feat::toggle_system_proxy(),
             "tun_mode" => feat::toggle_tun_mode(),
             profile if profile_uids.contains(&profile.to_string()) => {
@@ -372,7 +371,9 @@ impl Tray {
             "open_logs_dir" => crate::log_err!(cmds::open_logs_dir(app_handle_)),
             "open_devtools" => cmds::open_devtools(app_handle_),
             "restart_clash" => feat::restart_clash_core(),
-            "restart_app" => cmds::restart_app(app_handle_),
+            "restart_app" => tauri::async_runtime::block_on(async move {
+                let _ = cmds::restart_app(app_handle_).await;
+            }),
             "quit" => tauri::async_runtime::block_on(async move {
                 cmds::exit_app(app_handle_).await;
             }),

@@ -76,11 +76,9 @@ fn test_draft() {
         enable_auto_launch: Some(true),
         ..IVerge::default()
     };
-
     let draft = Draft::from(verge);
 
     assert_eq!(draft.data().enable_auto_launch, Some(true));
-
     assert_eq!(draft.draft().enable_auto_launch, Some(true));
 
     let mut d = draft.draft();
@@ -88,16 +86,13 @@ fn test_draft() {
     drop(d);
 
     assert_eq!(draft.data().enable_auto_launch, Some(true));
-
     assert_eq!(draft.draft().enable_auto_launch, Some(false));
-
     assert_eq!(draft.latest().enable_auto_launch, Some(false));
 
     assert!(draft.apply().is_some());
     assert!(draft.apply().is_none());
 
     assert_eq!(draft.data().enable_auto_launch, Some(false));
-
     assert_eq!(draft.draft().enable_auto_launch, Some(false));
 
     let mut d = draft.draft();
@@ -105,14 +100,10 @@ fn test_draft() {
     drop(d);
 
     assert_eq!(draft.data().enable_auto_launch, Some(false));
-
     assert_eq!(draft.draft().enable_auto_launch, Some(true));
-
     assert!(draft.discard().is_some());
 
     assert_eq!(draft.data().enable_auto_launch, Some(false));
-
     assert!(draft.discard().is_none());
-
     assert_eq!(draft.draft().enable_auto_launch, Some(false));
 }

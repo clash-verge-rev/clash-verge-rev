@@ -27,7 +27,7 @@ pub fn find_unused_port() -> Result<u16> {
 }
 
 /// handle something when start app
-pub async fn resolve_setup(app_handle: &AppHandle) {
+pub async fn resolve_setup() {
     log::trace!("init resources");
     log_err!(init::init_resources());
     log::trace!("init scheme");
@@ -41,7 +41,7 @@ pub async fn resolve_setup(app_handle: &AppHandle) {
     log_err!(CoreManager::global().init());
     // setup a simple http server for singleton
     log::trace!("launch embed server");
-    server::embed_server(app_handle.clone());
+    server::embed_server();
     log::trace!("init autolaunch");
     log_err!(sysopt::Sysopt::global().init_launch());
     log::trace!("init system proxy");
@@ -49,7 +49,7 @@ pub async fn resolve_setup(app_handle: &AppHandle) {
     log::trace!("update system tray");
     log_err!(handle::Handle::update_systray_part());
     log::trace!("init hotkey");
-    log_err!(hotkey::Hotkey::global().init(app_handle.clone()));
+    log_err!(hotkey::Hotkey::global().init());
     log::trace!("init webdav config");
     log_err!(backup::WebDav::global().init().await);
     log::trace!("init mihomo api client");
@@ -73,7 +73,8 @@ pub async fn resolve_reset() {
 }
 
 /// create main window
-pub fn create_window(app_handle: &AppHandle) {
+pub fn create_window() {
+    let app_handle = handle::Handle::get_app_handle();
     if let Some(window) = app_handle.get_webview_window("main") {
         trace_err!(window.unminimize(), "set win unminimize");
         trace_err!(window.show(), "set win visible");

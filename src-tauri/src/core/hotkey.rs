@@ -1,15 +1,12 @@
-use crate::{config::Config, feat, log_err};
+use crate::{config::Config, core::handle, feat, log_err};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
-use tauri::AppHandle;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
-
-    app_handle: Arc<Mutex<Option<AppHandle>>>,
 }
 
 impl Hotkey {
@@ -18,13 +15,10 @@ impl Hotkey {
 
         HOTKEY.get_or_init(|| Hotkey {
             current: Arc::new(Mutex::new(Vec::new())),
-            app_handle: Arc::new(Mutex::new(None)),
         })
     }
 
-    pub fn init(&self, app_handle: AppHandle) -> Result<()> {
-        *self.app_handle.lock() = Some(app_handle);
-
+    pub fn init(&self) -> Result<()> {
         let verge = Config::verge();
 
         if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
@@ -51,8 +45,7 @@ impl Hotkey {
     }
 
     fn register(&self, hotkey: &str, func: &str) -> Result<()> {
-        let app_handle = self.app_handle.lock();
-        let app_handle = app_handle.as_ref().unwrap();
+        let app_handle = handle::Handle::get_app_handle();
         let manager = app_handle.global_shortcut();
 
         if manager.is_registered(hotkey) {
@@ -79,8 +72,7 @@ impl Hotkey {
     }
 
     fn unregister(&self, hotkey: &str) -> Result<()> {
-        let app_handle = self.app_handle.lock();
-        let app_handle = app_handle.as_ref().unwrap();
+        let app_handle = handle::Handle::get_app_handle();
         app_handle.global_shortcut().unregister(hotkey)?;
         log::info!(target: "app", "unregister hotkey {hotkey}");
         Ok(())
@@ -153,8 +145,7 @@ impl Hotkey {
 
 impl Drop for Hotkey {
     fn drop(&mut self) {
-        let app_handle = self.app_handle.lock();
-        let app_handle = app_handle.as_ref().unwrap();
+        let app_handle = handle::Handle::get_app_handle();
         let shortcut = app_handle.global_shortcut();
         if let Err(e) = shortcut.unregister_all() {
             log::error!(target: "app", "unregister all hotkey error: {e}");

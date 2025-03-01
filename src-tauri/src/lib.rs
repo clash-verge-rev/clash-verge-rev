@@ -16,18 +16,20 @@ use crate::{
     utils::{init, resolve, server},
 };
 use anyhow::Result;
-use core::{handle, tray, verge_log::VergeLog};
+use core::{tray, verge_log::VergeLog};
 use once_cell::sync::OnceCell;
 use rust_i18n::t;
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
     time::Duration,
 };
+use tauri::AppHandle;
 use utils::dirs::APP_ID;
 
 rust_i18n::i18n!("./src/locales", fallback = "en");
 
 pub static APP_VERSION: OnceCell<String> = OnceCell::new();
+pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<()> {
@@ -90,9 +92,9 @@ pub fn run() -> Result<()> {
             resolve::resolve_reset().await;
         });
         let _ = task.join();
-        let _ = handle::Handle::global()
-            .get_app_handle()
-            .map(|app_handle| app_handle.cleanup_before_exit());
+        if let Some(app_handle) = APP_HANDLE.get() {
+            app_handle.cleanup_before_exit();
+        }
         std::process::exit(1);
     }));
 
@@ -116,9 +118,7 @@ pub fn run() -> Result<()> {
             // app version info
             let version = app_handle.package_info().version.to_string();
             APP_VERSION.get_or_init(|| version.clone());
-
-            log::trace!("init handle");
-            handle::Handle::global().init(app_handle.clone());
+            APP_HANDLE.get_or_init(|| app_handle.clone());
 
             log::trace!("init system tray");
             log_err!(tray::Tray::init(app_handle));
@@ -152,15 +152,14 @@ pub fn run() -> Result<()> {
             }
 
             // we perform the initialization code on a new task so the app doesn't freeze
-            let app_handle_ = app_handle.clone();
             tauri::async_runtime::spawn(async move {
                 // initialize your app here instead of sleeping :
-                resolve::resolve_setup(&app_handle_).await;
+                resolve::resolve_setup().await;
                 // wait 2 seconds for clash core to init profile
                 tokio::time::sleep(Duration::from_secs(2)).await;
                 // create main window
                 if !silent_start {
-                    resolve::create_window(&app_handle_);
+                    resolve::create_window();
                 }
             });
 

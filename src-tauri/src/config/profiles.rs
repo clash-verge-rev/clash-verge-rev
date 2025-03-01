@@ -100,13 +100,13 @@ impl IProfiles {
             // disable old chain
             if let Some(old_chain) = old_chain {
                 for old_uid in old_chain {
-                    let item = self.get_mut_item(&old_uid)?;
+                    let item = self.get_item_mut(&old_uid)?;
                     item.enable = Some(false);
                 }
             }
             // enable new chain
             for new_uid in new_chain.clone() {
-                let item = self.get_mut_item(&new_uid)?;
+                let item = self.get_item_mut(&new_uid)?;
                 item.enable = Some(true);
             }
 
@@ -132,7 +132,7 @@ impl IProfiles {
         bail!("failed to get the profile item \"uid:{uid}\"");
     }
 
-    pub fn get_mut_item(&mut self, uid: &String) -> Result<&mut PrfItem> {
+    pub fn get_item_mut(&mut self, uid: &String) -> Result<&mut PrfItem> {
         if let Some(items) = self.items.as_mut() {
             for item in items.iter_mut() {
                 if item.uid == Some(uid.clone()) {
@@ -206,7 +206,7 @@ impl IProfiles {
         }
 
         if let Some(parent) = item.parent.clone() {
-            let profile = self.get_mut_item(&parent)?;
+            let profile = self.get_item_mut(&parent)?;
             match profile.chain.as_mut() {
                 Some(chain) => chain.push(item.uid.clone().unwrap()),
                 None => profile.chain = Some(vec![item.uid.clone().unwrap()]),
@@ -321,7 +321,7 @@ impl IProfiles {
 
     /// delete item
     /// if delete the current then return true
-    pub fn delete_item(&mut self, uid: String) -> Result<(bool, bool)> {
+    pub fn delete_item(&mut self, uid: String) -> Result<bool> {
         let current = self.current.as_ref().unwrap_or(&uid);
         let current = current.clone();
 
@@ -343,8 +343,7 @@ impl IProfiles {
         profile.delete_file()?;
 
         // delete the original uid
-        let delete_current = current == uid;
-        let delete_current_chain = profile.parent == Some(current);
+        let delete_current = current == uid || profile.parent == Some(current);
         let items = self.items.take().unwrap_or_default();
         if delete_current {
             self.current = match !items.is_empty() {
@@ -362,7 +361,7 @@ impl IProfiles {
         self.items = Some(new_items);
 
         self.save_file()?;
-        Ok((delete_current, delete_current_chain))
+        Ok(delete_current)
     }
 
     pub fn set_rule_providers_path(&mut self, path: HashMap<String, PathBuf>) -> Result<()> {

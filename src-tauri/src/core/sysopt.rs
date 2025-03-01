@@ -274,15 +274,11 @@ impl Sysopt {
             use crate::core::handle::Handle;
             use tauri::Manager;
 
-            match Handle::global().get_app_handle() {
-                Ok(app_handle) => {
-                    let appimage = app_handle.env().appimage;
-                    appimage
-                        .and_then(|p| p.to_str().map(|s| s.to_string()))
-                        .unwrap_or(app_path)
-                }
-                Err(_) => app_path,
-            }
+            let app_handle = Handle::get_app_handle();
+            let appimage = app_handle.env().appimage;
+            appimage
+                .and_then(|p| p.to_str().map(|s| s.to_string()))
+                .unwrap_or(app_path)
         };
 
         let auto = AutoLaunchBuilder::new()

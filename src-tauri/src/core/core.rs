@@ -72,7 +72,7 @@ impl CoreManager {
 
         let app_dir = dirs::app_home_dir()?;
         let app_dir = dirs::path_to_str(&app_dir)?;
-        let app_handle = handle::Handle::global().get_app_handle()?;
+        let app_handle = handle::Handle::get_app_handle();
         let output = app_handle
             .shell()
             .sidecar(clash_core)?
@@ -179,7 +179,7 @@ impl CoreManager {
         let config_path = dirs::path_to_str(&config_path)?;
         let args = vec!["-d", app_dir, "-f", config_path];
 
-        let app_handle = handle::Handle::global().get_app_handle()?;
+        let app_handle = handle::Handle::get_app_handle();
         let cmd = app_handle.shell().sidecar(clash_core)?;
         let (mut rx, cmd_child) = cmd.args(args).spawn()?;
         {

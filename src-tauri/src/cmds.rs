@@ -106,15 +106,13 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 
 #[tauri::command]
 pub async fn delete_profile(uid: String) -> CmdResult {
-    let (restart_core, enhance_profile) =
-        wrap_err!({ Config::profiles().data().delete_item(uid) })?;
-    // the current profile is deleted, need to restart the core to apply new current profile
+    let restart_core = wrap_err!({ Config::profiles().data().delete_item(uid) })?;
+    // the running profile is deleted, update the core config
     if restart_core {
         wrap_err!(CoreManager::global().update_config().await)?;
-    } else if enhance_profile {
-        wrap_err!(CoreManager::global().update_config().await)?;
+        handle::Handle::refresh_clash();
     }
-    handle::Handle::refresh_clash();
+    handle::Handle::refresh_profiles();
     wrap_err!(handle::Handle::update_systray_part())
 }
 
@@ -480,9 +478,9 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub fn restart_app(app_handle: tauri::AppHandle) {
+pub async fn restart_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, false);
-    let _ = CoreManager::global().stop_core();
+    let _ = CoreManager::global().stop_core().await;
     app_handle.cleanup_before_exit();
     app_handle.restart();
 }

@@ -110,11 +110,7 @@ impl Config {
         let runtime_config = Self::runtime();
 
         // need to resolve auto launch file
-        let old_enable_auto_launch = verge_config
-            .latest()
-            .enable_auto_launch
-            .clone()
-            .unwrap_or(false);
+        let old_enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);
 
         // discard all config draft
         clash_config.discard();
@@ -130,11 +126,7 @@ impl Config {
         // generate runtime config
         Self::init_config()?;
 
-        let enable_auto_launch = verge_config
-            .latest()
-            .enable_auto_launch
-            .clone()
-            .unwrap_or(false);
+        let enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);
 
         // resolve auto launch file
         if old_enable_auto_launch != enable_auto_launch {
@@ -154,32 +146,6 @@ impl Config {
             })
             .await?;
         }
-
-        // resolve config settings
-        // let verge_config_ = verge_config.latest().clone();
-        // feat::resolve_config_settings(verge_config_).await?;
-
-        // restart clash code
-        // feat::restart_clash_core();
-        // std::thread::sleep(Duration::from_secs(2));
-        // check clash core run status
-        // for i in 1..=5 {
-        //     if i == 5 {
-        //         log::debug!(target: "app", "check clash core run status when reload config: failed.");
-        //         return Err(anyhow!(t!("clash.restart.failed")));
-        //     }
-        //     if MihomoClientManager::global()
-        //         .mihomo()
-        //         .get_base_config()
-        //         .await
-        //         .is_ok()
-        //     {
-        //         log::debug!(target: "app","check clash core run status when reload config: successful.");
-        //         break;
-        //     }
-        //     log::debug!(target: "app","check clash core run status when reload config: failed, retry {} times, sleep 1s", i);
-        //     std::thread::sleep(Duration::from_secs(1));
-        // }
 
         Ok(())
     }

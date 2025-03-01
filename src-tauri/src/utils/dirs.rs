@@ -54,15 +54,11 @@ pub fn app_home_dir() -> Result<PathBuf> {
 pub fn app_resources_dir() -> Result<PathBuf> {
     use tauri::{utils::platform::resource_dir, Env};
 
-    match handle::Handle::global().get_app_handle() {
-        Ok(app_handle) => {
-            let res_dir = resource_dir(app_handle.package_info(), &Env::default())
-                .map_err(|_| anyhow::anyhow!("failed to get the resource dir"))?
-                .join("resources");
-            Ok(res_dir)
-        }
-        Err(_) => Err(anyhow::anyhow!("failed to get the resource dir")),
-    }
+    let app_handle = handle::Handle::get_app_handle();
+    let res_dir = resource_dir(app_handle.package_info(), &Env::default())
+        .map_err(|_| anyhow::anyhow!("failed to get the resource dir"))?
+        .join("resources");
+    Ok(res_dir)
 }
 
 /// profiles dir

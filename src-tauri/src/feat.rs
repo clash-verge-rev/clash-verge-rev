@@ -15,7 +15,6 @@ use rust_i18n::t;
 use serde_yaml::{Mapping, Value};
 use service::JsonResponse;
 use tauri::AppHandle;
-use tauri::Manager;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::MessageDialogButtons;
 use tauri_plugin_dialog::MessageDialogKind;
@@ -23,16 +22,13 @@ use verge_log::VergeLog;
 
 // 打开面板
 pub fn open_or_close_dashboard() {
-    let app_handle = handle::Handle::global().get_app_handle();
-    if let Ok(app_handle) = app_handle {
-        if let Some(window) = app_handle.get_webview_window("main") {
-            if let Ok(true) = window.is_focused() {
-                let _ = window.close();
-                return;
-            }
+    if let Some(window) = handle::Handle::get_window() {
+        if let Ok(true) = window.is_focused() {
+            let _ = window.close();
+            return;
         }
-        resolve::create_window(&app_handle);
     }
+    resolve::create_window();
 }
 
 // 重启clash
