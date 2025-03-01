@@ -30,7 +30,7 @@ use std::{
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
-use tray::Tray;
+use tray::{Tray, TRAY_ID};
 type CmdResult<T = ()> = Result<T, String>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -481,7 +481,7 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 pub async fn restart_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, false);
     let _ = CoreManager::global().stop_core().await;
-    app_handle.cleanup_before_exit();
+    app_handle.remove_tray_by_id(TRAY_ID);
     app_handle.restart();
 }
 
@@ -636,7 +636,7 @@ pub async fn download_backup_and_reload(
     )?;
     resolve_reset().await;
     std::env::set_var("ApplyBackup", "true");
-    app_handle.cleanup_before_exit();
+    app_handle.remove_tray_by_id(TRAY_ID);
     app_handle.restart();
 }
 

@@ -15,7 +15,7 @@ use tauri::{
     AppHandle, Runtime,
 };
 
-const TRAY_ID: &str = "verge_tray";
+pub const TRAY_ID: &str = "verge_tray";
 
 pub struct Tray;
 
