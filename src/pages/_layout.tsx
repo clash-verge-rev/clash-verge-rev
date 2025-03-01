@@ -13,7 +13,7 @@ import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import iconDark from "@/assets/image/icon_dark.svg?react";
-import { useThemeMode } from "@/services/states";
+import { useThemeMode, useEnableLog } from "@/services/states";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
@@ -28,6 +28,8 @@ import React from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";
+import { useClashInfo } from "@/hooks/use-clash";
+import { initGlobalLogService } from "@/services/global-log-service";
 
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
@@ -126,6 +128,8 @@ const Layout = () => {
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
   const { verge } = useVerge();
+  const { clashInfo } = useClashInfo();
+  const [enableLog] = useEnableLog();
   const { language, start_page } = verge ?? {};
   const navigate = useNavigate();
   const location = useLocation();
@@ -139,6 +143,15 @@ const Layout = () => {
     },
     [t, navigate],
   );
+
+  // 初始化全局日志服务
+  useEffect(() => {
+    if (clashInfo) {
+      const { server = "", secret = "" } = clashInfo;
+      // 使用本地存储中的enableLog值初始化全局日志服务
+      initGlobalLogService(server, secret, enableLog, "info");
+    }
+  }, [clashInfo, enableLog]);
 
   // 设置监听器
   useEffect(() => {
