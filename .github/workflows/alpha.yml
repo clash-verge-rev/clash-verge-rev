@@ -203,7 +203,7 @@ jobs:
       - name: Get Version
         run: |
           sudo apt-get update
-          sudo apt-get install jq 
+          sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
@@ -293,9 +293,9 @@ jobs:
             Rename-Item $file.FullName $newName
           }
 
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip.sig"
+          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
           foreach ($file in $files) {
-            $newName = $file.Name -replace "-setup\.nsis\.zip\.sig$", "_fixed_webview2-setup.nsis.zip.sig"
+            $newName = $file.Name -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
             Rename-Item $file.FullName $newName
           }
 
