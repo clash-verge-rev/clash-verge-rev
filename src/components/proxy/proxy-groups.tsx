@@ -41,12 +41,14 @@ const AlphabetSelector = styled(Box)(({ theme }) => ({
   "& .scroll-container": {
     overflow: "hidden",
     maxHeight: "inherit",
+    willChange: "transform",
   },
   "& .letter-container": {
     display: "flex",
     flexDirection: "column",
     gap: "2px",
     transition: "transform 0.2s ease",
+    willChange: "transform",
   },
   "& .letter": {
     padding: "1px 4px",
@@ -259,7 +261,7 @@ export const ProxyGroups = (props: Props) => {
     }
   }, [mode, renderList]);
 
-  // 使用防抖保存滚动位置
+  // 改为使用节流函数保存滚动位置
   const saveScrollPosition = useCallback(
     (scrollTop: number) => {
       try {
@@ -275,13 +277,14 @@ export const ProxyGroups = (props: Props) => {
     [mode],
   );
 
-  // 优化滚动处理函数，使用防抖
+  // 使用改进的滚动处理
   const handleScroll = useCallback(
-    debounce((e: any) => {
+    throttle((e: any) => {
       const scrollTop = e.target.scrollTop;
       setShowScrollTop(scrollTop > 100);
+      // 使用稳定的节流来保存位置，而不是setTimeout
       saveScrollPosition(scrollTop);
-    }, 16),
+    }, 500), // 增加到500ms以确保平滑滚动
     [saveScrollPosition],
   );
 
@@ -407,8 +410,11 @@ export const ProxyGroups = (props: Props) => {
     }
   };
 
-  // 添加滚轮事件处理函数
+  // 添加滚轮事件处理函数 - 改进为只在悬停时触发
   const handleWheel = useCallback((e: WheelEvent) => {
+    // 只有当鼠标在字母选择器上时才处理滚轮事件
+    if (!alphabetSelectorRef.current?.contains(e.target as Node)) return;
+
     e.preventDefault();
     if (!letterContainerRef.current) return;
 
@@ -470,20 +476,25 @@ export const ProxyGroups = (props: Props) => {
   }
 
   return (
-    <div style={{ position: "relative", height: "100%" }}>
+    <div
+      style={{ position: "relative", height: "100%", willChange: "transform" }}
+    >
       <Virtuoso
         ref={virtuosoRef}
         style={{ height: "calc(100% - 14px)" }}
         totalCount={renderList.length}
-        increaseViewportBy={{ top: 256, bottom: 256 }}
+        increaseViewportBy={{ top: 200, bottom: 200 }}
         overscan={150}
         defaultItemHeight={56}
         scrollerRef={(ref) => {
           scrollerRef.current = ref as Element;
         }}
         components={{
-          Footer: () => <div style={{ height: "8px" }} />,
+          Footer: () => <div style={{ height: "2px" }} />,
         }}
+        // 添加平滑滚动设置
+        initialScrollTop={scrollPositionRef.current[mode]}
+        computeItemKey={(index) => renderList[index].key}
         itemContent={(index) => (
           <ProxyRender
             key={renderList[index].key}
@@ -516,7 +527,36 @@ export const ProxyGroups = (props: Props) => {
   );
 };
 
-// 简单的防抖函数
+// 替换简单防抖函数为更优的节流函数
+function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let previous = 0;
+
+  return function (...args: Parameters<T>) {
+    const now = Date.now();
+    const remaining = wait - (now - previous);
+
+    if (remaining <= 0 || remaining > wait) {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      previous = now;
+      func(...args);
+    } else if (!timer) {
+      timer = setTimeout(() => {
+        previous = Date.now();
+        timer = null;
+        func(...args);
+      }, remaining);
+    }
+  };
+}
+
+// 保留防抖函数以兼容其他地方可能的使用
 function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number,
