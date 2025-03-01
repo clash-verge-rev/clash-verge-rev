@@ -66,8 +66,8 @@ export const ProxyRender = (props: RenderProps) => {
         style={{
           background: itembackgroundcolor,
           height: "100%",
-          margin: "8px 8px",
-          borderRadius: "8px",
+          margin: "10px 16px",
+          borderRadius: "10px",
         }}
         onClick={() => onHeadState(group.name, { open: !headState?.open })}
       >
@@ -131,7 +131,7 @@ export const ProxyRender = (props: RenderProps) => {
   if (type === 1) {
     return (
       <ProxyHead
-        sx={{ pl: 2, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
+        sx={{ pl: 3, pr: 3.5, mt: indent ? 1 : 0.5, mb: 1 }}
         url={group.testUrl}
         groupName={group.name}
         headState={headState!}
@@ -191,10 +191,10 @@ export const ProxyRender = (props: RenderProps) => {
         sx={{
           height: 56,
           display: "grid",
-          gap: 1,
-          pl: 2,
-          pr: 2,
-          pb: 1,
+          gap: 1.5,
+          pl: 3,
+          pr: 3.5,
+          pb: 1.25,
           gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
         }}
       >
