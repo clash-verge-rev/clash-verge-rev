@@ -32,11 +32,6 @@
     }
   },
   "app": {
-    "windows": [
-      {
-        "title": "Clash Verge"
-      }
-    ],
     "trayIcon": {
       "iconPath": "icons/tray-icon-mono.ico",
       "iconAsTemplate": true
