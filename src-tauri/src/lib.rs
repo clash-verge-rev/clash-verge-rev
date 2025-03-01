@@ -9,6 +9,70 @@ use crate::utils::{resolve, resolve::resolve_scheme, server};
 use config::Config;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
+use std::{sync::{Mutex, Once}};
+use tauri::AppHandle;
+
+/// A global singleton handle to the application.
+pub struct AppHandleManager {
+    inner: Mutex<Option<AppHandle>>,
+    init: Once,
+}
+
+impl AppHandleManager {
+    /// Get the global instance of the app handle manager.
+    pub fn global() -> &'static Self {
+        static INSTANCE: AppHandleManager = AppHandleManager {
+            inner: Mutex::new(None),
+            init: Once::new(),
+        };
+        &INSTANCE
+    }
+
+    /// Initialize the app handle manager with an app handle.
+    pub fn init(&self, handle: AppHandle) {
+        self.init.call_once(|| {
+            let mut app_handle = self.inner.lock().unwrap();
+            *app_handle = Some(handle);
+        });
+    }
+
+    /// Get the app handle if it has been initialized.
+    pub fn get(&self) -> Option<AppHandle> {
+        self.inner.lock().unwrap().clone()
+    }
+
+    /// Get the app handle, panics if it hasn't been initialized.
+    pub fn get_handle(&self) -> AppHandle {
+        self.get().expect("AppHandle not initialized")
+    }
+
+    pub fn set_activation_policy_regular(&self) {
+        #[cfg(target_os = "macos")]
+        {
+            let app_handle = self.inner.lock().unwrap();
+            let app_handle = app_handle.as_ref().unwrap();
+            let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Regular);
+        }
+    }
+    
+    pub fn set_activation_policy_accessory(&self) {
+        #[cfg(target_os = "macos")]
+        {
+            let app_handle = self.inner.lock().unwrap();
+            let app_handle = app_handle.as_ref().unwrap();
+            let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
+        }
+    }
+    
+    pub fn set_activation_policy_prohibited(&self) {
+        #[cfg(target_os = "macos")]
+        {
+            let app_handle = self.inner.lock().unwrap();
+            let app_handle = app_handle.as_ref().unwrap();
+            let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Prohibited);
+        }
+    }
+}
 
 pub fn run() {
     // 单例检测
@@ -136,7 +200,16 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
 
-    app.run(|_, e| match e {
+    app.run(|app_handle, e| match e {
+        tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+            AppHandleManager::global().init(app_handle.clone());
+        }
+        tauri::RunEvent::Reopen { has_visible_windows, .. } => {
+            if !has_visible_windows {
+                AppHandleManager::global().set_activation_policy_regular();
+            }
+            AppHandleManager::global().init(app_handle.clone());
+        }
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             if code.is_none() {
                 api.prevent_exit();
@@ -146,6 +219,7 @@ pub fn run() {
             if label == "main" {
                 match event {
                     tauri::WindowEvent::CloseRequested { api, .. } => {
+                        AppHandleManager::global().set_activation_policy_accessory();
                         if core::handle::Handle::global().is_exiting() {
                             return;
                         }
