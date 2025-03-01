@@ -72,13 +72,16 @@ fn ipv4_prefixes(from: Ipv4Addr, to: Ipv4Addr) -> Vec<Prefix> {
     let mut cidrs = Vec::new();
 
     while from <= to {
-        let max_prefix = 32 - from.trailing_zeros().min(31) as u8;
-        let mut prefix = max_prefix;
+        let trailing_zeros = from.trailing_zeros().min(31) as u8;
+        let mut prefix = 32 - trailing_zeros;
         let (block_start, block_size) = loop {
             let mask = u32::MAX << (32 - prefix);
             let block_start = from & mask;
-            let block_size = 1 << (32 - prefix);
-            let block_end = block_start + block_size - 1;
+            let block_size = 1u32 << (32 - prefix);
+            let block_end = match block_start.checked_add(block_size - 1) {
+                Some(e) => e,
+                None => u32::MAX,
+            };
 
             if block_start >= from && block_end <= to {
                 break (block_start, block_size);
@@ -93,7 +96,10 @@ fn ipv4_prefixes(from: Ipv4Addr, to: Ipv4Addr) -> Vec<Prefix> {
 
         cidrs.push(Prefix::new(u32_to_ip(block_start), prefix));
 
-        from = block_start + block_size;
+        from = match block_start.checked_add(block_size) {
+            Some(s) => s,
+            None => break,
+        };
     }
 
     cidrs
@@ -116,8 +122,17 @@ fn ipv6_prefixes(from: Ipv6Addr, to: Ipv6Addr) -> Vec<Prefix> {
         let (block_start, block_size) = loop {
             let mask = u128::MAX << (128 - prefix);
             let block_start = from & mask;
-            let block_size = 1u128 << (128 - prefix);
-            let block_end = block_start + block_size - 1;
+            let block_size = match 1u128.checked_shl((128 - prefix) as u32) {
+                Some(s) => s,
+                None => {
+                    prefix = 128;
+                    break (from, 1);
+                }
+            };
+            let block_end = match block_start.checked_add(block_size.checked_sub(1).unwrap_or(0)) {
+                Some(e) => e,
+                None => u128::MAX,
+            };
 
             if block_start >= from && block_end <= to {
                 break (block_start, block_size);
@@ -132,7 +147,10 @@ fn ipv6_prefixes(from: Ipv6Addr, to: Ipv6Addr) -> Vec<Prefix> {
 
         prefixes.push(Prefix::new(u128_to_ip(block_start), prefix));
 
-        from = block_start + block_size;
+        from = match block_start.checked_add(block_size) {
+            Some(s) => s,
+            None => break,
+        };
     }
 
     prefixes
@@ -222,6 +240,7 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
         let range = IpAddr::ip_range(from_addr, to_addr);
         let prefixes = range.prefixes();
         for prefix in prefixes {
+            // println!("prefix: {:?}", prefix);
             rules.push(prefix.to_string());
         }
     }
