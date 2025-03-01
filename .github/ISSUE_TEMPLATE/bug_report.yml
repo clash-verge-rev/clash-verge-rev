@@ -2,6 +2,7 @@ name: 问题反馈 / Bug report
 title: "[BUG] "
 description: 反馈你遇到的问题 / Report the issue you are experiencing
 labels: ["bug"]
+type: "Bug"
 
 body:
   - type: markdown
