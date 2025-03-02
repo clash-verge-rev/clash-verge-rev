@@ -1,4 +1,5 @@
 {
+  "version": "2.1.3-alpha",
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "active": true,
@@ -25,7 +26,6 @@
     "devUrl": "http://localhost:3000/"
   },
   "productName": "Clash Verge",
-  "version": "2.1.2",
   "identifier": "io.github.clash-verge-rev.clash-verge-rev",
   "plugins": {
     "updater": {
