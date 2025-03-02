@@ -92,12 +92,6 @@ jobs:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
-      - name: Portable Bundle
-        if: matrix.os == 'windows-latest'
-        run: pnpm portable ${{ matrix.target }} --alpha
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   alpha-for-linux-arm:
     strategy:
       fail-fast: false
@@ -347,7 +341,7 @@ jobs:
           - Linux arm64 architecture: arm64.deb/aarch64.rpm
           - Linux armv7架构: armhf.deb/armhfp.rpm
 
-          ### Windows (Win7 用户请查看下面FAQ中的解决方案)
+          ### Windows (不再支持Win7)
           #### 正常版本(推荐)
           - 64位: x64-setup.exe
           - arm64架构: arm64-setup.exe

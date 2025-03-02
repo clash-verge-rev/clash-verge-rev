@@ -38,7 +38,7 @@ npm install pnpm -g
 pnpm install
 ```
 
-### Download the Clash Mihomo Core Binary
+### Download the Mihomo Core Binary
 
 You have two options for downloading the clash binary:
 
@@ -48,7 +48,7 @@ You have two options for downloading the clash binary:
   # Use '--force' to force update to the latest version
   # pnpm run check --force
   ```
-- Manually download it from the [Clash Meta release](https://github.com/MetaCubeX/Clash.Meta/releases). After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).
+- Manually download it from the [Mihomo release](https://github.com/MetaCubeX/mihomo/releases). After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).
 
 ### Run the Development Server
 
@@ -65,7 +65,7 @@ pnpm dev:diff
 To build this project:
 
 ```shell
-pnpm run build
+pnpm build
 ```
 
 For a faster build, use the following command
@@ -84,6 +84,14 @@ To clean rust build:
 
 ```shell
 pnpm clean
+```
+
+### Portable Version (Windows Only)
+
+To package portable version after the build:
+
+```shell
+pnpm portable
 ```
 
 ## Contributing Your Changes
