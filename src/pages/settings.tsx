@@ -76,8 +76,11 @@ const SettingPage = () => {
         <Grid item xs={12} md={6}>
           <Box
             sx={{
-              borderRadius: 2,
-              marginBottom: 1.5,
+              margin: "0px 10px",
+              marginTop: "10px",
+              marginRight: "5px",
+              borderRadius: "10px",
+              marginBottom: 2,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
             }}
           >
@@ -85,7 +88,11 @@ const SettingPage = () => {
           </Box>
           <Box
             sx={{
-              borderRadius: 2,
+              margin: "0px 10px",
+              marginTop: "10px",
+              marginRight: "5px",
+              borderRadius: "10px",
+              marginBottom: 2,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
             }}
           >
@@ -95,8 +102,11 @@ const SettingPage = () => {
         <Grid item xs={12} md={6}>
           <Box
             sx={{
-              borderRadius: 2,
-              marginBottom: 1.5,
+              margin: "0px 10px",
+              marginTop: "10px",
+              marginLeft: "5px",
+              borderRadius: "10px",
+              marginBottom: 2,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
             }}
           >
@@ -104,7 +114,11 @@ const SettingPage = () => {
           </Box>
           <Box
             sx={{
-              borderRadius: 2,
+              margin: "0px 10px",
+              marginTop: "10px",
+              marginLeft: "5px",
+              borderRadius: "10px",
+              marginBottom: 2,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
             }}
           >
