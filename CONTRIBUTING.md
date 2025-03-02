@@ -68,7 +68,23 @@ To build this project:
 pnpm run build
 ```
 
+For a faster build, use the following command
+
+```shell
+pnpm build:fast
+```
+
+This uses Rust's fast-release profile which significantly reduces compilation time by disabling optimization and LTO. The resulting binary will be larger and less performant than the standard build, but it's useful for testing changes quickly.
+
 The `Artifacts` will display in the `log` in the Terminal.
+
+### Build clean
+
+To clean rust build:
+
+```shell
+pnpm clean
+```
 
 ## Contributing Your Changes
 
