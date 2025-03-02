@@ -7,17 +7,12 @@ import {
   Notice,
   ScrollableText,
 } from "@/components/base";
-import { useProfiles } from "@/hooks/use-profiles";
 import {
   deleteBackup,
   downloadBackupAndReload,
-  getVergeConfig,
   listBackup,
-  restartApp,
 } from "@/services/cmds";
-import { useSetThemeMode } from "@/services/states";
 import { sleep } from "@/utils";
-import getSystem from "@/utils/get-system";
 import { Check, Delete, InboxRounded } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import {
@@ -27,10 +22,8 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  Tooltip,
   Typography,
 } from "@mui/material";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useLockFn } from "ahooks";
 import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -38,13 +31,11 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 dayjs.extend(customParseFormat);
-const OS = getSystem();
 
 type BackupFile = IWebDavFile & {
   platform: string;
   type: "profiles" | "all";
   backupTime: Dayjs;
-  allowApply: boolean;
 };
 
 export interface WebDavFilesViewerRef extends DialogRef {
@@ -55,9 +46,6 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
   (props, ref) => {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
-    const setMode = useSetThemeMode();
-    const { activateSelected } = useProfiles();
-
     const [deletingFile, setDeletingFile] = useState("");
     const [applyingFile, setApplyingFile] = useState("");
     const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);
@@ -87,14 +75,11 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
             /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}/,
           )!;
           const backupTime = dayjs(fileBackupTimeStr[0], "YYYY-MM-DD_HH-mm-ss");
-          const allowApply =
-            (type === "all" && OS === platform) || type === "profiles";
           return {
             ...file,
             platform,
             type,
             backupTime,
-            allowApply,
           } as BackupFile;
         })
         .sort((a, b) => (a.backupTime.isAfter(b.backupTime) ? -1 : 1));
@@ -120,26 +105,7 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
         await downloadBackupAndReload(file.filename);
         await sleep(1000);
         setApplyingFile("");
-        // apply theme mode
-        // const verge = await getVergeConfig();
-        // const mode = verge.theme_mode;
-        // if (mode) {
-        //   if (mode === "system") {
-        //     const appWindow = getCurrentWebviewWindow();
-        //     const theme = (await appWindow.theme()) ?? "light";
-        //     setMode(theme);
-        //   } else {
-        //     setMode(mode);
-        //   }
-        // }
         Notice.success(t("Apply Backup Successful"));
-
-        // emit reload all event
-        // emit("verge://reload-all");
-        // await sleep(1000);
-        // await activateSelected();
-        // await sleep(1000);
-        // restartApp();
       } catch (e) {
         Notice.error(t("Apply Backup Failed"));
         setApplyingFile("");
@@ -234,24 +200,19 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
                     startIcon={<Delete />}>
                     {t("Delete")}
                   </LoadingButton>
-                  <Tooltip
-                    title={!file.allowApply ? t("Platform No Match") : null}>
-                    <div>
-                      <LoadingButton
-                        sx={{ minWidth: "80px" }}
-                        disabled={
-                          !file.allowApply || deletingFile === file.filename
-                        }
-                        loading={applyingFile === file.filename}
-                        onClick={() => handleApplyBackup(file)}
-                        variant="contained"
-                        size="small"
-                        loadingPosition="start"
-                        startIcon={<Check />}>
-                        {t("Apply")}
-                      </LoadingButton>
-                    </div>
-                  </Tooltip>
+                  <div>
+                    <LoadingButton
+                      sx={{ minWidth: "80px" }}
+                      disabled={deletingFile === file.filename}
+                      loading={applyingFile === file.filename}
+                      onClick={() => handleApplyBackup(file)}
+                      variant="contained"
+                      size="small"
+                      loadingPosition="start"
+                      startIcon={<Check />}>
+                      {t("Apply")}
+                    </LoadingButton>
+                  </div>
                 </div>
               ))}
             </div>
