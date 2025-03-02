@@ -4,6 +4,8 @@ mod core;
 mod enhance;
 mod feat;
 mod utils;
+mod model;
+mod module;
 use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
 use config::Config;
@@ -191,6 +193,8 @@ pub fn run() {
             cmd::list_webdav_backup,
             cmd::delete_webdav_backup,
             cmd::restore_webdav_backup,
+            // export diagnostic info for issue reporting
+            cmd::export_diagnostic_info,
         ]);
 
     #[cfg(debug_assertions)]
