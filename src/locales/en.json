@@ -349,6 +349,8 @@
   "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
   "Break Change Update Error": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version",
   "Open Dev Tools": "Dev Tools",
+  "Export Diagnostic Info": "Export Diagnostic Info",
+  "Export Diagnostic Info For Issue Reporting": "Export Diagnostic Info For Issue Reporting",
   "Exit": "Exit",
   "Verge Version": "Verge Version",
   "ReadOnly": "ReadOnly",
