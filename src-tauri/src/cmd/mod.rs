@@ -14,6 +14,7 @@ pub mod clash;
 pub mod verge;
 pub mod runtime;
 pub mod save_profile;
+pub mod system;
 
 // Re-export all command functions for backwards compatibility
 pub use profile::*;
@@ -26,3 +27,4 @@ pub use clash::*;
 pub use verge::*;
 pub use runtime::*;
 pub use save_profile::*;
+pub use system::*;

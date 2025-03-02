@@ -191,6 +191,10 @@ export async function exitApp() {
   return invoke("exit_app");
 }
 
+export async function exportDiagnosticInfo() {
+  return invoke("export_diagnostic_info");
+}
+
 export async function copyIconFile(
   path: string,
   name: "common" | "sysproxy" | "tun",
