@@ -77,14 +77,12 @@ pub async fn resolve_setup(app: &mut App) {
                         }
                     }
                     if !service_runing {
-                        log::error!(target: "app", "service not runing. exit");
-                        app.app_handle().exit(-2);
+                        log::warn!(target: "app", "service not running, will fallback to user mode");
                     }
                 }
             }
             Err(e) => {
-                log::error!(target: "app", "{e:?}");
-                app.app_handle().exit(-1);
+                log::warn!(target: "app", "failed to install service: {e:?}, will fallback to user mode");
             }
         }
     }

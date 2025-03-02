@@ -3,11 +3,13 @@ use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
+use tauri_plugin_shell::process::CommandChild;
 
 #[derive(Debug, Default, Clone)]
 pub struct Handle {
     pub app_handle: Arc<RwLock<Option<AppHandle>>>,
     pub is_exiting: Arc<RwLock<bool>>,
+    pub core_process: Arc<RwLock<Option<CommandChild>>>,
 }
 
 impl Handle {
@@ -17,6 +19,7 @@ impl Handle {
         HANDLE.get_or_init(|| Handle {
             app_handle: Arc::new(RwLock::new(None)),
             is_exiting: Arc::new(RwLock::new(false)),
+            core_process: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -66,6 +69,16 @@ impl Handle {
     pub fn set_is_exiting(&self) {
         let mut is_exiting = self.is_exiting.write();
         *is_exiting = true;
+    }
+
+    pub fn set_core_process(&self, process: CommandChild) {
+        let mut core_process = self.core_process.write();
+        *core_process = Some(process);
+    }
+
+    pub fn take_core_process(&self) -> Option<CommandChild> {
+        let mut core_process = self.core_process.write();
+        core_process.take()
     }
 
     pub fn is_exiting(&self) -> bool {
