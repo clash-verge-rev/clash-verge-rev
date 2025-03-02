@@ -87,12 +87,6 @@ jobs:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
-      - name: Portable Bundle
-        if: matrix.os == 'windows-latest'
-        run: pnpm portable ${{ matrix.target }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   release-for-linux-arm:
     strategy:
       fail-fast: false
@@ -221,9 +215,6 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             arch: x64
-          - os: windows-latest
-            target: i686-pc-windows-msvc
-            arch: x86
           - os: windows-latest
             target: aarch64-pc-windows-msvc
             arch: arm64
