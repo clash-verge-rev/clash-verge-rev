@@ -37,11 +37,11 @@ jobs:
               labelsToAdd.push('macos');
             }
 
-            if (bodyContent.include("托盘") || bodyContent.include("tray")) {
+            if (bodyContent.includes("托盘") || bodyContent.includes("tray")) {
               labelsToAdd.push('tray');
             }
 
-            if (bodyContent.include("菜单") || bodyContent.include("menu")) {
+            if (bodyContent.includes("菜单") || bodyContent.includes("menu")) {
               labelsToAdd.push('menu');
             }
 
