@@ -65,7 +65,7 @@ pnpm dev:diff
 To build this project:
 
 ```shell
-pnpm run build
+pnpm build
 ```
 
 For a faster build, use the following command
@@ -84,6 +84,14 @@ To clean rust build:
 
 ```shell
 pnpm clean
+```
+
+### Portable Version (Windows Only)
+
+To package portable version after the build:
+
+```shell
+pnpm portable
 ```
 
 ## Contributing Your Changes
