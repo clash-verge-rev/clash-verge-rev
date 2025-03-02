@@ -1,0 +1,60 @@
+name: Label Issue
+
+on:
+  workflow_dispatch:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  label-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Label issue if it contains "windows"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const labelsToAdd = [];
+            const existingLabels = issue.labels.map(label => label.name);
+            const bodyContent = issue.body.toLowerCase();
+
+            // Check for keywords and add corresponding labels
+            if (bodyContent.includes('windows')) {
+              labelsToAdd.push('windows');
+            }
+            if (bodyContent.includes('linux')) {
+              labelsToAdd.push('linux');
+            }
+            if (bodyContent.includes('macos')) {
+              labelsToAdd.push('macos');
+            }
+
+            if (bodyContent.includes("托盘") || bodyContent.includes("tray")) {
+              labelsToAdd.push('tray');
+            }
+
+            if (bodyContent.includes("菜单") || bodyContent.includes("menu")) {
+              labelsToAdd.push('menu');
+            }
+
+            // Add labels if any match
+            // Filter out labels that already exist to avoid duplication
+            const newLabelsToAdd = labelsToAdd.filter(label => !existingLabels.includes(label));
+
+            // Add labels if there are new ones to add
+            if (newLabelsToAdd.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: newLabelsToAdd,
+              });
+            }
