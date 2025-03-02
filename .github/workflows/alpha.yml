@@ -207,15 +207,6 @@ jobs:
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
-      - name: Delete Old Release
-        uses: ncipollo/release-action@v1.16.0
-        with:
-          tag: alpha
-          removeArtifacts: true
-          allowUpdates: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
@@ -308,15 +299,6 @@ jobs:
             Rename-Item $file.FullName $newName
           }
 
-      - name: Delete Old Release
-        uses: ncipollo/release-action@v1.16.0
-        with:
-          tag: alpha
-          removeArtifacts: true
-          allowUpdates: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
@@ -383,15 +365,6 @@ jobs:
 
           Created at  ${{ env.BUILDTIME }}.
           EOF
-
-      - name: Delete Old Release
-        uses: ncipollo/release-action@v1.16.0
-        with:
-          tag: alpha
-          removeArtifacts: true
-          allowUpdates: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
