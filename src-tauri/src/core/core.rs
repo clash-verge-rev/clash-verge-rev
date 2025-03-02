@@ -7,7 +7,7 @@ use crate::utils::{dirs, help};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use serde_yaml::Mapping;
-use std::{sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration, path::PathBuf};
 use tauri_plugin_shell::ShellExt;
 use tokio::sync::Mutex;
 use tokio::time::sleep;
@@ -53,10 +53,35 @@ impl CoreManager {
         // 服务模式
         if service::check_service().await.is_ok() {
             log::info!(target: "app", "stop the core by service");
-            service::stop_core_by_service().await?;
+            match service::stop_core_by_service().await {
+                Ok(_) => {
+                    log::info!(target: "app", "core stopped successfully by service");
+                }
+                Err(err) => {
+                    log::warn!(target: "app", "failed to stop core by service: {}", err);
+                    // 服务停止失败，尝试停止可能的sidecar进程
+                    self.stop_sidecar_process();
+                }
+            }
+        } else {
+            // 如果没有使用服务，尝试停止sidecar进程
+            self.stop_sidecar_process();
         }
+        
         *running = false;
         Ok(())
+    }
+
+    /// 停止通过sidecar启动的进程
+    fn stop_sidecar_process(&self) {
+        if let Some(process) = handle::Handle::global().take_core_process() {
+            log::info!(target: "app", "stopping core process in sidecar mode");
+            if let Err(e) = process.kill() {
+                log::warn!(target: "app", "failed to kill core process: {}", e);
+            } else {
+                log::info!(target: "app", "core process stopped successfully");
+            }
+        }
     }
 
     /// 启动核心
@@ -69,11 +94,26 @@ impl CoreManager {
 
         let config_path = Config::generate_file(ConfigType::Run)?;
 
-        // 服务模式
+        // 先尝试服务模式
         if service::check_service().await.is_ok() {
             log::info!(target: "app", "try to run core in service mode");
-            service::run_core_by_service(&config_path).await?;
+            match service::run_core_by_service(&config_path).await {
+                Ok(_) => {
+                    log::info!(target: "app", "core started successfully in service mode");
+                },
+                Err(err) => {
+                    // 服务启动失败，尝试sidecar模式
+                    log::warn!(target: "app", "failed to start core in service mode: {}", err);
+                    log::info!(target: "app", "trying to run core in sidecar mode");
+                    self.run_core_by_sidecar(&config_path).await?;
+                }
+            }
+        } else {
+            // 服务不可用，直接使用sidecar模式
+            log::info!(target: "app", "service not available, running core in sidecar mode");
+            self.run_core_by_sidecar(&config_path).await?;
         }
+
         // 流量订阅
         #[cfg(target_os = "macos")]
         log_err!(Tray::global().subscribe_traffic().await);
@@ -83,11 +123,43 @@ impl CoreManager {
         Ok(())
     }
 
+    /// 通过sidecar启动内核
+    async fn run_core_by_sidecar(&self, config_path: &PathBuf) -> Result<()> {
+        let clash_core = { Config::verge().latest().clash_core.clone() };
+        let clash_core = clash_core.unwrap_or("verge-mihomo".into());
+        
+        log::info!(target: "app", "starting core {} in sidecar mode", clash_core);
+        
+        let app_handle = handle::Handle::global().app_handle().ok_or(anyhow::anyhow!("failed to get app handle"))?;
+        
+        // 获取配置目录
+        let config_dir = dirs::app_home_dir()?;
+        let config_path_str = dirs::path_to_str(config_path)?;
+        
+        // 启动核心进程并转入后台运行
+        let (_, child) = app_handle
+            .shell()
+            .sidecar(clash_core)?
+            .args(["-d", dirs::path_to_str(&config_dir)?, "-f", config_path_str])
+            .spawn()?;
+        
+        // 保存进程ID以便后续管理
+        handle::Handle::global().set_core_process(child);
+        
+        // 等待短暂时间确保启动成功
+        sleep(Duration::from_millis(300)).await;
+        
+        log::info!(target: "app", "core started in sidecar mode");
+        Ok(())
+    }
+
     /// 重启内核
     pub async fn restart_core(&self) -> Result<()> {
         // 重新启动app
+        log::info!(target: "app", "restarting core");
         self.stop_core().await?;
         self.start_core().await?;
+        log::info!(target: "app", "core restarted successfully");
         Ok(())
     }
 
@@ -139,9 +211,11 @@ impl CoreManager {
                     }
                     Err(err) => {
                         println!("[切换内核] 内核切换失败: {}", err);
-                        Config::verge().discard();
-                        Config::runtime().discard();
-                        Err(err)
+                        // 即使使用服务失败，我们也尝试使用sidecar模式启动
+                        log::info!(target: "app", "trying sidecar mode after service failure");
+                        self.start_core().await?;
+                        Config::runtime().apply();
+                        Ok(())
                     }
                 }
             }
@@ -159,8 +233,10 @@ impl CoreManager {
                     }
                     Err(err) => {
                         println!("[切换内核] 内核切换失败: {}", err);
-                        Config::verge().discard();
-                        Err(err)
+                        // 即使使用服务失败，我们也尝试使用sidecar模式启动
+                        log::info!(target: "app", "trying sidecar mode after service failure with default config");
+                        self.start_core().await?;
+                        Ok(())
                     }
                 }
             }
