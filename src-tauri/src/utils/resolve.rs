@@ -1,7 +1,9 @@
 use crate::config::IVerge;
 use crate::utils::error;
 use crate::{config::Config, config::PrfItem, core::*, utils::init, utils::server};
-use crate::{log_err, wrap_err, AppHandleManager};
+use crate::{log_err, wrap_err};
+#[cfg(target_os = "macos")]
+use crate::AppHandleManager;
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use percent_encoding::percent_decode_str;
@@ -133,6 +135,7 @@ pub fn create_window() {
     log::info!(target: "app", "Starting to create window");
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
+    #[cfg(target_os = "macos")]
     AppHandleManager::global().set_activation_policy_regular();
 
     if let Some(window) = handle::Handle::global().get_window() {
