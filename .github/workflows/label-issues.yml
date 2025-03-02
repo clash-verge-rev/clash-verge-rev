@@ -1,0 +1,68 @@
+name: Label Issues
+
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch: # 允许手动触发工作流
+
+jobs:
+  label-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Label issues based on title, body, and age
+        uses: actions/github-script@v5
+        with:
+          script: |
+            // 如果是手动触发，获取所有 issues；否则只处理当前 issue
+            const issues = context.eventName === 'workflow_dispatch'
+              ? (await github.rest.issues.listForRepo({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'open',  // 只处理 open 状态的 issues
+                })).data
+              : [context.payload.issue];
+
+            for (const issue of issues) {
+              const labels = [];
+
+              // Check for 'bug' and 'feature' keywords
+              if (issue.title.includes('bug')) {
+                labels.push('bug');
+              }
+              if (issue.title.includes('feature')) {
+                labels.push('enhancement');
+              }
+
+              // Check for platform keywords
+              const content = (issue.title + ' ' + (issue.body || '')).toLowerCase();
+              if (content.includes('windows')) {
+                labels.push('windows');
+              }
+              if (content.includes('macos')) {
+                labels.push('macos');
+              }
+              if (content.includes('linux')) {
+                labels.push('linux');
+              }
+
+              // Check if the issue is older than 12 months
+              const createdAt = new Date(issue.created_at);
+              const now = new Date();
+              const monthsDiff = (now.getFullYear() - createdAt.getFullYear()) * 12 + (now.getMonth() - createdAt.getMonth());
+              if (monthsDiff >= 12) {
+                labels.push('old');
+              }
+
+              // Add labels if any are found
+              if (labels.length > 0) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: labels
+                });
+              }
+            }
