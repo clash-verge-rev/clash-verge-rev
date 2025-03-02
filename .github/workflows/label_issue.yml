@@ -42,6 +42,8 @@ jobs:
             }
 
             if (bodyContent.includes("菜单") || bodyContent.includes("menu")) {
+              labelsToAdd.push('menu');
+            }
 
             // Add labels if any match
             // Filter out labels that already exist to avoid duplication
