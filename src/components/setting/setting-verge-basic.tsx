@@ -142,8 +142,9 @@ const SettingVergeBasic = ({ onError }: Props) => {
         >
           <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
             <MenuItem value="bash">Bash</MenuItem>
-            <MenuItem value="cmd">CMD</MenuItem>
+            <MenuItem value="fish">Fish</MenuItem>
             <MenuItem value="nushell">Nushell</MenuItem>
+            <MenuItem value="cmd">CMD</MenuItem>
             <MenuItem value="powershell">PowerShell</MenuItem>
           </Select>
         </GuardState>
