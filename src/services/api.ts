@@ -96,8 +96,10 @@ export const updateProxy = async (group: string, proxy: string) => {
 
 // get proxy
 export const getProxiesInner = async () => {
-  const response = await invoke<Record<string, IProxyItem>>("get_proxies");
-  return response.proxies;
+  const response = await invoke<{ proxies: Record<string, IProxyItem> }>(
+    "get_proxies",
+  );
+  return response.proxies as Record<string, IProxyItem>;
 };
 
 /// Get the Proxy information
@@ -188,10 +190,10 @@ export const getProxies = async (): Promise<{
 
 // get proxy providers
 export const getProxyProviders = async () => {
-  const response = await invoke<Record<string, IProxyProviderItem>>(
-    "get_providers_proxies",
-  );
-  const providers = response.providers;
+  const response = await invoke<{
+    providers: Record<string, IProxyProviderItem>;
+  }>("get_providers_proxies");
+  const providers = response.providers as Record<string, IProxyProviderItem>;
 
   return Object.fromEntries(
     Object.entries(providers).filter(([key, item]) => {
