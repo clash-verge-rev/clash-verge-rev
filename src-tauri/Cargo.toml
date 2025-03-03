@@ -67,6 +67,7 @@ getrandom = "0.2"
 tokio-tungstenite = "0.26.1"
 futures = "0.3"
 sys-locale = "0.3.1"
+async-trait = "0.1.86"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
@@ -120,3 +121,8 @@ strip = false         # 不剥离符号，保留调试信息
 [lib]
 name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dev-dependencies]
+env_logger = "0.11.0"
+mockito = "1.2.0"
+tempfile = "3.17.1"
