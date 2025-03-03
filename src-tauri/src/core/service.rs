@@ -279,3 +279,15 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
     Ok(())
 }
+
+/// 检查服务是否正在运行
+pub async fn is_service_running() -> Result<bool> {
+    let resp = check_service().await?;
+
+    // 检查服务状态码和消息
+    if resp.code == 200 && resp.msg == "success" && resp.data.is_some() {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}

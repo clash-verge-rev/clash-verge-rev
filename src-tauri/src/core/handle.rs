@@ -81,6 +81,11 @@ impl Handle {
         core_process.take()
     }
 
+    /// 检查是否有运行中的核心进程
+    pub fn has_core_process(&self) -> bool {
+        self.core_process.read().is_some()
+    }
+
     pub fn is_exiting(&self) -> bool {
         *self.is_exiting.read()
     }
