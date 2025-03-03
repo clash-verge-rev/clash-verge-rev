@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { getClashInfo } from "./cmds";
+import { invoke } from "@tauri-apps/api/core";
+import { useLockFn } from "ahooks";
 
 let axiosIns: AxiosInstance = null!;
 
@@ -94,13 +96,18 @@ export const updateProxy = async (group: string, proxy: string) => {
 
 // get proxy
 export const getProxiesInner = async () => {
-  const instance = await getAxios();
-  const response = await instance.get<any, any>("/proxies");
-  return (response?.proxies || {}) as Record<string, IProxyItem>;
+  const response = await invoke<Record<string, IProxyItem>>("get_proxies");
+  return response.proxies;
 };
 
 /// Get the Proxy information
-export const getProxies = async () => {
+export const getProxies = async (): Promise<{
+  global: IProxyGroupItem;
+  direct: IProxyItem;
+  groups: IProxyGroupItem[];
+  records: Record<string, IProxyItem>;
+  proxies: IProxyItem[];
+}> => {
   const [proxyRecord, providerRecord] = await Promise.all([
     getProxiesInner(),
     getProxyProviders(),
@@ -181,13 +188,10 @@ export const getProxies = async () => {
 
 // get proxy providers
 export const getProxyProviders = async () => {
-  const instance = await getAxios();
-  const response = await instance.get<any, any>("/providers/proxies");
-
-  const providers = (response.providers || {}) as Record<
-    string,
-    IProxyProviderItem
-  >;
+  const response = await invoke<Record<string, IProxyProviderItem>>(
+    "get_providers_proxies",
+  );
+  const providers = response.providers;
 
   return Object.fromEntries(
     Object.entries(providers).filter(([key, item]) => {
