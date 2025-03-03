@@ -92,7 +92,7 @@
     "husky": "9.1.7",
     "node-fetch": "3.3.2",
     "postcss": "8.5.3",
-    "prettier": "3.5.2",
+    "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "0.6.11",
     "pretty-quick": "4.0.0",
     "react-devtools": "6.1.1",

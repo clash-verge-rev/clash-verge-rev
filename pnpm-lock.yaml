@@ -205,14 +205,14 @@ importers:
         specifier: 8.5.3
         version: 8.5.3
       prettier:
-        specifier: 3.5.2
-        version: 3.5.2
+        specifier: 3.5.3
+        version: 3.5.3
       prettier-plugin-tailwindcss:
         specifier: 0.6.11
-        version: 0.6.11(prettier@3.5.2)
+        version: 0.6.11(prettier@3.5.3)
       pretty-quick:
         specifier: 4.0.0
-        version: 4.0.0(prettier@3.5.2)
+        version: 4.0.0(prettier@3.5.3)
       react-devtools:
         specifier: 6.1.1
         version: 6.1.1
@@ -3436,8 +3436,8 @@ packages:
       prettier-plugin-svelte:
         optional: true
 
-  prettier@3.5.2:
-    resolution: {integrity: sha512-lc6npv5PH7hVqozBR7lkBNOGXV9vMwROAPlumdBkX0wTbbzPu/U1hk5yL8p2pt4Xoc+2mkT8t/sow2YrV/M5qg==}
+  prettier@3.5.3:
+    resolution: {integrity: sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -7483,7 +7483,7 @@ snapshots:
       monaco-types: 0.1.0
       monaco-worker-manager: 2.0.1(monaco-editor@0.52.2)
       path-browserify: 1.0.1
-      prettier: 3.5.2
+      prettier: 3.5.3
       vscode-languageserver-textdocument: 1.0.12
       vscode-languageserver-types: 3.17.5
       vscode-uri: 3.1.0
@@ -7684,13 +7684,13 @@ snapshots:
 
   prepend-http@1.0.4: {}
 
-  prettier-plugin-tailwindcss@0.6.11(prettier@3.5.2):
+  prettier-plugin-tailwindcss@0.6.11(prettier@3.5.3):
     dependencies:
-      prettier: 3.5.2
+      prettier: 3.5.3
 
-  prettier@3.5.2: {}
+  prettier@3.5.3: {}
 
-  pretty-quick@4.0.0(prettier@3.5.2):
+  pretty-quick@4.0.0(prettier@3.5.3):
     dependencies:
       execa: 5.1.1
       find-up: 5.0.0
@@ -7698,7 +7698,7 @@ snapshots:
       mri: 1.2.0
       picocolors: 1.1.1
       picomatch: 3.0.1
-      prettier: 3.5.2
+      prettier: 3.5.3
       tslib: 2.8.1
 
   progress@2.0.3: {}
