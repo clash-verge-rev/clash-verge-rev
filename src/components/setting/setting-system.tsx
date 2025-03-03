@@ -54,10 +54,6 @@ const SettingSystem = ({ onError }: Props) => {
     proxy_auto_config,
   } = verge ?? {};
 
-  const isProxyEnabled = proxy_auto_config
-    ? autoproxy?.enable
-    : sysproxy?.enable;
-
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -149,7 +145,13 @@ const SettingSystem = ({ onError }: Props) => {
               icon={SettingsRounded}
               onClick={() => sysproxyRef.current?.open()}
             />
-            {isProxyEnabled ? (
+            {proxy_auto_config ? (
+              autoproxy?.enable ? (
+                <PlayArrowRounded sx={{ color: "success.main", mr: 1 }} />
+              ) : (
+                <PauseRounded sx={{ color: "error.main", mr: 1 }} />
+              )
+            ) : sysproxy?.enable ? (
               <PlayArrowRounded sx={{ color: "success.main", mr: 1 }} />
             ) : (
               <PauseRounded sx={{ color: "error.main", mr: 1 }} />
