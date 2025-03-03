@@ -166,9 +166,12 @@ const Layout = () => {
       }),
 
       // verge 配置更新监听
-      addListener("verge://refresh-verge-config", () =>
-        mutate("getVergeConfig"),
-      ),
+      addListener("verge://refresh-verge-config", () => {
+        mutate("getVergeConfig");
+        // 添加对系统代理状态的刷新
+        mutate("getSystemProxy");
+        mutate("getAutotemProxy");
+      }),
 
       // 通知消息监听
       addListener("verge://notice-message", ({ payload }) =>
