@@ -148,6 +148,9 @@ pub fn run() {
             cmd::get_network_interfaces,
             cmd::restart_core,
             cmd::restart_app,
+            // 添加新的命令
+            cmd::get_running_mode,
+            cmd::install_service,
             // clash
             cmd::get_clash_info,
             cmd::patch_clash_config,

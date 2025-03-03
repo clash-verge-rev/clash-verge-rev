@@ -253,3 +253,13 @@ export async function scriptValidateNotice(status: string, msg: string) {
 export async function validateScriptFile(filePath: string) {
   return invoke<boolean>("validate_script_file", { filePath });
 }
+
+// 获取当前运行模式
+export const getRunningMode = async () => {
+  return invoke<string>("get_running_mode");
+};
+
+// 安装/重装系统服务
+export const installService = async () => {
+  return invoke<void>("install_service");
+};

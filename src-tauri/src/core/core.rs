@@ -17,6 +17,17 @@ pub struct CoreManager {
     running: Arc<Mutex<bool>>,
 }
 
+/// 内核运行模式
+#[derive(Debug, Clone, serde::Serialize)]
+pub enum RunningMode {
+    /// 服务模式运行
+    Service,
+    /// Sidecar模式运行
+    Sidecar,
+    /// 未运行
+    NotRunning,
+}
+
 impl CoreManager {
     pub fn global() -> &'static CoreManager {
         static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
@@ -568,6 +579,40 @@ impl CoreManager {
                 let error_msg = format!("YAML syntax error: {}", err);
                 println!("[core配置语法检查] YAML语法错误: {}", error_msg);
                 Ok((false, error_msg))
+            }
+        }
+    }
+
+    /// 获取当前内核运行模式
+    pub async fn get_running_mode(&self) -> RunningMode {
+        let running = self.running.lock().await;
+        if !*running {
+            return RunningMode::NotRunning;
+        }
+        
+        // 检查服务状态
+        match service::check_service().await {
+            Ok(_) => {
+                // 检查服务是否实际运行核心
+                match service::is_service_running().await {
+                    Ok(true) => RunningMode::Service,
+                    _ => {
+                        // 服务存在但可能没有运行，检查是否有sidecar进程
+                        if handle::Handle::global().has_core_process() {
+                            RunningMode::Sidecar
+                        } else {
+                            RunningMode::NotRunning
+                        }
+                    }
+                }
+            },
+            Err(_) => {
+                // 服务不可用，检查是否有sidecar进程
+                if handle::Handle::global().has_core_process() {
+                    RunningMode::Sidecar
+                } else {
+                    RunningMode::NotRunning
+                }
             }
         }
     }
