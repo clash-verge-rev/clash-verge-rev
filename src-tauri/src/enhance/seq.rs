@@ -85,6 +85,7 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[allow(unused_imports)]
     use serde_yaml::Value;
 
     #[test]
