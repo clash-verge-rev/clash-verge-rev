@@ -1,8 +1,7 @@
-use std::sync::Arc;
+use crate::model::api::mihomo::MihomoAPICaller;
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
-use crate::model::api::mihomo::MihomoAPICaller;
-
+use std::sync::Arc;
 
 #[allow(unused)]
 pub struct MihomoManager {
@@ -34,19 +33,26 @@ impl MihomoManager {
 
     pub async fn refresh_proxies(&mut self) {
         match MihomoAPICaller::get_proxies().await {
-            Ok(proxies) => self.proxies = proxies,
-            Err(e) => log::error!("Failed to get proxies: {}", e),
+            Ok(proxies) => {
+                self.proxies = proxies;
+            }
+            Err(e) => {
+                log::error!("Failed to get proxies: {}", e);
+            }
         }
     }
 
     pub async fn refresh_providers_proxies(&mut self) {
         match MihomoAPICaller::get_providers_proxies().await {
-            Ok(providers_proxies) => self.providers_proxies = providers_proxies,
-            Err(e) => log::error!("Failed to get providers proxies: {}", e),
+            Ok(providers_proxies) => {
+                self.providers_proxies = providers_proxies;
+            },
+            Err(e) => {
+                log::error!("Failed to get providers proxies: {}", e);
+            },
         }
-    }   
+    }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -55,18 +61,21 @@ mod tests {
     async fn test_mihomo_manager_singleton() {
         let manager1 = MihomoManager::new();
         let manager2 = MihomoManager::new();
-        
-        assert!(Arc::ptr_eq(&manager1, &manager2), "Should return same instance");
+
+        assert!(
+            Arc::ptr_eq(&manager1, &manager2),
+            "Should return same instance"
+        );
 
         let manager = manager1.read();
         assert!(manager.proxies.is_null());
         assert!(manager.providers_proxies.is_null());
     }
-    
+
     #[tokio::test]
     async fn test_refresh_proxies() {
         let manager = MihomoManager::new();
-        
+
         // Test initial state
         {
             let data = manager.read();
@@ -87,7 +96,7 @@ mod tests {
     #[tokio::test]
     async fn test_refresh_providers_proxies() {
         let manager = MihomoManager::new();
-        
+
         // Test initial state
         {
             let data = manager.read();
@@ -108,7 +117,7 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_proxies() {
         let manager = MihomoManager::new();
-        
+
         // Test initial state
         {
             let data = manager.read();
@@ -129,7 +138,7 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_providers_proxies() {
         let manager = MihomoManager::new();
-        
+
         // Test initial state
         {
             let data = manager.read();

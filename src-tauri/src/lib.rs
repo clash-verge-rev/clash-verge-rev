@@ -162,6 +162,8 @@ pub fn run() {
             cmd::get_runtime_logs,
             cmd::invoke_uwp_tool,
             cmd::copy_clash_env,
+            cmd::get_proxies,
+            cmd::get_providers_proxies,
             // verge
             cmd::get_verge_config,
             cmd::patch_verge_config,
