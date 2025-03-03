@@ -508,13 +508,8 @@ export const ProxyGroups = (props: Props) => {
         )}
       />
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
-      <AlphabetSelector
-        ref={alphabetSelectorRef}
-        style={{
-          maxHeight,
-          right: 10,
-        }}
-      >
+
+      <AlphabetSelector ref={alphabetSelectorRef} style={{ maxHeight }}>
         <div className="scroll-container">
           <div ref={letterContainerRef} className="letter-container">
             {groupFirstLetters.map((name) => (
