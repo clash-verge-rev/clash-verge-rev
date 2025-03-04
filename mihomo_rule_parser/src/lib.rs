@@ -10,10 +10,10 @@ use std::fmt::Display;
 mod bitmap;
 mod utils;
 
-pub mod classical;
-pub mod domain;
+mod classical;
+mod domain;
 pub mod error;
-pub mod ipcidr;
+mod ipcidr;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum RuleBehavior {
