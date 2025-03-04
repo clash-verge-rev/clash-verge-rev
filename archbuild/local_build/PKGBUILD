@@ -9,14 +9,14 @@ pkgdesc="Continuation of Clash Verge | A Clash Meta GUI based on Tauri"
 arch=('x86_64')
 url="https://github.com/oomeow/clash-verge-self"
 license=('GPL3')
-depends=('cairo' 'desktop-file-utils' 'gdk-pixbuf2' 'glib2' 'gtk3' 'hicolor-icon-theme' 'libsoup' 'pango' 'webkit2gtk')
+depends=('cairo' 'desktop-file-utils' 'gdk-pixbuf2' 'glib2' 'gtk3' 'hicolor-icon-theme' 'libsoup' 'pango' 'webkit2gtk' 'libkeybinder3')
 options=('!strip' '!emptydirs')
 conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "clash-verge-rev" "clash-verge-rev-alpha" "clash-verge-rev-alpha-bin" "clash-verge" "clash-verge-bin" "clash-nyanpasu" "clash-nyanpasu-bin" "clash-nyanpasu-git" "clash-meta")
 install=clash-verge.install
 
 source_x86_64=("clash-verge_${_pkgver}_amd64.deb")
 
-sha256sums_x86_64=("f257d24f2049b4d5fcc4b10c0f34bc1b184130be410cbb73c5e7f2822d494e4b")
+sha256sums_x86_64=("b3d4d4449ac11c98ad9e14e2c678ceaa79d38a10d5b94bccd10ebb4d30b8c62b")
 
 package() {
 	# Extract package data
