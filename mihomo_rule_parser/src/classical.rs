@@ -1,16 +1,66 @@
-use crate::{Parser, RuleFormat};
+use crate::{error::RuleParseError, utils, Parser, RuleBehavior, RuleFormat};
 
 pub(crate) struct ClassicalParseStrategy;
 
 impl Parser for ClassicalParseStrategy {
     fn parse(
-        _buf: &[u8],
+        buf: &[u8],
         format: crate::RuleFormat,
     ) -> anyhow::Result<crate::RulePayload, crate::error::RuleParseError> {
         match format {
-            RuleFormat::Mrs => todo!(),
-            RuleFormat::Yaml => todo!(),
-            RuleFormat::Text => todo!(),
+            RuleFormat::Mrs => Err(RuleParseError::UnsupportedFormat(
+                RuleBehavior::Classical,
+                RuleFormat::Mrs,
+            )),
+            RuleFormat::Yaml => utils::parse_from_yaml(buf),
+            RuleFormat::Text => utils::parse_from_text(buf),
         }
+    }
+}
+
+#[cfg(test)]
+#[allow(deprecated)]
+mod tests {
+    use anyhow::Result;
+
+    use super::*;
+
+    #[test]
+    fn test_classical_parse_from_mrs() -> Result<()> {
+        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        let path = format!(
+            "{}/Downloads/meta-rules-dat/geo/geoip/ad.mrs",
+            home_dir.display()
+        );
+        let buf = std::fs::read(path)?;
+        let payload = ClassicalParseStrategy::parse(&buf, RuleFormat::Mrs)?;
+        println!("payload: {:?}", payload);
+        Ok(())
+    }
+
+    #[test]
+    fn test_classical_parse_from_yaml() -> Result<()> {
+        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        let path = format!(
+            "{}/Downloads/meta-rules-dat/geo/geoip/classical/ad.yaml",
+            home_dir.display()
+        );
+        let buf = std::fs::read(path)?;
+        let payload = ClassicalParseStrategy::parse(&buf, RuleFormat::Yaml)?;
+        println!("payload: {:?}", payload);
+        Ok(())
+    }
+
+    #[test]
+    fn test_classical_parse_from_text() -> Result<()> {
+        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        let path = format!(
+            "{}/Downloads/meta-rules-dat/geo/geoip/classical/ad.list",
+            home_dir.display()
+        );
+        let buf = std::fs::read(path)?;
+        let payload = ClassicalParseStrategy::parse(&buf, RuleFormat::Text)?;
+        println!("payload: {:?}", payload);
+        Ok(())
     }
 }

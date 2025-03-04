@@ -1,7 +1,7 @@
-use crate::{error::RuleParseError, RuleBehavior};
+use crate::{error::RuleParseError, RuleBehavior, RulePayload, YamlPayload};
 use anyhow::Result;
 use byteorder::{BigEndian, ReadBytesExt};
-use std::io::Read;
+use std::io::{BufRead, BufReader, Read};
 
 /// MRSv1
 const MRS_MAGIC: [u8; 4] = [b'M', b'R', b'S', 1];
@@ -57,4 +57,20 @@ pub fn validate_mrs<R: Read>(
     };
 
     Ok(count)
+}
+
+pub(crate) fn parse_from_yaml(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
+    let payload: YamlPayload = serde_yaml::from_reader(buf)?;
+    Ok(RulePayload::from(payload))
+}
+
+pub(crate) fn parse_from_text(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
+    let reader = BufReader::new(buf);
+    let mut count = 0;
+    let mut rules = Vec::new();
+    for rule in reader.lines() {
+        count += 1;
+        rules.push(rule?.trim().to_string());
+    }
+    Ok(RulePayload { count, rules })
 }

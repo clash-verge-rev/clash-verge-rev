@@ -1,4 +1,4 @@
-use crate::RuleBehavior;
+use crate::{RuleBehavior, RuleFormat};
 use std::io;
 use thiserror::Error;
 
@@ -22,4 +22,8 @@ pub enum RuleParseError {
         expected: RuleBehavior,
         actual: RuleBehavior,
     },
+    #[error("yaml parse error: {0}")]
+    YamlParseError(#[from] serde_yaml::Error),
+    #[error("{0} unsupported format: {1}")]
+    UnsupportedFormat(RuleBehavior, RuleFormat),
 }

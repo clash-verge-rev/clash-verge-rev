@@ -1,6 +1,5 @@
 use crate::bitmap;
 use crate::{error::RuleParseError, utils, Parser, RuleBehavior, RuleFormat, RulePayload};
-use anyhow::Result;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
     io::{Cursor, Read},
@@ -103,9 +102,9 @@ pub(crate) struct DomainParseStrategy;
 impl Parser for DomainParseStrategy {
     fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload, RuleParseError> {
         match format {
-            RuleFormat::Mrs => Ok(parse_from_mrs(buf)?),
-            RuleFormat::Yaml => todo!(),
-            RuleFormat::Text => todo!(),
+            RuleFormat::Mrs => parse_from_mrs(buf),
+            RuleFormat::Yaml => utils::parse_from_yaml(buf),
+            RuleFormat::Text => utils::parse_from_text(buf),
         }
     }
 }
@@ -180,4 +179,51 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
     }
 
     Ok(RulePayload { count, rules })
+}
+
+#[cfg(test)]
+#[allow(deprecated)]
+mod tests {
+    use anyhow::Result;
+
+    use super::*;
+
+    #[test]
+    fn test_domain_parse_from_mrs() -> Result<()> {
+        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        let path = format!(
+            "{}/Downloads/meta-rules-dat/geo/geosite/aliyun.mrs",
+            home_dir.display()
+        );
+        let buf = std::fs::read(path)?;
+        let payload = DomainParseStrategy::parse(&buf, RuleFormat::Mrs)?;
+        println!("payload: {:?}", payload);
+        Ok(())
+    }
+
+    #[test]
+    fn test_domain_parse_from_yaml() -> Result<()> {
+        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        let path = format!(
+            "{}/Downloads/meta-rules-dat/geo/geosite/aliyun.yaml",
+            home_dir.display()
+        );
+        let buf = std::fs::read(path)?;
+        let payload = DomainParseStrategy::parse(&buf, RuleFormat::Yaml)?;
+        println!("payload: {:?}", payload);
+        Ok(())
+    }
+
+    #[test]
+    fn test_domain_parse_from_text() -> Result<()> {
+        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        let path = format!(
+            "{}/Downloads/meta-rules-dat/geo/geosite/aliyun.txt",
+            home_dir.display()
+        );
+        let buf = std::fs::read(path)?;
+        let payload = DomainParseStrategy::parse(&buf, RuleFormat::Text)?;
+        println!("payload: {:?}", payload);
+        Ok(())
+    }
 }

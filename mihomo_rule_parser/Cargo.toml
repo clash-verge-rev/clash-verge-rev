@@ -12,5 +12,7 @@ name = "mihomo_rule_parser"
 [dependencies]
 anyhow = "1.0.96"
 byteorder = "1.5.0"
+serde = { version = "1.0.218", features = ["derive"] }
+serde_yaml = "0.9.34"
 thiserror = "2.0.11"
 zstd = "0.13.3"
