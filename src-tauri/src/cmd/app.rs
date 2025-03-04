@@ -1,9 +1,5 @@
-use crate::{
-    utils::dirs,
-    feat,
-    wrap_err,
-};
 use super::CmdResult;
+use crate::{feat, utils::dirs, wrap_err};
 use tauri::Manager;
 
 /// 打开应用程序所在目录
@@ -93,26 +89,47 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
     Ok(icon_path.to_string_lossy().to_string())
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct IconInfo {
+    name: String,
+    previous_t: String,
+    current_t: String,
+}
+
 /// 复制图标文件
 #[tauri::command]
-pub fn copy_icon_file(path: String, name: String) -> CmdResult<String> {
-    let file_path = std::path::Path::new(&path);
+pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
+    use std::fs;
+    use std::path::Path;
+
+    let file_path = Path::new(&path);
+
     let icon_dir = wrap_err!(dirs::app_home_dir())?.join("icons");
     if !icon_dir.exists() {
-        let _ = std::fs::create_dir_all(&icon_dir);
+        let _ = fs::create_dir_all(&icon_dir);
     }
     let ext = match file_path.extension() {
         Some(e) => e.to_string_lossy().to_string(),
         None => "ico".to_string(),
     };
 
-    let png_dest_path = icon_dir.join(format!("{name}.png"));
-    let ico_dest_path = icon_dir.join(format!("{name}.ico"));
-    let dest_path = icon_dir.join(format!("{name}.{ext}"));
+    let dest_path = icon_dir.join(format!(
+        "{0}-{1}.{ext}",
+        icon_info.name, icon_info.current_t
+    ));
     if file_path.exists() {
-        std::fs::remove_file(png_dest_path).unwrap_or_default();
-        std::fs::remove_file(ico_dest_path).unwrap_or_default();
-        match std::fs::copy(file_path, &dest_path) {
+        if icon_info.previous_t.trim() != "" {
+            fs::remove_file(
+                icon_dir.join(format!("{0}-{1}.png", icon_info.name, icon_info.previous_t)),
+            )
+            .unwrap_or_default();
+            fs::remove_file(
+                icon_dir.join(format!("{0}-{1}.ico", icon_info.name, icon_info.previous_t)),
+            )
+            .unwrap_or_default();
+        }
+
+        match fs::copy(file_path, &dest_path) {
             Ok(_) => Ok(dest_path.to_string_lossy().to_string()),
             Err(err) => Err(err.to_string()),
         }
