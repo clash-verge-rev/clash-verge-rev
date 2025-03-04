@@ -76,7 +76,7 @@ pub async fn get_proxy_delay(
 }
 
 /// 根据clash info获取clash服务地址和请求头
-fn clash_client_info() -> Result<(String, HeaderMap)> {
+pub fn clash_client_info() -> Result<(String, HeaderMap)> {
     let client = { Config::clash().data().get_client_info() };
 
     let server = format!("http://{}", client.server);

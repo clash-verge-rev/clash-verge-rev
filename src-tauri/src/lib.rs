@@ -4,7 +4,6 @@ mod core;
 mod enhance;
 mod feat;
 mod utils;
-mod model;
 mod module;
 use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
