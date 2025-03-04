@@ -1,5 +1,6 @@
 use super::CmdResult;
-use crate::{core::handle, model::sysinfo::PlatformSpecification};
+use crate::core::handle;
+use crate::module::sysinfo::PlatformSpecification;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use crate::{core::{self, CoreManager, service}, wrap_err};
 
