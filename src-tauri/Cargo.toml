@@ -68,6 +68,7 @@ tokio-tungstenite = "0.26.1"
 futures = "0.3"
 sys-locale = "0.3.1"
 async-trait = "0.1.86"
+mihomo_api = { path = "./src/crate_mihomo_api" }
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
@@ -126,3 +127,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 env_logger = "0.11.0"
 mockito = "1.2.0"
 tempfile = "3.17.1"
+
+[workspace]
+members = [
+    "src/crate_mihomo_api"
+]
