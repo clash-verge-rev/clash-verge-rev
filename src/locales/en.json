@@ -470,5 +470,6 @@
   "Validate YAML File": "Validate YAML File",
   "Validate Merge File": "Validate Merge File",
   "Validation Success": "Validation Success",
-  "Validation Failed": "Validation Failed"
+  "Validation Failed": "Validation Failed",
+  "Service Administrator Prompt": "Clash Verge needs administrator privileges to reinstall the system service"
 }
