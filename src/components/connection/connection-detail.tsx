@@ -30,7 +30,13 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         open={open}
         onClose={onClose}
-        sx={{ maxWidth: "520px" }}
+        sx={{
+          ".MuiSnackbarContent-root": {
+            maxWidth: "520px",
+            maxHeight: "480px",
+            overflowY: "auto",
+          },
+        }}
         message={
           detail ? (
             <InnerConnectionDetail data={detail} onClose={onClose} />
@@ -69,7 +75,10 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
       label: t("UL Speed"),
       value: parseTraffic(data.curUpload ?? -1).join(" ") + "/s",
     },
-    { label: t("Chains"), value: chains },
+    {
+      label: t("Chains"),
+      value: chains,
+    },
     { label: t("Rule"), value: rule },
     {
       label: t("Process"),
@@ -93,7 +102,8 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     <Box sx={{ userSelect: "text" }}>
       {information.map((each) => (
         <div key={each.label}>
-          <b>{each.label}</b>: <span>{each.value}</span>
+          <b>{each.label}</b>
+          <span style={{ wordBreak: "break-all" }}>: {each.value}</span>
         </div>
       ))}
 
