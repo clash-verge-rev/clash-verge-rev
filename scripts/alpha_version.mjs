@@ -26,34 +26,24 @@ async function getLatestCommitHash() {
 
 /**
  * @param string 传入格式化后的hash
- * 将新的版本号写入文件 package.json / tauri.conf.json
+ * 将新的版本号写入文件 package.json
  */
 async function updatePackageVersion(newVersion) {
   // 获取内容根目录
   const _dirname = process.cwd();
   const packageJsonPath = path.join(_dirname, "package.json");
-  const tauriDir = path.join(_dirname, "src-tauri");
-  const internalfile = path.join(tauriDir, "tauri.conf.json");
   try {
+    // 读取文件
     const data = await fs.readFile(packageJsonPath, "utf8");
-    const tauriData = await fs.readFile(internalfile, "utf8");
-
     const packageJson = JSON.parse(data);
-    const tauriJson = JSON.parse(tauriData);
-
+    // 获取键值替换
     let result = packageJson.version.replace("alpha", newVersion);
     console.log("[INFO]: Current version is: ", result);
     packageJson.version = result;
-    tauriJson.version = result;
     // 写入版本号
     await fs.writeFile(
       packageJsonPath,
       JSON.stringify(packageJson, null, 2),
-      "utf8",
-    );
-    await fs.writeFile(
-      internalfile,
-      JSON.stringify(tauriJson, null, 2),
       "utf8",
     );
     console.log(`[INFO]: Alpha version update to: ${newVersion}`);
