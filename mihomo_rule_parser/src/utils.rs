@@ -59,11 +59,13 @@ pub fn validate_mrs<R: Read>(
     Ok(count)
 }
 
+/// Parse YAML format
 pub(crate) fn parse_from_yaml(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
     let payload: YamlPayload = serde_yaml::from_reader(buf)?;
     Ok(RulePayload::from(payload))
 }
 
+/// Parse text format
 pub(crate) fn parse_from_text(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
     let reader = BufReader::new(buf);
     let mut count = 0;

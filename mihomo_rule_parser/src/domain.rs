@@ -191,10 +191,7 @@ mod tests {
     #[test]
     fn test_domain_parse_from_mrs() -> Result<()> {
         let home_dir = std::env::home_dir().expect("failed to get home dir");
-        let path = format!(
-            "{}/Downloads/meta-rules-dat/geo/geosite/aliyun.mrs",
-            home_dir.display()
-        );
+        let path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.mrs");
         let buf = std::fs::read(path)?;
         let payload = DomainParseStrategy::parse(&buf, RuleFormat::Mrs)?;
         println!("payload: {:?}", payload);
@@ -204,10 +201,7 @@ mod tests {
     #[test]
     fn test_domain_parse_from_yaml() -> Result<()> {
         let home_dir = std::env::home_dir().expect("failed to get home dir");
-        let path = format!(
-            "{}/Downloads/meta-rules-dat/geo/geosite/aliyun.yaml",
-            home_dir.display()
-        );
+        let path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.yaml");
         let buf = std::fs::read(path)?;
         let payload = DomainParseStrategy::parse(&buf, RuleFormat::Yaml)?;
         println!("payload: {:?}", payload);
@@ -217,10 +211,7 @@ mod tests {
     #[test]
     fn test_domain_parse_from_text() -> Result<()> {
         let home_dir = std::env::home_dir().expect("failed to get home dir");
-        let path = format!(
-            "{}/Downloads/meta-rules-dat/geo/geosite/aliyun.txt",
-            home_dir.display()
-        );
+        let path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.txt");
         let buf = std::fs::read(path)?;
         let payload = DomainParseStrategy::parse(&buf, RuleFormat::Text)?;
         println!("payload: {:?}", payload);
