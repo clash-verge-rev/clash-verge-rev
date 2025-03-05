@@ -445,5 +445,9 @@
   "Core Changed Successfully": "Ядро уңышлы алыштырылды",
   "Failed to Change Core": "Ядро алыштыру уңышсыз булды",
   "Verge Basic Setting": "Verge Төп көйләүләр",
-  "Verge Advanced Setting": "Verge Киңәйтелгән көйләүләр"
+  "Verge Advanced Setting": "Verge Киңәйтелгән көйләүләр",
+  "TUN requires Service Mode": "TUN режимы хезмәт күрсәтүне таләп итә",
+  "Install Service": "Хезмәтне урнаштыру",
+  "Installing Service...": "Хезмәт урнаштырыла...",
+  "Service Administrator Prompt": "Clash Verge система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә"
 }

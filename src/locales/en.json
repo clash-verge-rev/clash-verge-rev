@@ -471,5 +471,5 @@
   "Validate Merge File": "Validate Merge File",
   "Validation Success": "Validation Success",
   "Validation Failed": "Validation Failed",
-  "Service Administrator Prompt": "Clash Verge needs administrator privileges to reinstall the system service"
+  "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service"
 }

@@ -446,5 +446,9 @@
   "Core Changed Successfully": "Ядро успешно сменено",
   "Failed to Change Core": "Не удалось сменить ядро",
   "Verge Basic Setting": "Основные настройки Verge",
-  "Verge Advanced Setting": "Расширенные настройки Verge"
+  "Verge Advanced Setting": "Расширенные настройки Verge",
+  "TUN requires Service Mode": "Режим TUN требует обслуживания",
+  "Install Service": "Установить службу",
+  "Installing Service...": "Установка службы...",
+  "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы"
 }

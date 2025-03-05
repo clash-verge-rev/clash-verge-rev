@@ -445,5 +445,9 @@
   "Core Changed Successfully": "Inti berhasil diubah",
   "Failed to Change Core": "Gagal mengubah inti",
   "Verge Basic Setting": "Pengaturan Dasar Verge",
-  "Verge Advanced Setting": "Pengaturan Lanjutan Verge"
+  "Verge Advanced Setting": "Pengaturan Lanjutan Verge",
+  "TUN requires Service Mode": "Mode TUN memerlukan layanan",
+  "Install Service": "Instal Layanan",
+  "Installing Service...": "Memasang Layanan...",
+  "Service Administrator Prompt": "Clash Verge memerlukan hak administrator untuk menginstal ulang layanan sistem"
 }
