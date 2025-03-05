@@ -462,5 +462,6 @@
   "Validation Success": "验证成功",
   "Validation Failed": "验证失败",
   "Verge Basic Setting": "Verge 基础设置",
-  "Verge Advanced Setting": "Verge 高级设置"
+  "Verge Advanced Setting": "Verge 高级设置",
+  "Service Administrator Prompt": "Clash Verge 需要使用管理员权限来重新安装系统服务"
 }

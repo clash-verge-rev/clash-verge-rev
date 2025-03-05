@@ -154,8 +154,21 @@ pub async fn reinstall_service() -> Result<()> {
 
     let install_shell: String = install_path.to_string_lossy().into_owned();
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
+    
+    // 获取提示文本，如果 i18n 失败则使用硬编码默认值
+    let prompt = crate::utils::i18n::t("Service Administrator Prompt");
+    let prompt = if prompt == "Service Administrator Prompt" {
+        if Config::verge().latest().language.as_deref() == Some("zh") || Config::verge().latest().language.is_none() {
+            "Clash Verge 需要使用管理员权限来重新安装系统服务"
+        } else {
+            "Clash Verge needs administrator privileges to reinstall the system service"
+        }
+    } else {
+        &prompt
+    };
+    
     let command = format!(
-        r#"do shell script "sudo '{uninstall_shell}' && sudo '{install_shell}'" with administrator privileges"#
+        r#"do shell script "sudo '{uninstall_shell}' && sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
     );
 
     log::debug!(target: "app", "command: {}", command);
