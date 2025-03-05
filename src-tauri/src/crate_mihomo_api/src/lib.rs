@@ -28,6 +28,10 @@ impl MihomoManager {
         data.providers_proxies = providers_proxies;
     }
 
+    pub fn get_mihomo_server(&self) -> String {
+        self.mihomo_server.clone()
+    }
+
     pub fn get_proxies(&self) -> serde_json::Value {
         let data = self.data.lock().unwrap();
         data.proxies.clone()

@@ -1,21 +1,16 @@
 use super::CmdResult;
-use crate::core;
-use mihomo_api;
+use crate::module::mihomo::MihomoManager;
 
 #[tauri::command]
 pub async fn get_proxies() -> CmdResult<serde_json::Value> {
-    let (mihomo_server, headers) = core::clash_api::clash_client_info().unwrap();
-    let mihomo = mihomo_api::MihomoManager::new(mihomo_server, headers);
-    Ok(mihomo.refresh_proxies().await.unwrap().get_proxies())
+    let mannager = MihomoManager::global();
+    mannager.refresh_proxies().await.unwrap();
+    Ok(mannager.get_proxies())
 }
 
 #[tauri::command]
 pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
-    let (mihomo_server, headers) = core::clash_api::clash_client_info().unwrap();
-    let mihomo = mihomo_api::MihomoManager::new(mihomo_server, headers);
-    Ok(mihomo
-        .refresh_providers_proxies()
-        .await
-        .unwrap()
-        .get_providers_proxies())
+    let mannager = MihomoManager::global();
+    mannager.refresh_providers_proxies().await.unwrap();
+    Ok(mannager.get_providers_proxies())
 }
