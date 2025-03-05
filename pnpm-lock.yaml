@@ -211,8 +211,8 @@ importers:
         specifier: 0.6.11
         version: 0.6.11(prettier@3.5.3)
       pretty-quick:
-        specifier: 4.0.0
-        version: 4.0.0(prettier@3.5.3)
+        specifier: 4.1.1
+        version: 4.1.1(prettier@3.5.3)
       react-devtools:
         specifier: 6.1.1
         version: 6.1.1
@@ -2701,8 +2701,8 @@ packages:
       typescript:
         optional: true
 
-  ignore@5.3.2:
-    resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
+  ignore@7.0.3:
+    resolution: {integrity: sha512-bAH5jbK/F3T3Jls4I0SO1hmPR0dKU0a7+SY6n1yzRtG54FLO8d6w/nxLFX2Nb7dBu6cCWXPaAME6cYqFUMmuCA==}
     engines: {node: '>= 4'}
 
   immutable@4.3.7:
@@ -3316,10 +3316,6 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  picomatch@3.0.1:
-    resolution: {integrity: sha512-I3EurrIQMlRc9IaAZnqRR044Phh2DXY+55o7uJ0V+hYZAcQYSuFWsc9q5PvyDHUSCe1Qxn/iBz+78s86zWnGag==}
-    engines: {node: '>=10'}
-
   picomatch@4.0.2:
     resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
     engines: {node: '>=12'}
@@ -3441,8 +3437,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  pretty-quick@4.0.0:
-    resolution: {integrity: sha512-M+2MmeufXb/M7Xw3Afh1gxcYpj+sK0AxEfnfF958ktFeAyi5MsKY5brymVURQLgPLV1QaF5P4pb2oFJ54H3yzQ==}
+  pretty-quick@4.1.1:
+    resolution: {integrity: sha512-9Ud0l/CspNTmyIdYac9X7Inb3o8fuUsw+1zJFvCGn+at0t1UwUcUdo2RSZ41gcmfLv1fxgWQxWEfItR7CBwugg==}
     engines: {node: '>=14'}
     hasBin: true
     peerDependencies:
@@ -3896,6 +3892,9 @@ packages:
   timers-ext@0.1.8:
     resolution: {integrity: sha512-wFH7+SEAcKfJpfLPkrgMPvvwnEtj8W4IurvEyrKsDleXnKLCDw71w8jltvfLa8Rm4qQxxT4jmDBYbJG/z7qoww==}
     engines: {node: '>=0.12'}
+
+  tinyexec@0.3.2:
+    resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
 
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
@@ -6955,7 +6954,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.2
 
-  ignore@5.3.2: {}
+  ignore@7.0.3: {}
 
   immutable@4.3.7:
     optional: true
@@ -7635,8 +7634,6 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  picomatch@3.0.1: {}
-
   picomatch@4.0.2: {}
 
   pify@2.3.0: {}
@@ -7690,15 +7687,15 @@ snapshots:
 
   prettier@3.5.3: {}
 
-  pretty-quick@4.0.0(prettier@3.5.3):
+  pretty-quick@4.1.1(prettier@3.5.3):
     dependencies:
-      execa: 5.1.1
       find-up: 5.0.0
-      ignore: 5.3.2
+      ignore: 7.0.3
       mri: 1.2.0
       picocolors: 1.1.1
-      picomatch: 3.0.1
+      picomatch: 4.0.2
       prettier: 3.5.3
+      tinyexec: 0.3.2
       tslib: 2.8.1
 
   progress@2.0.3: {}
@@ -8220,6 +8217,8 @@ snapshots:
     dependencies:
       es5-ext: 0.10.64
       next-tick: 1.1.0
+
+  tinyexec@0.3.2: {}
 
   to-regex-range@5.0.1:
     dependencies:
