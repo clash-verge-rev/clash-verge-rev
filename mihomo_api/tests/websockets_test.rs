@@ -7,14 +7,11 @@ use std::{
     time::Duration,
 };
 
+mod utils;
+
 #[tokio::test]
 async fn websockets_test() -> Result<()> {
-    let mihomo = MihomoBuilder::new()
-        .set_protocol(Protocol::Http)
-        .set_external_host("127.0.0.1")
-        .set_external_port(9090)
-        .set_secret("nBaciu2IqTZoGd6NBajit")
-        .build()?;
+    let mihomo = utils::default_mihomo()?;
 
     let ws_client = mihomo.ws_memory().await?;
     let ws_client_ = ws_client.clone();

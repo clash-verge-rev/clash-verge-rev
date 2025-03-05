@@ -1,19 +1,12 @@
 use anyhow::Result;
-use mihomo_api::{
-    model::Protocol,
-    model::{ClashMode, TunStack},
-    MihomoBuilder,
-};
+use mihomo_api::model::{ClashMode, TunStack};
 use serde_json::json;
+
+mod utils;
 
 #[tokio::test]
 async fn runtime_config_test() -> Result<()> {
-    let mihomo = MihomoBuilder::new()
-        .set_protocol(Protocol::Http)
-        .set_external_host("127.0.0.1")
-        .set_external_port(9090)
-        .set_secret("nBaciu2IqTZoGd6NBajit")
-        .build()?;
+    let mihomo = utils::default_mihomo()?;
 
     let base_config = mihomo.get_base_config().await?;
     println!("base config: {:#?}", base_config);

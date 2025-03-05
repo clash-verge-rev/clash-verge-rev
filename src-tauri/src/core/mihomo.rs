@@ -2,52 +2,51 @@ use crate::config::Config;
 use anyhow::{Ok, Result};
 use mihomo_api::{Mihomo, MihomoBuilder};
 use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
 use std::sync::Arc;
+use tokio::sync::{RwLock, RwLockReadGuard};
 
 #[derive(Debug, Clone)]
 pub struct MihomoClientManager {
-    mihomo: Arc<Mutex<Mihomo>>,
+    inner: Arc<RwLock<Mihomo>>,
 }
 
 impl MihomoClientManager {
     pub fn global() -> &'static MihomoClientManager {
         static MIHOMO_MANAGER_CLIENT: OnceCell<MihomoClientManager> = OnceCell::new();
+
         MIHOMO_MANAGER_CLIENT.get_or_init(|| MihomoClientManager {
-            mihomo: Arc::new(Mutex::new(MihomoBuilder::new().build().unwrap())),
+            inner: Arc::new(RwLock::new(MihomoBuilder::new().build().unwrap())),
         })
     }
 
-    pub fn init(&self) -> Result<()> {
+    pub async fn init(&self) -> Result<()> {
         let clash = { Config::clash().latest().get_client_info() };
         let (external_host, external_port) = clash
             .server
             .split_once(":")
             .expect("failed to get external host and port");
         let secret = clash.secret.unwrap_or_default();
-        let mut mihomo = self.mihomo.lock();
-        mihomo.set_external_host(external_host);
-        mihomo.set_external_port(external_port.parse::<u32>().unwrap());
-        mihomo.set_secret(secret);
+        let mut mihomo = self.inner.write().await;
+        mihomo.update_external_host(external_host);
+        mihomo.update_external_port(external_port.parse::<u32>().unwrap());
+        mihomo.update_secret(secret);
         Ok(())
     }
 
-    // TODO: 使用 mihomo() 方法是无法改变 mihomo 的 external_host、external_port、secret 的值,
-    //       因为 mihomo 方法返回的是一个克隆的对象，不是原来对象本身
-    pub fn mihomo(&self) -> Mihomo {
-        self.mihomo.lock().clone()
+    pub async fn mihomo(&self) -> RwLockReadGuard<Mihomo> {
+        self.inner.read().await
     }
 
-    pub fn set_external_controller(&self, external_controller: &str) {
-        let mut mihomo = self.mihomo.lock();
+    pub async fn set_external_controller(&self, external_controller: &str) {
+        let mut mihomo = self.inner.write().await;
         let (host, port) = external_controller.split_once(':').unwrap();
-        mihomo.set_external_host(host);
-        mihomo.set_external_port(port.parse::<u32>().unwrap());
+        mihomo.update_external_host(host);
+        mihomo.update_external_port(port.parse::<u32>().unwrap());
     }
 
-    pub fn set_secret(&self, secret: &str) {
-        let mut mihomo = self.mihomo.lock();
-        mihomo.set_secret(secret);
+    pub async fn set_secret(&self, secret: &str) {
+        let mut mihomo = self.inner.write().await;
+        mihomo.update_secret(secret);
     }
 }
 

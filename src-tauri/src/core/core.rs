@@ -110,6 +110,7 @@ impl CoreManager {
             log::debug!(target: "app", "disable tun mode");
             let _ = MihomoClientManager::global()
                 .mihomo()
+                .await
                 .patch_base_config(&disable)
                 .await;
         }
@@ -251,6 +252,7 @@ impl CoreManager {
         log::debug!(target: "app", "disable tun mode");
         let _ = MihomoClientManager::global()
             .mihomo()
+            .await
             .patch_base_config(&disable)
             .await;
 

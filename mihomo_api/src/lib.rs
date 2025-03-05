@@ -26,19 +26,19 @@ pub struct Mihomo {
 
 #[allow(dead_code)]
 impl Mihomo {
-    pub fn set_protocol(&mut self, protocol: Protocol) {
+    pub fn update_protocol(&mut self, protocol: Protocol) {
         self.protocol = protocol;
     }
 
-    pub fn set_external_host<S: Into<String>>(&mut self, host: S) {
+    pub fn update_external_host<S: Into<String>>(&mut self, host: S) {
         self.external_host = host.into();
     }
 
-    pub fn set_external_port(&mut self, port: u32) {
+    pub fn update_external_port(&mut self, port: u32) {
         self.external_port = port;
     }
 
-    pub fn set_secret<S: Into<String>>(&mut self, secret: S) {
+    pub fn update_secret<S: Into<String>>(&mut self, secret: S) {
         self.secret = Some(secret.into());
     }
 

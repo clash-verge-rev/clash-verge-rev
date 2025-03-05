@@ -1,14 +1,10 @@
 use anyhow::Result;
-use mihomo_api::{model::Protocol, MihomoBuilder};
+
+mod utils;
 
 #[tokio::test]
 pub async fn group_test() -> Result<()> {
-    let mihomo = MihomoBuilder::new()
-        .set_protocol(Protocol::Http)
-        .set_external_host("127.0.0.1")
-        .set_external_port(9090)
-        .set_secret("nBaciu2IqTZoGd6NBajit")
-        .build()?;
+    let mihomo = utils::default_mihomo()?;
 
     let group = mihomo.get_groups().await?;
     println!("group result: {:?}", group);

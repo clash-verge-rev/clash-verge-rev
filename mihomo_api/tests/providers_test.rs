@@ -1,14 +1,10 @@
 use anyhow::Result;
-use mihomo_api::{model::Protocol, MihomoBuilder};
+
+mod utils;
 
 #[tokio::test]
 async fn providers_test() -> Result<()> {
-    let mihomo = MihomoBuilder::new()
-        .set_protocol(Protocol::Http)
-        .set_external_host("127.0.0.1")
-        .set_external_port(9090)
-        .set_secret("nBaciu2IqTZoGd6NBajit")
-        .build()?;
+    let mihomo = utils::default_mihomo()?;
     let providers = mihomo.get_proxies_providers().await?;
     println!("providers: {:#?}", providers.providers.get("AIGC"));
 

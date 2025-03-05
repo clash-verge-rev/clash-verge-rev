@@ -398,6 +398,7 @@ pub async fn clash_api_get_proxy_delay(
     wrap_err!(
         MihomoClientManager::global()
             .mihomo()
+            .await
             .delay_proxy_by_name(&name, &test_url, timeout)
             .await
     )
@@ -487,7 +488,7 @@ pub async fn restart_app(app_handle: tauri::AppHandle) {
 
 #[tauri::command]
 pub async fn restart_clash() -> CmdResult<()> {
-    wrap_err!(MihomoClientManager::global().mihomo().restart().await)
+    wrap_err!(MihomoClientManager::global().mihomo().await.restart().await)
     // wrap_err!(clash_api::restart_core().await)
 }
 
@@ -496,6 +497,7 @@ pub async fn get_clash_configs() -> CmdResult<bool> {
     wrap_err!(
         MihomoClientManager::global()
             .mihomo()
+            .await
             .get_base_config()
             .await
     )?;
@@ -544,6 +546,7 @@ pub mod service {
         for i in 0..5 {
             if MihomoClientManager::global()
                 .mihomo()
+                .await
                 .get_base_config()
                 .await
                 .is_err()

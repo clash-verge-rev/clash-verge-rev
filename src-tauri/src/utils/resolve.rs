@@ -53,7 +53,7 @@ pub async fn resolve_setup() {
     log::trace!("init webdav config");
     log_err!(backup::WebDav::global().init().await);
     log::trace!("init mihomo api client");
-    log_err!(MihomoClientManager::global().init());
+    log_err!(MihomoClientManager::global().init().await);
     log::trace!("init timer");
     log_err!(timer::Timer::global().init());
 

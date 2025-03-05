@@ -118,7 +118,7 @@ impl Timer {
             }
             let current = current.unwrap_or_default();
             let profiles = Config::profiles().latest().clone();
-            let mihomo = MihomoClientManager::global().mihomo();
+            let mihomo = MihomoClientManager::global().mihomo().await;
 
             if mihomo.get_base_config().await.is_err() {
                 log::error!("Failed to get base config");

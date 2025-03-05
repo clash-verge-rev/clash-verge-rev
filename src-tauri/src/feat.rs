@@ -57,6 +57,7 @@ pub fn change_clash_mode(mode: String) {
 
         match MihomoClientManager::global()
             .mihomo()
+            .await
             .patch_base_config(&mapping)
             .await
         {
@@ -269,6 +270,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         tmp_map.insert("tproxy-port".into(), 0.into());
         let _ = MihomoClientManager::global()
             .mihomo()
+            .await
             .patch_base_config(&tmp_map)
             .await;
         // clash config
@@ -291,6 +293,17 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         return Result::<()>::Ok(());
     }
 
+    if patch.get("external-controller").is_some() {
+        let external_controller = patch.get("external-controller").unwrap().as_str().unwrap();
+        MihomoClientManager::global()
+            .set_external_controller(external_controller)
+            .await;
+    }
+    if patch.get("secret").is_some() {
+        let secret = patch.get("secret").unwrap().as_str().unwrap();
+        MihomoClientManager::global().set_secret(secret).await;
+    }
+
     Config::clash()
         .draft()
         .patch_and_merge_config(patch.clone());
@@ -309,6 +322,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 mapping.insert(key.into(), value.clone());
                 let _ = MihomoClientManager::global()
                     .mihomo()
+                    .await
                     .patch_base_config(&mapping)
                     .await;
 
@@ -316,6 +330,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 if key == "tun" {
                     let clash_basic_configs = MihomoClientManager::global()
                         .mihomo()
+                        .await
                         .get_base_config()
                         .await?;
                     let tun_enable = value
