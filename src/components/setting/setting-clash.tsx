@@ -5,6 +5,7 @@ import {
   SettingsRounded,
   ShuffleRounded,
   LanRounded,
+  DnsRounded,
 } from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
@@ -20,6 +21,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { updateGeoData } from "@/services/api";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
+import { DnsViewer } from "./mods/dns-viewer";
 
 const isWIN = getSystem() === "windows";
 
@@ -38,6 +40,7 @@ const SettingClash = ({ onError }: Props) => {
     "allow-lan": allowLan,
     "log-level": logLevel,
     "unified-delay": unifiedDelay,
+    dns,
   } = clash ?? {};
 
   const { enable_random_port = false, verge_mixed_port } = verge ?? {};
@@ -47,6 +50,7 @@ const SettingClash = ({ onError }: Props) => {
   const ctrlRef = useRef<DialogRef>(null);
   const coreRef = useRef<DialogRef>(null);
   const networkRef = useRef<DialogRef>(null);
+  const dnsRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -71,6 +75,7 @@ const SettingClash = ({ onError }: Props) => {
       <ControllerViewer ref={ctrlRef} />
       <ClashCoreViewer ref={coreRef} />
       <NetworkInterfaceViewer ref={networkRef} />
+      <DnsViewer ref={dnsRef} />
 
       <SettingItem
         label={t("Allow Lan")}
@@ -92,6 +97,27 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ "allow-lan": e })}
           onGuard={(e) => patchClash({ "allow-lan": e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t("DNS Settings")}
+        extra={
+          <TooltipIcon
+            icon={SettingsRounded}
+            onClick={() => dnsRef.current?.open()}
+          />
+        }
+      >
+        <GuardState
+          value={dns?.enable ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeData({ dns: { ...dns, enable: e } })}
+          onGuard={(e) => patchClash({ dns: { enable: e } })}
         >
           <Switch edge="end" />
         </GuardState>
