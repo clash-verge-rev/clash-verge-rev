@@ -137,7 +137,7 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
     } else {
         // Generate and save new key
         let mut key = vec![0u8; 32];
-        getrandom::getrandom(&mut key)?;
+        getrandom::fill(&mut key)?;
 
         // Ensure directory exists
         if let Some(parent) = key_path.parent() {
