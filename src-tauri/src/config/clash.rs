@@ -38,6 +38,56 @@ impl IClashTemp {
         tun.insert("strict-route".into(), false.into());
         tun.insert("auto-detect-interface".into(), true.into());
         tun.insert("dns-hijack".into(), vec!["any:53"].into());
+        
+        // 添加默认的DNS配置
+        let mut dns = Mapping::new();
+        dns.insert("enable".into(), true.into());
+        dns.insert("listen".into(), ":53".into());
+        dns.insert("enhanced-mode".into(), "fake-ip".into());
+        dns.insert("fake-ip-range".into(), "198.18.0.1/16".into());
+        dns.insert("fake-ip-filter-mode".into(), "blacklist".into());
+        dns.insert("prefer-h3".into(), false.into());
+        dns.insert("respect-rules".into(), false.into());
+        dns.insert("use-hosts".into(), false.into());
+        dns.insert("use-system-hosts".into(), false.into());
+        
+        // 添加fake-ip-filter
+        dns.insert("fake-ip-filter".into(), vec![
+            "*.lan", "*.local", "*.arpa", "time.*.com", "ntp.*.com", "time.*.com",
+            "+.market.xiaomi.com", "localhost.ptlogin2.qq.com", "*.msftncsi.com", "www.msftconnecttest.com"
+        ].into());
+        
+        // 添加nameserver相关配置
+        dns.insert("default-nameserver".into(), vec!["223.6.6.6", "8.8.8.8"].into());
+        dns.insert("nameserver".into(), vec![
+            "8.8.8.8", "https://doh.pub/dns-query", "https://dns.alidns.com/dns-query"
+        ].into());
+        
+        // 添加fallback配置
+        dns.insert("fallback".into(), vec![
+            "https://dns.alidns.com/dns-query", "https://dns.google/dns-query", "https://cloudflare-dns.com/dns-query"
+        ].into());
+        
+        // 添加proxy-server-nameserver
+        dns.insert("proxy-server-nameserver".into(), vec![
+            "https://doh.pub/dns-query", "https://dns.alidns.com/dns-query"
+        ].into());
+        
+        // 添加direct-nameserver
+        dns.insert("direct-nameserver".into(), Vec::<String>::new().into());
+        dns.insert("direct-nameserver-follow-policy".into(), false.into());
+        
+        // 添加nameserver-policy (空对象)
+        dns.insert("nameserver-policy".into(), Mapping::new().into());
+        
+        // 添加fallback-filter
+        let mut fallback_filter = Mapping::new();
+        fallback_filter.insert("geoip".into(), true.into());
+        fallback_filter.insert("geoip-code".into(), "CN".into());
+        fallback_filter.insert("ipcidr".into(), vec!["240.0.0.0/4", "0.0.0.0/32"].into());
+        fallback_filter.insert("domain".into(), vec!["+.google.com", "+.facebook.com", "+.youtube.com"].into());
+        dns.insert("fallback-filter".into(), fallback_filter.into());
+        
         #[cfg(not(target_os = "windows"))]
         map.insert("redir-port".into(), 7895.into());
         #[cfg(target_os = "linux")]
@@ -54,6 +104,7 @@ impl IClashTemp {
         cors_map.insert("allow-origins".into(), vec!["*"].into());
         map.insert("secret".into(), "".into());
         map.insert("tun".into(), tun.into());
+        map.insert("dns".into(), dns.into());
         map.insert("external-controller-cors".into(), cors_map.into());
         map.insert("unified-delay".into(), true.into());
         Self(map)
