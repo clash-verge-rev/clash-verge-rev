@@ -27,6 +27,10 @@ pub struct IVerge {
 
     /// start page
     pub start_page: Option<String>,
+
+    /// start position
+    pub start_position: Option<String>,
+
     /// startup script path
     pub startup_script: Option<String>,
 
@@ -98,7 +102,7 @@ pub struct IVerge {
     /// hotkey map
     /// format: {func},{key}
     pub hotkeys: Option<Vec<String>>,
-    
+
     /// enable global hotkey
     pub enable_global_hotkey: Option<bool>,
 
@@ -217,7 +221,7 @@ impl IVerge {
             .to_lowercase();
 
         let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
-        let supported_languages = i18n::get_supported_languages();
+        let supported_languages: Vec<String> = i18n::get_supported_languages();
 
         if supported_languages.contains(&lang_code.to_string()) {
             lang_code.to_string()
@@ -246,6 +250,7 @@ impl IVerge {
             #[cfg(target_os = "windows")]
             env_type: Some("powershell".into()),
             start_page: Some("/".into()),
+            start_position: Some("center".into()),
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_group_icon: Some(true),
@@ -313,6 +318,7 @@ impl IVerge {
         patch!(tray_event);
         patch!(env_type);
         patch!(start_page);
+        patch!(start_position);
         patch!(startup_script);
         patch!(traffic_graph);
         patch!(enable_memory_usage);
@@ -406,6 +412,7 @@ pub struct IVergeResponse {
     pub tray_event: Option<String>,
     pub env_type: Option<String>,
     pub start_page: Option<String>,
+    pub start_position: Option<String>,
     pub startup_script: Option<String>,
     pub traffic_graph: Option<bool>,
     pub enable_memory_usage: Option<bool>,
@@ -469,6 +476,7 @@ impl From<IVerge> for IVergeResponse {
             tray_event: verge.tray_event,
             env_type: verge.env_type,
             start_page: verge.start_page,
+            start_position: verge.start_position,
             startup_script: verge.startup_script,
             traffic_graph: verge.traffic_graph,
             enable_memory_usage: verge.enable_memory_usage,

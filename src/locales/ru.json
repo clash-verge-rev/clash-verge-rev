@@ -450,5 +450,15 @@
   "TUN requires Service Mode": "Режим TUN требует обслуживания",
   "Install Service": "Установить службу",
   "Installing Service...": "Установка службы...",
-  "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы"
+  "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы",
+  "Start Position": "Начальная позиция",
+  "Top Left": "Верхний левый",
+  "Top Right": "Верхний правый",
+  "Bottom Left": "Нижний левый",
+  "Bottom Right": "Нижний правый",
+  "Top Center": "Верхний центр",
+  "Bottom Center": "Нижний центр",
+  "Left Center": "Левый центр",
+  "Right Center": "Правый центр",
+  "Center": "Центр"
 }

@@ -449,5 +449,15 @@
   "TUN requires Service Mode": "TUN режимы хезмәт күрсәтүне таләп итә",
   "Install Service": "Хезмәтне урнаштыру",
   "Installing Service...": "Хезмәт урнаштырыла...",
-  "Service Administrator Prompt": "Clash Verge система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә"
+  "Service Administrator Prompt": "Clash Verge система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә",
+  "Start Position": "Башлангыч позиция",
+  "Top Left": "Өске сул",
+  "Top Right": "Өске уң",
+  "Bottom Left": "Аска сул",
+  "Bottom Right": "Аска уң",
+  "Top Center": "Өске урта",
+  "Bottom Center": "Аска урта",
+  "Left Center": "Сул урта",
+  "Right Center": "Уң урта",
+  "Center": "Үзәк"
 }

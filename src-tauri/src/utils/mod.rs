@@ -1,8 +1,9 @@
 pub mod dirs;
 pub mod error;
 pub mod help;
+pub mod i18n;
 pub mod init;
+pub mod position;
 pub mod resolve;
 pub mod server;
 pub mod tmpl;
-pub mod i18n;

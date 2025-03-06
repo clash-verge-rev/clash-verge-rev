@@ -16,6 +16,7 @@
     "deep-link:default",
     "window-state:default",
     "window-state:default",
-    "autostart:default"
+    "autostart:default",
+    "positioner:default"
   ]
 }

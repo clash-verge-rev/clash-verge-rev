@@ -715,6 +715,17 @@ interface IProxyConfig
     | "vless";
 }
 
+type StartPosition =
+  | "topLeft"
+  | "topRight"
+  | "bottomLeft"
+  | "bottomRight"
+  | "topCenter"
+  | "bottomCenter"
+  | "leftCenter"
+  | "rightCenter"
+  | "center";
+
 interface IVergeConfig {
   app_log_level?: "trace" | "debug" | "info" | "warn" | "error" | string;
   language?: string;
@@ -722,6 +733,7 @@ interface IVergeConfig {
   env_type?: "bash" | "cmd" | "powershell" | "fish" | string;
   startup_script?: string;
   start_page?: string;
+  start_position?: StartPosition | string;
   clash_core?: string;
   theme_mode?: "light" | "dark" | "system";
   traffic_graph?: boolean;

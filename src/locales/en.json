@@ -510,5 +510,15 @@
   "Fallback IP CIDR": "Fallback IP CIDR",
   "IP CIDRs not using fallback servers": "IP CIDRs not using fallback servers, comma separated",
   "Fallback Domain": "Fallback Domain",
-  "Domains using fallback servers": "Domains using fallback servers, comma separated"
+  "Domains using fallback servers": "Domains using fallback servers, comma separated",
+  "Start Position": "Start Position",
+  "Top Left": "Top Left",
+  "Top Right": "Top Right",
+  "Bottom Left": "Bottom Left",
+  "Bottom Right": "Bottom Right",
+  "Top Center": "Top Center",
+  "Bottom Center": "Bottom Center",
+  "Left Center": "Left Center",
+  "Right Center": "Right Center",
+  "Center": "Center"
 }

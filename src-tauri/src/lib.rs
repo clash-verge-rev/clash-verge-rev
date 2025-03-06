@@ -3,17 +3,18 @@ mod config;
 mod core;
 mod enhance;
 mod feat;
-mod utils;
 mod module;
+mod utils;
 use crate::core::hotkey;
 use crate::utils::{resolve, resolve::resolve_scheme, server};
 use config::Config;
-use tauri_plugin_autostart::MacosLauncher;
-use tauri_plugin_deep_link::DeepLinkExt;
 use std::sync::{Mutex, Once};
 use tauri::AppHandle;
 #[cfg(target_os = "macos")]
 use tauri::Manager;
+use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_deep_link::DeepLinkExt;
+use tauri_plugin_positioner::WindowExt;
 
 /// A global singleton handle to the application.
 pub struct AppHandleManager {
@@ -57,7 +58,7 @@ impl AppHandleManager {
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Regular);
         }
     }
-    
+
     pub fn set_activation_policy_accessory(&self) {
         #[cfg(target_os = "macos")]
         {
@@ -66,7 +67,7 @@ impl AppHandleManager {
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
         }
     }
-    
+
     pub fn set_activation_policy_prohibited(&self) {
         #[cfg(target_os = "macos")]
         {
@@ -213,14 +214,30 @@ pub fn run() {
     app.run(|app_handle, e| match e {
         tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
             AppHandleManager::global().init(app_handle.clone());
+
+            // start move window
+            if let Ok(config) = cmd::get_verge_config() {
+                let win = app_handle.get_webview_window("main").unwrap();
+                let _ = win
+                    .as_ref()
+                    .window()
+                    .move_window(utils::position::to_position(config.start_position));
+            };
+
             #[cfg(target_os = "macos")]
             {
-                let main_window = AppHandleManager::global().get_handle().get_webview_window("main").unwrap();
+                let main_window = AppHandleManager::global()
+                    .get_handle()
+                    .get_webview_window("main")
+                    .unwrap();
                 let _ = main_window.set_title("Clash Verge");
             }
         }
         #[cfg(target_os = "macos")]
-        tauri::RunEvent::Reopen { has_visible_windows, .. } => {
+        tauri::RunEvent::Reopen {
+            has_visible_windows,
+            ..
+        } => {
             if !has_visible_windows {
                 AppHandleManager::global().set_activation_policy_regular();
             }
@@ -255,8 +272,11 @@ pub fn run() {
                         {
                             log_err!(hotkey::Hotkey::global().register("Control+Q", "quit"));
                         };
-                        {   
-                            let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
+                        {
+                            let is_enable_global_hotkey = Config::verge()
+                                .latest()
+                                .enable_global_hotkey
+                                .unwrap_or(true);
                             if !is_enable_global_hotkey {
                                 log_err!(hotkey::Hotkey::global().init())
                             }
@@ -271,8 +291,11 @@ pub fn run() {
                         {
                             log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
                         };
-                        {   
-                            let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
+                        {
+                            let is_enable_global_hotkey = Config::verge()
+                                .latest()
+                                .enable_global_hotkey
+                                .unwrap_or(true);
                             if !is_enable_global_hotkey {
                                 log_err!(hotkey::Hotkey::global().reset())
                             }

@@ -503,5 +503,15 @@
   "IP CIDRs not using fallback servers": "不使用回退服务器的 IP CIDR，用逗号分隔",
   "Fallback Domain": "回退域名",
   "Domains using fallback servers": "使用回退服务器的域名，用逗号分隔",
-  "Fallback Geosite": "回退 Geosite"
+  "Fallback Geosite": "回退 Geosite",
+  "Start Position": "启动位置",
+  "Top Left": "左上角",
+  "Top Right": "右上角",
+  "Bottom Left": "左下角",
+  "Bottom Right": "右下角",
+  "Top Center": "顶部居中",
+  "Bottom Center": "底部居中",
+  "Left Center": "左侧居中",
+  "Right Center": "右侧居中",
+  "Center": "居中"
 }
