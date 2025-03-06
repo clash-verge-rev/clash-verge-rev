@@ -47,7 +47,7 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
           </Box>
         </Box>
       }
-      contentSx={{ width: 450, maxHeight: 330 }}
+      contentSx={{ width: 450 }}
       disableOk
       cancelBtn={t("Close")}
       onCancel={() => setOpen(false)}
@@ -66,7 +66,7 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                         label={t("Ip Address")}
                         content={address.V4.ip}
                       />
-                    )
+                    ),
                 )}
                 <AddressDisplay
                   label={t("Mac Address")}
@@ -84,7 +84,7 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                         label={t("Ip Address")}
                         content={address.V6.ip}
                       />
-                    )
+                    ),
                 )}
                 <AddressDisplay
                   label={t("Mac Address")}

@@ -92,7 +92,7 @@ export const useCustomTheme = () => {
     // css
     const backgroundColor = mode === "light" ? "#ECECEC" : "#2e303d";
     const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
-    const scrollColor = mode === "light" ? "#90939980" : "#54545480";
+    const scrollColor = mode === "light" ? "#90939980" : "#3E3E3Eee";
     const dividerColor =
       mode === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)";
 

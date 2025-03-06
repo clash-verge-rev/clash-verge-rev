@@ -42,6 +42,31 @@ interface IConfigData {
     "strict-route": boolean;
     mtu: number;
   };
+  dns?: {
+    enable?: boolean;
+    listen?: string;
+    "enhanced-mode"?: "fake-ip" | "redir-host";
+    "fake-ip-range"?: string;
+    "fake-ip-filter"?: string[];
+    "fake-ip-filter-mode"?: "blacklist" | "whitelist";
+    "prefer-h3"?: boolean;
+    "respect-rules"?: boolean;
+    nameserver?: string[];
+    fallback?: string[];
+    "default-nameserver"?: string[];
+    "proxy-server-nameserver"?: string[];
+    "direct-nameserver"?: string[];
+    "direct-nameserver-follow-policy"?: boolean;
+    "nameserver-policy"?: Record<string, any>;
+    "use-hosts"?: boolean;
+    "use-system-hosts"?: boolean;
+    "fallback-filter"?: {
+      geoip?: boolean;
+      "geoip-code"?: string;
+      ipcidr?: string[];
+      domain?: string[];
+    };
+  };
 }
 
 interface IRuleItem {
