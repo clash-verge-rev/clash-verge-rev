@@ -231,7 +231,8 @@ export const ProxyGroups = (props: Props) => {
 
   // 缓存getFirstChar函数
   const getFirstChar = useCallback((str: string) => {
-    const regex = /\p{Extended_Pictographic}|\p{L}|\p{N}|./u;
+    const regex =
+      /\p{Regional_Indicator}{2}|\p{Extended_Pictographic}|\p{L}|\p{N}|./u;
     const match = str.match(regex);
     return match ? match[0] : str.charAt(0);
   }, []);
