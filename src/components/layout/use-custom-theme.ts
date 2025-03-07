@@ -4,14 +4,33 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useSetThemeMode, useThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
-import { useTheme } from "@mui/material/styles";
+import {
+  zhCN as zhXDataGrid,
+  enUS as enXDataGrid,
+  ruRU as ruXDataGrid,
+  faIR as faXDataGrid,
+  arSD as arXDataGrid,
+} from "@mui/x-data-grid/locales";
+import { useTranslation } from "react-i18next";
 const appWindow = getCurrentWebviewWindow();
+
+const languagePackMap: Record<string, any> = {
+  zh: { ...zhXDataGrid },
+  fa: { ...faXDataGrid },
+  ru: { ...ruXDataGrid },
+  ar: { ...arXDataGrid },
+  en: { ...enXDataGrid },
+};
+
+const getLanguagePackMap = (key: string) =>
+  languagePackMap[key] || languagePackMap.en;
 
 /**
  * custom theme
  */
 export const useCustomTheme = () => {
   const { verge } = useVerge();
+  const { i18n } = useTranslation();
   const { theme_mode, theme_setting } = verge ?? {};
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
@@ -41,34 +60,37 @@ export const useCustomTheme = () => {
     let theme: Theme;
 
     try {
-      theme = createTheme({
-        breakpoints: {
-          values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
-        },
-        palette: {
-          mode,
-          primary: { main: setting.primary_color || dt.primary_color },
-          secondary: { main: setting.secondary_color || dt.secondary_color },
-          info: { main: setting.info_color || dt.info_color },
-          error: { main: setting.error_color || dt.error_color },
-          warning: { main: setting.warning_color || dt.warning_color },
-          success: { main: setting.success_color || dt.success_color },
-          text: {
-            primary: setting.primary_text || dt.primary_text,
-            secondary: setting.secondary_text || dt.secondary_text,
+      theme = createTheme(
+        {
+          breakpoints: {
+            values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
           },
-          background: {
-            paper: dt.background_color,
+          palette: {
+            mode,
+            primary: { main: setting.primary_color || dt.primary_color },
+            secondary: { main: setting.secondary_color || dt.secondary_color },
+            info: { main: setting.info_color || dt.info_color },
+            error: { main: setting.error_color || dt.error_color },
+            warning: { main: setting.warning_color || dt.warning_color },
+            success: { main: setting.success_color || dt.success_color },
+            text: {
+              primary: setting.primary_text || dt.primary_text,
+              secondary: setting.secondary_text || dt.secondary_text,
+            },
+            background: {
+              paper: dt.background_color,
+            },
+          },
+          shadows: Array(25).fill("none") as Shadows,
+          typography: {
+            // todo
+            fontFamily: setting.font_family
+              ? `${setting.font_family}, ${dt.font_family}`
+              : dt.font_family,
           },
         },
-        shadows: Array(25).fill("none") as Shadows,
-        typography: {
-          // todo
-          fontFamily: setting.font_family
-            ? `${setting.font_family}, ${dt.font_family}`
-            : dt.font_family,
-        },
-      });
+        getLanguagePackMap(i18n.language),
+      );
     } catch {
       // fix #294
       theme = createTheme({
@@ -133,7 +155,7 @@ export const useCustomTheme = () => {
     }, 0);
 
     return theme;
-  }, [mode, theme_setting]);
+  }, [mode, theme_setting, i18n.language]);
 
   return { theme };
 };
