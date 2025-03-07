@@ -230,6 +230,9 @@ pub fn run() -> Result<()> {
             cmds::service::uninstall_service,
             // clash api
             cmds::clash_api_get_proxy_delay,
+            // bakcup
+            cmds::create_local_backup,
+            cmds::apply_local_backup,
             // web dav
             cmds::update_webdav_info,
             cmds::create_and_upload_backup,

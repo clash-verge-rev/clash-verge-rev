@@ -305,6 +305,10 @@
   "Script Run Check Successful": "脚本运行检查成功, 可正常运行",
   "Save Content Successfully": "内容保存成功",
 
+  "Backup Setting": "备份设置",
+  "BK_Local": "本地",
+  "BK_WebDAV": "WebDAV",
+  "Invalid file format": "无效的文件格式",
   "WebDav Backup": "WebDav 备份",
   "Recovery": "恢复",
   "Backup": "备份",

@@ -573,26 +573,26 @@ pub mod uwp {
 }
 
 // backup
-// #[tauri::command]
-// pub async fn create_backup_local(only_backup_profiles: bool) -> CmdResult<(String, PathBuf)> {
-//     let (file_name, file_path) = backup::create_backup(true, only_backup_profiles).unwrap();
-//     Ok((file_name, file_path))
-// }
+#[tauri::command]
+pub async fn create_local_backup(only_backup_profiles: bool) -> CmdResult<(String, PathBuf)> {
+    let (file_name, file_path) = backup::create_backup(true, only_backup_profiles).unwrap();
+    Ok((file_name, file_path))
+}
 
-// #[tauri::command]
-// pub async fn extract_backup(file_path: String) -> CmdResult {
-//     let mut zip: zip::ZipArchive<fs::File> =
-//         zip::ZipArchive::new(fs::File::open(file_path).unwrap()).unwrap();
-//     zip.extract(dirs::app_home_dir().unwrap()).unwrap();
-//     // reload config
-//     if let Err(e) = Config::reload() {
-//         return Err(format!(
-//             "download backup file success, but reload config failed. error: {:?}",
-//             e
-//         ));
-//     }
-//     Ok(())
-// }
+#[tauri::command]
+pub async fn apply_local_backup(app_handle: tauri::AppHandle, file_path: String) -> CmdResult {
+    let file = wrap_err!(fs::File::open(file_path))?;
+    let mut zip: zip::ZipArchive<fs::File> = wrap_err!(zip::ZipArchive::new(file))?;
+    wrap_err!(zip.extract(dirs::app_home_dir().unwrap()))?;
+    wrap_err!(
+        Config::reload().await,
+        "download backup file success, but reload config failed."
+    )?;
+    resolve_reset().await;
+    std::env::set_var("ApplyBackup", "true");
+    app_handle.remove_tray_by_id(TRAY_ID);
+    app_handle.restart();
+}
 
 // web dav
 #[tauri::command]
@@ -606,8 +606,8 @@ pub async fn update_webdav_info(url: String, username: String, password: String)
 }
 
 #[tauri::command]
-pub async fn create_and_upload_backup(local_save: bool, only_backup_profiles: bool) -> CmdResult {
-    let (file_name, file_path) = backup::create_backup(local_save, only_backup_profiles).unwrap();
+pub async fn create_and_upload_backup(only_backup_profiles: bool) -> CmdResult {
+    let (file_name, file_path) = backup::create_backup(false, only_backup_profiles).unwrap();
     wrap_err!(WebDav::upload_file(file_path, file_name).await)
 }
 

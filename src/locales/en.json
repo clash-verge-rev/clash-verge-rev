@@ -305,6 +305,10 @@
   "Script Run Check Successful": "Script run check successful, This script can be run normally",
   "Save Content Successfully": "Save Content Successfully",
 
+  "Backup Setting": "Backup Setting",
+  "BK_Local": "Local",
+  "BK_WebDAV": "WebDAV",
+  "Invalid file format": "Invalid file format",
   "WebDav Backup": "WebDav Backup",
   "Recovery": "Recovery",
   "Backup": "Backup",

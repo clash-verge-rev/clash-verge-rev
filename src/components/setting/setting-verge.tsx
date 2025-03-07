@@ -6,8 +6,11 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { routers } from "@/pages/_routers";
 import {
+  applyLocalBackup,
   createAndUploadBackup,
+  createLocalBackup,
   exitApp,
+  getAppDir,
   openAppDir,
   openCoreDir,
   openDevTools,
@@ -22,8 +25,9 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
-import { LoadingButton } from "@mui/lab";
+import { LoadingButton, TabContext, TabPanel } from "@mui/lab";
 import {
+  Box,
   Button,
   Checkbox,
   Collapse,
@@ -33,6 +37,8 @@ import {
   InputAdornment,
   MenuItem,
   Select,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
@@ -98,6 +104,7 @@ const SettingVerge = ({ onError }: Props) => {
     }
   };
 
+  const [backupMode, setBackupMode] = useState<"local" | "webdav">("local");
   const [expand, setExpand] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, watch, reset } = useForm<IWebDavConfig>({
@@ -145,10 +152,36 @@ const SettingVerge = ({ onError }: Props) => {
     }
   };
 
+  const handleSelectLocalBackup = async () => {
+    const appDir = await getAppDir();
+    const defaultAppBackupDir = appDir + "/backup";
+    const selected = await open({
+      multiple: false,
+      directory: false,
+      defaultPath: defaultAppBackupDir,
+      filters: [{ name: "zip", extensions: ["zip"] }],
+    });
+    if (selected) {
+      if (selected.endsWith(".zip")) {
+        await applyLocalBackup(selected);
+        Notice.success(t("Apply Backup Successful"));
+      } else {
+        Notice.error(t("Invalid file format"));
+      }
+    }
+  };
+
   const handleBackup = async () => {
     try {
       setStartingBackup(true);
-      await createAndUploadBackup(false, onlyBackupProfiles);
+      if (backupMode === "local") {
+        const res = await createLocalBackup(onlyBackupProfiles);
+        const fileName = res[0];
+        const filePath = res[1];
+        console.log(res, fileName, filePath);
+      } else if (backupMode === "webdav") {
+        await createAndUploadBackup(onlyBackupProfiles);
+      }
       Notice.success(t("Backup Successful"));
     } catch (e) {
       Notice.error(t("Backup Failed", { error: e }), 3000);
@@ -313,104 +346,46 @@ const SettingVerge = ({ onError }: Props) => {
           }
           setExpand(!expand);
         }}
-        label={t("WebDav Backup")}
+        label={t("Backup Setting")}
         expand={expand}
       />
 
       <Collapse in={expand} timeout={"auto"} unmountOnExit>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="w-full bg-primary-alpha px-2">
-          <TextField
-            label={t("WebDav URL")}
-            {...register("url")}
-            size="small"
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            autoComplete="off"
-            autoCorrect="off"
-          />
-          <TextField
-            label={t("WebDav Username")}
-            {...register("username")}
-            size="small"
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            autoComplete="off"
-            autoCorrect="off"
-          />
-          <TextField
-            label={t("WebDav Password")}
-            type={showPassword ? "text" : "password"}
-            {...register("password")}
-            size="small"
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            autoComplete="off"
-            autoCorrect="off"
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
+        <div className="w-full bg-primary-alpha">
+          <TabContext value={backupMode}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+              <Tabs
+                value={backupMode}
+                onChange={(_e, value) => {
+                  setBackupMode(value);
+                }}
+                aria-label="backup model">
+                <Tab label={t("BK_Local")} id="local-tab" value="local" />
+                <Tab label={t("BK_WebDAV")} id="webdav-tab" value="webdav" />
+              </Tabs>
+            </Box>
+            <TabPanel value="local" className="px-4 py-0">
+              <div className="flex w-full items-center justify-end">
+                <FormControlLabel
+                  className="mx-0"
+                  control={
+                    <Checkbox
+                      checked={onlyBackupProfiles}
                       size="small"
-                      className="text-primary-main"
-                      aria-label="toggle password visibility"
-                      onClick={() => {
-                        setShowPassword(!showPassword);
-                      }}
-                      edge="end">
-                      {showPassword ? (
-                        <Visibility fontSize="inherit" />
-                      ) : (
-                        <VisibilityOff fontSize="inherit" />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <div className="flex w-full items-center justify-end">
-            <FormControlLabel
-              className="mx-0"
-              control={
-                <Checkbox
-                  checked={onlyBackupProfiles}
-                  size="small"
-                  onChange={(e) => setOnlyBackupProfiles(e.target.checked)}
+                      onChange={(e) => setOnlyBackupProfiles(e.target.checked)}
+                    />
+                  }
+                  label={t("Only Backup Profiles")}
                 />
-              }
-              label={t("Only Backup Profiles")}
-            />
-          </div>
-          <div className="flex w-full items-center justify-around space-x-4 pb-4 pt-2">
-            {webdavChanged ? (
-              <LoadingButton
-                loading={saving}
-                startIcon={<Check />}
-                loadingPosition="start"
-                type="submit"
-                size="small"
-                fullWidth
-                variant="contained">
-                {t("Save")}
-              </LoadingButton>
-            ) : (
-              <>
-                <LoadingButton
-                  loading={loadingBackupFiles}
-                  startIcon={<Refresh />}
-                  loadingPosition="start"
-                  type="submit"
+              </div>
+              <div className="flex w-full items-center justify-around space-x-4 pb-4 pt-2">
+                <Button
+                  onClick={() => handleSelectLocalBackup()}
                   size="small"
                   fullWidth
                   variant="contained">
                   {t("Recovery")}
-                </LoadingButton>
+                </Button>
                 <LoadingButton
                   loading={startingBackup}
                   startIcon={<CloudUpload />}
@@ -421,10 +396,119 @@ const SettingVerge = ({ onError }: Props) => {
                   onClick={() => handleBackup()}>
                   {t("Backup")}
                 </LoadingButton>
-              </>
-            )}
-          </div>
-        </form>
+              </div>
+            </TabPanel>
+            <TabPanel value="webdav" className="px-4 py-0">
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <TextField
+                  label={t("WebDav URL")}
+                  {...register("url")}
+                  size="small"
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                  autoComplete="off"
+                  autoCorrect="off"
+                />
+                <TextField
+                  label={t("WebDav Username")}
+                  {...register("username")}
+                  size="small"
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                  autoComplete="off"
+                  autoCorrect="off"
+                />
+                <TextField
+                  label={t("WebDav Password")}
+                  type={showPassword ? "text" : "password"}
+                  {...register("password")}
+                  size="small"
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            className="text-primary-main"
+                            aria-label="toggle password visibility"
+                            onClick={() => {
+                              setShowPassword(!showPassword);
+                            }}
+                            edge="end">
+                            {showPassword ? (
+                              <Visibility fontSize="inherit" />
+                            ) : (
+                              <VisibilityOff fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+                <div className="flex w-full items-center justify-end">
+                  <FormControlLabel
+                    className="mx-0"
+                    control={
+                      <Checkbox
+                        checked={onlyBackupProfiles}
+                        size="small"
+                        onChange={(e) =>
+                          setOnlyBackupProfiles(e.target.checked)
+                        }
+                      />
+                    }
+                    label={t("Only Backup Profiles")}
+                  />
+                </div>
+                <div className="flex w-full items-center justify-around space-x-4 pb-4 pt-2">
+                  {webdavChanged ? (
+                    <LoadingButton
+                      loading={saving}
+                      startIcon={<Check />}
+                      loadingPosition="start"
+                      type="submit"
+                      size="small"
+                      fullWidth
+                      variant="contained">
+                      {t("Save")}
+                    </LoadingButton>
+                  ) : (
+                    <>
+                      <LoadingButton
+                        loading={loadingBackupFiles}
+                        startIcon={<Refresh />}
+                        loadingPosition="start"
+                        type="submit"
+                        size="small"
+                        fullWidth
+                        variant="contained">
+                        {t("Recovery")}
+                      </LoadingButton>
+                      <LoadingButton
+                        loading={startingBackup}
+                        startIcon={<CloudUpload />}
+                        loadingPosition="start"
+                        size="small"
+                        fullWidth
+                        variant="contained"
+                        onClick={() => handleBackup()}>
+                        {t("Backup")}
+                      </LoadingButton>
+                    </>
+                  )}
+                </div>
+              </form>
+            </TabPanel>
+          </TabContext>
+        </div>
       </Collapse>
 
       <SettingItem

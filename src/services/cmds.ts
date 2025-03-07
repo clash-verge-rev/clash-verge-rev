@@ -349,14 +349,16 @@ export async function updateWebDavInfo(
   return invoke<void>("update_webdav_info", { url, username, password });
 }
 
-export async function createAndUploadBackup(
-  localSave = false,
-  onlyBackupProfiles = false,
-) {
-  return invoke<void>("create_and_upload_backup", {
-    localSave,
-    onlyBackupProfiles,
-  });
+export async function createLocalBackup(onlyBackupProfiles = false) {
+  return invoke<string[]>("create_local_backup", { onlyBackupProfiles });
+}
+
+export async function applyLocalBackup(filePath: string) {
+  return invoke<void>("apply_local_backup", { filePath });
+}
+
+export async function createAndUploadBackup(onlyBackupProfiles = false) {
+  return invoke<void>("create_and_upload_backup", { onlyBackupProfiles });
 }
 
 export async function listBackup() {

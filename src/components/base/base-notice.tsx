@@ -77,7 +77,9 @@ const NoticeInner = (props: InnerProps) => {
           color: isDark ? "#ffffff" : "#000000",
         },
       }}
-      TransitionComponent={(p) => <Slide {...p} direction="left" />}
+      slots={{
+        transition: (props) => <Slide {...props} direction="left" />,
+      }}
       transitionDuration={200}
       action={
         <IconButton size="small" color="inherit" onClick={onBtnClose}>
