@@ -720,10 +720,6 @@ type StartPosition =
   | "topRight"
   | "bottomLeft"
   | "bottomRight"
-  | "topCenter"
-  | "bottomCenter"
-  | "leftCenter"
-  | "rightCenter"
   | "center";
 
 interface IVergeConfig {

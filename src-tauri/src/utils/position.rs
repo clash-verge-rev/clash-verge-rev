@@ -6,10 +6,6 @@ pub fn to_position(input: Option<String>) -> Position {
         Some("topRight") => Position::TopRight,
         Some("bottomLeft") => Position::BottomLeft,
         Some("bottomRight") => Position::BottomRight,
-        Some("topCenter") => Position::TopCenter,
-        Some("bottomCenter") => Position::BottomCenter,
-        Some("leftCenter") => Position::LeftCenter,
-        Some("rightCenter") => Position::RightCenter,
         Some("center") => Position::Center,
         _ => Position::Center,
     }

@@ -45,22 +45,6 @@ const positionOptions = [
     value: "bottomRight",
   },
   {
-    label: "Top Center",
-    value: "topCenter",
-  },
-  {
-    label: "Bottom Center",
-    value: "bottomCenter",
-  },
-  {
-    label: "Left Center",
-    value: "leftCenter",
-  },
-  {
-    label: "Right Center",
-    value: "rightCenter",
-  },
-  {
     label: "Center",
     value: "center",
   },
