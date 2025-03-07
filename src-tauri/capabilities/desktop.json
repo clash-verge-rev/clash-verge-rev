@@ -15,7 +15,6 @@
     "process:allow-restart",
     "deep-link:default",
     "window-state:default",
-    "window-state:default",
     "autostart:default",
     "positioner:default"
   ]
