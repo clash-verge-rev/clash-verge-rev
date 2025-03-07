@@ -92,7 +92,7 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.1 }}
+            transition={{ duration: full ? 0 : 0.1 }}
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundImage: "var(--mui-overlays-24)",
