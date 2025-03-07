@@ -27,29 +27,6 @@ interface Props {
 
 const OS = getSystem();
 
-const positionOptions = [
-  {
-    label: "Top Left",
-    value: "topLeft",
-  },
-  {
-    label: "Top Right",
-    value: "topRight",
-  },
-  {
-    label: "Bottom Left",
-    value: "bottomLeft",
-  },
-  {
-    label: "Bottom Right",
-    value: "bottomRight",
-  },
-  {
-    label: "Center",
-    value: "center",
-  },
-];
-
 const languageOptions = Object.entries(languages).map(([code, _]) => {
   const labels: { [key: string]: string } = {
     en: "English",
@@ -190,24 +167,6 @@ const SettingVergeBasic = ({ onError }: Props) => {
                 </MenuItem>
               );
             })}
-          </Select>
-        </GuardState>
-      </SettingItem>
-
-      <SettingItem label={t("Start Position")}>
-        <GuardState
-          value={start_position || "center"}
-          onCatch={onError}
-          onFormat={(e: any) => e.target.value}
-          onChange={(e) => onChangeData({ start_position: e })}
-          onGuard={(e) => patchVerge({ start_position: e })}
-        >
-          <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
-            {positionOptions.map((position) => (
-              <MenuItem key={position.value} value={position.value}>
-                {t(position.label)}
-              </MenuItem>
-            ))}
           </Select>
         </GuardState>
       </SettingItem>

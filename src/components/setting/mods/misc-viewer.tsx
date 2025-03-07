@@ -14,6 +14,29 @@ import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 
+const positionOptions = [
+  {
+    label: "Top Left",
+    value: "topLeft",
+  },
+  {
+    label: "Top Right",
+    value: "topRight",
+  },
+  {
+    label: "Bottom Left",
+    value: "bottomLeft",
+  },
+  {
+    label: "Bottom Right",
+    value: "bottomRight",
+  },
+  {
+    label: "Center",
+    value: "center",
+  },
+];
+
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
@@ -21,6 +44,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
     appLogLevel: "info",
+    startPosition: "center",
     autoCloseConnection: true,
     autoCheckUpdate: true,
     enableBuiltinEnhanced: true,
@@ -35,6 +59,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setValues({
         appLogLevel: verge?.app_log_level ?? "info",
+        startPosition: verge?.start_position ?? "center",
         autoCloseConnection: verge?.auto_close_connection ?? true,
         autoCheckUpdate: verge?.auto_check_update ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
@@ -51,6 +76,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       await patchVerge({
         app_log_level: values.appLogLevel,
+        start_position: values.startPosition,
         auto_close_connection: values.autoCloseConnection,
         auto_check_update: values.autoCheckUpdate,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
@@ -192,6 +218,28 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             ].map((i) => (
               <MenuItem key={i.value} value={i.value}>
                 {i.key}
+              </MenuItem>
+            ))}
+          </Select>
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Start Position")} />
+
+          <Select
+            size="small"
+            sx={{ width: 135, "> div": { py: "7.5px" } }}
+            value={values.startPosition}
+            onChange={(e) =>
+              setValues((v) => ({
+                ...v,
+                startPosition: e.target.value as string,
+              }))
+            }
+          >
+            {positionOptions.map((position) => (
+              <MenuItem key={position.value} value={position.value}>
+                {t(position.label)}
               </MenuItem>
             ))}
           </Select>
