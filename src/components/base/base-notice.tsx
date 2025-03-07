@@ -103,7 +103,6 @@ interface NoticeInstance {
 
 let parent: HTMLDivElement = null!;
 
-// @ts-ignore
 export const Notice: NoticeInstance = (props) => {
   const { type, message, duration } = props;
 
@@ -142,8 +141,8 @@ export const Notice: NoticeInstance = (props) => {
   );
 };
 
-(["info", "error", "success"] as const).forEach((type) => {
-  Notice[type] = (message: ReactNode, duration?: number) => {
+const createNoticeTypeFactory =
+  (type: keyof NoticeInstance) => (message: ReactNode, duration?: number) => {
     // 确保消息不为空
     if (!message) {
       return;
@@ -156,4 +155,7 @@ export const Notice: NoticeInstance = (props) => {
       duration: type === "error" ? 8000 : duration || 1500,
     });
   };
-});
+
+Notice.info = createNoticeTypeFactory("info");
+Notice.error = createNoticeTypeFactory("error");
+Notice.success = createNoticeTypeFactory("success");
