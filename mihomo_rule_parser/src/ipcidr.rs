@@ -6,6 +6,19 @@ use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
 };
 
+/// ipcidr parse strategy
+pub(crate) struct IpCidrParseStrategy;
+
+impl Parser for IpCidrParseStrategy {
+    fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload, RuleParseError> {
+        match format {
+            RuleFormat::Mrs => parse_from_mrs(buf),
+            RuleFormat::Yaml => utils::parse_from_yaml(buf),
+            RuleFormat::Text => utils::parse_from_text(buf),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct IpRange {
     from: IpAddr,
@@ -188,18 +201,6 @@ impl IpCidrTransform for IpAddr {
     /// 创建一个 IP 地址范围
     fn ip_range(from: IpAddr, to: IpAddr) -> IpRange {
         IpRange { from, to }
-    }
-}
-
-pub(crate) struct IpCidrParseStrategy;
-
-impl Parser for IpCidrParseStrategy {
-    fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload, RuleParseError> {
-        match format {
-            RuleFormat::Mrs => parse_from_mrs(buf),
-            RuleFormat::Yaml => utils::parse_from_yaml(buf),
-            RuleFormat::Text => utils::parse_from_text(buf),
-        }
     }
 }
 

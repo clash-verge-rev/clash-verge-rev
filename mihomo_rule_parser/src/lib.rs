@@ -5,7 +5,7 @@ use domain::DomainParseStrategy;
 use error::RuleParseError;
 use ipcidr::IpCidrParseStrategy;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
+use std::{fmt::Display, path::Path};
 
 mod bitmap;
 mod utils;
@@ -73,27 +73,16 @@ trait Parser {
     fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload, RuleParseError>;
 }
 
+/// public rule parser
 pub struct RuleParser;
 
 impl RuleParser {
-    pub fn parse(
-        file_path: &std::path::Path,
-        behavior: &str,
-        format: &str,
+    pub fn parse<P: AsRef<Path>>(
+        file_path: P,
+        behavior: RuleBehavior,
+        format: RuleFormat,
     ) -> Result<RulePayload, RuleParseError> {
         let buf = std::fs::read(file_path)?;
-        let behavior = match behavior {
-            "domain" => RuleBehavior::Domain,
-            "ipcidr" => RuleBehavior::IpCidr,
-            "classical" => RuleBehavior::Classical,
-            _ => return Err(RuleParseError::InvalidBehavior),
-        };
-        let format = match format {
-            "mrs" => RuleFormat::Mrs,
-            "yaml" => RuleFormat::Yaml,
-            "text" => RuleFormat::Text,
-            _ => return Err(RuleParseError::InvalidFormat),
-        };
         match behavior {
             RuleBehavior::Domain => DomainParseStrategy::parse(&buf, format),
             RuleBehavior::IpCidr => IpCidrParseStrategy::parse(&buf, format),
@@ -105,8 +94,8 @@ impl RuleParser {
 #[cfg(test)]
 #[allow(deprecated)] // for std::env::home_dir() method, I develop on Linux, so it can get home dir
 mod tests {
-    use crate::{error::RuleParseError, RuleParser};
-    use anyhow::Result;
+    use crate::{error::RuleParseError, RuleBehavior, RuleFormat, RuleParser};
+    use anyhow::{bail, Result};
     use std::io::{Read, Write};
 
     /// Test public parse method
@@ -116,7 +105,8 @@ mod tests {
 
         // domain
         let domain_mrs_path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.mrs");
-        let domain_mrs_payload = RuleParser::parse(&domain_mrs_path, "domain", "mrs")?;
+        let domain_mrs_payload =
+            RuleParser::parse(&domain_mrs_path, RuleBehavior::Domain, RuleFormat::Mrs)?;
         assert_ne!(domain_mrs_payload.count, 0);
         assert_ne!(domain_mrs_payload.rules.len(), 0);
         let mut file = std::fs::File::create("domain_mrs.txt")?;
@@ -124,7 +114,8 @@ mod tests {
         file.sync_all()?;
 
         let domain_yaml_path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.yaml");
-        let domain_yaml_payload = RuleParser::parse(&domain_yaml_path, "domain", "yaml")?;
+        let domain_yaml_payload =
+            RuleParser::parse(&domain_yaml_path, RuleBehavior::Domain, RuleFormat::Yaml)?;
         assert_ne!(domain_yaml_payload.count, 0);
         assert_ne!(domain_yaml_payload.rules.len(), 0);
         let mut file = std::fs::File::create("domain_yaml.txt")?;
@@ -132,7 +123,8 @@ mod tests {
         file.sync_all()?;
 
         let domain_txt_path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.txt");
-        let domain_txt_payload = RuleParser::parse(&domain_txt_path, "domain", "text")?;
+        let domain_txt_payload =
+            RuleParser::parse(&domain_txt_path, RuleBehavior::Domain, RuleFormat::Text)?;
         assert_ne!(domain_txt_payload.count, 0);
         assert_ne!(domain_txt_payload.rules.len(), 0);
         let mut file = std::fs::File::create("domain.txt")?;
@@ -141,7 +133,8 @@ mod tests {
 
         // ipcidr
         let ipcidr_mrs_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/private.mrs");
-        let ipcidr_mrs_payload = RuleParser::parse(&ipcidr_mrs_path, "ipcidr", "mrs")?;
+        let ipcidr_mrs_payload =
+            RuleParser::parse(&ipcidr_mrs_path, RuleBehavior::IpCidr, RuleFormat::Mrs)?;
         assert_ne!(ipcidr_mrs_payload.count, 0);
         assert_ne!(ipcidr_mrs_payload.rules.len(), 0);
         let mut file = std::fs::File::create("ipcidr_mrs.txt")?;
@@ -149,7 +142,8 @@ mod tests {
         file.sync_all()?;
 
         let ipcidr_yaml_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/private.yaml");
-        let ipcidr_yaml_payload = RuleParser::parse(&ipcidr_yaml_path, "ipcidr", "yaml")?;
+        let ipcidr_yaml_payload =
+            RuleParser::parse(&ipcidr_yaml_path, RuleBehavior::IpCidr, RuleFormat::Yaml)?;
         assert_ne!(ipcidr_yaml_payload.count, 0);
         assert_ne!(ipcidr_yaml_payload.rules.len(), 0);
         let mut file = std::fs::File::create("ipcidr_yaml.txt")?;
@@ -157,7 +151,8 @@ mod tests {
         file.sync_all()?;
 
         let ipcidr_txt_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/private.txt");
-        let ipcidr_txt_payload = RuleParser::parse(&ipcidr_txt_path, "ipcidr", "text")?;
+        let ipcidr_txt_payload =
+            RuleParser::parse(&ipcidr_txt_path, RuleBehavior::IpCidr, RuleFormat::Text)?;
         assert_ne!(ipcidr_txt_payload.count, 0);
         assert_ne!(ipcidr_txt_payload.rules.len(), 0);
         let mut file = std::fs::File::create("ipcidr.txt")?;
@@ -167,7 +162,11 @@ mod tests {
         // classical
         let classical_yaml_path =
             home_dir.join("Downloads/meta-rules-dat/geo/geoip/classical/ad.yaml");
-        let rule_payload = RuleParser::parse(&classical_yaml_path, "classical", "yaml")?;
+        let rule_payload = RuleParser::parse(
+            &classical_yaml_path,
+            RuleBehavior::Classical,
+            RuleFormat::Yaml,
+        )?;
         assert_ne!(rule_payload.count, 0);
         assert_ne!(rule_payload.rules.len(), 0);
         let mut file = std::fs::File::create("classical_yaml.txt")?;
@@ -176,7 +175,11 @@ mod tests {
 
         let classical_txt_path =
             home_dir.join("Downloads/meta-rules-dat/geo/geoip/classical/ad.list");
-        let rule_payload = RuleParser::parse(&classical_txt_path, "classical", "text")?;
+        let rule_payload = RuleParser::parse(
+            &classical_txt_path,
+            RuleBehavior::Classical,
+            RuleFormat::Text,
+        )?;
         assert_ne!(rule_payload.count, 0);
         assert_ne!(rule_payload.rules.len(), 0);
         let mut file = std::fs::File::create("classical.txt")?;
@@ -266,7 +269,7 @@ mod tests {
             });
 
         // starting check diff
-        let mut mihomo_convert_error_file = vec![];
+        let mut mihomo_convert_error_file: Vec<String> = vec![];
         for file_name in &mrs_files {
             // use mihomo command to convert mrs files to txt files
             let mrs_file_path = mrs_dir_path.join(file_name);
@@ -288,7 +291,12 @@ mod tests {
                 mihomo_convert_error_file.push(file_name.clone());
                 continue;
             }
-            let rule_payload = RuleParser::parse(&mrs_file_path, check_behavior, "mrs")?;
+            let behavior = match check_behavior {
+                "domain" => RuleBehavior::Domain,
+                "ipcidr" => RuleBehavior::IpCidr,
+                _ => bail!("Invalid test behavior"),
+            };
+            let rule_payload = RuleParser::parse(&mrs_file_path, behavior, RuleFormat::Mrs)?;
 
             // check file content diff
             let content_r_items = rule_payload.rules;

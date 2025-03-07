@@ -1,5 +1,6 @@
 use crate::{error::RuleParseError, utils, Parser, RuleBehavior, RuleFormat};
 
+/// classical parse strategy
 pub(crate) struct ClassicalParseStrategy;
 
 impl Parser for ClassicalParseStrategy {

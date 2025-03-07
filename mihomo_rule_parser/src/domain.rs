@@ -6,6 +6,19 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+/// domain parse strategy
+pub(crate) struct DomainParseStrategy;
+
+impl Parser for DomainParseStrategy {
+    fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload, RuleParseError> {
+        match format {
+            RuleFormat::Mrs => parse_from_mrs(buf),
+            RuleFormat::Yaml => utils::parse_from_yaml(buf),
+            RuleFormat::Text => utils::parse_from_text(buf),
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 struct DomainSet {
     leaves: Vec<u64>,
@@ -30,7 +43,7 @@ impl DomainSet {
     where
         F: FnMut(&String) -> bool,
     {
-        let mut current_key = vec![];
+        let mut current_key: Vec<char> = vec![];
         self.traverse(&mut current_key, 0, 0, &mut f);
     }
 
@@ -94,19 +107,6 @@ fn count_zeros(bm: &[u64], ranks: &[i32], i: isize) -> isize {
 fn select_ith_one(bm: &[u64], ranks: &[i32], selects: &[i32], i: isize) -> isize {
     let (a, _) = bitmap::Bitmap::select_32_r64(bm, selects, ranks, i as i32);
     return a as isize;
-}
-
-/// domain parse strategy
-pub(crate) struct DomainParseStrategy;
-
-impl Parser for DomainParseStrategy {
-    fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload, RuleParseError> {
-        match format {
-            RuleFormat::Mrs => parse_from_mrs(buf),
-            RuleFormat::Yaml => utils::parse_from_yaml(buf),
-            RuleFormat::Text => utils::parse_from_text(buf),
-        }
-    }
 }
 
 fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {

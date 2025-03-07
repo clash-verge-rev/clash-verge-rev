@@ -69,7 +69,7 @@ pub(crate) fn parse_from_yaml(buf: &[u8]) -> Result<RulePayload, RuleParseError>
 pub(crate) fn parse_from_text(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
     let reader = BufReader::new(buf);
     let mut count = 0;
-    let mut rules = Vec::new();
+    let mut rules: Vec<String> = vec![];
     for rule in reader.lines() {
         count += 1;
         rules.push(rule?.trim().to_string());
