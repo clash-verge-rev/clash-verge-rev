@@ -1,6 +1,7 @@
 use crate::config::Config;
-use crate::core::{clash_api, handle, tray, CoreManager};
+use crate::core::{handle, tray, CoreManager};
 use crate::log_err;
+use crate::module::mihomo::MihomoManager;
 use crate::utils::resolve;
 use serde_yaml::{Mapping, Value};
 use tauri::Manager;
@@ -38,10 +39,14 @@ pub fn restart_app() {
 pub fn change_clash_mode(mode: String) {
     let mut mapping = Mapping::new();
     mapping.insert(Value::from("mode"), mode.clone().into());
+    // Convert YAML mapping to JSON Value
+    let json_value = serde_json::json!({
+        "mode": mode
+    });
     tauri::async_runtime::spawn(async move {
         log::debug!(target: "app", "change clash mode to {mode}");
 
-        match clash_api::patch_configs(&mapping).await {
+        match MihomoManager::global().patch_configs(json_value).await {
             Ok(_) => {
                 // 更新订阅
                 Config::clash().data().patch_config(mapping);

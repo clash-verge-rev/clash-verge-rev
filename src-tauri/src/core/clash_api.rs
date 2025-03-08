@@ -1,48 +1,12 @@
 use crate::config::Config;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use reqwest::header::HeaderMap;
 use serde::{Deserialize, Serialize};
-use serde_yaml::Mapping;
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Rate {
     pub up: u64,
     pub down: u64,
-}
-
-/// PUT /configs
-/// path 是绝对路径
-pub async fn put_configs(path: &str) -> Result<()> {
-    let (url, headers) = clash_client_info()?;
-    let url = format!("{url}/configs?force=true");
-
-    let mut data = HashMap::new();
-    data.insert("path", path);
-
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client.put(&url).headers(headers).json(&data);
-    let response = builder.send().await?;
-
-    match response.status().as_u16() {
-        204 => Ok(()),
-        status => {
-            let body = response.text().await?;
-           // print!("failed to put configs with status \"{}\"\n{}\n{}", status, url, body);
-            bail!("failed to put configs with status \"{status}\"\n{url}\n{body}");
-        }
-    }
-}
-
-/// PATCH /configs
-pub async fn patch_configs(config: &Mapping) -> Result<()> {
-    let (url, headers) = clash_client_info()?;
-    let url = format!("{url}/configs");
-
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client.patch(&url).headers(headers.clone()).json(config);
-    builder.send().await?;
-    Ok(())
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
