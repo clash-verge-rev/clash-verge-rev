@@ -1,7 +1,8 @@
-use crate::core::clash_api;
+use crate::config::Config;
 use mihomo_api;
 use once_cell::sync::{Lazy, OnceCell};
 use std::sync::Mutex;
+use tauri::http::HeaderMap;
 
 pub struct MihomoManager {
     mihomo: Mutex<OnceCell<mihomo_api::MihomoManager>>,
@@ -17,7 +18,7 @@ impl MihomoManager {
 
     pub fn global() -> mihomo_api::MihomoManager {
         let instance = MihomoManager::__global();
-        let (current_server, headers) = clash_api::clash_client_info().unwrap();
+        let (current_server, headers) = MihomoManager::get_clash_client_info().unwrap();
 
         let lock = instance.mihomo.lock().unwrap();
         if let Some(mihomo) = lock.get() {
@@ -29,5 +30,20 @@ impl MihomoManager {
         lock.set(mihomo_api::MihomoManager::new(current_server, headers))
             .ok();
         lock.get().unwrap().clone()
+    }
+}
+
+impl MihomoManager {
+    pub fn get_clash_client_info() -> Option<(String, HeaderMap)> {
+        let client = { Config::clash().data().get_client_info() };
+        let server = format!("http://{}", client.server);
+        let mut headers = HeaderMap::new();
+        headers.insert("Content-Type", "application/json".parse().unwrap());
+        if let Some(secret) = client.secret {
+            let secret = format!("Bearer {}", secret).parse().unwrap();
+            headers.insert("Authorization", secret);
+        }
+
+        Some((server, headers))
     }
 }

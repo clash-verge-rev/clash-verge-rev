@@ -100,16 +100,8 @@ impl MihomoManager {
         let payload = serde_json::json!({
             "path": clash_config_path,
         });
-        let response = self.send_request("PUT", url, Some(payload)).await?;
-        println!("put_configs_force::{:?}", response);
+        let _response = self.send_request("PUT", url, Some(payload)).await?;
         Ok(())
-        // if response["code"] == 204 {
-        //     Ok(())
-        // } else {
-        //     Err(response["message"]
-        //         .as_str()
-        //         .unwrap_or("unknown error")
-        //         .to_string())
     }
 
     pub async fn patch_configs(&self, config: serde_json::Value) -> Result<(), String> {
