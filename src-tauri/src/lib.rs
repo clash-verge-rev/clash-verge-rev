@@ -163,6 +163,10 @@ pub fn run() {
             cmd::copy_clash_env,
             cmd::get_proxies,
             cmd::get_providers_proxies,
+            cmd::save_dns_config,
+            cmd::apply_dns_config,
+            cmd::check_dns_config_exists,
+            cmd::get_dns_config_content,
             // verge
             cmd::get_verge_config,
             cmd::patch_verge_config,

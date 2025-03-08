@@ -133,6 +133,81 @@ pub fn delete_log() -> Result<()> {
     Ok(())
 }
 
+/// 初始化DNS配置文件
+fn init_dns_config() -> Result<()> {
+    use serde_yaml::Value;
+
+    // 获取默认DNS配置
+    let default_dns_config = serde_yaml::Mapping::from_iter([
+        ("enable".into(), Value::Bool(true)),
+        ("listen".into(), Value::String(":53".into())),
+        ("enhanced-mode".into(), Value::String("fake-ip".into())),
+        ("fake-ip-range".into(), Value::String("198.18.0.1/16".into())),
+        ("fake-ip-filter-mode".into(), Value::String("blacklist".into())),
+        ("prefer-h3".into(), Value::Bool(false)),
+        ("respect-rules".into(), Value::Bool(false)),
+        ("use-hosts".into(), Value::Bool(false)),
+        ("use-system-hosts".into(), Value::Bool(false)),
+        ("fake-ip-filter".into(), Value::Sequence(vec![
+            Value::String("*.lan".into()),
+            Value::String("*.local".into()),
+            Value::String("*.arpa".into()),
+            Value::String("time.*.com".into()),
+            Value::String("ntp.*.com".into()),
+            Value::String("time.*.com".into()),
+            Value::String("+.market.xiaomi.com".into()),
+            Value::String("localhost.ptlogin2.qq.com".into()),
+            Value::String("*.msftncsi.com".into()),
+            Value::String("www.msftconnecttest.com".into()),
+        ])),
+        ("default-nameserver".into(), Value::Sequence(vec![
+            Value::String("223.6.6.6".into()),
+            Value::String("8.8.8.8".into()),
+        ])),
+        ("nameserver".into(), Value::Sequence(vec![
+            Value::String("8.8.8.8".into()),
+            Value::String("https://doh.pub/dns-query".into()),
+            Value::String("https://dns.alidns.com/dns-query".into()),
+        ])),
+        ("fallback".into(), Value::Sequence(vec![
+            Value::String("https://dns.alidns.com/dns-query".into()),
+            Value::String("https://dns.google/dns-query".into()),
+            Value::String("https://cloudflare-dns.com/dns-query".into()),
+        ])),
+        ("nameserver-policy".into(), Value::Mapping(serde_yaml::Mapping::new())),
+        ("proxy-server-nameserver".into(), Value::Sequence(vec![
+            Value::String("https://doh.pub/dns-query".into()),
+            Value::String("https://dns.alidns.com/dns-query".into()),
+        ])),
+        ("direct-nameserver".into(), Value::Sequence(vec![])),
+        ("direct-nameserver-follow-policy".into(), Value::Bool(false)),
+        ("fallback-filter".into(), Value::Mapping(serde_yaml::Mapping::from_iter([
+            ("geoip".into(), Value::Bool(true)),
+            ("geoip-code".into(), Value::String("CN".into())),
+            ("ipcidr".into(), Value::Sequence(vec![
+                Value::String("240.0.0.0/4".into()),
+                Value::String("0.0.0.0/32".into()),
+            ])),
+            ("domain".into(), Value::Sequence(vec![
+                Value::String("+.google.com".into()),
+                Value::String("+.facebook.com".into()),
+                Value::String("+.youtube.com".into()),
+            ])),
+        ]))),
+    ]);
+
+    // 检查DNS配置文件是否存在
+    let app_dir = dirs::app_home_dir()?;
+    let dns_path = app_dir.join("dns_config.yaml");
+    
+    if !dns_path.exists() {
+        log::info!(target: "app", "Creating default DNS config file");
+        help::save_yaml(&dns_path, &default_dns_config, Some("# Clash Verge DNS Config"))?;
+    }
+    
+    Ok(())
+}
+
 /// Initialize all the config files
 /// before tauri setup
 pub fn init_config() -> Result<()> {
@@ -172,6 +247,9 @@ pub fn init_config() -> Result<()> {
         }
         <Result<()>>::Ok(())
     }));
+
+    // 初始化DNS配置文件
+    let _ = init_dns_config();
 
     Ok(())
 }
