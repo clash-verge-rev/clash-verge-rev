@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useEnableLog } from "../services/states";
-import { createSockette } from "../utils/websocket";
+import { createSockette, createAuthSockette } from "../utils/websocket";
 import { useClashInfo } from "./use-clash";
 import dayjs from "dayjs";
 import { create } from "zustand";
@@ -18,20 +18,16 @@ export type { ILogItem };
 
 const MAX_LOG_NUM = 1000;
 
-const buildWSUrl = (server: string, secret: string, logLevel: LogLevel) => {
-  const baseUrl = `ws://${server}/logs`;
-  const params = new URLSearchParams();
+const buildWSUrl = (server: string, logLevel: LogLevel) => {
+  let baseUrl = `${server}/logs`;
 
-  if (secret) {
-    params.append("token", secret);
+  // 只处理日志级别参数
+  if (logLevel && logLevel !== "info") {
+    const level = logLevel === "all" ? "debug" : logLevel;
+    baseUrl += `?level=${level}`;
   }
-  if (logLevel === "all") {
-    params.append("level", "debug");
-  } else {
-    params.append("level", logLevel);
-  }
-  const queryString = params.toString();
-  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+  return baseUrl;
 };
 
 interface LogStore {

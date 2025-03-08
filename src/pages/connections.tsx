@@ -26,7 +26,7 @@ import {
 } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import useSWRSubscription from "swr/subscription";
-import { createSockette } from "@/utils/websocket";
+import { createSockette, createAuthSockette } from "@/utils/websocket";
 import { useTheme } from "@mui/material/styles";
 import { useVisibility } from "@/hooks/use-visibility";
 
@@ -74,51 +74,71 @@ const ConnectionsPage = () => {
     clashInfo && pageVisible ? "getClashConnections" : null,
     (_key, { next }) => {
       const { server = "", secret = "" } = clashInfo!;
-      const s = createSockette(
-        `ws://${server}/connections?token=${encodeURIComponent(secret)}`,
-        {
-          onmessage(event) {
-            const data = JSON.parse(event.data) as IConnections;
-            next(null, (old = initConn) => {
-              const oldConn = old.connections;
-              const maxLen = data.connections?.length;
 
-              const connections: IConnectionsItem[] = [];
+      if (!server) {
+        console.warn("[Connections] 服务器地址为空，无法建立连接");
+        next(null, initConn);
+        return () => {};
+      }
 
-              const rest = (data.connections || []).filter((each) => {
-                const index = oldConn.findIndex((o) => o.id === each.id);
+      console.log(`[Connections] 正在连接: ${server}/connections`);
 
-                if (index >= 0 && index < maxLen) {
-                  const old = oldConn[index];
-                  each.curUpload = each.upload - old.upload;
-                  each.curDownload = each.download - old.download;
+      // 设置较长的超时时间，确保连接可以建立
+      const s = createAuthSockette(`${server}/connections`, secret, {
+        timeout: 8000, // 8秒超时
+        onmessage(event) {
+          const data = JSON.parse(event.data) as IConnections;
+          next(null, (old = initConn) => {
+            const oldConn = old.connections;
+            const maxLen = data.connections?.length;
 
-                  connections[index] = each;
-                  return false;
-                }
-                return true;
-              });
+            const connections: IConnectionsItem[] = [];
 
-              for (let i = 0; i < maxLen; ++i) {
-                if (!connections[i] && rest.length > 0) {
-                  connections[i] = rest.shift()!;
-                  connections[i].curUpload = 0;
-                  connections[i].curDownload = 0;
-                }
+            const rest = (data.connections || []).filter((each) => {
+              const index = oldConn.findIndex((o) => o.id === each.id);
+
+              if (index >= 0 && index < maxLen) {
+                const old = oldConn[index];
+                each.curUpload = each.upload - old.upload;
+                each.curDownload = each.download - old.download;
+
+                connections[index] = each;
+                return false;
               }
-
-              return { ...data, connections };
+              return true;
             });
-          },
-          onerror(event) {
-            next(event);
-          },
+
+            for (let i = 0; i < maxLen; ++i) {
+              if (!connections[i] && rest.length > 0) {
+                connections[i] = rest.shift()!;
+                connections[i].curUpload = 0;
+                connections[i].curDownload = 0;
+              }
+            }
+
+            return { ...data, connections };
+          });
         },
-        3,
-      );
+        onerror(event) {
+          console.error("[Connections] WebSocket 连接错误", event);
+          // 报告错误但提供空数据，避免UI崩溃
+          next(null, initConn);
+        },
+        onclose(event) {
+          console.log("[Connections] WebSocket 连接关闭", event);
+        },
+        onopen(event) {
+          console.log("[Connections] WebSocket 连接已建立");
+        },
+      });
 
       return () => {
-        s.close();
+        console.log("[Connections] 清理WebSocket连接");
+        try {
+          s.close();
+        } catch (e) {
+          console.error("[Connections] 关闭连接时出错", e);
+        }
       };
     },
   );
