@@ -1,42 +1,11 @@
 use crate::config::Config;
 use anyhow::Result;
 use reqwest::header::HeaderMap;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Rate {
     pub up: u64,
     pub down: u64,
-}
-
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
-pub struct DelayRes {
-    delay: u64,
-}
-
-/// GET /proxies/{name}/delay
-/// 获取代理延迟
-pub async fn get_proxy_delay(
-    name: String,
-    test_url: Option<String>,
-    timeout: i32,
-) -> Result<DelayRes> {
-    let (url, headers) = clash_client_info()?;
-    let url = format!("{url}/proxies/{name}/delay");
-
-    let default_url = "http://cp.cloudflare.com/generate_204";
-    let test_url = test_url
-        .map(|s| if s.is_empty() { default_url.into() } else { s })
-        .unwrap_or(default_url.into());
-
-    let client = reqwest::ClientBuilder::new().no_proxy().build()?;
-    let builder = client
-        .get(&url)
-        .headers(headers)
-        .query(&[("timeout", &format!("{timeout}")), ("url", &test_url)]);
-    let response = builder.send().await?;
-
-    Ok(response.json::<DelayRes>().await?)
 }
 
 /// 根据clash info获取clash服务地址和请求头
