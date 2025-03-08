@@ -74,18 +74,57 @@ pub fn get_app_dir() -> CmdResult<String> {
 #[tauri::command]
 pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String> {
     let icon_cache_dir = wrap_err!(dirs::app_home_dir())?.join("icons").join("cache");
-    let icon_path = icon_cache_dir.join(name);
+    let icon_path = icon_cache_dir.join(&name);
+    
+    // 如果文件已存在，直接返回路径
+    if icon_path.exists() {
+        return Ok(icon_path.to_string_lossy().to_string());
+    }
+    
+    // 确保缓存目录存在
     if !icon_cache_dir.exists() {
         let _ = std::fs::create_dir_all(&icon_cache_dir);
     }
-    if !icon_path.exists() {
-        let response = wrap_err!(reqwest::get(url).await)?;
-
-        let mut file = wrap_err!(std::fs::File::create(&icon_path))?;
-
-        let content = wrap_err!(response.bytes().await)?;
+    
+    // 使用临时文件名来下载
+    let temp_path = icon_cache_dir.join(format!("{}.downloading", &name));
+    
+    // 下载文件到临时位置
+    let response = wrap_err!(reqwest::get(url).await)?;
+    let content = wrap_err!(response.bytes().await)?;
+    
+    // 写入临时文件
+    {
+        let mut file = match std::fs::File::create(&temp_path) {
+            Ok(file) => file,
+            Err(_) => {
+                if icon_path.exists() {
+                    return Ok(icon_path.to_string_lossy().to_string());
+                } else {
+                    return Err("Failed to create temporary file".into());
+                }
+            }
+        };
+        
         wrap_err!(std::io::copy(&mut content.as_ref(), &mut file))?;
     }
+    
+    // 再次检查目标文件是否已存在，避免重命名覆盖其他线程已完成的文件
+    if !icon_path.exists() {
+        // 使用原子重命名操作将临时文件移动到最终位置
+        match std::fs::rename(&temp_path, &icon_path) {
+            Ok(_) => {},
+            Err(_) => {
+                let _ = std::fs::remove_file(&temp_path);
+                if icon_path.exists() {
+                    return Ok(icon_path.to_string_lossy().to_string());
+                }
+            }
+        }
+    } else {
+        let _ = std::fs::remove_file(&temp_path);
+    }
+    
     Ok(icon_path.to_string_lossy().to_string())
 }
 
