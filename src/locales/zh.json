@@ -194,7 +194,7 @@
   "Test URL": "测试地址",
   "Settings": "设置",
   "System Setting": "系统设置",
-  "Tun Mode": "TUN（虚拟网卡）模式",
+  "Tun Mode": "TUN(虚拟网卡)模式",
   "TUN requires Service Mode": "TUN 模式需要服务",
   "Install Service": "安装服务",
   "Reset to Default": "重置为默认值",
@@ -502,6 +502,5 @@
   "Fallback IP CIDR": "回退 IP CIDR",
   "IP CIDRs not using fallback servers": "不使用回退服务器的 IP CIDR，用逗号分隔",
   "Fallback Domain": "回退域名",
-  "Domains using fallback servers": "使用回退服务器的域名，用逗号分隔",
-  "Fallback Geosite": "回退 Geosite"
+  "Domains using fallback servers": "使用回退服务器的域名，用逗号分隔"
 }
