@@ -604,7 +604,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
         overflow: "auto",
         ...(visualization
           ? {}
-          : { padding: 0, display: "flex", flexDirection: "column" }),
+          : { padding: "0 24px", display: "flex", flexDirection: "column" }),
       }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
