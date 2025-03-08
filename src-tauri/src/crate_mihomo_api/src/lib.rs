@@ -96,7 +96,7 @@ impl MihomoManager {
         let payload = serde_json::json!({
             "path": clash_config_path,
         });
-        let response = self.send_request("PUT", url, Some(payload)).await.unwrap();
+        let response = self.send_request("PUT", url, Some(payload)).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
@@ -109,7 +109,7 @@ impl MihomoManager {
 
     pub async fn patch_configs(&self, config: serde_json::Value) -> Result<(), String> {
         let url = format!("{}/configs", self.mihomo_server);
-        let response = self.send_request("PATCH", url, Some(config)).await.unwrap();
+        let response = self.send_request("PATCH", url, Some(config)).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
@@ -118,5 +118,17 @@ impl MihomoManager {
                 .unwrap_or("unknown error")
                 .to_string())
         }
+    }
+
+    pub async fn test_proxy_delay(
+        &self,
+        name: &str,
+        test_url: Option<String>,
+        timeout: i32,
+    ) -> Result<serde_json::Value, String> {
+        let test_url = test_url.unwrap_or("http://cp.cloudflare.com/generate_204".to_string());
+        let url = format!("{}/proxies/{}/delay?url={}&timeout={}", self.mihomo_server, name, test_url, timeout);
+        let response = self.send_request("GET", url, None).await?;
+        return Ok(response);
     }
 }
