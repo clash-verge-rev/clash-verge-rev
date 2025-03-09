@@ -135,7 +135,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("DNS Settings")}
+        label={t("DNS Overwrite")}
         extra={
           <TooltipIcon
             icon={SettingsRounded}
