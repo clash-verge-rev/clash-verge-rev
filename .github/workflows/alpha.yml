@@ -2,6 +2,9 @@ name: Alpha Build
 
 on:
   workflow_dispatch:
+  schedule:
+    # UTC+8 00:00 (UTC 16:00 previous day) and UTC+8 12:00 (UTC 04:00)
+    - cron: "0 16,4 * * *"
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -12,7 +15,40 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  check_commit:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if commit changed
+        id: check
+        run: |
+          # For manual workflow_dispatch, always run
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if current commit is different from the previous one
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
+
+          if [ "$CURRENT_COMMIT" != "$PREVIOUS_COMMIT" ]; then
+            echo "New commit detected: $CURRENT_COMMIT"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "No new commits since last run"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
   alpha:
+    needs: check_commit
+    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -93,6 +129,8 @@ jobs:
           args: --target ${{ matrix.target }}
 
   alpha-for-linux-arm:
+    needs: check_commit
+    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -214,6 +252,8 @@ jobs:
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   alpha-for-fixed-webview2:
+    needs: check_commit
+    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -311,7 +351,8 @@ jobs:
   update_tag:
     name: Update tag
     runs-on: ubuntu-latest
-    needs: [alpha, alpha-for-linux-arm, alpha-for-fixed-webview2]
+    needs: [check_commit, alpha, alpha-for-linux-arm, alpha-for-fixed-webview2]
+    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
