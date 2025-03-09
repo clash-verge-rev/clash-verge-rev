@@ -1,7 +1,7 @@
 use once_cell::sync::OnceCell;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
-use crate::core::clash_api::Rate;
+use crate::module::mihomo::Rate;
 use crate::{
     cmd,
     config::Config,

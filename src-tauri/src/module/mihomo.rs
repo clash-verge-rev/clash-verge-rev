@@ -2,7 +2,15 @@ use crate::config::Config;
 use mihomo_api;
 use once_cell::sync::{Lazy, OnceCell};
 use std::sync::Mutex;
-use tauri::http::HeaderMap;
+use tauri::http::{HeaderMap, HeaderValue};
+#[cfg(target_os = "macos")]
+use tokio_tungstenite::tungstenite::http;
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Rate {
+    pub up: u64,
+    pub down: u64,
+}
 
 pub struct MihomoManager {
     mihomo: Mutex<OnceCell<mihomo_api::MihomoManager>>,
@@ -45,5 +53,18 @@ impl MihomoManager {
         }
 
         Some((server, headers))
+    }
+    #[cfg(target_os = "macos")]
+    pub fn get_traffic_ws_url() -> (String, HeaderValue) {
+        let (url, headers) = MihomoManager::get_clash_client_info().unwrap();
+        let ws_url = url.replace("http://", "ws://") + "/traffic";
+        let auth = headers
+            .get("Authorization")
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
+        let token = http::header::HeaderValue::from_str(&auth).unwrap();
+        return (ws_url, token);
     }
 }
