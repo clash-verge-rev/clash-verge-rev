@@ -1184,6 +1184,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-tungstenite 0.26.2",
+ "tungstenite 0.26.2",
  "url",
  "users",
  "warp",

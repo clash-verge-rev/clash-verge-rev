@@ -1,4 +1,5 @@
-use crate::core::clash_api::{get_traffic_ws_url, Rate};
+use crate::module::mihomo::Rate;
+use crate::module::mihomo::MihomoManager;
 use crate::utils::help::format_bytes_speed;
 use ab_glyph::FontArc;
 use anyhow::Result;
@@ -8,8 +9,9 @@ use imageproc::drawing::draw_text_mut;
 use parking_lot::Mutex;
 use std::io::Cursor;
 use std::sync::Arc;
+use tokio_tungstenite::tungstenite::http;
 use tokio_tungstenite::tungstenite::Message;
-
+use tungstenite::client::IntoClientRequest;
 #[derive(Debug, Clone)]
 pub struct SpeedRate {
     rate: Arc<Mutex<(Rate, Rate)>>,
@@ -198,9 +200,13 @@ impl Traffic {
         let stream = Box::pin(
             stream::unfold((), |_| async {
                 loop {
-                    let ws_url = get_traffic_ws_url().unwrap();
+                    let (url, token) = MihomoManager::get_traffic_ws_url();
+                    let mut request = url.into_client_request().unwrap();
+                    request
+                        .headers_mut()
+                        .insert(http::header::AUTHORIZATION, token);
 
-                    match tokio_tungstenite::connect_async(&ws_url).await {
+                    match tokio_tungstenite::connect_async(request).await {
                         Ok((ws_stream, _)) => {
                             log::info!(target: "app", "traffic ws connection established");
                             return Some((
