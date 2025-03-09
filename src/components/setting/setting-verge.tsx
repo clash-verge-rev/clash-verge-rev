@@ -175,10 +175,7 @@ const SettingVerge = ({ onError }: Props) => {
     try {
       setStartingBackup(true);
       if (backupMode === "local") {
-        const res = await createLocalBackup(onlyBackupProfiles);
-        const fileName = res[0];
-        const filePath = res[1];
-        console.log(res, fileName, filePath);
+        await createLocalBackup(onlyBackupProfiles);
       } else if (backupMode === "webdav") {
         await createAndUploadBackup(onlyBackupProfiles);
       }
@@ -379,13 +376,14 @@ const SettingVerge = ({ onError }: Props) => {
                 />
               </div>
               <div className="flex w-full items-center justify-around space-x-4 pb-4 pt-2">
-                <Button
+                <LoadingButton
+                  startIcon={<Refresh />}
                   onClick={() => handleSelectLocalBackup()}
                   size="small"
                   fullWidth
                   variant="contained">
                   {t("Recovery")}
-                </Button>
+                </LoadingButton>
                 <LoadingButton
                   loading={startingBackup}
                   startIcon={<CloudUpload />}

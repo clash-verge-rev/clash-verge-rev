@@ -18,6 +18,7 @@ import {
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
+import ThemeColorInput from "./theme-color-input";
 
 export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -74,49 +75,40 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
     }
   });
 
-  // default theme
-  const dt = themeMode === "light" ? defaultTheme : defaultDarkTheme;
-  type ThemeKey = keyof typeof theme & keyof typeof defaultTheme;
-
-  const renderItem = (label: string, key: ThemeKey) => {
-    return (
-      <Item>
-        <ListItemText primary={label} />
-        <Round sx={{ background: theme[key] || dt[key] }} />
-        <TextField
-          {...textProps}
-          value={theme[key] ?? ""}
-          placeholder={dt[key]}
-          onChange={handleChange(key)}
-          onKeyDown={(e) => e.key === "Enter" && onSave()}
-        />
-      </Item>
-    );
-  };
-
-  // TODO: once click to change both(light/dark) theme settings
   return (
     <BaseDialog
       open={open}
       title={
         <Box display="flex" justifyContent={"space-between"} gap={1}>
           <Typography variant="h6">{t("Theme Setting")}</Typography>
-          <ButtonGroup size="small">
+          <div className="flex items-center justify-between">
             <Button
-              variant={themeMode === "light" ? "contained" : "outlined"}
-              onClick={(e) => {
-                toggleTheme(e, "light");
+              className="mr-2"
+              onClick={() => {
+                setThemeSettings((prev: any) => ({
+                  ...prev,
+                  [themeMode]: {},
+                }));
               }}>
-              {t("theme.light")}
+              {t("Reset to Default")}
             </Button>
-            <Button
-              variant={themeMode === "dark" ? "contained" : "outlined"}
-              onClick={(e) => {
-                toggleTheme(e, "dark");
-              }}>
-              {t("theme.dark")}
-            </Button>
-          </ButtonGroup>
+            <ButtonGroup size="small">
+              <Button
+                variant={themeMode === "light" ? "contained" : "outlined"}
+                onClick={(e) => {
+                  toggleTheme(e, "light");
+                }}>
+                {t("theme.light")}
+              </Button>
+              <Button
+                variant={themeMode === "dark" ? "contained" : "outlined"}
+                onClick={(e) => {
+                  toggleTheme(e, "dark");
+                }}>
+                {t("theme.dark")}
+              </Button>
+            </ButtonGroup>
+          </div>
         </Box>
       }
       okBtn={t("Save")}
@@ -137,21 +129,14 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       }}
       onOk={onSave}>
       <List sx={{ pt: 0 }}>
-        {renderItem("Primary Color", "primary_color")}
-
-        {renderItem("Secondary Color", "secondary_color")}
-
-        {renderItem("Primary Text", "primary_text")}
-
-        {renderItem("Secondary Text", "secondary_text")}
-
-        {renderItem("Info Color", "info_color")}
-
-        {renderItem("Error Color", "error_color")}
-
-        {renderItem("Warning Color", "warning_color")}
-
-        {renderItem("Success Color", "success_color")}
+        <ThemeColorInput label="Primary Color" themeKey="primary_color" />
+        <ThemeColorInput label="Secondary Color" themeKey="secondary_color" />
+        <ThemeColorInput label="Primary Text" themeKey="primary_text" />
+        <ThemeColorInput label="Secondary Text" themeKey="secondary_text" />
+        <ThemeColorInput label="Info Color" themeKey="info_color" />
+        <ThemeColorInput label="Error Color" themeKey="error_color" />
+        <ThemeColorInput label="Warning Color" themeKey="warning_color" />
+        <ThemeColorInput label="Success Color" themeKey="success_color" />
 
         <Item>
           <ListItemText primary="Font Family" />

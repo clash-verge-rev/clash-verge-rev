@@ -9,14 +9,10 @@ pub enum RuleParseError {
     Io(#[from] io::Error),
     #[error("invalid magic number")]
     InvalidMagic,
-    #[error("invalid behavior")]
-    InvalidBehavior,
     #[error("invalid version")]
     InvalidVersion,
     #[error("invalid length: {0}")]
     InvalidLength(i64),
-    #[error("invalid format")]
-    InvalidFormat,
     #[error("behavior mismatch (expected {expected}, got {actual})")]
     BehaviorMismatch {
         expected: RuleBehavior,
@@ -24,6 +20,6 @@ pub enum RuleParseError {
     },
     #[error("yaml parse error: {0}")]
     YamlParseError(#[from] serde_yaml::Error),
-    #[error("{0} unsupported format: {1}")]
+    #[error("current {0} unsupported format: {1}")]
     UnsupportedFormat(RuleBehavior, RuleFormat),
 }
