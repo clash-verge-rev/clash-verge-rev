@@ -82,7 +82,7 @@
     "@vitejs/plugin-legacy": "6.0.2",
     "@vitejs/plugin-react": "4.3.4",
     "adm-zip": "0.5.16",
-    "autoprefixer": "10.4.20",
+    "autoprefixer": "10.4.21",
     "cli-color": "2.0.4",
     "clsx": "2.1.1",
     "concurrently": "9.1.2",
