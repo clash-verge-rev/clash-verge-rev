@@ -210,6 +210,10 @@ async function processRelease(github, options, tag, isAlpha) {
 
   // Get the appropriate updater release based on isAlpha flag
   const releaseTag = isAlpha ? ALPHA_TAG_NAME : UPDATE_TAG_NAME;
+  console.log(
+    `Processing ${isAlpha ? "alpha" : "stable"} release:`,
+    releaseTag,
+  );
 
   try {
     const { data: updateRelease } = await github.rest.repos.getReleaseByTag({
