@@ -453,5 +453,15 @@
   "TUN requires Service Mode": "يتطلب وضع TUN خدمة",
   "Install Service": "تثبيت الخدمة ",
   "Installing Service...": "جاري تثبيت الخدمة...",
-  "Service Administrator Prompt": "يتطلب Clash Verge امتيازات المسؤول لإعادة تثبيت خدمة النظام"
+  "Service Administrator Prompt": "يتطلب Clash Verge امتيازات المسؤول لإعادة تثبيت خدمة النظام",
+  "Start Position": "موضع البدء",
+  "Top Left": "أعلى اليسار",
+  "Top Right": "أعلى اليمين",
+  "Bottom Left": "أسفل اليسار",
+  "Bottom Right": "أسفل اليمين",
+  "Top Center": "أعلى الوسط",
+  "Bottom Center": "أسفل الوسط",
+  "Left Center": "اليسار في الوسط",
+  "Right Center": "اليمين في الوسط",
+  "Center": "الوسط"
 }

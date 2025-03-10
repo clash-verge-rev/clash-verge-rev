@@ -51,6 +51,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
     env_type,
     startup_script,
     start_page,
+    start_position,
   } = verge ?? {};
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
