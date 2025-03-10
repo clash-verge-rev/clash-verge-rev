@@ -23,7 +23,7 @@ async function resolveUpdater() {
 
   const { data: tags } = await github.rest.repos.listTags({
     ...options,
-    per_page: 20, // Increase to have more chances to find alpha tags
+    per_page: 50, // Increase to have more chances to find alpha tags
     page: 1,
   });
 
@@ -31,8 +31,11 @@ async function resolveUpdater() {
   const stableTag = tags.find(
     (t) => t.name.startsWith("v") && !t.name.includes("alpha"),
   );
-  const alphaTag = tags.find((t) => t.name.includes("alpha"));
+  const alphaTag = tags.find(
+    (t) => t.name.startsWith("alpha") && !t.name.includes("v"),
+  );
 
+  console.log(tags);
   console.log("Stable tag:", stableTag);
   console.log("Alpha tag:", alphaTag);
   console.log();
