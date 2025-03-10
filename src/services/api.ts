@@ -266,12 +266,31 @@ export const getGroupProxyDelays = async (
     timeout: timeout || 10000,
     url: url || "http://cp.cloudflare.com/generate_204",
   };
-  const instance = await getAxios();
-  const result = await instance.get(
-    `/group/${encodeURIComponent(groupName)}/delay`,
-    { params },
+
+  console.log(
+    `[API] 获取代理组延迟，组: ${groupName}, URL: ${params.url}, 超时: ${params.timeout}ms`,
   );
-  return result as any as Record<string, number>;
+
+  try {
+    const instance = await getAxios();
+    console.log(
+      `[API] 发送HTTP请求: GET /group/${encodeURIComponent(groupName)}/delay`,
+    );
+
+    const result = await instance.get(
+      `/group/${encodeURIComponent(groupName)}/delay`,
+      { params },
+    );
+
+    console.log(
+      `[API] 获取代理组延迟成功，组: ${groupName}, 结果数量:`,
+      Object.keys(result || {}).length,
+    );
+    return result as any as Record<string, number>;
+  } catch (error) {
+    console.error(`[API] 获取代理组延迟失败，组: ${groupName}`, error);
+    throw error;
+  }
 };
 
 // Is debug enabled

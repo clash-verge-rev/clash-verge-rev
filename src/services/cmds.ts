@@ -161,12 +161,42 @@ export async function cmdGetProxyDelay(
   timeout: number,
   url?: string,
 ) {
-  name = encodeURIComponent(name);
-  return invoke<{ delay: number }>("clash_api_get_proxy_delay", {
-    name,
-    url,
-    timeout,
-  });
+  // 确保URL不为空
+  const testUrl = url || "http://cp.cloudflare.com/generate_204";
+  console.log(
+    `[API] 调用延迟测试API，代理: ${name}, 超时: ${timeout}ms, URL: ${testUrl}`,
+  );
+
+  try {
+    name = encodeURIComponent(name);
+    const result = await invoke<{ delay: number }>(
+      "clash_api_get_proxy_delay",
+      {
+        name,
+        url: testUrl, // 传递经过验证的URL
+        timeout,
+      },
+    );
+
+    // 验证返回结果中是否有delay字段，并且值是一个有效的数字
+    if (result && typeof result.delay === "number") {
+      console.log(
+        `[API] 延迟测试API调用成功，代理: ${name}, 延迟: ${result.delay}ms`,
+      );
+      return result;
+    } else {
+      console.error(
+        `[API] 延迟测试API返回无效结果，代理: ${name}, 结果:`,
+        result,
+      );
+      // 返回一个有效的结果对象，但标记为超时
+      return { delay: 1e6 };
+    }
+  } catch (error) {
+    console.error(`[API] 延迟测试API调用失败，代理: ${name}`, error);
+    // 返回一个有效的结果对象，但标记为错误
+    return { delay: 1e6 };
+  }
 }
 
 export async function cmdTestDelay(url: string) {

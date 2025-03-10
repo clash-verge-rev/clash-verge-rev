@@ -70,6 +70,7 @@ sys-locale = "0.3.1"
 async-trait = "0.1.87"
 mihomo_api = { path = "./src/crate_mihomo_api" }
 ab_glyph = "0.2.29"
+tungstenite = "0.26.2"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"

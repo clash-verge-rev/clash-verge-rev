@@ -1,6 +1,6 @@
 // 全局日志服务，使应用在任何页面都能收集日志
 import { create } from "zustand";
-import { createSockette } from "../utils/websocket";
+import { createSockette, createAuthSockette } from "@/utils/websocket";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 
@@ -47,20 +47,16 @@ export const useGlobalLogStore = create<GlobalLogStore>((set) => ({
 }));
 
 // 构建WebSocket URL
-const buildWSUrl = (server: string, secret: string, logLevel: LogLevel) => {
-  const baseUrl = `ws://${server}/logs`;
-  const params = new URLSearchParams();
+const buildWSUrl = (server: string, logLevel: LogLevel) => {
+  let baseUrl = `${server}/logs`;
 
-  if (secret) {
-    params.append("token", secret);
+  // 只处理日志级别参数
+  if (logLevel && logLevel !== "info") {
+    const level = logLevel === "all" ? "debug" : logLevel;
+    baseUrl += `?level=${level}`;
   }
-  if (logLevel === "all") {
-    params.append("level", "debug");
-  } else {
-    params.append("level", logLevel);
-  }
-  const queryString = params.toString();
-  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+  return baseUrl;
 };
 
 // 初始化全局日志服务
@@ -86,28 +82,49 @@ export const initGlobalLogService = (
   // 关闭现有连接
   closeGlobalLogConnection();
 
-  // 创建新的WebSocket连接
-  const wsUrl = buildWSUrl(server, secret, logLevel);
-  globalLogSocket = createSockette(wsUrl, {
+  // 创建新的WebSocket连接，使用新的认证方法
+  const wsUrl = buildWSUrl(server, logLevel);
+  console.log(`[GlobalLog] 正在连接日志服务: ${wsUrl}`);
+
+  if (!server) {
+    console.warn("[GlobalLog] 服务器地址为空，无法建立连接");
+    return;
+  }
+
+  globalLogSocket = createAuthSockette(wsUrl, secret, {
+    timeout: 8000, // 8秒超时
     onmessage(event) {
       try {
         const data = JSON.parse(event.data) as ILogItem;
         const time = dayjs().format("MM-DD HH:mm:ss");
         appendLog({ ...data, time });
       } catch (error) {
-        console.error("Failed to parse log data:", error);
+        console.error("[GlobalLog] 解析日志数据失败:", error);
       }
     },
-    onerror() {
-      console.error("Log WebSocket connection error");
-      closeGlobalLogConnection();
+    onerror(event) {
+      console.error("[GlobalLog] WebSocket连接错误", event);
+
+      // 记录错误状态但不关闭连接，让重连机制起作用
+      useGlobalLogStore.setState({ isConnected: false });
+
+      // 只有在重试彻底失败后才关闭连接
+      if (
+        event &&
+        typeof event === "object" &&
+        "type" in event &&
+        event.type === "error"
+      ) {
+        console.error("[GlobalLog] 连接已彻底失败，关闭连接");
+        closeGlobalLogConnection();
+      }
     },
-    onclose() {
-      console.log("Log WebSocket connection closed");
+    onclose(event) {
+      console.log("[GlobalLog] WebSocket连接关闭", event);
       useGlobalLogStore.setState({ isConnected: false });
     },
-    onopen() {
-      console.log("Log WebSocket connection opened");
+    onopen(event) {
+      console.log("[GlobalLog] WebSocket连接已建立", event);
       useGlobalLogStore.setState({ isConnected: true });
     },
   });

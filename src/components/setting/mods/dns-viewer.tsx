@@ -22,6 +22,7 @@ import yaml from "js-yaml";
 import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
+import { invoke } from "@tauri-apps/api/core";
 
 const Item = styled(ListItem)(({ theme }) => ({
   padding: "8px 0",
@@ -145,10 +146,108 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
   useImperativeHandle(ref, () => ({
     open: () => {
       setOpen(true);
-      resetToDefaults();
+      // 获取DNS配置文件并初始化表单
+      initDnsConfig();
     },
     close: () => setOpen(false),
   }));
+
+  // 初始化DNS配置
+  const initDnsConfig = async () => {
+    try {
+      // 尝试从dns_config.yaml文件读取配置
+      const dnsConfigExists = await invoke<boolean>(
+        "check_dns_config_exists",
+        {},
+      );
+
+      if (dnsConfigExists) {
+        // 如果存在配置文件，加载其内容
+        const dnsConfig = await invoke<string>("get_dns_config_content", {});
+        const config = yaml.load(dnsConfig) as any;
+
+        // 更新表单数据
+        updateValuesFromConfig(config);
+        // 更新YAML编辑器内容
+        setYamlContent(dnsConfig);
+      } else {
+        // 如果不存在配置文件，使用默认值
+        resetToDefaults();
+      }
+    } catch (err) {
+      console.error("Failed to initialize DNS config", err);
+      resetToDefaults();
+    }
+  };
+
+  // 从配置对象更新表单值
+  const updateValuesFromConfig = (config: any) => {
+    if (!config) return;
+
+    const enhancedMode =
+      config["enhanced-mode"] || DEFAULT_DNS_CONFIG["enhanced-mode"];
+    const validEnhancedMode =
+      enhancedMode === "fake-ip" || enhancedMode === "redir-host"
+        ? enhancedMode
+        : DEFAULT_DNS_CONFIG["enhanced-mode"];
+
+    const fakeIpFilterMode =
+      config["fake-ip-filter-mode"] ||
+      DEFAULT_DNS_CONFIG["fake-ip-filter-mode"];
+    const validFakeIpFilterMode =
+      fakeIpFilterMode === "blacklist" || fakeIpFilterMode === "whitelist"
+        ? fakeIpFilterMode
+        : DEFAULT_DNS_CONFIG["fake-ip-filter-mode"];
+
+    setValues({
+      enable: config.enable ?? DEFAULT_DNS_CONFIG.enable,
+      listen: config.listen ?? DEFAULT_DNS_CONFIG.listen,
+      enhancedMode: validEnhancedMode,
+      fakeIpRange:
+        config["fake-ip-range"] ?? DEFAULT_DNS_CONFIG["fake-ip-range"],
+      fakeIpFilterMode: validFakeIpFilterMode,
+      preferH3: config["prefer-h3"] ?? DEFAULT_DNS_CONFIG["prefer-h3"],
+      respectRules:
+        config["respect-rules"] ?? DEFAULT_DNS_CONFIG["respect-rules"],
+      fakeIpFilter:
+        config["fake-ip-filter"]?.join(", ") ??
+        DEFAULT_DNS_CONFIG["fake-ip-filter"].join(", "),
+      nameserver:
+        config.nameserver?.join(", ") ??
+        DEFAULT_DNS_CONFIG.nameserver.join(", "),
+      fallback:
+        config.fallback?.join(", ") ?? DEFAULT_DNS_CONFIG.fallback.join(", "),
+      defaultNameserver:
+        config["default-nameserver"]?.join(", ") ??
+        DEFAULT_DNS_CONFIG["default-nameserver"].join(", "),
+      useHosts: config["use-hosts"] ?? DEFAULT_DNS_CONFIG["use-hosts"],
+      useSystemHosts:
+        config["use-system-hosts"] ?? DEFAULT_DNS_CONFIG["use-system-hosts"],
+      proxyServerNameserver:
+        config["proxy-server-nameserver"]?.join(", ") ??
+        (DEFAULT_DNS_CONFIG["proxy-server-nameserver"]?.join(", ") || ""),
+      directNameserver:
+        config["direct-nameserver"]?.join(", ") ??
+        (DEFAULT_DNS_CONFIG["direct-nameserver"]?.join(", ") || ""),
+      directNameserverFollowPolicy:
+        config["direct-nameserver-follow-policy"] ??
+        DEFAULT_DNS_CONFIG["direct-nameserver-follow-policy"],
+      fallbackGeoip:
+        config["fallback-filter"]?.geoip ??
+        DEFAULT_DNS_CONFIG["fallback-filter"].geoip,
+      fallbackGeoipCode:
+        config["fallback-filter"]?.["geoip-code"] ??
+        DEFAULT_DNS_CONFIG["fallback-filter"]["geoip-code"],
+      fallbackIpcidr:
+        config["fallback-filter"]?.ipcidr?.join(", ") ??
+        DEFAULT_DNS_CONFIG["fallback-filter"].ipcidr.join(", "),
+      fallbackDomain:
+        config["fallback-filter"]?.domain?.join(", ") ??
+        DEFAULT_DNS_CONFIG["fallback-filter"].domain.join(", "),
+      nameserverPolicy:
+        formatNameserverPolicy(config["nameserver-policy"]) || "",
+    });
+  };
 
   // 重置为默认值
   const resetToDefaults = () => {
@@ -396,6 +495,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
     return dnsConfig;
   };
 
+  // 处理保存操作
   const onSave = useLockFn(async () => {
     try {
       let dnsConfig;
@@ -412,8 +512,15 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
         dnsConfig = parsedConfig;
       }
 
-      await patchClash({ dns: dnsConfig });
-      mutateClash();
+      // 不直接应用到clash配置，而是保存到单独文件
+      await invoke("save_dns_config", { dnsConfig });
+
+      // 如果DNS开关当前是打开的，则需要应用新的DNS配置
+      if (clash?.dns?.enable) {
+        await invoke("apply_dns_config", { apply: true });
+        mutateClash(); // 刷新UI
+      }
+
       setOpen(false);
       Notice.success(t("DNS settings saved"));
     } catch (err: any) {
@@ -497,7 +604,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
         overflow: "auto",
         ...(visualization
           ? {}
-          : { padding: 0, display: "flex", flexDirection: "column" }),
+          : { padding: "0 24px", display: "flex", flexDirection: "column" }),
       }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}

@@ -74,6 +74,9 @@ pub struct IVerge {
     /// enable proxy guard
     pub enable_proxy_guard: Option<bool>,
 
+    /// enable dns settings - this controls whether dns_config.yaml is applied
+    pub enable_dns_settings: Option<bool>,
+
     /// always use default bypass
     pub use_default_bypass: Option<bool>,
 
@@ -292,6 +295,7 @@ impl IVerge {
             enable_tray_speed: Some(true),
             enable_global_hotkey: Some(true),
             enable_lite_mode: Some(false),
+            enable_dns_settings: Some(true),
             ..Self::default()
         }
     }
@@ -375,6 +379,7 @@ impl IVerge {
         patch!(webdav_password);
         patch!(enable_tray_speed);
         patch!(enable_lite_mode);
+        patch!(enable_dns_settings);
     }
 
     /// 在初始化前尝试拿到单例端口的值
@@ -465,6 +470,7 @@ pub struct IVergeResponse {
     pub webdav_password: Option<String>,
     pub enable_tray_speed: Option<bool>,
     pub enable_lite_mode: Option<bool>,
+    pub enable_dns_settings: Option<bool>,
 }
 
 impl From<IVerge> for IVergeResponse {
@@ -529,6 +535,7 @@ impl From<IVerge> for IVergeResponse {
             webdav_password: verge.webdav_password,
             enable_tray_speed: verge.enable_tray_speed,
             enable_lite_mode: verge.enable_lite_mode,
+            enable_dns_settings: verge.enable_dns_settings,
         }
     }
 }

@@ -1,4 +1,5 @@
 use reqwest::header::HeaderMap;
+use serde_json::json;
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -42,43 +43,92 @@ impl MihomoManager {
         data.providers_proxies.clone()
     }
 
-    pub async fn refresh_proxies(&self) -> Result<&Self, String> {
-        let url = format!("{}/proxies", self.mihomo_server);
-        let response = reqwest::ClientBuilder::new()
+    async fn send_request(
+        &self,
+        method: &str,
+        url: String,
+        data: Option<serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
+        let client_response = reqwest::ClientBuilder::new()
             .default_headers(self.headers.clone())
             .no_proxy()
-            .timeout(Duration::from_secs(3))
+            .timeout(Duration::from_secs(2))
             .build()
             .map_err(|e| e.to_string())?
-            .get(url)
+            .request(
+                match method {
+                    "GET" => reqwest::Method::GET,
+                    "PUT" => reqwest::Method::PUT,
+                    "POST" => reqwest::Method::POST,
+                    "PATCH" => reqwest::Method::PATCH,
+                    _ => reqwest::Method::GET,
+                },
+                &url,
+            )
+            .json(&data.unwrap_or(json!({})))
             .send()
             .await
-            .map_err(|e| e.to_string())?
-            .json::<serde_json::Value>()
-            .await
             .map_err(|e| e.to_string())?;
-        let proxies = response;
+
+        let response = if method != "PUT" {
+            client_response.json::<serde_json::Value>().await
+        } else {
+            client_response.text().await.map(|text| json!(text))
+        }
+        .map_err(|e| e.to_string())?;
+        return Ok(response);
+    }
+
+    pub async fn refresh_proxies(&self) -> Result<&Self, String> {
+        let url = format!("{}/proxies", self.mihomo_server);
+        let proxies = self.send_request("GET", url, None).await?;
         self.update_proxies(proxies);
         Ok(self)
     }
 
     pub async fn refresh_providers_proxies(&self) -> Result<&Self, String> {
         let url = format!("{}/providers/proxies", self.mihomo_server);
-        let response = reqwest::ClientBuilder::new()
-            .default_headers(self.headers.clone())
-            .no_proxy()
-            .timeout(Duration::from_secs(3))
-            .build()
-            .map_err(|e| e.to_string())?
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| e.to_string())?
-            .json::<serde_json::Value>()
-            .await
-            .map_err(|e| e.to_string())?;
-        let proxies = response;
-        self.update_providers_proxies(proxies);
+        let providers_proxies = self.send_request("GET", url, None).await?;
+        self.update_providers_proxies(providers_proxies);
         Ok(self)
+    }
+}
+
+impl MihomoManager {
+    pub async fn put_configs_force(&self, clash_config_path: &str) -> Result<(), String> {
+        let url = format!("{}/configs?force=true", self.mihomo_server);
+        let payload = serde_json::json!({
+            "path": clash_config_path,
+        });
+        let _response = self.send_request("PUT", url, Some(payload)).await?;
+        Ok(())
+    }
+
+    pub async fn patch_configs(&self, config: serde_json::Value) -> Result<(), String> {
+        let url = format!("{}/configs", self.mihomo_server);
+        let response = self.send_request("PATCH", url, Some(config)).await?;
+        if response["code"] == 204 {
+            Ok(())
+        } else {
+            Err(response["message"]
+                .as_str()
+                .unwrap_or("unknown error")
+                .to_string())
+        }
+    }
+
+    pub async fn test_proxy_delay(
+        &self,
+        name: &str,
+        test_url: Option<String>,
+        timeout: i32,
+    ) -> Result<serde_json::Value, String> {
+        let test_url = test_url.unwrap_or("http://cp.cloudflare.com/generate_204".to_string());
+        let url = format!(
+            "{}/proxies/{}/delay?url={}&timeout={}",
+            self.mihomo_server, name, test_url, timeout
+        );
+        let response = self.send_request("GET", url, None).await?;
+        return Ok(response);
     }
 }
