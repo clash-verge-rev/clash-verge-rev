@@ -21,31 +21,56 @@ async function resolveUpdater() {
   const options = { owner: context.repo.owner, repo: context.repo.repo };
   const github = getOctokit(process.env.GITHUB_TOKEN);
 
-  const { data: tags } = await github.rest.repos.listTags({
-    ...options,
-    per_page: 50, // Increase to have more chances to find alpha tags
-    page: 1,
-  });
+  // Fetch all tags using pagination
+  let allTags = [];
+  let page = 1;
+  const perPage = 100;
 
-  // Get the latest stable tag and alpha tag
-  const stableTag = tags.find(
-    (t) => t.name.startsWith("v") && !t.name.includes("alpha"),
-  );
-  const alphaTag = tags.find(
-    (t) => t.name.startsWith("alpha") && !t.name.includes("v"),
-  );
+  while (true) {
+    const { data: pageTags } = await github.rest.repos.listTags({
+      ...options,
+      per_page: perPage,
+      page: page,
+    });
 
-  console.log(tags);
-  console.log("Stable tag:", stableTag);
-  console.log("Alpha tag:", alphaTag);
+    allTags = allTags.concat(pageTags);
+
+    // Break if we received fewer tags than requested (last page)
+    if (pageTags.length < perPage) {
+      break;
+    }
+
+    page++;
+  }
+
+  const tags = allTags;
+  console.log(`Retrieved ${tags.length} tags in total`);
+
+  // More flexible tag detection with regex patterns
+  const stableTagRegex = /^v\d+\.\d+\.\d+$/; // Matches vX.Y.Z format
+  // const preReleaseRegex = /^v\d+\.\d+\.\d+-(alpha|beta|rc|pre)/i; // Matches vX.Y.Z-alpha/beta/rc format
+  const preReleaseRegex = /^v(alpha|beta|rc|pre)/i; // Matches alpha/beta/rc format
+
+  // Get the latest stable tag and pre-release tag
+  const stableTag = tags.find((t) => stableTagRegex.test(t.name));
+  const preReleaseTag = tags.find((t) => preReleaseRegex.test(t.name));
+
+  console.log("All tags:", tags.map((t) => t.name).join(", "));
+  console.log("Stable tag:", stableTag ? stableTag.name : "None found");
+  console.log(
+    "Pre-release tag:",
+    preReleaseTag ? preReleaseTag.name : "None found",
+  );
   console.log();
 
   // Process stable release
-  await processRelease(github, options, stableTag, false);
+  if (stableTag) {
+    await processRelease(github, options, stableTag, false);
+  }
 
-  // Process alpha release if found
-  if (alphaTag) {
-    await processRelease(github, options, alphaTag, true);
+  // Process pre-release if found
+  if (preReleaseTag) {
+    await processRelease(github, options, preReleaseTag, true);
   }
 }
 
