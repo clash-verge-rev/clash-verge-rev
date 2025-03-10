@@ -2,9 +2,14 @@ import fetch from "node-fetch";
 import { getOctokit, context } from "@actions/github";
 import { resolveUpdateLog } from "./updatelog.mjs";
 
+// Add stable update JSON filenames
 const UPDATE_TAG_NAME = "updater";
 const UPDATE_JSON_FILE = "update.json";
 const UPDATE_JSON_PROXY = "update-proxy.json";
+// Add alpha update JSON filenames
+const ALPHA_TAG_NAME = "updater-alpha";
+const ALPHA_UPDATE_JSON_FILE = "update-alpha.json";
+const ALPHA_UPDATE_JSON_PROXY = "update-alpha-proxy.json";
 
 /// generate update.json
 /// upload to update tag's release asset
@@ -16,26 +21,73 @@ async function resolveUpdater() {
   const options = { owner: context.repo.owner, repo: context.repo.repo };
   const github = getOctokit(process.env.GITHUB_TOKEN);
 
-  const { data: tags } = await github.rest.repos.listTags({
-    ...options,
-    per_page: 10,
-    page: 1,
-  });
+  // Fetch all tags using pagination
+  let allTags = [];
+  let page = 1;
+  const perPage = 100;
 
-  // get the latest publish tag
-  const tag = tags.find((t) => t.name.startsWith("v"));
+  while (true) {
+    const { data: pageTags } = await github.rest.repos.listTags({
+      ...options,
+      per_page: perPage,
+      page: page,
+    });
 
-  console.log(tag);
+    allTags = allTags.concat(pageTags);
+
+    // Break if we received fewer tags than requested (last page)
+    if (pageTags.length < perPage) {
+      break;
+    }
+
+    page++;
+  }
+
+  const tags = allTags;
+  console.log(`Retrieved ${tags.length} tags in total`);
+
+  // More flexible tag detection with regex patterns
+  const stableTagRegex = /^v\d+\.\d+\.\d+$/; // Matches vX.Y.Z format
+  // const preReleaseRegex = /^v\d+\.\d+\.\d+-(alpha|beta|rc|pre)/i; // Matches vX.Y.Z-alpha/beta/rc format
+  const preReleaseRegex = /^(alpha|beta|rc|pre)$/i; // Matches exact alpha/beta/rc/pre tags
+
+  // Get the latest stable tag and pre-release tag
+  const stableTag = tags.find((t) => stableTagRegex.test(t.name));
+  const preReleaseTag = tags.find((t) => preReleaseRegex.test(t.name));
+
+  console.log("All tags:", tags.map((t) => t.name).join(", "));
+  console.log("Stable tag:", stableTag ? stableTag.name : "None found");
+  console.log(
+    "Pre-release tag:",
+    preReleaseTag ? preReleaseTag.name : "None found",
+  );
   console.log();
 
-  const { data: latestRelease } = await github.rest.repos.getReleaseByTag({
+  // Process stable release
+  if (stableTag) {
+    await processRelease(github, options, stableTag, false);
+  }
+
+  // Process pre-release if found
+  if (preReleaseTag) {
+    await processRelease(github, options, preReleaseTag, true);
+  }
+}
+
+// Process a release (stable or alpha) and generate update files
+async function processRelease(github, options, tag, isAlpha) {
+  if (!tag) return;
+
+  const { data: release } = await github.rest.repos.getReleaseByTag({
     ...options,
     tag: tag.name,
   });
 
   const updateData = {
     name: tag.name,
-    notes: await resolveUpdateLog(tag.name), // use updatelog.md
+    notes: await resolveUpdateLog(tag.name).catch(
+      () => "No changelog available",
+    ),
     pub_date: new Date().toISOString(),
     platforms: {
       win64: { signature: "", url: "" }, // compatible with older formats
@@ -56,9 +108,10 @@ async function resolveUpdater() {
     },
   };
 
-  const promises = latestRelease.assets.map(async (asset) => {
+  const promises = release.assets.map(async (asset) => {
     const { name, browser_download_url } = asset;
 
+    // Process all the platform URL and signature data
     // win64 url
     if (name.endsWith("x64-setup.exe")) {
       updateData.platforms.win64.url = browser_download_url;
@@ -143,8 +196,7 @@ async function resolveUpdater() {
     }
   });
 
-  // 生成一个代理github的更新文件
-  // 使用 https://hub.fastgit.xyz/ 做github资源的加速
+  // Generate a proxy update file for accelerated GitHub resources
   const updateDataNew = JSON.parse(JSON.stringify(updateData));
 
   Object.entries(updateDataNew.platforms).forEach(([key, value]) => {
@@ -156,42 +208,95 @@ async function resolveUpdater() {
     }
   });
 
-  // update the update.json
-  const { data: updateRelease } = await github.rest.repos.getReleaseByTag({
-    ...options,
-    tag: UPDATE_TAG_NAME,
-  });
+  // Get the appropriate updater release based on isAlpha flag
+  const releaseTag = isAlpha ? ALPHA_TAG_NAME : UPDATE_TAG_NAME;
+  console.log(
+    `Processing ${isAlpha ? "alpha" : "stable"} release:`,
+    releaseTag,
+  );
 
-  // delete the old assets
-  for (let asset of updateRelease.assets) {
-    if (asset.name === UPDATE_JSON_FILE) {
-      await github.rest.repos.deleteReleaseAsset({
+  try {
+    let updateRelease;
+
+    try {
+      // Try to get the existing release
+      const response = await github.rest.repos.getReleaseByTag({
         ...options,
-        asset_id: asset.id,
+        tag: releaseTag,
       });
+      updateRelease = response.data;
+      console.log(
+        `Found existing ${releaseTag} release with ID: ${updateRelease.id}`,
+      );
+    } catch (error) {
+      // If release doesn't exist, create it
+      if (error.status === 404) {
+        console.log(
+          `Release with tag ${releaseTag} not found, creating new release...`,
+        );
+        const createResponse = await github.rest.repos.createRelease({
+          ...options,
+          tag_name: releaseTag,
+          name: isAlpha
+            ? "Auto-update Alpha Channel"
+            : "Auto-update Stable Channel",
+          body: `This release contains the update information for ${isAlpha ? "alpha" : "stable"} channel.`,
+          prerelease: isAlpha,
+        });
+        updateRelease = createResponse.data;
+        console.log(
+          `Created new ${releaseTag} release with ID: ${updateRelease.id}`,
+        );
+      } else {
+        // If it's another error, throw it
+        throw error;
+      }
     }
 
-    if (asset.name === UPDATE_JSON_PROXY) {
-      await github.rest.repos
-        .deleteReleaseAsset({ ...options, asset_id: asset.id })
-        .catch(console.error); // do not break the pipeline
+    // File names based on release type
+    const jsonFile = isAlpha ? ALPHA_UPDATE_JSON_FILE : UPDATE_JSON_FILE;
+    const proxyFile = isAlpha ? ALPHA_UPDATE_JSON_PROXY : UPDATE_JSON_PROXY;
+
+    // Delete existing assets with these names
+    for (let asset of updateRelease.assets) {
+      if (asset.name === jsonFile) {
+        await github.rest.repos.deleteReleaseAsset({
+          ...options,
+          asset_id: asset.id,
+        });
+      }
+
+      if (asset.name === proxyFile) {
+        await github.rest.repos
+          .deleteReleaseAsset({ ...options, asset_id: asset.id })
+          .catch(console.error); // do not break the pipeline
+      }
     }
+
+    // Upload new assets
+    await github.rest.repos.uploadReleaseAsset({
+      ...options,
+      release_id: updateRelease.id,
+      name: jsonFile,
+      data: JSON.stringify(updateData, null, 2),
+    });
+
+    await github.rest.repos.uploadReleaseAsset({
+      ...options,
+      release_id: updateRelease.id,
+      name: proxyFile,
+      data: JSON.stringify(updateDataNew, null, 2),
+    });
+
+    console.log(
+      `Successfully uploaded ${isAlpha ? "alpha" : "stable"} update files to ${releaseTag}`,
+    );
+  } catch (error) {
+    console.error(
+      `Failed to process ${isAlpha ? "alpha" : "stable"} release:`,
+      error.message,
+    );
   }
-
-  // upload new assets
-  await github.rest.repos.uploadReleaseAsset({
-    ...options,
-    release_id: updateRelease.id,
-    name: UPDATE_JSON_FILE,
-    data: JSON.stringify(updateData, null, 2),
-  });
-
-  await github.rest.repos.uploadReleaseAsset({
-    ...options,
-    release_id: updateRelease.id,
-    name: UPDATE_JSON_PROXY,
-    data: JSON.stringify(updateDataNew, null, 2),
-  });
 }
 
 // get the signature file content
