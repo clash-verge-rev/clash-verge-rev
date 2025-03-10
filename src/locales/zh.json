@@ -503,5 +503,7 @@
   "Fallback IP CIDR": "回退 IP CIDR",
   "IP CIDRs not using fallback servers": "不使用回退服务器的 IP CIDR，用逗号分隔",
   "Fallback Domain": "回退域名",
-  "Domains using fallback servers": "使用回退服务器的域名，用逗号分隔"
+  "Domains using fallback servers": "使用回退服务器的域名，用逗号分隔",
+  "Enable Alpha Channel": "启用 Alpha 通道",
+  "Alpha versions may contain experimental features and bugs": "Alpha 版本可能包含实验性功能和已知问题"
 }
