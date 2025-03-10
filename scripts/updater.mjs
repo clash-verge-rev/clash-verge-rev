@@ -49,7 +49,7 @@ async function resolveUpdater() {
   // More flexible tag detection with regex patterns
   const stableTagRegex = /^v\d+\.\d+\.\d+$/; // Matches vX.Y.Z format
   // const preReleaseRegex = /^v\d+\.\d+\.\d+-(alpha|beta|rc|pre)/i; // Matches vX.Y.Z-alpha/beta/rc format
-  const preReleaseRegex = /^v(alpha|beta|rc|pre)/i; // Matches alpha/beta/rc format
+  const preReleaseRegex = /^(alpha|beta|rc|pre)$/i; // Matches exact alpha/beta/rc/pre tags
 
   // Get the latest stable tag and pre-release tag
   const stableTag = tags.find((t) => stableTagRegex.test(t.name));
