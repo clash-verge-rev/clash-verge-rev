@@ -7,7 +7,6 @@ use crate::{
 };
 use crate::{log_err, trace_err};
 use anyhow::Result;
-use mihomo::MihomoClientManager;
 use rust_i18n::t;
 use std::net::TcpListener;
 use tauri::{AppHandle, CloseRequestApi, Manager};
@@ -52,8 +51,6 @@ pub async fn resolve_setup() {
     log_err!(hotkey::Hotkey::global().init());
     log::trace!("init webdav config");
     log_err!(backup::WebDav::global().init().await);
-    log::trace!("init mihomo api client");
-    log_err!(MihomoClientManager::global().init().await);
     log::trace!("init timer");
     log_err!(timer::Timer::global().init());
 

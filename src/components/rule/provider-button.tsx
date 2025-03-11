@@ -1,5 +1,5 @@
 import { BaseDialog, Notice } from "@/components/base";
-import { getRuleProviders, ruleProviderUpdate } from "@/services/api";
+import { calcuRuleProviders } from "@/services/api";
 import { Error, RefreshRounded } from "@mui/icons-material";
 import {
   Box,
@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
+import { updateRulesProviders } from "tauri-plugin-mihomo-api";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -26,7 +27,7 @@ const round = keyframes`
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
-  const { data } = useSWR("getRuleProviders", getRuleProviders);
+  const { data } = useSWR("getRuleProviders", calcuRuleProviders);
   const entries = Object.entries(data || {});
   const keys = entries.map(([key]) => key);
 
@@ -46,7 +47,7 @@ export const ProviderButton = () => {
 
   const handleUpdate = async (key: string, index: number, retryCount = 5) => {
     setUpdatingAt(true, index);
-    ruleProviderUpdate(key)
+    updateRulesProviders(key)
       .then(async () => {
         setErrorItems((pre) => {
           if (pre?.includes(key)) {

@@ -1,10 +1,10 @@
-import { deleteConnection } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
 import { Box, Button, Snackbar } from "@mui/material";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { closeConnections } from "tauri-plugin-mihomo-api";
 
 export interface ConnectionDetailRef {
   open: (detail: IConnectionsItem) => void;
@@ -85,7 +85,7 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     { label: t("Type"), value: `${metadata.type}(${metadata.network})` },
   ];
 
-  const onDelete = useLockFn(async () => deleteConnection(data.id));
+  const onDelete = useLockFn(async () => closeConnections(data.id));
 
   return (
     <Box sx={{ userSelect: "text" }}>

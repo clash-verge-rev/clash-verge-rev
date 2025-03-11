@@ -1,6 +1,6 @@
 import { useVerge } from "@/hooks/use-verge";
 import { useWindowSize } from "@/hooks/use-window-size";
-import { getProxies } from "@/services/api";
+import { calcuProxies } from "@/services/api";
 import { useEffect, useMemo } from "react";
 import useSWR from "swr";
 import { filterSort } from "./use-filter-sort";
@@ -24,7 +24,7 @@ export interface IRenderItem {
 export const useRenderList = (mode: string) => {
   const { data: proxiesData, mutate: mutateProxies } = useSWR(
     "getProxies",
-    getProxies,
+    calcuProxies,
     { refreshInterval: 45000 },
   );
 

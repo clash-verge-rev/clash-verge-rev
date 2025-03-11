@@ -1,6 +1,6 @@
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import { closeAllConnections, upgradeCore } from "@/services/api";
+import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 import {
   changeClashCore,
   grantPermission,

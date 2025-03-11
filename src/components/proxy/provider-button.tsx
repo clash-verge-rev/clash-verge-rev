@@ -1,4 +1,4 @@
-import { getProxyProviders, proxyProviderUpdate } from "@/services/api";
+import { calcuProxyProviders } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
 import { RefreshRounded } from "@mui/icons-material";
 import {
@@ -20,6 +20,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
 import { BaseDialog } from "../base";
+import { updateProxiesProviders } from "tauri-plugin-mihomo-api";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -28,7 +29,7 @@ const round = keyframes`
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
-  const { data } = useSWR("getProxyProviders", getProxyProviders);
+  const { data } = useSWR("getProxyProviders", calcuProxyProviders);
 
   const [open, setOpen] = useState(false);
 
@@ -46,7 +47,7 @@ export const ProviderButton = () => {
   };
   const handleUpdate = async (key: string, index: number) => {
     setUpdatingAt(true, index);
-    proxyProviderUpdate(key).finally(async () => {
+    updateProxiesProviders(key).finally(async () => {
       setUpdatingAt(false, index);
       await mutate("getProxies");
       await mutate("getProxyProviders");
@@ -96,10 +97,10 @@ export const ProviderButton = () => {
             const time = dayjs(item.updatedAt);
             const sub = item.subscriptionInfo;
             const hasSubInfo = !!sub;
-            const upload = sub?.Upload || 0;
-            const download = sub?.Download || 0;
-            const total = sub?.Total || 0;
-            const expire = sub?.Expire || 0;
+            const upload = sub?.upload || 0;
+            const download = sub?.download || 0;
+            const total = sub?.total || 0;
+            const expire = sub?.expire || 0;
             const progress = Math.round(
               ((download + upload) * 100) / (total + 0.1),
             );

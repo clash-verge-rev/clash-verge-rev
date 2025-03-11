@@ -11,7 +11,6 @@ import {
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
 import { useClashInfo } from "@/hooks/use-clash";
-import { closeAllConnections, deleteConnection } from "@/services/api";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
 import { createSockette } from "@/utils/websocket";
@@ -22,6 +21,7 @@ import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import useSWRSubscription from "swr/subscription";
+import { closeAllConnections, closeConnections } from "tauri-plugin-mihomo-api";
 
 const initConn: IConnections = {
   uploadTotal: 0,
@@ -129,7 +129,7 @@ const ConnectionsPage = () => {
     if (filterConn.length === connData.connections.length) {
       await closeAllConnections();
     } else {
-      filterConn.forEach(async (conn) => await deleteConnection(conn.id));
+      filterConn.forEach(async (conn) => await closeConnections(conn.id));
     }
   });
 

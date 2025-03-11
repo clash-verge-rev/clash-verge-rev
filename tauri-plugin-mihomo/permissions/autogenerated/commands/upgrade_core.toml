@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-upgrade-core"
+description = "Enables the upgrade_core command without any pre-configured scope."
+commands.allow = ["upgrade_core"]
+
+[[permission]]
+identifier = "deny-upgrade-core"
+description = "Denies the upgrade_core command without any pre-configured scope."
+commands.deny = ["upgrade_core"]

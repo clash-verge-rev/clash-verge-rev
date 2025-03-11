@@ -16,8 +16,6 @@ use crate::{
 use crate::{ret_err, wrap_err};
 use anyhow::{Context, Result};
 use backup::WebDav;
-use mihomo::MihomoClientManager;
-use mihomo_api::model::ProxyDelay;
 use reqwest_dav::list_cmd::ListFile;
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
@@ -29,6 +27,7 @@ use std::{
 };
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::Manager;
+use tauri_plugin_mihomo::ProxyDelay;
 use tauri_plugin_opener::OpenerExt;
 use tray::{Tray, TRAY_ID};
 type CmdResult<T = ()> = Result<T, String>;
@@ -396,8 +395,7 @@ pub async fn clash_api_get_proxy_delay(
         .map(|s| if s.is_empty() { default_url.into() } else { s })
         .unwrap_or(default_url.into());
     wrap_err!(
-        MihomoClientManager::global()
-            .mihomo()
+        handle::Handle::get_mihomo_read()
             .await
             .delay_proxy_by_name(&name, &test_url, timeout)
             .await
@@ -488,15 +486,14 @@ pub async fn restart_app(app_handle: tauri::AppHandle) {
 
 #[tauri::command]
 pub async fn restart_clash() -> CmdResult<()> {
-    wrap_err!(MihomoClientManager::global().mihomo().await.restart().await)
+    wrap_err!(handle::Handle::get_mihomo_read().await.restart().await)
     // wrap_err!(clash_api::restart_core().await)
 }
 
 #[tauri::command]
 pub async fn get_clash_configs() -> CmdResult<bool> {
     wrap_err!(
-        MihomoClientManager::global()
-            .mihomo()
+        handle::Handle::get_mihomo_read()
             .await
             .get_base_config()
             .await
@@ -543,14 +540,9 @@ pub mod service {
                 }
             };
         }
+        let mihomo = handle::Handle::get_mihomo_read().await;
         for i in 0..5 {
-            if MihomoClientManager::global()
-                .mihomo()
-                .await
-                .get_base_config()
-                .await
-                .is_err()
-            {
+            if mihomo.get_base_config().await.is_err() {
                 if i == 4 {
                     ret_err!("clash check failed");
                 } else {

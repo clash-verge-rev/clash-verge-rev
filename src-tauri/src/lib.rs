@@ -98,6 +98,11 @@ pub fn run() -> Result<()> {
         std::process::exit(1);
     }));
 
+    let info = Config::clash().latest().get_client_info();
+    let server = info.server;
+    let (host, port) = server.split_once(':').unwrap();
+    let secret = info.secret;
+
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -109,6 +114,12 @@ pub fn run() -> Result<()> {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_mihomo::MihomoBuilder::new()
+            .protocol(tauri_plugin_mihomo::models::Protocol::Http)
+            .external_host(host.into())
+            .external_port(port.parse()?)
+            .secret(secret)
+            .build())
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);

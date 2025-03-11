@@ -9,8 +9,8 @@ import {
   alpha,
 } from "@mui/material";
 import { CloseRounded } from "@mui/icons-material";
-import { deleteConnection } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
+import { closeConnections } from "tauri-plugin-mihomo-api";
 
 const Tag = styled("span")(({ theme }) => ({
   fontSize: "10px",
@@ -33,7 +33,7 @@ export const ConnectionItem = (props: Props) => {
 
   const { id, metadata, chains, start, curUpload, curDownload } = value;
 
-  const onDelete = useLockFn(async () => deleteConnection(id));
+  const onDelete = useLockFn(async () => closeConnections(id));
   const showTraffic = curUpload! >= 100 || curDownload! >= 100;
 
   return (

@@ -5,7 +5,6 @@ import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
 import LoadingPage from "@/pages/loading";
-import { getAxios } from "@/services/api";
 import { getPortableFlag } from "@/services/cmds";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
@@ -96,7 +95,7 @@ const Layout = () => {
       "verge://refresh-clash-config",
       async () => {
         // the clash info may be updated
-        await getAxios(true);
+        // await getAxios(true);
         mutate("getProxies");
         mutate("getVersion");
         mutate("getClashConfig");

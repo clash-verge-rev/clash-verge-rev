@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-clean-fakeip"
+description = "Enables the clean_fakeip command without any pre-configured scope."
+commands.allow = ["clean_fakeip"]
+
+[[permission]]
+identifier = "deny-clean-fakeip"
+description = "Denies the clean_fakeip command without any pre-configured scope."
+commands.deny = ["clean_fakeip"]

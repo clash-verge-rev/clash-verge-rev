@@ -1,4 +1,3 @@
-import { getAxios, getVersion } from "@/services/api";
 import {
   getClashInfo,
   getRuntimeConfig,
@@ -6,6 +5,7 @@ import {
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import useSWR, { mutate } from "swr";
+import { getVersion } from "tauri-plugin-mihomo-api";
 
 export const useClash = () => {
   const { data: clash, mutate: mutateClash } = useSWR(
@@ -23,11 +23,9 @@ export const useClash = () => {
     mutateClash();
   });
 
-  const version = versionData?.premium
-    ? `${versionData.version} Premium`
-    : versionData?.meta
-      ? `${versionData.version} Mihomo`
-      : versionData?.version || "-";
+  const version = versionData?.meta
+    ? `${versionData.version} Mihomo`
+    : versionData?.version || "-";
 
   return {
     clash,
@@ -123,7 +121,7 @@ export const useClashInfo = () => {
     mutateInfo();
     mutate("getClashConfig");
     // 刷新接口
-    getAxios(true);
+    // getAxios(true);
   };
 
   return {

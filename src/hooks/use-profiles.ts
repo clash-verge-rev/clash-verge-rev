@@ -1,10 +1,11 @@
-import { getProxies, updateProxy } from "@/services/api";
+import { selectNodeForProxy } from "tauri-plugin-mihomo-api";
 import {
   getProfiles,
   patchProfile,
   patchProfilesConfig,
 } from "@/services/cmds";
 import useSWR, { mutate } from "swr";
+import { calcuProxies } from "@/services/api";
 
 export const useProfiles = () => {
   const { data: profiles, mutate: mutateProfiles } = useSWR(
@@ -26,7 +27,7 @@ export const useProfiles = () => {
 
   // 根据 selected 的节点选择
   const activateSelected = async () => {
-    const proxiesData = await getProxies();
+    const proxiesData = await calcuProxies();
     const profileData = await getProfiles();
 
     if (!profileData || !proxiesData) return;
@@ -48,18 +49,19 @@ export const useProfiles = () => {
     const newSelected: typeof selected = [];
     const { global, groups } = proxiesData;
 
-    [global, ...groups].forEach(({ type, name, now }) => {
+    for (const item of [global, ...groups]) {
+      const { type, name, now } = item;
       if (!now || type !== "Selector") return;
       if (selectedMap[name] != null && selectedMap[name] !== now) {
         hasChange = true;
-        updateProxy(name, selectedMap[name]);
+        await selectNodeForProxy(name, selectedMap[name]);
       }
       newSelected.push({ name, now: selectedMap[name] });
-    });
+    }
 
     if (hasChange) {
       patchProfile(profileData.current!, { selected: newSelected });
-      mutate("getProxies", getProxies());
+      mutate("getProxies");
     }
   };
 

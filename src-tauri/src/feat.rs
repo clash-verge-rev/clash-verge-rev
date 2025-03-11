@@ -10,7 +10,6 @@ use crate::core::*;
 use crate::log_err;
 use crate::utils::resolve;
 use anyhow::{anyhow, bail, Error, Result};
-use mihomo::MihomoClientManager;
 use rust_i18n::t;
 use serde_yaml::{Mapping, Value};
 use service::JsonResponse;
@@ -55,8 +54,7 @@ pub fn change_clash_mode(mode: String) {
     tauri::async_runtime::spawn(async move {
         log::debug!(target: "app", "change clash mode to {mode}");
 
-        match MihomoClientManager::global()
-            .mihomo()
+        match handle::Handle::get_mihomo_read()
             .await
             .patch_base_config(&mapping)
             .await
@@ -268,8 +266,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         tmp_map.insert("socks-port".into(), 0.into());
         tmp_map.insert("redir-port".into(), 0.into());
         tmp_map.insert("tproxy-port".into(), 0.into());
-        let _ = MihomoClientManager::global()
-            .mihomo()
+        let _ = handle::Handle::get_mihomo_read()
             .await
             .patch_base_config(&tmp_map)
             .await;
@@ -295,13 +292,18 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
     if patch.get("external-controller").is_some() {
         let external_controller = patch.get("external-controller").unwrap().as_str().unwrap();
-        MihomoClientManager::global()
-            .set_external_controller(external_controller)
-            .await;
+        let (host, port) = external_controller
+            .split_once(':')
+            .ok_or(anyhow!("invalid external controller"))?;
+        let mut mihomo = handle::Handle::get_mihomo_write().await;
+        mihomo.update_external_host(host);
+        mihomo.update_external_port(port.parse()?);
     }
     if patch.get("secret").is_some() {
         let secret = patch.get("secret").unwrap().as_str().unwrap();
-        MihomoClientManager::global().set_secret(secret).await;
+        handle::Handle::get_mihomo_write()
+            .await
+            .update_secret(secret);
     }
 
     Config::clash()
@@ -320,16 +322,14 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 let value = clash_config_mapping.get(key).unwrap();
 
                 mapping.insert(key.into(), value.clone());
-                let _ = MihomoClientManager::global()
-                    .mihomo()
+                let _ = handle::Handle::get_mihomo_read()
                     .await
                     .patch_base_config(&mapping)
                     .await;
 
                 // handle tun config
                 if key == "tun" {
-                    let clash_basic_configs = MihomoClientManager::global()
-                        .mihomo()
+                    let clash_basic_configs = handle::Handle::get_mihomo_read()
                         .await
                         .get_base_config()
                         .await?;

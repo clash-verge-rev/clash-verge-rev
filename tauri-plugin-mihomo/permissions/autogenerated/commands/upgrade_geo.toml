@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-upgrade-geo"
+description = "Enables the upgrade_geo command without any pre-configured scope."
+commands.allow = ["upgrade_geo"]
+
+[[permission]]
+identifier = "deny-upgrade-geo"
+description = "Denies the upgrade_geo command without any pre-configured scope."
+commands.deny = ["upgrade_geo"]

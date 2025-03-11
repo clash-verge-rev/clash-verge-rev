@@ -3,13 +3,33 @@ use crate::{log_err, APP_HANDLE};
 use anyhow::{anyhow, Ok, Result};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_mihomo::{Mihomo, MihomoExt};
 use tauri_plugin_notification::NotificationExt;
+use tokio::sync::{RwLockReadGuard, RwLockWriteGuard};
 
 pub struct Handle;
 
 impl Handle {
     pub fn get_app_handle() -> &'static AppHandle {
         APP_HANDLE.get().expect("failed to get app handle")
+    }
+
+    pub async fn get_mihomo_read() -> RwLockReadGuard<'static, Mihomo> {
+        APP_HANDLE
+            .get()
+            .expect("failed to get app handle")
+            .mihomo()
+            .read()
+            .await
+    }
+
+    pub async fn get_mihomo_write() -> RwLockWriteGuard<'static, Mihomo> {
+        APP_HANDLE
+            .get()
+            .expect("failed to get app handle")
+            .mihomo()
+            .write()
+            .await
     }
 
     pub fn get_window() -> Option<WebviewWindow> {
@@ -59,7 +79,7 @@ impl Handle {
 
     pub fn set_tray_visible(visible: bool) -> Result<()> {
         let app_handle = Self::get_app_handle();
-        Tray::set_tray_visible(&app_handle, visible)?;
+        Tray::set_tray_visible(app_handle, visible)?;
         Ok(())
     }
 

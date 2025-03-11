@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-rules-providers"
+description = "Enables the get_rules_providers command without any pre-configured scope."
+commands.allow = ["get_rules_providers"]
+
+[[permission]]
+identifier = "deny-get-rules-providers"
+description = "Denies the get_rules_providers command without any pre-configured scope."
+commands.deny = ["get_rules_providers"]

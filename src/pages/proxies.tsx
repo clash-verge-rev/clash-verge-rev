@@ -2,9 +2,9 @@ import { BasePage } from "@/components/base";
 import { ProviderButton } from "@/components/proxy/provider-button";
 import { ProxyGroups } from "@/components/proxy/proxy-groups";
 import { useVerge } from "@/hooks/use-verge";
-import { closeAllConnections, getClashConfig } from "@/services/api";
 import { patchClashConfig } from "@/services/cmds";
 import { Box, Button, ButtonGroup } from "@mui/material";
+import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,7 @@ const ProxyPage = () => {
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
-    getClashConfig,
+    getBaseConfig,
   );
 
   const { verge } = useVerge();

@@ -1,0 +1,39 @@
+const COMMANDS: &[&str] = &[
+    "update_controller",
+    "update_secret",
+    "get_version",
+    "clean_fakeip",
+    "get_connections",
+    "close_all_connections",
+    "close_connections",
+    "get_groups",
+    "get_group_by_name",
+    "delay_group",
+    "get_proxies_providers",
+    "get_providers_proxy_by_name",
+    "update_proxies_providers",
+    "healthcheck_providers",
+    "healthcheck_providers_proxies",
+    "get_proxies",
+    "get_proxy_by_name",
+    "select_node_for_proxy",
+    "delay_proxy_by_name",
+    "get_rules",
+    "get_rules_providers",
+    "update_rules_providers",
+    "get_base_config",
+    "reload_config",
+    "patch_base_config",
+    "update_geo",
+    "restart",
+    "upgrade_core",
+    "upgrade_ui",
+    "upgrade_geo",
+];
+
+fn main() {
+    tauri_plugin::Builder::new(COMMANDS)
+        .android_path("android")
+        .ios_path("ios")
+        .build();
+}

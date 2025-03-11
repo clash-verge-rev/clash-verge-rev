@@ -1,7 +1,7 @@
 import { BaseEmpty, BasePage, BaseSearchBox } from "@/components/base";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { RuleItem } from "@/components/rule/rule-item";
-import { getRuleProviders, getRules } from "@/services/api";
+import { getRulesProviders, getRules, Rule } from "tauri-plugin-mihomo-api";
 import { getCurrentProfileRuleProvidersPath } from "@/services/cmds";
 import ExpandIcon from "@mui/icons-material/Expand";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
@@ -12,24 +12,35 @@ import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import useSWR from "swr";
 
+type CustomRule = Rule & {
+  expanded: boolean;
+  ruleSetProviderPath: string;
+  ruleSetProviderPayload: string;
+  matchPayloadItems: string[];
+};
+
 const RulesPage = () => {
   const { t } = useTranslation();
-  const { data = [] } = useSWR("getRules", getRules);
+  const { data } = useSWR("getRules", getRules);
   const { data: ruleProvidersData } = useSWR(
     "getRuleProviders",
-    getRuleProviders,
+    getRulesProviders,
   );
-  const [rules, setRules] = useState(data);
+  let dataRules = data?.rules.sort().map((item) => {
+    return { ...item } as CustomRule;
+  });
+  const [rules, setRules] = useState<CustomRule[]>(dataRules || []);
   const [match, setMatch] = useState(() => (_: string) => true);
   const [ruleProvidersPaths, setRuleProvidersPaths] = useState<
     Record<string, string>
   >({});
   const payloadSuffix = "-payload";
-  const hasRuleSet = rules.findIndex((item) => item.type === "RuleSet") !== -1;
+  const hasRuleSet = rules?.findIndex((item) => item.type === "RuleSet") !== -1;
 
   useEffect(() => {
-    const filterData = data
+    const filterData = data?.rules
       .map((item) => {
+        const newItem = { ...item } as CustomRule;
         const itemName = item.payload;
         if (
           item.type === "RuleSet" &&
@@ -37,10 +48,10 @@ const RulesPage = () => {
           !ruleProvidersPaths[itemName].endsWith(".mrs")
         ) {
           const payloadKey = itemName + payloadSuffix;
-          item.ruleSetProviderPath = ruleProvidersPaths[itemName];
-          item.ruleSetProviderPayload = ruleProvidersPaths[payloadKey];
+          newItem.ruleSetProviderPath = ruleProvidersPaths[itemName];
+          newItem.ruleSetProviderPayload = ruleProvidersPaths[payloadKey];
         }
-        return item;
+        return newItem;
       })
       .filter((item) => {
         if (item.ruleSetProviderPayload) {
@@ -65,7 +76,7 @@ const RulesPage = () => {
           (item.matchPayloadItems && item.matchPayloadItems.length > 0)
         );
       });
-    setRules(filterData);
+    setRules(filterData || []);
   }, [data, match, ruleProvidersPaths]);
 
   const getAllRuleProvidersPaths = async () => {

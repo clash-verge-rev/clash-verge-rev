@@ -1,6 +1,5 @@
 use super::verge_log::VergeLog;
 use crate::config::*;
-use crate::core::mihomo::MihomoClientManager;
 use crate::core::{handle, logger::Logger, mihomo, service};
 use crate::log_err;
 use crate::utils::dirs;
@@ -108,8 +107,7 @@ impl CoreManager {
             self.sidecar.lock().take();
             // 关闭 tun 模式
             log::debug!(target: "app", "disable tun mode");
-            let _ = MihomoClientManager::global()
-                .mihomo()
+            let _ = handle::Handle::get_mihomo_read()
                 .await
                 .patch_base_config(&disable)
                 .await;
@@ -250,8 +248,7 @@ impl CoreManager {
         tun.insert("enable".into(), false.into());
         disable.insert("tun".into(), tun.into());
         log::debug!(target: "app", "disable tun mode");
-        let _ = MihomoClientManager::global()
-            .mihomo()
+        let _ = handle::Handle::get_mihomo_read()
             .await
             .patch_base_config(&disable)
             .await;

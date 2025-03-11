@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-proxies-providers"
+description = "Enables the get_proxies_providers command without any pre-configured scope."
+commands.allow = ["get_proxies_providers"]
+
+[[permission]]
+identifier = "deny-get-proxies-providers"
+description = "Denies the get_proxies_providers command without any pre-configured scope."
+commands.deny = ["get_proxies_providers"]

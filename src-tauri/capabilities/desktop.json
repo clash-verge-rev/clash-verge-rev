@@ -9,6 +9,7 @@
     "updater:allow-download",
     "updater:allow-download-and-install",
     "updater:allow-install",
-    "global-shortcut:default"
+    "global-shortcut:default",
+    "mihomo:default"
   ]
 }

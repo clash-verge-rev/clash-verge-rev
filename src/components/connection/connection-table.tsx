@@ -1,4 +1,3 @@
-import { deleteConnection } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
 import { truncateStr } from "@/utils/truncate-str";
 import CancelIcon from "@mui/icons-material/Close";
@@ -12,6 +11,7 @@ import {
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { closeConnections } from "tauri-plugin-mihomo-api";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -45,7 +45,7 @@ export const ConnectionTable = (props: Props) => {
             icon={<CancelIcon />}
             label="Cancel"
             className="textPrimary"
-            onClick={() => deleteConnection(id.toString())}
+            onClick={() => closeConnections(id.toString())}
             color="inherit"
           />,
         ];

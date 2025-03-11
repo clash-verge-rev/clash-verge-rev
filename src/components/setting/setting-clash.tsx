@@ -4,7 +4,7 @@ import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useClash } from "@/hooks/use-clash";
 import { useService } from "@/hooks/use-service";
 import { useVerge } from "@/hooks/use-verge";
-import { flushFakeipCache, updateGeoData } from "@/services/api";
+import { updateGeo, cleanFakeIp } from "tauri-plugin-mihomo-api";
 import { invoke_uwp_tool } from "@/services/cmds";
 import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
@@ -74,7 +74,7 @@ const SettingClash = ({ onError }: Props) => {
   };
   const onUpdateGeo = async () => {
     try {
-      await updateGeoData();
+      await updateGeo();
       Notice.success(t("GeoData Updated"));
     } catch (err: any) {
       Notice.error(err?.response.data.message || err.toString());
@@ -83,7 +83,7 @@ const SettingClash = ({ onError }: Props) => {
 
   const onFlushFakeip = async () => {
     try {
-      await flushFakeipCache();
+      await cleanFakeIp();
       Notice.success(t("Fake-IP Cache Flushed"));
     } catch (err: any) {
       Notice.error(err?.response.data.message || err.toString());

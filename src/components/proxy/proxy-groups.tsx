@@ -2,13 +2,6 @@ import { ProxyGroupSidebar } from "@/components/proxy/proxy-group-sidebar";
 import { ProxyRender } from "@/components/proxy/proxy-render";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
-import {
-  deleteConnection,
-  getConnections,
-  getGroupProxyDelays,
-  providerHealthCheck,
-  updateProxy,
-} from "@/services/api";
 import delayManager from "@/services/delay";
 import { Box } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
@@ -16,6 +9,13 @@ import { useRef } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
+import {
+  closeConnections,
+  delayGroup,
+  getConnections,
+  healthcheckProviders,
+  selectNodeForProxy,
+} from "tauri-plugin-mihomo-api";
 
 interface Props {
   mode: string;
@@ -42,7 +42,7 @@ export const ProxyGroups = (props: Props) => {
       if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
 
       const { name, now } = group;
-      await updateProxy(name, proxy.name);
+      await selectNodeForProxy(name, proxy.name);
       onProxies();
 
       // 断开连接
@@ -50,7 +50,7 @@ export const ProxyGroups = (props: Props) => {
         getConnections().then(({ connections }) => {
           connections.forEach((conn) => {
             if (conn.chains.includes(now!)) {
-              deleteConnection(conn.id);
+              closeConnections(conn.id);
             }
           });
         });
@@ -89,7 +89,7 @@ export const ProxyGroups = (props: Props) => {
 
       if (providers.size) {
         Promise.allSettled(
-          [...providers].map((p) => providerHealthCheck(p)),
+          [...providers].map((p) => healthcheckProviders(p)),
         ).then(() => onProxies());
       }
 
@@ -97,7 +97,12 @@ export const ProxyGroups = (props: Props) => {
 
       await Promise.race([
         delayManager.checkListDelay(names, groupName, timeout),
-        getGroupProxyDelays(groupName, delayManager.getUrl(groupName), timeout), // 查询group delays 将清除fixed(不关注调用结果)
+        delayGroup(
+          groupName,
+          delayManager.getUrl(groupName) ||
+            "https://www.gstatic.com/generate_204",
+          timeout,
+        ), // 查询group delays 将清除fixed(不关注调用结果)
       ]);
 
       onProxies();

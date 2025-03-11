@@ -1,5 +1,4 @@
 use crate::config::Config;
-use crate::core::mihomo::MihomoClientManager;
 use crate::feat;
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
@@ -118,7 +117,7 @@ impl Timer {
             }
             let current = current.unwrap_or_default();
             let profiles = Config::profiles().latest().clone();
-            let mihomo = MihomoClientManager::global().mihomo().await;
+            let mihomo = handle::Handle::get_mihomo_read().await;
 
             if mihomo.get_base_config().await.is_err() {
                 log::error!("Failed to get base config");

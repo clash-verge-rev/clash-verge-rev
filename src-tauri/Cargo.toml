@@ -17,7 +17,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-mihomo-api = { path = "../mihomo_api" }
+# mihomo-api = { path = "../mihomo_api" }
+tauri-plugin-mihomo = { path = "../tauri-plugin-mihomo" }
 warp = "0.3"
 anyhow = "1.0"
 dirs = "5.0"
