@@ -25,14 +25,14 @@ impl<R: Runtime, T: Manager<R>> crate::MihomoExt<R> for T {
     }
 }
 
-pub struct MihomoBuilder {
+pub struct Builder {
     protocol: Protocol,
     external_host: String,
     external_port: u32,
     secret: Option<String>,
 }
 
-impl Default for MihomoBuilder {
+impl Default for Builder {
     fn default() -> Self {
         Self {
             protocol: Protocol::Http,
@@ -43,7 +43,7 @@ impl Default for MihomoBuilder {
     }
 }
 
-impl MihomoBuilder {
+impl Builder {
     pub fn new() -> Self {
         Self::default()
     }

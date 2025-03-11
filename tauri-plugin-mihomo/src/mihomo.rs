@@ -283,7 +283,7 @@ impl Mihomo {
         let response = client
             .query(&[
                 ("timeout", &format!("{timeout}")),
-                ("url", &format!("{test_url}")),
+                ("url", &test_url.to_string()),
             ])
             .send()
             .await?;
@@ -393,9 +393,10 @@ impl Mihomo {
             match res.get("message") {
                 Some(msg) => {
                     if msg.contains("already using latest version") {
-                        return Ok(());
+                        fail_resp!("already using latest version");
+                    } else {
+                        fail_resp!(msg.clone());
                     }
-                    fail_resp!(msg.clone());
                 }
                 None => {
                     fail_resp!("upgrade core failed");
@@ -440,7 +441,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_upgrade_core() -> Result<()> {
+    async fn test_patch_base_config() -> Result<()> {
         let value = serde_json::Value::from_str("{ \"mode\": \"direct\"}")?;
         let _ = mihomo().patch_base_config(&value).await?;
         Ok(())
@@ -457,6 +458,12 @@ mod test {
     async fn test_get_proxies_providers() -> Result<()> {
         let providers = mihomo().get_proxies_providers().await?;
         println!("{:?}", providers.providers);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_upgrade_core() -> Result<()> {
+        let _ = mihomo().upgrade_core().await?;
         Ok(())
     }
 }

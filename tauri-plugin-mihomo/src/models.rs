@@ -2,9 +2,10 @@ use std::{collections::HashMap, fmt::Display};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Protocol {
+    #[default]
     Http,
     Https,
 }
@@ -16,12 +17,6 @@ impl Display for Protocol {
             Protocol::Https => "https",
         };
         write!(f, "{}", protocol_str)
-    }
-}
-
-impl Default for Protocol {
-    fn default() -> Self {
-        Protocol::Http
     }
 }
 

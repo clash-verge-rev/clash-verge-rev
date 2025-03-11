@@ -99,10 +99,10 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
       Notice.success(t(`Core Version Updated`), 1000);
     } catch (err: any) {
       setUpgrading(false);
-      if (err?.response.data.message.includes("already using latest version")) {
-        Notice.info(`Already using latest version`, 1000);
+      if (err.includes("already using latest version")) {
+        Notice.info(t("Currently on the Latest Version"), 1000);
       } else {
-        Notice.error(err?.response.data.message || err.toString());
+        Notice.error(err);
       }
     }
   });
