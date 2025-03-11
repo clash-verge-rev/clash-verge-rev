@@ -1,9 +1,9 @@
 use super::verge_log::VergeLog;
-use crate::config::*;
-use crate::core::{handle, logger::Logger, mihomo, service};
+use crate::core::{handle, logger::Logger, service};
 use crate::log_err;
 use crate::utils::dirs;
 use crate::utils::resolve::find_unused_port;
+use crate::{config::*, utils};
 use anyhow::{bail, Result};
 
 use once_cell::sync::OnceCell;
@@ -81,7 +81,7 @@ impl CoreManager {
 
         if !output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout.clone()).into_owned();
-            let error = mihomo::parse_check_output(stdout.clone());
+            let error = utils::help::parse_check_output(stdout.clone());
             let error = match !error.is_empty() {
                 true => error,
                 false => stdout.clone(),
