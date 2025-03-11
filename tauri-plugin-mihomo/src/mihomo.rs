@@ -430,28 +430,32 @@ mod test {
 
     use super::*;
 
-    #[tokio::test]
-    async fn test_upgrade_core() -> Result<()> {
-        let value = serde_json::Value::from_str("{ \"mode\": \"direct\"}")?;
-        let mihomo = Mihomo::new(
+    fn mihomo() -> Mihomo {
+        Mihomo::new(
             Protocol::Http,
             "127.0.0.1".into(),
             9090,
             Some("ofY_JpdwekVcyO1DY3q61".into()),
-        );
-        let _ = mihomo.patch_base_config(&value).await?;
+        )
+    }
+
+    #[tokio::test]
+    async fn test_upgrade_core() -> Result<()> {
+        let value = serde_json::Value::from_str("{ \"mode\": \"direct\"}")?;
+        let _ = mihomo().patch_base_config(&value).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_rules() -> Result<()> {
+        let rules = mihomo().get_rules().await?;
+        println!("{:?}", rules.rules);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_get_proxies_providers() -> Result<()> {
-        let mihomo = Mihomo::new(
-            Protocol::Http,
-            "127.0.0.1".into(),
-            9090,
-            Some("ofY_JpdwekVcyO1DY3q61".into()),
-        );
-        let providers = mihomo.get_proxies_providers().await?;
+        let providers = mihomo().get_proxies_providers().await?;
         println!("{:?}", providers.providers);
         Ok(())
     }

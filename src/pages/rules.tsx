@@ -26,10 +26,7 @@ const RulesPage = () => {
     "getRuleProviders",
     getRulesProviders,
   );
-  let dataRules = data?.rules.sort().map((item) => {
-    return { ...item } as CustomRule;
-  });
-  const [rules, setRules] = useState<CustomRule[]>(dataRules || []);
+  const [rules, setRules] = useState<CustomRule[]>([]);
   const [match, setMatch] = useState(() => (_: string) => true);
   const [ruleProvidersPaths, setRuleProvidersPaths] = useState<
     Record<string, string>
