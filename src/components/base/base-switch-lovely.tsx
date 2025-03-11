@@ -1,11 +1,6 @@
 import { keyframes, styled } from "@mui/material/styles";
 import Switch, { switchClasses } from "@mui/material/Switch";
 
-// const loading = keyframes`
-//   from { transform: rotate(0deg); }
-//   to { transform: rotate(360deg); }
-// `;
-
 const bailPulse = keyframes`
    0% {
     transform: scale(1);
@@ -75,20 +70,6 @@ export const SwitchLovely = styled(Switch)(({ theme }) => {
       opacity: "0.3 !important",
     },
 
-    // switch aria-busy style
-    // [`[aria-busy=true] .${switchClasses.thumb}::before`]: {
-    //   content: '""',
-    //   position: "absolute",
-    //   width: "calc(100% - 10px)",
-    //   height: "calc(100% - 10px)",
-    //   border: "2px solid #fff",
-    //   clip: "rect(0, 42px, 15px, 0px)",
-    //   borderRadius: "50%",
-    //   animation: `${loading} 1s linear infinite`,
-    //   top: 3,
-    //   left: 3,
-    //   zIndex: 1,
-    // },
     [`[aria-busy=true] .${switchClasses.thumb}::before, [aria-busy=true] .${switchClasses.thumb}::after`]:
       {
         content: '""',

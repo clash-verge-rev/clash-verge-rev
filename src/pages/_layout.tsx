@@ -69,21 +69,6 @@ const Layout = () => {
       }
     });
 
-    // const unlistenReloadAll = listen("verge://reload-all", async () => {
-    //   mutate("getVergeConfig");
-    //   mutate("getClashConfig");
-    //   mutate("getClashInfo");
-    //   mutate("getProfiles");
-    //   mutate("getRuntimeLogs");
-    //   mutate("getRuntimeConfig");
-    //   mutate("getProxyProviders");
-    //   mutate("getProxies");
-    //   mutate("getRules");
-    //   mutate("getRuleProviders");
-    //   mutate("checkService");
-    //   mutate("getVersion");
-    // });
-
     const unlistenRefreshProfiles = listen(
       "verge://refresh-profiles",
       async () => {
@@ -95,7 +80,6 @@ const Layout = () => {
       "verge://refresh-clash-config",
       async () => {
         // the clash info may be updated
-        // await getAxios(true);
         mutate("getProxies");
         mutate("getVersion");
         mutate("getClashConfig");
@@ -133,7 +117,6 @@ const Layout = () => {
     }, 50);
 
     return () => {
-      // unlistenReloadAll.then((fn) => fn());
       unlistenRefreshClash.then((fn) => fn());
       unlistenRefreshVerge.then((fn) => fn());
       unlistenNotice.then((fn) => fn());
