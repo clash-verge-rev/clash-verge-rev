@@ -1,6 +1,6 @@
+import { useProfiles } from "@/hooks/use-profiles";
 import { useCallback, useEffect, useState } from "react";
 import { ProxySortType } from "./use-filter-sort";
-import { useProfiles } from "@/hooks/use-profiles";
 
 export interface HeadState {
   open?: boolean;
@@ -37,7 +37,7 @@ export function useHeadStateNew() {
 
     try {
       const data = JSON.parse(
-        localStorage.getItem(HEAD_STATE_KEY)!
+        localStorage.getItem(HEAD_STATE_KEY)!,
       ) as HeadStateStorage;
 
       const value = data[current] || {};
@@ -74,7 +74,7 @@ export function useHeadStateNew() {
         return ret;
       });
     },
-    [current]
+    [current],
   );
 
   return [state, setHeadState] as const;

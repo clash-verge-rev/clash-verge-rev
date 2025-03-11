@@ -1,6 +1,5 @@
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 import {
   changeClashCore,
   grantPermission,
@@ -21,6 +20,7 @@ import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
+import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 
 interface Props {
   serviceActive: boolean;

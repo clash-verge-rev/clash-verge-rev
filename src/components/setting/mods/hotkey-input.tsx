@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
-import { alpha, Box, IconButton, styled } from "@mui/material";
-import { DeleteRounded } from "@mui/icons-material";
 import { parseHotkey } from "@/utils/parse-hotkey";
+import { DeleteRounded } from "@mui/icons-material";
+import { alpha, Box, IconButton, styled } from "@mui/material";
+import { useRef, useState } from "react";
 
 const KeyWrapper = styled("div")(({ theme }) => ({
   position: "relative",
@@ -98,8 +98,7 @@ export const HotkeyInput = (props: Props) => {
         onClick={() => {
           onChange([]);
           setKeys([]);
-        }}
-      >
+        }}>
         <DeleteRounded fontSize="inherit" />
       </IconButton>
     </Box>

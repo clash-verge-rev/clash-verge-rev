@@ -1,11 +1,11 @@
-import { selectNodeForProxy } from "tauri-plugin-mihomo-api";
+import { calcuProxies } from "@/services/api";
 import {
   getProfiles,
   patchProfile,
   patchProfilesConfig,
 } from "@/services/cmds";
 import useSWR, { mutate } from "swr";
-import { calcuProxies } from "@/services/api";
+import { selectNodeForProxy } from "tauri-plugin-mihomo-api";
 
 export const useProfiles = () => {
   const { data: profiles, mutate: mutateProfiles } = useSWR(

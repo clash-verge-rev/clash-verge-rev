@@ -19,8 +19,8 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-import { BaseDialog } from "../base";
 import { updateProxiesProviders } from "tauri-plugin-mihomo-api";
+import { BaseDialog } from "../base";
 
 const round = keyframes`
   from { transform: rotate(0deg); }

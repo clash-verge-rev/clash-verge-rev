@@ -1,7 +1,6 @@
 import { BaseDialog, DialogRef, EditorViewer, Notice } from "@/components/base";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
-import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
 import { useThemeMode, useThemeSettings } from "@/services/states";
 import {
   Box,

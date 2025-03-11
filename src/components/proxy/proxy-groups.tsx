@@ -7,8 +7,6 @@ import { Box } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { useRef } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import { BaseEmpty } from "../base";
-import { useRenderList } from "./use-render-list";
 import {
   closeConnections,
   delayGroup,
@@ -16,6 +14,8 @@ import {
   healthcheckProviders,
   selectNodeForProxy,
 } from "tauri-plugin-mihomo-api";
+import { BaseEmpty } from "../base";
+import { useRenderList } from "./use-render-list";
 
 interface Props {
   mode: string;

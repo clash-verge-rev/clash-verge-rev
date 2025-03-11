@@ -7,6 +7,7 @@ import {
 } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { LogMessage } from "@/components/profile/profile-more";
+import { useProfiles } from "@/hooks/use-profiles";
 import { useWindowSize } from "@/hooks/use-window-size";
 import {
   enhanceProfiles,
@@ -21,6 +22,18 @@ import {
 import monaco from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
+import {
+  closestCenter,
+  defaultDropAnimationSideEffects,
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DropAnimation,
+  MouseSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { arrayMove, SortableContext } from "@dnd-kit/sortable";
 import {
   Add,
   CheckCircleOutline,
@@ -55,19 +68,6 @@ import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 import ProfileMoreMini from "./profile-more-mini";
 import { ProfileViewer, ProfileViewerRef } from "./profile-viewer";
-import {
-  closestCenter,
-  defaultDropAnimationSideEffects,
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DropAnimation,
-  MouseSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { arrayMove, SortableContext } from "@dnd-kit/sortable";
-import { useProfiles } from "@/hooks/use-profiles";
 
 interface Props {
   title?: string | ReactNode;

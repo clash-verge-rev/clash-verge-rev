@@ -1,15 +1,15 @@
-import dayjs from "dayjs";
-import { useLockFn } from "ahooks";
-import {
-  styled,
-  ListItem,
-  IconButton,
-  ListItemText,
-  Box,
-  alpha,
-} from "@mui/material";
-import { CloseRounded } from "@mui/icons-material";
 import parseTraffic from "@/utils/parse-traffic";
+import { CloseRounded } from "@mui/icons-material";
+import {
+  Box,
+  IconButton,
+  ListItem,
+  ListItemText,
+  alpha,
+  styled,
+} from "@mui/material";
+import { useLockFn } from "ahooks";
+import dayjs from "dayjs";
 import { closeConnections } from "tauri-plugin-mihomo-api";
 
 const Tag = styled("span")(({ theme }) => ({

@@ -3,7 +3,7 @@ import YamlIcon from "@/assets/image/yaml.svg?react";
 import { Notice, ScrollableText } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
-import { deleteProfile, viewProfile } from "@/services/cmds";
+import { viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import { cn } from "@/utils";
 import {
@@ -33,7 +33,6 @@ import { Message } from "console-feed/lib/definitions/Component";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { mutate } from "swr";
 import { ConfirmViewer } from "./confirm-viewer";
 import { ProfileDiv } from "./profile-box";
 

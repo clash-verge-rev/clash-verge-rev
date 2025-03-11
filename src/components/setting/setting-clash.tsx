@@ -4,7 +4,6 @@ import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useClash } from "@/hooks/use-clash";
 import { useService } from "@/hooks/use-service";
 import { useVerge } from "@/hooks/use-verge";
-import { updateGeo, cleanFakeIp } from "tauri-plugin-mihomo-api";
 import { invoke_uwp_tool } from "@/services/cmds";
 import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
@@ -24,6 +23,7 @@ import {
 } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { cleanFakeIp, updateGeo } from "tauri-plugin-mihomo-api";
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
 import { ControllerViewer } from "./mods/controller-viewer";

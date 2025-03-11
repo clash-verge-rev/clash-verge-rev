@@ -1,7 +1,6 @@
 import { BaseEmpty, BasePage, BaseSearchBox } from "@/components/base";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { RuleItem } from "@/components/rule/rule-item";
-import { getRulesProviders, getRules, Rule } from "tauri-plugin-mihomo-api";
 import { getCurrentProfileRuleProvidersPath } from "@/services/cmds";
 import ExpandIcon from "@mui/icons-material/Expand";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
@@ -11,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import useSWR from "swr";
+import { getRules, getRulesProviders, Rule } from "tauri-plugin-mihomo-api";
 
 type CustomRule = Rule & {
   expanded: boolean;

@@ -1,9 +1,9 @@
-import { createRoot } from "react-dom/client";
-import { ReactNode, useState, useEffect } from "react";
-import { Box, IconButton, Slide, Snackbar, Typography } from "@mui/material";
-import { Close, CheckCircleRounded, ErrorRounded } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
+import { CheckCircleRounded, Close, ErrorRounded } from "@mui/icons-material";
+import { Box, IconButton, Slide, Snackbar, Typography } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { ReactNode, useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
 const appWindow = getCurrentWebviewWindow();
 interface InnerProps {
   type: string;

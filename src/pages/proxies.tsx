@@ -4,11 +4,11 @@ import { ProxyGroups } from "@/components/proxy/proxy-groups";
 import { useVerge } from "@/hooks/use-verge";
 import { patchClashConfig } from "@/services/cmds";
 import { Box, Button, ButtonGroup } from "@mui/material";
-import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
+import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
