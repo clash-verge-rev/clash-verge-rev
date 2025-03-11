@@ -80,11 +80,12 @@ pub fn create_window() {
     }
 
     let verge = Config::verge().latest().clone();
+    let start_page = verge.start_page.unwrap_or("/".into());
 
     let mut builder = tauri::WebviewWindowBuilder::new(
         app_handle,
         "main".to_string(),
-        tauri::WebviewUrl::App("index.html".into()),
+        tauri::WebviewUrl::App(start_page.into()),
     )
     .title("Clash Verge")
     .fullscreen(false)

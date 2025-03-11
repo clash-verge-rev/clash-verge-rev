@@ -18,7 +18,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import i18next from "i18next";
 import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
 const appWindow = getCurrentWebviewWindow();
 
@@ -34,14 +34,8 @@ const Layout = () => {
   const visible = useVisibility();
 
   const { verge } = useVerge();
-  const {
-    language,
-    start_page,
-    enable_system_title_bar,
-    enable_keep_ui_active,
-  } = verge;
+  const { language, enable_system_title_bar, enable_keep_ui_active } = verge;
   keepUIActive = enable_keep_ui_active ?? false;
-  const navigate = useNavigate();
 
   appWindow.isMaximized().then((maximized) => {
     setIsMaximized(maximized);
@@ -129,10 +123,7 @@ const Layout = () => {
       dayjs.locale(language === "zh" ? "zh-cn" : language);
       i18next.changeLanguage(language);
     }
-    if (start_page) {
-      navigate(start_page);
-    }
-  }, [language, start_page, visible]);
+  }, [language, visible]);
 
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
