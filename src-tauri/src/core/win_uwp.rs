@@ -1,5 +1,4 @@
 #![cfg(target_os = "windows")]
-
 use crate::utils::dirs;
 use anyhow::{bail, Result};
 use deelevate::{PrivilegeLevel, Token};

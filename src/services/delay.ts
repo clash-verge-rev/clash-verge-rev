@@ -1,4 +1,4 @@
-import { cmdGetProxyDelay } from "./cmds";
+import { delayProxyByName } from "tauri-plugin-mihomo-api";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
@@ -73,7 +73,11 @@ class DelayManager {
 
     try {
       const url = this.getUrl(group);
-      const result = await cmdGetProxyDelay(name, timeout, url);
+      const result = await delayProxyByName(
+        name,
+        url || "https://www.gstatic.com/generate_204",
+        timeout,
+      );
       if (result.delay) {
         delay = result.delay;
       } else if (result.message) {

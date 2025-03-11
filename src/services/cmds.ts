@@ -270,24 +270,11 @@ export async function openWebUrl(url: string) {
   return invoke<void>("open_web_url", { url });
 }
 
-export async function cmdGetProxyDelay(
-  name: string,
-  timeout: number,
-  url?: string,
-) {
-  name = encodeURIComponent(name);
-  return invoke<{ message: string; delay: number }>(
-    "clash_api_get_proxy_delay",
-    { name, url, timeout },
-  );
-}
-
 export async function cmdTestDelay(url: string) {
   return invoke<number>("test_delay", { url });
 }
 
 /// service mode
-
 export async function checkService() {
   try {
     const result = await invoke<any>("check_service");

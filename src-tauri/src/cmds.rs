@@ -27,9 +27,9 @@ use std::{
 };
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::Manager;
-use tauri_plugin_mihomo::ProxyDelay;
 use tauri_plugin_opener::OpenerExt;
 use tray::{Tray, TRAY_ID};
+
 type CmdResult<T = ()> = Result<T, String>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -385,24 +385,6 @@ pub mod uwp {
 }
 
 #[tauri::command]
-pub async fn clash_api_get_proxy_delay(
-    name: String,
-    url: Option<String>,
-    timeout: u32,
-) -> CmdResult<ProxyDelay> {
-    let default_url = "https://www.gstatic.com/generate_204";
-    let test_url = url
-        .map(|s| if s.is_empty() { default_url.into() } else { s })
-        .unwrap_or(default_url.into());
-    wrap_err!(
-        handle::Handle::get_mihomo_read()
-            .await
-            .delay_proxy_by_name(&name, &test_url, timeout)
-            .await
-    )
-}
-
-#[tauri::command]
 pub fn get_portable_flag() -> CmdResult<bool> {
     Ok(*dirs::PORTABLE_FLAG.get().unwrap_or(&false))
 }
@@ -482,23 +464,6 @@ pub async fn restart_app(app_handle: tauri::AppHandle) {
     let _ = CoreManager::global().stop_core().await;
     app_handle.remove_tray_by_id(TRAY_ID);
     app_handle.restart();
-}
-
-#[tauri::command]
-pub async fn restart_clash() -> CmdResult<()> {
-    wrap_err!(handle::Handle::get_mihomo_read().await.restart().await)
-    // wrap_err!(clash_api::restart_core().await)
-}
-
-#[tauri::command]
-pub async fn get_clash_configs() -> CmdResult<bool> {
-    wrap_err!(
-        handle::Handle::get_mihomo_read()
-            .await
-            .get_base_config()
-            .await
-    )?;
-    Ok(true)
 }
 
 #[tauri::command]

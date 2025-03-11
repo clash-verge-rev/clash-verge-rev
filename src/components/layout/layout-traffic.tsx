@@ -17,6 +17,7 @@ import { t } from "i18next";
 import { useRef } from "react";
 import useSWRSubscription from "swr/subscription";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
+import { restart } from "tauri-plugin-mihomo-api";
 
 interface MemoryUsage {
   inuse: number;
@@ -140,7 +141,7 @@ export const LayoutTraffic = () => {
   };
 
   const restartClashCore = useLockFn(async () => {
-    await invoke("restart_clash");
+    await restart();
     Notice.success(t("Clash Core Restarted"));
   });
 

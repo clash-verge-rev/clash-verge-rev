@@ -194,8 +194,6 @@ pub fn run() -> Result<()> {
             cmds::restart_sidecar,
             cmds::grant_permission,
             // clash
-            cmds::restart_clash,
-            cmds::get_clash_configs,
             cmds::get_clash_info,
             cmds::get_clash_logs,
             cmds::patch_clash_config,
@@ -239,8 +237,6 @@ pub fn run() -> Result<()> {
             cmds::service::check_service,
             cmds::service::install_service,
             cmds::service::uninstall_service,
-            // clash api
-            cmds::clash_api_get_proxy_delay,
             // bakcup
             cmds::create_local_backup,
             cmds::apply_local_backup,
