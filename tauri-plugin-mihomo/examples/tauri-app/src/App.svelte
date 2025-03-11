@@ -1,17 +1,19 @@
 <script>
   import Greet from './lib/Greet.svelte'
-  import { getVersion, getConnections, getBaseConfig } from "tauri-plugin-mihomo-api"
+  import { getVersion, getConnections, getBaseConfig, getProxiesProviders, getRulesProviders } from "tauri-plugin-mihomo-api"
 
 	let response = ''
 
 	function updateResponse(returnValue) {
+	    console.log(returnValue.providers["廉价机场"].subscriptionInfo.upload);
 		response += `[${new Date().toLocaleTimeString()}] ` + (typeof returnValue === 'string' ? returnValue : JSON.stringify(returnValue)) + '<br>'
 	}
 
 	function _ping() {
 		// getVersion().then(updateResponse).catch(updateResponse)
 		// getConnections().then(updateResponse).catch(updateResponse)
-		getBaseConfig().then(updateResponse).catch(updateResponse)
+		// getBaseConfig().then(updateResponse).catch(updateResponse)
+		getProxiesProviders().then(updateResponse).catch(updateResponse)
 	}
 </script>
 

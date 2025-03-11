@@ -442,4 +442,17 @@ mod test {
         let _ = mihomo.patch_base_config(&value).await?;
         Ok(())
     }
+
+    #[tokio::test]
+    async fn test_get_proxies_providers() -> Result<()> {
+        let mihomo = Mihomo::new(
+            Protocol::Http,
+            "127.0.0.1".into(),
+            9090,
+            Some("ofY_JpdwekVcyO1DY3q61".into()),
+        );
+        let providers = mihomo.get_proxies_providers().await?;
+        println!("{:?}", providers.providers);
+        Ok(())
+    }
 }

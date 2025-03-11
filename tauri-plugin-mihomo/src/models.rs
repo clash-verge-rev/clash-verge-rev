@@ -205,7 +205,7 @@ pub struct ProxyProviders {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(rename_all(deserialize = "PascalCase", serialize = "camelCase"))]
 pub struct SubScriptionInfo {
     pub upload: u64,
     pub download: u64,

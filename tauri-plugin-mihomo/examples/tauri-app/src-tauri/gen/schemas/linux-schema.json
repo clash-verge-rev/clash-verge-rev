@@ -1814,6 +1814,11 @@
           "const": "mihomo:allow-update-geo"
         },
         {
+          "description": "Enables the update_proxies_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "mihomo:allow-update-proxies-providers"
+        },
+        {
           "description": "Enables the update_rules_providers command without any pre-configured scope.",
           "type": "string",
           "const": "mihomo:allow-update-rules-providers"
@@ -1957,6 +1962,11 @@
           "description": "Denies the update_geo command without any pre-configured scope.",
           "type": "string",
           "const": "mihomo:deny-update-geo"
+        },
+        {
+          "description": "Denies the update_proxies_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "mihomo:deny-update-proxies-providers"
         },
         {
           "description": "Denies the update_rules_providers command without any pre-configured scope.",

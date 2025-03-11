@@ -1701,6 +1701,7 @@
         "allow-delay-group",
         "allow-get-proxies-providers",
         "allow-get-providers-proxy-by-name",
+        "allow-update-proxies-providers",
         "allow-healthcheck-providers",
         "allow-healthcheck-providers-proxies",
         "allow-get-proxies",
@@ -1840,6 +1841,11 @@
         "identifier": "allow-update-geo",
         "description": "Enables the update_geo command without any pre-configured scope.",
         "commands": { "allow": ["update_geo"], "deny": [] }
+      },
+      "allow-update-proxies-providers": {
+        "identifier": "allow-update-proxies-providers",
+        "description": "Enables the update_proxies_providers command without any pre-configured scope.",
+        "commands": { "allow": ["update_proxies_providers"], "deny": [] }
       },
       "allow-update-rules-providers": {
         "identifier": "allow-update-rules-providers",
@@ -1985,6 +1991,11 @@
         "identifier": "deny-update-geo",
         "description": "Denies the update_geo command without any pre-configured scope.",
         "commands": { "allow": [], "deny": ["update_geo"] }
+      },
+      "deny-update-proxies-providers": {
+        "identifier": "deny-update-proxies-providers",
+        "description": "Denies the update_proxies_providers command without any pre-configured scope.",
+        "commands": { "allow": [], "deny": ["update_proxies_providers"] }
       },
       "deny-update-rules-providers": {
         "identifier": "deny-update-rules-providers",
