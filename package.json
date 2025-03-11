@@ -43,7 +43,7 @@
     "@tauri-apps/plugin-opener": "^2.2.2",
     "@tauri-apps/plugin-process": "~2.2.0",
     "@tauri-apps/plugin-shell": "~2.2.0",
-    "@tauri-apps/plugin-updater": "~2.5.0",
+    "@tauri-apps/plugin-updater": "~2.6.0",
     "ahooks": "^3.8.1",
     "axios": "^1.7.7",
     "console-feed": "^3.6.0",
