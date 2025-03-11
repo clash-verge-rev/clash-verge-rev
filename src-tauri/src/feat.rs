@@ -19,7 +19,7 @@ use tauri_plugin_dialog::MessageDialogButtons;
 use tauri_plugin_dialog::MessageDialogKind;
 use verge_log::VergeLog;
 
-// 打开面板
+/// 打开面板
 pub fn open_or_close_dashboard() {
     if let Some(window) = handle::Handle::get_window() {
         if let Ok(true) = window.is_focused() {
@@ -30,7 +30,7 @@ pub fn open_or_close_dashboard() {
     resolve::create_window();
 }
 
-// 重启clash
+/// 重启clash
 pub fn restart_clash_core() {
     tauri::async_runtime::spawn(async {
         match CoreManager::global().run_core().await {
@@ -46,7 +46,7 @@ pub fn restart_clash_core() {
     });
 }
 
-// 切换模式 rule/global/direct/script mode
+/// 切换模式 rule/global/direct/script mode
 pub fn change_clash_mode(mode: String) {
     let mut mapping = Mapping::new();
     mapping.insert(Value::from("mode"), mode.clone().into());
@@ -73,7 +73,7 @@ pub fn change_clash_mode(mode: String) {
     });
 }
 
-// 切换系统代理
+/// 切换系统代理
 pub fn toggle_system_proxy() {
     let enable = Config::verge().draft().enable_system_proxy;
     let enable = enable.unwrap_or(false);
@@ -92,6 +92,7 @@ pub fn toggle_system_proxy() {
     });
 }
 
+/// 切换服务模式 (仅内核)
 pub fn toggle_service_mode() {
     let enable = Config::verge()
         .latest()
@@ -144,7 +145,7 @@ pub fn toggle_service_mode() {
     });
 }
 
-// 切换tun模式
+/// 切换tun模式
 pub fn toggle_tun_mode() {
     let enable = Config::clash().data().get_enable_tun();
     let toggle_failed_msg = if enable {
@@ -223,6 +224,7 @@ pub fn toggle_tun_mode() {
     });
 }
 
+/// 安装并运行服务 (仅内核)
 async fn install_and_run_service() -> Result<()> {
     if let Err(err) = cmds::service::install_service().await {
         handle::Handle::notification(
@@ -441,7 +443,7 @@ pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
     }
 }
 
-pub async fn resolve_config_settings(patch: IVerge) -> Result<()> {
+async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     let auto_launch = patch.enable_auto_launch;
     let system_proxy = patch.enable_system_proxy;
     let pac = patch.proxy_auto_config;

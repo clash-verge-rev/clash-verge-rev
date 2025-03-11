@@ -19,9 +19,10 @@
     "portable": "node scripts/portable.mjs",
     "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
     "prepare": "husky",
-    "cargo:check": "cd src-tauri && cargo check",
-    "cargo:clean": "cd src-tauri && cargo clean",
-    "cargo:update": "cd src-tauri && cargo update",
+    "c:check": "cd src-tauri && cargo check",
+    "c:clean": "cd src-tauri && cargo clean",
+    "c:update": "cd src-tauri && cargo update",
+    "c:clippy": "cd src-tauri && cargo clippy",
     "bump": "node scripts/bump-version.mjs"
   },
   "dependencies": {
