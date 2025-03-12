@@ -73,7 +73,7 @@ impl Tray {
         let tray_event: String = tray_event.unwrap_or("main_window".into());
 
         #[cfg(any(target_os = "macos", target_os = "windows"))]
-        if tray_event.as_str() != "menu" {
+        if tray_event.as_str() != "tray_menu" {
             builder = builder.show_menu_on_left_click(false);
         }
 
@@ -108,7 +108,7 @@ impl Tray {
         let tray_event: String = tray_event.unwrap_or("main_window".into());
         let tray = app_handle.tray_by_id("main").unwrap();
         match tray_event.as_str() {
-            "menu" => tray.set_show_menu_on_left_click(true)?,
+            "tray_menu" => tray.set_show_menu_on_left_click(true)?,
             _ => tray.set_show_menu_on_left_click(false)?
         }
         Ok(())
