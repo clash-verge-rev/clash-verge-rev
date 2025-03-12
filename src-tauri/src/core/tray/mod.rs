@@ -1,4 +1,5 @@
 use once_cell::sync::OnceCell;
+use tauri::tray::TrayIconBuilder;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
 use crate::module::mihomo::Rate;
@@ -22,10 +23,10 @@ pub use speed_rate::{SpeedRate, Traffic};
 #[cfg(target_os = "macos")]
 use std::sync::Arc;
 use tauri::menu::{CheckMenuItem, IsMenuItem};
-use tauri::AppHandle;
+use tauri::{App, AppHandle};
 use tauri::{
     menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
-    tray::{MouseButton, MouseButtonState, TrayIconEvent, TrayIconId},
+    tray::{MouseButton, MouseButtonState, TrayIconEvent},
     Wry,
 };
 #[cfg(target_os = "macos")]
@@ -66,13 +67,15 @@ impl Tray {
         Ok(())
     }
 
-    pub fn create_systray(&self) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        let tray_incon_id = TrayIconId::new("main");
-        let tray = app_handle.tray_by_id(&tray_incon_id).unwrap();
+    pub fn create_systray(&self, app: &App) -> Result<()> {
+        let builder = TrayIconBuilder::with_id("main")
+            .icon(app.default_window_icon().unwrap().clone())
+            .icon_as_template(false);
 
         #[cfg(target_os = "macos")]
-        tray.set_show_menu_on_left_click(false)?;
+        let builder = builder.show_menu_on_left_click(false);
+
+        let tray = builder.build(app)?;
 
         tray.on_tray_icon_event(|_, event| {
             let tray_event = { Config::verge().latest().tray_event.clone() };

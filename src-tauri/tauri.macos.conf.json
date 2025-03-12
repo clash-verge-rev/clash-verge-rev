@@ -30,11 +30,5 @@
         }
       }
     }
-  },
-  "app": {
-    "trayIcon": {
-      "iconPath": "icons/tray-icon-mono.ico",
-      "iconAsTemplate": true
-    }
   }
 }
