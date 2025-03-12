@@ -749,6 +749,7 @@ interface IVergeConfig {
   enable_dns_settings?: boolean;
   proxy_auto_config?: boolean;
   pac_file_content?: string;
+  proxy_host?: string;
   enable_random_port?: boolean;
   verge_mixed_port?: number;
   verge_socks_port?: number;

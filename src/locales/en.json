@@ -243,6 +243,8 @@
   "Enabled": "Enabled",
   "Disabled": "Disabled",
   "Server Addr": "Server Addr: ",
+  "Proxy Host": "Proxy Host",
+  "Invalid Proxy Host Format": "Invalid Proxy Host Format",
   "Not available": "Not available",
   "Proxy Guard": "Proxy Guard",
   "Proxy Guard Info": "Enable to prevent other software from modifying the operating system's proxy settings",

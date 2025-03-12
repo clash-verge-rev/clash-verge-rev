@@ -225,6 +225,8 @@
   "Enabled": "ممكّن",
   "Disabled": "معطّل",
   "Server Addr": "عنوان الخادم:",
+  "Proxy Host": "مضيف الوكيل",
+  "Invalid Proxy Host Format": "تنسيق مضيف الوكيل غير صالح",
   "Not available": "غير متوفر",
   "Proxy Guard": "حماية الوكيل",
   "Proxy Guard Info": "عند التمكين، يمنع برامج أخرى من تعديل إعدادات وكيل النظام",

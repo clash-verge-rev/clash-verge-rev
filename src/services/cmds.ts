@@ -265,6 +265,10 @@ export async function getNetworkInterfaces() {
   return invoke<string[]>("get_network_interfaces");
 }
 
+export async function getSystemHostname() {
+  return invoke<string>("get_system_hostname");
+}
+
 export async function getNetworkInterfacesInfo() {
   return invoke<INetworkInterface[]>("get_network_interfaces_info");
 }

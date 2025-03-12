@@ -31,6 +31,25 @@ pub fn get_auto_proxy() -> CmdResult<Mapping> {
     Ok(map)
 }
 
+/// 获取系统主机名
+#[tauri::command]
+pub fn get_system_hostname() -> CmdResult<String> {
+    use gethostname::gethostname;
+    
+    // 获取系统主机名，处理可能的非UTF-8字符
+    let hostname = match gethostname().into_string() {
+        Ok(name) => name,
+        Err(os_string) => {
+            // 对于包含非UTF-8的主机名，使用调试格式化
+            let fallback = format!("{:?}", os_string);
+            // 去掉可能存在的引号
+            fallback.trim_matches('"').to_string()
+        }
+    };
+    
+    Ok(hostname)
+}
+
 /// 获取网络接口列表
 #[tauri::command]
 pub fn get_network_interfaces() -> Vec<String> {
