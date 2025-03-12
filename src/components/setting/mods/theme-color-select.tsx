@@ -18,7 +18,7 @@ interface Props {
   themeKey: ThemeKey;
 }
 
-const ThemeColorInput = (props: Props) => {
+const ThemeColorSelect = (props: Props) => {
   const { label, themeKey } = props;
   const [themeSettings, setThemeSettings] = useThemeSettings();
   const themeMode = useThemeMode();
@@ -26,7 +26,7 @@ const ThemeColorInput = (props: Props) => {
     (themeMode === "light" ? themeSettings.light : themeSettings.dark) ?? {};
   const dt = themeMode === "light" ? defaultTheme : defaultDarkTheme;
   const [color, setColor] = useState<string>(theme[themeKey] || dt[themeKey]);
-  const debounceValue = useDebounce(color, { wait: 500 });
+  const debounceValue = useDebounce(color, { wait: 300 });
 
   useEffect(() => {
     setColor(theme[themeKey] || dt[themeKey]);
@@ -47,6 +47,7 @@ const ThemeColorInput = (props: Props) => {
       <p className="text-lg">{label}</p>
       <div className="flex w-[150px] items-center justify-between">
         <input
+          className="background-transparent cursor-pointer border-none outline-none"
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
@@ -57,4 +58,4 @@ const ThemeColorInput = (props: Props) => {
   );
 };
 
-export default ThemeColorInput;
+export default ThemeColorSelect;

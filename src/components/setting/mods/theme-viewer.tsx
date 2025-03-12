@@ -17,7 +17,7 @@ import {
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import ThemeColorInput from "./theme-color-input";
+import ThemeColorSelect from "./theme-color-select";
 
 export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -128,14 +128,14 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       }}
       onOk={onSave}>
       <List sx={{ pt: 0 }}>
-        <ThemeColorInput label="Primary Color" themeKey="primary_color" />
-        <ThemeColorInput label="Secondary Color" themeKey="secondary_color" />
-        <ThemeColorInput label="Primary Text" themeKey="primary_text" />
-        <ThemeColorInput label="Secondary Text" themeKey="secondary_text" />
-        <ThemeColorInput label="Info Color" themeKey="info_color" />
-        <ThemeColorInput label="Error Color" themeKey="error_color" />
-        <ThemeColorInput label="Warning Color" themeKey="warning_color" />
-        <ThemeColorInput label="Success Color" themeKey="success_color" />
+        <ThemeColorSelect label="Primary Color" themeKey="primary_color" />
+        <ThemeColorSelect label="Secondary Color" themeKey="secondary_color" />
+        <ThemeColorSelect label="Primary Text" themeKey="primary_text" />
+        <ThemeColorSelect label="Secondary Text" themeKey="secondary_text" />
+        <ThemeColorSelect label="Info Color" themeKey="info_color" />
+        <ThemeColorSelect label="Error Color" themeKey="error_color" />
+        <ThemeColorSelect label="Warning Color" themeKey="warning_color" />
+        <ThemeColorSelect label="Success Color" themeKey="success_color" />
 
         <Item>
           <ListItemText primary="Font Family" />
