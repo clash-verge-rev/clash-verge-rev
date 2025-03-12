@@ -88,6 +88,9 @@ pub struct IVerge {
     /// pac script content
     pub pac_file_content: Option<String>,
 
+    /// proxy host address
+    pub proxy_host: Option<String>,
+
     /// theme setting
     pub theme_setting: Option<IVergeTheme>,
 
@@ -275,6 +278,7 @@ impl IVerge {
             enable_system_proxy: Some(false),
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
+            proxy_host: Some("127.0.0.1".into()),
             enable_random_port: Some(false),
             #[cfg(not(target_os = "windows"))]
             verge_redir_port: Some(7895),
@@ -368,7 +372,7 @@ impl IVerge {
         patch!(proxy_guard_duration);
         patch!(proxy_auto_config);
         patch!(pac_file_content);
-
+        patch!(proxy_host);
         patch!(theme_setting);
         patch!(web_ui_list);
         patch!(clash_core);
@@ -452,6 +456,7 @@ pub struct IVergeResponse {
     pub proxy_guard_duration: Option<u64>,
     pub proxy_auto_config: Option<bool>,
     pub pac_file_content: Option<String>,
+    pub proxy_host: Option<String>,
     pub theme_setting: Option<IVergeTheme>,
     pub web_ui_list: Option<Vec<String>>,
     pub clash_core: Option<String>,
@@ -520,6 +525,7 @@ impl From<IVerge> for IVergeResponse {
             proxy_guard_duration: verge.proxy_guard_duration,
             proxy_auto_config: verge.proxy_auto_config,
             pac_file_content: verge.pac_file_content,
+            proxy_host: verge.proxy_host,
             theme_setting: verge.theme_setting,
             web_ui_list: verge.web_ui_list,
             clash_core: verge.clash_core,

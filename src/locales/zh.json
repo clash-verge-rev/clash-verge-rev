@@ -243,6 +243,8 @@
   "Enabled": "已启用",
   "Disabled": "未启用",
   "Server Addr": "服务地址：",
+  "Proxy Host": "代理主机",
+  "Invalid Proxy Host Format": "代理主机格式无效",
   "Not available": "不可用",
   "Proxy Guard": "系统代理守卫",
   "Proxy Guard Info": "开启以防止其他软件修改操作系统的代理设置",
