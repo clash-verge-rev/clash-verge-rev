@@ -96,7 +96,7 @@ pub async fn resolve_setup(app: &mut App) {
 
     log::trace!(target: "app", "init system tray");
     log_err!(tray::Tray::global().init());
-    log_err!(tray::Tray::global().create_systray());
+    log_err!(tray::Tray::global().create_systray(app));
 
     log_err!(sysopt::Sysopt::global().update_sysproxy().await);
     log_err!(sysopt::Sysopt::global().init_guard_sysproxy());
