@@ -61,6 +61,7 @@ impl IClashConfig {
         // default store selected
         let mut profile = Mapping::new();
         profile.insert("store-selected".into(), true.into());
+        profile.insert("store-fake-ip".into(), true.into());
         map.insert("profile".into(), profile.into());
 
         Self(map)
