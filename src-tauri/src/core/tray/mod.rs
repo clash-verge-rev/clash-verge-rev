@@ -66,14 +66,12 @@ impl Tray {
     }
 
     pub fn create_systray(&self, app: &App) -> Result<()> {
-        let builder =
-            TrayIconBuilder::with_id("main");
-
-        #[cfg(target_os = "macos")]
-        let builder = builder
+        let builder = TrayIconBuilder::with_id("main")
             .icon(app.default_window_icon().unwrap().clone())
-            .icon_as_template(false)
-            .show_menu_on_left_click(false);
+            .icon_as_template(false);
+
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
+        let builder = builder.show_menu_on_left_click(false);
 
         let tray = builder.build(app)?;
 
