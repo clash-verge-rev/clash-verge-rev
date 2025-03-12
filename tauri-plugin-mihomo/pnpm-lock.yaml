@@ -13,8 +13,8 @@ importers:
         version: 2.3.0
     devDependencies:
       '@rollup/plugin-typescript':
-        specifier: 11.1.6
-        version: 11.1.6(rollup@4.35.0)(tslib@2.8.1)(typescript@5.8.2)
+        specifier: 12.1.2
+        version: 12.1.2(rollup@4.35.0)(tslib@2.8.1)(typescript@5.8.2)
       rollup:
         specifier: 4.35.0
         version: 4.35.0
@@ -27,8 +27,8 @@ importers:
 
 packages:
 
-  '@rollup/plugin-typescript@11.1.6':
-    resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
+  '@rollup/plugin-typescript@12.1.2':
+    resolution: {integrity: sha512-cdtSp154H5sv637uMr1a8OTWB0L1SWDSm1rDGiyfcGcvQ6cuTs4MDk2BVEBGysUWago4OJN4EQZqOTl/QY3Jgg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^2.14.0||^3.0.0||^4.0.0
@@ -200,7 +200,7 @@ packages:
 
 snapshots:
 
-  '@rollup/plugin-typescript@11.1.6(rollup@4.35.0)(tslib@2.8.1)(typescript@5.8.2)':
+  '@rollup/plugin-typescript@12.1.2(rollup@4.35.0)(tslib@2.8.1)(typescript@5.8.2)':
     dependencies:
       '@rollup/pluginutils': 5.1.4(rollup@4.35.0)
       resolve: 1.22.10
