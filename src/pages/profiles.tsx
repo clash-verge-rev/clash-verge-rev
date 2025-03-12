@@ -288,22 +288,26 @@ const ProfilePage = () => {
 
   const handleChainDelete = useMemoizedFn(
     useLockFn(async (item: IProfileItem) => {
-      if (item.enable) {
-        try {
+      try {
+        if (item.enable) {
           setActivatingUids([
             profiles.current || "",
             item.uid,
             ...enabledChainUids,
           ]);
-          await deleteProfile(item.uid);
+        }
+        await deleteProfile(item.uid);
+        mutateProfiles();
+        if (item.enable) {
           await onEnhance();
-        } catch (error: any) {
-          Notice.error(error);
-        } finally {
+        }
+      } catch (error: any) {
+        Notice.error(error);
+      } finally {
+        if (item.enable) {
           setActivatingUids([]);
         }
       }
-      mutateProfiles();
     }),
   );
 
