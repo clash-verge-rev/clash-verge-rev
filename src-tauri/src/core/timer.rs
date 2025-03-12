@@ -19,6 +19,9 @@ pub struct Timer {
 
     /// increment id
     timer_count: Arc<Mutex<TaskID>>,
+
+    /// 标记定时器是否已经初始化
+    initialized: Arc<Mutex<bool>>,
 }
 
 impl Timer {
@@ -29,15 +32,22 @@ impl Timer {
             delay_timer: Arc::new(Mutex::new(DelayTimerBuilder::default().build())),
             timer_map: Arc::new(Mutex::new(HashMap::new())),
             timer_count: Arc::new(Mutex::new(1)),
+            initialized: Arc::new(Mutex::new(false)),
         })
     }
 
     /// restore timer
     pub fn init(&self) -> Result<()> {
+        let mut initialized = self.initialized.lock();
+        if *initialized {
+            log::info!(target: "app", "Timer already initialized, skipping...");
+            return Ok(());
+        }
+
+        log::info!(target: "app", "Initializing timer...");
         self.refresh()?;
 
         let cur_timestamp = chrono::Local::now().timestamp();
-
         let timer_map = self.timer_map.lock();
         let delay_timer = self.delay_timer.lock();
 
@@ -45,7 +55,6 @@ impl Timer {
             items
                 .iter()
                 .filter_map(|item| {
-                    // mins to seconds
                     let interval = ((item.option.as_ref()?.update_interval?) as i64) * 60;
                     let updated = item.updated? as i64;
 
@@ -58,11 +67,15 @@ impl Timer {
                 .for_each(|item| {
                     if let Some(uid) = item.uid.as_ref() {
                         if let Some((task_id, _)) = timer_map.get(uid) {
+                            log::info!(target: "app", "Advancing task for uid: {}", uid);
                             crate::log_err!(delay_timer.advance_task(*task_id));
                         }
                     }
-                })
+                });
         }
+
+        *initialized = true;
+        log::info!(target: "app", "Timer initialization completed");
 
         Ok(())
     }
@@ -155,34 +168,46 @@ impl Timer {
         tid: TaskID,
         minutes: u64,
     ) -> Result<()> {
+        log::info!(target: "app", "Adding new task: uid={}, interval={} minutes", uid, minutes);
+
         let task = TaskBuilder::default()
             .set_task_id(tid)
             .set_maximum_parallel_runnable_num(1)
             .set_frequency_repeated_by_minutes(minutes)
-            // .set_frequency_repeated_by_seconds(minutes) // for test
-            .spawn_async_routine(move || Self::async_task(uid.to_owned()))
+            .spawn_async_routine(move || {
+                let uid = uid.clone();
+                async move {
+                    Self::async_task(uid).await;
+                }
+            })
             .context("failed to create timer task")?;
 
         delay_timer
             .add_task(task)
             .context("failed to add timer task")?;
 
+        log::info!(target: "app", "Task added successfully: {}", tid);
         Ok(())
     }
 
     /// the task runner
     async fn async_task(uid: String) {
-        log::info!(target: "app", "running timer task `{uid}`");
-        
-        // 使用更轻量级的更新方式
-        if let Err(e) = feat::update_profile(uid.clone(), None).await {
-            log::error!(target: "app", "timer task update error: {}", e);
-            return;
-        }
+        log::info!(target: "app", "Running timer task `{}`", uid);
 
-        // 只有更新成功后才刷新配置
-        if let Err(e) = CoreManager::global().update_config().await {
-            log::error!(target: "app", "timer task refresh error: {}", e);
+        match feat::update_profile(uid.clone(), None).await {
+            Ok(_) => {
+                match CoreManager::global().update_config().await {
+                    Ok(_) => {
+                        log::info!(target: "app", "Timer task completed successfully for uid: {}", uid);
+                    }
+                    Err(e) => {
+                        log::error!(target: "app", "Timer task refresh error for uid {}: {}", uid, e);
+                    }
+                }
+            }
+            Err(e) => {
+                log::error!(target: "app", "Timer task update error for uid {}: {}", uid, e);
+            }
         }
     }
 }
