@@ -2,13 +2,13 @@ use once_cell::sync::OnceCell;
 use tauri::tray::TrayIconBuilder;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
-use crate::module::mihomo::Rate;
 use crate::{
     cmd,
     config::Config,
-    feat, resolve,
-    utils::resolve::VERSION,
-    utils::{dirs, i18n::t},
+    feat,
+    module::mihomo::Rate,
+    resolve,
+    utils::{dirs, i18n::t, resolve::VERSION},
 };
 
 use anyhow::Result;
@@ -22,12 +22,10 @@ use parking_lot::RwLock;
 pub use speed_rate::{SpeedRate, Traffic};
 #[cfg(target_os = "macos")]
 use std::sync::Arc;
-use tauri::menu::{CheckMenuItem, IsMenuItem};
-use tauri::{App, AppHandle};
 use tauri::{
-    menu::{MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
+    menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
-    Wry,
+    App, AppHandle, Wry,
 };
 #[cfg(target_os = "macos")]
 use tokio::sync::broadcast;
@@ -68,12 +66,14 @@ impl Tray {
     }
 
     pub fn create_systray(&self, app: &App) -> Result<()> {
-        let builder = TrayIconBuilder::with_id("main")
-            .icon(app.default_window_icon().unwrap().clone())
-            .icon_as_template(false);
+        let builder =
+            TrayIconBuilder::with_id("main");
 
         #[cfg(target_os = "macos")]
-        let builder = builder.show_menu_on_left_click(false);
+        let builder = builder
+            .icon(app.default_window_icon().unwrap().clone())
+            .icon_as_template(false)
+            .show_menu_on_left_click(false);
 
         let tray = builder.build(app)?;
 
@@ -229,7 +229,7 @@ impl Tray {
         {
             let enable_tray_speed = Config::verge().latest().enable_tray_speed.unwrap_or(true);
             let is_colorful = tray_icon == "colorful";
-            
+
             // 处理图标和速率
             let final_icon_bytes = if enable_tray_speed {
                 let rate = rate.or_else(|| {
@@ -238,7 +238,7 @@ impl Tray {
                         .as_ref()
                         .and_then(|speed_rate| speed_rate.get_curent_rate())
                 });
-                
+
                 // 使用新的方法渲染图标和速率
                 SpeedRate::add_speed_text(icon_bytes, rate)?
             } else {
@@ -398,21 +398,24 @@ fn create_tray_menu(
                 .collect::<std::collections::HashMap<String, String>>()
         })
         .unwrap_or_default();
-    
+
     let profile_menu_items: Vec<CheckMenuItem<Wry>> = profile_uid_and_name
         .iter()
         .map(|(profile_uid, profile_name)| {
-        let is_current_profile = Config::profiles().data().is_current_profile_index(profile_uid.to_string());
-        CheckMenuItem::with_id(
-            app_handle,
-            &format!("profiles_{}", profile_uid),
-            t(&profile_name),
-            true,
-            is_current_profile,
-            None::<&str>,
-        )
-        .unwrap()
-    }).collect();
+            let is_current_profile = Config::profiles()
+                .data()
+                .is_current_profile_index(profile_uid.to_string());
+            CheckMenuItem::with_id(
+                app_handle,
+                &format!("profiles_{}", profile_uid),
+                t(&profile_name),
+                true,
+                is_current_profile,
+                None::<&str>,
+            )
+            .unwrap()
+        })
+        .collect();
     let profile_menu_items: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
         .iter()
         .map(|item| item as &dyn IsMenuItem<Wry>)
@@ -458,12 +461,13 @@ fn create_tray_menu(
     .unwrap();
 
     let profiles = &Submenu::with_id_and_items(
-        app_handle, 
-        "profiles", 
+        app_handle,
+        "profiles",
         t("Profiles"),
-        true, 
+        true,
         &profile_menu_items,
-    ).unwrap();
+    )
+    .unwrap();
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
@@ -607,7 +611,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "quit" => {
             println!("quit");
             feat::quit(Some(0));
-        },
+        }
         id if id.starts_with("profiles_") => {
             let profile_index = &id["profiles_".len()..];
             feat::toggle_proxy_profile(profile_index.into());
