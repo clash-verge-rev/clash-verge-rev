@@ -6369,9 +6369,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-updater"
-version = "2.5.1"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69b7db616844d73d55e4d00190be101b29de463d5cb70321c2840fa4e9c414c4"
+checksum = "67cd78a6cbd1255e989e96eedec004e9e8949e6c6359b41f861279aba64ea306"
 dependencies = [
  "base64 0.22.1",
  "dirs 6.0.0",
@@ -6379,6 +6379,7 @@ dependencies = [
  "futures-util",
  "http 1.1.0",
  "infer",
+ "log",
  "minisign-verify",
  "osakit",
  "percent-encoding",
@@ -7580,7 +7581,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
