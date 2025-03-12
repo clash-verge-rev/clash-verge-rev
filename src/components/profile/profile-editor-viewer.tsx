@@ -520,6 +520,8 @@ export const ProfileEditorViewer = (props: Props) => {
       if (originContent !== value) {
         await saveProfileFile(editProfile.uid, value);
         onChange?.();
+      } else {
+        Notice.info(t("Profile Content No Changes"));
       }
       setOriginContent(value);
       setChainChecked(false);

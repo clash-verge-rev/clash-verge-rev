@@ -304,6 +304,7 @@
   "Script Run Check Failed": "Script run check failed, Please check the script content is correct",
   "Script Run Check Successful": "Script run check successful, This script can be run normally",
   "Save Content Successfully": "Save Content Successfully",
+  "Profile Content No Changes": "Profile Content No Changes",
 
   "Backup Setting": "Backup Setting",
   "BK_Local": "Local",

@@ -61,7 +61,7 @@ export const useProfiles = () => {
 
     if (hasChange) {
       patchProfile(profileData.current!, { selected: newSelected });
-      mutate("getProxies");
+      mutate("getProxies", calcuProxies());
     }
   };
 

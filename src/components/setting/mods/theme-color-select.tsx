@@ -47,7 +47,7 @@ const ThemeColorSelect = (props: Props) => {
       <p className="text-lg">{label}</p>
       <div className="flex w-[150px] items-center justify-between">
         <input
-          className="background-transparent cursor-pointer border-none outline-none"
+          className="cursor-pointer border-none bg-transparent outline-none"
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
