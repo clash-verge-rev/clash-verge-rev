@@ -1,16 +1,17 @@
-use crate::config::Config;
-use crate::utils::dirs;
+use crate::{config::Config, utils::dirs};
 use anyhow::Error;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest_dav::list_cmd::{ListEntity, ListFile};
-use std::collections::HashMap;
-use std::env::{consts::OS, temp_dir};
-use std::fs;
-use std::io::Write;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{
+    collections::HashMap,
+    env::{consts::OS, temp_dir},
+    fs,
+    io::Write,
+    path::PathBuf,
+    sync::Arc,
+    time::Duration,
+};
 use tokio::time::timeout;
 use zip::write::SimpleFileOptions;
 

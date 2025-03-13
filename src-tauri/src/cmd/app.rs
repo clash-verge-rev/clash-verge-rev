@@ -75,40 +75,41 @@ pub fn get_app_dir() -> CmdResult<String> {
 pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String> {
     let icon_cache_dir = wrap_err!(dirs::app_home_dir())?.join("icons").join("cache");
     let icon_path = icon_cache_dir.join(&name);
-    
+
     // 如果文件已存在，直接返回路径
     if icon_path.exists() {
         return Ok(icon_path.to_string_lossy().to_string());
     }
-    
+
     // 确保缓存目录存在
     if !icon_cache_dir.exists() {
         let _ = std::fs::create_dir_all(&icon_cache_dir);
     }
-    
+
     // 使用临时文件名来下载
     let temp_path = icon_cache_dir.join(format!("{}.downloading", &name));
-    
+
     // 下载文件到临时位置
     let response = wrap_err!(reqwest::get(&url).await)?;
-    
+
     // 检查内容类型是否为图片
-    let content_type = response.headers()
+    let content_type = response
+        .headers()
         .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    
+
     let is_image = content_type.starts_with("image/");
-    
+
     // 获取响应内容
     let content = wrap_err!(response.bytes().await)?;
-    
+
     // 检查内容是否为HTML (针对CDN错误页面)
-    let is_html = content.len() > 15 && 
-        (content.starts_with(b"<!DOCTYPE html") || 
-         content.starts_with(b"<html") || 
-         content.starts_with(b"<?xml"));
-    
+    let is_html = content.len() > 15
+        && (content.starts_with(b"<!DOCTYPE html")
+            || content.starts_with(b"<html")
+            || content.starts_with(b"<?xml"));
+
     // 只有当内容确实是图片时才保存
     if is_image && !is_html {
         {
@@ -122,14 +123,14 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
                     }
                 }
             };
-            
+
             wrap_err!(std::io::copy(&mut content.as_ref(), &mut file))?;
         }
-        
+
         // 再次检查目标文件是否已存在，避免重命名覆盖其他线程已完成的文件
         if !icon_path.exists() {
             match std::fs::rename(&temp_path, &icon_path) {
-                Ok(_) => {},
+                Ok(_) => {}
                 Err(_) => {
                     let _ = std::fs::remove_file(&temp_path);
                     if icon_path.exists() {
@@ -140,11 +141,11 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
         } else {
             let _ = std::fs::remove_file(&temp_path);
         }
-        
+
         Ok(icon_path.to_string_lossy().to_string())
     } else {
         let _ = std::fs::remove_file(&temp_path);
-        Err(format!("下载的内容不是有效图片: {}", url).into())
+        Err(format!("下载的内容不是有效图片: {}", url))
     }
 }
 
@@ -158,8 +159,7 @@ pub struct IconInfo {
 /// 复制图标文件
 #[tauri::command]
 pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
-    use std::fs;
-    use std::path::Path;
+    use std::{fs, path::Path};
 
     let file_path = Path::new(&path);
 

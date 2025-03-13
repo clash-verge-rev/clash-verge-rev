@@ -134,7 +134,7 @@ impl Tray {
         let profile_uid_and_name = Config::profiles()
             .data()
             .all_profile_uid_and_name()
-            .unwrap_or(Vec::new());
+            .unwrap_or_default();
 
         let tray = app_handle.tray_by_id("main").unwrap();
         let _ = tray.set_menu(Some(create_tray_menu(
@@ -408,8 +408,8 @@ fn create_tray_menu(
                 .is_current_profile_index(profile_uid.to_string());
             CheckMenuItem::with_id(
                 app_handle,
-                &format!("profiles_{}", profile_uid),
-                t(&profile_name),
+                format!("profiles_{}", profile_uid),
+                t(profile_name),
                 true,
                 is_current_profile,
                 None::<&str>,

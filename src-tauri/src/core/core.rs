@@ -1,16 +1,17 @@
-use crate::config::*;
 #[cfg(target_os = "macos")]
 use crate::core::tray::Tray;
-use crate::core::{handle, service};
-use crate::log_err;
-use crate::module::mihomo::MihomoManager;
-use crate::utils::{dirs, help};
+use crate::{
+    config::*,
+    core::{handle, service},
+    log_err,
+    module::mihomo::MihomoManager,
+    utils::{dirs, help},
+};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use std::{path::PathBuf, sync::Arc, time::Duration};
 use tauri_plugin_shell::ShellExt;
-use tokio::sync::Mutex;
-use tokio::time::sleep;
+use tokio::{sync::Mutex, time::sleep};
 
 #[derive(Debug)]
 pub struct CoreManager {

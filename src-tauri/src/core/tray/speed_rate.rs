@@ -1,16 +1,15 @@
-use crate::module::mihomo::Rate;
-use crate::module::mihomo::MihomoManager;
-use crate::utils::help::format_bytes_speed;
+use crate::{
+    module::mihomo::{MihomoManager, Rate},
+    utils::help::format_bytes_speed,
+};
 use ab_glyph::FontArc;
 use anyhow::Result;
 use futures::Stream;
 use image::{GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::draw_text_mut;
 use parking_lot::Mutex;
-use std::io::Cursor;
-use std::sync::Arc;
-use tokio_tungstenite::tungstenite::http;
-use tokio_tungstenite::tungstenite::Message;
+use std::{io::Cursor, sync::Arc};
+use tokio_tungstenite::tungstenite::{http, Message};
 use tungstenite::client::IntoClientRequest;
 #[derive(Debug, Clone)]
 pub struct SpeedRate {

@@ -65,6 +65,6 @@ impl MihomoManager {
             .unwrap()
             .to_string();
         let token = http::header::HeaderValue::from_str(&auth).unwrap();
-        return (ws_url, token);
+        (ws_url, token)
     }
 }

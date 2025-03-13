@@ -1,12 +1,9 @@
-use crate::config::Config;
-use crate::feat;
-use crate::core::CoreManager;
+use crate::{config::Config, core::CoreManager, feat};
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 type TaskID = u64;
 
@@ -195,16 +192,14 @@ impl Timer {
         log::info!(target: "app", "Running timer task `{}`", uid);
 
         match feat::update_profile(uid.clone(), None).await {
-            Ok(_) => {
-                match CoreManager::global().update_config().await {
-                    Ok(_) => {
-                        log::info!(target: "app", "Timer task completed successfully for uid: {}", uid);
-                    }
-                    Err(e) => {
-                        log::error!(target: "app", "Timer task refresh error for uid {}: {}", uid, e);
-                    }
+            Ok(_) => match CoreManager::global().update_config().await {
+                Ok(_) => {
+                    log::info!(target: "app", "Timer task completed successfully for uid: {}", uid);
                 }
-            }
+                Err(e) => {
+                    log::error!(target: "app", "Timer task refresh error for uid {}: {}", uid, e);
+                }
+            },
             Err(e) => {
                 log::error!(target: "app", "Timer task update error for uid {}: {}", uid, e);
             }

@@ -1,16 +1,21 @@
-use crate::config::*;
-use crate::core::handle;
-use crate::utils::{dirs, help};
+use crate::{
+    config::*,
+    core::handle,
+    utils::{dirs, help},
+};
 use anyhow::Result;
 use chrono::{Local, TimeZone};
 use log::LevelFilter;
-use log4rs::append::console::ConsoleAppender;
-use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Logger, Root};
-use log4rs::encode::pattern::PatternEncoder;
-use std::fs::{self, DirEntry};
-use std::path::PathBuf;
-use std::str::FromStr;
+use log4rs::{
+    append::{console::ConsoleAppender, file::FileAppender},
+    config::{Appender, Logger, Root},
+    encode::pattern::PatternEncoder,
+};
+use std::{
+    fs::{self, DirEntry},
+    path::PathBuf,
+    str::FromStr,
+};
 use tauri_plugin_shell::ShellExt;
 
 /// initialize this instance's log file
@@ -142,69 +147,106 @@ fn init_dns_config() -> Result<()> {
         ("enable".into(), Value::Bool(true)),
         ("listen".into(), Value::String(":53".into())),
         ("enhanced-mode".into(), Value::String("fake-ip".into())),
-        ("fake-ip-range".into(), Value::String("198.18.0.1/16".into())),
-        ("fake-ip-filter-mode".into(), Value::String("blacklist".into())),
+        (
+            "fake-ip-range".into(),
+            Value::String("198.18.0.1/16".into()),
+        ),
+        (
+            "fake-ip-filter-mode".into(),
+            Value::String("blacklist".into()),
+        ),
         ("prefer-h3".into(), Value::Bool(false)),
         ("respect-rules".into(), Value::Bool(false)),
         ("use-hosts".into(), Value::Bool(false)),
         ("use-system-hosts".into(), Value::Bool(false)),
-        ("fake-ip-filter".into(), Value::Sequence(vec![
-            Value::String("*.lan".into()),
-            Value::String("*.local".into()),
-            Value::String("*.arpa".into()),
-            Value::String("time.*.com".into()),
-            Value::String("ntp.*.com".into()),
-            Value::String("time.*.com".into()),
-            Value::String("+.market.xiaomi.com".into()),
-            Value::String("localhost.ptlogin2.qq.com".into()),
-            Value::String("*.msftncsi.com".into()),
-            Value::String("www.msftconnecttest.com".into()),
-        ])),
-        ("default-nameserver".into(), Value::Sequence(vec![
-            Value::String("223.6.6.6".into()),
-            Value::String("8.8.8.8".into()),
-        ])),
-        ("nameserver".into(), Value::Sequence(vec![
-            Value::String("8.8.8.8".into()),
-            Value::String("https://doh.pub/dns-query".into()),
-            Value::String("https://dns.alidns.com/dns-query".into()),
-        ])),
-        ("fallback".into(), Value::Sequence(vec![
-            Value::String("https://dns.alidns.com/dns-query".into()),
-            Value::String("https://dns.google/dns-query".into()),
-            Value::String("https://cloudflare-dns.com/dns-query".into()),
-        ])),
-        ("nameserver-policy".into(), Value::Mapping(serde_yaml::Mapping::new())),
-        ("proxy-server-nameserver".into(), Value::Sequence(vec![
-            Value::String("https://doh.pub/dns-query".into()),
-            Value::String("https://dns.alidns.com/dns-query".into()),
-        ])),
+        (
+            "fake-ip-filter".into(),
+            Value::Sequence(vec![
+                Value::String("*.lan".into()),
+                Value::String("*.local".into()),
+                Value::String("*.arpa".into()),
+                Value::String("time.*.com".into()),
+                Value::String("ntp.*.com".into()),
+                Value::String("time.*.com".into()),
+                Value::String("+.market.xiaomi.com".into()),
+                Value::String("localhost.ptlogin2.qq.com".into()),
+                Value::String("*.msftncsi.com".into()),
+                Value::String("www.msftconnecttest.com".into()),
+            ]),
+        ),
+        (
+            "default-nameserver".into(),
+            Value::Sequence(vec![
+                Value::String("223.6.6.6".into()),
+                Value::String("8.8.8.8".into()),
+            ]),
+        ),
+        (
+            "nameserver".into(),
+            Value::Sequence(vec![
+                Value::String("8.8.8.8".into()),
+                Value::String("https://doh.pub/dns-query".into()),
+                Value::String("https://dns.alidns.com/dns-query".into()),
+            ]),
+        ),
+        (
+            "fallback".into(),
+            Value::Sequence(vec![
+                Value::String("https://dns.alidns.com/dns-query".into()),
+                Value::String("https://dns.google/dns-query".into()),
+                Value::String("https://cloudflare-dns.com/dns-query".into()),
+            ]),
+        ),
+        (
+            "nameserver-policy".into(),
+            Value::Mapping(serde_yaml::Mapping::new()),
+        ),
+        (
+            "proxy-server-nameserver".into(),
+            Value::Sequence(vec![
+                Value::String("https://doh.pub/dns-query".into()),
+                Value::String("https://dns.alidns.com/dns-query".into()),
+            ]),
+        ),
         ("direct-nameserver".into(), Value::Sequence(vec![])),
         ("direct-nameserver-follow-policy".into(), Value::Bool(false)),
-        ("fallback-filter".into(), Value::Mapping(serde_yaml::Mapping::from_iter([
-            ("geoip".into(), Value::Bool(true)),
-            ("geoip-code".into(), Value::String("CN".into())),
-            ("ipcidr".into(), Value::Sequence(vec![
-                Value::String("240.0.0.0/4".into()),
-                Value::String("0.0.0.0/32".into()),
+        (
+            "fallback-filter".into(),
+            Value::Mapping(serde_yaml::Mapping::from_iter([
+                ("geoip".into(), Value::Bool(true)),
+                ("geoip-code".into(), Value::String("CN".into())),
+                (
+                    "ipcidr".into(),
+                    Value::Sequence(vec![
+                        Value::String("240.0.0.0/4".into()),
+                        Value::String("0.0.0.0/32".into()),
+                    ]),
+                ),
+                (
+                    "domain".into(),
+                    Value::Sequence(vec![
+                        Value::String("+.google.com".into()),
+                        Value::String("+.facebook.com".into()),
+                        Value::String("+.youtube.com".into()),
+                    ]),
+                ),
             ])),
-            ("domain".into(), Value::Sequence(vec![
-                Value::String("+.google.com".into()),
-                Value::String("+.facebook.com".into()),
-                Value::String("+.youtube.com".into()),
-            ])),
-        ]))),
+        ),
     ]);
 
     // 检查DNS配置文件是否存在
     let app_dir = dirs::app_home_dir()?;
     let dns_path = app_dir.join("dns_config.yaml");
-    
+
     if !dns_path.exists() {
         log::info!(target: "app", "Creating default DNS config file");
-        help::save_yaml(&dns_path, &default_dns_config, Some("# Clash Verge DNS Config"))?;
+        help::save_yaml(
+            &dns_path,
+            &default_dns_config,
+            Some("# Clash Verge DNS Config"),
+        )?;
     }
-    
+
     Ok(())
 }
 
@@ -323,8 +365,7 @@ pub fn init_resources() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn init_scheme() -> Result<()> {
     use tauri::utils::platform::current_exe;
-    use winreg::enums::*;
-    use winreg::RegKey;
+    use winreg::{enums::*, RegKey};
 
     let app_exe = current_exe()?;
     let app_exe = dunce::canonicalize(app_exe)?;

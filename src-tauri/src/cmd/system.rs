@@ -1,8 +1,10 @@
 use super::CmdResult;
-use crate::core::handle;
-use crate::module::sysinfo::PlatformSpecification;
+use crate::{
+    core::{self, handle, service, CoreManager},
+    module::sysinfo::PlatformSpecification,
+    wrap_err,
+};
 use tauri_plugin_clipboard_manager::ClipboardExt;
-use crate::{core::{self, CoreManager, service}, wrap_err};
 
 #[tauri::command]
 pub async fn export_diagnostic_info() -> CmdResult<()> {
@@ -11,8 +13,7 @@ pub async fn export_diagnostic_info() -> CmdResult<()> {
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let cliboard = app_handle.clipboard();
-    
-    if let Err(_) = cliboard.write_text(info) {
+    if cliboard.write_text(info).is_err() {
         log::error!(target: "app", "Failed to write to clipboard");
     }
     Ok(())

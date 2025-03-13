@@ -43,7 +43,6 @@ impl PlatformSpecification {
             })
         });
 
-
         Self {
             system_name,
             system_version,

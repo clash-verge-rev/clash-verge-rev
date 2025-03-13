@@ -1,13 +1,10 @@
-use crate::core::handle;
-use crate::{config::Config, feat, log_err};
-use crate::utils::resolve;
+use crate::{config::Config, core::handle, feat, log_err, utils::resolve};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
-use tauri::Manager;
+use tauri::{async_runtime, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
-use tauri::async_runtime;
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
@@ -26,7 +23,10 @@ impl Hotkey {
         let verge = Config::verge();
         let enable_global_hotkey = verge.latest().enable_global_hotkey.unwrap_or(true);
 
-        println!("Initializing hotkeys, global hotkey enabled: {}", enable_global_hotkey);
+        println!(
+            "Initializing hotkeys, global hotkey enabled: {}",
+            enable_global_hotkey
+        );
         log::info!(target: "app", "Initializing hotkeys, global hotkey enabled: {}", enable_global_hotkey);
 
         // 如果全局热键被禁用，则不注册热键
@@ -85,11 +85,17 @@ impl Hotkey {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let manager = app_handle.global_shortcut();
 
-        println!("Attempting to register hotkey: {} for function: {}", hotkey, func);
+        println!(
+            "Attempting to register hotkey: {} for function: {}",
+            hotkey, func
+        );
         log::info!(target: "app", "Attempting to register hotkey: {} for function: {}", hotkey, func);
 
         if manager.is_registered(hotkey) {
-            println!("Hotkey {} was already registered, unregistering first", hotkey);
+            println!(
+                "Hotkey {} was already registered, unregistering first",
+                hotkey
+            );
             log::info!(target: "app", "Hotkey {} was already registered, unregistering first", hotkey);
             manager.unregister(hotkey)?;
         }
@@ -101,12 +107,12 @@ impl Hotkey {
                 || {
                     println!("=== Hotkey Dashboard Window Operation Start ===");
                     log::info!(target: "app", "=== Hotkey Dashboard Window Operation Start ===");
-                    
+
                     // 使用 spawn_blocking 来确保在正确的线程上执行
                     async_runtime::spawn_blocking(|| {
                         println!("Toggle dashboard window visibility");
                         log::info!(target: "app", "Toggle dashboard window visibility");
-                        
+
                         // 检查窗口是否存在
                         if let Some(window) = handle::Handle::global().get_window() {
                             // 如果窗口可见，则隐藏它
@@ -131,11 +137,11 @@ impl Hotkey {
                             resolve::create_window();
                         }
                     });
-                    
+
                     println!("=== Hotkey Dashboard Window Operation End ===");
                     log::info!(target: "app", "=== Hotkey Dashboard Window Operation End ===");
                 }
-            },
+            }
             "clash_mode_rule" => || feat::change_clash_mode("rule".into()),
             "clash_mode_global" => || feat::change_clash_mode("global".into()),
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
@@ -169,11 +175,14 @@ impl Hotkey {
                     // 直接执行函数，不做任何状态检查
                     println!("Executing function directly");
                     log::info!(target: "app", "Executing function directly");
-                    
+
                     // 获取轻量模式状态和全局热键状态
                     let is_lite_mode = Config::verge().latest().enable_lite_mode.unwrap_or(false);
-                    let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
-                    
+                    let is_enable_global_hotkey = Config::verge()
+                        .latest()
+                        .enable_global_hotkey
+                        .unwrap_or(true);
+
                     // 在轻量模式下或配置了全局热键时，始终执行热键功能
                     if is_lite_mode || is_enable_global_hotkey {
                         f();
@@ -181,7 +190,7 @@ impl Hotkey {
                         // 非轻量模式且未启用全局热键时，只在窗口可见且有焦点的情况下响应热键
                         let is_visible = window.is_visible().unwrap_or(false);
                         let is_focused = window.is_focused().unwrap_or(false);
-                        
+
                         if is_focused && is_visible {
                             f();
                         }

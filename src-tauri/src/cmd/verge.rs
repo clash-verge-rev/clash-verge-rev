@@ -1,9 +1,5 @@
-use crate::{
-    config::*,
-    feat,
-    wrap_err,
-};
 use super::CmdResult;
+use crate::{config::*, feat, wrap_err};
 
 /// 获取Verge配置
 #[tauri::command]

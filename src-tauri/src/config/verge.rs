@@ -1,7 +1,7 @@
-use crate::config::DEFAULT_PAC;
-use crate::config::{deserialize_encrypted, serialize_encrypted};
-use crate::utils::i18n;
-use crate::utils::{dirs, help};
+use crate::{
+    config::{deserialize_encrypted, serialize_encrypted, DEFAULT_PAC},
+    utils::{dirs, help, i18n},
+};
 use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
@@ -101,7 +101,7 @@ pub struct IVerge {
     /// hotkey map
     /// format: {func},{key}
     pub hotkeys: Option<Vec<String>>,
-    
+
     /// enable global hotkey
     pub enable_global_hotkey: Option<bool>,
 

@@ -1,10 +1,5 @@
-use crate::{
-    core,
-    config::*,
-    feat,
-    wrap_err,
-};
 use super::CmdResult;
+use crate::{config::*, core, feat, wrap_err};
 use reqwest_dav::list_cmd::ListFile;
 
 /// 保存 WebDAV 配置

@@ -3,17 +3,19 @@ mod config;
 mod core;
 mod enhance;
 mod feat;
-mod utils;
 mod module;
-use crate::core::hotkey;
-use crate::utils::{resolve, resolve::resolve_scheme, server};
+mod utils;
+use crate::{
+    core::hotkey,
+    utils::{resolve, resolve::resolve_scheme, server},
+};
 use config::Config;
-use tauri_plugin_autostart::MacosLauncher;
-use tauri_plugin_deep_link::DeepLinkExt;
 use std::sync::{Mutex, Once};
 use tauri::AppHandle;
 #[cfg(target_os = "macos")]
 use tauri::Manager;
+use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_deep_link::DeepLinkExt;
 
 /// A global singleton handle to the application.
 pub struct AppHandleManager {
@@ -57,7 +59,7 @@ impl AppHandleManager {
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Regular);
         }
     }
-    
+
     pub fn set_activation_policy_accessory(&self) {
         #[cfg(target_os = "macos")]
         {
@@ -66,7 +68,7 @@ impl AppHandleManager {
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
         }
     }
-    
+
     pub fn set_activation_policy_prohibited(&self) {
         #[cfg(target_os = "macos")]
         {
@@ -77,6 +79,7 @@ impl AppHandleManager {
     }
 }
 
+#[allow(clippy::panic)]
 pub fn run() {
     // 单例检测
     let app_exists: bool = tauri::async_runtime::block_on(async move {
@@ -219,12 +222,18 @@ pub fn run() {
             AppHandleManager::global().init(app_handle.clone());
             #[cfg(target_os = "macos")]
             {
-                let main_window = AppHandleManager::global().get_handle().get_webview_window("main").unwrap();
+                let main_window = AppHandleManager::global()
+                    .get_handle()
+                    .get_webview_window("main")
+                    .unwrap();
                 let _ = main_window.set_title("Clash Verge");
             }
         }
         #[cfg(target_os = "macos")]
-        tauri::RunEvent::Reopen { has_visible_windows, .. } => {
+        tauri::RunEvent::Reopen {
+            has_visible_windows,
+            ..
+        } => {
             if !has_visible_windows {
                 AppHandleManager::global().set_activation_policy_regular();
             }
@@ -259,8 +268,11 @@ pub fn run() {
                         {
                             log_err!(hotkey::Hotkey::global().register("Control+Q", "quit"));
                         };
-                        {   
-                            let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
+                        {
+                            let is_enable_global_hotkey = Config::verge()
+                                .latest()
+                                .enable_global_hotkey
+                                .unwrap_or(true);
                             if !is_enable_global_hotkey {
                                 log_err!(hotkey::Hotkey::global().init())
                             }
@@ -275,8 +287,11 @@ pub fn run() {
                         {
                             log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
                         };
-                        {   
-                            let is_enable_global_hotkey = Config::verge().latest().enable_global_hotkey.unwrap_or(true);
+                        {
+                            let is_enable_global_hotkey = Config::verge()
+                                .latest()
+                                .enable_global_hotkey
+                                .unwrap_or(true);
                             if !is_enable_global_hotkey {
                                 log_err!(hotkey::Hotkey::global().reset())
                             }

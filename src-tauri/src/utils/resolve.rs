@@ -1,9 +1,12 @@
-use crate::config::IVerge;
-use crate::utils::error;
-use crate::{config::Config, config::PrfItem, core::*, utils::init, utils::server};
-use crate::{log_err, wrap_err};
 #[cfg(target_os = "macos")]
 use crate::AppHandleManager;
+use crate::{
+    config::{Config, IVerge, PrfItem},
+    core::*,
+    log_err,
+    utils::{error, init, server},
+    wrap_err,
+};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use percent_encoding::percent_decode_str;
@@ -201,7 +204,7 @@ pub fn create_window() {
             log::info!(target: "app", "Window created successfully, attempting to show");
             let _ = window.show();
             let _ = window.set_focus();
-            
+
             // 设置窗口状态监控，实时保存窗口位置和大小
             crate::feat::setup_window_state_monitor(&app_handle);
         }
@@ -315,8 +318,7 @@ fn resolve_random_port_config() -> Result<()> {
 
 #[cfg(target_os = "macos")]
 pub async fn set_public_dns(dns_server: String) {
-    use crate::core::handle;
-    use crate::utils::dirs;
+    use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt;
     let app_handle = handle::Handle::global().app_handle().unwrap();
 
@@ -352,8 +354,7 @@ pub async fn set_public_dns(dns_server: String) {
 
 #[cfg(target_os = "macos")]
 pub async fn restore_public_dns() {
-    use crate::core::handle;
-    use crate::utils::dirs;
+    use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt;
     let app_handle = handle::Handle::global().app_handle().unwrap();
     log::info!(target: "app", "try to unset system dns");

@@ -207,7 +207,7 @@ macro_rules! t {
 /// # Examples
 /// ```not_run
 /// format_bytes_speed(1000) // returns "1000B/s"
-/// format_bytes_speed(1024) // returns "1.0KB/s" 
+/// format_bytes_speed(1024) // returns "1.0KB/s"
 /// format_bytes_speed(1024 * 1024) // returns "1.0MB/s"
 /// ```
 /// ```

@@ -1,7 +1,9 @@
-use crate::config::{Config, IVerge};
-use crate::core::{handle, hotkey, sysopt, tray, CoreManager};
-use crate::log_err;
-use crate::utils::resolve;
+use crate::{
+    config::{Config, IVerge},
+    core::{handle, hotkey, sysopt, tray, CoreManager},
+    log_err,
+    utils::resolve,
+};
 use anyhow::Result;
 use serde_yaml::Mapping;
 use tauri::Manager;
