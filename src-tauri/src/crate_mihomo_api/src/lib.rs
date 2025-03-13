@@ -52,7 +52,7 @@ impl MihomoManager {
         let client_response = reqwest::ClientBuilder::new()
             .default_headers(self.headers.clone())
             .no_proxy()
-            .timeout(Duration::from_secs(2))
+            .timeout(Duration::from_secs(60))
             .build()
             .map_err(|e| e.to_string())?
             .request(
