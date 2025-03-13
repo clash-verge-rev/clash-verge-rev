@@ -410,24 +410,3 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
-
-  trigger_updater:
-    name: Trigger Updater Workflow
-    runs-on: ubuntu-latest
-    needs:
-      [
-        check_commit,
-        alpha,
-        alpha-for-linux-arm,
-        alpha-for-fixed-webview2,
-        update_tag,
-      ]
-    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    steps:
-      - name: Trigger Updater Workflow
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/updater.yml/dispatches \
-            -d '{"ref":"${{ github.ref }}"}'
