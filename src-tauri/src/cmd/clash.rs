@@ -24,7 +24,8 @@ pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
 /// 修改Clash模式
 #[tauri::command]
 pub async fn patch_clash_mode(payload: String) -> CmdResult {
-    Ok(feat::change_clash_mode(payload))
+    feat::change_clash_mode(payload);
+    Ok(())
 }
 
 /// 切换Clash核心
@@ -98,9 +99,11 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 /// 应用或撤销DNS配置
 #[tauri::command]
 pub fn apply_dns_config(apply: bool) -> CmdResult {
-    use crate::config::Config;
-    use crate::core::{handle, CoreManager};
-    use crate::utils::dirs;
+    use crate::{
+        config::Config,
+        core::{handle, CoreManager},
+        utils::dirs,
+    };
     use tauri::async_runtime;
 
     // 使用spawn来处理异步操作

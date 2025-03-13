@@ -234,10 +234,10 @@ impl PrfItem {
         option: Option<PrfOption>,
     ) -> Result<PrfItem> {
         let opt_ref = option.as_ref();
-        let with_proxy = opt_ref.map_or(false, |o| o.with_proxy.unwrap_or(false));
-        let self_proxy = opt_ref.map_or(false, |o| o.self_proxy.unwrap_or(false));
+        let with_proxy = opt_ref.is_some_and(|o| o.with_proxy.unwrap_or(false));
+        let self_proxy = opt_ref.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs =
-            opt_ref.map_or(false, |o| o.danger_accept_invalid_certs.unwrap_or(false));
+            opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
         let mut merge = opt_ref.and_then(|o| o.merge.clone());

@@ -1,8 +1,10 @@
 extern crate warp;
 
 use super::resolve;
-use crate::config::{Config, IVerge, DEFAULT_PAC};
-use crate::log_err;
+use crate::{
+    config::{Config, IVerge, DEFAULT_PAC},
+    log_err,
+};
 use anyhow::{bail, Result};
 use port_scanner::local_port_available;
 use std::convert::Infallible;

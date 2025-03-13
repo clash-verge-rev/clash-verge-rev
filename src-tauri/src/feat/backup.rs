@@ -1,7 +1,9 @@
-use crate::config::{Config, IVerge};
-use crate::core::backup;
-use crate::log_err;
-use crate::utils::dirs::app_home_dir;
+use crate::{
+    config::{Config, IVerge},
+    core::backup,
+    log_err,
+    utils::dirs::app_home_dir,
+};
 use anyhow::Result;
 use reqwest_dav::list_cmd::ListFile;
 use std::fs;

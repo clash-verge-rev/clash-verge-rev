@@ -1,11 +1,11 @@
+use super::CmdResult;
 use crate::{
     config::*,
     core::*,
-    feat,
+    feat, log_err, ret_err,
     utils::{dirs, help},
-    log_err, ret_err, wrap_err,
+    wrap_err,
 };
-use super::CmdResult;
 
 /// 获取配置文件列表
 #[tauri::command]
@@ -31,7 +31,7 @@ pub async fn enhance_profiles() -> CmdResult {
         }
         Err(e) => {
             println!("[enhance_profiles] 更新过程发生错误: {}", e);
-            handle::Handle::notice_message("config_validate::process_terminated", &e.to_string());
+            handle::Handle::notice_message("config_validate::process_terminated", e.to_string());
             Ok(())
         }
     }
@@ -76,19 +76,17 @@ pub async fn delete_profile(index: String) -> CmdResult {
 
 /// 修改profiles的配置
 #[tauri::command]
-pub async fn patch_profiles_config(
-    profiles: IProfiles
-) -> CmdResult<bool> {
+pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     println!("[cmd配置patch] 开始修改配置文件");
-    
+
     // 保存当前配置，以便在验证失败时恢复
     let current_profile = Config::profiles().latest().current.clone();
     println!("[cmd配置patch] 当前配置: {:?}", current_profile);
-    
+
     // 更新profiles配置
     println!("[cmd配置patch] 正在更新配置草稿");
     wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
-    
+
     // 更新配置并进行验证
     match CoreManager::global().update_config().await {
         Ok((true, _)) => {
@@ -102,7 +100,7 @@ pub async fn patch_profiles_config(
         Ok((false, error_msg)) => {
             println!("[cmd配置patch] 配置验证失败: {}", error_msg);
             Config::profiles().discard();
-            
+
             // 如果验证失败，恢复到之前的配置
             if let Some(prev_profile) = current_profile {
                 println!("[cmd配置patch] 尝试恢复到之前的配置: {}", prev_profile);
@@ -124,7 +122,7 @@ pub async fn patch_profiles_config(
         Err(e) => {
             println!("[cmd配置patch] 更新过程发生错误: {}", e);
             Config::profiles().discard();
-            handle::Handle::notice_message("config_validate::boot_error", &e.to_string());
+            handle::Handle::notice_message("config_validate::boot_error", e.to_string());
             Ok(false)
         }
     }
@@ -134,9 +132,12 @@ pub async fn patch_profiles_config(
 #[tauri::command]
 pub async fn patch_profiles_config_by_profile_index(
     _app_handle: tauri::AppHandle,
-    profile_index: String
+    profile_index: String,
 ) -> CmdResult<bool> {
-    let profiles = IProfiles{current: Some(profile_index), items: None};
+    let profiles = IProfiles {
+        current: Some(profile_index),
+        items: None,
+    };
     patch_profiles_config(profiles).await
 }
 

@@ -1,8 +1,7 @@
 use crate::core::handle;
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use std::fs;
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 use tauri::Manager;
 
 #[cfg(not(feature = "verge-dev"))]

@@ -24,7 +24,7 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
         val.as_mapping().cloned().unwrap_or(Mapping::new())
     });
-    
+
     if enable {
         // 读取DNS配置
         let dns_key = Value::from("dns");
@@ -40,20 +40,20 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
 
         // 检查现有的 enhanced-mode 设置
         let current_mode = dns_val
-            .get(&Value::from("enhanced-mode"))
+            .get(Value::from("enhanced-mode"))
             .and_then(|v| v.as_str())
             .unwrap_or("fake-ip");
 
         // 只有当 enhanced-mode 是 fake-ip 或未设置时才修改 DNS 配置
-        if current_mode == "fake-ip" || !dns_val.contains_key(&Value::from("enhanced-mode")) {
+        if current_mode == "fake-ip" || !dns_val.contains_key(Value::from("enhanced-mode")) {
             revise!(dns_val, "enable", true);
             revise!(dns_val, "ipv6", ipv6_val);
-            
-            if !dns_val.contains_key(&Value::from("enhanced-mode")) {
+
+            if !dns_val.contains_key(Value::from("enhanced-mode")) {
                 revise!(dns_val, "enhanced-mode", "fake-ip");
             }
-            
-            if !dns_val.contains_key(&Value::from("fake-ip-range")) {
+
+            if !dns_val.contains_key(Value::from("fake-ip-range")) {
                 revise!(dns_val, "fake-ip-range", "198.18.0.1/16");
             }
 
@@ -63,7 +63,7 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
                 crate::utils::resolve::set_public_dns("223.6.6.6".to_string()).await;
             }
         }
-        
+
         // 当TUN启用时，将修改后的DNS配置写回
         revise!(config, "dns", dns_val);
     } else {
@@ -75,6 +75,6 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     // 更新TUN配置
     revise!(tun_val, "enable", enable);
     revise!(config, "tun", tun_val);
-    
+
     config
 }

@@ -1,8 +1,8 @@
-use crate::cmd;
-use crate::config::{Config, PrfItem, PrfOption};
-use crate::core::handle;
-use crate::core::CoreManager;
-use crate::core::*;
+use crate::{
+    cmd,
+    config::{Config, PrfItem, PrfOption},
+    core::{handle, CoreManager, *},
+};
 use anyhow::{bail, Result};
 
 /// Toggle proxy profile
@@ -29,7 +29,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         let item = profiles.get_item(&uid)?;
-        let is_remote = item.itype.as_ref().map_or(false, |s| s == "remote");
+        let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
         if !is_remote {
             println!("[订阅更新] {} 不是远程订阅，跳过更新", uid);

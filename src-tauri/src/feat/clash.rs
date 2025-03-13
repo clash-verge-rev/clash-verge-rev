@@ -1,8 +1,10 @@
-use crate::config::Config;
-use crate::core::{handle, tray, CoreManager};
-use crate::log_err;
-use crate::module::mihomo::MihomoManager;
-use crate::utils::resolve;
+use crate::{
+    config::Config,
+    core::{handle, tray, CoreManager},
+    log_err,
+    module::mihomo::MihomoManager,
+    utils::resolve,
+};
 use serde_yaml::{Mapping, Value};
 use tauri::Manager;
 

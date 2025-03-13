@@ -1,6 +1,6 @@
-use crate::core::handle::Handle;
 use crate::{
     config::{Config, IVerge},
+    core::handle::Handle,
     log_err,
 };
 use anyhow::Result;
@@ -126,8 +126,7 @@ impl Sysopt {
             if !sys_enable {
                 return self.reset_sysproxy().await;
             }
-            use crate::core::handle::Handle;
-            use crate::utils::dirs;
+            use crate::{core::handle::Handle, utils::dirs};
             use anyhow::bail;
             use tauri_plugin_shell::ShellExt;
 
@@ -185,8 +184,7 @@ impl Sysopt {
 
         #[cfg(target_os = "windows")]
         {
-            use crate::core::handle::Handle;
-            use crate::utils::dirs;
+            use crate::{core::handle::Handle, utils::dirs};
             use anyhow::bail;
             use tauri_plugin_shell::ShellExt;
 
@@ -305,8 +303,7 @@ impl Sysopt {
 
                 #[cfg(target_os = "windows")]
                 {
-                    use crate::core::handle::Handle;
-                    use crate::utils::dirs;
+                    use crate::{core::handle::Handle, utils::dirs};
                     use tauri_plugin_shell::ShellExt;
 
                     let app_handle = Handle::global().app_handle().unwrap();

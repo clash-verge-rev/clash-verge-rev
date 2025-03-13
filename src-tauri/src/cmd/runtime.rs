@@ -1,11 +1,8 @@
-use crate::{
-    config::*,
-    wrap_err,
-};
 use super::CmdResult;
+use crate::{config::*, wrap_err};
 use anyhow::Context;
-use std::collections::HashMap;
 use serde_yaml::Mapping;
+use std::collections::HashMap;
 
 /// 获取运行时配置
 #[tauri::command]

@@ -1,9 +1,9 @@
-use crate::config::Config;
-use crate::core::handle;
-use crate::core::{sysopt, CoreManager};
-use crate::module::mihomo::MihomoManager;
-use crate::utils::resolve;
-use futures;
+use crate::{
+    config::Config,
+    core::{handle, sysopt, CoreManager},
+    module::mihomo::MihomoManager,
+    utils::resolve,
+};
 use tauri::Manager;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 

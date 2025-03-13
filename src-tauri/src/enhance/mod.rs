@@ -5,17 +5,10 @@ mod script;
 pub mod seq;
 mod tun;
 
-use self::chain::*;
-use self::field::*;
-use self::merge::*;
-use self::script::*;
-use self::seq::*;
-use self::tun::*;
-use crate::config::Config;
-use crate::utils::tmpl;
+use self::{chain::*, field::*, merge::*, script::*, seq::*, tun::*};
+use crate::{config::Config, utils::tmpl};
 use serde_yaml::Mapping;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 type ResultLog = Vec<(String, String)>;
 
@@ -267,11 +260,11 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if enable_dns_settings {
         use crate::utils::dirs;
         use std::fs;
-        
+
         // 尝试读取dns_config.yaml
         if let Ok(app_dir) = dirs::app_home_dir() {
             let dns_path = app_dir.join("dns_config.yaml");
-            
+
             if dns_path.exists() {
                 if let Ok(dns_yaml) = fs::read_to_string(&dns_path) {
                     if let Ok(dns_config) = serde_yaml::from_str::<serde_yaml::Mapping>(&dns_yaml) {

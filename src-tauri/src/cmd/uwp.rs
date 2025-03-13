@@ -4,8 +4,7 @@ use super::CmdResult;
 #[cfg(windows)]
 mod platform {
     use super::CmdResult;
-    use crate::core::win_uwp;
-    use crate::wrap_err;
+    use crate::{core::win_uwp, wrap_err};
 
     pub async fn invoke_uwp_tool() -> CmdResult {
         wrap_err!(win_uwp::invoke_uwptools().await)
