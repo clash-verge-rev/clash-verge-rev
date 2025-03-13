@@ -16,11 +16,10 @@ impl IClashConfig {
         let template = Self::default();
         match dirs::clash_path().and_then(|path| help::read_merge_mapping(&path)) {
             Ok(mut map) => {
-                template.0.keys().for_each(|key| {
-                    if !map.contains_key(key) {
-                        map.insert(key.clone(), template.0.get(key).unwrap().clone());
-                    }
-                });
+                let mut dst_merge = Value::from(template.0.clone());
+                let config = Value::from(map.clone());
+                help::deep_merge(&mut dst_merge, &config);
+                map = dst_merge.as_mapping().unwrap().clone();
                 Self(Self::guard(map))
             }
             Err(err) => {
@@ -279,6 +278,14 @@ impl IClashConfig {
                 socket.to_string()
             }
             Err(_) => "127.0.0.1:9090".into(),
+        }
+    }
+}
+
+impl Drop for IClashConfig {
+    fn drop(&mut self) {
+        if let Err(e) = self.save_config() {
+            log::error!("Failed to save config after drop: {}", e);
         }
     }
 }

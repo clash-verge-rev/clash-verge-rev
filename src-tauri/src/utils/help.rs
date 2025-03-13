@@ -54,6 +54,17 @@ pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -
         .with_context(|| format!("failed to save file \"{path_str}\""))
 }
 
+pub fn deep_merge(a: &mut Value, b: &Value) {
+    match (a, b) {
+        (&mut Value::Mapping(ref mut a), Value::Mapping(b)) => {
+            for (k, v) in b {
+                deep_merge(a.entry(k.clone()).or_insert(Value::Null), v);
+            }
+        }
+        (a, b) => *a = b.clone(),
+    }
+}
+
 const ALPHABET: [char; 62] = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
     'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
