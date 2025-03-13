@@ -282,14 +282,6 @@ impl IClashConfig {
     }
 }
 
-impl Drop for IClashConfig {
-    fn drop(&mut self) {
-        if let Err(e) = self.save_config() {
-            log::error!("Failed to save config after drop: {}", e);
-        }
-    }
-}
-
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct ClashInfo {
     /// clash core port
