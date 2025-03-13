@@ -30,10 +30,5 @@
       "./sidecar/verge-mihomo",
       "./sidecar/verge-mihomo-alpha"
     ]
-  },
-  "app": {
-    "trayIcon": {
-      "iconPath": "icons/tray-icon.ico"
-    }
   }
 }
