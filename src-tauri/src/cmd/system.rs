@@ -5,8 +5,10 @@ use crate::{
     wrap_err,
 };
 use once_cell::sync::Lazy;
-use std::sync::atomic::{AtomicI64, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    sync::atomic::{AtomicI64, Ordering},
+    time::{SystemTime, UNIX_EPOCH},
+};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 // 存储应用启动时间的全局变量

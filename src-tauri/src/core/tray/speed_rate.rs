@@ -38,12 +38,20 @@ impl SpeedRate {
 
         let (current, previous) = &mut *rates;
 
-        // 如果速率变化不大（小于10%），则不更新
-        let should_update = {
-            let up_change = (current.up as f64 - up as f64).abs() / (current.up as f64 + 1.0);
-            let down_change =
-                (current.down as f64 - down as f64).abs() / (current.down as f64 + 1.0);
-            up_change > 0.1 || down_change > 0.1
+        // Avoid unnecessary float conversions for small value checks
+        let should_update = if current.up < 1000 && down < 1000 {
+            // For small values, always update to ensure accuracy
+            current.up != up || current.down != down
+        } else {
+            // For larger values, use integer math to check for >5% change
+            // Multiply by 20 instead of dividing by 0.05 to avoid floating point
+            let up_threshold = current.up / 20;
+            let down_threshold = current.down / 20;
+
+            (up > current.up && up - current.up > up_threshold)
+                || (up < current.up && current.up - up > up_threshold)
+                || (down > current.down && down - current.down > down_threshold)
+                || (down < current.down && current.down - down > down_threshold)
         };
 
         if !should_update {
