@@ -153,6 +153,7 @@ pub fn run() {
             // 添加新的命令
             cmd::get_running_mode,
             cmd::install_service,
+            cmd::get_app_uptime,
             // clash
             cmd::get_clash_info,
             cmd::patch_clash_config,
@@ -206,6 +207,8 @@ pub fn run() {
             cmd::restore_webdav_backup,
             // export diagnostic info for issue reporting
             cmd::export_diagnostic_info,
+            // get system info for display
+            cmd::get_system_info,
         ]);
 
     #[cfg(debug_assertions)]

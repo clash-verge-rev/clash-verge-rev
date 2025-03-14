@@ -1,11 +1,5 @@
-import {
-  Box,
-  ButtonGroup,
-  Grid,
-  IconButton,
-  Select,
-  MenuItem,
-} from "@mui/material";
+import { Box, ButtonGroup, IconButton, Select, MenuItem } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { BasePage, Notice } from "@/components/base";
@@ -72,8 +66,8 @@ const SettingPage = () => {
         </ButtonGroup>
       }
     >
-      <Grid container spacing={{ xs: 1.5, lg: 1.5 }}>
-        <Grid item xs={12} md={6}>
+      <Grid container spacing={1.5} columns={{ xs: 6, sm: 6, md: 12 }}>
+        <Grid size={6}>
           <Box
             sx={{
               borderRadius: 2,
@@ -92,7 +86,7 @@ const SettingPage = () => {
             <SettingClash onError={onError} />
           </Box>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={6}>
           <Box
             sx={{
               borderRadius: 2,

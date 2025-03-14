@@ -1,10 +1,10 @@
 import LogsPage from "./logs";
 import ProxiesPage from "./proxies";
-import TestPage from "./test";
 import ProfilesPage from "./profiles";
 import SettingsPage from "./settings";
 import ConnectionsPage from "./connections";
 import RulesPage from "./rules";
+import HomePage from "./home";
 import { BaseErrorBoundary } from "@/components/base";
 
 import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
@@ -12,7 +12,6 @@ import ProfilesSvg from "@/assets/image/itemicon/profiles.svg?react";
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
 import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
-import TestSvg from "@/assets/image/itemicon/test.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
@@ -22,8 +21,15 @@ import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 
 export const routers = [
+  {
+    label: "Label-Home",
+    path: "/home",
+    icon: [<HomeRoundedIcon />],
+    element: <HomePage />,
+  },
   {
     label: "Label-Proxies",
     path: "/",
@@ -53,12 +59,6 @@ export const routers = [
     path: "/logs",
     icon: [<SubjectRoundedIcon />, <LogsSvg />],
     element: <LogsPage />,
-  },
-  {
-    label: "Label-Test",
-    path: "/test",
-    icon: [<WifiTetheringRoundedIcon />, <TestSvg />],
-    element: <TestPage />,
   },
   {
     label: "Label-Settings",

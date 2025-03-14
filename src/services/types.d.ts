@@ -787,6 +787,7 @@ interface IVergeConfig {
   webdav_url?: string;
   webdav_username?: string;
   webdav_password?: string;
+  home_cards?: Record<string, boolean>;
 }
 
 interface IWebDavFile {

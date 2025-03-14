@@ -76,6 +76,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
     let enable_tray_speed = patch.enable_tray_speed;
     let enable_global_hotkey = patch.enable_global_hotkey;
     let tray_event = patch.tray_event;
+    let home_cards = patch.home_cards.clone();
 
     let res: std::result::Result<(), anyhow::Error> = {
         let mut should_restart_core = false;
@@ -96,6 +97,9 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             should_update_systray_icon = true;
         }
         if enable_global_hotkey.is_some() {
+            should_update_verge_config = true;
+        }
+        if home_cards.is_some() {
             should_update_verge_config = true;
         }
         #[cfg(not(target_os = "windows"))]

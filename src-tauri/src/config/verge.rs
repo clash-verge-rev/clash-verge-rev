@@ -5,6 +5,7 @@ use crate::{
 use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -104,6 +105,10 @@ pub struct IVerge {
 
     /// enable global hotkey
     pub enable_global_hotkey: Option<bool>,
+
+    /// 首页卡片设置
+    /// 控制首页各个卡片的显示和隐藏
+    pub home_cards: Option<serde_json::Value>,
 
     /// 切换代理时自动关闭连接
     pub auto_close_connection: Option<bool>,
@@ -291,6 +296,7 @@ impl IVerge {
             enable_global_hotkey: Some(true),
             enable_lite_mode: Some(false),
             enable_dns_settings: Some(true),
+            home_cards: None,
             ..Self::default()
         }
     }
@@ -374,6 +380,7 @@ impl IVerge {
         patch!(enable_tray_speed);
         patch!(enable_lite_mode);
         patch!(enable_dns_settings);
+        patch!(home_cards);
     }
 
     /// 在初始化前尝试拿到单例端口的值
@@ -464,6 +471,7 @@ pub struct IVergeResponse {
     pub enable_tray_speed: Option<bool>,
     pub enable_lite_mode: Option<bool>,
     pub enable_dns_settings: Option<bool>,
+    pub home_cards: Option<serde_json::Value>,
 }
 
 impl From<IVerge> for IVergeResponse {
@@ -528,6 +536,7 @@ impl From<IVerge> for IVergeResponse {
             enable_tray_speed: verge.enable_tray_speed,
             enable_lite_mode: verge.enable_lite_mode,
             enable_dns_settings: verge.enable_dns_settings,
+            home_cards: verge.home_cards,
         }
     }
 }

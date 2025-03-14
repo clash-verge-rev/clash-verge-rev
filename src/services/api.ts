@@ -253,7 +253,7 @@ export const deleteConnection = async (id: string) => {
 // Close all connections
 export const closeAllConnections = async () => {
   const instance = await getAxios();
-  await instance.delete<any, any>(`/connections`);
+  await instance.delete("/connections");
 };
 
 // Get Group Proxy Delays
@@ -312,4 +312,23 @@ export const gc = async () => {
   } catch (error) {
     console.error(`Error gcing: ${error}`);
   }
+};
+
+// Get current IP and geolocation information
+export const getIpInfo = async () => {
+  // 使用axios直接请求IP.sb的API，不通过clash代理
+  const response = await axios.get("https://api.ip.sb/geoip");
+  return response.data as {
+    ip: string;
+    country_code: string;
+    country: string;
+    region: string;
+    city: string;
+    organization: string;
+    asn: number;
+    asn_organization: string;
+    longitude: number;
+    latitude: number;
+    timezone: string;
+  };
 };

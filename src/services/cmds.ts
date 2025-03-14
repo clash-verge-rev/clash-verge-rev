@@ -225,6 +225,10 @@ export async function exportDiagnosticInfo() {
   return invoke("export_diagnostic_info");
 }
 
+export async function getSystemInfo() {
+  return invoke<string>("get_system_info");
+}
+
 export async function copyIconFile(
   path: string,
   name: "common" | "sysproxy" | "tun",
@@ -299,6 +303,11 @@ export async function validateScriptFile(filePath: string) {
 // 获取当前运行模式
 export const getRunningMode = async () => {
   return invoke<string>("get_running_mode");
+};
+
+// 获取应用运行时间
+export const getAppUptime = async () => {
+  return invoke<number>("get_app_uptime");
 };
 
 // 安装/重装系统服务
