@@ -1,5 +1,7 @@
 use serde::{ser::Serializer, Serialize};
 
+use crate::ConnectionId;
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
@@ -11,7 +13,13 @@ pub enum Error {
     #[error(transparent)]
     Json(#[from] serde_json::Error),
     #[error(transparent)]
-    InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),
+    Websocket(#[from] tokio_tungstenite::tungstenite::Error),
+    #[error("connection not found for the given id: {0}")]
+    ConnectionNotFound(ConnectionId),
+    #[error(transparent)]
+    InvalidHeaderValue(#[from] tokio_tungstenite::tungstenite::http::header::InvalidHeaderValue),
+    #[error(transparent)]
+    InvalidHeaderName(#[from] tokio_tungstenite::tungstenite::http::header::InvalidHeaderName),
     #[error("The {0} method not supported")]
     MethodNotSupported(String),
     #[error("Response is failed, {0}")]

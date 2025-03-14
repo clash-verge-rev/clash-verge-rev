@@ -32,6 +32,13 @@ Default permissions for the plugin
 - `allow-upgrade-core`
 - `allow-upgrade-ui`
 - `allow-upgrade-geo`
+- `allow-ws-connect`
+- `allow-ws-traffic`
+- `allow-ws-memory`
+- `allow-ws-connections`
+- `allow-ws-logs`
+- `allow-ws-send`
+- `allow-ws-disconnect`
 
 ## Permission Table
 
@@ -817,6 +824,188 @@ Enables the upgrade_ui command without any pre-configured scope.
 <td>
 
 Denies the upgrade_ui command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-ws-connect`
+
+</td>
+<td>
+
+Enables the ws_connect command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-ws-connect`
+
+</td>
+<td>
+
+Denies the ws_connect command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-ws-connections`
+
+</td>
+<td>
+
+Enables the ws_connections command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-ws-connections`
+
+</td>
+<td>
+
+Denies the ws_connections command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-ws-disconnect`
+
+</td>
+<td>
+
+Enables the ws_disconnect command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-ws-disconnect`
+
+</td>
+<td>
+
+Denies the ws_disconnect command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-ws-logs`
+
+</td>
+<td>
+
+Enables the ws_logs command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-ws-logs`
+
+</td>
+<td>
+
+Denies the ws_logs command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-ws-memory`
+
+</td>
+<td>
+
+Enables the ws_memory command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-ws-memory`
+
+</td>
+<td>
+
+Denies the ws_memory command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-ws-send`
+
+</td>
+<td>
+
+Enables the ws_send command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-ws-send`
+
+</td>
+<td>
+
+Denies the ws_send command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-ws-traffic`
+
+</td>
+<td>
+
+Enables the ws_traffic command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-ws-traffic`
+
+</td>
+<td>
+
+Denies the ws_traffic command without any pre-configured scope.
 
 </td>
 </tr>

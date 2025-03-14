@@ -1,6 +1,9 @@
 use std::{collections::HashMap, fmt::Display};
 
+use futures_util::stream::SplitSink;
 use serde::{Deserialize, Serialize};
+use tokio::net::TcpStream;
+use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -300,3 +303,7 @@ pub struct ConnectionMetaData {
     pub dscp: u32,
     pub sniff_host: String,
 }
+
+pub(crate) type ConnectionId = u32;
+pub(crate) type WebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
+pub(crate) type WebSocketWriter = SplitSink<WebSocket, Message>;

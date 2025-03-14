@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { Channel, invoke } from "@tauri-apps/api/core";
 
 export interface MihomoVersion {
   meta: boolean;
@@ -394,4 +394,138 @@ export async function upgradeUi(): Promise<void> {
 
 export async function upgradeGeo(): Promise<void> {
   await invoke<void>("plugin:mihomo|upgrade_geo");
+}
+
+export interface MessageKind<T, D> {
+  type: T;
+  data: D;
+}
+
+export interface CloseFrame {
+  code: number;
+  reason: string;
+}
+
+export type Message =
+  | MessageKind<"Text", string>
+  | MessageKind<"Binary", number[]>
+  | MessageKind<"Ping", number[]>
+  | MessageKind<"Pong", number[]>
+  | MessageKind<"Close", CloseFrame | null>;
+
+export class WebSocket {
+  id: number;
+  private readonly listeners: Set<(arg: Message) => void>;
+
+  constructor(id: number, listeners: Set<(arg: Message) => void>) {
+    this.id = id;
+    this.listeners = listeners;
+  }
+
+  static async connect(url: string): Promise<WebSocket> {
+    const listeners: Set<(arg: Message) => void> = new Set();
+
+    const onMessage = new Channel<Message>();
+    onMessage.onmessage = (message: Message): void => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+
+    return await invoke<number>("plugin:mihomo|connect", {
+      url,
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+
+  static async connect_traffic(): Promise<WebSocket> {
+    const listeners: Set<(arg: Message) => void> = new Set();
+
+    const onMessage = new Channel<Message>();
+    onMessage.onmessage = (message: Message): void => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+
+    return await invoke<number>("plugin:mihomo|ws_traffic", {
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+
+  static async connect_memory(): Promise<WebSocket> {
+    const listeners: Set<(arg: Message) => void> = new Set();
+
+    const onMessage = new Channel<Message>();
+    onMessage.onmessage = (message: Message): void => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+
+    return await invoke<number>("plugin:mihomo|ws_memory", {
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+
+  static async connect_connections(): Promise<WebSocket> {
+    const listeners: Set<(arg: Message) => void> = new Set();
+
+    const onMessage = new Channel<Message>();
+    onMessage.onmessage = (message: Message): void => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+
+    return await invoke<number>("plugin:mihomo|ws_connections", {
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+
+  static async connect_logs(
+    level: "debug" | "info" | "warn" | "error",
+  ): Promise<WebSocket> {
+    const listeners: Set<(arg: Message) => void> = new Set();
+
+    const onMessage = new Channel<Message>();
+    onMessage.onmessage = (message: Message): void => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+
+    return await invoke<number>("plugin:mihomo|ws_logs", {
+      level,
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+
+  addListener(cb: (arg: Message) => void): () => void {
+    this.listeners.add(cb);
+
+    return () => {
+      this.listeners.delete(cb);
+    };
+  }
+
+  async send(message: Message | string | number[]): Promise<void> {
+    let m: Message;
+    if (typeof message === "string") {
+      m = { type: "Text", data: message };
+    } else if (typeof message === "object" && "type" in message) {
+      m = message;
+    } else if (Array.isArray(message)) {
+      m = { type: "Binary", data: message };
+    } else {
+      throw new Error(
+        "invalid `message` type, expected a `{ type: string, data: any }` object, a string or a numeric array",
+      );
+    }
+    await invoke("plugin:mihomo|send", { id: this.id, message: m });
+  }
+
+  async disconnect(): Promise<void> {
+    await invoke("plugin:mihomo|disconnect", { id: this.id });
+  }
 }

@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-
 use tauri::async_runtime::RwLock;
+use tauri::ipc::Channel;
 use tauri::{command, State};
 
-use crate::mihomo::Mihomo;
+use crate::mihomo::{Mihomo, WebSocketMessage};
 use crate::{models::*, Result};
 
 #[command]
@@ -249,4 +249,65 @@ pub(crate) async fn upgrade_ui(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
 #[command]
 pub(crate) async fn upgrade_geo(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
     state.read().await.upgrade_geo().await
+}
+
+// websocket
+#[command]
+pub(crate) async fn ws_connect(
+    state: State<'_, RwLock<Mihomo>>,
+    url: String,
+    on_message: Channel<serde_json::Value>,
+) -> Result<ConnectionId> {
+    state.read().await.connect(url, on_message).await
+}
+
+#[command]
+pub(crate) async fn ws_traffic(
+    state: State<'_, RwLock<Mihomo>>,
+    on_message: Channel<serde_json::Value>,
+) -> Result<ConnectionId> {
+    state.read().await.ws_traffic(on_message).await
+}
+
+#[command]
+pub(crate) async fn ws_memory(
+    state: State<'_, RwLock<Mihomo>>,
+    on_message: Channel<serde_json::Value>,
+) -> Result<ConnectionId> {
+    state.read().await.ws_memory(on_message).await
+}
+
+#[command]
+pub(crate) async fn ws_connections(
+    state: State<'_, RwLock<Mihomo>>,
+    on_message: Channel<serde_json::Value>,
+) -> Result<ConnectionId> {
+    state.read().await.ws_connections(on_message).await
+}
+
+#[command]
+pub(crate) async fn ws_logs(
+    state: State<'_, RwLock<Mihomo>>,
+    level: String,
+    on_message: Channel<serde_json::Value>,
+) -> Result<ConnectionId> {
+    state.read().await.ws_logs(level, on_message).await
+}
+
+#[command]
+pub(crate) async fn ws_send(
+    state: State<'_, RwLock<Mihomo>>,
+    id: u32,
+    message: WebSocketMessage,
+) -> Result<()> {
+    state.read().await.send(id, message).await
+}
+
+#[command]
+pub(crate) async fn ws_disconnect(
+    state: State<'_, RwLock<Mihomo>>,
+    id: ConnectionId,
+    force_timeout: Option<u64>,
+) -> Result<()> {
+    state.read().await.disconnect(id, force_timeout).await
 }

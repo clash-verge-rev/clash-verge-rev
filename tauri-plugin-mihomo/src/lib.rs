@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use mihomo::ConnectionManager;
 pub use mihomo::Mihomo;
 use tauri::{
     async_runtime::RwLock,
@@ -113,6 +116,14 @@ impl Builder {
                 commands::upgrade_core,
                 commands::upgrade_ui,
                 commands::upgrade_geo,
+                // ws
+                commands::ws_connect,
+                commands::ws_traffic,
+                commands::ws_memory,
+                commands::ws_connections,
+                commands::ws_logs,
+                commands::ws_disconnect,
+                commands::ws_send,
             ])
             .setup(move |app, _api| {
                 app.manage(RwLock::new(Mihomo {
@@ -120,6 +131,7 @@ impl Builder {
                     external_host,
                     external_port,
                     secret,
+                    connection_manager: Arc::new(ConnectionManager::default()),
                 }));
                 Ok(())
             })

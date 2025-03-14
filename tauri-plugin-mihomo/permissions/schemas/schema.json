@@ -556,6 +556,76 @@
           "const": "deny-upgrade-ui"
         },
         {
+          "description": "Enables the ws_connect command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ws-connect"
+        },
+        {
+          "description": "Denies the ws_connect command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ws-connect"
+        },
+        {
+          "description": "Enables the ws_connections command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ws-connections"
+        },
+        {
+          "description": "Denies the ws_connections command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ws-connections"
+        },
+        {
+          "description": "Enables the ws_disconnect command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ws-disconnect"
+        },
+        {
+          "description": "Denies the ws_disconnect command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ws-disconnect"
+        },
+        {
+          "description": "Enables the ws_logs command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ws-logs"
+        },
+        {
+          "description": "Denies the ws_logs command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ws-logs"
+        },
+        {
+          "description": "Enables the ws_memory command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ws-memory"
+        },
+        {
+          "description": "Denies the ws_memory command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ws-memory"
+        },
+        {
+          "description": "Enables the ws_send command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ws-send"
+        },
+        {
+          "description": "Denies the ws_send command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ws-send"
+        },
+        {
+          "description": "Enables the ws_traffic command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-ws-traffic"
+        },
+        {
+          "description": "Denies the ws_traffic command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-ws-traffic"
+        },
+        {
           "description": "Default permissions for the plugin",
           "type": "string",
           "const": "default"

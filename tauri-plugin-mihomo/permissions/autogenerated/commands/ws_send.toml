@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-ws-send"
+description = "Enables the ws_send command without any pre-configured scope."
+commands.allow = ["ws_send"]
+
+[[permission]]
+identifier = "deny-ws-send"
+description = "Denies the ws_send command without any pre-configured scope."
+commands.deny = ["ws_send"]

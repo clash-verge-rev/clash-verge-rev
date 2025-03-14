@@ -20,6 +20,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
+import { WebSocket } from "tauri-plugin-mihomo-api";
+
 const appWindow = getCurrentWebviewWindow();
 
 export let portableFlag = false;
@@ -57,6 +59,14 @@ const Layout = () => {
   };
 
   useEffect(() => {
+    WebSocket.connect_traffic().then((ws) => {
+      // ws.addListener((msg) => {
+      //   console.log("Received Message:", msg.data);
+      // });
+    });
+    // await ws.send("Hello World!");
+    // await ws.disconnect();
+
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && OS !== "macos") {
         handleClose(keepUIActive);

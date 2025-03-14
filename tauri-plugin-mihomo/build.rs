@@ -29,6 +29,13 @@ const COMMANDS: &[&str] = &[
     "upgrade_core",
     "upgrade_ui",
     "upgrade_geo",
+    "ws_connect",
+    "ws_traffic",
+    "ws_memory",
+    "ws_connections",
+    "ws_logs",
+    "ws_send",
+    "ws_disconnect",
 ];
 
 fn main() {

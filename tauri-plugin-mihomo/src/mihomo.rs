@@ -1,13 +1,19 @@
-use std::collections::HashMap;
-
-use reqwest::{Method, RequestBuilder};
-use serde::Deserialize;
-use serde_json::json;
-use tauri::http::{HeaderMap, HeaderValue};
-
+#![allow(dead_code)]
 use crate::{
-    BaseConfig, Connections, Error, GroupProxies, MihomoVersion, Protocol, Providers, Proxies,
-    Proxy, ProxyDelay, ProxyProviders, Result, RuleProviders, Rules,
+    BaseConfig, ConnectionId, Connections, Error, GroupProxies, MihomoVersion, Protocol, Providers,
+    Proxies, Proxy, ProxyDelay, ProxyProviders, Result, RuleProviders, Rules, WebSocketWriter,
+};
+use futures_util::{SinkExt, StreamExt};
+use http::{HeaderMap, HeaderValue};
+use reqwest::{Method, RequestBuilder};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use std::{collections::HashMap, sync::Arc, time::Duration};
+use tauri::ipc::Channel;
+use tokio::sync::Mutex;
+use tokio_tungstenite::{
+    connect_async,
+    tungstenite::{client::IntoClientRequest, protocol::CloseFrame as ProtocolCloseFrame, Message},
 };
 
 macro_rules! ret_err {
@@ -16,16 +22,42 @@ macro_rules! ret_err {
     };
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default)]
+pub struct ConnectionManager(Mutex<HashMap<ConnectionId, WebSocketWriter>>);
+
+#[derive(Deserialize)]
+#[serde(untagged, rename_all = "camelCase")]
+pub(crate) enum Max {
+    None,
+    Number(usize),
+}
+
+#[derive(Deserialize, Serialize)]
+pub(crate) struct CloseFrame {
+    pub code: u16,
+    pub reason: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(tag = "type", content = "data")]
+pub(crate) enum WebSocketMessage {
+    Text(String),
+    Binary(Vec<u8>),
+    Ping(Vec<u8>),
+    Pong(Vec<u8>),
+    Close(Option<CloseFrame>),
+}
+
+#[derive(Debug)]
 pub struct Mihomo {
     pub protocol: Protocol,
     pub external_host: String,
     pub external_port: u32,
     pub secret: Option<String>,
+    pub connection_manager: Arc<ConnectionManager>,
 }
 
 impl Mihomo {
-    #[allow(dead_code)]
     pub(crate) fn new(
         protocol: Protocol,
         external_host: String,
@@ -37,6 +69,7 @@ impl Mihomo {
             external_host,
             external_port,
             secret,
+            connection_manager: Arc::new(ConnectionManager::default()),
         }
     }
 
@@ -70,7 +103,6 @@ impl Mihomo {
     fn get_req_headers(&self) -> Result<HeaderMap<HeaderValue>> {
         let mut headers = HeaderMap::new();
         headers.insert("Content-Type", "application/json".parse()?);
-        headers.insert("User-Agent", "tauri-plugin-mihomo".parse()?);
         if let Some(secret) = self.secret.clone() {
             let auth_value = format!("Bearer {}", secret).parse()?;
             headers.insert("Authorization", auth_value);
@@ -92,6 +124,170 @@ impl Mihomo {
         }
     }
 
+    fn get_websocket_url(&self, suffix_url: &str) -> Result<String> {
+        if self.external_host.is_empty() {
+            ret_err!("not found external host, please set external host");
+        }
+        let mut ws_url = format!(
+            "ws://{}:{}{}",
+            self.external_host, self.external_port, suffix_url
+        );
+        if self.secret.is_some() {
+            ws_url.push_str("?token=");
+            ws_url.push_str(self.secret.as_ref().unwrap());
+        }
+        Ok(ws_url)
+    }
+
+    pub(crate) async fn connect(
+        &self,
+        url: String,
+        on_message: Channel<serde_json::Value>,
+    ) -> Result<ConnectionId> {
+        let id = rand::random();
+        let request = url.into_client_request()?;
+        let manager = self.connection_manager.clone();
+
+        let (ws_stream, _) = connect_async(request).await?;
+
+        let (write, read) = ws_stream.split();
+        manager.0.lock().await.insert(id, write);
+
+        tauri::async_runtime::spawn(async move {
+            read.for_each(move |message| {
+                let on_message_ = on_message.clone();
+                let manager_ = manager.clone();
+                async move {
+                    if let Ok(Message::Close(_)) = message {
+                        manager_.0.lock().await.remove(&id);
+                    }
+
+                    let response = match message {
+                        Ok(Message::Text(t)) => {
+                            serde_json::to_value(WebSocketMessage::Text(t.to_string())).unwrap()
+                        }
+                        Ok(Message::Binary(t)) => {
+                            serde_json::to_value(WebSocketMessage::Binary(t.to_vec())).unwrap()
+                        }
+                        Ok(Message::Ping(t)) => {
+                            serde_json::to_value(WebSocketMessage::Ping(t.to_vec())).unwrap()
+                        }
+                        Ok(Message::Pong(t)) => {
+                            serde_json::to_value(WebSocketMessage::Pong(t.to_vec())).unwrap()
+                        }
+                        Ok(Message::Close(t)) => {
+                            serde_json::to_value(WebSocketMessage::Close(t.map(|v| CloseFrame {
+                                code: v.code.into(),
+                                reason: v.reason.to_string(),
+                            })))
+                            .unwrap()
+                        }
+                        Ok(Message::Frame(_)) => serde_json::Value::Null, // This value can't be recieved.
+                        Err(e) => serde_json::to_value(Error::from(e)).unwrap(),
+                    };
+
+                    let _ = on_message_.send(response);
+                }
+            })
+            .await;
+        });
+
+        Ok(id)
+    }
+
+    pub(crate) async fn send(&self, id: ConnectionId, message: WebSocketMessage) -> Result<()> {
+        let manager = self.connection_manager.clone();
+        let mut manager = manager.0.lock().await;
+        if let Some(write) = manager.get_mut(&id) {
+            write
+                .send(match message {
+                    WebSocketMessage::Text(t) => Message::Text(t.into()),
+                    WebSocketMessage::Binary(t) => Message::Binary(t.into()),
+                    WebSocketMessage::Ping(t) => Message::Ping(t.into()),
+                    WebSocketMessage::Pong(t) => Message::Pong(t.into()),
+                    WebSocketMessage::Close(t) => Message::Close(t.map(|v| ProtocolCloseFrame {
+                        code: v.code.into(),
+                        reason: v.reason.into(),
+                    })),
+                })
+                .await?;
+            Ok(())
+        } else {
+            Err(Error::ConnectionNotFound(id))
+        }
+    }
+
+    pub(crate) async fn disconnect(
+        &self,
+        id: ConnectionId,
+        force_timeout_secs: Option<u64>,
+    ) -> Result<()> {
+        let manager = self.connection_manager.clone();
+        let manager_ = manager.clone();
+        let mut manager = manager.0.lock().await;
+        if let Some(write) = manager.get_mut(&id) {
+            write
+                .send(Message::Close(Some(ProtocolCloseFrame {
+                    code: 1000.into(),
+                    reason: "Disconnected by client".into(),
+                })))
+                .await?;
+            if let Some(timeout) = force_timeout_secs {
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(Duration::from_secs(timeout)).await;
+                    manager_.0.lock().await.remove(&id);
+                });
+            }
+            Ok(())
+        } else {
+            Err(Error::ConnectionNotFound(id))
+        }
+    }
+
+    async fn get_connection(&self, id: ConnectionId) -> bool {
+        let manager = self.connection_manager.clone();
+        let manager = manager.0.lock().await;
+        manager.get(&id).is_some()
+    }
+
+    // websocket
+    pub async fn ws_traffic(&self, on_message: Channel<serde_json::Value>) -> Result<ConnectionId> {
+        let ws_url = self.get_websocket_url("/traffic")?;
+        let websocket_id = self.connect(ws_url, on_message).await?;
+        Ok(websocket_id)
+    }
+
+    pub async fn ws_memory(&self, on_message: Channel<serde_json::Value>) -> Result<ConnectionId> {
+        let ws_url = self.get_websocket_url("/memory")?;
+        let websocket_id = self.connect(ws_url, on_message).await?;
+        Ok(websocket_id)
+    }
+
+    pub async fn ws_connections(
+        &self,
+        on_message: Channel<serde_json::Value>,
+    ) -> Result<ConnectionId> {
+        let ws_url = self.get_websocket_url("/connections")?;
+        let websocket_id = self.connect(ws_url, on_message).await?;
+        Ok(websocket_id)
+    }
+
+    pub async fn ws_logs(
+        &self,
+        level: String,
+        on_message: Channel<serde_json::Value>,
+    ) -> Result<ConnectionId> {
+        let mut ws_url = self.get_websocket_url("/logs")?;
+        if self.secret.is_some() {
+            ws_url.push_str(&format!("&level={}", level));
+        } else {
+            ws_url.push_str(&format!("?level={}", level));
+        }
+        let websocket_id = self.connect(ws_url, on_message).await?;
+        Ok(websocket_id)
+    }
+
+    // clash api
     pub async fn get_version(&self) -> Result<MihomoVersion> {
         let client = self.build_request(Method::GET, "/version")?;
         let response = client.send().await?;
@@ -428,7 +624,9 @@ impl Mihomo {
 
 #[cfg(test)]
 mod test {
-    use std::str::FromStr;
+    use std::{str::FromStr, time::Duration};
+
+    use tauri::ipc::InvokeResponseBody;
 
     use super::*;
 
@@ -437,7 +635,7 @@ mod test {
             Protocol::Http,
             "127.0.0.1".into(),
             9090,
-            Some("ofY_JpdwekVcyO1DY3q61".into()),
+            Some("oA9xfLbi5OCbb9ByKaXDk".into()),
         )
     }
 
@@ -465,6 +663,40 @@ mod test {
     #[tokio::test]
     async fn test_upgrade_core() -> Result<()> {
         let _ = mihomo().upgrade_core().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_ws_traffic() -> Result<()> {
+        let mihomo = mihomo();
+        let on_message = Channel::new(|message| {
+            match message {
+                InvokeResponseBody::Json(msg) => {
+                    println!("Received JSON message: {}", msg);
+                }
+                InvokeResponseBody::Raw(raw) => {
+                    println!(
+                        "Received raw message: {}",
+                        String::from_utf8(raw).unwrap().to_string()
+                    );
+                }
+            }
+            Ok(())
+        });
+        let websocket_id = mihomo.ws_logs("info".into(), on_message).await?;
+        // let websocket_id = mihomo
+        //     .connect("ws://toolin.cn/echo".into(), on_message)
+        //     .await?;
+        println!("WebSocket ID: {}", websocket_id);
+        tokio::time::sleep(Duration::from_millis(3000)).await;
+        mihomo.disconnect(websocket_id, Some(5)).await?;
+        for i in 0..10 {
+            println!("check connection exist {}", i);
+            if !mihomo.get_connection(websocket_id).await {
+                break;
+            }
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
         Ok(())
     }
 }

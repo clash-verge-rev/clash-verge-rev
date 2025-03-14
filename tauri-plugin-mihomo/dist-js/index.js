@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, Channel } from "@tauri-apps/api/core";
 
 var TunStack;
 (function (TunStack) {
@@ -148,10 +148,103 @@ async function upgradeUi() {
 async function upgradeGeo() {
   await invoke("plugin:mihomo|upgrade_geo");
 }
+class WebSocket {
+  constructor(id, listeners) {
+    this.id = id;
+    this.listeners = listeners;
+  }
+  static async connect(url) {
+    const listeners = new Set();
+    const onMessage = new Channel();
+    onMessage.onmessage = (message) => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+    return await invoke("plugin:mihomo|connect", {
+      url,
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+  static async connect_traffic() {
+    const listeners = new Set();
+    const onMessage = new Channel();
+    onMessage.onmessage = (message) => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+    return await invoke("plugin:mihomo|ws_traffic", {
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+  static async connect_memory() {
+    const listeners = new Set();
+    const onMessage = new Channel();
+    onMessage.onmessage = (message) => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+    return await invoke("plugin:mihomo|ws_memory", {
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+  static async connect_connections() {
+    const listeners = new Set();
+    const onMessage = new Channel();
+    onMessage.onmessage = (message) => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+    return await invoke("plugin:mihomo|ws_connections", {
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+  static async connect_logs(level) {
+    const listeners = new Set();
+    const onMessage = new Channel();
+    onMessage.onmessage = (message) => {
+      listeners.forEach((l) => {
+        l(message);
+      });
+    };
+    return await invoke("plugin:mihomo|ws_logs", {
+      level,
+      onMessage,
+    }).then((id) => new WebSocket(id, listeners));
+  }
+  addListener(cb) {
+    this.listeners.add(cb);
+    return () => {
+      this.listeners.delete(cb);
+    };
+  }
+  async send(message) {
+    let m;
+    if (typeof message === "string") {
+      m = { type: "Text", data: message };
+    } else if (typeof message === "object" && "type" in message) {
+      m = message;
+    } else if (Array.isArray(message)) {
+      m = { type: "Binary", data: message };
+    } else {
+      throw new Error(
+        "invalid `message` type, expected a `{ type: string, data: any }` object, a string or a numeric array",
+      );
+    }
+    await invoke("plugin:mihomo|send", { id: this.id, message: m });
+  }
+  async disconnect() {
+    await invoke("plugin:mihomo|disconnect", { id: this.id });
+  }
+}
 
 export {
   ClashMode,
   TunStack,
+  WebSocket,
   cleanFakeIp,
   closeAllConnections,
   closeConnections,
