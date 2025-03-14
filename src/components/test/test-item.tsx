@@ -3,15 +3,7 @@ import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  Box,
-  Typography,
-  Divider,
-  MenuItem,
-  Menu,
-  styled,
-  alpha,
-} from "@mui/material";
+import { Box, Divider, MenuItem, Menu, styled, alpha } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import { LanguageRounded } from "@mui/icons-material";
 import { Notice } from "@/components/base";
@@ -149,11 +141,7 @@ export const TestItem = (props: Props) => {
             </Box>
           )}
 
-          <Box sx={{ display: "flex", justifyContent: "center" }}>
-            <Typography variant="h6" component="h2" noWrap title={name}>
-              {name}
-            </Typography>
-          </Box>
+          <Box sx={{ display: "flex", justifyContent: "center" }}>{name}</Box>
         </Box>
         <Divider sx={{ marginTop: "8px" }} />
         <Box

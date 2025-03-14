@@ -57,7 +57,7 @@ export const ProxyHead = (props: Props) => {
       <IconButton
         size="small"
         color="inherit"
-        title={t("Location")}
+        title={t("locate")}
         onClick={props.onLocation}
       >
         <MyLocationRounded />

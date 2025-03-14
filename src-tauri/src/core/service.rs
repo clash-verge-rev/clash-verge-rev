@@ -7,7 +7,7 @@ use tokio::time::Duration;
 // Windows only
 
 const SERVICE_URL: &str = "http://127.0.0.1:33211";
-const REQUIRED_SERVICE_VERSION: &str = "1.0.1"; // 定义所需的服务版本号
+const REQUIRED_SERVICE_VERSION: &str = "1.0.2"; // 定义所需的服务版本号
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ResponseBody {
