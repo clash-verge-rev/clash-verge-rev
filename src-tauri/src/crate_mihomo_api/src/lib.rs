@@ -1,4 +1,4 @@
-use reqwest::header::HeaderMap;
+use reqwest::{Method, header::HeaderMap};
 use serde_json::json;
 use std::{
     sync::{Arc, Mutex},
@@ -45,7 +45,7 @@ impl MihomoManager {
 
     async fn send_request(
         &self,
-        method: &str,
+        method: Method,
         url: String,
         data: Option<serde_json::Value>,
     ) -> Result<serde_json::Value, String> {
@@ -55,40 +55,43 @@ impl MihomoManager {
             .timeout(Duration::from_secs(60))
             .build()
             .map_err(|e| e.to_string())?
-            .request(
-                match method {
-                    "GET" => reqwest::Method::GET,
-                    "PUT" => reqwest::Method::PUT,
-                    "POST" => reqwest::Method::POST,
-                    "PATCH" => reqwest::Method::PATCH,
-                    _ => reqwest::Method::GET,
-                },
-                &url,
-            )
+            .request(method.clone(), &url)
             .json(&data.unwrap_or(json!({})))
             .send()
             .await
             .map_err(|e| e.to_string())?;
 
-        let response = if method != "PUT" {
-            client_response.json::<serde_json::Value>().await
-        } else {
-            client_response.text().await.map(|text| json!(text))
-        }
-        .map_err(|e| e.to_string())?;
+        let response = match method {
+            Method::PATCH => {
+                let status = client_response.status();
+                if status.as_u16() == 204 {
+                    json!({"code": 204})
+                } else {
+                    client_response
+                        .json::<serde_json::Value>()
+                        .await
+                        .map_err(|e| e.to_string())?
+                }
+            }
+            Method::PUT => json!(client_response.text().await.map_err(|e| e.to_string())?),
+            _ => client_response
+                .json::<serde_json::Value>()
+                .await
+                .map_err(|e| e.to_string())?,
+        };
         Ok(response)
     }
 
     pub async fn refresh_proxies(&self) -> Result<&Self, String> {
         let url = format!("{}/proxies", self.mihomo_server);
-        let proxies = self.send_request("GET", url, None).await?;
+        let proxies = self.send_request(Method::GET, url, None).await?;
         self.update_proxies(proxies);
         Ok(self)
     }
 
     pub async fn refresh_providers_proxies(&self) -> Result<&Self, String> {
         let url = format!("{}/providers/proxies", self.mihomo_server);
-        let providers_proxies = self.send_request("GET", url, None).await?;
+        let providers_proxies = self.send_request(Method::GET, url, None).await?;
         self.update_providers_proxies(providers_proxies);
         Ok(self)
     }
@@ -100,13 +103,13 @@ impl MihomoManager {
         let payload = serde_json::json!({
             "path": clash_config_path,
         });
-        let _response = self.send_request("PUT", url, Some(payload)).await?;
+        let _response = self.send_request(Method::PUT, url, Some(payload)).await?;
         Ok(())
     }
 
     pub async fn patch_configs(&self, config: serde_json::Value) -> Result<(), String> {
         let url = format!("{}/configs", self.mihomo_server);
-        let response = self.send_request("PATCH", url, Some(config)).await?;
+        let response = self.send_request(Method::PATCH, url, Some(config)).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
@@ -128,7 +131,7 @@ impl MihomoManager {
             "{}/proxies/{}/delay?url={}&timeout={}",
             self.mihomo_server, name, test_url, timeout
         );
-        let response = self.send_request("GET", url, None).await?;
+        let response = self.send_request(Method::GET, url, None).await?;
         Ok(response)
     }
 }

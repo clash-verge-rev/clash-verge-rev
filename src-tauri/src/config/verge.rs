@@ -5,7 +5,6 @@ use crate::{
 use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
