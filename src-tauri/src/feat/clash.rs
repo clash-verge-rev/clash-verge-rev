@@ -59,7 +59,7 @@ pub fn change_clash_mode(mode: String) {
                     log_err!(tray::Tray::global().update_icon(None));
                 }
             }
-            Err(err) => log::error!(target: "app", "{err}"),
+            Err(err) => println!("{err}"),
         }
     });
 }
