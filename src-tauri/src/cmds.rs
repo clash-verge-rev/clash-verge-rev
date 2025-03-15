@@ -111,7 +111,6 @@ pub async fn delete_profile(uid: String) -> CmdResult {
         wrap_err!(CoreManager::global().update_config().await)?;
         handle::Handle::refresh_clash();
     }
-    handle::Handle::refresh_profiles();
     wrap_err!(handle::Handle::update_systray_part())
 }
 

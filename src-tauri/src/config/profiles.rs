@@ -121,10 +121,10 @@ impl IProfiles {
     }
 
     /// find the item by the uid
-    pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
+    pub fn get_item(&self, uid: &str) -> Result<&PrfItem> {
         if let Some(items) = self.items.as_ref() {
             for each in items.iter() {
-                if each.uid == Some(uid.clone()) {
+                if each.uid == Some(uid.to_string()) {
                     return Ok(each);
                 }
             }
@@ -132,10 +132,10 @@ impl IProfiles {
         bail!("failed to get the profile item \"uid:{uid}\"");
     }
 
-    pub fn get_item_mut(&mut self, uid: &String) -> Result<&mut PrfItem> {
+    pub fn get_item_mut(&mut self, uid: &str) -> Result<&mut PrfItem> {
         if let Some(items) = self.items.as_mut() {
             for item in items.iter_mut() {
-                if item.uid == Some(uid.clone()) {
+                if item.uid == Some(uid.to_string()) {
                     return Ok(item);
                 }
             }
