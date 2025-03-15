@@ -111,6 +111,7 @@ const Layout = () => {
     }, 50);
 
     return () => {
+      unlistenRefreshProfiles.then((fn) => fn());
       unlistenRefreshClash.then((fn) => fn());
       unlistenRefreshVerge.then((fn) => fn());
       unlistenNotice.then((fn) => fn());
