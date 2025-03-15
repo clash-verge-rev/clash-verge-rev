@@ -22,10 +22,10 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
   return (
     <EditorViewer
       title={
-        <Box>
+        <div className="flex w-full items-center">
           {t("Runtime Config")}
-          <Chip label={t("ReadOnly")} size="small" />
-        </Box>
+          <Chip label={t("ReadOnly")} size="small" className="ml-2" />
+        </div>
       }
       open={open}
       language="yaml"

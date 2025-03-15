@@ -8,7 +8,7 @@ import LoadingPage from "@/pages/loading";
 import { getPortableFlag } from "@/services/cmds";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
-import { CssBaseline, Paper, ThemeProvider } from "@mui/material";
+import { Paper, ThemeProvider } from "@mui/material";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
@@ -129,12 +129,11 @@ const Layout = () => {
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
         <Paper
           square
           elevation={0}
           className={cn("relative flex h-screen w-screen overflow-hidden", {
-            "rounded-md border-2 border-solid border-[--divider-color]":
+            "rounded-md border-2 border-solid border-(--divider-color)":
               OS === "linux" && !enable_system_title_bar,
             "rounded-none": isMaximized,
           })}
@@ -156,7 +155,7 @@ const Layout = () => {
 
           <div className="flex h-full w-full flex-col overflow-hidden">
             {!enable_system_title_bar && (
-              <div className="z-10 box-border flex flex-shrink-0 flex-grow-0 basis-8 justify-end">
+              <div className="z-10 box-border flex shrink-0 grow-0 basis-8 justify-end">
                 <div
                   className="mt-1 w-full"
                   data-tauri-drag-region="true"></div>

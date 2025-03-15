@@ -62,7 +62,7 @@ import useSWR, { mutate } from "swr";
 
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
   return [...Array(20)].map((_, index) => (
-    <i key={index} className="mx-[5px] my-0 flex h-0 w-[260px] flex-grow"></i>
+    <i key={index} className="mx-[5px] my-0 flex h-0 w-[260px] grow"></i>
   ));
 });
 

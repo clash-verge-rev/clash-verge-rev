@@ -43,11 +43,11 @@ const ThemeColorSelect = (props: Props) => {
   }, [debounceValue]);
 
   return (
-    <div className="my-1 flex h-12 items-center justify-between px-1 text-primary">
+    <div className="text-primary-text my-1 flex h-12 items-center justify-between px-1">
       <p className="text-lg">{label}</p>
       <div className="flex w-[150px] items-center justify-between">
         <input
-          className="cursor-pointer border-none bg-transparent outline-none"
+          className="cursor-pointer border-none bg-transparent outline-hidden"
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}

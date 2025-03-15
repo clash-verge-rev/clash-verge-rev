@@ -348,7 +348,7 @@ const SettingVerge = ({ onError }: Props) => {
       />
 
       <Collapse in={expand} timeout={"auto"} unmountOnExit>
-        <div className="w-full bg-primary-alpha">
+        <div className="bg-primary-alpha w-full">
           <TabContext value={backupMode}>
             <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
               <Tabs
@@ -361,7 +361,7 @@ const SettingVerge = ({ onError }: Props) => {
                 <Tab label={t("BK_WebDAV")} id="webdav-tab" value="webdav" />
               </Tabs>
             </Box>
-            <TabPanel value="local" className="px-4 py-0">
+            <TabPanel value="local">
               <div className="flex w-full items-center justify-end">
                 <FormControlLabel
                   className="mx-0"
@@ -375,7 +375,7 @@ const SettingVerge = ({ onError }: Props) => {
                   label={t("Only Backup Profiles")}
                 />
               </div>
-              <div className="flex w-full items-center justify-around space-x-4 pb-4 pt-2">
+              <div className="flex w-full items-center justify-around !space-x-4">
                 <LoadingButton
                   startIcon={<Refresh />}
                   onClick={() => handleSelectLocalBackup()}
@@ -396,14 +396,14 @@ const SettingVerge = ({ onError }: Props) => {
                 </LoadingButton>
               </div>
             </TabPanel>
-            <TabPanel value="webdav" className="px-4 py-0">
+            <TabPanel value="webdav">
               <form onSubmit={handleSubmit(onSubmit)}>
                 <TextField
                   label={t("WebDav URL")}
                   {...register("url")}
                   size="small"
                   fullWidth
-                  margin="normal"
+                  margin="dense"
                   variant="outlined"
                   autoComplete="off"
                   autoCorrect="off"
@@ -413,7 +413,7 @@ const SettingVerge = ({ onError }: Props) => {
                   {...register("username")}
                   size="small"
                   fullWidth
-                  margin="normal"
+                  margin="dense"
                   variant="outlined"
                   autoComplete="off"
                   autoCorrect="off"
@@ -424,7 +424,7 @@ const SettingVerge = ({ onError }: Props) => {
                   {...register("password")}
                   size="small"
                   fullWidth
-                  margin="normal"
+                  margin="dense"
                   variant="outlined"
                   autoComplete="off"
                   autoCorrect="off"
@@ -466,7 +466,7 @@ const SettingVerge = ({ onError }: Props) => {
                     label={t("Only Backup Profiles")}
                   />
                 </div>
-                <div className="flex w-full items-center justify-around space-x-4 pb-4 pt-2">
+                <div className="flex w-full items-center justify-around !space-x-4">
                   {webdavChanged ? (
                     <LoadingButton
                       loading={saving}

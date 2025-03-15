@@ -1,20 +1,67 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@font-face {
-  font-family: "twemoji mozilla";
-  src: url("./assets/fonts/Twemoji.Mozilla.ttf");
+/* 禁用 preflight 的 MUI 组件样式似乎没什么区别, 但是一些自定义组件样式会与之前使用的 v3 版本有差别 */
+/* @layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities); */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer utilities {
+  @font-face {
+    font-family: "twemoji mozilla";
+    src: url("./assets/fonts/Twemoji.Mozilla.ttf");
+  }
 }
 
+@theme {
+  --breakpoint-xs: 0px;
+  --breakpoint-sm: 650px;
+  --breakpoint-md: 900px;
+  --breakpoint-lg: 1200px;
+  --breakpoint-xl: 1536px;
+
+  /* color */
+  --color-primary: var(--mui-palette-primary-main);
+  --color-primary-main: var(--mui-palette-primary-main);
+  --color-primary-alpha: var(--background-color-alpha);
+  --color-secondary-main: var(--mui-palette-secondary-main);
+  --color-error-main: var(--mui-palette-error-main);
+  --color-comment: var(--background-color);
+
+  /* text color */
+  --color-primary-text: var(--mui-palette-text-primary);
+  --color-secondary-text: var(--mui-palette-text-secondary);
+
+  /* divide color */
+  --color-divide-primary: var(--divide-color);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
 @layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
   body {
     margin: 0;
     padding: 0;
     background-color: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-      "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-      "Helvetica Neue", sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+      "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     user-select: none;
     -webkit-user-select: none;

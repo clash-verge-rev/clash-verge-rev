@@ -159,9 +159,9 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
             <div>
               {filterBackupFiles.map((file) => (
                 <div
-                  className="my-2 flex items-center justify-between rounded-md bg-primary-alpha px-2 py-1"
+                  className="bg-primary-alpha my-2 flex items-center justify-between rounded-md px-2 py-1"
                   key={file.href}>
-                  <div className="mr-2 flex-shrink-0 flex-grow-0 basis-10 p-1">
+                  <div className="mr-2 shrink-0 grow-0 basis-10 p-1">
                     {file.platform === "windows" ? (
                       <WindowsIcon className="h-full w-full" />
                     ) : file.platform === "linux" ? (
@@ -170,7 +170,7 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
                       <MacIcon className="h-full w-full" />
                     )}
                   </div>
-                  <div className="mr-2 flex flex-grow flex-col justify-center space-y-2 overflow-hidden py-1">
+                  <div className="mr-2 flex grow flex-col justify-center !space-y-2 overflow-hidden py-1">
                     <ScrollableText>{file.filename}</ScrollableText>
                     <div>
                       <Chip

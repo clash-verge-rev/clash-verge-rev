@@ -27,7 +27,7 @@ import youtube from "@/assets/image/test/youtube.svg?raw";
 
 const FlexDecorationItems = memo(function FlexDecorationItems() {
   return [...Array(20)].map((_, index) => (
-    <i key={index} className="mx-[5px] my-0 flex h-0 w-[180px] flex-grow"></i>
+    <i key={index} className="mx-[5px] my-0 flex h-0 w-[180px] grow"></i>
   ));
 });
 

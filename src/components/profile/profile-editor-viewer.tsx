@@ -560,10 +560,10 @@ export const ProfileEditorViewer = (props: Props) => {
         }}
         onOk={onSave}
         contentStyle={{ userSelect: "text" }}>
-        <div className="flex h-full overflow-hidden bg-comment dark:bg-[#1e1f27]">
-          <div className="w-1/4 min-w-[260px] overflow-auto p-2">
+        <div className="bg-comment flex h-full overflow-hidden dark:bg-[#1e1f27]">
+          <div className="no-scrollbar w-1/4 min-w-[260px] overflow-auto">
             <div
-              className="flex cursor-pointer items-center justify-between bg-primary-alpha p-2"
+              className="bg-primary-alpha flex cursor-pointer items-center justify-between p-2"
               onClick={() => setExpand(!expand)}>
               <ScrollableText>
                 <span className="text-md font-bold">{profileName}</span>
@@ -584,7 +584,7 @@ export const ProfileEditorViewer = (props: Props) => {
               in={expand}
               timeout={"auto"}
               unmountOnExit
-              className="mt-2">
+              className="mt-2 px-2">
               <form>
                 <Controller
                   name="type"
@@ -730,84 +730,86 @@ export const ProfileEditorViewer = (props: Props) => {
                   flexItem>
                   {t("Enhance Scripts")}
                 </Divider>
-                <Button
-                  size="small"
-                  variant="contained"
-                  fullWidth
-                  startIcon={<Add />}
-                  onClick={() => viewerRef.current?.create(profileUid)}>
-                  {t("Add")}
-                </Button>
+                <div className="px-2">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    fullWidth
+                    startIcon={<Add />}
+                    onClick={() => viewerRef.current?.create(profileUid)}>
+                    {t("Add")}
+                  </Button>
 
-                <ProfileViewer
-                  ref={viewerRef}
-                  onChange={async () => await refreshChain()}
-                />
+                  <ProfileViewer
+                    ref={viewerRef}
+                    onChange={async () => await refreshChain()}
+                  />
 
-                <div className="overflow-auto">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragOver={(event) => {
-                      const { over } = event;
-                      if (over) {
-                        const item = chain.find(
-                          (i) => i.uid === event.active.id,
-                        )!;
-                        setDraggingItem(item);
-                      }
-                    }}
-                    onDragEnd={(e) => handleChainDragEnd(e)}
-                    onDragCancel={() => setDraggingItem(null)}>
-                    <SortableContext items={chain.map((i) => i.uid)}>
-                      {chain.map((item, index) => (
-                        <DraggableItem key={item.uid} id={item.uid}>
+                  <div className="overflow-auto">
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragOver={(event) => {
+                        const { over } = event;
+                        if (over) {
+                          const item = chain.find(
+                            (i) => i.uid === event.active.id,
+                          )!;
+                          setDraggingItem(item);
+                        }
+                      }}
+                      onDragEnd={(e) => handleChainDragEnd(e)}
+                      onDragCancel={() => setDraggingItem(null)}>
+                      <SortableContext items={chain.map((i) => i.uid)}>
+                        {chain.map((item, index) => (
+                          <DraggableItem key={item.uid} id={item.uid}>
+                            <ProfileMoreMini
+                              key={item.uid}
+                              item={item}
+                              isDragging={item.uid === draggingItem?.uid}
+                              reactivating={reactivating && item.enable}
+                              selected={item.uid === editProfile.uid}
+                              logs={chainLogs[item.uid]}
+                              onToggleEnableCallback={async (enabled) => {
+                                mutate("getRuntimeLogs");
+                                await refreshChain();
+                              }}
+                              onClick={async () => {
+                                await handleChainClick(item);
+                              }}
+                              onInfoChangeCallback={refreshChain}
+                              onDeleteCallback={async () => {
+                                await handleChainDeleteCallBack(item);
+                              }}
+                            />
+                          </DraggableItem>
+                        ))}
+                      </SortableContext>
+                      <DragOverlay dropAnimation={dropAnimationConfig}>
+                        {draggingItem && (
                           <ProfileMoreMini
-                            key={item.uid}
-                            item={item}
-                            isDragging={item.uid === draggingItem?.uid}
-                            reactivating={reactivating && item.enable}
-                            selected={item.uid === editProfile.uid}
-                            logs={chainLogs[item.uid]}
+                            key={draggingItem.uid}
+                            item={draggingItem}
+                            isDragging={true}
+                            reactivating={reactivating && draggingItem.enable}
+                            selected={draggingItem.uid === editProfile.uid}
+                            logs={chainLogs[draggingItem.uid]}
                             onToggleEnableCallback={async (enabled) => {
                               mutate("getRuntimeLogs");
                               await refreshChain();
                             }}
                             onClick={async () => {
-                              await handleChainClick(item);
+                              await handleChainClick(draggingItem);
                             }}
                             onInfoChangeCallback={refreshChain}
                             onDeleteCallback={async () => {
-                              await handleChainDeleteCallBack(item);
+                              await handleChainDeleteCallBack(draggingItem);
                             }}
                           />
-                        </DraggableItem>
-                      ))}
-                    </SortableContext>
-                    <DragOverlay dropAnimation={dropAnimationConfig}>
-                      {draggingItem && (
-                        <ProfileMoreMini
-                          key={draggingItem.uid}
-                          item={draggingItem}
-                          isDragging={true}
-                          reactivating={reactivating && draggingItem.enable}
-                          selected={draggingItem.uid === editProfile.uid}
-                          logs={chainLogs[draggingItem.uid]}
-                          onToggleEnableCallback={async (enabled) => {
-                            mutate("getRuntimeLogs");
-                            await refreshChain();
-                          }}
-                          onClick={async () => {
-                            await handleChainClick(draggingItem);
-                          }}
-                          onInfoChangeCallback={refreshChain}
-                          onDeleteCallback={async () => {
-                            await handleChainDeleteCallBack(draggingItem);
-                          }}
-                        />
-                      )}
-                    </DragOverlay>
-                  </DndContext>
+                        )}
+                      </DragOverlay>
+                    </DndContext>
+                  </div>
                 </div>
               </>
             )}
@@ -815,7 +817,7 @@ export const ProfileEditorViewer = (props: Props) => {
 
           <div className="h-full w-full overflow-hidden" ref={editorDomRef} />
 
-          <div className="flex w-14 flex-col items-center justify-end space-y-2 px-1 pb-4">
+          <div className="flex w-14 flex-col items-center justify-end !space-y-2 px-1 pb-4">
             <Tooltip title={t("Restore Changes")} placement="left">
               <IconButton
                 aria-label="rollback"

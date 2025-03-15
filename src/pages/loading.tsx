@@ -3,7 +3,7 @@ import { ClimbingBoxLoader } from "react-spinners";
 
 export default function LoadingPage() {
   return (
-    <Box className="flex h-full w-full flex-col items-center justify-center bg-comment">
+    <Box className="bg-comment flex h-full w-full flex-col items-center justify-center">
       <Typography className="text-primary-main" variant="h4">
         Loading...
       </Typography>
