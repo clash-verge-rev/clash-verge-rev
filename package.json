@@ -98,7 +98,7 @@
     "prettier-plugin-tailwindcss": "0.6.11",
     "pretty-quick": "4.1.1",
     "react-devtools": "6.1.1",
-    "tailwind-merge": "^3.0.2",
+    "tailwind-merge": "3.0.2",
     "tailwindcss": "4.0.14",
     "terser": "5.39.0",
     "typescript": "5.8.2",
