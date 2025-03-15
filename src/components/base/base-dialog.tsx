@@ -105,9 +105,7 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
             )}>
             <div
               ref={titlebarRef}
-              className={cn("w-full px-6 py-4 text-xl font-bold", {
-                "cursor-move": full,
-              })}>
+              className="w-full px-6 py-4 text-xl font-bold">
               {title}
             </div>
 

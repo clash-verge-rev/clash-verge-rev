@@ -48,6 +48,7 @@ import {
   BadgeProps,
   Button,
   ButtonGroup,
+  Chip,
   Collapse,
   Divider,
   IconButton,
@@ -568,6 +569,12 @@ export const ProfileEditorViewer = (props: Props) => {
               <ScrollableText>
                 <span className="text-md font-bold">{profileName}</span>
               </ScrollableText>
+              <Chip
+                label={t(formType || "local")}
+                size="small"
+                color="primary"
+                className="mr-1 ml-2"
+              />
               <IconButton size="small">
                 <ExpandMore
                   fontSize="inherit"
@@ -586,27 +593,6 @@ export const ProfileEditorViewer = (props: Props) => {
               unmountOnExit
               className="mt-2 px-2">
               <form>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <ButtonGroup
-                      size="small"
-                      fullWidth
-                      disabled
-                      className="mb-2"
-                      aria-label="profile type button group">
-                      {["remote", "local", "script", "merge"].map((type) => (
-                        <Button
-                          key={type}
-                          variant={formType === type ? "contained" : "outlined"}
-                          onClick={() => field.onChange(type)}>
-                          {t(type)}
-                        </Button>
-                      ))}
-                    </ButtonGroup>
-                  )}
-                />
                 <Controller
                   name="name"
                   control={control}
