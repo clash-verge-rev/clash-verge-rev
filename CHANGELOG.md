@@ -11,6 +11,9 @@
 - 优化主题设置界面
 - 重构 mihomo 的 api 调用模块抽取为 tauri 插件
 - 优化应用启动页
+- Tailwind CSS 升级到 v4 版本
+- clash 配置设置默认缓存策略组的选择和 fakeip 映射表
+- 优化部分样式界面
 
 ### 🐛 Bug Fixes
 
