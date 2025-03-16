@@ -565,5 +565,9 @@
   "Failed": "Failed",
   "Completed": "Completed",
   "Bahamut Anime": "Bahamut Anime",
-  "Disallowed ISP": "Disallowed ISP"
+  "Disallowed ISP": "Disallowed ISP",
+  "Originals Only": "Originals Only",
+  "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
+  "Unsupported Country": "Unsupported Country",
+  "Failed (Network Connection)": "Failed (Network Connection)"
 }
