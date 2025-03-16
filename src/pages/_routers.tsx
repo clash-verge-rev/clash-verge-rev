@@ -5,6 +5,7 @@ import SettingsPage from "./settings";
 import ConnectionsPage from "./connections";
 import RulesPage from "./rules";
 import HomePage from "./home";
+import UnlockPage from "./unlock";
 import { BaseErrorBoundary } from "@/components/base";
 
 import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
@@ -22,6 +23,7 @@ import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 
 export const routers = [
   {
@@ -59,6 +61,12 @@ export const routers = [
     path: "/logs",
     icon: [<SubjectRoundedIcon />, <LogsSvg />],
     element: <LogsPage />,
+  },
+  {
+    label: "Label-Unlock",
+    path: "/unlock",
+    icon: [<LockOpenRoundedIcon />],
+    element: <UnlockPage />,
   },
   {
     label: "Label-Settings",

@@ -209,6 +209,9 @@ pub fn run() {
             cmd::export_diagnostic_info,
             // get system info for display
             cmd::get_system_info,
+            // media unlock checker
+            cmd::get_unlock_items,
+            cmd::check_media_unlock,
         ]);
 
     #[cfg(debug_assertions)]
