@@ -22,6 +22,7 @@
   "Label-Connections": "连 接",
   "Label-Rules": "规 则",
   "Label-Logs": "日 志",
+  "Label-Unlock": "测 试",
   "Label-Settings": "设 置",
   "Proxies": "代理",
   "Proxy Groups": "代理组",
@@ -190,6 +191,7 @@
   "Clear": "清除",
   "Test": "测试",
   "Test All": "测试全部",
+  "Testing...": "测试中...",
   "Create Test": "新建测试",
   "Edit Test": "编辑测试",
   "Icon": "图标",
@@ -555,5 +557,13 @@
   "ORG": "组织",
   "Location": "位置",
   "Timezone": "时区",
-  "Auto refresh": "自动刷新"
+  "Auto refresh": "自动刷新",
+  "Unlock Test": "解锁测试",
+  "Pending": "待检测",
+  "Yes": "支持",
+  "No": "不支持",
+  "Failed": "测试失败",
+  "Completed": "检测完成",
+  "Bahamut Anime": "动画疯",
+  "Disallowed ISP": "不允许的 ISP"
 }

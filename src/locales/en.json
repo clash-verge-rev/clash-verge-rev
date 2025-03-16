@@ -22,6 +22,7 @@
   "Label-Connections": "Connections",
   "Label-Rules": "Rules",
   "Label-Logs": "Logs",
+  "Label-Unlock": "Test",
   "Label-Settings": "Settings",
   "Proxies": "Proxies",
   "Proxy Groups": "Proxy Groups",
@@ -190,6 +191,7 @@
   "Clear": "Clear",
   "Test": "Test",
   "Test All": "Test All",
+  "Testing...": "Testing...",
   "Create Test": "Create Test",
   "Edit Test": "Edit Test",
   "Icon": "Icon",
@@ -555,5 +557,13 @@
   "ORG": "ORG",
   "Location": "Location",
   "Timezone": "Timezone",
-  "Auto refresh": "Auto refresh"
+  "Auto refresh": "Auto refresh",
+  "Unlock Test": "Unlock Test",
+  "Pending": "Pending",
+  "Yes": "Yes",
+  "No": "No",
+  "Failed": "Failed",
+  "Completed": "Completed",
+  "Bahamut Anime": "Bahamut Anime",
+  "Disallowed ISP": "Disallowed ISP"
 }
