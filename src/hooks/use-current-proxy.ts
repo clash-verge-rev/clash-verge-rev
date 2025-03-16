@@ -10,7 +10,7 @@ export const useCurrentProxy = () => {
     "getProxies",
     getProxies,
     {
-      refreshInterval: 3000,
+      refreshInterval: 2000,
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
     },

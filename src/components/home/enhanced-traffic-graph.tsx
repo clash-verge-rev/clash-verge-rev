@@ -6,6 +6,8 @@ import {
   useCallback,
   useMemo,
   ReactElement,
+  useRef,
+  memo,
 } from "react";
 import { Box, useTheme } from "@mui/material";
 import parseTraffic from "@/utils/parse-traffic";
@@ -38,21 +40,41 @@ export interface EnhancedTrafficGraphRef {
 // 时间范围类型
 type TimeRange = 1 | 5 | 10; // 分钟
 
+// 创建一个明确的类型
+type DataPoint = ITrafficItem & { name: string; timestamp: number };
+
+// 控制帧率的工具函数
+const FPS_LIMIT = 30; // 限制最高30fps
+const FRAME_MIN_TIME = 1000 / FPS_LIMIT; // 每帧最小时间间隔
+
 /**
  * 增强型流量图表组件
  * 基于 Recharts 实现，支持线图和面积图两种模式
  */
-export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
+export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
   (props, ref) => {
     const theme = useTheme();
     const { t } = useTranslation();
 
     // 时间范围状态(默认10分钟)
     const [timeRange, setTimeRange] = useState<TimeRange>(10);
+    
+    // 使用useRef存储数据，避免不必要的重渲染
+    const dataBufferRef = useRef<DataPoint[]>([]);
+    // 只为渲染目的的状态
+    const [displayData, setDisplayData] = useState<DataPoint[]>([]);
+    
+    // 帧率控制
+    const lastUpdateTimeRef = useRef<number>(0);
+    const pendingUpdateRef = useRef<boolean>(false);
+    const rafIdRef = useRef<number | null>(null);
 
     // 根据时间范围计算保留的数据点数量
     const getMaxPointsByTimeRange = useCallback(
-      (minutes: TimeRange): number => minutes * 60, // 每分钟60个点(每秒1个点)
+      (minutes: TimeRange): number => {
+        // 使用更低的采样率来减少点的数量，每2秒一个点而不是每秒一个点
+        return minutes * 30; // 每分钟30个点(每2秒1个点)
+      },
       [],
     );
 
@@ -64,21 +86,6 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
 
     // 图表样式：line 或 area
     const [chartStyle, setChartStyle] = useState<"line" | "area">("area");
-
-    // 创建一个明确的类型
-    type DataPoint = ITrafficItem & { name: string; timestamp: number };
-
-    // 完整数据缓冲区 - 保存10分钟的数据
-    const [dataBuffer, setDataBuffer] = useState<DataPoint[]>([]);
-
-    // 当前显示的数据点 - 根据选定的时间范围从缓冲区过滤
-    const dataPoints = useMemo(() => {
-      if (dataBuffer.length === 0) return [];
-      // 根据当前时间范围计算需要显示的点数
-      const pointsToShow = getMaxPointsByTimeRange(timeRange);
-      // 从缓冲区中获取最新的数据点
-      return dataBuffer.slice(-pointsToShow);
-    }, [dataBuffer, timeRange, getMaxPointsByTimeRange]);
 
     // 颜色配置
     const colors = useMemo(
@@ -108,7 +115,7 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
       const now = Date.now();
       const tenMinutesAgo = now - 10 * 60 * 1000;
 
-      // 创建600个点作为初始缓冲区
+      // 创建初始缓冲区，降低点的密度
       const initialBuffer: DataPoint[] = Array.from(
         { length: MAX_BUFFER_SIZE },
         (_, index) => {
@@ -131,39 +138,91 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
         },
       );
 
-      setDataBuffer(initialBuffer);
+      dataBufferRef.current = initialBuffer;
+      setDisplayData(initialBuffer);
+      
+      // 清理函数，取消任何未完成的动画帧
+      return () => {
+        if (rafIdRef.current !== null) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
+      };
     }, [MAX_BUFFER_SIZE]);
+
+    // 处理数据更新并控制帧率的函数
+    const updateDisplayData = useCallback(() => {
+      if (pendingUpdateRef.current) {
+        pendingUpdateRef.current = false;
+        
+        // 根据当前时间范围计算需要显示的点数
+        const pointsToShow = getMaxPointsByTimeRange(timeRange);
+        // 从缓冲区中获取最新的数据点
+        const newDisplayData = dataBufferRef.current.slice(-pointsToShow);
+        setDisplayData(newDisplayData);
+      }
+      
+      rafIdRef.current = null;
+    }, [timeRange, getMaxPointsByTimeRange]);
+    
+    // 节流更新函数
+    const throttledUpdateData = useCallback(() => {
+      pendingUpdateRef.current = true;
+      
+      const now = performance.now();
+      const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
+      
+      if (rafIdRef.current === null) {
+        if (timeSinceLastUpdate >= FRAME_MIN_TIME) {
+          // 如果距离上次更新已经超过最小帧时间，立即更新
+          lastUpdateTimeRef.current = now;
+          rafIdRef.current = requestAnimationFrame(updateDisplayData);
+        } else {
+          // 否则，在适当的时间进行更新
+          const timeToWait = FRAME_MIN_TIME - timeSinceLastUpdate;
+          setTimeout(() => {
+            lastUpdateTimeRef.current = performance.now();
+            rafIdRef.current = requestAnimationFrame(updateDisplayData);
+          }, timeToWait);
+        }
+      }
+    }, [updateDisplayData]);
+
+    // 监听时间范围变化，更新显示数据
+    useEffect(() => {
+      throttledUpdateData();
+    }, [timeRange, throttledUpdateData]);
 
     // 添加数据点方法
     const appendData = useCallback((data: ITrafficItem) => {
       // 安全处理数据
       const safeData = {
         up: typeof data.up === "number" && !isNaN(data.up) ? data.up : 0,
-        down:
-          typeof data.down === "number" && !isNaN(data.down) ? data.down : 0,
+        down: typeof data.down === "number" && !isNaN(data.down) ? data.down : 0,
       };
 
-      setDataBuffer((prev) => {
-        // 使用提供的时间戳或当前时间
-        const timestamp = data.timestamp || Date.now();
-        const date = new Date(timestamp);
+      // 使用提供的时间戳或当前时间
+      const timestamp = data.timestamp || Date.now();
+      const date = new Date(timestamp);
 
-        // 带时间标签的新数据点
-        const newPoint: DataPoint = {
-          ...safeData,
-          name: date.toLocaleTimeString("en-US", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          }),
-          timestamp: timestamp,
-        };
+      // 带时间标签的新数据点
+      const newPoint: DataPoint = {
+        ...safeData,
+        name: date.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+        timestamp: timestamp,
+      };
 
-        // 更新缓冲区，保持最大长度
-        return [...prev.slice(1), newPoint];
-      });
-    }, []);
+      // 直接更新ref，不触发重渲染
+      dataBufferRef.current = [...dataBufferRef.current.slice(1), newPoint];
+      
+      // 使用节流更新显示数据
+      throttledUpdateData();
+    }, [throttledUpdateData]);
 
     // 切换图表样式
     const toggleStyle = useCallback(() => {
@@ -181,16 +240,16 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
     );
 
     // 格式化工具提示内容
-    const formatTooltip = (value: number) => {
+    const formatTooltip = useCallback((value: number) => {
       const [num, unit] = parseTraffic(value);
       return [`${num} ${unit}/s`, ""];
-    };
+    }, []);
 
     // Y轴刻度格式化
-    const formatYAxis = (value: number) => {
+    const formatYAxis = useCallback((value: number) => {
       const [num, unit] = parseTraffic(value);
       return `${num}${unit}`;
-    };
+    }, []);
 
     // 格式化X轴标签
     const formatXLabel = useCallback((value: string) => {
@@ -206,7 +265,7 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
     }, [timeRange, t]);
 
     // 渲染图表内的标签
-    const renderInnerLabels = () => (
+    const renderInnerLabels = useCallback(() => (
       <>
         {/* 上传标签 - 右上角 */}
         <text
@@ -232,19 +291,19 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
           {t("Download")}
         </text>
       </>
-    );
+    ), [colors.up, colors.down, t]);
 
     // 共享图表配置
-    const commonProps = {
-      data: dataPoints,
+    const commonProps = useMemo(() => ({
+      data: displayData,
       margin: { top: 10, right: 20, left: 0, bottom: 0 },
-    };
+    }), [displayData]);
 
     // 曲线类型 - 使用平滑曲线
     const curveType = "basis";
 
     // 共享图表子组件
-    const commonChildren = (
+    const commonChildren = useMemo(() => (
       <>
         <CartesianGrid
           strokeDasharray="3 3"
@@ -303,16 +362,17 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
           </text>
         </g>
       </>
-    );
+    ), [colors, formatXLabel, formatYAxis, formatTooltip, timeRange, theme.palette.text.secondary, handleTimeRangeClick, getTimeRangeText, t]);
 
     // 渲染图表 - 线图或面积图
-    const renderChart = () => {
+    const renderChart = useCallback(() => {
       // 共享的线条/区域配置
       const commonLineProps = {
         dot: false,
         strokeWidth: 2,
         connectNulls: false,
         activeDot: { r: 4, strokeWidth: 1 },
+        isAnimationActive: false, // 禁用动画以减少CPU使用
       };
 
       return chartStyle === "line" ? (
@@ -358,7 +418,7 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
           {renderInnerLabels()}
         </AreaChart>
       );
-    };
+    }, [chartStyle, commonProps, commonChildren, renderInnerLabels, colors, t]);
 
     return (
       <Box
@@ -379,4 +439,7 @@ export const EnhancedTrafficGraph = forwardRef<EnhancedTrafficGraphRef>(
       </Box>
     );
   },
-);
+));
+
+// 添加显示名称以便调试
+EnhancedTrafficGraph.displayName = "EnhancedTrafficGraph";
