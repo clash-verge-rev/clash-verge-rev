@@ -5,9 +5,11 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 use tauri::command;
 use tokio::sync::Mutex;
 use tokio::task::JoinSet;
+use crate::utils::http;
 
 // 定义解锁测试项目的结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1069,11 +1071,15 @@ pub async fn get_unlock_items() -> Result<Vec<UnlockItem>, String> {
     Ok(items)
 }
 
+
 // 开始检测流媒体解锁状态
 #[command]
 pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
+    let builder = http::http_client_builder_with_verge_mixed_port();
+
     // 创建一个http客户端
-    let client = match Client::builder()
+    let client = match builder
+        .timeout(Duration::from_millis(10000)) // default timeout is 10 seconds
         .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
         .build() {
         Ok(client) => client,
