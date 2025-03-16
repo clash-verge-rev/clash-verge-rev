@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Typography,
@@ -60,158 +60,20 @@ declare global {
   }
 }
 
-export const EnhancedTrafficStats = () => {
-  const { t } = useTranslation();
+// 控制更新频率
+const CONNECTIONS_UPDATE_INTERVAL = 5000; // 5秒更新一次连接数据
+
+// 统计卡片组件 - 使用memo优化
+const CompactStatCard = memo(({
+  icon,
+  title,
+  value,
+  unit,
+  color,
+  onClick,
+}: StatCardProps) => {
   const theme = useTheme();
-  const { clashInfo } = useClashInfo();
-  const { verge } = useVerge();
-  const trafficRef = useRef<EnhancedTrafficGraphRef>(null);
-  const pageVisible = useVisibility();
-  const [isDebug, setIsDebug] = useState(false);
-  const [trafficStats, setTrafficStats] = useState<TrafficStatData>({
-    uploadTotal: 0,
-    downloadTotal: 0,
-    activeConnections: 0,
-  });
-
-  // 是否显示流量图表
-  const trafficGraph = verge?.traffic_graph ?? true;
-
-  // 获取连接数据
-  const fetchConnections = async () => {
-    try {
-      const connections = await getConnections();
-      if (connections && connections.connections) {
-        const uploadTotal = connections.connections.reduce(
-          (sum, conn) => sum + conn.upload,
-          0,
-        );
-        const downloadTotal = connections.connections.reduce(
-          (sum, conn) => sum + conn.download,
-          0,
-        );
-
-        setTrafficStats({
-          uploadTotal,
-          downloadTotal,
-          activeConnections: connections.connections.length,
-        });
-      }
-    } catch (err) {
-      console.error("Failed to fetch connections:", err);
-    }
-  };
-
-  // 定期更新连接数据
-  useEffect(() => {
-    if (pageVisible) {
-      fetchConnections();
-      const intervalId = setInterval(fetchConnections, 5000);
-      return () => clearInterval(intervalId);
-    }
-  }, [pageVisible]);
-
-  // 检查是否支持调试
-  useEffect(() => {
-    isDebugEnabled().then((flag) => setIsDebug(flag));
-  }, []);
-
-  // 为流量数据和内存数据准备状态
-  const [trafficData, setTrafficData] = useState<ITrafficItem>({
-    up: 0,
-    down: 0,
-  });
-  const [memoryData, setMemoryData] = useState<MemoryUsage>({ inuse: 0 });
-
-  // 使用 WebSocket 连接获取流量数据
-  useEffect(() => {
-    if (!clashInfo || !pageVisible) return;
-
-    const { server, secret = "" } = clashInfo;
-    if (!server) return;
-
-    const socket = createAuthSockette(`${server}/traffic`, secret, {
-      onmessage(event) {
-        try {
-          const data = JSON.parse(event.data) as ITrafficItem;
-          if (
-            data &&
-            typeof data.up === "number" &&
-            typeof data.down === "number"
-          ) {
-            setTrafficData({
-              up: isNaN(data.up) ? 0 : data.up,
-              down: isNaN(data.down) ? 0 : data.down,
-            });
-
-            if (trafficRef.current) {
-              const lastData = {
-                up: isNaN(data.up) ? 0 : data.up,
-                down: isNaN(data.down) ? 0 : data.down,
-              };
-
-              if (!window.lastTrafficData) {
-                window.lastTrafficData = { ...lastData };
-              }
-
-              trafficRef.current.appendData({
-                up: lastData.up,
-                down: lastData.down,
-                timestamp: Date.now(),
-              });
-
-              window.lastTrafficData = { ...lastData };
-
-              if (window.animationFrameId) {
-                cancelAnimationFrame(window.animationFrameId);
-                window.animationFrameId = undefined;
-              }
-            }
-          }
-        } catch (err) {
-          console.error("[Traffic] 解析数据错误:", err);
-        }
-      },
-    });
-
-    return () => socket.close();
-  }, [clashInfo, pageVisible]);
-
-  // 使用 WebSocket 连接获取内存数据
-  useEffect(() => {
-    if (!clashInfo || !pageVisible) return;
-
-    const { server, secret = "" } = clashInfo;
-    if (!server) return;
-
-    const socket = createAuthSockette(`${server}/memory`, secret, {
-      onmessage(event) {
-        try {
-          const data = JSON.parse(event.data) as MemoryUsage;
-          if (data && typeof data.inuse === "number") {
-            setMemoryData({
-              inuse: isNaN(data.inuse) ? 0 : data.inuse,
-              oslimit: data.oslimit,
-            });
-          }
-        } catch (err) {
-          console.error("[Memory] 解析数据错误:", err);
-        }
-      },
-    });
-
-    return () => socket.close();
-  }, [clashInfo, pageVisible]);
-
-  // 解析流量数据
-  const [up, upUnit] = parseTraffic(trafficData.up);
-  const [down, downUnit] = parseTraffic(trafficData.down);
-  const [inuse, inuseUnit] = parseTraffic(memoryData.inuse);
-  const [uploadTotal, uploadTotalUnit] = parseTraffic(trafficStats.uploadTotal);
-  const [downloadTotal, downloadTotalUnit] = parseTraffic(
-    trafficStats.downloadTotal,
-  );
-
+  
   // 获取调色板颜色
   const getColorFromPalette = (colorName: string) => {
     const palette = theme.palette;
@@ -224,15 +86,8 @@ export const EnhancedTrafficStats = () => {
     }
     return palette.primary.main;
   };
-
-  // 统计卡片组件
-  const CompactStatCard = ({
-    icon,
-    title,
-    value,
-    unit,
-    color,
-  }: StatCardProps) => (
+  
+  return (
     <Paper
       elevation={0}
       sx={{
@@ -241,16 +96,16 @@ export const EnhancedTrafficStats = () => {
         borderRadius: 2,
         bgcolor: alpha(getColorFromPalette(color), 0.05),
         border: `1px solid ${alpha(getColorFromPalette(color), 0.15)}`,
-        //height: "80px",
         padding: "8px",
         transition: "all 0.2s ease-in-out",
-        cursor: "pointer",
-        "&:hover": {
+        cursor: onClick ? "pointer" : "default",
+        "&:hover": onClick ? {
           bgcolor: alpha(getColorFromPalette(color), 0.1),
           border: `1px solid ${alpha(getColorFromPalette(color), 0.3)}`,
           boxShadow: `0 4px 8px rgba(0,0,0,0.05)`,
-        },
+        } : {},
       }}
+      onClick={onClick}
     >
       {/* 图标容器 */}
       <Grid
@@ -287,9 +142,206 @@ export const EnhancedTrafficStats = () => {
       </Grid>
     </Paper>
   );
+});
+
+// 添加显示名称
+CompactStatCard.displayName = "CompactStatCard";
+
+export const EnhancedTrafficStats = () => {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const { clashInfo } = useClashInfo();
+  const { verge } = useVerge();
+  const trafficRef = useRef<EnhancedTrafficGraphRef>(null);
+  const pageVisible = useVisibility();
+  const [isDebug, setIsDebug] = useState(false);
+  
+  // 为流量数据和内存数据准备状态
+  const [trafficData, setTrafficData] = useState<ITrafficItem>({
+    up: 0,
+    down: 0,
+  });
+  const [memoryData, setMemoryData] = useState<MemoryUsage>({ inuse: 0 });
+  const [trafficStats, setTrafficStats] = useState<TrafficStatData>({
+    uploadTotal: 0,
+    downloadTotal: 0,
+    activeConnections: 0,
+  });
+
+  // 是否显示流量图表
+  const trafficGraph = verge?.traffic_graph ?? true;
+
+  // WebSocket引用
+  const trafficSocketRef = useRef<ReturnType<typeof createAuthSockette> | null>(null);
+  const memorySocketRef = useRef<ReturnType<typeof createAuthSockette> | null>(null);
+
+  // 获取连接数据
+  const fetchConnections = useCallback(async () => {
+    if (!pageVisible) return;
+    
+    try {
+      const connections = await getConnections();
+      if (connections && connections.connections) {
+        const uploadTotal = connections.connections.reduce(
+          (sum, conn) => sum + conn.upload,
+          0,
+        );
+        const downloadTotal = connections.connections.reduce(
+          (sum, conn) => sum + conn.download,
+          0,
+        );
+
+        setTrafficStats({
+          uploadTotal,
+          downloadTotal,
+          activeConnections: connections.connections.length,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch connections:", err);
+    }
+  }, [pageVisible]);
+
+  // 定期更新连接数据
+  useEffect(() => {
+    if (pageVisible) {
+      fetchConnections();
+      const intervalId = setInterval(fetchConnections, CONNECTIONS_UPDATE_INTERVAL);
+      return () => clearInterval(intervalId);
+    }
+  }, [pageVisible, fetchConnections]);
+
+  // 检查是否支持调试
+  useEffect(() => {
+    isDebugEnabled().then((flag) => setIsDebug(flag));
+  }, []);
+
+  // 处理流量数据更新
+  const handleTrafficUpdate = useCallback((event: MessageEvent) => {
+    try {
+      const data = JSON.parse(event.data) as ITrafficItem;
+      if (
+        data &&
+        typeof data.up === "number" &&
+        typeof data.down === "number"
+      ) {
+        // 验证数据有效性，防止NaN
+        const safeUp = isNaN(data.up) ? 0 : data.up;
+        const safeDown = isNaN(data.down) ? 0 : data.down;
+        
+        setTrafficData({
+          up: safeUp,
+          down: safeDown,
+        });
+
+        // 更新图表数据
+        if (trafficRef.current) {
+          trafficRef.current.appendData({
+            up: safeUp,
+            down: safeDown,
+            timestamp: Date.now(),
+          });
+          
+          // 清除之前可能存在的动画帧
+          if (window.animationFrameId) {
+            cancelAnimationFrame(window.animationFrameId);
+            window.animationFrameId = undefined;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[Traffic] 解析数据错误:", err);
+    }
+  }, []);
+
+  // 处理内存数据更新
+  const handleMemoryUpdate = useCallback((event: MessageEvent) => {
+    try {
+      const data = JSON.parse(event.data) as MemoryUsage;
+      if (data && typeof data.inuse === "number") {
+        setMemoryData({
+          inuse: isNaN(data.inuse) ? 0 : data.inuse,
+          oslimit: data.oslimit,
+        });
+      }
+    } catch (err) {
+      console.error("[Memory] 解析数据错误:", err);
+    }
+  }, []);
+
+  // 使用 WebSocket 连接获取流量数据
+  useEffect(() => {
+    if (!clashInfo || !pageVisible) return;
+
+    const { server, secret = "" } = clashInfo;
+    if (!server) return;
+
+    // 关闭现有连接
+    if (trafficSocketRef.current) {
+      trafficSocketRef.current.close();
+    }
+
+    // 创建新连接
+    trafficSocketRef.current = createAuthSockette(`${server}/traffic`, secret, {
+      onmessage: handleTrafficUpdate,
+    });
+
+    return () => {
+      if (trafficSocketRef.current) {
+        trafficSocketRef.current.close();
+        trafficSocketRef.current = null;
+      }
+    };
+  }, [clashInfo, pageVisible, handleTrafficUpdate]);
+
+  // 使用 WebSocket 连接获取内存数据
+  useEffect(() => {
+    if (!clashInfo || !pageVisible) return;
+
+    const { server, secret = "" } = clashInfo;
+    if (!server) return;
+
+    // 关闭现有连接
+    if (memorySocketRef.current) {
+      memorySocketRef.current.close();
+    }
+
+    // 创建新连接
+    memorySocketRef.current = createAuthSockette(`${server}/memory`, secret, {
+      onmessage: handleMemoryUpdate,
+    });
+
+    return () => {
+      if (memorySocketRef.current) {
+        memorySocketRef.current.close();
+        memorySocketRef.current = null;
+      }
+    };
+  }, [clashInfo, pageVisible, handleMemoryUpdate]);
+
+  // 解析流量数据
+  const [up, upUnit] = parseTraffic(trafficData.up);
+  const [down, downUnit] = parseTraffic(trafficData.down);
+  const [inuse, inuseUnit] = parseTraffic(memoryData.inuse);
+  const [uploadTotal, uploadTotalUnit] = parseTraffic(trafficStats.uploadTotal);
+  const [downloadTotal, downloadTotalUnit] = parseTraffic(
+    trafficStats.downloadTotal,
+  );
+
+  // 执行垃圾回收
+  const handleGarbageCollection = useCallback(async () => {
+    if (isDebug) {
+      try {
+        await gc();
+        console.log("[Debug] 垃圾回收已执行");
+      } catch (err) {
+        console.error("[Debug] 垃圾回收失败:", err);
+      }
+    }
+  }, [isDebug]);
 
   // 渲染流量图表
-  const renderTrafficGraph = () => {
+  const renderTrafficGraph = useCallback(() => {
     if (!trafficGraph || !pageVisible) return null;
 
     return (
@@ -328,7 +380,7 @@ export const EnhancedTrafficStats = () => {
         </div>
       </Paper>
     );
-  };
+  }, [trafficGraph, pageVisible, theme.palette.divider, isDebug]);
 
   // 统计卡片配置
   const statCards = [
@@ -373,7 +425,7 @@ export const EnhancedTrafficStats = () => {
       value: inuse,
       unit: inuseUnit,
       color: "error" as const,
-      onClick: isDebug ? async () => await gc() : undefined,
+      onClick: isDebug ? handleGarbageCollection : undefined,
     },
   ];
 
@@ -385,7 +437,7 @@ export const EnhancedTrafficStats = () => {
       </Grid>
       {/* 统计卡片区域 */}
       {statCards.map((card, index) => (
-        <Grid size={4}>
+        <Grid key={index} size={4}>
           <CompactStatCard {...card} />
         </Grid>
       ))}

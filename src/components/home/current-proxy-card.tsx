@@ -2,7 +2,6 @@ import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
-  Stack,
   Chip,
   Button,
   alpha,
@@ -16,7 +15,6 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import {
-  RouterOutlined,
   SignalWifi4Bar as SignalStrong,
   SignalWifi3Bar as SignalGood,
   SignalWifi2Bar as SignalMedium,
@@ -28,8 +26,14 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useCurrentProxy } from "@/hooks/use-current-proxy";
 import { EnhancedCard } from "@/components/home/enhanced-card";
-import { getProxies, updateProxy } from "@/services/api";
+import {
+  getProxies,
+  updateProxy,
+  getConnections,
+  deleteConnection,
+} from "@/services/api";
 import delayManager from "@/services/delay";
+import { useVerge } from "@/hooks/use-verge";
 
 // 本地存储的键名
 const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";
@@ -121,6 +125,7 @@ export const CurrentProxyCard = () => {
     useCurrentProxy();
   const navigate = useNavigate();
   const theme = useTheme();
+  const { verge } = useVerge();
 
   // 判断模式
   const isGlobalMode = mode === "global";
@@ -341,11 +346,23 @@ export const CurrentProxyCard = () => {
   const refreshProxyData = async () => {
     try {
       const data = await getProxies();
+      // 更新所有代理记录
+      setRecords(data.records);
+
+      // 更新代理组信息
+      const filteredGroups = data.groups
+        .filter((g) => g.name !== "DIRECT" && g.name !== "REJECT")
+        .map((g) => ({
+          name: g.name,
+          now: g.now || "",
+          all: g.all.map((p) => p.name),
+        }));
+
+      setGroups(filteredGroups);
 
       // 检查并更新全局代理信息
       if (isGlobalMode && data.global) {
         const globalNow = data.global.now || "";
-
         setSelectedProxy(globalNow);
 
         if (globalNow && data.records[globalNow]) {
@@ -359,24 +376,48 @@ export const CurrentProxyCard = () => {
 
         setProxyOptions(options);
       }
-
       // 更新直连代理信息
-      if (isDirectMode && data.records["DIRECT"]) {
+      else if (isDirectMode && data.records["DIRECT"]) {
         setDirectProxy(data.records["DIRECT"]);
         setDisplayProxy(data.records["DIRECT"]);
+      }
+      // 更新普通模式下当前选中组的信息
+      else {
+        const currentGroup = filteredGroups.find(
+          (g) => g.name === selectedGroup,
+        );
+        if (currentGroup) {
+          // 如果当前选中的代理节点与组中的now不一致，则需要更新
+          if (currentGroup.now !== selectedProxy) {
+            setSelectedProxy(currentGroup.now);
+
+            if (data.records[currentGroup.now]) {
+              setDisplayProxy(data.records[currentGroup.now]);
+            }
+          }
+
+          // 更新代理选项
+          const options = currentGroup.all.map((proxyName) => ({
+            name: proxyName,
+          }));
+
+          setProxyOptions(options);
+        }
       }
     } catch (error) {
       console.error("刷新代理信息失败", error);
     }
   };
 
-  // 每隔一段时间刷新特殊模式下的代理信息
+  // 每隔一段时间刷新代理信息 - 修改为在所有模式下都刷新
   useEffect(() => {
-    if (!isGlobalMode && !isDirectMode) return;
+    // 初始刷新一次
+    refreshProxyData();
 
-    const refreshInterval = setInterval(refreshProxyData, 3000);
+    // 定期刷新所有模式下的代理信息
+    const refreshInterval = setInterval(refreshProxyData, 2000);
     return () => clearInterval(refreshInterval);
-  }, [isGlobalMode, isDirectMode]);
+  }, [isGlobalMode, isDirectMode, selectedGroup]); // 依赖项添加selectedGroup以便在切换组时重新设置定时器
 
   // 处理代理组变更
   const handleGroupChange = (event: SelectChangeEvent) => {
@@ -393,6 +434,8 @@ export const CurrentProxyCard = () => {
     if (isDirectMode) return;
 
     const newProxy = event.target.value;
+    const previousProxy = selectedProxy; // 保存变更前的代理节点名称
+
     setSelectedProxy(newProxy);
 
     // 更新显示的代理节点信息
@@ -403,6 +446,18 @@ export const CurrentProxyCard = () => {
     try {
       // 更新代理设置
       await updateProxy(selectedGroup, newProxy);
+
+      // 添加断开连接逻辑 - 与proxy-groups.tsx中的逻辑相同
+      if (verge?.auto_close_connection && previousProxy) {
+        getConnections().then(({ connections }) => {
+          connections.forEach((conn) => {
+            if (conn.chains.includes(previousProxy)) {
+              deleteConnection(conn.id);
+            }
+          });
+        });
+      }
+
       setTimeout(() => {
         refreshProxy();
         if (isGlobalMode || isDirectMode) {
