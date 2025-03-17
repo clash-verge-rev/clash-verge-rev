@@ -10,7 +10,7 @@ import {
   MultipleStopRounded,
   DirectionsRounded,
 } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export const ClashModeCard = () => {
   const { t } = useTranslation();
@@ -20,15 +20,13 @@ export const ClashModeCard = () => {
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
     getClashConfig,
-    {
-      revalidateOnFocus: false,
-    },
+    { revalidateOnFocus: false }
   );
 
-  // 支持的模式列表 - 添加直连模式
-  const modeList = ["rule", "global", "direct"];
+  // 支持的模式列表
+  const modeList = useMemo(() => ["rule", "global", "direct"] as const, []);
 
-  // 本地状态记录当前模式，提供更快的UI响应
+  // 本地状态记录当前模式
   const [localMode, setLocalMode] = useState<string>("rule");
 
   // 当从API获取到当前模式时更新本地状态
@@ -38,25 +36,27 @@ export const ClashModeCard = () => {
     }
   }, [clashConfig]);
 
+  // 模式图标映射
+  const modeIcons = useMemo(() => ({
+    rule: <MultipleStopRounded fontSize="small" />,
+    global: <LanguageRounded fontSize="small" />,
+    direct: <DirectionsRounded fontSize="small" />
+  }), []);
+
   // 切换模式的处理函数
   const onChangeMode = useLockFn(async (mode: string) => {
-    // 如果已经是当前模式，不做任何操作
     if (mode === localMode) return;
-
-    // 立即更新本地UI状态
+    
     setLocalMode(mode);
-
-    // 断开连接（如果启用了设置）
+    
     if (verge?.auto_close_connection) {
       closeAllConnections();
     }
 
     try {
       await patchClashMode(mode);
-      // 成功后刷新数据
       mutateClash();
     } catch (error) {
-      // 如果操作失败，恢复之前的状态
       console.error("Failed to change mode:", error);
       if (clashConfig?.mode) {
         setLocalMode(clashConfig.mode.toLowerCase());
@@ -64,32 +64,55 @@ export const ClashModeCard = () => {
     }
   });
 
-  // 获取模式对应的图标
-  const getModeIcon = (mode: string) => {
-    switch (mode) {
-      case "rule":
-        return <MultipleStopRounded fontSize="small" />;
-      case "global":
-        return <LanguageRounded fontSize="small" />;
-      case "direct":
-        return <DirectionsRounded fontSize="small" />;
-      default:
-        return null;
-    }
-  };
+  // 按钮样式
+  const buttonStyles = (mode: string) => ({
+    cursor: "pointer",
+    px: 2,
+    py: 1.2,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 1,
+    bgcolor: mode === localMode ? "primary.main" : "background.paper",
+    color: mode === localMode ? "primary.contrastText" : "text.primary",
+    borderRadius: 1.5,
+    transition: "all 0.2s ease-in-out",
+    position: "relative",
+    overflow: "visible",
+    "&:hover": {
+      transform: "translateY(-1px)",
+      boxShadow: 1,
+    },
+    "&:active": {
+      transform: "translateY(1px)",
+    },
+    "&::after": mode === localMode
+      ? {
+          content: '""',
+          position: "absolute",
+          bottom: -16,
+          left: "50%",
+          width: 2,
+          height: 16,
+          bgcolor: "primary.main",
+          transform: "translateX(-50%)",
+        }
+      : {},
+  });
 
-  // 获取模式说明文字
-  const getModeDescription = (mode: string) => {
-    switch (mode) {
-      case "rule":
-        return t("Rule Mode Description");
-      case "global":
-        return t("Global Mode Description");
-      case "direct":
-        return t("Direct Mode Description");
-      default:
-        return "";
-    }
+  // 描述样式
+  const descriptionStyles = {
+    width: "95%",
+    textAlign: "center",
+    color: "text.secondary",
+    p: 0.8,
+    borderRadius: 1,
+    borderColor: "primary.main",
+    borderWidth: 1,
+    borderStyle: "solid",
+    backgroundColor: "background.paper",
+    wordBreak: "break-word",
+    hyphens: "auto",
   };
 
   return (
@@ -111,44 +134,9 @@ export const ClashModeCard = () => {
             key={mode}
             elevation={mode === localMode ? 2 : 0}
             onClick={() => onChangeMode(mode)}
-            sx={{
-              cursor: "pointer",
-              px: 2,
-              py: 1.2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 1,
-              bgcolor: mode === localMode ? "primary.main" : "background.paper",
-              color:
-                mode === localMode ? "primary.contrastText" : "text.primary",
-              borderRadius: 1.5,
-              transition: "all 0.2s ease-in-out",
-              position: "relative",
-              overflow: "visible",
-              "&:hover": {
-                transform: "translateY(-1px)",
-                boxShadow: 1,
-              },
-              "&:active": {
-                transform: "translateY(1px)",
-              },
-              "&::after":
-                mode === localMode
-                  ? {
-                      content: '""',
-                      position: "absolute",
-                      bottom: -16,
-                      left: "50%",
-                      width: 2,
-                      height: 16,
-                      bgcolor: "primary.main",
-                      transform: "translateX(-50%)",
-                    }
-                  : {},
-            }}
+            sx={buttonStyles(mode)}
           >
-            {getModeIcon(mode)}
+            {modeIcons[mode]}
             <Typography
               variant="body2"
               sx={{
@@ -173,77 +161,15 @@ export const ClashModeCard = () => {
           overflow: "visible",
         }}
       >
-        {localMode === "rule" && (
-          <Fade in={true} timeout={200}>
-            <Typography
-              variant="caption"
-              component="div"
-              sx={{
-                width: "95%",
-                textAlign: "center",
-                color: "text.secondary",
-                p: 0.8,
-                borderRadius: 1,
-                borderColor: "primary.main",
-                borderWidth: 1,
-                borderStyle: "solid",
-                backgroundColor: "background.paper",
-                wordBreak: "break-word",
-                hyphens: "auto",
-              }}
-            >
-              {getModeDescription("rule")}
-            </Typography>
-          </Fade>
-        )}
-
-        {localMode === "global" && (
-          <Fade in={true} timeout={200}>
-            <Typography
-              variant="caption"
-              component="div"
-              sx={{
-                width: "95%",
-                textAlign: "center",
-                color: "text.secondary",
-                p: 0.8,
-                borderRadius: 1,
-                borderColor: "primary.main",
-                borderWidth: 1,
-                borderStyle: "solid",
-                backgroundColor: "background.paper",
-                wordBreak: "break-word",
-                hyphens: "auto",
-              }}
-            >
-              {getModeDescription("global")}
-            </Typography>
-          </Fade>
-        )}
-
-        {localMode === "direct" && (
-          <Fade in={true} timeout={200}>
-            <Typography
-              variant="caption"
-              component="div"
-              sx={{
-                width: "95%",
-                textAlign: "center",
-                color: "text.secondary",
-                p: 0.8,
-                borderRadius: 1,
-                borderColor: "primary.main",
-                borderWidth: 1,
-                borderStyle: "solid",
-                backgroundColor: "background.paper",
-                wordBreak: "break-word",
-                hyphens: "auto",
-              }}
-            >
-              {getModeDescription("direct")}
-            </Typography>
-          </Fade>
-        )}
+        <Fade in={true} timeout={200}>
+          <Typography
+            variant="caption"
+            component="div"
+            sx={descriptionStyles}
+          >
+            {t(`${localMode} Mode Description`)}
+          </Typography>
+        </Fade>
       </Box>
     </Box>
   );
