@@ -35,10 +35,19 @@ const round = keyframes`
 `;
 
 // 辅助函数解析URL和过期时间
-const parseUrl = (url?: string) => {
+const parseUrl = (url?: string, maxLength: number = 25) => {
   if (!url) return "-";
-  if (url.startsWith("http")) return new URL(url).host;
-  return "local";
+  let parsedUrl = "";
+  if (url.startsWith("http")) {
+    parsedUrl = new URL(url).host;
+  } else {
+    parsedUrl = "local";
+  }
+  
+  if (parsedUrl.length > maxLength) {
+    return parsedUrl.substring(0, maxLength - 3) + "...";
+  }
+  return parsedUrl;
 };
 
 const parseExpire = (expire?: number) => {
@@ -107,16 +116,22 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
                   component="button"
                   fontWeight="medium"
                   onClick={() => current.home && openWebUrl(current.home)}
-                  sx={{ display: "inline-flex", alignItems: "center" }}
+                  sx={{ 
+                    display: "inline-flex", 
+                    alignItems: "center"
+                  }}
                 >
                   {parseUrl(current.url)}
                   <LaunchOutlined
                     fontSize="inherit"
-                    sx={{ ml: 0.5, fontSize: "0.8rem", opacity: 0.7 }}
+                    sx={{ ml: 0.5, fontSize: "0.8rem", opacity: 0.7, flexShrink: 0 }}
                   />
                 </Link>
               ) : (
-                <Box component="span" fontWeight="medium">
+                <Box 
+                  component="span" 
+                  fontWeight="medium"
+                >
                   {parseUrl(current.url)}
                 </Box>
               )}
