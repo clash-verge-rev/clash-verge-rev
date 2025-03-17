@@ -4,6 +4,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::error::Error;
 use std::sync::Arc;
 use tauri::command;
 use tokio::sync::Mutex;
@@ -286,7 +287,7 @@ async fn check_gemini(client: &Client) -> UnlockItem {
     }
 }
 
-// 测试YouTube Premium
+// 测试 YouTube Premium
 async fn check_youtube_premium(client: &Client) -> UnlockItem {
     let url = "https://www.youtube.com/premium";
 
@@ -453,39 +454,43 @@ async fn check_bahamut_anime(client: &Client) -> UnlockItem {
 
 // 测试 Netflix
 async fn check_netflix(client: &Client) -> UnlockItem {
+    // 首先尝试使用Fast.com API检测Netflix CDN区域
+    let cdn_result = check_netflix_cdn(client).await;
+    if cdn_result.status == "Yes" {
+        return cdn_result;
+    }
+
+    // 如果CDN方法失败，尝试传统的内容检测方法
     // 测试两个 Netflix 内容 (LEGO Ninjago 和 Breaking Bad)
     let url1 = "https://www.netflix.com/title/81280792"; // LEGO Ninjago
     let url2 = "https://www.netflix.com/title/70143836"; // Breaking Bad
 
-    let headers = {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            "accept-language",
-            HeaderValue::from_static("en-US,en;q=0.9"),
-        );
-        headers.insert("sec-ch-ua-mobile", HeaderValue::from_static("?0"));
-        headers.insert(
-            "sec-ch-ua-platform",
-            HeaderValue::from_static("\"Windows\""),
-        );
-        headers.insert("sec-fetch-site", HeaderValue::from_static("none"));
-        headers.insert("sec-fetch-mode", HeaderValue::from_static("navigate"));
-        headers.insert("sec-fetch-user", HeaderValue::from_static("?1"));
-        headers.insert("sec-fetch-dest", HeaderValue::from_static("document"));
-        headers
-    };
-
-    // 执行第一个请求
-    let result1 = client.get(url1).headers(headers.clone()).send().await;
-
-    // 执行第二个请求
-    let result2 = client.get(url2).headers(headers.clone()).send().await;
+    // 创建简单的请求（不添加太多头部信息）
+    let result1 = client.get(url1)
+        .timeout(std::time::Duration::from_secs(30))
+        .send().await;
 
     // 检查连接失败情况
-    if result1.is_err() || result2.is_err() {
+    if let Err(e) = &result1 {
+        eprintln!("Netflix请求错误: {}", e);
         return UnlockItem {
             name: "Netflix".to_string(),
-            status: "Failed (Network Connection)".to_string(),
+            status: "Failed".to_string(),
+            region: None,
+            check_time: Some(get_local_date_string()),
+        };
+    }
+
+    // 如果第一个请求成功，尝试第二个请求
+    let result2 = client.get(url2)
+        .timeout(std::time::Duration::from_secs(30))
+        .send().await;
+
+    if let Err(e) = &result2 {
+        eprintln!("Netflix请求错误: {}", e);
+        return UnlockItem {
+            name: "Netflix".to_string(),
+            status: "Failed".to_string(),
             region: None,
             check_time: Some(get_local_date_string()),
         };
@@ -514,21 +519,23 @@ async fn check_netflix(client: &Client) -> UnlockItem {
         };
     }
 
-    if status1 == 200 || status2 == 200 {
+    if status1 == 200 || status1 == 301 || status2 == 200 || status2 == 301 {
         // 成功解锁，尝试获取地区信息
-        match client
-            .get("https://www.netflix.com/")
-            .headers(headers)
+        // 使用Netflix测试内容获取区域
+        let test_url = "https://www.netflix.com/title/80018499";
+        match client.get(test_url)
+            .timeout(std::time::Duration::from_secs(30))
             .send()
             .await
         {
             Ok(response) => {
-                if let Ok(body) = response.text().await {
-                    // 使用正则表达式提取区域代码
-                    let re = Regex::new(r#""id":"([A-Z]{2})"#).unwrap();
-                    if let Some(caps) = re.captures(&body) {
-                        if let Some(region_match) = caps.get(1) {
-                            let region_code = region_match.as_str();
+                // 检查重定向位置
+                if let Some(location) = response.headers().get("location") {
+                    if let Ok(location_str) = location.to_str() {
+                        // 解析位置获取区域
+                        let parts: Vec<&str> = location_str.split('/').collect();
+                        if parts.len() >= 4 {
+                            let region_code = parts[3].split('-').next().unwrap_or("unknown");
                             let emoji = country_code_to_emoji(region_code);
                             return UnlockItem {
                                 name: "Netflix".to_string(),
@@ -539,28 +546,104 @@ async fn check_netflix(client: &Client) -> UnlockItem {
                         }
                     }
                 }
-                // 如果无法获取区域信息，仍然返回成功
+                // 如果没有重定向，假设是美国
+                let emoji = country_code_to_emoji("us");
                 UnlockItem {
                     name: "Netflix".to_string(),
                     status: "Yes".to_string(),
-                    region: None,
+                    region: Some(format!("{}{}", emoji, "us")),
                     check_time: Some(get_local_date_string()),
                 }
             }
-            Err(_) => UnlockItem {
-                name: "Netflix".to_string(),
-                status: "Yes".to_string(),
-                region: None,
-                check_time: Some(get_local_date_string()),
+            Err(e) => {
+                eprintln!("获取Netflix区域信息失败: {}", e);
+                UnlockItem {
+                    name: "Netflix".to_string(),
+                    status: "Yes (但无法获取区域)".to_string(),
+                    region: None,
+                    check_time: Some(get_local_date_string()),
+                }
             },
         }
     } else {
         // 其他未知错误状态
         UnlockItem {
             name: "Netflix".to_string(),
-            status: format!("Failed (Error: {}_{}", status1, status2),
+            status: format!("Failed (状态码: {}_{}", status1, status2),
             region: None,
             check_time: Some(get_local_date_string()),
+        }
+    }
+}
+
+// 使用Fast.com API检测Netflix CDN区域
+async fn check_netflix_cdn(client: &Client) -> UnlockItem {
+    // Fast.com API URL
+    let url = "https://api.fast.com/netflix/speedtest/v2?https=true&token=YXNkZmFzZGxmbnNkYWZoYXNkZmhrYWxm&urlCount=5";
+    
+    let result = client.get(url)
+        .timeout(std::time::Duration::from_secs(30))
+        .send().await;
+    
+    match result {
+        Ok(response) => {
+            // 检查状态码
+            if response.status().as_u16() == 403 {
+                return UnlockItem {
+                    name: "Netflix".to_string(),
+                    status: "No (IP Banned By Netflix)".to_string(),
+                    region: None,
+                    check_time: Some(get_local_date_string()),
+                };
+            }
+            
+            // 尝试解析响应
+            match response.json::<serde_json::Value>().await {
+                Ok(data) => {
+                    // 尝试从数据中提取区域信息
+                    if let Some(targets) = data.get("targets").and_then(|t| t.as_array()) {
+                        if !targets.is_empty() {
+                            if let Some(location) = targets[0].get("location") {
+                                if let Some(country) = location.get("country").and_then(|c| c.as_str()) {
+                                    let emoji = country_code_to_emoji(country);
+                                    return UnlockItem {
+                                        name: "Netflix".to_string(),
+                                        status: "Yes".to_string(),
+                                        region: Some(format!("{}{}", emoji, country)),
+                                        check_time: Some(get_local_date_string()),
+                                    };
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 如果无法解析区域信息
+                    return UnlockItem {
+                        name: "Netflix".to_string(),
+                        status: "Unknown".to_string(),
+                        region: None,
+                        check_time: Some(get_local_date_string()),
+                    };
+                }
+                Err(e) => {
+                    eprintln!("解析Fast.com API响应失败: {}", e);
+                    UnlockItem {
+                        name: "Netflix".to_string(),
+                        status: "Failed (解析错误)".to_string(),
+                        region: None,
+                        check_time: Some(get_local_date_string()),
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("Fast.com API请求失败: {}", e);
+            UnlockItem {
+                name: "Netflix".to_string(),
+                status: "Failed (CDN API)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            }
         }
     }
 }
@@ -1072,9 +1155,14 @@ pub async fn get_unlock_items() -> Result<Vec<UnlockItem>, String> {
 // 开始检测流媒体解锁状态
 #[command]
 pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
-    // 创建一个http客户端
+    // 创建一个http客户端，增加更多配置
     let client = match Client::builder()
         .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+        .timeout(std::time::Duration::from_secs(30)) // 全局超时设置
+        .danger_accept_invalid_certs(true) // 接受无效证书，防止SSL错误
+        .danger_accept_invalid_hostnames(true) // 接受无效主机名
+        .tcp_keepalive(std::time::Duration::from_secs(60)) // TCP keepalive
+        .connection_verbose(true) // 详细连接信息
         .build() {
         Ok(client) => client,
         Err(e) => return Err(format!("创建HTTP客户端失败: {}", e)),
