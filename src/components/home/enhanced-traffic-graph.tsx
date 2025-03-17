@@ -46,6 +46,22 @@ type DataPoint = ITrafficItem & { name: string; timestamp: number };
 const FPS_LIMIT = 1; // 限制为1fps，因为数据每秒才更新一次
 const FRAME_MIN_TIME = 1000 / FPS_LIMIT; // 每帧最小时间间隔，即1000ms
 
+// 全局存储流量数据历史记录
+declare global {
+  interface Window {
+    trafficHistoryData?: DataPoint[];
+    trafficHistoryStyle?: "line" | "area";
+    trafficHistoryTimeRange?: TimeRange;
+  }
+}
+
+// 初始化全局存储
+if (typeof window !== "undefined" && !window.trafficHistoryData) {
+  window.trafficHistoryData = [];
+  window.trafficHistoryStyle = "area";
+  window.trafficHistoryTimeRange = 10;
+}
+
 /**
  * 增强型流量图表组件
  * 基于 Recharts 实现，支持线图和面积图两种模式
@@ -55,8 +71,13 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
     const theme = useTheme();
     const { t } = useTranslation();
 
-    // 时间范围状态(默认10分钟)
-    const [timeRange, setTimeRange] = useState<TimeRange>(10);
+    // 从全局变量恢复状态
+    const [timeRange, setTimeRange] = useState<TimeRange>(
+      window.trafficHistoryTimeRange || 10
+    );
+    const [chartStyle, setChartStyle] = useState<"line" | "area">(
+      window.trafficHistoryStyle || "area"
+    );
     
     // 使用useRef存储数据，避免不必要的重渲染
     const dataBufferRef = useRef<DataPoint[]>([]);
@@ -83,9 +104,6 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
       [getMaxPointsByTimeRange],
     );
 
-    // 图表样式：line 或 area
-    const [chartStyle, setChartStyle] = useState<"line" | "area">("area");
-
     // 颜色配置
     const colors = useMemo(
       () => ({
@@ -102,43 +120,90 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
     const handleTimeRangeClick = useCallback(() => {
       setTimeRange((prevRange) => {
         // 在1、5、10分钟之间循环切换
-        if (prevRange === 1) return 5;
-        if (prevRange === 5) return 10;
-        return 1;
+        const newRange = prevRange === 1 ? 5 : prevRange === 5 ? 10 : 1;
+        window.trafficHistoryTimeRange = newRange; // 保存到全局
+        return newRange;
       });
     }, []);
 
     // 初始化数据缓冲区
     useEffect(() => {
-      // 生成10分钟的初始数据点
-      const now = Date.now();
-      const tenMinutesAgo = now - 10 * 60 * 1000;
+      let initialBuffer: DataPoint[] = [];
+      
+      // 如果全局有保存的数据，优先使用
+      if (window.trafficHistoryData && window.trafficHistoryData.length > 0) {
+        initialBuffer = [...window.trafficHistoryData];
+        
+        // 确保数据长度符合要求
+        if (initialBuffer.length > MAX_BUFFER_SIZE) {
+          initialBuffer = initialBuffer.slice(-MAX_BUFFER_SIZE);
+        } else if (initialBuffer.length < MAX_BUFFER_SIZE) {
+          // 如果历史数据不足，则在前面补充空数据
+          const now = Date.now();
+          const oldestTimestamp = initialBuffer.length > 0 
+            ? initialBuffer[0].timestamp 
+            : now - 10 * 60 * 1000;
+          
+          const additionalPoints = MAX_BUFFER_SIZE - initialBuffer.length;
+          const timeInterval = initialBuffer.length > 0
+            ? (initialBuffer[0].timestamp - (now - 10 * 60 * 1000)) / additionalPoints
+            : (10 * 60 * 1000) / MAX_BUFFER_SIZE;
+          
+          const emptyPrefix: DataPoint[] = Array.from(
+            { length: additionalPoints },
+            (_, index) => {
+              const pointTime = oldestTimestamp - (additionalPoints - index) * timeInterval;
+              const date = new Date(pointTime);
+              
+              return {
+                up: 0,
+                down: 0,
+                timestamp: pointTime,
+                name: date.toLocaleTimeString("en-US", {
+                  hour12: false,
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                }),
+              };
+            }
+          );
+          
+          initialBuffer = [...emptyPrefix, ...initialBuffer];
+        }
+      } else {
+        // 没有历史数据时，创建空的初始缓冲区
+        const now = Date.now();
+        const tenMinutesAgo = now - 10 * 60 * 1000;
 
-      // 创建初始缓冲区，降低点的密度
-      const initialBuffer: DataPoint[] = Array.from(
-        { length: MAX_BUFFER_SIZE },
-        (_, index) => {
-          // 计算每个点的时间
-          const pointTime =
-            tenMinutesAgo + index * ((10 * 60 * 1000) / MAX_BUFFER_SIZE);
-          const date = new Date(pointTime);
+        initialBuffer = Array.from(
+          { length: MAX_BUFFER_SIZE },
+          (_, index) => {
+            const pointTime =
+              tenMinutesAgo + index * ((10 * 60 * 1000) / MAX_BUFFER_SIZE);
+            const date = new Date(pointTime);
 
-          return {
-            up: 0,
-            down: 0,
-            timestamp: pointTime,
-            name: date.toLocaleTimeString("en-US", {
-              hour12: false,
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-          };
-        },
-      );
+            return {
+              up: 0,
+              down: 0,
+              timestamp: pointTime,
+              name: date.toLocaleTimeString("en-US", {
+                hour12: false,
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              }),
+            };
+          }
+        );
+      }
 
       dataBufferRef.current = initialBuffer;
-      setDisplayData(initialBuffer);
+      window.trafficHistoryData = initialBuffer; // 保存到全局
+      
+      // 更新显示数据
+      const pointsToShow = getMaxPointsByTimeRange(timeRange);
+      setDisplayData(initialBuffer.slice(-pointsToShow));
       
       // 清理函数，取消任何未完成的动画帧
       return () => {
@@ -147,7 +212,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
           rafIdRef.current = null;
         }
       };
-    }, [MAX_BUFFER_SIZE]);
+    }, [MAX_BUFFER_SIZE, getMaxPointsByTimeRange, timeRange]);
 
     // 处理数据更新并控制帧率的函数
     const updateDisplayData = useCallback(() => {
@@ -220,13 +285,20 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
       const newBuffer = [...dataBufferRef.current.slice(1), newPoint];
       dataBufferRef.current = newBuffer;
       
+      // 保存到全局变量
+      window.trafficHistoryData = newBuffer;
+      
       // 使用节流更新显示数据
       throttledUpdateData();
     }, [throttledUpdateData]);
 
     // 切换图表样式
     const toggleStyle = useCallback(() => {
-      setChartStyle((prev) => (prev === "line" ? "area" : "line"));
+      setChartStyle((prev) => {
+        const newStyle = prev === "line" ? "area" : "line";
+        window.trafficHistoryStyle = newStyle; // 保存到全局
+        return newStyle;
+      });
     }, []);
 
     // 暴露方法给父组件
