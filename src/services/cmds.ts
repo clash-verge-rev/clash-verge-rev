@@ -118,6 +118,10 @@ export async function getAutotemProxy() {
   }>("get_auto_proxy");
 }
 
+export async function getAutoLaunchStatus() {
+  return invoke<boolean>("get_auto_launch_status");
+}
+
 export async function changeClashCore(clashCore: string) {
   return invoke<string | null>("change_clash_core", { clashCore });
 }

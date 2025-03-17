@@ -70,6 +70,13 @@ pub fn get_app_dir() -> CmdResult<String> {
     Ok(app_home_dir)
 }
 
+/// 获取当前自启动状态
+#[tauri::command]
+pub fn get_auto_launch_status() -> CmdResult<bool> {
+    use crate::core::sysopt::Sysopt;
+    wrap_err!(Sysopt::global().get_launch_status())
+}
+
 /// 下载图标缓存
 #[tauri::command]
 pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String> {
