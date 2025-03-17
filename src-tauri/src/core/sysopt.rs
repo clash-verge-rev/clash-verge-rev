@@ -220,10 +220,28 @@ impl Sysopt {
         let enable = enable.unwrap_or(false);
         let app_handle = Handle::global().app_handle().unwrap();
         let autostart_manager = app_handle.autolaunch();
-        println!("enable: {}", enable);
+        
+        log::info!(target: "app", "Setting auto launch to: {}", enable);
+        
         match enable {
-            true => log_err!(autostart_manager.enable()),
-            false => log_err!(autostart_manager.disable()),
+            true => {
+                let result = autostart_manager.enable();
+                if let Err(ref e) = result {
+                    log::error!(target: "app", "Failed to enable auto launch: {}", e);
+                } else {
+                    log::info!(target: "app", "Auto launch enabled successfully");
+                }
+                log_err!(result)
+            },
+            false => {
+                let result = autostart_manager.disable();
+                if let Err(ref e) = result {
+                    log::error!(target: "app", "Failed to disable auto launch: {}", e);
+                } else {
+                    log::info!(target: "app", "Auto launch disabled successfully");
+                }
+                log_err!(result)
+            },
         };
 
         Ok(())
@@ -233,7 +251,17 @@ impl Sysopt {
     pub fn get_launch_status(&self) -> Result<bool> {
         let app_handle = Handle::global().app_handle().unwrap();
         let autostart_manager = app_handle.autolaunch();
-        Ok(autostart_manager.is_enabled()?)
+        
+        match autostart_manager.is_enabled() {
+            Ok(status) => {
+                log::info!(target: "app", "Auto launch status: {}", status);
+                Ok(status)
+            },
+            Err(e) => {
+                log::error!(target: "app", "Failed to get auto launch status: {}", e);
+                Err(anyhow::anyhow!("Failed to get auto launch status: {}", e))
+            }
+        }
     }
 
     fn guard_proxy(&self) {
