@@ -1,5 +1,5 @@
 import useSWR, { mutate } from "swr";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   SettingsRounded,
@@ -20,6 +20,7 @@ import {
   getAutotemProxy,
   getRunningMode,
   installService,
+  getAutoLaunchStatus,
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { Box, Button, Tooltip } from "@mui/material";
@@ -39,6 +40,14 @@ const SettingSystem = ({ onError }: Props) => {
     "getRunningMode",
     getRunningMode,
   );
+  const { data: autoLaunchEnabled } = useSWR("getAutoLaunchStatus", getAutoLaunchStatus);
+
+  // 当实际自启动状态与配置不同步时更新配置
+  useEffect(() => {
+    if (autoLaunchEnabled !== undefined && verge && verge.enable_auto_launch !== autoLaunchEnabled) {
+      patchVerge({ enable_auto_launch: autoLaunchEnabled });
+    }
+  }, [autoLaunchEnabled, verge]);
 
   // 是否以sidecar模式运行
   const isSidecarMode = runningMode === "sidecar";

@@ -229,6 +229,13 @@ impl Sysopt {
         Ok(())
     }
 
+    /// 获取当前自启动的实际状态
+    pub fn get_launch_status(&self) -> Result<bool> {
+        let app_handle = Handle::global().app_handle().unwrap();
+        let autostart_manager = app_handle.autolaunch();
+        Ok(autostart_manager.is_enabled()?)
+    }
+
     fn guard_proxy(&self) {
         let _lock = self.guard_state.lock();
 

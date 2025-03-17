@@ -154,6 +154,7 @@ pub fn run() {
             cmd::get_running_mode,
             cmd::install_service,
             cmd::get_app_uptime,
+            cmd::get_auto_launch_status,
             // clash
             cmd::get_clash_info,
             cmd::patch_clash_config,
