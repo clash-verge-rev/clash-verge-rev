@@ -119,7 +119,13 @@ export async function getAutotemProxy() {
 }
 
 export async function getAutoLaunchStatus() {
-  return invoke<boolean>("get_auto_launch_status");
+  try {
+    return await invoke<boolean>("get_auto_launch_status");
+  } catch (error) {
+    console.error("获取自启动状态失败:", error);
+    // 出错时返回false作为默认值
+    return false;
+  }
 }
 
 export async function changeClashCore(clashCore: string) {
