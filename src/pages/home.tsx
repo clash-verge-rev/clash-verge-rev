@@ -201,7 +201,7 @@ const HomeSettingsDialog = ({
 const HomePage = () => {
   const { t } = useTranslation();
   const { verge } = useVerge();
-  const { current } = useProfiles();
+  const { current, mutateProfiles } = useProfiles();
   const navigate = useNavigate();
   const theme = useTheme();
 
@@ -275,7 +275,10 @@ const HomePage = () => {
         {/* 订阅和当前节点部分 */}
         {homeCards.profile && (
           <Grid size={6}>
-            <HomeProfileCard current={current} />
+            <HomeProfileCard 
+              current={current} 
+              onProfileUpdated={mutateProfiles} 
+            />
           </Grid>
         )}
 

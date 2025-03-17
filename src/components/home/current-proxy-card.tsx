@@ -13,7 +13,7 @@ import {
   SelectChangeEvent,
   Tooltip,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   SignalWifi4Bar as SignalStrong,
   SignalWifi3Bar as SignalGood,
@@ -45,17 +45,7 @@ interface ProxyOption {
 }
 
 // 将delayManager返回的颜色格式转换为MUI Chip组件需要的格式
-function convertDelayColor(
-  delayValue: number,
-):
-  | "default"
-  | "success"
-  | "warning"
-  | "error"
-  | "primary"
-  | "secondary"
-  | "info"
-  | undefined {
+function convertDelayColor(delayValue: number) {
   const colorStr = delayManager.formatDelayColor(delayValue);
   if (!colorStr) return "default";
 
@@ -63,445 +53,365 @@ function convertDelayColor(
   const mainColor = colorStr.split(".")[0];
 
   switch (mainColor) {
-    case "success":
-      return "success";
-    case "warning":
-      return "warning";
-    case "error":
-      return "error";
-    case "primary":
-      return "primary";
-    default:
-      return "default";
+    case "success": return "success";
+    case "warning": return "warning";
+    case "error": return "error";
+    case "primary": return "primary";
+    default: return "default";
   }
 }
 
 // 根据延迟值获取合适的WiFi信号图标
-function getSignalIcon(delay: number): {
-  icon: JSX.Element;
-  text: string;
-  color: string;
-} {
+function getSignalIcon(delay: number) {
   if (delay < 0)
-    return {
-      icon: <SignalNone />,
-      text: "未测试",
-      color: "text.secondary",
-    };
+    return { icon: <SignalNone />, text: "未测试", color: "text.secondary" };
   if (delay >= 10000)
-    return {
-      icon: <SignalError />,
-      text: "超时",
-      color: "error.main",
-    };
+    return { icon: <SignalError />, text: "超时", color: "error.main" };
   if (delay >= 500)
-    return {
-      icon: <SignalWeak />,
-      text: "延迟较高",
-      color: "error.main",
-    };
+    return { icon: <SignalWeak />, text: "延迟较高", color: "error.main" };
   if (delay >= 300)
-    return {
-      icon: <SignalMedium />,
-      text: "延迟中等",
-      color: "warning.main",
-    };
+    return { icon: <SignalMedium />, text: "延迟中等", color: "warning.main" };
   if (delay >= 200)
-    return {
-      icon: <SignalGood />,
-      text: "延迟良好",
-      color: "info.main",
-    };
-  return {
-    icon: <SignalStrong />,
-    text: "延迟极佳",
-    color: "success.main",
+    return { icon: <SignalGood />, text: "延迟良好", color: "info.main" };
+  return { icon: <SignalStrong />, text: "延迟极佳", color: "success.main" };
+}
+
+// 简单的防抖函数
+function debounce(fn: Function, ms = 100) {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return function(this: any, ...args: any[]) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), ms);
   };
 }
 
 export const CurrentProxyCard = () => {
   const { t } = useTranslation();
-  const { currentProxy, primaryGroupName, mode, refreshProxy } =
-    useCurrentProxy();
+  const { currentProxy, primaryGroupName, mode, refreshProxy } = useCurrentProxy();
   const navigate = useNavigate();
   const theme = useTheme();
   const { verge } = useVerge();
 
   // 判断模式
   const isGlobalMode = mode === "global";
-  const isDirectMode = mode === "direct"; // 添加直连模式判断
+  const isDirectMode = mode === "direct";
 
-  // 从本地存储获取初始值，如果是特殊模式或没有存储值则使用默认值
-  const getSavedGroup = () => {
-    // 全局模式使用 GLOBAL 组
-    if (isGlobalMode) {
-      return "GLOBAL";
-    }
-    // 直连模式使用 DIRECT
-    if (isDirectMode) {
-      return "DIRECT";
-    }
-    const savedGroup = localStorage.getItem(STORAGE_KEY_GROUP);
-    return savedGroup || primaryGroupName || "GLOBAL";
+  // 使用 useRef 存储最后一次刷新时间和是否正在刷新
+  const lastRefreshRef = useRef<number>(0);
+  const isRefreshingRef = useRef<boolean>(false);
+  const pendingRefreshRef = useRef<boolean>(false);
+
+  // 定义状态类型
+  type ProxyState = {
+    proxyData: {
+      groups: { name: string; now: string; all: string[] }[];
+      records: Record<string, any>;
+      globalProxy: string;
+      directProxy: any;
+    };
+    selection: {
+      group: string;
+      proxy: string;
+    };
+    displayProxy: any;
   };
 
-  // 状态管理
-  const [groups, setGroups] = useState<
-    { name: string; now: string; all: string[] }[]
-  >([]);
-  const [selectedGroup, setSelectedGroup] = useState<string>(getSavedGroup());
-  const [proxyOptions, setProxyOptions] = useState<ProxyOption[]>([]);
-  const [selectedProxy, setSelectedProxy] = useState<string>("");
-  const [displayProxy, setDisplayProxy] = useState<any>(null);
-  const [records, setRecords] = useState<Record<string, any>>({});
-  const [globalProxy, setGlobalProxy] = useState<string>(""); // 存储全局代理
-  const [directProxy, setDirectProxy] = useState<any>(null); // 存储直连代理信息
+  // 合并状态，减少状态更新次数
+  const [state, setState] = useState<ProxyState>({
+    proxyData: {
+      groups: [],
+      records: {},
+      globalProxy: "",
+      directProxy: null,
+    },
+    selection: {
+      group: "",
+      proxy: "",
+    },
+    displayProxy: null,
+  });
 
-  // 保存选择的代理组到本地存储
+  // 初始化选择的组
   useEffect(() => {
-    // 只有在普通模式下才保存到本地存储
-    if (selectedGroup && !isGlobalMode && !isDirectMode) {
-      localStorage.setItem(STORAGE_KEY_GROUP, selectedGroup);
-    }
-  }, [selectedGroup, isGlobalMode, isDirectMode]);
-
-  // 保存选择的代理节点到本地存储
-  useEffect(() => {
-    // 只有在普通模式下才保存到本地存储
-    if (selectedProxy && !isGlobalMode && !isDirectMode) {
-      localStorage.setItem(STORAGE_KEY_PROXY, selectedProxy);
-    }
-  }, [selectedProxy, isGlobalMode, isDirectMode]);
-
-  // 当模式变化时更新选择的组
-  useEffect(() => {
+    // 根据模式确定初始组
     if (isGlobalMode) {
-      setSelectedGroup("GLOBAL");
+      setState(prev => ({
+        ...prev,
+        selection: {
+          ...prev.selection,
+          group: "GLOBAL"
+        }
+      }));
     } else if (isDirectMode) {
-      setSelectedGroup("DIRECT");
-    } else if (primaryGroupName) {
+      setState(prev => ({
+        ...prev,
+        selection: {
+          ...prev.selection,
+          group: "DIRECT"
+        }
+      }));
+    } else {
       const savedGroup = localStorage.getItem(STORAGE_KEY_GROUP);
-      setSelectedGroup(savedGroup || primaryGroupName);
+      setState(prev => ({
+        ...prev,
+        selection: {
+          ...prev.selection,
+          group: savedGroup || primaryGroupName || ""
+        }
+      }));
     }
   }, [isGlobalMode, isDirectMode, primaryGroupName]);
 
-  // 获取所有代理组和代理信息
-  useEffect(() => {
-    const fetchProxies = async () => {
-      try {
-        const data = await getProxies();
-        // 保存所有节点记录信息，用于显示详细节点信息
-        setRecords(data.records);
-
-        // 检查并存储全局代理信息
-        if (data.global) {
-          setGlobalProxy(data.global.now || "");
-        }
-
-        // 查找并存储直连代理信息
-        if (data.records && data.records["DIRECT"]) {
-          setDirectProxy(data.records["DIRECT"]);
-        }
-
-        const filteredGroups = data.groups
-          .filter((g) => g.name !== "DIRECT" && g.name !== "REJECT")
-          .map((g) => ({
-            name: g.name,
-            now: g.now || "",
-            all: g.all.map((p) => p.name),
-          }));
-
-        setGroups(filteredGroups);
-
-        // 直连模式处理
-        if (isDirectMode) {
-          // 直连模式下使用 DIRECT 节点
-          setSelectedGroup("DIRECT");
-          setSelectedProxy("DIRECT");
-
-          if (data.records && data.records["DIRECT"]) {
-            setDisplayProxy(data.records["DIRECT"]);
-          }
-
-          // 设置仅包含 DIRECT 节点的选项
-          setProxyOptions([{ name: "DIRECT" }]);
-          return;
-        }
-
-        // 全局模式处理
-        if (isGlobalMode) {
-          // 在全局模式下，使用 GLOBAL 组和 data.global.now 作为选中节点
-          if (data.global) {
-            const globalNow = data.global.now || "";
-            setSelectedGroup("GLOBAL");
-            setSelectedProxy(globalNow);
-
-            if (globalNow && data.records[globalNow]) {
-              setDisplayProxy(data.records[globalNow]);
-            }
-
-            // 设置全局组的代理选项
-            const options = data.global.all.map((proxy) => ({
-              name: proxy.name,
-            }));
-
-            setProxyOptions(options);
-          }
-          return;
-        }
-
-        // 以下是普通模式的处理逻辑
-        let targetGroup = primaryGroupName;
-
-        // 非特殊模式下，尝试从本地存储获取上次选择的代理组
-        const savedGroup = localStorage.getItem(STORAGE_KEY_GROUP);
-        targetGroup = savedGroup || primaryGroupName;
-
-        // 如果目标组在列表中，则选择它
-        if (targetGroup && filteredGroups.some((g) => g.name === targetGroup)) {
-          setSelectedGroup(targetGroup);
-
-          // 设置该组下的代理选项
-          const currentGroup = filteredGroups.find(
-            (g) => g.name === targetGroup,
-          );
-          if (currentGroup) {
-            // 创建代理选项
-            const options = currentGroup.all.map((proxyName) => {
-              return { name: proxyName };
-            });
-
-            setProxyOptions(options);
-
-            let targetProxy = currentGroup.now;
-
-            const savedProxy = localStorage.getItem(STORAGE_KEY_PROXY);
-            // 如果有保存的代理节点且该节点在当前组中，则选择它
-            if (savedProxy && currentGroup.all.includes(savedProxy)) {
-              targetProxy = savedProxy;
-            }
-
-            setSelectedProxy(targetProxy);
-
-            if (targetProxy && data.records[targetProxy]) {
-              setDisplayProxy(data.records[targetProxy]);
-            }
-          }
-        } else if (filteredGroups.length > 0) {
-          // 否则选择第一个组
-          setSelectedGroup(filteredGroups[0].name);
-
-          // 创建代理选项
-          const options = filteredGroups[0].all.map((proxyName) => {
-            return { name: proxyName };
-          });
-
-          setProxyOptions(options);
-          setSelectedProxy(filteredGroups[0].now);
-
-          // 更新显示的代理节点信息
-          if (filteredGroups[0].now && data.records[filteredGroups[0].now]) {
-            setDisplayProxy(data.records[filteredGroups[0].now]);
-          }
-        }
-      } catch (error) {
-        console.error("获取代理信息失败", error);
-      }
-    };
-
-    fetchProxies();
-  }, [primaryGroupName, isGlobalMode, isDirectMode]);
-
-  // 当选择的组发生变化时更新代理选项
-  useEffect(() => {
-    // 如果是特殊模式，已在 fetchProxies 中处理
-    if (isGlobalMode || isDirectMode) return;
-
-    const group = groups.find((g) => g.name === selectedGroup);
-    if (group && records) {
-      // 创建代理选项
-      const options = group.all.map((proxyName) => {
-        return { name: proxyName };
-      });
-
-      setProxyOptions(options);
-
-      let targetProxy = group.now;
-
-      const savedProxy = localStorage.getItem(STORAGE_KEY_PROXY);
-      // 如果保存的代理节点在当前组中，则选择它
-      if (savedProxy && group.all.includes(savedProxy)) {
-        targetProxy = savedProxy;
-      }
-
-      setSelectedProxy(targetProxy);
-
-      if (targetProxy && records[targetProxy]) {
-        setDisplayProxy(records[targetProxy]);
-      }
+  // 带锁的代理数据获取函数，防止并发请求
+  const fetchProxyData = useCallback(async (force = false) => {
+    // 防止重复请求
+    if (isRefreshingRef.current) {
+      pendingRefreshRef.current = true;
+      return;
     }
-  }, [selectedGroup, groups, records, isGlobalMode, isDirectMode]);
 
-  // 刷新代理信息
-  const refreshProxyData = async () => {
+    // 检查刷新间隔
+    const now = Date.now();
+    if (!force && now - lastRefreshRef.current < 1000) {
+      return;
+    }
+
+    isRefreshingRef.current = true;
+    lastRefreshRef.current = now;
+    
     try {
       const data = await getProxies();
-      // 更新所有代理记录
-      setRecords(data.records);
-
-      // 更新代理组信息
+      
+      // 过滤和格式化组
       const filteredGroups = data.groups
-        .filter((g) => g.name !== "DIRECT" && g.name !== "REJECT")
-        .map((g) => ({
+        .filter(g => g.name !== "DIRECT" && g.name !== "REJECT")
+        .map(g => ({
           name: g.name,
           now: g.now || "",
-          all: g.all.map((p) => p.name),
+          all: g.all.map(p => p.name),
         }));
 
-      setGroups(filteredGroups);
+      // 使用函数式更新确保状态更新的原子性
+      setState(prev => {
+        let newProxy = "";
+        let newDisplayProxy = null;
+        let newGroup = prev.selection.group;
 
-      // 检查并更新全局代理信息
-      if (isGlobalMode && data.global) {
-        const globalNow = data.global.now || "";
-        setSelectedProxy(globalNow);
-
-        if (globalNow && data.records[globalNow]) {
-          setDisplayProxy(data.records[globalNow]);
-        }
-
-        // 更新全局组的代理选项
-        const options = data.global.all.map((proxy) => ({
-          name: proxy.name,
-        }));
-
-        setProxyOptions(options);
-      }
-      // 更新直连代理信息
-      else if (isDirectMode && data.records["DIRECT"]) {
-        setDirectProxy(data.records["DIRECT"]);
-        setDisplayProxy(data.records["DIRECT"]);
-      }
-      // 更新普通模式下当前选中组的信息
-      else {
-        const currentGroup = filteredGroups.find(
-          (g) => g.name === selectedGroup,
-        );
-        if (currentGroup) {
-          // 如果当前选中的代理节点与组中的now不一致，则需要更新
-          if (currentGroup.now !== selectedProxy) {
-            setSelectedProxy(currentGroup.now);
-
-            if (data.records[currentGroup.now]) {
-              setDisplayProxy(data.records[currentGroup.now]);
+        // 根据模式确定新代理
+        if (isDirectMode) {
+          newGroup = "DIRECT";
+          newProxy = "DIRECT";
+          newDisplayProxy = data.records?.DIRECT || null;
+        } else if (isGlobalMode && data.global) {
+          newGroup = "GLOBAL";
+          newProxy = data.global.now || "";
+          newDisplayProxy = data.records?.[newProxy] || null;
+        } else {
+          // 普通模式 - 检查当前选择的组是否存在
+          const currentGroup = filteredGroups.find(g => g.name === prev.selection.group);
+          
+          // 如果当前组不存在或为空，自动选择第一个组
+          if (!currentGroup && filteredGroups.length > 0) {
+            newGroup = filteredGroups[0].name;
+            const firstGroup = filteredGroups[0];
+            newProxy = firstGroup.now;
+            newDisplayProxy = data.records?.[newProxy] || null;
+            
+            // 保存到本地存储
+            if (!isGlobalMode && !isDirectMode) {
+              localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+              if (newProxy) {
+                localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
+              }
             }
+          } else if (currentGroup) {
+            // 使用当前组的代理
+            newProxy = currentGroup.now;
+            newDisplayProxy = data.records?.[newProxy] || null;
           }
-
-          // 更新代理选项
-          const options = currentGroup.all.map((proxyName) => ({
-            name: proxyName,
-          }));
-
-          setProxyOptions(options);
         }
-      }
+
+        // 返回新状态
+        return {
+          proxyData: {
+            groups: filteredGroups,
+            records: data.records || {},
+            globalProxy: data.global?.now || "",
+            directProxy: data.records?.DIRECT || null,
+          },
+          selection: {
+            group: newGroup,
+            proxy: newProxy
+          },
+          displayProxy: newDisplayProxy
+        };
+      });
     } catch (error) {
-      console.error("刷新代理信息失败", error);
+      console.error("获取代理信息失败", error);
+    } finally {
+      isRefreshingRef.current = false;
+      
+      // 处理待处理的刷新请求
+      if (pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        setTimeout(() => fetchProxyData(), 100);
+      }
     }
-  };
+  }, [isGlobalMode, isDirectMode]);
 
-  // 每隔一段时间刷新代理信息 - 修改为在所有模式下都刷新
+  // 响应 currentProxy 变化
   useEffect(() => {
-    // 初始刷新一次
-    refreshProxyData();
+    if (currentProxy && (!state.displayProxy || currentProxy.name !== state.displayProxy.name)) {
+      fetchProxyData(true);
+    }
+  }, [currentProxy, fetchProxyData, state.displayProxy]);
 
-    // 定期刷新所有模式下的代理信息
-    const refreshInterval = setInterval(refreshProxyData, 2000);
-    return () => clearInterval(refreshInterval);
-  }, [isGlobalMode, isDirectMode, selectedGroup]); // 依赖项添加selectedGroup以便在切换组时重新设置定时器
+  // 平滑的定期刷新，使用固定间隔
+  useEffect(() => {
+    fetchProxyData();
+    
+    const intervalId = setInterval(() => {
+      fetchProxyData();
+    }, 3000); // 使用固定的3秒间隔，平衡响应速度和性能
+    
+    return () => clearInterval(intervalId);
+  }, [fetchProxyData]);
+
+  // 计算要显示的代理选项 - 使用 useMemo 优化
+  const proxyOptions = useMemo(() => {
+    if (isDirectMode) {
+      return [{ name: "DIRECT" }];
+    }
+    if (isGlobalMode && state.proxyData.records) {
+      // 全局模式下的选项
+      return Object.keys(state.proxyData.records)
+        .filter(name => name !== "DIRECT" && name !== "REJECT")
+        .map(name => ({ name }));
+    }
+    
+    // 普通模式
+    const group = state.proxyData.groups.find(g => g.name === state.selection.group);
+    if (group) {
+      return group.all.map(name => ({ name }));
+    }
+    return [];
+  }, [isDirectMode, isGlobalMode, state.proxyData, state.selection.group]);
+
+  // 使用防抖包装状态更新，避免快速连续更新
+  const debouncedSetState = useCallback(
+    debounce((updateFn: (prev: ProxyState) => ProxyState) => {
+      setState(updateFn);
+    }, 50),
+    []
+  );
 
   // 处理代理组变更
-  const handleGroupChange = (event: SelectChangeEvent) => {
-    // 特殊模式下不允许切换组
+  const handleGroupChange = useCallback((event: SelectChangeEvent) => {
     if (isGlobalMode || isDirectMode) return;
-
+    
     const newGroup = event.target.value;
-    setSelectedGroup(newGroup);
-  };
+    
+    // 保存到本地存储
+    localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+    
+    // 获取该组当前选中的代理
+    setState(prev => {
+      const group = prev.proxyData.groups.find(g => g.name === newGroup);
+      if (group) {
+        return {
+          ...prev,
+          selection: {
+            group: newGroup,
+            proxy: group.now
+          },
+          displayProxy: prev.proxyData.records[group.now] || null
+        };
+      }
+      return {
+        ...prev,
+        selection: {
+          ...prev.selection,
+          group: newGroup
+        }
+      };
+    });
+  }, [isGlobalMode, isDirectMode]);
 
   // 处理代理节点变更
-  const handleProxyChange = async (event: SelectChangeEvent) => {
-    // 直连模式下不允许切换节点
+  const handleProxyChange = useCallback(async (event: SelectChangeEvent) => {
     if (isDirectMode) return;
-
+    
     const newProxy = event.target.value;
-    const previousProxy = selectedProxy; // 保存变更前的代理节点名称
-
-    setSelectedProxy(newProxy);
-
-    // 更新显示的代理节点信息
-    if (records[newProxy]) {
-      setDisplayProxy(records[newProxy]);
+    const currentGroup = state.selection.group;
+    const previousProxy = state.selection.proxy;
+    
+    // 立即更新UI，优化体验
+    debouncedSetState((prev: ProxyState) => ({
+      ...prev,
+      selection: {
+        ...prev.selection,
+        proxy: newProxy
+      },
+      displayProxy: prev.proxyData.records[newProxy] || null
+    }));
+    
+    // 非特殊模式下保存到本地存储
+    if (!isGlobalMode && !isDirectMode) {
+      localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
     }
-
+    
     try {
       // 更新代理设置
-      await updateProxy(selectedGroup, newProxy);
-
-      // 添加断开连接逻辑 - 与proxy-groups.tsx中的逻辑相同
+      await updateProxy(currentGroup, newProxy);
+      
+      // 自动关闭连接设置
       if (verge?.auto_close_connection && previousProxy) {
         getConnections().then(({ connections }) => {
-          connections.forEach((conn) => {
+          connections.forEach(conn => {
             if (conn.chains.includes(previousProxy)) {
               deleteConnection(conn.id);
             }
           });
         });
       }
-
+      
+      // 刷新代理信息，使用较短的延迟
       setTimeout(() => {
         refreshProxy();
-        if (isGlobalMode || isDirectMode) {
-          refreshProxyData(); // 特殊模式下额外刷新数据
-        }
-      }, 300);
+        fetchProxyData(true);
+      }, 200);
     } catch (error) {
       console.error("更新代理失败", error);
     }
-  };
+  }, [isDirectMode, isGlobalMode, state.proxyData.records, state.selection, verge?.auto_close_connection, refreshProxy, fetchProxyData, debouncedSetState]);
 
   // 导航到代理页面
-  const goToProxies = () => {
-    // 修正路由路径，根据_routers.tsx配置，代理页面的路径是"/"
+  const goToProxies = useCallback(() => {
     navigate("/");
-  };
+  }, [navigate]);
 
   // 获取要显示的代理节点
-  const proxyToDisplay = displayProxy || currentProxy;
-
+  const proxyToDisplay = state.displayProxy || currentProxy;
+  
   // 获取当前节点的延迟
   const currentDelay = proxyToDisplay
-    ? delayManager.getDelayFix(proxyToDisplay, selectedGroup)
+    ? delayManager.getDelayFix(proxyToDisplay, state.selection.group)
     : -1;
-
+  
   // 获取信号图标
   const signalInfo = getSignalIcon(currentDelay);
 
   // 自定义渲染选择框中的值
-  const renderProxyValue = (selected: string) => {
-    if (!selected || !records[selected]) return selected;
+  const renderProxyValue = useCallback((selected: string) => {
+    if (!selected || !state.proxyData.records[selected]) return selected;
 
     const delayValue = delayManager.getDelayFix(
-      records[selected],
-      selectedGroup,
+      state.proxyData.records[selected],
+      state.selection.group
     );
 
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <Typography noWrap>{selected}</Typography>
         <Chip
           size="small"
@@ -510,7 +420,7 @@ export const CurrentProxyCard = () => {
         />
       </Box>
     );
-  };
+  }, [state.proxyData.records, state.selection.group]);
 
   return (
     <EnhancedCard
@@ -561,48 +471,22 @@ export const CurrentProxyCard = () => {
                 {proxyToDisplay.name}
               </Typography>
 
-              <Box
-                sx={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mr: 1 }}
-                >
+              <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
                   {proxyToDisplay.type}
                 </Typography>
                 {isGlobalMode && (
-                  <Chip
-                    size="small"
-                    label={t("Global Mode")}
-                    color="primary"
-                    sx={{ mr: 0.5 }}
-                  />
+                  <Chip size="small" label={t("Global Mode")} color="primary" sx={{ mr: 0.5 }} />
                 )}
                 {isDirectMode && (
-                  <Chip
-                    size="small"
-                    label={t("Direct Mode")}
-                    color="success"
-                    sx={{ mr: 0.5 }}
-                  />
+                  <Chip size="small" label={t("Direct Mode")} color="success" sx={{ mr: 0.5 }} />
                 )}
                 {/* 节点特性 */}
-                {proxyToDisplay.udp && (
-                  <Chip size="small" label="UDP" variant="outlined" />
-                )}
-                {proxyToDisplay.tfo && (
-                  <Chip size="small" label="TFO" variant="outlined" />
-                )}
-                {proxyToDisplay.xudp && (
-                  <Chip size="small" label="XUDP" variant="outlined" />
-                )}
-                {proxyToDisplay.mptcp && (
-                  <Chip size="small" label="MPTCP" variant="outlined" />
-                )}
-                {proxyToDisplay.smux && (
-                  <Chip size="small" label="SMUX" variant="outlined" />
-                )}
+                {proxyToDisplay.udp && <Chip size="small" label="UDP" variant="outlined" />}
+                {proxyToDisplay.tfo && <Chip size="small" label="TFO" variant="outlined" />}
+                {proxyToDisplay.xudp && <Chip size="small" label="XUDP" variant="outlined" />}
+                {proxyToDisplay.mptcp && <Chip size="small" label="MPTCP" variant="outlined" />}
+                {proxyToDisplay.smux && <Chip size="small" label="SMUX" variant="outlined" />}
               </Box>
             </Box>
 
@@ -610,31 +494,22 @@ export const CurrentProxyCard = () => {
             {proxyToDisplay && !isDirectMode && (
               <Chip
                 size="small"
-                label={delayManager.formatDelay(
-                  delayManager.getDelayFix(proxyToDisplay, selectedGroup),
-                )}
-                color={convertDelayColor(
-                  delayManager.getDelayFix(proxyToDisplay, selectedGroup),
-                )}
+                label={delayManager.formatDelay(currentDelay)}
+                color={convertDelayColor(currentDelay)}
               />
             )}
           </Box>
           {/* 代理组选择器 */}
-          <FormControl
-            fullWidth
-            variant="outlined"
-            size="small"
-            sx={{ mb: 1.5 }}
-          >
+          <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 1.5 }}>
             <InputLabel id="proxy-group-select-label">{t("Group")}</InputLabel>
             <Select
               labelId="proxy-group-select-label"
-              value={selectedGroup}
+              value={state.selection.group}
               onChange={handleGroupChange}
               label={t("Group")}
-              disabled={isGlobalMode || isDirectMode} // 特殊模式下禁用选择器
+              disabled={isGlobalMode || isDirectMode}
             >
-              {groups.map((group) => (
+              {state.proxyData.groups.map((group) => (
                 <MenuItem key={group.name} value={group.name}>
                   {group.name}
                 </MenuItem>
@@ -647,10 +522,10 @@ export const CurrentProxyCard = () => {
             <InputLabel id="proxy-select-label">{t("Proxy")}</InputLabel>
             <Select
               labelId="proxy-select-label"
-              value={selectedProxy}
+              value={state.selection.proxy}
               onChange={handleProxyChange}
               label={t("Proxy")}
-              disabled={isDirectMode} // 直连模式下禁用选择器
+              disabled={isDirectMode}
               renderValue={renderProxyValue}
               MenuProps={{
                 PaperProps: {
@@ -662,8 +537,8 @@ export const CurrentProxyCard = () => {
             >
               {proxyOptions.map((proxy) => {
                 const delayValue = delayManager.getDelayFix(
-                  records[proxy.name],
-                  selectedGroup,
+                  state.proxyData.records[proxy.name],
+                  state.selection.group
                 );
                 return (
                   <MenuItem

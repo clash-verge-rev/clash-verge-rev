@@ -5,7 +5,6 @@ import {
   useEffect,
   useCallback,
   useMemo,
-  ReactElement,
   useRef,
   memo,
 } from "react";
@@ -44,8 +43,8 @@ type TimeRange = 1 | 5 | 10; // 分钟
 type DataPoint = ITrafficItem & { name: string; timestamp: number };
 
 // 控制帧率的工具函数
-const FPS_LIMIT = 30; // 限制最高30fps
-const FRAME_MIN_TIME = 1000 / FPS_LIMIT; // 每帧最小时间间隔
+const FPS_LIMIT = 1; // 限制为1fps，因为数据每秒才更新一次
+const FRAME_MIN_TIME = 1000 / FPS_LIMIT; // 每帧最小时间间隔，即1000ms
 
 /**
  * 增强型流量图表组件
@@ -109,7 +108,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
       });
     }, []);
 
-    // 初始化空数据缓冲区
+    // 初始化数据缓冲区
     useEffect(() => {
       // 生成10分钟的初始数据点
       const now = Date.now();
@@ -217,8 +216,9 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
         timestamp: timestamp,
       };
 
-      // 直接更新ref，不触发重渲染
-      dataBufferRef.current = [...dataBufferRef.current.slice(1), newPoint];
+      // 更新ref，但保持原数组大小
+      const newBuffer = [...dataBufferRef.current.slice(1), newPoint];
+      dataBufferRef.current = newBuffer;
       
       // 使用节流更新显示数据
       throttledUpdateData();
@@ -264,161 +264,23 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
       return t("{{time}} Minutes", { time: timeRange });
     }, [timeRange, t]);
 
-    // 渲染图表内的标签
-    const renderInnerLabels = useCallback(() => (
-      <>
-        {/* 上传标签 - 右上角 */}
-        <text
-          x="98%"
-          y="7%"
-          textAnchor="end"
-          fill={colors.up}
-          fontSize={12}
-          fontWeight="bold"
-        >
-          {t("Upload")}
-        </text>
-
-        {/* 下载标签 - 右上角下方 */}
-        <text
-          x="98%"
-          y="16%"
-          textAnchor="end"
-          fill={colors.down}
-          fontSize={12}
-          fontWeight="bold"
-        >
-          {t("Download")}
-        </text>
-      </>
-    ), [colors.up, colors.down, t]);
-
     // 共享图表配置
-    const commonProps = useMemo(() => ({
+    const chartConfig = useMemo(() => ({
       data: displayData,
       margin: { top: 10, right: 20, left: 0, bottom: 0 },
     }), [displayData]);
 
-    // 曲线类型 - 使用平滑曲线
-    const curveType = "basis";
+    // 共享的线条/区域配置
+    const commonLineProps = useMemo(() => ({
+      dot: false,
+      strokeWidth: 2,
+      connectNulls: false,
+      activeDot: { r: 4, strokeWidth: 1 },
+      isAnimationActive: false, // 禁用动画以减少CPU使用
+    }), []);
 
-    // 共享图表子组件
-    const commonChildren = useMemo(() => (
-      <>
-        <CartesianGrid
-          strokeDasharray="3 3"
-          vertical={false}
-          stroke={colors.grid}
-          opacity={0.3}
-        />
-        <XAxis
-          dataKey="name"
-          tick={{ fontSize: 10, fill: colors.text }}
-          tickLine={{ stroke: colors.grid }}
-          axisLine={{ stroke: colors.grid }}
-          interval="preserveStart"
-          tickFormatter={formatXLabel}
-          minTickGap={timeRange === 1 ? 40 : 80}
-          tickCount={Math.min(6, timeRange * 2)}
-          domain={["dataMin", "dataMax"]}
-          scale="auto"
-        />
-        <YAxis
-          tickFormatter={formatYAxis}
-          tick={{ fontSize: 10, fill: colors.text }}
-          tickLine={{ stroke: colors.grid }}
-          axisLine={{ stroke: colors.grid }}
-          width={40}
-          domain={[0, "auto"]}
-          padding={{ top: 10, bottom: 0 }}
-        />
-        <Tooltip
-          formatter={formatTooltip}
-          labelFormatter={(label) => `${t("Time")}: ${label}`}
-          contentStyle={{
-            backgroundColor: colors.tooltip,
-            borderColor: colors.grid,
-            borderRadius: 4,
-          }}
-          itemStyle={{ color: colors.text }}
-          isAnimationActive={false}
-        />
-
-        {/* 可点击的时间范围标签 */}
-        <g
-          className="time-range-selector"
-          onClick={handleTimeRangeClick}
-          style={{ cursor: "pointer" }}
-        >
-          <text
-            x="1%"
-            y="6%"
-            textAnchor="start"
-            fill={theme.palette.text.secondary}
-            fontSize={11}
-            fontWeight="bold"
-          >
-            {getTimeRangeText()}
-          </text>
-        </g>
-      </>
-    ), [colors, formatXLabel, formatYAxis, formatTooltip, timeRange, theme.palette.text.secondary, handleTimeRangeClick, getTimeRangeText, t]);
-
-    // 渲染图表 - 线图或面积图
-    const renderChart = useCallback(() => {
-      // 共享的线条/区域配置
-      const commonLineProps = {
-        dot: false,
-        strokeWidth: 2,
-        connectNulls: false,
-        activeDot: { r: 4, strokeWidth: 1 },
-        isAnimationActive: false, // 禁用动画以减少CPU使用
-      };
-
-      return chartStyle === "line" ? (
-        <LineChart {...commonProps}>
-          {commonChildren}
-          <Line
-            type="basis"
-            {...commonLineProps}
-            dataKey="up"
-            name={t("Upload")}
-            stroke={colors.up}
-          />
-          <Line
-            type="basis"
-            {...commonLineProps}
-            dataKey="down"
-            name={t("Download")}
-            stroke={colors.down}
-          />
-          {renderInnerLabels()}
-        </LineChart>
-      ) : (
-        <AreaChart {...commonProps}>
-          {commonChildren}
-          <Area
-            type="basis"
-            {...commonLineProps}
-            dataKey="up"
-            name={t("Upload")}
-            stroke={colors.up}
-            fill={colors.up}
-            fillOpacity={0.2}
-          />
-          <Area
-            type="basis"
-            {...commonLineProps}
-            dataKey="down"
-            name={t("Download")}
-            stroke={colors.down}
-            fill={colors.down}
-            fillOpacity={0.3}
-          />
-          {renderInnerLabels()}
-        </AreaChart>
-      );
-    }, [chartStyle, commonProps, commonChildren, renderInnerLabels, colors, t]);
+    // 曲线类型 - 使用线性曲线避免错位
+    const curveType = "monotone";
 
     return (
       <Box
@@ -434,7 +296,180 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
         onClick={toggleStyle}
       >
         <ResponsiveContainer width="100%" height="100%">
-          {renderChart()}
+          {chartStyle === "line" ? (
+            <LineChart {...chartConfig}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={colors.grid} opacity={0.3} />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10, fill: colors.text }}
+                tickLine={{ stroke: colors.grid }}
+                axisLine={{ stroke: colors.grid }}
+                interval="preserveStart"
+                tickFormatter={formatXLabel}
+                minTickGap={30}
+              />
+              <YAxis
+                tickFormatter={formatYAxis}
+                tick={{ fontSize: 10, fill: colors.text }}
+                tickLine={{ stroke: colors.grid }}
+                axisLine={{ stroke: colors.grid }}
+                width={40}
+                domain={[0, "auto"]}
+              />
+              <Tooltip
+                formatter={formatTooltip}
+                labelFormatter={(label) => `${t("Time")}: ${label}`}
+                contentStyle={{
+                  backgroundColor: colors.tooltip,
+                  borderColor: colors.grid,
+                  borderRadius: 4,
+                }}
+                itemStyle={{ color: colors.text }}
+                isAnimationActive={false}
+              />
+              <Line
+                type={curveType}
+                {...commonLineProps}
+                dataKey="up"
+                name={t("Upload")}
+                stroke={colors.up}
+              />
+              <Line
+                type={curveType}
+                {...commonLineProps}
+                dataKey="down"
+                name={t("Download")}
+                stroke={colors.down}
+              />
+              
+              {/* 可点击的时间范围标签 */}
+              <text
+                x="1%"
+                y="6%"
+                textAnchor="start"
+                fill={theme.palette.text.secondary}
+                fontSize={11}
+                fontWeight="bold"
+                onClick={handleTimeRangeClick}
+                style={{ cursor: "pointer" }}
+              >
+                {getTimeRangeText()}
+              </text>
+              
+              {/* 上传标签 - 右上角 */}
+              <text
+                x="98%"
+                y="7%"
+                textAnchor="end"
+                fill={colors.up}
+                fontSize={12}
+                fontWeight="bold"
+              >
+                {t("Upload")}
+              </text>
+
+              {/* 下载标签 - 右上角下方 */}
+              <text
+                x="98%"
+                y="16%"
+                textAnchor="end"
+                fill={colors.down}
+                fontSize={12}
+                fontWeight="bold"
+              >
+                {t("Download")}
+              </text>
+            </LineChart>
+          ) : (
+            <AreaChart {...chartConfig}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={colors.grid} opacity={0.3} />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10, fill: colors.text }}
+                tickLine={{ stroke: colors.grid }}
+                axisLine={{ stroke: colors.grid }}
+                interval="preserveStart"
+                tickFormatter={formatXLabel}
+                minTickGap={30}
+              />
+              <YAxis
+                tickFormatter={formatYAxis}
+                tick={{ fontSize: 10, fill: colors.text }}
+                tickLine={{ stroke: colors.grid }}
+                axisLine={{ stroke: colors.grid }}
+                width={40}
+                domain={[0, "auto"]}
+                padding={{ top: 10, bottom: 0 }}
+              />
+              <Tooltip
+                formatter={formatTooltip}
+                labelFormatter={(label) => `${t("Time")}: ${label}`}
+                contentStyle={{
+                  backgroundColor: colors.tooltip,
+                  borderColor: colors.grid,
+                  borderRadius: 4,
+                }}
+                itemStyle={{ color: colors.text }}
+                isAnimationActive={false}
+              />
+              <Area
+                type={curveType}
+                {...commonLineProps}
+                dataKey="up"
+                name={t("Upload")}
+                stroke={colors.up}
+                fill={colors.up}
+                fillOpacity={0.2}
+              />
+              <Area
+                type={curveType}
+                {...commonLineProps}
+                dataKey="down"
+                name={t("Download")}
+                stroke={colors.down}
+                fill={colors.down}
+                fillOpacity={0.3}
+              />
+              
+              {/* 可点击的时间范围标签 */}
+              <text
+                x="1%"
+                y="6%"
+                textAnchor="start"
+                fill={theme.palette.text.secondary}
+                fontSize={11}
+                fontWeight="bold"
+                onClick={handleTimeRangeClick}
+                style={{ cursor: "pointer" }}
+              >
+                {getTimeRangeText()}
+              </text>
+              
+              {/* 上传标签 - 右上角 */}
+              <text
+                x="98%"
+                y="7%"
+                textAnchor="end"
+                fill={colors.up}
+                fontSize={12}
+                fontWeight="bold"
+              >
+                {t("Upload")}
+              </text>
+
+              {/* 下载标签 - 右上角下方 */}
+              <text
+                x="98%"
+                y="16%"
+                textAnchor="end"
+                fill={colors.down}
+                fontSize={12}
+                fontWeight="bold"
+              >
+                {t("Download")}
+              </text>
+            </AreaChart>
+          )}
         </ResponsiveContainer>
       </Box>
     );
