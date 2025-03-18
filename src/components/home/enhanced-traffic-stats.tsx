@@ -182,22 +182,13 @@ export const EnhancedTrafficStats = () => {
     
     try {
       const connections = await getConnections();
-      if (connections && connections.connections) {
-        const uploadTotal = connections.connections.reduce(
-          (sum, conn) => sum + conn.upload,
-          0,
-        );
-        const downloadTotal = connections.connections.reduce(
-          (sum, conn) => sum + conn.download,
-          0,
-        );
-
+      if (connections) {
         setStats(prev => ({
           ...prev,
           connections: {
-            uploadTotal,
-            downloadTotal,
-            activeConnections: connections.connections.length,
+            uploadTotal: connections.uploadTotal || 0,
+            downloadTotal: connections.downloadTotal || 0,
+            activeConnections: connections.connections ? connections.connections.length : 0,
           }
         }));
       }
