@@ -8,11 +8,13 @@ import HomePage from "./home";
 import UnlockPage from "./unlock";
 import { BaseErrorBoundary } from "@/components/base";
 
+import HomeSvg from "@/assets/image/itemicon/home.svg?react";
 import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
 import ProfilesSvg from "@/assets/image/itemicon/profiles.svg?react";
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
 import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
+import UnlockSvg from "@/assets/image/itemicon/unlock.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
@@ -20,7 +22,6 @@ import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
-import WifiTetheringRoundedIcon from "@mui/icons-material/WifiTetheringRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
@@ -29,7 +30,7 @@ export const routers = [
   {
     label: "Label-Home",
     path: "/home",
-    icon: [<HomeRoundedIcon />],
+    icon: [<HomeRoundedIcon />, <HomeSvg />],
     element: <HomePage />,
   },
   {
@@ -65,7 +66,7 @@ export const routers = [
   {
     label: "Label-Unlock",
     path: "/unlock",
-    icon: [<LockOpenRoundedIcon />],
+    icon: [<LockOpenRoundedIcon />, <UnlockSvg />],
     element: <UnlockPage />,
   },
   {
