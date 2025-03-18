@@ -269,9 +269,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
 
@@ -313,11 +310,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tagName: alpha
-          releaseName: "Clash Verge Rev Alpha"
-          releaseBody: "More new features are now supported."
-          releaseDraft: false
-          prerelease: true
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
