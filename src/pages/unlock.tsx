@@ -304,7 +304,7 @@ const UnlockPage = () => {
                     >
                       {item.name}
                     </Typography>
-                    <Tooltip title={t("Test now")}>
+                    <Tooltip title={t("Test")}>
                       <span>
                         <Button
                           size="small"
