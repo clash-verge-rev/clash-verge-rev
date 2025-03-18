@@ -1,10 +1,8 @@
 use chrono::Local;
 use regex::Regex;
-use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::error::Error;
 use std::sync::Arc;
 use tauri::command;
 use tokio::sync::Mutex;

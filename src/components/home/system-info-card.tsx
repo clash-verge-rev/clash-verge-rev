@@ -30,6 +30,9 @@ export const SystemInfoCard = () => {
     { suspense: false, revalidateOnFocus: false }
   );
 
+  // 是否以sidecar模式运行
+  const isSidecarMode = runningMode === "sidecar";
+
   // 初始化系统信息
   useEffect(() => {
     // 获取系统信息
@@ -123,10 +126,10 @@ export const SystemInfoCard = () => {
 
   // 点击运行模式处理
   const handleRunningModeClick = useCallback(() => {
-    if (runningMode === "sidecar") {
+    if (isSidecarMode) {
       onInstallService();
     }
-  }, [runningMode, onInstallService]);
+  }, [isSidecarMode, onInstallService]);
 
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {
@@ -148,12 +151,12 @@ export const SystemInfoCard = () => {
 
   // 运行模式样式
   const runningModeStyle = useMemo(() => ({
-    cursor: runningMode === "sidecar" ? "pointer" : "default",
-    textDecoration: runningMode === "sidecar" ? "underline" : "none",
+    cursor: isSidecarMode ? "pointer" : "default",
+    textDecoration: isSidecarMode ? "underline" : "none",
     "&:hover": {
-      opacity: runningMode === "sidecar" ? 0.7 : 1,
+      opacity: isSidecarMode ? 0.7 : 1,
     },
-  }), [runningMode]);
+  }), [isSidecarMode]);
 
   // 只有当verge存在时才渲染内容
   if (!verge) return null;
@@ -203,7 +206,7 @@ export const SystemInfoCard = () => {
             onClick={handleRunningModeClick}
             sx={runningModeStyle}
           >
-            {runningMode === "service" ? t("Service Mode") : t("Sidecar Mode")}
+            {isSidecarMode ? t("Sidecar Mode") : t("Service Mode")}
           </Typography>
         </Stack>
         <Divider />
