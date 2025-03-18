@@ -11,9 +11,12 @@ use crate::{
 };
 use config::Config;
 use std::sync::{Mutex, Once};
-use tauri::AppHandle;
 #[cfg(target_os = "macos")]
 use tauri::Manager;
+use tauri::{
+    menu::{Menu, MenuItem, Submenu},
+    AppHandle,
+};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
 
@@ -99,7 +102,6 @@ pub fn run() {
 
     #[cfg(debug_assertions)]
     let devtools = tauri_plugin_devtools::init();
-
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_autostart::init(
@@ -218,6 +220,23 @@ pub fn run() {
     #[cfg(debug_assertions)]
     {
         builder = builder.plugin(devtools);
+    }
+
+    // Macos Application Menu
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.menu(|handle| {
+            Menu::with_items(
+                handle,
+                &[&Submenu::with_items(
+                    handle,
+                    "Menu",
+                    true,
+                    &[&MenuItem::new(handle, "Clash Verge", true, None::<String>).unwrap()],
+                )
+                .unwrap()],
+            )
+        });
     }
 
     let app = builder
