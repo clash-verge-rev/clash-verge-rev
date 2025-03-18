@@ -194,18 +194,11 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
         }
 
         // Handle lite mode switch
-        if lite_mode.is_some() {
-            if let Some(window) = handle::Handle::global().get_window() {
-                if lite_mode.unwrap() {
-                    // 完全退出 webview 进程
-                    window.close()?; // 先关闭窗口
-                    let app_handle = handle::Handle::global().app_handle().unwrap();
-                    if let Some(webview) = app_handle.get_webview_window("main") {
-                        webview.destroy()?; // 销毁 webview 进程
-                    }
-                } else {
-                    resolve::create_window(); // 重新创建窗口
-                }
+        if let Some(enable) = lite_mode {
+            if enable {
+                handle::Handle::global().destroy_window().ok();
+            } else {
+                resolve::create_window();
             }
         }
 
