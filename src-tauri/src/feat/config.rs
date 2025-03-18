@@ -6,7 +6,6 @@ use crate::{
 };
 use anyhow::Result;
 use serde_yaml::Mapping;
-use tauri::Manager;
 
 /// Patch Clash configuration
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
