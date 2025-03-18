@@ -23,6 +23,7 @@ import {
   DnsOutlined,
   SpeedOutlined,
   HelpOutlineRounded,
+  HistoryEduOutlined,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { ProxyTunCard } from "@/components/home/proxy-tun-card";
@@ -36,7 +37,7 @@ import { BasePage } from "@/components/base";
 import { ClashInfoCard } from "@/components/home/clash-info-card";
 import { SystemInfoCard } from "@/components/home/system-info-card";
 import { useLockFn } from "ahooks";
-import { openWebUrl } from "@/services/cmds";
+import { openWebUrl, patchVergeConfig } from "@/services/cmds";
 import { TestCard } from "@/components/home/test-card";
 import { IpInfoCard } from "@/components/home/ip-info-card";
 
@@ -258,6 +259,11 @@ const HomePage = () => {
       contentStyle={{ padding: 2 }}
       header={
         <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Tooltip title={t("Lite Mode")} arrow>
+            <IconButton onClick={() => patchVergeConfig({ enable_lite_mode: true })} size="small" color="inherit">
+              <HistoryEduOutlined />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={t("Manual")} arrow>
             <IconButton onClick={toGithubDoc} size="small" color="inherit">
               <HelpOutlineRounded />
@@ -275,9 +281,9 @@ const HomePage = () => {
         {/* 订阅和当前节点部分 */}
         {homeCards.profile && (
           <Grid size={6}>
-            <HomeProfileCard 
-              current={current} 
-              onProfileUpdated={mutateProfiles} 
+            <HomeProfileCard
+              current={current}
+              onProfileUpdated={mutateProfiles}
             />
           </Grid>
         )}
