@@ -3,7 +3,7 @@
 # RUN chmod a+x /entrypoint.sh
 # ENTRYPOINT ["/entrypoint.sh"] 
 
-FROM debian:trixie@sha256:2ad7bf4cde8aafcdd2711d03cdd55faaaa0d0f833510ef1c731f885e8ef5b445
+FROM debian:trixie@sha256:ad1a494fd8dac6ff85bbc76e03edf98b3064a096bf79f641f91316e28d478f2d
 ENV DEBIAN_FRONTEND=noninteractive
 
 # change the sources list and install dependencies
