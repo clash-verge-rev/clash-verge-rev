@@ -21,6 +21,7 @@ import { ThemeViewer } from "./mods/theme-viewer";
 import { LayoutViewer } from "./mods/layout-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 import { BackupViewer } from "./mods/backup-viewer";
+import { LiteModeViewer } from "./mods/lite-mode-viewer";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { ContentCopyRounded } from "@mui/icons-material";
 
@@ -39,6 +40,7 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
   const layoutRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
   const backupRef = useRef<DialogRef>(null);
+  const liteModeRef = useRef<DialogRef>(null);
 
   const onCheckUpdate = async () => {
     try {
@@ -67,6 +69,7 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
       <LayoutViewer ref={layoutRef} />
       <UpdateViewer ref={updateRef} />
       <BackupViewer ref={backupRef} />
+      <LiteModeViewer ref={liteModeRef} />
 
       <SettingItem
         onClick={() => backupRef.current?.open()}
@@ -104,11 +107,11 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
       <SettingItem onClick={openDevTools} label={t("Open Dev Tools")} />
 
       <SettingItem
-        label={t("Lite Mode")}
+        label={t("Lite Mode Settings")}
         extra={
           <TooltipIcon title={t("Lite Mode Info")} sx={{ opacity: "0.7" }} />
         }
-        onClick={() => patchVerge({ enable_lite_mode: true })}
+        onClick={() => liteModeRef.current?.open()}
       />
 
       <SettingItem

@@ -283,6 +283,41 @@ pub fn run() {
                         api.prevent_close();
                         let window = core::handle::Handle::global().get_window().unwrap();
                         let _ = window.hide();
+
+                        // 检查是否启用了自动进入 Lite Mode
+                        let verge = crate::config::Config::verge();
+                        let verge_config = verge.latest();
+                        let auto_enter_lite_mode = verge_config.auto_enter_lite_mode.unwrap_or(false);
+                        
+                        if auto_enter_lite_mode {
+                            let delay_minutes = verge_config.auto_enter_lite_mode_delay.unwrap_or(10);
+                            let app_handle_clone = app_handle.clone();
+                            println!("自动进入 Lite Mode 已启用");
+                            // 启动一个线程，在指定延迟后启用 Lite Mode
+                            std::thread::spawn(move || {
+                                println!("等待 {} 分钟后自动进入 Lite Mode", delay_minutes);
+                                std::thread::sleep(std::time::Duration::from_secs(delay_minutes as u64 * 60));
+                                println!("Lite Mode 倒计时结束");
+                                
+                                // 延迟后检查窗口是否仍然隐藏，如果是，则启用 Lite Mode
+                                let window_opt = app_handle_clone.get_webview_window("main");
+                                if let Some(window) = window_opt {
+                                    if !window.is_visible().unwrap_or(true) {
+                                        println!("倒计时结束，正在进入 Lite Mode...");
+                                        // 应用 Lite Mode
+                                        if let Err(e) = tauri::async_runtime::block_on(crate::feat::patch_verge(
+                                            crate::config::IVerge {
+                                                enable_lite_mode: Some(true),
+                                                ..Default::default()
+                                            },
+                                            false
+                                        )) {
+                                            println!("Lite Mode 进入失败: {:?}", e);
+                                        }
+                                    }
+                                }
+                            });
+                        }
                     }
                     tauri::WindowEvent::Focused(true) => {
                         #[cfg(target_os = "macos")]

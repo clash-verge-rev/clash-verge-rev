@@ -740,6 +740,8 @@ interface IVergeConfig {
   enable_tray_speed?: boolean;
   enable_tun_mode?: boolean;
   enable_lite_mode?: boolean;
+  auto_enter_lite_mode?: boolean;
+  auto_enter_lite_mode_delay?: number;
   enable_auto_launch?: boolean;
   enable_silent_start?: boolean;
   enable_system_proxy?: boolean;
