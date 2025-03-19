@@ -41,18 +41,6 @@ impl Handle {
         window
     }
 
-    pub fn destroy_window(&self) -> Result<(), String> {
-        if let Some(window) = self.get_window() {
-            log_err!(window.close());
-        }
-        if let Some(window) = Self::global().get_window() {
-            if let Some(webview) = window.get_webview_window("main") {
-                log_err!(webview.destroy());
-            }
-        }
-        Ok(())
-    }
-
     pub fn refresh_clash() {
         if let Some(window) = Self::global().get_window() {
             log_err!(window.emit("verge://refresh-clash-config", "yes"));

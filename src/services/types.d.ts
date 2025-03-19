@@ -739,7 +739,6 @@ interface IVergeConfig {
   tun_tray_icon?: boolean;
   enable_tray_speed?: boolean;
   enable_tun_mode?: boolean;
-  enable_lite_mode?: boolean;
   auto_enter_lite_mode?: boolean;
   auto_enter_lite_mode_delay?: number;
   enable_auto_launch?: boolean;

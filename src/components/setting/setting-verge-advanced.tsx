@@ -107,9 +107,9 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
       <SettingItem onClick={openDevTools} label={t("Open Dev Tools")} />
 
       <SettingItem
-        label={t("Lite Mode Settings")}
+        label={t("LightWeight Mode Settings")}
         extra={
-          <TooltipIcon title={t("Lite Mode Info")} sx={{ opacity: "0.7" }} />
+          <TooltipIcon title={t("LightWeight Mode Info")} sx={{ opacity: "0.7" }} />
         }
         onClick={() => liteModeRef.current?.open()}
       />

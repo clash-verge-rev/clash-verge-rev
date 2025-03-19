@@ -176,15 +176,13 @@ impl Hotkey {
                     println!("Executing function directly");
                     log::info!(target: "app", "Executing function directly");
 
-                    // 获取轻量模式状态和全局热键状态
-                    let is_lite_mode = Config::verge().latest().enable_lite_mode.unwrap_or(false);
+                    // 获取全局热键状态
                     let is_enable_global_hotkey = Config::verge()
                         .latest()
                         .enable_global_hotkey
                         .unwrap_or(true);
-
-                    // 在轻量模式下或配置了全局热键时，始终执行热键功能
-                    if is_lite_mode || is_enable_global_hotkey {
+                    
+                    if is_enable_global_hotkey {
                         f();
                     } else if let Some(window) = app_handle.get_webview_window("main") {
                         // 非轻量模式且未启用全局热键时，只在窗口可见且有焦点的情况下响应热键

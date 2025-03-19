@@ -2,7 +2,6 @@ use crate::{
     config::{Config, IVerge},
     core::{handle, hotkey, sysopt, tray, CoreManager},
     log_err,
-    utils::resolve,
 };
 use anyhow::Result;
 use serde_yaml::Mapping;
@@ -68,7 +67,6 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
     let proxy_bypass = patch.system_proxy_bypass;
     let language = patch.language;
     let mixed_port = patch.verge_mixed_port;
-    let lite_mode = patch.enable_lite_mode;
     #[cfg(target_os = "macos")]
     let tray_icon = patch.tray_icon;
     #[cfg(not(target_os = "macos"))]
@@ -190,15 +188,6 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
         }
         if (update_flags & (UpdateFlags::SystrayClickBehavior as i32)) != 0 {
             tray::Tray::global().update_click_behavior()?;
-        }
-
-        // Handle lite mode switch
-        if let Some(enable) = lite_mode {
-            if enable {
-                handle::Handle::global().destroy_window().ok();
-            } else {
-                resolve::create_window();
-            }
         }
 
         <Result<()>>::Ok(())
