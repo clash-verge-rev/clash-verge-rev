@@ -31,7 +31,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@juggle/resize-observer": "^3.4.0",
     "@mui/icons-material": "^6.4.7",
-    "@mui/lab": "5.0.0-alpha.175",
+    "@mui/lab": "5.0.0-alpha.176",
     "@mui/material": "^6.4.7",
     "@mui/x-data-grid": "^7.27.3",
     "@tailwindcss/vite": "^4.0.14",
