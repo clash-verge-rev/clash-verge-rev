@@ -189,9 +189,6 @@ pub struct IVerge {
 
     pub enable_tray_speed: Option<bool>,
 
-    /// 轻量模式 - 只保留内核运行
-    pub enable_lite_mode: Option<bool>,
-
     /// 自动进入轻量模式
     pub auto_enter_lite_mode: Option<bool>,
 
@@ -299,7 +296,6 @@ impl IVerge {
             webdav_password: None,
             enable_tray_speed: Some(true),
             enable_global_hotkey: Some(true),
-            enable_lite_mode: Some(false),
             auto_enter_lite_mode: Some(false),
             auto_enter_lite_mode_delay: Some(10),
             enable_dns_settings: Some(true),
@@ -385,7 +381,6 @@ impl IVerge {
         patch!(webdav_username);
         patch!(webdav_password);
         patch!(enable_tray_speed);
-        patch!(enable_lite_mode);
         patch!(auto_enter_lite_mode);
         patch!(auto_enter_lite_mode_delay);
         patch!(enable_dns_settings);
@@ -478,7 +473,6 @@ pub struct IVergeResponse {
     pub webdav_username: Option<String>,
     pub webdav_password: Option<String>,
     pub enable_tray_speed: Option<bool>,
-    pub enable_lite_mode: Option<bool>,
     pub auto_enter_lite_mode: Option<bool>,
     pub auto_enter_lite_mode_delay: Option<u16>,
     pub enable_dns_settings: Option<bool>,
@@ -545,7 +539,6 @@ impl From<IVerge> for IVergeResponse {
             webdav_username: verge.webdav_username,
             webdav_password: verge.webdav_password,
             enable_tray_speed: verge.enable_tray_speed,
-            enable_lite_mode: verge.enable_lite_mode,
             auto_enter_lite_mode: verge.auto_enter_lite_mode,
             auto_enter_lite_mode_delay: verge.auto_enter_lite_mode_delay,
             enable_dns_settings: verge.enable_dns_settings,

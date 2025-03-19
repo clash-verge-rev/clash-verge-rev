@@ -17,6 +17,7 @@ pub mod uwp;
 pub mod validate;
 pub mod verge;
 pub mod webdav;
+pub mod lighteweight;
 
 // Re-export all command functions for backwards compatibility
 pub use app::*;
@@ -32,3 +33,4 @@ pub use uwp::*;
 pub use validate::*;
 pub use verge::*;
 pub use webdav::*;
+pub use lighteweight::*;

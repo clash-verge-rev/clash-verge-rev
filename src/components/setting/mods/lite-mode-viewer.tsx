@@ -12,6 +12,7 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { entry_lightweight_mode } from "@/services/cmds";
 
 export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -34,15 +35,6 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  const onEnterLiteMode = useLockFn(async () => {
-    try {
-      await patchVerge({ enable_lite_mode: true });
-      setOpen(false);
-    } catch (err: any) {
-      Notice.error(err.message || err.toString());
-    }
-  });
-
   const onSave = useLockFn(async () => {
     try {
       await patchVerge({
@@ -58,7 +50,7 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Lite Mode Settings")}
+      title={t("LightWeight Mode Settings")}
       contentSx={{ width: 450 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
@@ -68,15 +60,15 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Enter Lite Mode Now")} />
-          <Typography 
-            variant="button" 
-            sx={{ 
-              cursor: "pointer", 
-              color: "primary.main", 
-              "&:hover": { textDecoration: "underline" } 
+          <ListItemText primary={t("Enter LightWeight Mode Now")} />
+          <Typography
+            variant="button"
+            sx={{
+              cursor: "pointer",
+              color: "primary.main",
+              "&:hover": { textDecoration: "underline" }
             }}
-            onClick={onEnterLiteMode}
+            onClick={() => entry_lightweight_mode()}
           >
             {t("Enable")}
           </Typography>
@@ -84,11 +76,11 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Auto Enter Lite Mode")}
+            primary={t("Auto Enter LightWeight Mode")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Auto Enter Lite Mode Info")}
+            title={t("Auto Enter LightWeight Mode Info")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -104,7 +96,7 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
         {values.autoEnterLiteMode && (
           <>
             <ListItem sx={{ padding: "5px 2px" }}>
-              <ListItemText primary={t("Auto Enter Lite Mode Delay")} />
+              <ListItemText primary={t("Auto Enter LightWeight Mode Delay")} />
               <TextField
                 autoComplete="off"
                 size="small"
@@ -129,11 +121,11 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
                 }}
               />
             </ListItem>
-            
+
             <ListItem sx={{ padding: "5px 2px" }}>
               <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
-                {t("When closing the window, Lite Mode will be automatically activated after _n minutes", 
-                   { n: values.autoEnterLiteModeDelay })}
+                {t("When closing the window, LightWeight Mode will be automatically activated after _n minutes",
+                  { n: values.autoEnterLiteModeDelay })}
               </Typography>
             </ListItem>
           </>

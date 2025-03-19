@@ -324,3 +324,11 @@ export const getAppUptime = async () => {
 export const installService = async () => {
   return invoke<void>("install_service");
 };
+
+export const entry_lightweight_mode = async () => {
+  return invoke<void>("entry_lightweight_mode");
+}
+
+export const exit_lightweight_mode = async () => {
+  return invoke<void>("exit_lightweight_mode");
+}
