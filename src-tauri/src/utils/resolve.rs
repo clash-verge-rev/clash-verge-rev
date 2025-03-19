@@ -1,11 +1,7 @@
 #[cfg(target_os = "macos")]
 use crate::AppHandleManager;
 use crate::{
-    config::{Config, IVerge, PrfItem},
-    core::*,
-    log_err,
-    utils::{error, init, server},
-    wrap_err,
+    config::{Config, IVerge, PrfItem}, core::*, log_err, module::lightweight, utils::{error, init, server}, wrap_err
 };
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
@@ -115,6 +111,11 @@ pub async fn resolve_setup(app: &mut App) {
 
     log_err!(tray::Tray::global().update_part());
     log_err!(timer::Timer::global().init());
+
+    let enable_auto_light_weight_mode = { Config::verge().data().enable_auto_light_weight_mode };
+    if enable_auto_light_weight_mode.unwrap_or(false) {
+        lightweight::enable_auto_light_weight_mode();
+    }
 }
 
 /// reset system proxy

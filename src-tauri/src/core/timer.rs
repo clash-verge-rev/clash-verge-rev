@@ -8,24 +8,25 @@ use std::{collections::HashMap, sync::Arc};
 type TaskID = u64;
 
 #[derive(Debug, Clone)]
-struct TimerTask {
-    task_id: TaskID,
-    interval_minutes: u64,
-    __last_run: i64, // Timestamp of last execution
+pub struct TimerTask {
+    pub task_id: TaskID,
+    pub interval_minutes: u64,
+    #[allow(unused)]
+    pub last_run: i64, // Timestamp of last execution
 }
 
 pub struct Timer {
     /// cron manager
-    delay_timer: Arc<RwLock<DelayTimer>>,
+    pub delay_timer: Arc<RwLock<DelayTimer>>,
 
     /// save the current state - using RwLock for better read concurrency
-    timer_map: Arc<RwLock<HashMap<String, TimerTask>>>,
+    pub timer_map: Arc<RwLock<HashMap<String, TimerTask>>>,
 
     /// increment id - kept as mutex since it's just a counter
-    timer_count: Arc<Mutex<TaskID>>,
+    pub timer_count: Arc<Mutex<TaskID>>,
 
     /// Flag to mark if timer is initialized - atomic for better performance
-    initialized: Arc<std::sync::atomic::AtomicBool>,
+    pub initialized: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Timer {
@@ -139,7 +140,7 @@ impl Timer {
                     let task = TimerTask {
                         task_id: tid,
                         interval_minutes: interval,
-                        __last_run: chrono::Local::now().timestamp(),
+                        last_run: chrono::Local::now().timestamp(),
                     };
 
                     timer_map.insert(uid.clone(), task);
@@ -161,7 +162,7 @@ impl Timer {
                     let task = TimerTask {
                         task_id: tid,
                         interval_minutes: interval,
-                        __last_run: chrono::Local::now().timestamp(),
+                        last_run: chrono::Local::now().timestamp(),
                     };
 
                     timer_map.insert(uid.clone(), task);

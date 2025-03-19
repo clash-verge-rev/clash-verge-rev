@@ -7,9 +7,3 @@ pub async fn entry_lightweight_mode() -> CmdResult {
     lightweight::entry_lightweight_mode();
     Ok(())
 }
-
-#[tauri::command]
-pub async fn exit_lightweight_mode() -> CmdResult {
-    lightweight::exit_lightweight_mode();
-    Ok(())
-}

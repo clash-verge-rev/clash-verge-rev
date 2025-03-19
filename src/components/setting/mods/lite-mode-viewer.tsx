@@ -28,8 +28,8 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
     open: () => {
       setOpen(true);
       setValues({
-        autoEnterLiteMode: verge?.auto_enter_lite_mode ?? false,
-        autoEnterLiteModeDelay: verge?.auto_enter_lite_mode_delay ?? 10,
+        autoEnterLiteMode: verge?.enable_auto_light_weight_mode ?? false,
+        autoEnterLiteModeDelay: verge?.auto_light_weight_minutes ?? 10,
       });
     },
     close: () => setOpen(false),
@@ -38,8 +38,8 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
   const onSave = useLockFn(async () => {
     try {
       await patchVerge({
-        auto_enter_lite_mode: values.autoEnterLiteMode,
-        auto_enter_lite_mode_delay: values.autoEnterLiteModeDelay,
+        enable_auto_light_weight_mode: values.autoEnterLiteMode,
+        auto_light_weight_minutes: values.autoEnterLiteModeDelay,
       });
       setOpen(false);
     } catch (err: any) {
