@@ -217,7 +217,6 @@ pub fn run() {
             cmd::check_media_unlock,
             // light-weight model
             cmd::entry_lightweight_mode,
-            cmd::exit_lightweight_mode,
         ]);
 
     #[cfg(debug_assertions)]
