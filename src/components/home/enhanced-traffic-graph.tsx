@@ -312,10 +312,11 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
     );
 
     // 格式化工具提示内容
-    const formatTooltip = useCallback((value: number) => {
+    const formatTooltip = useCallback((value: number, name: string, props: any) => {
       const [num, unit] = parseTraffic(value);
-      return [`${num} ${unit}/s`, ""];
-    }, []);
+      // 使用props.dataKey判断是上传还是下载
+      return [`${num} ${unit}/s`, props?.dataKey === "up" ? t("Upload") : t("Download")];
+    }, [t]);
 
     // Y轴刻度格式化
     const formatYAxis = useCallback((value: number) => {
