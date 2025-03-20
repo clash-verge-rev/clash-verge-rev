@@ -31,6 +31,16 @@ export const EnhancedCard = ({
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
+  // 统一的标题截断样式
+  const titleTruncateStyle = {
+    minWidth: 0,
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    display: "block"
+  };
+
   return (
     <Box
       sx={{
@@ -52,7 +62,13 @@ export const EnhancedCard = ({
           borderColor: "divider",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          minWidth: 0, 
+          flex: 1,
+          overflow: "hidden"
+        }}>
           <Box
             sx={{
               display: "flex",
@@ -62,21 +78,32 @@ export const EnhancedCard = ({
               width: 38,
               height: 38,
               mr: 1.5,
+              flexShrink: 0,
               backgroundColor: alpha(theme.palette[iconColor].main, 0.12),
               color: theme.palette[iconColor].main,
             }}
           >
             {icon}
           </Box>
-          {typeof title === "string" ? (
-            <Typography variant="h6" fontWeight="medium" fontSize={18}>
-              {title}
-            </Typography>
-          ) : (
-            title
-          )}
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            {typeof title === "string" ? (
+              <Typography 
+                variant="h6" 
+                fontWeight="medium" 
+                fontSize={18}
+                sx={titleTruncateStyle}
+                title={title}
+              >
+                {title}
+              </Typography>
+            ) : (
+              <Box sx={titleTruncateStyle}>
+                {title}
+              </Box>
+            )}
+          </Box>
         </Box>
-        {action}
+        {action && <Box sx={{ ml: 2, flexShrink: 0 }}>{action}</Box>}
       </Box>
       <Box
         sx={{

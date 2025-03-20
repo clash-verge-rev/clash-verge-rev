@@ -120,17 +120,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {proxy_auto_config ? (
-              autoproxy?.enable ? (
-                <PlayCircleOutlineRounded
-                  sx={{ color: "success.main", mr: 1.5, fontSize: 28 }}
-                />
-              ) : (
-                <PauseCircleOutlineRounded
-                  sx={{ color: "text.disabled", mr: 1.5, fontSize: 28 }}
-                />
-              )
-            ) : sysproxy?.enable ? (
+            {enable_system_proxy ? (
               <PlayCircleOutlineRounded
                 sx={{ color: "success.main", mr: 1.5, fontSize: 28 }}
               />

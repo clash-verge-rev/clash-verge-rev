@@ -24,6 +24,7 @@ import {
   getAutotemProxy,
   getRunningMode,
 } from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
 
@@ -151,6 +152,10 @@ export const ProxyTunCard: FC = () => {
   // 获取代理状态信息
   const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
   const { data: runningMode } = useSWR("getRunningMode", getRunningMode);
+  const { verge } = useVerge();
+
+  // 从verge配置中获取开关状态
+  const { enable_system_proxy, enable_tun_mode } = verge ?? {};
 
   // 是否以sidecar模式运行
   const isSidecarMode = runningMode === "sidecar";
@@ -170,7 +175,7 @@ export const ProxyTunCard: FC = () => {
   const tabDescription = useMemo(() => {
     if (activeTab === "system") {
       return {
-        text: sysproxy?.enable
+        text: enable_system_proxy
           ? t("System Proxy Enabled")
           : t("System Proxy Disabled"),
         tooltip: t("System Proxy Info")
@@ -179,11 +184,13 @@ export const ProxyTunCard: FC = () => {
       return {
         text: isSidecarMode
           ? t("TUN Mode Service Required")
-          : t("TUN Mode Intercept Info"),
+          : enable_tun_mode
+            ? t("TUN Mode Enabled")
+            : t("TUN Mode Disabled"),
         tooltip: t("Tun Mode Info")
       };
     }
-  }, [activeTab, sysproxy?.enable, isSidecarMode, t]);
+  }, [activeTab, enable_system_proxy, enable_tun_mode, isSidecarMode, t]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
@@ -203,13 +210,14 @@ export const ProxyTunCard: FC = () => {
           onClick={() => handleTabChange("system")}
           icon={ComputerRounded}
           label={t("System Proxy")}
-          hasIndicator={sysproxy?.enable}
+          hasIndicator={enable_system_proxy}
         />
         <TabButton
           isActive={activeTab === "tun"}
           onClick={() => handleTabChange("tun")}
           icon={TroubleshootRounded}
           label={t("Tun Mode")}
+          hasIndicator={enable_tun_mode && !isSidecarMode}
         />
       </Stack>
 
