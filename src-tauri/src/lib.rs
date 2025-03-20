@@ -290,6 +290,7 @@ pub fn run() {
                         #[cfg(target_os = "macos")]
                         {
                             log_err!(hotkey::Hotkey::global().register("CMD+Q", "quit"));
+                            log_err!(hotkey::Hotkey::global().register("CMD+W", "hide"));
                         }
 
                         #[cfg(not(target_os = "macos"))]
@@ -310,6 +311,7 @@ pub fn run() {
                         #[cfg(target_os = "macos")]
                         {
                             log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
+                            log_err!(hotkey::Hotkey::global().unregister("CMD+W"));
                         }
                         #[cfg(not(target_os = "macos"))]
                         {
@@ -329,6 +331,7 @@ pub fn run() {
                         #[cfg(target_os = "macos")]
                         {
                             log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
+                            log_err!(hotkey::Hotkey::global().unregister("CMD+W"));
                         }
 
                         #[cfg(not(target_os = "macos"))]

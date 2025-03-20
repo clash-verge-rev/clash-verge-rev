@@ -148,6 +148,8 @@ impl Hotkey {
             "toggle_system_proxy" => || feat::toggle_system_proxy(),
             "toggle_tun_mode" => || feat::toggle_tun_mode(None),
             "quit" => || feat::quit(Some(0)),
+            #[cfg(target_os = "macos")]
+            "hide" => || feat::hide(),
 
             _ => {
                 println!("Invalid function: {}", func);
@@ -181,7 +183,7 @@ impl Hotkey {
                         .latest()
                         .enable_global_hotkey
                         .unwrap_or(true);
-                    
+
                     if is_enable_global_hotkey {
                         f();
                     } else if let Some(window) = app_handle.get_webview_window("main") {

@@ -1,3 +1,5 @@
+#[cfg(target_os = "macos")]
+use crate::AppHandleManager;
 use crate::{
     config::Config,
     core::{handle, sysopt, CoreManager},
@@ -136,4 +138,14 @@ pub fn quit(code: Option<i32>) {
         // 无论清理结果如何，确保应用退出
         app_handle.exit(code.unwrap_or(0));
     });
+}
+
+#[cfg(target_os = "macos")]
+pub fn hide() {
+    if let Some(window) = handle::Handle::global().get_window() {
+        if window.is_visible().unwrap_or(false) {
+            AppHandleManager::global().set_activation_policy_accessory();
+            let _ = window.hide();
+        }
+    }
 }
