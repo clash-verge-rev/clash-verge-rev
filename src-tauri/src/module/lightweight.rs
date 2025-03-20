@@ -25,18 +25,15 @@ pub fn disable_auto_light_weight_mode() {
 }
 
 pub fn entry_lightweight_mode() {
-    println!("尝试进入轻量模式。motherfucker");
-    if let Some(window) = handle::Handle::global().get_window() {
-        log_err!(window.close());
-    }
-
     if let Some(window) = handle::Handle::global().get_window() {
         if let Some(webview) = window.get_webview_window("main") {
-            log_err!(webview.destroy());
+            let _ = webview.destroy();
+            let _ = window.hide();
             println!("[lightweight_mode] 轻量模式已开启");
             log::info!(target: "app", "[lightweight_mode] 轻量模式已开启");
         }
     }
+    let _ = cancel_light_weight_timer();
 }
 
 fn setup_window_close_listener() -> u32 {
@@ -132,10 +129,9 @@ fn cancel_light_weight_timer() -> Result<()> {
         delay_timer
             .remove_task(task.task_id)
             .context("failed to remove light weight timer task")?;
+        println!("[lightweight_mode] 轻量模式计时器已取消");
+        log::info!(target: "app", "[lightweight_mode] 轻量模式计时器已取消");
     }
-
-    println!("[lightweight_mode] 轻量模式计时器已取消");
-    log::info!(target: "app", "[lightweight_mode] 轻量模式计时器已取消");
 
     Ok(())
 }

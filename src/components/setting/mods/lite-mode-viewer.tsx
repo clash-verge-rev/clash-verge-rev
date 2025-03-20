@@ -66,9 +66,9 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
             sx={{
               cursor: "pointer",
               color: "primary.main",
-              "&:hover": { textDecoration: "underline" }
+              "&:hover": { textDecoration: "underline" },
             }}
-            onClick={() => entry_lightweight_mode()}
+            onClick={async () => await entry_lightweight_mode()}
           >
             {t("Enable")}
           </Typography>
@@ -115,17 +115,25 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
                 slotProps={{
                   input: {
                     endAdornment: (
-                      <InputAdornment position="end">{t("mins")}</InputAdornment>
-                    )
-                  }
+                      <InputAdornment position="end">
+                        {t("mins")}
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             </ListItem>
 
             <ListItem sx={{ padding: "5px 2px" }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
-                {t("When closing the window, LightWeight Mode will be automatically activated after _n minutes",
-                  { n: values.autoEnterLiteModeDelay })}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontStyle: "italic" }}
+              >
+                {t(
+                  "When closing the window, LightWeight Mode will be automatically activated after _n minutes",
+                  { n: values.autoEnterLiteModeDelay },
+                )}
               </Typography>
             </ListItem>
           </>
@@ -133,4 +141,4 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
       </List>
     </BaseDialog>
   );
-}); 
+});
