@@ -11,12 +11,9 @@ use crate::{
 };
 use config::Config;
 use std::sync::{Mutex, Once};
+use tauri::AppHandle;
 #[cfg(target_os = "macos")]
 use tauri::Manager;
-use tauri::{
-    menu::{Menu, MenuItem, Submenu},
-    AppHandle,
-};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
 
@@ -227,18 +224,7 @@ pub fn run() {
     // Macos Application Menu
     #[cfg(target_os = "macos")]
     {
-        builder = builder.menu(|handle| {
-            Menu::with_items(
-                handle,
-                &[&Submenu::with_items(
-                    handle,
-                    "Menu",
-                    true,
-                    &[&MenuItem::new(handle, "Clash Verge", true, None::<String>).unwrap()],
-                )
-                .unwrap()],
-            )
-        });
+        // Temporary Achived due to cannot CMD+C/V/A
     }
 
     let app = builder
