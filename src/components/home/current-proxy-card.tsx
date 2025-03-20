@@ -53,11 +53,16 @@ function convertDelayColor(delayValue: number) {
   const mainColor = colorStr.split(".")[0];
 
   switch (mainColor) {
-    case "success": return "success";
-    case "warning": return "warning";
-    case "error": return "error";
-    case "primary": return "primary";
-    default: return "default";
+    case "success":
+      return "success";
+    case "warning":
+      return "warning";
+    case "error":
+      return "error";
+    case "primary":
+      return "primary";
+    default:
+      return "default";
   }
 }
 
@@ -79,7 +84,7 @@ function getSignalIcon(delay: number) {
 // 简单的防抖函数
 function debounce(fn: Function, ms = 100) {
   let timeoutId: ReturnType<typeof setTimeout>;
-  return function(this: any, ...args: any[]) {
+  return function (this: any, ...args: any[]) {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn.apply(this, args), ms);
   };
@@ -87,7 +92,8 @@ function debounce(fn: Function, ms = 100) {
 
 export const CurrentProxyCard = () => {
   const { t } = useTranslation();
-  const { currentProxy, primaryGroupName, mode, refreshProxy } = useCurrentProxy();
+  const { currentProxy, primaryGroupName, mode, refreshProxy } =
+    useCurrentProxy();
   const navigate = useNavigate();
   const theme = useTheme();
   const { verge } = useVerge();
@@ -135,133 +141,141 @@ export const CurrentProxyCard = () => {
   useEffect(() => {
     // 根据模式确定初始组
     if (isGlobalMode) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         selection: {
           ...prev.selection,
-          group: "GLOBAL"
-        }
+          group: "GLOBAL",
+        },
       }));
     } else if (isDirectMode) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         selection: {
           ...prev.selection,
-          group: "DIRECT"
-        }
+          group: "DIRECT",
+        },
       }));
     } else {
       const savedGroup = localStorage.getItem(STORAGE_KEY_GROUP);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         selection: {
           ...prev.selection,
-          group: savedGroup || primaryGroupName || ""
-        }
+          group: savedGroup || primaryGroupName || "",
+        },
       }));
     }
   }, [isGlobalMode, isDirectMode, primaryGroupName]);
 
   // 带锁的代理数据获取函数，防止并发请求
-  const fetchProxyData = useCallback(async (force = false) => {
-    // 防止重复请求
-    if (isRefreshingRef.current) {
-      pendingRefreshRef.current = true;
-      return;
-    }
-
-    // 检查刷新间隔
-    const now = Date.now();
-    if (!force && now - lastRefreshRef.current < 1000) {
-      return;
-    }
-
-    isRefreshingRef.current = true;
-    lastRefreshRef.current = now;
-    
-    try {
-      const data = await getProxies();
-      
-      // 过滤和格式化组
-      const filteredGroups = data.groups
-        .filter(g => g.name !== "DIRECT" && g.name !== "REJECT")
-        .map(g => ({
-          name: g.name,
-          now: g.now || "",
-          all: g.all.map(p => p.name),
-        }));
-
-      // 使用函数式更新确保状态更新的原子性
-      setState(prev => {
-        let newProxy = "";
-        let newDisplayProxy = null;
-        let newGroup = prev.selection.group;
-
-        // 根据模式确定新代理
-        if (isDirectMode) {
-          newGroup = "DIRECT";
-          newProxy = "DIRECT";
-          newDisplayProxy = data.records?.DIRECT || null;
-        } else if (isGlobalMode && data.global) {
-          newGroup = "GLOBAL";
-          newProxy = data.global.now || "";
-          newDisplayProxy = data.records?.[newProxy] || null;
-        } else {
-          // 普通模式 - 检查当前选择的组是否存在
-          const currentGroup = filteredGroups.find(g => g.name === prev.selection.group);
-          
-          // 如果当前组不存在或为空，自动选择第一个组
-          if (!currentGroup && filteredGroups.length > 0) {
-            newGroup = filteredGroups[0].name;
-            const firstGroup = filteredGroups[0];
-            newProxy = firstGroup.now;
-            newDisplayProxy = data.records?.[newProxy] || null;
-            
-            // 保存到本地存储
-            if (!isGlobalMode && !isDirectMode) {
-              localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
-              if (newProxy) {
-                localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
-              }
-            }
-          } else if (currentGroup) {
-            // 使用当前组的代理
-            newProxy = currentGroup.now;
-            newDisplayProxy = data.records?.[newProxy] || null;
-          }
-        }
-
-        // 返回新状态
-        return {
-          proxyData: {
-            groups: filteredGroups,
-            records: data.records || {},
-            globalProxy: data.global?.now || "",
-            directProxy: data.records?.DIRECT || null,
-          },
-          selection: {
-            group: newGroup,
-            proxy: newProxy
-          },
-          displayProxy: newDisplayProxy
-        };
-      });
-    } catch (error) {
-      console.error("获取代理信息失败", error);
-    } finally {
-      isRefreshingRef.current = false;
-      
-      // 处理待处理的刷新请求
-      if (pendingRefreshRef.current) {
-        pendingRefreshRef.current = false;
-        setTimeout(() => fetchProxyData(), 100);
+  const fetchProxyData = useCallback(
+    async (force = false) => {
+      // 防止重复请求
+      if (isRefreshingRef.current) {
+        pendingRefreshRef.current = true;
+        return;
       }
-    }
-  }, [isGlobalMode, isDirectMode]);
+
+      // 检查刷新间隔
+      const now = Date.now();
+      if (!force && now - lastRefreshRef.current < 1000) {
+        return;
+      }
+
+      isRefreshingRef.current = true;
+      lastRefreshRef.current = now;
+
+      try {
+        const data = await getProxies();
+
+        // 过滤和格式化组
+        const filteredGroups = data.groups
+          .filter((g) => g.name !== "DIRECT" && g.name !== "REJECT")
+          .map((g) => ({
+            name: g.name,
+            now: g.now || "",
+            all: g.all.map((p) => p.name),
+          }));
+
+        // 使用函数式更新确保状态更新的原子性
+        setState((prev) => {
+          let newProxy = "";
+          let newDisplayProxy = null;
+          let newGroup = prev.selection.group;
+
+          // 根据模式确定新代理
+          if (isDirectMode) {
+            newGroup = "DIRECT";
+            newProxy = "DIRECT";
+            newDisplayProxy = data.records?.DIRECT || null;
+          } else if (isGlobalMode && data.global) {
+            newGroup = "GLOBAL";
+            newProxy = data.global.now || "";
+            newDisplayProxy = data.records?.[newProxy] || null;
+          } else {
+            // 普通模式 - 检查当前选择的组是否存在
+            const currentGroup = filteredGroups.find(
+              (g) => g.name === prev.selection.group,
+            );
+
+            // 如果当前组不存在或为空，自动选择第一个组
+            if (!currentGroup && filteredGroups.length > 0) {
+              newGroup = filteredGroups[0].name;
+              const firstGroup = filteredGroups[0];
+              newProxy = firstGroup.now;
+              newDisplayProxy = data.records?.[newProxy] || null;
+
+              // 保存到本地存储
+              if (!isGlobalMode && !isDirectMode) {
+                localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+                if (newProxy) {
+                  localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
+                }
+              }
+            } else if (currentGroup) {
+              // 使用当前组的代理
+              newProxy = currentGroup.now;
+              newDisplayProxy = data.records?.[newProxy] || null;
+            }
+          }
+
+          // 返回新状态
+          return {
+            proxyData: {
+              groups: filteredGroups,
+              records: data.records || {},
+              globalProxy: data.global?.now || "",
+              directProxy: data.records?.DIRECT || null,
+            },
+            selection: {
+              group: newGroup,
+              proxy: newProxy,
+            },
+            displayProxy: newDisplayProxy,
+          };
+        });
+      } catch (error) {
+        console.error("获取代理信息失败", error);
+      } finally {
+        isRefreshingRef.current = false;
+
+        // 处理待处理的刷新请求
+        if (pendingRefreshRef.current) {
+          pendingRefreshRef.current = false;
+          setTimeout(() => fetchProxyData(), 100);
+        }
+      }
+    },
+    [isGlobalMode, isDirectMode],
+  );
 
   // 响应 currentProxy 变化
   useEffect(() => {
-    if (currentProxy && (!state.displayProxy || currentProxy.name !== state.displayProxy.name)) {
+    if (
+      currentProxy &&
+      (!state.displayProxy || currentProxy.name !== state.displayProxy.name)
+    ) {
       fetchProxyData(true);
     }
   }, [currentProxy, fetchProxyData, state.displayProxy]);
@@ -269,11 +283,11 @@ export const CurrentProxyCard = () => {
   // 平滑的定期刷新，使用固定间隔
   useEffect(() => {
     fetchProxyData();
-    
+
     const intervalId = setInterval(() => {
       fetchProxyData();
     }, 3000); // 使用固定的3秒间隔，平衡响应速度和性能
-    
+
     return () => clearInterval(intervalId);
   }, [fetchProxyData]);
 
@@ -285,14 +299,16 @@ export const CurrentProxyCard = () => {
     if (isGlobalMode && state.proxyData.records) {
       // 全局模式下的选项
       return Object.keys(state.proxyData.records)
-        .filter(name => name !== "DIRECT" && name !== "REJECT")
-        .map(name => ({ name }));
+        .filter((name) => name !== "DIRECT" && name !== "REJECT")
+        .map((name) => ({ name }));
     }
-    
+
     // 普通模式
-    const group = state.proxyData.groups.find(g => g.name === state.selection.group);
+    const group = state.proxyData.groups.find(
+      (g) => g.name === state.selection.group,
+    );
     if (group) {
-      return group.all.map(name => ({ name }));
+      return group.all.map((name) => ({ name }));
     }
     return [];
   }, [isDirectMode, isGlobalMode, state.proxyData, state.selection.group]);
@@ -302,88 +318,103 @@ export const CurrentProxyCard = () => {
     debounce((updateFn: (prev: ProxyState) => ProxyState) => {
       setState(updateFn);
     }, 50),
-    []
+    [],
   );
 
   // 处理代理组变更
-  const handleGroupChange = useCallback((event: SelectChangeEvent) => {
-    if (isGlobalMode || isDirectMode) return;
-    
-    const newGroup = event.target.value;
-    
-    // 保存到本地存储
-    localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
-    
-    // 获取该组当前选中的代理
-    setState(prev => {
-      const group = prev.proxyData.groups.find(g => g.name === newGroup);
-      if (group) {
+  const handleGroupChange = useCallback(
+    (event: SelectChangeEvent) => {
+      if (isGlobalMode || isDirectMode) return;
+
+      const newGroup = event.target.value;
+
+      // 保存到本地存储
+      localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+
+      // 获取该组当前选中的代理
+      setState((prev) => {
+        const group = prev.proxyData.groups.find((g) => g.name === newGroup);
+        if (group) {
+          return {
+            ...prev,
+            selection: {
+              group: newGroup,
+              proxy: group.now,
+            },
+            displayProxy: prev.proxyData.records[group.now] || null,
+          };
+        }
         return {
           ...prev,
           selection: {
+            ...prev.selection,
             group: newGroup,
-            proxy: group.now
           },
-          displayProxy: prev.proxyData.records[group.now] || null
         };
-      }
-      return {
+      });
+    },
+    [isGlobalMode, isDirectMode],
+  );
+
+  // 处理代理节点变更
+  const handleProxyChange = useCallback(
+    async (event: SelectChangeEvent) => {
+      if (isDirectMode) return;
+
+      const newProxy = event.target.value;
+      const currentGroup = state.selection.group;
+      const previousProxy = state.selection.proxy;
+
+      // 立即更新UI，优化体验
+      debouncedSetState((prev: ProxyState) => ({
         ...prev,
         selection: {
           ...prev.selection,
-          group: newGroup
-        }
-      };
-    });
-  }, [isGlobalMode, isDirectMode]);
+          proxy: newProxy,
+        },
+        displayProxy: prev.proxyData.records[newProxy] || null,
+      }));
 
-  // 处理代理节点变更
-  const handleProxyChange = useCallback(async (event: SelectChangeEvent) => {
-    if (isDirectMode) return;
-    
-    const newProxy = event.target.value;
-    const currentGroup = state.selection.group;
-    const previousProxy = state.selection.proxy;
-    
-    // 立即更新UI，优化体验
-    debouncedSetState((prev: ProxyState) => ({
-      ...prev,
-      selection: {
-        ...prev.selection,
-        proxy: newProxy
-      },
-      displayProxy: prev.proxyData.records[newProxy] || null
-    }));
-    
-    // 非特殊模式下保存到本地存储
-    if (!isGlobalMode && !isDirectMode) {
-      localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
-    }
-    
-    try {
-      // 更新代理设置
-      await updateProxy(currentGroup, newProxy);
-      
-      // 自动关闭连接设置
-      if (verge?.auto_close_connection && previousProxy) {
-        getConnections().then(({ connections }) => {
-          connections.forEach(conn => {
-            if (conn.chains.includes(previousProxy)) {
-              deleteConnection(conn.id);
-            }
-          });
-        });
+      // 非特殊模式下保存到本地存储
+      if (!isGlobalMode && !isDirectMode) {
+        localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
       }
-      
-      // 刷新代理信息，使用较短的延迟
-      setTimeout(() => {
-        refreshProxy();
-        fetchProxyData(true);
-      }, 200);
-    } catch (error) {
-      console.error("更新代理失败", error);
-    }
-  }, [isDirectMode, isGlobalMode, state.proxyData.records, state.selection, verge?.auto_close_connection, refreshProxy, fetchProxyData, debouncedSetState]);
+
+      try {
+        // 更新代理设置
+        await updateProxy(currentGroup, newProxy);
+
+        // 自动关闭连接设置
+        if (verge?.auto_close_connection && previousProxy) {
+          getConnections().then(({ connections }) => {
+            connections.forEach((conn) => {
+              if (conn.chains.includes(previousProxy)) {
+                deleteConnection(conn.id);
+              }
+            });
+          });
+        }
+
+        // 刷新代理信息，使用较短的延迟
+        setTimeout(() => {
+          refreshProxy();
+          fetchProxyData(true);
+        }, 200);
+      } catch (error) {
+        console.error("更新代理失败", error);
+      }
+    },
+    [
+      isDirectMode,
+      isGlobalMode,
+      state.proxyData.records,
+      state.selection,
+      verge?.auto_close_connection,
+      refreshProxy,
+      fetchProxyData,
+      debouncedSetState,
+    ],
+  );
 
   // 导航到代理页面
   const goToProxies = useCallback(() => {
@@ -392,35 +423,38 @@ export const CurrentProxyCard = () => {
 
   // 获取要显示的代理节点
   const proxyToDisplay = state.displayProxy || currentProxy;
-  
+
   // 获取当前节点的延迟
   const currentDelay = proxyToDisplay
     ? delayManager.getDelayFix(proxyToDisplay, state.selection.group)
     : -1;
-  
+
   // 获取信号图标
   const signalInfo = getSignalIcon(currentDelay);
 
   // 自定义渲染选择框中的值
-  const renderProxyValue = useCallback((selected: string) => {
-    if (!selected || !state.proxyData.records[selected]) return selected;
+  const renderProxyValue = useCallback(
+    (selected: string) => {
+      if (!selected || !state.proxyData.records[selected]) return selected;
 
-    const delayValue = delayManager.getDelayFix(
-      state.proxyData.records[selected],
-      state.selection.group
-    );
+      const delayValue = delayManager.getDelayFix(
+        state.proxyData.records[selected],
+        state.selection.group,
+      );
 
-    return (
-      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography noWrap>{selected}</Typography>
-        <Chip
-          size="small"
-          label={delayManager.formatDelay(delayValue)}
-          color={convertDelayColor(delayValue)}
-        />
-      </Box>
-    );
-  }, [state.proxyData.records, state.selection.group]);
+      return (
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Typography noWrap>{selected}</Typography>
+          <Chip
+            size="small"
+            label={delayManager.formatDelay(delayValue)}
+            color={convertDelayColor(delayValue)}
+          />
+        </Box>
+      );
+    },
+    [state.proxyData.records, state.selection.group],
+  );
 
   return (
     <EnhancedCard
@@ -471,22 +505,48 @@ export const CurrentProxyCard = () => {
                 {proxyToDisplay.name}
               </Typography>
 
-              <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
-                <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mr: 1 }}
+                >
                   {proxyToDisplay.type}
                 </Typography>
                 {isGlobalMode && (
-                  <Chip size="small" label={t("Global Mode")} color="primary" sx={{ mr: 0.5 }} />
+                  <Chip
+                    size="small"
+                    label={t("Global Mode")}
+                    color="primary"
+                    sx={{ mr: 0.5 }}
+                  />
                 )}
                 {isDirectMode && (
-                  <Chip size="small" label={t("Direct Mode")} color="success" sx={{ mr: 0.5 }} />
+                  <Chip
+                    size="small"
+                    label={t("Direct Mode")}
+                    color="success"
+                    sx={{ mr: 0.5 }}
+                  />
                 )}
                 {/* 节点特性 */}
-                {proxyToDisplay.udp && <Chip size="small" label="UDP" variant="outlined" />}
-                {proxyToDisplay.tfo && <Chip size="small" label="TFO" variant="outlined" />}
-                {proxyToDisplay.xudp && <Chip size="small" label="XUDP" variant="outlined" />}
-                {proxyToDisplay.mptcp && <Chip size="small" label="MPTCP" variant="outlined" />}
-                {proxyToDisplay.smux && <Chip size="small" label="SMUX" variant="outlined" />}
+                {proxyToDisplay.udp && (
+                  <Chip size="small" label="UDP" variant="outlined" />
+                )}
+                {proxyToDisplay.tfo && (
+                  <Chip size="small" label="TFO" variant="outlined" />
+                )}
+                {proxyToDisplay.xudp && (
+                  <Chip size="small" label="XUDP" variant="outlined" />
+                )}
+                {proxyToDisplay.mptcp && (
+                  <Chip size="small" label="MPTCP" variant="outlined" />
+                )}
+                {proxyToDisplay.smux && (
+                  <Chip size="small" label="SMUX" variant="outlined" />
+                )}
               </Box>
             </Box>
 
@@ -500,7 +560,12 @@ export const CurrentProxyCard = () => {
             )}
           </Box>
           {/* 代理组选择器 */}
-          <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 1.5 }}>
+          <FormControl
+            fullWidth
+            variant="outlined"
+            size="small"
+            sx={{ mb: 1.5 }}
+          >
             <InputLabel id="proxy-group-select-label">{t("Group")}</InputLabel>
             <Select
               labelId="proxy-group-select-label"
@@ -535,39 +600,41 @@ export const CurrentProxyCard = () => {
                 },
               }}
             >
-              {proxyOptions.map((proxy) => {
-                const delayValue = delayManager.getDelayFix(
-                  state.proxyData.records[proxy.name],
-                  state.selection.group
-                );
-                return (
-                  <MenuItem
-                    key={proxy.name}
-                    value={proxy.name}
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      width: "100%",
-                      pr: 1,
-                    }}
-                  >
-                    <Typography noWrap sx={{ flex: 1, mr: 1 }}>
-                      {proxy.name}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={delayManager.formatDelay(delayValue)}
-                      color={convertDelayColor(delayValue)}
-                      sx={{
-                        minWidth: "60px",
-                        height: "22px",
-                        flexShrink: 0,
-                      }}
-                    />
-                  </MenuItem>
-                );
-              })}
+              {isDirectMode
+                ? null
+                : proxyOptions.map((proxy) => {
+                    const delayValue = delayManager.getDelayFix(
+                      state.proxyData.records[proxy.name],
+                      state.selection.group,
+                    );
+                    return (
+                      <MenuItem
+                        key={proxy.name}
+                        value={proxy.name}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          width: "100%",
+                          pr: 1,
+                        }}
+                      >
+                        <Typography noWrap sx={{ flex: 1, mr: 1 }}>
+                          {proxy.name}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={delayManager.formatDelay(delayValue)}
+                          color={convertDelayColor(delayValue)}
+                          sx={{
+                            minWidth: "60px",
+                            height: "22px",
+                            flexShrink: 0,
+                          }}
+                        />
+                      </MenuItem>
+                    );
+                  })}
             </Select>
           </FormControl>
         </Box>
