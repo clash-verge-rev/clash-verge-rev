@@ -250,11 +250,12 @@ pub fn run() {
             AppHandleManager::global().init(app_handle.clone());
             #[cfg(target_os = "macos")]
             {
-                let main_window = AppHandleManager::global()
+                if let Some(window) = AppHandleManager::global()
                     .get_handle()
                     .get_webview_window("main")
-                    .unwrap();
-                let _ = main_window.set_title("Clash Verge");
+                {
+                    let _ = window.set_title("Clash Verge");
+                }
             }
         }
         #[cfg(target_os = "macos")]
