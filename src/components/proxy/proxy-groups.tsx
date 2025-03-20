@@ -92,18 +92,8 @@ export const ProxyGroups = (props: Props) => {
           [...providers].map((p) => healthcheckProviders(p)),
         ).then(() => onProxies());
       }
-
       const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
-
-      await Promise.race([
-        delayManager.checkListDelay(names, groupName, timeout),
-        delayGroup(
-          groupName,
-          delayManager.getUrl(groupName) ||
-            "https://www.gstatic.com/generate_204",
-          timeout,
-        ), // 查询group delays 将清除fixed(不关注调用结果)
-      ]);
+      await delayManager.checkListDelay(names, groupName, timeout);
 
       onProxies();
     }),
@@ -173,7 +163,7 @@ export const ProxyGroups = (props: Props) => {
         />
       </Box>
 
-      <div className="absolute bottom-0 right-0 top-0 z-10 mr-0 w-7 bg-transparent hover:w-[120px]">
+      <div className="absolute top-0 right-0 bottom-0 z-10 mr-0 w-7 bg-transparent hover:w-[120px]">
         <div className="flex h-full w-full items-center justify-center hover:shadow-2xl">
           <ProxyGroupSidebar
             groupNameList={groupNameList}

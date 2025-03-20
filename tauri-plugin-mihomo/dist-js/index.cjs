@@ -100,9 +100,9 @@ async function selectNodeForProxy(proxyName, node) {
     node,
   });
 }
-async function unfixedProxy(proxyName) {
+async function unfixedProxy(groupName) {
   await core.invoke("plugin:mihomo|unfixed_proxy", {
-    proxyName,
+    proxyName: groupName,
   });
 }
 async function delayProxyByName(proxyName, testUrl, timeout) {

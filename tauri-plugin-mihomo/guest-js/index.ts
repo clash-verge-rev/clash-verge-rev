@@ -323,9 +323,9 @@ export async function selectNodeForProxy(
   });
 }
 
-export async function unfixedProxy(proxyName: string): Promise<void> {
+export async function unfixedProxy(groupName: string): Promise<void> {
   await invoke<void>("plugin:mihomo|unfixed_proxy", {
-    proxyName,
+    proxyName: groupName,
   });
 }
 
