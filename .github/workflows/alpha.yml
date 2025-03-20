@@ -37,15 +37,15 @@ jobs:
           # Store current version from package.json
           CURRENT_VERSION=$(cat package.json | jq -r '.version')
           echo "Current version: $CURRENT_VERSION"
-          
+
           # Get the previous commit's package.json version
           git checkout HEAD~1 package.json
           PREVIOUS_VERSION=$(cat package.json | jq -r '.version')
           echo "Previous version: $PREVIOUS_VERSION"
-          
+
           # Reset back to current commit
           git checkout HEAD package.json
-          
+
           # Check if version changed
           if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
             echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
@@ -54,7 +54,7 @@ jobs:
             echo "Version unchanged: $CURRENT_VERSION"
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
-          
+
   delete_old_assets:
     needs: check_commit
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
@@ -66,7 +66,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const releaseTag = 'alpha';
-            
+
             try {
               // Get the release by tag name
               const { data: release } = await github.rest.repos.getReleaseByTag({
@@ -74,13 +74,13 @@ jobs:
                 repo: context.repo.repo,
                 tag: releaseTag
               });
-              
+
               console.log(`Found release with ID: ${release.id}`);
-              
+
               // Delete each asset
               if (release.assets && release.assets.length > 0) {
                 console.log(`Deleting ${release.assets.length} assets`);
-                
+
                 for (const asset of release.assets) {
                   console.log(`Deleting asset: ${asset.name} (${asset.id})`);
                   await github.rest.repos.deleteReleaseAsset({
@@ -89,7 +89,7 @@ jobs:
                     asset_id: asset.id
                   });
                 }
-                
+
                 console.log('All assets deleted successfully');
               } else {
                 console.log('No assets found to delete');
@@ -103,8 +103,95 @@ jobs:
               }
             }
 
-  alpha:
+  update_tag:
+    name: Update tag
+    runs-on: ubuntu-latest
     needs: delete_old_assets
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Alpha update logs
+        id: fetch_alpha_logs
+        run: |
+          # Check if UPDATELOG.md exists
+          if [ -f "UPDATELOG.md" ]; then
+            # Extract the section starting with ## and containing -alpha until the next ## or end of file
+            ALPHA_LOGS=$(awk '/^## .*-alpha/{flag=1; print; next} /^## /{flag=0} flag' UPDATELOG.md)
+
+            if [ -n "$ALPHA_LOGS" ]; then
+              echo "Found alpha update logs"
+              echo "ALPHA_LOGS<<EOF" >> $GITHUB_ENV
+              echo "$ALPHA_LOGS" >> $GITHUB_ENV
+              echo "EOF" >> $GITHUB_ENV
+            else
+              echo "No alpha sections found in UPDATELOG.md"
+            fi
+          else
+            echo "UPDATELOG.md file not found"
+          fi
+        shell: bash
+
+      - name: Set Env
+        run: |
+          echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
+        shell: bash
+
+      - run: |
+          # 检查 ALPHA_LOGS 是否存在，如果不存在则使用默认消息
+          if [ -z "$ALPHA_LOGS" ]; then
+            echo "No alpha logs found, using default message"
+            ALPHA_LOGS="More new features are now supported. Check for detailed changelog soon."
+          else
+            echo "Using found alpha logs"
+          fi
+
+          # 生成 release.txt 文件
+          cat > release.txt << EOF
+          $ALPHA_LOGS
+
+          ## 我应该下载哪个版本？
+
+          ### MacOS
+          - MacOS intel芯片: x64.dmg
+          - MacOS apple M芯片: aarch64.dmg
+
+          ### Linux
+          - Linux 64位: amd64.deb/amd64.rpm
+          - Linux arm64 architecture: arm64.deb/aarch64.rpm
+          - Linux armv7架构: armhf.deb/armhfp.rpm
+
+          ### Windows (不再支持Win7)
+          #### 正常版本(推荐)
+          - 64位: x64-setup.exe
+          - arm64架构: arm64-setup.exe
+          #### 便携版问题很多不再提供
+          #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
+          - 64位: x64_fixed_webview2-setup.exe
+          - arm64架构: arm64_fixed_webview2-setup.exe
+
+          ### FAQ
+
+          - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
+
+          ### 稳定机场VPN推荐
+          - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+
+          Created at ${{ env.BUILDTIME }}.
+          EOF
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: alpha
+          name: "Clash Verge Rev Alpha"
+          body_path: release.txt
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+
+  alpha:
+    needs: update_tag
     strategy:
       fail-fast: false
       matrix:
@@ -182,7 +269,7 @@ jobs:
           args: --target ${{ matrix.target }}
 
   alpha-for-linux-arm:
-    needs: delete_old_assets
+    needs: update_tag
     strategy:
       fail-fast: false
       matrix:
@@ -296,7 +383,6 @@ jobs:
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
-          body: "More new features are now supported."
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
@@ -304,7 +390,7 @@ jobs:
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   alpha-for-fixed-webview2:
-    needs: delete_old_assets
+    needs: update_tag
     strategy:
       fail-fast: false
       matrix:
@@ -389,7 +475,6 @@ jobs:
         with:
           tag_name: alpha
           name: "Clash Verge Rev Alpha"
-          body: "More new features are now supported."
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
@@ -398,90 +483,3 @@ jobs:
         run: pnpm portable-fixed-webview2 ${{ matrix.target }} --alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  update_tag:
-    name: Update tag
-    runs-on: ubuntu-latest
-    needs: [alpha, alpha-for-linux-arm, alpha-for-fixed-webview2]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Fetch Alpha update logs
-        id: fetch_alpha_logs
-        run: |
-          # Check if UPDATELOG.md exists
-          if [ -f "UPDATELOG.md" ]; then
-            # Extract the section starting with ## and containing -alpha until the next ## or end of file
-            ALPHA_LOGS=$(awk '/^## .*-alpha/{flag=1; print; next} /^## /{flag=0} flag' UPDATELOG.md)
-            
-            if [ -n "$ALPHA_LOGS" ]; then
-              echo "Found alpha update logs"
-              echo "ALPHA_LOGS<<EOF" >> $GITHUB_ENV
-              echo "$ALPHA_LOGS" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
-            else
-              echo "No alpha sections found in UPDATELOG.md"
-            fi
-          else
-            echo "UPDATELOG.md file not found"
-          fi
-        shell: bash
-
-      - name: Set Env
-        run: |
-          echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
-        shell: bash
-
-      - run: |
-          # 检查 ALPHA_LOGS 是否存在，如果不存在则使用默认消息
-          if [ -z "$ALPHA_LOGS" ]; then
-            echo "No alpha logs found, using default message"
-            ALPHA_LOGS="More new features are now supported. Check for detailed changelog soon."
-          else
-            echo "Using found alpha logs"
-          fi
-      
-          # 生成 release.txt 文件
-          cat > release.txt << EOF
-          $ALPHA_LOGS
-      
-          ## 我应该下载哪个版本？
-      
-          ### MacOS
-          - MacOS intel芯片: x64.dmg
-          - MacOS apple M芯片: aarch64.dmg
-      
-          ### Linux
-          - Linux 64位: amd64.deb/amd64.rpm
-          - Linux arm64 architecture: arm64.deb/aarch64.rpm
-          - Linux armv7架构: armhf.deb/armhfp.rpm
-      
-          ### Windows (不再支持Win7)
-          #### 正常版本(推荐)
-          - 64位: x64-setup.exe
-          - arm64架构: arm64-setup.exe
-          #### 便携版问题很多不再提供
-          #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
-          - 64位: x64_fixed_webview2-setup.exe
-          - arm64架构: arm64_fixed_webview2-setup.exe
-      
-          ### FAQ
-
-          - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
-
-          ### 稳定机场VPN推荐
-          - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
-      
-          Created at ${{ env.BUILDTIME }}.
-          EOF
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
-          body_path: release.txt
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          generate_release_notes: true
