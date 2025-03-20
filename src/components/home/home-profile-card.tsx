@@ -35,19 +35,10 @@ const round = keyframes`
 `;
 
 // 辅助函数解析URL和过期时间
-const parseUrl = (url?: string, maxLength: number = 25) => {
+const parseUrl = (url?: string) => {
   if (!url) return "-";
-  let parsedUrl = "";
-  if (url.startsWith("http")) {
-    parsedUrl = new URL(url).host;
-  } else {
-    parsedUrl = "local";
-  }
-  
-  if (parsedUrl.length > maxLength) {
-    return parsedUrl.substring(0, maxLength - 3) + "...";
-  }
-  return parsedUrl;
+  if (url.startsWith("http")) return new URL(url).host;
+  return "local";
 };
 
 const parseExpire = (expire?: number) => {
@@ -81,6 +72,14 @@ export interface HomeProfileCardProps {
   onProfileUpdated?: () => void;
 }
 
+// 添加一个通用的截断样式
+const truncateStyle = {
+  maxWidth: "calc(100% - 28px)",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap"
+};
+
 // 提取独立组件减少主组件复杂度
 const ProfileDetails = ({ current, onUpdateProfile, updating }: { 
   current: ProfileItem; 
@@ -109,31 +108,55 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
         {current.url && (
           <Stack direction="row" alignItems="center" spacing={1}>
             <DnsOutlined fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">
-              {t("From")}:{" "}
+            <Typography variant="body2" color="text.secondary" noWrap sx={{ display: "flex", alignItems: "center" }}>
+              <span style={{ flexShrink: 0 }}>{t("From")}: </span>
               {current.home ? (
                 <Link
                   component="button"
                   fontWeight="medium"
                   onClick={() => current.home && openWebUrl(current.home)}
                   sx={{ 
-                    display: "inline-flex", 
-                    alignItems: "center"
+                    display: "inline-flex",
+                    alignItems: "center",
+                    minWidth: 0,
+                    maxWidth: "calc(100% - 40px)",
+                    ml: 0.5
                   }}
+                  title={parseUrl(current.url)}
                 >
-                  {parseUrl(current.url)}
+                  <Typography
+                    component="span"
+                    sx={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      minWidth: 0,
+                      flex: 1
+                    }}
+                  >
+                    {parseUrl(current.url)}
+                  </Typography>
                   <LaunchOutlined
                     fontSize="inherit"
                     sx={{ ml: 0.5, fontSize: "0.8rem", opacity: 0.7, flexShrink: 0 }}
                   />
                 </Link>
               ) : (
-                <Box 
-                  component="span" 
+                <Typography
+                  component="span"
                   fontWeight="medium"
+                  sx={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    minWidth: 0,
+                    flex: 1,
+                    ml: 0.5
+                  }}
+                  title={parseUrl(current.url)}
                 >
                   {parseUrl(current.url)}
-                </Box>
+                </Typography>
               )}
             </Typography>
           </Stack>
@@ -285,16 +308,30 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
         fontSize={18}
         onClick={() => current.home && openWebUrl(current.home)}
         sx={{
-          display: "inline-flex",
-          alignItems: "center",
           color: "inherit",
           textDecoration: "none",
+          display: "flex",
+          alignItems: "center",
+          minWidth: 0,
+          maxWidth: "100%",
+          "& > span": {
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: 1
+          }
         }}
+        title={current.name}
       >
-        {current.name}
+        <span>{current.name}</span>
         <LaunchOutlined
           fontSize="inherit"
-          sx={{ ml: 0.5, fontSize: "0.8rem", opacity: 0.7 }}
+          sx={{ 
+            ml: 0.5, 
+            fontSize: "0.8rem", 
+            opacity: 0.7,
+            flexShrink: 0 
+          }}
         />
       </Link>
     );
