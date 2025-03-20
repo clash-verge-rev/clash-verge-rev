@@ -273,6 +273,15 @@ impl Mihomo {
         Ok(())
     }
 
+    pub async fn unfixed_proxy(&self, proxy_name: &str) -> Result<()> {
+        let client = self.build_request(Method::DELETE, &format!("/proxies/{}", proxy_name))?;
+        let response = client.send().await?;
+        if !response.status().is_success() {
+            ret_err!("unfixed proxy failed");
+        }
+        Ok(())
+    }
+
     pub async fn delay_proxy_by_name(
         &self,
         proxy_name: &str,
@@ -437,7 +446,7 @@ mod test {
             Protocol::Http,
             "127.0.0.1".into(),
             9090,
-            Some("ofY_JpdwekVcyO1DY3q61".into()),
+            Some("oA9xfLbi5OCbb9ByKaXDk".into()),
         )
     }
 
@@ -465,6 +474,12 @@ mod test {
     #[tokio::test]
     async fn test_upgrade_core() -> Result<()> {
         let _ = mihomo().upgrade_core().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_unfixed_proxy() -> Result<()> {
+        let _ = mihomo().unfixed_proxy("US AUTO").await?;
         Ok(())
     }
 }

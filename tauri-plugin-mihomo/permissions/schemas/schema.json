@@ -476,6 +476,16 @@
           "const": "deny-select-node-for-proxy"
         },
         {
+          "description": "Enables the unfixed_proxy command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-unfixed-proxy"
+        },
+        {
+          "description": "Denies the unfixed_proxy command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-unfixed-proxy"
+        },
+        {
           "description": "Enables the update_controller command without any pre-configured scope.",
           "type": "string",
           "const": "allow-update-controller"

@@ -20,6 +20,7 @@ Default permissions for the plugin
 - `allow-get-proxies`
 - `allow-get-proxy-by-name`
 - `allow-select-node-for-proxy`
+- `allow-unfixed-proxy`
 - `allow-delay-proxy-by-name`
 - `allow-get-rules`
 - `allow-get-rules-providers`
@@ -609,6 +610,32 @@ Enables the select_node_for_proxy command without any pre-configured scope.
 <td>
 
 Denies the select_node_for_proxy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-unfixed-proxy`
+
+</td>
+<td>
+
+Enables the unfixed_proxy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-unfixed-proxy`
+
+</td>
+<td>
+
+Denies the unfixed_proxy command without any pre-configured scope.
 
 </td>
 </tr>

@@ -166,6 +166,14 @@ pub(crate) async fn select_node_for_proxy(
 }
 
 #[command]
+pub(crate) async fn unfixed_proxy(
+    state: State<'_, RwLock<Mihomo>>,
+    proxy_name: String,
+) -> Result<()> {
+    state.read().await.unfixed_proxy(&proxy_name).await
+}
+
+#[command]
 pub(crate) async fn delay_proxy_by_name(
     state: State<'_, RwLock<Mihomo>>,
     proxy_name: String,

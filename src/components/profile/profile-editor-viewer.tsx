@@ -47,7 +47,6 @@ import {
   Badge,
   BadgeProps,
   Button,
-  ButtonGroup,
   Chip,
   Collapse,
   Divider,
@@ -101,7 +100,7 @@ export const ProfileEditorViewer = (props: Props) => {
   const isRunningProfile = current?.uid === profileUid;
 
   const [editProfile, setEditProfile] = useState<IProfileItem>(profileItem);
-  const [originContent, setOriginContent] = useState<string | null>(null);
+  const originContentRef = useRef<string | null>(null);
   const [appVersion, setAppVersion] = useState("");
   const themeMode = useThemeMode();
 
@@ -196,8 +195,8 @@ export const ProfileEditorViewer = (props: Props) => {
     });
     refreshChain();
     readProfileFile(profileUid).then(async (data) => {
-      if (!originContent) {
-        setOriginContent(data);
+      if (!originContentRef.current) {
+        originContentRef.current = data;
       }
       const dom = editorDomRef.current;
       if (!dom) return;
@@ -266,6 +265,11 @@ export const ProfileEditorViewer = (props: Props) => {
           const uid = uri?.query.split("=").pop();
           const val = instanceRef.current?.getValue();
           if (uid && val) {
+            const originContent = originContentRef.current;
+            if (originContent === val) {
+              Notice.info(t("Profile Content No Changes"));
+              return;
+            }
             let checkSuccess = true;
             if (editChainCondition.current?.get()) {
               checkSuccess = saveChainCondition.current?.get() ?? false;
@@ -278,6 +282,7 @@ export const ProfileEditorViewer = (props: Props) => {
                 setReactivating(true);
               }
               await saveProfileFile(uid, val);
+              originContentRef.current = val;
               setTimeout(() => {
                 Notice.success(t("Save Content Successfully"), 1000);
                 onChange?.();
@@ -461,7 +466,7 @@ export const ProfileEditorViewer = (props: Props) => {
     } else {
       setEditProfile(item);
     }
-    setOriginContent(content);
+    originContentRef.current = content;
     setChainChecked(false);
     let oldModel = instanceRef.current?.getModel();
     let newModel = null;
@@ -494,7 +499,7 @@ export const ProfileEditorViewer = (props: Props) => {
     if (item.uid === editProfile.uid) {
       setEditProfile(profileItem);
       const content = await readProfileFile(profileUid);
-      setOriginContent(content);
+      originContentRef.current = content;
       setChainChecked(false);
       let oldModel = instanceRef.current?.getModel();
       const id = nanoid();
@@ -518,13 +523,13 @@ export const ProfileEditorViewer = (props: Props) => {
     if (value == undefined) return;
     try {
       await handleProfileSubmit();
-      if (originContent !== value) {
+      if (originContentRef.current !== value) {
         await saveProfileFile(editProfile.uid, value);
         onChange?.();
       } else {
         Notice.info(t("Profile Content No Changes"));
       }
-      setOriginContent(value);
+      originContentRef.current = value;
       setChainChecked(false);
       // setExpand(type !== "clash");
       // if (profileUid === editProfile.uid) {
@@ -809,8 +814,8 @@ export const ProfileEditorViewer = (props: Props) => {
                 aria-label="rollback"
                 size="medium"
                 onClick={() => {
-                  if (originContent) {
-                    instanceRef.current?.setValue(originContent);
+                  if (originContentRef.current) {
+                    instanceRef.current?.setValue(originContentRef.current);
                   }
                 }}>
                 <Reply fontSize="medium" />

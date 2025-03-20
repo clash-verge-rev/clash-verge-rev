@@ -17,6 +17,7 @@ const COMMANDS: &[&str] = &[
     "get_proxies",
     "get_proxy_by_name",
     "select_node_for_proxy",
+    "unfixed_proxy",
     "delay_proxy_by_name",
     "get_rules",
     "get_rules_providers",

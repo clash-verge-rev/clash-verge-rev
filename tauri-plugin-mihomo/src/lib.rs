@@ -98,6 +98,7 @@ impl Builder {
                 commands::get_proxies,
                 commands::get_proxy_by_name,
                 commands::select_node_for_proxy,
+                commands::unfixed_proxy,
                 commands::delay_proxy_by_name,
                 // rules
                 commands::get_rules,

@@ -19,6 +19,7 @@ permissions = [
     "allow-get-proxies",
     "allow-get-proxy-by-name",
     "allow-select-node-for-proxy",
+    "allow-unfixed-proxy",
     "allow-delay-proxy-by-name",
     "allow-get-rules",
     "allow-get-rules-providers",
