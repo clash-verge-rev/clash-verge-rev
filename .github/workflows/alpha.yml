@@ -55,23 +55,56 @@ jobs:
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
           
-  delete_old_release:
+  delete_old_assets:
     needs: check_commit
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Delete Old Alpha Release
-        uses: dev-drprasad/delete-tag-and-release@v1.1
+      - name: Delete Old Alpha Release Assets
+        uses: actions/github-script@v7
         with:
-          tag_name: alpha
-          delete_release: true
-          repo: ${{ github.repository }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const releaseTag = 'alpha';
+            
+            try {
+              // Get the release by tag name
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: releaseTag
+              });
+              
+              console.log(`Found release with ID: ${release.id}`);
+              
+              // Delete each asset
+              if (release.assets && release.assets.length > 0) {
+                console.log(`Deleting ${release.assets.length} assets`);
+                
+                for (const asset of release.assets) {
+                  console.log(`Deleting asset: ${asset.name} (${asset.id})`);
+                  await github.rest.repos.deleteReleaseAsset({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    asset_id: asset.id
+                  });
+                }
+                
+                console.log('All assets deleted successfully');
+              } else {
+                console.log('No assets found to delete');
+              }
+            } catch (error) {
+              if (error.status === 404) {
+                console.log('Release not found, nothing to delete');
+              } else {
+                console.error('Error:', error);
+                throw error;
+              }
+            }
 
   alpha:
-    needs: delete_old_release
+    needs: delete_old_assets
     strategy:
       fail-fast: false
       matrix:
@@ -149,7 +182,7 @@ jobs:
           args: --target ${{ matrix.target }}
 
   alpha-for-linux-arm:
-    needs: delete_old_release
+    needs: delete_old_assets
     strategy:
       fail-fast: false
       matrix:
@@ -271,7 +304,7 @@ jobs:
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   alpha-for-fixed-webview2:
-    needs: delete_old_release
+    needs: delete_old_assets
     strategy:
       fail-fast: false
       matrix:
@@ -369,7 +402,7 @@ jobs:
   update_tag:
     name: Update tag
     runs-on: ubuntu-latest
-    needs: [delete_old_release, alpha, alpha-for-linux-arm, alpha-for-fixed-webview2]
+    needs: [alpha, alpha-for-linux-arm, alpha-for-fixed-webview2]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
