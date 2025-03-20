@@ -100,6 +100,11 @@ async function selectNodeForProxy(proxyName, node) {
     node,
   });
 }
+async function unfixedProxy(proxyName) {
+  await core.invoke("plugin:mihomo|unfixed_proxy", {
+    proxyName,
+  });
+}
 async function delayProxyByName(proxyName, testUrl, timeout) {
   return await core.invoke("plugin:mihomo|delay_proxy_by_name", {
     proxyName,
@@ -173,6 +178,7 @@ exports.patchBaseConfig = patchBaseConfig;
 exports.reloadConfig = reloadConfig;
 exports.restart = restart;
 exports.selectNodeForProxy = selectNodeForProxy;
+exports.unfixedProxy = unfixedProxy;
 exports.updateController = updateController;
 exports.updateGeo = updateGeo;
 exports.updateProxiesProviders = updateProxiesProviders;

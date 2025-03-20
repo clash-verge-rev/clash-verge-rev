@@ -98,6 +98,11 @@ async function selectNodeForProxy(proxyName, node) {
     node,
   });
 }
+async function unfixedProxy(proxyName) {
+  await invoke("plugin:mihomo|unfixed_proxy", {
+    proxyName,
+  });
+}
 async function delayProxyByName(proxyName, testUrl, timeout) {
   return await invoke("plugin:mihomo|delay_proxy_by_name", {
     proxyName,
@@ -174,6 +179,7 @@ export {
   reloadConfig,
   restart,
   selectNodeForProxy,
+  unfixedProxy,
   updateController,
   updateGeo,
   updateProxiesProviders,

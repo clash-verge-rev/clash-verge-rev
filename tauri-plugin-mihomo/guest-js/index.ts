@@ -323,6 +323,12 @@ export async function selectNodeForProxy(
   });
 }
 
+export async function unfixedProxy(proxyName: string): Promise<void> {
+  await invoke<void>("plugin:mihomo|unfixed_proxy", {
+    proxyName,
+  });
+}
+
 export async function delayProxyByName(
   proxyName: string,
   testUrl: string,

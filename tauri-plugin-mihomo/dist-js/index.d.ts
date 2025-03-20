@@ -214,6 +214,7 @@ export declare function selectNodeForProxy(
   proxyName: string,
   node: string,
 ): Promise<void>;
+export declare function unfixedProxy(proxyName: string): Promise<void>;
 export declare function delayProxyByName(
   proxyName: string,
   testUrl: string,
