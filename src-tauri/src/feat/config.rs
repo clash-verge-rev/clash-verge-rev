@@ -164,6 +164,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
 
         // Process updates based on flags
         if (update_flags & (UpdateFlags::RestartCore as i32)) != 0 {
+            Config::generate().await?;
             CoreManager::global().restart_core().await?;
         }
         if (update_flags & (UpdateFlags::ClashConfig as i32)) != 0 {
