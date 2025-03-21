@@ -6,8 +6,8 @@ import { useClash } from "@/hooks/use-clash";
 import { EnhancedCard } from "./enhanced-card";
 import useSWR from "swr";
 import { getRules } from "@/services/api";
-import { getAppUptime } from "@/services/cmds";
-import { useMemo } from "react";
+import { getAppUptime, getSystemProxy } from "@/services/cmds";
+import { useMemo, useState, useEffect } from "react";
 
 // 将毫秒转换为时:分:秒格式的函数
 const formatUptime = (uptimeMs: number) => {
@@ -21,6 +21,8 @@ export const ClashInfoCard = () => {
   const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
   const { version: clashVersion } = useClash();
+  const [sysproxy, setSysproxy] = useState<{ server: string; enable: boolean; bypass: string } | null>(null);
+  const [rules, setRules] = useState<any[]>([]);
 
   // 使用SWR获取应用运行时间，降低更新频率
   const { data: uptimeMs = 0 } = useSWR(
@@ -33,14 +35,17 @@ export const ClashInfoCard = () => {
     },
   );
 
+  // 在组件加载时获取系统代理信息和规则数据
+  useEffect(() => {
+    // 获取系统代理信息
+    getSystemProxy().then(setSysproxy);
+    
+    // 获取规则数据
+    getRules().then(setRules).catch(() => setRules([]));
+  }, []);
+
   // 使用useMemo缓存格式化后的uptime，避免频繁计算
   const uptime = useMemo(() => formatUptime(uptimeMs), [uptimeMs]);
-
-  // 获取规则数据，只在组件加载时获取一次
-  const { data: rules = [] } = useSWR("getRules", getRules, {
-    revalidateOnFocus: false,
-    errorRetryCount: 2,
-  });
 
   // 使用备忘录组件内容，减少重新渲染
   const cardContent = useMemo(() => {
@@ -62,7 +67,7 @@ export const ClashInfoCard = () => {
             {t("System Proxy Address")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
-            {clashInfo.server || "-"}
+            {sysproxy?.server || "-"}
           </Typography>
         </Stack>
         <Divider />
@@ -94,7 +99,7 @@ export const ClashInfoCard = () => {
         </Stack>
       </Stack>
     );
-  }, [clashInfo, clashVersion, t, uptime, rules.length]);
+  }, [clashInfo, clashVersion, t, uptime, rules.length, sysproxy]);
 
   return (
     <EnhancedCard
