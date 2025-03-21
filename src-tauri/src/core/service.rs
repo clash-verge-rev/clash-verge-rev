@@ -250,6 +250,8 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 
     let config_dir = dirs::app_home_dir()?;
     let config_dir = dirs::path_to_str(&config_dir)?;
+    #[cfg(target_os = "linux")]
+    let config_dir = &(config_dir.replace("/verge-mihomo", "") + "/resources");
 
     let log_path = dirs::service_log_file()?;
     let log_path = dirs::path_to_str(&log_path)?;
