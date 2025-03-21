@@ -187,7 +187,7 @@ export const ProxyTunCard: FC = () => {
           : enable_tun_mode
             ? t("TUN Mode Enabled")
             : t("TUN Mode Disabled"),
-        tooltip: t("Tun Mode Info")
+        tooltip: t("TUN Mode Intercept Info")
       };
     }
   }, [activeTab, enable_system_proxy, enable_tun_mode, isSidecarMode, t]);
