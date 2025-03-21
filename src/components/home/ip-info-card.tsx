@@ -129,7 +129,7 @@ export const IpInfoCard = () => {
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Skeleton variant="text" width="60%" height={32} />
+          <Skeleton variant="text" width="60%" height={30} />
           <Skeleton variant="text" width="80%" height={24} />
           <Skeleton variant="text" width="70%" height={24} />
           <Skeleton variant="text" width="50%" height={24} />
