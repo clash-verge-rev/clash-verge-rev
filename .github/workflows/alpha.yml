@@ -246,6 +246,9 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
+      - name: Release Alpha Version
+          pnpm release-alpha-version
+
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
@@ -311,6 +314,9 @@ jobs:
         run: |
           pnpm i
           pnpm check ${{ matrix.target }}
+
+      - name: Release Alpha Version
+          pnpm release-alpha-version
 
       - name: "Setup for linux"
         run: |-
@@ -431,6 +437,9 @@ jobs:
         run: |
           pnpm i
           pnpm check ${{ matrix.target }}
+
+      - name: Release Alpha Version
+          pnpm release-alpha-version
 
       - name: Download WebView2 Runtime
         run: |
