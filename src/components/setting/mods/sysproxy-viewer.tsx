@@ -20,7 +20,7 @@ import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
-  return "PROXY 127.0.0.1:%mixed-port%; SOCKS5 127.0.0.1:%mixed-port%; DIRECT;";
+  return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
 }`;
 
 /** NO_PROXY validation */
@@ -79,6 +79,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     use_default_bypass,
     system_proxy_bypass,
     proxy_guard_duration,
+    proxy_host,
   } = verge ?? {};
 
   const [value, setValue] = useState({
@@ -88,6 +89,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     use_default: use_default_bypass ?? true,
     pac: proxy_auto_config,
     pac_content: pac_file_content ?? DEFAULT_PAC,
+    proxy_host: proxy_host ?? "127.0.0.1",
   });
 
   const defaultBypass = () => {
@@ -110,6 +112,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         use_default: use_default_bypass ?? true,
         pac: proxy_auto_config,
         pac_content: pac_file_content ?? DEFAULT_PAC,
+        proxy_host: proxy_host ?? "127.0.0.1",
       });
       getSystemProxy().then((p) => setSysproxy(p));
       getAutotemProxy().then((p) => setAutoproxy(p));
@@ -127,6 +130,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       return;
     }
 
+    const ipv4Regex =
+      /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    if (!ipv4Regex.test(value.proxy_host)) {
+      Notice.error(t("Invalid Proxy Host Format"));
+      return;
+    }
+
     const patch: Partial<IVergeConfig> = {};
 
     if (value.guard !== enable_proxy_guard) {
@@ -138,15 +148,24 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (value.bypass !== system_proxy_bypass) {
       patch.system_proxy_bypass = value.bypass;
     }
-
     if (value.pac !== proxy_auto_config) {
       patch.proxy_auto_config = value.pac;
     }
     if (value.use_default !== use_default_bypass) {
       patch.use_default_bypass = value.use_default;
     }
-    if (value.pac_content !== pac_file_content) {
-      patch.pac_file_content = value.pac_content;
+
+    let pacContent = value.pac_content;
+    if (pacContent) {
+      pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host);
+    }
+
+    if (pacContent !== pac_file_content) {
+      patch.pac_file_content = pacContent;
+    }
+
+    if (value.proxy_host !== proxy_host) {
+      patch.proxy_host = value.proxy_host;
     }
 
     try {
@@ -199,6 +218,21 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             </FlexBox>
           )}
         </BaseFieldset>
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Proxy Host")} />
+          <TextField
+            size="small"
+            value={value.proxy_host}
+            sx={{ width: 150 }}
+            placeholder="127.0.0.1"
+            onChange={(e) => {
+              setValue((v) => ({
+                ...v,
+                proxy_host: e.target.value,
+              }));
+            }}
+          />
+        </ListItem>
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Use PAC Mode")} />
           <Switch
