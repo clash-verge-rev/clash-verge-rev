@@ -21,6 +21,10 @@ use parking_lot::RwLock;
 #[cfg(target_os = "macos")]
 pub use speed_rate::{SpeedRate, Traffic};
 #[cfg(target_os = "macos")]
+use std::collections::hash_map::DefaultHasher;
+#[cfg(target_os = "macos")]
+use std::hash::{Hash, Hasher};
+#[cfg(target_os = "macos")]
 use std::sync::Arc;
 use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
@@ -36,6 +40,9 @@ pub struct Tray {
     pub speed_rate: Arc<Mutex<Option<SpeedRate>>>,
     shutdown_tx: Arc<RwLock<Option<broadcast::Sender<()>>>>,
     is_subscribed: Arc<RwLock<bool>>,
+    pub icon_hash: Arc<Mutex<Option<u64>>>,
+    pub icon_cache: Arc<Mutex<Option<Vec<u8>>>>,
+    pub rate_cache: Arc<Mutex<Option<Rate>>>,
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -50,6 +57,9 @@ impl Tray {
             speed_rate: Arc::new(Mutex::new(None)),
             shutdown_tx: Arc::new(RwLock::new(None)),
             is_subscribed: Arc::new(RwLock::new(false)),
+            icon_hash: Arc::new(Mutex::new(None)),
+            icon_cache: Arc::new(Mutex::new(None)),
+            rate_cache: Arc::new(Mutex::new(None)),
         });
 
         #[cfg(not(target_os = "macos"))]
@@ -228,34 +238,59 @@ impl Tray {
 
         #[cfg(target_os = "macos")]
         {
-            let enable_tray_speed = Config::verge().latest().enable_tray_speed.unwrap_or(true);
+            let enable_tray_speed = verge.enable_tray_speed.unwrap_or(true);
             let is_colorful = tray_icon == "colorful";
 
-            // 处理图标和速率
-            let final_icon_bytes = if enable_tray_speed {
-                let rate = rate.or_else(|| {
-                    self.speed_rate
-                        .lock()
-                        .as_ref()
-                        .and_then(|speed_rate| speed_rate.get_curent_rate())
-                });
-
-                // 使用新的方法渲染图标和速率
-                SpeedRate::add_speed_text(icon_bytes, rate)?
-            } else {
-                icon_bytes
+            let icon_hash = {
+                let mut hasher = DefaultHasher::new();
+                icon_bytes.clone().hash(&mut hasher);
+                hasher.finish()
             };
 
-            // 设置系统托盘图标
-            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&final_icon_bytes)?));
-            // 只对单色图标使用 template 模式
-            let _ = tray.set_icon_as_template(!is_colorful);
+            let mut icon_hash_guard = self.icon_hash.lock();
+            let mut icon_bytes_guard = self.icon_cache.lock();
+            if *icon_hash_guard != Some(icon_hash) {
+                *icon_hash_guard = Some(icon_hash);
+                *icon_bytes_guard = Some(icon_bytes.clone());
+            }
+
+            if !enable_tray_speed {
+                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(
+                    &(*icon_bytes_guard).clone().unwrap(),
+                )?));
+                let _ = tray.set_icon_as_template(!is_colorful);
+                return Ok(());
+            }
+
+            let rate = if let Some(rate) = rate {
+                Some(rate)
+            } else {
+                let guard = self.speed_rate.lock();
+                if let Some(rate) = guard.as_ref().unwrap().get_curent_rate() {
+                    Some(rate)
+                } else {
+                    Some(Rate::default())
+                }
+            };
+
+            let mut rate_guard = self.rate_cache.lock();
+            if *rate_guard != rate {
+                *rate_guard = rate;
+
+                let bytes = icon_bytes_guard.as_ref().unwrap();
+                let rate = rate_guard.as_ref();
+                let rate_bytes = SpeedRate::add_speed_text(bytes, rate).unwrap();
+                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
+                let _ = tray.set_icon_as_template(!is_colorful);
+            }
+            Ok(())
         }
 
         #[cfg(not(target_os = "macos"))]
-        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
-
-        Ok(())
+        {
+            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
+            Ok(())
+        }
     }
 
     /// 更新托盘提示
