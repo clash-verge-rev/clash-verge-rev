@@ -353,6 +353,7 @@
   "clash_mode_direct": "Direct Mode",
   "toggle_system_proxy": "Enable/Disable System Proxy",
   "toggle_tun_mode": "Enable/Disable Tun Mode",
+  "entry_lightweight_mode": "Entry Lightweight Mode",
   "Backup Setting": "Backup Setting",
   "Backup Setting Info": "Support WebDAV backup configuration files",
   "Runtime Config": "Runtime Config",

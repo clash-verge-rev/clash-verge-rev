@@ -6,7 +6,7 @@ use crate::{
     cmd,
     config::Config,
     feat,
-    module::mihomo::Rate,
+    module::{lightweight, mihomo::Rate},
     resolve,
     utils::{dirs, i18n::t, resolve::VERSION},
 };
@@ -94,6 +94,7 @@ impl Tray {
         tray.on_tray_icon_event(|_, event| {
             let tray_event = { Config::verge().latest().tray_event.clone() };
             let tray_event: String = tray_event.unwrap_or("main_window".into());
+            log::debug!(target: "app","tray event: {:?}", tray_event);
 
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
@@ -525,6 +526,15 @@ fn create_tray_menu(
     )
     .unwrap();
 
+    let lighteweight_mode = &MenuItem::with_id(
+        app_handle,
+        "entry_lightweight_mode",
+        t("Lightweight Mode"),
+        true,
+        hotkeys.get("entry_lightweight_mode").map(|s| s.as_str()),
+    )
+    .unwrap();
+
     let copy_env =
         &MenuItem::with_id(app_handle, "copy_env", t("Copy Env"), true, None::<&str>).unwrap();
 
@@ -617,6 +627,8 @@ fn create_tray_menu(
             separator,
             system_proxy,
             tun_mode,
+            separator,
+            lighteweight_mode,
             copy_env,
             open_dir,
             more,
@@ -644,6 +656,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "open_logs_dir" => crate::log_err!(cmd::open_logs_dir()),
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
+        "entry_lightweight_mode" => feat::lightweight_mode(),
         "quit" => {
             println!("quit");
             feat::quit(Some(0));
