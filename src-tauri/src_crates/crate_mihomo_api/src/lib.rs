@@ -98,6 +98,12 @@ impl MihomoManager {
 }
 
 impl MihomoManager {
+    pub async fn is_mihomo_running(&self) -> Result<(), String> {
+        let url = format!("{}/version", self.mihomo_server);
+        let _response = self.send_request(Method::GET, url, None).await?;
+        Ok(())
+    }
+
     pub async fn put_configs_force(&self, clash_config_path: &str) -> Result<(), String> {
         let url = format!("{}/configs?force=true", self.mihomo_server);
         let payload = serde_json::json!({
