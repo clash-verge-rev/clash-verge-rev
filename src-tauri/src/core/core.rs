@@ -784,83 +784,94 @@ impl CoreManager {
     /// 检查系统中是否存在同名进程
     async fn check_existing_processes(&self, process_name: &str) -> Result<Vec<u32>> {
         println!("[进程检查] 检查系统中是否存在进程: {}", process_name);
-
+        
         #[cfg(target_os = "windows")]
         {
             use std::process::Command;
-
+            
             println!("[进程检查] Windows系统，使用tasklist命令");
             let output = Command::new("tasklist")
                 .args(["/FO", "CSV", "/NH"])
                 .output()?;
-
+                
             let output = String::from_utf8_lossy(&output.stdout);
-            let mut pids = Vec::new();
 
-            for line in output.lines() {
-                if line.contains(process_name) {
+            let pids: Vec<u32> = output
+                .lines()
+                .filter(|line| line.contains(process_name))
+                .filter_map(|line| {
                     println!("[进程检查] 发现匹配行: {}", line);
                     let parts: Vec<&str> = line.split(',').collect();
                     if parts.len() >= 2 {
                         let pid_str = parts[1].trim_matches('"');
-                        if let Ok(pid) = pid_str.parse::<u32>() {
+                        pid_str.parse::<u32>().ok().map(|pid| {
                             println!("[进程检查] 发现进程 PID: {}", pid);
-                            pids.push(pid);
-                        }
+                            pid
+                        })
+                    } else {
+                        None
                     }
-                }
-            }
-
+                })
+                .collect();
+            
             println!("[进程检查] 共发现 {} 个相关进程", pids.len());
             Ok(pids)
         }
-
+        
         #[cfg(target_os = "linux")]
         {
             use std::process::Command;
-
+            
             println!("[进程检查] Linux系统，使用pgrep命令");
-            let output = Command::new("pgrep").arg("-f").arg(process_name).output()?;
-
+            let output = Command::new("pgrep")
+                .arg("-f")
+                .arg(process_name)
+                .output()?;
+                
             let output = String::from_utf8_lossy(&output.stdout);
-            let mut pids = Vec::new();
 
-            for line in output.lines() {
-                if let Ok(pid) = line.trim().parse::<u32>() {
-                    println!("[进程检查] 发现进程 PID: {}", pid);
-                    pids.push(pid);
-                }
-            }
-
+            let pids: Vec<u32> = output
+                .lines()
+                .filter_map(|line| {
+                    line.trim().parse::<u32>().ok().map(|pid| {
+                        println!("[进程检查] 发现进程 PID: {}", pid);
+                        pid
+                    })
+                })
+                .collect();
+            
             println!("[进程检查] 共发现 {} 个相关进程", pids.len());
             Ok(pids)
         }
-
+        
         #[cfg(target_os = "macos")]
         {
             use std::process::Command;
-
+            
             println!("[进程检查] macOS系统，使用ps命令");
             let output = Command::new("ps")
                 .args(["-ax", "-o", "pid,command"])
                 .output()?;
-
+                
             let output = String::from_utf8_lossy(&output.stdout);
-            let mut pids = Vec::new();
 
-            for line in output.lines() {
-                if line.contains(process_name) {
+            let pids: Vec<u32> = output
+                .lines()
+                .filter(|line| line.contains(process_name))
+                .filter_map(|line| {
                     println!("[进程检查] 发现匹配行: {}", line);
                     let parts: Vec<&str> = line.split_whitespace().collect();
                     if !parts.is_empty() {
-                        if let Ok(pid) = parts[0].parse::<u32>() {
+                        parts[0].parse::<u32>().ok().map(|pid| {
                             println!("[进程检查] 发现进程 PID: {}", pid);
-                            pids.push(pid);
-                        }
+                            pid
+                        })
+                    } else {
+                        None
                     }
-                }
-            }
-
+                })
+                .collect();
+            
             println!("[进程检查] 共发现 {} 个相关进程", pids.len());
             Ok(pids)
         }
