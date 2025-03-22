@@ -34,6 +34,7 @@ port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 parking_lot = "0.12"
 percent-encoding = "2.3.1"
+fs2 = "0.4.3"
 window-shadows = { version = "0.2.2" }
 tokio = { version = "1.43", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }

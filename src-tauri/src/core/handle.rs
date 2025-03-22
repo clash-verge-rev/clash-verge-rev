@@ -4,12 +4,14 @@ use parking_lot::RwLock;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tauri_plugin_shell::process::CommandChild;
+use std::fs::File;
 
 #[derive(Debug, Default, Clone)]
 pub struct Handle {
     pub app_handle: Arc<RwLock<Option<AppHandle>>>,
     pub is_exiting: Arc<RwLock<bool>>,
     pub core_process: Arc<RwLock<Option<CommandChild>>>,
+    pub core_lock: Arc<RwLock<Option<File>>>,
 }
 
 impl Handle {
@@ -20,6 +22,7 @@ impl Handle {
             app_handle: Arc::new(RwLock::new(None)),
             is_exiting: Arc::new(RwLock::new(false)),
             core_process: Arc::new(RwLock::new(None)),
+            core_lock: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -88,5 +91,22 @@ impl Handle {
 
     pub fn is_exiting(&self) -> bool {
         *self.is_exiting.read()
+    }
+    
+    /// 设置核心文件锁
+    pub fn set_core_lock(&self, file: File) {
+        let mut core_lock = self.core_lock.write();
+        *core_lock = Some(file);
+    }
+    
+    /// 释放核心文件锁
+    pub fn release_core_lock(&self) -> Option<File> {
+        let mut core_lock = self.core_lock.write();
+        core_lock.take()
+    }
+    
+    /// 检查是否持有核心文件锁
+    pub fn has_core_lock(&self) -> bool {
+        self.core_lock.read().is_some()
     }
 }
