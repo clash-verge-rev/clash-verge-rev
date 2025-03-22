@@ -1,6 +1,7 @@
 mod backup;
 mod clash;
 mod config;
+mod lightweight;
 mod profile;
 mod proxy;
 mod window;
@@ -9,6 +10,7 @@ mod window;
 pub use backup::*;
 pub use clash::*;
 pub use config::*;
+pub use lightweight::*;
 pub use profile::*;
 pub use proxy::*;
 pub use window::*;

@@ -26,12 +26,14 @@ pub fn disable_auto_light_weight_mode() {
 
 pub fn entry_lightweight_mode() {
     if let Some(window) = handle::Handle::global().get_window() {
+        if window.is_visible().unwrap_or(false) {
+            let _ = window.hide();
+        }
         if let Some(webview) = window.get_webview_window("main") {
             let _ = webview.destroy();
-            let _ = window.hide();
-            println!("[lightweight_mode] 轻量模式已开启");
-            log::info!(target: "app", "[lightweight_mode] 轻量模式已开启");
         }
+        println!("[lightweight_mode] 轻量模式已开启");
+        log::info!(target: "app", "[lightweight_mode] 轻量模式已开启");
     }
     let _ = cancel_light_weight_timer();
 }

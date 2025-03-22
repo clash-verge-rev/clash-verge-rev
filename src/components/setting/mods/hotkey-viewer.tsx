@@ -20,6 +20,7 @@ const HOTKEY_FUNC = [
   "clash_mode_direct",
   "toggle_system_proxy",
   "toggle_tun_mode",
+  "entry_lightweight_mode",
 ];
 
 export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
