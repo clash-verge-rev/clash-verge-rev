@@ -117,7 +117,8 @@ jobs:
           # Check if UPDATELOG.md exists
           if [ -f "UPDATELOG.md" ]; then
             # Extract the section starting with ## and containing -alpha until the next ## or end of file
-            ALPHA_LOGS=$(awk '/^## .*-alpha/{flag=1; print; next} /^## /{flag=0} flag' UPDATELOG.md)
+            # ALPHA_LOGS=$(awk '/^## .*-alpha/{flag=1; print; next} /^## /{flag=0} flag' UPDATELOG.md)
+            ALPHA_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
 
             if [ -n "$ALPHA_LOGS" ]; then
               echo "Found alpha update logs"
