@@ -15,7 +15,6 @@ use tungstenite::client::IntoClientRequest;
 pub struct SpeedRate {
     rate: Arc<Mutex<(Rate, Rate)>>,
     last_update: Arc<Mutex<std::time::Instant>>,
-    // 移除 base_image，不再缓存原始图像
 }
 
 impl SpeedRate {
@@ -77,20 +76,24 @@ impl SpeedRate {
     }
 
     // 分离图标加载和速率渲染
-    pub fn add_speed_text(icon_bytes: Vec<u8>, rate: Option<Rate>) -> Result<Vec<u8>> {
-        let rate = rate.unwrap_or(Rate { up: 0, down: 0 });
+    pub fn add_speed_text<'a>(icon_bytes: &'a Vec<u8>, rate: Option<&'a Rate>) -> Result<Vec<u8>> {
+        let rate = rate.unwrap_or(&Rate { up: 0, down: 0 });
 
         // 加载原始图标
-        let icon_image = image::load_from_memory(&icon_bytes)?;
+        let icon_image = image::load_from_memory(icon_bytes)?;
         let (icon_width, icon_height) = (icon_image.width(), icon_image.height());
 
         // 判断是否为彩色图标
         let is_colorful =
-            !crate::utils::help::is_monochrome_image_from_bytes(&icon_bytes).unwrap_or(false);
+            !crate::utils::help::is_monochrome_image_from_bytes(icon_bytes).unwrap_or(false);
 
         // 增加文本宽度和间距
-        let text_width = 580; // 文本区域宽度
-        let total_width = icon_width + text_width;
+        let total_width = if icon_width < 580 {
+            let text_width = 580; // 文本区域宽度
+            icon_width + text_width
+        } else {
+            icon_width
+        };
 
         // 创建新的透明画布
         let mut combined_image = RgbaImage::new(total_width, icon_height);
