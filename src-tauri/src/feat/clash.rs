@@ -47,6 +47,7 @@ pub fn change_clash_mode(mode: String) {
     });
     tauri::async_runtime::spawn(async move {
         log::debug!(target: "app", "change clash mode to {mode}");
+        CoreManager::global().ensure_running_core().await;
 
         match MihomoManager::global().patch_configs(json_value).await {
             Ok(_) => {
@@ -66,6 +67,7 @@ pub fn change_clash_mode(mode: String) {
 
 /// Test connection delay to a URL
 pub async fn test_delay(url: String) -> anyhow::Result<u32> {
+    CoreManager::global().ensure_running_core().await;
     use tokio::time::{Duration, Instant};
     let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
