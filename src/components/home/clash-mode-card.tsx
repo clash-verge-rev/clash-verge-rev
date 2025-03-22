@@ -10,7 +10,7 @@ import {
   MultipleStopRounded,
   DirectionsRounded,
 } from "@mui/icons-material";
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 export const ClashModeCard = () => {
   const { t } = useTranslation();
@@ -20,21 +20,19 @@ export const ClashModeCard = () => {
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
     getClashConfig,
-    { revalidateOnFocus: false }
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: true,
+      dedupingInterval: 1000,
+      errorRetryInterval: 5000
+    }
   );
 
   // 支持的模式列表
   const modeList = useMemo(() => ["rule", "global", "direct"] as const, []);
 
-  // 本地状态记录当前模式
-  const [localMode, setLocalMode] = useState<string>("rule");
-
-  // 当从API获取到当前模式时更新本地状态
-  useEffect(() => {
-    if (clashConfig?.mode) {
-      setLocalMode(clashConfig.mode.toLowerCase());
-    }
-  }, [clashConfig]);
+  // 直接使用API返回的模式，不维护本地状态
+  const currentMode = clashConfig?.mode?.toLowerCase();
 
   // 模式图标映射
   const modeIcons = useMemo(() => ({
@@ -45,10 +43,7 @@ export const ClashModeCard = () => {
 
   // 切换模式的处理函数
   const onChangeMode = useLockFn(async (mode: string) => {
-    if (mode === localMode) return;
-    
-    setLocalMode(mode);
-    
+    if (mode === currentMode) return;
     if (verge?.auto_close_connection) {
       closeAllConnections();
     }
@@ -58,9 +53,6 @@ export const ClashModeCard = () => {
       mutateClash();
     } catch (error) {
       console.error("Failed to change mode:", error);
-      if (clashConfig?.mode) {
-        setLocalMode(clashConfig.mode.toLowerCase());
-      }
     }
   });
 
@@ -73,8 +65,8 @@ export const ClashModeCard = () => {
     alignItems: "center",
     justifyContent: "center",
     gap: 1,
-    bgcolor: mode === localMode ? "primary.main" : "background.paper",
-    color: mode === localMode ? "primary.contrastText" : "text.primary",
+    bgcolor: mode === currentMode ? "primary.main" : "background.paper",
+    color: mode === currentMode ? "primary.contrastText" : "text.primary",
     borderRadius: 1.5,
     transition: "all 0.2s ease-in-out",
     position: "relative",
@@ -86,7 +78,7 @@ export const ClashModeCard = () => {
     "&:active": {
       transform: "translateY(1px)",
     },
-    "&::after": mode === localMode
+    "&::after": mode === currentMode
       ? {
           content: '""',
           position: "absolute",
@@ -132,7 +124,7 @@ export const ClashModeCard = () => {
         {modeList.map((mode) => (
           <Paper
             key={mode}
-            elevation={mode === localMode ? 2 : 0}
+            elevation={mode === currentMode ? 2 : 0}
             onClick={() => onChangeMode(mode)}
             sx={buttonStyles(mode)}
           >
@@ -141,7 +133,7 @@ export const ClashModeCard = () => {
               variant="body2"
               sx={{
                 textTransform: "capitalize",
-                fontWeight: mode === localMode ? 600 : 400,
+                fontWeight: mode === currentMode ? 600 : 400,
               }}
             >
               {t(mode)}
@@ -161,15 +153,13 @@ export const ClashModeCard = () => {
           overflow: "visible",
         }}
       >
-        <Fade in={true} timeout={200}>
-          <Typography
-            variant="caption"
-            component="div"
-            sx={descriptionStyles}
-          >
-            {t(`${localMode} Mode Description`)}
-          </Typography>
-        </Fade>
+        <Typography
+          variant="caption"
+          component="div"
+          sx={descriptionStyles}
+        >
+          {t(`${currentMode} Mode Description`)}
+        </Typography>
       </Box>
     </Box>
   );
