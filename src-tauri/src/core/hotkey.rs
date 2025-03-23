@@ -1,4 +1,4 @@
-use crate::{config::Config, core::handle, feat, log_err, module::lightweight, utils::resolve};
+use crate::{config::Config, core::handle, feat, log_err, utils::resolve};
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
