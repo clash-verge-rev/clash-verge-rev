@@ -76,33 +76,51 @@ impl SpeedRate {
     }
 
     // 分离图标加载和速率渲染
-    pub fn add_speed_text<'a>(icon_bytes: &'a Vec<u8>, rate: Option<&'a Rate>) -> Result<Vec<u8>> {
+    pub fn add_speed_text<'a>(
+        icon_bytes: Option<&'a Vec<u8>>,
+        rate: Option<&'a Rate>,
+    ) -> Result<Vec<u8>> {
         let rate = rate.unwrap_or(&Rate { up: 0, down: 0 });
 
-        // 加载原始图标
-        let icon_image = image::load_from_memory(icon_bytes)?;
-        let (icon_width, icon_height) = (icon_image.width(), icon_image.height());
+        let (mut icon_width, mut icon_height) = (0, 256);
+        let icon_image = if let Some(bytes) = icon_bytes {
+            let icon_image = image::load_from_memory(bytes)?;
+            icon_width = icon_image.width();
+            icon_height = icon_image.height();
+            icon_image
+        } else {
+            // 返回一个空的 RGBA 图像
+            image::DynamicImage::new_rgba8(0, 0)
+        };
 
         // 判断是否为彩色图标
-        let is_colorful =
-            !crate::utils::help::is_monochrome_image_from_bytes(icon_bytes).unwrap_or(false);
+        let is_colorful = if let Some(bytes) = icon_bytes {
+            !crate::utils::help::is_monochrome_image_from_bytes(bytes).unwrap_or(false)
+        } else {
+            false
+        };
 
         // 增加文本宽度和间距
-        let total_width = if icon_width < 580 {
-            let text_width = 580; // 文本区域宽度
-            icon_width + text_width
+        let total_width = if icon_bytes.is_some() {
+            if icon_width < 580 {
+                icon_width + 580
+            } else {
+                icon_width
+            }
         } else {
-            icon_width
+            580
         };
 
         // 创建新的透明画布
         let mut combined_image = RgbaImage::new(total_width, icon_height);
 
         // 将原始图标绘制到新画布的左侧
-        for y in 0..icon_height {
-            for x in 0..icon_width {
-                let pixel = icon_image.get_pixel(x, y);
-                combined_image.put_pixel(x, y, pixel);
+        if icon_bytes.is_some() {
+            for y in 0..icon_height {
+                for x in 0..icon_width {
+                    let pixel = icon_image.get_pixel(x, y);
+                    combined_image.put_pixel(x, y, pixel);
+                }
             }
         }
 

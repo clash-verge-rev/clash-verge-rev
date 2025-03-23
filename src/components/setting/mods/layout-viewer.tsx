@@ -198,6 +198,26 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             </GuardState>
           </Item>
         )}
+        {OS === "macos" && (
+          <Item>
+            <ListItemText primary={t("Enable Tray Icon")} />
+            <GuardState
+              value={
+                verge?.enable_tray_icon === false &&
+                verge?.enable_tray_speed === false
+                  ? true
+                  : (verge?.enable_tray_icon ?? true)
+              }
+              valueProps="checked"
+              onCatch={onError}
+              onFormat={onSwitchFormat}
+              onChange={(e) => onChangeData({ enable_tray_icon: e })}
+              onGuard={(e) => patchVerge({ enable_tray_icon: e })}
+            >
+              <Switch edge="end" />
+            </GuardState>
+          </Item>
+        )}
 
         <Item>
           <ListItemText primary={t("Common Tray Icon")} />

@@ -454,6 +454,7 @@
   "Global Mode": "Global Mode",
   "Direct Mode": "Direct Mode",
   "Enable Tray Speed": "Enable Tray Speed",
+  "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "Lightweight Mode",
   "LightWeight Mode Info": "Close the GUI and keep only the kernel running",
   "LightWeight Mode Settings": "LightWeight Mode Settings",

@@ -189,6 +189,8 @@ pub struct IVerge {
 
     pub enable_tray_speed: Option<bool>,
 
+    pub enable_tray_icon: Option<bool>,
+
     /// 自动进入轻量模式
     pub enable_auto_light_weight_mode: Option<bool>,
 
@@ -295,6 +297,7 @@ impl IVerge {
             webdav_username: None,
             webdav_password: None,
             enable_tray_speed: Some(true),
+            enable_tray_icon: Some(true),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
@@ -381,6 +384,7 @@ impl IVerge {
         patch!(webdav_username);
         patch!(webdav_password);
         patch!(enable_tray_speed);
+        patch!(enable_tray_icon);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);
         patch!(enable_dns_settings);
@@ -473,6 +477,7 @@ pub struct IVergeResponse {
     pub webdav_username: Option<String>,
     pub webdav_password: Option<String>,
     pub enable_tray_speed: Option<bool>,
+    pub enable_tray_icon: Option<bool>,
     pub enable_auto_light_weight_mode: Option<bool>,
     pub auto_light_weight_minutes: Option<u64>,
     pub enable_dns_settings: Option<bool>,
@@ -539,6 +544,7 @@ impl From<IVerge> for IVergeResponse {
             webdav_username: verge.webdav_username,
             webdav_password: verge.webdav_password,
             enable_tray_speed: verge.enable_tray_speed,
+            enable_tray_icon: verge.enable_tray_icon,
             enable_auto_light_weight_mode: verge.enable_auto_light_weight_mode,
             auto_light_weight_minutes: verge.auto_light_weight_minutes,
             enable_dns_settings: verge.enable_dns_settings,
