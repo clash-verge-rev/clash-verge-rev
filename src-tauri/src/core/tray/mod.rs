@@ -6,7 +6,7 @@ use crate::{
     cmd,
     config::Config,
     feat,
-    module::{lightweight, mihomo::Rate},
+    module::mihomo::Rate,
     resolve,
     utils::{dirs, i18n::t, resolve::VERSION},
 };
