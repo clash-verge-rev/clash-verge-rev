@@ -240,6 +240,7 @@ impl Tray {
         #[cfg(target_os = "macos")]
         {
             let enable_tray_speed = verge.enable_tray_speed.unwrap_or(true);
+            let enable_tray_icon = verge.enable_tray_icon.unwrap_or(true);
             let is_colorful = tray_icon == "colorful";
 
             let icon_hash = {
@@ -255,7 +256,7 @@ impl Tray {
                 *icon_bytes_guard = Some(icon_bytes.clone());
             }
 
-            if !enable_tray_speed {
+            if !enable_tray_speed || (!enable_tray_speed && !enable_tray_icon) {
                 let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(
                     &(*icon_bytes_guard).clone().unwrap(),
                 )?));
@@ -278,9 +279,15 @@ impl Tray {
             if *rate_guard != rate {
                 *rate_guard = rate;
 
-                let bytes = icon_bytes_guard.as_ref().unwrap();
+                let bytes = if enable_tray_icon {
+                    Some(icon_bytes_guard.as_ref().unwrap())
+                } else {
+                    None
+                };
+
                 let rate = rate_guard.as_ref();
                 let rate_bytes = SpeedRate::add_speed_text(bytes, rate).unwrap();
+
                 let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
                 let _ = tray.set_icon_as_template(!is_colorful);
             }
