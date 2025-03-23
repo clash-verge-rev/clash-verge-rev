@@ -3,8 +3,8 @@ name: Alpha Build
 on:
   workflow_dispatch:
   schedule:
-    # UTC+8 00:00 (UTC 16:00 previous day) and UTC+8 12:00 (UTC 04:00)
-    - cron: "0 16,4 * * *"
+    # UTC+8 0,6,12,18
+    - cron: "0 16,22,4,10 * * *"
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
