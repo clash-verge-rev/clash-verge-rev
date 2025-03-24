@@ -141,15 +141,17 @@ impl CoreManager {
 
         let config_path = Config::generate_file(ConfigType::Run)?;
 
-        // 先尝试服务模式
-        if service::check_service().await.is_ok() {
+        // 先检查服务状态
+        let service_available = service::check_service().await.is_ok();
+        
+        if service_available {
             log::info!(target: "app", "try to run core in service mode");
             match service::run_core_by_service(&config_path).await {
                 Ok(_) => {
                     log::info!(target: "app", "core started successfully in service mode");
                 }
                 Err(err) => {
-                    // 服务启动失败，尝试sidecar模式
+                    // 服务启动失败，直接尝试sidecar模式，不再尝试重装服务
                     log::warn!(target: "app", "failed to start core in service mode: {}", err);
                     log::info!(target: "app", "trying to run core in sidecar mode");
                     self.run_core_by_sidecar(&config_path).await?;
@@ -305,6 +307,19 @@ impl CoreManager {
         self.stop_core().await?;
         self.start_core().await?;
         log::info!(target: "app", "core restarted successfully");
+        Ok(())
+    }
+
+    /// 强制重新安装服务（供UI调用，用户主动修复服务）
+    pub async fn repair_service(&self) -> Result<()> {
+        log::info!(target: "app", "user requested service repair");
+        
+        // 调用强制重装服务
+        service::force_reinstall_service().await?;
+        
+        // 重启核心
+        self.restart_core().await?;
+        
         Ok(())
     }
 

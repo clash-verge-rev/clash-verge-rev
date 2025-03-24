@@ -152,6 +152,7 @@ pub fn run() {
             // 添加新的命令
             cmd::get_running_mode,
             cmd::install_service,
+            cmd::repair_service,
             cmd::get_app_uptime,
             cmd::get_auto_launch_status,
             // clash
