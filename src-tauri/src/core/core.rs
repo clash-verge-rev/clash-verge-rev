@@ -19,6 +19,7 @@ use super::service::is_service_running;
 #[derive(Debug)]
 pub struct CoreManager {
     running: Arc<Mutex<bool>>,
+    last_check_time: Arc<Mutex<Option<std::time::Instant>>>,
 }
 
 /// 内核运行模式
@@ -37,6 +38,7 @@ impl CoreManager {
         static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
         CORE_MANAGER.get_or_init(|| CoreManager {
             running: Arc::new(Mutex::new(false)),
+            last_check_time: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -681,8 +683,25 @@ impl CoreManager {
 
                 // 5. 应用新配置
                 println!("[core配置更新] 应用新配置");
-                for i in 0..3 {
-                    CoreManager::global().ensure_running_core().await;
+                
+                // 检查当前运行模式
+                let running_mode = self.get_running_mode().await;
+                
+                // 使用指数退避策略进行重试
+                let mut retry_count = 0;
+                let max_retries = 3;
+                
+                loop {
+                    // 仅在服务模式下确保服务在运行
+                    match running_mode {
+                        RunningMode::Service => {
+                            println!("[core配置更新] 服务模式下检查服务状态");
+                            self.ensure_running_core().await;
+                        },
+                        _ => {
+                            println!("[core配置更新] 非服务模式，跳过服务状态检查");
+                        }
+                    }
 
                     match MihomoManager::global().put_configs_force(run_path).await {
                         Ok(_) => {
@@ -691,19 +710,21 @@ impl CoreManager {
                             return Ok((true, String::new()));
                         }
                         Err(err) => {
-                            if i < 2 {
-                                println!("[core配置更新] 第{}次重试应用配置", i + 1);
-                                log::info!(target: "app", "{err}");
-                                sleep(Duration::from_millis(100)).await;
+                            retry_count += 1;
+                            if retry_count < max_retries {
+                                // 使用指数退避策略计算下一次重试间隔
+                                let wait_time = 200 * (2_u64.pow(retry_count as u32 - 1));
+                                println!("[core配置更新] 第{}次重试应用配置，等待{}ms", retry_count, wait_time);
+                                log::info!(target: "app", "配置应用失败: {}，将在{}ms后重试", err, wait_time);
+                                sleep(Duration::from_millis(wait_time)).await;
                             } else {
-                                println!("[core配置更新] 配置应用失败: {}", err);
+                                println!("[core配置更新] 已重试{}次，配置应用失败: {}", max_retries, err);
                                 Config::runtime().discard();
                                 return Ok((false, err.to_string()));
                             }
                         }
                     }
                 }
-                Ok((true, String::new()))
             }
             Ok((false, error_msg)) => {
                 println!("[core配置更新] 配置验证失败: {}", error_msg);
@@ -896,7 +917,7 @@ impl CoreManager {
     async fn is_port_in_use(&self, port: u16) -> bool {
         println!("[端口检查] 检查端口 {} 是否被占用", port);
 
-        use tokio::net::TcpSocket;
+       use tokio::net::TcpSocket;
 
         match TcpSocket::new_v4() {
             Ok(socket) => {
@@ -990,17 +1011,74 @@ impl CoreManager {
     }
     /// 确保 Mihomo 和 Verge service 都在运行
     pub async fn ensure_running_core(&self) {
-        if MihomoManager::global().is_mihomo_running().await.is_err() {
-            log_err!(self.restart_core().await);
-        }
-        match is_service_running().await {
-            Ok(false) => log_err!(self.restart_core().await),
-            Ok(true) => {
-                if MihomoManager::global().is_mihomo_running().await.is_err() {
-                    log_err!(self.restart_core().await);
+        // 添加时间间隔检查，避免频繁执行
+        let min_check_interval = Duration::from_secs(20); // 最小检查间隔为20秒
+        
+        let should_check = {
+            let mut last_check = self.last_check_time.lock().await;
+            let now = std::time::Instant::now();
+            
+            match *last_check {
+                Some(time) if now.duration_since(time) < min_check_interval => {
+                    // 如果距离上次检查时间不足30秒，跳过本次检查
+                    false
+                },
+                _ => {
+                    // 更新最后检查时间
+                    *last_check = Some(now);
+                    true
                 }
             }
-            _ => {}
+        };
+        
+        if !should_check {
+            return;
+        }
+        
+        // 检查当前运行模式，只在服务模式下执行完整的检查
+        match self.get_running_mode().await {
+            RunningMode::Service => {
+                println!("[确保核心运行] 服务模式下检查核心状态");
+                
+                // 检查Mihomo是否运行
+                if MihomoManager::global().is_mihomo_running().await.is_err() {
+                    println!("[确保核心运行] Mihomo未运行，尝试重启");
+                    log_err!(self.restart_core().await);
+                    return; // 已重启，无需继续检查
+                }
+                
+                // 检查服务是否运行
+                match is_service_running().await {
+                    Ok(false) => {
+                        println!("[确保核心运行] 服务未运行，尝试重启");
+                        log_err!(self.restart_core().await);
+                    },
+                    Ok(true) => {
+                        // 服务运行中，再次确认Mihomo状态
+                        if MihomoManager::global().is_mihomo_running().await.is_err() {
+                            println!("[确保核心运行] 服务运行但Mihomo未响应，尝试重启");
+                            log_err!(self.restart_core().await);
+                        } else {
+                            println!("[确保核心运行] 服务和Mihomo都正常运行");
+                        }
+                    },
+                    Err(err) => {
+                        println!("[确保核心运行] 检查服务状态失败: {:?}", err);
+                    }
+                }
+            },
+            RunningMode::Sidecar => {
+                println!("[确保核心运行] Sidecar模式下仅检查Mihomo状态");
+                // 在Sidecar模式下，只检查Mihomo是否运行
+                if MihomoManager::global().is_mihomo_running().await.is_err() {
+                    println!("[确保核心运行] Mihomo未运行，尝试重启");
+                    log_err!(self.restart_core().await);
+                }
+            },
+            RunningMode::NotRunning => {
+                println!("[确保核心运行] 核心未运行，尝试启动");
+                log_err!(self.start_core().await);
+            }
         }
     }
 }
