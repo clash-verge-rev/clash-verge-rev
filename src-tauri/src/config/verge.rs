@@ -196,6 +196,9 @@ pub struct IVerge {
 
     /// 自动进入轻量模式的延迟（分钟）
     pub auto_light_weight_minutes: Option<u64>,
+    
+    /// 服务状态跟踪
+    pub service_state: Option<crate::core::service::ServiceState>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -303,6 +306,7 @@ impl IVerge {
             auto_light_weight_minutes: Some(10),
             enable_dns_settings: Some(true),
             home_cards: None,
+            service_state: None,
             ..Self::default()
         }
     }
@@ -389,6 +393,7 @@ impl IVerge {
         patch!(auto_light_weight_minutes);
         patch!(enable_dns_settings);
         patch!(home_cards);
+        patch!(service_state);
     }
 
     /// 在初始化前尝试拿到单例端口的值
@@ -482,6 +487,7 @@ pub struct IVergeResponse {
     pub auto_light_weight_minutes: Option<u64>,
     pub enable_dns_settings: Option<bool>,
     pub home_cards: Option<serde_json::Value>,
+    pub service_state: Option<crate::core::service::ServiceState>,
 }
 
 impl From<IVerge> for IVergeResponse {
@@ -549,6 +555,7 @@ impl From<IVerge> for IVergeResponse {
             auto_light_weight_minutes: verge.auto_light_weight_minutes,
             enable_dns_settings: verge.enable_dns_settings,
             home_cards: verge.home_cards,
+            service_state: verge.service_state,
         }
     }
 }
