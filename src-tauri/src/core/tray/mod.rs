@@ -6,7 +6,7 @@ use crate::{
     cmd,
     config::Config,
     feat,
-    module::mihomo::Rate,
+    module::{lightweight::entry_lightweight_mode, mihomo::Rate},
     resolve,
     utils::{dirs, i18n::t, resolve::VERSION},
 };
@@ -663,7 +663,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "open_logs_dir" => crate::log_err!(cmd::open_logs_dir()),
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
-        "entry_lightweight_mode" => feat::lightweight_mode(),
+        "entry_lightweight_mode" => entry_lightweight_mode(),
         "quit" => {
             println!("quit");
             feat::quit(Some(0));
