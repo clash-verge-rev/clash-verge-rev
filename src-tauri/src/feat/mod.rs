@@ -10,7 +10,6 @@ mod window;
 pub use backup::*;
 pub use clash::*;
 pub use config::*;
-pub use lightweight::*;
 pub use profile::*;
 pub use proxy::*;
 pub use window::*;
