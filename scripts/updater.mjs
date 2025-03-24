@@ -8,8 +8,8 @@ const UPDATE_JSON_FILE = "update.json";
 const UPDATE_JSON_PROXY = "update-proxy.json";
 // Add alpha update JSON filenames
 const ALPHA_TAG_NAME = "updater-alpha";
-const ALPHA_UPDATE_JSON_FILE = "update-alpha.json";
-const ALPHA_UPDATE_JSON_PROXY = "update-alpha-proxy.json";
+const ALPHA_UPDATE_JSON_FILE = "update.json";
+const ALPHA_UPDATE_JSON_PROXY = "update-proxy.json";
 
 /// generate update.json
 /// upload to update tag's release asset
