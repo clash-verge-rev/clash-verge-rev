@@ -216,6 +216,12 @@ pub async fn reinstall_service() -> Result<()> {
         );
     }
 
+    // 记录安装信息并保存
+    let mut service_state = ServiceState::get();
+    service_state.record_install();
+    service_state.last_error = None;
+    service_state.save()?;
+
     Ok(())
 }
 
@@ -268,6 +274,13 @@ pub async fn reinstall_service() -> Result<()> {
             status.code().unwrap()
         );
     }
+
+    // 记录安装信息并保存
+    let mut service_state = ServiceState::get();
+    service_state.record_install();
+    service_state.last_error = None;
+    service_state.save()?;
+    
     Ok(())
 }
 
