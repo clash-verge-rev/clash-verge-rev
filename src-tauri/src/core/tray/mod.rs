@@ -536,7 +536,7 @@ fn create_tray_menu(
     let lighteweight_mode = &MenuItem::with_id(
         app_handle,
         "entry_lightweight_mode",
-        t("Lightweight Mode"),
+        t("LightWeight Mode"),
         true,
         hotkeys.get("entry_lightweight_mode").map(|s| s.as_str()),
     )
