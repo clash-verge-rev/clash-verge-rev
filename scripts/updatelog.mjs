@@ -43,3 +43,42 @@ export async function resolveUpdateLog(tag) {
 
   return map[tag].join("\n").trim();
 }
+
+export async function resolveUpdateLogDefault() {
+  const cwd = process.cwd();
+  const file = path.join(cwd, UPDATE_LOG);
+
+  if (!fs.existsSync(file)) {
+    throw new Error("could not found UPDATELOG.md");
+  }
+
+  const data = await fsp.readFile(file, "utf-8");
+
+  const reTitle = /^## v[\d\.]+/;
+  const reEnd = /^---/;
+
+  let isCapturing = false;
+  let content = [];
+  let firstTag = "";
+
+  for (const line of data.split("\n")) {
+    if (reTitle.test(line) && !isCapturing) {
+      isCapturing = true;
+      firstTag = line.slice(3).trim();
+      continue;
+    }
+
+    if (isCapturing) {
+      if (reEnd.test(line)) {
+        break;
+      }
+      content.push(line);
+    }
+  }
+
+  if (!firstTag) {
+    throw new Error("could not found any version tag in UPDATELOG.md");
+  }
+
+  return content.join("\n").trim();
+}

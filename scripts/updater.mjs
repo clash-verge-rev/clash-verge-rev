@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import { getOctokit, context } from "@actions/github";
-import { resolveUpdateLog } from "./updatelog.mjs";
+import { resolveUpdateLog, resolveUpdateLogDefault } from "./updatelog.mjs";
 
 // Add stable update JSON filenames
 const UPDATE_TAG_NAME = "updater";
@@ -85,8 +85,8 @@ async function processRelease(github, options, tag, isAlpha) {
 
   const updateData = {
     name: tag.name,
-    notes: await resolveUpdateLog(tag.name).catch(
-      () => "No changelog available",
+    notes: await resolveUpdateLog(tag.name).catch(() =>
+      resolveUpdateLogDefault().catch(() => "No changelog available"),
     ),
     pub_date: new Date().toISOString(),
     platforms: {
