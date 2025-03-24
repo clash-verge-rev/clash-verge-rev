@@ -1,7 +1,6 @@
 mod backup;
 mod clash;
 mod config;
-mod lightweight;
 mod profile;
 mod proxy;
 mod window;
