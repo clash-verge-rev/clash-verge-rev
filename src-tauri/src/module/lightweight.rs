@@ -32,6 +32,7 @@ pub fn entry_lightweight_mode() {
         if let Some(webview) = window.get_webview_window("main") {
             let _ = webview.destroy();
         }
+        #[cfg(target_os = "macos")]
         AppHandleManager::global().set_activation_policy_accessory();
         println!("[lightweight_mode] 轻量模式已开启");
         log::info!(target: "app", "[lightweight_mode] 轻量模式已开启");
