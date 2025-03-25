@@ -353,7 +353,6 @@
   "clash_mode_direct": "直连模式",
   "toggle_system_proxy": "打开/关闭系统代理",
   "toggle_tun_mode": "打开/关闭 TUN 模式",
-  "toggle_lightweight_mode": "进入轻量模式",
   "entry_lightweight_mode": "进入轻量模式",
   "Backup Setting": "备份设置",
   "Backup Setting Info": "支持 WebDAV 备份配置文件",
