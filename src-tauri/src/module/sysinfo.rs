@@ -37,7 +37,7 @@ impl PlatformSpecification {
             tokio::runtime::Handle::current().block_on(async {
                 match CoreManager::global().get_running_mode().await {
                     crate::core::RunningMode::Service => "Service".to_string(),
-                    crate::core::RunningMode::Sidecar => "Sidecar".to_string(),
+                    crate::core::RunningMode::Sidecar => "Standalone".to_string(),
                     crate::core::RunningMode::NotRunning => "Not Running".to_string(),
                 }
             })

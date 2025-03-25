@@ -1,7 +1,17 @@
-use crate::{config::Config, utils::dirs};
+use crate::{
+    config::Config,
+    logging,
+    utils::{dirs, logging::Type},
+};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, env::current_exe, path::PathBuf, process::Command as StdCommand, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    collections::HashMap,
+    env::current_exe,
+    path::PathBuf,
+    process::Command as StdCommand,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use tokio::time::Duration;
 
 // Windows only
@@ -11,15 +21,15 @@ const REQUIRED_SERVICE_VERSION: &str = "1.0.5"; // 定义所需的服务版本�
 
 // 限制重装时间和次数的常量
 const REINSTALL_COOLDOWN_SECS: u64 = 300; // 5分钟冷却期
-const MAX_REINSTALLS_PER_DAY: u32 = 3;    // 每24小时最多重装3次
-const ONE_DAY_SECS: u64 = 86400;         // 24小时的秒数
+const MAX_REINSTALLS_PER_DAY: u32 = 3; // 每24小时最多重装3次
+const ONE_DAY_SECS: u64 = 86400; // 24小时的秒数
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct ServiceState {
-    pub last_install_time: u64,       // 上次安装时间戳 (Unix 时间戳，秒)
-    pub install_count: u32,           // 24小时内安装次数
-    pub last_check_time: u64,         // 上次检查时间
-    pub last_error: Option<String>,   // 上次错误信息
+    pub last_install_time: u64,     // 上次安装时间戳 (Unix 时间戳，秒)
+    pub install_count: u32,         // 24小时内安装次数
+    pub last_check_time: u64,       // 上次检查时间
+    pub last_error: Option<String>, // 上次错误信息
 }
 
 impl ServiceState {
@@ -47,12 +57,12 @@ impl ServiceState {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         // 检查是否需要重置计数器（24小时已过）
         if now - self.last_install_time > ONE_DAY_SECS {
             self.install_count = 0;
         }
-        
+
         self.last_install_time = now;
         self.install_count += 1;
     }
@@ -63,17 +73,19 @@ impl ServiceState {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-            
+
         // 如果在冷却期内，不允许重装
         if now - self.last_install_time < REINSTALL_COOLDOWN_SECS {
             return false;
         }
-        
+
         // 如果24小时内安装次数过多，也不允许
-        if now - self.last_install_time < ONE_DAY_SECS && self.install_count >= MAX_REINSTALLS_PER_DAY {
+        if now - self.last_install_time < ONE_DAY_SECS
+            && self.install_count >= MAX_REINSTALLS_PER_DAY
+        {
             return false;
         }
-        
+
         true
     }
 }
@@ -112,7 +124,7 @@ pub async fn reinstall_service() -> Result<()> {
 
     // 获取当前服务状态
     let mut service_state = ServiceState::get();
-    
+
     // 检查是否允许重装
     if !service_state.can_reinstall() {
         log::warn!(target:"app", "service reinstall rejected: cooldown period or max attempts reached");
@@ -327,7 +339,7 @@ pub async fn check_service_version() -> Result<String> {
 pub async fn check_service_needs_reinstall() -> bool {
     // 获取当前服务状态
     let service_state = ServiceState::get();
-    
+
     // 首先检查是否在冷却期或超过重装次数限制
     if !service_state.can_reinstall() {
         log::info!(target: "app", "service reinstall check: in cooldown period or max attempts reached");
@@ -339,21 +351,21 @@ pub async fn check_service_needs_reinstall() -> bool {
         Ok(version) => {
             // 打印更详细的日志，方便排查问题
             log::info!(target: "app", "服务版本检测：当前={}, 要求={}", version, REQUIRED_SERVICE_VERSION);
-            
+
             let needs_reinstall = version != REQUIRED_SERVICE_VERSION;
             if needs_reinstall {
-                log::warn!(target: "app", "发现服务版本不匹配，需要重装! 当前={}, 要求={}", 
+                log::warn!(target: "app", "发现服务版本不匹配，需要重装! 当前={}, 要求={}",
                     version, REQUIRED_SERVICE_VERSION);
-                
+
                 // 打印版本字符串的原始字节，确认没有隐藏字符
                 log::debug!(target: "app", "当前版本字节: {:?}", version.as_bytes());
                 log::debug!(target: "app", "要求版本字节: {:?}", REQUIRED_SERVICE_VERSION.as_bytes());
             } else {
                 log::info!(target: "app", "服务版本匹配，无需重装");
             }
-            
+
             needs_reinstall
-        },
+        }
         Err(err) => {
             // 检查服务是否可用，如果可用但版本检查失败，可能只是版本API有问题
             match is_service_running().await {
@@ -421,9 +433,9 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     // 先检查服务版本，不受冷却期限制
     let version_check = match check_service_version().await {
         Ok(version) => {
-            log::info!(target: "app", "检测到服务版本: {}, 要求版本: {}", 
+            log::info!(target: "app", "检测到服务版本: {}, 要求版本: {}",
                 version, REQUIRED_SERVICE_VERSION);
-            
+
             // 通过字节比较确保完全匹配
             if version.as_bytes() != REQUIRED_SERVICE_VERSION.as_bytes() {
                 log::warn!(target: "app", "服务版本不匹配，需要重装");
@@ -432,7 +444,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
                 log::info!(target: "app", "服务版本匹配");
                 true // 版本匹配
             }
-        },
+        }
         Err(err) => {
             log::warn!(target: "app", "无法获取服务版本: {}", err);
             false // 无法获取版本
@@ -447,11 +459,11 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
             return start_with_existing_service(config_file).await;
         }
     }
-    
+
     // 强制执行版本检查，如果版本不匹配则重装
     if !version_check {
         log::info!(target: "app", "服务版本不匹配，尝试重装");
-        
+
         // 获取服务状态，检查是否可以重装
         let service_state = ServiceState::get();
         if !service_state.can_reinstall() {
@@ -464,22 +476,22 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
                 bail!("服务版本不匹配且无法重装，启动失败");
             }
         }
-        
+
         // 尝试重装
         log::info!(target: "app", "开始重装服务");
         if let Err(err) = reinstall_service().await {
             log::warn!(target: "app", "服务重装失败: {}", err);
-            
+
             // 尝试使用现有服务
             log::info!(target: "app", "尝试使用现有服务");
             return start_with_existing_service(config_file).await;
         }
-        
+
         // 重装成功，尝试启动
         log::info!(target: "app", "服务重装成功，尝试启动");
         return start_with_existing_service(config_file).await;
     }
-    
+
     // 检查服务状态
     match check_service().await {
         Ok(_) => {
@@ -488,22 +500,22 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
             if let Ok(()) = start_with_existing_service(config_file).await {
                 return Ok(());
             }
-        },
+        }
         Err(err) => {
             log::warn!(target: "app", "服务检查失败: {}", err);
         }
     }
-    
+
     // 服务不可用或启动失败，检查是否需要重装
     if check_service_needs_reinstall().await {
         log::info!(target: "app", "服务需要重装");
-        
+
         // 尝试重装
         if let Err(err) = reinstall_service().await {
             log::warn!(target: "app", "服务重装失败: {}", err);
             bail!("Failed to reinstall service: {}", err);
         }
-        
+
         // 重装后再次尝试启动
         log::info!(target: "app", "服务重装完成，尝试启动核心");
         start_with_existing_service(config_file).await
@@ -534,10 +546,20 @@ pub async fn is_service_running() -> Result<bool> {
 
     // 检查服务状态码和消息
     if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
+        logging!(debug, Type::Service, "Service is running");
         Ok(true)
     } else {
+        logging!(debug, Type::Service, "Service is not running");
         Ok(false)
     }
+}
+
+pub async fn is_service_available() -> Result<()> {
+    let resp = check_service().await?;
+    if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
+        logging!(debug, Type::Service, "Service is available");
+    }
+    Ok(())
 }
 
 /// 强制重装服务（用于UI中的修复服务按钮）
@@ -547,15 +569,15 @@ pub async fn force_reinstall_service() -> Result<()> {
     // 创建默认服务状态（重置所有限制）
     let service_state = ServiceState::default();
     service_state.save()?;
-    
+
     log::info!(target: "app", "已重置服务状态，开始执行重装");
-    
+
     // 执行重装
     match reinstall_service().await {
         Ok(()) => {
             log::info!(target: "app", "服务重装成功");
             Ok(())
-        },
+        }
         Err(err) => {
             log::error!(target: "app", "强制重装服务失败: {}", err);
             bail!("强制重装服务失败: {}", err)

@@ -47,7 +47,7 @@ pub async fn get_system_info() -> CmdResult<String> {
 pub async fn get_running_mode() -> Result<String, String> {
     match CoreManager::global().get_running_mode().await {
         core::RunningMode::Service => Ok("service".to_string()),
-        core::RunningMode::Sidecar => Ok("sidecar".to_string()),
+        core::RunningMode::Sidecar => Ok("standalone".to_string()),
         core::RunningMode::NotRunning => Ok("not_running".to_string()),
     }
 }
