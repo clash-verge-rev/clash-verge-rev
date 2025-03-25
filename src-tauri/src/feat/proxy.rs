@@ -1,6 +1,12 @@
 use crate::{
     config::{Config, IVerge},
-    core::handle,
+    core::{
+        handle,
+        service::{install_service, is_service_available, reinstall_service},
+        CoreManager,
+    },
+    logging, logging_error,
+    utils::logging::Type,
 };
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -28,6 +34,19 @@ pub fn toggle_system_proxy() {
 
 /// Toggle TUN mode on/off
 pub fn toggle_tun_mode(not_save_file: Option<bool>) {
+    // tauri::async_runtime::spawn(async move {
+    //     logging!(
+    //         info,
+    //         Type::Service,
+    //         true,
+    //         "Toggle TUN mode need install service"
+    //     );
+    //     if is_service_available().await.is_err() {
+    //         logging_error!(Type::Service, true, install_service().await);
+    //     }
+    //     logging_error!(Type::Core, true, CoreManager::global().restart_core().await);
+    // });
+
     let enable = Config::verge().data().enable_tun_mode;
     let enable = enable.unwrap_or(false);
 

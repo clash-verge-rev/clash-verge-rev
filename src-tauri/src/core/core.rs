@@ -184,23 +184,22 @@ impl CoreManager {
     async fn validate_config_internal(&self, config_path: &str) -> Result<(bool, String)> {
         // 检查程序是否正在退出，如果是则跳过验证
         if handle::Handle::global().is_exiting() {
-            println!("[core配置验证] 应用正在退出，跳过验证");
+            logging!(info, Type::Core, true, "应用正在退出，跳过验证");
             return Ok((true, String::new()));
         }
 
-        println!("[core配置验证] 开始验证配置文件: {}", config_path);
+        logging!(info, Type::Core, true, "开始验证配置文件: {}", config_path);
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let clash_core = clash_core.unwrap_or("verge-mihomo".into());
-        println!("[core配置验证] 使用内核: {}", clash_core);
+        logging!(info, Type::Core, true, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let test_dir = dirs::app_home_dir()?.join("test");
         let test_dir = dirs::path_to_str(&test_dir)?;
-        println!("[core配置验证] 测试目录: {}", test_dir);
+        logging!(info, Type::Core, true, "测试目录: {}", test_dir);
 
         // 使用子进程运行clash验证配置
-        println!("[core配置验证] 运行子进程验证配置");
         let output = app_handle
             .shell()
             .sidecar(clash_core)?
@@ -216,18 +215,14 @@ impl CoreManager {
         let has_error =
             !output.status.success() || error_keywords.iter().any(|&kw| stderr.contains(kw));
 
-        println!("\n[core配置验证] -------- 验证结果 --------");
-        println!("[core配置验证] 进程退出状态: {:?}", output.status);
+        logging!(info, Type::Core, true, "-------- 验证结果 --------");
 
         if !stderr.is_empty() {
-            println!("[core配置验证] stderr输出:\n{}", stderr);
-        }
-        if !stdout.is_empty() {
-            println!("[core配置验证] stdout输出:\n{}", stdout);
+            logging!(info, Type::Core, true, "stderr输出:\n{}", stderr);
         }
 
         if has_error {
-            println!("[core配置验证] 发现错误，开始处理错误信息");
+            logging!(info, Type::Core, true, "发现错误，开始处理错误信息");
             let error_msg = if !stdout.is_empty() {
                 stdout.to_string()
             } else if !stderr.is_empty() {
@@ -238,11 +233,11 @@ impl CoreManager {
                 "验证进程被终止".to_string()
             };
 
-            println!("[core配置验证] -------- 验证结束 --------\n");
+            logging!(info, Type::Core, true, "-------- 验证结束 --------\n");
             Ok((false, error_msg)) // 返回错误消息给调用者处理
         } else {
-            println!("[core配置验证] 验证成功");
-            println!("[core配置验证] -------- 验证结束 --------\n");
+            logging!(info, Type::Core, true, "验证成功");
+            logging!(info, Type::Core, true, "-------- 验证结束 --------\n");
             Ok((true, String::new()))
         }
     }

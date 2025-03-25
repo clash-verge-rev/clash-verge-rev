@@ -665,7 +665,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "restart_app" => feat::restart_app(),
         "entry_lightweight_mode" => entry_lightweight_mode(),
         "quit" => {
-            println!("quit");
             feat::quit(Some(0));
         }
         id if id.starts_with("profiles_") => {

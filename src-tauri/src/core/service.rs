@@ -119,29 +119,15 @@ pub struct VersionJsonResponse {
 }
 
 #[cfg(target_os = "windows")]
-pub async fn reinstall_service() -> Result<()> {
-    log::info!(target:"app", "reinstall service");
-
-    // 获取当前服务状态
-    let mut service_state = ServiceState::get();
-
-    // 检查是否允许重装
-    if !service_state.can_reinstall() {
-        log::warn!(target:"app", "service reinstall rejected: cooldown period or max attempts reached");
-        bail!("Service reinstallation is rate limited. Please try again later.");
-    }
+pub async fn uninstall_service() -> Result<()> {
+    logging!(info, Type::Service, true, "uninstall service");
 
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
 
     let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("install-service.exe");
     let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
-
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -149,13 +135,40 @@ pub async fn reinstall_service() -> Result<()> {
 
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
-    let _ = match level {
+    let status = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
         _ => StdCommand::new(uninstall_path)
             .creation_flags(0x08000000)
             .status()?,
     };
 
+    if !status.success() {
+        bail!(
+            "failed to uninstall service with status {}",
+            status.code().unwrap()
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+pub async fn install_service() -> Result<()> {
+    logging!(info, Type::Service, true, "install service");
+
+    use deelevate::{PrivilegeLevel, Token};
+    use runas::Command as RunasCommand;
+    use std::os::windows::process::CommandExt;
+
+    let binary_path = dirs::service_path()?;
+    let install_path = binary_path.with_file_name("install-service.exe");
+
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let token = Token::with_current_process()?;
+    let level = token.privilege_level()?;
     let status = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).status()?,
         _ => StdCommand::new(install_path)
@@ -164,41 +177,73 @@ pub async fn reinstall_service() -> Result<()> {
     };
 
     if !status.success() {
-        let error = format!(
+        bail!(
             "failed to install service with status {}",
             status.code().unwrap()
         );
-        service_state.last_error = Some(error.clone());
-        service_state.save()?;
-        bail!(error);
     }
-
-    // 记录安装信息并保存
-    service_state.record_install();
-    service_state.last_error = None;
-    service_state.save()?;
 
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(target_os = "windows")]
 pub async fn reinstall_service() -> Result<()> {
-    log::info!(target:"app", "reinstall service");
+    logging!(info, Type::Service, true, "reinstall service");
+
+    // 获取当前服务状态
+    let mut service_state = ServiceState::get();
+
+    // 检查是否允许重装
+    if !service_state.can_reinstall() {
+        logging!(
+            warn,
+            Type::Service,
+            true,
+            "service reinstall rejected: cooldown period or max attempts reached"
+        );
+        bail!("Service reinstallation is rate limited. Please try again later.");
+    }
+
+    // 先卸载服务
+    if let Err(err) = uninstall_service().await {
+        logging!(
+            warn,
+            Type::Service,
+            true,
+            "failed to uninstall service: {}",
+            err
+        );
+    }
+
+    // 再安装服务
+    match install_service().await {
+        Ok(_) => {
+            // 记录安装信息并保存
+            service_state.record_install();
+            service_state.last_error = None;
+            service_state.save()?;
+            Ok(())
+        }
+        Err(err) => {
+            let error = format!("failed to install service: {}", err);
+            service_state.last_error = Some(error.clone());
+            service_state.save()?;
+            bail!(error)
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+pub async fn uninstall_service() -> Result<()> {
+    logging!(info, Type::Service, true, "uninstall service");
     use users::get_effective_uid;
 
-    let install_path = tauri::utils::platform::current_exe()?.with_file_name("install-service");
-
     let uninstall_path = tauri::utils::platform::current_exe()?.with_file_name("uninstall-service");
-
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
 
-    let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
     let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
 
     let elevator = crate::utils::help::linux_elevator();
@@ -210,8 +255,38 @@ pub async fn reinstall_service() -> Result<()> {
             .arg(uninstall_shell)
             .status()?,
     };
-    log::info!(target:"app", "status code:{}", status.code().unwrap());
+    logging!(
+        info,
+        Type::Service,
+        true,
+        "uninstall status code:{}",
+        status.code().unwrap()
+    );
 
+    if !status.success() {
+        bail!(
+            "failed to uninstall service with status {}",
+            status.code().unwrap()
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+pub async fn install_service() -> Result<()> {
+    logging!(info, Type::Service, true, "install service");
+    use users::get_effective_uid;
+
+    let install_path = tauri::utils::platform::current_exe()?.with_file_name("install-service");
+
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
+
+    let elevator = crate::utils::help::linux_elevator();
     let status = match get_effective_uid() {
         0 => StdCommand::new(install_shell).status()?,
         _ => StdCommand::new(elevator.clone())
@@ -220,6 +295,13 @@ pub async fn reinstall_service() -> Result<()> {
             .arg(install_shell)
             .status()?,
     };
+    logging!(
+        info,
+        Type::Service,
+        true,
+        "install status code:{}",
+        status.code().unwrap()
+    );
 
     if !status.success() {
         bail!(
@@ -228,42 +310,113 @@ pub async fn reinstall_service() -> Result<()> {
         );
     }
 
-    // 记录安装信息并保存
-    let mut service_state = ServiceState::get();
-    service_state.record_install();
-    service_state.last_error = None;
-    service_state.save()?;
-
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(target_os = "linux")]
 pub async fn reinstall_service() -> Result<()> {
+    logging!(info, Type::Service, true, "reinstall service");
+
+    // 获取当前服务状态
+    let mut service_state = ServiceState::get();
+
+    // 检查是否允许重装
+    if !service_state.can_reinstall() {
+        logging!(
+            warn,
+            Type::Service,
+            true,
+            "service reinstall rejected: cooldown period or max attempts reached"
+        );
+        bail!("Service reinstallation is rate limited. Please try again later.");
+    }
+
+    // 先卸载服务
+    if let Err(err) = uninstall_service().await {
+        logging!(
+            warn,
+            Type::Service,
+            true,
+            "failed to uninstall service: {}",
+            err
+        );
+    }
+
+    // 再安装服务
+    match install_service().await {
+        Ok(_) => {
+            // 记录安装信息并保存
+            service_state.record_install();
+            service_state.last_error = None;
+            service_state.save()?;
+            Ok(())
+        }
+        Err(err) => {
+            let error = format!("failed to install service: {}", err);
+            service_state.last_error = Some(error.clone());
+            service_state.save()?;
+            bail!(error)
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub async fn uninstall_service() -> Result<()> {
     use crate::utils::i18n::t;
 
-    log::info!(target:"app", "reinstall service");
+    logging!(info, Type::Service, true, "uninstall service");
 
     let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("install-service");
     let uninstall_path = binary_path.with_file_name("uninstall-service");
-
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
 
-    let install_shell: String = install_path.to_string_lossy().into_owned();
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
 
     let prompt = t("Service Administrator Prompt");
     let command = format!(
-        r#"do shell script "sudo '{uninstall_shell}' && sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
+        r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#
     );
 
-    log::debug!(target: "app", "command: {}", command);
+    logging!(debug, Type::Service, true, "uninstall command: {}", command);
+
+    let status = StdCommand::new("osascript")
+        .args(vec!["-e", &command])
+        .status()?;
+
+    if !status.success() {
+        bail!(
+            "failed to uninstall service with status {}",
+            status.code().unwrap()
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub async fn install_service() -> Result<()> {
+    use crate::utils::i18n::t;
+
+    logging!(info, Type::Service, true, "install service");
+
+    let binary_path = dirs::service_path()?;
+    let install_path = binary_path.with_file_name("install-service");
+
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let install_shell: String = install_path.to_string_lossy().into_owned();
+
+    let prompt = t("Service Administrator Prompt");
+    let command = format!(
+        r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
+    );
+
+    logging!(debug, Type::Service, true, "install command: {}", command);
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])
@@ -276,13 +429,54 @@ pub async fn reinstall_service() -> Result<()> {
         );
     }
 
-    // 记录安装信息并保存
-    let mut service_state = ServiceState::get();
-    service_state.record_install();
-    service_state.last_error = None;
-    service_state.save()?;
-
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub async fn reinstall_service() -> Result<()> {
+    logging!(info, Type::Service, true, "reinstall service");
+
+    // 获取当前服务状态
+    let mut service_state = ServiceState::get();
+
+    // 检查是否允许重装
+    if !service_state.can_reinstall() {
+        logging!(
+            warn,
+            Type::Service,
+            true,
+            "service reinstall rejected: cooldown period or max attempts reached"
+        );
+        bail!("Service reinstallation is rate limited. Please try again later.");
+    }
+
+    // 先卸载服务
+    if let Err(err) = uninstall_service().await {
+        logging!(
+            warn,
+            Type::Service,
+            true,
+            "failed to uninstall service: {}",
+            err
+        );
+    }
+
+    // 再安装服务
+    match install_service().await {
+        Ok(_) => {
+            // 记录安装信息并保存
+            service_state.record_install();
+            service_state.last_error = None;
+            service_state.save()?;
+            Ok(())
+        }
+        Err(err) => {
+            let error = format!("failed to install service: {}", err);
+            service_state.last_error = Some(error.clone());
+            service_state.save()?;
+            bail!(error)
+        }
+    }
 }
 
 /// check the windows service status

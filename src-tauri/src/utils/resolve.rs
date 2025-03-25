@@ -1,7 +1,12 @@
 #[cfg(target_os = "macos")]
 use crate::AppHandleManager;
 use crate::{
-    config::{Config, IVerge, PrfItem}, core::*, log_err, module::lightweight, utils::{error, init, server}, wrap_err
+    config::{Config, IVerge, PrfItem},
+    core::*,
+    log_err,
+    module::lightweight,
+    utils::{error, init, server},
+    wrap_err,
 };
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
@@ -58,7 +63,7 @@ pub async fn resolve_setup(app: &mut App) {
     log_err!(Config::init_config().await);
 
     if service::check_service().await.is_err() {
-        match service::reinstall_service().await {
+        match service::install_service().await {
             Ok(_) => {
                 log::info!(target:"app", "install service susccess.");
                 #[cfg(not(target_os = "macos"))]
