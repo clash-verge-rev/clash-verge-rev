@@ -1,8 +1,9 @@
 use super::CmdResult;
-use crate::module::mihomo::MihomoManager;
+use crate::{logging, module::mihomo::MihomoManager};
 
 #[tauri::command]
 pub async fn get_proxies() -> CmdResult<serde_json::Value> {
+    println!("get_proxies");
     let mannager = MihomoManager::global();
     let proxies = mannager
         .refresh_proxies()
@@ -14,7 +15,8 @@ pub async fn get_proxies() -> CmdResult<serde_json::Value> {
 
 #[tauri::command]
 pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
-    let mannager = MihomoManager::global();
+    println!("get_providers_proxies");
+    let manager = MihomoManager::global();
     let providers = mannager
         .refresh_providers_proxies()
         .await

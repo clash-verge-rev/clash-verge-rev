@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "2.2.2",
+  "version": "v2.2.3-alpha",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev -- --profile fast-dev",
@@ -17,6 +17,7 @@
     "portable": "node scripts/portable.mjs",
     "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
     "fix-alpha-version": "node scripts/fix-alpha_version.mjs",
+    "release-version": "node scripts/release_version.mjs",
     "release-alpha-version": "node scripts/release-alpha_version.mjs",
     "prepare": "husky",
     "clean": "cd ./src-tauri && cargo clean && cd -"

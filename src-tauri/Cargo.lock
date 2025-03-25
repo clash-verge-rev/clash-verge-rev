@@ -1132,7 +1132,7 @@ dependencies = [
 
 [[package]]
 name = "clash-verge"
-version = "2.2.2"
+version = "2.2.3-alpha"
 dependencies = [
  "ab_glyph",
  "aes-gcm",

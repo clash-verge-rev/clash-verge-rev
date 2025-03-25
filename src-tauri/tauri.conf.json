@@ -1,5 +1,5 @@
 {
-  "version": "2.2.2",
+  "version": "2.2.3-alpha",
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "active": true,
@@ -11,9 +11,15 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["resources", "resources/locales/*"],
+    "resources": [
+      "resources",
+      "resources/locales/*"
+    ],
     "publisher": "Clash Verge Rev",
-    "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
+    "externalBin": [
+      "sidecar/verge-mihomo",
+      "sidecar/verge-mihomo-alpha"
+    ],
     "copyright": "GNU General Public License v3.0",
     "category": "DeveloperTool",
     "shortDescription": "Clash Verge Rev",
@@ -44,15 +50,25 @@
     },
     "deep-link": {
       "desktop": {
-        "schemes": ["clash", "clash-verge"]
+        "schemes": [
+          "clash",
+          "clash-verge"
+        ]
       }
     }
   },
   "app": {
     "security": {
-      "capabilities": ["desktop-capability", "migrated"],
+      "capabilities": [
+        "desktop-capability",
+        "migrated"
+      ],
       "assetProtocol": {
-        "scope": ["$APPDATA/**", "$RESOURCE/../**", "**"],
+        "scope": [
+          "$APPDATA/**",
+          "$RESOURCE/../**",
+          "**"
+        ],
         "enable": true
       },
       "csp": null
