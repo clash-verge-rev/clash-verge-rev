@@ -4,6 +4,8 @@ use std::fmt;
 pub enum Type {
     Core,
     Service,
+    Hotkey,
+    Window,
 }
 
 impl fmt::Display for Type {
@@ -11,6 +13,8 @@ impl fmt::Display for Type {
         match self {
             Type::Core => write!(f, "[Core]"),
             Type::Service => write!(f, "[Service]"),
+            Type::Hotkey => write!(f, "[Hotkey]"),
+            Type::Window => write!(f, "[Window]"),
         }
     }
 }

@@ -1,6 +1,9 @@
 use crate::{
-    config::Config, core::handle, feat, log_err, module::lightweight::entry_lightweight_mode,
-    utils::resolve,
+    config::Config,
+    core::handle,
+    feat, log_err, logging,
+    module::lightweight::entry_lightweight_mode,
+    utils::{logging::Type, resolve},
 };
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
@@ -26,22 +29,27 @@ impl Hotkey {
         let verge = Config::verge();
         let enable_global_hotkey = verge.latest().enable_global_hotkey.unwrap_or(true);
 
-        println!(
-            "Initializing hotkeys, global hotkey enabled: {}",
+        logging!(
+            info,
+            Type::Hotkey,
+            true,
+            "Initializing hotkeys with enable: {}",
             enable_global_hotkey
         );
-        log::info!(target: "app", "Initializing hotkeys, global hotkey enabled: {}", enable_global_hotkey);
 
         // 如果全局热键被禁用，则不注册热键
         if !enable_global_hotkey {
-            println!("Global hotkey is disabled, skipping registration");
-            log::info!(target: "app", "Global hotkey is disabled, skipping registration");
             return Ok(());
         }
 
         if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
-            println!("Found {} hotkeys to register", hotkeys.len());
-            log::info!(target: "app", "Found {} hotkeys to register", hotkeys.len());
+            logging!(
+                info,
+                Type::Hotkey,
+                true,
+                "Has {} hotkeys need to register",
+                hotkeys.len()
+            );
 
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
@@ -50,28 +58,52 @@ impl Hotkey {
 
                 match (key, func) {
                     (Some(key), Some(func)) => {
-                        println!("Registering hotkey: {} -> {}", key, func);
-                        log::info!(target: "app", "Registering hotkey: {} -> {}", key, func);
+                        logging!(
+                            info,
+                            Type::Hotkey,
+                            true,
+                            "Registering hotkey: {} -> {}",
+                            key,
+                            func
+                        );
                         if let Err(e) = self.register(key, func) {
-                            println!("Failed to register hotkey {} -> {}: {:?}", key, func, e);
-                            log::error!(target: "app", "Failed to register hotkey {} -> {}: {:?}", key, func, e);
+                            logging!(
+                                error,
+                                Type::Hotkey,
+                                true,
+                                "Failed to register hotkey {} -> {}: {:?}",
+                                key,
+                                func,
+                                e
+                            );
                         } else {
-                            println!("Successfully registered hotkey {} -> {}", key, func);
-                            log::info!(target: "app", "Successfully registered hotkey {} -> {}", key, func);
+                            logging!(
+                                info,
+                                Type::Hotkey,
+                                true,
+                                "Successfully registered hotkey {} -> {}",
+                                key,
+                                func
+                            );
                         }
                     }
                     _ => {
                         let key = key.unwrap_or("None");
                         let func = func.unwrap_or("None");
-                        println!("Invalid hotkey configuration: `{key}`:`{func}`");
-                        log::error!(target: "app", "Invalid hotkey configuration: `{key}`:`{func}`");
+                        logging!(
+                            error,
+                            Type::Hotkey,
+                            true,
+                            "Invalid hotkey configuration: `{}`:`{}`",
+                            key,
+                            func
+                        );
                     }
                 }
             }
             self.current.lock().clone_from(hotkeys);
         } else {
-            println!("No hotkeys configured");
-            log::info!(target: "app", "No hotkeys configured");
+            logging!(info, Type::Hotkey, true, "No hotkeys configured");
         }
 
         Ok(())
@@ -88,45 +120,60 @@ impl Hotkey {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let manager = app_handle.global_shortcut();
 
-        println!(
+        logging!(
+            info,
+            Type::Hotkey,
+            true,
             "Attempting to register hotkey: {} for function: {}",
-            hotkey, func
+            hotkey,
+            func
         );
-        log::info!(target: "app", "Attempting to register hotkey: {} for function: {}", hotkey, func);
 
         if manager.is_registered(hotkey) {
-            println!(
+            logging!(
+                info,
+                Type::Hotkey,
+                true,
                 "Hotkey {} was already registered, unregistering first",
                 hotkey
             );
-            log::info!(target: "app", "Hotkey {} was already registered, unregistering first", hotkey);
             manager.unregister(hotkey)?;
         }
 
         let f = match func.trim() {
             "open_or_close_dashboard" => {
-                println!("Registering open_or_close_dashboard function");
-                log::info!(target: "app", "Registering open_or_close_dashboard function");
+                logging!(
+                    info,
+                    Type::Hotkey,
+                    true,
+                    "Registering open_or_close_dashboard function"
+                );
                 || {
-                    println!("=== Hotkey Dashboard Window Operation Start ===");
-                    log::info!(target: "app", "=== Hotkey Dashboard Window Operation Start ===");
+                    logging!(
+                        info,
+                        Type::Hotkey,
+                        true,
+                        "=== Hotkey Dashboard Window Operation Start ==="
+                    );
 
                     // 使用 spawn_blocking 来确保在正确的线程上执行
                     async_runtime::spawn_blocking(|| {
-                        println!("Toggle dashboard window visibility");
-                        log::info!(target: "app", "Toggle dashboard window visibility");
+                        logging!(
+                            info,
+                            Type::Hotkey,
+                            true,
+                            "Toggle dashboard window visibility"
+                        );
 
                         // 检查窗口是否存在
                         if let Some(window) = handle::Handle::global().get_window() {
                             // 如果窗口可见，则隐藏它
                             if window.is_visible().unwrap_or(false) {
-                                println!("Window is visible, hiding it");
-                                log::info!(target: "app", "Window is visible, hiding it");
+                                logging!(info, Type::Window, true, "Window is visible, hiding it");
                                 let _ = window.hide();
                             } else {
                                 // 如果窗口不可见，则显示它
-                                println!("Window is hidden, showing it");
-                                log::info!(target: "app", "Window is hidden, showing it");
+                                logging!(info, Type::Window, true, "Window is hidden, showing it");
                                 if window.is_minimized().unwrap_or(false) {
                                     let _ = window.unminimize();
                                 }
@@ -135,14 +182,22 @@ impl Hotkey {
                             }
                         } else {
                             // 如果窗口不存在，创建一个新窗口
-                            println!("Window does not exist, creating a new one");
-                            log::info!(target: "app", "Window does not exist, creating a new one");
+                            logging!(
+                                info,
+                                Type::Window,
+                                true,
+                                "Window does not exist, creating a new one"
+                            );
                             resolve::create_window();
                         }
                     });
 
-                    println!("=== Hotkey Dashboard Window Operation End ===");
-                    log::info!(target: "app", "=== Hotkey Dashboard Window Operation End ===");
+                    logging!(
+                        info,
+                        Type::Hotkey,
+                        true,
+                        "=== Hotkey Dashboard Window Operation End ==="
+                    );
                 }
             }
             "clash_mode_rule" => || feat::change_clash_mode("rule".into()),
@@ -156,8 +211,7 @@ impl Hotkey {
             "hide" => || feat::hide(),
 
             _ => {
-                println!("Invalid function: {}", func);
-                log::error!(target: "app", "Invalid function: {}", func);
+                logging!(error, Type::Hotkey, true, "Invalid function: {}", func);
                 bail!("invalid function \"{func}\"");
             }
         };
@@ -166,21 +220,18 @@ impl Hotkey {
 
         let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey, event| {
             if event.state == ShortcutState::Pressed {
-                println!("Hotkey pressed: {:?}", hotkey);
-                log::info!(target: "app", "Hotkey pressed: {:?}", hotkey);
+                logging!(info, Type::Hotkey, true, "Hotkey pressed: {:?}", hotkey);
 
                 if hotkey.key == Code::KeyQ && is_quit {
                     if let Some(window) = app_handle.get_webview_window("main") {
                         if window.is_focused().unwrap_or(false) {
-                            println!("Executing quit function");
-                            log::info!(target: "app", "Executing quit function");
+                            logging!(info, Type::Hotkey, true, "Executing quit function");
                             f();
                         }
                     }
                 } else {
                     // 直接执行函数，不做任何状态检查
-                    println!("Executing function directly");
-                    log::info!(target: "app", "Executing function directly");
+                    logging!(info, Type::Hotkey, true, "Executing function directly");
 
                     // 获取全局热键状态
                     let is_enable_global_hotkey = Config::verge()
@@ -203,8 +254,14 @@ impl Hotkey {
             }
         });
 
-        println!("Successfully registered hotkey {} for {}", hotkey, func);
-        log::info!(target: "app", "Successfully registered hotkey {} for {}", hotkey, func);
+        logging!(
+            info,
+            Type::Hotkey,
+            true,
+            "Successfully registered hotkey {} for {}",
+            hotkey,
+            func
+        );
         Ok(())
     }
 
@@ -212,7 +269,7 @@ impl Hotkey {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let manager = app_handle.global_shortcut();
         manager.unregister(hotkey)?;
-        log::debug!(target: "app", "unregister hotkey {hotkey}");
+        logging!(debug, Type::Hotkey, true, "Unregister hotkey {}", hotkey);
         Ok(())
     }
 
@@ -285,7 +342,13 @@ impl Drop for Hotkey {
     fn drop(&mut self) {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         if let Err(e) = app_handle.global_shortcut().unregister_all() {
-            log::error!(target:"app", "Error unregistering all hotkeys: {:?}", e);
+            logging!(
+                error,
+                Type::Hotkey,
+                true,
+                "Error unregistering all hotkeys: {:?}",
+                e
+            );
         }
     }
 }
