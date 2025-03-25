@@ -177,9 +177,9 @@ export const CurrentProxyCard = () => {
         return;
       }
 
-      // 检查刷新间隔
+      // 检查刷新间隔，强制增加最小间隔
       const now = Date.now();
-      if (!force && now - lastRefreshRef.current < 1000) {
+      if (!force && now - lastRefreshRef.current < 1500) {
         return;
       }
 
@@ -260,31 +260,32 @@ export const CurrentProxyCard = () => {
       } finally {
         isRefreshingRef.current = false;
 
-        // 处理待处理的刷新请求
+        // 处理待处理的刷新请求，但增加延迟
         if (pendingRefreshRef.current) {
           pendingRefreshRef.current = false;
-          setTimeout(() => fetchProxyData(), 100);
+          setTimeout(() => fetchProxyData(), 500);
         }
       }
     },
     [isGlobalMode, isDirectMode],
   );
 
-  // 响应 currentProxy 变化
+  // 响应 currentProxy 变化，增加时间检查避免循环调用
   useEffect(() => {
     if (
       currentProxy &&
-      (!state.displayProxy || currentProxy.name !== state.displayProxy.name)
+      (!state.displayProxy || 
+       (currentProxy.name !== state.displayProxy.name && 
+        Date.now() - lastRefreshRef.current > 1000))
     ) {
       fetchProxyData(true);
     }
-  }, [currentProxy, fetchProxyData, state.displayProxy]);
+  }, [currentProxy, fetchProxyData]);
 
   // 监听模式变化，mode变化时刷新
   useEffect(() => {
     fetchProxyData(true);
   }, [mode, fetchProxyData]);
-
 
   // 计算要显示的代理选项 - 使用 useMemo 优化
   const proxyOptions = useMemo(() => {
@@ -308,11 +309,11 @@ export const CurrentProxyCard = () => {
     return [];
   }, [isDirectMode, isGlobalMode, state.proxyData, state.selection.group]);
 
-  // 使用防抖包装状态更新，避免快速连续更新
+  // 使用防抖包装状态更新，避免快速连续更新，增加防抖时间
   const debouncedSetState = useCallback(
     debounce((updateFn: (prev: ProxyState) => ProxyState) => {
       setState(updateFn);
-    }, 50),
+    }, 300),
     [],
   );
 
@@ -390,11 +391,12 @@ export const CurrentProxyCard = () => {
           });
         }
 
-        // 刷新代理信息，使用较短的延迟
+        // 延长刷新延迟时间
         setTimeout(() => {
           refreshProxy();
-          fetchProxyData(true);
-        }, 200);
+          // 给refreshProxy一点时间完成，再触发fetchProxyData
+          setTimeout(() => fetchProxyData(true), 300);
+        }, 500);
       } catch (error) {
         console.error("更新代理失败", error);
       }
