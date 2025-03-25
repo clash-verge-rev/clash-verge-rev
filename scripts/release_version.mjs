@@ -171,7 +171,7 @@ async function main(versionArg) {
     }
 
     console.log(`[INFO]: Updating versions to: ${newVersion}`);
-    await updatePackageVersion("v" + newVersion);
+    await updatePackageVersion(newVersion);
     await updateCargoVersion(newVersion);
     await updateTauriConfigVersion(newVersion);
     console.log("[SUCCESS]: All version updates completed successfully!");
@@ -181,6 +181,8 @@ async function main(versionArg) {
   }
 }
 
+// Example:
+// pnpm release-version 2.2.3-alpha
 // 设置命令行界面
 program
   .name("pnpm release-version")
