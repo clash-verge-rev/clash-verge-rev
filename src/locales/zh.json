@@ -486,7 +486,7 @@
   "Validate Merge File": "验证覆写文件",
   "Validation Success": "验证成功",
   "Validation Failed": "验证失败",
-  "Service Administrator Prompt": "Clash Verge 需要使用管理员权限来重新安装系统服务",
+  "Service Administrator Prompt": "Clash Verge 需要管理员权限安装系统服务",
   "DNS Settings": "DNS 设置",
   "DNS Overwrite": "DNS 覆写",
   "DNS Settings Warning": "如果你不清楚这里的设置请不要修改，并保持 DNS 覆写开启",
