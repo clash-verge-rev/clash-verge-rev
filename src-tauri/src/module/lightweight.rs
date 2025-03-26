@@ -85,7 +85,6 @@ fn setup_light_weight_timer() -> Result<()> {
     let once_by_minutes = Config::verge()
         .latest()
         .auto_light_weight_minutes
-        .clone()
         .unwrap_or(10);
 
     let task = TaskBuilder::default()

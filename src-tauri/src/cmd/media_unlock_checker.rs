@@ -623,12 +623,12 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                     }
 
                     // 如果无法解析区域信息
-                    return UnlockItem {
+                    UnlockItem {
                         name: "Netflix".to_string(),
                         status: "Unknown".to_string(),
                         region: None,
                         check_time: Some(get_local_date_string()),
-                    };
+                    }
                 }
                 Err(e) => {
                     eprintln!("解析Fast.com API响应失败: {}", e);

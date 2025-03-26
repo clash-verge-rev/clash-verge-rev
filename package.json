@@ -20,7 +20,7 @@
     "release-version": "node scripts/release_version.mjs",
     "release-alpha-version": "node scripts/release-alpha_version.mjs",
     "prepare": "husky",
-    "clean": "cd ./src-tauri && cargo clean && cd -"
+    "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -387,13 +387,13 @@ impl CoreManager {
             Ok(_) => {
                 Config::runtime().apply();
                 logging!(info, Type::Core, true, "Configuration updated successfully");
-                return Ok(());
+                Ok(())
             }
             Err(e) => {
                 let msg = e.to_string();
                 Config::runtime().discard();
                 logging_error!(Type::Core, true, "Failed to update configuration: {}", msg);
-                return Err(msg);
+                Err(msg)
             }
         }
     }
@@ -419,7 +419,7 @@ impl CoreManager {
                 "-d",
                 dirs::path_to_str(&config_dir)?,
                 "-f",
-                dirs::path_to_str(&config_file)?,
+                dirs::path_to_str(config_file)?,
             ])
             .spawn()?;
         let pid = child.pid();

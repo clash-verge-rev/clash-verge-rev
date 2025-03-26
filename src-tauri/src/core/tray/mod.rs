@@ -256,7 +256,7 @@ impl Tray {
                 *icon_bytes_guard = Some(icon_bytes.clone());
             }
 
-            if !enable_tray_speed || (!enable_tray_speed && !enable_tray_icon) {
+            if !enable_tray_speed {
                 let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(
                     &(*icon_bytes_guard).clone().unwrap(),
                 )?));

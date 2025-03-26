@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::{
-    core::{self, handle, CoreManager, RunningMode},
+    core::{handle, CoreManager},
     module::sysinfo::PlatformSpecification,
 };
 use once_cell::sync::Lazy;
