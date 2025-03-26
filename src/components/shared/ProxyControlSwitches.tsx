@@ -52,7 +52,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   );
 
   // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === RunningMode.Sidecar;
+  const isSidecarMode = runningMode === "Sidecar";
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);

@@ -147,7 +147,7 @@ export const ProxyTunCard: FC = () => {
   const { enable_system_proxy, enable_tun_mode } = verge ?? {};
 
   // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === RunningMode.Sidecar;
+  const isSidecarMode = runningMode === "Sidecar";
 
   // 处理错误
   const handleError = (err: Error) => {

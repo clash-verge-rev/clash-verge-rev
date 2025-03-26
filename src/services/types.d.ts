@@ -806,9 +806,3 @@ interface IWebDavConfig {
   username: string;
   password: string;
 }
-
-enum RunningMode {
-  Service = "Service",
-  Sidecar = "Sidecar",
-  NotRunning = "NotRunning",
-}
