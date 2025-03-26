@@ -35,10 +35,10 @@ delay_timer = "0.11.6"
 parking_lot = "0.12"
 percent-encoding = "2.3.1"
 tokio = { version = "1.44", features = [
-    "rt-multi-thread",
-    "macros",
-    "time",
-    "sync",
+  "rt-multi-thread",
+  "macros",
+  "time",
+  "sync",
 ] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "cookies"] }
@@ -47,17 +47,16 @@ sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", rev = "3d74
 image = "0.25.6"
 imageproc = "0.25.0"
 tauri = { version = "2.4.0", features = [
-    "protocol-asset",
-    "devtools",
-    "tray-icon",
-    "image-ico",
-    "image-png",
+  "protocol-asset",
+  "devtools",
+  "tray-icon",
+  "image-ico",
+  "image-png",
 ] }
 network-interface = { version = "2.0.0", features = ["serde"] }
 tauri-plugin-shell = "2.2.0"
 tauri-plugin-dialog = "2.2.0"
 tauri-plugin-fs = "2.2.0"
-tauri-plugin-notification = "2.2.2"
 tauri-plugin-process = "2.2.0"
 tauri-plugin-clipboard-manager = "2.2.2"
 tauri-plugin-deep-link = "2.2.0"

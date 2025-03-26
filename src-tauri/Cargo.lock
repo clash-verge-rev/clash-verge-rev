@@ -277,17 +277,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-fs"
-version = "2.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebcd09b382f40fcd159c2d695175b2ae620ffa5f3bd6f664131efff4e8b9e04a"
-dependencies = [
- "async-lock 3.4.0",
- "blocking",
- "futures-lite 2.6.0",
-]
-
-[[package]]
 name = "async-io"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -372,25 +361,6 @@ dependencies = [
  "futures-lite 1.13.0",
  "rustix 0.38.44",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "async-process"
-version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63255f1dc2381611000436537bbedfe83183faa303a5a0edaf191edef06526bb"
-dependencies = [
- "async-channel 2.3.1",
- "async-io 2.4.0",
- "async-lock 3.4.0",
- "async-signal",
- "async-task",
- "blocking",
- "cfg-if",
- "event-listener 5.3.0",
- "futures-lite 2.6.0",
- "rustix 0.38.44",
- "tracing",
 ]
 
 [[package]]
@@ -1118,7 +1088,6 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
  "tauri-plugin-global-shortcut",
- "tauri-plugin-notification",
  "tauri-plugin-process",
  "tauri-plugin-shell",
  "tauri-plugin-updater",
@@ -1762,16 +1731,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dirs-next"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b98cf8ebf19c3d1b223e151f99a4f9f0690dca41414773390fc824184ac833e1"
-dependencies = [
- "cfg-if",
- "dirs-sys-next",
-]
-
-[[package]]
 name = "dirs-sys"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1792,17 +1751,6 @@ dependencies = [
  "option-ext",
  "redox_users 0.5.0",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "dirs-sys-next"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ebda144c4fe02d1f7ea1a7d9641b6fc6b580adcfa024ae48797ecdeb6825b4d"
-dependencies = [
- "libc",
- "redox_users 0.4.6",
- "winapi",
 ]
 
 [[package]]
@@ -3796,19 +3744,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
 
 [[package]]
-name = "mac-notification-sys"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dce8f34f3717aa37177e723df6c1fc5fb02b2a1087374ea3fe0ea42316dc8f91"
-dependencies = [
- "cc",
- "dirs-next",
- "objc-foundation",
- "objc_id",
- "time",
-]
-
-[[package]]
 name = "malloc_buf"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4196,20 +4131,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
 
 [[package]]
-name = "notify-rust"
-version = "4.11.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fa3b9f2364a09bd359aa0206702882e208437450866a374d5372d64aece4029"
-dependencies = [
- "futures-lite 2.6.0",
- "log",
- "mac-notification-sys",
- "serde",
- "tauri-winrt-notification",
- "zbus",
-]
-
-[[package]]
 name = "ntapi"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4368,17 +4289,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "915b1b472bc21c53464d6c8461c9d3af805ba1ef837e1cac254428f4a77177b1"
 dependencies = [
  "malloc_buf",
-]
-
-[[package]]
-name = "objc-foundation"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1add1b659e36c9607c7aab864a76c7a4c2760cd0cd2e120f3fb8b952c7e22bf9"
-dependencies = [
- "block",
- "objc",
- "objc_id",
 ]
 
 [[package]]
@@ -4643,15 +4553,6 @@ dependencies = [
  "objc2-app-kit 0.3.0",
  "objc2-core-foundation",
  "objc2-foundation 0.3.0",
-]
-
-[[package]]
-name = "objc_id"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c92d4ddb4bd7b50d730c215ff871754d0da6b2178849f8a2a2ab69712d0c073b"
-dependencies = [
- "objc",
 ]
 
 [[package]]
@@ -5410,15 +5311,6 @@ name = "quick-error"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a993555f31e5a609f617c12db6250dedcac1b0a85076912c436e6fc9b2c8e6a3"
-
-[[package]]
-name = "quick-xml"
-version = "0.31.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1004a344b30a54e2ee58d66a71b32d2db2feb0a31f9a2d302bf0536f15de2a33"
-dependencies = [
- "memchr",
-]
 
 [[package]]
 name = "quick-xml"
@@ -6570,11 +6462,11 @@ checksum = "13f2b548cd8447f8de0fdf1c592929f70f4fc7039a05e47404b0d096ec6987a1"
 dependencies = [
  "async-channel 1.9.0",
  "async-executor",
- "async-fs 1.6.0",
+ "async-fs",
  "async-io 1.13.0",
  "async-lock 2.8.0",
  "async-net",
- "async-process 1.8.1",
+ "async-process",
  "blocking",
  "futures-lite 1.13.0",
 ]
@@ -7177,25 +7069,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-plugin-notification"
-version = "2.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c474c7cc524385e682ccc1e149e13913a66fd8586ac4c2319cf01b78f070d309"
-dependencies = [
- "log",
- "notify-rust",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "serde_repr",
- "tauri",
- "tauri-plugin",
- "thiserror 2.0.12",
- "time",
- "url",
-]
-
-[[package]]
 name = "tauri-plugin-process"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7367,17 +7240,6 @@ checksum = "56eaa45f707bedf34d19312c26d350bc0f3c59a47e58e8adbeecdc850d2c13a0"
 dependencies = [
  "embed-resource",
  "toml",
-]
-
-[[package]]
-name = "tauri-winrt-notification"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f89f5fb70d6f62381f5d9b2ba9008196150b40b75f3068eb24faeddf1c686871"
-dependencies = [
- "quick-xml 0.31.0",
- "windows 0.56.0",
- "windows-version",
 ]
 
 [[package]]
@@ -8723,16 +8585,6 @@ dependencies = [
 
 [[package]]
 name = "windows"
-version = "0.56.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1de69df01bdf1ead2f4ac895dc77c9351aefff65b2f3db429a343f9cbf05e132"
-dependencies = [
- "windows-core 0.56.0",
- "windows-targets 0.52.6",
-]
-
-[[package]]
-name = "windows"
 version = "0.57.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "12342cb4d8e3b046f3d80effd474a7a02447231330ef77d71daa6fbc40681143"
@@ -8779,18 +8631,6 @@ version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9"
 dependencies = [
- "windows-targets 0.52.6",
-]
-
-[[package]]
-name = "windows-core"
-version = "0.56.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4698e52ed2d08f8658ab0c39512a7c00ee5fe2688c65f8c0a4f06750d729f2a6"
-dependencies = [
- "windows-implement 0.56.0",
- "windows-interface 0.56.0",
- "windows-result 0.1.2",
  "windows-targets 0.52.6",
 ]
 
@@ -8844,17 +8684,6 @@ dependencies = [
 
 [[package]]
 name = "windows-implement"
-version = "0.56.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6fc35f58ecd95a9b71c4f2329b911016e6bec66b3f2e6a4aad86bd2e99e2f9b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.100",
-]
-
-[[package]]
-name = "windows-implement"
 version = "0.57.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9107ddc059d5b6fbfbffdfa7a7fe3e22a226def0b2608f72e9d552763d3e1ad7"
@@ -8880,17 +8709,6 @@ name = "windows-implement"
 version = "0.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83577b051e2f49a058c308f17f273b570a6a758386fc291b5f6a934dd84e48c1"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.100",
-]
-
-[[package]]
-name = "windows-interface"
-version = "0.56.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08990546bf4edef8f431fa6326e032865f27138718c587dc21bc0265bbcb57cc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -9553,15 +9371,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59c333f648ea1b647bc95dc1d34807c8e25ed7a6feff3394034dc4776054b236"
 dependencies = [
  "async-broadcast",
- "async-executor",
- "async-fs 2.1.2",
- "async-io 2.4.0",
- "async-lock 3.4.0",
- "async-process 2.3.0",
  "async-recursion",
- "async-task",
  "async-trait",
- "blocking",
  "enumflags2",
  "event-listener 5.3.0",
  "futures-core",

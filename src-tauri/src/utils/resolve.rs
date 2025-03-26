@@ -18,7 +18,6 @@ use tauri::{App, Manager};
 use tauri::Url;
 //#[cfg(not(target_os = "linux"))]
 // use window_shadows::set_shadow;
-use tauri_plugin_notification::NotificationExt;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
 
@@ -239,8 +238,6 @@ pub fn create_window() {
 pub async fn resolve_scheme(param: String) -> Result<()> {
     log::info!(target:"app", "received deep link: {}", param);
 
-    let app_handle = handle::Handle::global().app_handle().unwrap();
-
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param
             .get(2..param.len() - 2)
@@ -280,24 +277,9 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                         let uid = item.uid.clone().unwrap();
                         let _ = wrap_err!(Config::profiles().data().append_item(item));
                         handle::Handle::notice_message("import_sub_url::ok", uid);
-
-                        app_handle
-                            .notification()
-                            .builder()
-                            .title("Clash Verge")
-                            .body("Import profile success")
-                            .show()
-                            .unwrap();
                     }
                     Err(e) => {
                         handle::Handle::notice_message("import_sub_url::error", e.to_string());
-                        app_handle
-                            .notification()
-                            .builder()
-                            .title("Clash Verge")
-                            .body(format!("Import profile failed: {e}"))
-                            .show()
-                            .unwrap();
                     }
                 }
             }

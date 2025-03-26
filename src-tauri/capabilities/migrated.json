@@ -68,7 +68,6 @@
     "shell:allow-spawn",
     "shell:allow-stdin-write",
     "dialog:allow-open",
-    "notification:default",
     "global-shortcut:allow-is-registered",
     "global-shortcut:allow-register",
     "global-shortcut:allow-register-all",
@@ -79,7 +78,6 @@
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",
     "shell:default",
-    "dialog:default",
-    "notification:default"
+    "dialog:default"
   ]
 }
