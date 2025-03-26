@@ -15,7 +15,7 @@ use serde_yaml::Mapping;
 use std::net::TcpListener;
 use tauri::{App, Manager};
 
-use url::Url;
+use tauri::Url;
 //#[cfg(not(target_os = "linux"))]
 // use window_shadows::set_shadow;
 use tauri_plugin_notification::NotificationExt;

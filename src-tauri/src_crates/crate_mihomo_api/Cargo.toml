@@ -6,9 +6,9 @@ edition = "2024"
 debug = []
 
 [dependencies]
-reqwest = { version = "0.12.12", features = ["json"] }
-serde = { version = "1.0.218", features = ["derive"] }
+reqwest = { version = "0.12.15", features = ["json"] }
+serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
 [dev-dependencies]
-tokio = { version = "1.43.0", features = ["rt", "macros"] }
+tokio = { version = "1.44.1", features = ["rt", "macros"] }
