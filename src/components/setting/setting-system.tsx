@@ -58,7 +58,7 @@ const SettingSystem = ({ onError }: Props) => {
   }, [autoLaunchEnabled]);
 
   // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === "Sidecar";
+  const isSidecarMode = runningMode === RunningMode.Sidecar;
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);

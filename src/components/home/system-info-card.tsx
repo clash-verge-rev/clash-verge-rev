@@ -31,7 +31,7 @@ export const SystemInfoCard = () => {
   );
 
   // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === "Sidecar";
+  const isSidecarMode = runningMode === RunningMode.Sidecar;
 
   // 初始化系统信息
   useEffect(() => {
