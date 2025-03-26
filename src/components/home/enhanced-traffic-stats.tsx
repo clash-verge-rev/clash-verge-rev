@@ -28,6 +28,7 @@ import { createAuthSockette } from "@/utils/websocket";
 import parseTraffic from "@/utils/parse-traffic";
 import { getConnections, isDebugEnabled, gc } from "@/services/api";
 import { ReactNode } from "react";
+import { useAppData } from "@/providers/app-data-provider";
 
 interface MemoryUsage {
   inuse: number;
@@ -157,11 +158,13 @@ export const EnhancedTrafficStats = () => {
   const pageVisible = useVisibility();
   const [isDebug, setIsDebug] = useState(false);
   
+  // 使用AppDataProvider
+  const { connections, uptime } = useAppData();
+  
   // 使用单一状态对象减少状态更新次数
   const [stats, setStats] = useState({
     traffic: { up: 0, down: 0 },
     memory: { inuse: 0, oslimit: undefined as number | undefined },
-    connections: { uploadTotal: 0, downloadTotal: 0, activeConnections: 0 },
   });
 
   // 创建一个标记来追踪最后更新时间，用于节流
@@ -175,36 +178,6 @@ export const EnhancedTrafficStats = () => {
     traffic: null as ReturnType<typeof createAuthSockette> | null,
     memory: null as ReturnType<typeof createAuthSockette> | null,
   });
-
-  // 获取连接数据
-  const fetchConnections = useCallback(async () => {
-    if (!pageVisible) return;
-    
-    try {
-      const connections = await getConnections();
-      if (connections) {
-        setStats(prev => ({
-          ...prev,
-          connections: {
-            uploadTotal: connections.uploadTotal || 0,
-            downloadTotal: connections.downloadTotal || 0,
-            activeConnections: connections.connections ? connections.connections.length : 0,
-          }
-        }));
-      }
-    } catch (err) {
-      console.error("Failed to fetch connections:", err);
-    }
-  }, [pageVisible]);
-
-  // 定期更新连接数据
-  useEffect(() => {
-    if (!pageVisible) return;
-    
-    fetchConnections();
-    const intervalId = setInterval(fetchConnections, CONNECTIONS_UPDATE_INTERVAL);
-    return () => clearInterval(intervalId);
-  }, [pageVisible, fetchConnections]);
 
   // 检查是否支持调试
   useEffect(() => {
@@ -328,14 +301,14 @@ export const EnhancedTrafficStats = () => {
     const [up, upUnit] = parseTraffic(stats.traffic.up);
     const [down, downUnit] = parseTraffic(stats.traffic.down);
     const [inuse, inuseUnit] = parseTraffic(stats.memory.inuse);
-    const [uploadTotal, uploadTotalUnit] = parseTraffic(stats.connections.uploadTotal);
-    const [downloadTotal, downloadTotalUnit] = parseTraffic(stats.connections.downloadTotal);
+    const [uploadTotal, uploadTotalUnit] = parseTraffic(connections.uploadTotal);
+    const [downloadTotal, downloadTotalUnit] = parseTraffic(connections.downloadTotal);
     
     return {
       up, upUnit, down, downUnit, inuse, inuseUnit,
       uploadTotal, uploadTotalUnit, downloadTotal, downloadTotalUnit
     };
-  }, [stats]);
+  }, [stats, connections.uploadTotal, connections.downloadTotal]);
 
   // 渲染流量图表 - 使用useMemo缓存渲染结果
   const trafficGraphComponent = useMemo(() => {
@@ -398,7 +371,7 @@ export const EnhancedTrafficStats = () => {
     {
       icon: <LinkRounded fontSize="small" />,
       title: t("Active Connections"),
-      value: stats.connections.activeConnections,
+      value: connections.count,
       unit: "",
       color: "success" as const,
     },
@@ -424,7 +397,7 @@ export const EnhancedTrafficStats = () => {
       color: "error" as const,
       onClick: isDebug ? handleGarbageCollection : undefined,
     },
-  ], [t, parsedData, stats.connections.activeConnections, isDebug, handleGarbageCollection]);
+  ], [t, parsedData, connections.count, isDebug, handleGarbageCollection]);
 
   return (
     <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>

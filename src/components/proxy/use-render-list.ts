@@ -1,6 +1,4 @@
-import useSWR from "swr";
 import { useEffect, useMemo, useCallback } from "react";
-import { getProxies } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import { filterSort } from "./use-filter-sort";
 import { useWindowWidth } from "./use-window-width";
@@ -9,12 +7,52 @@ import {
   DEFAULT_STATE,
   type HeadState,
 } from "./use-head-state";
+import { useAppData } from "@/providers/app-data-provider";
+
+// 定义代理项接口
+interface IProxyItem {
+  name: string;
+  type: string;
+  udp: boolean;
+  xudp: boolean;
+  tfo: boolean;
+  mptcp: boolean;
+  smux: boolean;
+  history: {
+    time: string;
+    delay: number;
+  }[];
+  provider?: string;
+  testUrl?: string;
+  [key: string]: any; // 添加索引签名以适应其他可能的属性
+}
+
+// 代理组类型
+type ProxyGroup = {
+  name: string;
+  type: string;
+  udp: boolean;
+  xudp: boolean;
+  tfo: boolean;
+  mptcp: boolean;
+  smux: boolean;
+  history: {
+    time: string;
+    delay: number;
+  }[];
+  now: string;
+  all: IProxyItem[];
+  hidden?: boolean;
+  icon?: string;
+  testUrl?: string;
+  provider?: string;
+};
 
 export interface IRenderItem {
   // 组 | head | item | empty | item col
   type: 0 | 1 | 2 | 3 | 4;
   key: string;
-  group: IProxyGroupItem;
+  group: ProxyGroup;
   proxy?: IProxyItem;
   col?: number;
   proxyCol?: IProxyItem[];
@@ -51,16 +89,8 @@ const groupProxies = <T = any>(list: T[], size: number): T[][] => {
 };
 
 export const useRenderList = (mode: string) => {
-  const { data: proxiesData, mutate: mutateProxies } = useSWR(
-    "getProxies",
-    getProxies,
-    {
-      refreshInterval: 2000,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: true,
-    },
-  );
-
+  // 使用全局数据提供者
+  const { proxies: proxiesData, refreshProxy } = useAppData();
   const { verge } = useVerge();
   const { width } = useWindowWidth();
   const [headStates, setHeadState] = useHeadStateNew();
@@ -80,9 +110,9 @@ export const useRenderList = (mode: string) => {
       (mode === "rule" && !groups.length) ||
       (mode === "global" && proxies.length < 2)
     ) {
-      setTimeout(() => mutateProxies(), 500);
+      setTimeout(() => refreshProxy(), 500);
     }
-  }, [proxiesData, mode, mutateProxies]);
+  }, [proxiesData, mode, refreshProxy]);
 
   // 处理渲染列表
   const renderList: IRenderItem[] = useMemo(() => {
@@ -94,7 +124,7 @@ export const useRenderList = (mode: string) => {
         ? proxiesData.groups
         : [proxiesData.global!];
 
-    const retList = renderGroups.flatMap((group) => {
+    const retList = renderGroups.flatMap((group: ProxyGroup) => {
       const headState = headStates[group.name] || DEFAULT_STATE;
       const ret: IRenderItem[] = [
         {
@@ -158,12 +188,12 @@ export const useRenderList = (mode: string) => {
     });
 
     if (!useRule) return retList.slice(1);
-    return retList.filter((item) => !item.group.hidden);
+    return retList.filter((item: IRenderItem) => !item.group.hidden);
   }, [headStates, proxiesData, mode, col]);
 
   return {
     renderList,
-    onProxies: mutateProxies,
+    onProxies: refreshProxy,
     onHeadState: setHeadState,
     currentColumns: col,
   };

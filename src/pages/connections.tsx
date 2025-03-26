@@ -11,7 +11,6 @@ import {
 } from "@mui/icons-material";
 import { closeAllConnections } from "@/services/api";
 import { useConnectionSetting } from "@/services/states";
-import { useClashInfo } from "@/hooks/use-clash";
 import { BaseEmpty, BasePage } from "@/components/base";
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
@@ -25,10 +24,9 @@ import {
   type SearchState,
 } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
-import useSWRSubscription from "swr/subscription";
-import { createSockette, createAuthSockette } from "@/utils/websocket";
 import { useTheme } from "@mui/material/styles";
 import { useVisibility } from "@/hooks/use-visibility";
+import { useAppData } from "@/providers/app-data-provider";
 
 const initConn: IConnections = {
   uploadTotal: 0,
@@ -40,12 +38,14 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
 const ConnectionsPage = () => {
   const { t } = useTranslation();
-  const { clashInfo } = useClashInfo();
   const pageVisible = useVisibility();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
+  
+  // 使用全局数据
+  const { connections } = useAppData();
 
   const [setting, setSetting] = useConnectionSetting();
 
@@ -66,99 +66,37 @@ const ConnectionsPage = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [frozenData, setFrozenData] = useState<IConnections | null>(null);
 
-  const { data: connData = initConn } = useSWRSubscription<
-    IConnections,
-    any,
-    "getClashConnections" | null
-  >(
-    clashInfo && pageVisible ? "getClashConnections" : null,
-    (_key, { next }) => {
-      const { server = "", secret = "" } = clashInfo!;
-
-      if (!server) {
-        console.warn("[Connections] 服务器地址为空，无法建立连接");
-        next(null, initConn);
-        return () => {};
-      }
-
-      console.log(`[Connections] 正在连接: ${server}/connections`);
-
-      // 设置较长的超时时间，确保连接可以建立
-      const s = createAuthSockette(`${server}/connections`, secret, {
-        timeout: 8000, // 8秒超时
-        onmessage(event) {
-          const data = JSON.parse(event.data) as IConnections;
-          next(null, (old = initConn) => {
-            const oldConn = old.connections;
-            const maxLen = data.connections?.length;
-
-            const connections: IConnectionsItem[] = [];
-
-            const rest = (data.connections || []).filter((each) => {
-              const index = oldConn.findIndex((o) => o.id === each.id);
-
-              if (index >= 0 && index < maxLen) {
-                const old = oldConn[index];
-                each.curUpload = each.upload - old.upload;
-                each.curDownload = each.download - old.download;
-
-                connections[index] = each;
-                return false;
-              }
-              return true;
-            });
-
-            for (let i = 0; i < maxLen; ++i) {
-              if (!connections[i] && rest.length > 0) {
-                connections[i] = rest.shift()!;
-                connections[i].curUpload = 0;
-                connections[i].curDownload = 0;
-              }
-            }
-
-            return { ...data, connections };
-          });
-        },
-        onerror(event) {
-          console.error("[Connections] WebSocket 连接错误", event);
-          // 报告错误但提供空数据，避免UI崩溃
-          next(null, initConn);
-        },
-        onclose(event) {
-          console.log("[Connections] WebSocket 连接关闭", event);
-        },
-        onopen(event) {
-          console.log("[Connections] WebSocket 连接已建立");
-        },
-      });
-
-      return () => {
-        console.log("[Connections] 清理WebSocket连接");
-        try {
-          s.close();
-        } catch (e) {
-          console.error("[Connections] 关闭连接时出错", e);
-        }
-      };
-    },
-  );
-
+  // 使用全局连接数据
   const displayData = useMemo(() => {
-    return isPaused ? (frozenData ?? connData) : connData;
-  }, [isPaused, frozenData, connData]);
+    if (!pageVisible) return initConn;
+    
+    if (isPaused) {
+      return frozenData ?? {
+        uploadTotal: connections.uploadTotal,
+        downloadTotal: connections.downloadTotal,
+        connections: connections.data
+      };
+    }
+    
+    return {
+      uploadTotal: connections.uploadTotal,
+      downloadTotal: connections.downloadTotal,
+      connections: connections.data
+    };
+  }, [isPaused, frozenData, connections, pageVisible]);
 
   const [filterConn] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
-    let connections = displayData.connections.filter((conn) => {
+    let conns = displayData.connections.filter((conn) => {
       const { host, destinationIP, process } = conn.metadata;
       return (
         match(host || "") || match(destinationIP || "") || match(process || "")
       );
     });
 
-    if (orderFunc) connections = orderFunc(connections);
+    if (orderFunc) conns = orderFunc(conns);
 
-    return [connections];
+    return [conns];
   }, [displayData, match, curOrderOpt]);
 
   const onCloseAll = useLockFn(closeAllConnections);
@@ -172,13 +110,17 @@ const ConnectionsPage = () => {
   const handlePauseToggle = useCallback(() => {
     setIsPaused((prev) => {
       if (!prev) {
-        setFrozenData(connData);
+        setFrozenData({
+          uploadTotal: connections.uploadTotal,
+          downloadTotal: connections.downloadTotal,
+          connections: connections.data
+        });
       } else {
         setFrozenData(null);
       }
       return !prev;
     });
-  }, [connData]);
+  }, [connections]);
 
   return (
     <BasePage

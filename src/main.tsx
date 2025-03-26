@@ -19,6 +19,7 @@ import {
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
+import { AppDataProvider } from "./providers/app-data-provider";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -51,9 +52,11 @@ createRoot(container).render(
   <React.StrictMode>
     <ComposeContextProvider contexts={contexts}>
       <BaseErrorBoundary>
-        <BrowserRouter>
-          <Layout />
-        </BrowserRouter>
+        <AppDataProvider>
+          <BrowserRouter>
+            <Layout />
+          </BrowserRouter>
+        </AppDataProvider>
       </BaseErrorBoundary>
     </ComposeContextProvider>
   </React.StrictMode>

@@ -25,10 +25,10 @@ import { downloadIconCache } from "@/services/cmds";
 interface RenderProps {
   item: IRenderItem;
   indent: boolean;
-  onLocation: (group: IProxyGroupItem) => void;
+  onLocation: (group: IRenderItem["group"]) => void;
   onCheckAll: (groupName: string) => void;
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void;
-  onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void;
+  onChangeProxy: (group: IRenderItem["group"], proxy: IRenderItem["proxy"] & { name: string }) => void;
 }
 
 export const ProxyRender = (props: RenderProps) => {

@@ -203,7 +203,7 @@ const HomeSettingsDialog = ({
   );
 };
 
-const HomePage = () => {
+export const HomePage = () => {
   const { t } = useTranslation();
   const { verge } = useVerge();
   const { current, mutateProfiles } = useProfiles();

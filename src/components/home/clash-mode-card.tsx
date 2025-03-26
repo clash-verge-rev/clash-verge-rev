@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Box, Typography, Paper, Stack, Fade } from "@mui/material";
 import { useLockFn } from "ahooks";
-import useSWR from "swr";
-import { closeAllConnections, getClashConfig } from "@/services/api";
+import { closeAllConnections } from "@/services/api";
 import { patchClashMode } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import {
@@ -11,22 +10,12 @@ import {
   DirectionsRounded,
 } from "@mui/icons-material";
 import { useMemo } from "react";
+import { useAppData } from "@/providers/app-data-provider";
 
 export const ClashModeCard = () => {
   const { t } = useTranslation();
   const { verge } = useVerge();
-
-  // 获取当前Clash配置
-  const { data: clashConfig, mutate: mutateClash } = useSWR(
-    "getClashConfig",
-    getClashConfig,
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: true,
-      dedupingInterval: 1000,
-      errorRetryInterval: 5000
-    }
-  );
+  const { clashConfig, refreshProxy } = useAppData();
 
   // 支持的模式列表
   const modeList = useMemo(() => ["rule", "global", "direct"] as const, []);
@@ -50,7 +39,8 @@ export const ClashModeCard = () => {
 
     try {
       await patchClashMode(mode);
-      mutateClash();
+      // 使用共享的刷新方法
+      refreshProxy();
     } catch (error) {
       console.error("Failed to change mode:", error);
     }

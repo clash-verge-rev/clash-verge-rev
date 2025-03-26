@@ -1,32 +1,25 @@
-import useSWR from "swr";
 import { useMemo } from "react";
-import { getProxies } from "@/services/api";
-import { getClashConfig } from "@/services/api";
+import { useAppData } from "@/providers/app-data-provider";
+
+// 定义代理组类型
+interface ProxyGroup {
+  name: string;
+  now: string;
+}
 
 // 获取当前代理节点信息的自定义Hook
 export const useCurrentProxy = () => {
-  // 获取代理信息
-  const { data: proxiesData, mutate: mutateProxies } = useSWR(
-    "getProxies",
-    getProxies,
-    {
-      refreshInterval: 2000,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: true,
-    },
-  );
-
-  // 获取当前Clash配置（包含模式信息）
-  const { data: clashConfig } = useSWR("getClashConfig", getClashConfig);
+  // 从AppDataProvider获取数据
+  const { proxies, clashConfig, refreshProxy } = useAppData();
 
   // 获取当前模式
   const currentMode = clashConfig?.mode?.toLowerCase() || "rule";
 
   // 获取当前代理节点信息
   const currentProxyInfo = useMemo(() => {
-    if (!proxiesData) return { currentProxy: null, primaryGroupName: null };
+    if (!proxies) return { currentProxy: null, primaryGroupName: null };
 
-    const { global, groups, records } = proxiesData;
+    const { global, groups, records } = proxies;
 
     // 默认信息
     let primaryGroupName = "GLOBAL";
@@ -43,11 +36,11 @@ export const useCurrentProxy = () => {
         "自动选择",
       ];
       const primaryGroup =
-        groups.find((group) =>
+        groups.find((group: ProxyGroup) =>
           primaryKeywords.some((keyword) =>
             group.name.toLowerCase().includes(keyword.toLowerCase()),
           ),
-        ) || groups.filter((g) => g.name !== "GLOBAL")[0];
+        ) || groups.filter((g: ProxyGroup) => g.name !== "GLOBAL")[0];
 
       if (primaryGroup) {
         primaryGroupName = primaryGroup.name;
@@ -71,12 +64,12 @@ export const useCurrentProxy = () => {
     };
 
     return { currentProxy, primaryGroupName };
-  }, [proxiesData, currentMode]);
+  }, [proxies, currentMode]);
 
   return {
     currentProxy: currentProxyInfo.currentProxy,
     primaryGroupName: currentProxyInfo.primaryGroupName,
     mode: currentMode,
-    refreshProxy: mutateProxies,
+    refreshProxy,
   };
 };

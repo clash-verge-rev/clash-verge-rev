@@ -1,28 +1,27 @@
-import useSWR from "swr";
 import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Box } from "@mui/material";
-import { getRules } from "@/services/api";
 import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { useTheme } from "@mui/material/styles";
 import { ScrollTopButton } from "@/components/layout/scroll-top-button";
+import { useAppData } from "@/providers/app-data-provider";
 
 const RulesPage = () => {
   const { t } = useTranslation();
-  const { data = [] } = useSWR("getRules", getRules);
+  const { rules = [] } = useAppData();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const rules = useMemo(() => {
-    return data.filter((item) => match(item.payload));
-  }, [data, match]);
+  const filteredRules = useMemo(() => {
+    return rules.filter((item) => match(item.payload));
+  }, [rules, match]);
 
   const scrollToTop = () => {
     virtuosoRef.current?.scrollTo({
@@ -64,11 +63,11 @@ const RulesPage = () => {
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
-      {rules.length > 0 ? (
+      {filteredRules.length > 0 ? (
         <>
           <Virtuoso
             ref={virtuosoRef}
-            data={rules}
+            data={filteredRules}
             style={{
               flex: 1,
             }}

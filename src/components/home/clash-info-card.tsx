@@ -1,13 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { Typography, Stack, Divider } from "@mui/material";
 import { DeveloperBoardOutlined } from "@mui/icons-material";
-import { useClashInfo } from "@/hooks/use-clash";
 import { useClash } from "@/hooks/use-clash";
 import { EnhancedCard } from "./enhanced-card";
-import useSWR from "swr";
-import { getRules } from "@/services/api";
-import { getAppUptime, getSystemProxy } from "@/services/cmds";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
+import { useAppData } from "@/providers/app-data-provider";
 
 // 将毫秒转换为时:分:秒格式的函数
 const formatUptime = (uptimeMs: number) => {
@@ -19,37 +16,15 @@ const formatUptime = (uptimeMs: number) => {
 
 export const ClashInfoCard = () => {
   const { t } = useTranslation();
-  const { clashInfo } = useClashInfo();
   const { version: clashVersion } = useClash();
-  const [sysproxy, setSysproxy] = useState<{ server: string; enable: boolean; bypass: string } | null>(null);
-  const [rules, setRules] = useState<any[]>([]);
-
-  // 使用SWR获取应用运行时间，降低更新频率
-  const { data: uptimeMs = 0 } = useSWR(
-    "appUptime",
-    getAppUptime,
-    {
-      refreshInterval: 1000,
-      revalidateOnFocus: false,
-      dedupingInterval: 1000,
-    },
-  );
-
-  // 在组件加载时获取系统代理信息和规则数据
-  useEffect(() => {
-    // 获取系统代理信息
-    getSystemProxy().then(setSysproxy);
-    
-    // 获取规则数据
-    getRules().then(setRules).catch(() => setRules([]));
-  }, []);
+  const { clashConfig, sysproxy, rules, uptime } = useAppData();
 
   // 使用useMemo缓存格式化后的uptime，避免频繁计算
-  const uptime = useMemo(() => formatUptime(uptimeMs), [uptimeMs]);
+  const formattedUptime = useMemo(() => formatUptime(uptime), [uptime]);
 
   // 使用备忘录组件内容，减少重新渲染
   const cardContent = useMemo(() => {
-    if (!clashInfo) return null;
+    if (!clashConfig) return null;
     
     return (
       <Stack spacing={1.5}>
@@ -76,7 +51,7 @@ export const ClashInfoCard = () => {
             {t("Mixed Port")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
-            {clashInfo.mixed_port || "-"}
+            {clashConfig["mixed-port"] || "-"}
           </Typography>
         </Stack>
         <Divider />
@@ -85,7 +60,7 @@ export const ClashInfoCard = () => {
             {t("Uptime")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
-            {uptime}
+            {formattedUptime}
           </Typography>
         </Stack>
         <Divider />
@@ -99,7 +74,7 @@ export const ClashInfoCard = () => {
         </Stack>
       </Stack>
     );
-  }, [clashInfo, clashVersion, t, uptime, rules.length, sysproxy]);
+  }, [clashConfig, clashVersion, t, formattedUptime, rules.length, sysproxy]);
 
   return (
     <EnhancedCard

@@ -18,13 +18,8 @@ import {
   HelpOutlineRounded,
   SvgIconComponent,
 } from "@mui/icons-material";
-import useSWR from "swr";
-import {
-  getSystemProxy,
-  getAutotemProxy,
-  getRunningMode,
-} from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
+import { useAppData } from "@/providers/app-data-provider";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
 
@@ -150,8 +145,7 @@ export const ProxyTunCard: FC = () => {
   );
 
   // 获取代理状态信息
-  const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
-  const { data: runningMode } = useSWR("getRunningMode", getRunningMode);
+  const { sysproxy, runningMode } = useAppData();
   const { verge } = useVerge();
 
   // 从verge配置中获取开关状态

@@ -27,6 +27,7 @@ import { openWebUrl, updateProfile } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { Notice } from "@/components/base";
 import { EnhancedCard } from "./enhanced-card";
+import { useAppData } from "@/providers/app-data-provider";
 
 // 定义旋转动画
 const round = keyframes`
@@ -270,6 +271,7 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
 export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { refreshAll } = useAppData();
   
   // 更新当前订阅
   const [updating, setUpdating] = useState(false);
@@ -282,6 +284,9 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
       await updateProfile(current.uid);
       Notice.success(t("Update subscription successfully"));
       onProfileUpdated?.();
+      
+      // 刷新首页数据
+      refreshAll();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
     } finally {
