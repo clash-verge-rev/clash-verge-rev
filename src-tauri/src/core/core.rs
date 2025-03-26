@@ -511,13 +511,6 @@ impl CoreManager {
         Ok(())
     }
 
-    /// 强制重新安装服务（供UI调用，用户主动修复服务）
-    pub async fn repair_service(&self) -> Result<()> {
-        service::force_reinstall_service().await?;
-        self.restart_core().await?;
-        Ok(())
-    }
-
     /// 切换核心
     pub async fn change_core(&self, clash_core: Option<String>) -> Result<(), String> {
         if clash_core.is_none() {
