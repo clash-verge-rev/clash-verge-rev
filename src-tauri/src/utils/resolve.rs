@@ -3,9 +3,9 @@ use crate::AppHandleManager;
 use crate::{
     config::{Config, IVerge, PrfItem},
     core::*,
-    log_err,
+    log_err, logging,
     module::lightweight,
-    utils::{error, init, server},
+    utils::{error, init, logging::Type, server},
     wrap_err,
 };
 use anyhow::{bail, Result};
@@ -62,34 +62,34 @@ pub async fn resolve_setup(app: &mut App) {
     log::trace!(target:"app", "init config");
     log_err!(Config::init_config().await);
 
-    if service::check_service().await.is_err() {
-        match service::install_service().await {
-            Ok(_) => {
-                log::info!(target:"app", "install service susccess.");
-                #[cfg(not(target_os = "macos"))]
-                std::thread::sleep(std::time::Duration::from_millis(1000));
-                #[cfg(target_os = "macos")]
-                {
-                    let mut service_runing = false;
-                    for _ in 0..40 {
-                        if service::check_service().await.is_ok() {
-                            service_runing = true;
-                            break;
-                        } else {
-                            log::warn!(target: "app", "service not runing, sleep 500ms and check again.");
-                            std::thread::sleep(std::time::Duration::from_millis(500));
-                        }
-                    }
-                    if !service_runing {
-                        log::warn!(target: "app", "service not running, will fallback to user mode");
-                    }
-                }
-            }
-            Err(e) => {
-                log::warn!(target: "app", "failed to install service: {e:?}, will fallback to user mode");
-            }
-        }
-    }
+    // if service::check_service().await.is_err() {
+    //     match service::install_service().await {
+    //         Ok(_) => {
+    //             log::info!(target:"app", "install service susccess.");
+    //             #[cfg(not(target_os = "macos"))]
+    //             std::thread::sleep(std::time::Duration::from_millis(1000));
+    //             #[cfg(target_os = "macos")]
+    //             {
+    //                 let mut service_runing = false;
+    //                 for _ in 0..40 {
+    //                     if service::check_service().await.is_ok() {
+    //                         service_runing = true;
+    //                         break;
+    //                     } else {
+    //                         log::warn!(target: "app", "service not runing, sleep 500ms and check again.");
+    //                         std::thread::sleep(std::time::Duration::from_millis(500));
+    //                     }
+    //                 }
+    //                 if !service_runing {
+    //                     log::warn!(target: "app", "service not running, will fallback to user mode");
+    //                 }
+    //             }
+    //         }
+    //         Err(e) => {
+    //             log::warn!(target: "app", "failed to install service: {e:?}, will fallback to user mode");
+    //         }
+    //     }
+    // }
 
     log::trace!(target: "app", "launch core");
     log_err!(CoreManager::global().init().await);
@@ -138,20 +138,27 @@ pub fn resolve_reset() {
 
 /// create main window
 pub fn create_window() {
-    println!("Starting to create window");
-    log::info!(target: "app", "Starting to create window");
+    logging!(info, Type::Window, true, "Creating window");
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
     #[cfg(target_os = "macos")]
     AppHandleManager::global().set_activation_policy_regular();
 
     if let Some(window) = handle::Handle::global().get_window() {
-        println!("Found existing window, trying to show it");
-        log::info!(target: "app", "Found existing window, trying to show it");
+        logging!(
+            info,
+            Type::Window,
+            true,
+            "Found existing window, attempting to restore visibility"
+        );
 
         if window.is_minimized().unwrap_or(false) {
-            println!("Window is minimized, unminimizing");
-            log::info!(target: "app", "Window is minimized, unminimizing");
+            logging!(
+                info,
+                Type::Window,
+                true,
+                "Window is minimized, restoring window state"
+            );
             let _ = window.unminimize();
         }
         let _ = window.show();
@@ -159,8 +166,7 @@ pub fn create_window() {
         return;
     }
 
-    println!("Creating new window");
-    log::info!(target: "app", "Creating new window");
+    logging!(info, Type::Window, true, "Creating new application window");
 
     #[cfg(target_os = "windows")]
     let window = tauri::WebviewWindowBuilder::new(
@@ -206,8 +212,12 @@ pub fn create_window() {
 
     match window {
         Ok(window) => {
-            println!("Window created successfully, attempting to show");
-            log::info!(target: "app", "Window created successfully, attempting to show");
+            logging!(
+                info,
+                Type::Window,
+                true,
+                "Window created successfully, making window visible"
+            );
             let _ = window.show();
             let _ = window.set_focus();
 
@@ -215,8 +225,13 @@ pub fn create_window() {
             crate::feat::setup_window_state_monitor(&app_handle);
         }
         Err(e) => {
-            println!("Failed to create window: {:?}", e);
-            log::error!(target: "app", "Failed to create window: {:?}", e);
+            logging!(
+                error,
+                Type::Window,
+                true,
+                "Failed to create window: {:?}",
+                e
+            );
         }
     }
 }

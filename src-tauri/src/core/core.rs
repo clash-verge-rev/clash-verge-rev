@@ -188,16 +188,22 @@ impl CoreManager {
             return Ok((true, String::new()));
         }
 
-        logging!(info, Type::Core, true, "开始验证配置文件: {}", config_path);
+        logging!(
+            info,
+            Type::Config,
+            true,
+            "开始验证配置文件: {}",
+            config_path
+        );
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
         let clash_core = clash_core.unwrap_or("verge-mihomo".into());
-        logging!(info, Type::Core, true, "使用内核: {}", clash_core);
+        logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let test_dir = dirs::app_home_dir()?.join("test");
         let test_dir = dirs::path_to_str(&test_dir)?;
-        logging!(info, Type::Core, true, "测试目录: {}", test_dir);
+        logging!(info, Type::Config, true, "测试目录: {}", test_dir);
 
         // 使用子进程运行clash验证配置
         let output = app_handle
@@ -215,14 +221,14 @@ impl CoreManager {
         let has_error =
             !output.status.success() || error_keywords.iter().any(|&kw| stderr.contains(kw));
 
-        logging!(info, Type::Core, true, "-------- 验证结果 --------");
+        logging!(info, Type::Config, true, "-------- 验证结果 --------");
 
         if !stderr.is_empty() {
             logging!(info, Type::Core, true, "stderr输出:\n{}", stderr);
         }
 
         if has_error {
-            logging!(info, Type::Core, true, "发现错误，开始处理错误信息");
+            logging!(info, Type::Config, true, "发现错误，开始处理错误信息");
             let error_msg = if !stdout.is_empty() {
                 stdout.to_string()
             } else if !stderr.is_empty() {
@@ -233,11 +239,11 @@ impl CoreManager {
                 "验证进程被终止".to_string()
             };
 
-            logging!(info, Type::Core, true, "-------- 验证结束 --------\n");
+            logging!(info, Type::Config, true, "-------- 验证结束 --------");
             Ok((false, error_msg)) // 返回错误消息给调用者处理
         } else {
-            logging!(info, Type::Core, true, "验证成功");
-            logging!(info, Type::Core, true, "-------- 验证结束 --------\n");
+            logging!(info, Type::Config, true, "验证成功");
+            logging!(info, Type::Config, true, "-------- 验证结束 --------");
             Ok((true, String::new()))
         }
     }

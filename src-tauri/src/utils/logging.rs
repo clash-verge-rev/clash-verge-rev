@@ -6,6 +6,7 @@ pub enum Type {
     Service,
     Hotkey,
     Window,
+    Config,
 }
 
 impl fmt::Display for Type {
@@ -15,6 +16,7 @@ impl fmt::Display for Type {
             Type::Service => write!(f, "[Service]"),
             Type::Hotkey => write!(f, "[Hotkey]"),
             Type::Window => write!(f, "[Window]"),
+            Type::Config => write!(f, "[Config]"),
         }
     }
 }

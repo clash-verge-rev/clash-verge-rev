@@ -1,12 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{
-        handle,
-        service::{install_service, is_service_available, reinstall_service},
-        CoreManager,
-    },
-    logging, logging_error,
-    utils::logging::Type,
+    core::handle,
 };
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt;
