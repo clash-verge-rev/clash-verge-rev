@@ -196,7 +196,7 @@ pub struct IVerge {
 
     /// 自动进入轻量模式的延迟（分钟）
     pub auto_light_weight_minutes: Option<u64>,
-    
+
     /// 服务状态跟踪
     pub service_state: Option<crate::core::service::ServiceState>,
 }

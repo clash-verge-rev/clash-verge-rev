@@ -2,11 +2,9 @@ use chrono::Local;
 use regex::Regex;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tauri::command;
-use tokio::sync::Mutex;
-use tokio::task::JoinSet;
+use tokio::{sync::Mutex, task::JoinSet};
 
 // 定义解锁测试项目的结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -464,9 +462,11 @@ async fn check_netflix(client: &Client) -> UnlockItem {
     let url2 = "https://www.netflix.com/title/70143836"; // Breaking Bad
 
     // 创建简单的请求（不添加太多头部信息）
-    let result1 = client.get(url1)
+    let result1 = client
+        .get(url1)
         .timeout(std::time::Duration::from_secs(30))
-        .send().await;
+        .send()
+        .await;
 
     // 检查连接失败情况
     if let Err(e) = &result1 {
@@ -480,9 +480,11 @@ async fn check_netflix(client: &Client) -> UnlockItem {
     }
 
     // 如果第一个请求成功，尝试第二个请求
-    let result2 = client.get(url2)
+    let result2 = client
+        .get(url2)
         .timeout(std::time::Duration::from_secs(30))
-        .send().await;
+        .send()
+        .await;
 
     if let Err(e) = &result2 {
         eprintln!("Netflix请求错误: {}", e);
@@ -521,7 +523,8 @@ async fn check_netflix(client: &Client) -> UnlockItem {
         // 成功解锁，尝试获取地区信息
         // 使用Netflix测试内容获取区域
         let test_url = "https://www.netflix.com/title/80018499";
-        match client.get(test_url)
+        match client
+            .get(test_url)
             .timeout(std::time::Duration::from_secs(30))
             .send()
             .await
@@ -561,7 +564,7 @@ async fn check_netflix(client: &Client) -> UnlockItem {
                     region: None,
                     check_time: Some(get_local_date_string()),
                 }
-            },
+            }
         }
     } else {
         // 其他未知错误状态
@@ -578,11 +581,13 @@ async fn check_netflix(client: &Client) -> UnlockItem {
 async fn check_netflix_cdn(client: &Client) -> UnlockItem {
     // Fast.com API URL
     let url = "https://api.fast.com/netflix/speedtest/v2?https=true&token=YXNkZmFzZGxmbnNkYWZoYXNkZmhrYWxm&urlCount=5";
-    
-    let result = client.get(url)
+
+    let result = client
+        .get(url)
         .timeout(std::time::Duration::from_secs(30))
-        .send().await;
-    
+        .send()
+        .await;
+
     match result {
         Ok(response) => {
             // 检查状态码
@@ -594,7 +599,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                     check_time: Some(get_local_date_string()),
                 };
             }
-            
+
             // 尝试解析响应
             match response.json::<serde_json::Value>().await {
                 Ok(data) => {
@@ -602,7 +607,9 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                     if let Some(targets) = data.get("targets").and_then(|t| t.as_array()) {
                         if !targets.is_empty() {
                             if let Some(location) = targets[0].get("location") {
-                                if let Some(country) = location.get("country").and_then(|c| c.as_str()) {
+                                if let Some(country) =
+                                    location.get("country").and_then(|c| c.as_str())
+                                {
                                     let emoji = country_code_to_emoji(country);
                                     return UnlockItem {
                                         name: "Netflix".to_string(),
@@ -614,7 +621,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                             }
                         }
                     }
-                    
+
                     // 如果无法解析区域信息
                     return UnlockItem {
                         name: "Netflix".to_string(),
