@@ -24,14 +24,14 @@ export const SystemInfoCard = () => {
   });
 
   // 获取运行模式
-  const { data: runningMode = "sidecar", mutate: mutateRunningMode } = useSWR(
+  const { data: runningMode = "Sidecar", mutate: mutateRunningMode } = useSWR(
     "getRunningMode",
     getRunningMode,
-    { suspense: false, revalidateOnFocus: false }
+    { suspense: false, revalidateOnFocus: false },
   );
 
   // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === "sidecar";
+  const isSidecarMode = runningMode === "Sidecar";
 
   // 初始化系统信息
   useEffect(() => {
@@ -42,7 +42,10 @@ export const SystemInfoCard = () => {
         if (lines.length > 0) {
           const sysName = lines[0].split(": ")[1] || "";
           const sysVersion = lines[1].split(": ")[1] || "";
-          setSystemState(prev => ({ ...prev, osInfo: `${sysName} ${sysVersion}` }));
+          setSystemState((prev) => ({
+            ...prev,
+            osInfo: `${sysName} ${sysVersion}`,
+          }));
         }
       })
       .catch(console.error);
@@ -53,9 +56,9 @@ export const SystemInfoCard = () => {
       try {
         const timestamp = parseInt(lastCheck, 10);
         if (!isNaN(timestamp)) {
-          setSystemState(prev => ({ 
-            ...prev, 
-            lastCheckUpdate: new Date(timestamp).toLocaleString() 
+          setSystemState((prev) => ({
+            ...prev,
+            lastCheckUpdate: new Date(timestamp).toLocaleString(),
           }));
         }
       } catch (e) {
@@ -65,11 +68,11 @@ export const SystemInfoCard = () => {
       // 如果启用了自动检查更新但没有记录，设置当前时间并延迟检查
       const now = Date.now();
       localStorage.setItem("last_check_update", now.toString());
-      setSystemState(prev => ({ 
-        ...prev, 
-        lastCheckUpdate: new Date(now).toLocaleString() 
+      setSystemState((prev) => ({
+        ...prev,
+        lastCheckUpdate: new Date(now).toLocaleString(),
       }));
-      
+
       setTimeout(() => {
         if (verge?.auto_check_update) {
           checkUpdate().catch(console.error);
@@ -84,9 +87,9 @@ export const SystemInfoCard = () => {
     async () => {
       const now = Date.now();
       localStorage.setItem("last_check_update", now.toString());
-      setSystemState(prev => ({ 
-        ...prev, 
-        lastCheckUpdate: new Date(now).toLocaleString() 
+      setSystemState((prev) => ({
+        ...prev,
+        lastCheckUpdate: new Date(now).toLocaleString(),
       }));
       return await checkUpdate();
     },
@@ -94,7 +97,7 @@ export const SystemInfoCard = () => {
       revalidateOnFocus: false,
       refreshInterval: 24 * 60 * 60 * 1000, // 每天检查一次
       dedupingInterval: 60 * 60 * 1000, // 1小时内不重复检查
-    }
+    },
   );
 
   // 导航到设置页面
@@ -147,16 +150,22 @@ export const SystemInfoCard = () => {
   });
 
   // 是否启用自启动
-  const autoLaunchEnabled = useMemo(() => verge?.enable_auto_launch || false, [verge]);
+  const autoLaunchEnabled = useMemo(
+    () => verge?.enable_auto_launch || false,
+    [verge],
+  );
 
   // 运行模式样式
-  const runningModeStyle = useMemo(() => ({
-    cursor: isSidecarMode ? "pointer" : "default",
-    textDecoration: isSidecarMode ? "underline" : "none",
-    "&:hover": {
-      opacity: isSidecarMode ? 0.7 : 1,
-    },
-  }), [isSidecarMode]);
+  const runningModeStyle = useMemo(
+    () => ({
+      cursor: isSidecarMode ? "pointer" : "default",
+      textDecoration: isSidecarMode ? "underline" : "none",
+      "&:hover": {
+        opacity: isSidecarMode ? 0.7 : 1,
+      },
+    }),
+    [isSidecarMode],
+  );
 
   // 只有当verge存在时才渲染内容
   if (!verge) return null;

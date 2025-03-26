@@ -35,11 +35,8 @@ impl PlatformSpecification {
         // Get running mode asynchronously
         let running_mode = tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async {
-                match CoreManager::global().get_running_mode().await {
-                    crate::core::RunningMode::Service => "Service".to_string(),
-                    crate::core::RunningMode::Sidecar => "Standalone".to_string(),
-                    crate::core::RunningMode::NotRunning => "Not Running".to_string(),
-                }
+                let running_mode = CoreManager::global().get_running_mode().await;
+                running_mode.to_string()
             })
         });
 

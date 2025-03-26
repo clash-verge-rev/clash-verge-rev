@@ -52,7 +52,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   );
 
   // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === "sidecar";
+  const isSidecarMode = runningMode === "Sidecar";
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
@@ -138,7 +138,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
                 {t("System Proxy")}
               </Typography>
               {/*               <Typography variant="caption" color="text.secondary">
-                {sysproxy?.enable 
+                {sysproxy?.enable
                   ? t("Proxy is active")
                   : t("Enable this for most users")
                 }
