@@ -16,7 +16,7 @@ use crate::{
 };
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use std::{path::PathBuf, sync::Arc};
+use std::{fmt, path::PathBuf, sync::Arc};
 use tauri_plugin_shell::{process::CommandChild, ShellExt};
 use tokio::sync::Mutex;
 
@@ -35,6 +35,16 @@ pub enum RunningMode {
     Sidecar,
     /// 未运行
     NotRunning,
+}
+
+impl fmt::Display for RunningMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RunningMode::Service => write!(f, "Service"),
+            RunningMode::Sidecar => write!(f, "Sidecar"),
+            RunningMode::NotRunning => write!(f, "NotRunning"),
+        }
+    }
 }
 
 const CLASH_CORES: [&str; 2] = ["verge-mihomo", "verge-mihomo-alpha"];

@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { invoke } from "@tauri-apps/api/core";
 import { Notice } from "@/components/base";
+import { IRunningMode } from "./types";
 
 export async function copyClashEnv() {
   return invoke<void>("copy_clash_env");
@@ -312,7 +313,7 @@ export async function validateScriptFile(filePath: string) {
 
 // 获取当前运行模式
 export const getRunningMode = async () => {
-  return invoke<string>("get_running_mode");
+  return invoke<IRunningMode>("get_running_mode");
 };
 
 // 获取应用运行时间

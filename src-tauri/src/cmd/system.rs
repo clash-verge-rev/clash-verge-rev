@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::{
-    core::{self, handle, CoreManager},
+    core::{self, handle, CoreManager, RunningMode},
     module::sysinfo::PlatformSpecification,
 };
 use once_cell::sync::Lazy;
@@ -44,11 +44,7 @@ pub async fn get_system_info() -> CmdResult<String> {
 /// 获取当前内核运行模式
 #[tauri::command]
 pub async fn get_running_mode() -> Result<String, String> {
-    match CoreManager::global().get_running_mode().await {
-        core::RunningMode::Service => Ok("service".to_string()),
-        core::RunningMode::Sidecar => Ok("standalone".to_string()),
-        core::RunningMode::NotRunning => Ok("not_running".to_string()),
-    }
+    Ok(CoreManager::global().get_running_mode().await.to_string())
 }
 
 /// 获取应用的运行时间（毫秒）

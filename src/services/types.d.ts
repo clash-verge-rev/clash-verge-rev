@@ -806,3 +806,13 @@ interface IWebDavConfig {
   username: string;
   password: string;
 }
+
+export enum RunningMode {
+  Service = "Service",
+  Sidecar = "Sidecar",
+  NotRunning = "NotRunning",
+}
+
+export interface IRunningMode {
+  mode: RunningMode;
+}
