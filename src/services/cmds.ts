@@ -320,15 +320,30 @@ export const getAppUptime = async () => {
   return invoke<number>("get_app_uptime");
 };
 
-// 安装/重装系统服务
+// 安装系统服务
 export const installService = async () => {
   return invoke<void>("install_service");
 };
 
+// 卸载系统服务
+export const uninstallService = async () => {
+  return invoke<void>("uninstall_service");
+};
+
+// 重装系统服务
+export const reinstallService = async () => {
+  return invoke<void>("reinstall_service");
+};
+
+// 修复系统服务
+export const repairService = async () => {
+  return invoke<void>("repair_service");
+};
+
 export const entry_lightweight_mode = async () => {
   return invoke<void>("entry_lightweight_mode");
-}
+};
 
 export const exit_lightweight_mode = async () => {
   return invoke<void>("exit_lightweight_mode");
-}
+};
