@@ -1,8 +1,9 @@
 use crate::{
     config::{Config, IVerge},
     core::{handle, hotkey, sysopt, tray, CoreManager},
-    log_err,
+    logging_error,
     module::lightweight,
+    utils::logging::Type,
 };
 use anyhow::Result;
 use serde_yaml::Mapping;
@@ -18,8 +19,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             CoreManager::global().restart_core().await?;
         } else {
             if patch.get("mode").is_some() {
-                log_err!(tray::Tray::global().update_menu());
-                log_err!(tray::Tray::global().update_icon(None));
+                logging_error!(Type::Tray, true, tray::Tray::global().update_menu());
+                logging_error!(Type::Tray, true, tray::Tray::global().update_icon(None));
             }
             Config::runtime().latest().patch_config(patch);
             CoreManager::global().update_config().await?;

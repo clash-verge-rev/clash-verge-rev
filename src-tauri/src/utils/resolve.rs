@@ -3,7 +3,7 @@ use crate::AppHandleManager;
 use crate::{
     config::{Config, IVerge, PrfItem},
     core::*,
-    log_err, logging,
+    logging, logging_error,
     module::lightweight,
     utils::{error, init, logging::Type, server},
     wrap_err,
@@ -51,15 +51,15 @@ pub async fn resolve_setup(app: &mut App) {
     handle::Handle::global().init(app.app_handle());
     VERSION.get_or_init(|| version.clone());
 
-    log_err!(init::init_config());
-    log_err!(init::init_resources());
-    log_err!(init::init_scheme());
-    log_err!(init::startup_script().await);
+    logging_error!(Type::Config, true, init::init_config());
+    logging_error!(Type::Setup, true, init::init_resources());
+    logging_error!(Type::Setup, true, init::init_scheme());
+    logging_error!(Type::Setup, true, init::startup_script().await);
     // 处理随机端口
-    log_err!(resolve_random_port_config());
+    logging_error!(Type::System, true, resolve_random_port_config());
     // 启动核心
-    log::trace!(target:"app", "init config");
-    log_err!(Config::init_config().await);
+    logging!(trace, Type::Config, true, "Initial config");
+    logging_error!(Type::Config, true, Config::init_config().await);
 
     // if service::check_service().await.is_err() {
     //     match service::install_service().await {
@@ -90,31 +90,39 @@ pub async fn resolve_setup(app: &mut App) {
     //     }
     // }
 
-    log::trace!(target: "app", "launch core");
-    log_err!(CoreManager::global().init().await);
+    logging!(trace, Type::Core, "Starting CoreManager");
+    logging_error!(Type::Core, true, CoreManager::global().init().await);
 
     // setup a simple http server for singleton
     log::trace!(target: "app", "launch embed server");
     server::embed_server();
 
-    log::trace!(target: "app", "init system tray");
-    log_err!(tray::Tray::global().init());
-    log_err!(tray::Tray::global().create_systray(app));
+    log::trace!(target: "app", "Initial system tray");
+    logging_error!(Type::Tray, true, tray::Tray::global().init());
+    logging_error!(Type::Tray, true, tray::Tray::global().create_systray(app));
 
-    log_err!(sysopt::Sysopt::global().update_sysproxy().await);
-    log_err!(sysopt::Sysopt::global().init_guard_sysproxy());
+    logging_error!(
+        Type::System,
+        true,
+        sysopt::Sysopt::global().update_sysproxy().await
+    );
+    logging_error!(
+        Type::System,
+        true,
+        sysopt::Sysopt::global().init_guard_sysproxy()
+    );
 
     // 初始化热键
-    log::trace!(target: "app", "init hotkeys");
-    log_err!(hotkey::Hotkey::global().init());
+    logging!(trace, Type::System, true, "Initial hotkeys");
+    logging_error!(Type::System, true, hotkey::Hotkey::global().init());
 
     let silent_start = { Config::verge().data().enable_silent_start };
     if !silent_start.unwrap_or(false) {
         create_window();
     }
 
-    log_err!(tray::Tray::global().update_part());
-    log_err!(timer::Timer::global().init());
+    logging_error!(Type::Tray, true, tray::Tray::global().update_part());
+    logging_error!(Type::System, true, timer::Timer::global().init());
 
     let enable_auto_light_weight_mode = { Config::verge().data().enable_auto_light_weight_mode };
     if enable_auto_light_weight_mode.unwrap_or(false) {
@@ -126,12 +134,20 @@ pub async fn resolve_setup(app: &mut App) {
 pub fn resolve_reset() {
     tauri::async_runtime::block_on(async move {
         #[cfg(target_os = "macos")]
+        logging!(info, Type::Tray, true, "Unsubscribing from traffic updates");
         tray::Tray::global().unsubscribe_traffic();
 
-        log_err!(sysopt::Sysopt::global().reset_sysproxy().await);
-        log_err!(CoreManager::global().stop_core().await);
+        logging_error!(
+            Type::System,
+            true,
+            sysopt::Sysopt::global().reset_sysproxy().await
+        );
+        logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
         #[cfg(target_os = "macos")]
-        restore_public_dns().await;
+        {
+            logging!(info, Type::System, true, "Restoring system DNS settings");
+            restore_public_dns().await;
+        }
     });
 }
 

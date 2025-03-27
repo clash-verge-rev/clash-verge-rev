@@ -66,9 +66,12 @@ impl Config {
             let script_item = PrfItem::from_script(Some("Script".to_string()))?;
             Self::profiles().data().append_item(script_item.clone())?;
         }
-
         // 生成运行时配置
-        crate::log_err!(Self::generate().await);
+        if let Err(err) = Self::generate().await {
+            logging!(error, Type::Config, true, "生成运行时配置失败: {}", err);
+        } else {
+            logging!(info, Type::Config, true, "生成运行时配置成功");
+        }
 
         // 生成运行时配置文件并验证
         let config_result = Self::generate_file(ConfigType::Run);

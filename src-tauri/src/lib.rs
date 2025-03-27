@@ -2,6 +2,7 @@ mod cmd;
 mod config;
 mod core;
 mod enhance;
+mod error;
 mod feat;
 mod module;
 mod utils;
@@ -16,6 +17,7 @@ use tauri::AppHandle;
 use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
+use utils::logging::Type;
 
 /// A global singleton handle to the application.
 pub struct AppHandleManager {
@@ -119,13 +121,13 @@ pub fn run() {
             #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
-                log_err!(app.deep_link().register_all());
+                logging_error!(Type::System, true, app.deep_link().register_all());
             }
 
             app.deep_link().on_open_url(|event| {
                 tauri::async_runtime::spawn(async move {
                     if let Some(url) = event.urls().first() {
-                        log_err!(resolve_scheme(url.to_string()).await);
+                        logging_error!(Type::Setup, true, resolve_scheme(url.to_string()).await);
                     }
                 });
             });
@@ -279,13 +281,25 @@ pub fn run() {
                     tauri::WindowEvent::Focused(true) => {
                         #[cfg(target_os = "macos")]
                         {
-                            log_err!(hotkey::Hotkey::global().register("CMD+Q", "quit"));
-                            log_err!(hotkey::Hotkey::global().register("CMD+W", "hide"));
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().register("CMD+Q", "quit")
+                            );
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().register("CMD+W", "hide")
+                            );
                         }
 
                         #[cfg(not(target_os = "macos"))]
                         {
-                            log_err!(hotkey::Hotkey::global().register("Control+Q", "quit"));
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().register("Control+Q", "quit")
+                            );
                         };
                         {
                             let is_enable_global_hotkey = Config::verge()
@@ -293,19 +307,31 @@ pub fn run() {
                                 .enable_global_hotkey
                                 .unwrap_or(true);
                             if !is_enable_global_hotkey {
-                                log_err!(hotkey::Hotkey::global().init())
+                                logging_error!(Type::Hotkey, true, hotkey::Hotkey::global().init())
                             }
                         }
                     }
                     tauri::WindowEvent::Focused(false) => {
                         #[cfg(target_os = "macos")]
                         {
-                            log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
-                            log_err!(hotkey::Hotkey::global().unregister("CMD+W"));
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().unregister("CMD+Q")
+                            );
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().unregister("CMD+W")
+                            );
                         }
                         #[cfg(not(target_os = "macos"))]
                         {
-                            log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().unregister("Control+Q")
+                            );
                         };
                         {
                             let is_enable_global_hotkey = Config::verge()
@@ -313,20 +339,32 @@ pub fn run() {
                                 .enable_global_hotkey
                                 .unwrap_or(true);
                             if !is_enable_global_hotkey {
-                                log_err!(hotkey::Hotkey::global().reset())
+                                logging_error!(Type::Hotkey, true, hotkey::Hotkey::global().reset())
                             }
                         }
                     }
                     tauri::WindowEvent::Destroyed => {
                         #[cfg(target_os = "macos")]
                         {
-                            log_err!(hotkey::Hotkey::global().unregister("CMD+Q"));
-                            log_err!(hotkey::Hotkey::global().unregister("CMD+W"));
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().unregister("CMD+Q")
+                            );
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().unregister("CMD+W")
+                            );
                         }
 
                         #[cfg(not(target_os = "macos"))]
                         {
-                            log_err!(hotkey::Hotkey::global().unregister("Control+Q"));
+                            logging_error!(
+                                Type::Hotkey,
+                                true,
+                                hotkey::Hotkey::global().unregister("Control+Q")
+                            );
                         };
                     }
                     _ => {}

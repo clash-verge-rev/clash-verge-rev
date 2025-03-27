@@ -2,23 +2,37 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
+    Cmd,
     Core,
+    Config,
+    Setup,
+    System,
     Service,
     Hotkey,
     Window,
-    Config,
-    CMD,
+    Tray,
+    Timer,
+    Frontend,
+    Backup,
+    Lightweight,
 }
 
 impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Type::Cmd => write!(f, "[Cmd]"),
             Type::Core => write!(f, "[Core]"),
+            Type::Config => write!(f, "[Config]"),
+            Type::Setup => write!(f, "[Setup]"),
+            Type::System => write!(f, "[System]"),
             Type::Service => write!(f, "[Service]"),
             Type::Hotkey => write!(f, "[Hotkey]"),
             Type::Window => write!(f, "[Window]"),
-            Type::Config => write!(f, "[Config]"),
-            Type::CMD => write!(f, "[CMD]"),
+            Type::Tray => write!(f, "[Tray]"),
+            Type::Timer => write!(f, "[Timer]"),
+            Type::Frontend => write!(f, "[Frontend]"),
+            Type::Backup => write!(f, "[Backup]"),
+            Type::Lightweight => write!(f, "[Lightweight]"),
         }
     }
 }

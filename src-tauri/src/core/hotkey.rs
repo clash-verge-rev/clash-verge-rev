@@ -1,7 +1,7 @@
 use crate::{
     config::Config,
     core::handle,
-    feat, log_err, logging,
+    feat, logging, logging_error,
     module::lightweight::entry_lightweight_mode,
     utils::{logging::Type, resolve},
 };
@@ -285,7 +285,7 @@ impl Hotkey {
         });
 
         add.iter().for_each(|(key, func)| {
-            log_err!(self.register(key, func));
+            logging_error!(Type::Hotkey, true, self.register(key, func));
         });
 
         *current = new_hotkeys;

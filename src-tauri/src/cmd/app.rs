@@ -200,7 +200,7 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
         }
         logging!(
             info,
-            Type::CMD,
+            Type::Cmd,
             true,
             "Copying icon file path: {:?} -> file dist: {:?}",
             path,

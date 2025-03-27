@@ -1,7 +1,8 @@
 use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
-    log_err,
+    logging_error,
+    utils::logging::Type,
 };
 use anyhow::Result;
 use once_cell::sync::OnceCell;
@@ -231,7 +232,7 @@ impl Sysopt {
                 } else {
                     log::info!(target: "app", "Auto launch enabled successfully");
                 }
-                log_err!(result)
+                logging_error!(Type::System, true, result);
             }
             false => {
                 let result = autostart_manager.disable();
@@ -240,7 +241,7 @@ impl Sysopt {
                 } else {
                     log::info!(target: "app", "Auto launch disabled successfully");
                 }
-                log_err!(result)
+                logging_error!(Type::System, true, result);
             }
         };
 
@@ -323,7 +324,7 @@ impl Sysopt {
                             enable: true,
                             url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
                         };
-                        log_err!(autoproxy.set_auto_proxy());
+                        logging_error!(Type::System, true, autoproxy.set_auto_proxy());
                     } else {
                         let sysproxy = Sysproxy {
                             enable: true,
@@ -332,7 +333,7 @@ impl Sysopt {
                             bypass: get_bypass(),
                         };
 
-                        log_err!(sysproxy.set_system_proxy());
+                        logging_error!(Type::System, true, sysproxy.set_system_proxy());
                     }
                 }
 

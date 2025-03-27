@@ -8,7 +8,7 @@ use crate::{
     feat,
     module::{lightweight::entry_lightweight_mode, mihomo::Rate},
     resolve,
-    utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
+    utils::{dirs::find_target_icons, i18n::t, logging::Type, resolve::VERSION},
 };
 
 use anyhow::Result;
@@ -684,9 +684,9 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(None),
         "copy_env" => feat::copy_clash_env(),
-        "open_app_dir" => crate::log_err!(cmd::open_app_dir()),
-        "open_core_dir" => crate::log_err!(cmd::open_core_dir()),
-        "open_logs_dir" => crate::log_err!(cmd::open_logs_dir()),
+        "open_app_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_app_dir()),
+        "open_core_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_core_dir()),
+        "open_logs_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_logs_dir()),
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
         "entry_lightweight_mode" => entry_lightweight_mode(),

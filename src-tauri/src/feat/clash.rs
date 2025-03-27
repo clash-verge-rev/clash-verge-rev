@@ -1,9 +1,9 @@
 use crate::{
     config::Config,
     core::{handle, tray, CoreManager},
-    log_err,
+    logging_error,
     module::mihomo::MihomoManager,
-    utils::resolve,
+    utils::{logging::Type, resolve},
 };
 use serde_yaml::{Mapping, Value};
 use tauri::Manager;
@@ -28,7 +28,7 @@ pub fn restart_clash_core() {
 pub fn restart_app() {
     tauri::async_runtime::spawn_blocking(|| {
         tauri::async_runtime::block_on(async {
-            log_err!(CoreManager::global().stop_core().await);
+            logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
         });
         resolve::resolve_reset();
         let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -54,8 +54,8 @@ pub fn change_clash_mode(mode: String) {
 
                 if Config::clash().data().save_config().is_ok() {
                     handle::Handle::refresh_clash();
-                    log_err!(tray::Tray::global().update_menu());
-                    log_err!(tray::Tray::global().update_icon(None));
+                    logging_error!(Type::Tray, true, tray::Tray::global().update_menu());
+                    logging_error!(Type::Tray, true, tray::Tray::global().update_icon(None));
                 }
             }
             Err(err) => println!("{err}"),

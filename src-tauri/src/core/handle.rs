@@ -1,8 +1,9 @@
-use crate::log_err;
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
+
+use crate::{logging_error, utils::logging::Type};
 
 #[derive(Debug, Default, Clone)]
 pub struct Handle {
@@ -40,26 +41,42 @@ impl Handle {
 
     pub fn refresh_clash() {
         if let Some(window) = Self::global().get_window() {
-            log_err!(window.emit("verge://refresh-clash-config", "yes"));
+            logging_error!(
+                Type::Frontend,
+                true,
+                window.emit("verge://refresh-clash-config", "yes")
+            );
         }
     }
 
     pub fn refresh_verge() {
         if let Some(window) = Self::global().get_window() {
-            log_err!(window.emit("verge://refresh-verge-config", "yes"));
+            logging_error!(
+                Type::Frontend,
+                true,
+                window.emit("verge://refresh-verge-config", "yes")
+            );
         }
     }
 
     #[allow(unused)]
     pub fn refresh_profiles() {
         if let Some(window) = Self::global().get_window() {
-            log_err!(window.emit("verge://refresh-profiles-config", "yes"));
+            logging_error!(
+                Type::Frontend,
+                true,
+                window.emit("verge://refresh-profiles-config", "yes")
+            );
         }
     }
 
     pub fn notice_message<S: Into<String>, M: Into<String>>(status: S, msg: M) {
         if let Some(window) = Self::global().get_window() {
-            log_err!(window.emit("verge://notice-message", (status.into(), msg.into())));
+            logging_error!(
+                Type::Frontend,
+                true,
+                window.emit("verge://notice-message", (status.into(), msg.into()))
+            );
         }
     }
 
