@@ -20,11 +20,7 @@ use parking_lot::Mutex;
 use parking_lot::RwLock;
 #[cfg(target_os = "macos")]
 pub use speed_rate::{SpeedRate, Traffic};
-#[cfg(target_os = "macos")]
-use std::collections::hash_map::DefaultHasher;
 use std::fs;
-#[cfg(target_os = "macos")]
-use std::hash::{Hash, Hasher};
 #[cfg(target_os = "macos")]
 use std::sync::Arc;
 use tauri::{
@@ -45,10 +41,7 @@ pub struct Tray {
     pub speed_rate: Arc<Mutex<Option<SpeedRate>>>,
     shutdown_tx: Arc<RwLock<Option<broadcast::Sender<()>>>>,
     is_subscribed: Arc<RwLock<bool>>,
-    pub icon_hash: Arc<Mutex<Option<u64>>>,
-    pub icon_cache: Arc<Mutex<Option<Vec<u8>>>>,
     pub rate_cache: Arc<Mutex<Option<Rate>>>,
-    // pub tray_state: Arc<Mutex<TrayState>>,
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -57,77 +50,104 @@ pub struct Tray {
 }
 
 impl TrayState {
-    pub fn get_common_tray_icon() -> Vec<u8> {
+    pub fn get_common_tray_icon() -> (bool, Vec<u8>) {
         let verge = Config::verge().latest().clone();
         let is_common_tray_icon = verge.common_tray_icon.clone().unwrap_or(false);
         if is_common_tray_icon {
             if let Some(common_icon_path) = find_target_icons("common").unwrap() {
                 let icon_data = fs::read(common_icon_path).unwrap();
-                return icon_data;
+                return (true, icon_data);
             }
         }
         #[cfg(target_os = "macos")]
         {
             let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
             if tray_icon_colorful == "monochrome" {
-                include_bytes!("../../../icons/tray-icon.ico").to_vec()
+                (
+                    false,
+                    include_bytes!("../../../icons/tray-icon-mono.ico").to_vec(),
+                )
             } else {
-                include_bytes!("../../../icons/tray-icon-mono.ico").to_vec()
+                (
+                    false,
+                    include_bytes!("../../../icons/tray-icon.ico").to_vec(),
+                )
             }
         }
 
         #[cfg(not(target_os = "macos"))]
         {
-            include_bytes!("../../../icons/tray-icon.ico").to_vec()
+            (
+                false,
+                include_bytes!("../../../icons/tray-icon.ico").to_vec(),
+            )
         }
     }
 
-    pub fn get_sysproxy_tray_icon() -> Vec<u8> {
+    pub fn get_sysproxy_tray_icon() -> (bool, Vec<u8>) {
         let verge = Config::verge().latest().clone();
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.clone().unwrap_or(false);
         if is_sysproxy_tray_icon {
             if let Some(sysproxy_icon_path) = find_target_icons("sysproxy").unwrap() {
                 let icon_data = fs::read(sysproxy_icon_path).unwrap();
-                return icon_data;
+                return (true, icon_data);
             }
         }
         #[cfg(target_os = "macos")]
         {
             let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
             if tray_icon_colorful == "monochrome" {
-                include_bytes!("../../../icons/tray-icon-sys.ico").to_vec()
+                (
+                    false,
+                    include_bytes!("../../../icons/tray-icon-sys-mono.ico").to_vec(),
+                )
             } else {
-                include_bytes!("../../../icons/tray-icon-sys-mono.ico").to_vec()
+                (
+                    false,
+                    include_bytes!("../../../icons/tray-icon-sys.ico").to_vec(),
+                )
             }
         }
 
         #[cfg(not(target_os = "macos"))]
         {
-            include_bytes!("../../../icons/tray-icon-sys.ico").to_vec()
+            (
+                false,
+                include_bytes!("../../../icons/tray-icon-sys.ico").to_vec(),
+            )
         }
     }
 
-    pub fn get_tun_tray_icon() -> Vec<u8> {
+    pub fn get_tun_tray_icon() -> (bool, Vec<u8>) {
         let verge = Config::verge().latest().clone();
         let is_tun_tray_icon = verge.tun_tray_icon.clone().unwrap_or(false);
         if is_tun_tray_icon {
             if let Some(tun_icon_path) = find_target_icons("tun").unwrap() {
                 let icon_data = fs::read(tun_icon_path).unwrap();
-                return icon_data;
+                return (true, icon_data);
             }
         }
         #[cfg(target_os = "macos")]
         {
             let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
             if tray_icon_colorful == "monochrome" {
-                include_bytes!("../../../icons/tray-icon-tun.ico").to_vec()
+                (
+                    false,
+                    include_bytes!("../../../icons/tray-icon-tun-mono.ico").to_vec(),
+                )
             } else {
-                include_bytes!("../../../icons/tray-icon-tun-mono.ico").to_vec()
+                (
+                    false,
+                    include_bytes!("../../../icons/tray-icon-tun.ico").to_vec(),
+                )
             }
         }
         #[cfg(not(target_os = "macos"))]
         {
-            include_bytes!("../../../icons/tray-icon-tun.ico").to_vec()
+            (
+                false,
+                include_bytes!("../../../icons/tray-icon-tun.ico").to_vec(),
+            )
         }
     }
 }
@@ -141,8 +161,6 @@ impl Tray {
             speed_rate: Arc::new(Mutex::new(None)),
             shutdown_tx: Arc::new(RwLock::new(None)),
             is_subscribed: Arc::new(RwLock::new(false)),
-            icon_hash: Arc::new(Mutex::new(None)),
-            icon_cache: Arc::new(Mutex::new(None)),
             rate_cache: Arc::new(Mutex::new(None)),
         });
 
@@ -251,13 +269,12 @@ impl Tray {
         let app_handle = handle::Handle::global().app_handle().unwrap();
         let tray = app_handle.tray_by_id("main").unwrap();
 
-        let icon_bytes = match (*system_mode, *tun_mode) {
+        let (is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
             (true, true) => TrayState::get_tun_tray_icon(),
             (true, false) => TrayState::get_sysproxy_tray_icon(),
             (false, true) => TrayState::get_tun_tray_icon(),
             (false, false) => TrayState::get_common_tray_icon(),
         };
-
         #[cfg(target_os = "macos")]
         {
             let enable_tray_speed = verge.enable_tray_speed.unwrap_or(true);
@@ -265,23 +282,8 @@ impl Tray {
             let colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
             let is_colorful = colorful == "colorful";
 
-            let icon_hash = {
-                let mut hasher = DefaultHasher::new();
-                icon_bytes.clone().hash(&mut hasher);
-                hasher.finish()
-            };
-
-            let mut icon_hash_guard = self.icon_hash.lock();
-            let mut icon_bytes_guard = self.icon_cache.lock();
-            if *icon_hash_guard != Some(icon_hash) {
-                *icon_hash_guard = Some(icon_hash);
-                *icon_bytes_guard = Some(icon_bytes.clone());
-            }
-
             if !enable_tray_speed {
-                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(
-                    &(*icon_bytes_guard).clone().unwrap(),
-                )?));
+                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
                 let _ = tray.set_icon_as_template(!is_colorful);
                 return Ok(());
             }
@@ -302,16 +304,20 @@ impl Tray {
                 *rate_guard = rate;
 
                 let bytes = if enable_tray_icon {
-                    Some(icon_bytes_guard.as_ref().unwrap())
+                    Some(icon_bytes)
                 } else {
                     None
                 };
 
                 let rate = rate_guard.as_ref();
-                let rate_bytes = SpeedRate::add_speed_text(bytes, rate).unwrap();
+                let rate_bytes = SpeedRate::add_speed_text(is_custom_icon, bytes, rate).unwrap();
 
                 let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
-                let _ = tray.set_icon_as_template(!is_colorful);
+                if !is_custom_icon {
+                    let _ = tray.set_icon_as_template(!is_colorful);
+                } else {
+                    let _ = tray.set_icon_as_template(false);
+                }
             }
             Ok(())
         }

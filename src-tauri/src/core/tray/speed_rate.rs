@@ -77,14 +77,15 @@ impl SpeedRate {
 
     // 分离图标加载和速率渲染
     pub fn add_speed_text<'a>(
-        icon_bytes: Option<&'a Vec<u8>>,
+        is_custom_icon: bool,
+        icon_bytes: Option<Vec<u8>>,
         rate: Option<&'a Rate>,
     ) -> Result<Vec<u8>> {
         let rate = rate.unwrap_or(&Rate { up: 0, down: 0 });
 
         let (mut icon_width, mut icon_height) = (0, 256);
-        let icon_image = if let Some(bytes) = icon_bytes {
-            let icon_image = image::load_from_memory(bytes)?;
+        let icon_image = if let Some(bytes) = icon_bytes.clone() {
+            let icon_image = image::load_from_memory(&bytes)?;
             icon_width = icon_image.width();
             icon_height = icon_image.height();
             icon_image
@@ -94,19 +95,16 @@ impl SpeedRate {
         };
 
         // 判断是否为彩色图标
-        let is_colorful = if let Some(bytes) = icon_bytes {
-            !crate::utils::help::is_monochrome_image_from_bytes(bytes).unwrap_or(false)
+        let is_colorful = if let Some(bytes) = icon_bytes.clone() {
+            !crate::utils::help::is_monochrome_image_from_bytes(&bytes).unwrap_or(false)
         } else {
             false
         };
 
-        // 增加文本宽度和间距
-        let total_width = if icon_bytes.is_some() {
-            if icon_width < 580 {
-                icon_width + 580
-            } else {
-                icon_width
-            }
+        let total_width = if is_custom_icon {
+            450
+        } else if icon_bytes.is_some() {
+            icon_width + 580
         } else {
             580
         };
