@@ -43,6 +43,7 @@ const SettingSystem = ({ onError }: Props) => {
   const { data: autoLaunchEnabled } = useSWR(
     "getAutoLaunchStatus",
     getAutoLaunchStatus,
+    { revalidateOnFocus: false }
   );
 
   // 当实际自启动状态与配置不同步时更新配置

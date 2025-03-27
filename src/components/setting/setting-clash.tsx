@@ -5,7 +5,6 @@ import {
   SettingsRounded,
   ShuffleRounded,
   LanRounded,
-  DnsRounded,
 } from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
@@ -49,7 +48,16 @@ const SettingClash = ({ onError }: Props) => {
   const { enable_random_port = false, verge_mixed_port } = verge ?? {};
 
   // 独立跟踪DNS设置开关状态
-  const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(false);
+  const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
+    // 尝试从localStorage获取之前保存的状态
+    const savedState = localStorage.getItem("dns_settings_enabled");
+    if (savedState !== null) {
+      return savedState === "true";
+    }
+    // 如果没有保存的状态，则从verge配置中获取
+    return verge?.enable_dns_settings ?? false;
+  });
+  
   const { addListener } = useListen();
 
   const webRef = useRef<DialogRef>(null);
@@ -58,12 +66,6 @@ const SettingClash = ({ onError }: Props) => {
   const coreRef = useRef<DialogRef>(null);
   const networkRef = useRef<DialogRef>(null);
   const dnsRef = useRef<DialogRef>(null);
-
-  // 初始化时从verge配置中加载DNS设置开关状态
-  useEffect(() => {
-    const dnsSettingsState = verge?.enable_dns_settings ?? false;
-    setDnsSettingsEnabled(dnsSettingsState);
-  }, [verge]);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -84,15 +86,21 @@ const SettingClash = ({ onError }: Props) => {
   // 实现DNS设置开关处理函数
   const handleDnsToggle = useLockFn(async (enable: boolean) => {
     try {
+      // 立即更新UI状态
       setDnsSettingsEnabled(enable);
+      // 保存到localStorage，用于记住用户的选择
+      localStorage.setItem("dns_settings_enabled", String(enable));
+      // 更新verge配置
       await patchVerge({ enable_dns_settings: enable });
       await invoke("apply_dns_config", { apply: enable });
       setTimeout(() => {
         mutateClash();
       }, 500); // 延迟500ms确保后端完成处理
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      // 如果出错，恢复原始状态
       setDnsSettingsEnabled(!enable);
+      localStorage.setItem("dns_settings_enabled", String(!enable));
+      Notice.error(err.message || err.toString());
       await patchVerge({ enable_dns_settings: !enable }).catch(() => {
         // 忽略恢复状态时的错误
       });
@@ -143,7 +151,6 @@ const SettingClash = ({ onError }: Props) => {
           />
         }
       >
-        {/* 使用独立状态，不再依赖dns?.enable */}
         <Switch
           edge="end"
           checked={dnsSettingsEnabled}
