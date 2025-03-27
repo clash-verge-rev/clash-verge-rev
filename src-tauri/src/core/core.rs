@@ -480,10 +480,13 @@ impl CoreManager {
 
     pub async fn init(&self) -> Result<()> {
         logging!(trace, Type::Core, "Initializing core");
-        if is_service_available().await.is_ok() {
-            Self::global().start_core_by_service().await?;
+        if service::is_service_available().await.is_ok() {
+            if service::check_service_needs_reinstall().await {
+                service::reinstall_service().await?;
+            }
+            self.start_core_by_service().await?;
         } else {
-            Self::global().start_core_by_sidecar().await?;
+            self.start_core_by_sidecar().await?;
         }
         logging!(trace, Type::Core, "Initied core");
         #[cfg(target_os = "macos")]
@@ -503,7 +506,10 @@ impl CoreManager {
 
     /// 启动核心
     pub async fn start_core(&self) -> Result<()> {
-        if is_service_available().await.is_ok() {
+        if service::is_service_available().await.is_ok() {
+            if service::check_service_needs_reinstall().await {
+                service::reinstall_service().await?;
+            }
             self.start_core_by_service().await?;
         } else {
             self.start_core_by_sidecar().await?;
