@@ -4,7 +4,7 @@ use crate::{
     config::*,
     core::{
         handle,
-        service::{self, is_service_available},
+        service::{self},
     },
     log_err, logging, logging_error,
     module::mihomo::MihomoManager,

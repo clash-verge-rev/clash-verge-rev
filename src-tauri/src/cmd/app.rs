@@ -1,5 +1,9 @@
 use super::CmdResult;
-use crate::{feat, utils::dirs, wrap_err};
+use crate::{
+    feat, logging,
+    utils::{dirs, logging::Type},
+    wrap_err,
+};
 use tauri::Manager;
 
 /// 打开应用程序所在目录
@@ -194,7 +198,14 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
             )
             .unwrap_or_default();
         }
-
+        logging!(
+            info,
+            Type::CMD,
+            true,
+            "Copying icon file path: {:?} -> file dist: {:?}",
+            path,
+            dest_path
+        );
         match fs::copy(file_path, &dest_path) {
             Ok(_) => Ok(dest_path.to_string_lossy().to_string()),
             Err(err) => Err(err.to_string()),

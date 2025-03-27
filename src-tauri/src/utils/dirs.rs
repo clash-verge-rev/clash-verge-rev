@@ -77,9 +77,39 @@ pub fn app_profiles_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("profiles"))
 }
 
+/// icons dir
+pub fn app_icons_dir() -> Result<PathBuf> {
+    Ok(app_home_dir()?.join("icons"))
+}
+
+pub fn find_target_icons(target: &str) -> Result<Option<String>> {
+    let icons_dir = app_icons_dir()?;
+    let mut matching_files = Vec::new();
+
+    for entry in fs::read_dir(icons_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+            if file_name.starts_with(target)
+                && (file_name.ends_with(".ico") || file_name.ends_with(".png"))
+            {
+                matching_files.push(path);
+            }
+        }
+    }
+
+    if matching_files.is_empty() {
+        Ok(None)
+    } else {
+        let first = path_to_str(matching_files.first().unwrap())?;
+        Ok(Some(first.to_string()))
+    }
+}
+
 /// logs dir
 pub fn app_logs_dir() -> Result<PathBuf> {
-    Ok(app_home_dir()?.join("logs"))
+    Ok(app_home_dir()?.join("icons"))
 }
 
 pub fn clash_path() -> Result<PathBuf> {

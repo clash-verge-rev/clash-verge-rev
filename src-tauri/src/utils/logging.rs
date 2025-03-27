@@ -7,6 +7,7 @@ pub enum Type {
     Hotkey,
     Window,
     Config,
+    CMD,
 }
 
 impl fmt::Display for Type {
@@ -17,6 +18,7 @@ impl fmt::Display for Type {
             Type::Hotkey => write!(f, "[Hotkey]"),
             Type::Window => write!(f, "[Window]"),
             Type::Config => write!(f, "[Config]"),
+            Type::CMD => write!(f, "[CMD]"),
         }
     }
 }
