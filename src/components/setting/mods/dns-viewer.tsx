@@ -576,7 +576,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          {t("DNS Settings")}
+          {t("DNS Overwrite")}
           <Box display="flex" alignItems="center" gap={1}>
             <Button
               variant="outlined"
