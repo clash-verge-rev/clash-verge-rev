@@ -2,8 +2,8 @@ use super::CmdResult;
 use crate::{
     config::*,
     core::*,
-    feat, log_err, ret_err,
-    utils::{dirs, help},
+    feat, log_err, logging, ret_err,
+    utils::{dirs, help, logging::Type},
     wrap_err,
 };
 
@@ -77,20 +77,19 @@ pub async fn delete_profile(index: String) -> CmdResult {
 /// 修改profiles的配置
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
-    println!("[cmd配置patch] 开始修改配置文件");
+    logging!(info, Type::CMD, true, "开始修改配置文件");
 
     // 保存当前配置，以便在验证失败时恢复
     let current_profile = Config::profiles().latest().current.clone();
-    println!("[cmd配置patch] 当前配置: {:?}", current_profile);
+    logging!(info, Type::CMD, true, "当前配置: {:?}", current_profile);
 
     // 更新profiles配置
-    println!("[cmd配置patch] 正在更新配置草稿");
+    logging!(info, Type::CMD, true, "正在更新配置草稿");
     wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
-
     // 更新配置并进行验证
     match CoreManager::global().update_config().await {
         Ok((true, _)) => {
-            println!("[cmd配置patch] 配置更新成功");
+            logging!(info, Type::CMD, true, "配置更新成功");
             handle::Handle::refresh_clash();
             let _ = tray::Tray::global().update_tooltip();
             Config::profiles().apply();
@@ -98,12 +97,17 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             Ok(true)
         }
         Ok((false, error_msg)) => {
-            println!("[cmd配置patch] 配置验证失败: {}", error_msg);
+            logging!(warn, Type::CMD, true, "配置验证失败: {}", error_msg);
             Config::profiles().discard();
-
             // 如果验证失败，恢复到之前的配置
             if let Some(prev_profile) = current_profile {
-                println!("[cmd配置patch] 尝试恢复到之前的配置: {}", prev_profile);
+                logging!(
+                    info,
+                    Type::CMD,
+                    true,
+                    "尝试恢复到之前的配置: {}",
+                    prev_profile
+                );
                 let restore_profiles = IProfiles {
                     current: Some(prev_profile),
                     items: None,
@@ -112,7 +116,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
                 Config::profiles().apply();
                 wrap_err!(Config::profiles().data().save_file())?;
-                println!("[cmd配置patch] 成功恢复到之前的配置");
+                logging!(info, Type::CMD, true, "成功恢复到之前的配置");
             }
 
             // 发送验证错误通知
@@ -120,7 +124,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             Ok(false)
         }
         Err(e) => {
-            println!("[cmd配置patch] 更新过程发生错误: {}", e);
+            logging!(warn, Type::CMD, true, "更新过程发生错误: {}", e);
             Config::profiles().discard();
             handle::Handle::notice_message("config_validate::boot_error", e.to_string());
             Ok(false)

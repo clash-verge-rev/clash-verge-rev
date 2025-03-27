@@ -6,7 +6,7 @@ use crate::{
         handle,
         service::{self},
     },
-    log_err, logging, logging_error,
+    logging, logging_error,
     module::mihomo::MihomoManager,
     utils::{
         dirs,
@@ -63,7 +63,14 @@ impl CoreManager {
         let content = match std::fs::read_to_string(path) {
             Ok(content) => content,
             Err(err) => {
-                log::warn!(target: "app", "无法读取文件以检测类型: {}, 错误: {}", path, err);
+                logging!(
+                    warn,
+                    Type::Config,
+                    true,
+                    "无法读取文件以检测类型: {}, 错误: {}",
+                    path,
+                    err
+                );
                 return Err(anyhow::anyhow!(
                     "Failed to read file to detect type: {}",
                     err
@@ -114,7 +121,13 @@ impl CoreManager {
         }
 
         // 默认情况：无法确定时，假设为非脚本文件（更安全）
-        log::debug!(target: "app", "无法确定文件类型，默认当作YAML处理: {}", path);
+        logging!(
+            debug,
+            Type::Config,
+            true,
+            "无法确定文件类型，默认当作YAML处理: {}",
+            path
+        );
         Ok(false)
     }
     /// 使用默认配置
@@ -147,7 +160,7 @@ impl CoreManager {
     ) -> Result<(bool, String)> {
         // 检查程序是否正在退出，如果是则跳过验证
         if handle::Handle::global().is_exiting() {
-            println!("[core配置验证] 应用正在退出，跳过验证");
+            logging!(info, Type::Core, true, "应用正在退出，跳过验证");
             return Ok((true, String::new()));
         }
 
@@ -160,8 +173,11 @@ impl CoreManager {
 
         // 如果是合并文件且不是强制验证，执行语法检查但不进行完整验证
         if is_merge_file.unwrap_or(false) {
-            println!(
-                "[core配置验证] 检测到Merge文件，仅进行语法检查: {}",
+            logging!(
+                info,
+                Type::Config,
+                true,
+                "检测到Merge文件，仅进行语法检查: {}",
                 config_path
             );
             return self.validate_file_syntax(config_path).await;
@@ -175,19 +191,38 @@ impl CoreManager {
                 Ok(result) => result,
                 Err(err) => {
                     // 如果无法确定文件类型，尝试使用Clash内核验证
-                    log::warn!(target: "app", "无法确定文件类型: {}, 错误: {}", config_path, err);
+                    logging!(
+                        warn,
+                        Type::Config,
+                        true,
+                        "无法确定文件类型: {}, 错误: {}",
+                        config_path,
+                        err
+                    );
                     return self.validate_config_internal(config_path).await;
                 }
             }
         };
 
         if is_script {
-            log::info!(target: "app", "检测到脚本文件，使用JavaScript验证: {}", config_path);
+            logging!(
+                info,
+                Type::Config,
+                true,
+                "检测到脚本文件，使用JavaScript验证: {}",
+                config_path
+            );
             return self.validate_script_file(config_path).await;
         }
 
         // 对YAML配置文件使用Clash内核验证
-        log::info!(target: "app", "使用Clash内核验证配置文件: {}", config_path);
+        logging!(
+            info,
+            Type::Config,
+            true,
+            "使用Clash内核验证配置文件: {}",
+            config_path
+        );
         self.validate_config_internal(config_path).await
     }
     /// 内部验证配置文件的实现
@@ -234,7 +269,7 @@ impl CoreManager {
         logging!(info, Type::Config, true, "-------- 验证结果 --------");
 
         if !stderr.is_empty() {
-            logging!(info, Type::Core, true, "stderr输出:\n{}", stderr);
+            logging!(info, Type::Config, true, "stderr输出:\n{}", stderr);
         }
 
         if has_error {
@@ -259,29 +294,28 @@ impl CoreManager {
     }
     /// 只进行文件语法检查，不进行完整验证
     async fn validate_file_syntax(&self, config_path: &str) -> Result<(bool, String)> {
-        println!("[core配置语法检查] 开始检查文件: {}", config_path);
+        logging!(info, Type::Config, true, "开始检查文件: {}", config_path);
 
         // 读取文件内容
         let content = match std::fs::read_to_string(config_path) {
             Ok(content) => content,
             Err(err) => {
                 let error_msg = format!("Failed to read file: {}", err);
-                println!("[core配置语法检查] 无法读取文件: {}", error_msg);
+                logging!(error, Type::Config, true, "无法读取文件: {}", error_msg);
                 return Ok((false, error_msg));
             }
         };
-
         // 对YAML文件尝试解析，只检查语法正确性
-        println!("[core配置语法检查] 进行YAML语法检查");
+        logging!(info, Type::Config, true, "进行YAML语法检查");
         match serde_yaml::from_str::<serde_yaml::Value>(&content) {
             Ok(_) => {
-                println!("[core配置语法检查] YAML语法检查通过");
+                logging!(info, Type::Config, true, "YAML语法检查通过");
                 Ok((true, String::new()))
             }
             Err(err) => {
                 // 使用标准化的前缀，以便错误处理函数能正确识别
                 let error_msg = format!("YAML syntax error: {}", err);
-                println!("[core配置语法检查] YAML语法错误: {}", error_msg);
+                logging!(error, Type::Config, true, "YAML语法错误: {}", error_msg);
                 Ok((false, error_msg))
             }
         }
@@ -293,13 +327,13 @@ impl CoreManager {
             Ok(content) => content,
             Err(err) => {
                 let error_msg = format!("Failed to read script file: {}", err);
-                log::warn!(target: "app", "脚本语法错误: {}", err);
+                logging!(warn, Type::Config, true, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 return Ok((false, error_msg));
             }
         };
 
-        log::debug!(target: "app", "验证脚本文件: {}", path);
+        logging!(debug, Type::Config, true, "验证脚本文件: {}", path);
 
         // 使用boa引擎进行基本语法检查
         use boa_engine::{Context, Source};
@@ -309,7 +343,7 @@ impl CoreManager {
 
         match result {
             Ok(_) => {
-                log::debug!(target: "app", "脚本语法验证通过: {}", path);
+                logging!(debug, Type::Config, true, "脚本语法验证通过: {}", path);
 
                 // 检查脚本是否包含main函数
                 if !content.contains("function main")
@@ -317,7 +351,7 @@ impl CoreManager {
                     && !content.contains("let main")
                 {
                     let error_msg = "Script must contain a main function";
-                    log::warn!(target: "app", "脚本缺少main函数: {}", path);
+                    logging!(warn, Type::Config, true, "脚本缺少main函数: {}", path);
                     //handle::Handle::notice_message("config_validate::script_missing_main", error_msg);
                     return Ok((false, error_msg.to_string()));
                 }
@@ -326,7 +360,7 @@ impl CoreManager {
             }
             Err(err) => {
                 let error_msg = format!("Script syntax error: {}", err);
-                log::warn!(target: "app", "脚本语法错误: {}", err);
+                logging!(warn, Type::Config, true, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 Ok((false, error_msg))
             }
@@ -336,39 +370,45 @@ impl CoreManager {
     pub async fn update_config(&self) -> Result<(bool, String)> {
         // 检查程序是否正在退出，如果是则跳过完整验证流程
         if handle::Handle::global().is_exiting() {
-            println!("[core配置更新] 应用正在退出，跳过验证");
+            logging!(info, Type::Config, true, "应用正在退出，跳过验证");
             return Ok((true, String::new()));
         }
 
-        println!("[core配置更新] 开始更新配置");
+        logging!(info, Type::Config, true, "开始更新配置");
 
         // 1. 先生成新的配置内容
-        println!("[core配置更新] 生成新的配置内容");
+        logging!(info, Type::Config, true, "生成新的配置内容");
         Config::generate().await?;
 
         // 2. 生成临时文件并进行验证
-        println!("[core配置更新] 生成临时配置文件用于验证");
+        logging!(info, Type::Config, true, "生成临时配置文件用于验证");
         let temp_config = Config::generate_file(ConfigType::Check)?;
         let temp_config = dirs::path_to_str(&temp_config)?;
-        println!("[core配置更新] 临时配置文件路径: {}", temp_config);
+        logging!(
+            info,
+            Type::Config,
+            true,
+            "临时配置文件路径: {}",
+            temp_config
+        );
 
         // 3. 验证配置
         match self.validate_config().await {
             Ok((true, _)) => {
-                println!("[core配置更新] 配置验证通过");
+                logging!(info, Type::Config, true, "配置验证通过");
                 // 4. 验证通过后，生成正式的运行时配置
-                println!("[core配置更新] 生成运行时配置");
+                logging!(info, Type::Config, true, "生成运行时配置");
                 let run_path = Config::generate_file(ConfigType::Run)?;
-                logging_error!(Type::Core, true, self.put_configs_force(run_path).await);
+                logging_error!(Type::Config, true, self.put_configs_force(run_path).await);
                 Ok((true, "something".into()))
             }
             Ok((false, error_msg)) => {
-                println!("[core配置更新] 配置验证失败: {}", error_msg);
+                logging!(warn, Type::Config, true, "配置验证失败: {}", error_msg);
                 Config::runtime().discard();
                 Ok((false, error_msg))
             }
             Err(e) => {
-                println!("[core配置更新] 验证过程发生错误: {}", e);
+                logging!(warn, Type::Config, true, "验证过程发生错误: {}", e);
                 Config::runtime().discard();
                 Err(e)
             }
@@ -483,7 +523,7 @@ impl CoreManager {
         self.start_core().await?;
         logging!(trace, Type::Core, "Initied core");
         #[cfg(target_os = "macos")]
-        log_err!(Tray::global().subscribe_traffic().await);
+        logging_error!(Type::Core, true, Tray::global().subscribe_traffic().await);
         Ok(())
     }
 
