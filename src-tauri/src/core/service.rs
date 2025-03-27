@@ -30,6 +30,7 @@ pub struct ServiceState {
     pub install_count: u32,         // 24小时内安装次数
     pub last_check_time: u64,       // 上次检查时间
     pub last_error: Option<String>, // 上次错误信息
+    pub prefer_sidecar: bool,       // 用户是否偏好sidecar模式，如拒绝安装服务或安装失败
 }
 
 impl ServiceState {

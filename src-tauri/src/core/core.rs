@@ -520,7 +520,81 @@ impl CoreManager {
 
     pub async fn init(&self) -> Result<()> {
         logging!(trace, Type::Core, "Initializing core");
-        self.start_core().await?;
+
+        if service::is_service_available().await.is_ok() {
+            logging!(info, Type::Core, true, "服务可用，直接使用服务模式");
+
+            // 检查版本是否需要重装
+            if service::check_service_needs_reinstall().await {
+                logging!(info, Type::Core, true, "服务版本不匹配，执行重装");
+                service::reinstall_service().await?;
+            }
+
+            self.start_core_by_service().await?;
+        } else {
+            // 服务不可用，获取服务状态
+            let service_state = service::ServiceState::get();
+            let has_service_install_record = service_state.last_install_time > 0;
+
+            if service_state.prefer_sidecar {
+                logging!(
+                    info,
+                    Type::Core,
+                    true,
+                    "用户偏好Sidecar模式，使用Sidecar模式启动"
+                );
+                self.start_core_by_sidecar().await?;
+            }
+            // 检查是否已经有服务安装记录，如果没有，则尝试安装
+            else if !has_service_install_record {
+                logging!(info, Type::Core, true, "首次运行，服务不可用，尝试安装");
+
+                match service::install_service().await {
+                    Ok(_) => {
+                        logging!(info, Type::Core, true, "服务安装成功");
+
+                        let mut new_state = service::ServiceState::default();
+                        new_state.record_install();
+                        new_state.prefer_sidecar = false;
+                        new_state.save()?;
+
+                        if service::is_service_available().await.is_ok() {
+                            self.start_core_by_service().await?;
+                            logging!(info, Type::Core, true, "服务启动成功");
+                        } else {
+                            logging!(
+                                warn,
+                                Type::Core,
+                                true,
+                                "服务安装成功但未能连接，回退到Sidecar模式"
+                            );
+
+                            self.start_core_by_sidecar().await?;
+                        }
+                    }
+                    Err(err) => {
+                        // 安装失败，记录错误并使用sidecar模式
+                        logging!(warn, Type::Core, true, "服务安装失败: {}", err);
+
+                        let mut new_state = service::ServiceState::default();
+                        new_state.last_error = Some(err.to_string());
+                        new_state.prefer_sidecar = true; // 标记偏好sidecar模式
+                        new_state.save()?;
+
+                        self.start_core_by_sidecar().await?;
+                    }
+                }
+            } else {
+                logging!(
+                    info,
+                    Type::Core,
+                    true,
+                    "有服务安装记录但服务不可用，使用Sidecar模式"
+                );
+                self.start_core_by_sidecar().await?;
+            }
+        }
+
         logging!(trace, Type::Core, "Initied core");
         #[cfg(target_os = "macos")]
         logging_error!(Type::Core, true, Tray::global().subscribe_traffic().await);
@@ -543,9 +617,23 @@ impl CoreManager {
             if service::check_service_needs_reinstall().await {
                 service::reinstall_service().await?;
             }
+            logging!(info, Type::Core, true, "服务可用，使用服务模式启动");
             self.start_core_by_service().await?;
         } else {
-            self.start_core_by_sidecar().await?;
+            // 服务不可用，检查用户偏好
+            let service_state = service::ServiceState::get();
+            if service_state.prefer_sidecar {
+                logging!(
+                    info,
+                    Type::Core,
+                    true,
+                    "服务不可用，根据用户偏好使用Sidecar模式"
+                );
+                self.start_core_by_sidecar().await?;
+            } else {
+                logging!(info, Type::Core, true, "服务不可用，使用Sidecar模式");
+                self.start_core_by_sidecar().await?;
+            }
         }
         Ok(())
     }
