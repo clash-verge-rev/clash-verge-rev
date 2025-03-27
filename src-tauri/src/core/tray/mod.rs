@@ -45,9 +45,7 @@ pub struct Tray {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub struct Tray {
-    pub tray_state: Arc<Mutex<TrayState>>,
-}
+pub struct Tray {}
 
 impl TrayState {
     pub fn get_common_tray_icon() -> (bool, Vec<u8>) {
