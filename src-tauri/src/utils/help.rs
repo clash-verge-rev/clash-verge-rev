@@ -167,15 +167,16 @@ macro_rules! t {
 /// ```
 #[cfg(target_os = "macos")]
 pub fn format_bytes_speed(speed: u64) -> String {
-    if speed < 1024 {
-        format!("{}B/s", speed)
-    } else if speed < 1024 * 1024 {
-        format!("{:.1}KB/s", speed as f64 / 1024.0)
-    } else if speed < 1024 * 1024 * 1024 {
-        format!("{:.1}MB/s", speed as f64 / 1024.0 / 1024.0)
-    } else {
-        format!("{:.1}GB/s", speed as f64 / 1024.0 / 1024.0 / 1024.0)
+    const UNITS: [&str; 4] = ["B", "KB", "MB", "GB"];
+    let mut size = speed as f64;
+    let mut unit_index = 0;
+
+    while size >= 1000.0 && unit_index < UNITS.len() - 1 {
+        size /= 1024.0;
+        unit_index += 1;
     }
+
+    format!("{:.1}{}/s", size, UNITS[unit_index])
 }
 
 #[cfg(target_os = "macos")]

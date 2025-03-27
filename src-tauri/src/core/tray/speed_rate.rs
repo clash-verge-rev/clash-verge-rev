@@ -101,13 +101,17 @@ impl SpeedRate {
             false
         };
 
-        let total_width = if is_custom_icon {
-            450
-        } else if icon_bytes.is_some() {
-            icon_width + 580
-        } else {
-            580
+        let total_width = match (is_custom_icon, icon_bytes.is_some()) {
+            (true, true) => 510,
+            (true, false) => 740,
+            (false, false) => 740,
+            (false, true) => icon_width + 740,
         };
+
+        // println!(
+        //     "icon_height: {}, icon_wight: {}, total_width: {}",
+        //     icon_height, icon_width, total_width
+        // );
 
         // 创建新的透明画布
         let mut combined_image = RgbaImage::new(total_width, icon_height);
@@ -143,17 +147,30 @@ impl SpeedRate {
         let scale = ab_glyph::PxScale::from(font_size);
 
         // 使用更简洁的速率格式
-        let up_text = format_bytes_speed(rate.up);
-        let down_text = format_bytes_speed(rate.down);
+        let up_text = format!("↑ {}", format_bytes_speed(rate.up));
+        let down_text = format!("↓ {}", format_bytes_speed(rate.down));
+
+        // For test rate display
+        // let down_text = format!("↓ {}", format_bytes_speed(102 * 1020 * 1024));
 
         // 计算文本位置，确保垂直间距合适
         // 修改文本位置为居右显示
-        let up_text_width = imageproc::drawing::text_size(scale, &font, &up_text).0 as u32;
-        let down_text_width = imageproc::drawing::text_size(scale, &font, &down_text).0 as u32;
-
         // 计算右对齐的文本位置
-        let up_text_x = total_width - up_text_width;
-        let down_text_x = total_width - down_text_width;
+        // let up_text_width = imageproc::drawing::text_size(scale, &font, &up_text).0 as u32;
+        // let down_text_width = imageproc::drawing::text_size(scale, &font, &down_text).0 as u32;
+        // let up_text_x = total_width - up_text_width;
+        // let down_text_x = total_width - down_text_width;
+
+        // 计算左对齐的文本位置
+        let (up_text_x, down_text_x) = {
+            if is_custom_icon || icon_bytes.is_some() {
+                let text_left_offset = 30;
+                let left_begin = icon_width + text_left_offset;
+                (left_begin, left_begin)
+            } else {
+                (icon_width, icon_width)
+            }
+        };
 
         // 优化垂直位置，使速率显示的高度和上下间距正好等于图标大小
         let text_height = font_size as i32;
