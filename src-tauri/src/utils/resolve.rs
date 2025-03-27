@@ -135,6 +135,7 @@ pub fn resolve_reset() {
     tauri::async_runtime::block_on(async move {
         #[cfg(target_os = "macos")]
         logging!(info, Type::Tray, true, "Unsubscribing from traffic updates");
+        #[cfg(target_os = "macos")]
         tray::Tray::global().unsubscribe_traffic();
 
         logging_error!(
