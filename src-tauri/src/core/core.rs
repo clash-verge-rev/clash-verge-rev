@@ -480,14 +480,7 @@ impl CoreManager {
 
     pub async fn init(&self) -> Result<()> {
         logging!(trace, Type::Core, "Initializing core");
-        if service::is_service_available().await.is_ok() {
-            if service::check_service_needs_reinstall().await {
-                service::reinstall_service().await?;
-            }
-            self.start_core_by_service().await?;
-        } else {
-            self.start_core_by_sidecar().await?;
-        }
+        self.start_core().await?;
         logging!(trace, Type::Core, "Initied core");
         #[cfg(target_os = "macos")]
         log_err!(Tray::global().subscribe_traffic().await);
