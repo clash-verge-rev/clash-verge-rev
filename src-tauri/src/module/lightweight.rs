@@ -13,13 +13,13 @@ use crate::{
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
 
 pub fn enable_auto_light_weight_mode() {
-    logging!(info, Type::Lightweight, True, "开启自动轻量模式");
+    logging!(info, Type::Lightweight, true, "开启自动轻量模式");
     setup_window_close_listener();
     setup_webview_focus_listener();
 }
 
 pub fn disable_auto_light_weight_mode() {
-    logging!(info, Type::Lightweight, True, "关闭自动轻量模式");
+    logging!(info, Type::Lightweight, true, "关闭自动轻量模式");
     let _ = cancel_light_weight_timer();
     cancel_window_close_listener();
 }
@@ -34,7 +34,7 @@ pub fn entry_lightweight_mode() {
         }
         #[cfg(target_os = "macos")]
         AppHandleManager::global().set_activation_policy_accessory();
-        logging!(info, Type::Lightweight, True, "轻量模式已开启");
+        logging!(info, Type::Lightweight, true, "轻量模式已开启");
     }
     let _ = cancel_light_weight_timer();
 }
@@ -46,7 +46,7 @@ fn setup_window_close_listener() -> u32 {
             logging!(
                 info,
                 Type::Lightweight,
-                True,
+                true,
                 "监听到关闭请求，开始轻量模式计时"
             );
         });
@@ -62,7 +62,7 @@ fn setup_webview_focus_listener() -> u32 {
             logging!(
                 info,
                 Type::Lightweight,
-                True,
+                true,
                 "监听到窗口获得焦点，取消轻量模式计时"
             );
         });
@@ -74,7 +74,7 @@ fn setup_webview_focus_listener() -> u32 {
 fn cancel_window_close_listener() {
     if let Some(window) = handle::Handle::global().get_window() {
         window.unlisten(setup_window_close_listener());
-        logging!(info, Type::Lightweight, True, "取消了窗口关闭监听");
+        logging!(info, Type::Lightweight, true, "取消了窗口关闭监听");
     }
 }
 
@@ -98,7 +98,7 @@ fn setup_light_weight_timer() -> Result<()> {
         .set_maximum_parallel_runnable_num(1)
         .set_frequency_once_by_minutes(once_by_minutes)
         .spawn_async_routine(move || async move {
-            logging!(info, Type::Timer, True, "计时器到期，开始进入轻量模式");
+            logging!(info, Type::Timer, true, "计时器到期，开始进入轻量模式");
             entry_lightweight_mode();
         })
         .context("failed to create timer task")?;
@@ -118,7 +118,7 @@ fn setup_light_weight_timer() -> Result<()> {
     logging!(
         info,
         Type::Timer,
-        True,
+        true,
         "计时器已设置，{} 分钟后将自动进入轻量模式",
         once_by_minutes
     );
@@ -134,7 +134,7 @@ fn cancel_light_weight_timer() -> Result<()> {
         delay_timer
             .remove_task(task.task_id)
             .context("failed to remove timer task")?;
-        logging!(info, Type::Timer, True, "计时器已取消");
+        logging!(info, Type::Timer, true, "计时器已取消");
     }
 
     Ok(())
