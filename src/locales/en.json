@@ -201,6 +201,8 @@
   "Tun Mode": "Tun Mode",
   "TUN requires Service Mode": "TUN mode requires install service",
   "Install Service": "Install Service",
+  "Install Service failed": "Install Service failed",
+  "Restart Core failed": "Restart Core failed",
   "Reset to Default": "Reset to Default",
   "Tun Mode Info": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
   "System Proxy Enabled": "System proxy is enabled, your applications will access the network through the proxy",

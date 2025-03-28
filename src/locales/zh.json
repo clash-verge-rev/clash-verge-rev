@@ -201,6 +201,8 @@
   "Tun Mode": "虚拟网卡模式",
   "TUN requires Service Mode": "TUN 模式需要安装服务",
   "Install Service": "安装服务",
+  "Install Service failed": "安装服务失败",
+  "Restart Core failed": "重启核心失败",
   "Reset to Default": "重置为默认值",
   "Tun Mode Info": "TUN（虚拟网卡）模式接管系统所有流量，启用时无须打开系统代理",
   "System Proxy Enabled": "系统代理已启用，您的应用将通过代理访问网络",
