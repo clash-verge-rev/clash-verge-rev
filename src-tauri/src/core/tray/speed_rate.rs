@@ -76,10 +76,10 @@ impl SpeedRate {
     }
 
     // 分离图标加载和速率渲染
-    pub fn add_speed_text<'a>(
+    pub fn add_speed_text(
         is_custom_icon: bool,
         icon_bytes: Option<Vec<u8>>,
-        rate: Option<&'a Rate>,
+        rate: Option<&Rate>,
     ) -> Result<Vec<u8>> {
         let rate = rate.unwrap_or(&Rate { up: 0, down: 0 });
 

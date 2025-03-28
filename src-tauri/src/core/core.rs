@@ -576,9 +576,11 @@ impl CoreManager {
                         // 安装失败，记录错误并使用sidecar模式
                         logging!(warn, Type::Core, true, "服务安装失败: {}", err);
 
-                        let mut new_state = service::ServiceState::default();
-                        new_state.last_error = Some(err.to_string());
-                        new_state.prefer_sidecar = true; // 标记偏好sidecar模式
+                        let new_state = service::ServiceState {
+                            last_error: Some(err.to_string()),
+                            prefer_sidecar: true,
+                            ..Default::default()
+                        };
                         new_state.save()?;
 
                         self.start_core_by_sidecar().await?;
