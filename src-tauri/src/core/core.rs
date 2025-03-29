@@ -151,7 +151,6 @@ impl CoreManager {
         logging!(info, Type::Config, true, "生成临时配置文件用于验证");
         let config_path = Config::generate_file(ConfigType::Check)?;
         let config_path = dirs::path_to_str(&config_path)?;
-        println!("{}", config_path);
         self.validate_config_internal(config_path).await
     }
     /// 验证指定的配置文件
