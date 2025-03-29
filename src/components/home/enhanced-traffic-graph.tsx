@@ -60,7 +60,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
 
     // 根据时间范围计算保留的数据点数量
     const getMaxPointsByTimeRange = useCallback(
-      (minutes: TimeRange): number => minutes * 30,
+      (minutes: TimeRange): number => minutes * 60,
       []
     );
 
