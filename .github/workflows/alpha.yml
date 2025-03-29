@@ -25,7 +25,7 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Check if version changed
+      - name: Check if version changed or src changed
         id: check
         run: |
           # For manual workflow_dispatch, always run
@@ -50,8 +50,25 @@ jobs:
           if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
             echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
             echo "should_run=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if src or src-tauri directories changed
+          CURRENT_SRC_HASH=$(git rev-parse HEAD:src)
+          PREVIOUS_SRC_HASH=$(git rev-parse HEAD~1:src 2>/dev/null || echo "")
+          CURRENT_TAURI_HASH=$(git rev-parse HEAD:src-tauri 2>/dev/null || echo "")
+          PREVIOUS_TAURI_HASH=$(git rev-parse HEAD~1:src-tauri 2>/dev/null || echo "")
+
+          echo "Current src hash: $CURRENT_SRC_HASH"
+          echo "Previous src hash: $PREVIOUS_SRC_HASH"
+          echo "Current tauri hash: $CURRENT_TAURI_HASH"
+          echo "Previous tauri hash: $PREVIOUS_TAURI_HASH"
+
+          if [ "$CURRENT_SRC_HASH" != "$PREVIOUS_SRC_HASH" ] || [ "$CURRENT_TAURI_HASH" != "$PREVIOUS_TAURI_HASH" ]; then
+            echo "Source directories changed"
+            echo "should_run=true" >> $GITHUB_OUTPUT
           else
-            echo "Version unchanged: $CURRENT_VERSION"
+            echo "Version and source directories unchanged"
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
 

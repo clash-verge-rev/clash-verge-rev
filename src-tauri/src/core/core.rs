@@ -148,8 +148,10 @@ impl CoreManager {
     }
     /// 验证运行时配置
     pub async fn validate_config(&self) -> Result<(bool, String)> {
+        logging!(info, Type::Config, true, "生成临时配置文件用于验证");
         let config_path = Config::generate_file(ConfigType::Check)?;
         let config_path = dirs::path_to_str(&config_path)?;
+        println!("{}", config_path);
         self.validate_config_internal(config_path).await
     }
     /// 验证指定的配置文件
@@ -377,20 +379,8 @@ impl CoreManager {
         logging!(info, Type::Config, true, "开始更新配置");
 
         // 1. 先生成新的配置内容
-        logging!(info, Type::Config, true, "生成新的配置内容");
-        Config::generate().await?;
-
-        // 2. 生成临时文件并进行验证
-        logging!(info, Type::Config, true, "生成临时配置文件用于验证");
-        let temp_config = Config::generate_file(ConfigType::Check)?;
-        let temp_config = dirs::path_to_str(&temp_config)?;
-        logging!(
-            info,
-            Type::Config,
-            true,
-            "临时配置文件路径: {}",
-            temp_config
-        );
+        // logging!(info, Type::Config, true, "生成新的配置内容");
+        // Config::generate().await?;
 
         // 3. 验证配置
         match self.validate_config().await {

@@ -154,6 +154,8 @@ impl Config {
             chain_logs: logs,
         };
 
+        println!("generate runtime draft");
+
         Ok(())
     }
 }

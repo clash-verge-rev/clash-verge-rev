@@ -85,7 +85,8 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     // 更新profiles配置
     logging!(info, Type::Cmd, true, "正在更新配置草稿");
-    wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
+    let _ = Config::profiles().draft().patch_config(profiles);
+
     // 更新配置并进行验证
     match CoreManager::global().update_config().await {
         Ok((true, _)) => {

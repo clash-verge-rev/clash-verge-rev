@@ -1,10 +1,11 @@
 use super::{prfitem::PrfItem, PrfOption};
-use crate::utils::{dirs, help};
-use crate::{logging, utils::logging::Type};
+use crate::{
+    logging,
+    utils::{dirs, help, logging::Type},
+};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_yaml::Mapping;
-use serde_yaml::Value;
+use serde_yaml::{Mapping, Value};
 use std::{fs, io::Write};
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
