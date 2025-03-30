@@ -10,7 +10,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-git add .
+#git add .
 
 # 允许提交
 exit 0

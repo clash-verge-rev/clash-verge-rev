@@ -59,7 +59,7 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: 日志 / Log
-      description: 请提供完整或相关部分的Debug日志（请在“软件左侧菜单”->“设置”->“日志等级”调整到debug，Verge错误请把“杂项设置”->“app日志等级”调整到debug/trace，并重启Verge生效。日志文件在“软件左侧菜单”->“设置”->“日志目录”下） / Please provide a complete or relevant part of the Debug log (please adjust the "Log level" to debug in "Software left menu" -> "Settings" -> "Log level". If there is a Verge error, please adjust "Miscellaneous settings" -> "app log level" to trace, and restart Verge to take effect. The log file is under "Software left menu" -> "Settings" -> "Log directory")
+      label: 日志(勿上传日志文件，请粘贴日志内容) / Log (Do not upload the log file, paste the log content directly)
+      description: 请提供完整或相关部分的Debug日志（请在“软件左侧菜单”->“设置”->“日志等级”调整到debug，Verge错误请把“杂项设置”->“app日志等级”调整到debug，并重启Verge生效。日志文件在“软件左侧菜单”->“设置”->“日志目录”下） / Please provide a complete or relevant part of the Debug log (please adjust the "Log level" to debug in "Software left menu" -> "Settings" -> "Log level". If there is a Verge error, please adjust "Miscellaneous settings" -> "app log level" to debug, and restart Verge to take effect. The log file is under "Software left menu" -> "Settings" -> "Log directory")
     validations:
       required: true
