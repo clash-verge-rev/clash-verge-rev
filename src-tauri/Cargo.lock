@@ -1059,6 +1059,7 @@ dependencies = [
  "getrandom 0.3.2",
  "image",
  "imageproc",
+ "libc",
  "log",
  "log4rs",
  "mihomo_api",

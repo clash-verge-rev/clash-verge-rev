@@ -73,6 +73,7 @@ async-trait = "0.1.88"
 mihomo_api = { path = "src_crates/crate_mihomo_api" }
 ab_glyph = "0.2.29"
 tungstenite = "0.26.2"
+libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
