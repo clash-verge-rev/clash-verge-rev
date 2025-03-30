@@ -5,6 +5,8 @@ import {
   ListItemButton,
   Typography,
   styled,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import {
   ExpandLessRounded,
@@ -21,6 +23,7 @@ import { useThemeMode } from "@/services/states";
 import { useEffect, useMemo, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { downloadIconCache } from "@/services/cmds";
+import { useTranslation } from "react-i18next";
 
 interface RenderProps {
   item: IRenderItem;
@@ -32,6 +35,7 @@ interface RenderProps {
 }
 
 export const ProxyRender = (props: RenderProps) => {
+  const { t } = useTranslation();
   const { indent, item, onLocation, onCheckAll, onHeadState, onChangeProxy } =
     props;
   const { type, group, headState, proxy, proxyCol } = item;
@@ -123,7 +127,20 @@ export const ProxyRender = (props: RenderProps) => {
             },
           }}
         />
-        {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Tooltip title={t("Proxy Count")} arrow>
+            <Chip 
+              size="small" 
+              label={`${group.all.length}`} 
+              sx={{ 
+                mr: 1, 
+                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                color: (theme) => theme.palette.primary.main,
+              }} 
+            />
+          </Tooltip>
+          {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
+        </Box>
       </ListItemButton>
     );
   }
