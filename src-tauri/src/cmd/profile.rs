@@ -1,8 +1,8 @@
 use super::CmdResult;
 use crate::{
-    config::*,
-    core::{tray::Tray, *},
-    feat, logging, logging_error, ret_err,
+    config::{Config, IProfiles, PrfItem, PrfOption},
+    core::{handle, tray::Tray, CoreManager},
+    feat, logging, ret_err,
     utils::{dirs, help, logging::Type},
     wrap_err,
 };
@@ -10,31 +10,16 @@ use crate::{
 /// 获取配置文件列表
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
-    let _ = tray::Tray::global().update_menu();
+    let _ = Tray::global().update_menu();
     Ok(Config::profiles().data().clone())
 }
 
 /// 增强配置文件
 #[tauri::command]
 pub async fn enhance_profiles() -> CmdResult {
-    match CoreManager::global().update_config().await {
-        Ok((true, _)) => {
-            logging!(info, Type::Cmd, true, "配置更新成功");
-            logging_error!(Type::Tray, true, Tray::global().update_tooltip());
-            handle::Handle::refresh_clash();
-            Ok(())
-        }
-        Ok((false, error_msg)) => {
-            println!("[enhance_profiles] 配置验证失败: {}", error_msg);
-            handle::Handle::notice_message("config_validate::error", &error_msg);
-            Ok(())
-        }
-        Err(e) => {
-            println!("[enhance_profiles] 更新过程发生错误: {}", e);
-            handle::Handle::notice_message("config_validate::process_terminated", e.to_string());
-            Ok(())
-        }
-    }
+    wrap_err!(feat::enhance_profiles().await)?;
+    handle::Handle::refresh_clash();
+    Ok(())
 }
 
 /// 导入配置文件
@@ -83,6 +68,81 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     let current_profile = Config::profiles().latest().current.clone();
     logging!(info, Type::Cmd, true, "当前配置: {:?}", current_profile);
 
+    // 如果要切换配置，先检查目标配置文件是否有语法错误
+    if let Some(new_profile) = profiles.current.as_ref() {
+        if current_profile.as_ref() != Some(new_profile) {
+            logging!(info, Type::Cmd, true, "正在切换到新配置: {}", new_profile);
+
+            // 获取目标配置文件路径
+            let profiles_config = Config::profiles();
+            let profiles_data = profiles_config.latest();
+            let config_file_result = match profiles_data.get_item(new_profile) {
+                Ok(item) => {
+                    if let Some(file) = &item.file {
+                        let path = dirs::app_profiles_dir().map(|dir| dir.join(file));
+                        path.ok()
+                    } else {
+                        None
+                    }
+                }
+                Err(e) => {
+                    logging!(error, Type::Cmd, true, "获取目标配置信息失败: {}", e);
+                    None
+                }
+            };
+
+            // 如果获取到文件路径，检查YAML语法
+            if let Some(file_path) = config_file_result {
+                if !file_path.exists() {
+                    logging!(
+                        error,
+                        Type::Cmd,
+                        true,
+                        "目标配置文件不存在: {}",
+                        file_path.display()
+                    );
+                    handle::Handle::notice_message(
+                        "config_validate::file_not_found",
+                        &format!("{}", file_path.display()),
+                    );
+                    return Ok(false);
+                }
+
+                match std::fs::read_to_string(&file_path) {
+                    Ok(content) => match serde_yaml::from_str::<serde_yaml::Value>(&content) {
+                        Ok(_) => {
+                            logging!(info, Type::Cmd, true, "目标配置文件语法正确");
+                        }
+                        Err(err) => {
+                            let error_msg = format!(" {}", err);
+                            logging!(
+                                error,
+                                Type::Cmd,
+                                true,
+                                "目标配置文件存在YAML语法错误:{}",
+                                error_msg
+                            );
+                            handle::Handle::notice_message(
+                                "config_validate::yaml_syntax_error",
+                                &error_msg,
+                            );
+                            return Ok(false);
+                        }
+                    },
+                    Err(err) => {
+                        let error_msg = format!("无法读取目标配置文件: {}", err);
+                        logging!(error, Type::Cmd, true, "{}", error_msg);
+                        handle::Handle::notice_message(
+                            "config_validate::file_read_error",
+                            &error_msg,
+                        );
+                        return Ok(false);
+                    }
+                }
+            }
+        }
+    }
+
     // 更新profiles配置
     logging!(info, Type::Cmd, true, "正在更新配置草稿");
     let _ = Config::profiles().draft().patch_config(profiles);
@@ -92,7 +152,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         Ok((true, _)) => {
             logging!(info, Type::Cmd, true, "配置更新成功");
             handle::Handle::refresh_clash();
-            let _ = tray::Tray::global().update_tooltip();
+            let _ = Tray::global().update_tooltip();
             Config::profiles().apply();
             wrap_err!(Config::profiles().data().save_file())?;
             Ok(true)
@@ -139,6 +199,8 @@ pub async fn patch_profiles_config_by_profile_index(
     _app_handle: tauri::AppHandle,
     profile_index: String,
 ) -> CmdResult<bool> {
+    logging!(info, Type::Cmd, true, "切换配置到: {}", profile_index);
+
     let profiles = IProfiles {
         current: Some(profile_index),
         items: None,

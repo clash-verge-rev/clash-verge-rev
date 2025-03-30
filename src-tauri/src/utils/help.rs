@@ -1,8 +1,10 @@
 use crate::enhance::seq::SeqMap;
+use crate::logging;
+use crate::utils::logging::Type;
 use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
-use serde_yaml::{Mapping, Value};
+use serde_yaml::Mapping;
 use std::{fs, path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
@@ -22,19 +24,41 @@ pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
     })
 }
 
-/// read mapping from yaml fix #165
+/// read mapping from yaml
 pub fn read_mapping(path: &PathBuf) -> Result<Mapping> {
-    let mut val: Value = read_yaml(path)?;
-    val.apply_merge()
-        .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
+    if !path.exists() {
+        bail!("file not found \"{}\"", path.display());
+    }
 
-    Ok(val
-        .as_mapping()
-        .ok_or(anyhow!(
-            "failed to transform to yaml mapping \"{}\"",
-            path.display()
-        ))?
-        .to_owned())
+    let yaml_str = fs::read_to_string(path)
+        .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
+
+    // YAML语法检查
+    match serde_yaml::from_str::<serde_yaml::Value>(&yaml_str) {
+        Ok(mut val) => {
+            val.apply_merge()
+                .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
+
+            Ok(val
+                .as_mapping()
+                .ok_or(anyhow!(
+                    "failed to transform to yaml mapping \"{}\"",
+                    path.display()
+                ))?
+                .to_owned())
+        }
+        Err(err) => {
+            let error_msg = format!("YAML syntax error in {}: {}", path.display(), err);
+            logging!(error, Type::Config, true, "{}", error_msg);
+
+            crate::core::handle::Handle::notice_message(
+                "config_validate::yaml_syntax_error",
+                &error_msg,
+            );
+
+            bail!("YAML syntax error: {}", err)
+        }
+    }
 }
 
 /// read mapping from yaml fix #165

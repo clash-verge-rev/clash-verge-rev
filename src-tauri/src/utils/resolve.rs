@@ -239,6 +239,24 @@ pub fn create_window() {
 
             // 设置窗口状态监控，实时保存窗口位置和大小
             crate::feat::setup_window_state_monitor(&app_handle);
+
+            // 标记前端UI已准备就绪，向前端发送启动完成事件
+            let app_handle_clone = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                use tauri::Emitter;
+
+                logging!(
+                    info,
+                    Type::Window,
+                    true,
+                    "标记前端UI已准备就绪，开始处理启动错误队列"
+                );
+                handle::Handle::global().mark_startup_completed();
+
+                if let Some(window) = app_handle_clone.get_webview_window("main") {
+                    let _ = window.emit("verge://startup-completed", ());
+                }
+            });
         }
         Err(e) => {
             logging!(

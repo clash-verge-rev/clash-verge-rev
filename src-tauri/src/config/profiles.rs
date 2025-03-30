@@ -1,12 +1,10 @@
 use super::{prfitem::PrfItem, PrfOption};
-use crate::{
-    logging,
-    utils::{dirs, help, logging::Type},
-};
+use crate::utils::{dirs, help};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_yaml::{Mapping, Value};
+use serde_yaml::Mapping;
 use std::{fs, io::Write};
+
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IProfiles {
@@ -384,92 +382,16 @@ impl IProfiles {
     pub fn current_mapping(&self) -> Result<Mapping> {
         match (self.current.as_ref(), self.items.as_ref()) {
             (Some(current), Some(items)) => {
-                logging!(
-                    info,
-                    Type::Config,
-                    true,
-                    "开始获取当前配置文件 current_uid={}",
-                    current
-                );
-                logging!(info, Type::Core, true, "服务可用，直接使用服务模式");
                 if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
                     let file_path = match item.file.as_ref() {
-                        Some(file) => {
-                            let path = dirs::app_profiles_dir()?.join(file);
-                            logging!(
-                                info,
-                                Type::Config,
-                                true,
-                                "找到配置文件路径: {}",
-                                path.display()
-                            );
-                            path
-                        }
-                        None => {
-                            logging!(
-                                error,
-                                Type::Config,
-                                true,
-                                "配置项缺少file字段 uid={}",
-                                current
-                            );
-                            bail!("failed to get the file field");
-                        }
+                        Some(file) => dirs::app_profiles_dir()?.join(file),
+                        None => bail!("failed to get the file field"),
                     };
-                    if !file_path.exists() {
-                        logging!(
-                            error,
-                            Type::Config,
-                            true,
-                            "配置文件不存在: {}",
-                            file_path.display()
-                        );
-                    }
-                    match help::read_mapping(&file_path) {
-                        Ok(mapping) => {
-                            let key_count = mapping.len();
-                            logging!(
-                                info,
-                                Type::Config,
-                                true,
-                                "成功读取配置文件, 包含{}个键值对",
-                                key_count
-                            );
-                            // 打印主要的配置键
-                            let important_keys = ["proxies", "proxy-groups", "rules"];
-                            for key in important_keys.iter() {
-                                if mapping.contains_key(&Value::from(*key)) {
-                                    logging!(info, Type::Config, true, "配置包含关键字段: {}", key);
-                                } else {
-                                    logging!(warn, Type::Config, true, "配置缺少关键字段: {}", key);
-                                }
-                            }
-                            return Ok(mapping);
-                        }
-                        Err(e) => {
-                            logging!(error, Type::Config, true, "读取配置文件失败: {}", e);
-                            // 将错误发送到前端显示
-                            crate::core::handle::Handle::notice_message(
-                                "config_validate::yaml_syntax_error",
-                                &format!("{}", e),
-                            );
-                            return Err(e);
-                        }
-                    }
+                    return help::read_mapping(&file_path);
                 }
-                logging!(
-                    error,
-                    Type::Config,
-                    true,
-                    "未找到当前配置项 uid={}",
-                    current
-                );
                 bail!("failed to find the current profile \"uid:{current}\"");
             }
-            _ => {
-                logging!(warn, Type::Config, true, "没有当前配置项，返回空配置");
-                Ok(Mapping::new())
-            }
+            _ => Ok(Mapping::new()),
         }
     }
 

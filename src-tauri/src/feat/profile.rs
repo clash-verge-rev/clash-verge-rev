@@ -82,3 +82,11 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
 
     Ok(())
 }
+
+/// 增强配置
+pub async fn enhance_profiles() -> Result<()> {
+    crate::core::CoreManager::global()
+        .update_config()
+        .await
+        .map(|_| ())
+}
