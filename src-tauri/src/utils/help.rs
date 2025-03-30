@@ -1,6 +1,4 @@
-use crate::enhance::seq::SeqMap;
-use crate::logging;
-use crate::utils::logging::Type;
+use crate::{enhance::seq::SeqMap, logging, utils::logging::Type};
 use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};

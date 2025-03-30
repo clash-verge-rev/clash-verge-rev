@@ -378,10 +378,10 @@ impl CoreManager {
         logging!(info, Type::Config, true, "开始更新配置");
 
         // 1. 先生成新的配置内容
-        // logging!(info, Type::Config, true, "生成新的配置内容");
-        // Config::generate().await?;
+        logging!(info, Type::Config, true, "生成新的配置内容");
+        Config::generate().await?;
 
-        // 3. 验证配置
+        // 2. 验证配置
         match self.validate_config().await {
             Ok((true, _)) => {
                 logging!(info, Type::Config, true, "配置验证通过");
