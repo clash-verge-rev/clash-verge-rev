@@ -109,7 +109,7 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
 
 /// logs dir
 pub fn app_logs_dir() -> Result<PathBuf> {
-    Ok(app_home_dir()?.join("icons"))
+    Ok(app_home_dir()?.join("logs"))
 }
 
 pub fn clash_path() -> Result<PathBuf> {
