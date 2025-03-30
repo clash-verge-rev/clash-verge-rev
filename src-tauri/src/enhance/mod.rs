@@ -174,31 +174,40 @@ pub fn get_pre_merge_result(
             // get new profile chain, index form 0 to modified chain index.
             log::info!("excute profile chains until find the modified chain");
             let profile_chain = {
-                let chain = profiles.get_profile_chains(Some(profile_uid), EnableFilter::Enable);
-                match chain.iter().position(|v| *v.uid == modified_uid) {
+                let chain = profiles.get_profile_chains(Some(profile_uid), EnableFilter::All);
+                let new_chain = match chain.iter().position(|v| *v.uid == modified_uid) {
                     Some(index) => chain[..index].to_vec(),
                     None => chain,
-                }
+                };
+                new_chain.into_iter().filter(|c| c.enable).collect()
             };
             // execute new profile chain
             excute_chains(&mut config, &profile_chain, &mut script_logs);
         }
         None => {
             log::info!("excute global chains until find the modified chain");
-            let global_chain = match profiles.chain.as_ref() {
-                Some(chain) => {
-                    let new_chain = match chain.iter().position(|v| *v == modified_uid) {
-                        Some(index) => chain[..index].to_vec(),
-                        None => chain.to_vec(),
-                    };
-                    new_chain
-                        .iter()
-                        .filter_map(|uid| profiles.get_item(uid).cloned().ok())
-                        .filter_map(<Option<ChainItem>>::from)
-                        .collect::<Vec<ChainItem>>()
-                }
-                None => vec![],
+            let global_chain = {
+                let chain = profiles.get_profile_chains(None, EnableFilter::All);
+                let new_chain = match chain.iter().position(|v| *v.uid == modified_uid) {
+                    Some(index) => chain[..index].to_vec(),
+                    None => chain,
+                };
+                new_chain.into_iter().filter(|c| c.enable).collect()
             };
+            // let global_chain = match profiles.chain.as_ref() {
+            //     Some(chain) => {
+            //         let new_chain = match chain.iter().position(|v| *v == modified_uid) {
+            //             Some(index) => chain[..index].to_vec(),
+            //             None => chain.to_vec(),
+            //         };
+            //         new_chain
+            //             .iter()
+            //             .filter_map(|uid| profiles.get_item(uid).cloned().ok())
+            //             .filter_map(<Option<ChainItem>>::from)
+            //             .collect::<Vec<ChainItem>>()
+            //     }
+            //     None => vec![],
+            // };
             // global chain
             excute_chains(&mut config, &global_chain, &mut script_logs);
         }
