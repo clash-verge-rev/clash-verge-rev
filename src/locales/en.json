@@ -254,6 +254,7 @@
   "PAC Script Content": "PAC Script Content",
   "PAC URL": "PAC URL: ",
   "Auto Launch": "Auto Launch",
+  "Administrator mode does not support auto launch": "Administrator mode does not support auto launch",
   "Silent Start": "Silent Start",
   "Silent Start Info": "Start the program in background mode without displaying the panel",
   "TG Channel": "Telegram Channel",

@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Typography, Stack, Divider, Chip, IconButton } from "@mui/material";
-import { InfoOutlined, SettingsOutlined } from "@mui/icons-material";
+import { Typography, Stack, Divider, Chip, IconButton, Tooltip } from "@mui/material";
+import { InfoOutlined, SettingsOutlined, WarningOutlined } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { EnhancedCard } from "./enhanced-card";
 import useSWR from "swr";
-import { getRunningMode, getSystemInfo, installService } from "@/services/cmds";
+import { getRunningMode, getSystemInfo, installService, isAdmin } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import { version as appVersion } from "@root/package.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -27,6 +27,13 @@ export const SystemInfoCard = () => {
   const { data: runningMode = "Sidecar", mutate: mutateRunningMode } = useSWR(
     "getRunningMode",
     getRunningMode,
+    { suspense: false, revalidateOnFocus: false },
+  );
+
+  // 获取管理员状态
+  const { data: isAdminMode = false } = useSWR(
+    "isAdmin",
+    isAdmin,
     { suspense: false, revalidateOnFocus: false },
   );
 
@@ -107,13 +114,13 @@ export const SystemInfoCard = () => {
 
   // 切换自启动状态
   const toggleAutoLaunch = useCallback(async () => {
-    if (!verge) return;
+    if (!verge || isAdminMode) return;
     try {
       await patchVerge({ enable_auto_launch: !verge.enable_auto_launch });
     } catch (err) {
       console.error("切换开机自启动状态失败:", err);
     }
-  }, [verge, patchVerge]);
+  }, [verge, patchVerge, isAdminMode]);
 
   // 安装系统服务
   const onInstallService = useLockFn(async () => {
@@ -191,18 +198,26 @@ export const SystemInfoCard = () => {
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="body2" color="text.secondary">
             {t("Auto Launch")}
           </Typography>
-          <Chip
-            size="small"
-            label={autoLaunchEnabled ? t("Enabled") : t("Disabled")}
-            color={autoLaunchEnabled ? "success" : "default"}
-            variant={autoLaunchEnabled ? "filled" : "outlined"}
-            onClick={toggleAutoLaunch}
-            sx={{ cursor: "pointer" }}
-          />
+          <Stack direction="row" spacing={1} alignItems="center">
+            {isAdminMode && (
+              <Tooltip title={t("Administrator mode does not support auto launch")}>
+                <WarningOutlined sx={{ color: "warning.main", fontSize: 20 }} />
+              </Tooltip>
+            )}
+            <Chip
+              size="small"
+              label={autoLaunchEnabled ? t("Enabled") : t("Disabled")}
+              color={autoLaunchEnabled ? "success" : "default"}
+              variant={autoLaunchEnabled ? "filled" : "outlined"}
+              onClick={toggleAutoLaunch}
+              disabled={isAdminMode}
+              sx={{ cursor: isAdminMode ? "not-allowed" : "pointer" }}
+            />
+          </Stack>
         </Stack>
         <Divider />
         <Stack direction="row" justifyContent="space-between">

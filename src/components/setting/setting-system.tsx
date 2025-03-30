@@ -21,6 +21,7 @@ import {
   getRunningMode,
   installService,
   getAutoLaunchStatus,
+  isAdmin,
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { Box, Button, Tooltip } from "@mui/material";
@@ -43,6 +44,11 @@ const SettingSystem = ({ onError }: Props) => {
   const { data: autoLaunchEnabled } = useSWR(
     "getAutoLaunchStatus",
     getAutoLaunchStatus,
+    { revalidateOnFocus: false }
+  );
+  const { data: isAdminMode = false } = useSWR(
+    "isAdmin",
+    isAdmin,
     { revalidateOnFocus: false }
   );
 
@@ -192,14 +198,32 @@ const SettingSystem = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Auto Launch")}>
+      <SettingItem 
+        label={t("Auto Launch")}
+        extra={
+          isAdminMode && (
+            <Tooltip title={t("Administrator mode does not support auto launch")}>
+              <WarningRounded sx={{ color: "warning.main", mr: 1 }} />
+            </Tooltip>
+          )
+        }
+      >
         <GuardState
           value={enable_auto_launch ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_auto_launch: e })}
+          onChange={(e) => {
+            // 在管理员模式下禁用更改
+            if (isAdminMode) return;
+            onChangeData({ enable_auto_launch: e });
+          }}
           onGuard={async (e) => {
+            if (isAdminMode) {
+              Notice.error(t("Administrator mode does not support auto launch"), 2000);
+              return Promise.reject(new Error(t("Administrator mode does not support auto launch")));
+            }
+            
             try {
               // 在应用更改之前先触发UI更新，让用户立即看到反馈
               onChangeData({ enable_auto_launch: e });
@@ -214,7 +238,7 @@ const SettingSystem = ({ onError }: Props) => {
             }
           }}
         >
-          <Switch edge="end" />
+          <Switch edge="end" disabled={isAdminMode} />
         </GuardState>
       </SettingItem>
 

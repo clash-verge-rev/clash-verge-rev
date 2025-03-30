@@ -254,6 +254,7 @@
   "PAC Script Content": "PAC 脚本内容",
   "PAC URL": "PAC 地址：",
   "Auto Launch": "开机自启",
+  "Administrator mode does not support auto launch": "管理员模式不支持开机自启",
   "Silent Start": "静默启动",
   "Silent Start Info": "程序启动时以后台模式运行，不显示程序面板",
   "TG Channel": "Telegram 频道",

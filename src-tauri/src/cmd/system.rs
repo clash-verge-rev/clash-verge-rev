@@ -58,3 +58,37 @@ pub fn get_app_uptime() -> CmdResult<i64> {
 
     Ok(now - start_time)
 }
+
+/// 检查应用是否以管理员身份运行
+#[tauri::command]
+#[cfg(target_os = "windows")]
+pub fn is_admin() -> CmdResult<bool> {
+    use deelevate::{PrivilegeLevel, Token};
+    
+    let result = Token::with_current_process()
+        .and_then(|token| token.privilege_level())
+        .map(|level| level != PrivilegeLevel::NotPrivileged)
+        .unwrap_or(false);
+    
+    Ok(result)
+}
+
+/// 非Windows平台检测是否以管理员身份运行
+#[tauri::command]
+#[cfg(not(target_os = "windows"))]
+pub fn is_admin() -> CmdResult<bool> {
+    #[cfg(target_os = "macos")]
+    {
+        Ok(unsafe { libc::geteuid() } == 0)
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        Ok(unsafe { libc::geteuid() } == 0)
+    }
+    
+    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    {
+        Ok(false)
+    }
+}

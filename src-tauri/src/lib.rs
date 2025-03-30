@@ -154,6 +154,7 @@ pub fn run() {
             cmd::get_running_mode,
             cmd::get_app_uptime,
             cmd::get_auto_launch_status,
+            cmd::is_admin,
             // service 管理
             cmd::install_service,
             cmd::uninstall_service,
