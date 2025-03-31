@@ -120,15 +120,17 @@ export const SystemInfoCard = () => {
       Notice.info(t("Installing Service..."), 1000);
       await installService();
       Notice.success(t("Service Installed Successfully"), 2000);
-      await mutateRunningMode();
+
+        await mutateRunningMode();
+
     } catch (err: any) {
       Notice.error(err.message || err.toString(), 3000);
     }
   });
 
-  // 点击运行模式处理
+  // 点击运行模式处理,Sidecar或纯管理员模式允许安装服务
   const handleRunningModeClick = useCallback(() => {
-    if (isSidecarMode || isAdminMode) {
+    if (isSidecarMode || (isAdminMode && isSidecarMode)) {
       onInstallService();
     }
   }, [isSidecarMode, isAdminMode, onInstallService]);
@@ -157,13 +159,14 @@ export const SystemInfoCard = () => {
   // 运行模式样式
   const runningModeStyle = useMemo(
     () => ({
-      cursor: (isSidecarMode || isAdminMode) ? "pointer" : "default",
-      textDecoration: (isSidecarMode || isAdminMode) ? "underline" : "none",
+      // Sidecar或纯管理员模式允许安装服务
+      cursor: (isSidecarMode || (isAdminMode && isSidecarMode)) ? "pointer" : "default",
+      textDecoration: (isSidecarMode || (isAdminMode && isSidecarMode)) ? "underline" : "none",
       display: "flex",
       alignItems: "center",
       gap: 0.5,
       "&:hover": {
-        opacity: (isSidecarMode || isAdminMode) ? 0.7 : 1,
+        opacity: (isSidecarMode || (isAdminMode && isSidecarMode)) ? 0.7 : 1,
       },
     }),
     [isSidecarMode, isAdminMode],
@@ -172,6 +175,21 @@ export const SystemInfoCard = () => {
   // 获取模式图标和文本
   const getModeIcon = () => {
     if (isAdminMode) {
+      // 判断是否为组合模式（管理员+服务）
+      if (!isSidecarMode) {
+        return (
+          <>
+            <AdminPanelSettingsOutlined 
+              sx={{ color: "primary.main", fontSize: 16 }} 
+              titleAccess={t("Administrator Mode")}
+            />
+            <DnsOutlined 
+              sx={{ color: "success.main", fontSize: 16, ml: 0.5 }} 
+              titleAccess={t("Service Mode")}
+            />
+          </>
+        );
+      }
       return (
         <AdminPanelSettingsOutlined 
           sx={{ color: "primary.main", fontSize: 16 }} 
@@ -192,6 +210,21 @@ export const SystemInfoCard = () => {
           titleAccess={t("Service Mode")}
         />
       );
+    }
+  };
+
+  // 获取模式文本
+  const getModeText = () => {
+    if (isAdminMode) {
+      // 判断是否同时处于服务模式
+      if (!isSidecarMode) {
+        return t("Administrator + Service Mode");
+      }
+      return t("Administrator Mode");
+    } else if (isSidecarMode) {
+      return t("Sidecar Mode");
+    } else {
+      return t("Service Mode");
     }
   };
 
@@ -252,9 +285,7 @@ export const SystemInfoCard = () => {
             sx={runningModeStyle}
           >
             {getModeIcon()}
-            {isAdminMode 
-              ? t("Administrator Mode") 
-              : isSidecarMode ? t("Sidecar Mode") : t("Service Mode")}
+            {getModeText()}
           </Typography>
         </Stack>
         <Divider />

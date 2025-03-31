@@ -555,6 +555,7 @@
   "Running Mode": "运行模式",
   "Sidecar Mode": "用户模式",
   "Administrator Mode": "管理员模式",
+  "Administrator + Service Mode": "管理员 + 服务模式",
   "Last Check Update": "最后检查更新",
   "Click to import subscription": "点击导入订阅",
   "Update subscription successfully": "订阅更新成功",
