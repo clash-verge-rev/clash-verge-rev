@@ -1,3 +1,4 @@
+use crate::cmd::system;
 use crate::core::{handle, CoreManager};
 use std::fmt::{self, Debug, Formatter};
 use sysinfo::System;
@@ -9,14 +10,15 @@ pub struct PlatformSpecification {
     system_arch: String,
     verge_version: String,
     running_mode: String,
+    is_admin: bool,
 }
 
 impl Debug for PlatformSpecification {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "System Name: {}\nSystem Version: {}\nSystem kernel Version: {}\nSystem Arch: {}\nVerge Version: {}\nRunning Mode: {}",
-            self.system_name, self.system_version, self.system_kernel_version, self.system_arch, self.verge_version, self.running_mode
+            "System Name: {}\nSystem Version: {}\nSystem kernel Version: {}\nSystem Arch: {}\nVerge Version: {}\nRunning Mode: {}\nIs Admin: {}",
+            self.system_name, self.system_version, self.system_kernel_version, self.system_arch, self.verge_version, self.running_mode, self.is_admin
         )
     }
 }
@@ -40,6 +42,11 @@ impl PlatformSpecification {
             })
         });
 
+        let is_admin = match system::is_admin() {
+            Ok(value) => value,
+            Err(_) => false,
+        };
+
         Self {
             system_name,
             system_version,
@@ -47,6 +54,7 @@ impl PlatformSpecification {
             system_arch,
             verge_version,
             running_mode,
+            is_admin,
         }
     }
 }
