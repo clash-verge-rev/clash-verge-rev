@@ -140,4 +140,23 @@ impl MihomoManager {
         let response = self.send_request(Method::GET, url, None).await?;
         Ok(response)
     }
+
+    pub async fn get_connections(&self) -> Result<serde_json::Value, String> {
+        let url = format!("{}/connections", self.mihomo_server);
+        let response = self.send_request(Method::GET, url, None).await?;
+        Ok(response)
+    }
+
+    pub async fn delete_connection(&self, id: &str) -> Result<(), String> {
+        let url = format!("{}/connections/{}", self.mihomo_server, id);
+        let response = self.send_request(Method::DELETE, url, None).await?;
+        if response["code"] == 204 {
+            Ok(())
+        } else {
+            Err(response["message"]
+                .as_str()
+                .unwrap_or("unknown error")
+                .to_string())
+        }
+    }
 }

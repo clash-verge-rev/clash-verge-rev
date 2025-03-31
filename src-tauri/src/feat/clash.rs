@@ -37,6 +37,19 @@ pub fn restart_app() {
     });
 }
 
+fn after_change_clash_mode() {
+    tauri::async_runtime::block_on(tauri::async_runtime::spawn_blocking(|| {
+        tauri::async_runtime::block_on(async {
+            let connections = MihomoManager::global().get_connections().await.unwrap();
+            let connections = connections["connections"].as_array().unwrap();
+            for connection in connections {
+                let id = connection["id"].as_str().unwrap();
+                let _ = MihomoManager::global().delete_connection(id).await;
+            }
+        })
+    }));
+}
+
 /// Change Clash mode (rule/global/direct/script)
 pub fn change_clash_mode(mode: String) {
     let mut mapping = Mapping::new();
@@ -56,6 +69,14 @@ pub fn change_clash_mode(mode: String) {
                     handle::Handle::refresh_clash();
                     logging_error!(Type::Tray, true, tray::Tray::global().update_menu());
                     logging_error!(Type::Tray, true, tray::Tray::global().update_icon(None));
+                }
+
+                let is_auto_close_connection = Config::verge()
+                    .data()
+                    .auto_close_connection
+                    .unwrap_or(false);
+                if is_auto_close_connection {
+                    after_change_clash_mode();
                 }
             }
             Err(err) => println!("{err}"),
