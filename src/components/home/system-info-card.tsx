@@ -1,44 +1,36 @@
 import { useTranslation } from "react-i18next";
 import { Typography, Stack, Divider, Chip, IconButton, Tooltip } from "@mui/material";
-import { InfoOutlined, SettingsOutlined, WarningOutlined } from "@mui/icons-material";
+import { 
+  InfoOutlined, 
+  SettingsOutlined, 
+  WarningOutlined, 
+  AdminPanelSettingsOutlined,
+  DnsOutlined,
+  ExtensionOutlined
+} from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { EnhancedCard } from "./enhanced-card";
 import useSWR from "swr";
-import { getRunningMode, getSystemInfo, installService, isAdmin } from "@/services/cmds";
+import { getSystemInfo, installService } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import { version as appVersion } from "@root/package.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import { Notice } from "@/components/base";
+import { useSystemState } from "@/hooks/use-system-state";
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
   const navigate = useNavigate();
+  const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
 
   // 系统信息状态
   const [systemState, setSystemState] = useState({
     osInfo: "",
     lastCheckUpdate: "-",
   });
-
-  // 获取运行模式
-  const { data: runningMode = "Sidecar", mutate: mutateRunningMode } = useSWR(
-    "getRunningMode",
-    getRunningMode,
-    { suspense: false, revalidateOnFocus: false },
-  );
-
-  // 获取管理员状态
-  const { data: isAdminMode = false } = useSWR(
-    "isAdmin",
-    isAdmin,
-    { suspense: false, revalidateOnFocus: false },
-  );
-
-  // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === "Sidecar";
 
   // 初始化系统信息
   useEffect(() => {
@@ -136,10 +128,10 @@ export const SystemInfoCard = () => {
 
   // 点击运行模式处理
   const handleRunningModeClick = useCallback(() => {
-    if (isSidecarMode) {
+    if (isSidecarMode || isAdminMode) {
       onInstallService();
     }
-  }, [isSidecarMode, onInstallService]);
+  }, [isSidecarMode, isAdminMode, onInstallService]);
 
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {
@@ -165,14 +157,43 @@ export const SystemInfoCard = () => {
   // 运行模式样式
   const runningModeStyle = useMemo(
     () => ({
-      cursor: isSidecarMode ? "pointer" : "default",
-      textDecoration: isSidecarMode ? "underline" : "none",
+      cursor: (isSidecarMode || isAdminMode) ? "pointer" : "default",
+      textDecoration: (isSidecarMode || isAdminMode) ? "underline" : "none",
+      display: "flex",
+      alignItems: "center",
+      gap: 0.5,
       "&:hover": {
-        opacity: isSidecarMode ? 0.7 : 1,
+        opacity: (isSidecarMode || isAdminMode) ? 0.7 : 1,
       },
     }),
-    [isSidecarMode],
+    [isSidecarMode, isAdminMode],
   );
+
+  // 获取模式图标和文本
+  const getModeIcon = () => {
+    if (isAdminMode) {
+      return (
+        <AdminPanelSettingsOutlined 
+          sx={{ color: "primary.main", fontSize: 16 }} 
+          titleAccess={t("Administrator Mode")}
+        />
+      );
+    } else if (isSidecarMode) {
+      return (
+        <ExtensionOutlined 
+          sx={{ color: "info.main", fontSize: 16 }} 
+          titleAccess={t("Sidecar Mode")}
+        />
+      );
+    } else {
+      return (
+        <DnsOutlined 
+          sx={{ color: "success.main", fontSize: 16 }} 
+          titleAccess={t("Service Mode")}
+        />
+      );
+    }
+  };
 
   // 只有当verge存在时才渲染内容
   if (!verge) return null;
@@ -220,7 +241,7 @@ export const SystemInfoCard = () => {
           </Stack>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="body2" color="text.secondary">
             {t("Running Mode")}
           </Typography>
@@ -230,7 +251,10 @@ export const SystemInfoCard = () => {
             onClick={handleRunningModeClick}
             sx={runningModeStyle}
           >
-            {isSidecarMode ? t("Sidecar Mode") : t("Service Mode")}
+            {getModeIcon()}
+            {isAdminMode 
+              ? t("Administrator Mode") 
+              : isSidecarMode ? t("Sidecar Mode") : t("Service Mode")}
           </Typography>
         </Stack>
         <Divider />

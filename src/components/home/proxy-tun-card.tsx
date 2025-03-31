@@ -19,7 +19,7 @@ import {
   SvgIconComponent,
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-provider";
+import { useSystemState } from "@/hooks/use-system-state";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
 
@@ -140,14 +140,14 @@ export const ProxyTunCard: FC = () => {
   );
 
   // 获取代理状态信息
-  const { sysproxy, runningMode } = useAppData();
   const { verge } = useVerge();
+  const { isSidecarMode, isAdminMode } = useSystemState();
 
   // 从verge配置中获取开关状态
   const { enable_system_proxy, enable_tun_mode } = verge ?? {};
-
-  // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === "Sidecar";
+  
+  // 判断Tun模式是否可用 - 当处于服务模式或管理员模式时可用
+  const isTunAvailable = !isSidecarMode || isAdminMode;
 
   // 处理错误
   const handleError = (err: Error) => {
@@ -171,7 +171,7 @@ export const ProxyTunCard: FC = () => {
       };
     } else {
       return {
-        text: isSidecarMode
+        text: !isTunAvailable
           ? t("TUN Mode Service Required")
           : enable_tun_mode
             ? t("TUN Mode Enabled")
@@ -179,7 +179,7 @@ export const ProxyTunCard: FC = () => {
         tooltip: t("TUN Mode Intercept Info"),
       };
     }
-  }, [activeTab, enable_system_proxy, enable_tun_mode, isSidecarMode, t]);
+  }, [activeTab, enable_system_proxy, enable_tun_mode, isTunAvailable, t]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
@@ -206,7 +206,7 @@ export const ProxyTunCard: FC = () => {
           onClick={() => handleTabChange("tun")}
           icon={TroubleshootRounded}
           label={t("Tun Mode")}
-          hasIndicator={enable_tun_mode && !isSidecarMode}
+          hasIndicator={enable_tun_mode && isTunAvailable}
         />
       </Stack>
 

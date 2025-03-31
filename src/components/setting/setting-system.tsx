@@ -18,13 +18,12 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import {
   getSystemProxy,
   getAutotemProxy,
-  getRunningMode,
   installService,
   getAutoLaunchStatus,
-  isAdmin,
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
-import { Box, Button, Tooltip } from "@mui/material";
+import { Button, Tooltip } from "@mui/material";
+import { useSystemState } from "@/hooks/use-system-state";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -37,20 +36,16 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
   const { data: autoproxy } = useSWR("getAutotemProxy", getAutotemProxy);
-  const { data: runningMode, mutate: mutateRunningMode } = useSWR(
-    "getRunningMode",
-    getRunningMode,
-  );
   const { data: autoLaunchEnabled } = useSWR(
     "getAutoLaunchStatus",
     getAutoLaunchStatus,
     { revalidateOnFocus: false }
   );
-  const { data: isAdminMode = false } = useSWR(
-    "isAdmin",
-    isAdmin,
-    { revalidateOnFocus: false }
-  );
+
+  const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
+
+  // 判断Tun模式是否可用 - 当处于服务模式或管理员模式时可用
+  const isTunAvailable = !isSidecarMode || isAdminMode;
 
   // 当实际自启动状态与配置不同步时更新配置
   useEffect(() => {
@@ -63,9 +58,6 @@ const SettingSystem = ({ onError }: Props) => {
       mutateVerge({ ...verge, enable_auto_launch: autoLaunchEnabled }, false);
     }
   }, [autoLaunchEnabled]);
-
-  // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === "Sidecar";
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
@@ -117,12 +109,12 @@ const SettingSystem = ({ onError }: Props) => {
               icon={SettingsRounded}
               onClick={() => tunRef.current?.open()}
             />
-            {isSidecarMode && (
+            {isSidecarMode && !isAdminMode && (
               <Tooltip title={t("TUN requires Service Mode")}>
                 <WarningRounded sx={{ color: "warning.main", mr: 1 }} />
               </Tooltip>
             )}
-            {isSidecarMode && (
+            {isSidecarMode && !isAdminMode && (
               <Tooltip title={t("Install Service")}>
                 <Button
                   variant="outlined"
@@ -144,20 +136,20 @@ const SettingSystem = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => {
-            // 当在sidecar模式下禁用切换
-            if (isSidecarMode) return;
+            // 当在sidecar模式下且非管理员模式时禁用切换
+            if (isSidecarMode && !isAdminMode) return;
             onChangeData({ enable_tun_mode: e });
           }}
           onGuard={(e) => {
-            // 当在sidecar模式下禁用切换
-            if (isSidecarMode) {
+            // 当在sidecar模式下且非管理员模式时禁用切换
+            if (isSidecarMode && !isAdminMode) {
               Notice.error(t("TUN requires Service Mode"), 2000);
               return Promise.reject(new Error(t("TUN requires Service Mode")));
             }
             return patchVerge({ enable_tun_mode: e });
           }}
         >
-          <Switch edge="end" disabled={isSidecarMode} />
+          <Switch edge="end" disabled={isSidecarMode && !isAdminMode} />
         </GuardState>
       </SettingItem>
       <SettingItem
