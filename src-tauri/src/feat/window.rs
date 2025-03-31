@@ -53,32 +53,35 @@ pub fn open_or_close_dashboard() {
 
 /// Setup window state monitor to save window position and size in real-time
 pub fn setup_window_state_monitor(app_handle: &tauri::AppHandle) {
-    let window = app_handle.get_webview_window("main").unwrap();
-    let app_handle_clone = app_handle.clone();
+    // 暂时移除实时监控-保存窗口位置和大小，这个特性可能会导致窗口异常大小和位置，需要进一步优化
+    //
 
-    // 监听窗口移动事件
-    let app_handle_move = app_handle_clone.clone();
-    window.on_window_event(move |event| {
-        match event {
-            // 窗口移动时保存状态
-            tauri::WindowEvent::Moved(_) => {
-                let _ = app_handle_move.save_window_state(StateFlags::all());
-            }
-            // 窗口调整大小时保存状态
-            tauri::WindowEvent::Resized(_) => {
-                let _ = app_handle_move.save_window_state(StateFlags::all());
-            }
-            // 其他可能改变窗口状态的事件
-            tauri::WindowEvent::ScaleFactorChanged { .. } => {
-                let _ = app_handle_move.save_window_state(StateFlags::all());
-            }
-            // 窗口关闭时保存
-            tauri::WindowEvent::CloseRequested { .. } => {
-                let _ = app_handle_move.save_window_state(StateFlags::all());
-            }
-            _ => {}
-        }
-    });
+    // let window = app_handle.get_webview_window("main").unwrap();
+    // let app_handle_clone = app_handle.clone();
+
+    // // 监听窗口移动事件
+    // let app_handle_move = app_handle_clone.clone();
+    // window.on_window_event(move |event| {
+    //     match event {
+    //         // 窗口移动时保存状态
+    //         tauri::WindowEvent::Moved(_) => {
+    //             let _ = app_handle_move.save_window_state(StateFlags::all());
+    //         }
+    //         // 窗口调整大小时保存状态
+    //         tauri::WindowEvent::Resized(_) => {
+    //             let _ = app_handle_move.save_window_state(StateFlags::all());
+    //         }
+    //         // 其他可能改变窗口状态的事件
+    //         tauri::WindowEvent::ScaleFactorChanged { .. } => {
+    //             let _ = app_handle_move.save_window_state(StateFlags::all());
+    //         }
+    //         // 窗口关闭时保存
+    //         tauri::WindowEvent::CloseRequested { .. } => {
+    //             let _ = app_handle_move.save_window_state(StateFlags::all());
+    //         }
+    //         _ => {}
+    //     }
+    // });
 }
 
 /// 优化的应用退出函数
