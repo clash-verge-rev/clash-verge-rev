@@ -1,5 +1,7 @@
-use crate::cmd::system;
-use crate::core::{handle, CoreManager};
+use crate::{
+    cmd::system,
+    core::{handle, CoreManager},
+};
 use std::fmt::{self, Debug, Formatter};
 use sysinfo::System;
 

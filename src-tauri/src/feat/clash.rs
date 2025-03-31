@@ -38,7 +38,7 @@ pub fn restart_app() {
 }
 
 fn after_change_clash_mode() {
-    tauri::async_runtime::block_on(tauri::async_runtime::spawn_blocking(|| {
+    let _ = tauri::async_runtime::block_on(tauri::async_runtime::spawn_blocking(|| {
         tauri::async_runtime::block_on(async {
             let connections = MihomoManager::global().get_connections().await.unwrap();
             let connections = connections["connections"].as_array().unwrap();
