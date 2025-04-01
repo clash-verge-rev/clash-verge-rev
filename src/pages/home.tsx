@@ -322,7 +322,6 @@ export const HomePage = () => {
               title={t("Traffic Stats")}
               icon={<SpeedOutlined />}
               iconColor="secondary"
-              minHeight={280}
             >
               <EnhancedTrafficStats />
             </EnhancedCard>

@@ -401,10 +401,12 @@ export const EnhancedTrafficStats = () => {
 
   return (
     <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>
-      <Grid size={12}>
-        {/* 流量图表区域 */}
-        {trafficGraphComponent}
-      </Grid>
+      {trafficGraph && (
+        <Grid size={12}>
+          {/* 流量图表区域 */}
+          {trafficGraphComponent}
+        </Grid>
+      )}
       {/* 统计卡片区域 */}
       {statCards.map((card, index) => (
         <Grid key={index} size={4}>
