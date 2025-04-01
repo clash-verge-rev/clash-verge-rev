@@ -36,13 +36,8 @@ impl PlatformSpecification {
         let config = handler.config();
         let verge_version = config.version.clone().unwrap_or("Null".into());
 
-        // Get running mode asynchronously
-        let running_mode = tokio::task::block_in_place(|| {
-            tokio::runtime::Handle::current().block_on(async {
-                let running_mode = CoreManager::global().get_running_mode().await;
-                running_mode.to_string()
-            })
-        });
+        // 使用默认值避免在同步上下文中执行异步操作
+        let running_mode = "NotRunning".to_string();
 
         let is_admin = match system::is_admin() {
             Ok(value) => value,
@@ -58,5 +53,15 @@ impl PlatformSpecification {
             running_mode,
             is_admin,
         }
+    }
+
+    // 异步方法来获取完整的系统信息
+    pub async fn new_async() -> Self {
+        let mut info = Self::new();
+
+        let running_mode = CoreManager::global().get_running_mode().await;
+        info.running_mode = running_mode.to_string();
+
+        info
     }
 }

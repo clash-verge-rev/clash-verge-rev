@@ -23,7 +23,7 @@ static APP_START_TIME: Lazy<AtomicI64> = Lazy::new(|| {
 
 #[tauri::command]
 pub async fn export_diagnostic_info() -> CmdResult<()> {
-    let sysinfo = PlatformSpecification::new();
+    let sysinfo = PlatformSpecification::new_async().await;
     let info = format!("{:?}", sysinfo);
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -36,7 +36,7 @@ pub async fn export_diagnostic_info() -> CmdResult<()> {
 
 #[tauri::command]
 pub async fn get_system_info() -> CmdResult<String> {
-    let sysinfo = PlatformSpecification::new();
+    let sysinfo = PlatformSpecification::new_async().await;
     let info = format!("{:?}", sysinfo);
     Ok(info)
 }

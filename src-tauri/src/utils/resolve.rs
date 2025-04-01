@@ -130,26 +130,24 @@ pub async fn resolve_setup(app: &mut App) {
     }
 }
 
-/// reset system proxy
-pub fn resolve_reset() {
-    tauri::async_runtime::block_on(async move {
-        #[cfg(target_os = "macos")]
-        logging!(info, Type::Tray, true, "Unsubscribing from traffic updates");
-        #[cfg(target_os = "macos")]
-        tray::Tray::global().unsubscribe_traffic();
+/// reset system proxy (异步版)
+pub async fn resolve_reset_async() {
+    #[cfg(target_os = "macos")]
+    logging!(info, Type::Tray, true, "Unsubscribing from traffic updates");
+    #[cfg(target_os = "macos")]
+    tray::Tray::global().unsubscribe_traffic();
 
-        logging_error!(
-            Type::System,
-            true,
-            sysopt::Sysopt::global().reset_sysproxy().await
-        );
-        logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
-        #[cfg(target_os = "macos")]
-        {
-            logging!(info, Type::System, true, "Restoring system DNS settings");
-            restore_public_dns().await;
-        }
-    });
+    logging_error!(
+        Type::System,
+        true,
+        sysopt::Sysopt::global().reset_sysproxy().await
+    );
+    logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+    #[cfg(target_os = "macos")]
+    {
+        logging!(info, Type::System, true, "Restoring system DNS settings");
+        restore_public_dns().await;
+    }
 }
 
 /// create main window

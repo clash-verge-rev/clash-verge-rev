@@ -29,25 +29,31 @@ pub fn restart_app() {
     tauri::async_runtime::spawn_blocking(|| {
         tauri::async_runtime::block_on(async {
             logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+            resolve::resolve_reset_async().await;
+            let app_handle = handle::Handle::global().app_handle().unwrap();
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            tauri::process::restart(&app_handle.env());
         });
-        resolve::resolve_reset();
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        std::thread::sleep(std::time::Duration::from_secs(1));
-        tauri::process::restart(&app_handle.env());
     });
 }
 
 fn after_change_clash_mode() {
-    let _ = tauri::async_runtime::block_on(tauri::async_runtime::spawn_blocking(|| {
-        tauri::async_runtime::block_on(async {
-            let connections = MihomoManager::global().get_connections().await.unwrap();
-            let connections = connections["connections"].as_array().unwrap();
-            for connection in connections {
-                let id = connection["id"].as_str().unwrap();
-                let _ = MihomoManager::global().delete_connection(id).await;
+    tauri::async_runtime::spawn(async {
+        match MihomoManager::global().get_connections().await {
+            Ok(connections) => {
+                if let Some(connections_array) = connections["connections"].as_array() {
+                    for connection in connections_array {
+                        if let Some(id) = connection["id"].as_str() {
+                            let _ = MihomoManager::global().delete_connection(id).await;
+                        }
+                    }
+                }
             }
-        })
-    }));
+            Err(err) => {
+                log::error!(target: "app", "Failed to get connections: {}", err);
+            }
+        }
+    });
 }
 
 /// Change Clash mode (rule/global/direct/script)
