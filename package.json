@@ -79,7 +79,7 @@
     "@types/js-cookie": "3.0.6",
     "@types/lodash-es": "4.17.12",
     "@types/react": "18.3.20",
-    "@types/react-dom": "18.3.5",
+    "@types/react-dom": "18.3.6",
     "@types/react-transition-group": "4.4.12",
     "@types/sortablejs": "1.15.8",
     "@vitejs/plugin-legacy": "6.0.2",
