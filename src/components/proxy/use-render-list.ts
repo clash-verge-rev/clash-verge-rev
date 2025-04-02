@@ -161,9 +161,9 @@ export const useRenderList = (mode: string) => {
           });
         } else if (col > 1) {
           return ret.concat(
-            groupProxies(proxies, col).map((proxyCol) => ({
+            groupProxies(proxies, col).map((proxyCol, colIndex) => ({
               type: 4,
-              key: `col-${group.name}-${proxyCol[0].name}`,
+              key: `col-${group.name}-${proxyCol[0].name}-${colIndex}`,
               group,
               headState,
               col,

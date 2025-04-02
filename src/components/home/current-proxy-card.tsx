@@ -567,14 +567,14 @@ export const CurrentProxyCard = () => {
             >
               {isDirectMode
                 ? null
-                : proxyOptions.map((proxy) => {
+                : proxyOptions.map((proxy, index) => {
                     const delayValue = delayManager.getDelayFix(
                       state.proxyData.records[proxy.name],
                       state.selection.group,
                     );
                     return (
                       <MenuItem
-                        key={proxy.name}
+                        key={`${proxy.name}-${index}`}
                         value={proxy.name}
                         sx={{
                           display: "flex",
