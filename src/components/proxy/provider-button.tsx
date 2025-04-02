@@ -158,7 +158,7 @@ export const ProviderButton = () => {
       >
         <DialogTitle>
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">{t("Proxy Providers")}</Typography>
+            <Typography variant="h6">{t("Proxy Provider")}</Typography>
             <Box>
               <Button
                 variant="contained"
@@ -212,7 +212,6 @@ export const ProviderButton = () => {
                         backgroundColor: bgcolor,
                         "&:hover": {
                           backgroundColor: hoverColor,
-                          borderColor: alpha(primary.main, 0.3)
                         }
                       };
                     }
