@@ -101,8 +101,12 @@ export const EditorViewer = (props: Props) => {
 
     return () => {
       instanceRef.current?.dispose();
+      pacLibRef.current?.dispose();
+      pacCompletionRef.current?.dispose();
       registerCodeLensRef.current?.dispose();
       instanceRef.current = null;
+      pacLibRef.current = null;
+      pacCompletionRef.current = null;
       registerCodeLensRef.current = null;
     };
   }, [open]);
