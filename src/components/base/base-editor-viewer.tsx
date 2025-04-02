@@ -1,7 +1,11 @@
 import { Notice } from "@/components/base";
 import { useWindowSize } from "@/hooks/use-window-size";
-import { getTemplate } from "@/services/cmds";
-import monaco from "@/services/monaco";
+import {
+  generateTemplate,
+  monaco,
+  registerPacCompletion,
+  registerPacFunctionLib,
+} from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
@@ -44,6 +48,8 @@ export const EditorViewer = (props: Props) => {
   const registerCodeLensRef = useRef<any>();
   const themeMode = useThemeMode();
   const { size } = useWindowSize();
+  const pacLibRef = useRef<any>();
+  const pacCompletionRef = useRef<any>();
 
   useEffect(() => {
     if (!open) return;
@@ -82,43 +88,14 @@ export const EditorViewer = (props: Props) => {
       });
 
       if (scope && "pac" === scope) {
-        const generateCommand = instanceRef.current?.addCommand(
-          0,
-          () => {
-            getTemplate(scope, language).then((templateContent) => {
-              instanceRef.current?.setValue(templateContent);
-            });
-          },
-          "",
-        );
-        registerCodeLensRef.current = monaco.languages.registerCodeLensProvider(
-          ["javascript"],
-          {
-            provideCodeLenses(model, token) {
-              return {
-                lenses: [
-                  {
-                    range: {
-                      startLineNumber: 1,
-                      startColumn: 1,
-                      endLineNumber: 2,
-                      endColumn: 1,
-                    },
-                    id: "Regenerate Template Content",
-                    command: {
-                      id: generateCommand!,
-                      title: t("Regenerate Template Content"),
-                    },
-                  },
-                ],
-                dispose: () => {},
-              };
-            },
-            resolveCodeLens(model, codeLens, token) {
-              return codeLens;
-            },
-          },
-        );
+        pacLibRef.current = registerPacFunctionLib();
+        pacCompletionRef.current = registerPacCompletion();
+        registerCodeLensRef.current = generateTemplate({
+          monacoInstance: instanceRef.current,
+          languages: ["javascript"],
+          showCondition: () => true,
+          isPacScript: true,
+        });
       }
     });
 

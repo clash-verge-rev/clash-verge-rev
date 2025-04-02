@@ -12,14 +12,13 @@ import { useWindowSize } from "@/hooks/use-window-size";
 import {
   enhanceProfiles,
   getChains,
-  getTemplate,
   patchProfile,
   readProfileFile,
   reorderProfile,
   saveProfileFile,
   testMergeChain,
 } from "@/services/cmds";
-import monaco from "@/services/monaco";
+import { generateTemplate, monaco } from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
@@ -292,59 +291,12 @@ export const ProfileEditorViewer = (props: Props) => {
           }
         },
       });
-
-      // 生成模板的命令方法
-      const generateCommand = instanceRef.current?.addCommand(
-        0,
-        (_, scope: string, language: string) => {
-          getTemplate(scope, language).then((templateContent) => {
-            instanceRef.current?.setValue(templateContent);
-            setChainChecked(false);
-          });
-        },
-        "",
-      );
-
-      // 增强脚本模板生成
-      codeLensRef.current = monaco.languages.registerCodeLensProvider(
-        ["yaml", "javascript"],
-        {
-          provideCodeLenses(model, token) {
-            const uriPath = model.uri.path;
-            if (uriPath.includes("clash.yaml")) {
-              return null;
-            }
-            const nextType = uriPath.includes("merge.yaml")
-              ? "merge"
-              : "script";
-            const nextLanguage = uriPath.includes("merge.yaml")
-              ? "yaml"
-              : "javascript";
-            return {
-              lenses: [
-                {
-                  id: "Regenerate Template Content",
-                  range: {
-                    startLineNumber: 1,
-                    startColumn: 1,
-                    endLineNumber: 2,
-                    endColumn: 1,
-                  },
-                  command: {
-                    id: generateCommand!,
-                    title: t("Regenerate Template Content"),
-                    arguments: [nextType, nextLanguage],
-                  },
-                },
-              ],
-              dispose: () => {},
-            };
-          },
-          resolveCodeLens(model, codeLens, token) {
-            return codeLens;
-          },
-        },
-      );
+      codeLensRef.current = generateTemplate({
+        monacoInstance: instanceRef.current,
+        languages: ["yaml", "javascript"],
+        showCondition: (uriPath) => !uriPath.includes("clash.yaml"),
+        onGenerateSuccess: () => setChainChecked(false),
+      });
 
       instanceRef.current?.onDidChangeModel((e) => {
         const { newModelUrl } = e;
