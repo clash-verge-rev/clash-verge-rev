@@ -1,3 +1,4 @@
 pnpm pretty-quick --staged
 
+# rust clippy
 pnpm c:lint

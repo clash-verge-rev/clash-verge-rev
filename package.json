@@ -22,7 +22,7 @@
     "c:check": "cd src-tauri && cargo check",
     "c:clean": "cd src-tauri && cargo clean",
     "c:update": "cd src-tauri && cargo update",
-    "c:lint": "cd src-tauri && cargo clippy",
+    "c:lint": "cd src-tauri && cargo clippy -- -D warnings",
     "bump": "node scripts/bump-version.mjs"
   },
   "dependencies": {
