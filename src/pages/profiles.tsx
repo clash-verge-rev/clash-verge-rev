@@ -142,15 +142,36 @@ const ProfilePage = () => {
     setLoading(true);
 
     try {
+      // 尝试正常导入
       await importProfile(url);
       Notice.success(t("Profile Imported Successfully"));
       setUrl("");
-      setLoading(false);
       mutateProfiles();
       await onEnhance(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
-      setLoading(false);
+      // 首次导入失败，尝试使用自身代理
+      const errmsg = err.message || err.toString();
+      Notice.info(t("Import failed, retrying with Clash proxy..."));
+      
+      try {
+        // 使用自身代理尝试导入
+        await importProfile(url, {
+          with_proxy: false,
+          self_proxy: true
+        });
+        
+        // 回退导入成功
+        Notice.success(t("Profile Imported with Clash proxy"));
+        setUrl("");
+        mutateProfiles();
+        await onEnhance(false);
+      } catch (retryErr: any) {
+        // 回退导入也失败
+        const retryErrmsg = retryErr?.message || retryErr.toString();
+        Notice.error(
+          `${t("Import failed even with Clash proxy")}: ${retryErrmsg}`,
+        );
+      }
     } finally {
       setDisabled(false);
       setLoading(false);
