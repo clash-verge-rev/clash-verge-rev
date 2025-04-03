@@ -63,8 +63,8 @@ importers:
         specifier: ~2.2.0
         version: 2.2.1
       '@tauri-apps/plugin-updater':
-        specifier: ~2.6.0
-        version: 2.6.1
+        specifier: ~2.7.0
+        version: 2.7.0
       ahooks:
         specifier: ^3.8.4
         version: 3.8.4(react@18.3.1)
@@ -1788,8 +1788,8 @@ packages:
   '@tauri-apps/plugin-shell@2.2.1':
     resolution: {integrity: sha512-G1GFYyWe/KlCsymuLiNImUgC8zGY0tI0Y3p8JgBCWduR5IEXlIJS+JuG1qtveitwYXlfJrsExt3enhv5l2/yhA==}
 
-  '@tauri-apps/plugin-updater@2.6.1':
-    resolution: {integrity: sha512-iiOevw4kc12Ok99J9KthXwUqwPv1sYjG+tNEDZqPmwvOmIq7s58nKMRz6NJPKXT4U16NzMPffFcP/LUOsz6c4A==}
+  '@tauri-apps/plugin-updater@2.7.0':
+    resolution: {integrity: sha512-oBug5UCH2wOsoYk0LW5LEMAT51mszjg11s8eungRH26x/qOrEjLvnuJJoxVVr9nsWowJ6vnpXKS+lUMfFTlvHQ==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -5697,7 +5697,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.4.1
 
-  '@tauri-apps/plugin-updater@2.6.1':
+  '@tauri-apps/plugin-updater@2.7.0':
     dependencies:
       '@tauri-apps/api': 2.4.1
 
