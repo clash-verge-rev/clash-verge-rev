@@ -25,7 +25,7 @@ import {
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
-import { LoadingButton, TabContext, TabPanel } from "@mui/lab";
+import { TabContext, TabPanel } from "@mui/lab";
 import {
   Box,
   Button,
@@ -376,15 +376,15 @@ const SettingVerge = ({ onError }: Props) => {
                 />
               </div>
               <div className="flex w-full items-center justify-around !space-x-4">
-                <LoadingButton
+                <Button
                   startIcon={<Refresh />}
                   onClick={() => handleSelectLocalBackup()}
                   size="small"
                   fullWidth
                   variant="contained">
                   {t("Recovery")}
-                </LoadingButton>
-                <LoadingButton
+                </Button>
+                <Button
                   loading={startingBackup}
                   startIcon={<CloudUpload />}
                   loadingPosition="start"
@@ -393,7 +393,7 @@ const SettingVerge = ({ onError }: Props) => {
                   variant="contained"
                   onClick={() => handleBackup()}>
                   {t("Backup")}
-                </LoadingButton>
+                </Button>
               </div>
             </TabPanel>
             <TabPanel value="webdav">
@@ -468,7 +468,7 @@ const SettingVerge = ({ onError }: Props) => {
                 </div>
                 <div className="flex w-full items-center justify-around !space-x-4">
                   {webdavChanged ? (
-                    <LoadingButton
+                    <Button
                       loading={saving}
                       startIcon={<Check />}
                       loadingPosition="start"
@@ -477,10 +477,10 @@ const SettingVerge = ({ onError }: Props) => {
                       fullWidth
                       variant="contained">
                       {t("Save")}
-                    </LoadingButton>
+                    </Button>
                   ) : (
                     <>
-                      <LoadingButton
+                      <Button
                         loading={loadingBackupFiles}
                         startIcon={<Refresh />}
                         loadingPosition="start"
@@ -489,8 +489,8 @@ const SettingVerge = ({ onError }: Props) => {
                         fullWidth
                         variant="contained">
                         {t("Recovery")}
-                      </LoadingButton>
-                      <LoadingButton
+                      </Button>
+                      <Button
                         loading={startingBackup}
                         startIcon={<CloudUpload />}
                         loadingPosition="start"
@@ -499,7 +499,7 @@ const SettingVerge = ({ onError }: Props) => {
                         variant="contained"
                         onClick={() => handleBackup()}>
                         {t("Backup")}
-                      </LoadingButton>
+                      </Button>
                     </>
                   )}
                 </div>

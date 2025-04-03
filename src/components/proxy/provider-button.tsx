@@ -7,9 +7,6 @@ import {
   Divider,
   IconButton,
   LinearProgress,
-  List,
-  ListItem,
-  ListItemText,
   Typography,
   alpha,
   keyframes,
@@ -92,7 +89,7 @@ export const ProviderButton = () => {
         hideOkBtn
         hideCancelBtn
         onClose={() => setOpen(false)}>
-        <List sx={{ py: 0 }}>
+        <div className="space-y-2">
           {Object.entries(data || {}).map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
             const sub = item.subscriptionInfo;
@@ -105,58 +102,31 @@ export const ProviderButton = () => {
               ((download + upload) * 100) / (total + 0.1),
             );
             return (
-              <ListItem
-                sx={(theme) => ({
-                  p: 1,
-                  borderRadius: "6px",
-                  bgcolor: "white",
-                  mb: 1,
-                  ...theme.applyStyles("dark", {
-                    bgcolor: "#282A36",
-                  }),
-                })}
-                key={key}>
-                <ListItemText
-                  sx={{ px: 1 }}
-                  primary={
-                    <Box display={"flex"} alignItems={"center"}>
-                      <Typography
-                        variant="h6"
-                        component="span"
-                        noWrap
-                        title={key}>
-                        {key}
-                      </Typography>
-                      <TypeSpan>{item.proxies.length}</TypeSpan>
-                    </Box>
-                  }
-                  secondary={
-                    <>
-                      <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>
-                      <StyledTypeSpan>
-                        {t("Update At")} {time.fromNow()}
-                      </StyledTypeSpan>
-                      {hasSubInfo && (
-                        <>
-                          <Box sx={{ ...boxStyle, fontSize: 14 }}>
-                            <span title="Used / Total">
-                              {parseTraffic(upload + download)} /{" "}
-                              {parseTraffic(total)}
-                            </span>
-                            <span title="Expire Time">
-                              {parseExpire(expire)}
-                            </span>
-                          </Box>
-
-                          <LinearProgress
-                            variant="determinate"
-                            value={progress}
-                          />
-                        </>
-                      )}
-                    </>
-                  }
-                />
+              <div
+                key={key}
+                className="flex items-center rounded-sm bg-white p-2 shadow-sm dark:bg-[#282A36]">
+                <div className="w-full overflow-hidden pr-4">
+                  <div className="flex items-center">
+                    <p className="text-primary-text text-xl font-bold">{key}</p>
+                    <TypeSpan>{item.proxies.length}</TypeSpan>
+                  </div>
+                  <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>
+                  <StyledTypeSpan>
+                    {t("Update At")} {time.fromNow()}
+                  </StyledTypeSpan>
+                  {hasSubInfo && (
+                    <div className="py-1">
+                      <div className="mb-1 flex items-center justify-between text-sm">
+                        <span title="Used / Total">
+                          {parseTraffic(upload + download)} /{" "}
+                          {parseTraffic(total)}
+                        </span>
+                        <span title="Expire Time">{parseExpire(expire)}</span>
+                      </div>
+                      <LinearProgress variant="determinate" value={progress} />
+                    </div>
+                  )}
+                </div>
                 <Divider orientation="vertical" flexItem />
                 <IconButton
                   size="small"
@@ -170,14 +140,15 @@ export const ProviderButton = () => {
                   }}>
                   <RefreshRounded />
                 </IconButton>
-              </ListItem>
+              </div>
             );
           })}
-        </List>
+        </div>
       </BaseDialog>
     </>
   );
 };
+
 const TypeSpan = styled("span")(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
@@ -199,21 +170,12 @@ const StyledTypeSpan = styled("span")(({ theme }) => ({
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.primary.main, 0.5),
   color: alpha(theme.palette.primary.main, 0.8),
-  borderRadius: 4,
-  fontSize: 10,
+  borderRadius: "4px",
+  fontSize: "10px",
   marginRight: "4px",
   textAlign: "center",
   padding: "1px 4px",
-  height: "15px",
-  lineHeight: "15px",
 }));
-
-const boxStyle = {
-  height: 26,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-};
 
 function parseExpire(expire?: number) {
   if (!expire) return "-";

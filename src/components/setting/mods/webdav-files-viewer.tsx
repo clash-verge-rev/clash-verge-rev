@@ -14,9 +14,9 @@ import {
 } from "@/services/cmds";
 import { sleep } from "@/utils";
 import { Check, Delete, InboxRounded } from "@mui/icons-material";
-import { LoadingButton } from "@mui/lab";
 import {
   Box,
+  Button,
   Chip,
   FormControl,
   FormControlLabel,
@@ -188,7 +188,7 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
                       </span>
                     </div>
                   </div>
-                  <LoadingButton
+                  <Button
                     sx={{ mr: 1, minWidth: "80px" }}
                     disabled={applyingFile === file.filename}
                     loading={deletingFile === file.filename}
@@ -199,9 +199,9 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
                     loadingPosition="start"
                     startIcon={<Delete />}>
                     {t("Delete")}
-                  </LoadingButton>
+                  </Button>
                   <div>
-                    <LoadingButton
+                    <Button
                       sx={{ minWidth: "80px" }}
                       disabled={deletingFile === file.filename}
                       loading={applyingFile === file.filename}
@@ -211,7 +211,7 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
                       loadingPosition="start"
                       startIcon={<Check />}>
                       {t("Apply")}
-                    </LoadingButton>
+                    </Button>
                   </div>
                 </div>
               ))}

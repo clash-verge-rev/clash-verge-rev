@@ -4,7 +4,7 @@ import SettingSystem from "@/components/setting/setting-system";
 import SettingVerge from "@/components/setting/setting-verge";
 import { openWebUrl } from "@/services/cmds";
 import { GitHub } from "@mui/icons-material";
-import { Box, Grid2 as Grid, IconButton } from "@mui/material";
+import { Box, Grid, IconButton } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 

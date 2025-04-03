@@ -2,6 +2,8 @@
 
 Default permissions for the plugin
 
+#### This default permission set includes the following:
+
 - `allow-update-controller`
 - `allow-update-secret`
 - `allow-get-connections`

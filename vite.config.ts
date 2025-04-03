@@ -95,6 +95,7 @@ export default defineConfig({
       "@": path.resolve("./src"),
       "@root": path.resolve("."),
     },
+    conditions: ["mui-modern", "module", "browser", "development|production"],
   },
   define: {
     OS_PLATFORM: `"${process.platform}"`,

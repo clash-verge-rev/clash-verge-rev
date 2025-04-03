@@ -1,7 +1,6 @@
 import { useVerge } from "@/hooks/use-verge";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
-import { LoadingButton } from "@mui/lab";
 import { Button } from "@mui/material";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AnimatePresence, motion } from "framer-motion";
@@ -124,13 +123,13 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
                   </Button>
                 )}
                 {!hideOkBtn && (
-                  <LoadingButton
+                  <Button
                     disabled={okDisabled}
                     loading={loading}
                     variant="contained"
                     onClick={onOk}>
                     {okBtn}
-                  </LoadingButton>
+                  </Button>
                 )}
               </div>
             )}
