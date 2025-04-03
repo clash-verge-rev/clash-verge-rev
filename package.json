@@ -99,7 +99,7 @@
     "pretty-quick": "4.1.1",
     "react-devtools": "6.1.1",
     "tailwind-merge": "3.1.0",
-    "tailwindcss": "4.1.1",
+    "tailwindcss": "4.1.2",
     "terser": "5.39.0",
     "typescript": "5.8.2",
     "vite": "6.2.5",
