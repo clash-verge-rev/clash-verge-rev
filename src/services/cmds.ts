@@ -36,10 +36,10 @@ export async function saveProfileFile(index: string, fileData: string) {
   return invoke<void>("save_profile_file", { index, fileData });
 }
 
-export async function importProfile(url: string) {
+export async function importProfile(url: string, option?: IProfileOption) {
   return invoke<void>("import_profile", {
     url,
-    option: { with_proxy: true },
+    option: option || { with_proxy: true },
   });
 }
 

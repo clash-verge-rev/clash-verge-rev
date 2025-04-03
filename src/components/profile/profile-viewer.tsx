@@ -88,11 +88,13 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
       formIns.handleSubmit(async (form) => {
         setLoading(true);
         try {
+          // 基本验证
           if (!form.type) throw new Error("`Type` should not be null");
           if (form.type === "remote" && !form.url) {
             throw new Error("The URL should not be null");
           }
 
+          // 处理表单数据
           if (form.option?.update_interval) {
             form.option.update_interval = +form.option.update_interval;
           } else {
@@ -101,25 +103,72 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           if (form.option?.user_agent === "") {
             delete form.option.user_agent;
           }
+          
           const name = form.name || `${form.type} file`;
           const item = { ...form, name };
-
-          // 创建
-          if (openType === "new") {
-            await createProfile(item, fileDataRef.current);
+          const isRemote = form.type === "remote";
+          
+          // 保存原始代理设置以便回退成功后恢复
+          const originalOptions = { 
+            with_proxy: form.option?.with_proxy,
+            self_proxy: form.option?.self_proxy
+          };
+          
+          // 执行创建或更新操作，本地配置不需要回退机制
+          if (!isRemote) {
+            if (openType === "new") {
+              await createProfile(item, fileDataRef.current);
+            } else {
+              if (!form.uid) throw new Error("UID not found");
+              await patchProfile(form.uid, item);
+            }
+          } else {
+            // 远程配置使用回退机制
+            try {
+              // 尝试正常操作
+              if (openType === "new") {
+                await createProfile(item, fileDataRef.current);
+              } else {
+                if (!form.uid) throw new Error("UID not found");
+                await patchProfile(form.uid, item);
+              }
+            } catch (err) {
+              // 首次创建/更新失败，尝试使用自身代理
+              Notice.info(t("Profile creation failed, retrying with Clash proxy..."));
+              
+              // 使用自身代理的配置
+              const retryItem = {
+                ...item,
+                option: {
+                  ...item.option,
+                  with_proxy: false,
+                  self_proxy: true
+                }
+              };
+              
+              // 使用自身代理再次尝试
+              if (openType === "new") {
+                await createProfile(retryItem, fileDataRef.current);
+              } else {
+                if (!form.uid) throw new Error("UID not found");
+                await patchProfile(form.uid, retryItem);
+                
+                // 编辑模式下恢复原始代理设置
+                await patchProfile(form.uid, { option: originalOptions });
+              }
+              
+              Notice.success(t("Profile creation succeeded with Clash proxy"));
+            }
           }
-          // 编辑
-          else {
-            if (!form.uid) throw new Error("UID not found");
-            await patchProfile(form.uid, item);
-          }
+          
+          // 成功后的操作
           setOpen(false);
-          setLoading(false);
           setTimeout(() => formIns.reset(), 500);
           fileDataRef.current = null;
           props.onChange();
         } catch (err: any) {
           Notice.error(err.message || err.toString());
+        } finally {
           setLoading(false);
         }
       })

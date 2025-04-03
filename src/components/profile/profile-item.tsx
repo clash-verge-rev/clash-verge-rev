@@ -179,17 +179,21 @@ export const ProfileItem = (props: Props) => {
   /// 0 不使用任何代理
   /// 1 使用订阅好的代理
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
-  const onUpdate = useLockFn(async (type: 0 | 1 | 2) => {
+  const onUpdate = useLockFn(async (type: 0 | 1 | 2): Promise<void> => {
     setAnchorEl(null);
     setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }));
 
-    const option: Partial<IProfileOption> = {};
+    // 存储原始设置以便回退后恢复
+    const originalOptions = { 
+      with_proxy: itemData.option?.with_proxy,
+      self_proxy: itemData.option?.self_proxy
+    };
 
+    // 根据类型设置初始更新选项
+    const option: Partial<IProfileOption> = {};
     if (type === 0) {
       option.with_proxy = false;
       option.self_proxy = false;
-    } else if (type === 1) {
-      // nothing
     } else if (type === 2) {
       if (itemData.option?.self_proxy) {
         option.with_proxy = false;
@@ -201,14 +205,31 @@ export const ProfileItem = (props: Props) => {
     }
 
     try {
+      // 尝试正常更新
       await updateProfile(itemData.uid, option);
       Notice.success(t("Update subscription successfully"));
       mutate("getProfiles");
     } catch (err: any) {
+      // 更新失败，尝试使用自身代理
       const errmsg = err?.message || err.toString();
-      Notice.error(
-        errmsg.replace(/error sending request for url (\S+?): /, ""),
-      );
+      Notice.info(t("Update failed, retrying with Clash proxy..."));
+      
+      try {
+        await updateProfile(itemData.uid, {
+          with_proxy: false,
+          self_proxy: true
+        });
+        
+        Notice.success(t("Update with Clash proxy successfully"));
+        
+        await updateProfile(itemData.uid, originalOptions);
+        mutate("getProfiles");
+      } catch (retryErr: any) {
+        const retryErrmsg = retryErr?.message || retryErr.toString();
+        Notice.error(
+          `${t("Update failed even with Clash proxy")}: ${retryErrmsg.replace(/error sending request for url (\S+?): /, "")}`,
+        );
+      }
     } finally {
       setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }));
     }
