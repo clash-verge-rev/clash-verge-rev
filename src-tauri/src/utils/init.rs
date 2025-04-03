@@ -177,6 +177,7 @@ fn init_dns_config() -> Result<()> {
         (
             "default-nameserver".into(),
             Value::Sequence(vec![
+                Value::String("system".into()),
                 Value::String("223.6.6.6".into()),
                 Value::String("8.8.8.8".into()),
             ]),
@@ -189,14 +190,7 @@ fn init_dns_config() -> Result<()> {
                 Value::String("https://dns.alidns.com/dns-query".into()),
             ]),
         ),
-        (
-            "fallback".into(),
-            Value::Sequence(vec![
-                Value::String("https://dns.alidns.com/dns-query".into()),
-                Value::String("https://dns.google/dns-query".into()),
-                Value::String("https://cloudflare-dns.com/dns-query".into()),
-            ]),
-        ),
+        ("fallback".into(), Value::Sequence(vec![])),
         (
             "nameserver-policy".into(),
             Value::Mapping(serde_yaml::Mapping::new()),
@@ -206,6 +200,7 @@ fn init_dns_config() -> Result<()> {
             Value::Sequence(vec![
                 Value::String("https://doh.pub/dns-query".into()),
                 Value::String("https://dns.alidns.com/dns-query".into()),
+                Value::String("tls://223.5.5.5".into()),
             ]),
         ),
         ("direct-nameserver".into(), Value::Sequence(vec![])),
