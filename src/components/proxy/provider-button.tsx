@@ -89,7 +89,7 @@ export const ProviderButton = () => {
         hideOkBtn
         hideCancelBtn
         onClose={() => setOpen(false)}>
-        <div className="space-y-2">
+        <div>
           {Object.entries(data || {}).map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
             const sub = item.subscriptionInfo;
@@ -104,7 +104,7 @@ export const ProviderButton = () => {
             return (
               <div
                 key={key}
-                className="flex items-center rounded-sm bg-white p-2 shadow-sm dark:bg-[#282A36]">
+                className="mb-2 flex items-center rounded-sm bg-white p-2 shadow-sm dark:bg-[#282A36]">
                 <div className="w-full overflow-hidden pr-4">
                   <div className="flex items-center">
                     <p className="text-primary-text text-xl font-bold">{key}</p>

@@ -108,13 +108,13 @@ export const ProfileEditorViewer = (props: Props) => {
     editProfile.type === "script" || editProfile.type === "merge";
 
   // monaco
-  const editorDomRef = useRef<any>();
+  const editorDomRef = useRef<any>(null);
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const codeLensRef = useRef<IDisposable | null>(null);
-  let editChainCondition =
-    useRef<monaco.editor.IContextKey<boolean | undefined>>();
-  let saveChainCondition =
-    useRef<monaco.editor.IContextKey<boolean | undefined>>();
+  const editChainCondition =
+    useRef<monaco.editor.IContextKey<boolean | undefined>>(null);
+  const saveChainCondition =
+    useRef<monaco.editor.IContextKey<boolean | undefined>>(null);
 
   // chain
   const [chainChecked, setChainChecked] = useState(false);

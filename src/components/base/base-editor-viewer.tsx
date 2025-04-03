@@ -43,13 +43,13 @@ export const EditorViewer = (props: Props) => {
     onChange,
   } = props;
   const { t } = useTranslation();
-  const editorDomRef = useRef<any>();
+  const editorDomRef = useRef<any>(null);
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const registerCodeLensRef = useRef<any>();
+  const registerCodeLensRef = useRef<any>(null);
   const themeMode = useThemeMode();
   const { size } = useWindowSize();
-  const pacLibRef = useRef<any>();
-  const pacCompletionRef = useRef<any>();
+  const pacLibRef = useRef<any>(null);
+  const pacCompletionRef = useRef<any>(null);
 
   useEffect(() => {
     if (!open) return;

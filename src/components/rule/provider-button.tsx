@@ -118,14 +118,14 @@ export const ProviderButton = () => {
         hideOkBtn
         hideCancelBtn
         onClose={() => setOpen(false)}>
-        <div className="space-y-2">
+        <div>
           {entries.map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
             const error = errorItems?.includes(key);
             return (
               <div
                 key={key}
-                className="flex items-center rounded-sm bg-white p-2 shadow-sm dark:bg-[#282A36]">
+                className="mb-2 flex items-center rounded-sm bg-white p-2 shadow-sm dark:bg-[#282A36]">
                 <div className="w-full overflow-hidden">
                   <div className="flex items-center">
                     {error && (
