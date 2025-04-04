@@ -247,15 +247,15 @@ impl CoreManager {
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::global().app_handle().unwrap();
-        let test_dir = dirs::app_home_dir()?.join("test");
-        let test_dir = dirs::path_to_str(&test_dir)?;
-        logging!(info, Type::Config, true, "测试目录: {}", test_dir);
+        let app_dir = dirs::app_home_dir()?;
+        let app_dir_str = dirs::path_to_str(&app_dir)?;
+        logging!(info, Type::Config, true, "验证目录: {}", app_dir_str);
 
         // 使用子进程运行clash验证配置
         let output = app_handle
             .shell()
             .sidecar(clash_core)?
-            .args(["-t", "-d", test_dir, "-f", config_path])
+            .args(["-t", "-d", app_dir_str, "-f", config_path])
             .output()
             .await?;
 
