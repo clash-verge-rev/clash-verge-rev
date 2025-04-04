@@ -9,9 +9,8 @@ import { useRef } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import {
   closeConnections,
-  delayGroup,
   getConnections,
-  healthcheckProviders,
+  healthcheckProxyProvider,
   selectNodeForProxy,
 } from "tauri-plugin-mihomo-api";
 import { BaseEmpty } from "../base";
@@ -89,7 +88,7 @@ export const ProxyGroups = (props: Props) => {
 
       if (providers.size) {
         Promise.allSettled(
-          [...providers].map((p) => healthcheckProviders(p)),
+          [...providers].map((p) => healthcheckProxyProvider(p)),
         ).then(() => onProxies());
       }
       const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);

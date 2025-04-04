@@ -16,8 +16,8 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-import { updateProxiesProviders } from "tauri-plugin-mihomo-api";
 import { BaseDialog } from "../base";
+import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -44,7 +44,7 @@ export const ProviderButton = () => {
   };
   const handleUpdate = async (key: string, index: number) => {
     setUpdatingAt(true, index);
-    updateProxiesProviders(key).finally(async () => {
+    updateProxyProvider(key).finally(async () => {
       setUpdatingAt(false, index);
       await mutate("getProxies");
       await mutate("getProxyProviders");
@@ -107,7 +107,7 @@ export const ProviderButton = () => {
                 className="mb-2 flex items-center rounded-sm bg-white p-2 shadow-sm dark:bg-[#282A36]">
                 <div className="w-full overflow-hidden pr-4">
                   <div className="flex items-center">
-                    <p className="text-primary-text text-xl font-bold">{key}</p>
+                    <p className="text-primary-text text-xl">{key}</p>
                     <TypeSpan>{item.proxies.length}</TypeSpan>
                   </div>
                   <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>

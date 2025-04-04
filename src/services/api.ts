@@ -1,7 +1,7 @@
 import {
   getProxies,
-  getProxiesProviders,
-  getRulesProviders,
+  getProxyProviders,
+  getRuleProviders,
 } from "tauri-plugin-mihomo-api";
 
 /// Get the Proxy information
@@ -89,7 +89,7 @@ export const calcuProxies = async () => {
 
 // get proxy providers
 export const calcuProxyProviders = async () => {
-  const providers = await getProxiesProviders();
+  const providers = await getProxyProviders();
   return Object.fromEntries(
     Object.entries(providers.providers)
       .sort()
@@ -101,7 +101,7 @@ export const calcuProxyProviders = async () => {
 };
 
 export const calcuRuleProviders = async () => {
-  const providers = await getRulesProviders();
+  const providers = await getRuleProviders();
   return Object.fromEntries(
     Object.entries(providers.providers)
       .sort()

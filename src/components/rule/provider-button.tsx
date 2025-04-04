@@ -15,7 +15,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-import { updateRulesProviders } from "tauri-plugin-mihomo-api";
+import { updateRuleProvider } from "tauri-plugin-mihomo-api";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -44,7 +44,7 @@ export const ProviderButton = () => {
 
   const handleUpdate = async (key: string, index: number, retryCount = 5) => {
     setUpdatingAt(true, index);
-    updateRulesProviders(key)
+    updateRuleProvider(key)
       .then(async () => {
         setErrorItems((pre) => {
           if (pre?.includes(key)) {
