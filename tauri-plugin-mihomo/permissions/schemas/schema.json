@@ -412,6 +412,42 @@
           "markdownDescription": "Denies the get_proxy_by_name command without any pre-configured scope."
         },
         {
+          "description": "Enables the get_proxy_provider_by_name command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-proxy-provider-by-name",
+          "markdownDescription": "Enables the get_proxy_provider_by_name command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_proxy_provider_by_name command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-proxy-provider-by-name",
+          "markdownDescription": "Denies the get_proxy_provider_by_name command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_proxy_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-proxy-providers",
+          "markdownDescription": "Enables the get_proxy_providers command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_proxy_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-proxy-providers",
+          "markdownDescription": "Denies the get_proxy_providers command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_rule_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-rule-providers",
+          "markdownDescription": "Enables the get_rule_providers command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_rule_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-rule-providers",
+          "markdownDescription": "Denies the get_rule_providers command without any pre-configured scope."
+        },
+        {
           "description": "Enables the get_rules command without any pre-configured scope.",
           "type": "string",
           "const": "allow-get-rules",
@@ -448,6 +484,18 @@
           "markdownDescription": "Denies the get_version command without any pre-configured scope."
         },
         {
+          "description": "Enables the healthcheck_node_in_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-healthcheck-node-in-provider",
+          "markdownDescription": "Enables the healthcheck_node_in_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the healthcheck_node_in_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-healthcheck-node-in-provider",
+          "markdownDescription": "Denies the healthcheck_node_in_provider command without any pre-configured scope."
+        },
+        {
           "description": "Enables the healthcheck_providers command without any pre-configured scope.",
           "type": "string",
           "const": "allow-healthcheck-providers",
@@ -470,6 +518,18 @@
           "type": "string",
           "const": "deny-healthcheck-providers-proxies",
           "markdownDescription": "Denies the healthcheck_providers_proxies command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the healthcheck_proxy_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-healthcheck-proxy-provider",
+          "markdownDescription": "Enables the healthcheck_proxy_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the healthcheck_proxy_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-healthcheck-proxy-provider",
+          "markdownDescription": "Denies the healthcheck_proxy_provider command without any pre-configured scope."
         },
         {
           "description": "Enables the patch_base_config command without any pre-configured scope.",
@@ -566,6 +626,30 @@
           "type": "string",
           "const": "deny-update-proxies-providers",
           "markdownDescription": "Denies the update_proxies_providers command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the update_proxy_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-update-proxy-provider",
+          "markdownDescription": "Enables the update_proxy_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the update_proxy_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-update-proxy-provider",
+          "markdownDescription": "Denies the update_proxy_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the update_rule_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-update-rule-provider",
+          "markdownDescription": "Enables the update_rule_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the update_rule_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-update-rule-provider",
+          "markdownDescription": "Denies the update_rule_provider command without any pre-configured scope."
         },
         {
           "description": "Enables the update_rules_providers command without any pre-configured scope.",

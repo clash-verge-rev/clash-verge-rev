@@ -83,58 +83,60 @@ pub(crate) async fn delay_group(
 
 // providers
 #[command]
-pub(crate) async fn get_proxies_providers(state: State<'_, RwLock<Mihomo>>) -> Result<Providers> {
-    state.read().await.get_proxies_providers().await
-}
-
-#[command]
-pub(crate) async fn get_providers_proxy_by_name(
+pub(crate) async fn get_proxy_providers(
     state: State<'_, RwLock<Mihomo>>,
-    provider_name: String,
 ) -> Result<ProxyProviders> {
+    state.read().await.get_proxy_providers().await
+}
+
+#[command]
+pub(crate) async fn get_proxy_provider_by_name(
+    state: State<'_, RwLock<Mihomo>>,
+    provider_name: String,
+) -> Result<ProxyProvider> {
     state
         .read()
         .await
-        .get_providers_proxy_by_name(&provider_name)
+        .get_proxy_provider_by_name(&provider_name)
         .await
 }
 
 #[command]
-pub(crate) async fn update_proxies_providers(
+pub(crate) async fn update_proxy_provider(
     state: State<'_, RwLock<Mihomo>>,
     provider_name: String,
 ) -> Result<()> {
     state
         .read()
         .await
-        .update_proxies_providers(&provider_name)
+        .update_proxy_provider(&provider_name)
         .await
 }
 
 #[command]
-pub(crate) async fn healthcheck_providers(
+pub(crate) async fn healthcheck_proxy_provider(
     state: State<'_, RwLock<Mihomo>>,
-    providers_name: String,
+    provider_name: String,
 ) -> Result<()> {
     state
         .read()
         .await
-        .healthcheck_providers(&providers_name)
+        .healthcheck_proxy_provider(&provider_name)
         .await
 }
 
 #[command]
-pub(crate) async fn healthcheck_providers_proxies(
+pub(crate) async fn healthcheck_node_in_provider(
     state: State<'_, RwLock<Mihomo>>,
-    providers_name: String,
-    proxies_name: String,
+    provider_name: String,
+    proxy_name: String,
     test_url: String,
     timeout: u32,
-) -> Result<()> {
+) -> Result<ProxyDelay> {
     state
         .read()
         .await
-        .healthcheck_providers_proxies(&providers_name, &proxies_name, &test_url, timeout)
+        .healthcheck_node_in_provider(&provider_name, &proxy_name, &test_url, timeout)
         .await
 }
 
@@ -147,9 +149,9 @@ pub(crate) async fn get_proxies(state: State<'_, RwLock<Mihomo>>) -> Result<Prox
 #[command]
 pub(crate) async fn get_proxy_by_name(
     state: State<'_, RwLock<Mihomo>>,
-    proxies_name: String,
+    proxy_name: String,
 ) -> Result<Proxy> {
-    state.read().await.get_proxy_by_name(&proxies_name).await
+    state.read().await.get_proxy_by_name(&proxy_name).await
 }
 
 #[command]
@@ -168,9 +170,9 @@ pub(crate) async fn select_node_for_proxy(
 #[command]
 pub(crate) async fn unfixed_proxy(
     state: State<'_, RwLock<Mihomo>>,
-    proxy_name: String,
+    group_name: String,
 ) -> Result<()> {
-    state.read().await.unfixed_proxy(&proxy_name).await
+    state.read().await.unfixed_proxy(&group_name).await
 }
 
 #[command]
@@ -194,19 +196,19 @@ pub(crate) async fn get_rules(state: State<'_, RwLock<Mihomo>>) -> Result<Rules>
 }
 
 #[command]
-pub(crate) async fn get_rules_providers(state: State<'_, RwLock<Mihomo>>) -> Result<RuleProviders> {
-    state.read().await.get_rules_providers().await
+pub(crate) async fn get_rule_providers(state: State<'_, RwLock<Mihomo>>) -> Result<RuleProviders> {
+    state.read().await.get_rule_providers().await
 }
 
 #[command]
-pub(crate) async fn update_rules_providers(
+pub(crate) async fn update_rule_provider(
     state: State<'_, RwLock<Mihomo>>,
-    providers_name: String,
+    provider_name: String,
 ) -> Result<()> {
     state
         .read()
         .await
-        .update_rules_providers(&providers_name)
+        .update_rule_provider(&provider_name)
         .await
 }
 
@@ -220,9 +222,9 @@ pub(crate) async fn get_base_config(state: State<'_, RwLock<Mihomo>>) -> Result<
 pub(crate) async fn reload_config(
     state: State<'_, RwLock<Mihomo>>,
     force: bool,
-    path: String,
+    config_path: String,
 ) -> Result<()> {
-    state.read().await.reload_config(force, &path).await
+    state.read().await.reload_config(force, &config_path).await
 }
 
 #[command]

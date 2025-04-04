@@ -20,7 +20,7 @@ export default {
   plugins: [
     typescript({
       declaration: true,
-      declarationDir: `./${pkg.exports.import.split("/")[0]}`,
+      declarationDir: `./${pkg.exports.import.replace("./", "").split("/")[0]}`,
     }),
   ],
   external: [

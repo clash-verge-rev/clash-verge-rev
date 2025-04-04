@@ -2,7 +2,7 @@ export interface MihomoVersion {
   meta: boolean;
   version: string;
 }
-export interface MihomoConnections {
+export interface Connections {
   downloadTotal: number;
   uploadTotal: number;
   connections: Connection[];
@@ -44,7 +44,7 @@ export interface ConnectionMetaData {
   dscp: number;
   sniffHost: string;
 }
-export interface MihomoGroups {
+export interface Groups {
   proxies: Proxy[];
 }
 export interface Proxy {
@@ -73,10 +73,10 @@ export interface DelayHistory {
   time: string;
   delay: number;
 }
-export interface MihomoProviders {
-  providers: Record<string, ProxyProviders>;
-}
 export interface ProxyProviders {
+  providers: Record<string, ProxyProvider>;
+}
+export interface ProxyProvider {
   expectedStatus: string;
   name: string;
   proxies: Proxy[];
@@ -96,7 +96,7 @@ export type MihomoGroupDelay = Record<string, number>;
 export interface Proxies {
   proxies: Record<string, Proxy>;
 }
-export interface MihomoProxyDelay {
+export interface ProxyDelay {
   delay: number;
   message?: string;
 }
@@ -174,67 +174,202 @@ export declare enum ClashMode {
   Global = "global",
   Direct = "direct",
 }
+/**
+ * 更新控制器地址
+ * @param controller 控制器地址, 例如：127.0.0.1:9090
+ */
 export declare function updateController(controller: string): Promise<void>;
+/**
+ * 更新控制器的密钥
+ * @param secret 控制器的密钥
+ */
 export declare function updateSecret(secret: string): Promise<void>;
+/**
+ * 获取Mihomo版本信息
+ */
 export declare function getVersion(): Promise<MihomoVersion>;
+/**
+ * 清除 FakeIP 的缓存
+ */
 export declare function cleanFakeIp(): Promise<void>;
-export declare function getConnections(): Promise<MihomoConnections>;
+/**
+ * 获取所有连接信息
+ * @returns 所有连接信息
+ */
+export declare function getConnections(): Promise<Connections>;
+/**
+ * 关闭所有连接
+ */
 export declare function closeAllConnections(): Promise<void>;
+/**
+ * 关闭指定连接
+ * @param connectionId 连接 ID
+ */
 export declare function closeConnections(connectionId: string): Promise<void>;
-export declare function getGroups(): Promise<MihomoGroups | null>;
-export declare function getGroupByName(
-  groupName: string,
-): Promise<Proxy | null>;
+/**
+ * 获取所有代理组信息
+ * @returns 所有代理组信息
+ */
+export declare function getGroups(): Promise<Groups>;
+/**
+ * 获取指定代理组信息
+ * @param groupName 代理组名称
+ * @returns 指定代理组信息
+ */
+export declare function getGroupByName(groupName: string): Promise<Proxy>;
+/**
+ * 获取指定代理组延迟
+ *
+ * 注：返回值中不包含超时的节点
+ * @param groupName 代理组名称
+ * @param testUrl 测试 url
+ * @param timeout 超时时间（毫秒）
+ * @returns 代理组里代理节点的延迟
+ */
 export declare function delayGroup(
   groupName: string,
   testUrl: string,
   timeout: number,
 ): Promise<MihomoGroupDelay>;
-export declare function getProxiesProviders(): Promise<MihomoProviders>;
-export declare function getProvidersProxyByName(
+/**
+ * 获取所有代理提供者信息
+ * @returns 所有代理提供者信息
+ */
+export declare function getProxyProviders(): Promise<ProxyProviders>;
+/**
+ * 获取指定的代理提供者信息
+ * @param providerName 代理提供者名称
+ * @returns 代理提供者信息
+ */
+export declare function getProxyProviderByName(
   providerName: string,
-): Promise<ProxyProviders>;
-export declare function updateProxiesProviders(
+): Promise<ProxyProvider>;
+/**
+ * 更新代理提供者信息
+ * @param providerName 代理提供者名称
+ */
+export declare function updateProxyProvider(
   providerName: string,
 ): Promise<void>;
-export declare function healthcheckProviders(
-  providersName: string,
+/**
+ * 对指定的代理提供者进行健康检查
+ * @param providerName 代理提供者名称
+ */
+export declare function healthcheckProxyProvider(
+  providerName: string,
 ): Promise<void>;
-export declare function healthcheckProvidersProxies(
-  providersName: string,
-  proxiesName: string,
+/**
+ * 对指定代理提供者下的指定节点（非代理组）进行健康检查, 并返回新的延迟信息
+ * @param providerName 代理提供者名称
+ * @param proxyName 代理节点名称 (非代理组)
+ * @param testUrl 测试 url
+ * @param timeout 超时时间
+ * @returns 该代理节点的延迟
+ */
+export declare function healthcheckNodeInProvider(
+  providerName: string,
+  proxyName: string,
   testUrl: string,
   timeout: number,
-): Promise<void>;
+): Promise<ProxyDelay>;
+/**
+ * 获取所有代理信息
+ * @returns 所有代理信息
+ */
 export declare function getProxies(): Promise<Proxies>;
+/**
+ * 获取指定代理信息
+ * @param proxyName 代理名称
+ * @returns 代理信息
+ */
 export declare function getProxyByName(
-  proxiesName: string,
+  proxyName: string,
 ): Promise<Proxy | null>;
+/**
+ * 为指定代理选择节点
+ *
+ * 一般为指定代理组下使用指定的代理节点 【代理组/节点】
+ * @param proxyName 代理组名称
+ * @param node 代理节点
+ */
 export declare function selectNodeForProxy(
   proxyName: string,
   node: string,
 ): Promise<void>;
+/**
+ * 指定代理组下不再使用固定的代理节点
+ *
+ * 一般用于自动选择的代理组（例如：URLTest 类型的代理组）下的节点
+ * @param groupName 代理组名称
+ */
 export declare function unfixedProxy(groupName: string): Promise<void>;
+/**
+ * 对指定代理进行延迟测试
+ *
+ * 一般用于代理节点的延迟测试，也可传代理组名称（只会测试代理组下选中的代理节点）
+ * @param proxyName 代理节点名称
+ * @param testUrl 测试 url
+ * @param timeout 超时时间
+ * @returns 该代理节点的延迟信息
+ */
 export declare function delayProxyByName(
   proxyName: string,
   testUrl: string,
   timeout: number,
-): Promise<MihomoProxyDelay>;
+): Promise<ProxyDelay>;
+/**
+ * 获取所有规则信息
+ * @returns 所有规则信息
+ */
 export declare function getRules(): Promise<Rules>;
-export declare function getRulesProviders(): Promise<RuleProviders>;
-export declare function updateRulesProviders(
-  providersName: string,
-): Promise<void>;
+/**
+ * 获取所有规则提供者信息
+ * @returns 所有规则提供者信息
+ */
+export declare function getRuleProviders(): Promise<RuleProviders>;
+/**
+ * 更新规则提供者信息
+ * @param providerName 规则提供者名称
+ */
+export declare function updateRuleProvider(providerName: string): Promise<void>;
+/**
+ * 获取基础配置
+ * @returns 基础配置
+ */
 export declare function getBaseConfig(): Promise<BaseConfig>;
+/**
+ * 重新加载配置
+ * @param force 强制更新
+ * @param configPath 配置文件路径
+ */
 export declare function reloadConfig(
   force: boolean,
-  path: string,
+  configPath: string,
 ): Promise<void>;
+/**
+ * 更改基础配置
+ * @param data 基础配置更改后的内容, 例如：{"tun": {"enabled": true}}
+ */
 export declare function patchBaseConfig(
   data: Record<string, any>,
 ): Promise<void>;
+/**
+ * 更新 Geo
+ */
 export declare function updateGeo(): Promise<void>;
+/**
+ * 重启核心
+ */
 export declare function restart(): Promise<void>;
+/**
+ * 升级核心
+ */
 export declare function upgradeCore(): Promise<void>;
+/**
+ * 更新 UI
+ */
 export declare function upgradeUi(): Promise<void>;
+/**
+ * 更新 Geo
+ */
 export declare function upgradeGeo(): Promise<void>;

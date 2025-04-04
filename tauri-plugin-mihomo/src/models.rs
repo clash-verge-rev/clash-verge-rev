@@ -114,12 +114,11 @@ pub enum TunStack {
 
 impl Display for TunStack {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let tun_stack_str = match self {
-            TunStack::Mixed => "Mixed",
-            TunStack::Gvisor => "gVisor",
-            TunStack::System => "System",
-        };
-        write!(f, "{}", tun_stack_str)
+        match self {
+            TunStack::Mixed => write!(f, "Mixed"),
+            TunStack::Gvisor => write!(f, "gVisor"),
+            TunStack::System => write!(f, "System"),
+        }
     }
 }
 
@@ -181,13 +180,13 @@ pub struct ProxyDelay {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Providers {
-    pub providers: HashMap<String, ProxyProviders>,
+pub struct ProxyProviders {
+    pub providers: HashMap<String, ProxyProvider>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProxyProviders {
+pub struct ProxyProvider {
     pub expected_status: String,
     pub name: String,
     pub proxies: Vec<Proxy>,

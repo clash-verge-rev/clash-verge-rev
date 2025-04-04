@@ -89,11 +89,11 @@ impl Builder {
                 commands::get_group_by_name,
                 commands::delay_group,
                 // providers
-                commands::get_proxies_providers,
-                commands::get_providers_proxy_by_name,
-                commands::update_proxies_providers,
-                commands::healthcheck_providers,
-                commands::healthcheck_providers_proxies,
+                commands::get_proxy_providers,
+                commands::get_proxy_provider_by_name,
+                commands::update_proxy_provider,
+                commands::healthcheck_proxy_provider,
+                commands::healthcheck_node_in_provider,
                 // proxies
                 commands::get_proxies,
                 commands::get_proxy_by_name,
@@ -102,8 +102,8 @@ impl Builder {
                 commands::delay_proxy_by_name,
                 // rules
                 commands::get_rules,
-                commands::get_rules_providers,
-                commands::update_rules_providers,
+                commands::get_rule_providers,
+                commands::update_rule_provider,
                 // runtime config
                 commands::get_base_config,
                 commands::reload_config,

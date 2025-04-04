@@ -385,6 +385,84 @@ Denies the get_proxy_by_name command without any pre-configured scope.
 <tr>
 <td>
 
+`mihomo:allow-get-proxy-provider-by-name`
+
+</td>
+<td>
+
+Enables the get_proxy_provider_by_name command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-get-proxy-provider-by-name`
+
+</td>
+<td>
+
+Denies the get_proxy_provider_by_name command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-get-proxy-providers`
+
+</td>
+<td>
+
+Enables the get_proxy_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-get-proxy-providers`
+
+</td>
+<td>
+
+Denies the get_proxy_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-get-rule-providers`
+
+</td>
+<td>
+
+Enables the get_rule_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-get-rule-providers`
+
+</td>
+<td>
+
+Denies the get_rule_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `mihomo:allow-get-rules`
 
 </td>
@@ -463,6 +541,32 @@ Denies the get_version command without any pre-configured scope.
 <tr>
 <td>
 
+`mihomo:allow-healthcheck-node-in-provider`
+
+</td>
+<td>
+
+Enables the healthcheck_node_in_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-healthcheck-node-in-provider`
+
+</td>
+<td>
+
+Denies the healthcheck_node_in_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `mihomo:allow-healthcheck-providers`
 
 </td>
@@ -508,6 +612,32 @@ Enables the healthcheck_providers_proxies command without any pre-configured sco
 <td>
 
 Denies the healthcheck_providers_proxies command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-healthcheck-proxy-provider`
+
+</td>
+<td>
+
+Enables the healthcheck_proxy_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-healthcheck-proxy-provider`
+
+</td>
+<td>
+
+Denies the healthcheck_proxy_provider command without any pre-configured scope.
 
 </td>
 </tr>
@@ -716,6 +846,58 @@ Enables the update_proxies_providers command without any pre-configured scope.
 <td>
 
 Denies the update_proxies_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-update-proxy-provider`
+
+</td>
+<td>
+
+Enables the update_proxy_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-update-proxy-provider`
+
+</td>
+<td>
+
+Denies the update_proxy_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-update-rule-provider`
+
+</td>
+<td>
+
+Enables the update_rule_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-update-rule-provider`
+
+</td>
+<td>
+
+Denies the update_rule_provider command without any pre-configured scope.
 
 </td>
 </tr>
