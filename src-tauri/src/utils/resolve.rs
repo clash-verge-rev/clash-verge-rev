@@ -293,16 +293,22 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
             .find(|(key, _)| key == "name")
             .map(|(_, value)| value.into_owned());
 
-        let encode_url = link_parsed
-            .query_pairs()
-            .find(|(key, _)| key == "url")
-            .map(|(_, value)| value.into_owned());
+        // 通过直接获取查询部分并解析特定参数来避免 URL 转义问题
+        let url_param = if let Some(query) = link_parsed.query() {
+            let prefix = "url=";
+            if let Some(pos) = query.find(prefix) {
+                let raw_url = &query[pos + prefix.len()..];
+                Some(percent_decode_str(raw_url).decode_utf8_lossy().to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
 
-        match encode_url {
+        match url_param {
             Some(url) => {
-                let url = percent_decode_str(url.as_ref())
-                    .decode_utf8_lossy()
-                    .to_string();
+                log::info!(target:"app", "decoded subscription url: {}", url);
 
                 create_window();
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
