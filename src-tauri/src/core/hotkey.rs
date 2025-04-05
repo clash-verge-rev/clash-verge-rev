@@ -30,7 +30,7 @@ impl Hotkey {
         let enable_global_hotkey = verge.latest().enable_global_hotkey.unwrap_or(true);
 
         logging!(
-            info,
+            debug,
             Type::Hotkey,
             true,
             "Initializing hotkeys with enable: {}",
@@ -44,7 +44,7 @@ impl Hotkey {
 
         if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
             logging!(
-                info,
+                debug,
                 Type::Hotkey,
                 true,
                 "Has {} hotkeys need to register",
@@ -59,7 +59,7 @@ impl Hotkey {
                 match (key, func) {
                     (Some(key), Some(func)) => {
                         logging!(
-                            info,
+                            debug,
                             Type::Hotkey,
                             true,
                             "Registering hotkey: {} -> {}",
@@ -78,7 +78,7 @@ impl Hotkey {
                             );
                         } else {
                             logging!(
-                                info,
+                                debug,
                                 Type::Hotkey,
                                 true,
                                 "Successfully registered hotkey {} -> {}",
@@ -103,7 +103,7 @@ impl Hotkey {
             }
             self.current.lock().clone_from(hotkeys);
         } else {
-            logging!(info, Type::Hotkey, true, "No hotkeys configured");
+            logging!(debug, Type::Hotkey, true, "No hotkeys configured");
         }
 
         Ok(())
@@ -121,7 +121,7 @@ impl Hotkey {
         let manager = app_handle.global_shortcut();
 
         logging!(
-            info,
+            debug,
             Type::Hotkey,
             true,
             "Attempting to register hotkey: {} for function: {}",
@@ -131,7 +131,7 @@ impl Hotkey {
 
         if manager.is_registered(hotkey) {
             logging!(
-                info,
+                debug,
                 Type::Hotkey,
                 true,
                 "Hotkey {} was already registered, unregistering first",
@@ -143,14 +143,14 @@ impl Hotkey {
         let f = match func.trim() {
             "open_or_close_dashboard" => {
                 logging!(
-                    info,
+                    debug,
                     Type::Hotkey,
                     true,
                     "Registering open_or_close_dashboard function"
                 );
                 || {
                     logging!(
-                        info,
+                        debug,
                         Type::Hotkey,
                         true,
                         "=== Hotkey Dashboard Window Operation Start ==="
@@ -159,7 +159,7 @@ impl Hotkey {
                     // 使用 spawn_blocking 来确保在正确的线程上执行
                     async_runtime::spawn_blocking(|| {
                         logging!(
-                            info,
+                            debug,
                             Type::Hotkey,
                             true,
                             "Toggle dashboard window visibility"
@@ -193,7 +193,7 @@ impl Hotkey {
                     });
 
                     logging!(
-                        info,
+                        debug,
                         Type::Hotkey,
                         true,
                         "=== Hotkey Dashboard Window Operation End ==="
@@ -220,18 +220,18 @@ impl Hotkey {
 
         let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey, event| {
             if event.state == ShortcutState::Pressed {
-                logging!(info, Type::Hotkey, true, "Hotkey pressed: {:?}", hotkey);
+                logging!(debug, Type::Hotkey, true, "Hotkey pressed: {:?}", hotkey);
 
                 if hotkey.key == Code::KeyQ && is_quit {
                     if let Some(window) = app_handle.get_webview_window("main") {
                         if window.is_focused().unwrap_or(false) {
-                            logging!(info, Type::Hotkey, true, "Executing quit function");
+                            logging!(debug, Type::Hotkey, true, "Executing quit function");
                             f();
                         }
                     }
                 } else {
                     // 直接执行函数，不做任何状态检查
-                    logging!(info, Type::Hotkey, true, "Executing function directly");
+                    logging!(debug, Type::Hotkey, true, "Executing function directly");
 
                     // 获取全局热键状态
                     let is_enable_global_hotkey = Config::verge()
@@ -255,7 +255,7 @@ impl Hotkey {
         });
 
         logging!(
-            info,
+            debug,
             Type::Hotkey,
             true,
             "Successfully registered hotkey {} for {}",
