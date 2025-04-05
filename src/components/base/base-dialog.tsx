@@ -1,7 +1,6 @@
 import { useVerge } from "@/hooks/use-verge";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
-import { LoadingButton } from "@mui/lab";
 import { Button } from "@mui/material";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AnimatePresence, motion } from "framer-motion";
@@ -82,9 +81,9 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
           onClick={onClose}
           className={cn(
             "fixed inset-0 z-50 flex h-dvh items-center justify-center",
-            { "bg-black bg-opacity-50": !full },
+            { "bg-black/50": !full },
             {
-              "rounded-md border-2 border-solid border-[--divider-color]":
+              "rounded-md border-2 border-solid border-(--divider-color)":
                 OS === "linux" && !enable_system_title_bar,
             },
           )}>
@@ -99,15 +98,13 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
               ...contentStyle,
             }}
             className={cn(
-              "inline-flex max-h-[calc(100%-100px)] w-full max-w-md flex-col rounded-[4px] bg-comment text-primary shadow-xl",
+              "bg-comment text-primary-text inline-flex max-h-[calc(100%-100px)] w-full max-w-md flex-col rounded-[4px] shadow-xl",
               { "h-full max-w-[calc(100%-100px)]": fullWidth },
               { "h-full max-h-full w-full max-w-full": full },
             )}>
             <div
               ref={titlebarRef}
-              className={cn("w-full px-6 py-4 text-xl font-bold", {
-                "cursor-move": full,
-              })}>
+              className="w-full px-6 py-4 text-xl font-bold">
               {title}
             </div>
 
@@ -119,20 +116,20 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
             </div>
 
             {!hideFooter && (
-              <div className="my-4 flex justify-end space-x-2 px-6">
+              <div className="my-4 flex justify-end !space-x-2 px-6">
                 {!hideCancelBtn && (
                   <Button variant="outlined" onClick={onCancel}>
                     {cancelBtn}
                   </Button>
                 )}
                 {!hideOkBtn && (
-                  <LoadingButton
+                  <Button
                     disabled={okDisabled}
                     loading={loading}
                     variant="contained"
                     onClick={onOk}>
                     {okBtn}
-                  </LoadingButton>
+                  </Button>
                 )}
               </div>
             )}

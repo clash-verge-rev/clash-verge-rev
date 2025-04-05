@@ -295,23 +295,21 @@ impl Tray {
     }
 
     pub fn on_click(_tray: &TrayIcon, event: TrayIconEvent) {
-        match event {
-            TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Up,
-                ..
-            } => {
-                let tray_event = Config::verge().latest().tray_event.clone();
-                let tray_event = tray_event.unwrap_or("main_window".into());
-                match tray_event.as_str() {
-                    "system_proxy" => feat::toggle_system_proxy(),
-                    "service_mode" => feat::toggle_service_mode(),
-                    "tun_mode" => feat::toggle_tun_mode(),
-                    "main_window" => resolve::create_window(),
-                    _ => {}
-                }
+        if let TrayIconEvent::Click {
+            button: MouseButton::Left,
+            button_state: MouseButtonState::Up,
+            ..
+        } = event
+        {
+            let tray_event = Config::verge().latest().tray_event.clone();
+            let tray_event = tray_event.unwrap_or("main_window".into());
+            match tray_event.as_str() {
+                "system_proxy" => feat::toggle_system_proxy(),
+                "service_mode" => feat::toggle_service_mode(),
+                "tun_mode" => feat::toggle_tun_mode(),
+                "main_window" => resolve::create_window(),
+                _ => {}
             }
-            _ => {}
         }
     }
 

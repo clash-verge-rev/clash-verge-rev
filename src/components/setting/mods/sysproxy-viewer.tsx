@@ -226,16 +226,18 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     {t("Proxy Bypass")}
                     <Tooltip title={t("Reset Default Bypass")}>
-                      <IconButton
-                        disabled={!enabled}
-                        color="primary"
-                        size="small"
-                        onClick={async () => {
-                          const defaultBypass = await getDefaultBypass();
-                          setBypass(defaultBypass.split(separator));
-                        }}>
-                        <RotateLeft fontSize="inherit" />
-                      </IconButton>
+                      <span>
+                        <IconButton
+                          disabled={!enabled}
+                          color="primary"
+                          size="small"
+                          onClick={async () => {
+                            const defaultBypass = await getDefaultBypass();
+                            setBypass(defaultBypass.split(separator));
+                          }}>
+                          <RotateLeft fontSize="inherit" />
+                        </IconButton>
+                      </span>
                     </Tooltip>
                   </Box>
                 }

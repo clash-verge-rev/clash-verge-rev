@@ -12,14 +12,13 @@ import { useWindowSize } from "@/hooks/use-window-size";
 import {
   enhanceProfiles,
   getChains,
-  getTemplate,
   patchProfile,
   readProfileFile,
   reorderProfile,
   saveProfileFile,
   testMergeChain,
 } from "@/services/cmds";
-import monaco from "@/services/monaco";
+import { generateTemplate, monaco } from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
@@ -47,7 +46,7 @@ import {
   Badge,
   BadgeProps,
   Button,
-  ButtonGroup,
+  Chip,
   Collapse,
   Divider,
   IconButton,
@@ -100,7 +99,7 @@ export const ProfileEditorViewer = (props: Props) => {
   const isRunningProfile = current?.uid === profileUid;
 
   const [editProfile, setEditProfile] = useState<IProfileItem>(profileItem);
-  const [originContent, setOriginContent] = useState<string | null>(null);
+  const originContentRef = useRef<string | null>(null);
   const [appVersion, setAppVersion] = useState("");
   const themeMode = useThemeMode();
 
@@ -109,13 +108,13 @@ export const ProfileEditorViewer = (props: Props) => {
     editProfile.type === "script" || editProfile.type === "merge";
 
   // monaco
-  const editorDomRef = useRef<any>();
+  const editorDomRef = useRef<any>(null);
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const codeLensRef = useRef<IDisposable | null>(null);
-  let editChainCondition =
-    useRef<monaco.editor.IContextKey<boolean | undefined>>();
-  let saveChainCondition =
-    useRef<monaco.editor.IContextKey<boolean | undefined>>();
+  const editChainCondition =
+    useRef<monaco.editor.IContextKey<boolean | undefined>>(null);
+  const saveChainCondition =
+    useRef<monaco.editor.IContextKey<boolean | undefined>>(null);
 
   // chain
   const [chainChecked, setChainChecked] = useState(false);
@@ -195,8 +194,8 @@ export const ProfileEditorViewer = (props: Props) => {
     });
     refreshChain();
     readProfileFile(profileUid).then(async (data) => {
-      if (!originContent) {
-        setOriginContent(data);
+      if (!originContentRef.current) {
+        originContentRef.current = data;
       }
       const dom = editorDomRef.current;
       if (!dom) return;
@@ -265,6 +264,11 @@ export const ProfileEditorViewer = (props: Props) => {
           const uid = uri?.query.split("=").pop();
           const val = instanceRef.current?.getValue();
           if (uid && val) {
+            const originContent = originContentRef.current;
+            if (originContent === val) {
+              Notice.info(t("Profile Content No Changes"));
+              return;
+            }
             let checkSuccess = true;
             if (editChainCondition.current?.get()) {
               checkSuccess = saveChainCondition.current?.get() ?? false;
@@ -277,6 +281,7 @@ export const ProfileEditorViewer = (props: Props) => {
                 setReactivating(true);
               }
               await saveProfileFile(uid, val);
+              originContentRef.current = val;
               setTimeout(() => {
                 Notice.success(t("Save Content Successfully"), 1000);
                 onChange?.();
@@ -286,59 +291,12 @@ export const ProfileEditorViewer = (props: Props) => {
           }
         },
       });
-
-      // 生成模板的命令方法
-      const generateCommand = instanceRef.current?.addCommand(
-        0,
-        (_, scope: string, language: string) => {
-          getTemplate(scope, language).then((templateContent) => {
-            instanceRef.current?.setValue(templateContent);
-            setChainChecked(false);
-          });
-        },
-        "",
-      );
-
-      // 增强脚本模板生成
-      codeLensRef.current = monaco.languages.registerCodeLensProvider(
-        ["yaml", "javascript"],
-        {
-          provideCodeLenses(model, token) {
-            const uriPath = model.uri.path;
-            if (uriPath.includes("clash.yaml")) {
-              return null;
-            }
-            const nextType = uriPath.includes("merge.yaml")
-              ? "merge"
-              : "script";
-            const nextLanguage = uriPath.includes("merge.yaml")
-              ? "yaml"
-              : "javascript";
-            return {
-              lenses: [
-                {
-                  id: "Regenerate Template Content",
-                  range: {
-                    startLineNumber: 1,
-                    startColumn: 1,
-                    endLineNumber: 2,
-                    endColumn: 1,
-                  },
-                  command: {
-                    id: generateCommand!,
-                    title: t("Regenerate Template Content"),
-                    arguments: [nextType, nextLanguage],
-                  },
-                },
-              ],
-              dispose: () => {},
-            };
-          },
-          resolveCodeLens(model, codeLens, token) {
-            return codeLens;
-          },
-        },
-      );
+      codeLensRef.current = generateTemplate({
+        monacoInstance: instanceRef.current,
+        languages: ["yaml", "javascript"],
+        showCondition: (uriPath) => !uriPath.includes("clash.yaml"),
+        onGenerateSuccess: () => setChainChecked(false),
+      });
 
       instanceRef.current?.onDidChangeModel((e) => {
         const { newModelUrl } = e;
@@ -460,7 +418,7 @@ export const ProfileEditorViewer = (props: Props) => {
     } else {
       setEditProfile(item);
     }
-    setOriginContent(content);
+    originContentRef.current = content;
     setChainChecked(false);
     let oldModel = instanceRef.current?.getModel();
     let newModel = null;
@@ -493,7 +451,7 @@ export const ProfileEditorViewer = (props: Props) => {
     if (item.uid === editProfile.uid) {
       setEditProfile(profileItem);
       const content = await readProfileFile(profileUid);
-      setOriginContent(content);
+      originContentRef.current = content;
       setChainChecked(false);
       let oldModel = instanceRef.current?.getModel();
       const id = nanoid();
@@ -517,13 +475,13 @@ export const ProfileEditorViewer = (props: Props) => {
     if (value == undefined) return;
     try {
       await handleProfileSubmit();
-      if (originContent !== value) {
+      if (originContentRef.current !== value) {
         await saveProfileFile(editProfile.uid, value);
         onChange?.();
       } else {
         Notice.info(t("Profile Content No Changes"));
       }
-      setOriginContent(value);
+      originContentRef.current = value;
       setChainChecked(false);
       // setExpand(type !== "clash");
       // if (profileUid === editProfile.uid) {
@@ -560,14 +518,20 @@ export const ProfileEditorViewer = (props: Props) => {
         }}
         onOk={onSave}
         contentStyle={{ userSelect: "text" }}>
-        <div className="flex h-full overflow-hidden bg-comment dark:bg-[#1e1f27]">
-          <div className="w-1/4 min-w-[260px] overflow-auto p-2">
+        <div className="bg-comment flex h-full overflow-hidden dark:bg-[#1e1f27]">
+          <div className="no-scrollbar w-1/4 min-w-[260px] overflow-auto">
             <div
-              className="flex cursor-pointer items-center justify-between bg-primary-alpha p-2"
+              className="bg-primary-alpha flex cursor-pointer items-center justify-between p-2"
               onClick={() => setExpand(!expand)}>
               <ScrollableText>
                 <span className="text-md font-bold">{profileName}</span>
               </ScrollableText>
+              <Chip
+                label={t(formType || "local")}
+                size="small"
+                color="primary"
+                className="mr-1 ml-2"
+              />
               <IconButton size="small">
                 <ExpandMore
                   fontSize="inherit"
@@ -584,29 +548,8 @@ export const ProfileEditorViewer = (props: Props) => {
               in={expand}
               timeout={"auto"}
               unmountOnExit
-              className="mt-2">
+              className="mt-2 px-2">
               <form>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <ButtonGroup
-                      size="small"
-                      fullWidth
-                      disabled
-                      className="mb-2"
-                      aria-label="profile type button group">
-                      {["remote", "local", "script", "merge"].map((type) => (
-                        <Button
-                          key={type}
-                          variant={formType === type ? "contained" : "outlined"}
-                          onClick={() => field.onChange(type)}>
-                          {t(type)}
-                        </Button>
-                      ))}
-                    </ButtonGroup>
-                  )}
-                />
                 <Controller
                   name="name"
                   control={control}
@@ -730,84 +673,86 @@ export const ProfileEditorViewer = (props: Props) => {
                   flexItem>
                   {t("Enhance Scripts")}
                 </Divider>
-                <Button
-                  size="small"
-                  variant="contained"
-                  fullWidth
-                  startIcon={<Add />}
-                  onClick={() => viewerRef.current?.create(profileUid)}>
-                  {t("Add")}
-                </Button>
+                <div className="px-2">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    fullWidth
+                    startIcon={<Add />}
+                    onClick={() => viewerRef.current?.create(profileUid)}>
+                    {t("Add")}
+                  </Button>
 
-                <ProfileViewer
-                  ref={viewerRef}
-                  onChange={async () => await refreshChain()}
-                />
+                  <ProfileViewer
+                    ref={viewerRef}
+                    onChange={async () => await refreshChain()}
+                  />
 
-                <div className="overflow-auto">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragOver={(event) => {
-                      const { over } = event;
-                      if (over) {
-                        const item = chain.find(
-                          (i) => i.uid === event.active.id,
-                        )!;
-                        setDraggingItem(item);
-                      }
-                    }}
-                    onDragEnd={(e) => handleChainDragEnd(e)}
-                    onDragCancel={() => setDraggingItem(null)}>
-                    <SortableContext items={chain.map((i) => i.uid)}>
-                      {chain.map((item, index) => (
-                        <DraggableItem key={item.uid} id={item.uid}>
+                  <div className="overflow-auto">
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragOver={(event) => {
+                        const { over } = event;
+                        if (over) {
+                          const item = chain.find(
+                            (i) => i.uid === event.active.id,
+                          )!;
+                          setDraggingItem(item);
+                        }
+                      }}
+                      onDragEnd={(e) => handleChainDragEnd(e)}
+                      onDragCancel={() => setDraggingItem(null)}>
+                      <SortableContext items={chain.map((i) => i.uid)}>
+                        {chain.map((item, index) => (
+                          <DraggableItem key={item.uid} id={item.uid}>
+                            <ProfileMoreMini
+                              key={item.uid}
+                              item={item}
+                              isDragging={item.uid === draggingItem?.uid}
+                              reactivating={reactivating && item.enable}
+                              selected={item.uid === editProfile.uid}
+                              logs={chainLogs[item.uid]}
+                              onToggleEnableCallback={async (enabled) => {
+                                mutate("getRuntimeLogs");
+                                await refreshChain();
+                              }}
+                              onClick={async () => {
+                                await handleChainClick(item);
+                              }}
+                              onInfoChangeCallback={refreshChain}
+                              onDeleteCallback={async () => {
+                                await handleChainDeleteCallBack(item);
+                              }}
+                            />
+                          </DraggableItem>
+                        ))}
+                      </SortableContext>
+                      <DragOverlay dropAnimation={dropAnimationConfig}>
+                        {draggingItem && (
                           <ProfileMoreMini
-                            key={item.uid}
-                            item={item}
-                            isDragging={item.uid === draggingItem?.uid}
-                            reactivating={reactivating && item.enable}
-                            selected={item.uid === editProfile.uid}
-                            logs={chainLogs[item.uid]}
+                            key={draggingItem.uid}
+                            item={draggingItem}
+                            isDragging={true}
+                            reactivating={reactivating && draggingItem.enable}
+                            selected={draggingItem.uid === editProfile.uid}
+                            logs={chainLogs[draggingItem.uid]}
                             onToggleEnableCallback={async (enabled) => {
                               mutate("getRuntimeLogs");
                               await refreshChain();
                             }}
                             onClick={async () => {
-                              await handleChainClick(item);
+                              await handleChainClick(draggingItem);
                             }}
                             onInfoChangeCallback={refreshChain}
                             onDeleteCallback={async () => {
-                              await handleChainDeleteCallBack(item);
+                              await handleChainDeleteCallBack(draggingItem);
                             }}
                           />
-                        </DraggableItem>
-                      ))}
-                    </SortableContext>
-                    <DragOverlay dropAnimation={dropAnimationConfig}>
-                      {draggingItem && (
-                        <ProfileMoreMini
-                          key={draggingItem.uid}
-                          item={draggingItem}
-                          isDragging={true}
-                          reactivating={reactivating && draggingItem.enable}
-                          selected={draggingItem.uid === editProfile.uid}
-                          logs={chainLogs[draggingItem.uid]}
-                          onToggleEnableCallback={async (enabled) => {
-                            mutate("getRuntimeLogs");
-                            await refreshChain();
-                          }}
-                          onClick={async () => {
-                            await handleChainClick(draggingItem);
-                          }}
-                          onInfoChangeCallback={refreshChain}
-                          onDeleteCallback={async () => {
-                            await handleChainDeleteCallBack(draggingItem);
-                          }}
-                        />
-                      )}
-                    </DragOverlay>
-                  </DndContext>
+                        )}
+                      </DragOverlay>
+                    </DndContext>
+                  </div>
                 </div>
               </>
             )}
@@ -815,14 +760,14 @@ export const ProfileEditorViewer = (props: Props) => {
 
           <div className="h-full w-full overflow-hidden" ref={editorDomRef} />
 
-          <div className="flex w-14 flex-col items-center justify-end space-y-2 px-1 pb-4">
+          <div className="flex w-14 flex-col items-center justify-end !space-y-2 px-1 pb-4">
             <Tooltip title={t("Restore Changes")} placement="left">
               <IconButton
                 aria-label="rollback"
                 size="medium"
                 onClick={() => {
-                  if (originContent) {
-                    instanceRef.current?.setValue(originContent);
+                  if (originContentRef.current) {
+                    instanceRef.current?.setValue(originContentRef.current);
                   }
                 }}>
                 <Reply fontSize="medium" />

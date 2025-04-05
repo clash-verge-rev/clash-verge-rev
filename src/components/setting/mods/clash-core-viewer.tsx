@@ -7,7 +7,6 @@ import {
 } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import { RestartAlt, SwitchAccessShortcut } from "@mui/icons-material";
-import { LoadingButton } from "@mui/lab";
 import {
   Box,
   Button,
@@ -114,7 +113,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
         <Box display="flex" justifyContent="space-between">
           {t("Clash Core")}
           <Box>
-            <LoadingButton
+            <Button
               variant="contained"
               size="small"
               startIcon={<SwitchAccessShortcut />}
@@ -123,7 +122,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
               sx={{ marginRight: "8px" }}
               onClick={onUpgrade}>
               {t("Upgrade")}
-            </LoadingButton>
+            </Button>
             <Button
               variant="contained"
               size="small"

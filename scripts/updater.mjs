@@ -260,7 +260,8 @@ export async function resolveUpdateLog(tag) {
 }
 
 export async function updateUpdateLog() {
-  const tag = await getLatestTag();
+  // const tag = await getLatestTag();
+  const tag = { name: "v1.0.0" };
   const tagTitle = `## ${tag.name}`;
   // write all change log content to update log file
   const changeLogContent = await fs
@@ -273,10 +274,18 @@ export async function updateUpdateLog() {
     const prependContent = `${tagTitle}\n${changeLogContent}\n---\n\n`;
     const finaleUpdateLogContent = prependContent.concat(updateLogContent);
     await fs.writeFile(update_log_file, finaleUpdateLogContent);
-    // clean change log file
-    await fs.writeFile(change_log_file, "");
+    // generate default change log file
+    const defaultChangeLog = `<!--
+### 🚨 Breaking Changes
+
+### ✨ Features
+
+### 🐛 Bug Fixes
+
+-->`;
+    await fs.writeFile(change_log_file, defaultChangeLog);
   } else {
-    console.log(`v${tag} already exists in UPDATELOG.md`);
+    throw new Error(`${tag.name} already exists in UPDATELOG.md`);
   }
 }
 

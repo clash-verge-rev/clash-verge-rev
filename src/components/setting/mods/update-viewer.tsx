@@ -1,6 +1,7 @@
 import { BaseDialog, DialogRef, Notice } from "@/components/base";
 import { portableFlag } from "@/pages/_layout";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
+import getSystem from "@/utils/get-system";
 import { Box, Button, LinearProgress } from "@mui/material";
 import { Event, listen, UnlistenFn } from "@tauri-apps/api/event";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -12,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import useSWR from "swr";
 
-let eventListener: UnlistenFn | null = null;
+const OS = getSystem();
 
 export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -30,7 +31,8 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [downloaded, setDownloaded] = useState(0);
   const [buffer, setBuffer] = useState(0);
-  const [total, setTotal] = useState(0);
+  // default 10M
+  const [total, setTotal] = useState(10 * 1024 * 1024);
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -63,21 +65,18 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
     }
     if (updateState) return;
     setUpdateState(true);
-    if (eventListener !== null) {
-      eventListener();
-    }
-    eventListener = await listen(
-      "tauri://update-download-progress",
-      (e: Event<any>) => {
-        setTotal(e.payload.contentLength);
-        setBuffer(e.payload.chunkLength);
-        setDownloaded((a) => {
-          return a + e.payload.chunkLength;
-        });
-      },
-    );
     try {
-      await updateInfo.downloadAndInstall();
+      await updateInfo.downloadAndInstall((e) => {
+        console.log(e);
+        if (e.event === "Started") setTotal(e.data.contentLength || 100);
+        if (e.event === "Progress") {
+          const chunkLength = e.data.chunkLength;
+          setBuffer(chunkLength);
+          setDownloaded((prev) => {
+            return prev + chunkLength;
+          });
+        }
+      });
       await relaunch();
     } catch (err: any) {
       Notice.error(err?.message || err.toString());
@@ -109,6 +108,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       contentStyle={{ minWidth: 360, maxWidth: 400 }}
       okBtn={t("Update")}
       cancelBtn={t("Cancel")}
+      hideFooter={OS === "linux"}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onUpdate}>

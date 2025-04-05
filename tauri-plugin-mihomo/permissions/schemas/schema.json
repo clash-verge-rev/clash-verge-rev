@@ -44,7 +44,7 @@
           "minimum": 1.0
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": ["string", "null"]
         },
         "permissions": {
@@ -94,7 +94,7 @@
           "type": "string"
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri internal convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": ["string", "null"]
         },
         "commands": {
@@ -258,377 +258,548 @@
         {
           "description": "Enables the clean_fakeip command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-clean-fakeip"
+          "const": "allow-clean-fakeip",
+          "markdownDescription": "Enables the clean_fakeip command without any pre-configured scope."
         },
         {
           "description": "Denies the clean_fakeip command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-clean-fakeip"
+          "const": "deny-clean-fakeip",
+          "markdownDescription": "Denies the clean_fakeip command without any pre-configured scope."
         },
         {
           "description": "Enables the close_all_connections command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-close-all-connections"
+          "const": "allow-close-all-connections",
+          "markdownDescription": "Enables the close_all_connections command without any pre-configured scope."
         },
         {
           "description": "Denies the close_all_connections command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-close-all-connections"
+          "const": "deny-close-all-connections",
+          "markdownDescription": "Denies the close_all_connections command without any pre-configured scope."
         },
         {
           "description": "Enables the close_connections command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-close-connections"
+          "const": "allow-close-connections",
+          "markdownDescription": "Enables the close_connections command without any pre-configured scope."
         },
         {
           "description": "Denies the close_connections command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-close-connections"
+          "const": "deny-close-connections",
+          "markdownDescription": "Denies the close_connections command without any pre-configured scope."
         },
         {
           "description": "Enables the delay_group command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-delay-group"
+          "const": "allow-delay-group",
+          "markdownDescription": "Enables the delay_group command without any pre-configured scope."
         },
         {
           "description": "Denies the delay_group command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-delay-group"
+          "const": "deny-delay-group",
+          "markdownDescription": "Denies the delay_group command without any pre-configured scope."
         },
         {
           "description": "Enables the delay_proxy_by_name command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-delay-proxy-by-name"
+          "const": "allow-delay-proxy-by-name",
+          "markdownDescription": "Enables the delay_proxy_by_name command without any pre-configured scope."
         },
         {
           "description": "Denies the delay_proxy_by_name command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-delay-proxy-by-name"
+          "const": "deny-delay-proxy-by-name",
+          "markdownDescription": "Denies the delay_proxy_by_name command without any pre-configured scope."
         },
         {
           "description": "Enables the get_base_config command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-base-config"
+          "const": "allow-get-base-config",
+          "markdownDescription": "Enables the get_base_config command without any pre-configured scope."
         },
         {
           "description": "Denies the get_base_config command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-base-config"
+          "const": "deny-get-base-config",
+          "markdownDescription": "Denies the get_base_config command without any pre-configured scope."
         },
         {
           "description": "Enables the get_connections command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-connections"
+          "const": "allow-get-connections",
+          "markdownDescription": "Enables the get_connections command without any pre-configured scope."
         },
         {
           "description": "Denies the get_connections command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-connections"
+          "const": "deny-get-connections",
+          "markdownDescription": "Denies the get_connections command without any pre-configured scope."
         },
         {
           "description": "Enables the get_group_by_name command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-group-by-name"
+          "const": "allow-get-group-by-name",
+          "markdownDescription": "Enables the get_group_by_name command without any pre-configured scope."
         },
         {
           "description": "Denies the get_group_by_name command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-group-by-name"
+          "const": "deny-get-group-by-name",
+          "markdownDescription": "Denies the get_group_by_name command without any pre-configured scope."
         },
         {
           "description": "Enables the get_groups command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-groups"
+          "const": "allow-get-groups",
+          "markdownDescription": "Enables the get_groups command without any pre-configured scope."
         },
         {
           "description": "Denies the get_groups command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-groups"
+          "const": "deny-get-groups",
+          "markdownDescription": "Denies the get_groups command without any pre-configured scope."
         },
         {
           "description": "Enables the get_providers_proxy_by_name command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-providers-proxy-by-name"
+          "const": "allow-get-providers-proxy-by-name",
+          "markdownDescription": "Enables the get_providers_proxy_by_name command without any pre-configured scope."
         },
         {
           "description": "Denies the get_providers_proxy_by_name command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-providers-proxy-by-name"
+          "const": "deny-get-providers-proxy-by-name",
+          "markdownDescription": "Denies the get_providers_proxy_by_name command without any pre-configured scope."
         },
         {
           "description": "Enables the get_proxies command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-proxies"
+          "const": "allow-get-proxies",
+          "markdownDescription": "Enables the get_proxies command without any pre-configured scope."
         },
         {
           "description": "Denies the get_proxies command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-proxies"
+          "const": "deny-get-proxies",
+          "markdownDescription": "Denies the get_proxies command without any pre-configured scope."
         },
         {
           "description": "Enables the get_proxies_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-proxies-providers"
+          "const": "allow-get-proxies-providers",
+          "markdownDescription": "Enables the get_proxies_providers command without any pre-configured scope."
         },
         {
           "description": "Denies the get_proxies_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-proxies-providers"
+          "const": "deny-get-proxies-providers",
+          "markdownDescription": "Denies the get_proxies_providers command without any pre-configured scope."
         },
         {
           "description": "Enables the get_proxy_by_name command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-proxy-by-name"
+          "const": "allow-get-proxy-by-name",
+          "markdownDescription": "Enables the get_proxy_by_name command without any pre-configured scope."
         },
         {
           "description": "Denies the get_proxy_by_name command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-proxy-by-name"
+          "const": "deny-get-proxy-by-name",
+          "markdownDescription": "Denies the get_proxy_by_name command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_proxy_provider_by_name command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-proxy-provider-by-name",
+          "markdownDescription": "Enables the get_proxy_provider_by_name command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_proxy_provider_by_name command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-proxy-provider-by-name",
+          "markdownDescription": "Denies the get_proxy_provider_by_name command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_proxy_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-proxy-providers",
+          "markdownDescription": "Enables the get_proxy_providers command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_proxy_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-proxy-providers",
+          "markdownDescription": "Denies the get_proxy_providers command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_rule_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-rule-providers",
+          "markdownDescription": "Enables the get_rule_providers command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_rule_providers command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-rule-providers",
+          "markdownDescription": "Denies the get_rule_providers command without any pre-configured scope."
         },
         {
           "description": "Enables the get_rules command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-rules"
+          "const": "allow-get-rules",
+          "markdownDescription": "Enables the get_rules command without any pre-configured scope."
         },
         {
           "description": "Denies the get_rules command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-rules"
+          "const": "deny-get-rules",
+          "markdownDescription": "Denies the get_rules command without any pre-configured scope."
         },
         {
           "description": "Enables the get_rules_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-rules-providers"
+          "const": "allow-get-rules-providers",
+          "markdownDescription": "Enables the get_rules_providers command without any pre-configured scope."
         },
         {
           "description": "Denies the get_rules_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-rules-providers"
+          "const": "deny-get-rules-providers",
+          "markdownDescription": "Denies the get_rules_providers command without any pre-configured scope."
         },
         {
           "description": "Enables the get_version command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-version"
+          "const": "allow-get-version",
+          "markdownDescription": "Enables the get_version command without any pre-configured scope."
         },
         {
           "description": "Denies the get_version command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-version"
+          "const": "deny-get-version",
+          "markdownDescription": "Denies the get_version command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the healthcheck_node_in_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-healthcheck-node-in-provider",
+          "markdownDescription": "Enables the healthcheck_node_in_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the healthcheck_node_in_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-healthcheck-node-in-provider",
+          "markdownDescription": "Denies the healthcheck_node_in_provider command without any pre-configured scope."
         },
         {
           "description": "Enables the healthcheck_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-healthcheck-providers"
+          "const": "allow-healthcheck-providers",
+          "markdownDescription": "Enables the healthcheck_providers command without any pre-configured scope."
         },
         {
           "description": "Denies the healthcheck_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-healthcheck-providers"
+          "const": "deny-healthcheck-providers",
+          "markdownDescription": "Denies the healthcheck_providers command without any pre-configured scope."
         },
         {
           "description": "Enables the healthcheck_providers_proxies command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-healthcheck-providers-proxies"
+          "const": "allow-healthcheck-providers-proxies",
+          "markdownDescription": "Enables the healthcheck_providers_proxies command without any pre-configured scope."
         },
         {
           "description": "Denies the healthcheck_providers_proxies command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-healthcheck-providers-proxies"
+          "const": "deny-healthcheck-providers-proxies",
+          "markdownDescription": "Denies the healthcheck_providers_proxies command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the healthcheck_proxy_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-healthcheck-proxy-provider",
+          "markdownDescription": "Enables the healthcheck_proxy_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the healthcheck_proxy_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-healthcheck-proxy-provider",
+          "markdownDescription": "Denies the healthcheck_proxy_provider command without any pre-configured scope."
         },
         {
           "description": "Enables the patch_base_config command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-patch-base-config"
+          "const": "allow-patch-base-config",
+          "markdownDescription": "Enables the patch_base_config command without any pre-configured scope."
         },
         {
           "description": "Denies the patch_base_config command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-patch-base-config"
+          "const": "deny-patch-base-config",
+          "markdownDescription": "Denies the patch_base_config command without any pre-configured scope."
         },
         {
           "description": "Enables the reload_config command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-reload-config"
+          "const": "allow-reload-config",
+          "markdownDescription": "Enables the reload_config command without any pre-configured scope."
         },
         {
           "description": "Denies the reload_config command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-reload-config"
+          "const": "deny-reload-config",
+          "markdownDescription": "Denies the reload_config command without any pre-configured scope."
         },
         {
           "description": "Enables the restart command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-restart"
+          "const": "allow-restart",
+          "markdownDescription": "Enables the restart command without any pre-configured scope."
         },
         {
           "description": "Denies the restart command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-restart"
+          "const": "deny-restart",
+          "markdownDescription": "Denies the restart command without any pre-configured scope."
         },
         {
           "description": "Enables the select_node_for_proxy command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-select-node-for-proxy"
+          "const": "allow-select-node-for-proxy",
+          "markdownDescription": "Enables the select_node_for_proxy command without any pre-configured scope."
         },
         {
           "description": "Denies the select_node_for_proxy command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-select-node-for-proxy"
+          "const": "deny-select-node-for-proxy",
+          "markdownDescription": "Denies the select_node_for_proxy command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the unfixed_proxy command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-unfixed-proxy",
+          "markdownDescription": "Enables the unfixed_proxy command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the unfixed_proxy command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-unfixed-proxy",
+          "markdownDescription": "Denies the unfixed_proxy command without any pre-configured scope."
         },
         {
           "description": "Enables the update_controller command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-update-controller"
+          "const": "allow-update-controller",
+          "markdownDescription": "Enables the update_controller command without any pre-configured scope."
         },
         {
           "description": "Denies the update_controller command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-update-controller"
+          "const": "deny-update-controller",
+          "markdownDescription": "Denies the update_controller command without any pre-configured scope."
         },
         {
           "description": "Enables the update_geo command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-update-geo"
+          "const": "allow-update-geo",
+          "markdownDescription": "Enables the update_geo command without any pre-configured scope."
         },
         {
           "description": "Denies the update_geo command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-update-geo"
+          "const": "deny-update-geo",
+          "markdownDescription": "Denies the update_geo command without any pre-configured scope."
         },
         {
           "description": "Enables the update_proxies_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-update-proxies-providers"
+          "const": "allow-update-proxies-providers",
+          "markdownDescription": "Enables the update_proxies_providers command without any pre-configured scope."
         },
         {
           "description": "Denies the update_proxies_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-update-proxies-providers"
+          "const": "deny-update-proxies-providers",
+          "markdownDescription": "Denies the update_proxies_providers command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the update_proxy_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-update-proxy-provider",
+          "markdownDescription": "Enables the update_proxy_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the update_proxy_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-update-proxy-provider",
+          "markdownDescription": "Denies the update_proxy_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the update_rule_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-update-rule-provider",
+          "markdownDescription": "Enables the update_rule_provider command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the update_rule_provider command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-update-rule-provider",
+          "markdownDescription": "Denies the update_rule_provider command without any pre-configured scope."
         },
         {
           "description": "Enables the update_rules_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-update-rules-providers"
+          "const": "allow-update-rules-providers",
+          "markdownDescription": "Enables the update_rules_providers command without any pre-configured scope."
         },
         {
           "description": "Denies the update_rules_providers command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-update-rules-providers"
+          "const": "deny-update-rules-providers",
+          "markdownDescription": "Denies the update_rules_providers command without any pre-configured scope."
         },
         {
           "description": "Enables the update_secret command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-update-secret"
+          "const": "allow-update-secret",
+          "markdownDescription": "Enables the update_secret command without any pre-configured scope."
         },
         {
           "description": "Denies the update_secret command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-update-secret"
+          "const": "deny-update-secret",
+          "markdownDescription": "Denies the update_secret command without any pre-configured scope."
         },
         {
           "description": "Enables the upgrade_core command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-upgrade-core"
+          "const": "allow-upgrade-core",
+          "markdownDescription": "Enables the upgrade_core command without any pre-configured scope."
         },
         {
           "description": "Denies the upgrade_core command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-upgrade-core"
+          "const": "deny-upgrade-core",
+          "markdownDescription": "Denies the upgrade_core command without any pre-configured scope."
         },
         {
           "description": "Enables the upgrade_geo command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-upgrade-geo"
+          "const": "allow-upgrade-geo",
+          "markdownDescription": "Enables the upgrade_geo command without any pre-configured scope."
         },
         {
           "description": "Denies the upgrade_geo command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-upgrade-geo"
+          "const": "deny-upgrade-geo",
+          "markdownDescription": "Denies the upgrade_geo command without any pre-configured scope."
         },
         {
           "description": "Enables the upgrade_ui command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-upgrade-ui"
+          "const": "allow-upgrade-ui",
+          "markdownDescription": "Enables the upgrade_ui command without any pre-configured scope."
         },
         {
           "description": "Denies the upgrade_ui command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-upgrade-ui"
+          "const": "deny-upgrade-ui",
+          "markdownDescription": "Denies the upgrade_ui command without any pre-configured scope."
         },
         {
           "description": "Enables the ws_connect command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ws-connect"
+          "const": "allow-ws-connect",
+          "markdownDescription": "Enables the ws_connect command without any pre-configured scope."
         },
         {
           "description": "Denies the ws_connect command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ws-connect"
+          "const": "deny-ws-connect",
+          "markdownDescription": "Denies the ws_connect command without any pre-configured scope."
         },
         {
           "description": "Enables the ws_connections command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ws-connections"
+          "const": "allow-ws-connections",
+          "markdownDescription": "Enables the ws_connections command without any pre-configured scope."
         },
         {
           "description": "Denies the ws_connections command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ws-connections"
+          "const": "deny-ws-connections",
+          "markdownDescription": "Denies the ws_connections command without any pre-configured scope."
         },
         {
           "description": "Enables the ws_disconnect command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ws-disconnect"
+          "const": "allow-ws-disconnect",
+          "markdownDescription": "Enables the ws_disconnect command without any pre-configured scope."
         },
         {
           "description": "Denies the ws_disconnect command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ws-disconnect"
+          "const": "deny-ws-disconnect",
+          "markdownDescription": "Denies the ws_disconnect command without any pre-configured scope."
         },
         {
           "description": "Enables the ws_logs command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ws-logs"
+          "const": "allow-ws-logs",
+          "markdownDescription": "Enables the ws_logs command without any pre-configured scope."
         },
         {
           "description": "Denies the ws_logs command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ws-logs"
+          "const": "deny-ws-logs",
+          "markdownDescription": "Denies the ws_logs command without any pre-configured scope."
         },
         {
           "description": "Enables the ws_memory command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ws-memory"
+          "const": "allow-ws-memory",
+          "markdownDescription": "Enables the ws_memory command without any pre-configured scope."
         },
         {
           "description": "Denies the ws_memory command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ws-memory"
+          "const": "deny-ws-memory",
+          "markdownDescription": "Denies the ws_memory command without any pre-configured scope."
         },
         {
           "description": "Enables the ws_send command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ws-send"
+          "const": "allow-ws-send",
+          "markdownDescription": "Enables the ws_send command without any pre-configured scope."
         },
         {
           "description": "Denies the ws_send command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ws-send"
+          "const": "deny-ws-send",
+          "markdownDescription": "Denies the ws_send command without any pre-configured scope."
         },
         {
           "description": "Enables the ws_traffic command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-ws-traffic"
+          "const": "allow-ws-traffic",
+          "markdownDescription": "Enables the ws_traffic command without any pre-configured scope."
         },
         {
           "description": "Denies the ws_traffic command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-ws-traffic"
+          "const": "deny-ws-traffic",
+          "markdownDescription": "Denies the ws_traffic command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-clean-fakeip`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`",
           "type": "string",
-          "const": "default"
+          "const": "default",
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-clean-fakeip`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`"
         }
       ]
     }

@@ -15,39 +15,82 @@ exports.ClashMode = void 0;
   ClashMode["Direct"] = "direct";
 })(exports.ClashMode || (exports.ClashMode = {}));
 // ======================= functions =======================
+/**
+ * 更新控制器地址
+ * @param controller 控制器地址, 例如：127.0.0.1:9090
+ */
 async function updateController(controller) {
   const [host, portStr] = controller.trim().split(":");
   const port = parseInt(portStr);
   await core.invoke("plugin:mihomo|update_controller", { host, port });
 }
+/**
+ * 更新控制器的密钥
+ * @param secret 控制器的密钥
+ */
 async function updateSecret(secret) {
   await core.invoke("plugin:mihomo|update_secret", { secret });
 }
+/**
+ * 获取Mihomo版本信息
+ */
 async function getVersion() {
   return await core.invoke("plugin:mihomo|get_version");
 }
+/**
+ * 清除 FakeIP 的缓存
+ */
 async function cleanFakeIp() {
   await core.invoke("plugin:mihomo|clean_fakeip");
 }
 // connections
+/**
+ * 获取所有连接信息
+ * @returns 所有连接信息
+ */
 async function getConnections() {
   return await core.invoke("plugin:mihomo|get_connections");
 }
+/**
+ * 关闭所有连接
+ */
 async function closeAllConnections() {
   await core.invoke("plugin:mihomo|close_all_connections");
 }
+/**
+ * 关闭指定连接
+ * @param connectionId 连接 ID
+ */
 async function closeConnections(connectionId) {
   await core.invoke("plugin:mihomo|close_connections", { connectionId });
 }
 // groups
+/**
+ * 获取所有代理组信息
+ * @returns 所有代理组信息
+ */
 async function getGroups() {
   return await core.invoke("plugin:mihomo|get_groups");
 }
+/**
+ * 获取指定代理组信息
+ * @param groupName 代理组名称
+ * @returns 指定代理组信息
+ */
 async function getGroupByName(groupName) {
   return await core.invoke("plugin:mihomo|get_group_by_name", {
     groupName,
   });
 }
+/**
+ * 获取指定代理组延迟
+ *
+ * 注：返回值中不包含超时的节点
+ * @param groupName 代理组名称
+ * @param testUrl 测试 url
+ * @param timeout 超时时间（毫秒）
+ * @returns 代理组里代理节点的延迟
+ */
 async function delayGroup(groupName, testUrl, timeout) {
   return await core.invoke("plugin:mihomo|delay_group", {
     groupName,
@@ -56,50 +99,113 @@ async function delayGroup(groupName, testUrl, timeout) {
   });
 }
 // providers
-async function getProxiesProviders() {
-  return await core.invoke("plugin:mihomo|get_proxies_providers");
+/**
+ * 获取所有代理提供者信息
+ * @returns 所有代理提供者信息
+ */
+async function getProxyProviders() {
+  return await core.invoke("plugin:mihomo|get_proxy_providers");
 }
-async function getProvidersProxyByName(providerName) {
-  return await core.invoke("plugin:mihomo|get_providers_proxy_by_name", {
+/**
+ * 获取指定的代理提供者信息
+ * @param providerName 代理提供者名称
+ * @returns 代理提供者信息
+ */
+async function getProxyProviderByName(providerName) {
+  return await core.invoke("plugin:mihomo|get_proxy_provider_by_name", {
     providerName,
   });
 }
-async function updateProxiesProviders(providerName) {
-  await core.invoke("plugin:mihomo|update_proxies_providers", {
+/**
+ * 更新代理提供者信息
+ * @param providerName 代理提供者名称
+ */
+async function updateProxyProvider(providerName) {
+  await core.invoke("plugin:mihomo|update_proxy_provider", {
     providerName,
   });
 }
-async function healthcheckProviders(providersName) {
-  await core.invoke("plugin:mihomo|healthcheck_providers", { providersName });
+/**
+ * 对指定的代理提供者进行健康检查
+ * @param providerName 代理提供者名称
+ */
+async function healthcheckProxyProvider(providerName) {
+  await core.invoke("plugin:mihomo|healthcheck_proxy_provider", {
+    providerName,
+  });
 }
-async function healthcheckProvidersProxies(
-  providersName,
-  proxiesName,
+/**
+ * 对指定代理提供者下的指定节点（非代理组）进行健康检查, 并返回新的延迟信息
+ * @param providerName 代理提供者名称
+ * @param proxyName 代理节点名称 (非代理组)
+ * @param testUrl 测试 url
+ * @param timeout 超时时间
+ * @returns 该代理节点的延迟
+ */
+async function healthcheckNodeInProvider(
+  providerName,
+  proxyName,
   testUrl,
   timeout,
 ) {
-  await core.invoke("plugin:mihomo|healthcheck_providers_proxies", {
-    providersName,
-    proxiesName,
+  return await core.invoke("plugin:mihomo|healthcheck_node_in_provider", {
+    providerName,
+    proxyName,
     testUrl,
     timeout,
   });
 }
 // proxies
+/**
+ * 获取所有代理信息
+ * @returns 所有代理信息
+ */
 async function getProxies() {
   return await core.invoke("plugin:mihomo|get_proxies");
 }
-async function getProxyByName(proxiesName) {
+/**
+ * 获取指定代理信息
+ * @param proxyName 代理名称
+ * @returns 代理信息
+ */
+async function getProxyByName(proxyName) {
   return await core.invoke("plugin:mihomo|get_proxy_by_name", {
-    proxiesName,
+    proxiesName: proxyName,
   });
 }
+/**
+ * 为指定代理选择节点
+ *
+ * 一般为指定代理组下使用指定的代理节点 【代理组/节点】
+ * @param proxyName 代理组名称
+ * @param node 代理节点
+ */
 async function selectNodeForProxy(proxyName, node) {
   await core.invoke("plugin:mihomo|select_node_for_proxy", {
     proxyName,
     node,
   });
 }
+/**
+ * 指定代理组下不再使用固定的代理节点
+ *
+ * 一般用于自动选择的代理组（例如：URLTest 类型的代理组）下的节点
+ * @param groupName 代理组名称
+ */
+async function unfixedProxy(groupName) {
+  await core.invoke("plugin:mihomo|unfixed_proxy", {
+    groupName,
+  });
+}
+/**
+ * 对指定代理进行延迟测试
+ *
+ * 一般用于代理节点的延迟测试，也可传代理组名称（只会测试代理组下选中的代理节点）
+ * @param proxyName 代理节点名称
+ * @param testUrl 测试 url
+ * @param timeout 超时时间
+ * @returns 该代理节点的延迟信息
+ */
 async function delayProxyByName(proxyName, testUrl, timeout) {
   return await core.invoke("plugin:mihomo|delay_proxy_by_name", {
     proxyName,
@@ -108,45 +214,85 @@ async function delayProxyByName(proxyName, testUrl, timeout) {
   });
 }
 // rules
+/**
+ * 获取所有规则信息
+ * @returns 所有规则信息
+ */
 async function getRules() {
   return await core.invoke("plugin:mihomo|get_rules");
 }
-async function getRulesProviders() {
-  return await core.invoke("plugin:mihomo|get_rules_providers");
+/**
+ * 获取所有规则提供者信息
+ * @returns 所有规则提供者信息
+ */
+async function getRuleProviders() {
+  return await core.invoke("plugin:mihomo|get_rule_providers");
 }
-async function updateRulesProviders(providersName) {
-  await core.invoke("plugin:mihomo|update_rules_providers", {
-    providersName,
+/**
+ * 更新规则提供者信息
+ * @param providerName 规则提供者名称
+ */
+async function updateRuleProvider(providerName) {
+  await core.invoke("plugin:mihomo|update_rule_provider", {
+    providerName,
   });
 }
 // runtime config
+/**
+ * 获取基础配置
+ * @returns 基础配置
+ */
 async function getBaseConfig() {
   return await core.invoke("plugin:mihomo|get_base_config");
 }
-async function reloadConfig(force, path) {
+/**
+ * 重新加载配置
+ * @param force 强制更新
+ * @param configPath 配置文件路径
+ */
+async function reloadConfig(force, configPath) {
   await core.invoke("plugin:mihomo|reload_config", {
     force,
-    path,
+    configPath,
   });
 }
+/**
+ * 更改基础配置
+ * @param data 基础配置更改后的内容, 例如：{"tun": {"enabled": true}}
+ */
 async function patchBaseConfig(data) {
   await core.invoke("plugin:mihomo|patch_base_config", {
     data,
   });
 }
+/**
+ * 更新 Geo
+ */
 async function updateGeo() {
   await core.invoke("plugin:mihomo|update_geo");
 }
+/**
+ * 重启核心
+ */
 async function restart() {
   await core.invoke("plugin:mihomo|restart");
 }
 // upgrade
+/**
+ * 升级核心
+ */
 async function upgradeCore() {
   await core.invoke("plugin:mihomo|upgrade_core");
 }
+/**
+ * 更新 UI
+ */
 async function upgradeUi() {
   await core.invoke("plugin:mihomo|upgrade_ui");
 }
+/**
+ * 更新 Geo
+ */
 async function upgradeGeo() {
   await core.invoke("plugin:mihomo|upgrade_geo");
 }
@@ -263,23 +409,24 @@ exports.getBaseConfig = getBaseConfig;
 exports.getConnections = getConnections;
 exports.getGroupByName = getGroupByName;
 exports.getGroups = getGroups;
-exports.getProvidersProxyByName = getProvidersProxyByName;
 exports.getProxies = getProxies;
-exports.getProxiesProviders = getProxiesProviders;
 exports.getProxyByName = getProxyByName;
+exports.getProxyProviderByName = getProxyProviderByName;
+exports.getProxyProviders = getProxyProviders;
+exports.getRuleProviders = getRuleProviders;
 exports.getRules = getRules;
-exports.getRulesProviders = getRulesProviders;
 exports.getVersion = getVersion;
-exports.healthcheckProviders = healthcheckProviders;
-exports.healthcheckProvidersProxies = healthcheckProvidersProxies;
+exports.healthcheckNodeInProvider = healthcheckNodeInProvider;
+exports.healthcheckProxyProvider = healthcheckProxyProvider;
 exports.patchBaseConfig = patchBaseConfig;
 exports.reloadConfig = reloadConfig;
 exports.restart = restart;
 exports.selectNodeForProxy = selectNodeForProxy;
+exports.unfixedProxy = unfixedProxy;
 exports.updateController = updateController;
 exports.updateGeo = updateGeo;
-exports.updateProxiesProviders = updateProxiesProviders;
-exports.updateRulesProviders = updateRulesProviders;
+exports.updateProxyProvider = updateProxyProvider;
+exports.updateRuleProvider = updateRuleProvider;
 exports.updateSecret = updateSecret;
 exports.upgradeCore = upgradeCore;
 exports.upgradeGeo = upgradeGeo;

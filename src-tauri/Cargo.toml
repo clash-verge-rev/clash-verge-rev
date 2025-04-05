@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "2.0.0-beta.1"
+version = "2.0.0-beta.2"
 description = "clash verge"
 authors = ["zzzgydi", "wonfen", "MystiPanda", "oomeow"]
 license = "GPL-3.0-only"
@@ -27,7 +27,7 @@ dunce = "1.0"
 log4rs = "1.3"
 nanoid = "0.4"
 chrono = "0.4"
-sysinfo = "0.33"
+sysinfo = "0.34"
 boa_engine = "0.20"
 serde_json = "1.0"
 serde_yaml = "0.9"

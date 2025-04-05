@@ -1,4 +1,4 @@
-import { BaseDialog, Notice } from "@/components/base";
+import { BaseDialog } from "@/components/base";
 import { calcuRuleProviders } from "@/services/api";
 import { Error, RefreshRounded } from "@mui/icons-material";
 import {
@@ -6,9 +6,6 @@ import {
   Button,
   Divider,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
   Typography,
   alpha,
   keyframes,
@@ -18,7 +15,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-import { updateRulesProviders } from "tauri-plugin-mihomo-api";
+import { updateRuleProvider } from "tauri-plugin-mihomo-api";
 
 const round = keyframes`
   from { transform: rotate(0deg); }
@@ -47,7 +44,7 @@ export const ProviderButton = () => {
 
   const handleUpdate = async (key: string, index: number, retryCount = 5) => {
     setUpdatingAt(true, index);
-    updateRulesProviders(key)
+    updateRuleProvider(key)
       .then(async () => {
         setErrorItems((pre) => {
           if (pre?.includes(key)) {
@@ -66,12 +63,12 @@ export const ProviderButton = () => {
             await handleUpdate(key, index, retryCount - 1);
           }, 1000);
         } else {
-          Notice.error(
-            t("Update Rule Provider Error", {
-              name: `${key}`,
-              errorMsg: e.message,
-            }),
-          );
+          // Notice.error(
+          //   t("Update Rule Provider Error", {
+          //     name: `${key}`,
+          //     errorMsg: e.message,
+          //   }),
+          // );
           setErrorItems((pre) => {
             if (pre?.includes(key)) {
               return pre;
@@ -121,55 +118,34 @@ export const ProviderButton = () => {
         hideOkBtn
         hideCancelBtn
         onClose={() => setOpen(false)}>
-        <List sx={{ py: 0, minHeight: 250 }}>
+        <div>
           {entries.map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
             const error = errorItems?.includes(key);
             return (
-              <ListItem
-                sx={(theme) => ({
-                  p: 1,
-                  borderRadius: "6px",
-                  bgcolor: "white",
-                  mb: 1,
-                  ...theme.applyStyles("dark", {
-                    bgcolor: "#282A36",
-                  }),
-                })}
-                key={key}>
-                <ListItemText
-                  sx={{ px: 1 }}
-                  primary={
-                    <Box display={"flex"} alignItems={"center"}>
-                      {error && (
-                        <Error
-                          color="error"
-                          fontSize="small"
-                          sx={{ marginRight: "8px" }}
-                        />
-                      )}
-                      <Typography
-                        variant="h6"
-                        color={error ? "error" : "inherit"}
-                        noWrap
-                        title={key}>
-                        {key}
-                      </Typography>
-                      <TypeSpan sx={{ marginLeft: "8px" }}>
-                        {item.ruleCount}
-                      </TypeSpan>
-                    </Box>
-                  }
-                  secondary={
-                    <>
-                      <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>
-                      <StyledTypeSpan>{item.behavior}</StyledTypeSpan>
-                      <StyledTypeSpan>
-                        {t("Update At")} {time.fromNow()}
-                      </StyledTypeSpan>
-                    </>
-                  }
-                />
+              <div
+                key={key}
+                className="mb-2 flex items-center rounded-sm bg-white p-2 shadow-sm dark:bg-[#282A36]">
+                <div className="w-full overflow-hidden">
+                  <div className="flex items-center">
+                    {error && (
+                      <Error
+                        color="error"
+                        fontSize="small"
+                        sx={{ marginRight: "8px" }}
+                      />
+                    )}
+                    <p className="text-primary-text text-xl">{key}</p>
+                    <TypeSpan sx={{ marginLeft: "8px" }}>
+                      {item.ruleCount}
+                    </TypeSpan>
+                  </div>
+                  <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>
+                  <StyledTypeSpan>{item.behavior}</StyledTypeSpan>
+                  <StyledTypeSpan>
+                    {t("Update At")} {time.fromNow()}
+                  </StyledTypeSpan>
+                </div>
                 <Divider orientation="vertical" flexItem />
                 <IconButton
                   size="small"
@@ -183,14 +159,15 @@ export const ProviderButton = () => {
                   }}>
                   <RefreshRounded />
                 </IconButton>
-              </ListItem>
+              </div>
             );
           })}
-        </List>
+        </div>
       </BaseDialog>
     </>
   );
 };
+
 const TypeSpan = styled("span")(({ theme }) => ({
   display: "inline-block",
   border: "1px solid #ccc",
@@ -208,9 +185,8 @@ const StyledTypeSpan = styled("span")(({ theme }) => ({
   border: "1px solid #ccc",
   borderColor: alpha(theme.palette.primary.main, 0.5),
   color: alpha(theme.palette.primary.main, 0.8),
-  borderRadius: 4,
-  fontSize: 10,
+  borderRadius: "4px",
+  fontSize: "10px",
   marginRight: "4px",
   padding: "0 2px",
-  lineHeight: 1.25,
 }));

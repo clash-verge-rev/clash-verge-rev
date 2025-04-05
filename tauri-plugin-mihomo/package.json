@@ -2,7 +2,7 @@
   "name": "tauri-plugin-mihomo-api",
   "version": "0.1.0",
   "author": "oomeow",
-  "description": "",
+  "description": "Tauri plugin for Mihomo",
   "type": "module",
   "types": "./dist-js/index.d.ts",
   "main": "./dist-js/index.cjs",
@@ -26,8 +26,8 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "12.1.2",
-    "rollup": "4.35.0",
-    "typescript": "5.8.2",
+    "rollup": "4.39.0",
+    "typescript": "5.8.3",
     "tslib": "2.8.1"
   }
 }

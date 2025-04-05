@@ -264,7 +264,7 @@ export const ProfileMore = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        MenuListProps={{ sx: { py: 0.5 } }}
+        slotProps={{ list: { sx: { py: 0.5 } } }}
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
@@ -277,7 +277,7 @@ export const ProfileMore = (props: Props) => {
               onClick={() => item.handler()}
               sx={{ minWidth: 120 }}
               dense>
-              <ListItemIcon className="text-primary-main">
+              <ListItemIcon className="!text-primary-main">
                 {item.icon}
               </ListItemIcon>
               <ListItemText

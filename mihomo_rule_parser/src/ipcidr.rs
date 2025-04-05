@@ -142,7 +142,7 @@ fn ipv6_prefixes(from: Ipv6Addr, to: Ipv6Addr) -> Vec<Prefix> {
                     break (from, 1);
                 }
             };
-            let block_end = match block_start.checked_add(block_size.checked_sub(1).unwrap_or(0)) {
+            let block_end = match block_start.checked_add(block_size.saturating_sub(1)) {
                 Some(e) => e,
                 None => u128::MAX,
             };
@@ -192,9 +192,9 @@ impl IpCidrTransform for IpAddr {
                 let v4_bytes = [octets[12], octets[13], octets[14], octets[15]];
                 return IpAddr::V4(Ipv4Addr::from(v4_bytes));
             }
-            IpAddr::V6(v6.clone())
+            IpAddr::V6(*v6)
         } else {
-            self.clone()
+            *self
         }
     }
 

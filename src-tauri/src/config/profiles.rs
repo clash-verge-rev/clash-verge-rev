@@ -121,10 +121,10 @@ impl IProfiles {
     }
 
     /// find the item by the uid
-    pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
+    pub fn get_item(&self, uid: &str) -> Result<&PrfItem> {
         if let Some(items) = self.items.as_ref() {
             for each in items.iter() {
-                if each.uid == Some(uid.clone()) {
+                if each.uid == Some(uid.to_string()) {
                     return Ok(each);
                 }
             }
@@ -132,10 +132,10 @@ impl IProfiles {
         bail!("failed to get the profile item \"uid:{uid}\"");
     }
 
-    pub fn get_item_mut(&mut self, uid: &String) -> Result<&mut PrfItem> {
+    pub fn get_item_mut(&mut self, uid: &str) -> Result<&mut PrfItem> {
         if let Some(items) = self.items.as_mut() {
             for item in items.iter_mut() {
-                if item.uid == Some(uid.clone()) {
+                if item.uid == Some(uid.to_string()) {
                     return Ok(item);
                 }
             }
@@ -343,7 +343,9 @@ impl IProfiles {
         profile.delete_file()?;
 
         // delete the original uid
-        let delete_current = current == uid || profile.parent == Some(current);
+        let delete_current = current == uid;
+        let restart_core = delete_current || (profile.parent == Some(current) && profile.enable.is_some_and(|x| x));
+
         let items = self.items.take().unwrap_or_default();
         if delete_current {
             self.current = match !items.is_empty() {
@@ -361,7 +363,7 @@ impl IProfiles {
         self.items = Some(new_items);
 
         self.save_file()?;
-        Ok(delete_current)
+        Ok(restart_core)
     }
 
     pub fn set_rule_providers_path(&mut self, path: HashMap<String, PathBuf>) -> Result<()> {

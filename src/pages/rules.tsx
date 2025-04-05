@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import useSWR from "swr";
-import { getRules, getRulesProviders, Rule } from "tauri-plugin-mihomo-api";
+import { getRuleProviders, getRules, Rule } from "tauri-plugin-mihomo-api";
 
 type CustomRule = Rule & {
   expanded: boolean;
@@ -24,7 +24,7 @@ const RulesPage = () => {
   const { data } = useSWR("getRules", getRules);
   const { data: ruleProvidersData } = useSWR(
     "getRuleProviders",
-    getRulesProviders,
+    getRuleProviders,
   );
   const [rules, setRules] = useState<CustomRule[]>([]);
   const [match, setMatch] = useState(() => (_: string) => true);

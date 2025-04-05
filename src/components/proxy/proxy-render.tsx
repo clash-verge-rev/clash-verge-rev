@@ -21,6 +21,8 @@ import { ProxyItem } from "./proxy-item";
 import { ProxyItemMini } from "./proxy-item-mini";
 import { HeadState } from "./use-head-state";
 import type { IRenderItem } from "./use-render-list";
+import { unfixedProxy } from "tauri-plugin-mihomo-api";
+import { mutate } from "swr";
 
 interface RenderProps {
   item: IRenderItem;
@@ -89,7 +91,14 @@ const ProxyItemMiniCol = memo(function ProxyItemMiniCol(props: ProxyColProps) {
           fixed={group.fixed === proxy.name}
           selected={group.now === proxy.name}
           showType={headState?.showType}
-          onClick={() => onChangeProxy(group, proxy!)}
+          onClick={async () => {
+            if (group.fixed === proxy.name) {
+              await unfixedProxy(group.name);
+              mutate("getProxies");
+            } else {
+              onChangeProxy(group, proxy!);
+            }
+          }}
         />
       ))}
     </Box>
@@ -180,8 +189,10 @@ export const ProxyRender = (props: RenderProps) => {
               </span>
             </ListItemTextChild>
           }
-          secondaryTypographyProps={{
-            sx: { display: "flex", alignItems: "center", color: "#ccc" },
+          slotProps={{
+            secondary: {
+              sx: { display: "flex", alignItems: "center", color: "#ccc" },
+            },
           }}
         />
         {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}

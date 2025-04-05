@@ -48,7 +48,6 @@ import {
   RefreshRounded,
   TextSnippetOutlined,
 } from "@mui/icons-material";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, Divider, IconButton, Stack } from "@mui/material";
 import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
@@ -62,7 +61,7 @@ import useSWR, { mutate } from "swr";
 
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
   return [...Array(20)].map((_, index) => (
-    <i key={index} className="mx-[5px] my-0 flex h-0 w-[260px] flex-grow"></i>
+    <i key={index} className="mx-[5px] my-0 flex h-0 w-[260px] grow"></i>
   ));
 });
 
@@ -384,7 +383,7 @@ const ProfilePage = () => {
             <TextSnippetOutlined />
           </IconButton>
 
-          <LoadingButton
+          <Button
             size="small"
             // loading={activating.profile !== "" || activating.chain !== ""}
             loading={activatingUids.length > 0}
@@ -395,7 +394,7 @@ const ProfilePage = () => {
             title={t("Reactivate Profiles")}
             onClick={() => onEnhance()}>
             <span>{t("Reactivate Profiles")}</span>
-          </LoadingButton>
+          </Button>
         </Box>
       }>
       <Stack
@@ -445,7 +444,7 @@ const ProfilePage = () => {
             },
           }}
         />
-        <LoadingButton
+        <Button
           disabled={!url || disabled}
           loading={importLoading}
           variant="contained"
@@ -453,7 +452,7 @@ const ProfilePage = () => {
           sx={{ borderRadius: "6px" }}
           onClick={() => onImport()}>
           {t("Import")}
-        </LoadingButton>
+        </Button>
         <Button
           variant="contained"
           size="small"

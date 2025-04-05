@@ -1,4 +1,3 @@
-import { LoadingButton } from "@mui/lab";
 import {
   Button,
   Dialog,
@@ -61,12 +60,9 @@ export const BaseDialog: React.FC<Props> = (props) => {
             </Button>
           )}
           {!disableOk && (
-            <LoadingButton
-              loading={loading}
-              variant="contained"
-              onClick={props.onOk}>
+            <Button loading={loading} variant="contained" onClick={props.onOk}>
               {okBtn}
-            </LoadingButton>
+            </Button>
           )}
         </DialogActions>
       )}

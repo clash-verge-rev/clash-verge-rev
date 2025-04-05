@@ -6,7 +6,7 @@ export interface MihomoVersion {
 }
 
 // connections
-export interface MihomoConnections {
+export interface Connections {
   downloadTotal: number;
   uploadTotal: number;
   connections: Connection[];
@@ -52,7 +52,7 @@ export interface ConnectionMetaData {
 }
 
 // groups
-export interface MihomoGroups {
+export interface Groups {
   proxies: Proxy[];
 }
 
@@ -86,11 +86,11 @@ export interface DelayHistory {
 }
 
 // providers
-export interface MihomoProviders {
-  providers: Record<string, ProxyProviders>;
+export interface ProxyProviders {
+  providers: Record<string, ProxyProvider>;
 }
 
-export interface ProxyProviders {
+export interface ProxyProvider {
   expectedStatus: string;
   name: string;
   proxies: Proxy[];
@@ -115,7 +115,7 @@ export interface Proxies {
   proxies: Record<string, Proxy>;
 }
 
-export interface MihomoProxyDelay {
+export interface ProxyDelay {
   delay: number;
   message?: string;
 }
@@ -204,48 +204,92 @@ export enum ClashMode {
 }
 
 // ======================= functions =======================
+
+/**
+ * 更新控制器地址
+ * @param controller 控制器地址, 例如：127.0.0.1:9090
+ */
 export async function updateController(controller: string): Promise<void> {
   const [host, portStr] = controller.trim().split(":");
   const port = parseInt(portStr);
   await invoke<void>("plugin:mihomo|update_controller", { host, port });
 }
 
+/**
+ * 更新控制器的密钥
+ * @param secret 控制器的密钥
+ */
 export async function updateSecret(secret: string): Promise<void> {
   await invoke<void>("plugin:mihomo|update_secret", { secret });
 }
 
+/**
+ * 获取Mihomo版本信息
+ */
 export async function getVersion(): Promise<MihomoVersion> {
   return await invoke<MihomoVersion>("plugin:mihomo|get_version");
 }
 
+/**
+ * 清除 FakeIP 的缓存
+ */
 export async function cleanFakeIp(): Promise<void> {
   await invoke<void>("plugin:mihomo|clean_fakeip");
 }
 
 // connections
-export async function getConnections(): Promise<MihomoConnections> {
-  return await invoke<MihomoConnections>("plugin:mihomo|get_connections");
+/**
+ * 获取所有连接信息
+ * @returns 所有连接信息
+ */
+export async function getConnections(): Promise<Connections> {
+  return await invoke<Connections>("plugin:mihomo|get_connections");
 }
 
+/**
+ * 关闭所有连接
+ */
 export async function closeAllConnections(): Promise<void> {
   await invoke<void>("plugin:mihomo|close_all_connections");
 }
 
+/**
+ * 关闭指定连接
+ * @param connectionId 连接 ID
+ */
 export async function closeConnections(connectionId: string): Promise<void> {
   await invoke<void>("plugin:mihomo|close_connections", { connectionId });
 }
 
 // groups
-export async function getGroups(): Promise<MihomoGroups | null> {
-  return await invoke<MihomoGroups>("plugin:mihomo|get_groups");
+/**
+ * 获取所有代理组信息
+ * @returns 所有代理组信息
+ */
+export async function getGroups(): Promise<Groups> {
+  return await invoke<Groups>("plugin:mihomo|get_groups");
 }
 
-export async function getGroupByName(groupName: string): Promise<Proxy | null> {
+/**
+ * 获取指定代理组信息
+ * @param groupName 代理组名称
+ * @returns 指定代理组信息
+ */
+export async function getGroupByName(groupName: string): Promise<Proxy> {
   return await invoke<Proxy>("plugin:mihomo|get_group_by_name", {
     groupName,
   });
 }
 
+/**
+ * 获取指定代理组延迟
+ *
+ * 注：返回值中不包含超时的节点
+ * @param groupName 代理组名称
+ * @param testUrl 测试 url
+ * @param timeout 超时时间（毫秒）
+ * @returns 代理组里代理节点的延迟
+ */
 export async function delayGroup(
   groupName: string,
   testUrl: string,
@@ -259,60 +303,102 @@ export async function delayGroup(
 }
 
 // providers
-export async function getProxiesProviders(): Promise<MihomoProviders> {
-  return await invoke<MihomoProviders>("plugin:mihomo|get_proxies_providers");
+/**
+ * 获取所有代理提供者信息
+ * @returns 所有代理提供者信息
+ */
+export async function getProxyProviders(): Promise<ProxyProviders> {
+  return await invoke<ProxyProviders>("plugin:mihomo|get_proxy_providers");
 }
 
-export async function getProvidersProxyByName(
+/**
+ * 获取指定的代理提供者信息
+ * @param providerName 代理提供者名称
+ * @returns 代理提供者信息
+ */
+export async function getProxyProviderByName(
   providerName: string,
-): Promise<ProxyProviders> {
-  return await invoke<ProxyProviders>(
-    "plugin:mihomo|get_providers_proxy_by_name",
+): Promise<ProxyProvider> {
+  return await invoke<ProxyProvider>(
+    "plugin:mihomo|get_proxy_provider_by_name",
     { providerName },
   );
 }
 
-export async function updateProxiesProviders(
-  providerName: string,
-): Promise<void> {
-  await invoke<void>("plugin:mihomo|update_proxies_providers", {
+/**
+ * 更新代理提供者信息
+ * @param providerName 代理提供者名称
+ */
+export async function updateProxyProvider(providerName: string): Promise<void> {
+  await invoke<void>("plugin:mihomo|update_proxy_provider", {
     providerName,
   });
 }
 
-export async function healthcheckProviders(
-  providersName: string,
+/**
+ * 对指定的代理提供者进行健康检查
+ * @param providerName 代理提供者名称
+ */
+export async function healthcheckProxyProvider(
+  providerName: string,
 ): Promise<void> {
-  await invoke<void>("plugin:mihomo|healthcheck_providers", { providersName });
-}
-
-export async function healthcheckProvidersProxies(
-  providersName: string,
-  proxiesName: string,
-  testUrl: string,
-  timeout: number,
-): Promise<void> {
-  await invoke<void>("plugin:mihomo|healthcheck_providers_proxies", {
-    providersName,
-    proxiesName,
-    testUrl,
-    timeout,
+  await invoke<void>("plugin:mihomo|healthcheck_proxy_provider", {
+    providerName,
   });
 }
 
+/**
+ * 对指定代理提供者下的指定节点（非代理组）进行健康检查, 并返回新的延迟信息
+ * @param providerName 代理提供者名称
+ * @param proxyName 代理节点名称 (非代理组)
+ * @param testUrl 测试 url
+ * @param timeout 超时时间
+ * @returns 该代理节点的延迟
+ */
+export async function healthcheckNodeInProvider(
+  providerName: string,
+  proxyName: string,
+  testUrl: string,
+  timeout: number,
+): Promise<ProxyDelay> {
+  return await invoke<ProxyDelay>(
+    "plugin:mihomo|healthcheck_node_in_provider",
+    {
+      providerName,
+      proxyName,
+      testUrl,
+      timeout,
+    },
+  );
+}
+
 // proxies
+/**
+ * 获取所有代理信息
+ * @returns 所有代理信息
+ */
 export async function getProxies(): Promise<Proxies> {
   return await invoke<Proxies>("plugin:mihomo|get_proxies");
 }
 
-export async function getProxyByName(
-  proxiesName: string,
-): Promise<Proxy | null> {
+/**
+ * 获取指定代理信息
+ * @param proxyName 代理名称
+ * @returns 代理信息
+ */
+export async function getProxyByName(proxyName: string): Promise<Proxy | null> {
   return await invoke<Proxy>("plugin:mihomo|get_proxy_by_name", {
-    proxiesName,
+    proxiesName: proxyName,
   });
 }
 
+/**
+ * 为指定代理选择节点
+ *
+ * 一般为指定代理组下使用指定的代理节点 【代理组/节点】
+ * @param proxyName 代理组名称
+ * @param node 代理节点
+ */
 export async function selectNodeForProxy(
   proxyName: string,
   node: string,
@@ -323,12 +409,33 @@ export async function selectNodeForProxy(
   });
 }
 
+/**
+ * 指定代理组下不再使用固定的代理节点
+ *
+ * 一般用于自动选择的代理组（例如：URLTest 类型的代理组）下的节点
+ * @param groupName 代理组名称
+ */
+export async function unfixedProxy(groupName: string): Promise<void> {
+  await invoke<void>("plugin:mihomo|unfixed_proxy", {
+    groupName,
+  });
+}
+
+/**
+ * 对指定代理进行延迟测试
+ *
+ * 一般用于代理节点的延迟测试，也可传代理组名称（只会测试代理组下选中的代理节点）
+ * @param proxyName 代理节点名称
+ * @param testUrl 测试 url
+ * @param timeout 超时时间
+ * @returns 该代理节点的延迟信息
+ */
 export async function delayProxyByName(
   proxyName: string,
   testUrl: string,
   timeout: number,
-): Promise<MihomoProxyDelay> {
-  return await invoke<MihomoProxyDelay>("plugin:mihomo|delay_proxy_by_name", {
+): Promise<ProxyDelay> {
+  return await invoke<ProxyDelay>("plugin:mihomo|delay_proxy_by_name", {
     proxyName,
     testUrl,
     timeout,
@@ -336,37 +443,60 @@ export async function delayProxyByName(
 }
 
 // rules
+/**
+ * 获取所有规则信息
+ * @returns 所有规则信息
+ */
 export async function getRules(): Promise<Rules> {
   return await invoke<Rules>("plugin:mihomo|get_rules");
 }
 
-export async function getRulesProviders(): Promise<RuleProviders> {
-  return await invoke<RuleProviders>("plugin:mihomo|get_rules_providers");
+/**
+ * 获取所有规则提供者信息
+ * @returns 所有规则提供者信息
+ */
+export async function getRuleProviders(): Promise<RuleProviders> {
+  return await invoke<RuleProviders>("plugin:mihomo|get_rule_providers");
 }
 
-export async function updateRulesProviders(
-  providersName: string,
-): Promise<void> {
-  await invoke<void>("plugin:mihomo|update_rules_providers", {
-    providersName,
+/**
+ * 更新规则提供者信息
+ * @param providerName 规则提供者名称
+ */
+export async function updateRuleProvider(providerName: string): Promise<void> {
+  await invoke<void>("plugin:mihomo|update_rule_provider", {
+    providerName,
   });
 }
 
 // runtime config
+/**
+ * 获取基础配置
+ * @returns 基础配置
+ */
 export async function getBaseConfig(): Promise<BaseConfig> {
   return await invoke<BaseConfig>("plugin:mihomo|get_base_config");
 }
 
+/**
+ * 重新加载配置
+ * @param force 强制更新
+ * @param configPath 配置文件路径
+ */
 export async function reloadConfig(
   force: boolean,
-  path: string,
+  configPath: string,
 ): Promise<void> {
   await invoke<void>("plugin:mihomo|reload_config", {
     force,
-    path,
+    configPath,
   });
 }
 
+/**
+ * 更改基础配置
+ * @param data 基础配置更改后的内容, 例如：{"tun": {"enabled": true}}
+ */
 export async function patchBaseConfig(
   data: Record<string, any>,
 ): Promise<void> {
@@ -375,23 +505,38 @@ export async function patchBaseConfig(
   });
 }
 
+/**
+ * 更新 Geo
+ */
 export async function updateGeo(): Promise<void> {
   await invoke<void>("plugin:mihomo|update_geo");
 }
 
+/**
+ * 重启核心
+ */
 export async function restart(): Promise<void> {
   await invoke<void>("plugin:mihomo|restart");
 }
 
 // upgrade
+/**
+ * 升级核心
+ */
 export async function upgradeCore(): Promise<void> {
   await invoke<void>("plugin:mihomo|upgrade_core");
 }
 
+/**
+ * 更新 UI
+ */
 export async function upgradeUi(): Promise<void> {
   await invoke<void>("plugin:mihomo|upgrade_ui");
 }
 
+/**
+ * 更新 Geo
+ */
 export async function upgradeGeo(): Promise<void> {
   await invoke<void>("plugin:mihomo|upgrade_geo");
 }

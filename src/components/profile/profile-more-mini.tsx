@@ -71,7 +71,7 @@ export default function ProfileMoreMini(props: Props) {
 
   return (
     <>
-      <div className="my-1 flex h-[56px] w-full cursor-pointer items-center justify-between rounded-md bg-comment">
+      <div className="bg-comment my-2 flex h-[56px] w-full cursor-pointer items-center justify-between rounded-md">
         <div
           style={{
             backgroundColor: item.enable
@@ -83,11 +83,11 @@ export default function ProfileMoreMini(props: Props) {
                 : unselectedbackgroundColor,
           }}
           className={cn(
-            "relative flex h-full w-full items-center justify-between overflow-hidden rounded-md p-1 shadow-sm",
+            "relative flex h-full w-full items-center justify-between overflow-hidden rounded-md p-1 shadow-xs",
             {
-              "border-0 !border-l-2 border-solid border-primary-main":
+              "border-primary-main border-0 border-l-2! border-solid":
                 item.enable,
-              "border border-solid border-primary-main": selected,
+              "border-primary-main border border-solid": selected,
             },
           )}>
           <div className="flex h-full w-8 flex-col items-center justify-center">
@@ -114,7 +114,7 @@ export default function ProfileMoreMini(props: Props) {
                 )}
               </>
             </IconButton>
-            <div className="w-full cursor-pointer rounded-sm bg-primary-alpha px-1 text-center text-xs text-primary-main dark:text-primary-main">
+            <div className="bg-primary-alpha text-primary-main dark:text-primary-main w-full cursor-pointer rounded-xs px-1 text-center text-xs">
               {item.type === "merge" ? "YML" : "JS"}
             </div>
           </div>
@@ -122,10 +122,10 @@ export default function ProfileMoreMini(props: Props) {
           <div
             className="ml-2 box-border flex w-full flex-col items-center overflow-hidden text-sm"
             onClick={onClick}>
-            <div className="w-full text-primary">
+            <div className="text-primary-main w-full">
               <ScrollableText>{item.name}</ScrollableText>
             </div>
-            <div className="w-full text-xs text-secondary">
+            <div className="text-secondary-text w-full text-xs">
               <ScrollableText>{item.desc}</ScrollableText>
             </div>
           </div>

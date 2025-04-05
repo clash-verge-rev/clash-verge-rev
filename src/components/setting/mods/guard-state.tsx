@@ -38,7 +38,7 @@ export function GuardState<T>(props: Props<T>) {
   const lockRef = useRef(false);
   const saveRef = useRef(value);
   const lastRef = useRef(0);
-  const timeRef = useRef<any>();
+  const timeRef = useRef<any>(null);
   const [busy, setBusy] = useState(false);
   const showChildrenBusy = onChange === noop;
 
@@ -46,7 +46,7 @@ export function GuardState<T>(props: Props<T>) {
     return children as any;
   }
 
-  const childProps = { ...children.props };
+  const childProps = { ...(children.props as any) };
 
   childProps[valueProps] = value;
   childProps["aria-busy"] = busy;

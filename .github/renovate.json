@@ -18,14 +18,6 @@
       "matchDatasources": ["github-runners"],
       "matchPackageNames": ["ubuntu"],
       "versioning": "22.04"
-    },
-    {
-      "matchPackageNames": ["tailwind-merge"],
-      "matchCurrentVersion": "<3.0.0"
-    },
-    {
-      "matchPackageNames": ["tailwindcss"],
-      "matchCurrentVersion": "<4.0.0"
     }
   ]
 }

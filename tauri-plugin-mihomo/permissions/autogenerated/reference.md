@@ -2,28 +2,31 @@
 
 Default permissions for the plugin
 
+#### This default permission set includes the following:
+
 - `allow-update-controller`
 - `allow-update-secret`
-- `allow-get-connections`
 - `allow-get-version`
 - `allow-clean-fakeip`
+- `allow-get-connections`
 - `allow-close-all-connections`
 - `allow-close-connections`
 - `allow-get-groups`
 - `allow-get-group-by-name`
 - `allow-delay-group`
-- `allow-get-proxies-providers`
-- `allow-get-providers-proxy-by-name`
-- `allow-update-proxies-providers`
-- `allow-healthcheck-providers`
-- `allow-healthcheck-providers-proxies`
+- `allow-get-proxy-providers`
+- `allow-get-proxy-provider-by-name`
+- `allow-update-proxy-provider`
+- `allow-healthcheck-proxy-provider`
+- `allow-healthcheck-node-in-provider`
 - `allow-get-proxies`
 - `allow-get-proxy-by-name`
 - `allow-select-node-for-proxy`
+- `allow-unfixed-proxy`
 - `allow-delay-proxy-by-name`
 - `allow-get-rules`
-- `allow-get-rules-providers`
-- `allow-update-rules-providers`
+- `allow-get-rule-providers`
+- `allow-update-rule-provider`
 - `allow-get-base-config`
 - `allow-reload-config`
 - `allow-patch-base-config`
@@ -32,13 +35,6 @@ Default permissions for the plugin
 - `allow-upgrade-core`
 - `allow-upgrade-ui`
 - `allow-upgrade-geo`
-- `allow-ws-connect`
-- `allow-ws-traffic`
-- `allow-ws-memory`
-- `allow-ws-connections`
-- `allow-ws-logs`
-- `allow-ws-send`
-- `allow-ws-disconnect`
 
 ## Permission Table
 
@@ -389,6 +385,84 @@ Denies the get_proxy_by_name command without any pre-configured scope.
 <tr>
 <td>
 
+`mihomo:allow-get-proxy-provider-by-name`
+
+</td>
+<td>
+
+Enables the get_proxy_provider_by_name command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-get-proxy-provider-by-name`
+
+</td>
+<td>
+
+Denies the get_proxy_provider_by_name command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-get-proxy-providers`
+
+</td>
+<td>
+
+Enables the get_proxy_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-get-proxy-providers`
+
+</td>
+<td>
+
+Denies the get_proxy_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-get-rule-providers`
+
+</td>
+<td>
+
+Enables the get_rule_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-get-rule-providers`
+
+</td>
+<td>
+
+Denies the get_rule_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `mihomo:allow-get-rules`
 
 </td>
@@ -467,6 +541,32 @@ Denies the get_version command without any pre-configured scope.
 <tr>
 <td>
 
+`mihomo:allow-healthcheck-node-in-provider`
+
+</td>
+<td>
+
+Enables the healthcheck_node_in_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-healthcheck-node-in-provider`
+
+</td>
+<td>
+
+Denies the healthcheck_node_in_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `mihomo:allow-healthcheck-providers`
 
 </td>
@@ -512,6 +612,32 @@ Enables the healthcheck_providers_proxies command without any pre-configured sco
 <td>
 
 Denies the healthcheck_providers_proxies command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-healthcheck-proxy-provider`
+
+</td>
+<td>
+
+Enables the healthcheck_proxy_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-healthcheck-proxy-provider`
+
+</td>
+<td>
+
+Denies the healthcheck_proxy_provider command without any pre-configured scope.
 
 </td>
 </tr>
@@ -623,6 +749,32 @@ Denies the select_node_for_proxy command without any pre-configured scope.
 <tr>
 <td>
 
+`mihomo:allow-unfixed-proxy`
+
+</td>
+<td>
+
+Enables the unfixed_proxy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-unfixed-proxy`
+
+</td>
+<td>
+
+Denies the unfixed_proxy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `mihomo:allow-update-controller`
 
 </td>
@@ -694,6 +846,58 @@ Enables the update_proxies_providers command without any pre-configured scope.
 <td>
 
 Denies the update_proxies_providers command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-update-proxy-provider`
+
+</td>
+<td>
+
+Enables the update_proxy_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-update-proxy-provider`
+
+</td>
+<td>
+
+Denies the update_proxy_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-update-rule-provider`
+
+</td>
+<td>
+
+Enables the update_rule_provider command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-update-rule-provider`
+
+</td>
+<td>
+
+Denies the update_rule_provider command without any pre-configured scope.
 
 </td>
 </tr>

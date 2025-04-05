@@ -79,7 +79,7 @@ impl DomainSet {
                 next_node_id - 1,
             ) + 1;
 
-            if !self.traverse(current_key, next_node_id as isize, next_bm_idx as isize, f) {
+            if !self.traverse(current_key, next_node_id, next_bm_idx, f) {
                 return false;
             }
             current_key.pop();
@@ -106,7 +106,7 @@ fn count_zeros(bm: &[u64], ranks: &[i32], i: isize) -> isize {
 
 fn select_ith_one(bm: &[u64], ranks: &[i32], selects: &[i32], i: isize) -> isize {
     let (a, _) = bitmap::Bitmap::select_32_r64(bm, selects, ranks, i as i32);
-    return a as isize;
+    a as isize
 }
 
 fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {

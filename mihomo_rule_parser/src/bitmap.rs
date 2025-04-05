@@ -103,9 +103,9 @@ impl Bitmap {
         }
         let mut idx = Vec::<i32>::with_capacity(length);
         let mut n = 0i32;
-        for i in 0..words.len() {
+        for word in words {
             idx.push(n);
-            n += words[i].count_ones() as i32;
+            n += word.count_ones() as i32;
         }
         if trailling {
             idx.push(n)
@@ -154,7 +154,7 @@ impl Bitmap {
                 + offset
                 + 8;
         } else {
-            a = SELECT_8_LOOKUP[((ww & 0xff) << 3 | (find_ith) as u64) as usize] as i32 + offset;
+            a = SELECT_8_LOOKUP[(((ww & 0xff) << 3) | (find_ith) as u64) as usize] as i32 + offset;
         }
 
         a += base;
