@@ -1,4 +1,6 @@
-use crate::{config::Config, core::CoreManager, feat, logging, utils::logging::Type};
+use crate::{
+    config::Config, core::CoreManager, feat, logging, logging_error, utils::logging::Type,
+};
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
@@ -54,7 +56,7 @@ impl Timer {
             )
             .is_err()
         {
-            log::debug!(target: "app", "Timer already initialized, skipping...");
+            logging!(debug, Type::Timer, "Timer already initialized, skipping...");
             return Ok(());
         }
 
@@ -65,7 +67,7 @@ impl Timer {
             // Reset initialization flag on error
             self.initialized
                 .store(false, std::sync::atomic::Ordering::SeqCst);
-            log::error!(target: "app", "Failed to initialize timer: {}", e);
+            logging_error!(Type::Timer, false, "Failed to initialize timer: {}", e);
             return Err(e);
         }
 
@@ -98,15 +100,15 @@ impl Timer {
 
             for uid in profiles_to_update {
                 if let Some(task) = timer_map.get(&uid) {
-                    log::info!(target: "app", "Advancing task for uid: {}", uid);
+                    logging!(info, Type::Timer, "Advancing task for uid: {}", uid);
                     if let Err(e) = delay_timer.advance_task(task.task_id) {
-                        log::warn!(target: "app", "Failed to advance task {}: {}", uid, e);
+                        logging!(warn, Type::Timer, "Failed to advance task {}: {}", uid, e);
                     }
                 }
             }
         }
 
-        log::info!(target: "app", "Timer initialization completed");
+        logging!(info, Type::Timer, "Timer initialization completed");
         Ok(())
     }
 
@@ -116,11 +118,16 @@ impl Timer {
         let diff_map = self.gen_diff();
 
         if diff_map.is_empty() {
-            log::debug!(target: "app", "No timer changes needed");
+            logging!(debug, Type::Timer, "No timer changes needed");
             return Ok(());
         }
 
-        log::info!(target: "app", "Refreshing {} timer tasks", diff_map.len());
+        logging!(
+            info,
+            Type::Timer,
+            "Refreshing {} timer tasks",
+            diff_map.len()
+        );
 
         // Apply changes while holding locks
         let mut timer_map = self.timer_map.write();
@@ -131,9 +138,16 @@ impl Timer {
                 DiffFlag::Del(tid) => {
                     timer_map.remove(&uid);
                     if let Err(e) = delay_timer.remove_task(tid) {
-                        log::warn!(target: "app", "Failed to remove task {} for uid {}: {}", tid, uid, e);
+                        logging!(
+                            warn,
+                            Type::Timer,
+                            "Failed to remove task {} for uid {}: {}",
+                            tid,
+                            uid,
+                            e
+                        );
                     } else {
-                        log::debug!(target: "app", "Removed task {} for uid {}", tid, uid);
+                        logging!(debug, Type::Timer, "Removed task {} for uid {}", tid, uid);
                     }
                 }
                 DiffFlag::Add(tid, interval) => {
@@ -146,16 +160,23 @@ impl Timer {
                     timer_map.insert(uid.clone(), task);
 
                     if let Err(e) = self.add_task(&mut delay_timer, uid.clone(), tid, interval) {
-                        log::error!(target: "app", "Failed to add task for uid {}: {}", uid, e);
+                        logging_error!(Type::Timer, "Failed to add task for uid {}: {}", uid, e);
                         timer_map.remove(&uid); // Rollback on failure
                     } else {
-                        log::debug!(target: "app", "Added task {} for uid {}", tid, uid);
+                        logging!(debug, Type::Timer, "Added task {} for uid {}", tid, uid);
                     }
                 }
                 DiffFlag::Mod(tid, interval) => {
                     // Remove old task first
                     if let Err(e) = delay_timer.remove_task(tid) {
-                        log::warn!(target: "app", "Failed to remove old task {} for uid {}: {}", tid, uid, e);
+                        logging!(
+                            warn,
+                            Type::Timer,
+                            "Failed to remove old task {} for uid {}: {}",
+                            tid,
+                            uid,
+                            e
+                        );
                     }
 
                     // Then add the new one
@@ -168,10 +189,10 @@ impl Timer {
                     timer_map.insert(uid.clone(), task);
 
                     if let Err(e) = self.add_task(&mut delay_timer, uid.clone(), tid, interval) {
-                        log::error!(target: "app", "Failed to update task for uid {}: {}", uid, e);
+                        logging_error!(Type::Timer, "Failed to update task for uid {}: {}", uid, e);
                         timer_map.remove(&uid); // Rollback on failure
                     } else {
-                        log::debug!(target: "app", "Updated task {} for uid {}", tid, uid);
+                        logging!(debug, Type::Timer, "Updated task {} for uid {}", tid, uid);
                     }
                 }
             }
@@ -250,7 +271,14 @@ impl Timer {
         tid: TaskID,
         minutes: u64,
     ) -> Result<()> {
-        log::info!(target: "app", "Adding task: uid={}, id={}, interval={}min", uid, tid, minutes);
+        logging!(
+            info,
+            Type::Timer,
+            "Adding task: uid={}, id={}, interval={}min",
+            uid,
+            tid,
+            minutes
+        );
 
         // Create a task with reasonable retries and backoff
         let task = TaskBuilder::default()
@@ -275,7 +303,7 @@ impl Timer {
     /// Async task with better error handling and logging
     async fn async_task(uid: String) {
         let task_start = std::time::Instant::now();
-        log::info!(target: "app", "Running timer task for profile: {}", uid);
+        logging!(info, Type::Timer, "Running timer task for profile: {}", uid);
 
         // Update profile
         let profile_result = feat::update_profile(uid.clone(), None).await;
@@ -286,23 +314,26 @@ impl Timer {
                 match CoreManager::global().update_config().await {
                     Ok(_) => {
                         let duration = task_start.elapsed().as_millis();
-                        log::info!(
-                            target: "app",
+                        logging!(
+                            info,
+                            Type::Timer,
                             "Timer task completed successfully for uid: {} (took {}ms)",
-                            uid, duration
+                            uid,
+                            duration
                         );
                     }
                     Err(e) => {
-                        log::error!(
-                            target: "app",
+                        logging_error!(
+                            Type::Timer,
                             "Failed to refresh config after profile update for uid {}: {}",
-                            uid, e
+                            uid,
+                            e
                         );
                     }
                 }
             }
             Err(e) => {
-                log::error!(target: "app", "Failed to update profile uid {}: {}", uid, e);
+                logging_error!(Type::Timer, "Failed to update profile uid {}: {}", uid, e);
             }
         }
     }

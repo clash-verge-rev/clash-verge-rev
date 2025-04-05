@@ -103,7 +103,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                     );
                     handle::Handle::notice_message(
                         "config_validate::file_not_found",
-                        &format!("{}", file_path.display()),
+                        format!("{}", file_path.display()),
                     );
                     return Ok(false);
                 }

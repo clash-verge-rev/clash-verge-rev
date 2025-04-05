@@ -39,10 +39,7 @@ impl PlatformSpecification {
         // 使用默认值避免在同步上下文中执行异步操作
         let running_mode = "NotRunning".to_string();
 
-        let is_admin = match system::is_admin() {
-            Ok(value) => value,
-            Err(_) => false,
-        };
+        let is_admin = system::is_admin().unwrap_or_default();
 
         Self {
             system_name,
