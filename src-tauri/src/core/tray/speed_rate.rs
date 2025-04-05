@@ -128,16 +128,16 @@ impl SpeedRate {
 
         // 选择文本颜色
         let (text_color, shadow_color) = if is_colorful {
-            // 彩色图标使用黑色文本和轻微白色阴影
             (
+                // Rgba([0u8, 0u8, 0u8, 255u8]),
+                // Rgba([255u8, 255u8, 255u8, 128u8]),
                 Rgba([255u8, 255u8, 255u8, 255u8]),
-                Rgba([0u8, 0u8, 0u8, 160u8]),
+                Rgba([0u8, 0u8, 0u8, 08u8]),
             )
         } else {
-            // 单色图标使用白色文本和轻微黑色阴影
             (
                 Rgba([255u8, 255u8, 255u8, 255u8]),
-                Rgba([0u8, 0u8, 0u8, 120u8]),
+                Rgba([0u8, 0u8, 0u8, 128u8]),
             )
         };
         // 减小字体大小以适应文本区域
