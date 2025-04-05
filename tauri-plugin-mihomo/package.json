@@ -27,7 +27,7 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "12.1.2",
     "rollup": "4.39.0",
-    "typescript": "5.8.2",
+    "typescript": "5.8.3",
     "tslib": "2.8.1"
   }
 }
