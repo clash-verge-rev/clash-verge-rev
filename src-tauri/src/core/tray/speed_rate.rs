@@ -94,13 +94,6 @@ impl SpeedRate {
             image::DynamicImage::new_rgba8(0, 0)
         };
 
-        // 判断是否为彩色图标
-        let is_colorful = if let Some(bytes) = icon_bytes.clone() {
-            !crate::utils::help::is_monochrome_image_from_bytes(&bytes).unwrap_or(false)
-        } else {
-            false
-        };
-
         let total_width = match (is_custom_icon, icon_bytes.is_some()) {
             (true, true) => 510,
             (true, false) => 740,
@@ -127,19 +120,11 @@ impl SpeedRate {
         }
 
         // 选择文本颜色
-        let (text_color, shadow_color) = if is_colorful {
-            // 彩色图标使用黑色文本和轻微白色阴影
-            (
-                Rgba([255u8, 255u8, 255u8, 255u8]),
-                Rgba([0u8, 0u8, 0u8, 160u8]),
-            )
-        } else {
-            // 单色图标使用白色文本和轻微黑色阴影
-            (
-                Rgba([255u8, 255u8, 255u8, 255u8]),
-                Rgba([0u8, 0u8, 0u8, 120u8]),
-            )
-        };
+        // 单色图标使用白色文本和轻微黑色阴影
+        let (text_color, shadow_color) = (
+            Rgba([255u8, 255u8, 255u8, 255u8]),
+            Rgba([0u8, 0u8, 0u8, 120u8]),
+        );
         // 减小字体大小以适应文本区域
         let font_data = include_bytes!("../../../assets/fonts/SF-Pro.ttf");
         let font = FontArc::try_from_vec(font_data.to_vec()).unwrap();

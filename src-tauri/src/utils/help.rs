@@ -125,18 +125,18 @@ pub fn open_file(_: tauri::AppHandle, path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
-pub fn is_monochrome_image_from_bytes(data: &[u8]) -> anyhow::Result<bool> {
-    let img = image::load_from_memory(data)?;
-    let rgb_img = img.to_rgb8();
+// #[cfg(target_os = "macos")]
+// pub fn is_monochrome_image_from_bytes(data: &[u8]) -> anyhow::Result<bool> {
+//     let img = image::load_from_memory(data)?;
+//     let rgb_img = img.to_rgb8();
 
-    for pixel in rgb_img.pixels() {
-        if pixel[0] != pixel[1] || pixel[1] != pixel[2] {
-            return Ok(false);
-        }
-    }
-    Ok(true)
-}
+//     for pixel in rgb_img.pixels() {
+//         if pixel[0] != pixel[1] || pixel[1] != pixel[2] {
+//             return Ok(false);
+//         }
+//     }
+//     Ok(true)
+// }
 
 #[cfg(target_os = "linux")]
 pub fn linux_elevator() -> String {
