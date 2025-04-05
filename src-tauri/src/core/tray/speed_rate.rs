@@ -128,11 +128,15 @@ impl SpeedRate {
         // 选择文本颜色
         let (text_color, shadow_color) = if is_colorful {
             (
-                // Rgba([0u8, 0u8, 0u8, 255u8]),
+                Rgba([144u8, 144u8, 144u8, 255u8]),
                 // Rgba([255u8, 255u8, 255u8, 128u8]),
-                Rgba([255u8, 255u8, 255u8, 255u8]),
-                Rgba([0u8, 0u8, 0u8, 08u8]),
+                Rgba([0u8, 0u8, 0u8, 128u8]),
             )
+            // (
+            //     Rgba([160u8, 160u8, 160u8, 255u8]),
+            //     // Rgba([255u8, 255u8, 255u8, 128u8]),
+            //     Rgba([0u8, 0u8, 0u8, 255u8]),
+            // )
         } else {
             (
                 Rgba([255u8, 255u8, 255u8, 255u8]),
