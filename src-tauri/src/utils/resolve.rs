@@ -61,35 +61,6 @@ pub async fn resolve_setup(app: &mut App) {
     logging!(trace, Type::Config, true, "Initial config");
     logging_error!(Type::Config, true, Config::init_config().await);
 
-    // if service::check_service().await.is_err() {
-    //     match service::install_service().await {
-    //         Ok(_) => {
-    //             log::info!(target:"app", "install service susccess.");
-    //             #[cfg(not(target_os = "macos"))]
-    //             std::thread::sleep(std::time::Duration::from_millis(1000));
-    //             #[cfg(target_os = "macos")]
-    //             {
-    //                 let mut service_runing = false;
-    //                 for _ in 0..40 {
-    //                     if service::check_service().await.is_ok() {
-    //                         service_runing = true;
-    //                         break;
-    //                     } else {
-    //                         log::warn!(target: "app", "service not runing, sleep 500ms and check again.");
-    //                         std::thread::sleep(std::time::Duration::from_millis(500));
-    //                     }
-    //                 }
-    //                 if !service_runing {
-    //                     log::warn!(target: "app", "service not running, will fallback to user mode");
-    //                 }
-    //             }
-    //         }
-    //         Err(e) => {
-    //             log::warn!(target: "app", "failed to install service: {e:?}, will fallback to user mode");
-    //         }
-    //     }
-    // }
-
     logging!(trace, Type::Core, "Starting CoreManager");
     logging_error!(Type::Core, true, CoreManager::global().init().await);
 
@@ -112,22 +83,21 @@ pub async fn resolve_setup(app: &mut App) {
         sysopt::Sysopt::global().init_guard_sysproxy()
     );
 
-    // 初始化热键
-    logging!(trace, Type::System, true, "Initial hotkeys");
-    logging_error!(Type::System, true, hotkey::Hotkey::global().init());
+    let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
+    create_window(!is_silent_start);
 
-    let silent_start = { Config::verge().data().enable_silent_start };
-    if !silent_start.unwrap_or(false) {
-        create_window();
-    }
-
-    logging_error!(Type::Tray, true, tray::Tray::global().update_part());
     logging_error!(Type::System, true, timer::Timer::global().init());
 
     let enable_auto_light_weight_mode = { Config::verge().data().enable_auto_light_weight_mode };
     if enable_auto_light_weight_mode.unwrap_or(false) {
         lightweight::enable_auto_light_weight_mode();
     }
+
+    logging_error!(Type::Tray, true, tray::Tray::global().update_part());
+
+    // 初始化热键
+    logging!(trace, Type::System, true, "Initial hotkeys");
+    logging_error!(Type::System, true, hotkey::Hotkey::global().init());
 }
 
 /// reset system proxy (异步版)
@@ -151,7 +121,7 @@ pub async fn resolve_reset_async() {
 }
 
 /// create main window
-pub fn create_window() {
+pub fn create_window(is_showup: bool) {
     logging!(info, Type::Window, true, "Creating window");
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -226,17 +196,19 @@ pub fn create_window() {
 
     match window {
         Ok(window) => {
-            logging!(
-                info,
-                Type::Window,
-                true,
-                "Window created successfully, making window visible"
-            );
-            let _ = window.show();
-            let _ = window.set_focus();
+            logging!(info, Type::Window, true, "Window created successfully");
+            if is_showup {
+                println!("is showup");
+                let _ = window.show();
+                let _ = window.set_focus();
+            } else {
+                let _ = window.hide();
+                #[cfg(target_os = "macos")]
+                AppHandleManager::global().set_activation_policy_accessory();
+            }
 
             // 设置窗口状态监控，实时保存窗口位置和大小
-            crate::feat::setup_window_state_monitor(&app_handle);
+            // crate::feat::setup_window_state_monitor(&app_handle);
 
             // 标记前端UI已准备就绪，向前端发送启动完成事件
             let app_handle_clone = app_handle.clone();
@@ -310,7 +282,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
             Some(url) => {
                 log::info!(target:"app", "decoded subscription url: {}", url);
 
-                create_window();
+                create_window(false);
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
                     Ok(item) => {
                         let uid = item.uid.clone().unwrap();

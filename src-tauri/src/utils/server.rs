@@ -49,7 +49,7 @@ pub fn embed_server() {
 
     tauri::async_runtime::spawn(async move {
         let visible = warp::path!("commands" / "visible").map(move || {
-            resolve::create_window();
+            resolve::create_window(false);
             "ok"
         });
 

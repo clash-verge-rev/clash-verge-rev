@@ -47,7 +47,7 @@ pub fn open_or_close_dashboard() {
     } else {
         println!("No existing window found, creating new window");
         log::info!(target: "app", "No existing window found, creating new window");
-        resolve::create_window();
+        resolve::create_window(true);
     }
 }
 

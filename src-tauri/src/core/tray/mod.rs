@@ -205,7 +205,7 @@ impl Tray {
                 match tray_event.as_str() {
                     "system_proxy" => feat::toggle_system_proxy(),
                     "tun_mode" => feat::toggle_tun_mode(None),
-                    "main_window" => resolve::create_window(),
+                    "main_window" => resolve::create_window(true),
                     _ => {}
                 }
             }
@@ -680,7 +680,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             println!("change mode to: {}", mode);
             feat::change_clash_mode(mode.into());
         }
-        "open_window" => resolve::create_window(),
+        "open_window" => resolve::create_window(true),
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(None),
         "copy_env" => feat::copy_clash_env(),

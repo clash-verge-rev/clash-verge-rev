@@ -188,7 +188,7 @@ impl Hotkey {
                                 true,
                                 "Window does not exist, creating a new one"
                             );
-                            resolve::create_window();
+                            resolve::create_window(true);
                         }
                     });
 

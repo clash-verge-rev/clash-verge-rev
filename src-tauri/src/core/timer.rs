@@ -1,4 +1,4 @@
-use crate::{config::Config, core::CoreManager, feat};
+use crate::{config::Config, core::CoreManager, feat, logging, utils::logging::Type};
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
@@ -58,7 +58,7 @@ impl Timer {
             return Ok(());
         }
 
-        log::info!(target: "app", "Initializing timer...");
+        logging!(info, Type::Timer, true, "Initializing timer...");
 
         // Initialize timer tasks
         if let Err(e) = self.refresh() {

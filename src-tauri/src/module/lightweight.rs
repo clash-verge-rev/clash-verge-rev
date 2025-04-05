@@ -13,6 +13,7 @@ use crate::{
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
 
 pub fn enable_auto_light_weight_mode() {
+    let _ = Timer::global().init().unwrap();
     logging!(info, Type::Lightweight, true, "开启自动轻量模式");
     setup_window_close_listener();
     setup_webview_focus_listener();
