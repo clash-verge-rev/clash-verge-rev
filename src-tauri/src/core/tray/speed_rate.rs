@@ -119,12 +119,26 @@ impl SpeedRate {
             }
         }
 
+        let is_colorful = if let Some(bytes) = icon_bytes.clone() {
+            !crate::utils::help::is_monochrome_image_from_bytes(&bytes).unwrap_or(false)
+        } else {
+            false
+        };
+
         // 选择文本颜色
-        // 单色图标使用白色文本和轻微黑色阴影
-        let (text_color, shadow_color) = (
-            Rgba([255u8, 255u8, 255u8, 255u8]),
-            Rgba([0u8, 0u8, 0u8, 120u8]),
-        );
+        let (text_color, shadow_color) = if is_colorful {
+            (
+                // Rgba([0u8, 0u8, 0u8, 255u8]),
+                // Rgba([255u8, 255u8, 255u8, 128u8]),
+                Rgba([255u8, 255u8, 255u8, 255u8]),
+                Rgba([0u8, 0u8, 0u8, 08u8]),
+            )
+        } else {
+            (
+                Rgba([255u8, 255u8, 255u8, 255u8]),
+                Rgba([0u8, 0u8, 0u8, 128u8]),
+            )
+        };
         // 减小字体大小以适应文本区域
         let font_data = include_bytes!("../../../assets/fonts/SF-Pro.ttf");
         let font = FontArc::try_from_vec(font_data.to_vec()).unwrap();

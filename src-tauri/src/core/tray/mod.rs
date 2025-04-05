@@ -309,13 +309,8 @@ impl Tray {
 
                 let rate = rate_guard.as_ref();
                 let rate_bytes = SpeedRate::add_speed_text(is_custom_icon, bytes, rate).unwrap();
-
                 let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
-                if !is_custom_icon {
-                    let _ = tray.set_icon_as_template(!is_colorful);
-                } else {
-                    let _ = tray.set_icon_as_template(false);
-                }
+                let _ = tray.set_icon_as_template(!is_custom_icon && !is_colorful);
             }
             Ok(())
         }
