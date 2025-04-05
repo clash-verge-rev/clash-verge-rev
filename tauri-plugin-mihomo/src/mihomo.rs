@@ -140,6 +140,7 @@ impl Mihomo {
         Ok(ws_url)
     }
 
+    /// 连接 WebSocket
     pub(crate) async fn connect(
         &self,
         url: String,
@@ -151,18 +152,20 @@ impl Mihomo {
 
         let (ws_stream, _) = connect_async(request).await?;
 
-        let (write, read) = ws_stream.split();
+        let (write, mut read) = ws_stream.split();
         manager.0.lock().await.insert(id, write);
 
         tauri::async_runtime::spawn(async move {
-            read.for_each(move |message| {
-                let on_message_ = on_message.clone();
-                let manager_ = manager.clone();
-                async move {
+            let on_message_ = on_message.clone();
+            let manager_ = manager.clone();
+            loop {
+                if manager_.0.lock().await.get(&id).is_none() {
+                    break;
+                }
+                if let Some(message) = read.next().await {
                     if let Ok(Message::Close(_)) = message {
                         manager_.0.lock().await.remove(&id);
                     }
-
                     let response = match message {
                         Ok(Message::Text(t)) => {
                             serde_json::to_value(WebSocketMessage::Text(t.to_string())).unwrap()
@@ -186,16 +189,15 @@ impl Mihomo {
                         Ok(Message::Frame(_)) => serde_json::Value::Null, // This value can't be recieved.
                         Err(e) => serde_json::to_value(Error::from(e)).unwrap(),
                     };
-
                     let _ = on_message_.send(response);
                 }
-            })
-            .await;
+            }
         });
 
         Ok(id)
     }
 
+    /// 向指定 WebSocket 连接发送消息
     pub(crate) async fn send(&self, id: ConnectionId, message: WebSocketMessage) -> Result<()> {
         let manager = self.connection_manager.clone();
         let mut manager = manager.0.lock().await;
@@ -218,6 +220,7 @@ impl Mihomo {
         }
     }
 
+    /// 取消 WebSocket 连接
     pub(crate) async fn disconnect(
         &self,
         id: ConnectionId,
@@ -236,6 +239,7 @@ impl Mihomo {
             if let Some(timeout) = force_timeout_secs {
                 tauri::async_runtime::spawn(async move {
                     tokio::time::sleep(Duration::from_secs(timeout)).await;
+                    println!("force close websocket connection");
                     manager_.0.lock().await.remove(&id);
                 });
             }
@@ -251,19 +255,21 @@ impl Mihomo {
         manager.get(&id).is_some()
     }
 
-    // websocket
+    /// Mihomo 流量监控的 WebSocket 连接
     pub async fn ws_traffic(&self, on_message: Channel<serde_json::Value>) -> Result<ConnectionId> {
         let ws_url = self.get_websocket_url("/traffic")?;
         let websocket_id = self.connect(ws_url, on_message).await?;
         Ok(websocket_id)
     }
 
+    /// Mihomo 内存监控的 WebSocket 连接
     pub async fn ws_memory(&self, on_message: Channel<serde_json::Value>) -> Result<ConnectionId> {
         let ws_url = self.get_websocket_url("/memory")?;
         let websocket_id = self.connect(ws_url, on_message).await?;
         Ok(websocket_id)
     }
 
+    /// Mihomo 连接监控的 WebSocket 连接
     pub async fn ws_connections(
         &self,
         on_message: Channel<serde_json::Value>,
@@ -273,6 +279,7 @@ impl Mihomo {
         Ok(websocket_id)
     }
 
+    /// Mihomo 日志监控的 WebSocket 连接
     pub async fn ws_logs(
         &self,
         level: String,
@@ -732,6 +739,7 @@ mod test {
             }
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
+        tokio::time::sleep(Duration::from_secs(20)).await;
         Ok(())
     }
 

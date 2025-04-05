@@ -35,6 +35,13 @@ Default permissions for the plugin
 - `allow-upgrade-core`
 - `allow-upgrade-ui`
 - `allow-upgrade-geo`
+- `allow-ws-connect`
+- `allow-ws-traffic`
+- `allow-ws-memory`
+- `allow-ws-connections`
+- `allow-ws-logs`
+- `allow-ws-send`
+- `allow-ws-disconnect`
 
 ## Permission Table
 

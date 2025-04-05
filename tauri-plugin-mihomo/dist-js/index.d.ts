@@ -391,14 +391,47 @@ export declare class WebSocket {
   id: number;
   private readonly listeners;
   constructor(id: number, listeners: Set<(arg: Message) => void>);
+  /**
+   * 创建一个新的 WebSocket 连接
+   * @param url 要连接的 url
+   * @returns WebSocket 实例
+   */
   static connect(url: string): Promise<WebSocket>;
+  /**
+   * 创建一个新的 WebSocket 连接，用于 Mihomo 的流量监控
+   * @returns WebSocket 实例
+   */
   static connect_traffic(): Promise<WebSocket>;
+  /**
+   * 创建一个新的 WebSocket 连接，用于 Mihomo 的内存监控
+   * @returns WebSocket 实例
+   */
   static connect_memory(): Promise<WebSocket>;
+  /**
+   * 创建一个新的 WebSocket 连接，用于 Mihomo 的连接监控
+   * @returns WebSocket 实例
+   */
   static connect_connections(): Promise<WebSocket>;
+  /**
+   * 创建一个新的 WebSocket 连接，用于 Mihomo 的日志监控
+   * @returns WebSocket 实例
+   */
   static connect_logs(
     level: "debug" | "info" | "warn" | "error",
   ): Promise<WebSocket>;
+  /**
+   * 添加处理 WebSocket 连接后接受的数据的回调函数
+   * @param cb 回调函数
+   */
   addListener(cb: (arg: Message) => void): () => void;
+  /**
+   * 发送消息到 WebSocket 连接
+   * @param message 发送的消息
+   */
   send(message: Message | string | number[]): Promise<void>;
-  disconnect(): Promise<void>;
+  /**
+   * 关闭 WebSocket 连接
+   * @param forceTimeoutSecs 强制关闭 WebSocket 连接等待的时间，单位: 秒
+   */
+  disconnect(forceTimeoutSecs: null | number): Promise<void>;
 }

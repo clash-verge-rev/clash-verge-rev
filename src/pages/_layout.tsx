@@ -16,18 +16,16 @@ import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
 import i18next from "i18next";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
-import { WebSocket } from "tauri-plugin-mihomo-api";
 
 const appWindow = getCurrentWebviewWindow();
 
 export let portableFlag = false;
 dayjs.extend(relativeTime);
 const OS = getSystem();
-let keepUIActive = false;
 
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -36,8 +34,12 @@ const Layout = () => {
   const visible = useVisibility();
 
   const { verge } = useVerge();
-  const { language, enable_system_title_bar, enable_keep_ui_active } = verge;
-  keepUIActive = enable_keep_ui_active ?? false;
+  const {
+    language,
+    enable_system_title_bar,
+    enable_keep_ui_active = false,
+  } = verge;
+  const keepUIActive = useRef(enable_keep_ui_active);
 
   appWindow.isMaximized().then((maximized) => {
     setIsMaximized(maximized);
@@ -59,17 +61,9 @@ const Layout = () => {
   };
 
   useEffect(() => {
-    WebSocket.connect_traffic().then((ws) => {
-      // ws.addListener((msg) => {
-      //   console.log("Received Message:", msg.data);
-      // });
-    });
-    // await ws.send("Hello World!");
-    // await ws.disconnect();
-
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && OS !== "macos") {
-        handleClose(keepUIActive);
+        handleClose(keepUIActive.current);
       }
     });
 
@@ -172,7 +166,7 @@ const Layout = () => {
                 {OS !== "macos" && (
                   <LayoutControl
                     maximized={isMaximized}
-                    onClose={() => handleClose(keepUIActive)}
+                    onClose={() => handleClose(keepUIActive.current)}
                   />
                 )}
               </div>

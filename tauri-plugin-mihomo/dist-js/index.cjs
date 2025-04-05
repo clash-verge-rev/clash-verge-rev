@@ -301,6 +301,11 @@ class WebSocket {
     this.id = id;
     this.listeners = listeners;
   }
+  /**
+   * 创建一个新的 WebSocket 连接
+   * @param url 要连接的 url
+   * @returns WebSocket 实例
+   */
   static async connect(url) {
     const listeners = new Set();
     const onMessage = new core.Channel();
@@ -310,12 +315,16 @@ class WebSocket {
       });
     };
     return await core
-      .invoke("plugin:mihomo|connect", {
+      .invoke("plugin:mihomo|ws_connect", {
         url,
         onMessage,
       })
       .then((id) => new WebSocket(id, listeners));
   }
+  /**
+   * 创建一个新的 WebSocket 连接，用于 Mihomo 的流量监控
+   * @returns WebSocket 实例
+   */
   static async connect_traffic() {
     const listeners = new Set();
     const onMessage = new core.Channel();
@@ -330,6 +339,10 @@ class WebSocket {
       })
       .then((id) => new WebSocket(id, listeners));
   }
+  /**
+   * 创建一个新的 WebSocket 连接，用于 Mihomo 的内存监控
+   * @returns WebSocket 实例
+   */
   static async connect_memory() {
     const listeners = new Set();
     const onMessage = new core.Channel();
@@ -344,6 +357,10 @@ class WebSocket {
       })
       .then((id) => new WebSocket(id, listeners));
   }
+  /**
+   * 创建一个新的 WebSocket 连接，用于 Mihomo 的连接监控
+   * @returns WebSocket 实例
+   */
   static async connect_connections() {
     const listeners = new Set();
     const onMessage = new core.Channel();
@@ -358,6 +375,10 @@ class WebSocket {
       })
       .then((id) => new WebSocket(id, listeners));
   }
+  /**
+   * 创建一个新的 WebSocket 连接，用于 Mihomo 的日志监控
+   * @returns WebSocket 实例
+   */
   static async connect_logs(level) {
     const listeners = new Set();
     const onMessage = new core.Channel();
@@ -373,12 +394,20 @@ class WebSocket {
       })
       .then((id) => new WebSocket(id, listeners));
   }
+  /**
+   * 添加处理 WebSocket 连接后接受的数据的回调函数
+   * @param cb 回调函数
+   */
   addListener(cb) {
     this.listeners.add(cb);
     return () => {
       this.listeners.delete(cb);
     };
   }
+  /**
+   * 发送消息到 WebSocket 连接
+   * @param message 发送的消息
+   */
   async send(message) {
     let m;
     if (typeof message === "string") {
@@ -392,10 +421,17 @@ class WebSocket {
         "invalid `message` type, expected a `{ type: string, data: any }` object, a string or a numeric array",
       );
     }
-    await core.invoke("plugin:mihomo|send", { id: this.id, message: m });
+    await core.invoke("plugin:mihomo|ws_send", { id: this.id, message: m });
   }
-  async disconnect() {
-    await core.invoke("plugin:mihomo|disconnect", { id: this.id });
+  /**
+   * 关闭 WebSocket 连接
+   * @param forceTimeoutSecs 强制关闭 WebSocket 连接等待的时间，单位: 秒
+   */
+  async disconnect(forceTimeoutSecs) {
+    await core.invoke("plugin:mihomo|ws_disconnect", {
+      id: this.id,
+      forceTimeoutSecs,
+    });
   }
 }
 
