@@ -1,6 +1,6 @@
 import JSIcon from "@/assets/image/js.svg?react";
 import YamlIcon from "@/assets/image/yaml.svg?react";
-import { Notice, ScrollableText } from "@/components/base";
+import { Marquee, Notice } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { viewProfile } from "@/services/cmds";
@@ -201,7 +201,7 @@ export const ProfileMore = (props: Props) => {
           alignItems="center"
           mb={0.5}>
           <div className="w-[calc(100%-52px)]">
-            <ScrollableText>
+            <Marquee pauseOnHover>
               <Typography
                 title={itemData.name}
                 variant="h6"
@@ -209,7 +209,7 @@ export const ProfileMore = (props: Props) => {
                 noWrap>
                 {itemData.name}
               </Typography>
-            </ScrollableText>
+            </Marquee>
           </div>
 
           {type === "script" ? (

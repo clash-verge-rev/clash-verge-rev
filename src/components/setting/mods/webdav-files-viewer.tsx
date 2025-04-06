@@ -1,12 +1,7 @@
 import LinuxIcon from "@/assets/image/linux.svg?react";
 import MacIcon from "@/assets/image/macos.svg?react";
 import WindowsIcon from "@/assets/image/windows.svg?react";
-import {
-  BaseDialog,
-  DialogRef,
-  Notice,
-  ScrollableText,
-} from "@/components/base";
+import { BaseDialog, DialogRef, Marquee, Notice } from "@/components/base";
 import {
   deleteBackup,
   downloadBackupAndReload,
@@ -171,7 +166,9 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
                     )}
                   </div>
                   <div className="mr-2 flex grow flex-col justify-center !space-y-2 overflow-hidden py-1">
-                    <ScrollableText>{file.filename}</ScrollableText>
+                    <Marquee pauseOnHover>
+                      <span>{file.filename}</span>
+                    </Marquee>
                     <div>
                       <Chip
                         size="small"

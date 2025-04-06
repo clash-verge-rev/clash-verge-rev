@@ -1,8 +1,8 @@
 import {
   BaseDialog,
   DraggableItem,
+  Marquee,
   Notice,
-  ScrollableText,
   SwitchLovely,
 } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
@@ -523,9 +523,9 @@ export const ProfileEditorViewer = (props: Props) => {
             <div
               className="bg-primary-alpha flex cursor-pointer items-center justify-between p-2"
               onClick={() => setExpand(!expand)}>
-              <ScrollableText>
+              <Marquee pauseOnHover>
                 <span className="text-md font-bold">{profileName}</span>
-              </ScrollableText>
+              </Marquee>
               <Chip
                 label={t(formType || "local")}
                 size="small"

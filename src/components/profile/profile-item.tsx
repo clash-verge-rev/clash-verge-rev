@@ -1,4 +1,4 @@
-import { Notice, ScrollableText } from "@/components/base";
+import { Marquee, Notice } from "@/components/base";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { openWebUrl, updateProfile, viewProfile } from "@/services/cmds";
 import {
@@ -274,7 +274,7 @@ export const ProfileItem = (props: Props) => {
         )}
         <Box position="relative">
           <div className="w-[calc(100%-36px)]">
-            <ScrollableText>
+            <Marquee pauseOnHover>
               <Typography
                 sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
                 variant="h6"
@@ -283,7 +283,7 @@ export const ProfileItem = (props: Props) => {
                 title={name}>
                 {name}
               </Typography>
-            </ScrollableText>
+            </Marquee>
           </div>
 
           {/* only if has url can it be updated */}

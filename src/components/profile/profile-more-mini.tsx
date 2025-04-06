@@ -21,9 +21,9 @@ import {
 } from "@mui/material";
 import { t } from "i18next";
 import { useRef, useState } from "react";
-import { ScrollableText } from "../base";
 import { useCustomTheme } from "../layout/use-custom-theme";
 import { ProfileViewer, ProfileViewerRef } from "./profile-viewer";
+import { Marquee } from "../base";
 
 interface Props {
   item: IProfileItem;
@@ -123,10 +123,14 @@ export default function ProfileMoreMini(props: Props) {
             className="ml-2 box-border flex w-full flex-col items-center overflow-hidden text-sm"
             onClick={onClick}>
             <div className="text-primary-main w-full">
-              <ScrollableText>{item.name}</ScrollableText>
+              <Marquee pauseOnHover>
+                <span>{item.name}</span>
+              </Marquee>
             </div>
             <div className="text-secondary-text w-full text-xs">
-              <ScrollableText>{item.desc}</ScrollableText>
+              <Marquee pauseOnHover>
+                <span>{item.desc}</span>
+              </Marquee>
             </div>
           </div>
 
