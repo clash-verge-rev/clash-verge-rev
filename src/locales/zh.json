@@ -305,7 +305,9 @@
   "Script Run Check Failed": "脚本运行检查失败, 请检查脚本是否正确",
   "Script Run Check Successful": "脚本运行检查成功, 可正常运行",
   "Save Content Successfully": "内容保存成功",
-  "Profile Content No Changes": "配置内容无变化",
+  "Profile Content No Change": "配置内容无变化",
+  "Profile Config No Change": "订阅相关设置无变化",
+  "Profile Config Updated": "订阅相关设置已更新",
 
   "Backup Setting": "备份设置",
   "BK_Local": "本地",

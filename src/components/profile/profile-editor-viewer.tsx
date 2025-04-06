@@ -67,6 +67,7 @@ import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 import ProfileMoreMini from "./profile-more-mini";
 import { ProfileViewer, ProfileViewerRef } from "./profile-viewer";
+import { sleep } from "@/utils";
 
 interface Props {
   title?: string | ReactNode;
@@ -266,7 +267,7 @@ export const ProfileEditorViewer = (props: Props) => {
           if (uid && val) {
             const originContent = originContentRef.current;
             if (originContent === val) {
-              Notice.info(t("Profile Content No Changes"));
+              Notice.info(t("Profile Content No Change"));
               return;
             }
             let checkSuccess = true;
@@ -341,6 +342,7 @@ export const ProfileEditorViewer = (props: Props) => {
     formIns.handleSubmit(async (form) => {
       const isSame = isEqual(form, profileItem);
       if (isSame) {
+        Notice.info(t("Profile Config No Change"));
         return;
       }
       try {
@@ -367,6 +369,7 @@ export const ProfileEditorViewer = (props: Props) => {
 
         if (!form.uid) throw new Error("UID not found");
         await patchProfile(form.uid, item);
+        Notice.success(t("Profile Config Updated"));
         mutate("getProfiles");
       } catch (err: any) {
         Notice.error(err.message || err.toString());
@@ -475,11 +478,12 @@ export const ProfileEditorViewer = (props: Props) => {
     if (value == undefined) return;
     try {
       await handleProfileSubmit();
+      await sleep(1000);
       if (originContentRef.current !== value) {
         await saveProfileFile(editProfile.uid, value);
         onChange?.();
       } else {
-        Notice.info(t("Profile Content No Changes"));
+        Notice.info(t("Profile Content No Change"));
       }
       originContentRef.current = value;
       setChainChecked(false);
