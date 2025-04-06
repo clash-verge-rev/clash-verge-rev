@@ -120,18 +120,16 @@ export default function ProfileMoreMini(props: Props) {
           </div>
 
           <div
-            className="ml-2 box-border flex w-full flex-col items-center overflow-hidden text-sm"
+            className="ml-2 box-border flex h-full w-full flex-col items-center justify-around overflow-hidden text-sm"
             onClick={onClick}>
-            <div className="text-primary-main w-full">
-              <Marquee pauseOnHover>
-                <span>{item.name}</span>
-              </Marquee>
-            </div>
-            <div className="text-secondary-text w-full text-xs">
-              <Marquee pauseOnHover>
-                <span>{item.desc}</span>
-              </Marquee>
-            </div>
+            <Marquee pauseOnHover className="text-primary-main">
+              <span>{item.name}</span>
+            </Marquee>
+            <Marquee
+              pauseOnHover
+              className="text-secondary-text text-xs italic">
+              <span>{item.desc}</span>
+            </Marquee>
           </div>
 
           {isScriptMerge && (

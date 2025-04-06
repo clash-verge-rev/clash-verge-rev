@@ -67,7 +67,7 @@ export function Marquee({
       // 首次初始化，判断是否需要应用动画
       const childrenWidth = childrenRef.current.offsetWidth;
       const containerWidth = containerRef.current.offsetWidth;
-      if (childrenWidth >= containerWidth) {
+      if (childrenWidth >= containerWidth + 5) {
         const duration = (childrenWidth * repeat) / containerWidth;
         document.documentElement.style.setProperty(
           "--duration",
@@ -96,7 +96,7 @@ export function Marquee({
     if (applyAnimation && !firstRender.current) return;
     const childrenWidth = childrenRef.current.offsetWidth;
     const containerWidth = containerRef.current.offsetWidth;
-    if (childrenWidth >= containerWidth) {
+    if (childrenWidth >= containerWidth + 5) {
       const duration = (childrenWidth * repeat) / containerWidth;
       document.documentElement.style.setProperty("--duration", `${duration}s`);
       if (!applyAnimation) {
@@ -110,7 +110,7 @@ export function Marquee({
       ref={containerRef}
       {...props}
       className={cn(
-        "group flex [gap:var(--gap)] overflow-hidden p-2 [--duration:5s] [--gap:1rem]",
+        "group flex w-full [gap:var(--gap)] overflow-hidden [--duration:5s] [--gap:1rem]",
         {
           "flex-row": !vertical,
           "flex-col": vertical,
