@@ -3,13 +3,9 @@ import { getClashInfo } from "./cmds";
 import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 
-let axiosIns: AxiosInstance = null!;
+let instancePromise: Promise<AxiosInstance> = null!;
 
-/// initialize some information
-/// enable force update axiosIns
-export const getAxios = async (force: boolean = false) => {
-  if (axiosIns && !force) return axiosIns;
-
+async function getInstancePromise() {
   let server = "";
   let secret = "";
 
@@ -26,13 +22,22 @@ export const getAxios = async (force: boolean = false) => {
     if (info?.secret) secret = info?.secret;
   } catch {}
 
-  axiosIns = axios.create({
+  const axiosIns = axios.create({
     baseURL: `http://${server}`,
     headers: secret ? { Authorization: `Bearer ${secret}` } : {},
     timeout: 15000,
   });
   axiosIns.interceptors.response.use((r) => r.data);
   return axiosIns;
+}
+
+/// initialize some information
+/// enable force update axiosIns
+export const getAxios = async (force: boolean = false) => {
+  if (!instancePromise || force) {
+    instancePromise = getInstancePromise();
+  }
+  return instancePromise;
 };
 
 /// Get Version
