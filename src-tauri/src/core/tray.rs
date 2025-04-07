@@ -177,7 +177,7 @@ impl Tray {
         #[cfg(target_os = "macos")]
         tray.set_icon_as_template(true)?;
 
-        let enable_tray = Config::verge().latest().enable_tray.unwrap_or(true);
+        let enable_tray = { Config::verge().latest().enable_tray.unwrap_or(true) };
         if !enable_tray {
             tray.set_visible(false)?;
         }
@@ -199,7 +199,7 @@ impl Tray {
     }
 
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
-        let enable_tray = Config::verge().latest().enable_tray.unwrap_or(true);
+        let enable_tray = { Config::verge().latest().enable_tray.unwrap_or(true) };
         if enable_tray {
             Self::update_part(app_handle)?;
         }

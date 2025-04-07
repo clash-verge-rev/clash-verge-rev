@@ -62,10 +62,21 @@ pub fn change_clash_mode(mode: String) {
             Ok(_) => {
                 // 更新订阅
                 Config::clash().data().patch_config(mapping);
-
                 if Config::clash().data().save_config().is_ok() {
                     handle::Handle::refresh_clash();
                     log_err!(handle::Handle::update_systray_part());
+                }
+                let auto_close_connection = {
+                    Config::verge()
+                        .latest()
+                        .auto_close_connection
+                        .unwrap_or_default()
+                };
+                if auto_close_connection {
+                    let _ = handle::Handle::get_mihomo_read()
+                        .await
+                        .close_all_connections()
+                        .await;
                 }
             }
             Err(err) => log::error!(target: "app", "{err}"),

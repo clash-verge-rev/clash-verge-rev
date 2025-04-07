@@ -236,7 +236,6 @@ const ProfilePage = () => {
         setActivatingUids([current, ...enabledChainUids]);
         await patchProfiles({ current });
         mutateLogs();
-        // closeAllConnections();
         setTimeout(() => activateSelected(), 2000);
         Notice.success(t("Profile Switched"), 1000);
       } catch (err: any) {
