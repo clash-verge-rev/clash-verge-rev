@@ -163,8 +163,8 @@ importers:
         specifier: 19.1.0
         version: 19.1.0
       '@types/react-dom':
-        specifier: 19.1.1
-        version: 19.1.1(@types/react@19.1.0)
+        specifier: 19.1.2
+        version: 19.1.2(@types/react@19.1.0)
       '@types/react-transition-group':
         specifier: 4.4.12
         version: 4.4.12(@types/react@19.1.0)
@@ -1772,8 +1772,8 @@ packages:
   '@types/prop-types@15.7.14':
     resolution: {integrity: sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==}
 
-  '@types/react-dom@19.1.1':
-    resolution: {integrity: sha512-jFf/woGTVTjUJsl2O7hcopJ1r0upqoq/vIOoCj0yLh3RIXxWcljlpuZ+vEBRXsymD1jhfeJrlyTy/S1UW+4y1w==}
+  '@types/react-dom@19.1.2':
+    resolution: {integrity: sha512-XGJkWF41Qq305SKWEILa1O8vzhb3aOo3ogBlSmiqNko/WmRb6QIaweuZCXjKygVDXpzXb5wyxKTSOsmkuqj+Qw==}
     peerDependencies:
       '@types/react': ^19.0.0
 
@@ -5596,7 +5596,7 @@ snapshots:
 
   '@types/prop-types@15.7.14': {}
 
-  '@types/react-dom@19.1.1(@types/react@19.1.0)':
+  '@types/react-dom@19.1.2(@types/react@19.1.0)':
     dependencies:
       '@types/react': 19.1.0
 
