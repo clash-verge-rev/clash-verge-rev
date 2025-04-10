@@ -15,7 +15,7 @@ import { useAppData } from "@/providers/app-data-provider";
 export const ClashModeCard = () => {
   const { t } = useTranslation();
   const { verge } = useVerge();
-  const { clashConfig, refreshProxy } = useAppData();
+  const { clashConfig, refreshClashConfig } = useAppData();
 
   // 支持的模式列表
   const modeList = useMemo(() => ["rule", "global", "direct"] as const, []);
@@ -40,7 +40,7 @@ export const ClashModeCard = () => {
     try {
       await patchClashMode(mode);
       // 使用共享的刷新方法
-      refreshProxy();
+      refreshClashConfig();
     } catch (error) {
       console.error("Failed to change mode:", error);
     }

@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "2.2.3",
+  "version": "2.2.4-alpha",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev -- --profile fast-dev",
