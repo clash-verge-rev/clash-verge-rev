@@ -1,7 +1,7 @@
 use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
-    logging_error,
+    logging, logging_error,
     utils::logging::Type,
 };
 use anyhow::Result;
@@ -16,8 +16,6 @@ use tokio::time::{sleep, Duration};
 pub struct Sysopt {
     update_sysproxy: Arc<TokioMutex<bool>>,
     reset_sysproxy: Arc<TokioMutex<bool>>,
-    /// helps to auto launch the app
-    auto_launch: Arc<Mutex<bool>>,
     /// record whether the guard async is running or not
     guard_state: Arc<Mutex<bool>>,
 }
@@ -58,7 +56,6 @@ impl Sysopt {
         SYSOPT.get_or_init(|| Sysopt {
             update_sysproxy: Arc::new(TokioMutex::new(false)),
             reset_sysproxy: Arc::new(TokioMutex::new(false)),
-            auto_launch: Arc::new(Mutex::new(false)),
             guard_state: Arc::new(false.into()),
         })
     }
@@ -216,34 +213,17 @@ impl Sysopt {
 
     /// update the startup
     pub fn update_launch(&self) -> Result<()> {
-        let _lock = self.auto_launch.lock();
-        let enable = { Config::verge().latest().enable_auto_launch };
-        let enable = enable.unwrap_or(false);
+        let enable_auto_launch = { Config::verge().latest().enable_auto_launch };
         let app_handle = Handle::global().app_handle().unwrap();
         let autostart_manager = app_handle.autolaunch();
 
-        log::info!(target: "app", "Setting auto launch to: {}", enable);
-
-        match enable {
-            true => {
-                let result = autostart_manager.enable();
-                if let Err(ref e) = result {
-                    log::error!(target: "app", "Failed to enable auto launch: {}", e);
-                } else {
-                    log::info!(target: "app", "Auto launch enabled successfully");
-                }
-                logging_error!(Type::System, true, result);
-            }
-            false => {
-                let result = autostart_manager.disable();
-                if let Err(ref e) = result {
-                    log::error!(target: "app", "Failed to disable auto launch: {}", e);
-                } else {
-                    log::info!(target: "app", "Auto launch disabled successfully");
-                }
-                logging_error!(Type::System, true, result);
-            }
-        };
+        let is_enable = enable_auto_launch.unwrap_or(false);
+        logging!(info, true, "Setting auto-launch state to: {:?}", is_enable);
+        if is_enable {
+            logging_error!(Type::System, true, "{:?}", autostart_manager.enable());
+        } else {
+            logging_error!(Type::System, true, "{:?}", autostart_manager.disable());
+        }
 
         Ok(())
     }

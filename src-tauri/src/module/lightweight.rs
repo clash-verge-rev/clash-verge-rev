@@ -63,7 +63,6 @@ fn setup_webview_focus_listener() -> u32 {
             logging!(
                 info,
                 Type::Lightweight,
-                true,
                 "监听到窗口获得焦点，取消轻量模式计时"
             );
         });

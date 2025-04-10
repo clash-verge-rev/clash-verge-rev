@@ -198,7 +198,6 @@ pub fn create_window(is_showup: bool) {
         Ok(window) => {
             logging!(info, Type::Window, true, "Window created successfully");
             if is_showup {
-                println!("is showup");
                 let _ = window.show();
                 let _ = window.set_focus();
             } else {
@@ -215,12 +214,7 @@ pub fn create_window(is_showup: bool) {
             tauri::async_runtime::spawn(async move {
                 use tauri::Emitter;
 
-                logging!(
-                    info,
-                    Type::Window,
-                    true,
-                    "标记前端UI已准备就绪，开始处理启动错误队列"
-                );
+                logging!(info, Type::Window, true, "UI gets ready.");
                 handle::Handle::global().mark_startup_completed();
 
                 if let Some(window) = app_handle_clone.get_webview_window("main") {
