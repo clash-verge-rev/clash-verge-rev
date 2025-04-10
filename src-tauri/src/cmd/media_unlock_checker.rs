@@ -207,7 +207,7 @@ async fn check_chatgpt_combined(client: &Client) -> Vec<UnlockItem> {
             if let Ok(body) = response.text().await {
                 let body_lower = body.to_lowercase();
                 if body_lower.contains("unsupported_country") {
-                    "Unsupported Country"
+                    "Unsupported Country/Region"
                 } else {
                     "Yes"
                 }

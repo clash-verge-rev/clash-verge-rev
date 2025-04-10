@@ -191,7 +191,7 @@ const UnlockPage = () => {
     if (
       status === "Disallowed ISP" ||
       status === "Blocked" ||
-      status === "Unsupported Country"
+      status === "Unsupported Country/Region"
     ) {
       return "error";
     }
