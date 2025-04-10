@@ -87,7 +87,6 @@ users = "0.11.0"
 tauri-plugin-autostart = "2.2.0"
 tauri-plugin-global-shortcut = "2.2.0"
 tauri-plugin-updater = "2.6.1"
-tauri-plugin-window-state = "2.2.1"
 
 [features]
 default = ["custom-protocol"]
