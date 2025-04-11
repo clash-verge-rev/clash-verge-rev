@@ -5,7 +5,8 @@ import { Box, Button, Snackbar, useTheme } from "@mui/material";
 import { deleteConnection } from "@/services/api";
 import parseTraffic from "@/utils/parse-traffic";
 import { t } from "i18next";
-
+import { RulesEditorViewer } from "@/components/profile/rules-editor-viewer";
+import { useProfiles } from "@/hooks/use-profiles";
 export interface ConnectionDetailRef {
   open: (detail: IConnectionsItem) => void;
 }
@@ -14,8 +15,23 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
   (props, ref) => {
     const [open, setOpen] = useState(false);
     const [detail, setDetail] = useState<IConnectionsItem>(null!);
+    const [rulesOpen, setRulesOpen] = useState(false);
     const theme = useTheme();
+    
+    const {
+      profiles = {},
+      activateSelected,
+      patchProfiles,
+      mutateProfiles,
+    } = useProfiles();
 
+    const groupUid = profiles.items?.find((item) => (item.type as string) === "groups")?.uid;
+    const mergeUid = profiles.items?.find((item) => item.type === "merge")?.uid;
+    const rules = profiles.items?.find((item) => (item.type as string) === "rules")?.uid;
+    let ruleContent = detail?.metadata.host
+    if (ruleContent == "") {
+      ruleContent = detail?.metadata.sourceIP
+    }
     useImperativeHandle(ref, () => ({
       open: (detail: IConnectionsItem) => {
         if (open) return;
@@ -27,25 +43,45 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
     const onClose = () => setOpen(false);
 
     return (
-      <Snackbar
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        open={open}
-        onClose={onClose}
-        sx={{
-          ".MuiSnackbarContent-root": {
-            maxWidth: "520px",
-            maxHeight: "480px",
-            overflowY: "auto",
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-          },
-        }}
-        message={
-          detail ? (
-            <InnerConnectionDetail data={detail} onClose={onClose} />
-          ) : null
-        }
-      />
+      <Box>
+        <Snackbar
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          open={open}
+          onClose={onClose}
+          sx={{
+            ".MuiSnackbarContent-root": {
+              maxWidth: "520px",
+              maxHeight: "480px",
+              overflowY: "auto",
+              backgroundColor: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+            },
+          }}
+          message={
+            detail ? (
+              <InnerConnectionDetail 
+                data={detail} 
+                onClose={onClose} 
+                onOpenRules={() => {
+                  setRulesOpen(true);
+                  onClose();
+                }}
+              />
+            ) : null
+          }
+        />
+
+        <RulesEditorViewer
+          profileUid={profiles.current ?? ""}
+          property={rules ?? ""}
+          groupsUid={groupUid ?? ""}
+          mergeUid={mergeUid ?? ""}
+          open={rulesOpen}
+          initialRule={ruleContent}
+          onSave={() => {}}
+          onClose={() => setRulesOpen(false)}
+        />
+      </Box>
     );
   },
 );
@@ -53,9 +89,10 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
 interface InnerProps {
   data: IConnectionsItem;
   onClose?: () => void;
+  onOpenRules: () => void;
 }
 
-const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
+const InnerConnectionDetail = ({ data, onClose, onOpenRules }: InnerProps) => {
   const { metadata, rulePayload } = data;
   const theme = useTheme();
   const chains = [...data.chains].reverse().join(" / ");
@@ -111,7 +148,7 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
         </div>
       ))}
 
-      <Box sx={{ textAlign: "right" }}>
+      <Box sx={{ textAlign: "right", display: "flex", gap: 1, justifyContent: "flex-end" }}>
         <Button
           variant="contained"
           title={t("Close Connection")}
@@ -122,7 +159,16 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
         >
           {t("Close Connection")}
         </Button>
+
+        <Button
+          variant="contained"
+          title={t("Add Rule")}
+          onClick={onOpenRules}
+        >
+          {t("Add Rule")}
+        </Button>
       </Box>
     </Box>
   );
 };
+

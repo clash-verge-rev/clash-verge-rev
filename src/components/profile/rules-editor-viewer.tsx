@@ -50,6 +50,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSave?: (prev?: string, curr?: string) => void;
+  initialRule?: string;
 }
 
 const portValidator = (value: string): boolean => {
@@ -234,7 +235,7 @@ const rules: {
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
 export const RulesEditorViewer = (props: Props) => {
-  const { groupsUid, mergeUid, profileUid, property, open, onClose, onSave } =
+  const { groupsUid, mergeUid, profileUid, property, open, onClose, onSave, initialRule } =
     props;
   const { t } = useTranslation();
   const themeMode = useThemeMode();
@@ -244,7 +245,7 @@ export const RulesEditorViewer = (props: Props) => {
   const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
 
-  const [ruleType, setRuleType] = useState<(typeof rules)[number]>(rules[0]);
+  const [ruleType, setRuleType] = useState<(typeof rules)[number]>(rules.find(r => r.name === "DOMAIN") || rules[0]);
   const [ruleContent, setRuleContent] = useState("");
   const [noResolve, setNoResolve] = useState(false);
   const [proxyPolicy, setProxyPolicy] = useState(builtinProxyPolicies[0]);
@@ -396,6 +397,15 @@ export const RulesEditorViewer = (props: Props) => {
     fetchContent();
     fetchProfile();
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    fetchContent();
+    fetchProfile();
+    if (initialRule && open) {
+      setRuleContent(initialRule);
+    }
+  }, [initialRule, open]);
 
   const validateRule = () => {
     if ((ruleType.required ?? true) && !ruleContent) {
