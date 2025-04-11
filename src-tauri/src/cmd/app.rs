@@ -49,7 +49,7 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
 /// 退出应用
 #[tauri::command]
 pub fn exit_app() {
-    feat::quit(Some(0));
+    feat::quit();
 }
 
 /// 重启应用

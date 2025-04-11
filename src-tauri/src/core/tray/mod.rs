@@ -691,7 +691,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "restart_app" => feat::restart_app(),
         "entry_lightweight_mode" => entry_lightweight_mode(),
         "quit" => {
-            feat::quit(Some(0));
+            feat::quit();
         }
         id if id.starts_with("profiles_") => {
             let profile_index = &id["profiles_".len()..];

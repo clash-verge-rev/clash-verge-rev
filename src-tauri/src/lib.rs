@@ -86,7 +86,7 @@ impl AppHandleManager {
 #[allow(clippy::panic)]
 pub fn run() {
     // 单例检测
-    let app_exists: bool = tauri::async_runtime::block_on(async move {
+    let app_exists: bool = AsyncHandler::block_on(move || async move {
         if server::check_singleton().await.is_err() {
             println!("app exists");
             true
@@ -134,7 +134,7 @@ pub fn run() {
                 });
             });
 
-            tauri::async_runtime::block_on(async move {
+            AsyncHandler::block_on(move || async move {
                 resolve::resolve_setup(app).await;
             });
 

@@ -1,5 +1,7 @@
 use super::CmdResult;
-use crate::{config::*, core::*, feat, module::mihomo::MihomoManager, wrap_err};
+use crate::{
+    config::*, core::*, feat, module::mihomo::MihomoManager, process::AsyncHandler, wrap_err,
+};
 use serde_yaml::Mapping;
 
 /// 复制Clash环境变量
@@ -104,10 +106,9 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
         core::{handle, CoreManager},
         utils::dirs,
     };
-    use tauri::async_runtime;
 
     // 使用spawn来处理异步操作
-    async_runtime::spawn(async move {
+    AsyncHandler::spawn(move || async move {
         if apply {
             // 读取DNS配置文件
             let dns_path = match dirs::app_home_dir() {

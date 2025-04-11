@@ -50,7 +50,7 @@ pub fn open_or_close_dashboard() {
 }
 
 /// 优化的应用退出函数
-pub fn quit(code: Option<i32>) {
+pub fn quit() {
     log::debug!(target: "app", "启动退出流程");
 
     // 获取应用句柄并设置退出标志
@@ -64,47 +64,46 @@ pub fn quit(code: Option<i32>) {
 
     // 在单独线程中处理资源清理，避免阻塞主线程
     std::thread::spawn(move || {
-        // 使用tokio运行时执行异步清理任务
-        tauri::async_runtime::block_on(async {
-            // 使用超时机制处理清理操作
-            use tokio::time::{timeout, Duration};
-
-            // 1. 直接关闭TUN模式 (优先处理，通常最容易卡住)
-            if Config::verge().data().enable_tun_mode.unwrap_or(false) {
-                let disable = serde_json::json!({
+        use tokio::time::{timeout, Duration};
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let cleanup_result = rt.block_on(async {
+            // 1. 处理TUN模式
+            let tun_success = if Config::verge().data().enable_tun_mode.unwrap_or(false) {
+                let disable_tun = serde_json::json!({
                     "tun": {
                         "enable": false
                     }
                 });
-
-                // 设置1秒超时
-                let _ = timeout(
+                timeout(
                     Duration::from_secs(1),
-                    MihomoManager::global().patch_configs(disable),
+                    MihomoManager::global().patch_configs(disable_tun),
                 )
-                .await;
-            }
+                .await
+                .is_ok()
+            } else {
+                true
+            };
 
-            // 2. 并行处理系统代理和核心进程清理
-            let proxy_future = timeout(
+            // 2. 顺序执行关键清理
+            let proxy_res = timeout(
                 Duration::from_secs(1),
                 sysopt::Sysopt::global().reset_sysproxy(),
-            );
+            )
+            .await;
 
-            let core_future = timeout(Duration::from_secs(1), CoreManager::global().stop_core());
+            let core_res = timeout(Duration::from_secs(1), CoreManager::global().stop_core()).await;
 
-            // 同时等待两个任务完成
-            let _ = futures::join!(proxy_future, core_future);
-
-            // 3. 处理macOS特定清理
+            // 3. 平台特定清理
             #[cfg(target_os = "macos")]
-            {
-                let _ = timeout(Duration::from_millis(500), resolve::restore_public_dns()).await;
-            }
+            let _dns_res = timeout(Duration::from_millis(500), resolve::restore_public_dns()).await;
+
+            tun_success && proxy_res.is_ok() && core_res.is_ok()
         });
 
-        // 无论清理结果如何，确保应用退出
-        app_handle.exit(code.unwrap_or(0));
+        app_handle.exit(match cleanup_result {
+            true => 0,
+            false => 1,
+        });
     });
 }
 
