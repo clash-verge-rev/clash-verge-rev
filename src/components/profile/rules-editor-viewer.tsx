@@ -396,12 +396,6 @@ export const RulesEditorViewer = (props: Props) => {
     if (!open) return;
     fetchContent();
     fetchProfile();
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    fetchContent();
-    fetchProfile();
     if (initialRule && open) {
       setRuleContent(initialRule);
     }
