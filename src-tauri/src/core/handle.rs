@@ -3,7 +3,7 @@ use parking_lot::RwLock;
 use std::{sync::Arc, time::Duration};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
-use crate::{logging, logging_error, utils::logging::Type};
+use crate::{logging, logging_error, process::AsyncHandler, utils::logging::Type};
 
 /// 存储启动期间的错误消息
 #[derive(Debug, Clone)]
@@ -152,7 +152,7 @@ impl Handle {
             let window_clone = window.clone();
             let errors_clone = errors.clone();
 
-            tauri::async_runtime::spawn(async move {
+            AsyncHandler::spawn(move || async move {
                 tokio::time::sleep(Duration::from_secs(2)).await;
 
                 for error in errors_clone {

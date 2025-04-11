@@ -1,6 +1,7 @@
 use crate::{
     config::{Config, IVerge},
     core::handle,
+    process::AsyncHandler,
 };
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -10,7 +11,7 @@ pub fn toggle_system_proxy() {
     let enable = Config::verge().draft().enable_system_proxy;
     let enable = enable.unwrap_or(false);
 
-    tauri::async_runtime::spawn(async move {
+    AsyncHandler::spawn(move || async move {
         match super::patch_verge(
             IVerge {
                 enable_system_proxy: Some(!enable),
@@ -28,7 +29,7 @@ pub fn toggle_system_proxy() {
 
 /// Toggle TUN mode on/off
 pub fn toggle_tun_mode(not_save_file: Option<bool>) {
-    // tauri::async_runtime::spawn(async move {
+    // AsyncHandler::spawn(async {
     //     logging!(
     //         info,
     //         Type::Service,
@@ -44,7 +45,7 @@ pub fn toggle_tun_mode(not_save_file: Option<bool>) {
     let enable = Config::verge().data().enable_tun_mode;
     let enable = enable.unwrap_or(false);
 
-    tauri::async_runtime::spawn(async move {
+    AsyncHandler::spawn(async move || {
         match super::patch_verge(
             IVerge {
                 enable_tun_mode: Some(!enable),

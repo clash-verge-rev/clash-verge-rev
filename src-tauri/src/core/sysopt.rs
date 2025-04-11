@@ -2,6 +2,7 @@ use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
     logging, logging_error,
+    process::AsyncHandler,
     utils::logging::Type,
 };
 use anyhow::Result;
@@ -248,7 +249,7 @@ impl Sysopt {
     fn guard_proxy(&self) {
         let _lock = self.guard_state.lock();
 
-        tauri::async_runtime::spawn(async move {
+        AsyncHandler::spawn(move || async move {
             // default duration is 10s
             let mut wait_secs = 10u64;
 

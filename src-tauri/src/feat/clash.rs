@@ -3,6 +3,7 @@ use crate::{
     core::{handle, tray, CoreManager},
     logging_error,
     module::mihomo::MihomoManager,
+    process::AsyncHandler,
     utils::{logging::Type, resolve},
 };
 use serde_yaml::{Mapping, Value};
@@ -10,7 +11,7 @@ use tauri::Manager;
 
 /// Restart the Clash core
 pub fn restart_clash_core() {
-    tauri::async_runtime::spawn(async {
+    AsyncHandler::spawn(move || async move {
         match CoreManager::global().restart_core().await {
             Ok(_) => {
                 handle::Handle::refresh_clash();
@@ -26,19 +27,17 @@ pub fn restart_clash_core() {
 
 /// Restart the application
 pub fn restart_app() {
-    tauri::async_runtime::spawn_blocking(|| {
-        tauri::async_runtime::block_on(async {
-            logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
-            resolve::resolve_reset_async().await;
-            let app_handle = handle::Handle::global().app_handle().unwrap();
-            std::thread::sleep(std::time::Duration::from_secs(1));
-            tauri::process::restart(&app_handle.env());
-        });
+    AsyncHandler::spawn(move || async move {
+        logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+        resolve::resolve_reset_async().await;
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        tauri::process::restart(&app_handle.env());
     });
 }
 
 fn after_change_clash_mode() {
-    tauri::async_runtime::spawn(async {
+    AsyncHandler::spawn(move || async {
         match MihomoManager::global().get_connections().await {
             Ok(connections) => {
                 if let Some(connections_array) = connections["connections"].as_array() {
@@ -64,7 +63,7 @@ pub fn change_clash_mode(mode: String) {
     let json_value = serde_json::json!({
         "mode": mode
     });
-    tauri::async_runtime::spawn(async move {
+    AsyncHandler::spawn(move || async move {
         log::debug!(target: "app", "change clash mode to {mode}");
         match MihomoManager::global().patch_configs(json_value).await {
             Ok(_) => {

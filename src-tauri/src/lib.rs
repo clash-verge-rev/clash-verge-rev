@@ -5,9 +5,11 @@ mod enhance;
 mod error;
 mod feat;
 mod module;
+mod process;
 mod utils;
 use crate::{
     core::hotkey,
+    process::AsyncHandler,
     utils::{resolve, resolve::resolve_scheme, server},
 };
 use config::Config;
@@ -121,11 +123,13 @@ pub fn run() {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 logging_error!(Type::System, true, app.deep_link().register_all());
             }
-
             app.deep_link().on_open_url(|event| {
-                tauri::async_runtime::spawn(async move {
-                    if let Some(url) = event.urls().first() {
-                        logging_error!(Type::Setup, true, resolve_scheme(url.to_string()).await);
+                AsyncHandler::spawn(move || {
+                    let url = event.urls().first().map(|u| u.to_string());
+                    async move {
+                        if let Some(url) = url {
+                            logging_error!(Type::Setup, true, resolve_scheme(url).await);
+                        }
                     }
                 });
             });

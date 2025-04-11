@@ -7,6 +7,7 @@ use crate::{
     config::Config,
     feat,
     module::{lightweight::entry_lightweight_mode, mihomo::Rate},
+    process::AsyncHandler,
     resolve,
     utils::{dirs::find_target_icons, i18n::t, logging::Type, resolve::VERSION},
 };
@@ -386,42 +387,46 @@ impl Tray {
         let speed_rate = Arc::clone(&self.speed_rate);
         let is_subscribed = Arc::clone(&self.is_subscribed);
 
-        tauri::async_runtime::spawn(async move {
+        AsyncHandler::spawn(move || {
             let mut shutdown = shutdown_rx;
+            let speed_rate = speed_rate.clone(); // 确保 Arc 被正确克隆
+            let is_subscribed = is_subscribed.clone();
 
-            'outer: loop {
-                match Traffic::get_traffic_stream().await {
-                    Ok(mut stream) => loop {
-                        tokio::select! {
-                            Some(traffic) = stream.next() => {
-                                if let Ok(traffic) = traffic {
-                                    let guard = speed_rate.lock();
-                                    let enable_tray_speed: bool = Config::verge().latest().enable_tray_speed.unwrap_or(true);
-                                    if !enable_tray_speed {
-                                        continue;
-                                    }
-                                    if let Some(sr) = guard.as_ref() {
-                                        if let Some(rate) = sr.update_and_check_changed(traffic.up, traffic.down) {
-                                            let _ = Tray::global().update_icon(Some(rate));
+            Box::pin(async move {
+                'outer: loop {
+                    match Traffic::get_traffic_stream().await {
+                        Ok(mut stream) => loop {
+                            tokio::select! {
+                                Some(traffic) = stream.next() => {
+                                    if let Ok(traffic) = traffic {
+                                        let guard = speed_rate.lock();
+                                        let enable_tray_speed: bool = Config::verge()
+                                            .latest()
+                                            .enable_tray_speed
+                                            .unwrap_or(true);
+                                        if !enable_tray_speed {
+                                            continue;
+                                        }
+                                        if let Some(sr) = guard.as_ref() {
+                                            if let Some(rate) = sr.update_and_check_changed(traffic.up, traffic.down) {
+                                                let _ = Tray::global().update_icon(Some(rate));
+                                            }
                                         }
                                     }
                                 }
+                                _ = shutdown.recv() => break 'outer,
                             }
-                            _ = shutdown.recv() => break 'outer,
-                        }
-                    },
-                    Err(e) => {
-                        log::error!(target: "app", "Failed to get traffic stream: {}", e);
-                        // 如果获取流失败，等待一段时间后重试
-                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-
-                        // 检查是否应该继续重试
-                        if !*is_subscribed.read() {
-                            break;
+                        },
+                        Err(e) => {
+                            log::error!(target: "app", "Failed to get traffic stream: {}", e);
+                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                            if !*is_subscribed.read() {
+                                break;
+                            }
                         }
                     }
                 }
-            }
+            })
         });
 
         Ok(())
