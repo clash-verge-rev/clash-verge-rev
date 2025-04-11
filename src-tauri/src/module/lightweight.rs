@@ -5,7 +5,7 @@ use tauri::{Listener, Manager};
 use crate::{
     config::Config,
     core::{handle, timer::Timer},
-    log_err, logging,
+    log_err, logging, logging_error,
     utils::logging::Type,
     AppHandleManager,
 };
@@ -38,6 +38,10 @@ pub fn entry_lightweight_mode() {
         logging!(info, Type::Lightweight, true, "轻量模式已开启");
     }
     let _ = cancel_light_weight_timer();
+}
+
+pub fn add_light_weight_timer() {
+    logging_error!(Type::Lightweight, setup_light_weight_timer());
 }
 
 fn setup_window_close_listener() -> u32 {

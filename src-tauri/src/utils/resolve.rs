@@ -151,8 +151,6 @@ pub fn create_window(is_showup: bool) {
         return;
     }
 
-    logging!(info, Type::Window, true, "Creating new application window");
-
     #[cfg(target_os = "windows")]
     let window = tauri::WebviewWindowBuilder::new(
                 &app_handle,

@@ -109,10 +109,21 @@ pub fn quit() {
 
 #[cfg(target_os = "macos")]
 pub fn hide() {
+    use crate::module::lightweight::add_light_weight_timer;
+
+    let enable_auto_light_weight_mode = Config::verge()
+        .data()
+        .enable_auto_light_weight_mode
+        .unwrap_or(false);
+
+    if enable_auto_light_weight_mode {
+        add_light_weight_timer();
+    }
+
     if let Some(window) = handle::Handle::global().get_window() {
         if window.is_visible().unwrap_or(false) {
-            AppHandleManager::global().set_activation_policy_accessory();
             let _ = window.hide();
         }
     }
+    AppHandleManager::global().set_activation_policy_accessory();
 }
