@@ -1,16 +1,17 @@
 import mergeSchema from "@/assets/schema/clash-verge-merge-json-schema.json";
 import metaSchema from "@/assets/schema/meta-json-schema.json";
+import { t } from "i18next";
 import * as monaco from "monaco-editor";
 import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
 import pac from "types-pac/pac.d.ts?raw";
 import { getTemplate } from "./cmds";
-import { t } from "i18next";
 
 export interface GenerateProps {
   monacoInstance: monaco.editor.IStandaloneCodeEditor;
-  languages: string[];
-  isPacScript?: boolean;
-  showCondition: (uriPath: string) => boolean;
+  languageSelector: string[];
+  generateType: "merge" | "script" | "pac";
+  generateLanguage: "yaml" | "javascript";
+  showCondition: boolean;
   onGenerateSuccess?: () => void;
 }
 
@@ -32,9 +33,30 @@ configureMonacoYaml(monaco, {
   ],
 });
 
+const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
+  tabSize: 2,
+  theme: "light",
+  minimap: { enabled: true },
+  mouseWheelZoom: true,
+  readOnlyMessage: { value: t("ReadOnlyMessage") },
+  renderValidationDecorations: "on",
+  quickSuggestions: {
+    strings: true,
+    comments: true,
+    other: true,
+  },
+  automaticLayout: true,
+  fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji", "twemoji mozilla"`,
+  fontLigatures: true,
+  smoothScrolling: true,
+};
+
 // PAC definition
 const registerPacFunctionLib = () => {
-  monaco.languages.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
+  return monaco.languages.typescript.javascriptDefaults.addExtraLib(
+    pac,
+    "pac.d.ts",
+  );
 };
 
 const registerPacCompletion = () => {
@@ -60,8 +82,9 @@ const registerPacCompletion = () => {
 const generateTemplate = (props: GenerateProps) => {
   const {
     monacoInstance,
-    languages,
-    isPacScript,
+    languageSelector,
+    generateType,
+    generateLanguage,
     showCondition,
     onGenerateSuccess,
   } = props;
@@ -78,17 +101,11 @@ const generateTemplate = (props: GenerateProps) => {
   );
 
   // 增强脚本模板生成
-  return monaco.languages.registerCodeLensProvider(languages, {
+  return monaco.languages.registerCodeLensProvider(languageSelector, {
     provideCodeLenses(model, token) {
       const uriPath = model.uri.path;
-      if (!showCondition(uriPath)) {
+      if (!showCondition) {
         return null;
-      }
-      let nextType = uriPath.includes("merge.yaml") ? "merge" : "script";
-      let nextLanguage = uriPath.includes("merge.yaml") ? "yaml" : "javascript";
-      if (isPacScript) {
-        nextType = "pac";
-        nextLanguage = "javascript";
       }
       return {
         lenses: [
@@ -103,7 +120,7 @@ const generateTemplate = (props: GenerateProps) => {
             command: {
               id: generateCommand!,
               title: t("Regenerate Template Content"),
-              arguments: [nextType, nextLanguage],
+              arguments: [generateType, generateLanguage],
             },
           },
         ],
@@ -117,8 +134,9 @@ const generateTemplate = (props: GenerateProps) => {
 };
 
 export {
-  monaco,
-  registerPacFunctionLib,
-  registerPacCompletion,
+  defaultOptions,
   generateTemplate,
+  monaco,
+  registerPacCompletion,
+  registerPacFunctionLib,
 };

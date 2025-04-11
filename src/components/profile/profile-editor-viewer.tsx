@@ -5,22 +5,16 @@ import {
   Notice,
   SwitchLovely,
 } from "@/components/base";
-import { LogViewer } from "@/components/profile/log-viewer";
 import { LogMessage } from "@/components/profile/profile-more";
 import { useProfiles } from "@/hooks/use-profiles";
-import { useWindowSize } from "@/hooks/use-window-size";
 import {
   enhanceProfiles,
   getChains,
   patchProfile,
   readProfileFile,
   reorderProfile,
-  saveProfileFile,
-  testMergeChain,
 } from "@/services/cmds";
-import { generateTemplate, monaco } from "@/services/monaco";
-import { useThemeMode } from "@/services/states";
-import getSystem from "@/utils/get-system";
+import { sleep } from "@/utils";
 import {
   closestCenter,
   defaultDropAnimationSideEffects,
@@ -33,18 +27,8 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext } from "@dnd-kit/sortable";
+import { Add, ExpandMore } from "@mui/icons-material";
 import {
-  Add,
-  CheckCircleOutline,
-  ErrorOutline,
-  ExpandMore,
-  RadioButtonUnchecked,
-  Reply,
-  Terminal,
-} from "@mui/icons-material";
-import {
-  Badge,
-  BadgeProps,
   Button,
   Chip,
   Collapse,
@@ -54,28 +38,24 @@ import {
   InputLabel,
   styled,
   TextField,
-  Tooltip,
 } from "@mui/material";
 import { getVersion } from "@tauri-apps/api/app";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { isEqual } from "lodash-es";
-import { IDisposable } from "monaco-editor";
-import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
+import { ConfirmViewer } from "./confirm-viewer";
+import { ProfileEditor, ProfileEditorHandle } from "./profile-editor";
 import ProfileMoreMini from "./profile-more-mini";
 import { ProfileViewer, ProfileViewerRef } from "./profile-viewer";
-import { sleep } from "@/utils";
 
 interface Props {
   title?: string | ReactNode;
   profileItem: IProfileItem;
   chainLogs?: Record<string, LogMessage[]>;
   open: boolean;
-  readOnly?: boolean;
-  language: "yaml" | "javascript";
   type?: "clash" | "merge" | "script";
   onClose: () => void;
   onChange?: () => void;
@@ -87,52 +67,29 @@ export const ProfileEditorViewer = (props: Props) => {
     profileItem,
     chainLogs = {},
     open,
-    readOnly,
-    language,
     type,
     onClose,
     onChange,
   } = props;
   const { t } = useTranslation();
-  const { size } = useWindowSize();
   const { current } = useProfiles();
   const profileUid = profileItem.uid;
   const isRunningProfile = current?.uid === profileUid;
-
   const [editProfile, setEditProfile] = useState<IProfileItem>(profileItem);
-  const originContentRef = useRef<string | null>(null);
   const [appVersion, setAppVersion] = useState("");
-  const themeMode = useThemeMode();
-
-  const isScriptMerge = editProfile.type === "script";
-  const isEnhanced =
-    editProfile.type === "script" || editProfile.type === "merge";
-
-  // monaco
-  const editorDomRef = useRef<any>(null);
-  const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const codeLensRef = useRef<IDisposable | null>(null);
-  const editChainCondition =
-    useRef<monaco.editor.IContextKey<boolean | undefined>>(null);
-  const saveChainCondition =
-    useRef<monaco.editor.IContextKey<boolean | undefined>>(null);
-
+  const [curContentSaved, setCurContentSaved] = useState(true);
+  const profileEditorRef = useRef<ProfileEditorHandle>(null);
+  // confim saved when edit other profile
+  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const resolveRef = useRef<any>(null);
   // chain
-  const [chainChecked, setChainChecked] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [expand, setExpand] = useState(isEnhanced ? true : false);
+  const isEditChain =
+    editProfile.type === "merge" || editProfile.type === "script";
+  const [expand, setExpand] = useState(isEditChain);
   const [chain, setChain] = useState<IProfileItem[]>([]);
   const enabledChainUids = chain.filter((i) => i.enable).map((i) => i.uid);
   const viewerRef = useRef<ProfileViewerRef>(null);
   const [reactivating, setReactivating] = useState(false);
-
-  // script chain
-  const [logOpen, setLogOpen] = useState(false);
-  const [logs, setLogs] = useState<LogMessage[]>(
-    chainLogs[editProfile.uid] || [],
-  );
-  const hasError = isScriptMerge && !!logs?.find((item) => item.exception);
-
   // sortable
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -143,6 +100,50 @@ export const ProfileEditorViewer = (props: Props) => {
     }),
   };
   const [draggingItem, setDraggingItem] = useState<IProfileItem | null>(null);
+  // update profile
+  const { control, watch, register, ...formIns } = useForm<IProfileItem>({
+    defaultValues: profileItem,
+  });
+  const text = {
+    fullWidth: true,
+    size: "small",
+    margin: "dense",
+    variant: "outlined",
+    autoComplete: "off",
+    autoCorrect: "off",
+  } as const;
+  const profileName = watch("name");
+  const formType = watch("type");
+  const isRemote = formType === "remote";
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    getVersion().then((version) => {
+      setAppVersion(version);
+    });
+    refreshChain();
+  }, [open]);
+
+  const showConfirm = () => {
+    setSaveConfirmOpen(true);
+    return new Promise((resolve: (status: boolean) => void) => {
+      resolveRef.current = resolve;
+    });
+  };
+
+  const handleConfirm = () => {
+    setSaveConfirmOpen(false);
+    setCurContentSaved(true);
+    resolveRef.current(true);
+  };
+
+  const handleCancel = () => {
+    setSaveConfirmOpen(false);
+    profileEditorRef.current?.reset();
+    setCurContentSaved(true);
+    resolveRef.current(false);
+  };
 
   const handleChainDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
     setDraggingItem(null);
@@ -170,167 +171,6 @@ export const ProfileEditorViewer = (props: Props) => {
         await refreshChain();
       }
     }
-  });
-
-  // update profile
-  const { control, watch, register, ...formIns } = useForm<IProfileItem>({
-    defaultValues: profileItem,
-  });
-  const text = {
-    fullWidth: true,
-    size: "small",
-    margin: "dense",
-    variant: "outlined",
-    autoComplete: "off",
-    autoCorrect: "off",
-  } as const;
-  const profileName = watch("name");
-  const formType = watch("type");
-  const isRemote = formType === "remote";
-
-  useEffect(() => {
-    if (!open || instanceRef.current) return;
-    getVersion().then((version) => {
-      setAppVersion(version);
-    });
-    refreshChain();
-    readProfileFile(profileUid).then(async (data) => {
-      if (!originContentRef.current) {
-        originContentRef.current = data;
-      }
-      const dom = editorDomRef.current;
-      if (!dom) return;
-      if (instanceRef.current) instanceRef.current.dispose();
-      const uri = monaco.Uri.parse(
-        `${nanoid()}.${type}.${language}?uid=${profileUid}`,
-      );
-      const model = monaco.editor.createModel(data, language, uri);
-      instanceRef.current = monaco.editor.create(dom, {
-        model: model,
-        language: language,
-        tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4,
-        theme: themeMode === "light" ? "vs" : "vs-dark",
-        minimap: { enabled: dom.clientWidth >= 1000 },
-        mouseWheelZoom: true,
-        readOnly: readOnly,
-        readOnlyMessage: { value: t("ReadOnlyMessage") },
-        renderValidationDecorations: "on",
-        quickSuggestions: {
-          strings: true,
-          comments: true,
-          other: true,
-        },
-        automaticLayout: true,
-        fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-          getSystem() === "windows" ? ", twemoji mozilla" : ""
-        }`,
-        fontLigatures: true,
-        smoothScrolling: true,
-      });
-
-      // 用于判断当前编辑的是否为脚本文件
-      editChainCondition.current = instanceRef.current?.createContextKey(
-        "editChain",
-        type && ["merge", "script"].includes(type),
-      );
-
-      // 用于判断当前编辑的脚本是否通过运行检测, 并且可以保存
-      saveChainCondition.current = instanceRef.current?.createContextKey(
-        "saveChain",
-        false,
-      );
-
-      // F5 快速执行脚本运行检测
-      instanceRef.current.addAction({
-        id: "runChainCheck",
-        label: "check run",
-        keybindings: [monaco.KeyCode.F5],
-        keybindingContext: "textInputFocus && editChain",
-        run: async (ed) => {
-          const chainUid = ed.getModel()?.uri.query.split("=").pop();
-          if (chainUid) {
-            await handleRunCheck(chainUid);
-          }
-        },
-      });
-
-      // Ctrl + s 保存当前编辑的配置内容
-      instanceRef.current.addAction({
-        id: "saveProfile",
-        label: "save profile",
-        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
-        keybindingContext: "textInputFocus",
-        run: async (ed) => {
-          const uri = ed.getModel()?.uri;
-          const uid = uri?.query.split("=").pop();
-          const val = instanceRef.current?.getValue();
-          if (uid && val) {
-            const originContent = originContentRef.current;
-            if (originContent === val) {
-              Notice.info(t("Profile Content No Change"));
-              return;
-            }
-            let checkSuccess = true;
-            if (editChainCondition.current?.get()) {
-              checkSuccess = saveChainCondition.current?.get() ?? false;
-              if (!checkSuccess) {
-                checkSuccess = await handleRunCheck(uid);
-              }
-            }
-            if (checkSuccess) {
-              if (isRunningProfile) {
-                setReactivating(true);
-              }
-              await saveProfileFile(uid, val);
-              originContentRef.current = val;
-              setTimeout(() => {
-                Notice.success(t("Save Content Successfully"), 1000);
-                onChange?.();
-                setReactivating(false);
-              }, 1000);
-            }
-          }
-        },
-      });
-      codeLensRef.current = generateTemplate({
-        monacoInstance: instanceRef.current,
-        languages: ["yaml", "javascript"],
-        showCondition: (uriPath) => !uriPath.includes("clash.yaml"),
-        onGenerateSuccess: () => setChainChecked(false),
-      });
-
-      instanceRef.current?.onDidChangeModel((e) => {
-        const { newModelUrl } = e;
-        const isChainMerge = !!newModelUrl?.path.includes("merge.yaml");
-        const isChainScript = !!newModelUrl?.path.includes("script.js");
-        if (isChainMerge || isChainScript) {
-          editChainCondition.current?.set(true);
-        } else {
-          editChainCondition.current?.set(false);
-        }
-      });
-
-      instanceRef.current?.onDidChangeModelContent(() => {
-        setChainChecked(false);
-        saveChainCondition.current?.set(false);
-      });
-    });
-
-    return () => {
-      instanceRef.current?.dispose();
-      instanceRef.current = null;
-      codeLensRef.current?.dispose();
-      codeLensRef.current = null;
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!editProfile) return;
-    setLogs(chainLogs[editProfile.uid]);
-  }, [editProfile, chainLogs]);
-
-  instanceRef.current?.updateOptions({
-    minimap: { enabled: size.width >= 1000 },
   });
 
   const refreshChain = async () => {
@@ -377,122 +217,53 @@ export const ProfileEditorViewer = (props: Props) => {
     }),
   );
 
-  const handleRunCheck = async (currentProfileUid: string) => {
-    try {
-      const value = instanceRef.current?.getValue();
-      if (value == undefined) return false;
-
-      setChecking(true);
-      const result = await testMergeChain(
-        type === "clash" ? profileUid : null,
-        currentProfileUid,
-        value,
-      );
-      setChecking(false);
-      setChainChecked(true);
-      const currentLogs = result.logs[currentProfileUid] || [];
-      setLogs(currentLogs);
-      if (currentLogs) {
-        if (currentLogs[0]?.exception) {
-          Notice.error(t("Script Run Check Failed"));
-          saveChainCondition.current?.set(false);
-          return false;
+  const handleChainClick = async (item: IProfileItem) => {
+    if (!curContentSaved) {
+      const status = await showConfirm();
+      if (status) {
+        const saveStatus = !!(await profileEditorRef.current?.save());
+        if (!saveStatus) {
+          return;
         }
       }
-      Notice.success(t("Script Run Check Successful"));
-      saveChainCondition.current?.set(true);
-      return true;
-    } catch (error: any) {
-      saveChainCondition.current?.set(false);
-      Notice.error(error);
-      return false;
-    } finally {
-      setChecking(false);
+      // 延迟 1s 后，执行后续操作
+      await sleep(1000);
     }
-  };
-
-  const handleChainClick = async (item: IProfileItem) => {
-    let content = await readProfileFile(item.uid);
     const backToOriginalProfile = editProfile.uid === item.uid;
     if (backToOriginalProfile) {
-      // 两次点击，表示编辑初始的配置内容
+      // 两次点击，表示编辑主配置文件内容
       setEditProfile(profileItem);
-      content = await readProfileFile(profileUid);
     } else {
       setEditProfile(item);
     }
-    originContentRef.current = content;
-    setChainChecked(false);
-    let oldModel = instanceRef.current?.getModel();
-    let newModel = null;
-    if (backToOriginalProfile) {
-      const id = nanoid();
-      let uri_str = `${id}.${type}.${language}?uid=${profileUid}`;
-      let uri = monaco.Uri.parse(uri_str);
-      newModel = monaco.editor.createModel(content, "yaml", uri);
-    } else if (item.type === "script") {
-      newModel = monaco.editor.createModel(
-        content,
-        "javascript",
-        monaco.Uri.parse(`${nanoid()}.script.js?uid=${item.uid}`),
-      );
-    } else {
-      const id = nanoid();
-      let uri_str = `${id}.${type}.${language}`;
-      if (item.uid !== profileUid) {
-        uri_str = `${id}.merge.yaml?uid=${item.uid}`;
-      }
-      let uri = monaco.Uri.parse(uri_str);
-      newModel = monaco.editor.createModel(content, "yaml", uri);
-    }
-    instanceRef.current?.setModel(newModel);
-    instanceRef.current?.focus();
-    oldModel?.dispose();
   };
 
   const handleChainDeleteCallBack = async (item: IProfileItem) => {
     if (item.uid === editProfile.uid) {
       setEditProfile(profileItem);
       const content = await readProfileFile(profileUid);
-      originContentRef.current = content;
-      setChainChecked(false);
-      let oldModel = instanceRef.current?.getModel();
-      const id = nanoid();
-      let uri_str = `${id}.${type}.${language}?uid=${profileUid}`;
-      let uri = monaco.Uri.parse(uri_str);
-      const newModel = monaco.editor.createModel(content, "yaml", uri);
-      instanceRef.current?.setModel(newModel);
-      instanceRef.current?.focus();
-      oldModel?.dispose();
     }
     mutate("getRuntimeLogs");
     await refreshChain();
   };
 
   const onSave = useLockFn(async () => {
-    if (isScriptMerge && hasError) {
-      Notice.error(t("Script Run Check Failed"));
-      return;
-    }
-    const value = instanceRef.current?.getValue();
-    if (value == undefined) return;
     try {
-      await handleProfileSubmit();
-      await sleep(1000);
-      if (originContentRef.current !== value) {
-        await saveProfileFile(editProfile.uid, value);
-        onChange?.();
-      } else {
-        Notice.info(t("Profile Content No Change"));
+      setSaving(true);
+      if (!curContentSaved) {
+        const saveStatus = !!(await profileEditorRef.current?.save());
+        if (!saveStatus) {
+          Notice.error(t("Save Content Failed"));
+          return;
+        }
+        // 延迟 1s 后，执行订阅配置项更新操作
+        await sleep(1000);
       }
-      originContentRef.current = value;
-      setChainChecked(false);
-      // setExpand(type !== "clash");
-      // if (profileUid === editProfile.uid) {
-      //   onClose();
-      // }
+      await handleProfileSubmit();
     } catch (err: any) {
       Notice.error(err.message || err.toString());
+    } finally {
+      setSaving(false);
     }
   });
 
@@ -504,22 +275,17 @@ export const ProfileEditorViewer = (props: Props) => {
         full
         cancelBtn={t("Back")}
         okBtn={t("Save")}
-        hideOkBtn={readOnly}
-        okDisabled={isEnhanced && (!chainChecked || hasError)}
         onClose={() => {
-          setLogs(chainLogs[editProfile.uid] || []);
-          setChainChecked(false);
           setEditProfile(profileItem);
           setExpand(type !== "clash");
           onClose();
         }}
         onCancel={() => {
-          setLogs(chainLogs[editProfile.uid] || []);
-          setChainChecked(false);
           setEditProfile(profileItem);
           setExpand(type !== "clash");
           onClose();
         }}
+        loading={saving}
         onOk={onSave}
         contentStyle={{ userSelect: "text" }}>
         <div className="bg-comment flex h-full overflow-hidden dark:bg-[#1e1f27]">
@@ -711,7 +477,6 @@ export const ProfileEditorViewer = (props: Props) => {
                         {chain.map((item, index) => (
                           <DraggableItem key={item.uid} id={item.uid}>
                             <ProfileMoreMini
-                              key={item.uid}
                               item={item}
                               isDragging={item.uid === draggingItem?.uid}
                               reactivating={reactivating && item.enable}
@@ -762,79 +527,29 @@ export const ProfileEditorViewer = (props: Props) => {
             )}
           </div>
 
-          <div className="h-full w-full overflow-hidden" ref={editorDomRef} />
-
-          <div className="flex w-14 flex-col items-center justify-end !space-y-2 px-1 pb-4">
-            <Tooltip title={t("Restore Changes")} placement="left">
-              <IconButton
-                aria-label="rollback"
-                size="medium"
-                onClick={() => {
-                  if (originContentRef.current) {
-                    instanceRef.current?.setValue(originContentRef.current);
-                  }
-                }}>
-                <Reply fontSize="medium" />
-              </IconButton>
-            </Tooltip>
-            {(isEnhanced || editProfile.uid !== profileUid) && (
-              <>
-                {isScriptMerge && (
-                  <Tooltip title={t("Console")} placement="left">
-                    <IconButton
-                      aria-label="terminal"
-                      size="medium"
-                      color="primary"
-                      onClick={() => setLogOpen(true)}>
-                      {hasError ? (
-                        <Badge color="error" variant="dot">
-                          <Terminal color="error" fontSize="medium" />
-                        </Badge>
-                      ) : (
-                        <StyledBadge
-                          badgeContent={logs?.length}
-                          color="primary">
-                          <Terminal color="primary" fontSize="medium" />
-                        </StyledBadge>
-                      )}
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title={t("Run Check")} placement="left">
-                  <IconButton
-                    loading={checking}
-                    aria-label="test"
-                    color={
-                      chainChecked
-                        ? hasError
-                          ? "error"
-                          : "success"
-                        : "inherit"
-                    }
-                    size="medium"
-                    onClick={async () => await handleRunCheck(editProfile.uid)}>
-                    {chainChecked ? (
-                      hasError ? (
-                        <ErrorOutline fontSize="medium" />
-                      ) : (
-                        <CheckCircleOutline fontSize="medium" />
-                      )
-                    ) : (
-                      <RadioButtonUnchecked fontSize="medium" />
-                    )}
-                  </IconButton>
-                </Tooltip>
-              </>
-            )}
-          </div>
-        </div>
-        {isScriptMerge && (
-          <LogViewer
-            open={logOpen}
-            logInfo={logs || []}
-            onClose={() => setLogOpen(false)}
+          <ProfileEditor
+            ref={profileEditorRef}
+            parentUid={editProfile.parent}
+            chainLogs={chainLogs}
+            profileItem={editProfile}
+            onChange={() => setCurContentSaved(false)}
+            onReset={() => setCurContentSaved(true)}
+            onSave={() => {
+              setCurContentSaved(true);
+              if (editProfile.enable || editProfile.uid === profileUid) {
+                onChange?.();
+              }
+            }}
           />
-        )}
+
+          <ConfirmViewer
+            title={t("Save Content", { keymap: "" })}
+            open={saveConfirmOpen}
+            message={t("Ask Save Content Now")}
+            onConfirm={() => handleConfirm()}
+            onClose={() => handleCancel()}
+          />
+        </div>
       </BaseDialog>
     </>
   );
@@ -845,13 +560,4 @@ const StyledDiv = styled("div")(() => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-}));
-
-const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
-  "& .MuiBadge-badge": {
-    right: 0,
-    top: 3,
-    border: `2px solid ${theme.palette.background.paper}`,
-    padding: "0 4px",
-  },
 }));

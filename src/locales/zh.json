@@ -286,7 +286,7 @@
   "Console": "控制台",
   "Runtime Console": "控制台 (当前运行)",
   "Restore Changes": "还原更改",
-  "Run Check": "运行检查",
+  "Run Check": "运行检查{{keymap}}",
   "Expand All": "全部展开",
   "Collapse All": "全部折叠",
   "Update Rule Provider Error": "[ {{name}} ] 更新失败：{{errorMsg}}",
@@ -308,6 +308,9 @@
   "Profile Content No Change": "配置内容无变化",
   "Profile Config No Change": "订阅相关设置无变化",
   "Profile Config Updated": "订阅相关设置已更新",
+  "Save Content Failed": "内容保存失败",
+  "Save Content": "保存内容{{keymap}}",
+  "Ask Save Content Now": "内容已改变，是否立即保存当前内容？",
 
   "Backup Setting": "备份设置",
   "BK_Local": "本地",

@@ -21,9 +21,9 @@ import {
 } from "@mui/material";
 import { t } from "i18next";
 import { useRef, useState } from "react";
+import { Marquee } from "../base";
 import { useCustomTheme } from "../layout/use-custom-theme";
 import { ProfileViewer, ProfileViewerRef } from "./profile-viewer";
-import { Marquee } from "../base";
 
 interface Props {
   item: IProfileItem;
@@ -85,9 +85,9 @@ export default function ProfileMoreMini(props: Props) {
           className={cn(
             "relative flex h-full w-full items-center justify-between overflow-hidden rounded-md p-1 shadow-xs",
             {
-              "border-primary-main border-0 border-l-2! border-solid":
+              "border-primary-main border-0 !border-l-2 border-solid":
                 item.enable,
-              "border-primary-main border border-solid": selected,
+              "border-primary-main border border-solid shadow-md": selected,
             },
           )}>
           <div className="flex h-full w-8 flex-col items-center justify-center">

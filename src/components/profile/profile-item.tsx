@@ -391,7 +391,6 @@ export const ProfileItem = (props: Props) => {
         profileItem={itemData}
         chainLogs={chainLogs}
         type="clash"
-        language="yaml"
         onChange={() => {
           if (selected) {
             onReactivate();

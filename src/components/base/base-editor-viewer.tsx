@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
+import { IDisposable } from "monaco-editor";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -45,16 +46,16 @@ export const EditorViewer = (props: Props) => {
   const { t } = useTranslation();
   const editorDomRef = useRef<any>(null);
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const registerCodeLensRef = useRef<any>(null);
   const themeMode = useThemeMode();
   const { size } = useWindowSize();
-  const pacLibRef = useRef<any>(null);
-  const pacCompletionRef = useRef<any>(null);
 
   useEffect(() => {
     if (!open) return;
 
     const fetchContent = Promise.resolve(property);
+    let pacFunLib: IDisposable | null = null;
+    let pacCompletion: IDisposable | null = null;
+    let codeLens: IDisposable | null = null;
     fetchContent.then((data) => {
       const dom = editorDomRef.current;
 
@@ -64,6 +65,7 @@ export const EditorViewer = (props: Props) => {
 
       const uri = monaco.Uri.parse(`${nanoid()}.${scope}.${language}`);
       const model = monaco.editor.createModel(data, language, uri);
+
       instanceRef.current = monaco.editor.create(editorDomRef.current, {
         model: model,
         language: language,
@@ -88,32 +90,47 @@ export const EditorViewer = (props: Props) => {
       });
 
       if (scope && "pac" === scope) {
-        pacLibRef.current = registerPacFunctionLib();
-        pacCompletionRef.current = registerPacCompletion();
-        registerCodeLensRef.current = generateTemplate({
+        pacFunLib = registerPacFunctionLib();
+        pacCompletion = registerPacCompletion();
+        codeLens = generateTemplate({
           monacoInstance: instanceRef.current,
-          languages: ["javascript"],
-          showCondition: () => true,
-          isPacScript: true,
+          languageSelector: ["javascript"],
+          generateType: "pac",
+          generateLanguage: "javascript",
+          showCondition: true,
         });
       }
     });
 
     return () => {
       instanceRef.current?.dispose();
-      pacLibRef.current?.dispose();
-      pacCompletionRef.current?.dispose();
-      registerCodeLensRef.current?.dispose();
+      pacFunLib?.dispose();
+      pacCompletion?.dispose();
+      codeLens?.dispose();
       instanceRef.current = null;
-      pacLibRef.current = null;
-      pacCompletionRef.current = null;
-      registerCodeLensRef.current = null;
     };
   }, [open]);
 
-  instanceRef.current?.updateOptions({
-    minimap: { enabled: size.width >= 1000 },
-  });
+  // 更新 monaco 显示小地图
+  useEffect(() => {
+    if (!instanceRef.current) return;
+
+    const minimap = instanceRef.current.getOption(
+      monaco.editor.EditorOption.minimap,
+    );
+    if (!minimap.enabled && size.width >= 1000) {
+      console.log("show mini map");
+      instanceRef.current.updateOptions({
+        minimap: { enabled: true },
+      });
+    }
+    if (minimap.enabled && size.width < 1000) {
+      console.log("disable mini map");
+      instanceRef.current.updateOptions({
+        minimap: { enabled: false },
+      });
+    }
+  }, [size]);
 
   const onSave = useLockFn(async () => {
     const value = instanceRef.current?.getValue();

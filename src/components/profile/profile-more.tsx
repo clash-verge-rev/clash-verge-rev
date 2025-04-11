@@ -294,7 +294,6 @@ export const ProfileMore = (props: Props) => {
         open={fileOpen}
         profileItem={itemData}
         type={type === "merge" ? "merge" : "script"}
-        language={type === "merge" ? "yaml" : "javascript"}
         chainLogs={chainLogs}
         onChange={() => {
           if (selected) {

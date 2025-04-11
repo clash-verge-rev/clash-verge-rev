@@ -286,7 +286,7 @@
   "Console": "Console",
   "Runtime Console": "Console (Runtime)",
   "Restore Changes": "Restore Changes",
-  "Run Check": "Run Check",
+  "Run Check": "Run Check{{keymap}}",
   "Expand All": "Expand All",
   "Collapse All": "Collapse All",
   "Update Rule Provider Error": "[ {{name}} ] Update Failed: {{errorMsg}}",
@@ -308,6 +308,9 @@
   "Profile Content No Changes": "Profile Content No Changes",
   "Profile Config No Change": "Profile Config No Change",
   "Profile Config Updated": "Profile Config Updated",
+  "Save Content Failed": "Save Content Failed",
+  "Save Content": "Save Content{{keymap}}",
+  "Ask Save Content Now": "Content has changed, save it now?",
 
   "Backup Setting": "Backup Setting",
   "BK_Local": "Local",
