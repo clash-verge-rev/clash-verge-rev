@@ -63,9 +63,14 @@ pub fn toggle_tun_mode(not_save_file: Option<bool>) {
 
 /// Copy proxy environment variables to clipboard
 pub fn copy_clash_env() {
-    // 从环境变量获取IP地址，默认127.0.0.1
-    let clash_verge_rev_ip =
-        env::var("CLASH_VERGE_REV_IP").unwrap_or_else(|_| "127.0.0.1".to_string());
+    // 从环境变量获取IP地址，如果没有则从配置中获取 proxy_host，默认为 127.0.0.1
+    let clash_verge_rev_ip = env::var("CLASH_VERGE_REV_IP").unwrap_or_else(|_| {
+        Config::verge()
+            .latest()
+            .proxy_host
+            .clone()
+            .unwrap_or_else(|| "127.0.0.1".to_string())
+    });
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
