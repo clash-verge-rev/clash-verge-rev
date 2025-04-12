@@ -13,7 +13,8 @@ use log4rs::{
 };
 use std::{
     fs::{self, DirEntry},
-    path::PathBuf,
+    io,
+    path::{Path, PathBuf},
     str::FromStr,
 };
 use tauri_plugin_shell::ShellExt;
@@ -313,17 +314,8 @@ pub fn init_resources() -> Result<()> {
         let dest_path = app_dir.join(file);
         log::debug!(target: "app", "src_path: {src_path:?}, dest_path: {dest_path:?}");
 
-        let handle_copy = |dest: &PathBuf| {
-            match fs::copy(&src_path, dest) {
-                Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
-                Err(err) => {
-                    log::error!(target: "app", "failed to copy resources '{file}' to '{dest:?}', {err}")
-                }
-            };
-        };
-
         if src_path.exists() && !dest_path.exists() {
-            handle_copy(&dest_path);
+            copy(&src_path, &dest_path, file);
             continue;
         }
 
@@ -333,19 +325,35 @@ pub fn init_resources() -> Result<()> {
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
-                    handle_copy(&dest_path);
+                    copy(&src_path, &dest_path, file);
                 } else {
                     log::debug!(target: "app", "skipping resource copy '{file}'");
                 }
             }
             _ => {
                 log::debug!(target: "app", "failed to get modified '{file}'");
-                handle_copy(&dest_path);
+                copy(&src_path, &dest_path, file);
             }
         };
     }
 
     Ok(())
+}
+
+fn copy(src_path: &Path, dest: &Path, file: &str) {
+    let result = Ok(()).and_then(|_| -> Result<()> {
+        let mut dest = fs::File::create(dest)?;
+        let mut src = fs::File::open(src_path)?;
+        io::copy(&mut src, &mut dest)?;
+        Ok(())
+    });
+
+    match result {
+        Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
+        Err(err) => {
+            log::error!(target: "app", "failed to copy resources '{file}' to '{dest:?}', {err}")
+        }
+    };
 }
 
 /// initialize url scheme
