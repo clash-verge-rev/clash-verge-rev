@@ -48,6 +48,7 @@ impl IClashTemp {
         map.insert("port".into(), 7899.into());
         map.insert("log-level".into(), "info".into());
         map.insert("allow-lan".into(), false.into());
+        map.insert("ipv6".into(), true.into());
         map.insert("mode".into(), "rule".into());
         map.insert("external-controller".into(), "127.0.0.1:9097".into());
         let mut cors_map = Mapping::new();

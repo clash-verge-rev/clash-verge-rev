@@ -500,6 +500,7 @@
   "Enhanced Mode": "Enhanced Mode",
   "Fake IP Range": "Fake IP Range",
   "Fake IP Filter Mode": "Fake IP Filter Mode",
+  "Enable IPv6 DNS resolution": "Enable IPv6 DNS resolution",
   "Prefer H3": "Prefer H3",
   "DNS DOH使用HTTP/3": "DNS DOH uses HTTP/3",
   "Respect Rules": "Respect Rules",

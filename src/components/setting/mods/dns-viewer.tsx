@@ -45,6 +45,7 @@ const DEFAULT_DNS_CONFIG = {
   "respect-rules": false,
   "use-hosts": false,
   "use-system-hosts": false,
+  ipv6: true,
   "fake-ip-filter": [
     "*.lan",
     "*.local",
@@ -57,7 +58,7 @@ const DEFAULT_DNS_CONFIG = {
     "*.msftncsi.com",
     "www.msftconnecttest.com",
   ],
-  "default-nameserver": ["system", "223.6.6.6", "8.8.8.8"],
+  "default-nameserver": ["system", "223.6.6.6", "8.8.8.8", "2400:3200::1", "2001:4860:4860::8888"],
   nameserver: [
     "8.8.8.8",
     "https://doh.pub/dns-query",
@@ -97,6 +98,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
     respectRules: boolean;
     useHosts: boolean;
     useSystemHosts: boolean;
+    ipv6: boolean;
     fakeIpFilter: string;
     nameserver: string;
     fallback: string;
@@ -119,6 +121,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
     respectRules: DEFAULT_DNS_CONFIG["respect-rules"],
     useHosts: DEFAULT_DNS_CONFIG["use-hosts"],
     useSystemHosts: DEFAULT_DNS_CONFIG["use-system-hosts"],
+    ipv6: DEFAULT_DNS_CONFIG.ipv6,
     fakeIpFilter: DEFAULT_DNS_CONFIG["fake-ip-filter"].join(", "),
     defaultNameserver: DEFAULT_DNS_CONFIG["default-nameserver"].join(", "),
     nameserver: DEFAULT_DNS_CONFIG.nameserver.join(", "),
@@ -206,9 +209,10 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
       preferH3: config["prefer-h3"] ?? DEFAULT_DNS_CONFIG["prefer-h3"],
       respectRules:
         config["respect-rules"] ?? DEFAULT_DNS_CONFIG["respect-rules"],
-        useHosts: config["use-hosts"] ?? DEFAULT_DNS_CONFIG["use-hosts"],
-        useSystemHosts:
-          config["use-system-hosts"] ?? DEFAULT_DNS_CONFIG["use-system-hosts"],
+      useHosts: config["use-hosts"] ?? DEFAULT_DNS_CONFIG["use-hosts"],
+      useSystemHosts:
+        config["use-system-hosts"] ?? DEFAULT_DNS_CONFIG["use-system-hosts"],
+      ipv6: config.ipv6 ?? DEFAULT_DNS_CONFIG.ipv6,
       fakeIpFilter:
         config["fake-ip-filter"]?.join(", ") ??
         DEFAULT_DNS_CONFIG["fake-ip-filter"].join(", "),
@@ -258,6 +262,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
       respectRules: DEFAULT_DNS_CONFIG["respect-rules"],
       useHosts: DEFAULT_DNS_CONFIG["use-hosts"],
       useSystemHosts: DEFAULT_DNS_CONFIG["use-system-hosts"],
+      ipv6: DEFAULT_DNS_CONFIG.ipv6,
       fakeIpFilter: DEFAULT_DNS_CONFIG["fake-ip-filter"].join(", "),
       defaultNameserver: DEFAULT_DNS_CONFIG["default-nameserver"].join(", "),
       nameserver: DEFAULT_DNS_CONFIG.nameserver.join(", "),
@@ -331,6 +336,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
         useSystemHosts:
           dnsConfig["use-system-hosts"] ??
           DEFAULT_DNS_CONFIG["use-system-hosts"],
+        ipv6: dnsConfig.ipv6 ?? DEFAULT_DNS_CONFIG.ipv6,
         fakeIpFilter:
           dnsConfig["fake-ip-filter"]?.join(", ") ??
           DEFAULT_DNS_CONFIG["fake-ip-filter"].join(", "),
@@ -457,6 +463,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
       "respect-rules": values.respectRules,
       "use-hosts": values.useHosts,
       "use-system-hosts": values.useSystemHosts,
+      ipv6: values.ipv6,
       "fake-ip-filter": parseList(values.fakeIpFilter),
       "default-nameserver": parseList(values.defaultNameserver),
       nameserver: parseList(values.nameserver),
@@ -681,6 +688,18 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
 
           <Item>
             <ListItemText
+              primary={t("IPv6")}
+              secondary={t("Enable IPv6 DNS resolution")}
+            />
+            <Switch
+              edge="end"
+              checked={values.ipv6}
+              onChange={handleChange("ipv6")}
+            />
+          </Item>
+
+          <Item>
+            <ListItemText
               primary={t("Prefer H3")}
               secondary={t("DNS DOH使用HTTP/3")}
             />
@@ -752,7 +771,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
               size="small"
               value={values.defaultNameserver}
               onChange={handleChange("defaultNameserver")}
-              placeholder="system,223.6.6.6, 8.8.8.8"
+              placeholder="system,223.6.6.6, 8.8.8.8, 2400:3200::1, 2001:4860:4860::8888"
             />
           </Item>
 
