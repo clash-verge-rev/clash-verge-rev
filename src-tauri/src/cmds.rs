@@ -469,8 +469,7 @@ pub async fn restart_app(app_handle: tauri::AppHandle) {
 pub async fn exit_app(app_handle: tauri::AppHandle) {
     let _ = resolve::save_window_size_position(&app_handle, true);
     resolve::resolve_reset().await;
-    app_handle.cleanup_before_exit();
-    std::process::exit(0);
+    app_handle.exit(0);
 }
 
 pub mod service {

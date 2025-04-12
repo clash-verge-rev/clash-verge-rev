@@ -93,9 +93,10 @@ pub fn run() -> Result<()> {
         });
         let _ = task.join();
         if let Some(app_handle) = APP_HANDLE.get() {
-            app_handle.cleanup_before_exit();
+            app_handle.exit(1);
+        } else {
+            std::process::exit(1);
         }
-        std::process::exit(1);
     }));
 
     let info = Config::clash().latest().get_client_info();
@@ -254,7 +255,7 @@ pub fn run() -> Result<()> {
         .expect("error while running tauri application");
 
     app.run(|app_handle, e| match e {
-        tauri::RunEvent::ExitRequested { api, .. } => {
+        tauri::RunEvent::ExitRequested { code, api, .. } if code.is_none() => {
             api.prevent_exit();
         }
         tauri::RunEvent::WindowEvent { label, event, .. } => {
