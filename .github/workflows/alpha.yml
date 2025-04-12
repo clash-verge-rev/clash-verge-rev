@@ -267,6 +267,9 @@ jobs:
       - name: Release Alpha Version
         run: pnpm release-alpha-version
 
+      - name: Patch Alpha Hash
+        run: pnpm fix-alpha-version
+
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
@@ -335,6 +338,9 @@ jobs:
 
       - name: Release Alpha Version
         run: pnpm release-alpha-version
+
+      - name: Patch Alpha Hash
+        run: pnpm fix-alpha-version
 
       - name: "Setup for linux"
         run: |-
@@ -458,6 +464,9 @@ jobs:
 
       - name: Release Alpha Version
         run: pnpm release-alpha-version
+
+      - name: Patch Alpha Hash
+        run: pnpm fix-alpha-version
 
       - name: Download WebView2 Runtime
         run: |
