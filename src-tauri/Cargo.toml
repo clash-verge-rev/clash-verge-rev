@@ -17,7 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-# mihomo-api = { path = "../mihomo_api" }
+tokio = "1.40"
 tauri-plugin-mihomo = { path = "../tauri-plugin-mihomo" }
 warp = "0.3"
 anyhow = "1.0"
@@ -37,7 +37,6 @@ delay_timer = "0.11"
 parking_lot = "0.12"
 auto-launch = "0.5"
 percent-encoding = "2.3"
-tokio = { version = "1.40", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["rustls-tls", "json"] }
 reqwest_dav = "0.1"
