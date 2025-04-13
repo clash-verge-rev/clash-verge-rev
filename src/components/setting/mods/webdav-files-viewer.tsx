@@ -1,7 +1,8 @@
 import LinuxIcon from "@/assets/image/linux.svg?react";
 import MacIcon from "@/assets/image/macos.svg?react";
 import WindowsIcon from "@/assets/image/windows.svg?react";
-import { BaseDialog, DialogRef, Marquee, Notice } from "@/components/base";
+import { BaseDialog, DialogRef, Marquee } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import {
   deleteBackup,
   downloadBackupAndReload,
@@ -40,6 +41,7 @@ export interface WebDavFilesViewerRef extends DialogRef {
 export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
   (props, ref) => {
     const { t } = useTranslation();
+    const { notice } = useNotice();
     const [open, setOpen] = useState(false);
     const [deletingFile, setDeletingFile] = useState("");
     const [applyingFile, setApplyingFile] = useState("");
@@ -86,9 +88,9 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
         setDeletingFile(file.filename);
         await deleteBackup(file.filename);
         await getAllBackupFiles();
-        Notice.success(t("Delete Backup Successful"));
+        notice("success", t("Delete Backup Successful"));
       } catch (e) {
-        Notice.error(t("Delete Backup Failed", { error: e }));
+        notice("error", t("Delete Backup Failed", { error: e }));
       } finally {
         setDeletingFile("");
       }
@@ -100,9 +102,9 @@ export const WebDavFilesViewer = forwardRef<WebDavFilesViewerRef>(
         await downloadBackupAndReload(file.filename);
         await sleep(1000);
         setApplyingFile("");
-        Notice.success(t("Apply Backup Successful"));
+        notice("success", t("Apply Backup Successful"));
       } catch (e) {
-        Notice.error(t("Apply Backup Failed"));
+        notice("error", t("Apply Backup Failed"));
         setApplyingFile("");
       }
     });

@@ -1,4 +1,4 @@
-import { BaseLoading, Notice } from "@/components/base";
+import { BaseLoading } from "@/components/base";
 import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import delayManager from "@/services/delay";
 import { LanguageTwoTone } from "@mui/icons-material";
@@ -17,6 +17,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useLockFn } from "ahooks";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNotice } from "../base/notifice";
 import { TestDiv } from "./test-box";
 
 interface Props {
@@ -32,6 +33,7 @@ export const TestItem = (props: Props) => {
   const { isDragging, sx, itemData, onEdit, onDelete: onDeleteItem } = props;
 
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   if (anchorEl && isDragging) {
     setAnchorEl(null);
@@ -73,7 +75,7 @@ export const TestItem = (props: Props) => {
     try {
       onDeleteItem(uid);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      notice("error", err?.message || err.toString());
     }
   });
 

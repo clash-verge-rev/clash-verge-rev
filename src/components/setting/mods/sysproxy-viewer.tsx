@@ -3,9 +3,9 @@ import {
   BaseFieldset,
   DialogRef,
   EditorViewer,
-  Notice,
   SwitchLovely,
 } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useVerge } from "@/hooks/use-verge";
 import {
   getAutotemProxy,
@@ -38,9 +38,9 @@ const DEFAULT_PAC = `function FindProxyForURL(url, host) {
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const isWindows = getSystem() === "windows";
   const separator = isWindows ? ";" : ",";
-  // const validReg = useMemo(() => getValidReg(isWindows), [isWindows]);
 
   const [open, setOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -93,7 +93,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
-      Notice.error(t("Proxy Daemon Duration Cannot be Less than 1 Second"));
+      notice("error", t("Proxy Daemon Duration Cannot be Less than 1 Second"));
       return;
     }
 
@@ -119,7 +119,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       await patchVerge(patch);
       setOpen(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 
@@ -258,7 +258,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                   if (bypassInput.trim().length > 0) {
                     if (bypass.includes(bypassInput)) {
                       setBypassInput("");
-                      Notice.info(t("Duplicate Bypass"));
+                      notice("info", t("Duplicate Bypass"));
                     } else {
                       setBypass((v) => [...v, bypassInput.trim()]);
                       setBypassInput("");
@@ -277,7 +277,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                         if (bypassInput.trim().length > 0) {
                           if (bypass.includes(bypassInput)) {
                             setBypassInput("");
-                            Notice.info(t("Duplicate Bypass"));
+                            notice("info", t("Duplicate Bypass"));
                           } else {
                             setBypass((v) => [...v, bypassInput.trim()]);
                             setBypassInput("");

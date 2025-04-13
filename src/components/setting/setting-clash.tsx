@@ -1,4 +1,4 @@
-import { DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { DialogRef, SwitchLovely } from "@/components/base";
 import { ServiceViewer } from "@/components/setting/mods/service-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useClash } from "@/hooks/use-clash";
@@ -24,6 +24,7 @@ import {
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { cleanFakeIp, updateGeo } from "tauri-plugin-mihomo-api";
+import { useNotice } from "../base/notifice";
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
 import { ControllerViewer } from "./mods/controller-viewer";
@@ -39,6 +40,7 @@ interface Props {
 
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const { clash, version, patchClash } = useClash();
   const { verge, mutateVerge, patchVerge } = useVerge();
@@ -75,18 +77,18 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeo();
-      Notice.success(t("GeoData Updated"));
+      notice("success", t("GeoData Updated"));
     } catch (err: any) {
-      Notice.error(err?.response.data.message || err.toString());
+      notice("error", err?.response.data.message || err.toString());
     }
   };
 
   const onFlushFakeip = async () => {
     try {
       await cleanFakeIp();
-      Notice.success(t("Fake-IP Cache Flushed"));
+      notice("success", t("Fake-IP Cache Flushed"));
     } catch (err: any) {
-      Notice.error(err?.response.data.message || err.toString());
+      notice("error", err?.response.data.message || err.toString());
     }
   };
 

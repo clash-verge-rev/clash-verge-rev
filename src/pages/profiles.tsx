@@ -3,8 +3,8 @@ import {
   BaseStyledTextField,
   DialogRef,
   DraggableItem,
-  Notice,
 } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { ProfileMore } from "@/components/profile/profile-more";
 import {
@@ -67,6 +67,7 @@ const FlexDecorationItems = memo(function FlexDecoratorItems() {
 
 const ProfilePage = () => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
@@ -123,7 +124,7 @@ const ProfilePage = () => {
       const fileList = payload.paths;
       for (let file of fileList) {
         if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-          Notice.error(t("Only YAML Files Supported"));
+          notice("error", t("Only YAML Files Supported"));
           continue;
         }
         const filename =
@@ -205,7 +206,7 @@ const ProfilePage = () => {
 
     try {
       await importProfile(url);
-      Notice.success(t("Profile Imported Successfully"));
+      notice("success", t("Profile Imported Successfully"));
       setUrl("");
       setImportLoading(false);
 
@@ -221,7 +222,7 @@ const ProfilePage = () => {
         }
       });
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
       setImportLoading(false);
     } finally {
       setDisabled(false);
@@ -237,9 +238,9 @@ const ProfilePage = () => {
         await patchProfiles({ current });
         mutateLogs();
         setTimeout(() => activateSelected(), 2000);
-        Notice.success(t("Profile Switched"), 1000);
+        notice("success", t("Profile Switched"), 1000);
       } catch (err: any) {
-        Notice.error(err?.message || err.toString(), 4000);
+        notice("error", err?.message || err.toString(), 4000);
       } finally {
         setTimeout(() => {
           setActivatingUids([]);
@@ -255,7 +256,7 @@ const ProfilePage = () => {
         await deleteProfile(uid);
         mutateProfiles();
       } catch (err: any) {
-        Notice.error(err?.message || err.toString());
+        notice("error", err?.message || err.toString());
       } finally {
         setActivatingUids([]);
       }
@@ -273,7 +274,7 @@ const ProfilePage = () => {
         await patchProfile(chainUid, { enable: enable });
         mutateLogs();
         mutateProfiles();
-        Notice.success(t("Profile Reactivated"), 1000);
+        notice("success", t("Profile Reactivated"), 1000);
       } catch (error) {
         console.error(error);
       } finally {
@@ -300,7 +301,7 @@ const ProfilePage = () => {
           await onEnhance();
         }
       } catch (error: any) {
-        Notice.error(error);
+        notice("error", error.message || error.toString());
       } finally {
         if (item.enable) {
           setActivatingUids([]);
@@ -315,9 +316,9 @@ const ProfilePage = () => {
         setActivatingUids([profiles.current || "", ...enabledChainUids]);
         await enhanceProfiles();
         mutateLogs();
-        Notice.success(t("Profile Reactivated"), 1000);
+        notice("success", t("Profile Reactivated"), 1000);
       } catch (err: any) {
-        Notice.error(err.message || err.toString(), 3000);
+        notice("error", err.message || err.toString(), 3000);
       } finally {
         setActivatingUids([]);
       }

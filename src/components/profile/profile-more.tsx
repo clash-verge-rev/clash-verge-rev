@@ -1,6 +1,6 @@
 import JSIcon from "@/assets/image/js.svg?react";
 import YamlIcon from "@/assets/image/yaml.svg?react";
-import { Marquee, Notice } from "@/components/base";
+import { Marquee } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { viewProfile } from "@/services/cmds";
@@ -33,6 +33,7 @@ import { Message } from "console-feed/lib/definitions/Component";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNotice } from "../base/notifice";
 import { ConfirmViewer } from "./confirm-viewer";
 import { ProfileDiv } from "./profile-box";
 
@@ -76,6 +77,7 @@ export const ProfileMore = (props: Props) => {
 
   const { uid, type } = itemData;
   const { t, i18n } = useTranslation();
+  const { notice } = useNotice();
   const themeMode = useThemeMode();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   if (anchorEl && isDragging) {
@@ -97,7 +99,7 @@ export const ProfileMore = (props: Props) => {
     try {
       await viewProfile(uid);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      notice("error", err?.message || err.toString());
     }
   });
 

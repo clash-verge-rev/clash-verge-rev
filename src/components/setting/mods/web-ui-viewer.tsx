@@ -1,4 +1,5 @@
-import { BaseDialog, BaseEmpty, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, BaseEmpty, DialogRef } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { openWebUrl } from "@/services/cmds";
@@ -10,6 +11,7 @@ import { WebUIItem } from "./web-ui-item";
 
 export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const { clashInfo } = useClashInfo();
   const { verge, patchVerge, mutateVerge } = useVerge();
@@ -71,7 +73,7 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
 
       await openWebUrl(url);
     } catch (e: any) {
-      Notice.error(e.message || e.toString());
+      notice("error", e.message || e.toString());
     }
   });
 

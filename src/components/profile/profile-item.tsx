@@ -1,4 +1,4 @@
-import { Marquee, Notice } from "@/components/base";
+import { Marquee } from "@/components/base";
 import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer";
 import { openWebUrl, updateProfile, viewProfile } from "@/services/cmds";
 import {
@@ -36,6 +36,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
+import { useNotice } from "../base/notifice";
 import { ConfirmViewer } from "./confirm-viewer";
 import { ProfileDiv } from "./profile-box";
 import { LogMessage } from "./profile-more";
@@ -71,6 +72,7 @@ export const ProfileItem = (props: Props) => {
   } = props;
 
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const themeMode = useThemeMode();
   const [anchorEl, setAnchorEl] = useState<any>(null);
   if (anchorEl && isDragging) {
@@ -142,7 +144,7 @@ export const ProfileItem = (props: Props) => {
     try {
       await viewProfile(uid);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      notice("error", err?.message || err.toString());
     }
   });
 
@@ -175,7 +177,8 @@ export const ProfileItem = (props: Props) => {
       mutate("getProfiles");
     } catch (err: any) {
       const errmsg = err?.message || err.toString();
-      Notice.error(
+      notice(
+        "error",
         errmsg.replace(/error sending request for url (\S+?): /, ""),
       );
     } finally {

@@ -56,6 +56,7 @@
     "monaco-editor": "^0.52.2",
     "monaco-yaml": "^5.3.1",
     "nanoid": "^5.1.3",
+    "notistack": "^3.0.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-error-boundary": "^5.0.0",

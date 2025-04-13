@@ -1,4 +1,5 @@
-import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { BaseDialog, DialogRef, SwitchLovely } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { useVerge } from "@/hooks/use-verge";
 import {
@@ -36,6 +37,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const show_title_setting = OS === "linux" || OS === "windows";
 
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const { verge, patchVerge, mutateVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
@@ -89,7 +91,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onError = (err: any) => {
-    Notice.error(err.message || err.toString());
+    notice("error", err.message || err.toString());
   };
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -146,7 +148,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               onGuard={async (e) => {
                 await patchVerge({ enable_system_title_bar: e });
                 if (await isWayland()) {
-                  Notice.info(t("App Will Be Restarted Soon"));
+                  notice("info", t("App Will Be Restarted Soon"));
                   await sleep(1000);
                   restartApp();
                 } else {

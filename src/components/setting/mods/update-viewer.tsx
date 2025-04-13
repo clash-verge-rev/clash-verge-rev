@@ -1,9 +1,9 @@
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { portableFlag } from "@/pages/_layout";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import { Box, Button, LinearProgress } from "@mui/material";
-import { Event, listen, UnlistenFn } from "@tauri-apps/api/event";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { check } from "@tauri-apps/plugin-updater";
@@ -17,6 +17,7 @@ const OS = getSystem();
 
 export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const [open, setOpen] = useState(false);
 
@@ -55,12 +56,12 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onUpdate = useLockFn(async () => {
     if (portableFlag) {
-      Notice.error(t("Portable Updater Error"));
+      notice("error", t("Portable Updater Error"));
       return;
     }
     if (!updateInfo?.body) return;
     if (breakChangeFlag) {
-      Notice.error(t("Break Change Update Error"));
+      notice("error", t("Break Change Update Error"));
       return;
     }
     if (updateState) return;
@@ -79,7 +80,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       });
       await relaunch();
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      notice("error", err?.message || err.toString());
     } finally {
       setUpdateState(false);
     }

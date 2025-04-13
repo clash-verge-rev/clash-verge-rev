@@ -63,12 +63,6 @@ export const ProviderButton = () => {
             await handleUpdate(key, index, retryCount - 1);
           }, 1000);
         } else {
-          // Notice.error(
-          //   t("Update Rule Provider Error", {
-          //     name: `${key}`,
-          //     errorMsg: e.message,
-          //   }),
-          // );
           setErrorItems((pre) => {
             if (pre?.includes(key)) {
               return pre;

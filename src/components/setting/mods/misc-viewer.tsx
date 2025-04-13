@@ -1,4 +1,5 @@
-import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { BaseDialog, DialogRef, SwitchLovely } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useVerge } from "@/hooks/use-verge";
 import {
   List,
@@ -14,6 +15,7 @@ import { useTranslation } from "react-i18next";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const { verge, patchVerge } = useVerge();
 
   const [open, setOpen] = useState(false);
@@ -59,7 +61,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       });
       setOpen(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 

@@ -38,7 +38,7 @@ export const LogoTitle = ({ open }: { open: boolean }) => {
           "top-0 left-16 scale-75": open,
         })}
       />
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         <motion.button
           key={isDark ? "dark" : "light"}
           initial={{ x: -25, opacity: 0 }}

@@ -1,4 +1,5 @@
-import { Notice, TailwindIndicator } from "@/components/base";
+import { TailwindIndicator } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { LayoutControl } from "@/components/layout/layout-control";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
@@ -30,6 +31,7 @@ const OS = getSystem();
 const Layout = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const { theme } = useCustomTheme();
   const visible = useVisibility();
 
@@ -97,10 +99,10 @@ const Layout = () => {
       const [status, msg] = payload as [string, string];
       switch (status) {
         case "set_config::ok":
-          Notice.success(t("Clash Config Updated"));
+          notice("success", t("Clash Config Updated"));
           break;
         case "set_config::error":
-          Notice.error(t(msg));
+          notice("error", t(msg));
           break;
         default:
           break;

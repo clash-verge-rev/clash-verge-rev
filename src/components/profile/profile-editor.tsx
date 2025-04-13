@@ -1,4 +1,3 @@
-import { Notice } from "@/components/base";
 import { LogViewer } from "@/components/profile/log-viewer";
 import { LogMessage } from "@/components/profile/profile-more";
 import { useWindowSize } from "@/hooks/use-window-size";
@@ -28,6 +27,7 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useNotice } from "../base/notifice";
 
 export type ProfileEditorHandle = {
   save: () => Promise<boolean>;
@@ -72,6 +72,7 @@ export const ProfileEditor = (props: Props) => {
 
   const { t } = useTranslation();
   const { size } = useWindowSize();
+  const { notice } = useNotice();
   const themeMode = useThemeMode();
   const language = profileItem.type === "script" ? "javascript" : "yaml";
   const type =
@@ -267,17 +268,17 @@ export const ProfileEditor = (props: Props) => {
       setLogs(currentLogs);
       if (currentLogs) {
         if (currentLogs[0]?.exception) {
-          Notice.error(t("Script Run Check Failed"));
+          notice("error", t("Script Run Check Failed"));
           saveChainCondition.current?.set(false);
           return false;
         }
       }
-      Notice.success(t("Script Run Check Successful"));
+      notice("success", t("Script Run Check Successful"));
       saveChainCondition.current?.set(true);
       return true;
     } catch (error: any) {
       saveChainCondition.current?.set(false);
-      Notice.error(error);
+      notice("error", error);
       return false;
     } finally {
       setChecking(false);
@@ -289,13 +290,13 @@ export const ProfileEditor = (props: Props) => {
     const uid = profileItem.uid;
     const val = instanceRef.current?.getValue();
     if (!val) {
-      Notice.error("Can't read monaco content");
+      notice("error", t("Can't read monaco content"));
       setSaving(false);
       return false;
     }
     const originContent = originContentRef.current;
     if (originContent === val) {
-      Notice.info(t("Profile Content No Change"));
+      notice("info", t("Profile Content No Change"));
       setSaving(false);
       return false;
     }
@@ -312,7 +313,7 @@ export const ProfileEditor = (props: Props) => {
     await saveProfileFile(uid, val);
     originContentRef.current = val;
     await sleep(1000);
-    Notice.success(t("Save Content Successfully"), 1000);
+    notice("success", t("Save Content Successfully"), 1000);
     setSaving(false);
     setSaved(true);
     onSave?.();

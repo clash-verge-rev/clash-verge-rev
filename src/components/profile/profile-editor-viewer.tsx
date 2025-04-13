@@ -2,7 +2,6 @@ import {
   BaseDialog,
   DraggableItem,
   Marquee,
-  Notice,
   SwitchLovely,
 } from "@/components/base";
 import { LogMessage } from "@/components/profile/profile-more";
@@ -46,6 +45,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
+import { useNotice } from "../base/notifice";
 import { ConfirmViewer } from "./confirm-viewer";
 import { ProfileEditor, ProfileEditorHandle } from "./profile-editor";
 import ProfileMoreMini from "./profile-more-mini";
@@ -73,6 +73,7 @@ export const ProfileEditorViewer = (props: Props) => {
   } = props;
   const { t } = useTranslation();
   const { current } = useProfiles();
+  const { notice } = useNotice();
   const profileUid = profileItem.uid;
   const isRunningProfile = current?.uid === profileUid;
   const [editProfile, setEditProfile] = useState<IProfileItem>(profileItem);
@@ -182,7 +183,7 @@ export const ProfileEditorViewer = (props: Props) => {
     formIns.handleSubmit(async (form) => {
       const isSame = isEqual(form, profileItem);
       if (isSame) {
-        Notice.info(t("Profile Config No Change"));
+        notice("info", t("Profile Config No Change"));
         return;
       }
       try {
@@ -209,10 +210,10 @@ export const ProfileEditorViewer = (props: Props) => {
 
         if (!form.uid) throw new Error("UID not found");
         await patchProfile(form.uid, item);
-        Notice.success(t("Profile Config Updated"));
+        notice("success", t("Profile Config Updated"));
         mutate("getProfiles");
       } catch (err: any) {
-        Notice.error(err.message || err.toString());
+        notice("error", err.message || err.toString());
       }
     }),
   );
@@ -253,7 +254,7 @@ export const ProfileEditorViewer = (props: Props) => {
       if (!curContentSaved) {
         const saveStatus = !!(await profileEditorRef.current?.save());
         if (!saveStatus) {
-          Notice.error(t("Save Content Failed"));
+          notice("error", t("Save Content Failed"));
           return;
         }
         // 延迟 1s 后，执行订阅配置项更新操作
@@ -261,7 +262,7 @@ export const ProfileEditorViewer = (props: Props) => {
       }
       await handleProfileSubmit();
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     } finally {
       setSaving(false);
     }

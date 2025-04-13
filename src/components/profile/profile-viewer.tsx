@@ -1,4 +1,4 @@
-import { BaseDialog, Notice, SwitchLovely } from "@/components/base";
+import { BaseDialog, SwitchLovely } from "@/components/base";
 import { FileInput } from "@/components/profile/file-input";
 import { createProfile, patchProfile } from "@/services/cmds";
 import {
@@ -20,6 +20,7 @@ import {
 } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useNotice } from "../base/notifice";
 
 interface Props {
   onChange: () => void;
@@ -35,6 +36,7 @@ export interface ProfileViewerRef {
 export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
   (props, ref) => {
     const { t } = useTranslation();
+    const { notice } = useNotice();
     const [open, setOpen] = useState(false);
     const [openType, setOpenType] = useState<"new" | "edit">("new");
     const [loading, setLoading] = useState(false);
@@ -135,7 +137,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           fileDataRef.current = null;
           props.onChange();
         } catch (err: any) {
-          Notice.error(err.message || err.toString());
+          notice("error", err.message || err.toString());
           setLoading(false);
         }
       }),

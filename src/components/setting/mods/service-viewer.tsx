@@ -1,4 +1,5 @@
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useService } from "@/hooks/use-service";
 import {
   installService,
@@ -19,6 +20,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const { enable } = props;
 
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const [open, setOpen] = useState(false);
 
   const { serviceStatus, mutateCheckService } = useService();
@@ -38,10 +40,10 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       setTimeout(() => {
         mutateCheckService();
       }, 2000);
-      Notice.success(t("Service Installed Successfully"));
+      notice("success", t("Service Installed Successfully"));
     } catch (err: any) {
       mutateCheckService();
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 
@@ -54,10 +56,10 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       await uninstallService();
       mutateCheckService();
       setOpen(false);
-      Notice.success(t("Service Uninstalled Successfully"));
+      notice("success", t("Service Uninstalled Successfully"));
     } catch (err: any) {
       mutateCheckService();
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 
@@ -69,7 +71,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
       setOpen(false);
     } catch (err: any) {
       mutateCheckService();
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 

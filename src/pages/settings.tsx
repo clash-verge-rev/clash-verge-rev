@@ -1,4 +1,5 @@
-import { BasePage, Notice } from "@/components/base";
+import { BasePage } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import SettingClash from "@/components/setting/setting-clash";
 import SettingSystem from "@/components/setting/setting-system";
 import SettingVerge from "@/components/setting/setting-verge";
@@ -10,9 +11,10 @@ import { useTranslation } from "react-i18next";
 
 const SettingPage = () => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const onError = (err: any) => {
-    Notice.error(err?.message || err.toString());
+    notice("error", err?.message || err.toString());
   };
 
   const openGithubRepo = useLockFn(() => {

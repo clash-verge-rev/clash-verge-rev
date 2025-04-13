@@ -1,4 +1,5 @@
-import { BaseDialog, DialogRef, Notice, SwitchLovely } from "@/components/base";
+import { BaseDialog, DialogRef, SwitchLovely } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useClash } from "@/hooks/use-clash";
 import getSystem from "@/utils/get-system";
 import {
@@ -19,6 +20,7 @@ const OS = getSystem();
 
 export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const { clash, mutateClash, patchClash } = useClash();
   const [open, setOpen] = useState(false);
   const isMacos = OS === "macos";
@@ -69,7 +71,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       );
       setLoading(false);
       setOpen(false);
-      Notice.success(t("Clash Config Updated"));
+      notice("success", t("Clash Config Updated"));
     } catch (err: any) {
       if (retry < 0) {
         await patchClash({ tun: { enable: false } });
@@ -82,7 +84,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
         );
         setLoading(false);
         setOpen(false);
-        Notice.error(t(err));
+        notice("error", t(err));
       } else {
         setTimeout(() => doSave(retry - 1), 1000);
       }
@@ -91,7 +93,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (isMacos && !values.device.startsWith("utun")) {
-      Notice.error(t("Macos Device Name Error"), 3000);
+      notice("error", t("Macos Device Name Error"), 3000);
       return;
     }
     doSave();

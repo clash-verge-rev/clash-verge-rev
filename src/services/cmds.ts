@@ -1,4 +1,3 @@
-import { Notice } from "@/components/base";
 import { LogMessage } from "@/components/profile/profile-more";
 import getSystem from "@/utils/get-system";
 import { invoke } from "@tauri-apps/api/core";
@@ -249,21 +248,15 @@ export async function getAppDir() {
 }
 
 export async function openAppDir() {
-  return invoke<void>("open_app_dir").catch((err) =>
-    Notice.error(err?.message || err.toString(), 1500),
-  );
+  return invoke<void>("open_app_dir");
 }
 
 export async function openCoreDir() {
-  return invoke<void>("open_core_dir").catch((err) =>
-    Notice.error(err?.message || err.toString(), 1500),
-  );
+  return invoke<void>("open_core_dir");
 }
 
 export async function openLogsDir() {
-  return invoke<void>("open_logs_dir").catch((err) =>
-    Notice.error(err?.message || err.toString(), 1500),
-  );
+  return invoke<void>("open_logs_dir");
 }
 
 export async function openWebUrl(url: string) {
@@ -295,9 +288,7 @@ export async function uninstallService() {
 }
 
 export async function invoke_uwp_tool() {
-  return invoke<void>("invoke_uwp_tool").catch((err) =>
-    Notice.error(err?.message || err.toString(), 1500),
-  );
+  return invoke<void>("invoke_uwp_tool");
 }
 
 export async function getPortableFlag() {

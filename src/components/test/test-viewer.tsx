@@ -1,10 +1,11 @@
-import { BaseDialog, Notice } from "@/components/base";
+import { BaseDialog } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { TextField } from "@mui/material";
 import { nanoid } from "nanoid";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useNotice } from "../base/notifice";
 
 interface Props {
   onChange: (uid: string, patch?: Partial<IVergeTestItem>) => void;
@@ -18,6 +19,7 @@ export interface TestViewerRef {
 // create or edit the test item
 export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const [open, setOpen] = useState(false);
   const [openType, setOpenType] = useState<"new" | "edit">("new");
   const [loading, setLoading] = useState(false);
@@ -82,7 +84,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       setLoading(false);
       setTimeout(() => reset(), 500);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
       setLoading(false);
     }
   };

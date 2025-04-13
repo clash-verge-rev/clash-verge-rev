@@ -1,4 +1,3 @@
-import { Notice } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useLogData } from "@/hooks/use-log-data";
 import { useVerge } from "@/hooks/use-verge";
@@ -11,13 +10,13 @@ import {
   MemoryOutlined,
 } from "@mui/icons-material";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
-import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 import { t } from "i18next";
 import { useRef } from "react";
 import useSWRSubscription from "swr/subscription";
-import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 import { restart } from "tauri-plugin-mihomo-api";
+import { useNotice } from "../base/notifice";
+import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 
 interface MemoryUsage {
   inuse: number;
@@ -28,6 +27,7 @@ interface MemoryUsage {
 export const LayoutTraffic = () => {
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
+  const { notice } = useNotice();
 
   // whether hide traffic graph
   const trafficGraph = verge?.traffic_graph ?? true;
@@ -142,7 +142,7 @@ export const LayoutTraffic = () => {
 
   const restartClashCore = useLockFn(async () => {
     await restart();
-    Notice.success(t("Clash Core Restarted"));
+    notice("success", t("Clash Core Restarted"));
   });
 
   return (

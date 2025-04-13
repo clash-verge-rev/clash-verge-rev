@@ -1,4 +1,3 @@
-import { Notice } from "@/components/base";
 import { useWindowSize } from "@/hooks/use-window-size";
 import {
   generateTemplate,
@@ -20,6 +19,7 @@ import { IDisposable } from "monaco-editor";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useNotice } from "./notifice";
 
 interface Props {
   title?: string | ReactNode;
@@ -48,6 +48,7 @@ export const EditorViewer = (props: Props) => {
   const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useThemeMode();
   const { size } = useWindowSize();
+  const { notice } = useNotice();
 
   useEffect(() => {
     if (!open) return;
@@ -141,7 +142,7 @@ export const EditorViewer = (props: Props) => {
       onChange?.(value);
       onClose();
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 

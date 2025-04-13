@@ -1,4 +1,5 @@
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useClashInfo } from "@/hooks/use-clash";
 import { Shuffle } from "@mui/icons-material";
 import {
@@ -16,6 +17,7 @@ import { useTranslation } from "react-i18next";
 
 export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
   const [open, setOpen] = useState(false);
 
   const { clashInfo, patchInfo } = useClashInfo();
@@ -35,10 +37,10 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const onSave = useLockFn(async () => {
     try {
       await patchInfo({ "external-controller": controller, secret });
-      Notice.success(t("External Controller Address Modified"), 1000);
+      notice("success", t("External Controller Address Modified"), 1000);
       setOpen(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 4000);
+      notice("error", err.message || err.toString(), 4000);
     }
   });
 

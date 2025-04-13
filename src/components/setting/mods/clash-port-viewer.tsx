@@ -1,4 +1,5 @@
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useClashInfo } from "@/hooks/use-clash";
 import { checkPortAvailable } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
@@ -13,6 +14,7 @@ const OS = getSystem();
 
 export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const { clashInfo, patchInfo } = useClashInfo();
 
@@ -56,7 +58,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         port,
       ].filter((port) => port !== 0);
       if (uniq(conflictPorts).length !== conflictPorts.length) {
-        Notice.error(t("Port Conflict"), 4000);
+        notice("error", t("Port Conflict"), 4000);
         return;
       }
     }
@@ -65,7 +67,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         (port) => port !== 0,
       );
       if (uniq(conflictPorts).length !== conflictPorts.length) {
-        Notice.error(t("Port Conflict"), 4000);
+        notice("error", t("Port Conflict"), 4000);
         return;
       }
     }
@@ -74,7 +76,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         (port) => port !== 0,
       );
       if (uniq(conflictPorts).length !== conflictPorts.length) {
-        Notice.error(t("Port Conflict"), 4000);
+        notice("error", t("Port Conflict"), 4000);
         return;
       }
     }
@@ -84,7 +86,7 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       if (OS !== "windows") {
         const res = await checkPortAvailable(redirPort);
         if (!res) {
-          Notice.error(t("Port Conflict", { portName: "redir port" }), 4000);
+          notice("error", t("Port Conflict", { portName: "redir port" }), 4000);
           return;
         }
         updatePorts["redir-port"] = redirPort;
@@ -92,35 +94,39 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       if (OS === "linux") {
         const res = await checkPortAvailable(tproxyPort);
         if (!res) {
-          Notice.error(t("Port Conflict", { portName: "tproxy port" }), 4000);
+          notice(
+            "error",
+            t("Port Conflict", { portName: "tproxy port" }),
+            4000,
+          );
           return;
         }
         updatePorts["tproxy-port"] = tproxyPort;
       }
       let res = await checkPortAvailable(mixedPort);
       if (!res) {
-        Notice.error(t("Port Conflict", { portName: "mixed port" }), 4000);
+        notice("error", t("Port Conflict", { portName: "mixed port" }), 4000);
         return;
       }
       updatePorts["mixed-port"] = mixedPort;
       res = await checkPortAvailable(socksPort);
       if (!res) {
-        Notice.error(t("Port Conflict", { portName: "socks port" }), 4000);
+        notice("error", t("Port Conflict", { portName: "socks port" }), 4000);
         return;
       }
       updatePorts["socks-port"] = socksPort;
       res = await checkPortAvailable(port);
       if (!res) {
-        Notice.error(t("Port Conflict", { portName: "port" }), 4000);
+        notice("error", t("Port Conflict", { portName: "port" }), 4000);
         return;
       }
       updatePorts["port"] = port;
       await patchInfo(updatePorts);
       await mutate("getRuntimeConfig");
       setOpen(false);
-      Notice.success(t("Clash Port Modified"), 1000);
+      notice("success", t("Clash Port Modified"), 1000);
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 4000);
+      notice("error", err.message || err.toString(), 4000);
     }
   });
 

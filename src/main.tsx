@@ -1,4 +1,8 @@
-import { BaseErrorBoundary } from "@/components/base";
+import {
+  BaseErrorBoundary,
+  MyNoticeContainer,
+  NoticeProvider,
+} from "@/components/base";
 import "@/index.css";
 import router from "@/pages/_routers";
 import "@/services/i18n";
@@ -6,6 +10,7 @@ import { ResizeObserver } from "@juggle/resize-observer";
 import { StyledEngineProvider } from "@mui/material";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
+import { SnackbarProvider } from "notistack";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
@@ -66,7 +71,19 @@ createRoot(container).render(
     <StyledEngineProvider injectFirst>
       <ComposeContextProvider contexts={contexts}>
         <BaseErrorBoundary>
-          <RouterProvider router={router} />
+          <SnackbarProvider
+            maxSnack={3}
+            Components={{
+              default: MyNoticeContainer,
+              success: MyNoticeContainer,
+              info: MyNoticeContainer,
+              warning: MyNoticeContainer,
+              error: MyNoticeContainer,
+            }}>
+            <NoticeProvider>
+              <RouterProvider router={router} />
+            </NoticeProvider>
+          </SnackbarProvider>
         </BaseErrorBoundary>
       </ComposeContextProvider>
     </StyledEngineProvider>

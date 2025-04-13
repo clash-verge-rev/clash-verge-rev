@@ -1,4 +1,5 @@
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useVerge } from "@/hooks/use-verge";
 import {
   changeClashCore,
@@ -35,6 +36,7 @@ const OS = getSystem();
 export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const { serviceActive } = props;
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const { verge, mutateVerge } = useVerge();
 
@@ -59,9 +61,13 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
         mutate("getClashConfig");
         mutate("getVersion");
       }, 100);
-      Notice.success(t("Switched to _clash Core", { core: `${core}` }), 1000);
+      notice(
+        "success",
+        t("Switched to _clash Core", { core: `${core}` }),
+        1000,
+      );
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      notice("error", err?.message || err.toString());
     }
   });
 
@@ -70,23 +76,24 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
       await grantPermission(core);
       // 自动重启
       if (core === clash_core) await restartSidecar();
-      Notice.success(
+      notice(
+        "success",
         t("Permissions Granted Successfully for _clash Core", {
           core: `${core}`,
         }),
         1000,
       );
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      notice("error", err?.message || err.toString());
     }
   });
 
   const onRestart = useLockFn(async () => {
     try {
       await restartSidecar();
-      Notice.success(t(`Clash Core Restarted`), 1000);
+      notice("success", t(`Clash Core Restarted`), 1000);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      notice("error", err?.message || err.toString());
     }
   });
 
@@ -95,13 +102,13 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      Notice.success(t(`Core Version Updated`), 1000);
+      notice("success", t(`Core Version Updated`), 1000);
     } catch (err: any) {
       setUpgrading(false);
       if (err.includes("already using latest version")) {
-        Notice.info(t("Currently on the Latest Version"), 1000);
+        notice("info", t("Currently on the Latest Version"), 1000);
       } else {
-        Notice.error(err);
+        notice("error", err?.message || err.toString());
       }
     }
   });

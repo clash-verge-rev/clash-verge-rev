@@ -1,4 +1,4 @@
-import { DialogRef, Notice } from "@/components/base";
+import { DialogRef } from "@/components/base";
 import {
   WebDavFilesViewer,
   WebDavFilesViewerRef,
@@ -48,6 +48,7 @@ import { check } from "@tauri-apps/plugin-updater";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useNotice } from "../base/notifice";
 import { ConfigViewer } from "./mods/config-viewer";
 import { GuardState } from "./mods/guard-state";
 import { HotkeyViewer } from "./mods/hotkey-viewer";
@@ -66,6 +67,7 @@ const OS = getSystem();
 
 const SettingVerge = ({ onError }: Props) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const { verge, patchVerge, mutateVerge } = useVerge();
   const {
@@ -95,12 +97,12 @@ const SettingVerge = ({ onError }: Props) => {
     try {
       const info = await check();
       if (!info?.available) {
-        Notice.success(t("Currently on the Latest Version"));
+        notice("success", t("Currently on the Latest Version"));
       } else {
         updateRef.current?.open();
       }
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   };
 
@@ -145,7 +147,7 @@ const SettingVerge = ({ onError }: Props) => {
         webDavRef.current?.open();
       }
     } catch (e: any) {
-      Notice.error(t("WebDav Connection Failed", { error: e }), 3000);
+      notice("error", t("WebDav Connection Failed", { error: e }), 3000);
     } finally {
       setSaving(false);
       setLoadingBackupFiles(false);
@@ -164,9 +166,9 @@ const SettingVerge = ({ onError }: Props) => {
     if (selected) {
       if (selected.endsWith(".zip")) {
         await applyLocalBackup(selected);
-        Notice.success(t("Apply Backup Successful"));
+        notice("success", t("Apply Backup Successful"));
       } else {
-        Notice.error(t("Invalid file format"));
+        notice("error", t("Invalid file format"));
       }
     }
   };
@@ -179,9 +181,9 @@ const SettingVerge = ({ onError }: Props) => {
       } else if (backupMode === "webdav") {
         await createAndUploadBackup(onlyBackupProfiles);
       }
-      Notice.success(t("Backup Successful"));
+      notice("success", t("Backup Successful"));
     } catch (e) {
-      Notice.error(t("Backup Failed", { error: e }), 3000);
+      notice("error", t("Backup Failed", { error: e }), 3000);
     } finally {
       setStartingBackup(false);
     }

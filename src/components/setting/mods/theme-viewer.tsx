@@ -1,4 +1,5 @@
-import { BaseDialog, DialogRef, EditorViewer, Notice } from "@/components/base";
+import { BaseDialog, DialogRef, EditorViewer } from "@/components/base";
+import { useNotice } from "@/components/base/notifice";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
 import { useThemeMode, useThemeSettings } from "@/services/states";
@@ -21,6 +22,7 @@ import ThemeColorSelect from "./theme-color-select";
 
 export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
+  const { notice } = useNotice();
 
   const [open, setOpen] = useState(false);
   const { verge, patchVerge } = useVerge();
@@ -70,7 +72,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       });
       setOpen(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 
