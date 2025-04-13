@@ -1,4 +1,5 @@
 import { calcuProxyProviders } from "@/services/api";
+import { cn } from "@/utils";
 import parseTraffic from "@/utils/parse-traffic";
 import { RefreshRounded } from "@mui/icons-material";
 import {
@@ -9,20 +10,14 @@ import {
   LinearProgress,
   Typography,
   alpha,
-  keyframes,
   styled,
 } from "@mui/material";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-import { BaseDialog } from "../base";
 import { updateProxyProvider } from "tauri-plugin-mihomo-api";
-
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
+import { BaseDialog } from "../base";
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
@@ -132,13 +127,12 @@ export const ProviderButton = () => {
                   size="small"
                   color="inherit"
                   title={`${t("Update")}${t("Proxy Provider")}`}
-                  onClick={() => handleUpdate(key, index)}
-                  sx={{
-                    ...(updating[index] && {
-                      animation: `1s linear infinite ${round}`,
-                    }),
-                  }}>
-                  <RefreshRounded />
+                  onClick={() => handleUpdate(key, index)}>
+                  <RefreshRounded
+                    className={cn({
+                      "animate-spin": updating[index],
+                    })}
+                  />
                 </IconButton>
               </div>
             );

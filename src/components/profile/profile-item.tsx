@@ -22,7 +22,6 @@ import {
   Box,
   CircularProgress,
   IconButton,
-  keyframes,
   LinearProgress,
   ListItemIcon,
   ListItemText,
@@ -40,11 +39,6 @@ import { useNotice } from "../base/notifice";
 import { ConfirmViewer } from "./confirm-viewer";
 import { ProfileDiv } from "./profile-box";
 import { LogMessage } from "./profile-more";
-
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
 
 interface Props {
   sx?: SxProps;
@@ -298,7 +292,6 @@ export const ProfileItem = (props: Props) => {
                 p: "3px",
                 top: -1,
                 right: -5,
-                ...(loading && { animation: `1s linear infinite ${round}` }),
               }}
               size="small"
               color="inherit"
@@ -307,7 +300,12 @@ export const ProfileItem = (props: Props) => {
                 e.stopPropagation();
                 onUpdate(1);
               }}>
-              <RefreshRounded color="inherit" />
+              <RefreshRounded
+                color="inherit"
+                className={cn({
+                  "animate-spin": loading,
+                })}
+              />
             </IconButton>
           )}
         </Box>

@@ -1,5 +1,6 @@
 import { BaseDialog } from "@/components/base";
 import { calcuRuleProviders } from "@/services/api";
+import { cn } from "@/utils";
 import { Error, RefreshRounded } from "@mui/icons-material";
 import {
   Box,
@@ -8,7 +9,6 @@ import {
   IconButton,
   Typography,
   alpha,
-  keyframes,
   styled,
 } from "@mui/material";
 import dayjs from "dayjs";
@@ -16,11 +16,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
 import { updateRuleProvider } from "tauri-plugin-mihomo-api";
-
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
@@ -145,13 +140,12 @@ export const ProviderButton = () => {
                   size="small"
                   color="inherit"
                   title={`${t("Update")}${t("Rule Provider")}`}
-                  onClick={() => handleUpdate(key, index)}
-                  sx={{
-                    animation: updating[index]
-                      ? `1s linear infinite ${round}`
-                      : "none",
-                  }}>
-                  <RefreshRounded />
+                  onClick={() => handleUpdate(key, index)}>
+                  <RefreshRounded
+                    className={cn({
+                      "animate-spin": updating[index],
+                    })}
+                  />
                 </IconButton>
               </div>
             );
