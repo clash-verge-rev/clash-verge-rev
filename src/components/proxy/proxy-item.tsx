@@ -145,7 +145,7 @@ export const ProxyItem = (props: Props) => {
             </Widget>
           )}
 
-          {!proxy.provider && delay !== -2 && (
+          {!proxy.provider && proxy.type !== "Direct" && delay !== -2 && (
             // provider的节点不支持检测
             <Widget
               className="the-check"
@@ -162,7 +162,7 @@ export const ProxyItem = (props: Props) => {
             </Widget>
           )}
 
-          {delay > 0 && (
+          {proxy.type !== "Direct" && delay > 0 && (
             // 显示延迟
             <Widget
               className="the-delay"
@@ -182,13 +182,16 @@ export const ProxyItem = (props: Props) => {
             </Widget>
           )}
 
-          {delay !== -2 && delay <= 0 && selected && (
-            // 展示已选择的icon
-            <CheckCircleOutlineRounded
-              className="the-icon"
-              sx={{ fontSize: 16 }}
-            />
-          )}
+          {proxy.type !== "Direct" &&
+            delay !== -2 &&
+            delay <= 0 &&
+            selected && (
+              // 展示已选择的icon
+              <CheckCircleOutlineRounded
+                className="the-icon"
+                sx={{ fontSize: 16 }}
+              />
+            )}
         </ListItemIcon>
       </ListItemButton>
     </ListItem>

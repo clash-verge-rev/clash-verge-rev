@@ -91,7 +91,9 @@ export const ProxyGroups = (props: Props) => {
           [...providers].map((p) => healthcheckProxyProvider(p)),
         ).then(() => onProxies());
       }
-      const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
+      const names = proxies
+        .filter((p) => !p!.provider && p.type !== "Direct")
+        .map((p) => p!.name);
       await delayManager.checkListDelay(names, groupName, timeout);
 
       onProxies();
