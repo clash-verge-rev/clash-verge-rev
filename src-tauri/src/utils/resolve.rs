@@ -21,6 +21,7 @@ use tauri::Url;
 // use window_shadows::set_shadow;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
+pub static AUTO_LIGHT_WEIGHT_MODE_INIT: OnceCell<()> = OnceCell::new();
 
 pub fn find_unused_port() -> Result<u16> {
     match TcpListener::bind("127.0.0.1:0") {
@@ -90,7 +91,7 @@ pub async fn resolve_setup(app: &mut App) {
     logging_error!(Type::System, true, timer::Timer::global().init());
 
     let enable_auto_light_weight_mode = { Config::verge().data().enable_auto_light_weight_mode };
-    if enable_auto_light_weight_mode.unwrap_or(false) {
+    if enable_auto_light_weight_mode.unwrap_or(false) && !is_silent_start {
         lightweight::enable_auto_light_weight_mode();
     }
 
@@ -203,6 +204,23 @@ pub fn create_window(is_showup: bool) {
             logging!(info, Type::Window, true, "Window created successfully");
             let _ = window.show();
             let _ = window.set_focus();
+
+            // 静默启动模式等窗口初始化再启动自动进入轻量模式的计时监听器，防止初始化的时候找不到窗口对象导致监听器挂载失败
+            AUTO_LIGHT_WEIGHT_MODE_INIT.get_or_init(|| {
+                let is_silent_start =
+                    { Config::verge().data().enable_silent_start }.unwrap_or(false);
+                let enable_auto_light_weight_mode =
+                    { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
+                if enable_auto_light_weight_mode && is_silent_start {
+                    logging!(
+                        info,
+                        Type::Lightweight,
+                        true,
+                        "Add timer listener when creating window"
+                    );
+                    lightweight::enable_auto_light_weight_mode();
+                };
+            });
 
             // 标记前端UI已准备就绪，向前端发送启动完成事件
             let app_handle_clone = app_handle.clone();
