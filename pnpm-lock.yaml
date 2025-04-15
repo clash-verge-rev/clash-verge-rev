@@ -123,8 +123,8 @@ importers:
         specifier: ^7.3.0
         version: 7.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-spinners:
-        specifier: ^0.15.0
-        version: 0.15.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^0.16.0
+        version: 0.16.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-virtuoso:
         specifier: ^4.12.5
         version: 4.12.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -3426,8 +3426,8 @@ packages:
       react-dom:
         optional: true
 
-  react-spinners@0.15.0:
-    resolution: {integrity: sha512-ZO3/fNB9Qc+kgpG3SfdlMnvTX6LtLmTnOogb3W6sXIaU/kZ1ydEViPfZ06kSOaEsor58C/tzXw2wROGQu3X2pA==}
+  react-spinners@0.16.1:
+    resolution: {integrity: sha512-hYDQp2mmmv3a3JZZZYOi3+jW7C/ro51Ny71TfkRXhoPBb6wZuK9BgdvYbTnSAUrQCrVnOLSpWfZatncUTb6n5w==}
     peerDependencies:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -7428,7 +7428,7 @@ snapshots:
     optionalDependencies:
       react-dom: 19.1.0(react@19.1.0)
 
-  react-spinners@0.15.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-spinners@0.16.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
