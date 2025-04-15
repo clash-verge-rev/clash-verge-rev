@@ -51,7 +51,7 @@
     "dayjs": "1.11.13",
     "foxact": "^0.2.44",
     "framer-motion": "^12.5.0",
-    "i18next": "^24.2.3",
+    "i18next": "^25.0.0",
     "lodash-es": "^4.17.21",
     "monaco-editor": "^0.52.2",
     "monaco-yaml": "^5.3.1",
