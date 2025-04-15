@@ -42,6 +42,7 @@
     "@tauri-apps/plugin-process": "^2.2.0",
     "@tauri-apps/plugin-shell": "2.2.0",
     "@tauri-apps/plugin-updater": "2.3.0",
+    "@tauri-apps/plugin-window-state": "^2.4.0",
     "@types/d3-shape": "^3.1.7",
     "@types/json-schema": "^7.0.15",
     "ahooks": "^3.8.4",

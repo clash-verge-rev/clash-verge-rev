@@ -163,13 +163,14 @@ pub fn create_window(is_showup: bool) {
                 tauri::WebviewUrl::App("index.html".into()),
             )
             .title("Clash Verge")
-            .inner_size(890.0, 700.0)
-            .min_inner_size(620.0, 550.0)
+            .inner_size(900.0, 700.0)
+            .min_inner_size(650.0, 580.0)
             .decorations(false)
             .maximizable(true)
             .additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling")
             .transparent(true)
             .shadow(true)
+            .visible(true)
             .build();
 
     #[cfg(target_os = "macos")]
@@ -181,8 +182,9 @@ pub fn create_window(is_showup: bool) {
     .decorations(true)
     .hidden_title(true)
     .title_bar_style(tauri::TitleBarStyle::Overlay)
-    .inner_size(890.0, 700.0)
-    .min_inner_size(620.0, 550.0)
+    .inner_size(900.0, 700.0)
+    .min_inner_size(650.0, 580.0)
+    .visible(true)
     .build();
 
     #[cfg(target_os = "linux")]
@@ -193,17 +195,15 @@ pub fn create_window(is_showup: bool) {
     )
     .title("Clash Verge")
     .decorations(false)
-    .inner_size(890.0, 700.0)
-    .min_inner_size(620.0, 550.0)
+    .inner_size(900.0, 700.0)
+    .min_inner_size(650.0, 580.0)
     .transparent(true)
+    .visible(true)
     .build();
 
     match window {
-        Ok(window) => {
+        Ok(_) => {
             logging!(info, Type::Window, true, "Window created successfully");
-            let _ = window.show();
-            let _ = window.set_focus();
-
             // 标记前端UI已准备就绪，向前端发送启动完成事件
             let app_handle_clone = app_handle.clone();
             AsyncHandler::spawn(move || async move {

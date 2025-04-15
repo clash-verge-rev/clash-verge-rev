@@ -61,6 +61,7 @@ tauri-plugin-process = "2.2.0"
 tauri-plugin-clipboard-manager = "2.2.2"
 tauri-plugin-deep-link = "2.2.0"
 tauri-plugin-devtools = "2.0.0"
+tauri-plugin-window-state = "2.2.2"
 zip = "2.5.0"
 reqwest_dav = "0.1.15"
 aes-gcm = { version = "0.10.3", features = ["std"] }
