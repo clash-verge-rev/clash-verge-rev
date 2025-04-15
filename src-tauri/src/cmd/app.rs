@@ -214,3 +214,11 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
         Err("file not found".to_string())
     }
 }
+
+/// 通知UI已准备就绪
+#[tauri::command]
+pub fn notify_ui_ready() -> CmdResult<()> {
+    log::info!(target: "app", "前端UI已准备就绪");
+    crate::utils::resolve::mark_ui_ready();
+    Ok(())
+}

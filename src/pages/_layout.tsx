@@ -30,6 +30,7 @@ import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";
 import { useClashInfo } from "@/hooks/use-clash";
 import { initGlobalLogService } from "@/services/global-log-service";
+import { invoke } from "@tauri-apps/api/core";
 
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
@@ -208,6 +209,34 @@ const Layout = () => {
       cleanupWindow.then((cleanup) => cleanup());
     };
   }, [handleNotice]);
+
+  // 监听启动完成事件并通知UI已加载
+  useEffect(() => {
+    const notifyUiReady = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        await invoke("notify_ui_ready");
+        console.log("已通知后端UI准备就绪");
+      } catch (err) {
+        console.error("通知UI准备就绪失败:", err);
+      }
+    };
+
+    // 监听后端发送的启动完成事件
+    const listenStartupCompleted = async () => {
+      const unlisten = await listen("verge://startup-completed", () => {
+        console.log("收到启动完成事件");
+      });
+      return unlisten;
+    };
+
+    notifyUiReady();
+    const unlistenPromise = listenStartupCompleted();
+
+    return () => {
+      unlistenPromise.then(unlisten => unlisten());
+    };
+  }, []);
 
   // 语言和起始页设置
   useEffect(() => {

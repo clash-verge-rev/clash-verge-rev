@@ -19,8 +19,8 @@ use tauri::AppHandle;
 use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
-use utils::logging::Type;
 use tauri_plugin_window_state;
+use utils::logging::Type;
 
 /// A global singleton handle to the application.
 pub struct AppHandleManager {
@@ -118,9 +118,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_window_state::Builder::default()
-            .with_state_flags(tauri_plugin_window_state::StateFlags::all())
-            .build())
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(tauri_plugin_window_state::StateFlags::all())
+                .build(),
+        )
         .setup(|app| {
             #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
@@ -157,6 +159,7 @@ pub fn run() {
             cmd::restart_core,
             cmd::restart_app,
             // 添加新的命令
+            cmd::notify_ui_ready,
             cmd::get_running_mode,
             cmd::get_app_uptime,
             cmd::get_auto_launch_status,
