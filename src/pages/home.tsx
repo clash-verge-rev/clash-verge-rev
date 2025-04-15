@@ -243,8 +243,8 @@ export const HomePage = () => {
   };
 
   // 文档链接函数
-  const toGithubDoc = useLockFn(() => {
-    return openWebUrl("https://clash-verge-rev.github.io/index.html");
+  const toSiteDoc = useLockFn(() => {
+    return openWebUrl("https://cgmax.net/#/knowledge");
   });
 
   // 新增：打开设置弹窗
@@ -273,7 +273,7 @@ export const HomePage = () => {
             </IconButton>
           </Tooltip>
           <Tooltip title={t("Manual")} arrow>
-            <IconButton onClick={toGithubDoc} size="small" color="inherit">
+            <IconButton onClick={toSiteDoc} size="small" color="inherit">
               <HelpOutlineRounded />
             </IconButton>
           </Tooltip>

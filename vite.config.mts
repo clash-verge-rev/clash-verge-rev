@@ -12,7 +12,7 @@ const monacoEditorPluginDefault = (monacoEditorPlugin as any).default as (
 
 export default defineConfig({
   root: "src",
-  server: { port: 3000 },
+  server: { port: 3001 },
   plugins: [
     svgr(),
     react(),
