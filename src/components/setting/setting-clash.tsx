@@ -7,7 +7,7 @@ import {
   LanRounded,
 } from "@mui/icons-material";
 import { DialogRef, Notice, Switch } from "@/components/base";
-import { useClash } from "@/hooks/use-clash";
+import { useClash, useClashInfo } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
 import { WebUIViewer } from "./mods/web-ui-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
@@ -36,6 +36,7 @@ const SettingClash = ({ onError }: Props) => {
 
   const { clash, version, mutateClash, patchClash } = useClash();
   const { verge, mutateVerge, patchVerge } = useVerge();
+  const { clashInfo, patchInfo } = useClashInfo();
 
   const {
     ipv6,
@@ -56,6 +57,15 @@ const SettingClash = ({ onError }: Props) => {
     }
     // 如果没有保存的状态，则从verge配置中获取
     return verge?.enable_dns_settings ?? false;
+  });
+  
+  // 添加外部控制器开关状态
+  const [enableController, setEnableController] = useState(() => {
+    const savedState = localStorage.getItem("enable_external_controller");
+    if (savedState !== null) {
+      return savedState === "true";
+    }
+    return verge?.enable_external_controller ?? true;
   });
   
   const { addListener } = useListen();
@@ -105,6 +115,26 @@ const SettingClash = ({ onError }: Props) => {
         // 忽略恢复状态时的错误
       });
       throw err;
+    }
+  });
+
+  // 处理外部控制器开关状态变化
+  const handleControllerToggle = useLockFn(async (enable: boolean) => {
+    try {
+      setEnableController(enable);
+      localStorage.setItem("enable_external_controller", String(enable));
+      await patchVerge({ enable_external_controller: enable });
+      if (!enable) {
+        await patchInfo({ "external-controller": "", secret: "" });
+      } else {
+        // 如果开启，恢复默认值或之前的值
+        const server = clashInfo?.server || "127.0.0.1:9097";
+        await patchInfo({ "external-controller": server, secret: clashInfo?.secret || "" });
+      }
+    } catch (err: any) {
+      setEnableController(!enable);
+      localStorage.setItem("enable_external_controller", String(!enable));
+      Notice.error(err.message || err.toString());
     }
   });
 
@@ -248,11 +278,41 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        onClick={() => ctrlRef.current?.open()}
-        label={t("External")}
-      />
+        label={t("External Controller")}
+        extra={
+          <TooltipIcon
+            icon={SettingsRounded}
+            onClick={() => ctrlRef.current?.open()}
+          />
+        }
+      >
+        <Switch
+          edge="end"
+          checked={enableController}
+          onChange={(_, checked) => handleControllerToggle(checked)}
+        />
+      </SettingItem>
 
-      <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
+      <SettingItem 
+        onClick={enableController ? () => webRef.current?.open() : undefined} 
+        label={
+          <Typography 
+            component="span" 
+            color={!enableController ? "text.disabled" : "text.primary"}
+            sx={{ fontSize: "inherit" }}
+          >
+            {t("Web UI")}
+          </Typography>
+        }
+        extra={
+          !enableController && (
+            <TooltipIcon
+              title={t("Web UI info")}
+              sx={{ opacity: "0.7" }}
+            />
+          )
+        }
+      />
 
       <SettingItem
         label={t("Clash Core")}
