@@ -15,8 +15,7 @@ use parking_lot::RwLock;
 use percent_encoding::percent_decode_str;
 use serde_json;
 use serde_yaml::Mapping;
-use std::net::TcpListener;
-use std::sync::Arc;
+use std::{net::TcpListener, sync::Arc};
 use tauri::{App, Manager};
 
 use tauri::Url;
