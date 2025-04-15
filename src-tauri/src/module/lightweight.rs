@@ -1,7 +1,3 @@
-use anyhow::{Context, Result};
-use delay_timer::prelude::TaskBuilder;
-use tauri::{Listener, Manager};
-
 use crate::{
     config::Config,
     core::{handle, timer::Timer},
@@ -9,6 +5,13 @@ use crate::{
     utils::logging::Type,
     AppHandleManager,
 };
+
+use anyhow::{Context, Result};
+use delay_timer::prelude::TaskBuilder;
+use once_cell::sync::OnceCell;
+use tauri::{Listener, Manager};
+
+pub static AUTO_LIGHT_WEIGHT_MODE_INIT: OnceCell<()> = OnceCell::new();
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
 
@@ -142,4 +145,20 @@ fn cancel_light_weight_timer() -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn run_once_auto_lightweight() {
+    AUTO_LIGHT_WEIGHT_MODE_INIT.get_or_init(|| {
+        let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
+        let enable_auto = { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
+        if enable_auto && is_silent_start {
+            logging!(
+                info,
+                Type::Lightweight,
+                true,
+                "Add timer listener when creating window in silent start mode"
+            );
+            enable_auto_light_weight_mode();
+        }
+    });
 }

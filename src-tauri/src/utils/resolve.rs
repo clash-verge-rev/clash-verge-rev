@@ -109,8 +109,9 @@ pub async fn resolve_setup(app: &mut App) {
 
     logging_error!(Type::System, true, timer::Timer::global().init());
 
-    let enable_auto_light_weight_mode = { Config::verge().data().enable_auto_light_weight_mode };
-    if enable_auto_light_weight_mode.unwrap_or(false) {
+    let enable_auto_light_weight_mode =
+        { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
+    if enable_auto_light_weight_mode && !is_silent_start {
         lightweight::enable_auto_light_weight_mode();
     }
 
@@ -295,6 +296,9 @@ pub fn create_window(is_showup: bool) {
     match window {
         Ok(window) => {
             logging!(info, Type::Window, true, "Window created successfully");
+
+            // 静默启动模式等窗口初始化再启动自动进入轻量模式的计时监听器，防止初始化的时候找不到窗口对象导致监听器挂载失败
+            lightweight::run_once_auto_lightweight();
 
             // 标记前端UI已准备就绪，向前端发送启动完成事件
             let app_handle_clone = app_handle.clone();
