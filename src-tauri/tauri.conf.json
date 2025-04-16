@@ -2,7 +2,7 @@
   "version": "2.2.3",
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
-    "active": false,
+    "active": true,
     "longDescription": "Clash Max",
     "icon": [
       "icons/32x32.png",
