@@ -160,6 +160,21 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           </Item>
         )}
 
+        {OS === "macos" && (
+          <Item>
+            <ListItemText primary={t("Show In Dock")} />
+            <GuardState
+              value={verge?.show_in_dock ?? true}
+              valueProps="checked"
+              onCatch={onError}
+              onFormat={onSwitchFormat}
+              onChange={(e) => onChangeData({ show_in_dock: e })}
+              onGuard={(e) => patchVerge({ show_in_dock: e })}>
+              <SwitchLovely edge="end" />
+            </GuardState>
+          </Item>
+        )}
+
         <Item>
           <ListItemText
             primary={

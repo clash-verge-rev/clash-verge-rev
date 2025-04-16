@@ -83,6 +83,13 @@ impl Handle {
         Ok(())
     }
 
+    #[cfg(target_os = "macos")]
+    pub fn set_dock_visible(visible: bool) -> Result<()> {
+        let app_handle = Self::get_app_handle();
+        app_handle.set_dock_visibility(visible);
+        Ok(())
+    }
+
     pub fn notification<T: Into<String>, B: Into<String>>(title: T, body: B) -> Result<()> {
         let app_handle = Self::get_app_handle();
         let _ = app_handle

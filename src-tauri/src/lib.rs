@@ -135,6 +135,12 @@ pub fn run() -> Result<()> {
             log_err!(tray::Tray::init(app_handle));
 
             let verge = Config::verge().data().clone();
+            #[cfg(target_os = "macos")]
+            {
+                let show_in_dock = verge.show_in_dock.unwrap_or(true);
+                app_handle.set_dock_visibility(show_in_dock);
+            }
+
             let enable_splashscreen = verge.enable_splashscreen;
             let enable_splashscreen = enable_splashscreen.unwrap_or(true);
             let silent_start = verge.enable_silent_start;

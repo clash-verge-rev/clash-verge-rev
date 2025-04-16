@@ -277,6 +277,7 @@
 
   "Splashscreen": "Splash Screen",
   "System Title Bar": "System Title Bar",
+  "Show In Dock": "Show In Dock",
   "Keep UI Active": "Keep UI Active",
   "Keep UI Active Info": "Keep the UI active and open it again without re-rendering the interface",
   "From": "From",

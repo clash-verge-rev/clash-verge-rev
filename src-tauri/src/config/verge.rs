@@ -153,6 +153,9 @@ pub struct IVerge {
 
     /// enable tray
     pub enable_tray: Option<bool>,
+
+    /// show in dock
+    pub show_in_dock: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -224,6 +227,7 @@ impl IVerge {
             auto_check_update: Some(true),
             auto_log_clean: Some(3),
             enable_tray: Some(true),
+            show_in_dock: Some(true),
             ..Self::default()
         }
     }
@@ -294,6 +298,7 @@ impl IVerge {
         patch!(webdav_username);
         patch!(webdav_password);
         patch!(enable_tray);
+        patch!(show_in_dock);
     }
 
     /// 在初始化前尝试拿到单例端口的值

@@ -469,6 +469,8 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     let log_level = patch.app_log_level;
     let enable_tray = patch.enable_tray;
     let service_mode = patch.enable_service_mode;
+    #[cfg(target_os = "macos")]
+    let show_in_dock = patch.show_in_dock;
 
     if log_level.is_some() {
         let log_level = Config::verge().latest().get_log_level();
@@ -513,6 +515,11 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
 
     if enable_tray.is_some() {
         handle::Handle::set_tray_visible(enable_tray.unwrap())?;
+    }
+
+    #[cfg(target_os = "macos")]
+    if show_in_dock.is_some() {
+        handle::Handle::set_dock_visible(show_in_dock.unwrap_or(true))?;
     }
 
     Ok(())
