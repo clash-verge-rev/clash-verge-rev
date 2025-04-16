@@ -240,6 +240,8 @@
   "Enabled": "Включено",
   "Disabled": "Отключено",
   "Server Addr": "Адрес сервера: ",
+  "Proxy Host": "Хост прокси",
+  "Invalid Proxy Host Format": "Неверный формат хоста прокси",
   "Not available": "Недоступно",
   "Proxy Guard": "Proxy Guard",
   "Proxy Guard Info": "Включите эту функцию чтобы предотвратить изменение настроек прокси-сервера операционной системы другим ПО",

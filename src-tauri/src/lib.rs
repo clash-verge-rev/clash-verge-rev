@@ -156,6 +156,7 @@ pub fn run() {
             cmd::open_core_dir,
             cmd::get_portable_flag,
             cmd::get_network_interfaces,
+            cmd::get_system_hostname,
             cmd::restart_core,
             cmd::restart_app,
             // 添加新的命令

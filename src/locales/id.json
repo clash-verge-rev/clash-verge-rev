@@ -257,6 +257,8 @@
   "Enabled": "Diaktifkan",
   "Disabled": "Dinonaktifkan",
   "Server Addr": "Alamat Server: ",
+  "Proxy Host": "Host Proksi",
+  "Invalid Proxy Host Format": "Format Host Proksi Tidak Valid",
   "Not available": "Tidak tersedia",
   "Proxy Guard": "Penjaga Proksi",
   "Proxy Guard Info": "Aktifkan untuk mencegah perangkat lunak lain mengubah pengaturan proksi sistem operasi",

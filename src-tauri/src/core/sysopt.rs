@@ -76,12 +76,13 @@ impl Sysopt {
             .unwrap_or(Config::clash().data().get_mixed_port());
         let pac_port = IVerge::get_singleton_port();
 
-        let (sys_enable, pac_enable) = {
+        let (sys_enable, pac_enable, proxy_host) = {
             let verge = Config::verge();
             let verge = verge.latest();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
+                verge.proxy_host.clone().unwrap_or_else(|| String::from("127.0.0.1")),
             )
         };
 
@@ -89,13 +90,13 @@ impl Sysopt {
         {
             let mut sys = Sysproxy {
                 enable: false,
-                host: String::from("127.0.0.1"),
+                host: proxy_host.clone(),
                 port,
                 bypass: get_bypass(),
             };
             let mut auto = Autoproxy {
                 enable: false,
-                url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
+                url: format!("http://{}:{}/commands/pac", proxy_host, pac_port),
             };
 
             if !sys_enable {
@@ -139,7 +140,7 @@ impl Sysopt {
 
             let shell = app_handle.shell();
             let output = if pac_enable {
-                let address = format!("http://{}:{}/commands/pac", "127.0.0.1", pac_port);
+                let address = format!("http://{}:{}/commands/pac", proxy_host, pac_port);
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
                     .args(["pac", address.as_str()])
@@ -148,7 +149,7 @@ impl Sysopt {
                     .unwrap();
                 output
             } else {
-                let address = format!("{}:{}", "127.0.0.1", port);
+                let address = format!("{}:{}", proxy_host, port);
                 let bypass = get_bypass();
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
@@ -256,7 +257,7 @@ impl Sysopt {
             loop {
                 sleep(Duration::from_secs(wait_secs)).await;
 
-                let (enable, guard, guard_duration, pac) = {
+                let (enable, guard, guard_duration, pac, proxy_host) = {
                     let verge = Config::verge();
                     let verge = verge.latest();
                     (
@@ -264,6 +265,7 @@ impl Sysopt {
                         verge.enable_proxy_guard.unwrap_or(false),
                         verge.proxy_guard_duration.unwrap_or(10),
                         verge.proxy_auto_config.unwrap_or(false),
+                        verge.proxy_host.clone().unwrap_or_else(|| String::from("127.0.0.1")),
                     )
                 };
 
@@ -303,13 +305,13 @@ impl Sysopt {
                     if pac {
                         let autoproxy = Autoproxy {
                             enable: true,
-                            url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
+                            url: format!("http://{}:{}/commands/pac", proxy_host, pac_port),
                         };
                         logging_error!(Type::System, true, autoproxy.set_auto_proxy());
                     } else {
                         let sysproxy = Sysproxy {
                             enable: true,
-                            host: "127.0.0.1".into(),
+                            host: proxy_host.into(),
                             port,
                             bypass: get_bypass(),
                         };
@@ -333,7 +335,7 @@ impl Sysopt {
 
                     let shell = app_handle.shell();
                     let output = if pac {
-                        let address = format!("http://{}:{}/commands/pac", "127.0.0.1", pac_port);
+                        let address = format!("http://{}:{}/commands/pac", proxy_host, pac_port);
 
                         shell
                             .command(sysproxy_exe.as_path().to_str().unwrap())
@@ -342,7 +344,7 @@ impl Sysopt {
                             .await
                             .unwrap()
                     } else {
-                        let address = format!("{}:{}", "127.0.0.1", port);
+                        let address = format!("{}:{}", proxy_host, port);
                         let bypass = get_bypass();
 
                         shell
