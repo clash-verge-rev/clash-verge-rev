@@ -334,7 +334,7 @@ impl Tray {
                 let current = config_profiles.get_current().unwrap_or_default();
                 if current != clicked_profile {
                     tauri::async_runtime::spawn(async move {
-                        match cmds::patch_profiles_config(IProfiles {
+                        match cmds::profile::patch_profiles_config(IProfiles {
                             current: Some(clicked_profile),
                             chain: None,
                             items: None,
@@ -364,16 +364,16 @@ impl Tray {
             }
             "service_mode" => feat::toggle_service_mode(),
             "copy_env" => feat::copy_clash_env(app_handle),
-            "open_app_dir" => crate::log_err!(cmds::open_app_dir(app_handle_)),
-            "open_core_dir" => crate::log_err!(cmds::open_core_dir(app_handle_)),
-            "open_logs_dir" => crate::log_err!(cmds::open_logs_dir(app_handle_)),
-            "open_devtools" => cmds::open_devtools(app_handle_),
+            "open_app_dir" => crate::log_err!(cmds::common::open_app_dir(app_handle_)),
+            "open_core_dir" => crate::log_err!(cmds::common::open_core_dir(app_handle_)),
+            "open_logs_dir" => crate::log_err!(cmds::common::open_logs_dir(app_handle_)),
+            "open_devtools" => cmds::common::open_devtools(app_handle_),
             "restart_clash" => feat::restart_clash_core(),
             "restart_app" => tauri::async_runtime::block_on(async move {
-                let _ = cmds::restart_app(app_handle_).await;
+                let _ = cmds::common::restart_app(app_handle_).await;
             }),
             "quit" => tauri::async_runtime::block_on(async move {
-                cmds::exit_app(app_handle_).await;
+                cmds::common::exit_app(app_handle_).await;
             }),
             _ => {}
         }

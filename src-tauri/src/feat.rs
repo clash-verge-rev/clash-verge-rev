@@ -189,7 +189,7 @@ pub fn toggle_tun_mode() {
                         format!("{}, {}", toggle_failed_msg, err),
                     );
                 } else {
-                    let _ = cmds::service::check_service_and_clash().await;
+                    let _ = cmds::check_service_and_clash().await;
                     handle::Handle::refresh_verge();
                     match patch_clash(tun).await {
                         Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
@@ -213,7 +213,7 @@ pub fn toggle_tun_mode() {
                 )
                 .unwrap_or(false);
                 if status && install_and_run_service().await.is_ok() {
-                    if let Err(err) = cmds::service::check_service_and_clash().await {
+                    if let Err(err) = cmds::check_service_and_clash().await {
                         let _ = handle::Handle::notification(
                             "Tun Mode",
                             format!("{}, {}", toggle_failed_msg, err),
@@ -418,7 +418,7 @@ pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
     // handle window size when toggle system title bar enable on linux wayland
     let enable_system_title_bar = patch.enable_system_title_bar;
     if let Some(system_title_bar) = enable_system_title_bar {
-        if cmds::is_wayland().unwrap_or(false) {
+        if cmds::common::is_wayland().unwrap_or(false) {
             let verge = Config::verge();
             let verge = verge.latest().clone();
             let verge_size_position = verge.window_size_position;

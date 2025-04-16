@@ -109,7 +109,7 @@ pub fn create_window() {
             #[cfg(target_os = "linux")]
             {
                 use crate::cmds;
-                let is_wayland = cmds::is_wayland().unwrap_or(false);
+                let is_wayland = cmds::common::is_wayland().unwrap_or(false);
                 if _decoration && is_wayland {
                     builder = builder
                         .inner_size(w - 90.0, h - 90.0)
@@ -139,7 +139,7 @@ pub fn create_window() {
     #[cfg(target_os = "linux")]
     let window = {
         use crate::cmds;
-        let visiable = _decoration && cmds::is_wayland().unwrap_or(false);
+        let visiable = _decoration && cmds::common::is_wayland().unwrap_or(false);
         builder
             .visible(visiable)
             .shadow(true)
