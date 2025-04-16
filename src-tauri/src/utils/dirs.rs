@@ -5,12 +5,12 @@ use std::{fs, path::PathBuf};
 use tauri::Manager;
 
 #[cfg(not(feature = "max-dev"))]
-pub static APP_ID: &str = "io.github.cg3s.clash-max";
+pub static APP_ID: &str = "cgsss.clash-max";
 #[cfg(not(feature = "max-dev"))]
 pub static BACKUP_DIR: &str = "clash-max-backup";
 
 #[cfg(feature = "max-dev")]
-pub static APP_ID: &str = "io.github.cg3s.clash-max";
+pub static APP_ID: &str = "cgsss.clash-max";
 #[cfg(feature = "max-dev")]
 pub static BACKUP_DIR: &str = "clash-max-backup-dev";
 

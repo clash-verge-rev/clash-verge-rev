@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "identifier": "io.github.cg3s.clash-max",
+  "identifier": "cgsss.clash-max",
   "bundle": {
     "targets": ["nsis"],
     "windows": {
