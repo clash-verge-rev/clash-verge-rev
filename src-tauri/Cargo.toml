@@ -10,7 +10,7 @@ edition = "2021"
 build = "build.rs"
 
 [package.metadata.bundle]
-identifier = "cgsss.clash-max"
+identifier = "cg3s.clash-max"
 
 [build-dependencies]
 tauri-build = { version = "2.1.0", features = [] }

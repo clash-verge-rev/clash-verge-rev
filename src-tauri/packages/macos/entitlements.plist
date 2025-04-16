@@ -6,7 +6,7 @@
     <false/>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>cgsss.clash-max</string>
+        <string>cg3s.clash-max</string>
     </array>
     <key>com.apple.security.inherit</key>
     <true/>

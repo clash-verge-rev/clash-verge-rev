@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "identifier": "cgsss.clash-max",
+  "identifier": "cg3s.clash-max",
   "productName": "Clash Max",
   "bundle": {
     "targets": ["app", "dmg"],

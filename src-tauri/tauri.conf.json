@@ -15,7 +15,7 @@
       "resources",
       "resources/locales/*"
     ],
-    "publisher": "CGSSS/CGMAX",
+    "publisher": "Cg3s, Inc",
     "externalBin": [
       "sidecar/max-mihomo",
       "sidecar/max-mihomo-alpha"
@@ -32,7 +32,7 @@
     "devUrl": "http://localhost:3001/"
   },
   "productName": "Clash Max",
-  "identifier": "cgsss.clash-max",
+  "identifier": "cg3s.clash-max",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDYyMzMwRTExQ0M1RTNGRkEKUldUNlAxN01FUTR6WWh0R244SnFId2tSYVBnbzIyRlI4bXNqblJwU3ErSjQ4bW5YOTBmaFVBZ0YK",
