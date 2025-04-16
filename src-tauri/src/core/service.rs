@@ -490,10 +490,10 @@ pub async fn check_service() -> Result<JsonResponse> {
         .get(url)
         .send()
         .await
-        .context("failed to connect to the Clash Verge Service")?
+        .context("failed to connect to the Clash Max Service")?
         .json::<JsonResponse>()
         .await
-        .context("failed to parse the Clash Verge Service response")?;
+        .context("failed to parse the Clash Max Service response")?;
 
     Ok(response)
 }
@@ -508,10 +508,10 @@ pub async fn check_service_version() -> Result<String> {
         .get(url)
         .send()
         .await
-        .context("failed to connect to the Clash Verge Service")?
+        .context("failed to connect to the Clash Max Service")?
         .json::<VersionJsonResponse>()
         .await
-        .context("failed to parse the Clash Verge Service version response")?;
+        .context("failed to parse the Clash Max Service version response")?;
 
     match response.data {
         Some(data) => Ok(data.version),
@@ -571,7 +571,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     log::info!(target:"app", "attempting to start core with existing service");
 
     let clash_core = { Config::verge().latest().clash_core.clone() };
-    let clash_core = clash_core.unwrap_or("verge-mihomo".into());
+    let clash_core = clash_core.unwrap_or("max-mihomo".into());
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let clash_bin = format!("{clash_core}{bin_ext}");
@@ -603,7 +603,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
         .json(&map)
         .send()
         .await
-        .context("failed to connect to the Clash Verge Service")?;
+        .context("failed to connect to the Clash Max Service")?;
 
     Ok(())
 }
@@ -717,7 +717,7 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
         .post(url)
         .send()
         .await
-        .context("failed to connect to the Clash Verge Service")?;
+        .context("failed to connect to the Clash Max Service")?;
 
     Ok(())
 }

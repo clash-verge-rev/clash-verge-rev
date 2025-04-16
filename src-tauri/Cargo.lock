@@ -1041,7 +1041,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "clash-verge"
+name = "clash-max"
 version = "2.2.4-alpha"
 dependencies = [
  "ab_glyph",

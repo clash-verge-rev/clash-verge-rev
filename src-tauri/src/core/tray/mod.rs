@@ -352,7 +352,7 @@ impl Tray {
 
         let tray = app_handle.tray_by_id("main").unwrap();
         let _ = tray.set_tooltip(Some(&format!(
-            "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
+            "Clash Max {version}\n{}: {}\n{}: {}\n{}: {}",
             t("SysProxy"),
             switch_map[system_proxy],
             t("TUN"),

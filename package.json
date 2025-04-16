@@ -1,6 +1,6 @@
 {
   "name": "clash-max",
-  "version": "2.2.4-alpha",
+  "version": "2.2.3.1",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev -- --profile fast-dev",

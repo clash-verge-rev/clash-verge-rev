@@ -5,14 +5,14 @@ use std::{fs, path::PathBuf};
 use tauri::Manager;
 
 #[cfg(not(feature = "verge-dev"))]
-pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
+pub static APP_ID: &str = "io.github.cg3s.clash-max";
 #[cfg(not(feature = "verge-dev"))]
-pub static BACKUP_DIR: &str = "clash-verge-rev-backup";
+pub static BACKUP_DIR: &str = "clash-max-backup";
 
 #[cfg(feature = "verge-dev")]
-pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev.dev";
+pub static APP_ID: &str = "io.github.cg3s.clash-max";
 #[cfg(feature = "verge-dev")]
-pub static BACKUP_DIR: &str = "clash-verge-rev-backup-dev";
+pub static BACKUP_DIR: &str = "clash-max-backup-dev";
 
 pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 
@@ -126,12 +126,12 @@ pub fn profiles_path() -> Result<PathBuf> {
 
 #[cfg(target_os = "macos")]
 pub fn service_path() -> Result<PathBuf> {
-    Ok(app_resources_dir()?.join("clash-verge-service"))
+    Ok(app_resources_dir()?.join("clash-max-service"))
 }
 
 #[cfg(windows)]
 pub fn service_path() -> Result<PathBuf> {
-    Ok(app_resources_dir()?.join("clash-verge-service.exe"))
+    Ok(app_resources_dir()?.join("clash-max-service.exe"))
 }
 
 pub fn service_log_file() -> Result<PathBuf> {

@@ -162,7 +162,7 @@ pub fn create_window(is_showup: bool) {
                 "main".to_string(),
                 tauri::WebviewUrl::App("index.html".into()),
             )
-            .title("Clash Verge")
+            .title("Clash Max")
             .inner_size(890.0, 700.0)
             .min_inner_size(620.0, 550.0)
             .decorations(false)
@@ -191,7 +191,7 @@ pub fn create_window(is_showup: bool) {
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
     )
-    .title("Clash Verge")
+    .title("Clash Max")
     .decorations(false)
     .inner_size(890.0, 700.0)
     .min_inner_size(620.0, 550.0)

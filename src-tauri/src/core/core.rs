@@ -47,7 +47,7 @@ impl fmt::Display for RunningMode {
     }
 }
 
-const CLASH_CORES: [&str; 2] = ["verge-mihomo", "verge-mihomo-alpha"];
+const CLASH_CORES: [&str; 2] = ["max-mihomo", "max-mihomo-alpha"];
 
 impl CoreManager {
     /// 检查文件是否为脚本文件
@@ -141,7 +141,7 @@ impl CoreManager {
         help::save_yaml(
             &runtime_path,
             &Config::clash().latest().0,
-            Some("# Clash Verge Runtime"),
+            Some("# Clash Max Runtime"),
         )?;
         handle::Handle::notice_message(msg_type, msg_content);
         Ok(())
@@ -243,7 +243,7 @@ impl CoreManager {
         );
 
         let clash_core = { Config::verge().latest().clash_core.clone() };
-        let clash_core = clash_core.unwrap_or("verge-mihomo".into());
+        let clash_core = clash_core.unwrap_or("max-mihomo".into());
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -439,7 +439,7 @@ impl CoreManager {
             .latest()
             .clash_core
             .clone()
-            .unwrap_or("verge-mihomo".to_string());
+            .unwrap_or("max-mihomo".to_string());
         let config_dir = dirs::app_home_dir()?;
         let (_, child) = app_handle
             .shell()

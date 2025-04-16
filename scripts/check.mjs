@@ -11,7 +11,7 @@ import { log_info, log_debug, log_error, log_success } from "./utils.mjs";
 import { glob } from "glob";
 
 const cwd = process.cwd();
-const TEMP_DIR = path.join(cwd, "node_modules/.verge");
+const TEMP_DIR = path.join(cwd, "node_modules/.max");
 const FORCE = process.argv.includes("--force");
 
 const PLATFORM_MAP = {
@@ -175,8 +175,8 @@ function clashMetaAlpha() {
   const zipFile = `${name}-${META_ALPHA_VERSION}.${urlExt}`;
 
   return {
-    name: "verge-mihomo-alpha",
-    targetFile: `verge-mihomo-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "max-mihomo-alpha",
+    targetFile: `max-mihomo-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     downloadURL,
@@ -192,8 +192,8 @@ function clashMeta() {
   const zipFile = `${name}-${META_VERSION}.${urlExt}`;
 
   return {
-    name: "verge-mihomo",
-    targetFile: `verge-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    name: "max-mihomo",
+    targetFile: `max-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
     exeFile,
     zipFile,
     downloadURL,
@@ -381,7 +381,7 @@ const resolvePlugin = async () => {
 // service chmod
 const resolveServicePermission = async () => {
   const serviceExecutables = [
-    "clash-verge-service*",
+    "clash-max-service*",
     "install-service*",
     "uninstall-service*",
   ];
@@ -429,14 +429,14 @@ async function resolveLocales() {
 /**
  * main
  */
-const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
+const SERVICE_URL = `https://github.com/cg3s/clash-max-service/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () => {
   let ext = platform === "win32" ? ".exe" : "";
   let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
-    file: "clash-verge-service" + suffix + ext,
-    downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
+    file: "clash-max-service" + suffix + ext,
+    downloadURL: `${SERVICE_URL}/clash-max-service${ext}`,
   });
 };
 
@@ -489,13 +489,13 @@ const resolveWinSysproxy = () =>
 const tasks = [
   // { name: "clash", func: resolveClash, retry: 5 },
   {
-    name: "verge-mihomo-alpha",
+    name: "max-mihomo-alpha",
     func: () =>
       getLatestAlphaVersion().then(() => resolveSidecar(clashMetaAlpha())),
     retry: 5,
   },
   {
-    name: "verge-mihomo",
+    name: "max-mihomo",
     func: () =>
       getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
     retry: 5,

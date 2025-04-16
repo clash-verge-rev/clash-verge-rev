@@ -21,8 +21,8 @@ import { changeClashCore, restartCore } from "@/services/cmds";
 import { closeAllConnections, upgradeCore } from "@/services/api";
 
 const VALID_CORE = [
-  { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
-  { name: "Mihomo Alpha", core: "verge-mihomo-alpha", chip: "Alpha Version" },
+  { name: "Mihomo", core: "max-mihomo", chip: "Release Version" },
+  { name: "Mihomo Alpha", core: "max-mihomo-alpha", chip: "Alpha Version" },
 ];
 
 export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
@@ -38,7 +38,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  const { clash_core = "verge-mihomo" } = verge ?? {};
+  const { clash_core = "max-mihomo" } = verge ?? {};
 
   const onCoreChange = useLockFn(async (core: string) => {
     if (core === clash_core) return;

@@ -1,7 +1,7 @@
 //! Some config file template
 
 /// template for new a profile item
-pub const ITEM_LOCAL: &str = "# Profile Template for Clash Verge
+pub const ITEM_LOCAL: &str = "# Profile Template for Clash Max
 
 proxies: []
 
@@ -11,7 +11,7 @@ rules: []
 ";
 
 /// enhanced profile
-pub const ITEM_MERGE: &str = "# Profile Enhancement Merge Template for Clash Verge
+pub const ITEM_MERGE: &str = "# Profile Enhancement Merge Template for Clash Max
 
 profile:
   store-selected: true
@@ -20,7 +20,7 @@ dns:
   use-system-hosts: false
 ";
 
-pub const ITEM_MERGE_EMPTY: &str = "# Profile Enhancement Merge Template for Clash Verge
+pub const ITEM_MERGE_EMPTY: &str = "# Profile Enhancement Merge Template for Clash Max
 
 ";
 
@@ -33,7 +33,7 @@ function main(config, profileName) {
 ";
 
 /// enhanced profile
-pub const ITEM_RULES: &str = "# Profile Enhancement Rules Template for Clash Verge
+pub const ITEM_RULES: &str = "# Profile Enhancement Rules Template for Clash Max
 
 prepend: []
 
@@ -43,7 +43,7 @@ delete: []
 ";
 
 /// enhanced profile
-pub const ITEM_PROXIES: &str = "# Profile Enhancement Proxies Template for Clash Verge
+pub const ITEM_PROXIES: &str = "# Profile Enhancement Proxies Template for Clash Max
 
 prepend: []
 
@@ -53,7 +53,7 @@ delete: []
 ";
 
 /// enhanced profile
-pub const ITEM_GROUPS: &str = "# Profile Enhancement Groups Template for Clash Verge
+pub const ITEM_GROUPS: &str = "# Profile Enhancement Groups Template for Clash Max
 
 prepend: []
 

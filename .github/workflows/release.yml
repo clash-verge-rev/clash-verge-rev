@@ -82,7 +82,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: v__VERSION__
-          releaseName: "Clash Verge Rev v__VERSION__"
+          releaseName: "Clash Max v__VERSION__"
           releaseBody: "More new features are now supported."
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
@@ -201,7 +201,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
+          name: "Clash Max v${{env.VERSION}}"
           body: "More new features are now supported."
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
@@ -292,7 +292,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
-          name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
+          name: "Clash Max v${{steps.build.outputs.appVersion}}"
           body: "More new features are now supported."
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
@@ -368,7 +368,7 @@ jobs:
       - name: Submit to Winget
         uses: vedantmgoyal9/winget-releaser@main
         with:
-          identifier: ClashVergeRev.ClashVergeRev
+          identifier: cg3s.ClashMax
           version: ${{env.VERSION}}
           release-tag: v${{env.VERSION}}
           installers-regex: '_(arm64|x64|x86)-setup\.exe$'

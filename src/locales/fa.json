@@ -213,7 +213,7 @@
   "uninstall": "حذف شده",
   "active": "فعال",
   "unknown": "ناشناخته",
-  "Information: Please make sure that the Clash Verge Service is installed and enabled": "اطلاعات: لطفاً مطمئن شوید که سرویس Clash Verge نصب و فعال شده است",
+  "Information: Please make sure that the Clash Max Service is installed and enabled": "اطلاعات: لطفاً مطمئن شوید که سرویس Clash Max نصب و فعال شده است",
   "Install": "نصب",
   "Uninstall": "حذف نصب",
   "Disable Service Mode": "غیرفعال کردن حالت سرویس",
@@ -450,5 +450,5 @@
   "TUN requires Service Mode": "حالت تونل‌زنی نیاز به سرویس دارد",
   "Install Service": "نصب سرویس",
   "Installing Service...": "در حال نصب سرویس...",
-  "Service Administrator Prompt": "Clash Verge برای نصب مجدد سرویس سیستم به امتیازات مدیر نیاز دارد"
+  "Service Administrator Prompt": "Clash Max برای نصب مجدد سرویس سیستم به امتیازات مدیر نیاز دارد"
 }

@@ -428,51 +428,51 @@ Function .onInit
 FunctionEnd
 
 !macro CheckAllVergeProcesses
-  ; Check if clash-verge-service.exe is running
+  ; Check if clash-max-service.exe is running
   !if "${INSTALLMODE}" == "currentUser"
-    nsis_tauri_utils::FindProcessCurrentUser "clash-verge-service.exe"
+    nsis_tauri_utils::FindProcessCurrentUser "clash-max-service.exe"
   !else
-    nsis_tauri_utils::FindProcess "clash-verge-service.exe"
+    nsis_tauri_utils::FindProcess "clash-max-service.exe"
   !endif
   Pop $R0
   ${If} $R0 = 0
-    DetailPrint "Kill clash-verge-service.exe..."
+    DetailPrint "Kill clash-max-service.exe..."
     !if "${INSTALLMODE}" == "currentUser"
-      nsis_tauri_utils::KillProcessCurrentUser "clash-verge-service.exe"
+      nsis_tauri_utils::KillProcessCurrentUser "clash-max-service.exe"
     !else
-      nsis_tauri_utils::KillProcess "clash-verge-service.exe"
+      nsis_tauri_utils::KillProcess "clash-max-service.exe"
     !endif
   ${EndIf}
 
-  ; Check if verge-mihomo-alpha.exe is running
+  ; Check if max-mihomo-alpha.exe is running
   !if "${INSTALLMODE}" == "currentUser"
-    nsis_tauri_utils::FindProcessCurrentUser "verge-mihomo-alpha.exe"
+    nsis_tauri_utils::FindProcessCurrentUser "max-mihomo-alpha.exe"
   !else
-    nsis_tauri_utils::FindProcess "verge-mihomo-alpha.exe"
+    nsis_tauri_utils::FindProcess "max-mihomo-alpha.exe"
   !endif
   Pop $R0
   ${If} $R0 = 0
-    DetailPrint "Kill verge-mihomo-alpha.exe..."
+    DetailPrint "Kill max-mihomo-alpha.exe..."
     !if "${INSTALLMODE}" == "currentUser"
-      nsis_tauri_utils::KillProcessCurrentUser "verge-mihomo-alpha.exe"
+      nsis_tauri_utils::KillProcessCurrentUser "max-mihomo-alpha.exe"
     !else
-      nsis_tauri_utils::KillProcess "verge-mihomo-alpha.exe"
+      nsis_tauri_utils::KillProcess "max-mihomo-alpha.exe"
     !endif
   ${EndIf}
 
-  ; Check if verge-mihomo.exe is running
+  ; Check if max-mihomo.exe is running
   !if "${INSTALLMODE}" == "currentUser"
-    nsis_tauri_utils::FindProcessCurrentUser "verge-mihomo.exe"
+    nsis_tauri_utils::FindProcessCurrentUser "max-mihomo.exe"
   !else
-    nsis_tauri_utils::FindProcess "verge-mihomo.exe"
+    nsis_tauri_utils::FindProcess "max-mihomo.exe"
   !endif
   Pop $R0
   ${If} $R0 = 0
-    DetailPrint "Kill verge-mihomo.exe..."
+    DetailPrint "Kill max-mihomo.exe..."
     !if "${INSTALLMODE}" == "currentUser"
-      nsis_tauri_utils::KillProcessCurrentUser "verge-mihomo.exe"
+      nsis_tauri_utils::KillProcessCurrentUser "max-mihomo.exe"
     !else
-      nsis_tauri_utils::KillProcess "verge-mihomo.exe"
+      nsis_tauri_utils::KillProcess "max-mihomo.exe"
     !endif
   ${EndIf}
 
@@ -523,7 +523,7 @@ FunctionEnd
     ${If} $0 == 0
       Push $0
       ${If} $1 == 0
-            DetailPrint "Restart Clash Verge Service..."
+            DetailPrint "Restart Clash Max Service..."
             SimpleSC::StartService "clash_verge_service" "" 30
       ${EndIf}
     ${ElseIf} $0 != 0
@@ -549,20 +549,20 @@ FunctionEnd
     ${If} $0 == 0
       Push $0
       ${If} $1 == 1
-        DetailPrint "Stop Clash Verge Service..."
+        DetailPrint "Stop Clash Max Service..."
         SimpleSC::StopService "clash_verge_service" 1 30
         Pop $0 ; returns an errorcode (<>0) otherwise success (0)
         ${If} $0 == 0
-              DetailPrint "Removing Clash Verge Service..."
+              DetailPrint "Removing Clash Max Service..."
               SimpleSC::RemoveService "clash_verge_service"
         ${ElseIf} $0 != 0
                   Push $0
                   SimpleSC::GetErrorMessage
                   Pop $0
-                  MessageBox MB_OK|MB_ICONSTOP "Clash Verge Service Stop Error ($0)"
+                  MessageBox MB_OK|MB_ICONSTOP "Clash Max Service Stop Error ($0)"
         ${EndIf}
   ${ElseIf} $1 == 0
-        DetailPrint "Removing Clash Verge Service..."
+        DetailPrint "Removing Clash Max Service..."
         SimpleSC::RemoveService "clash_verge_service"
   ${EndIf}
     ${ElseIf} $0 != 0
@@ -772,32 +772,32 @@ Section Install
   StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Run"
   
   SetRegView 64  
-  ; 清理旧版本的注册表项 (Clash Verge)
-  ReadRegStr $R2 HKCU "$R1" "Clash Verge"
+  ; 清理旧版本的注册表项 (Clash Max)
+  ReadRegStr $R2 HKCU "$R1" "Clash Max"
   ${If} $R2 != ""
-    DeleteRegValue HKCU "$R1" "Clash Verge"
+    DeleteRegValue HKCU "$R1" "Clash Max"
   ${EndIf}
   
-  ReadRegStr $R2 HKLM "$R1" "Clash Verge"
+  ReadRegStr $R2 HKLM "$R1" "Clash Max"
   ${If} $R2 != ""
-    DeleteRegValue HKLM "$R1" "Clash Verge"
+    DeleteRegValue HKLM "$R1" "Clash Max"
   ${EndIf}
 
-  ; 清理新版本的注册表项 (clash-verge)
-  ReadRegStr $R2 HKCU "$R1" "clash-verge"
+  ; 清理新版本的注册表项 (clash-max)
+  ReadRegStr $R2 HKCU "$R1" "clash-max"
   ${If} $R2 != ""
-    DeleteRegValue HKCU "$R1" "clash-verge"
+    DeleteRegValue HKCU "$R1" "clash-max"
   ${EndIf}
   
-  ReadRegStr $R2 HKLM "$R1" "clash-verge"
+  ReadRegStr $R2 HKLM "$R1" "clash-max"
   ${If} $R2 != ""
-    DeleteRegValue HKLM "$R1" "clash-verge"
+    DeleteRegValue HKLM "$R1" "clash-max"
   ${EndIf}
 
   ; Delete old files before installation
-    ; Delete clash-verge.desktop
-  IfFileExists "$INSTDIR\Clash Verge.exe" 0 +2
-    Delete "$INSTDIR\Clash Verge.exe"
+    ; Delete clash-max.desktop
+  IfFileExists "$INSTDIR\Clash Max.exe" 0 +2
+    Delete "$INSTDIR\Clash Max.exe"
   
   ; Copy main executable
   File "${MAINBINARYSRCPATH}"
@@ -926,26 +926,26 @@ Section Uninstall
   StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Run"
   
   SetRegView 64
-  ; 清理旧版本的注册表项 (Clash Verge)
-  ReadRegStr $R2 HKCU "$R1" "Clash Verge"
+  ; 清理旧版本的注册表项 (Clash Max)
+  ReadRegStr $R2 HKCU "$R1" "Clash Max"
   ${If} $R2 != ""
-    DeleteRegValue HKCU "$R1" "Clash Verge"
+    DeleteRegValue HKCU "$R1" "Clash Max"
   ${EndIf}
   
-  ReadRegStr $R2 HKLM "$R1" "Clash Verge"
+  ReadRegStr $R2 HKLM "$R1" "Clash Max"
   ${If} $R2 != ""
-    DeleteRegValue HKLM "$R1" "Clash Verge"
+    DeleteRegValue HKLM "$R1" "Clash Max"
   ${EndIf}
 
-  ; 清理新版本的注册表项 (clash-verge)
-  ReadRegStr $R2 HKCU "$R1" "clash-verge"
+  ; 清理新版本的注册表项 (clash-max)
+  ReadRegStr $R2 HKCU "$R1" "clash-max"
   ${If} $R2 != ""
-    DeleteRegValue HKCU "$R1" "clash-verge"
+    DeleteRegValue HKCU "$R1" "clash-max"
   ${EndIf}
   
-  ReadRegStr $R2 HKLM "$R1" "clash-verge"
+  ReadRegStr $R2 HKLM "$R1" "clash-max"
   ${If} $R2 != ""
-    DeleteRegValue HKLM "$R1" "clash-verge"
+    DeleteRegValue HKLM "$R1" "clash-max"
   ${EndIf}
 
   ; Delete the app directory and its content from disk
@@ -962,9 +962,9 @@ Section Uninstall
     Delete "$INSTDIR\\{{this}}"
   {{/each}}
 
-  ; Delete clash-verge.desktop
-  IfFileExists "$INSTDIR\Clash Verge.exe" 0 +2
-    Delete "$INSTDIR\Clash Verge.exe"
+  ; Delete clash-max.desktop
+  IfFileExists "$INSTDIR\Clash Max.exe" 0 +2
+    Delete "$INSTDIR\Clash Max.exe"
 
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"

@@ -17,8 +17,8 @@
     ],
     "publisher": "Clash Max",
     "externalBin": [
-      "sidecar/verge-mihomo",
-      "sidecar/verge-mihomo-alpha"
+      "sidecar/max-mihomo",
+      "sidecar/max-mihomo-alpha"
     ],
     "copyright": "GNU General Public License v3.0",
     "category": "DeveloperTool",

@@ -248,7 +248,7 @@ pub fn run() {
                     .get_handle()
                     .get_webview_window("main")
                 {
-                    let _ = window.set_title("Clash Verge");
+                    let _ = window.set_title("Clash Max");
                 }
             }
         }
