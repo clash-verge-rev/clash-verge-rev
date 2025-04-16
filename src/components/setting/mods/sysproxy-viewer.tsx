@@ -387,7 +387,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               edge="end"
               disabled={!enabled}
               checked={value.use_default}
-              onChange={(_, e) => setValue((v) => ({ ...v, use_default: e }))}
+              onChange={(_, e) => setValue((v) => ({
+                ...v,
+                use_default: e,
+                // 当取消选择use_default且当前bypass为空时，填充默认值
+                bypass: (!e && !v.bypass) ? defaultBypass() : v.bypass
+              }))}
             />
           </ListItem>
         )}
