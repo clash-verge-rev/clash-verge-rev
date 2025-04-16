@@ -217,7 +217,7 @@ pub fn create_backup() -> Result<(String, PathBuf), Error> {
         obj.remove("webdav_password");
         obj.remove("webdav_url");
     }
-    zip.start_file(dirs::VERGE_CONFIG, options)?;
+    zip.start_file(dirs::MAX_CONFIG, options)?;
     zip.write_all(serde_yaml::to_string(&verge_config)?.as_bytes())?;
 
     zip.start_file(dirs::PROFILE_YAML, options)?;

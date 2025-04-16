@@ -19,7 +19,7 @@ impl Debug for PlatformSpecification {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "System Name: {}\nSystem Version: {}\nSystem kernel Version: {}\nSystem Arch: {}\nVerge Version: {}\nRunning Mode: {}\nIs Admin: {}",
+            "System Name: {}\nSystem Version: {}\nSystem kernel Version: {}\nSystem Arch: {}\nMax Version: {}\nRunning Mode: {}\nIs Admin: {}",
             self.system_name, self.system_version, self.system_kernel_version, self.system_arch, self.verge_version, self.running_mode, self.is_admin
         )
     }

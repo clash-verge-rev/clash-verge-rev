@@ -309,7 +309,7 @@ export const SystemInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("Verge Version")}
+            {t("Max Version")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             v{appVersion}

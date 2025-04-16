@@ -6,7 +6,7 @@
     <false/>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>io.github.clash-verge-rev.clash-verge-rev</string>
+        <string>io.github.cg3s.clash-max</string>
     </array>
     <key>com.apple.security.inherit</key>
     <true/>

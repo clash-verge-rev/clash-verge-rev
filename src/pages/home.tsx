@@ -19,7 +19,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { useProfiles } from "@/hooks/use-profiles";
 import {
   RouterOutlined,
-  SettingsOutlined,
+  ViewListOutlined,
   DnsOutlined,
   SpeedOutlined,
   HelpOutlineRounded,
@@ -38,7 +38,6 @@ import { ClashInfoCard } from "@/components/home/clash-info-card";
 import { SystemInfoCard } from "@/components/home/system-info-card";
 import { useLockFn } from "ahooks";
 import {
-  entry_lightweight_mode,
   openWebUrl,
   patchVergeConfig,
 } from "@/services/cmds";
@@ -107,7 +106,7 @@ const HomeSettingsDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{t("Home Settings")}</DialogTitle>
+      <DialogTitle>{t("View Settings")}</DialogTitle>
       <DialogContent>
         <FormGroup>
           <FormControlLabel
@@ -259,27 +258,18 @@ export const HomePage = () => {
 
   return (
     <BasePage
-      title={t("Label-Home")}
+      title={t("Label-Dashboard")}
       contentStyle={{ padding: 2 }}
       header={
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Tooltip title={t("LightWeight Mode")} arrow>
-            <IconButton
-              onClick={async () => await entry_lightweight_mode()}
-              size="small"
-              color="inherit"
-            >
-              <HistoryEduOutlined />
-            </IconButton>
-          </Tooltip>
           <Tooltip title={t("Manual")} arrow>
             <IconButton onClick={toSiteDoc} size="small" color="inherit">
               <HelpOutlineRounded />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t("Home Settings")} arrow>
+          <Tooltip title={t("View Settings")} arrow>
             <IconButton onClick={openSettings} size="small" color="inherit">
-              <SettingsOutlined />
+              <ViewListOutlined />
             </IconButton>
           </Tooltip>
         </Box>

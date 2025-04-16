@@ -628,7 +628,7 @@ fn create_tray_menu(
     let app_version = &MenuItem::with_id(
         app_handle,
         "app_version",
-        format!("{} {version}", t("Verge Version")),
+        format!("{} {version}", t("Max Version")),
         true,
         None::<&str>,
     )

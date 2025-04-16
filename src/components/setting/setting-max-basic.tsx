@@ -70,7 +70,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
   }, []);
 
   return (
-    <SettingList title={t("Verge Basic Setting")}>
+    <SettingList title={t("Max Basic Setting")}>
       <ThemeViewer ref={themeRef} />
       <ConfigViewer ref={configRef} />
       <HotkeyViewer ref={hotkeyRef} />

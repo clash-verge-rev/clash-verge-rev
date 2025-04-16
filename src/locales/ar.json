@@ -275,7 +275,7 @@
   "Open UWP tool": "فتح أداة UWP",
   "Open UWP tool Info": "منذ نظام ويندوز 8، يتم تقييد تطبيقات UWP من الوصول المباشر إلى المضيف المحلي. هذه الأداة تتيح تجاوز هذا التقييد",
   "Update GeoData": "تحديث البيانات الجغرافية",
-  "Verge Setting": "إعدادات Verge",
+  "Max Setting": "إعدادات Max",
   "Language": "اللغة",
   "Theme Mode": "وضع السمة",
   "theme.light": "سمة فاتحة",
@@ -346,7 +346,7 @@
   "Break Change Update Error": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا",
   "Open Dev Tools": "أدوات المطور",
   "Exit": "خروج",
-  "Verge Version": "إصدار Verge",
+  "Max Version": "إصدار Max",
   "ReadOnly": "للقراءة فقط",
   "ReadOnlyMessage": "لا يمكن التعديل في محرر القراءة فقط",
   "Filter": "تصفية",
@@ -448,10 +448,11 @@
   "Script File Error": "خطأ في ملف السكريبت، تم التراجع عن التغييرات",
   "Core Changed Successfully": "تم تغيير النواة بنجاح",
   "Failed to Change Core": "فشل تغيير النواة",
-  "Verge Basic Setting": "الإعدادات الأساسية  Verge",
-  "Verge Advanced Setting": "الإعدادات الأساسية  Verge",
+  "Max Basic Setting": "الإعدادات الأساسية  Max",
+  "Max Advanced Setting": "الإعدادات الأساسية  Max",
   "TUN requires Service Mode": "يتطلب وضع TUN خدمة",
   "Install Service": "تثبيت الخدمة ",
   "Installing Service...": "جاري تثبيت الخدمة...",
-  "Service Administrator Prompt": "يتطلب Clash Max امتيازات المسؤول لإعادة تثبيت خدمة النظام"
+  "Service Administrator Prompt": "يتطلب Clash Max امتيازات المسؤول لإعادة تثبيت خدمة النظام",
+  "Record": "Record"
 }

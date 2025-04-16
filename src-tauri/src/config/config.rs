@@ -11,8 +11,8 @@ use once_cell::sync::OnceCell;
 use std::path::PathBuf;
 use tokio::time::{sleep, Duration};
 
-pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
-pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
+pub const RUNTIME_CONFIG: &str = "clash-max.yaml";
+pub const CHECK_CONFIG: &str = "clash-max-check.yaml";
 
 pub struct Config {
     clash_config: Draft<IClashTemp>,

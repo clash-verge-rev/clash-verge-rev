@@ -1,6 +1,6 @@
 [package]
 name = "clash-max"
-version = "2.2.4-alpha"
+version = "2.2.3"
 description = "clash max"
 authors = ["zzzgydi", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
@@ -91,7 +91,7 @@ tauri-plugin-updater = "2.6.1"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = []
+max-dev = []
 
 [profile.release]
 panic = "abort"

@@ -7,7 +7,9 @@ import { useLocalStorage } from "foxact/use-local-storage";
 import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
+  CleaningServicesOutlined
 } from "@mui/icons-material";
+
 import { LogLevel, clearLogs } from "@/hooks/use-log-data";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useEnableLog } from "@/services/states";
@@ -80,23 +82,27 @@ const LogPage = () => {
       }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <IconButton
-            title={t("Pause")}
+          <Button
+            variant="contained"
             size="small"
-            color="inherit"
             onClick={handleToggleLog}
+            color={enableLog ? "error" : "primary"}
+            startIcon={
+              enableLog ? (
+                <PauseCircleOutlineRounded />
+              ) : (
+                <PlayCircleOutlineRounded />
+              )
+            }
           >
-            {enableLog ? (
-              <PauseCircleOutlineRounded />
-            ) : (
-              <PlayCircleOutlineRounded />
-            )}
-          </IconButton>
+            {enableLog ? t("Pause") : t("Record")}
+          </Button>
 
           {enableLog === true && (
             <Button
               size="small"
               variant="contained"
+              startIcon={<CleaningServicesOutlined  />}
               onClick={() => {
                 clearGlobalLogs();
               }}

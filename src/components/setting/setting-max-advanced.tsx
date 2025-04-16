@@ -61,7 +61,7 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
   }, []);
 
   return (
-    <SettingList title={t("Verge Advanced Setting")}>
+    <SettingList title={t("Max Advanced Setting")}>
       <ThemeViewer ref={themeRef} />
       <ConfigViewer ref={configRef} />
       <HotkeyViewer ref={hotkeyRef} />
@@ -131,7 +131,7 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
         }
       ></SettingItem>
 
-      <SettingItem label={t("Verge Version")}>
+      <SettingItem label={t("Max Version")}>
         <Typography sx={{ py: "7px", pr: 1 }}>v{version}</Typography>
       </SettingItem>
     </SettingList>

@@ -23,33 +23,27 @@ import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 
 export const routers = [
   {
-    label: "Label-Home",
-    path: "/home",
-    icon: [<HomeRoundedIcon />, <HomeSvg />],
+    label: "Label-Dashboard",
+    path: "/dashboard",
+    icon: [<DashboardRoundedIcon />, <HomeSvg />],
     element: <HomePage />,
-  },
-  {
-    label: "Label-Proxies",
-    path: "/",
-    icon: [<WifiRoundedIcon />, <ProxiesSvg />],
-    element: <ProxiesPage />,
   },
   {
     label: "Label-Profiles",
     path: "/profile",
     icon: [<DnsRoundedIcon />, <ProfilesSvg />],
     element: <ProfilesPage />,
-  },
+  },  
   {
-    label: "Label-Connections",
-    path: "/connections",
-    icon: [<LanguageRoundedIcon />, <ConnectionsSvg />],
-    element: <ConnectionsPage />,
+    label: "Label-Proxies",
+    path: "/",
+    icon: [<WifiRoundedIcon />, <ProxiesSvg />],
+    element: <ProxiesPage />,
   },
   {
     label: "Label-Rules",
@@ -58,17 +52,23 @@ export const routers = [
     element: <RulesPage />,
   },
   {
-    label: "Label-Logs",
-    path: "/logs",
-    icon: [<SubjectRoundedIcon />, <LogsSvg />],
-    element: <LogsPage />,
-  },
-  {
     label: "Label-Unlock",
     path: "/unlock",
     icon: [<LockOpenRoundedIcon />, <UnlockSvg />],
     element: <UnlockPage />,
+  },    
+  {
+    label: "Label-Connections",
+    path: "/connections",
+    icon: [<LanguageRoundedIcon />, <ConnectionsSvg />],
+    element: <ConnectionsPage />,
   },
+  {
+    label: "Label-Logs",
+    path: "/logs",
+    icon: [<SubjectRoundedIcon />, <LogsSvg />],
+    element: <LogsPage />,
+  },  
   {
     label: "Label-Settings",
     path: "/settings",

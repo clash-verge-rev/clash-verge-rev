@@ -276,7 +276,7 @@
   "Open UWP tool": "UWP инструментын ачу",
   "Open UWP tool Info": "Windows 8'дән башлап UWP кушымталары (Microsoft Store кебек) локаль хосттагы челтәр хезмәтләренә турыдан-туры тоташа алмый. Бу инструмент әлеге чикләүне әйләнеп узарга ярдәм итә",
   "Update GeoData": "GeoData яңарту",
-  "Verge Setting": "Verge көйләүләре",
+  "Max Setting": "Max көйләүләре",
   "Language": "Тел",
   "Theme Mode": "Теманың режимы",
   "theme.light": "Якты",
@@ -348,7 +348,7 @@
   "Break Change Update Error": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала.",
   "Open Dev Tools": "Разработчик коралларын ачу",
   "Exit": "Чыгу",
-  "Verge Version": "Verge версиясе",
+  "Max Version": "Max версиясе",
   "ReadOnly": "Уку режимы гына",
   "ReadOnlyMessage": "Уку режимында үзгәртү мөмкин түгел",
   "Filter": "Фильтр",
@@ -444,10 +444,11 @@
   "Script File Error": "Скрипт файлы хатасы, үзгәрешләр кире кайтарылды",
   "Core Changed Successfully": "Ядро уңышлы алыштырылды",
   "Failed to Change Core": "Ядро алыштыру уңышсыз булды",
-  "Verge Basic Setting": "Verge Төп көйләүләр",
-  "Verge Advanced Setting": "Verge Киңәйтелгән көйләүләр",
+  "Max Basic Setting": "Max Төп көйләүләр",
+  "Max Advanced Setting": "Max Киңәйтелгән көйләүләр",
   "TUN requires Service Mode": "TUN режимы хезмәт күрсәтүне таләп итә",
   "Install Service": "Хезмәтне урнаштыру",
   "Installing Service...": "Хезмәт урнаштырыла...",
-  "Service Administrator Prompt": "Clash Max система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә"
+  "Service Administrator Prompt": "Clash Max система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә",
+  "Record": "Record"
 }

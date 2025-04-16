@@ -6,7 +6,7 @@ use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 
-/// ### `verge.yaml` schema
+/// ### `max.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVerge {
     /// app log level
@@ -260,9 +260,9 @@ impl IVerge {
             env_type: Some("bash".into()),
             #[cfg(target_os = "windows")]
             env_type: Some("powershell".into()),
-            start_page: Some("/home".into()),
+            start_page: Some("/dashboard".into()),
             traffic_graph: Some(true),
-            enable_memory_usage: Some(true),
+            enable_memory_usage: Some(false),
             enable_group_icon: Some(true),
             #[cfg(target_os = "macos")]
             tray_icon: Some("monochrome".into()),
@@ -398,9 +398,9 @@ impl IVerge {
 
     /// 在初始化前尝试拿到单例端口的值
     pub fn get_singleton_port() -> u16 {
-        #[cfg(not(feature = "verge-dev"))]
+        #[cfg(not(feature = "max-dev"))]
         const SERVER_PORT: u16 = 33331;
-        #[cfg(feature = "verge-dev")]
+        #[cfg(feature = "max-dev")]
         const SERVER_PORT: u16 = 11233;
         SERVER_PORT
     }

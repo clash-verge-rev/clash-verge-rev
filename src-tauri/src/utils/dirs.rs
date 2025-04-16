@@ -4,20 +4,20 @@ use once_cell::sync::OnceCell;
 use std::{fs, path::PathBuf};
 use tauri::Manager;
 
-#[cfg(not(feature = "verge-dev"))]
+#[cfg(not(feature = "max-dev"))]
 pub static APP_ID: &str = "io.github.cg3s.clash-max";
-#[cfg(not(feature = "verge-dev"))]
+#[cfg(not(feature = "max-dev"))]
 pub static BACKUP_DIR: &str = "clash-max-backup";
 
-#[cfg(feature = "verge-dev")]
+#[cfg(feature = "max-dev")]
 pub static APP_ID: &str = "io.github.cg3s.clash-max";
-#[cfg(feature = "verge-dev")]
+#[cfg(feature = "max-dev")]
 pub static BACKUP_DIR: &str = "clash-max-backup-dev";
 
 pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 
 pub static CLASH_CONFIG: &str = "config.yaml";
-pub static VERGE_CONFIG: &str = "verge.yaml";
+pub static MAX_CONFIG: &str = "max.yaml";
 pub static PROFILE_YAML: &str = "profiles.yaml";
 
 /// init portable flag
@@ -117,7 +117,7 @@ pub fn clash_path() -> Result<PathBuf> {
 }
 
 pub fn verge_path() -> Result<PathBuf> {
-    Ok(app_home_dir()?.join(VERGE_CONFIG))
+    Ok(app_home_dir()?.join(MAX_CONFIG))
 }
 
 pub fn profiles_path() -> Result<PathBuf> {

@@ -190,16 +190,6 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
 
         {current.extra && (
           <>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <SpeedOutlined fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
-                {t("Used / Total")}:{" "}
-                <Box component="span" fontWeight="medium">
-                  {parseTraffic(usedTraffic)} / {parseTraffic(current.extra.total)}
-                </Box>
-              </Typography>
-            </Stack>
-
             {current.extra.expire > 0 && (
               <Stack direction="row" alignItems="center" spacing={1}>
                 <EventOutlined fontSize="small" color="action" />
@@ -211,6 +201,16 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
                 </Typography>
               </Stack>
             )}
+
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <SpeedOutlined fontSize="small" color="action" />
+              <Typography variant="body2" color="text.secondary">
+                {t("Used / Total")}:{" "}
+                <Box component="span" fontWeight="medium">
+                  {parseTraffic(usedTraffic)} / {parseTraffic(current.extra.total)}
+                </Box>
+              </Typography>
+            </Stack>
 
             <Box sx={{ mt: 1 }}>
               <Typography

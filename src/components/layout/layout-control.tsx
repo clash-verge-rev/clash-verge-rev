@@ -1,4 +1,5 @@
-import { Button, ButtonGroup } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import { Tooltip, Button, ButtonGroup } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   CloseRounded,
@@ -7,13 +8,19 @@ import {
   HorizontalRuleRounded,
   PushPinOutlined,
   PushPinRounded,
+  VisibilityOffOutlined,
 } from "@mui/icons-material";
 import { useEffect, useState } from "react";
+
+import {
+  entry_lightweight_mode,
+} from "@/services/cmds";
+
 const appWindow = getCurrentWebviewWindow();
 
 export const LayoutControl = () => {
   const minWidth = 40;
-
+  const { t } = useTranslation();
   const [isMaximized, setIsMaximized] = useState(false);
   const [isPined, setIsPined] = useState(false);
 
@@ -59,6 +66,18 @@ export const LayoutControl = () => {
           <PushPinOutlined fontSize="small" />
         )}
       </Button>
+
+
+
+    <Tooltip title={t("LightWeight Mode")} arrow>
+      <Button
+        size="small"
+        sx={{ minWidth, svg: { transform: "scale(0.9)" } }}
+        onClick={async () => await entry_lightweight_mode()}
+        >
+        <VisibilityOffOutlined fontSize="small" />
+      </Button>
+    </Tooltip>      
 
       <Button
         size="small"

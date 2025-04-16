@@ -308,7 +308,7 @@
   "Open UWP tool": "Buka alat UWP",
   "Open UWP tool Info": "Sejak Windows 8, aplikasi UWP (seperti Microsoft Store) dibatasi dari mengakses layanan jaringan host lokal secara langsung, dan alat ini dapat digunakan untuk melewati pembatasan ini",
   "Update GeoData": "Perbarui GeoData",
-  "Verge Setting": "Pengaturan Verge",
+  "Max Setting": "Pengaturan Max",
   "Language": "Bahasa",
   "Theme Mode": "Mode Tema",
   "theme.light": "Terang",
@@ -380,7 +380,7 @@
   "Break Change Update Error": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual",
   "Open Dev Tools": "Buka Alat Pengembang",
   "Exit": "Keluar",
-  "Verge Version": "Versi Verge",
+  "Max Version": "Versi Max",
   "ReadOnly": "Hanya Baca",
   "ReadOnlyMessage": "Tidak dapat mengedit di editor hanya baca",
   "Filter": "Filter",
@@ -444,10 +444,11 @@
   "Script File Error": "Kesalahan file skrip, perubahan dibatalkan",
   "Core Changed Successfully": "Inti berhasil diubah",
   "Failed to Change Core": "Gagal mengubah inti",
-  "Verge Basic Setting": "Pengaturan Dasar Verge",
-  "Verge Advanced Setting": "Pengaturan Lanjutan Verge",
+  "Max Basic Setting": "Pengaturan Dasar Max",
+  "Max Advanced Setting": "Pengaturan Lanjutan Max",
   "TUN requires Service Mode": "Mode TUN memerlukan layanan",
   "Install Service": "Instal Layanan",
   "Installing Service...": "Memasang Layanan...",
-  "Service Administrator Prompt": "Clash Max memerlukan hak administrator untuk menginstal ulang layanan sistem"
+  "Service Administrator Prompt": "Clash Max memerlukan hak administrator untuk menginstal ulang layanan sistem",
+  "Record": "Record"
 }

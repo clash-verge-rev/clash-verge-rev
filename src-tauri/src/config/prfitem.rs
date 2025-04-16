@@ -284,8 +284,8 @@ impl PrfItem {
         }
 
         let version = match VERSION.get() {
-            Some(v) => format!("clash-verge/v{}", v),
-            None => "clash-verge/unknown".to_string(),
+            Some(v) => format!("clash-max/v{}", v),
+            None => "clash-max/unknown".to_string(),
         };
 
         builder = builder.danger_accept_invalid_certs(accept_invalid_certs);

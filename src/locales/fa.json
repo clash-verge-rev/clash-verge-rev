@@ -277,7 +277,7 @@
   "Open UWP tool": "باز کردن ابزار UWP",
   "Open UWP tool Info": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود",
   "Update GeoData": "به‌روزرسانی GeoData",
-  "Verge Setting": "تنظیمات Verge",
+  "Max Setting": "تنظیمات Max",
   "Language": "زبان",
   "Theme Mode": "حالت تم",
   "theme.light": "روشن",
@@ -349,7 +349,7 @@
   "Break Change Update Error": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید.",
   "Open Dev Tools": "باز کردن ابزارهای توسعه‌دهنده",
   "Exit": "خروج",
-  "Verge Version": "نسخه Verge",
+  "Max Version": "نسخه Max",
   "ReadOnly": "فقط خواندنی",
   "ReadOnlyMessage": "نمی‌توان در ویرایشگر فقط خواندنی ویرایش کرد",
   "Filter": "فیلتر",
@@ -445,10 +445,11 @@
   "Script File Error": "خطای فایل اسکریپت، تغییرات برگشت داده شد",
   "Core Changed Successfully": "هسته با موفقیت تغییر کرد",
   "Failed to Change Core": "تغییر هسته ناموفق بود",
-  "Verge Basic Setting": "تنظیمات پایه Verge",
-  "Verge Advanced Setting": "تنظیمات پیشرفته Verge",
+  "Max Basic Setting": "تنظیمات پایه Max",
+  "Max Advanced Setting": "تنظیمات پیشرفته Max",
   "TUN requires Service Mode": "حالت تونل‌زنی نیاز به سرویس دارد",
   "Install Service": "نصب سرویس",
   "Installing Service...": "در حال نصب سرویس...",
-  "Service Administrator Prompt": "Clash Max برای نصب مجدد سرویس سیستم به امتیازات مدیر نیاز دارد"
+  "Service Administrator Prompt": "Clash Max برای نصب مجدد سرویس سیستم به امتیازات مدیر نیاز دارد",
+  "Record": "Record"
 }

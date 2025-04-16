@@ -21,7 +21,7 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { useSystemState } from "@/hooks/use-system-state";
 
-const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
+const LOCAL_STORAGE_TAB_KEY = "clash-max-proxy-active-tab";
 
 interface TabButtonProps {
   isActive: boolean;

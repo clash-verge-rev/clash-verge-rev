@@ -4,6 +4,8 @@ import {
   ArrowDownwardRounded,
   ArrowUpwardRounded,
   MemoryRounded,
+  CloudUploadRounded,
+  CloudDownloadRounded
 } from "@mui/icons-material";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
@@ -14,6 +16,7 @@ import useSWRSubscription from "swr/subscription";
 import { createSockette, createAuthSockette } from "@/utils/websocket";
 import { useTranslation } from "react-i18next";
 import { isDebugEnabled, gc } from "@/services/api";
+import { useAppData } from "@/providers/app-data-provider";
 
 interface MemoryUsage {
   inuse: number;
@@ -28,6 +31,7 @@ export const LayoutTraffic = () => {
 
   // whether hide traffic graph
   const trafficGraph = verge?.traffic_graph ?? true;
+  const { connections, uptime } = useAppData();
 
   const trafficRef = useRef<TrafficRef>(null);
   const pageVisible = useVisibility();
@@ -148,6 +152,8 @@ export const LayoutTraffic = () => {
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
   const [inuse, inuseUnit] = parseTraffic(memory.inuse);
+  const [uploadTotal, uploadTotalUnit] = parseTraffic(connections.uploadTotal);
+  const [downloadTotal, downloadTotalUnit] = parseTraffic(connections.downloadTotal);
 
   const boxStyle: any = {
     display: "flex",
@@ -203,6 +209,28 @@ export const LayoutTraffic = () => {
           </Typography>
           <Typography {...unitStyle}>{downUnit}/s</Typography>
         </Box>
+
+        <Box title={t("Uploaded")} {...boxStyle}>
+          <CloudUploadRounded
+            {...iconStyle}
+            color={+uploadTotal > 0 ? "warning" : "disabled"}
+          />
+          <Typography {...valStyle} color="secondary">
+            {uploadTotal}
+          </Typography>
+          <Typography {...unitStyle}>{uploadTotalUnit}</Typography>
+        </Box>    
+
+        <Box title={t("Downloaded")} {...boxStyle}>
+          <CloudUploadRounded
+            {...iconStyle}
+            color={+uploadTotal > 0 ? "primary" : "disabled"}
+          />
+          <Typography {...valStyle} color="primary">
+            {downloadTotal}
+          </Typography>
+          <Typography {...unitStyle}>{downloadTotalUnit}</Typography>
+        </Box>            
 
         {displayMemory && (
           <Box
