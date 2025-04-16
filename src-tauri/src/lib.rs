@@ -138,7 +138,7 @@ pub fn run() -> Result<()> {
             #[cfg(target_os = "macos")]
             {
                 let show_in_dock = verge.show_in_dock.unwrap_or(true);
-                app_handle.set_dock_visibility(show_in_dock);
+                let _ = app_handle.set_dock_visibility(show_in_dock);
             }
 
             let enable_splashscreen = verge.enable_splashscreen;
