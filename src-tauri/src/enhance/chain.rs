@@ -115,7 +115,7 @@ impl ChainItem {
                 }
             }
         };
-        log::info!("chain [{}] excute finished", self.name);
+        tracing::info!("chain [{}] excute finished", self.name);
         Ok(res)
     }
 }

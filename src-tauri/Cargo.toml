@@ -22,9 +22,7 @@ tauri-plugin-mihomo = { path = "../tauri-plugin-mihomo" }
 warp = "0.3"
 anyhow = "1.0"
 dirs = "5.0"
-log = "0.4"
 dunce = "1.0"
-log4rs = "1.3"
 nanoid = "0.4"
 chrono = "0.4"
 sysinfo = "0.34"
@@ -62,6 +60,10 @@ rfd = { version = "0.15", default-features = false, features = [
   "gtk3",
   "common-controls-v6",
 ] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "local-time"] }
+tracing-appender = "0.2.3"
+time = { version = "0.3.41", features = ["macros", "parsing"] }
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2"

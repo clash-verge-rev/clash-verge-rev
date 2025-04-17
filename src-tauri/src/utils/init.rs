@@ -10,9 +10,9 @@ use tauri_plugin_shell::ShellExt;
 /// Initialize all the config files
 /// before tauri setup
 pub fn init_config() -> Result<()> {
-    dirs::init_portable_flag()?;
-    VergeLog::global().init()?;
     VergeLog::delete_log()?;
+
+    dirs::init_portable_flag()?;
 
     crate::log_err!(dirs::app_home_dir().map(|app_dir| {
         if !app_dir.exists() {
@@ -78,9 +78,9 @@ pub fn init_resources() -> Result<()> {
 
         let handle_copy = || {
             match fs::copy(&src_path, &dest_path) {
-                Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
+                Ok(_) => tracing::debug!("resources copied '{file}'"),
                 Err(err) => {
-                    log::error!(target: "app", "failed to copy resources '{file}', {err}")
+                    tracing::error!("failed to copy resources '{file}', {err}")
                 }
             };
         };
@@ -98,11 +98,11 @@ pub fn init_resources() -> Result<()> {
                 if src_modified > dest_modified {
                     handle_copy();
                 } else {
-                    log::debug!(target: "app", "skipping resource copy '{file}'");
+                    tracing::debug!("skipping resource copy '{file}'");
                 }
             }
             _ => {
-                log::debug!(target: "app", "failed to get modified '{file}'");
+                tracing::debug!("failed to get modified '{file}'");
                 handle_copy();
             }
         };

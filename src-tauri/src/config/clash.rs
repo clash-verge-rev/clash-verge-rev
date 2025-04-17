@@ -23,7 +23,7 @@ impl IClashConfig {
                 Self(Self::guard(map))
             }
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                tracing::error!("{err}");
                 template
             }
         }

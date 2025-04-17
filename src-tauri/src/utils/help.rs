@@ -113,7 +113,7 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
         .opener()
         .open_path(path.to_string_lossy(), Some("code"))
         .map_err(|_| {
-            log::info!(target: "app", "open file by vscode err, use system default to open it");
+            tracing::info!("open file by vscode err, use system default to open it");
             app.opener().open_path(path.to_string_lossy(), None::<&str>)
         });
     Ok(())
@@ -172,7 +172,7 @@ pub fn parse_check_output(log: String) -> String {
 #[macro_export]
 macro_rules! error {
     ($result: expr) => {
-        log::error!(target: "app", "{}", $result);
+        tracing::error!("{}", $result);
     };
 }
 
@@ -180,13 +180,13 @@ macro_rules! error {
 macro_rules! log_err {
     ($result: expr) => {
         if let Err(err) = $result {
-            log::error!(target: "app", "{err}");
+            tracing::error!("{err}");
         }
     };
 
     ($result: expr, $err_str: expr) => {
         if let Err(_) = $result {
-            log::error!(target: "app", "{}", $err_str);
+            tracing::error!("{}", $err_str);
         }
     };
 }
@@ -195,9 +195,9 @@ macro_rules! log_err {
 macro_rules! trace_err {
     ($result: expr, $err_str: expr) => {
         if let Err(err) = $result {
-            log::trace!(target: "app", "{}, err {}", $err_str, err);
+            tracing::trace!("{}, err {}", $err_str, err);
         }
-    }
+    };
 }
 
 /// wrap the anyhow error
@@ -208,7 +208,7 @@ macro_rules! wrap_err {
         match $stat {
             Ok(a) => Ok(a),
             Err(err) => {
-                log::error!(target: "app", "{}", err.to_string());
+                tracing::error!("{}", err.to_string());
                 Err(format!("{}", err.to_string()))
             }
         }
@@ -217,7 +217,7 @@ macro_rules! wrap_err {
         match $stat {
             Ok(a) => Ok(a),
             Err(err) => {
-                log::error!(target: "app", "{}, {}", $err_str, err.to_string());
+                tracing::error!("{}, {}", $err_str, err.to_string());
                 Err(format!("{}, {}", $err_str, err.to_string()))
             }
         }

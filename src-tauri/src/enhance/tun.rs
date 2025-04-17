@@ -39,7 +39,7 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             use crate::utils::dirs;
             use std::process::Command;
 
-            log::info!(target: "app", "try to set system dns");
+            tracing::info!("try to set system dns");
             let resource_dir = dirs::app_resources_dir().unwrap();
             let script = resource_dir.join("set_dns.sh");
             match Command::new("bash")
@@ -49,14 +49,14 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             {
                 Ok(status) => {
                     if status.success() {
-                        log::info!(target: "app", "set system dns successfully");
+                        tracing::info!("set system dns successfully");
                     } else {
                         let code = status.code().unwrap_or(-1);
-                        log::error!(target: "app", "set system dns failed: {code}");
+                        tracing::error!("set system dns failed: {code}");
                     }
                 }
                 Err(err) => {
-                    log::error!(target: "app", "set system dns failed: {err}");
+                    tracing::error!("set system dns failed: {err}");
                 }
             }
         }
@@ -67,7 +67,7 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             use crate::utils::dirs;
             use std::process::Command;
 
-            log::info!(target: "app", "try to unset system dns");
+            tracing::info!("try to unset system dns");
             let resource_dir = dirs::app_resources_dir().unwrap();
             let script = resource_dir.join("unset_dns.sh");
             match Command::new("bash")
@@ -77,14 +77,14 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             {
                 Ok(status) => {
                     if status.success() {
-                        log::info!(target: "app", "unset system dns successfully");
+                        tracing::info!("unset system dns successfully");
                     } else {
                         let code = status.code().unwrap_or(-1);
-                        log::error!(target: "app", "unset system dns failed: {code}");
+                        tracing::error!("unset system dns failed: {code}");
                     }
                 }
                 Err(err) => {
-                    log::error!(target: "app", "unset system dns failed: {err}");
+                    tracing::error!("unset system dns failed: {err}");
                 }
             }
         }

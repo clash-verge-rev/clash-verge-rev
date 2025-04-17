@@ -23,7 +23,7 @@ unsafe impl Sync for ShutdownState {}
 impl Drop for ShutdownState {
     fn drop(&mut self) {
         // this log not be printed, I don't know why.
-        log::info!("Dropping ShutdownState, destroying window");
+        tracing::info!("Dropping ShutdownState, destroying window");
         unsafe {
             DestroyWindow(self.hwnd);
         }
@@ -40,13 +40,13 @@ unsafe extern "system" fn shutdown_proc(
     // only perform reset operations in `WM_ENDSESSION`
     match msg {
         WM_QUERYENDSESSION => {
-            log::info!("System is shutting down or user is logging off.");
+            tracing::info!("System is shutting down or user is logging off.");
         }
         WM_ENDSESSION => {
             tauri::async_runtime::block_on(async move {
-                log::info!("Session ended, system shutting down.");
+                tracing::info!("Session ended, system shutting down.");
                 resolve::resolve_reset().await;
-                log::info!("resolved reset finished");
+                tracing::info!("resolved reset finished");
             });
         }
         _ => {}
@@ -113,7 +113,7 @@ pub fn register() {
             std::ptr::null_mut(),
         );
         if hwnd.is_null() {
-            log::error!("failed to create shutdown window");
+            tracing::error!("failed to create shutdown window");
         } else {
             app_hanlde.manage(ShutdownState { hwnd });
         }

@@ -7,7 +7,7 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
     let path = current_exe()?.with_file_name(core).canonicalize()?;
     let path = path.display().to_string();
 
-    log::debug!("grant_permission path: {path}");
+    tracing::debug!("grant_permission path: {path}");
 
     #[cfg(target_os = "macos")]
     let output = {

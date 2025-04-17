@@ -196,19 +196,19 @@ impl Sysopt {
 
             if old.enable && port_same {
                 old.enable = false;
-                log::info!(target: "app", "reset proxy by disabling the original proxy");
+                tracing::info!("reset proxy by disabling the original proxy");
             } else {
-                log::info!(target: "app", "reset proxy to the original proxy");
+                tracing::info!("reset proxy to the original proxy");
             }
 
             old.set_system_proxy()?;
         } else if let Some(mut cur @ Sysproxy { enable: true, .. }) = cur_sysproxy {
             // 没有原代理，就按现在的代理设置disable即可
-            log::info!(target: "app", "reset proxy by disabling the current proxy");
+            tracing::info!("reset proxy by disabling the current proxy");
             cur.enable = false;
             cur.set_system_proxy()?;
         } else {
-            log::info!(target: "app", "reset proxy with no action");
+            tracing::info!("reset proxy with no action");
         }
 
         if let Some(mut old) = old_autoproxy.take() {
@@ -218,19 +218,19 @@ impl Sysopt {
 
             if old.enable && url_same {
                 old.enable = false;
-                log::info!(target: "app", "reset proxy by disabling the original proxy");
+                tracing::info!("reset proxy by disabling the original proxy");
             } else {
-                log::info!(target: "app", "reset proxy to the original proxy");
+                tracing::info!("reset proxy to the original proxy");
             }
 
             old.set_auto_proxy()?;
         } else if let Some(mut cur @ Autoproxy { enable: true, .. }) = cur_autoproxy {
             // 没有原代理，就按现在的代理设置disable即可
-            log::info!(target: "app", "reset proxy by disabling the current proxy");
+            tracing::info!("reset proxy by disabling the current proxy");
             cur.enable = false;
             cur.set_auto_proxy()?;
         } else {
-            log::info!(target: "app", "reset proxy with no action");
+            tracing::info!("reset proxy with no action");
         }
 
         Ok(())
@@ -352,7 +352,7 @@ impl Sysopt {
                 // update duration
                 wait_secs = guard_duration;
 
-                log::debug!(target: "app", "try to guard the system proxy");
+                tracing::debug!("try to guard the system proxy");
 
                 let port = Config::clash().latest().get_mixed_port();
                 let pac_port = IVerge::get_singleton_port();

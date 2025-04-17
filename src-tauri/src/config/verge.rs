@@ -1,8 +1,8 @@
 use crate::config::DEFAULT_PAC;
 use crate::utils::{dirs, help};
 use anyhow::Result;
-use log::LevelFilter;
 use serde::{Deserialize, Serialize};
+use tracing::level_filters::LevelFilter;
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -187,7 +187,7 @@ impl IVerge {
         match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
             Ok(config) => config,
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                tracing::error!("{err}");
                 Self::template()
             }
         }
@@ -314,20 +314,20 @@ impl IVerge {
         }
     }
 
-    /// 获取日志等级
+    // 获取日志等级
     pub fn get_log_level(&self) -> LevelFilter {
         if let Some(level) = self.app_log_level.as_ref() {
             match level.to_lowercase().as_str() {
-                "silent" => LevelFilter::Off,
-                "error" => LevelFilter::Error,
-                "warn" => LevelFilter::Warn,
-                "info" => LevelFilter::Info,
-                "debug" => LevelFilter::Debug,
-                "trace" => LevelFilter::Trace,
-                _ => LevelFilter::Info,
+                "silent" => LevelFilter::OFF,
+                "error" => LevelFilter::ERROR,
+                "warn" => LevelFilter::WARN,
+                "info" => LevelFilter::INFO,
+                "debug" => LevelFilter::DEBUG,
+                "trace" => LevelFilter::TRACE,
+                _ => LevelFilter::INFO,
             }
         } else {
-            LevelFilter::Info
+            LevelFilter::INFO
         }
     }
 }

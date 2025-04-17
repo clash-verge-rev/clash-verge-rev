@@ -45,7 +45,7 @@ impl Timer {
 
         let app_handle = handle::Handle::get_app_handle();
         app_handle.listen(ACTIVATING_SELECTED_EVENT, move |_| {
-            log::info!("recived finish activating selected event");
+            tracing::info!("recived finish activating selected event");
             std::env::remove_var(ENV_APPLY_BACKUP);
             let delay_timer = Self::global().delay_timer.lock();
             // TODO: remove error --> (Fn : `finish_task`, Without the `task_mark_ref_mut` for task_id :0)
@@ -107,12 +107,12 @@ impl Timer {
             return Ok(());
         }
 
-        log::info!("backup file has been applied, register activating group selected task");
+        tracing::info!("backup file has been applied, register activating group selected task");
         let body = move || async {
-            log::info!("starting activating selected task");
+            tracing::info!("starting activating selected task");
             let current = Config::profiles().latest().get_current();
             if current.is_none() {
-                log::info!("No current profile found");
+                tracing::info!("No current profile found");
                 return;
             }
             let current = current.unwrap_or_default();
@@ -120,11 +120,11 @@ impl Timer {
             let mihomo = handle::Handle::get_mihomo_read().await;
 
             if mihomo.get_base_config().await.is_err() {
-                log::error!("Failed to get base config");
+                tracing::error!("Failed to get base config");
                 return;
             }
             if profiles.get_item(&current).is_err() {
-                log::error!("Failed to get profile");
+                tracing::error!("Failed to get profile");
                 return;
             }
             let profile = profiles.get_item(&current).unwrap();
@@ -141,17 +141,17 @@ impl Timer {
                     .is_err()
                 {
                     if mihomo.get_proxy_by_name(&node).await.is_err() {
-                        log::error!("Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist", proxy_name, node, node);
+                        tracing::error!("Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist", proxy_name, node, node);
                         continue;
                     }
-                    log::error!(
+                    tracing::error!(
                         "Failed to select node for proxy: {}, node: {}",
                         proxy_name,
                         node
                     );
                     return;
                 }
-                log::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
+                tracing::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
             }
             let app_handle = handle::Handle::get_app_handle();
             let _ = app_handle.emit(ACTIVATING_SELECTED_EVENT, ());
@@ -267,7 +267,7 @@ impl Timer {
 
     /// the task runner
     async fn update_profile_task(uid: String) {
-        log::info!(target: "app", "running timer task `{uid}`");
+        tracing::info!("running timer task `{uid}`");
         crate::log_err!(feat::update_profile(uid, None).await);
     }
 }

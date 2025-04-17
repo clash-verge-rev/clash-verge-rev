@@ -106,7 +106,7 @@ impl CoreManager {
             *self.need_restart_core.lock() = false;
             self.sidecar.lock().take();
             // 关闭 tun 模式
-            log::debug!(target: "app", "disable tun mode");
+            tracing::debug!("disable tun mode");
             let _ = handle::Handle::get_mihomo_read()
                 .await
                 .patch_base_config(&disable)
@@ -114,7 +114,7 @@ impl CoreManager {
         }
 
         if *self.use_service_mode.lock() {
-            log::debug!(target: "app", "stop the core by service");
+            tracing::debug!("stop the core by service");
             log_err!(service::stop_core_by_service().await);
         }
 
@@ -127,22 +127,22 @@ impl CoreManager {
         system.refresh_all();
         let procs = system.processes_by_name("verge-mihomo".as_ref());
         for proc in procs {
-            log::debug!(target: "app", "kill all clash process");
+            tracing::debug!("kill all clash process");
             proc.kill();
         }
 
         if enable {
             // 服务模式启动失败就直接运行 sidecar
-            // log::debug!(target: "app", "try to run core in service mode");
+            // tracing::debug!( "try to run core in service mode");
             let verge_log = VergeLog::global();
             let log_path = match verge_log.get_service_log_file() {
                 Some(log_path) => {
-                    log::info!("service log file: {log_path}");
+                    tracing::info!("service log file: {log_path}");
                     log_path
                 }
                 None => {
                     let log_path = verge_log.create_service_log_file()?;
-                    log::info!("service log file: {log_path}");
+                    tracing::info!("service log file: {log_path}");
                     log_path
                 }
             };
@@ -153,7 +153,7 @@ impl CoreManager {
                 Err(err) => {
                     // 修改这个值，免得stop出错
                     *self.use_service_mode.lock() = false;
-                    log::error!(target: "app", "{err}");
+                    tracing::error!("{err}");
                 }
             }
         } else {
@@ -190,20 +190,20 @@ impl CoreManager {
                 match event {
                     CommandEvent::Stdout(line) => {
                         let line = String::from_utf8(line).unwrap_or_default();
-                        log::info!(target: "app", "[mihomo]: {line}");
+                        tracing::info!("[mihomo]: {line}");
                         Logger::global().set_log(line);
                     }
                     CommandEvent::Stderr(err) => {
                         let err = String::from_utf8(err).unwrap_or_default();
-                        log::error!(target: "app", "[mihomo]: {err}");
+                        tracing::error!("[mihomo]: {err}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Error(err) => {
-                        log::error!(target: "app", "[mihomo]: {err}");
+                        tracing::error!("[mihomo]: {err}");
                         Logger::global().set_log(err);
                     }
                     CommandEvent::Terminated(_) => {
-                        log::info!(target: "app", "mihomo core terminated");
+                        tracing::info!("mihomo core terminated");
                         let _ = CoreManager::global().recover_core();
                         break;
                     }
@@ -226,11 +226,11 @@ impl CoreManager {
 
         tauri::async_runtime::spawn(async move {
             if self.sidecar.lock().is_none() {
-                log::info!(target: "app", "recover clash core");
+                tracing::info!("recover clash core");
                 // 重新启动app
                 if let Err(err) = self.run_core().await {
-                    log::error!(target: "app", "failed to recover clash core");
-                    log::error!(target: "app", "{err}");
+                    tracing::error!("failed to recover clash core");
+                    tracing::error!("{err}");
                     let _ = self.recover_core();
                 }
             }
@@ -247,14 +247,14 @@ impl CoreManager {
         let mut tun = Mapping::new();
         tun.insert("enable".into(), false.into());
         disable.insert("tun".into(), tun.into());
-        log::debug!(target: "app", "disable tun mode");
+        tracing::debug!("disable tun mode");
         let _ = handle::Handle::get_mihomo_read()
             .await
             .patch_base_config(&disable)
             .await;
 
         if *self.use_service_mode.lock() {
-            log::debug!(target: "app", "stop the core by service");
+            tracing::debug!("stop the core by service");
             log_err!(service::stop_core_by_service().await);
             return Ok(());
         }
@@ -268,7 +268,7 @@ impl CoreManager {
         system.refresh_all();
         let procs = system.processes_by_name("verge-mihomo".as_ref());
         for proc in procs {
-            log::debug!(target: "app", "kill all clash process");
+            tracing::debug!("kill all clash process");
             proc.kill();
         }
         Ok(())
@@ -284,7 +284,7 @@ impl CoreManager {
             bail!("invalid clash core name \"{clash_core}\"");
         }
 
-        log::debug!(target: "app", "change core to `{clash_core}`");
+        tracing::debug!("change core to `{clash_core}`");
         Config::verge().draft().clash_core = Some(clash_core);
         // 更新订阅
         Config::generate()?;
@@ -312,18 +312,18 @@ impl CoreManager {
     /// 更新proxies那些
     /// 如果涉及端口和外部控制则需要重启
     pub async fn update_config(&self) -> Result<()> {
-        log::debug!(target: "app", "try to update clash config");
+        tracing::debug!("try to update clash config");
 
         // 更新订阅
-        log::info!("generate enhanced config");
+        tracing::info!("generate enhanced config");
         Config::generate()?;
 
         // 检查订阅是否正常
-        log::info!("check config");
+        tracing::info!("check config");
         self.check_config(ConfigType::RuntimeCheck).await?;
 
         // 重启核心
-        log::info!("finished update config, need to restart core");
+        tracing::info!("finished update config, need to restart core");
         self.run_core().await
     }
 }

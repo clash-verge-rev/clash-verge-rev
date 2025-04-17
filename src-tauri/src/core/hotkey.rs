@@ -34,7 +34,7 @@ impl Hotkey {
                     _ => {
                         let key = key.unwrap_or("None");
                         let func = func.unwrap_or("None");
-                        log::error!(target: "app", "invalid hotkey `{key}`:`{func}`");
+                        tracing::error!("invalid hotkey `{key}`:`{func}`");
                     }
                 }
             }
@@ -63,18 +63,18 @@ impl Hotkey {
 
         manager.on_shortcut(hotkey, move |_app, hotkey, event| {
             if let ShortcutState::Pressed = event.state {
-                log::info!("hotkey [{}] pressed", hotkey);
+                tracing::info!("hotkey [{}] pressed", hotkey);
                 f();
             }
         })?;
-        log::info!(target: "app", "register hotkey {hotkey} {func}");
+        tracing::info!("register hotkey {hotkey} {func}");
         Ok(())
     }
 
     fn unregister(&self, hotkey: &str) -> Result<()> {
         let app_handle = handle::Handle::get_app_handle();
         app_handle.global_shortcut().unregister(hotkey)?;
-        log::info!(target: "app", "unregister hotkey {hotkey}");
+        tracing::info!("unregister hotkey {hotkey}");
         Ok(())
     }
 
@@ -148,7 +148,7 @@ impl Drop for Hotkey {
         let app_handle = handle::Handle::get_app_handle();
         let shortcut = app_handle.global_shortcut();
         if let Err(e) = shortcut.unregister_all() {
-            log::error!(target: "app", "unregister all hotkey error: {e}");
+            tracing::error!("unregister all hotkey error: {e}");
         }
     }
 }

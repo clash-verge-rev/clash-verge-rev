@@ -121,7 +121,7 @@ importers:
         version: 10.1.0(@types/react@19.1.2)(react@19.1.0)
       react-router-dom:
         specifier: ^7.3.0
-        version: 7.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 7.5.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-spinners:
         specifier: ^0.16.0
         version: 0.16.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1742,9 +1742,6 @@ packages:
 
   '@types/cli-color@2.0.6':
     resolution: {integrity: sha512-uLK0/0dOYdkX8hNsezpYh1gc8eerbhf9bOKZ3e24sP67703mw9S14/yW6mSTatiaKO9v+mU/a1EVy4rOXXeZTA==}
-
-  '@types/cookie@0.6.0':
-    resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
@@ -3417,15 +3414,15 @@ packages:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
     engines: {node: '>=0.10.0'}
 
-  react-router-dom@7.5.0:
-    resolution: {integrity: sha512-fFhGFCULy4vIseTtH5PNcY/VvDJK5gvOWcwJVHQp8JQcWVr85ENhJ3UpuF/zP1tQOIFYNRJHzXtyhU1Bdgw0RA==}
+  react-router-dom@7.5.1:
+    resolution: {integrity: sha512-5DPSPc7ENrt2tlKPq0FtpG80ZbqA9aIKEyqX6hSNJDlol/tr6iqCK4crqdsusmOSSotq6zDsn0y3urX9TuTNmA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
 
-  react-router@7.5.0:
-    resolution: {integrity: sha512-estOHrRlDMKdlQa6Mj32gIks4J+AxNsYoE0DbTTxiMy2mPzZuWSDU+N85/r1IlNR7kGfznF3VCUlvc5IUO+B9g==}
+  react-router@7.5.1:
+    resolution: {integrity: sha512-/jjU3fcYNd2bwz9Q0xt5TwyiyoO8XjSEFXJY4O/lMAlkGTHWuHRAbR9Etik+lSDqMC7A7mz3UlXzgYT6Vl58sA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
@@ -5610,8 +5607,6 @@ snapshots:
 
   '@types/cli-color@2.0.6': {}
 
-  '@types/cookie@0.6.0': {}
-
   '@types/debug@4.1.12':
     dependencies:
       '@types/ms': 2.1.0
@@ -7428,15 +7423,14 @@ snapshots:
 
   react-refresh@0.17.0: {}
 
-  react-router-dom@7.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-router-dom@7.5.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-      react-router: 7.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-router: 7.5.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
-  react-router@7.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-router@7.5.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
-      '@types/cookie': 0.6.0
       cookie: 1.0.2
       react: 19.1.0
       set-cookie-parser: 2.7.1

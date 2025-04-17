@@ -19,7 +19,7 @@ pub fn find_unused_port() -> Result<u16> {
         }
         Err(_) => {
             let port = Config::clash().latest().get_mixed_port();
-            log::warn!(target: "app", "use default port: {}", port);
+            tracing::warn!("use default port: {}", port);
             Ok(port)
         }
     }
@@ -27,31 +27,31 @@ pub fn find_unused_port() -> Result<u16> {
 
 /// handle something when start app
 pub async fn resolve_setup() {
-    log::trace!("init resources");
+    tracing::trace!("init resources");
     log_err!(init::init_resources());
-    log::trace!("init scheme");
+    tracing::trace!("init scheme");
     log_err!(init::init_scheme());
-    log::trace!("init startup script");
+    tracing::trace!("init startup script");
     log_err!(init::startup_script().await);
     // 启动核心
-    log::trace!("init config");
+    tracing::trace!("init config");
     log_err!(Config::init_config());
-    log::trace!("launch core");
+    tracing::trace!("launch core");
     log_err!(CoreManager::global().init());
     // setup a simple http server for singleton
-    log::trace!("launch embed server");
+    tracing::trace!("launch embed server");
     server::embed_server();
-    log::trace!("init autolaunch");
+    tracing::trace!("init autolaunch");
     log_err!(sysopt::Sysopt::global().init_launch());
-    log::trace!("init system proxy");
+    tracing::trace!("init system proxy");
     log_err!(sysopt::Sysopt::global().init_sysproxy());
-    log::trace!("update system tray");
+    tracing::trace!("update system tray");
     log_err!(handle::Handle::update_systray_part());
-    log::trace!("init hotkey");
+    tracing::trace!("init hotkey");
     log_err!(hotkey::Hotkey::global().init());
-    log::trace!("init webdav config");
+    tracing::trace!("init webdav config");
     log_err!(backup::WebDav::global().init().await);
-    log::trace!("init timer");
+    tracing::trace!("init timer");
     log_err!(timer::Timer::global().init());
 
     let argvs = std::env::args().collect::<Vec<String>>();
@@ -149,7 +149,7 @@ pub fn create_window() {
 
     match window {
         Ok(win) => {
-            log::trace!("try to calculate the monitor size");
+            tracing::trace!("try to calculate the monitor size");
             let center = (|| -> Result<bool> {
                 let mut center = false;
                 let monitor = win.current_monitor()?.ok_or(anyhow::anyhow!(""))?;
@@ -172,7 +172,7 @@ pub fn create_window() {
             win.open_devtools();
         }
         Err(_) => {
-            log::error!("failed to create window");
+            tracing::error!("failed to create window");
         }
     }
 }
@@ -219,7 +219,7 @@ pub async fn resolve_scheme(param: String) {
         };
     } else {
         let _ = handle::Handle::notification("Clash Verge", t!("import.failed"));
-        log::error!("failed to parse url: {}", url);
+        tracing::error!("failed to parse url: {}", url);
     }
 }
 

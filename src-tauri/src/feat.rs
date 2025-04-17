@@ -40,7 +40,7 @@ pub fn restart_clash_core() {
             }
             Err(err) => {
                 handle::Handle::notice_message("set_config::error", format!("{err}"));
-                log::error!(target:"app", "{err}");
+                tracing::error!(target:"app", "{err}");
             }
         }
     });
@@ -52,7 +52,7 @@ pub fn change_clash_mode(mode: String) {
     mapping.insert(Value::from("mode"), mode.clone().into());
 
     tauri::async_runtime::spawn(async move {
-        log::debug!(target: "app", "change clash mode to {mode}");
+        tracing::debug!("change clash mode to {mode}");
 
         match handle::Handle::get_mihomo_read()
             .await
@@ -79,7 +79,7 @@ pub fn change_clash_mode(mode: String) {
                         .await;
                 }
             }
-            Err(err) => log::error!(target: "app", "{err}"),
+            Err(err) => tracing::error!("{err}"),
         }
     });
 }
@@ -97,7 +97,7 @@ pub fn toggle_system_proxy() {
         .await
         {
             Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
+            Err(err) => tracing::error!("{err}"),
         }
         let _ = handle::Handle::update_systray_part();
     });
@@ -127,7 +127,7 @@ pub fn toggle_service_mode() {
                         "Clash Verge Service",
                         format!("{}, {}", toggle_failed_msg, err),
                     );
-                    log::error!(target: "app", "{err}")
+                    tracing::error!("{err}")
                 } else {
                     handle::Handle::refresh_verge()
                 }
@@ -139,7 +139,7 @@ pub fn toggle_service_mode() {
                 );
             }
             Err(err) => {
-                log::error!(target: "app", "toggle service mode failed: {err}");
+                tracing::error!("toggle service mode failed: {err}");
                 let status = handle::Handle::show_block_dialog(
                     "Clash Verge Service",
                     t!("install.service.ask"),
@@ -173,8 +173,8 @@ pub fn toggle_tun_mode() {
     tauri::async_runtime::spawn(async move {
         match cmds::service::check_service().await {
             Ok(JsonResponse { code: 0, .. }) => match patch_clash(tun).await {
-                Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
-                Err(err) => log::error!(target: "app", "toggle tun mode failed: {err}"),
+                Ok(_) => tracing::info!("change tun mode to {:?}", !enable),
+                Err(err) => tracing::error!("toggle tun mode failed: {err}"),
             },
             Ok(JsonResponse { code: 400, .. }) => {
                 // service installed but no enable, need to patch verge to enable service mode
@@ -192,8 +192,8 @@ pub fn toggle_tun_mode() {
                     let _ = cmds::check_service_and_clash().await;
                     handle::Handle::refresh_verge();
                     match patch_clash(tun).await {
-                        Ok(_) => log::info!(target: "app", "change tun mode to {:?}", !enable),
-                        Err(err) => log::error!(target: "app", "{err}"),
+                        Ok(_) => tracing::info!("change tun mode to {:?}", !enable),
+                        Err(err) => tracing::error!("{err}"),
                     }
                 }
             }
@@ -204,7 +204,7 @@ pub fn toggle_tun_mode() {
                 );
             }
             Err(err) => {
-                log::error!(target: "app", "toggle service mode failed: {err}");
+                tracing::error!("toggle service mode failed: {err}");
                 let status = handle::Handle::show_block_dialog(
                     "Clash Verge Service",
                     t!("install.service.ask"),
@@ -223,9 +223,9 @@ pub fn toggle_tun_mode() {
                             "Tun Mode",
                             format!("{}, {}", toggle_failed_msg, err),
                         );
-                        log::error!(target: "app", "{err}")
+                        tracing::error!("{err}")
                     } else {
-                        log::info!(target: "app", "change tun mode to {:?}", !enable);
+                        tracing::info!("change tun mode to {:?}", !enable);
                     }
                 }
             }
@@ -398,14 +398,14 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     };
     match res {
         Ok(()) => {
-            log::info!(target: "app", "update success, apply clash config");
+            tracing::info!("update success, apply clash config");
             Config::clash().apply();
             Config::clash().data().save_config()?;
             handle::Handle::refresh_clash();
             Ok(())
         }
         Err(err) => {
-            log::error!(target: "app", "update failed, discard clash config");
+            tracing::error!("update failed, discard clash config");
             Config::clash().discard();
             Err(err)
         }
@@ -478,7 +478,7 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     }
 
     if service_mode.is_some() {
-        log::debug!(target: "app", "change service mode to {}", service_mode.unwrap());
+        tracing::debug!("change service mode to {}", service_mode.unwrap());
         Config::generate()?;
         CoreManager::global().run_core().await?;
     }
@@ -611,7 +611,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
         "bash" => cliboard.write_text(sh).unwrap_or_default(),
         "cmd" => cliboard.write_text(cmd).unwrap_or_default(),
         "powershell" => cliboard.write_text(ps).unwrap_or_default(),
-        _ => log::error!(target: "app", "copy_clash_env: Invalid env type! {env_type}"),
+        _ => tracing::error!("copy_clash_env: Invalid env type! {env_type}"),
     };
 }
 
@@ -645,7 +645,7 @@ pub async fn test_delay(url: String) -> Result<u32> {
     let response = request.send().await;
     match response {
         Ok(response) => {
-            log::trace!(target: "app", "test_delay response: {:#?}", response);
+            tracing::trace!("test_delay response: {:#?}", response);
             if response.status().is_success() {
                 Ok(start.elapsed().as_millis() as u32)
             } else {
@@ -653,7 +653,7 @@ pub async fn test_delay(url: String) -> Result<u32> {
             }
         }
         Err(err) => {
-            log::trace!(target: "app", "test_delay error: {:#?}", err);
+            tracing::trace!("test_delay error: {:#?}", err);
             Err(err.into())
         }
     }

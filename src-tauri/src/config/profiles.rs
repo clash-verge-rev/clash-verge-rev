@@ -59,7 +59,7 @@ impl IProfiles {
                 profiles
             }
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                tracing::error!("{err}");
                 Self::template()
             }
         }
@@ -344,7 +344,8 @@ impl IProfiles {
 
         // delete the original uid
         let delete_current = current == uid;
-        let restart_core = delete_current || (profile.parent == Some(current) && profile.enable.is_some_and(|x| x));
+        let restart_core = delete_current
+            || (profile.parent == Some(current) && profile.enable.is_some_and(|x| x));
 
         let items = self.items.take().unwrap_or_default();
         if delete_current {

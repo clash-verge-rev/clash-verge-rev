@@ -347,14 +347,14 @@ impl Tray {
                                     t!("profiles.switch.success"),
                                 );
                                 handle::Handle::refresh_profiles();
-                                log::info!(target: "app", "switch profile successfully");
+                                tracing::info!("switch profile successfully");
                             }
                             Err(e) => {
                                 let _ = handle::Handle::notification(
                                     t!("profiles.switch"),
                                     t!("profiles.switch.failed"),
                                 );
-                                log::error!(target: "app", "failed to switch profile, error: {:?}", e);
+                                tracing::error!("failed to switch profile, error: {:?}", e);
                             }
                         }
                     });

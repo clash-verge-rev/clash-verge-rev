@@ -24,6 +24,7 @@ use std::{
     time::Duration,
 };
 use tauri::AppHandle;
+
 use utils::dirs::APP_ID;
 
 rust_i18n::i18n!("./src/locales", fallback = "en");
@@ -35,9 +36,12 @@ pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 pub fn run() -> Result<()> {
     // 单例检测
     if server::check_singleton().is_err() {
-        log::info!("app exists");
+        tracing::info!("app exists");
         return Ok(());
     }
+
+    // 初始化日志
+    let _g = VergeLog::global().init()?;
 
     crate::log_err!(init::init_config());
 
@@ -69,7 +73,7 @@ pub fn run() -> Result<()> {
             t!("panic.info.display.backtrace.note")
         };
 
-        log::error!("panicked at {}:\n{}\n{}", location, payload, backtrace);
+        tracing::error!("panicked at {}:\n{}\n{}", location, payload, backtrace);
         let limit_backtrace = backtrace.lines().take(10).collect::<Vec<_>>().join("\n");
         let log_file = VergeLog::global().get_log_file().unwrap_or_default();
         let log_file = log_file.split(APP_ID).last().unwrap_or_default();
@@ -131,7 +135,7 @@ pub fn run() -> Result<()> {
             APP_VERSION.get_or_init(|| version.clone());
             APP_HANDLE.get_or_init(|| app_handle.clone());
 
-            log::trace!("init system tray");
+            tracing::trace!("init system tray");
             log_err!(tray::Tray::init(app_handle));
 
             let verge = Config::verge().data().clone();
@@ -180,7 +184,7 @@ pub fn run() -> Result<()> {
                 }
             });
 
-            log::trace!("register os shutdown handler");
+            tracing::trace!("register os shutdown handler");
             shutdown::register();
 
             Ok(())

@@ -1,13 +1,7 @@
-use crate::utils::dirs;
-use anyhow::{Error, Result};
+use crate::config::Config;
+use crate::utils::dirs::{self};
+use anyhow::{bail, Error, Result};
 use chrono::{Local, TimeZone};
-use log::LevelFilter;
-use log4rs::{
-    append::{console::ConsoleAppender, file::FileAppender},
-    config::{Appender, Logger, Root},
-    encode::pattern::PatternEncoder,
-    Handle,
-};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::str::FromStr;
@@ -15,10 +9,18 @@ use std::{
     fs::{self, DirEntry},
     sync::Arc,
 };
+use time::macros::format_description;
+use tracing::level_filters::LevelFilter;
+use tracing_appender::non_blocking::WorkerGuard;
+use tracing_appender::{non_blocking, rolling};
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::reload::{self, Handle};
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::Registry;
 
 #[derive(Debug)]
 pub struct VergeLog {
-    log_handle: Arc<Mutex<Option<Handle>>>,
+    log_handle: Arc<Mutex<Option<Handle<LevelFilter, Registry>>>>,
     log_file: Arc<Mutex<Option<String>>>,
     service_log_file: Arc<Mutex<Option<String>>>,
 }
@@ -45,76 +47,6 @@ impl VergeLog {
         *self.service_log_file.lock() = None;
     }
 
-    /// create log4rs config
-    ///
-    /// # Args:
-    /// - `log_level`: log level
-    /// - `log_file`: log file path, if None, use default log file path
-    ///
-    /// # Returns:
-    /// - `Option<log4rs::config::Config>`: log4rs config
-    fn create_log_config(
-        log_level: LevelFilter,
-        log_file: Option<String>,
-    ) -> Option<log4rs::config::Config> {
-        let log_dir = dirs::app_logs_dir().unwrap();
-        if !log_dir.exists() {
-            let _ = fs::create_dir_all(&log_dir);
-        }
-
-        let real_log_file = log_file.map_or_else(
-            || {
-                let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-                let log_file_name = format!("{}.log", local_time);
-                log_dir.join(log_file_name)
-            },
-            |v| v.into(),
-        );
-        *Self::global().log_file.lock() = Some(real_log_file.to_string_lossy().to_string());
-
-        let log_pattern = match log_level {
-            LevelFilter::Trace => "{d(%Y-%m-%d %H:%M:%S)} {l} [{M}] - {m}{n}",
-            _ => "{d(%Y-%m-%d %H:%M:%S)} {l} - {m}{n}",
-        };
-
-        let encode = Box::new(PatternEncoder::new(log_pattern));
-
-        let stdout = ConsoleAppender::builder().encoder(encode.clone()).build();
-        let tofile = FileAppender::builder()
-            .encoder(encode)
-            .build(real_log_file)
-            .unwrap();
-
-        let mut logger_builder = Logger::builder();
-        let mut root_builder = Root::builder();
-
-        let log_more = log_level == LevelFilter::Trace || log_level == LevelFilter::Debug;
-
-        #[cfg(feature = "verge-dev")]
-        {
-            logger_builder = logger_builder.appenders(["file", "stdout"]);
-            if log_more {
-                root_builder = root_builder.appenders(["file", "stdout"]);
-            } else {
-                root_builder = root_builder.appenders(["stdout"]);
-            }
-        }
-        #[cfg(not(feature = "verge-dev"))]
-        {
-            logger_builder = logger_builder.appenders(["file"]);
-            if log_more {
-                root_builder = root_builder.appenders(["file"]);
-            }
-        }
-
-        let (config, _) = log4rs::config::Config::builder()
-            .appender(Appender::builder().build("stdout", Box::new(stdout)))
-            .appender(Appender::builder().build("file", Box::new(tofile)))
-            .logger(logger_builder.additive(false).build("app", log_level))
-            .build_lossy(root_builder.build(log_level));
-        Some(config)
-    }
-
     pub fn create_service_log_file(&self) -> Result<String> {
         let service_log_file = dirs::service_log_file()?;
         let service_log_file = service_log_file.to_string_lossy().to_string();
@@ -122,29 +54,54 @@ impl VergeLog {
         Ok(service_log_file)
     }
 
-    pub fn init(&self) -> Result<()> {
-        let log_level = crate::config::Config::verge().data().get_log_level();
-        let config = Self::create_log_config(log_level, None);
-        if let Some(config) = config {
-            let handle = log4rs::init_config(config)?;
-            *self.log_handle.lock() = Some(handle);
-        } else {
-            *self.log_handle.lock() = None;
-        }
-        Ok(())
+    /// 必须返回 WorkerGuard，并且仅在它的生命周期中，才能写入到日志文件
+    ///
+    /// 因此，必须确保返回的 WorkerGuard 的生命周期足够长
+    pub fn init(&self) -> Result<WorkerGuard> {
+        let log_level = Config::verge().latest().get_log_level();
+        let timer = tracing_subscriber::fmt::time::LocalTime::new(format_description!(
+            "[year]-[month]-[day] [hour]:[minute]:[second]"
+        ));
+        // 输出到终端
+        let (filter, reload_handle) = reload::Layer::new(log_level);
+        let console_layer = tracing_subscriber::fmt::layer()
+            .compact()
+            .with_ansi(true)
+            .with_timer(timer.clone())
+            .with_line_number(true)
+            .with_writer(std::io::stdout);
+
+        // 输出到日志文件
+        let log_dir = dirs::app_logs_dir()?;
+        let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
+        let log_file_name = format!("{}.log", local_time);
+        let file_appender = rolling::never(log_dir, log_file_name);
+        let (non_blocking_appender, guard) = non_blocking(file_appender);
+        let file_layer = tracing_subscriber::fmt::layer()
+            .compact()
+            .with_ansi(false)
+            .with_timer(timer)
+            .with_line_number(true)
+            .with_writer(non_blocking_appender);
+
+        tracing_subscriber::registry()
+            .with(filter)
+            .with(console_layer)
+            .with(file_layer)
+            .init();
+
+        *self.log_handle.lock() = Some(reload_handle);
+
+        Ok(guard)
     }
 
     pub fn update_log_level(log_level: LevelFilter) -> Result<(), Error> {
-        let handle = Self::global().log_handle.lock().clone();
-        if handle.is_none() {
-            anyhow::bail!("log handle is none, please init log first");
+        let handle = Self::global().log_handle.lock();
+        if let Some(handle) = handle.as_ref() {
+            handle.modify(|filter| *filter = log_level)?;
+        } else {
+            bail!("log handle is none, please init log first");
         }
-        let log_file = Self::global().log_file.lock().clone();
-        let config = Self::create_log_config(log_level, log_file);
-        if config.is_none() {
-            anyhow::bail!("create log config failed");
-        }
-        handle.unwrap().set_config(config.unwrap());
         Ok(())
     }
 
@@ -167,7 +124,7 @@ impl VergeLog {
             _ => return Ok(()),
         };
 
-        log::debug!(target: "app", "try to delete log files, day: {day}");
+        tracing::debug!("try to delete log files, day: {day}");
 
         // %Y-%m-%d to NaiveDateTime
         let parse_time_str = |s: &str| {
@@ -202,7 +159,7 @@ impl VergeLog {
                 if duration.num_days() > day {
                     let file_path = file.path();
                     let _ = fs::remove_file(file_path);
-                    log::info!(target: "app", "delete log file: {file_name}");
+                    tracing::info!("delete log file: {file_name}");
                 }
             }
             Ok(())

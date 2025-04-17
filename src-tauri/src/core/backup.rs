@@ -90,7 +90,7 @@ impl WebDav {
             || verge.webdav_username.is_none()
             || verge.webdav_password.is_none()
         {
-            log::trace!(target: "app", "webdav info config is empty, skip init webdav");
+            tracing::trace!("webdav info config is empty, skip init webdav");
             return Ok(());
         }
         let url = verge.webdav_url.unwrap_or_default();
@@ -121,7 +121,7 @@ impl WebDav {
             Some(client) => Ok(client),
             None => {
                 let msg = "Unable to create web dav client, please make sure the webdav config is correct";
-                log::error!(target: "app","{}",msg);
+                tracing::error!("{}", msg);
                 bail!(msg)
             }
         }

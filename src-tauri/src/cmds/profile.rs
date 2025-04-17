@@ -97,7 +97,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
         }
         Err(err) => {
             Config::profiles().discard();
-            log::error!(target: "app", "{err}");
+            tracing::error!("{err}");
             Err(format!("{err}"))
         }
     }

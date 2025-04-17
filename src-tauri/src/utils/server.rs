@@ -44,7 +44,7 @@ pub fn check_singleton() -> Result<()> {
                 bail!("app exists");
             }
 
-            log::error!("failed to setup singleton listen server");
+            tracing::error!("failed to setup singleton listen server");
             Ok(())
         })
     } else {
