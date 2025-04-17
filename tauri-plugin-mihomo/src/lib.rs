@@ -14,6 +14,7 @@ mod commands;
 mod error;
 mod mihomo;
 pub mod models;
+mod unix_sock;
 
 pub use error::{Error, Result};
 
