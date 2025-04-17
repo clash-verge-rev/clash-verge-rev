@@ -35,7 +35,7 @@ pub fn get_auto_proxy() -> CmdResult<Mapping> {
 #[tauri::command]
 pub fn get_system_hostname() -> CmdResult<String> {
     use gethostname::gethostname;
-    
+
     // 获取系统主机名，处理可能的非UTF-8字符
     let hostname = match gethostname().into_string() {
         Ok(name) => name,
@@ -46,7 +46,7 @@ pub fn get_system_hostname() -> CmdResult<String> {
             fallback.trim_matches('"').to_string()
         }
     };
-    
+
     Ok(hostname)
 }
 

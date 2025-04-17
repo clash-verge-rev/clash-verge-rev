@@ -82,7 +82,10 @@ impl Sysopt {
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
-                verge.proxy_host.clone().unwrap_or_else(|| String::from("127.0.0.1")),
+                verge
+                    .proxy_host
+                    .clone()
+                    .unwrap_or_else(|| String::from("127.0.0.1")),
             )
         };
 
@@ -265,7 +268,10 @@ impl Sysopt {
                         verge.enable_proxy_guard.unwrap_or(false),
                         verge.proxy_guard_duration.unwrap_or(10),
                         verge.proxy_auto_config.unwrap_or(false),
-                        verge.proxy_host.clone().unwrap_or_else(|| String::from("127.0.0.1")),
+                        verge
+                            .proxy_host
+                            .clone()
+                            .unwrap_or_else(|| String::from("127.0.0.1")),
                     )
                 };
 
