@@ -33,7 +33,7 @@
     "@mui/icons-material": "^7.0.0",
     "@mui/lab": "^7.0.0-beta.10",
     "@mui/material": "^7.0.0",
-    "@mui/x-data-grid": "^7.28.3",
+    "@mui/x-data-grid": "^8.0.0",
     "@tailwindcss/vite": "^4.0.14",
     "@tauri-apps/api": "^2.3.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.2.2",
