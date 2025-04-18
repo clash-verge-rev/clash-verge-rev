@@ -9,6 +9,10 @@
   },
   "packageRules": [
     {
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "5 days"
+    },
+    {
       "matchManagers": ["github-actions"],
       "labels": ["github-actions"],
       "semanticCommitType": "ci",
