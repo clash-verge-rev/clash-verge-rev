@@ -64,47 +64,51 @@ pub fn quit() {
 
     // 在单独线程中处理资源清理，避免阻塞主线程
     std::thread::spawn(move || {
-        use tokio::time::{timeout, Duration};
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let cleanup_result = rt.block_on(async {
-            // 1. 处理TUN模式
-            let tun_success = if Config::verge().data().enable_tun_mode.unwrap_or(false) {
-                let disable_tun = serde_json::json!({
-                    "tun": {
-                        "enable": false
-                    }
-                });
-                timeout(
-                    Duration::from_secs(1),
-                    MihomoManager::global().patch_configs(disable_tun),
-                )
-                .await
-                .is_ok()
-            } else {
-                true
-            };
-
-            // 2. 顺序执行关键清理
-            let proxy_res = timeout(
-                Duration::from_secs(1),
-                sysopt::Sysopt::global().reset_sysproxy(),
-            )
-            .await;
-
-            let core_res = timeout(Duration::from_secs(1), CoreManager::global().stop_core()).await;
-
-            // 3. 平台特定清理
-            #[cfg(target_os = "macos")]
-            let _dns_res = timeout(Duration::from_millis(500), resolve::restore_public_dns()).await;
-
-            tun_success && proxy_res.is_ok() && core_res.is_ok()
-        });
-
+        let cleanup_result = clean();
         app_handle.exit(match cleanup_result {
             true => 0,
             false => 1,
         });
     });
+}
+
+pub fn clean() -> bool {
+    use tokio::time::{timeout, Duration};
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let cleanup_result = rt.block_on(async {
+        // 1. 处理TUN模式
+        let tun_success = if Config::verge().data().enable_tun_mode.unwrap_or(false) {
+            let disable_tun = serde_json::json!({
+                    "tun": {
+                        "enable": false
+                    }
+                });
+            timeout(
+                Duration::from_secs(1),
+                MihomoManager::global().patch_configs(disable_tun),
+            )
+                .await
+                .is_ok()
+        } else {
+            true
+        };
+
+        // 2. 顺序执行关键清理
+        let proxy_res = timeout(
+            Duration::from_secs(1),
+            sysopt::Sysopt::global().reset_sysproxy(),
+        )
+            .await;
+
+        let core_res = timeout(Duration::from_secs(1), CoreManager::global().stop_core()).await;
+
+        // 3. 平台特定清理
+        #[cfg(target_os = "macos")]
+        let _dns_res = timeout(Duration::from_millis(500), resolve::restore_public_dns()).await;
+
+        tun_success && proxy_res.is_ok() && core_res.is_ok()
+    });
+    cleanup_result
 }
 
 #[cfg(target_os = "macos")]
