@@ -21,7 +21,7 @@ tokio = "1.40"
 tauri-plugin-mihomo = { path = "../tauri-plugin-mihomo" }
 warp = "0.3"
 anyhow = "1.0"
-dirs = "5.0"
+dirs = "6.0"
 dunce = "1.0"
 nanoid = "0.4"
 chrono = "0.4"
