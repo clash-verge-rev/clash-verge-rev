@@ -182,6 +182,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
           <Input
             value={startup_script}
             disabled
+            disableUnderline
             sx={{ width: 230 }}
             endAdornment={
               <>
