@@ -141,40 +141,39 @@ const ConnectionsPage = () => {
       title={<span style={{ whiteSpace: "nowrap" }}>{t("Connections")}</span>}
       contentStyle={{ height: "100%" }}
       header={
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ mx: 1 }}>
-            {t("Total Downloaded")}: {parseTraffic(connData.downloadTotal)}
-          </Box>
-          <Box sx={{ mx: 1 }}>
-            {t("Total Uploaded")}: {parseTraffic(connData.uploadTotal)}
-          </Box>
-          <IconButton
-            color="inherit"
-            size="small"
-            onClick={() =>
-              setSetting((o) =>
-                o?.layout !== "table"
-                  ? { ...o, layout: "table" }
-                  : { ...o, layout: "list" },
-              )
-            }>
-            {isTableLayout ? (
-              <span title={t("List View")}>
+        <div className="mx-2 flex items-center overflow-hidden">
+          <div className="flex items-center space-x-2 p-2">
+            <span>
+              {t("Total Downloaded")}: {parseTraffic(connData.downloadTotal)}
+            </span>
+            <span>
+              {t("Total Uploaded")}: {parseTraffic(connData.uploadTotal)}
+            </span>
+            <IconButton
+              color="inherit"
+              size="small"
+              title={isTableLayout ? t("List View") : t("Table View")}
+              onClick={() =>
+                setSetting((o) =>
+                  o?.layout !== "table"
+                    ? { ...o, layout: "table" }
+                    : { ...o, layout: "list" },
+                )
+              }>
+              {isTableLayout ? (
                 <TableRowsRounded fontSize="inherit" />
-              </span>
-            ) : (
-              <span title={t("Table View")}>
+              ) : (
                 <TableChartRounded fontSize="inherit" />
-              </span>
-            )}
-          </IconButton>
+              )}
+            </IconButton>
+          </div>
 
           <Button size="small" variant="contained" onClick={onCloseAll}>
             <span style={{ whiteSpace: "nowrap" }}>
               {t("Close All")} {filterConn.length}
             </span>
           </Button>
-        </Box>
+        </div>
       }>
       <Box
         sx={{

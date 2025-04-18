@@ -5,7 +5,7 @@ use tauri_plugin_opener::OpenerExt;
 
 use crate::{
     core::{
-        manager, sysopt,
+        sysopt,
         tray::{Tray, TRAY_ID},
         CoreManager,
     },
@@ -35,7 +35,10 @@ pub async fn restart_sidecar() -> CmdResult {
 #[tauri::command]
 pub fn grant_permission(_core: String) -> CmdResult {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
-    return wrap_err!(manager::grant_permission(_core));
+    {
+        use crate::core::manager;
+        return wrap_err!(manager::grant_permission(_core));
+    }
 
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
     return Err("Unsupported target".into());
@@ -115,9 +118,8 @@ pub fn open_web_url(app_handle: tauri::AppHandle, url: String) -> CmdResult<()> 
 pub async fn invoke_uwp_tool() -> CmdResult {
     #[cfg(target_os = "windows")]
     {
-        use super::*;
         use crate::core::win_uwp;
-        return wrap_err!(win_uwp::invoke_uwptools().await);
+        wrap_err!(win_uwp::invoke_uwptools().await)?;
     }
     Ok(())
 }
