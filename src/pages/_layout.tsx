@@ -287,6 +287,7 @@ const Layout = () => {
           <div className="layout__left">
             <div className="the-logo" data-tauri-drag-region="true">
               <div
+                data-tauri-drag-region="true"
                 style={{
                   height: "27px",
                   display: "flex",
