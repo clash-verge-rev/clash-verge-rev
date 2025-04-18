@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::{Mapping, Value};
-use std::{fs, path::PathBuf, str::FromStr};
+use std::{fs, net::TcpListener, path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
 pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
@@ -167,6 +167,10 @@ pub fn parse_check_output(log: String) -> String {
     }
 
     log
+}
+
+pub fn local_port_available(port: u16) -> bool {
+    TcpListener::bind(("127.0.0.1", port)).is_ok()
 }
 
 #[macro_export]

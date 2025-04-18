@@ -196,8 +196,6 @@ jobs:
   pkgbuild:
     name: PKGBUILD for ArchLinux
     needs: [release-for-linux]
-    strategy:
-      fail-fast: false
     runs-on: ubuntu-22.04
     outputs:
       VERSION: ${{ needs.release-for-linux.outputs.VERSION }}

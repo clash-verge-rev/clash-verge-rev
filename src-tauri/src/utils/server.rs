@@ -1,9 +1,8 @@
 extern crate warp;
 
-use super::resolve;
+use super::{help, resolve};
 use crate::config::{Config, IVerge, DEFAULT_PAC};
 use anyhow::{bail, Result};
-use port_scanner::local_port_available;
 use std::convert::Infallible;
 use warp::Filter;
 
@@ -16,7 +15,7 @@ struct QueryParam {
 pub fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
 
-    if !local_port_available(port) {
+    if !help::local_port_available(port) {
         tauri::async_runtime::block_on(async {
             let resp = reqwest::get(format!("http://127.0.0.1:{port}/commands/ping"))
                 .await?

@@ -10,7 +10,7 @@ use crate::{
         CoreManager,
     },
     ret_err,
-    utils::{dirs, resolve},
+    utils::{dirs, help, resolve},
     wrap_err,
 };
 
@@ -23,7 +23,7 @@ pub fn get_portable_flag() -> CmdResult<bool> {
 
 #[tauri::command]
 pub async fn check_port_available(port: u16) -> CmdResult<bool> {
-    Ok(port_scanner::local_port_available(port))
+    Ok(help::local_port_available(port))
 }
 
 /// restart the sidecar

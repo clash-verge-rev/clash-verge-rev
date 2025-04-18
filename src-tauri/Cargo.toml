@@ -30,7 +30,6 @@ boa_engine = "0.20"
 serde_json = "1.0"
 serde_yaml = "0.9"
 once_cell = "1.19"
-port_scanner = "0.1"
 delay_timer = "0.11"
 parking_lot = "0.12"
 auto-launch = "0.5"
@@ -61,7 +60,7 @@ rfd = { version = "0.15", default-features = false, features = [
   "common-controls-v6",
 ] }
 tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter", "local-time"] }
+tracing-subscriber = { version = "0.3.19", features = ["local-time"] }
 tracing-appender = "0.2.3"
 time = { version = "0.3.41", features = ["macros", "parsing"] }
 
