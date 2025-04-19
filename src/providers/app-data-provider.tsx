@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
-import { getProxies, getConnections, getRules, getClashConfig, getProxyProviders, getRuleProviders } from "@/services/api";
+import { getProxies, getRules, getClashConfig, getProxyProviders, getRuleProviders } from "@/services/api";
 import { getSystemProxy, getRunningMode, getAppUptime } from "@/services/cmds";
 import { useClashInfo } from "@/hooks/use-clash";
 import { createAuthSockette } from "@/utils/websocket";

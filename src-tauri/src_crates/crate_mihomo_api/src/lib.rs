@@ -95,6 +95,19 @@ impl MihomoManager {
         self.update_providers_proxies(providers_proxies);
         Ok(self)
     }
+
+    pub async fn close_all_connections(&self) -> Result<(), String> {
+        let url = format!("{}/connections", self.mihomo_server);
+        let response = self.send_request(Method::DELETE, url, None).await?;
+        if response["code"] == 204 {
+            Ok(())
+        } else {
+            Err(response["message"]
+                .as_str()
+                .unwrap_or("unknown error")
+                .to_string())
+        }
+    }
 }
 
 impl MihomoManager {

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
 import {
@@ -16,7 +16,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { DialogRef, Notice, Switch } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
@@ -28,7 +27,7 @@ import {
   installService,
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
-import { SettingItem } from "@/components/setting/mods/setting-comp";
+import { closeAllConnections } from "@/services/api";
 
 interface ProxySwitchProps {
   label?: string;
@@ -168,6 +167,9 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               onFormat={onSwitchFormat}
               onChange={(e) => onChangeData({ enable_system_proxy: e })}
               onGuard={async (e) => {
+                if (!e && verge?.auto_close_connection) {
+                  closeAllConnections();
+                }
                 await patchVerge({ enable_system_proxy: e });
                 await updateProxyStatus();
               }}

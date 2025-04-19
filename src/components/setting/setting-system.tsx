@@ -24,6 +24,7 @@ import {
 import { useLockFn } from "ahooks";
 import { Button, Tooltip } from "@mui/material";
 import { useSystemState } from "@/hooks/use-system-state";
+import { closeAllConnections } from "@/services/api";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -182,6 +183,9 @@ const SettingSystem = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_system_proxy: e })}
           onGuard={async (e) => {
+            if (!e && verge?.auto_close_connection) {
+              closeAllConnections();
+            }
             await patchVerge({ enable_system_proxy: e });
             await updateProxyStatus();
           }}
