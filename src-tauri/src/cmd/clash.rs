@@ -40,10 +40,21 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
         .await
     {
         Ok(_) => {
-            log::info!(target: "app", "core changed to {clash_core}");
-            handle::Handle::notice_message("config_core::change_success", &clash_core);
-            handle::Handle::refresh_clash();
-            Ok(None)
+            // 切换内核后重启内核
+            match CoreManager::global().restart_core().await {
+                Ok(_) => {
+                    log::info!(target: "app", "core changed and restarted to {clash_core}");
+                    handle::Handle::notice_message("config_core::change_success", &clash_core);
+                    handle::Handle::refresh_clash();
+                    Ok(None)
+                }
+                Err(err) => {
+                    let error_msg = format!("Core changed but failed to restart: {}", err);
+                    log::error!(target: "app", "{}", error_msg);
+                    handle::Handle::notice_message("config_core::change_error", &error_msg);
+                    Ok(Some(error_msg))
+                }
+            }
         }
         Err(err) => {
             let error_msg = err.to_string();
