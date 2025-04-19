@@ -15,7 +15,7 @@ type HeadStateStorage = Record<string, Record<string, HeadState>>;
 
 const HEAD_STATE_KEY = "proxy-head-state";
 export const DEFAULT_STATE: HeadState = {
-  open: false,
+  open: true,
   showType: true,
   sortType: 0,
   filterText: "",

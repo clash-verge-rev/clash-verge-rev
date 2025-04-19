@@ -48,9 +48,9 @@
   "Paste": "粘贴",
   "Profile URL": "订阅文件链接",
   "Import": "导入",
-  "From": "来自",
-  "Update Time": "更新时间",
-  "Used / Total": "已使用 / 总量",
+  "From": "来源",
+  "Update Time": "上次更新时间",
+  "Used / Total": "已用 / 总量",
   "Expire Time": "到期时间",
   "Create Profile": "新建配置",
   "Edit Profile": "编辑配置",
@@ -571,5 +571,7 @@
   "Originals Only": "仅限原创",
   "No (IP Banned By Disney+)": "不支持（IP被Disney+禁止）",
   "Unsupported Country/Region": "不支持的国家/地区",
-  "Failed (Network Connection)": "测试失败（网络连接问题）"
+  "Failed (Network Connection)": "测试失败（网络连接问题）",
+  "Update Nodes": "更新节点",
+  "Updating...": "更新中..."
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, useEffect } from "react";
 import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
 import { getProxies, getRules, getClashConfig, getProxyProviders, getRuleProviders } from "@/services/api";
@@ -6,6 +6,7 @@ import { getSystemProxy, getRunningMode, getAppUptime } from "@/services/cmds";
 import { useClashInfo } from "@/hooks/use-clash";
 import { createAuthSockette } from "@/utils/websocket";
 import { useVisibility } from "@/hooks/use-visibility";
+import { REFRESH_DATA_EVENT } from "./auth-provider";
 
 // 定义AppDataContext类型 - 使用宽松类型
 interface AppDataContextType {
@@ -237,6 +238,22 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
       refreshRuleProviders()
     ]);
   };
+  
+  // 监听刷新事件
+  useEffect(() => {
+    const handleRefreshEvent = () => {
+      console.log('REFRESH_DATA_EVENT received, refreshing all data...');
+      refreshAll();
+    };
+    
+    // 添加事件监听器
+    window.addEventListener(REFRESH_DATA_EVENT, handleRefreshEvent);
+    
+    // 组件卸载时移除监听器
+    return () => {
+      window.removeEventListener(REFRESH_DATA_EVENT, handleRefreshEvent);
+    };
+  }, [refreshAll]);
   
   // 聚合所有数据
   const value = useMemo(() => ({

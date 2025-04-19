@@ -2,9 +2,6 @@ import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
-  IconButton,
-  useTheme,
-  keyframes,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -34,28 +31,7 @@ import { HomeProfileCard } from "@/components/home/home-profile-card";
 import { EnhancedCard } from "@/components/home/enhanced-card";
 import { CurrentProxyCard } from "@/components/home/current-proxy-card";
 import { BasePage } from "@/components/base";
-import { ClashInfoCard } from "@/components/home/clash-info-card";
-import { SystemInfoCard } from "@/components/home/system-info-card";
-import { useLockFn } from "ahooks";
-import {
-  entry_lightweight_mode,
-  openWebUrl,
-  patchVergeConfig,
-} from "@/services/cmds";
 import { IpInfoCard } from "@/components/home/ip-info-card";
-
-// 定义旋转动画
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
-
-// 辅助函数解析URL和过期时间
-function parseUrl(url?: string) {
-  if (!url) return "-";
-  if (url.startsWith("http")) return new URL(url).host;
-  return "local";
-}
 
 // 定义首页卡片设置接口
 interface HomeCardsSettings {
@@ -196,8 +172,6 @@ export const HomePage = () => {
   const { t } = useTranslation();
   const { verge } = useVerge();
   const { current, mutateProfiles } = useProfiles();
-  const navigate = useNavigate();
-  const theme = useTheme();
 
   // 设置弹窗的状态
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -214,16 +188,6 @@ export const HomePage = () => {
       ip: true,
     },
   );
-  // 文档链接函数
-  const toGithubDoc = useLockFn(() => {
-    return openWebUrl("https://clash-verge-rev.github.io/index.html");
-  });
-
-  // 新增：打开设置弹窗
-  const openSettings = () => {
-    setSettingsOpen(true);
-  };
-
   // 新增：保存设置
   const handleSaveSettings = (newCards: HomeCardsSettings) => {
     setHomeCards(newCards);
@@ -233,36 +197,12 @@ export const HomePage = () => {
     <BasePage
       title={t("Label-Home")}
       contentStyle={{ padding: 2 }}
-      header={
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          {/* <Tooltip title={t("LightWeight Mode")} arrow>
-            <IconButton
-              onClick={async () => await entry_lightweight_mode()}
-              size="small"
-              color="inherit"
-            >
-              <HistoryEduOutlined />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("Manual")} arrow>
-            <IconButton onClick={toGithubDoc} size="small" color="inherit">
-              <HelpOutlineRounded />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t("Home Settings")} arrow>
-            <IconButton onClick={openSettings} size="small" color="inherit">
-              <SettingsOutlined />
-            </IconButton>
-          </Tooltip> */}
-        </Box>
-      }
     >
       <Grid container spacing={1.5} columns={{ xs: 6, sm: 6, md: 12 }}>
         {/* 订阅和当前节点部分 */}
         {homeCards.profile && (
           <Grid size={6}>
             <HomeProfileCard
-              current={current}
               onProfileUpdated={mutateProfiles}
             />
           </Grid>
@@ -305,18 +245,12 @@ export const HomePage = () => {
             <IpInfoCard />
           </Grid>
         )}
-        {/* Clash信息 */}
-        {homeCards.clashinfo && (
-          <Grid size={6}>
-            <ClashInfoCard />
-          </Grid>
-        )}
         {/* 系统信息 */}
-        {homeCards.systeminfo && (
+        {/* {homeCards.systeminfo && (
           <Grid size={6}>
             <SystemInfoCard />
           </Grid>
-        )}
+        )} */}
       </Grid>
 
       {/* 首页设置弹窗 */}

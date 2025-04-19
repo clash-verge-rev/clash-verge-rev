@@ -30,12 +30,7 @@ const OS = getSystem();
 const languageOptions = Object.entries(languages).map(([code, _]) => {
   const labels: { [key: string]: string } = {
     en: "English",
-    ru: "Русский",
     zh: "中文",
-    fa: "فارسی",
-    tt: "Татар",
-    id: "Bahasa Indonesia",
-    ar: "العربية",
   };
   return { code, label: labels[code] };
 });

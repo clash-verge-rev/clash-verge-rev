@@ -49,7 +49,7 @@
   "Profile URL": "Profile URL",
   "Import": "Import",
   "From": "From",
-  "Update Time": "Update Time",
+  "Update Time": "Last Update Time",
   "Used / Total": "Used / Total",
   "Expire Time": "Expire Time",
   "Create Profile": "Create Profile",
@@ -571,5 +571,7 @@
   "Originals Only": "Originals Only",
   "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
   "Unsupported Country/Region": "Unsupported Country/Region",
-  "Failed (Network Connection)": "Failed (Network Connection)"
+  "Failed (Network Connection)": "Failed (Network Connection)",
+  "Update Nodes": "Update Nodes",
+  "Updating...": "Updating..."
 }

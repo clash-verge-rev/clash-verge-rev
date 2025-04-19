@@ -2,9 +2,14 @@ import React, { createContext, useContext, useEffect, useRef, useState } from "r
 import { getUserInfo, isAuthenticated, login, logout } from "@/services/auth";
 import { Notice } from "@/components/base";
 import { useTranslation } from "react-i18next";
-import { importProfile } from "@/services/cmds";
+import { importProfile, updateProfile, getProfiles, patchProfilesConfig } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import { appInitialized } from "@/main";
+import { closeAllConnections } from "@/services/api";
+import { mutate } from "swr";
+
+// 创建一个自定义事件，用于触发数据刷新
+export const REFRESH_DATA_EVENT = 'refresh-app-data';
 
 // 默认配置文件URL
 const DEFAULT_PROFILE_URL = "http://13.230.16.216/api/short_url/fHWypA";
@@ -30,6 +35,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const profileLoadAttempted = useRef(false);
   
+  // 激活配置文件的函数
+  const activateProfile = async (profile: string, notifySuccess: boolean) => {
+    try {
+      console.log("激活配置文件中...", profile);
+      
+      await updateProfile(profile);
+      
+      console.log("触发刷新事件:", REFRESH_DATA_EVENT);
+      window.dispatchEvent(new Event(REFRESH_DATA_EVENT));
+      
+      if (notifySuccess) {
+        Notice.success(t("Profile Switched"), 1000);
+      }
+      mutate("getProfiles");
+      console.log("配置文件激活成功");
+    } catch (err: any) {
+      console.error("激活配置文件失败:", err);
+      Notice.error(err?.message || err.toString(), 4000);
+    }
+  };
+  
+  
   // 加载默认配置文件
   const loadDefaultProfile = async () => {
     try {
@@ -40,8 +67,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await importProfile(DEFAULT_PROFILE_URL);
       Notice.success(t("Default profile loaded successfully"));
       console.log("默认配置文件导入成功");
+      
+      // After import, get the profile UID and activate it
+      const profilesData = await getProfiles();
+      if (profilesData && profilesData.items && profilesData.items.length > 0) {
+        // Find the most recently added profile (likely the one we just imported)
+        // Sort by updated timestamp (descending) and take the first one
+        const sortedProfiles = [...profilesData.items].sort((a, b) => 
+          (b.updated || 0) - (a.updated || 0)
+        );
+        
+        if (sortedProfiles.length > 0 && sortedProfiles[0].uid) {
+          console.log("激活默认配置文件...");
+          await activateProfile(sortedProfiles[0].uid, true);
+          Notice.success(t("Default profile activated"));
+        }
+      }
     } catch (error: any) {
-      console.error("加载默认配置文件失败:", error);
+      console.error("加载或激活默认配置文件失败:", error);
       Notice.error(t("导入默认配置文件时出错"));
     }
   };

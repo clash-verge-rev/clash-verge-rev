@@ -9,6 +9,8 @@ import {
   useTheme,
   Link,
   keyframes,
+  CircularProgress,
+  Skeleton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -22,12 +24,13 @@ import {
 } from "@mui/icons-material";
 import dayjs from "dayjs";
 import parseTraffic from "@/utils/parse-traffic";
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import { openWebUrl, updateProfile } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { Notice } from "@/components/base";
 import { EnhancedCard } from "./enhanced-card";
 import { useAppData } from "@/providers/app-data-provider";
+import { useProfiles } from "@/hooks/use-profiles";
 
 // 定义旋转动画
 const round = keyframes`
@@ -69,7 +72,6 @@ export interface ProfileItem {
 }
 
 export interface HomeProfileCardProps {
-  current: ProfileItem | null | undefined;
   onProfileUpdated?: () => void;
 }
 
@@ -102,6 +104,7 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
       100
     );
   }, [current.extra, usedTraffic]);
+
 
   return (
     <Box>
@@ -188,6 +191,18 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
           </Stack>
         )}
 
+        {/* 添加更新节点信息按钮 */}
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<UpdateOutlined />}
+          onClick={onUpdateProfile}
+          disabled={updating}
+          sx={{ mt: 1, borderRadius: 2 }}
+        >
+          {updating ? t("Updating...") : t("Update Nodes")}
+        </Button>
+
         {current.extra && (
           <>
             <Stack direction="row" alignItems="center" spacing={1}>
@@ -268,13 +283,40 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardProps) => {
+// Add a ProfileLoadingUI component
+const ProfileLoadingUI = () => {
+  return (
+    <Box sx={{ py: 1 }}>
+      <Stack spacing={2}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Skeleton variant="circular" width={20} height={20} />
+          <Skeleton variant="text" width="60%" height={24} />
+        </Stack>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Skeleton variant="circular" width={20} height={20} />
+          <Skeleton variant="text" width="70%" height={24} />
+        </Stack>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Skeleton variant="circular" width={20} height={20} />
+          <Skeleton variant="text" width="65%" height={24} />
+        </Stack>
+        <Box sx={{ mt: 1 }}>
+          <Skeleton variant="text" width="30%" height={20} />
+          <Skeleton variant="rectangular" height={8} sx={{ borderRadius: 4 }} />
+        </Box>
+      </Stack>
+    </Box>
+  );
+};
+
+export const HomeProfileCard = ({onProfileUpdated }: HomeProfileCardProps) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { refreshAll } = useAppData();
   
   // 更新当前订阅
   const [updating, setUpdating] = useState(false);
+  const { current, mutateProfiles } = useProfiles();
+
   
   const onUpdateProfile = useLockFn(async () => {
     if (!current?.uid) return;
@@ -293,11 +335,6 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
       setUpdating(false);
     }
   });
-
-  // 导航到订阅页面
-  const goToProfiles = useCallback(() => {
-    navigate("/profile");
-  }, [navigate]);
 
   // 卡片标题
   const cardTitle = useMemo(() => {
@@ -347,11 +384,15 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
       icon={<CloudUploadOutlined />}
       iconColor="info"
     >
-        <ProfileDetails 
-          current={current!} 
-          onUpdateProfile={onUpdateProfile} 
-          updating={updating} 
-        />
+      {current ? (
+         <ProfileDetails 
+         current={current} 
+         onUpdateProfile={onUpdateProfile} 
+         updating={updating} 
+       />
+      ) : (
+        <ProfileLoadingUI />
+      )}
     </EnhancedCard>
   );
 };

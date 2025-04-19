@@ -362,7 +362,6 @@ const Layout = () => {
                 data-tauri-drag-region="true"
                 style={{ width: "100%" }}
               />
-              <LayoutControl />
               {OS !== "macos" && <LayoutControl />}
             </div>
 

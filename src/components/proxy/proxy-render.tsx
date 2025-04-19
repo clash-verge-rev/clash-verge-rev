@@ -73,34 +73,7 @@ export const ProxyRender = (props: RenderProps) => {
           margin: "8px 8px",
           borderRadius: "8px",
         }}
-        onClick={() => onHeadState(group.name, { open: !headState?.open })}
       >
-        {enable_group_icon &&
-          group.icon &&
-          group.icon.trim().startsWith("http") && (
-            <img
-              src={iconCachePath === "" ? group.icon : iconCachePath}
-              width="32px"
-              style={{ marginRight: "12px", borderRadius: "6px" }}
-            />
-          )}
-        {enable_group_icon &&
-          group.icon &&
-          group.icon.trim().startsWith("data") && (
-            <img
-              src={group.icon}
-              width="32px"
-              style={{ marginRight: "12px", borderRadius: "6px" }}
-            />
-          )}
-        {enable_group_icon &&
-          group.icon &&
-          group.icon.trim().startsWith("<svg") && (
-            <img
-              src={`data:image/svg+xml;base64,${btoa(group.icon)}`}
-              width="32px"
-            />
-          )}
         <ListItemText
           primary={<StyledPrimary>{group.name}</StyledPrimary>}
           secondary={
@@ -139,7 +112,6 @@ export const ProxyRender = (props: RenderProps) => {
               }} 
             />
           </Tooltip>
-          {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
         </Box>
       </ListItemButton>
     );
