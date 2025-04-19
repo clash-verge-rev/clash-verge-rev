@@ -1,36 +1,32 @@
-import dayjs from "dayjs";
-import i18next from "i18next";
-import relativeTime from "dayjs/plugin/relativeTime";
-import { SWRConfig, mutate } from "swr";
-import { useEffect, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { useLocation, useRoutes, useNavigate } from "react-router-dom";
-import { List, Paper, ThemeProvider, SvgIcon, Divider, Button, Box } from "@mui/material";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { routers, protectedRoutes } from "./_routers";
-import { getAxios } from "@/services/api";
-import { useVerge } from "@/hooks/use-verge";
-import LogoSvg from "@/assets/image/logo.svg?react";
-import iconLight from "@/assets/image/icon_light.svg?react";
-import iconDark from "@/assets/image/icon_dark.svg?react";
-import { useThemeMode } from "@/services/states";
+import { default as iconDark, default as iconLight } from "@/assets/image/logo.svg?react";
 import { Notice } from "@/components/base";
+import { LayoutControl } from "@/components/layout/layout-control";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
-import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { useClashInfo } from "@/hooks/use-clash";
+import { useListen } from "@/hooks/use-listen";
+import { useVerge } from "@/hooks/use-verge";
+import { useAuth } from "@/providers/auth-provider";
+import { getAxios } from "@/services/api";
+import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
+import { LogoutRounded } from "@mui/icons-material";
+import { Box, Button, Divider, List, Paper, SvgIcon, ThemeProvider, Typography } from "@mui/material";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-import React from "react";
-import { TransitionGroup, CSSTransition } from "react-transition-group";
-import { useListen } from "@/hooks/use-listen";
-import { listen } from "@tauri-apps/api/event";
-import { useClashInfo } from "@/hooks/use-clash";
-import { invoke } from "@tauri-apps/api/core";
-import { useAuth } from "@/providers/auth-provider";
-import { LogoutRounded } from "@mui/icons-material";
-import { LayoutControl } from "@/components/layout/layout-control";
+import relativeTime from "dayjs/plugin/relativeTime";
+import i18next from "i18next";
+import React, { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate, useRoutes } from "react-router-dom";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+import { SWRConfig, mutate } from "swr";
+import { protectedRoutes, routers } from "./_routers";
 
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
@@ -289,27 +285,33 @@ const Layout = () => {
           {!isLoginPage && (
             <div className="layout__left">
               <div className="the-logo" data-tauri-drag-region="true">
-                <div
-                  style={{
-                    height: "27px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
+                <div style={{ 
+                  display: "flex", 
+                  justifyContent: "center", 
+                  alignItems: "center", 
+                  flexDirection: "column",
+                  height: "100%", 
+                  width: "100%" 
+                }}>
                   <SvgIcon
                     component={isDark ? iconDark : iconLight}
                     style={{
-                      height: "36px",
-                      width: "36px",
-                      marginTop: "-3px",
-                      marginRight: "5px",
-                      marginLeft: "-3px",
+                      height: "80px",
+                      width: "80px",
                     }}
                     inheritViewBox
                   />
-                  <LogoSvg fill={isDark ? "white" : "black"} />
+                  <Typography 
+                    variant="subtitle1" 
+                    sx={{ 
+                      mt: 1, 
+                      fontWeight: "bold",
+                      color: theme => theme.palette.text.primary
+                    }}
+                  >
+                    101Proxy
+                  </Typography>
                 </div>
-                <UpdateButton className="the-newbtn" />
               </div>
 
               {isLoggedIn && (

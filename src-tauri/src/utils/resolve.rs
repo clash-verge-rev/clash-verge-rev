@@ -253,7 +253,7 @@ pub fn create_window(is_showup: bool) {
                 "main".to_string(),
                 tauri::WebviewUrl::App("index.html".into()),
             )
-            .title("Clash Verge")
+            .title("Yi0Yi Proxy")
             .inner_size(DEFAULT_WIDTH as f64, DEFAULT_HEIGHT as f64)
             .min_inner_size(MIN_WIDTH as f64, MIN_HEIGHT as f64)
             .decorations(false)
@@ -284,7 +284,7 @@ pub fn create_window(is_showup: bool) {
         "main".to_string(),
         tauri::WebviewUrl::App("index.html".into()),
     )
-    .title("Clash Verge")
+    .title("Yi0Yi Proxy")
     .decorations(false)
     .inner_size(DEFAULT_WIDTH as f64, DEFAULT_HEIGHT as f64)
     .min_inner_size(MIN_WIDTH as f64, MIN_HEIGHT as f64)

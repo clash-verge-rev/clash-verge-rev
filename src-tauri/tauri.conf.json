@@ -3,7 +3,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "active": true,
-    "longDescription": "Clash Verge Rev",
+    "longDescription": "Yi0Yi Proxy",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -15,14 +15,14 @@
       "resources",
       "resources/locales/*"
     ],
-    "publisher": "Clash Verge Rev",
+    "publisher": "Yi0Yi Proxy",
     "externalBin": [
       "sidecar/verge-mihomo",
       "sidecar/verge-mihomo-alpha"
     ],
     "copyright": "GNU General Public License v3.0",
     "category": "DeveloperTool",
-    "shortDescription": "Clash Verge Rev",
+    "shortDescription": "Yi0Yi Proxy",
     "createUpdaterArtifacts": true
   },
   "build": {
@@ -31,8 +31,8 @@
     "beforeDevCommand": "pnpm run web:dev",
     "devUrl": "http://localhost:3000/"
   },
-  "productName": "Clash Verge",
-  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+  "productName": "Yi0Yi Proxy",
+  "identifier": "io.github.yi0yi-proxy.yi0yi-proxy",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK",
@@ -52,7 +52,7 @@
       "desktop": {
         "schemes": [
           "clash",
-          "clash-verge"
+          "yi0yi-proxy"
         ]
       }
     }

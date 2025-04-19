@@ -1,27 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Paper,
-  CircularProgress,
-  InputAdornment,
-  IconButton,
-  SvgIcon,
-  Container,
-  FormControlLabel,
-  Checkbox,
-} from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
+import LogoSvg from "@/assets/image/logo.svg?react";
 import { useAuth } from "@/providers/auth-provider";
 import { useThemeMode } from "@/services/states";
-import { BasePage } from "@/components/base";
-import LogoSvg from "@/assets/image/logo.svg?react";
-import iconLight from "@/assets/image/icon_light.svg?react";
-import iconDark from "@/assets/image/icon_dark.svg?react";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  alpha,
+  Box,
+  Button,
+  Checkbox,
+  CircularProgress,
+  FormControlLabel,
+  IconButton,
+  InputAdornment,
+  Paper,
+  SvgIcon,
+  TextField,
+  Typography,
+  useTheme
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const { t } = useTranslation();
@@ -29,6 +27,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const mode = useThemeMode();
+  const theme = useTheme();
   
   // Form state
   const [email, setEmail] = useState("");
@@ -124,120 +123,241 @@ const LoginPage: React.FC = () => {
   };
   
   const isLight = mode === "light";
-  const bgColor = isLight ? "#f5f5f5" : "#212121";
   const isDark = !isLight;
   
   return (
-    <BasePage contentStyle={{ backgroundColor: bgColor, padding: 0 }}>
-      <Container maxWidth={false} disableGutters sx={{ height: "100vh" }}>
+    <Box
+      sx={{
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        overflow: "hidden",
+        position: "relative",
+        bgcolor: "background.default",
+      }}
+    >
+      {/* 左侧装饰区域 */}
+      <Box
+        sx={{
+          width: { xs: 0, md: "45%" },
+          height: "100%",
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          bgcolor: theme.palette.primary.main,
+          color: theme.palette.primary.contrastText,
+          overflow: "hidden",
+        }}
+      >
+        {/* 装饰性背景图形 */}
         <Box
           sx={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 2,
+            position: "absolute",
+            width: "160%",
+            height: "160%",
+            top: "-30%",
+            left: "-30%",
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${alpha(theme.palette.primary.light, 0.3)} 0%, transparent 70%)`,
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            width: "120%",
+            height: "120%",
+            bottom: "-20%",
+            right: "-20%",
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${alpha(theme.palette.primary.dark, 0.3)} 0%, transparent 70%)`,
+          }}
+        />
+        
+        {/* 左侧内容 */}
+        <Box
+          sx={{
+            zIndex: 1,
+            textAlign: "center",
+            p: 5,
+            maxWidth: "80%",
           }}
         >
-          {/* Logo区域 */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              mb: 6,
-            }}
-          >
-            <Box
+          <Box sx={{ mb: 4 }}>
+            <SvgIcon
+              component={LogoSvg}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                height: 110,
+                width: 110,
                 mb: 2,
               }}
+              inheritViewBox
+            />
+            <Typography
+              variant="h3"
+              component="h1"
+              sx={{
+                fontWeight: 700,
+                mb: 1,
+              }}
             >
-              <SvgIcon
-                component={isDark ? iconDark : iconLight}
-                style={{
-                  height: "48px",
-                  width: "48px",
-                  marginRight: "10px",
-                }}
-                inheritViewBox
-              />
-              <LogoSvg 
-                fill={isDark ? "white" : "black"} 
-                style={{ 
-                  height: "36px", 
-                  marginTop: "6px" 
-                }}
-              />
-            </Box>
-            <Typography variant="h6" color="textSecondary" gutterBottom>
-              {t("Welcome to Proxy Client")}
+              101Proxy
+            </Typography>
+            <Typography variant="h6" sx={{ opacity: 0.8 }}>
+              {t("Next-generation proxy client")}
             </Typography>
           </Box>
           
-          <Paper
-            elevation={3}
-            sx={{
-              padding: 4,
-              width: "100%",
-              maxWidth: 400,
-              borderRadius: 2,
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              mt: 4,
+              opacity: 0.9,
+              fontStyle: "italic"
             }}
           >
-            <Typography variant="h5" align="center" gutterBottom>
-              {t("Sign In")}
-            </Typography>
-            <Typography variant="body2" align="center" color="textSecondary" sx={{ mb: 3 }}>
-              {t("Enter your credentials to continue")}
-            </Typography>
+            {t("Secure. Fast. Reliable.")}
+          </Typography>
+        </Box>
+        
+        {/* 版权信息 */}
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            position: "absolute",
+            bottom: 16,
+            opacity: 0.7,
+          }}
+        >
+          © {new Date().getFullYear()} 101Proxy
+        </Typography>
+      </Box>
+      
+      {/* 右侧登录表单区域 */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          p: { xs: 2, sm: 4 },
+        }}
+      >
+        {/* 移动设备上显示的Logo */}
+        <Box
+          sx={{
+            display: { xs: "flex", md: "none" },
+            flexDirection: "column",
+            alignItems: "center",
+            mb: 5,
+          }}
+        >
+          <SvgIcon
+            component={LogoSvg}
+            sx={{
+              height: 70,
+              width: 70,
+              mb: 1,
+            }}
+            inheritViewBox
+          />
+          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+            101Proxy
+          </Typography>
+        </Box>
+        
+        <Paper
+          elevation={6}
+          sx={{
+            p: { xs: 3, sm: 4 },
+            width: "100%",
+            maxWidth: 450,
+            borderRadius: 2,
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            bgcolor: alpha(theme.palette.background.paper, 0.8),
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <Typography 
+            variant="h5" 
+            align="center" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 600,
+            }}
+          >
+            {t("Welcome Back")}
+          </Typography>
+          <Typography 
+            variant="body2" 
+            align="center" 
+            color="text.secondary" 
+            sx={{ mb: 4 }}
+          >
+            {t("Sign in to access your dashboard")}
+          </Typography>
+          
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              margin="normal"
+              id="email"
+              label={t("Email")}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              error={!!emailError}
+              helperText={emailError}
+              disabled={isLoading}
+              autoComplete="email"
+              autoFocus
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1.5,
+                }
+              }}
+            />
             
-            <form onSubmit={handleSubmit}>
-              <TextField
-                fullWidth
-                margin="normal"
-                id="email"
-                label={t("Email")}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={!!emailError}
-                helperText={emailError}
-                disabled={isLoading}
-                autoComplete="email"
-                autoFocus
-              />
-              
-              <TextField
-                fullWidth
-                margin="normal"
-                id="password"
-                label={t("Password")}
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                error={!!passwordError}
-                helperText={passwordError}
-                disabled={isLoading}
-                autoComplete="current-password"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={toggleShowPassword}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              
+            <TextField
+              fullWidth
+              variant="outlined"
+              margin="normal"
+              id="password"
+              label={t("Password")}
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              error={!!passwordError}
+              helperText={passwordError}
+              disabled={isLoading}
+              autoComplete="current-password"
+              sx={{
+                mb: 1,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1.5,
+                }
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={toggleShowPassword}
+                      edge="end"
+                      size="large"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -245,41 +365,50 @@ const LoginPage: React.FC = () => {
                     onChange={handleRememberMeChange}
                     color="primary"
                     disabled={isLoading}
+                    size="small"
                   />
                 }
-                label={t("Remember me")}
-                sx={{ mt: 1 }}
+                label={<Typography variant="body2">{t("Remember me")}</Typography>}
               />
-              
-              <Button
-                fullWidth
-                variant="contained"
-                color="primary"
-                type="submit"
-                disabled={isLoading}
-                sx={{ mt: 2, mb: 2, py: 1.2 }}
-              >
-                {isLoading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  t("Login")
-                )}
-              </Button>
-            </form>
-          </Paper>
-          
-          {/* 版权信息 */}
-          <Typography 
-            variant="body2" 
-            color="textSecondary" 
-            align="center" 
-            sx={{ mt: 4 }}
-          >
-            © {new Date().getFullYear()} Proxy Client
-          </Typography>
-        </Box>
-      </Container>
-    </BasePage>
+            </Box>
+            
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={isLoading}
+              sx={{ 
+                mt: 1, 
+                py: 1.5,
+                borderRadius: 1.5,
+                fontWeight: 600,
+                boxShadow: 2,
+              }}
+            >
+              {isLoading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                t("Sign In")
+              )}
+            </Button>
+          </form>
+        </Paper>
+        
+        {/* 移动设备上的版权信息 */}
+        <Typography 
+          variant="body2" 
+          color="text.secondary" 
+          align="center" 
+          sx={{ 
+            mt: 4,
+            display: { xs: "block", md: "none" }
+          }}
+        >
+          © {new Date().getFullYear()} 101Proxy
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 

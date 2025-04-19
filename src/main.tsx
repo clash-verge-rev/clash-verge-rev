@@ -7,21 +7,21 @@ if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
 }
 
+import { deleteProfile, getProfiles } from "@/services/cmds";
+import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { BrowserRouter } from "react-router-dom";
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
+import { AppDataProvider } from "./providers/app-data-provider";
+import { AuthProvider } from "./providers/auth-provider";
 import "./services/i18n";
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
-import { AppDataProvider } from "./providers/app-data-provider";
-import { deleteProfile, getProfiles } from "@/services/cmds";
-import { AuthProvider } from "./providers/auth-provider";
 
 // 标记初始化完成状态，供其他组件使用
 export let appInitialized = false;

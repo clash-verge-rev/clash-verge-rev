@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { getUserInfo, isAuthenticated, login, logout } from "@/services/auth";
 import { Notice } from "@/components/base";
-import { useTranslation } from "react-i18next";
-import { importProfile, updateProfile, getProfiles, patchProfilesConfig } from "@/services/cmds";
-import { useNavigate } from "react-router-dom";
 import { appInitialized } from "@/main";
-import { closeAllConnections } from "@/services/api";
+import { getUserInfo, isAuthenticated, login, logout } from "@/services/auth";
+import { getProfiles, importProfile, updateProfile } from "@/services/cmds";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { mutate } from "swr";
 
 // 创建一个自定义事件，用于触发数据刷新
