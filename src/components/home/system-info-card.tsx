@@ -106,13 +106,13 @@ export const SystemInfoCard = () => {
 
   // 切换自启动状态
   const toggleAutoLaunch = useCallback(async () => {
-    if (!verge || isAdminMode) return;
+    if (!verge) return;
     try {
       await patchVerge({ enable_auto_launch: !verge.enable_auto_launch });
     } catch (err) {
       console.error("切换开机自启动状态失败:", err);
     }
-  }, [verge, patchVerge, isAdminMode]);
+  }, [verge, patchVerge]);
 
   // 安装系统服务
   const onInstallService = useLockFn(async () => {
@@ -258,7 +258,7 @@ export const SystemInfoCard = () => {
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
             {isAdminMode && (
-              <Tooltip title={t("Administrator mode does not support auto launch")}>
+              <Tooltip title={t("Administrator mode may not support auto launch")}>
                 <WarningOutlined sx={{ color: "warning.main", fontSize: 20 }} />
               </Tooltip>
             )}
@@ -268,8 +268,7 @@ export const SystemInfoCard = () => {
               color={autoLaunchEnabled ? "success" : "default"}
               variant={autoLaunchEnabled ? "filled" : "outlined"}
               onClick={toggleAutoLaunch}
-              disabled={isAdminMode}
-              sx={{ cursor: isAdminMode ? "not-allowed" : "pointer" }}
+              sx={{ cursor: "pointer" }}
             />
           </Stack>
         </Stack>
