@@ -1,3 +1,4 @@
+pub mod autostart;
 pub mod dirs;
 pub mod error;
 pub mod help;
