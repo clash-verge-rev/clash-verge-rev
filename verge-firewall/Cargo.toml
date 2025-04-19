@@ -10,7 +10,7 @@ name = "verge-firewall"
 path = "src/main.rs"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.59"
+version = "0.61"
 features = [
     "Win32_System",
     "Win32_System_Com",
