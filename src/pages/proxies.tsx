@@ -16,6 +16,7 @@ const ProxyPage = () => {
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
     getBaseConfig,
+    { refreshInterval: 5000 },
   );
 
   const { verge } = useVerge();
