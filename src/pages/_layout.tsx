@@ -16,14 +16,12 @@ import iconDark from "@/assets/image/icon_dark.svg?react";
 import { useThemeMode } from "@/services/states";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
-import { LayoutControl } from "@/components/layout/layout-control";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import getSystem from "@/utils/get-system";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-import { getPortableFlag } from "@/services/cmds";
 import React from "react";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 import { useListen } from "@/hooks/use-listen";
@@ -32,6 +30,7 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { invoke } from "@tauri-apps/api/core";
 import { useAuth } from "@/providers/auth-provider";
 import { LogoutRounded } from "@mui/icons-material";
+import { LayoutControl } from "@/components/layout/layout-control";
 
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
@@ -353,10 +352,6 @@ const Layout = () => {
                   </Box>
                 </>
               )}
-
-              <div className="the-control">
-                <LayoutControl />
-              </div>
             </div>
           )}
 
@@ -367,6 +362,7 @@ const Layout = () => {
                 data-tauri-drag-region="true"
                 style={{ width: "100%" }}
               />
+              <LayoutControl />
               {OS !== "macos" && <LayoutControl />}
             </div>
 

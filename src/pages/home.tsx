@@ -42,7 +42,6 @@ import {
   openWebUrl,
   patchVergeConfig,
 } from "@/services/cmds";
-import { TestCard } from "@/components/home/test-card";
 import { IpInfoCard } from "@/components/home/ip-info-card";
 
 // 定义旋转动画
@@ -68,7 +67,6 @@ interface HomeCardsSettings {
   info: boolean;
   clashinfo: boolean;
   systeminfo: boolean;
-  test: boolean;
   ip: boolean;
   [key: string]: boolean;
 }
@@ -158,15 +156,6 @@ const HomeSettingsDialog = ({
           <FormControlLabel
             control={
               <Checkbox
-                checked={cards.test || false}
-                onChange={() => handleToggle("test")}
-              />
-            }
-            label={t("Website Tests Card")}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
                 checked={cards.ip || false}
                 onChange={() => handleToggle("ip")}
               />
@@ -222,26 +211,9 @@ export const HomePage = () => {
       traffic: true,
       clashinfo: true,
       systeminfo: true,
-      test: true,
       ip: true,
     },
   );
-
-  // 导航到订阅页面
-  const goToProfiles = () => {
-    navigate("/profile");
-  };
-
-  // 导航到代理页面
-  const goToProxies = () => {
-    navigate("/");
-  };
-
-  // 导航到设置页面
-  const goToSettings = () => {
-    navigate("/settings");
-  };
-
   // 文档链接函数
   const toGithubDoc = useLockFn(() => {
     return openWebUrl("https://clash-verge-rev.github.io/index.html");
@@ -263,7 +235,7 @@ export const HomePage = () => {
       contentStyle={{ padding: 2 }}
       header={
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Tooltip title={t("LightWeight Mode")} arrow>
+          {/* <Tooltip title={t("LightWeight Mode")} arrow>
             <IconButton
               onClick={async () => await entry_lightweight_mode()}
               size="small"
@@ -281,7 +253,7 @@ export const HomePage = () => {
             <IconButton onClick={openSettings} size="small" color="inherit">
               <SettingsOutlined />
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
         </Box>
       }
     >
@@ -325,12 +297,6 @@ export const HomePage = () => {
             >
               <EnhancedTrafficStats />
             </EnhancedCard>
-          </Grid>
-        )}
-        {/* 测试网站部分 */}
-        {homeCards.test && (
-          <Grid size={6}>
-            <TestCard />
           </Grid>
         )}
         {/* IP信息卡片 */}

@@ -221,12 +221,6 @@ interface IProfilesConfig {
   items?: IProfileItem[];
 }
 
-interface IVergeTestItem {
-  uid: string;
-  name?: string;
-  icon?: string;
-  url: string;
-}
 interface IAddress {
   V4?: {
     ip: string;
@@ -239,6 +233,7 @@ interface IAddress {
     netmask?: string;
   };
 }
+
 interface INetworkInterface {
   name: string;
   addr: IAddress[];
@@ -308,6 +303,7 @@ interface RealityOptions {
   "public-key"?: string;
   "short-id"?: string;
 }
+
 type ClientFingerprint =
   | "chrome"
   | "firefox"
@@ -318,7 +314,9 @@ type ClientFingerprint =
   | "360"
   | "qq"
   | "random";
+
 type NetworkType = "ws" | "http" | "h2" | "grpc" | "tcp";
+
 type CipherType =
   | "none"
   | "auto"
@@ -351,6 +349,7 @@ type CipherType =
   | "aez-384"
   | "deoxys-ii-256-128"
   | "rc4-md5";
+
 // base
 interface IProxyBaseConfig {
   tfo?: boolean;
@@ -360,16 +359,19 @@ interface IProxyBaseConfig {
   "ip-version"?: "dual" | "ipv4" | "ipv6" | "ipv4-prefer" | "ipv6-prefer";
   "dialer-proxy"?: string;
 }
+
 // direct
 interface IProxyDirectConfig extends IProxyBaseConfig {
   name: string;
   type: "direct";
 }
+
 // dns
 interface IProxyDnsConfig extends IProxyBaseConfig {
   name: string;
   type: "dns";
 }
+
 // http
 interface IProxyHttpConfig extends IProxyBaseConfig {
   name: string;
@@ -386,6 +388,7 @@ interface IProxyHttpConfig extends IProxyBaseConfig {
     [key: string]: string;
   };
 }
+
 // socks5
 interface IProxySocks5Config extends IProxyBaseConfig {
   name: string;
@@ -399,6 +402,7 @@ interface IProxySocks5Config extends IProxyBaseConfig {
   "skip-cert-verify"?: boolean;
   fingerprint?: string;
 }
+
 // ssh
 interface IProxySshConfig extends IProxyBaseConfig {
   name: string;
@@ -412,6 +416,7 @@ interface IProxySshConfig extends IProxyBaseConfig {
   "host-key"?: string;
   "host-key-algorithms"?: string;
 }
+
 // trojan
 interface IProxyTrojanConfig extends IProxyBaseConfig {
   name: string;
@@ -435,6 +440,7 @@ interface IProxyTrojanConfig extends IProxyBaseConfig {
   };
   "client-fingerprint"?: ClientFingerprint;
 }
+
 // tuic
 interface IProxyTuicConfig extends IProxyBaseConfig {
   name: string;
@@ -468,6 +474,7 @@ interface IProxyTuicConfig extends IProxyBaseConfig {
   "udp-over-stream"?: boolean;
   "udp-over-stream-version"?: number;
 }
+
 // vless
 interface IProxyVlessConfig extends IProxyBaseConfig {
   name: string;
@@ -498,6 +505,7 @@ interface IProxyVlessConfig extends IProxyBaseConfig {
   "client-fingerprint"?: ClientFingerprint;
   smux?: boolean;
 }
+
 // vmess
 interface IProxyVmessConfig extends IProxyBaseConfig {
   name: string;
@@ -527,6 +535,7 @@ interface IProxyVmessConfig extends IProxyBaseConfig {
   "client-fingerprint"?: ClientFingerprint;
   smux?: boolean;
 }
+
 interface WireGuardPeerOptions {
   server?: string;
   port?: number;
@@ -535,6 +544,7 @@ interface WireGuardPeerOptions {
   reserved?: number[];
   "allowed-ips"?: string[];
 }
+
 // wireguard
 interface IProxyWireguardConfig extends IProxyBaseConfig, WireGuardPeerOptions {
   name: string;
@@ -551,6 +561,7 @@ interface IProxyWireguardConfig extends IProxyBaseConfig, WireGuardPeerOptions {
   dns?: string[];
   "refresh-server-ip-interval"?: number;
 }
+
 // hysteria
 interface IProxyHysteriaConfig extends IProxyBaseConfig {
   name: string;
@@ -579,6 +590,7 @@ interface IProxyHysteriaConfig extends IProxyBaseConfig {
   "fast-open"?: boolean;
   "hop-interval"?: number;
 }
+
 // hysteria2
 interface IProxyHysteria2Config extends IProxyBaseConfig {
   name: string;
@@ -603,6 +615,7 @@ interface IProxyHysteria2Config extends IProxyBaseConfig {
   cwnd?: number;
   "udp-mtu"?: number;
 }
+
 // shadowsocks
 interface IProxyShadowsocksConfig extends IProxyBaseConfig {
   name: string;
@@ -636,6 +649,7 @@ interface IProxyShadowsocksConfig extends IProxyBaseConfig {
   "client-fingerprint"?: ClientFingerprint;
   smux?: boolean;
 }
+
 // shadowsocksR
 interface IProxyshadowsocksRConfig extends IProxyBaseConfig {
   name: string;
@@ -650,6 +664,7 @@ interface IProxyshadowsocksRConfig extends IProxyBaseConfig {
   "protocol-param"?: string;
   udp?: boolean;
 }
+
 // sing-mux
 interface IProxySmuxConfig {
   smux?: {
@@ -668,6 +683,7 @@ interface IProxySmuxConfig {
     };
   };
 }
+
 // snell
 interface IProxySnellConfig extends IProxyBaseConfig {
   name: string;
@@ -679,6 +695,7 @@ interface IProxySnellConfig extends IProxyBaseConfig {
   version?: number;
   "obfs-opts"?: {};
 }
+
 interface IProxyConfig
   extends IProxyBaseConfig,
     IProxyDirectConfig,
@@ -786,7 +803,6 @@ interface IVergeConfig {
   enable_builtin_enhanced?: boolean;
   auto_log_clean?: 0 | 1 | 2 | 3;
   proxy_layout_column?: number;
-  test_list?: IVergeTestItem[];
   webdav_url?: string;
   webdav_username?: string;
   webdav_password?: string;

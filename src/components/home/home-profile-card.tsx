@@ -341,40 +341,17 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
       </Link>
     );
   }, [current, t]);
-
-  // 卡片操作按钮
-  const cardAction = useMemo(() => {
-    if (!current) return null;
-    
-    return (
-      <Button
-        variant="outlined"
-        size="small"
-        onClick={goToProfiles}
-        endIcon={<StorageOutlined fontSize="small" />}
-        sx={{ borderRadius: 1.5 }}
-      >
-        {t("Label-Profiles")}
-      </Button>
-    );
-  }, [current, goToProfiles, t]);
-
   return (
     <EnhancedCard
       title={cardTitle}
       icon={<CloudUploadOutlined />}
       iconColor="info"
-      action={cardAction}
     >
-      {current ? (
         <ProfileDetails 
-          current={current} 
+          current={current!} 
           onUpdateProfile={onUpdateProfile} 
           updating={updating} 
         />
-      ) : (
-        <EmptyProfile onClick={goToProfiles} />
-      )}
     </EnhancedCard>
   );
 };
