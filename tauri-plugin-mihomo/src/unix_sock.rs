@@ -6,6 +6,8 @@ mod test {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::UnixStream;
 
+    use crate::{Connections, Rules};
+
     // 目前仅进行了 sock 套接字连接测试
     #[tokio::test]
     #[allow(deprecated)] // for home_dir method
@@ -14,7 +16,7 @@ mod test {
         let socket_path =
             home_dir.join(".local/share/io.github.oomeow.clash-verge-self/verge-mihomo.sock");
         if !socket_path.exists() {
-            panic!("socket not exists.");
+            panic!("socket not exists. {}", socket_path.display());
         }
 
         let socket_path_ = socket_path.clone();
@@ -42,10 +44,10 @@ mod test {
                     }
                 }
                 let response = String::from_utf8_lossy(&buf);
-                println!("[thread-1]: Received response: {:?}", response);
-                // let response = response.split("\r\n\r\n").nth(1).unwrap();
-                // let json: Rules = serde_json::from_str(response).unwrap();
-                // println!("[thread-1]: Received response json: {:?}", json);
+                // println!("[thread-1]: Received response: {:?}", response);
+                let response = response.split("\r\n\r\n").nth(1).unwrap();
+                let json: Rules = serde_json::from_str(response).unwrap();
+                println!("[thread-1]: Received response json: {:?}", json);
 
                 std::thread::sleep(Duration::from_millis(500));
             }
@@ -78,23 +80,21 @@ mod test {
                         let receive_msg = String::from_utf8_lossy(&b);
                         if receive_msg.starts_with("HTTP/1.1 101 Switching Protocols") {
                             println!("WebSocket handshake successful");
+                            //  清空缓冲区，准备接收下一次数据
+                            buf.clear();
                             continue;
                         } else {
                             break;
                         }
                     }
                 }
-                let response = String::from_utf8_lossy(&buf);
-                println!("[thread-2]: Received response: {:?}", response);
-                // TODO: 在 websocket 返回的数据中，使用 \r\n\r\n 分割后，需要的数据字符串中，
-                //          开头总是有其他莫名其妙的字符 [例如：�~F�{\"downloadTotal\": 13026, ...}]，导致无法序列化成指定对象
-                //
-                // let response = response
-                //     .find("{\"")
-                //     .map(|start| &response[start..])
-                //     .unwrap();
-                // let json: Connections = serde_json::from_str(response).unwrap();
-                // println!("[thread-2]: Received response json: {:?}", json);
+              // 解析 websocket 的数据
+              let (frame, _) = ws_frame::parse_websocket_frame(&buf).unwrap();
+              // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
+              let response = String::from_utf8_lossy(&frame.payload.as_slice());
+              // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);
+              let json: Connections = serde_json::from_str(&response).unwrap();
+              println!("[thread-2]: Received response json: {:?}", json);
             }
         });
 
