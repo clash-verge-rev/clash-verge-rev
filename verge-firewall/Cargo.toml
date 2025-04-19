@@ -1,0 +1,25 @@
+[package]
+name = "verge-firewall"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+description = "add verge-mihomo to the firewall"
+
+[[bin]]
+name = "verge-firewall"
+path = "src/main.rs"
+
+[target.'cfg(target_os = "windows")'.dependencies.windows]
+version = "0.59"
+features = [
+    "Win32_System",
+    "Win32_System_Com",
+    "Win32_System_Ole",
+    "Win32_System_Variant",
+    "Win32_NetworkManagement",
+    "Win32_NetworkManagement_WindowsFirewall",
+    "Win32_NetworkManagement_WindowsFilteringPlatform",
+]
+
+[build-dependencies]
+tauri-winres = "0.3"
