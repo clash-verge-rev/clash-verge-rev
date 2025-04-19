@@ -6,7 +6,7 @@ mod test {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::UnixStream;
 
-    use crate::{Connections, Rules};
+    use crate::{ws_frame, Connections, Rules};
 
     // 目前仅进行了 sock 套接字连接测试
     #[tokio::test]
@@ -88,13 +88,13 @@ mod test {
                         }
                     }
                 }
-              // 解析 websocket 的数据
-              let (frame, _) = ws_frame::parse_websocket_frame(&buf).unwrap();
-              // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
-              let response = String::from_utf8_lossy(&frame.payload.as_slice());
-              // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);
-              let json: Connections = serde_json::from_str(&response).unwrap();
-              println!("[thread-2]: Received response json: {:?}", json);
+                // 解析 websocket 的数据
+                let frame = ws_frame::parse_websocket_frame(&buf).unwrap();
+                // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
+                let response = String::from_utf8_lossy(&frame.payload.as_slice());
+                // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);
+                let json: Connections = serde_json::from_str(&response).unwrap();
+                println!("[thread-2]: Received response json: {:?}", json);
             }
         });
 

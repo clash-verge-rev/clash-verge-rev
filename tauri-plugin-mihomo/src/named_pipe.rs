@@ -14,7 +14,7 @@ mod test {
     // 目前仅进行了 named pipe 连接测试
     #[tokio::test]
     #[allow(deprecated)] // for home_dir method
-    async fn test_sock_connection() -> Result<(), Box<dyn Error>> {
+    async fn test_pipe_connection() -> Result<(), Box<dyn Error>> {
         const PIPE_NAME: &str = r"\\.\pipe\verge-mihomo";
 
         tokio::spawn(async move {
@@ -125,7 +125,7 @@ mod test {
                     }
                 }
                 // 解析 websocket 的数据
-                let (frame, _) = ws_frame::parse_websocket_frame(&buf).unwrap();
+                let frame = ws_frame::parse_websocket_frame(&buf).unwrap();
                 // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
                 let response = String::from_utf8_lossy(&frame.payload.as_slice());
                 // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);
