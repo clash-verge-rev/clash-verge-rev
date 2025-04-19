@@ -20,15 +20,14 @@ import {
   UpdateStateProvider,
 } from "./services/states";
 import { AppDataProvider } from "./providers/app-data-provider";
+import { deleteProfile, getProfiles } from "@/services/cmds";
+import { AuthProvider } from "./providers/auth-provider";
+
+// 标记初始化完成状态，供其他组件使用
+export let appInitialized = false;
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
-
-if (!container) {
-  throw new Error(
-    `No container '${mainElementId}' found to render application`
-  );
-}
 
 document.addEventListener("keydown", (event) => {
   // Disable WebView keyboard shortcuts
@@ -48,16 +47,48 @@ const contexts = [
   <UpdateStateProvider />,
 ];
 
-createRoot(container).render(
-  <React.StrictMode>
-    <ComposeContextProvider contexts={contexts}>
-      <BaseErrorBoundary>
-        <AppDataProvider>
+// Initialize app by deleting all profiles before rendering
+async function initializeApp() {
+  try {
+    // Get all profiles
+    const profiles = await getProfiles();
+    const items = profiles?.items || [];
+    
+    // Delete all profiles
+    if (items.length > 0) {
+      console.log(`Deleting ${items.length} profiles during app initialization...`);
+      for (const item of items) {
+        if (item && item.uid) {
+          await deleteProfile(item.uid);
+        }
+      }
+      console.log("All profiles have been deleted successfully");
+    }
+    
+    // 标记初始化完成
+    appInitialized = true;
+  } catch (err) {
+    console.error("Failed to delete profiles during initialization:", err);
+    // 即使出错也标记为初始化完成，以免阻塞后续流程
+    appInitialized = true;
+  }
+}
+
+// Run initialization and then render the app
+initializeApp().then(() => {
+  createRoot(container!).render(
+    <React.StrictMode>
+      <ComposeContextProvider contexts={contexts}>
+        <BaseErrorBoundary>
           <BrowserRouter>
-            <Layout />
+            <AuthProvider>
+              <AppDataProvider>
+                <Layout />
+              </AppDataProvider>
+            </AuthProvider>
           </BrowserRouter>
-        </AppDataProvider>
-      </BaseErrorBoundary>
-    </ComposeContextProvider>
-  </React.StrictMode>
-);
+        </BaseErrorBoundary>
+      </ComposeContextProvider>
+    </React.StrictMode>
+  );
+});

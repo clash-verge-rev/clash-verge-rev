@@ -7,15 +7,28 @@ import {
   HorizontalRuleRounded,
   PushPinOutlined,
   PushPinRounded,
+  LogoutRounded,
 } from "@mui/icons-material";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/providers/auth-provider";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+
 const appWindow = getCurrentWebviewWindow();
 
 export const LayoutControl = () => {
   const minWidth = 40;
+  const { t } = useTranslation();
+  const { logout, isLoggedIn } = useAuth();
+  const navigate = useNavigate();
 
   const [isMaximized, setIsMaximized] = useState(false);
   const [isPined, setIsPined] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   useEffect(() => {
     const unlistenResized = appWindow.onResized(() => {
@@ -45,6 +58,21 @@ export const LayoutControl = () => {
         },
       }}
     >
+      {isLoggedIn && (
+        <Button
+          size="small"
+          sx={{ 
+            minWidth, 
+            svg: { transform: "scale(0.9)" },
+            ":hover": { bgcolor: "#2196f390" } 
+          }}
+          onClick={handleLogout}
+          title={t("Logout")}
+        >
+          <LogoutRounded fontSize="small" />
+        </Button>
+      )}
+
       <Button
         size="small"
         sx={{ minWidth, svg: { transform: "scale(0.9)" } }}

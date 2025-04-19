@@ -27,8 +27,6 @@ import { useTranslation } from "react-i18next";
 import {
   importProfile,
   enhanceProfiles,
-  //restartCore,
-  getRuntimeLogs,
   deleteProfile,
   updateProfile,
   reorderProfile,
@@ -51,7 +49,6 @@ import { readTextFile } from "@tauri-apps/plugin-fs";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { useLocation } from "react-router-dom";
 import { useListen } from "@/hooks/use-listen";
-import { listen } from "@tauri-apps/api/event";
 import { TauriEvent } from "@tauri-apps/api/event";
 
 const ProfilePage = () => {
@@ -69,6 +66,13 @@ const ProfilePage = () => {
     }),
   );
   const { current } = location.state || {};
+
+  const {
+    profiles = {},
+    activateSelected,
+    patchProfiles,
+    mutateProfiles,
+  } = useProfiles();
 
   useEffect(() => {
     const handleFileDrop = async () => {
@@ -108,18 +112,6 @@ const ProfilePage = () => {
       unsubscribe.then((cleanup) => cleanup());
     };
   }, []);
-
-  const {
-    profiles = {},
-    activateSelected,
-    patchProfiles,
-    mutateProfiles,
-  } = useProfiles();
-
-  const { data: chainLogs = {}, mutate: mutateLogs } = useSWR(
-    "getRuntimeLogs",
-    getRuntimeLogs,
-  );
 
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
@@ -195,39 +187,40 @@ const ProfilePage = () => {
     }, 100);
 
     try {
-      const success = await patchProfiles({ current: profile });
-      await mutateLogs();
+      await patchProfiles({ current: profile });
       closeAllConnections();
       await activateSelected();
-      if (notifySuccess && success) {
-        Notice.success(t("Profile Switched"), 1000);
+
+      if (notifySuccess) {
+        Notice.success(t("Profile Switched"));
       }
     } catch (err: any) {
-      Notice.error(err?.message || err.toString(), 4000);
+      Notice.error(err.message || err.toString());
     } finally {
       clearTimeout(reset);
-      setActivatings([]);
+      setActivatings((prev) => prev.filter((item) => item !== profile));
     }
   };
+
   const onSelect = useLockFn(async (current: string, force: boolean) => {
     if (!force && current === profiles.current) return;
     await activateProfile(current, true);
   });
 
   useEffect(() => {
+    if (!current) return;
+
     (async () => {
-      if (current) {
-        mutateProfiles();
-        await activateProfile(current, false);
-      }
+      mutateProfiles();
+      await activateProfile(current, false);
     })();
-  }, current);
+  }, [current]);
 
   const onEnhance = useLockFn(async (notifySuccess: boolean) => {
     setActivatings(currentActivatings());
     try {
       await enhanceProfiles();
-      mutateLogs();
+      mutateProfiles();
       if (notifySuccess) {
         Notice.success(t("Profile Reactivated"), 1000);
       }
@@ -244,10 +237,11 @@ const ProfilePage = () => {
       setActivatings([...(current ? currentActivatings() : []), uid]);
       await deleteProfile(uid);
       mutateProfiles();
-      mutateLogs();
-      current && (await onEnhance(false));
+      if (current) {
+        await onEnhance(false);
+      }
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      Notice.error(err.message || err.toString());
     } finally {
       setActivatings([]);
     }
@@ -421,8 +415,6 @@ const ProfilePage = () => {
                       onSave={async (prev, curr) => {
                         if (prev !== curr && profiles.current === item.uid) {
                           await onEnhance(false);
-                          //  await restartCore();
-                          //   Notice.success(t("Clash Core Restarted"), 1000);
                         }
                       }}
                       onDelete={() => onDelete(item.uid)}
@@ -452,7 +444,6 @@ const ProfilePage = () => {
               <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
                 <ProfileMore
                   id="Script"
-                  logInfo={chainLogs["Script"]}
                   onSave={async (prev, curr) => {
                     if (prev !== curr) {
                       await onEnhance(false);
@@ -467,11 +458,9 @@ const ProfilePage = () => {
 
       <ProfileViewer
         ref={viewerRef}
-        onChange={async () => {
-          mutateProfiles();
-          await onEnhance(false);
-        }}
+        onChange={() => mutateProfiles()}
       />
+
       <ConfigViewer ref={configRef} />
     </BasePage>
   );

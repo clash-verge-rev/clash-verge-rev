@@ -62,6 +62,7 @@ export const useProfiles = () => {
       mutate("getProxies", getProxies());
     }
   };
+  console.log("profiles", profiles);
 
   return {
     profiles,

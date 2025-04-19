@@ -59,3 +59,31 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
 }
+
+// 登录页样式
+.login-page {
+  .layout__right.full-width {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+}
+
+// 退出登录按钮样式
+.the-logout {
+  margin-top: auto;
+  position: sticky;
+  bottom: 10px;
+  width: 100%;
+}
+
+// 调整左侧导航栏布局，使退出按钮固定在底部
+.layout__left {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  
+  .the-menu {
+    flex: 1;
+    overflow-y: auto;
+  }
+}

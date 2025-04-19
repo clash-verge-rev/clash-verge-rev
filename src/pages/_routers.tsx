@@ -1,4 +1,3 @@
-import LogsPage from "./logs";
 import ProxiesPage from "./proxies";
 import ProfilesPage from "./profiles";
 import SettingsPage from "./settings";
@@ -6,14 +5,16 @@ import ConnectionsPage from "./connections";
 import RulesPage from "./rules";
 import HomePage from "./home";
 import UnlockPage from "./unlock";
+import LoginPage from "./login";
 import { BaseErrorBoundary } from "@/components/base";
+import { ProtectedRoute } from "@/components/auth/protected-route";
+import { Navigate } from "react-router-dom";
 
 import HomeSvg from "@/assets/image/itemicon/home.svg?react";
 import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
 import ProfilesSvg from "@/assets/image/itemicon/profiles.svg?react";
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
 import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
-import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
 import UnlockSvg from "@/assets/image/itemicon/unlock.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 
@@ -21,12 +22,35 @@ import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
 import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
-import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
+import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 
-export const routers = [
+// 定义路由类型
+interface RouterItem {
+  label?: string;
+  path: string;
+  icon?: React.ReactNode[];
+  element: React.ReactNode;
+}
+
+// Public routes (not requiring authentication)
+export const publicRoutes: RouterItem[] = [
+  {
+    // 登录页面不显示标签
+    path: "/login",
+    element: <LoginPage />,
+  },
+  // 根路径直接重定向到登录页面
+  {
+    path: "/",
+    element: <Navigate to="/home" replace />,
+  }
+];
+
+// Protected routes (requiring authentication)
+export const protectedRoutes: RouterItem[] = [
   {
     label: "Label-Home",
     path: "/home",
@@ -35,7 +59,7 @@ export const routers = [
   },
   {
     label: "Label-Proxies",
-    path: "/",
+    path: "/proxies",
     icon: [<WifiRoundedIcon />, <ProxiesSvg />],
     element: <ProxiesPage />,
   },
@@ -58,12 +82,6 @@ export const routers = [
     element: <RulesPage />,
   },
   {
-    label: "Label-Logs",
-    path: "/logs",
-    icon: [<SubjectRoundedIcon />, <LogsSvg />],
-    element: <LogsPage />,
-  },
-  {
     label: "Label-Unlock",
     path: "/unlock",
     icon: [<LockOpenRoundedIcon />, <UnlockSvg />],
@@ -75,9 +93,29 @@ export const routers = [
     icon: [<SettingsRoundedIcon />, <SettingsSvg />],
     element: <SettingsPage />,
   },
-].map((router) => ({
+];
+
+// Process protected routes to wrap them with ProtectedRoute
+const processedProtectedRoutes = protectedRoutes.map((router) => ({
   ...router,
   element: (
-    <BaseErrorBoundary key={router.label}>{router.element}</BaseErrorBoundary>
+    <BaseErrorBoundary key={router.label}>
+      <ProtectedRoute>
+        {router.element}
+      </ProtectedRoute>
+    </BaseErrorBoundary>
   ),
 }));
+
+// Process public routes 
+const processedPublicRoutes = publicRoutes.map((router) => ({
+  ...router,
+  element: router.element ? (
+    <BaseErrorBoundary key={router.path}>
+      {router.element}
+    </BaseErrorBoundary>
+  ) : router.element,
+}));
+
+// Combine all routes for the router - 公共路由放在前面，确保它们优先匹配
+export const routers = [...processedPublicRoutes, ...processedProtectedRoutes];

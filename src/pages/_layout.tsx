@@ -5,15 +5,15 @@ import { SWRConfig, mutate } from "swr";
 import { useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes, useNavigate } from "react-router-dom";
-import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
+import { List, Paper, ThemeProvider, SvgIcon, Divider, Button, Box } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { routers } from "./_routers";
+import { routers, protectedRoutes } from "./_routers";
 import { getAxios } from "@/services/api";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import iconDark from "@/assets/image/icon_dark.svg?react";
-import { useThemeMode, useEnableLog } from "@/services/states";
+import { useThemeMode } from "@/services/states";
 import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
@@ -29,8 +29,9 @@ import { TransitionGroup, CSSTransition } from "react-transition-group";
 import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";
 import { useClashInfo } from "@/hooks/use-clash";
-import { initGlobalLogService } from "@/services/global-log-service";
 import { invoke } from "@tauri-apps/api/core";
+import { useAuth } from "@/providers/auth-provider";
+import { LogoutRounded } from "@mui/icons-material";
 
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
@@ -130,12 +131,22 @@ const Layout = () => {
   const { theme } = useCustomTheme();
   const { verge } = useVerge();
   const { clashInfo } = useClashInfo();
-  const [enableLog] = useEnableLog();
   const { language, start_page } = verge ?? {};
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
   const { addListener, setupCloseListener } = useListen();
+  const { isLoggedIn, logout } = useAuth();
+
+  // 判断是否为登录页面
+  const isLoginPage = location.pathname === "/login";
+
+  // 退出登录处理
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+    Notice.info(t("Logged out successfully"));
+  };
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {
@@ -144,15 +155,6 @@ const Layout = () => {
     },
     [t, navigate],
   );
-
-  // 初始化全局日志服务
-  useEffect(() => {
-    if (clashInfo) {
-      const { server = "", secret = "" } = clashInfo;
-      // 使用本地存储中的enableLog值初始化全局日志服务
-      initGlobalLogService(server, secret, enableLog, "info");
-    }
-  }, [clashInfo, enableLog]);
 
   // 设置监听器
   useEffect(() => {
@@ -260,7 +262,7 @@ const Layout = () => {
         <Paper
           square
           elevation={0}
-          className={`${OS} layout`}
+          className={`${OS} layout ${isLoginPage ? 'login-page' : ''}`}
           onContextMenu={(e) => {
             if (
               OS === "windows" &&
@@ -284,49 +286,81 @@ const Layout = () => {
               : {},
           ]}
         >
-          <div className="layout__left">
-            <div className="the-logo" data-tauri-drag-region="true">
-              <div
-                style={{
-                  height: "27px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <SvgIcon
-                  component={isDark ? iconDark : iconLight}
+          {/* 只在非登录页面且已登录时显示左侧导航 */}
+          {!isLoginPage && (
+            <div className="layout__left">
+              <div className="the-logo" data-tauri-drag-region="true">
+                <div
                   style={{
-                    height: "36px",
-                    width: "36px",
-                    marginTop: "-3px",
-                    marginRight: "5px",
-                    marginLeft: "-3px",
+                    height: "27px",
+                    display: "flex",
+                    justifyContent: "space-between",
                   }}
-                  inheritViewBox
-                />
-                <LogoSvg fill={isDark ? "white" : "black"} />
-              </div>
-              <UpdateButton className="the-newbtn" />
-            </div>
-
-            <List className="the-menu">
-              {routers.map((router) => (
-                <LayoutItem
-                  key={router.label}
-                  to={router.path}
-                  icon={router.icon}
                 >
-                  {t(router.label)}
-                </LayoutItem>
-              ))}
-            </List>
+                  <SvgIcon
+                    component={isDark ? iconDark : iconLight}
+                    style={{
+                      height: "36px",
+                      width: "36px",
+                      marginTop: "-3px",
+                      marginRight: "5px",
+                      marginLeft: "-3px",
+                    }}
+                    inheritViewBox
+                  />
+                  <LogoSvg fill={isDark ? "white" : "black"} />
+                </div>
+                <UpdateButton className="the-newbtn" />
+              </div>
 
-            <div className="the-traffic">
-              <LayoutTraffic />
+              {isLoggedIn && (
+                <>
+                  <List className="the-menu">
+                    {protectedRoutes
+                      .filter(router => router.label && router.icon)
+                      .map((router) => (
+                        <LayoutItem
+                          key={router.label}
+                          to={router.path}
+                          icon={router.icon || []}
+                        >
+                          {t(router.label || "")}
+                        </LayoutItem>
+                      ))}
+                  </List>
+
+                  <div className="the-traffic">
+                    <LayoutTraffic />
+                  </div>
+                  
+                  {/* 添加底部的退出登录按钮 */}
+                  <Box className="the-logout">
+                    <Divider sx={{ my: 1 }} />
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      color="inherit"
+                      onClick={handleLogout}
+                      startIcon={<LogoutRounded />}
+                      sx={{
+                        justifyContent: "flex-start",
+                        pl: 3,
+                        borderRadius: 1.5,
+                      }}
+                    >
+                      {t("Logout")}
+                    </Button>
+                  </Box>
+                </>
+              )}
+
+              <div className="the-control">
+                <LayoutControl />
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="layout__right">
+          <div className={`layout__right ${isLoginPage ? 'full-width' : ''}`}>
             <div className="the-bar">
               <div
                 className="the-dragbar"
