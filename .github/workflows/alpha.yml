@@ -210,7 +210,7 @@ jobs:
       #     files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
       - name: Upload Release
-        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2
         with:
           tag_name: alpha
           name: "Clash Verge Self Alpha"
@@ -246,7 +246,7 @@ jobs:
           echo "Package: ${{ steps.makepkg.outputs.pkgfile0 }}"
 
       - name: Upload Release
-        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2
         with:
           tag_name: alpha
           name: "Clash Verge Self Alpha"
@@ -275,7 +275,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release
-        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2
         with:
           tag_name: alpha
           name: "Clash Verge Self Alpha"
