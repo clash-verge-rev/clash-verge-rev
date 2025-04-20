@@ -3,6 +3,9 @@
 #![allow(dead_code)]
 use std::io::{self, Cursor, Read};
 
+use base64::{engine::general_purpose, Engine};
+use rand::Rng;
+
 // WebSocket 帧解析结果
 #[derive(Debug)]
 pub struct WebSocketFrame {
@@ -11,7 +14,7 @@ pub struct WebSocketFrame {
     pub fin: bool,        // 是否是最后一帧
 }
 
-// 从字节数组中解析帧
+/// 从字节数组中解析帧
 pub fn parse_websocket_frame(data: &[u8]) -> io::Result<WebSocketFrame> {
     let mut cursor = Cursor::new(data);
 
@@ -47,18 +50,18 @@ pub fn parse_websocket_frame(data: &[u8]) -> io::Result<WebSocketFrame> {
     })
 }
 
-// 读取帧头详细信息
+/// 读取帧头详细信息
 fn read_frame_header(cursor: &mut Cursor<&[u8]>) -> io::Result<(u8, u64, bool, bool, [u8; 4])> {
     // 读取前2字节基本头
     let mut header = [0u8; 2];
     cursor.read_exact(&mut header)?;
 
-    let fin = (header[0] & 0b10000000) != 0;
-    let opcode = header[0] & 0b00001111;
-    let mask_flag = (header[1] & 0b10000000) != 0;
+    let fin = (header[0] & 0x80) != 0;
+    let opcode = header[0] & 0x0F;
+    let mask_flag = (header[1] & 0x80) != 0;
 
     // 解析负载长度
-    let mut payload_len = (header[1] & 0b01111111) as u64;
+    let mut payload_len = (header[1] & 0x7F) as u64;
     match payload_len {
         126 => {
             let mut len_bytes = [0u8; 2];
@@ -82,9 +85,19 @@ fn read_frame_header(cursor: &mut Cursor<&[u8]>) -> io::Result<(u8, u64, bool, b
     Ok((opcode, payload_len, fin, mask_flag, mask_key))
 }
 
-// 应用掩码解码
+/// 应用掩码解码
 fn apply_mask(payload: &mut [u8], mask_key: &[u8; 4]) {
     for (i, byte) in payload.iter_mut().enumerate() {
         *byte ^= mask_key[i % 4];
     }
+}
+
+/// 生成 WebSocket 握手密钥
+pub fn generate_websocket_key() -> String {
+    // 生成 16 字节随机数
+    let mut rng = rand::rng();
+    let mut key = [0u8; 16];
+    rng.fill(&mut key);
+    // Base64 编码
+    general_purpose::STANDARD.encode(key)
 }

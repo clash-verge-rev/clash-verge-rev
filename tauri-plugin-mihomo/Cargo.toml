@@ -19,6 +19,7 @@ tokio = { version = "1", features = ["net", "sync", "macros"] }
 tokio-tungstenite = { version = "0.26" }
 rand = "0.9.0"
 http = "1.3.1"
+base64 = "0.22.1"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = "0.59.0"

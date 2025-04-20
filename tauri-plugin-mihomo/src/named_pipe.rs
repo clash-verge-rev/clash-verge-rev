@@ -5,11 +5,10 @@ mod test {
 
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::windows::named_pipe::ClientOptions;
-    // use tokio::sync::watch;
     use tokio::time;
     use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
 
-    use crate::{ws_frame, Connections, Rules};
+    use crate::{ws_utils, Connections, Rules};
 
     // 目前仅进行了 named pipe 连接测试
     #[tokio::test]
@@ -45,12 +44,12 @@ mod test {
                 // read
                 client.readable().await.unwrap();
                 let mut buf: Vec<u8> = Vec::new();
-                let mut b = [0; 1024];
+                let mut b = [0; 4096];
                 loop {
                     // 循环拼接返回的数据
                     let n = client.read(&mut b).await.unwrap();
                     buf.extend_from_slice(&b[..n]);
-                    if n < 1024 {
+                    if n < 4096 {
                         break;
                     }
                 }
@@ -77,7 +76,7 @@ mod test {
             loop {
                 client.writable().await.unwrap();
                 // 生成随机的 Sec-WebSocket-Key
-                let key = "x3JJHMbDL1EzLkh9GBhXDw==";
+                let key = ws_utils::generate_websocket_key();
                 // 构建 WebSocket 握手请求
                 let request = format!("GET /connections HTTP/1.1\r\nHost: clash-verge\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n");
                 println!("Sent handshake request");
@@ -89,16 +88,16 @@ mod test {
             loop {
                 client.readable().await.unwrap();
                 let mut buf = Vec::new();
-                let mut b = [0; 1024];
+                let mut b = [0; 4096];
                 loop {
                     // 循环拼接返回的数据
                     let n = client.read(&mut b).await.unwrap();
                     buf.extend_from_slice(&b[..n]);
 
-                    if n < 1024 {
+                    if n < 4096 {
                         // 判断是否为 websocket 帧
                         if n == 4 {
-                            match ws_frame::parse_websocket_frame(&buf) {
+                            match ws_utils::parse_websocket_frame(&buf) {
                                 Ok(_) => {
                                     break;
                                 }
@@ -125,7 +124,7 @@ mod test {
                     }
                 }
                 // 解析 websocket 的数据
-                let frame = ws_frame::parse_websocket_frame(&buf).unwrap();
+                let frame = ws_utils::parse_websocket_frame(&buf).unwrap();
                 // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
                 let response = String::from_utf8_lossy(&frame.payload.as_slice());
                 // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);

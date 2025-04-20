@@ -14,11 +14,11 @@ mod commands;
 mod error;
 mod mihomo;
 pub mod models;
-#[cfg(target_os = "linux")]
-mod unix_sock;
 #[cfg(target_os = "windows")]
 mod named_pipe;
-mod ws_frame;
+#[cfg(target_os = "linux")]
+mod unix_sock;
+mod ws_utils;
 
 pub use error::{Error, Result};
 

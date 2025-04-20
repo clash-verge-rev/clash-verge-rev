@@ -6,7 +6,7 @@ mod test {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::UnixStream;
 
-    use crate::{ws_frame, Connections, Rules};
+    use crate::{ws_utils, Connections, Rules};
 
     // 目前仅进行了 sock 套接字连接测试
     #[tokio::test]
@@ -34,12 +34,12 @@ mod test {
                 // read
                 stream.readable().await.unwrap();
                 let mut buf: Vec<u8> = Vec::new();
-                let mut b = [0; 1024];
+                let mut b = [0; 4096];
                 loop {
                     // 循环拼接返回的数据
                     let n = stream.read(&mut b).await.unwrap();
                     buf.extend_from_slice(&b[..n]);
-                    if n < 1024 {
+                    if n < 4096 {
                         break;
                     }
                 }
@@ -59,7 +59,7 @@ mod test {
             loop {
                 stream.writable().await.unwrap();
                 // 生成随机的 Sec-WebSocket-Key
-                let key = "dGhlIHNhbXBsZSBub25jZQ==";
+                let key = ws_utils::generate_websocket_key();
                 // 构建 WebSocket 握手请求
                 let request = format!("GET /connections HTTP/1.1\r\nHost: clash-verge\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n");
                 println!("Sent handshake request");
@@ -71,12 +71,12 @@ mod test {
             loop {
                 stream.readable().await.unwrap();
                 let mut buf = Vec::new();
-                let mut b = [0; 1024];
+                let mut b = [0; 4096];
                 loop {
                     // 循环拼接返回的数据
                     let n = stream.read(&mut b).await.unwrap();
                     buf.extend_from_slice(&b[..n]);
-                    if n < 1024 {
+                    if n < 4096 {
                         let receive_msg = String::from_utf8_lossy(&b);
                         if receive_msg.starts_with("HTTP/1.1 101 Switching Protocols") {
                             println!("WebSocket handshake successful");
@@ -89,7 +89,7 @@ mod test {
                     }
                 }
                 // 解析 websocket 的数据
-                let frame = ws_frame::parse_websocket_frame(&buf).unwrap();
+                let frame = ws_utils::parse_websocket_frame(&buf).unwrap();
                 // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
                 let response = String::from_utf8_lossy(&frame.payload.as_slice());
                 // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);
@@ -98,7 +98,7 @@ mod test {
             }
         });
 
-        tokio::time::sleep(Duration::from_secs(10)).await;
+        tokio::time::sleep(Duration::from_secs(5)).await;
 
         Ok(())
     }
