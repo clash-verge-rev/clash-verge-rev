@@ -303,15 +303,6 @@ pub fn run() {
                                 hotkey::Hotkey::global().register("CMD+W", "hide")
                             );
                         }
-
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            logging_error!(
-                                Type::Hotkey,
-                                true,
-                                hotkey::Hotkey::global().register("Control+Q", "quit")
-                            );
-                        };
                         {
                             let is_enable_global_hotkey = Config::verge()
                                 .latest()
@@ -336,14 +327,6 @@ pub fn run() {
                                 hotkey::Hotkey::global().unregister("CMD+W")
                             );
                         }
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            logging_error!(
-                                Type::Hotkey,
-                                true,
-                                hotkey::Hotkey::global().unregister("Control+Q")
-                            );
-                        };
                         {
                             let is_enable_global_hotkey = Config::verge()
                                 .latest()
@@ -368,15 +351,6 @@ pub fn run() {
                                 hotkey::Hotkey::global().unregister("CMD+W")
                             );
                         }
-
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            logging_error!(
-                                Type::Hotkey,
-                                true,
-                                hotkey::Hotkey::global().unregister("Control+Q")
-                            );
-                        };
                     }
                     _ => {}
                 }
