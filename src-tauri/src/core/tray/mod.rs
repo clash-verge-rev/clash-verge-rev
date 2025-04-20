@@ -206,7 +206,14 @@ impl Tray {
                 match tray_event.as_str() {
                     "system_proxy" => feat::toggle_system_proxy(),
                     "tun_mode" => feat::toggle_tun_mode(None),
-                    "main_window" => resolve::create_window(true),
+                    "main_window" => {
+                        // 如果在轻量模式中，先退出轻量模式
+                        if crate::module::lightweight::is_in_lightweight_mode() {
+                            crate::module::lightweight::exit_lightweight_mode();
+                        }
+                        // 然后创建窗口
+                        resolve::create_window(true)
+                    }
                     _ => {}
                 }
             }
@@ -680,7 +687,14 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             println!("change mode to: {}", mode);
             feat::change_clash_mode(mode.into());
         }
-        "open_window" => resolve::create_window(true),
+        "open_window" => {
+            // 如果在轻量模式中，先退出轻量模式
+            if crate::module::lightweight::is_in_lightweight_mode() {
+                crate::module::lightweight::exit_lightweight_mode();
+            }
+            // 然后创建窗口
+            resolve::create_window(true)
+        }
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(None),
         "copy_env" => feat::copy_clash_env(),

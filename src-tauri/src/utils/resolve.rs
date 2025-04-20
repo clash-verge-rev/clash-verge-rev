@@ -16,7 +16,7 @@ use percent_encoding::percent_decode_str;
 use serde_json;
 use serde_yaml::Mapping;
 use std::{net::TcpListener, sync::Arc};
-use tauri::{App, Manager};
+use tauri::{App, Emitter, Manager};
 
 use tauri::Url;
 //#[cfg(not(target_os = "linux"))]
@@ -39,6 +39,13 @@ fn get_ui_ready() -> &'static Arc<RwLock<bool>> {
 pub fn mark_ui_ready() {
     let mut ready = get_ui_ready().write();
     *ready = true;
+}
+
+// 重置UI就绪状态
+pub fn reset_ui_ready() {
+    let mut ready = get_ui_ready().write();
+    *ready = false;
+    logging!(info, Type::Window, true, "UI就绪状态已重置");
 }
 
 pub fn find_unused_port() -> Result<u16> {
@@ -219,26 +226,30 @@ pub fn create_window(is_showup: bool) {
     #[cfg(target_os = "macos")]
     AppHandleManager::global().set_activation_policy_regular();
 
+    // 检查是否从轻量模式恢复
+    let from_lightweight = crate::module::lightweight::is_in_lightweight_mode();
+    if from_lightweight {
+        logging!(info, Type::Window, true, "从轻量模式恢复窗口");
+        crate::module::lightweight::exit_lightweight_mode();
+    }
+
     if let Some(window) = handle::Handle::global().get_window() {
-        logging!(
-            info,
-            Type::Window,
-            true,
-            "Found existing window, attempting to restore visibility"
-        );
+        logging!(info, Type::Window, true, "Found existing window");
 
         if window.is_minimized().unwrap_or(false) {
-            logging!(
-                info,
-                Type::Window,
-                true,
-                "Window is minimized, restoring window state"
-            );
             let _ = window.unminimize();
         }
-        let _ = window.show();
-        let _ = window.set_focus();
-        return;
+
+        if from_lightweight {
+            // 从轻量模式恢复需要销毁旧窗口以重建
+            logging!(info, Type::Window, true, "销毁旧窗口以重建新窗口");
+            let _ = window.close();
+        } else {
+            // 普通情况直接显示窗口
+            let _ = window.show();
+            let _ = window.set_focus();
+            return;
+        }
     }
 
     // 定义默认窗口大小
@@ -346,83 +357,65 @@ pub fn create_window(is_showup: bool) {
                 }
             }
 
+            // 创建异步任务处理UI就绪和显示窗口
+            let was_from_lightweight = from_lightweight;
             AsyncHandler::spawn(move || async move {
-                use tauri::Emitter;
-
-                logging!(info, Type::Window, true, "UI gets ready.");
+                // 处理启动完成
                 handle::Handle::global().mark_startup_completed();
 
                 if let Some(window) = app_handle_clone.get_webview_window("main") {
-                    // 检查窗口大小
-                    match window.inner_size() {
-                        Ok(size) => {
-                            let width = size.width;
-                            let height = size.height;
-
-                            let state_width = STATE_WIDTH.get().copied().unwrap_or(DEFAULT_WIDTH);
-                            let state_height =
-                                STATE_HEIGHT.get().copied().unwrap_or(DEFAULT_HEIGHT);
-
-                            logging!(
-                                info,
-                                Type::Window,
-                                true,
-                                "异步任务中窗口尺寸: {}x{}, 状态文件尺寸: {}x{}",
-                                width,
-                                height,
-                                state_width,
-                                state_height
-                            );
-                        }
-                        Err(e) => {
-                            logging!(
-                                error,
-                                Type::Window,
-                                true,
-                                "Failed to get window size: {:?}",
-                                e
-                            );
-                        }
-                    }
-
                     // 发送启动完成事件
                     let _ = window.emit("verge://startup-completed", ());
 
                     if is_showup {
-                        // 启动一个任务等待UI准备就绪再显示窗口
                         let window_clone = window.clone();
-                        AsyncHandler::spawn(move || async move {
-                            async fn wait_for_ui_ready() {
-                                while !*get_ui_ready().read() {
-                                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                                }
-                            }
 
-                            match tokio::time::timeout(
-                                std::time::Duration::from_secs(5),
-                                wait_for_ui_ready(),
-                            )
-                            .await
-                            {
-                                Ok(_) => {
-                                    logging!(info, Type::Window, true, "UI准备就绪，显示窗口");
-                                }
-                                Err(_) => {
-                                    logging!(
-                                        warn,
-                                        Type::Window,
-                                        true,
-                                        "等待UI准备就绪超时，强制显示窗口"
-                                    );
-                                }
-                            }
+                        // 从轻量模式恢复时使用较短的超时，避免卡死
+                        let timeout_seconds = if was_from_lightweight {
+                            // 从轻量模式恢复只等待2秒，确保不会卡死
+                            2
+                        } else {
+                            5
+                        };
 
-                            let _ = window_clone.show();
-                            let _ = window_clone.set_focus();
-                        });
+                        // 等待UI就绪
+                        async fn wait_for_ui_ready() {
+                            while !*get_ui_ready().read() {
+                                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                            }
+                        }
+
+                        // 使用超时机制等待UI就绪
+                        match tokio::time::timeout(
+                            std::time::Duration::from_secs(timeout_seconds),
+                            wait_for_ui_ready(),
+                        )
+                        .await
+                        {
+                            Ok(_) => {
+                                logging!(info, Type::Window, true, "UI准备就绪，显示窗口");
+                            }
+                            Err(_) => {
+                                logging!(
+                                    warn,
+                                    Type::Window,
+                                    true,
+                                    "等待UI准备就绪超时（{}秒），强制显示窗口",
+                                    timeout_seconds
+                                );
+                            }
+                        }
+
+                        // 无论是否超时，都显示窗口
+                        let _ = window_clone.show();
+                        let _ = window_clone.set_focus();
                     }
+                } else {
+                    logging!(error, Type::Window, true, "无法获取主窗口");
                 }
             });
+
+            logging!(info, Type::Window, true, "异步任务已创建");
         }
         Err(e) => {
             logging!(

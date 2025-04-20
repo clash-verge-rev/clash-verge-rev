@@ -214,6 +214,8 @@ const Layout = () => {
   useEffect(() => {
     const notifyUiReady = async () => {
       try {
+        await invoke("reset_ui_ready_state");
+        console.log("已重置UI就绪状态");
         await new Promise(resolve => setTimeout(resolve, 200));
         await invoke("notify_ui_ready");
         console.log("已通知后端UI准备就绪");
@@ -224,12 +226,19 @@ const Layout = () => {
 
     // 监听后端发送的启动完成事件
     const listenStartupCompleted = async () => {
-      const unlisten = await listen("verge://startup-completed", () => {
-        console.log("收到启动完成事件");
-      });
-      return unlisten;
+      try {
+        const unlisten = await listen("verge://startup-completed", () => {
+          console.log("收到启动完成事件，开始通知UI就绪");
+          notifyUiReady();
+        });
+        return unlisten;
+      } catch (err) {
+        console.error("监听启动完成事件失败:", err);
+        return () => {};
+      }
     };
 
+    console.log("页面初始加载，通知UI就绪");
     notifyUiReady();
     const unlistenPromise = listenStartupCompleted();
 

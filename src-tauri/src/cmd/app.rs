@@ -222,3 +222,11 @@ pub fn notify_ui_ready() -> CmdResult<()> {
     crate::utils::resolve::mark_ui_ready();
     Ok(())
 }
+
+/// 重置UI就绪状态
+#[tauri::command]
+pub fn reset_ui_ready_state() -> CmdResult<()> {
+    log::info!(target: "app", "重置UI就绪状态");
+    crate::utils::resolve::reset_ui_ready();
+    Ok(())
+}

@@ -9,11 +9,32 @@ use crate::{
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
 use once_cell::sync::OnceCell;
+use parking_lot::RwLock;
+use std::sync::Arc;
 use tauri::{Listener, Manager};
 
 pub static AUTO_LIGHT_WEIGHT_MODE_INIT: OnceCell<()> = OnceCell::new();
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
+
+// 轻量模式状态标志
+static IS_LIGHTWEIGHT_MODE: OnceCell<Arc<RwLock<bool>>> = OnceCell::new();
+
+fn get_lightweight_mode() -> &'static Arc<RwLock<bool>> {
+    IS_LIGHTWEIGHT_MODE.get_or_init(|| Arc::new(RwLock::new(false)))
+}
+
+// 检查是否处于轻量模式
+pub fn is_in_lightweight_mode() -> bool {
+    *get_lightweight_mode().read()
+}
+
+// 设置轻量模式状态
+fn set_lightweight_mode(value: bool) {
+    let mut mode = get_lightweight_mode().write();
+    *mode = value;
+    logging!(info, Type::Lightweight, true, "轻量模式状态: {}", value);
+}
 
 pub fn enable_auto_light_weight_mode() {
     Timer::global().init().unwrap();
@@ -40,7 +61,19 @@ pub fn entry_lightweight_mode() {
         AppHandleManager::global().set_activation_policy_accessory();
         logging!(info, Type::Lightweight, true, "轻量模式已开启");
     }
+    // 标记已进入轻量模式
+    set_lightweight_mode(true);
     let _ = cancel_light_weight_timer();
+}
+
+// 从轻量模式恢复
+pub fn exit_lightweight_mode() {
+    // 标记退出轻量模式
+    set_lightweight_mode(false);
+    logging!(info, Type::Lightweight, true, "正在退出轻量模式");
+
+    // 重置UI就绪状态
+    crate::utils::resolve::reset_ui_ready();
 }
 
 pub fn add_light_weight_timer() {

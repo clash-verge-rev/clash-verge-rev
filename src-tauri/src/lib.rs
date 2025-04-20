@@ -160,10 +160,14 @@ pub fn run() {
             cmd::restart_app,
             // 添加新的命令
             cmd::notify_ui_ready,
+            cmd::reset_ui_ready_state,
             cmd::get_running_mode,
             cmd::get_app_uptime,
             cmd::get_auto_launch_status,
             cmd::is_admin,
+            // 添加轻量模式相关命令
+            cmd::entry_lightweight_mode,
+            cmd::exit_lightweight_mode,
             // service 管理
             cmd::install_service,
             cmd::uninstall_service,
