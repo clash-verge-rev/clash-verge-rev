@@ -1,7 +1,9 @@
 use anyhow::{anyhow, Result};
 use log::info;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 /// Windows 下的开机启动文件夹路径
 #[cfg(target_os = "windows")]

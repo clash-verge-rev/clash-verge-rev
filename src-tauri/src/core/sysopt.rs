@@ -1,10 +1,9 @@
-use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
     logging, logging_error,
     process::AsyncHandler,
-    utils::logging::Type,
+    utils::{autostart as startup_shortcut, logging::Type},
 };
 use anyhow::Result;
 use once_cell::sync::OnceCell;
