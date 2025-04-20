@@ -317,7 +317,7 @@ pub(crate) async fn ws_send(
 pub(crate) async fn ws_disconnect(
     state: State<'_, RwLock<Mihomo>>,
     id: ConnectionId,
-    force_timeout_secs: Option<u64>,
+    force_timeout: Option<u64>,
 ) -> Result<()> {
-    state.read().await.disconnect(id, force_timeout_secs).await
+    state.read().await.disconnect(id, force_timeout).await
 }

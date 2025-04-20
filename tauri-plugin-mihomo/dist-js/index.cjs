@@ -314,12 +314,13 @@ class WebSocket {
         l(message);
       });
     };
-    return await core
-      .invoke("plugin:mihomo|ws_connect", {
-        url,
-        onMessage,
-      })
-      .then((id) => new WebSocket(id, listeners));
+    const id = await core.invoke("plugin:mihomo|ws_connect", {
+      url,
+      onMessage,
+    });
+    const instance = new WebSocket(id, listeners);
+    WebSocket.instances.add(instance);
+    return instance;
   }
   /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的流量监控
@@ -333,11 +334,12 @@ class WebSocket {
         l(message);
       });
     };
-    return await core
-      .invoke("plugin:mihomo|ws_traffic", {
-        onMessage,
-      })
-      .then((id) => new WebSocket(id, listeners));
+    const id = await core.invoke("plugin:mihomo|ws_traffic", {
+      onMessage,
+    });
+    const instance = new WebSocket(id, listeners);
+    WebSocket.instances.add(instance);
+    return instance;
   }
   /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的内存监控
@@ -351,11 +353,12 @@ class WebSocket {
         l(message);
       });
     };
-    return await core
-      .invoke("plugin:mihomo|ws_memory", {
-        onMessage,
-      })
-      .then((id) => new WebSocket(id, listeners));
+    const id = await core.invoke("plugin:mihomo|ws_memory", {
+      onMessage,
+    });
+    const instance = new WebSocket(id, listeners);
+    WebSocket.instances.add(instance);
+    return instance;
   }
   /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的连接监控
@@ -369,11 +372,12 @@ class WebSocket {
         l(message);
       });
     };
-    return await core
-      .invoke("plugin:mihomo|ws_connections", {
-        onMessage,
-      })
-      .then((id) => new WebSocket(id, listeners));
+    const id = await core.invoke("plugin:mihomo|ws_connections", {
+      onMessage,
+    });
+    const instance = new WebSocket(id, listeners);
+    WebSocket.instances.add(instance);
+    return instance;
   }
   /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的日志监控
@@ -387,12 +391,13 @@ class WebSocket {
         l(message);
       });
     };
-    return await core
-      .invoke("plugin:mihomo|ws_logs", {
-        level,
-        onMessage,
-      })
-      .then((id) => new WebSocket(id, listeners));
+    const id = await core.invoke("plugin:mihomo|ws_logs", {
+      level,
+      onMessage,
+    });
+    const instance = new WebSocket(id, listeners);
+    WebSocket.instances.add(instance);
+    return instance;
   }
   /**
    * 添加处理 WebSocket 连接后接受的数据的回调函数
@@ -425,15 +430,24 @@ class WebSocket {
   }
   /**
    * 关闭 WebSocket 连接
-   * @param forceTimeoutSecs 强制关闭 WebSocket 连接等待的时间，单位: 秒
+   * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认超时 10 秒
    */
-  async disconnect(forceTimeoutSecs) {
+  async close(forceTimeout = 10000) {
     await core.invoke("plugin:mihomo|ws_disconnect", {
       id: this.id,
-      forceTimeoutSecs,
+      forceTimeout,
     });
+    WebSocket.instances.delete(this);
+  }
+  /**
+   * 清理全部的 websocket 连接资源
+   */
+  static cleanupAll() {
+    this.instances.forEach((instance) => instance.close(0));
+    this.instances.clear();
   }
 }
+WebSocket.instances = new Set();
 
 exports.WebSocket = WebSocket;
 exports.cleanFakeIp = cleanFakeIp;

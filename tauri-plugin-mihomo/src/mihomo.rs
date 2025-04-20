@@ -224,7 +224,7 @@ impl Mihomo {
     pub(crate) async fn disconnect(
         &self,
         id: ConnectionId,
-        force_timeout_secs: Option<u64>,
+        force_timeout: Option<u64>,
     ) -> Result<()> {
         let manager = self.connection_manager.clone();
         let manager_ = manager.clone();
@@ -236,9 +236,9 @@ impl Mihomo {
                     reason: "Disconnected by client".into(),
                 })))
                 .await?;
-            if let Some(timeout) = force_timeout_secs {
+            if let Some(timeout) = force_timeout {
                 tauri::async_runtime::spawn(async move {
-                    tokio::time::sleep(Duration::from_secs(timeout)).await;
+                    tokio::time::sleep(Duration::from_millis(timeout)).await;
                     println!("force close websocket connection");
                     manager_.0.lock().await.remove(&id);
                 });

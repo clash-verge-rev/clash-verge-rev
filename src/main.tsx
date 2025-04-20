@@ -19,6 +19,7 @@ import {
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
+import { WebSocket } from "tauri-plugin-mihomo-api";
 
 if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
@@ -58,6 +59,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       splashscreenWindow.close();
     }, 1000);
   }
+});
+
+// 页面关闭/刷新事件
+window.addEventListener("beforeunload", () => {
+  WebSocket.cleanupAll(); // 强制清理所有 WebSocket 实例
 });
 
 const contexts = [

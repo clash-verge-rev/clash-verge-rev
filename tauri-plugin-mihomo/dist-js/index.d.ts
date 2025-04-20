@@ -390,6 +390,7 @@ export type Message =
 export declare class WebSocket {
   id: number;
   private readonly listeners;
+  private static instances;
   constructor(id: number, listeners: Set<(arg: Message) => void>);
   /**
    * 创建一个新的 WebSocket 连接
@@ -431,7 +432,11 @@ export declare class WebSocket {
   send(message: Message | string | number[]): Promise<void>;
   /**
    * 关闭 WebSocket 连接
-   * @param forceTimeoutSecs 强制关闭 WebSocket 连接等待的时间，单位: 秒
+   * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认超时 10 秒
    */
-  disconnect(forceTimeoutSecs: null | number): Promise<void>;
+  close(forceTimeout?: number): Promise<void>;
+  /**
+   * 清理全部的 websocket 连接资源
+   */
+  static cleanupAll(): void;
 }

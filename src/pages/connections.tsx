@@ -135,6 +135,27 @@ const ConnectionsPage = () => {
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
 
+  // const wsRef = useRef<WebSocket | null>(null);
+  // const firstToConn = useRef<boolean>(true);
+  // useEffect(() => {
+  //   if (firstToConn.current) {
+  //     firstToConn.current = false;
+  //     WebSocket.connect_traffic().then((ws) => {
+  //       wsRef.current = ws;
+  //       console.log("connect success", ws);
+  //       ws.addListener((msg) => {
+  //         console.log(msg.data);
+  //       });
+  //     });
+  //   }
+
+  //   return () => {
+  //     if (wsRef.current) {
+  //       wsRef.current.close(0);
+  //     }
+  //   };
+  // }, []);
+
   return (
     <BasePage
       full
