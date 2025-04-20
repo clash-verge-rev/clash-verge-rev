@@ -4,13 +4,9 @@ use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
 
 use crate::{
-    core::{
-        sysopt,
-        tray::{Tray, TRAY_ID},
-        CoreManager,
-    },
+    core::{sysopt, tray::Tray, CoreManager},
     ret_err,
-    utils::{dirs, help, resolve},
+    utils::{self, dirs, help, resolve},
     wrap_err,
 };
 
@@ -37,11 +33,11 @@ pub fn grant_permission(_core: String) -> CmdResult {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     {
         use crate::core::manager;
-        return wrap_err!(manager::grant_permission(_core));
+        wrap_err!(manager::grant_permission(_core))
     }
 
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
-    return Err("Unsupported target".into());
+    Err("Unsupported target".into())
 }
 
 /// get the system proxy
@@ -198,16 +194,21 @@ pub fn is_wayland() -> CmdResult<bool> {
 }
 
 #[tauri::command]
-pub async fn restart_app(app_handle: tauri::AppHandle) {
+pub fn restart_app(app_handle: tauri::AppHandle) {
+    utils::server::shutdown_embed_server();
     let _ = resolve::save_window_size_position(&app_handle, false);
-    let _ = CoreManager::global().stop_core().await;
-    app_handle.remove_tray_by_id(TRAY_ID);
+    tauri::async_runtime::block_on(async {
+        let _ = CoreManager::global().stop_core().await;
+    });
     app_handle.restart();
 }
 
 #[tauri::command]
-pub async fn exit_app(app_handle: tauri::AppHandle) {
+pub fn exit_app(app_handle: tauri::AppHandle) {
+    utils::server::shutdown_embed_server();
     let _ = resolve::save_window_size_position(&app_handle, true);
-    resolve::resolve_reset().await;
+    tauri::async_runtime::block_on(async {
+        resolve::resolve_reset().await;
+    });
     app_handle.exit(0);
 }

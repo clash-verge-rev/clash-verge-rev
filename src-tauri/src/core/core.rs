@@ -216,22 +216,27 @@ impl CoreManager {
     }
 
     /// 重启内核
-    pub fn recover_core(&'static self) -> Result<()> {
+    pub fn recover_core(&self) -> Result<()> {
+        let need_restart_core = self.need_restart_core.lock();
+        tracing::info!(
+            "core terminated, need to restart it? [{}]",
+            need_restart_core
+        );
         // 服务模式 / 切换内核 不进行恢复
-        if *self.use_service_mode.lock() || !*self.need_restart_core.lock() {
+        if *self.use_service_mode.lock() || !*need_restart_core {
             return Ok(());
         }
         // 清空原来的 sidecar 值
         let _ = self.sidecar.lock().take();
-
+        let need_restart_core_ = *need_restart_core;
         tauri::async_runtime::spawn(async move {
-            if self.sidecar.lock().is_none() {
+            if need_restart_core_ {
                 tracing::info!("recover clash core");
                 // 重新启动app
-                if let Err(err) = self.run_core().await {
+                if let Err(err) = CoreManager::global().run_core().await {
                     tracing::error!("failed to recover clash core");
                     tracing::error!("{err}");
-                    let _ = self.recover_core();
+                    let _ = CoreManager::global().recover_core();
                 }
             }
         });

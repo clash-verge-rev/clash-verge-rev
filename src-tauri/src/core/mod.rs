@@ -10,6 +10,7 @@ pub mod sysopt;
 pub mod timer;
 pub mod tray;
 pub mod verge_log;
+#[cfg(target_os = "windows")]
 pub mod win_uwp;
 
 pub use self::core::*;

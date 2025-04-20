@@ -370,12 +370,8 @@ impl Tray {
             "open_logs_dir" => crate::log_err!(cmds::common::open_logs_dir(app_handle_)),
             "open_devtools" => cmds::common::open_devtools(app_handle_),
             "restart_clash" => feat::restart_clash_core(),
-            "restart_app" => tauri::async_runtime::block_on(async move {
-                let _ = cmds::common::restart_app(app_handle_).await;
-            }),
-            "quit" => tauri::async_runtime::block_on(async move {
-                cmds::common::exit_app(app_handle_).await;
-            }),
+            "restart_app" => cmds::common::restart_app(app_handle_),
+            "quit" => cmds::common::exit_app(app_handle_),
             _ => {}
         }
     }

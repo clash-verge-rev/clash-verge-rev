@@ -40,7 +40,7 @@ pub async fn resolve_setup() {
     log_err!(CoreManager::global().init());
     // setup a simple http server for singleton
     tracing::trace!("launch embed server");
-    server::embed_server();
+    server::embed_server().await;
     tracing::trace!("init autolaunch");
     log_err!(sysopt::Sysopt::global().init_launch());
     tracing::trace!("init system proxy");

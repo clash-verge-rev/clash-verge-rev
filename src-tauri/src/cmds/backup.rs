@@ -4,11 +4,8 @@ use reqwest_dav::list_cmd::ListFile;
 
 use crate::{
     config::Config,
-    core::{
-        backup::{self, WebDav},
-        tray::TRAY_ID,
-    },
-    utils::{dirs, resolve::resolve_reset},
+    core::backup::{self, WebDav},
+    utils::{self, dirs, resolve::resolve_reset},
     wrap_err,
 };
 
@@ -29,9 +26,9 @@ pub async fn apply_local_backup(app_handle: tauri::AppHandle, file_path: String)
         Config::reload().await,
         "download backup file success, but reload config failed."
     )?;
+    utils::server::shutdown_embed_server();
     resolve_reset().await;
     std::env::set_var("ApplyBackup", "true");
-    app_handle.remove_tray_by_id(TRAY_ID);
     app_handle.restart();
 }
 
@@ -78,9 +75,9 @@ pub async fn download_backup_and_reload(
         Config::reload().await,
         "download backup file success, but reload config failed."
     )?;
+    utils::server::shutdown_embed_server();
     resolve_reset().await;
     std::env::set_var("ApplyBackup", "true");
-    app_handle.remove_tray_by_id(TRAY_ID);
     app_handle.restart();
 }
 

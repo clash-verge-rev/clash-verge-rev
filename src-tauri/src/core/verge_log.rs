@@ -18,7 +18,7 @@ use tracing_subscriber::reload::{self, Handle};
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Registry;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct VergeLog {
     log_handle: Arc<Mutex<Option<Handle<LevelFilter, Registry>>>>,
     log_file: Arc<Mutex<Option<String>>>,
@@ -28,11 +28,7 @@ pub struct VergeLog {
 impl VergeLog {
     pub fn global() -> &'static Self {
         static VERGE_LOG: OnceCell<VergeLog> = OnceCell::new();
-        VERGE_LOG.get_or_init(|| VergeLog {
-            log_handle: Arc::new(Mutex::new(None)),
-            log_file: Arc::new(Mutex::new(None)),
-            service_log_file: Arc::new(Mutex::new(None)),
-        })
+        VERGE_LOG.get_or_init(VergeLog::default)
     }
 
     pub fn get_log_file(&self) -> Option<String> {
