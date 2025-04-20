@@ -127,6 +127,7 @@ impl Tray {
 
         let menu = MenuBuilder::new(app_handle)
             .text("open_window", t!("dashboard"))
+            .separator()
             .check("rule_mode", t!("mode.rule"))
             .check("global_mode", t!("mode.global"))
             .check("direct_mode", t!("mode.direct"))
