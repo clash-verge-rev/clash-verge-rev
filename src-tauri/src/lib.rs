@@ -19,7 +19,6 @@ use tauri::AppHandle;
 use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_window_state;
 use utils::logging::Type;
 
 /// A global singleton handle to the application.

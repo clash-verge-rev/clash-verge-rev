@@ -1,9 +1,10 @@
+#[cfg(target_os = "windows")]
 use anyhow::{anyhow, Result};
+#[cfg(target_os = "windows")]
 use log::info;
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+
+#[cfg(target_os = "windows")]
+use std::{fs, path::Path, path::PathBuf};
 
 /// Windows 下的开机启动文件夹路径
 #[cfg(target_os = "windows")]
@@ -25,6 +26,7 @@ pub fn get_startup_dir() -> Result<PathBuf> {
 }
 
 /// 获取当前可执行文件路径
+#[cfg(target_os = "windows")]
 pub fn get_exe_path() -> Result<PathBuf> {
     let exe_path =
         std::env::current_exe().map_err(|e| anyhow!("无法获取当前可执行文件路径: {}", e))?;
@@ -98,17 +100,17 @@ pub fn is_shortcut_enabled() -> Result<bool> {
 }
 
 // 非 Windows 平台使用的空方法
-#[cfg(not(target_os = "windows"))]
-pub fn create_shortcut() -> Result<()> {
-    Ok(())
-}
+// #[cfg(not(target_os = "windows"))]
+// pub fn create_shortcut() -> Result<()> {
+//     Ok(())
+// }
 
-#[cfg(not(target_os = "windows"))]
-pub fn remove_shortcut() -> Result<()> {
-    Ok(())
-}
+// #[cfg(not(target_os = "windows"))]
+// pub fn remove_shortcut() -> Result<()> {
+//     Ok(())
+// }
 
-#[cfg(not(target_os = "windows"))]
-pub fn is_shortcut_enabled() -> Result<bool> {
-    Ok(false)
-}
+// #[cfg(not(target_os = "windows"))]
+// pub fn is_shortcut_enabled() -> Result<bool> {
+//     Ok(false)
+// }

@@ -1,9 +1,11 @@
+#[cfg(target_os = "windows")]
+use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
     logging, logging_error,
     process::AsyncHandler,
-    utils::{autostart as startup_shortcut, logging::Type},
+    utils::logging::Type,
 };
 use anyhow::Result;
 use once_cell::sync::OnceCell;
@@ -363,7 +365,7 @@ impl Sysopt {
                     } else {
                         let sysproxy = Sysproxy {
                             enable: true,
-                            host: proxy_host.into(),
+                            host: proxy_host,
                             port,
                             bypass: get_bypass(),
                         };
