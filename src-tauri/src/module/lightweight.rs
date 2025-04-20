@@ -1,6 +1,6 @@
 use crate::{
     config::Config,
-    core::{handle, timer::Timer},
+    core::{handle, timer::Timer, tray::Tray},
     log_err, logging, logging_error,
     utils::logging::Type,
     AppHandleManager,
@@ -64,6 +64,8 @@ pub fn entry_lightweight_mode() {
     // 标记已进入轻量模式
     set_lightweight_mode(true);
     let _ = cancel_light_weight_timer();
+
+    logging_error!(Type::Tray, true, Tray::global().update_menu());
 }
 
 // 从轻量模式恢复
@@ -74,6 +76,8 @@ pub fn exit_lightweight_mode() {
 
     // 重置UI就绪状态
     crate::utils::resolve::reset_ui_ready();
+
+    logging_error!(Type::Tray, true, Tray::global().update_menu());
 }
 
 pub fn add_light_weight_timer() {
