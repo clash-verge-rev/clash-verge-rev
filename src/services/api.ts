@@ -321,19 +321,40 @@ export const gc = async () => {
 
 // Get current IP and geolocation information
 export const getIpInfo = async () => {
-  // 使用axios直接请求IP.sb的API，不通过clash代理
-  const response = await axios.get("https://api.ip.sb/geoip");
-  return response.data as {
-    ip: string;
-    country_code: string;
-    country: string;
-    region: string;
-    city: string;
-    organization: string;
-    asn: number;
-    asn_organization: string;
-    longitude: number;
-    latitude: number;
-    timezone: string;
-  };
+  // 添加重试机制
+  const maxRetries = 3;
+  const retryDelay = 1500;
+  const timeout = 5000;
+
+  let lastError;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // 使用axios直接请求IP.sb的API，不通过clash代理
+      const response = await axios.get("https://api.ip.sb/geoip", { timeout });
+      return response.data as {
+        ip: string;
+        country_code: string;
+        country: string;
+        region: string;
+        city: string;
+        organization: string;
+        asn: number;
+        asn_organization: string;
+        longitude: number;
+        latitude: number;
+        timezone: string;
+      };
+    } catch (error) {
+      console.log(`获取IP信息失败，尝试 ${attempt + 1}/${maxRetries}`, error);
+      lastError = error;
+      
+      // 如果不是最后一次尝试，则等待后重试
+      if (attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
+  }
+
+  throw lastError;
 };
