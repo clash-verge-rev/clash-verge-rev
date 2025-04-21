@@ -2626,7 +2626,7 @@ dependencies = [
  "httpdate",
  "itoa 1.0.11",
  "pin-project-lite",
- "socket2 0.4.10",
+ "socket2 0.5.7",
  "tokio",
  "tower-service",
  "tracing",
@@ -5021,9 +5021,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest_dav"
-version = "0.1.15"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fe99f71b7221005c532c30d3bf245103b66cea3c8eb29b78088f13e853b6708"
+checksum = "280c1af39de7c1fb07ab9a036b37cc9b52a411c12a15bee0b520e07500d48d30"
 dependencies = [
  "async-trait",
  "chrono",
