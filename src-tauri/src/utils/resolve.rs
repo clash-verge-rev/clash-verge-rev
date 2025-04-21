@@ -11,11 +11,15 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
-use parking_lot::RwLock;
+use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
 use serde_json;
 use serde_yaml::Mapping;
-use std::{net::TcpListener, sync::Arc};
+use std::{
+    net::TcpListener,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use tauri::{App, Emitter, Manager};
 
 use tauri::Url;
@@ -30,6 +34,13 @@ static STATE_HEIGHT: OnceCell<u32> = OnceCell::new();
 
 // 添加全局UI准备就绪标志
 static UI_READY: OnceCell<Arc<RwLock<bool>>> = OnceCell::new();
+
+// 窗口创建锁，防止并发创建窗口
+static WINDOW_CREATING: OnceCell<Mutex<(bool, Instant)>> = OnceCell::new();
+
+fn get_window_creating_lock() -> &'static Mutex<(bool, Instant)> {
+    WINDOW_CREATING.get_or_init(|| Mutex::new((false, Instant::now())))
+}
 
 fn get_ui_ready() -> &'static Arc<RwLock<bool>> {
     UI_READY.get_or_init(|| Arc::new(RwLock::new(false)))
@@ -148,8 +159,41 @@ pub async fn resolve_reset_async() {
     }
 }
 
+/// 窗口创建锁守卫
+struct WindowCreateGuard;
+
+impl Drop for WindowCreateGuard {
+    fn drop(&mut self) {
+        let mut lock = get_window_creating_lock().lock();
+        lock.0 = false;
+        logging!(info, Type::Window, true, "窗口创建过程已完成，释放锁");
+    }
+}
+
 /// create main window
 pub fn create_window(is_showup: bool) {
+    // 尝试获取窗口创建锁
+    let mut creating_lock = get_window_creating_lock().lock();
+    let (is_creating, last_create_time) = *creating_lock;
+    let now = Instant::now();
+
+    // 检查是否有其他线程正在创建窗口，防止短时间内多次创建窗口导致竞态条件
+    if is_creating && now.duration_since(last_create_time) < Duration::from_secs(2) {
+        logging!(
+            warn,
+            Type::Window,
+            true,
+            "另一个窗口创建过程正在进行中，跳过本次创建请求"
+        );
+        return;
+    }
+
+    *creating_lock = (true, now);
+    drop(creating_lock);
+
+    // 创建窗口锁守卫结束时自动释放锁
+    let _guard = WindowCreateGuard;
+
     // 打印 .window-state.json 文件路径
     if let Ok(app_dir) = crate::utils::dirs::app_home_dir() {
         let window_state_path = app_dir.join(".window-state.json");
@@ -244,6 +288,9 @@ pub fn create_window(is_showup: bool) {
             // 从轻量模式恢复需要销毁旧窗口以重建
             logging!(info, Type::Window, true, "销毁旧窗口以重建新窗口");
             let _ = window.close();
+
+            // 添加短暂延迟确保窗口正确关闭
+            std::thread::sleep(std::time::Duration::from_millis(100));
         } else {
             // 普通情况直接显示窗口
             let _ = window.show();

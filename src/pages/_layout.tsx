@@ -214,9 +214,6 @@ const Layout = () => {
   useEffect(() => {
     const notifyUiReady = async () => {
       try {
-        await invoke("reset_ui_ready_state");
-        console.log("已重置UI就绪状态");
-        await new Promise(resolve => setTimeout(resolve, 200));
         await invoke("notify_ui_ready");
         console.log("已通知后端UI准备就绪");
       } catch (err) {
@@ -238,6 +235,7 @@ const Layout = () => {
       }
     };
 
+    // 初始加载时也通知一次
     console.log("页面初始加载，通知UI就绪");
     notifyUiReady();
     const unlistenPromise = listenStartupCompleted();
