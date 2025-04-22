@@ -10,8 +10,10 @@ use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
 use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::{
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use tauri::{Listener, Manager};
 
 pub static AUTO_LIGHT_WEIGHT_MODE_INIT: OnceCell<()> = OnceCell::new();
