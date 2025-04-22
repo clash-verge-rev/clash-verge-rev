@@ -112,6 +112,14 @@ impl WebDavClient {
                         "clash-verge/{} ({} WebDAV-Client)",
                         APP_VERSION, OS
                     ))
+                    .redirect(reqwest::redirect::Policy::custom(|attempt| {
+                        // 允许所有请求类型的重定向，包括PUT
+                        if attempt.previous().len() >= 5 {
+                            attempt.error("重定向次数过多")
+                        } else {
+                            attempt.follow()
+                        }
+                    }))
                     .build()
                     .unwrap(),
             )
