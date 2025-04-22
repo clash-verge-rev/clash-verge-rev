@@ -146,7 +146,10 @@ export const ProfileEditor = (props: Props) => {
     readProfileFile(profileItem.uid)
       .then(async (data) => {
         originContentRef.current = data;
-        const model = monaco.editor.createModel(data, language);
+        // create uri to use schemas
+        const id = profileItem.uid;
+        const uri = monaco.Uri.parse(`$${id}.${type}.${language}`);
+        const model = monaco.editor.createModel(data, language, uri);
         const oldModel = instanceRef.current!.getModel();
         instanceRef.current!.setModel(model);
         editChainCondition.current?.set(
