@@ -127,12 +127,12 @@ impl WebDavClient {
             .set_auth(reqwest_dav::Auth::Basic(config.username, config.password))
             .build()?;
 
-        // 确保备份目录存在
-        let list_result = client
+        // 尝试检查目录是否存在，如果不存在尝试创建，但创建失败不报错
+        if let Err(_) = client
             .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0))
-            .await;
-        if list_result.is_err() {
-            client.mkcol(dirs::BACKUP_DIR).await?;
+            .await
+        {
+            let _ = client.mkcol(dirs::BACKUP_DIR).await;
         }
 
         // 缓存客户端
@@ -152,9 +152,41 @@ impl WebDavClient {
     pub async fn upload(&self, file_path: PathBuf, file_name: String) -> Result<(), Error> {
         let client = self.get_client(Operation::Upload).await?;
         let webdav_path: String = format!("{}/{}", dirs::BACKUP_DIR, file_name);
-        let fut = client.put(webdav_path.as_ref(), fs::read(file_path)?);
-        timeout(Duration::from_secs(TIMEOUT_UPLOAD), fut).await??;
-        Ok(())
+
+        // 读取文件并上传，如果失败尝试一次重试
+        let file_content = fs::read(&file_path)?;
+
+        // 添加超时保护
+        let upload_result = timeout(
+            Duration::from_secs(TIMEOUT_UPLOAD),
+            client.put(&webdav_path, file_content.clone()),
+        )
+        .await;
+
+        match upload_result {
+            Err(_) => {
+                log::warn!("Upload timed out, retrying once");
+                tokio::time::sleep(Duration::from_millis(500)).await;
+                timeout(
+                    Duration::from_secs(TIMEOUT_UPLOAD),
+                    client.put(&webdav_path, file_content),
+                )
+                .await??;
+                Ok(())
+            }
+
+            Ok(Err(e)) => {
+                log::warn!("Upload failed, retrying once: {}", e);
+                tokio::time::sleep(Duration::from_millis(500)).await;
+                timeout(
+                    Duration::from_secs(TIMEOUT_UPLOAD),
+                    client.put(&webdav_path, file_content),
+                )
+                .await??;
+                Ok(())
+            }
+            Ok(Ok(_)) => Ok(()),
+        }
     }
 
     pub async fn download(&self, filename: String, storage_path: PathBuf) -> Result<(), Error> {

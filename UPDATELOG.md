@@ -23,6 +23,7 @@
  - Webdav 请求加入 UA
  - Webdav 支持目录重定向
  - 移除 Webdav 跨平台备份恢复限制
+ - 增强 Webdav 备份目录检查和文件上传重试机制
 
 #### 优化了：
  - 系统代理 Bypass 设置
