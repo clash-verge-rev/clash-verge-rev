@@ -1,8 +1,11 @@
 use crate::{config::Config, utils::dirs};
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
-use reqwest_dav::list_cmd::{ListEntity, ListFile};
+use reqwest_dav::{
+    list_cmd::{ListEntity, ListFile},
+    Depth,
+};
 use std::{
     env::{consts::OS, temp_dir},
     fs,
@@ -23,51 +26,68 @@ const TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 // in timer crate, used to activating proxies group selected after restart app
 pub const ENV_APPLY_BACKUP: &str = "ApplyBackup";
 
-/// create backup zip file
-///
-/// # Args
-/// - `local_save`: save to local or not
-/// - `only_backup_profiles`: only backup profiles
-///
-/// # Return
-/// - `Result<(String, PathBuf), Box<dyn std::error::Error>>`: backup file name and path
-///     - `String`: backup file name
-///     - `PathBuf`: backup file path
 pub fn create_backup(local_save: bool, only_backup_profiles: bool) -> Result<(String, PathBuf)> {
     let now = chrono::Local::now().format(TIME_FORMAT_PATTERN).to_string();
 
-    let mut zip_file_name = format!("{}-backup-{}.zip", OS, now);
-    if only_backup_profiles {
-        zip_file_name = format!("{}-profiles-backup-{}.zip", OS, now);
-    }
-    let mut zip_path = temp_dir().join(&zip_file_name);
-    if local_save {
-        zip_path = dirs::backup_dir()?.join(&zip_file_name);
-    }
+    let zip_file_name = format!(
+        "{}-{}backup-{}.zip",
+        OS,
+        if only_backup_profiles {
+            "profiles-"
+        } else {
+            ""
+        },
+        now
+    );
+
+    let zip_path = if local_save {
+        dirs::backup_dir()?.join(&zip_file_name)
+    } else {
+        temp_dir().join(&zip_file_name)
+    };
 
     let file = fs::File::create(&zip_path)?;
     let mut zip = zip::ZipWriter::new(file);
-    zip.add_directory("profiles/", SimpleFileOptions::default())?;
+
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
-    if let Ok(entries) = fs::read_dir(dirs::app_profiles_dir()?) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_file() {
-                let backup_path = format!("profiles/{}", entry.file_name().to_str().unwrap());
-                zip.start_file(backup_path, options)?;
-                zip.write_all(fs::read(path).unwrap().as_slice())?;
-            }
+
+    fn add_file_to_zip(
+        zip: &mut zip::ZipWriter<fs::File>,
+        path: &PathBuf,
+        zip_path: &str,
+        options: SimpleFileOptions,
+    ) -> Result<()> {
+        zip.start_file(zip_path, options)?;
+        zip.write_all(&fs::read(path)?)?;
+        Ok(())
+    }
+
+    // Add profile files
+    zip.add_directory("profiles/", SimpleFileOptions::default())?;
+    let profile_dir = dirs::app_profiles_dir()?;
+    for entry in fs::read_dir(&profile_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_file() {
+            let backup_path = format!("profiles/{}", entry.file_name().to_string_lossy());
+            add_file_to_zip(&mut zip, &path, &backup_path, options)?;
         }
     }
+
+    // Add additional files if not only backing up profiles
     if !only_backup_profiles {
-        zip.start_file(dirs::CLASH_CONFIG, options)?;
-        zip.write_all(fs::read(dirs::clash_path()?)?.as_slice())?;
-        zip.start_file(dirs::VERGE_CONFIG, options)?;
-        zip.write_all(fs::read(dirs::verge_path()?)?.as_slice())?;
+        add_file_to_zip(&mut zip, &dirs::clash_path()?, dirs::CLASH_CONFIG, options)?;
+        add_file_to_zip(&mut zip, &dirs::verge_path()?, dirs::VERGE_CONFIG, options)?;
     }
-    zip.start_file(dirs::PROFILE_YAML, options)?;
-    zip.write_all(fs::read(dirs::profiles_path()?)?.as_slice())?;
+
+    add_file_to_zip(
+        &mut zip,
+        &dirs::profiles_path()?,
+        dirs::PROFILE_YAML,
+        options,
+    )?;
     zip.finish()?;
+
     Ok((zip_file_name, zip_path))
 }
 
@@ -85,18 +105,19 @@ impl WebDav {
     }
 
     pub async fn init(&self) -> Result<()> {
-        let verge = Config::verge().latest().clone();
-        if verge.webdav_url.is_none()
-            || verge.webdav_username.is_none()
-            || verge.webdav_password.is_none()
-        {
+        let (url, username, password) = {
+            let verge = Config::verge().latest().clone();
+            (
+                verge.webdav_url,
+                verge.webdav_username,
+                verge.webdav_password,
+            )
+        };
+        if let (Some(url), Some(username), Some(password)) = (url, username, password) {
+            self.update_webdav_info(url, username, password).await?;
+        } else {
             tracing::trace!("webdav info config is empty, skip init webdav");
-            return Ok(());
         }
-        let url = verge.webdav_url.unwrap_or_default();
-        let username = verge.webdav_username.unwrap_or_default();
-        let password = verge.webdav_password.unwrap_or_default();
-        self.update_webdav_info(url, username, password).await?;
         Ok(())
     }
 
@@ -112,8 +133,18 @@ impl WebDav {
             .set_auth(reqwest_dav::Auth::Basic(username.into(), password.into()))
             .build()?;
         *self.client.lock() = Some(client.clone());
-        client.mkcol(BACKUP_DIR).await?;
-        Ok(())
+        match client.list("/", Depth::Number(1)).await {
+            Ok(_) => {
+                if client.list(BACKUP_DIR, Depth::Number(1)).await.is_err() {
+                    client.mkcol(BACKUP_DIR).await?;
+                }
+                Ok(())
+            }
+            Err(e) => {
+                tracing::error!("invalid webdav config: {e:?}");
+                Err(anyhow!("connect webdav failed, {e:?}"))
+            }
+        }
     }
 
     fn get_client(&self) -> Result<reqwest_dav::Client> {
@@ -122,21 +153,23 @@ impl WebDav {
             None => {
                 let msg = "Unable to create web dav client, please make sure the webdav config is correct";
                 tracing::error!("{}", msg);
-                bail!(msg)
+                Err(anyhow!(msg))
             }
         }
     }
 
     pub async fn list_file_by_path(path: &str) -> Result<Vec<ListFile>> {
         let client = Self::global().get_client()?;
-        let files = client.list(path, reqwest_dav::Depth::Number(1)).await?;
-        let mut final_files = Vec::new();
-        for file in files {
-            if let ListEntity::File(file) = file {
-                final_files.push(file);
-            }
-        }
-        Ok(final_files)
+        let files = client
+            .list(path, reqwest_dav::Depth::Number(1))
+            .await?
+            .into_iter()
+            .filter_map(|entity| match entity {
+                ListEntity::File(file) => Some(file),
+                _ => None,
+            })
+            .collect();
+        Ok(files)
     }
 
     pub async fn list_file() -> Result<Vec<ListFile>> {
@@ -148,7 +181,7 @@ impl WebDav {
     pub async fn download_file(webdav_file_name: String, storage_path: PathBuf) -> Result<()> {
         let client = Self::global().get_client()?;
         let path = format!("{}/{}", BACKUP_DIR, webdav_file_name);
-        let response = client.get(path.as_str()).await?;
+        let response = client.get(&path).await?;
         let content = response.bytes().await?;
         fs::write(&storage_path, &content)?;
         Ok(())
