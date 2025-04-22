@@ -59,7 +59,7 @@ impl VergeLog {
             "[year]-[month]-[day] [hour]:[minute]:[second]"
         ));
         // 输出到终端
-        let (filter, reload_handle) = reload::Layer::new(log_level);
+        let (level_filter, reload_handle) = reload::Layer::new(log_level);
         let console_layer = tracing_subscriber::fmt::layer()
             .compact()
             .with_ansi(true)
@@ -81,9 +81,9 @@ impl VergeLog {
             .with_writer(non_blocking_appender);
 
         tracing_subscriber::registry()
-            .with(filter)
-            .with(console_layer)
+            .with(level_filter)
             .with(file_layer)
+            .with(console_layer)
             .init();
 
         *self.log_handle.lock() = Some(reload_handle);
