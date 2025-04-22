@@ -8,22 +8,8 @@ use crate::{
 use crate::{log_err, trace_err};
 use anyhow::Result;
 use rust_i18n::t;
-use std::net::TcpListener;
 use tauri::{AppHandle, CloseRequestApi, Manager};
 
-pub fn find_unused_port() -> Result<u16> {
-    match TcpListener::bind("127.0.0.1:0") {
-        Ok(listener) => {
-            let port = listener.local_addr()?.port();
-            Ok(port)
-        }
-        Err(_) => {
-            let port = Config::clash().latest().get_mixed_port();
-            tracing::warn!("use default port: {}", port);
-            Ok(port)
-        }
-    }
-}
 
 /// handle something when start app
 pub async fn resolve_setup() {

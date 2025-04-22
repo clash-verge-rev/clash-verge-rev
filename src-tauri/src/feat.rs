@@ -8,6 +8,7 @@ use crate::cmds;
 use crate::config::*;
 use crate::core::*;
 use crate::log_err;
+use crate::utils::help;
 use crate::utils::resolve;
 use anyhow::{anyhow, bail, Error, Result};
 use rust_i18n::t;
@@ -270,7 +271,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         let mut tmp_map = Mapping::new();
         if enable_random_port {
             let port =
-                resolve::find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
+                help::find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
             tmp_map.insert("mixed-port".into(), port.into());
         } else {
             tmp_map.insert("mixed-port".into(), 7890.into());

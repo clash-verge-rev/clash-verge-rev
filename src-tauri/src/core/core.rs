@@ -2,7 +2,7 @@ use super::verge_log::VergeLog;
 use crate::core::{handle, logger::Logger, service};
 use crate::log_err;
 use crate::utils::dirs;
-use crate::utils::resolve::find_unused_port;
+use crate::utils::help::find_unused_port;
 use crate::{config::*, utils};
 use anyhow::{bail, Result};
 

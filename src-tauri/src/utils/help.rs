@@ -1,3 +1,4 @@
+use crate::config::Config;
 use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
@@ -171,6 +172,20 @@ pub fn parse_check_output(log: String) -> String {
 
 pub fn local_port_available(port: u16) -> bool {
     TcpListener::bind(("127.0.0.1", port)).is_ok()
+}
+
+pub fn find_unused_port() -> Result<u16> {
+    match TcpListener::bind("127.0.0.1:0") {
+        Ok(listener) => {
+            let port = listener.local_addr()?.port();
+            Ok(port)
+        }
+        Err(_) => {
+            let port = Config::clash().latest().get_mixed_port();
+            tracing::warn!("use default port: {}", port);
+            Ok(port)
+        }
+    }
 }
 
 #[macro_export]
