@@ -15,6 +15,9 @@ use std::{
 use tokio::time::timeout;
 use zip::write::SimpleFileOptions;
 
+// 应用版本常量，来自 tauri.conf.json
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 const TIMEOUT_UPLOAD: u64 = 300; // 上传超时 5 分钟
 const TIMEOUT_DOWNLOAD: u64 = 300; // 下载超时 5 分钟
 const TIMEOUT_LIST: u64 = 3; // 列表超时 30 秒
@@ -105,6 +108,10 @@ impl WebDavClient {
                 reqwest::Client::builder()
                     .danger_accept_invalid_certs(true)
                     .timeout(Duration::from_secs(op.timeout()))
+                    .user_agent(format!(
+                        "clash-verge/{} ({} WebDAV-Client)",
+                        APP_VERSION, OS
+                    ))
                     .build()
                     .unwrap(),
             )
