@@ -1,35 +1,26 @@
 import { BasePage } from "@/components/base";
 import { ProviderButton } from "@/components/proxy/provider-button";
 import { ProxyGroups } from "@/components/proxy/proxy-groups";
+import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-import { patchClashConfig } from "@/services/cmds";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
-import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
-
-  const { data: clashConfig, mutate: mutateClash } = useSWR(
-    "getClashConfig",
-    getBaseConfig,
-    { refreshInterval: 5000 },
-  );
-
+  const { clashInfo, patchInfo, mutateInfo } = useClashInfo();
   const { verge } = useVerge();
 
   const modeList = ["rule", "global", "direct"];
-
-  const curMode = clashConfig?.mode?.toLowerCase();
+  const curMode = clashInfo?.mode?.toLowerCase() ?? "rule";
 
   const onChangeMode = useMemoizedFn(
     useLockFn(async (mode: string) => {
-      // await updateConfigs({ mode });
-      await patchClashConfig({ mode });
-      mutateClash();
+      await patchInfo({ mode });
+      mutateInfo();
       // 断开连接
       if (mode !== curMode && verge?.auto_close_connection) {
         closeAllConnections();

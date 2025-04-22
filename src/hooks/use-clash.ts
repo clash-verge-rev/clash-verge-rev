@@ -3,6 +3,7 @@ import {
   getRuntimeConfig,
   patchClashConfig,
 } from "@/services/cmds";
+import { path } from "@tauri-apps/api";
 import { useLockFn } from "ahooks";
 import useSWR, { mutate } from "swr";
 import { getVersion } from "tauri-plugin-mihomo-api";
@@ -46,6 +47,7 @@ export const useClashInfo = () => {
     patch: Partial<
       Pick<
         IConfigData,
+        | "mode"
         | "port"
         | "socks-port"
         | "mixed-port"
@@ -56,17 +58,6 @@ export const useClashInfo = () => {
       >
     >,
   ) => {
-    const hasInfo =
-      patch["redir-port"] != null ||
-      patch["tproxy-port"] != null ||
-      patch["mixed-port"] != null ||
-      patch["socks-port"] != null ||
-      patch.port != null ||
-      patch["external-controller"] != null ||
-      patch.secret != null;
-
-    if (!hasInfo) return;
-
     if (patch["redir-port"]) {
       const port = patch["redir-port"];
       if (port < 1000) {
@@ -120,8 +111,6 @@ export const useClashInfo = () => {
     await patchClashConfig(patch);
     mutateInfo();
     mutate("getClashConfig");
-    // 刷新接口
-    // getAxios(true);
   };
 
   return {

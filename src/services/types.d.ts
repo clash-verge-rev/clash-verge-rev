@@ -148,6 +148,8 @@ interface IConnections {
  */
 
 interface IClashInfo {
+  // clash mode
+  mode: string;
   // status: string;
   mixed_port?: number; // clash mixed port
   socks_port?: number; // clash socks port

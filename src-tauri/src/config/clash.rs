@@ -169,6 +169,7 @@ impl IClashConfig {
         let config = &self.0;
 
         ClashInfo {
+            mode: self.get_mode(),
             mixed_port: Self::guard_mixed_port(config),
             socks_port: Self::guard_socks_port(config),
             #[cfg(not(target_os = "windows"))]
@@ -284,6 +285,8 @@ impl IClashConfig {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct ClashInfo {
+    /// clash core mode
+    pub mode: String,
     /// clash core port
     pub mixed_port: u16,
     pub port: u16,
@@ -310,6 +313,7 @@ fn test_clash_info() {
 
     fn get_result<S: Into<String>>(port: u16, server: S) -> ClashInfo {
         ClashInfo {
+            mode: "rule".into(),
             mixed_port: port,
             socks_port: 0,
             #[cfg(not(target_os = "windows"))]
