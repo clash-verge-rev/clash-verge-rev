@@ -8,7 +8,7 @@ use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf, time::Duration};
 use sysproxy::Sysproxy;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -247,7 +247,10 @@ impl PrfItem {
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
 
-        let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
+        let mut builder = reqwest::ClientBuilder::new()
+            .timeout(Duration::from_secs(10))
+            .use_rustls_tls()
+            .no_proxy();
 
         if self_proxy {
             // 使用软件自己的代理
