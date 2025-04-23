@@ -9,6 +9,8 @@ import {
   getNetworkInterfacesInfo,
   getSystemHostname,
   getSystemProxy,
+  patchVergeConfig,
+  restartCore,
 } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import { EditRounded } from "@mui/icons-material";
@@ -32,6 +34,7 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { mutate } from "swr";
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
 }`;
@@ -264,6 +267,34 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
     try {
       await patchVerge(patch);
+      
+      // 更新系统代理状态，以便UI立即反映变化
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await mutate("getSystemProxy");
+      await mutate("getAutotemProxy");
+      
+      // 如果系统代理当前已开启，则重新应用系统代理设置以便立即生效
+      const currentSysProxy = await getSystemProxy();
+      const currentAutoProxy = await getAutotemProxy();
+      
+      if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
+        // 如果系统代理已开启，则通过临时切换代理状态来触发系统代理重新应用
+        const currentState = enabled ?? false;
+        
+        // 临时关闭系统代理
+        await patchVergeConfig({ enable_system_proxy: false });
+        
+        // 等待一小段时间
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        
+        // 重新开启系统代理
+        await patchVergeConfig({ enable_system_proxy: currentState });
+        
+        // 更新UI状态
+        await mutate("getSystemProxy");
+        await mutate("getAutotemProxy");
+      }
+      
       setOpen(false);
     } catch (err: any) {
       Notice.error(err.message || err.toString());

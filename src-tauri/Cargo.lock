@@ -6696,12 +6696,13 @@ dependencies = [
 [[package]]
 name = "sysproxy"
 version = "0.3.0"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs?rev=3d748b5#3d748b5743fcd954ced7a7fb45707bb1114494f2"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs#28c3df9005694354cbaf725c23fe243854aac8a0"
 dependencies = [
  "interfaces",
  "iptools",
  "log",
  "thiserror 1.0.69",
+ "url",
  "windows 0.58.0",
  "winreg 0.52.0",
  "xdg",
