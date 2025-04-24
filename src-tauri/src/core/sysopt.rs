@@ -333,85 +333,130 @@ impl Sysopt {
 
                 log::debug!(target: "app", "try to guard the system proxy");
 
-                let sysproxy = Sysproxy::get_system_proxy();
-                let autoproxy = Autoproxy::get_auto_proxy();
-                if sysproxy.is_err() || autoproxy.is_err() {
-                    log::error!(target: "app", "failed to get the system proxy");
-                    continue;
-                }
-
-                let sysproxy_enable = sysproxy.ok().map(|s| s.enable).unwrap_or(false);
-                let autoproxy_enable = autoproxy.ok().map(|s| s.enable).unwrap_or(false);
-
-                if sysproxy_enable || autoproxy_enable {
-                    continue;
-                }
-
-                let port = {
-                    Config::verge()
-                        .latest()
-                        .verge_mixed_port
-                        .unwrap_or(Config::clash().data().get_mixed_port())
-                };
+                // 获取期望的代理端口
+                let port = Config::verge()
+                    .latest()
+                    .verge_mixed_port
+                    .unwrap_or(Config::clash().data().get_mixed_port());
                 let pac_port = IVerge::get_singleton_port();
-                #[cfg(not(target_os = "windows"))]
-                {
-                    if pac {
-                        let autoproxy = Autoproxy {
-                            enable: true,
-                            url: format!("http://{}:{}/commands/pac", proxy_host, pac_port),
-                        };
-                        logging_error!(Type::System, true, autoproxy.set_auto_proxy());
-                    } else {
-                        let sysproxy = Sysproxy {
-                            enable: true,
-                            host: proxy_host,
-                            port,
-                            bypass: get_bypass(),
-                        };
+                let bypass = get_bypass();
 
-                        logging_error!(Type::System, true, sysproxy.set_system_proxy());
+                // 检查系统代理配置
+                if pac {
+                    // 检查 PAC 代理设置
+                    let expected_url = format!("http://{}:{}/commands/pac", proxy_host, pac_port);
+                    let autoproxy = match Autoproxy::get_auto_proxy() {
+                        Ok(ap) => ap,
+                        Err(e) => {
+                            log::error!(target: "app", "failed to get the auto proxy: {}", e);
+                            continue;
+                        }
+                    };
+
+                    // 检查自动代理是否启用且URL是否正确
+                    if !autoproxy.enable || autoproxy.url != expected_url {
+                        log::info!(target: "app", "auto proxy settings changed, restoring...");
+                        #[cfg(not(target_os = "windows"))]
+                        {
+                            let new_autoproxy = Autoproxy {
+                                enable: true,
+                                url: expected_url,
+                            };
+                            logging_error!(Type::System, true, new_autoproxy.set_auto_proxy());
+                        }
+
+                        #[cfg(target_os = "windows")]
+                        {
+                            use crate::{core::handle::Handle, utils::dirs};
+                            use tauri_plugin_shell::ShellExt;
+
+                            let app_handle = Handle::global().app_handle().unwrap();
+                            let binary_path = match dirs::service_path() {
+                                Ok(path) => path,
+                                Err(e) => {
+                                    log::error!(target: "app", "failed to get service path: {}", e);
+                                    continue;
+                                }
+                            };
+
+                            let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
+                            if !sysproxy_exe.exists() {
+                                log::error!(target: "app", "sysproxy.exe not found");
+                                continue;
+                            }
+
+                            let shell = app_handle.shell();
+                            let output = shell
+                                .command(sysproxy_exe.as_path().to_str().unwrap())
+                                .args(["pac", expected_url.as_str()])
+                                .output()
+                                .await
+                                .unwrap();
+
+                            if !output.status.success() {
+                                log::error!(target: "app", "failed to set auto proxy");
+                            }
+                        }
+                    }
+                } else {
+                    // 检查常规系统代理设置
+                    let sysproxy = match Sysproxy::get_system_proxy() {
+                        Ok(sp) => sp,
+                        Err(e) => {
+                            log::error!(target: "app", "failed to get the system proxy: {}", e);
+                            continue;
+                        }
+                    };
+
+                    // 检查系统代理是否启用且配置是否匹配
+                    if !sysproxy.enable || sysproxy.host != proxy_host || sysproxy.port != port {
+                        log::info!(target: "app", "system proxy settings changed, restoring...");
+                        #[cfg(not(target_os = "windows"))]
+                        {
+                            let new_sysproxy = Sysproxy {
+                                enable: true,
+                                host: proxy_host.clone(),
+                                port,
+                                bypass: bypass.clone(),
+                            };
+                            logging_error!(Type::System, true, new_sysproxy.set_system_proxy());
+                        }
+
+                        #[cfg(target_os = "windows")]
+                        {
+                            use crate::{core::handle::Handle, utils::dirs};
+                            use tauri_plugin_shell::ShellExt;
+
+                            let app_handle = Handle::global().app_handle().unwrap();
+                            let binary_path = match dirs::service_path() {
+                                Ok(path) => path,
+                                Err(e) => {
+                                    log::error!(target: "app", "failed to get service path: {}", e);
+                                    continue;
+                                }
+                            };
+
+                            let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
+                            if !sysproxy_exe.exists() {
+                                log::error!(target: "app", "sysproxy.exe not found");
+                                continue;
+                            }
+
+                            let address = format!("{}:{}", proxy_host, port);
+                            let shell = app_handle.shell();
+                            let output = shell
+                                .command(sysproxy_exe.as_path().to_str().unwrap())
+                                .args(["global", address.as_str(), bypass.as_ref()])
+                                .output()
+                                .await
+                                .unwrap();
+
+                            if !output.status.success() {
+                                log::error!(target: "app", "failed to set system proxy");
+                            }
+                        }
                     }
                 }
-
-                #[cfg(target_os = "windows")]
-                {
-                    use crate::{core::handle::Handle, utils::dirs};
-                    use tauri_plugin_shell::ShellExt;
-
-                    let app_handle = Handle::global().app_handle().unwrap();
-
-                    let binary_path = dirs::service_path().unwrap();
-                    let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
-                    if !sysproxy_exe.exists() {
-                        break;
-                    }
-
-                    let shell = app_handle.shell();
-                    let output = if pac {
-                        let address = format!("http://{}:{}/commands/pac", proxy_host, pac_port);
-
-                        shell
-                            .command(sysproxy_exe.as_path().to_str().unwrap())
-                            .args(["pac", address.as_str()])
-                            .output()
-                            .await
-                            .unwrap()
-                    } else {
-                        let address = format!("{}:{}", proxy_host, port);
-                        let bypass = get_bypass();
-
-                        shell
-                            .command(sysproxy_exe.as_path().to_str().unwrap())
-                            .args(["global", address.as_str(), bypass.as_ref()])
-                            .output()
-                            .await
-                            .unwrap()
-                    };
-                    if !output.status.success() {
-                        break;
-                    }
-                };
             }
         });
     }
