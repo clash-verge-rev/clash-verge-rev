@@ -51,17 +51,73 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
     let should_update = match url_opt {
         Some((url, opt)) => {
             println!("[订阅更新] 开始下载新的订阅内容");
-            let merged_opt = PrfOption::merge(opt, option);
-            let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
+            let merged_opt = PrfOption::merge(opt.clone(), option.clone());
 
-            println!("[订阅更新] 更新订阅配置");
-            let profiles = Config::profiles();
-            let mut profiles = profiles.latest();
-            profiles.update_item(uid.clone(), item)?;
+            // 尝试使用正常设置更新
+            match PrfItem::from_url(&url, None, None, merged_opt.clone()).await {
+                Ok(item) => {
+                    println!("[订阅更新] 更新订阅配置成功");
+                    let profiles = Config::profiles();
+                    let mut profiles = profiles.latest();
+                    profiles.update_item(uid.clone(), item)?;
 
-            let is_current = Some(uid.clone()) == profiles.get_current();
-            println!("[订阅更新] 是否为当前使用的订阅: {}", is_current);
-            is_current
+                    let is_current = Some(uid.clone()) == profiles.get_current();
+                    println!("[订阅更新] 是否为当前使用的订阅: {}", is_current);
+                    is_current
+                }
+                Err(err) => {
+                    // 首次更新失败，尝试使用Clash代理
+                    println!("[订阅更新] 正常更新失败: {}，尝试使用Clash代理更新", err);
+
+                    // 发送通知
+                    handle::Handle::notice_message("update_retry_with_clash", uid.clone());
+
+                    // 保存原始代理设置
+                    let original_with_proxy = merged_opt.as_ref().and_then(|o| o.with_proxy);
+                    let original_self_proxy = merged_opt.as_ref().and_then(|o| o.self_proxy);
+
+                    // 创建使用Clash代理的选项
+                    let mut fallback_opt = merged_opt.unwrap_or_default();
+                    fallback_opt.with_proxy = Some(false);
+                    fallback_opt.self_proxy = Some(true);
+
+                    // 使用Clash代理重试
+                    match PrfItem::from_url(&url, None, None, Some(fallback_opt)).await {
+                        Ok(mut item) => {
+                            println!("[订阅更新] 使用Clash代理更新成功");
+
+                            // 恢复原始代理设置到item
+                            if let Some(option) = item.option.as_mut() {
+                                option.with_proxy = original_with_proxy;
+                                option.self_proxy = original_self_proxy;
+                            }
+
+                            // 更新到配置
+                            let profiles = Config::profiles();
+                            let mut profiles = profiles.latest();
+                            profiles.update_item(uid.clone(), item.clone())?;
+
+                            // 获取配置名称用于通知
+                            let profile_name = item.name.clone().unwrap_or_else(|| uid.clone());
+
+                            // 发送通知告知用户自动更新使用了回退机制
+                            handle::Handle::notice_message("update_with_clash_proxy", profile_name);
+
+                            let is_current = Some(uid.clone()) == profiles.get_current();
+                            println!("[订阅更新] 是否为当前使用的订阅: {}", is_current);
+                            is_current
+                        }
+                        Err(retry_err) => {
+                            println!("[订阅更新] 使用Clash代理更新仍然失败: {}", retry_err);
+                            handle::Handle::notice_message(
+                                "update_failed_even_with_clash",
+                                format!("{}", retry_err),
+                            );
+                            return Err(retry_err);
+                        }
+                    }
+                }
+            }
         }
         None => true,
     };
@@ -75,7 +131,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
             }
             Err(err) => {
                 println!("[订阅更新] 更新失败: {}", err);
-                handle::Handle::notice_message("set_config::error", format!("{err}"));
+                handle::Handle::notice_message("update_failed", format!("{err}"));
                 log::error!(target: "app", "{err}");
             }
         }

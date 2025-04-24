@@ -263,6 +263,8 @@ const ProfilePage = () => {
       try {
         await updateProfile(uid);
         throttleMutate();
+      } catch (err: any) {
+        console.error(`更新订阅 ${uid} 失败:`, err);
       } finally {
         setLoadingCache((cache) => ({ ...cache, [uid]: false }));
       }

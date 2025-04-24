@@ -90,6 +90,12 @@ pub struct PrfOption {
     pub update_interval: Option<u64>,
 
     /// for `remote` profile
+    /// HTTP request timeout in seconds
+    /// default is 60 seconds
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout_seconds: Option<u64>,
+
+    /// for `remote` profile
     /// disable certificate validation
     /// default is `false`
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -122,6 +128,7 @@ impl PrfOption {
                 a.rules = b.rules.or(a.rules);
                 a.proxies = b.proxies.or(a.proxies);
                 a.groups = b.groups.or(a.groups);
+                a.timeout_seconds = b.timeout_seconds.or(a.timeout_seconds);
                 Some(a)
             }
             t => t.0.or(t.1),
@@ -240,12 +247,19 @@ impl PrfItem {
             opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
+        let timeout = opt_ref.and_then(|o| o.timeout_seconds).unwrap_or(60);
         let mut merge = opt_ref.and_then(|o| o.merge.clone());
         let mut script = opt_ref.and_then(|o| o.script.clone());
         let mut rules = opt_ref.and_then(|o| o.rules.clone());
         let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
-        let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
+
+        // 设置超时时间：连接超时10秒，请求总超时使用配置时间（默认60秒）
+        let mut builder = reqwest::ClientBuilder::new()
+            .use_rustls_tls()
+            .no_proxy()
+            .connect_timeout(std::time::Duration::from_secs(10))
+            .timeout(std::time::Duration::from_secs(timeout));
 
         // 使用软件自己的代理
         if self_proxy {

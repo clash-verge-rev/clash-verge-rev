@@ -60,6 +60,18 @@ const handleNoticeMessage = (
     case "set_config::error":
       Notice.error(msg);
       break;
+    case "update_with_clash_proxy":
+      Notice.success(`${t("Update with Clash proxy successfully")} ${msg}`);
+      break;
+    case "update_retry_with_clash":
+      Notice.info(t("Update failed, retrying with Clash proxy..."));
+      break;
+    case "update_failed_even_with_clash":
+      Notice.error(`${t("Update failed even with Clash proxy")}: ${msg}`);
+      break;
+    case "update_failed":
+      Notice.error(msg);
+      break;
     case "config_validate::boot_error":
       Notice.error(`${t("Boot Config Validation Failed")} ${msg}`);
       break;

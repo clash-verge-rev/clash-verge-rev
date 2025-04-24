@@ -262,6 +262,25 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                 />
               )}
             />
+            
+            <Controller
+              name="option.timeout_seconds"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...text}
+                  {...field}
+                  type="number"
+                  placeholder="60"
+                  label={t("HTTP Request Timeout")}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">{t("seconds")}</InputAdornment>
+                    ),
+                  }}
+                />
+              )}
+            />
           </>
         )}
 
