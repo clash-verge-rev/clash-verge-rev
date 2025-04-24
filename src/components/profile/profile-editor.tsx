@@ -28,6 +28,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotice } from "../base/notifice";
+import { nanoid } from "nanoid";
 
 export type ProfileEditorHandle = {
   save: () => Promise<boolean>;
@@ -147,8 +148,8 @@ export const ProfileEditor = (props: Props) => {
       .then(async (data) => {
         originContentRef.current = data;
         // create uri to use schemas
-        const id = profileItem.uid;
-        const uri = monaco.Uri.parse(`$${id}.${type}.${language}`);
+        const id = nanoid();
+        const uri = monaco.Uri.parse(`${id}.${type}.${language}`);
         const model = monaco.editor.createModel(data, language, uri);
         const oldModel = instanceRef.current!.getModel();
         instanceRef.current!.setModel(model);
