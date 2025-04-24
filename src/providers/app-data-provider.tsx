@@ -117,12 +117,12 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
     }
   );
   
-  // 高频率更新数据 (1秒)
+  // 高频率更新数据 (2秒)
   const { data: uptimeData } = useSWR(
     "appUptime", 
     getAppUptime, 
     { 
-      refreshInterval: 1000, 
+      refreshInterval: 2000, 
       revalidateOnFocus: false,
       suspense: false
     }

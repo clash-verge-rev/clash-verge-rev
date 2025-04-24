@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Box } from "@mui/material";
@@ -9,15 +9,28 @@ import { BaseSearchBox } from "@/components/base/base-search-box";
 import { useTheme } from "@mui/material/styles";
 import { ScrollTopButton } from "@/components/layout/scroll-top-button";
 import { useAppData } from "@/providers/app-data-provider";
+import { useVisibility } from "@/hooks/use-visibility";
 
 const RulesPage = () => {
   const { t } = useTranslation();
-  const { rules = [] } = useAppData();
+  const { rules = [], refreshRules, refreshRuleProviders } = useAppData();
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const pageVisible = useVisibility();
+
+  // 在组件挂载时和页面获得焦点时刷新规则数据
+  useEffect(() => {
+    refreshRules();
+    refreshRuleProviders();
+
+    if (pageVisible) {
+      refreshRules();
+      refreshRuleProviders();
+    }
+  }, [refreshRules, refreshRuleProviders, pageVisible]);
 
   const filteredRules = useMemo(() => {
     return rules.filter((item) => match(item.payload));
