@@ -22,9 +22,10 @@ import { createProfile, patchProfile } from "@/services/cmds";
 import { BaseDialog, Notice, Switch } from "@/components/base";
 import { version } from "@root/package.json";
 import { FileInput } from "./file-input";
+import { useProfiles } from "@/hooks/use-profiles";
 
 interface Props {
-  onChange: () => void;
+  onChange: (isActivating?: boolean) => void;
 }
 
 export interface ProfileViewerRef {
@@ -40,6 +41,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     const [open, setOpen] = useState(false);
     const [openType, setOpenType] = useState<"new" | "edit">("new");
     const [loading, setLoading] = useState(false);
+    const { profiles } = useProfiles();
 
     // file input
     const fileDataRef = useRef<string | null>(null);
@@ -107,6 +109,10 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           const name = form.name || `${form.type} file`;
           const item = { ...form, name };
           const isRemote = form.type === "remote";
+          const isUpdate = openType === "edit";
+          
+          // 判断是否是当前激活的配置
+          const isActivating = isUpdate && form.uid === (profiles?.current ?? "");
           
           // 保存原始代理设置以便回退成功后恢复
           const originalOptions = { 
@@ -165,7 +171,9 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           setOpen(false);
           setTimeout(() => formIns.reset(), 500);
           fileDataRef.current = null;
-          props.onChange();
+          
+          // 只传递当前配置激活状态，让父组件决定是否需要触发配置重载
+          props.onChange(isActivating);
         } catch (err: any) {
           Notice.error(err.message || err.toString());
         } finally {

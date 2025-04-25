@@ -469,9 +469,12 @@ const ProfilePage = () => {
 
       <ProfileViewer
         ref={viewerRef}
-        onChange={async () => {
+        onChange={async (isActivating) => {
           mutateProfiles();
-          await onEnhance(false);
+          // 只有更改当前激活的配置时才触发全局重新加载
+          if (isActivating) {
+            await onEnhance(false);
+          }
         }}
       />
       <ConfigViewer ref={configRef} />
