@@ -10,3 +10,4 @@ pub mod tray;
 pub mod win_uwp;
 
 pub use self::core::*;
+pub use self::timer::Timer;

@@ -23,8 +23,14 @@ pub fn toggle_proxy_profile(profile_index: String) {
 
 /// Update a profile
 /// If updating current profile, activate it
-pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()> {
+/// auto_refresh: 是否自动更新配置和刷新前端
+pub async fn update_profile(
+    uid: String,
+    option: Option<PrfOption>,
+    auto_refresh: Option<bool>,
+) -> Result<()> {
     println!("[订阅更新] 开始更新订阅 {}", uid);
+    let auto_refresh = auto_refresh.unwrap_or(true); // 默认为true，保持兼容性
 
     let url_opt = {
         let profiles = Config::profiles();
@@ -63,7 +69,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
 
                     let is_current = Some(uid.clone()) == profiles.get_current();
                     println!("[订阅更新] 是否为当前使用的订阅: {}", is_current);
-                    is_current
+                    is_current && auto_refresh
                 }
                 Err(err) => {
                     // 首次更新失败，尝试使用Clash代理
@@ -105,7 +111,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
 
                             let is_current = Some(uid.clone()) == profiles.get_current();
                             println!("[订阅更新] 是否为当前使用的订阅: {}", is_current);
-                            is_current
+                            is_current && auto_refresh
                         }
                         Err(retry_err) => {
                             println!("[订阅更新] 使用Clash代理更新仍然失败: {}", retry_err);
@@ -119,7 +125,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
                 }
             }
         }
-        None => true,
+        None => auto_refresh,
     };
 
     if should_update {

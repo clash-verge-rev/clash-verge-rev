@@ -1,11 +1,12 @@
 use super::CmdResult;
 use crate::{
     config::{Config, IProfiles, PrfItem, PrfOption},
-    core::{handle, tray::Tray, CoreManager},
+    core::{handle, timer::Timer, tray::Tray, CoreManager},
     feat, logging, ret_err,
     utils::{dirs, help, logging::Type},
     wrap_err,
 };
+use tauri::Emitter;
 
 /// 获取配置文件列表
 #[tauri::command]
@@ -45,7 +46,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 /// 更新配置文件
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    wrap_err!(feat::update_profile(index, option).await)
+    wrap_err!(feat::update_profile(index, option, Some(true)).await)
 }
 
 /// 删除配置文件
@@ -211,7 +212,35 @@ pub async fn patch_profiles_config_by_profile_index(
 /// 修改某个profile item的
 #[tauri::command]
 pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
-    wrap_err!(Config::profiles().data().patch_item(index, profile))?;
+    // 保存修改前检查是否有更新 update_interval
+    let update_interval_changed =
+        if let Ok(old_profile) = Config::profiles().latest().get_item(&index) {
+            let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
+            let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
+            old_interval != new_interval
+        } else {
+            false
+        };
+
+    // 保存修改
+    wrap_err!(Config::profiles().data().patch_item(index.clone(), profile))?;
+
+    // 如果更新间隔变更，异步刷新定时器
+    if update_interval_changed {
+        let index_clone = index.clone();
+        crate::process::AsyncHandler::spawn(move || async move {
+            logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");
+            if let Err(e) = crate::core::Timer::global().refresh() {
+                logging!(error, Type::Timer, "刷新定时器失败: {}", e);
+            } else {
+                // 刷新成功后发送自定义事件，不触发配置重载
+                if let Some(window) = crate::core::handle::Handle::global().get_window() {
+                    let _ = window.emit("verge://timer-updated", index_clone);
+                }
+            }
+        });
+    }
+
     Ok(())
 }
 
@@ -241,4 +270,12 @@ pub fn read_profile_file(index: String) -> CmdResult<String> {
     let item = wrap_err!(profiles.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
+}
+
+/// 获取下一次更新时间
+#[tauri::command]
+pub fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
+    let timer = Timer::global();
+    let next_time = timer.get_next_update_time(&uid);
+    Ok(next_time)
 }

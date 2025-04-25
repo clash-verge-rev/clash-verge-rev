@@ -359,3 +359,7 @@ export const isAdmin = async () => {
     return false;
   }
 };
+
+export async function getNextUpdateTime(uid: string) {
+  return invoke<number | null>("get_next_update_time", { uid });
+}

@@ -1,6 +1,4 @@
-use crate::{
-    config::Config, core::CoreManager, feat, logging, logging_error, utils::logging::Type,
-};
+use crate::{config::Config, feat, logging, logging_error, utils::logging::Type};
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
@@ -71,6 +69,25 @@ impl Timer {
             return Err(e);
         }
 
+        let timer_map = self.timer_map.read();
+        logging!(
+            info,
+            Type::Timer,
+            "已注册的定时任务数量: {}",
+            timer_map.len()
+        );
+
+        for (uid, task) in timer_map.iter() {
+            logging!(
+                info,
+                Type::Timer,
+                "注册了定时任务 - uid={}, interval={}min, task_id={}",
+                uid,
+                task.interval_minutes,
+                task.task_id
+            );
+        }
+
         let cur_timestamp = chrono::Local::now().timestamp();
 
         // Collect profiles that need immediate update
@@ -83,6 +100,7 @@ impl Timer {
                     let uid = item.uid.as_ref()?;
 
                     if interval > 0 && cur_timestamp - updated >= interval * 60 {
+                        logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
                         Some(uid.clone())
                     } else {
                         None
@@ -95,12 +113,18 @@ impl Timer {
 
         // Advance tasks outside of locks to minimize lock contention
         if !profiles_to_update.is_empty() {
+            logging!(
+                info,
+                Type::Timer,
+                "需要立即更新的配置数量: {}",
+                profiles_to_update.len()
+            );
             let timer_map = self.timer_map.read();
             let delay_timer = self.delay_timer.write();
 
             for uid in profiles_to_update {
                 if let Some(task) = timer_map.get(&uid) {
-                    logging!(info, Type::Timer, "Advancing task for uid: {}", uid);
+                    logging!(info, Type::Timer, "立即执行任务: uid={}", uid);
                     if let Err(e) = delay_timer.advance_task(task.task_id) {
                         logging!(warn, Type::Timer, "Failed to advance task {}: {}", uid, e);
                     }
@@ -210,6 +234,13 @@ impl Timer {
                 if let Some(option) = item.option.as_ref() {
                     if let (Some(interval), Some(uid)) = (option.update_interval, &item.uid) {
                         if interval > 0 {
+                            logging!(
+                                debug,
+                                Type::Timer,
+                                "找到定时更新配置: uid={}, interval={}min",
+                                uid,
+                                interval
+                            );
                             new_map.insert(uid.clone(), interval);
                         }
                     }
@@ -217,6 +248,12 @@ impl Timer {
             }
         }
 
+        logging!(
+            debug,
+            Type::Timer,
+            "生成的定时更新配置数量: {}",
+            new_map.len()
+        );
         new_map
     }
 
@@ -227,20 +264,36 @@ impl Timer {
 
         // Read lock for comparing current state
         let timer_map = self.timer_map.read();
+        logging!(
+            debug,
+            Type::Timer,
+            "当前 timer_map 大小: {}",
+            timer_map.len()
+        );
 
         // Find tasks to modify or delete
         for (uid, task) in timer_map.iter() {
             match new_map.get(uid) {
                 Some(&interval) if interval != task.interval_minutes => {
                     // Task exists but interval changed
+                    logging!(
+                        debug,
+                        Type::Timer,
+                        "定时任务间隔变更: uid={}, 旧={}, 新={}",
+                        uid,
+                        task.interval_minutes,
+                        interval
+                    );
                     diff_map.insert(uid.clone(), DiffFlag::Mod(task.task_id, interval));
                 }
                 None => {
                     // Task no longer needed
+                    logging!(debug, Type::Timer, "定时任务已删除: uid={}", uid);
                     diff_map.insert(uid.clone(), DiffFlag::Del(task.task_id));
                 }
                 _ => {
                     // Task exists with same interval, no change needed
+                    logging!(debug, Type::Timer, "定时任务保持不变: uid={}", uid);
                 }
             }
         }
@@ -250,6 +303,13 @@ impl Timer {
 
         for (uid, &interval) in new_map.iter() {
             if !timer_map.contains_key(uid) {
+                logging!(
+                    debug,
+                    Type::Timer,
+                    "新增定时任务: uid={}, interval={}min",
+                    uid,
+                    interval
+                );
                 diff_map.insert(uid.clone(), DiffFlag::Add(next_id, interval));
                 next_id += 1;
             }
@@ -260,6 +320,7 @@ impl Timer {
             *self.timer_count.lock() = next_id;
         }
 
+        logging!(debug, Type::Timer, "定时任务变更数量: {}", diff_map.len());
         diff_map
     }
 
@@ -300,42 +361,126 @@ impl Timer {
         Ok(())
     }
 
+    /// Get next update time for a profile
+    pub fn get_next_update_time(&self, uid: &str) -> Option<i64> {
+        logging!(info, Type::Timer, "获取下次更新时间，uid={}", uid);
+
+        let timer_map = self.timer_map.read();
+        let task = match timer_map.get(uid) {
+            Some(t) => t,
+            None => {
+                logging!(warn, Type::Timer, "找不到对应的定时任务，uid={}", uid);
+                return None;
+            }
+        };
+
+        // Get the profile updated timestamp
+        let profiles_config = Config::profiles();
+        let profiles = profiles_config.latest();
+        let items = match profiles.get_items() {
+            Some(i) => i,
+            None => {
+                logging!(warn, Type::Timer, "获取配置列表失败");
+                return None;
+            }
+        };
+
+        // 修复类型比较，使用字符串值比较而不是引用比较
+        let profile = match items
+            .iter()
+            .find(|item| item.uid.as_ref().map(|u| u.as_str()) == Some(uid))
+        {
+            Some(p) => p,
+            None => {
+                logging!(warn, Type::Timer, "找不到对应的配置，uid={}", uid);
+                return None;
+            }
+        };
+
+        let updated = profile.updated.unwrap_or(0) as i64;
+
+        // Calculate next update time
+        if updated > 0 && task.interval_minutes > 0 {
+            let next_time = updated + (task.interval_minutes as i64 * 60);
+            logging!(
+                info,
+                Type::Timer,
+                "计算得到下次更新时间: {}, uid={}",
+                next_time,
+                uid
+            );
+            Some(next_time)
+        } else {
+            logging!(
+                warn,
+                Type::Timer,
+                "更新时间或间隔无效，updated={}, interval={}",
+                updated,
+                task.interval_minutes
+            );
+            None
+        }
+    }
+
+    /// Emit update events for frontend notification
+    fn emit_update_event(_uid: &str, _is_start: bool) {
+        // 当feature="verge-dev"或"default"时才启用此功能
+        #[cfg(any(feature = "verge-dev", feature = "default"))]
+        {
+            use serde_json::json;
+            use tauri::Emitter;
+
+            let event_name = if _is_start {
+                "profile-update-started"
+            } else {
+                "profile-update-completed"
+            };
+
+            if let Some(window) = super::handle::Handle::global().get_window() {
+                let _ = window.emit(event_name, json!({ "uid": _uid }));
+            }
+        }
+    }
+
     /// Async task with better error handling and logging
     async fn async_task(uid: String) {
         let task_start = std::time::Instant::now();
         logging!(info, Type::Timer, "Running timer task for profile: {}", uid);
 
-        // Update profile
-        let profile_result = feat::update_profile(uid.clone(), None).await;
+        // Emit start event
+        Self::emit_update_event(&uid, true);
+
+        // 检查是否是当前激活的配置文件
+        let is_current = Config::profiles().latest().current.as_ref() == Some(&uid);
+        logging!(
+            info,
+            Type::Timer,
+            "配置 {} 是否为当前激活配置: {}",
+            uid,
+            is_current
+        );
+
+        // Update profile - 由update_profile函数自动处理是否需要刷新UI
+        let profile_result = feat::update_profile(uid.clone(), None, Some(is_current)).await;
 
         match profile_result {
             Ok(_) => {
-                // Update configuration
-                match CoreManager::global().update_config().await {
-                    Ok(_) => {
-                        let duration = task_start.elapsed().as_millis();
-                        logging!(
-                            info,
-                            Type::Timer,
-                            "Timer task completed successfully for uid: {} (took {}ms)",
-                            uid,
-                            duration
-                        );
-                    }
-                    Err(e) => {
-                        logging_error!(
-                            Type::Timer,
-                            "Failed to refresh config after profile update for uid {}: {}",
-                            uid,
-                            e
-                        );
-                    }
-                }
+                let duration = task_start.elapsed().as_millis();
+                logging!(
+                    info,
+                    Type::Timer,
+                    "Timer task completed successfully for uid: {} (took {}ms)",
+                    uid,
+                    duration
+                );
             }
             Err(e) => {
                 logging_error!(Type::Timer, "Failed to update profile uid {}: {}", uid, e);
             }
         }
+
+        // Emit completed event
+        Self::emit_update_event(&uid, false);
     }
 }
 
