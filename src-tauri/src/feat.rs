@@ -54,32 +54,8 @@ pub fn change_clash_mode(mode: String) {
 
     tauri::async_runtime::spawn(async move {
         tracing::debug!("change clash mode to {mode}");
-
-        match handle::Handle::get_mihomo_read()
-            .await
-            .patch_base_config(&mapping)
-            .await
-        {
-            Ok(_) => {
-                // 更新订阅
-                Config::clash().data().patch_config(mapping);
-                if Config::clash().data().save_config().is_ok() {
-                    handle::Handle::refresh_clash();
-                    log_err!(handle::Handle::update_systray_part());
-                }
-                let auto_close_connection = {
-                    Config::verge()
-                        .latest()
-                        .auto_close_connection
-                        .unwrap_or_default()
-                };
-                if auto_close_connection {
-                    let _ = handle::Handle::get_mihomo_read()
-                        .await
-                        .close_all_connections()
-                        .await;
-                }
-            }
+        match patch_clash(mapping).await {
+            Ok(_) => log_err!(handle::Handle::update_systray_part()),
             Err(err) => tracing::error!("{err}"),
         }
     });
@@ -353,11 +329,19 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                         .get("enable")
                         .is_some_and(|val| val.as_bool().unwrap_or(false));
                     let tun_enable_by_api = clash_basic_configs.tun.enable;
-                    // let tun_enable_by_api = clash_basic_configs
-                    //     .tun
-                    //     .get("enable")
-                    //     .map_or(false, |val| val.as_bool().unwrap_or(false));
                     if tun_enable == tun_enable_by_api {
+                        let auto_close_connection = {
+                            Config::verge()
+                                .latest()
+                                .auto_close_connection
+                                .unwrap_or_default()
+                        };
+                        if auto_close_connection {
+                            let _ = handle::Handle::get_mihomo_read()
+                                .await
+                                .close_all_connections()
+                                .await;
+                        }
                         handle::Handle::update_systray_part()?;
                     } else {
                         update_tun_failed = true;
@@ -385,6 +369,18 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             }
 
             if patch.get("mode").is_some() {
+                let auto_close_connection = {
+                    Config::verge()
+                        .latest()
+                        .auto_close_connection
+                        .unwrap_or_default()
+                };
+                if auto_close_connection {
+                    let _ = handle::Handle::get_mihomo_read()
+                        .await
+                        .close_all_connections()
+                        .await;
+                }
                 log_err!(handle::Handle::update_systray_part());
             }
 
