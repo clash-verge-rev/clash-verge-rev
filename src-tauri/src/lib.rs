@@ -302,6 +302,13 @@ pub fn run() {
                 api.prevent_exit();
             }
         }
+        tauri::RunEvent::Exit => {
+            // avoid duplicate cleanup
+            if core::handle::Handle::global().is_exiting() {
+                return;
+            }
+            feat::clean();
+        }
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
                 match event {
