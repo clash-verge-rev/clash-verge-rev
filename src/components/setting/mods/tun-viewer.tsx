@@ -14,6 +14,9 @@ import { useClash } from "@/hooks/use-clash";
 import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
 import { StackModeSwitch } from "./stack-mode-switch";
 import { enhanceProfiles } from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+
+const OS = getSystem();
 
 export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -23,7 +26,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
     stack: "mixed",
-    device: "Mihomo",
+    device: OS === "macos" ? "utun1024" : "Mihomo",
     autoRoute: true,
     autoDetectInterface: true,
     dnsHijack: ["any:53"],
@@ -36,7 +39,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setValues({
         stack: clash?.tun.stack ?? "gvisor",
-        device: clash?.tun.device ?? "Mihomo",
+        device: clash?.tun.device ?? (OS === "macos" ? "utun1024" : "Mihomo"),
         autoRoute: clash?.tun["auto-route"] ?? true,
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
         dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53"],
@@ -51,7 +54,12 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       let tun = {
         stack: values.stack,
-        device: values.device === "" ? "Mihomo" : values.device,
+        device:
+          values.device === ""
+            ? OS === "macos"
+              ? "utun1024"
+              : "Mihomo"
+            : values.device,
         "auto-route": values.autoRoute,
         "auto-detect-interface": values.autoDetectInterface,
         "dns-hijack": values.dnsHijack[0] === "" ? [] : values.dnsHijack,
@@ -90,7 +98,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             onClick={async () => {
               let tun = {
                 stack: "gvisor",
-                device: "Mihomo",
+                device: OS === "macos" ? "utun1024" : "Mihomo",
                 "auto-route": true,
                 "auto-detect-interface": true,
                 "dns-hijack": ["any:53"],
@@ -99,7 +107,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
               };
               setValues({
                 stack: "gvisor",
-                device: "Mihomo",
+                device: OS === "macos" ? "utun1024" : "Mihomo",
                 autoRoute: true,
                 autoDetectInterface: true,
                 dnsHijack: ["any:53"],
