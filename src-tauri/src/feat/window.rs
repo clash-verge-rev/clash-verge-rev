@@ -79,16 +79,16 @@ pub fn clean() -> bool {
         // 1. 处理TUN模式
         let tun_success = if Config::verge().data().enable_tun_mode.unwrap_or(false) {
             let disable_tun = serde_json::json!({
-                    "tun": {
-                        "enable": false
-                    }
-                });
+                "tun": {
+                    "enable": false
+                }
+            });
             timeout(
                 Duration::from_secs(1),
                 MihomoManager::global().patch_configs(disable_tun),
             )
-                .await
-                .is_ok()
+            .await
+            .is_ok()
         } else {
             true
         };
@@ -98,7 +98,7 @@ pub fn clean() -> bool {
             Duration::from_secs(1),
             sysopt::Sysopt::global().reset_sysproxy(),
         )
-            .await;
+        .await;
 
         let core_res = timeout(Duration::from_secs(1), CoreManager::global().stop_core()).await;
 
