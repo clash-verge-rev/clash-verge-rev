@@ -74,8 +74,8 @@ export async function readProfileFile(index: string) {
   return invoke<string>("read_profile_file", { index });
 }
 
-export async function getCurrentProfileRuleProvidersPath() {
-  return invoke<Record<string, string>>("get_current_profile_rule_providers");
+export async function getRuleProvidersPayload() {
+  return invoke<Record<string, RulePayload>>("get_rule_providers_payload");
 }
 
 export async function saveProfileFile(uid: string, fileData: string) {

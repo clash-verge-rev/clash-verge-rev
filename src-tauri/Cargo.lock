@@ -944,6 +944,7 @@ dependencies = [
  "delay_timer",
  "dirs 6.0.0",
  "dunce",
+ "mihomo-rule-parser",
  "nanoid",
  "once_cell",
  "openssl",
@@ -3413,6 +3414,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "mihomo-rule-parser"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "byteorder",
+ "serde",
+ "serde_yaml",
+ "thiserror 2.0.12",
+ "zstd",
 ]
 
 [[package]]
@@ -8754,9 +8767,9 @@ dependencies = [
 
 [[package]]
 name = "zstd"
-version = "0.13.2"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcf2b778a664581e31e389454a7072dab1647606d44f7feea22cd5abb9c9f3f9"
+checksum = "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
 dependencies = [
  "zstd-safe",
 ]

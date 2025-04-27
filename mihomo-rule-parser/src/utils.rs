@@ -16,7 +16,7 @@ fn get_rule_behavior(behavior: u8) -> RuleBehavior {
 }
 
 /// Validate MRS format and return the count of rules.
-pub fn validate_mrs<R: Read>(
+pub(crate) fn validate_mrs<R: Read>(
     reader: &mut R,
     expected_behavior: RuleBehavior,
 ) -> Result<i64, RuleParseError> {

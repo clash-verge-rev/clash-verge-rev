@@ -51,8 +51,7 @@ interface IRuleItem {
   type: string;
   payload: string;
   proxy: string;
-  ruleSetProviderPath: string;
-  ruleSetProviderPayload: string;
+  rules: string[];
   matchPayloadItems: string[];
   expanded: boolean;
 }
@@ -385,4 +384,9 @@ interface IWebDavConfig {
 
 type FileDragDropPayload = {
   paths: string[];
+};
+
+type RulePayload = {
+  count: number;
+  rules: string[];
 };

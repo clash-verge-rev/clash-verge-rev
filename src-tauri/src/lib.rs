@@ -221,6 +221,7 @@ pub fn run() -> Result<()> {
             cmds::clash::get_runtime_logs,
             cmds::clash::get_pre_merge_result,
             cmds::clash::test_merge_chain,
+            cmds::clash::get_rule_providers_payload,
             // verge
             cmds::verge::get_verge_config,
             cmds::verge::patch_verge_config,
@@ -240,7 +241,6 @@ pub fn run() -> Result<()> {
             cmds::profile::update_profile,
             cmds::profile::delete_profile,
             cmds::profile::read_profile_file,
-            cmds::profile::get_current_profile_rule_providers,
             cmds::profile::save_profile_file,
             // service mode
             cmds::service::check_service,

@@ -1,100 +1,69 @@
 import { BaseEmpty, BasePage, BaseSearchBox } from "@/components/base";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { RuleItem } from "@/components/rule/rule-item";
-import { getCurrentProfileRuleProvidersPath } from "@/services/cmds";
+import { getRuleProvidersPayload } from "@/services/cmds";
 import ExpandIcon from "@mui/icons-material/Expand";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import { Box, IconButton } from "@mui/material";
-import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import useSWR from "swr";
-import { getRuleProviders, getRules, Rule } from "tauri-plugin-mihomo-api";
+import { getRules, Rule } from "tauri-plugin-mihomo-api";
+import LoadingPage from "./loading";
 
-type CustomRule = Rule & {
-  expanded: boolean;
-  ruleSetProviderPath: string;
-  ruleSetProviderPayload: string;
-  matchPayloadItems: string[];
-};
+type CustomRule = Rule &
+  RulePayload & {
+    expanded: boolean;
+    matchPayloadItems: string[];
+  };
 
 const RulesPage = () => {
   const { t } = useTranslation();
-  const { data } = useSWR("getRules", getRules);
-  const { data: ruleProvidersData } = useSWR(
-    "getRuleProviders",
-    getRuleProviders,
-  );
+  const { data, isLoading } = useSWR("getRules", async () => {
+    const rules = await getRules();
+    const ruleProvidersPayload = await getRuleProvidersPayload();
+    const customRules = rules.rules.map((item) => {
+      const ruleName = item.payload;
+      if (ruleProvidersPayload[ruleName]) {
+        return { ...item, ...ruleProvidersPayload[ruleName] } as CustomRule;
+      }
+      return item as CustomRule;
+    });
+    return customRules;
+  });
+
   const [rules, setRules] = useState<CustomRule[]>([]);
   const [match, setMatch] = useState(() => (_: string) => true);
-  const [ruleProvidersPaths, setRuleProvidersPaths] = useState<
-    Record<string, string>
-  >({});
-  const payloadSuffix = "-payload";
   const hasRuleSet = rules?.findIndex((item) => item.type === "RuleSet") !== -1;
 
   useEffect(() => {
-    const filterData = data?.rules
+    if (!data) return;
+
+    const filterData = data
       .map((item) => {
-        const newItem = { ...item } as CustomRule;
-        const itemName = item.payload;
-        if (
-          item.type === "RuleSet" &&
-          !!ruleProvidersPaths[itemName] &&
-          !ruleProvidersPaths[itemName].endsWith(".mrs")
-        ) {
-          const payloadKey = itemName + payloadSuffix;
-          newItem.ruleSetProviderPath = ruleProvidersPaths[itemName];
-          newItem.ruleSetProviderPayload = ruleProvidersPaths[payloadKey];
-        }
-        return newItem;
+        item.expanded =
+          rules.find((rItem) => rItem.payload === item.payload)?.expanded ??
+          false;
+        item.matchPayloadItems = [];
+        return item;
       })
       .filter((item) => {
-        if (item.ruleSetProviderPayload) {
-          item.matchPayloadItems = [];
-          const payloadArr = item.ruleSetProviderPayload
-            .split("\n")
-            .filter(
-              (o) =>
-                o.trim().length > 0 &&
-                !o.includes("#") &&
-                !o.includes("payload:"),
-            )
-            .map((o) => o.trim());
-          payloadArr.forEach((payload) => {
-            if (match(payload)) {
-              item.matchPayloadItems.push(payload);
+        if (item.rules && item.rules.length > 0) {
+          item.rules.forEach((rule) => {
+            if (match(rule)) {
+              item.matchPayloadItems.push(rule);
             }
           });
         }
-        return (
-          match(item.payload) ||
-          (item.matchPayloadItems && item.matchPayloadItems.length > 0)
-        );
+        if (item.type === "RuleSet") {
+          return item.matchPayloadItems && item.matchPayloadItems.length > 0;
+        } else {
+          return match(item.payload);
+        }
       });
-    setRules(filterData || []);
-  }, [data, match, ruleProvidersPaths]);
-
-  const getAllRuleProvidersPaths = async () => {
-    let pathsMap = await getCurrentProfileRuleProvidersPath();
-    // 读取规则集文件内容
-    for (const name in pathsMap) {
-      const payloadKey = name + payloadSuffix;
-      const filePath = pathsMap[name];
-      const isMrsFile = filePath.endsWith(".mrs");
-      if (isMrsFile) {
-        continue;
-      }
-      const contents = await readTextFile(filePath);
-      pathsMap[payloadKey] = contents;
-    }
-    setRuleProvidersPaths(pathsMap);
-  };
-
-  useEffect(() => {
-    getAllRuleProvidersPaths();
-  }, [data, ruleProvidersData]);
+    setRules(filterData);
+  }, [data, match]);
 
   return (
     <BasePage
@@ -169,6 +138,7 @@ const RulesPage = () => {
                 index={index + 1}
                 value={item}
                 onExpand={(expanded) => {
+                  // console.log(item);
                   setRules((pre) =>
                     pre.map((o) => {
                       if (o.payload === item.payload) {
@@ -181,6 +151,8 @@ const RulesPage = () => {
               />
             )}
           />
+        ) : isLoading ? (
+          <LoadingPage />
         ) : (
           <BaseEmpty text="No Rules" />
         )}

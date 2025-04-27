@@ -53,10 +53,7 @@ const parseColor = (text: string) => {
 
 export const RuleItem = (props: Props) => {
   const { index, value, onExpand } = props;
-  const canExpandRuleItem =
-    value.type === "RuleSet" &&
-    !!value.ruleSetProviderPath &&
-    !value.ruleSetProviderPath.endsWith(".mrs");
+  const canExpandRuleItem = value.type === "RuleSet";
   const expanded = canExpandRuleItem && value.expanded;
 
   return (

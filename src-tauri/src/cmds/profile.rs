@@ -1,5 +1,3 @@
-use std::{collections::HashMap, path::PathBuf};
-
 use crate::{
     config::{Config, EnableFilter, IProfiles, PrfItem, PrfOption, DEFAULT_PAC},
     core::{handle, timer, CoreManager},
@@ -154,24 +152,6 @@ pub fn read_profile_file(index: String) -> CmdResult<String> {
     let item = wrap_err!(profiles.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
-}
-
-#[tauri::command]
-pub fn get_current_profile_rule_providers() -> CmdResult<HashMap<String, PathBuf>> {
-    let profiles = Config::profiles();
-    let profiles = profiles.latest();
-    let current = profiles.get_current();
-    match current {
-        Some(current) => {
-            let item = profiles.get_item(&current).unwrap();
-            if let Some(rule_providers_path) = &item.rule_providers_path {
-                Ok(rule_providers_path.clone())
-            } else {
-                Ok(HashMap::new())
-            }
-        }
-        None => Ok(HashMap::new()),
-    }
 }
 
 #[tauri::command]

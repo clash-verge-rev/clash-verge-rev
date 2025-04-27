@@ -19,6 +19,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tokio = "1.40"
 tauri-plugin-mihomo = { path = "../tauri-plugin-mihomo" }
+mihomo-rule-parser = { path = "../mihomo-rule-parser" }
 warp = "0.3"
 anyhow = "1.0"
 dirs = "6.0"
