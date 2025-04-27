@@ -17,7 +17,7 @@ use tokio::time::Duration;
 // Windows only
 
 const SERVICE_URL: &str = "http://127.0.0.1:33211";
-const REQUIRED_SERVICE_VERSION: &str = "1.0.5"; // 定义所需的服务版本号
+const REQUIRED_SERVICE_VERSION: &str = "1.0.6"; // 定义所需的服务版本号
 
 // 限制重装时间和次数的常量
 const REINSTALL_COOLDOWN_SECS: u64 = 300; // 5分钟冷却期
