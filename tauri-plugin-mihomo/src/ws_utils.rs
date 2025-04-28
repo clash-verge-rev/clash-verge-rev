@@ -15,7 +15,7 @@ pub struct WebSocketFrame {
 }
 
 /// 从字节数组中解析帧
-pub fn parse_websocket_frame(data: &[u8]) -> io::Result<WebSocketFrame> {
+pub fn parse_websocket_frame(data: &[u8]) -> io::Result<(WebSocketFrame, &[u8])> {
     let mut cursor = Cursor::new(data);
 
     // 读取帧头基本信息
@@ -42,12 +42,15 @@ pub fn parse_websocket_frame(data: &[u8]) -> io::Result<WebSocketFrame> {
     }
 
     // 返回解析结果及剩余未处理数据
-    // let remaining_data = &data[payload_end..];
-    Ok(WebSocketFrame {
-        opcode,
-        payload,
-        fin,
-    })
+    let remaining_data = &data[payload_end..];
+    Ok((
+        WebSocketFrame {
+            opcode,
+            payload,
+            fin,
+        },
+        remaining_data,
+    ))
 }
 
 /// 读取帧头详细信息

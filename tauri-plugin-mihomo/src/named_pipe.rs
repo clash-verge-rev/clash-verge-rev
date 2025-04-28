@@ -124,7 +124,7 @@ mod test {
                     }
                 }
                 // 解析 websocket 的数据
-                let frame = ws_utils::parse_websocket_frame(&buf).unwrap();
+                let (frame, remaining) = ws_utils::parse_websocket_frame(&buf).unwrap();
                 // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
                 let response = String::from_utf8_lossy(&frame.payload.as_slice());
                 // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);

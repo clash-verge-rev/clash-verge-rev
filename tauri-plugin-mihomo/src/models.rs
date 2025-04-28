@@ -306,3 +306,9 @@ pub struct ConnectionMetaData {
 pub(crate) type ConnectionId = u32;
 pub(crate) type WebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
 pub(crate) type WebSocketWriter = SplitSink<WebSocket, Message>;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct Log {
+    r#type: String,
+    payload: String,
+}

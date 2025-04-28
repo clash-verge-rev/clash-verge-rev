@@ -6,7 +6,7 @@ mod test {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::UnixStream;
 
-    use crate::{ws_utils, Connections, Rules};
+    use crate::{ws_utils, Log};
 
     // 目前仅进行了 sock 套接字连接测试
     #[tokio::test]
@@ -19,39 +19,39 @@ mod test {
             panic!("socket not exists. {}", socket_path.display());
         }
 
-        let socket_path_ = socket_path.clone();
-        tokio::spawn(async move {
-            // 连接到 Unix 域套接字
-            let mut stream = UnixStream::connect(socket_path_).await.unwrap();
-            loop {
-                // write
-                stream.writable().await.unwrap();
-                stream
-                    .write(b"GET /rules HTTP/1.1\r\nHost: clash-verge\r\n\r\n")
-                    // .write(b"GET /group HTTP/1.1\r\nHost: clash-verge\r\n\r\n")
-                    .await
-                    .unwrap();
-                // read
-                stream.readable().await.unwrap();
-                let mut buf: Vec<u8> = Vec::new();
-                let mut b = [0; 4096];
-                loop {
-                    // 循环拼接返回的数据
-                    let n = stream.read(&mut b).await.unwrap();
-                    buf.extend_from_slice(&b[..n]);
-                    if n < 4096 {
-                        break;
-                    }
-                }
-                let response = String::from_utf8_lossy(&buf);
-                // println!("[thread-1]: Received response: {:?}", response);
-                let response = response.split("\r\n\r\n").nth(1).unwrap();
-                let json: Rules = serde_json::from_str(response).unwrap();
-                println!("[thread-1]: Received response json: {:?}", json);
+        // let socket_path_ = socket_path.clone();
+        // tokio::spawn(async move {
+        //     // 连接到 Unix 域套接字
+        //     let mut stream = UnixStream::connect(socket_path_).await.unwrap();
+        //     loop {
+        //         // write
+        //         stream.writable().await.unwrap();
+        //         stream
+        //             .write(b"GET /rules HTTP/1.1\r\nHost: clash-verge\r\n\r\n")
+        //             // .write(b"GET /group HTTP/1.1\r\nHost: clash-verge\r\n\r\n")
+        //             .await
+        //             .unwrap();
+        //         // read
+        //         stream.readable().await.unwrap();
+        //         let mut buf: Vec<u8> = Vec::new();
+        //         let mut b = [0; 4096];
+        //         loop {
+        //             // 循环拼接返回的数据
+        //             let n = stream.read(&mut b).await.unwrap();
+        //             buf.extend_from_slice(&b[..n]);
+        //             if n < 4096 {
+        //                 break;
+        //             }
+        //         }
+        //         let response = String::from_utf8_lossy(&buf);
+        //         // println!("[thread-1]: Received response: {:?}", response);
+        //         let response = response.split("\r\n\r\n").nth(1).unwrap();
+        //         let json: Rules = serde_json::from_str(response).unwrap();
+        //         println!("[thread-1]: Received response json: {:?}", json);
 
-                std::thread::sleep(Duration::from_millis(500));
-            }
-        });
+        //         std::thread::sleep(Duration::from_millis(500));
+        //     }
+        // });
 
         tokio::spawn(async move {
             // 连接到 Unix 域套接字
@@ -61,7 +61,7 @@ mod test {
                 // 生成随机的 Sec-WebSocket-Key
                 let key = ws_utils::generate_websocket_key();
                 // 构建 WebSocket 握手请求
-                let request = format!("GET /connections HTTP/1.1\r\nHost: clash-verge\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n");
+                let request = format!("GET /logs?level=debug HTTP/1.1\r\nHost: clash-verge\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n");
                 println!("Sent handshake request");
                 // 发送握手请求
                 stream.write_all(request.as_bytes()).await.unwrap();
@@ -89,12 +89,17 @@ mod test {
                     }
                 }
                 // 解析 websocket 的数据
-                let frame = ws_utils::parse_websocket_frame(&buf).unwrap();
+                println!("----------------------------------");
+                println!("{}", String::from_utf8_lossy(&buf));
+                // 存在一次性读取到多条 websocket 数据的情况，需要循环逐条解析数据
+                let (frame, remaining) = ws_utils::parse_websocket_frame(&buf).unwrap();
+                println!("Remaining data : {}", String::from_utf8_lossy(&remaining));
                 // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
                 let response = String::from_utf8_lossy(&frame.payload.as_slice());
                 // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);
-                let json: Connections = serde_json::from_str(&response).unwrap();
+                let json: Log = serde_json::from_str(&response).unwrap();
                 println!("[thread-2]: Received response json: {:?}", json);
+                println!("----------------------------------");
             }
         });
 
