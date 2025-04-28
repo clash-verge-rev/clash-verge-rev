@@ -39,36 +39,33 @@ export const ProviderButton = () => {
 
   const handleUpdate = async (key: string, index: number, retryCount = 5) => {
     setUpdatingAt(true, index);
-    updateRuleProvider(key)
-      .then(async () => {
+    try {
+      await updateRuleProvider(key);
+      setErrorItems((pre) => {
+        if (pre?.includes(key)) {
+          return pre.filter((item) => item !== key);
+        }
+        return pre;
+      });
+    } catch (e: any) {
+      if (retryCount < 0) {
         setErrorItems((pre) => {
           if (pre?.includes(key)) {
-            return pre.filter((item) => item !== key);
+            return pre;
           }
-          return pre;
+          return [...pre, key];
         });
-        setUpdatingAt(false, index);
-        await mutate("getRules");
-        await mutate("getRuleProviders");
-      })
-      .catch(async (e: any) => {
-        if (retryCount > 0) {
-          // retry after 1 second
-          setTimeout(async () => {
-            await handleUpdate(key, index, retryCount - 1);
-          }, 1000);
-        } else {
-          setErrorItems((pre) => {
-            if (pre?.includes(key)) {
-              return pre;
-            }
-            return [...pre, key];
-          });
-          setUpdatingAt(false, index);
-          await mutate("getRules");
-          await mutate("getRuleProviders");
-        }
-      });
+      } else {
+        // retry after 1 second
+        setTimeout(async () => {
+          await handleUpdate(key, index, retryCount - 1);
+        }, 1000);
+      }
+    } finally {
+      setUpdatingAt(false, index);
+      await mutate("getRules");
+      await mutate("getRuleProviders");
+    }
   };
 
   if (!hasProvider) return null;

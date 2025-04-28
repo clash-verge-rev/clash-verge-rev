@@ -42,9 +42,7 @@ const RulesPage = () => {
 
     const filterData = data
       .map((item) => {
-        item.expanded =
-          rules.find((rItem) => rItem.payload === item.payload)?.expanded ??
-          false;
+        // 清空上一次搜索匹配的规则
         item.matchPayloadItems = [];
         return item;
       })
@@ -138,7 +136,6 @@ const RulesPage = () => {
                 index={index + 1}
                 value={item}
                 onExpand={(expanded) => {
-                  // console.log(item);
                   setRules((pre) =>
                     pre.map((o) => {
                       if (o.payload === item.payload) {
