@@ -3,54 +3,56 @@
 #![allow(dead_code)]
 use std::io::{self, Cursor, Read};
 
+use anyhow::{bail, Result};
 use base64::{engine::general_purpose, Engine};
 use rand::Rng;
+use tokio_tungstenite::tungstenite::protocol::frame::FrameHeader;
 
 // WebSocket 帧解析结果
 #[derive(Debug)]
 pub struct WebSocketFrame {
-    pub opcode: u8,       // 操作码（1=文本，2=二进制，8=关闭等）
     pub payload: Vec<u8>, // 解码后的有效载荷
     pub fin: bool,        // 是否是最后一帧
 }
 
 /// 从字节数组中解析帧
-pub fn parse_websocket_frame(data: &[u8]) -> io::Result<(WebSocketFrame, &[u8])> {
+pub fn parse_websocket_frame(data: &[u8]) -> Result<(WebSocketFrame, &[u8])> {
     let mut cursor = Cursor::new(data);
 
     // 读取帧头基本信息
-    let (opcode, payload_len, fin, mask_flag, mask_key) = read_frame_header(&mut cursor)?;
+    // let (opcode, payload_len, fin, mask_flag, mask_key) = read_frame_header(&mut cursor)?;
+    let header = FrameHeader::parse(&mut cursor)?;
+    match header {
+        Some((frame, payload_len)) => {
+            // 检查剩余数据是否足够
+            let total_header_len = cursor.position() as usize;
+            let required_len = total_header_len + payload_len as usize;
+            if data.len() < required_len {
+                bail!("required more data");
+            }
 
-    // 检查剩余数据是否足够
-    let total_header_len = cursor.position() as usize;
-    let required_len = total_header_len + payload_len as usize;
-    if data.len() < required_len {
-        return Err(io::Error::new(
-            io::ErrorKind::UnexpectedEof,
-            "Incomplete frame data",
-        ));
+            // 提取有效载荷数据
+            let payload_start = total_header_len;
+            let payload_end = payload_start + payload_len as usize;
+            let mut payload = data[payload_start..payload_end].to_vec();
+
+            // 应用掩码解码（客户端发送的帧必须带掩码）
+            if let Some(mask_key) = frame.mask {
+                apply_mask(&mut payload, &mask_key);
+            }
+
+            // 返回解析结果及剩余未处理数据
+            let remaining_data = &data[payload_end..];
+            Ok((
+                WebSocketFrame {
+                    payload,
+                    fin: frame.is_final,
+                },
+                remaining_data,
+            ))
+        }
+        None => bail!("none"),
     }
-
-    // 提取有效载荷数据
-    let payload_start = total_header_len;
-    let payload_end = payload_start + payload_len as usize;
-    let mut payload = data[payload_start..payload_end].to_vec();
-
-    // 应用掩码解码（客户端发送的帧必须带掩码）
-    if mask_flag {
-        apply_mask(&mut payload, &mask_key);
-    }
-
-    // 返回解析结果及剩余未处理数据
-    let remaining_data = &data[payload_end..];
-    Ok((
-        WebSocketFrame {
-            opcode,
-            payload,
-            fin,
-        },
-        remaining_data,
-    ))
 }
 
 /// 读取帧头详细信息

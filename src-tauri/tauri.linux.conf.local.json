@@ -1,0 +1,35 @@
+{
+  "productName": "clash-verge",
+  "mainBinaryName": "clash-verge",
+  "identifier": "io.github.oomeow.clash-verge-self",
+  "bundle": {
+    "targets": ["deb", "rpm"],
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false,
+        "files": {}
+      },
+      "deb": {
+        "files": {},
+        "depends": ["openssl"],
+        "desktopTemplate": "./template/clash-verge.desktop"
+      },
+      "rpm": {
+        "epoch": 0,
+        "files": {},
+        "release": "1",
+        "depends": ["openssl"],
+        "desktopTemplate": "./template/clash-verge.desktop"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEREMTBCNUIyQzA3OEU2QzQKUldURTVuakFzclVRM2Y3Tk9kblFHVWZvTjlDNGF1cUVhUEJpR05OVWc4MVNTTk1IeE9ReThmeFEK",
+      "endpoints": [
+        "https://ghp.ci/https://github.com/oomeow/clash-verge-self/releases/download/updater/update-proxy.json",
+        "https://github.com/oomeow/clash-verge-self/releases/download/updater/update.json"
+      ]
+    }
+  }
+}
