@@ -15,6 +15,7 @@ pub enum Type {
     Frontend,
     Backup,
     Lightweight,
+    Network,
 }
 
 impl fmt::Display for Type {
@@ -33,6 +34,7 @@ impl fmt::Display for Type {
             Type::Frontend => write!(f, "[Frontend]"),
             Type::Backup => write!(f, "[Backup]"),
             Type::Lightweight => write!(f, "[Lightweight]"),
+            Type::Network => write!(f, "[Network]"),
         }
     }
 }

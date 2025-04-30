@@ -86,6 +86,9 @@ impl AppHandleManager {
 
 #[allow(clippy::panic)]
 pub fn run() {
+    // 初始化网络管理器
+    utils::network::NetworkManager::global().init();
+
     // 单例检测 - 使用超时机制防止阻塞
     let app_exists: bool = AsyncHandler::block_on(move || async move {
         match timeout(Duration::from_secs(3), server::check_singleton()).await {

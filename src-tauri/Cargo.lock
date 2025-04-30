@@ -1060,6 +1060,7 @@ dependencies = [
  "getrandom 0.3.2",
  "image",
  "imageproc",
+ "lazy_static",
  "libc",
  "log",
  "log4rs",

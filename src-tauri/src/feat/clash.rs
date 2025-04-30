@@ -91,36 +91,27 @@ pub fn change_clash_mode(mode: String) {
 
 /// Test connection delay to a URL
 pub async fn test_delay(url: String) -> anyhow::Result<u32> {
-    use tokio::time::{Duration, Instant};
-    let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
+    use crate::utils::network::{NetworkManager, ProxyType};
+    use tokio::time::Instant;
 
-    let port = Config::verge()
-        .latest()
-        .verge_mixed_port
-        .unwrap_or(Config::clash().data().get_mixed_port());
     let tun_mode = Config::verge().latest().enable_tun_mode.unwrap_or(false);
 
-    let proxy_scheme = format!("http://127.0.0.1:{port}");
+    // 如果是TUN模式，不使用代理，否则使用自身代理
+    let proxy_type = if !tun_mode {
+        ProxyType::SelfProxy
+    } else {
+        ProxyType::NoProxy
+    };
 
-    if !tun_mode {
-        if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
-            builder = builder.proxy(proxy);
-        }
-        if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
-            builder = builder.proxy(proxy);
-        }
-        if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
-            builder = builder.proxy(proxy);
-        }
-    }
+    let user_agent = Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0".to_string());
 
-    let request = builder
-        .timeout(Duration::from_millis(10000))
-        .build()?
-        .get(url).header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
     let start = Instant::now();
 
-    let response = request.send().await;
+    // 使用网络管理器发送请求，设置10秒超时
+    let response = NetworkManager::global()
+        .get(&url, proxy_type, Some(10), user_agent, false)
+        .await;
+
     match response {
         Ok(response) => {
             log::trace!(target: "app", "test_delay response: {:#?}", response);
@@ -132,7 +123,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
         }
         Err(err) => {
             log::trace!(target: "app", "test_delay error: {:#?}", err);
-            Err(err.into())
+            Err(err)
         }
     }
 }

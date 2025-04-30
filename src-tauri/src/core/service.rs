@@ -12,7 +12,6 @@ use std::{
     process::Command as StdCommand,
     time::{SystemTime, UNIX_EPOCH},
 };
-use tokio::time::Duration;
 
 // Windows only
 
@@ -49,7 +48,8 @@ impl ServiceState {
         latest.service_state = Some(self.clone());
         *config.draft() = latest;
         config.apply();
-        Config::verge().latest().save_file()
+        let result = config.latest().save_file();
+        result
     }
 
     // 更新安装信息
@@ -482,13 +482,13 @@ pub async fn reinstall_service() -> Result<()> {
 
 /// check the windows service status
 pub async fn check_service() -> Result<JsonResponse> {
+    use crate::utils::network::{NetworkManager, ProxyType};
+
     let url = format!("{SERVICE_URL}/get_clash");
-    let response = reqwest::ClientBuilder::new()
-        .no_proxy()
-        .timeout(Duration::from_secs(3))
-        .build()?
-        .get(url)
-        .send()
+
+    // 使用无代理模式和3秒超时检查服务
+    let response = NetworkManager::global()
+        .get(&url, ProxyType::NoProxy, Some(3), None, false)
         .await
         .context("failed to connect to the Clash Verge Service")?
         .json::<JsonResponse>()
@@ -500,13 +500,13 @@ pub async fn check_service() -> Result<JsonResponse> {
 
 /// check the service version
 pub async fn check_service_version() -> Result<String> {
+    use crate::utils::network::{NetworkManager, ProxyType};
+
     let url = format!("{SERVICE_URL}/version");
-    let response = reqwest::ClientBuilder::new()
-        .no_proxy()
-        .timeout(Duration::from_secs(3))
-        .build()?
-        .get(url)
-        .send()
+
+    // 使用无代理模式和3秒超时检查服务版本
+    let response = NetworkManager::global()
+        .get(&url, ProxyType::NoProxy, Some(3), None, false)
         .await
         .context("failed to connect to the Clash Verge Service")?
         .json::<VersionJsonResponse>()
@@ -568,6 +568,8 @@ pub async fn check_service_needs_reinstall() -> bool {
 
 /// 尝试使用现有服务启动核心，不进行重装
 pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result<()> {
+    use crate::utils::network::{NetworkManager, ProxyType};
+
     log::info!(target:"app", "attempting to start core with existing service");
 
     let clash_core = { Config::verge().latest().clash_core.clone() };
@@ -596,9 +598,10 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     log::info!(target:"app", "start service: {:?}", map.clone());
 
     let url = format!("{SERVICE_URL}/start_clash");
-    let _ = reqwest::ClientBuilder::new()
-        .no_proxy()
-        .build()?
+
+    // 使用网络管理器发送POST请求
+    let client = NetworkManager::global().get_client(ProxyType::NoProxy);
+    let _ = client
         .post(url)
         .json(&map)
         .send()
@@ -710,10 +713,13 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 
 /// stop the clash by service
 pub(super) async fn stop_core_by_service() -> Result<()> {
+    use crate::utils::network::{NetworkManager, ProxyType};
+
     let url = format!("{SERVICE_URL}/stop_clash");
-    let _ = reqwest::ClientBuilder::new()
-        .no_proxy()
-        .build()?
+
+    // 使用网络管理器发送POST请求
+    let client = NetworkManager::global().get_client(ProxyType::NoProxy);
+    let _ = client
         .post(url)
         .send()
         .await

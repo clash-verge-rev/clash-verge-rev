@@ -1,10 +1,10 @@
-use crate::utils::{dirs, help, resolve::VERSION, tmpl};
+use crate::utils::network::{NetworkManager, ProxyType};
+use crate::utils::{dirs, help, tmpl};
 use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::fs;
-use sysproxy::Sysproxy;
 
 use super::Config;
 
@@ -254,58 +254,25 @@ impl PrfItem {
         let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
-        // 设置超时时间：连接超时10秒，请求总超时使用配置时间（默认60秒）
-        let mut builder = reqwest::ClientBuilder::new()
-            .use_rustls_tls()
-            .no_proxy()
-            .connect_timeout(std::time::Duration::from_secs(10))
-            .timeout(std::time::Duration::from_secs(timeout));
-
-        // 使用软件自己的代理
-        if self_proxy {
-            let port = Config::verge()
-                .latest()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().data().get_mixed_port());
-
-            let proxy_scheme = format!("http://127.0.0.1:{port}");
-
-            if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
-            if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
-            if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
-        }
-        // 使用系统代理
-        else if with_proxy {
-            if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
-                let proxy_scheme = format!("http://{}:{}", p.host, p.port);
-
-                if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-                if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-                if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-            }
-        }
-
-        let version = match VERSION.get() {
-            Some(v) => format!("clash-verge/v{}", v),
-            None => "clash-verge/unknown".to_string(),
+        // 选择代理类型
+        let proxy_type = if self_proxy {
+            ProxyType::SelfProxy
+        } else if with_proxy {
+            ProxyType::SystemProxy
+        } else {
+            ProxyType::NoProxy
         };
 
-        builder = builder.danger_accept_invalid_certs(accept_invalid_certs);
-        builder = builder.user_agent(user_agent.unwrap_or(version));
-
-        let resp = builder.build()?.get(url).send().await?;
+        // 使用网络管理器发送请求
+        let resp = NetworkManager::global()
+            .get(
+                url,
+                proxy_type,
+                Some(timeout),
+                user_agent.clone(),
+                accept_invalid_certs,
+            )
+            .await?;
 
         let status_code = resp.status();
         if !StatusCode::is_success(&status_code) {
