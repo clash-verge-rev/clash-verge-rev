@@ -269,8 +269,13 @@ export async function updateUpdateLog() {
   const updateLogContent = await fs
     .readFile(update_log_file)
     .then((d) => d.toString("utf8"));
-  if (!updateLogContent.includes(tagTitle)) {
-    const prependContent = `${tagTitle}\n${changeLogContent}\n---\n\n`;
+  const regexp = new RegExp("## (v.*)", "g");
+  let allVersions = [...updateLogContent.matchAll(regexp)].map((match) =>
+    match[1].trim(),
+  );
+  console.log(allVersions);
+  if (!allVersions.includes(tag.name)) {
+    const prependContent = `${tagTitle}\n\n${changeLogContent}\n---\n\n`;
     const finaleUpdateLogContent = prependContent.concat(updateLogContent);
     await fs.writeFile(update_log_file, finaleUpdateLogContent);
     // generate default change log file
