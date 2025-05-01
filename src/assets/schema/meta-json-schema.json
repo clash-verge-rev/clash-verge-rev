@@ -5518,7 +5518,7 @@
           },
           "format": {
             "enum": ["yaml", "text", "mrs"],
-            "markdownEnumDescriptions": ["YAML格式", "普通文本格式"],
+            "markdownEnumDescriptions": ["YAML格式", "普通文本格式", "mrs格式"],
             "title": "provider文件格式",
             "description": "provider文件格式",
             "markdownDescription": "provider文件格式",
