@@ -5,6 +5,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::fs;
+use std::time::Duration;
 
 use super::Config;
 
@@ -247,7 +248,7 @@ impl PrfItem {
             opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
-        let timeout = opt_ref.and_then(|o| o.timeout_seconds).unwrap_or(60);
+        let timeout = opt_ref.and_then(|o| o.timeout_seconds).unwrap_or(20);
         let mut merge = opt_ref.and_then(|o| o.merge.clone());
         let mut script = opt_ref.and_then(|o| o.script.clone());
         let mut rules = opt_ref.and_then(|o| o.rules.clone());
@@ -264,15 +265,22 @@ impl PrfItem {
         };
 
         // 使用网络管理器发送请求
-        let resp = NetworkManager::global()
-            .get_with_retry(
+        let resp = match NetworkManager::global()
+            .get_with_interrupt(
                 url,
                 proxy_type,
                 Some(timeout),
                 user_agent.clone(),
                 accept_invalid_certs,
             )
-            .await?;
+            .await
+        {
+            Ok(r) => r,
+            Err(e) => {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                bail!("failed to fetch remote profile: {}", e);
+            }
+        };
 
         let status_code = resp.status();
         if !StatusCode::is_success(&status_code) {
