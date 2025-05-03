@@ -260,6 +260,52 @@ impl NetworkManager {
         .await
         .context("Failed to send HTTP request")
     }
+    pub async fn get_with_retry(
+        &self,
+        url: &str,
+        proxy_type: ProxyType,
+        timeout_secs: Option<u64>,
+        user_agent: Option<String>,
+        accept_invalid_certs: bool,
+    ) -> Result<Response> {
+        let max_retries = 2;
+        let mut last_error = None;
+
+        for attempt in 0..=max_retries {
+            if attempt > 0 {
+                logging!(info, Type::Network, "重试第{}次请求: {}", attempt, url);
+                tokio::time::sleep(Duration::from_millis(500)).await;
+            }
+
+            match self
+                .get(
+                    url,
+                    proxy_type,
+                    timeout_secs,
+                    user_agent.clone(),
+                    accept_invalid_certs,
+                )
+                .await
+            {
+                Ok(resp) => return Ok(resp),
+                Err(e) => {
+                    logging!(
+                        warn,
+                        Type::Network,
+                        "请求失败 (尝试 {}/{}): {} - {}",
+                        attempt + 1,
+                        max_retries + 1,
+                        url,
+                        e
+                    );
+                    last_error = Some(e);
+                    continue;
+                }
+            }
+        }
+
+        Err(last_error.unwrap_or_else(|| anyhow::anyhow!("请求失败，但没有具体错误信息")))
+    }
 }
 
 /// 代理类型

@@ -108,14 +108,29 @@ impl Handle {
             return;
         }
 
-        // 已经完成启动，直接发送消息
-        if let Some(window) = handle.get_window() {
-            logging_error!(
-                Type::Frontend,
-                true,
-                window.emit("verge://notice-message", (status_str, msg_str))
-            );
-        }
+        // 使用AsyncHandler发送消息，防止阻塞
+        let status_clone = status_str.clone();
+        let msg_clone = msg_str.clone();
+
+        crate::process::AsyncHandler::spawn(move || async move {
+            let handle_clone = Self::global();
+            if let Some(window) = handle_clone.get_window() {
+                match tokio::time::timeout(tokio::time::Duration::from_millis(500), async {
+                    window.emit("verge://notice-message", (status_clone, msg_clone))
+                })
+                .await
+                {
+                    Ok(result) => {
+                        if let Err(e) = result {
+                            logging!(warn, Type::Frontend, true, "发送通知消息失败: {}", e);
+                        }
+                    }
+                    Err(_) => {
+                        logging!(warn, Type::Frontend, true, "发送通知消息超时");
+                    }
+                }
+            }
+        });
     }
 
     /// 标记启动已完成，并发送所有启动阶段累积的错误消息
@@ -158,7 +173,6 @@ impl Handle {
                 for error in errors_clone {
                     let _ =
                         window_clone.emit("verge://notice-message", (error.status, error.message));
-                    // 每条消息之间间隔500ms，避免消息堆积
                     tokio::time::sleep(Duration::from_millis(500)).await;
                 }
             });

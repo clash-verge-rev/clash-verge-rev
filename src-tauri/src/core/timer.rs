@@ -385,7 +385,6 @@ impl Timer {
             }
         };
 
-        // 修复类型比较，使用字符串值比较而不是引用比较
         let profile = match items
             .iter()
             .find(|item| item.uid.as_ref().map(|u| u.as_str()) == Some(uid))
@@ -424,7 +423,6 @@ impl Timer {
 
     /// Emit update events for frontend notification
     fn emit_update_event(_uid: &str, _is_start: bool) {
-        // 当feature="verge-dev"或"default"时才启用此功能
         #[cfg(any(feature = "verge-dev", feature = "default"))]
         {
             use serde_json::json;
@@ -443,39 +441,44 @@ impl Timer {
     }
 
     /// Async task with better error handling and logging
+
     async fn async_task(uid: String) {
         let task_start = std::time::Instant::now();
         logging!(info, Type::Timer, "Running timer task for profile: {}", uid);
 
-        // Emit start event
-        Self::emit_update_event(&uid, true);
+        match tokio::time::timeout(std::time::Duration::from_secs(40), async {
+            Self::emit_update_event(&uid, true);
 
-        // 检查是否是当前激活的配置文件
-        let is_current = Config::profiles().latest().current.as_ref() == Some(&uid);
-        logging!(
-            info,
-            Type::Timer,
-            "配置 {} 是否为当前激活配置: {}",
-            uid,
-            is_current
-        );
+            let is_current = Config::profiles().latest().current.as_ref() == Some(&uid);
+            logging!(
+                info,
+                Type::Timer,
+                "配置 {} 是否为当前激活配置: {}",
+                uid,
+                is_current
+            );
 
-        // Update profile - 由update_profile函数自动处理是否需要刷新UI
-        let profile_result = feat::update_profile(uid.clone(), None, Some(is_current)).await;
-
-        match profile_result {
-            Ok(_) => {
-                let duration = task_start.elapsed().as_millis();
-                logging!(
-                    info,
-                    Type::Timer,
-                    "Timer task completed successfully for uid: {} (took {}ms)",
-                    uid,
-                    duration
-                );
-            }
-            Err(e) => {
-                logging_error!(Type::Timer, "Failed to update profile uid {}: {}", uid, e);
+            feat::update_profile(uid.clone(), None, Some(is_current)).await
+        })
+        .await
+        {
+            Ok(result) => match result {
+                Ok(_) => {
+                    let duration = task_start.elapsed().as_millis();
+                    logging!(
+                        info,
+                        Type::Timer,
+                        "Timer task completed successfully for uid: {} (took {}ms)",
+                        uid,
+                        duration
+                    );
+                }
+                Err(e) => {
+                    logging_error!(Type::Timer, "Failed to update profile uid {}: {}", uid, e);
+                }
+            },
+            Err(_) => {
+                logging_error!(Type::Timer, false, "Timer task timed out for uid: {}", uid);
             }
         }
 

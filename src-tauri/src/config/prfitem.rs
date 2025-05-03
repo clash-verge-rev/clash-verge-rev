@@ -265,7 +265,7 @@ impl PrfItem {
 
         // 使用网络管理器发送请求
         let resp = NetworkManager::global()
-            .get(
+            .get_with_retry(
                 url,
                 proxy_type,
                 Some(timeout),
