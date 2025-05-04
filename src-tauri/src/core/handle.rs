@@ -125,25 +125,12 @@ impl NotificationSystem {
                                             ref status,
                                             ref message,
                                         } => {
-                                            if let Err(e) = window.emit(
+                                            Self::emit_with_timeout(
+                                                &window,
                                                 "verge://notice-message",
                                                 (status.clone(), message.clone()),
-                                            ) {
-                                                log::warn!("Failed to send notice: {}", e);
-                                                if let Some(sys) = system_guard.as_ref() {
-                                                    sys.stats
-                                                        .total_errors
-                                                        .fetch_add(1, Ordering::SeqCst);
-                                                    *sys.stats.last_error_time.write() =
-                                                        Some(Instant::now());
-                                                }
-                                            } else {
-                                                if let Some(sys) = system_guard.as_ref() {
-                                                    sys.stats
-                                                        .total_sent
-                                                        .fetch_add(1, Ordering::SeqCst);
-                                                }
-                                            }
+                                                &handle,
+                                            );
                                         }
                                     }
                                 }
