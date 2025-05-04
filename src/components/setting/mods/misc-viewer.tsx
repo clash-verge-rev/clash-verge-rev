@@ -11,8 +11,9 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { showNotice } from "@/services/noticeService";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -61,7 +62,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       });
       setOpen(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.toString());
     }
   });
 

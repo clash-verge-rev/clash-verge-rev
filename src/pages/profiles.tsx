@@ -36,7 +36,7 @@ import {
 } from "@/services/cmds";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import { closeAllConnections } from "@/services/api";
-import { BasePage, DialogRef, Notice } from "@/components/base";
+import { BasePage, DialogRef } from "@/components/base";
 import {
   ProfileViewer,
   ProfileViewerRef,
@@ -53,6 +53,7 @@ import { useLocation } from "react-router-dom";
 import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";
 import { TauriEvent } from "@tauri-apps/api/event";
+import { showNotice } from "@/services/noticeService";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -79,7 +80,7 @@ const ProfilePage = () => {
 
           for (let file of paths) {
             if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-              Notice.error(t("Only YAML Files Supported"));
+              showNotice('error', t("Only YAML Files Supported"));
               continue;
             }
             const item = {
@@ -144,14 +145,14 @@ const ProfilePage = () => {
     try {
       // 尝试正常导入
       await importProfile(url);
-      Notice.success(t("Profile Imported Successfully"));
+      showNotice('success', t("Profile Imported Successfully"));
       setUrl("");
       mutateProfiles();
       await onEnhance(false);
     } catch (err: any) {
       // 首次导入失败，尝试使用自身代理
       const errmsg = err.message || err.toString();
-      Notice.info(t("Import failed, retrying with Clash proxy..."));
+      showNotice('info', t("Import failed, retrying with Clash proxy..."));
       
       try {
         // 使用自身代理尝试导入
@@ -161,16 +162,14 @@ const ProfilePage = () => {
         });
         
         // 回退导入成功
-        Notice.success(t("Profile Imported with Clash proxy"));
+        showNotice('success', t("Profile Imported with Clash proxy"));
         setUrl("");
         mutateProfiles();
         await onEnhance(false);
       } catch (retryErr: any) {
         // 回退导入也失败
         const retryErrmsg = retryErr?.message || retryErr.toString();
-        Notice.error(
-          `${t("Import failed even with Clash proxy")}: ${retryErrmsg}`,
-        );
+        showNotice('error', `${t("Import failed even with Clash proxy")}: ${retryErrmsg}`);
       }
     } finally {
       setDisabled(false);
@@ -200,10 +199,10 @@ const ProfilePage = () => {
       closeAllConnections();
       await activateSelected();
       if (notifySuccess && success) {
-        Notice.success(t("Profile Switched"), 1000);
+        showNotice('success', t("Profile Switched"), 1000);
       }
     } catch (err: any) {
-      Notice.error(err?.message || err.toString(), 4000);
+      showNotice('error', err?.message || err.toString(), 4000);
     } finally {
       clearTimeout(reset);
       setActivatings([]);
@@ -229,10 +228,10 @@ const ProfilePage = () => {
       await enhanceProfiles();
       mutateLogs();
       if (notifySuccess) {
-        Notice.success(t("Profile Reactivated"), 1000);
+        showNotice('success', t("Profile Reactivated"), 1000);
       }
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
+      showNotice('error', err.message || err.toString(), 3000);
     } finally {
       setActivatings([]);
     }
@@ -247,7 +246,7 @@ const ProfilePage = () => {
       mutateLogs();
       current && (await onEnhance(false));
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice('error', err?.message || err.toString());
     } finally {
       setActivatings([]);
     }

@@ -5,13 +5,14 @@ import { Box, LinearProgress, Button } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
 import { useUpdateState, useSetUpdateState } from "@/services/states";
 import { Event, UnlistenFn } from "@tauri-apps/api/event";
 import { portableFlag } from "@/pages/_layout";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import ReactMarkdown from "react-markdown";
 import { useListen } from "@/hooks/use-listen";
+import { showNotice } from "@/services/noticeService";
 
 let eventListener: UnlistenFn | null = null;
 
@@ -55,12 +56,12 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onUpdate = useLockFn(async () => {
     if (portableFlag) {
-      Notice.error(t("Portable Updater Error"));
+      showNotice('error', t("Portable Updater Error"));
       return;
     }
     if (!updateInfo?.body) return;
     if (breakChangeFlag) {
-      Notice.error(t("Break Change Update Error"));
+      showNotice('error', t("Break Change Update Error"));
       return;
     }
     if (updateState) return;
@@ -82,7 +83,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       await updateInfo.downloadAndInstall();
       await relaunch();
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice('error', err?.message || err.toString());
     } finally {
       setUpdateState(false);
     }

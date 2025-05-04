@@ -11,10 +11,11 @@ import {
   TextField,
 } from "@mui/material";
 import { useClash } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { StackModeSwitch } from "./stack-mode-switch";
 import { enhanceProfiles } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
+import { showNotice } from "@/services/noticeService";
 
 const OS = getSystem();
 
@@ -76,13 +77,13 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       );
       try {
         await enhanceProfiles();
-        Notice.success(t("Settings Applied"), 1000);
+        showNotice('success', t("Settings Applied"));
       } catch (err: any) {
-        Notice.error(err.message || err.toString(), 3000);
+        showNotice('error', err.message || err.toString());
       }
       setOpen(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.message || err.toString());
     }
   });
 

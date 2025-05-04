@@ -9,7 +9,7 @@ import {
   BuildRounded,
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
-import { DialogRef, Notice, Switch } from "@/components/base";
+import { DialogRef, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { GuardState } from "./mods/guard-state";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
@@ -25,6 +25,7 @@ import { useLockFn } from "ahooks";
 import { Button, Tooltip } from "@mui/material";
 import { useSystemState } from "@/hooks/use-system-state";
 import { closeAllConnections } from "@/services/api";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -86,13 +87,13 @@ const SettingSystem = ({ onError }: Props) => {
   // 安装系统服务
   const onInstallService = useLockFn(async () => {
     try {
-      Notice.info(t("Installing Service..."), 1000);
+      showNotice('info', t("Installing Service..."), 1000);
       await installService();
-      Notice.success(t("Service Installed Successfully"), 2000);
+      showNotice('success', t("Service Installed Successfully"), 2000);
       // 重新获取运行模式
       await mutateRunningMode();
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
+      showNotice('error', err.message || err.toString(), 3000);
     }
   });
 
@@ -144,7 +145,7 @@ const SettingSystem = ({ onError }: Props) => {
           onGuard={(e) => {
             // 当在sidecar模式下且非管理员模式时禁用切换
             if (isSidecarMode && !isAdminMode) {
-              Notice.error(t("TUN requires Service Mode"), 2000);
+              showNotice('error', t("TUN requires Service Mode"), 2000);
               return Promise.reject(new Error(t("TUN requires Service Mode")));
             }
             return patchVerge({ enable_tun_mode: e });
@@ -215,7 +216,7 @@ const SettingSystem = ({ onError }: Props) => {
           }}
           onGuard={async (e) => {
             if (isAdminMode) {
-              Notice.info(t("Administrator mode may not support auto launch"), 2000);
+              showNotice('info', t("Administrator mode may not support auto launch"), 2000);
             }
             
             try {

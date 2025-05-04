@@ -1,6 +1,6 @@
 import { mutate } from "swr";
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useVerge } from "@/hooks/use-verge";
 import { useLockFn } from "ahooks";
@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { changeClashCore, restartCore } from "@/services/cmds";
 import { closeAllConnections, upgradeCore } from "@/services/api";
+import { showNotice } from "@/services/noticeService";
 
 const VALID_CORE = [
   { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
@@ -48,7 +49,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       const errorMsg = await changeClashCore(core);
       
       if (errorMsg) {
-        Notice.error(errorMsg);
+        showNotice('error', errorMsg);
         return;
       }
       
@@ -58,16 +59,16 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
         mutate("getVersion");
       }, 500);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice('error', err.message || err.toString());
     }
   });
 
   const onRestart = useLockFn(async () => {
     try {
       await restartCore();
-      Notice.success(t(`Clash Core Restarted`), 1000);
+      showNotice('success', t(`Clash Core Restarted`), 1000);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice('error', err.message || err.toString());
     }
   });
 
@@ -76,10 +77,10 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      Notice.success(t(`Core Version Updated`), 1000);
+      showNotice('success', t(`Core Version Updated`), 1000);
     } catch (err: any) {
       setUpgrading(false);
-      Notice.error(err?.response.data.message || err.toString());
+      showNotice('error', err.response?.data?.message || err.toString());
     }
   });
 

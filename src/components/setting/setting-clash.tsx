@@ -6,7 +6,7 @@ import {
   ShuffleRounded,
   LanRounded,
 } from "@mui/icons-material";
-import { DialogRef, Notice, Switch } from "@/components/base";
+import { DialogRef, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { GuardState } from "./mods/guard-state";
 import { WebUIViewer } from "./mods/web-ui-viewer";
@@ -24,6 +24,7 @@ import { DnsViewer } from "./mods/dns-viewer";
 import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 import { useListen } from "@/hooks/use-listen";
+import { showNotice } from "@/services/noticeService";
 
 const isWIN = getSystem() === "windows";
 
@@ -77,9 +78,9 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeoData();
-      Notice.success(t("GeoData Updated"));
+      showNotice('success', t("GeoData Updated"));
     } catch (err: any) {
-      Notice.error(err?.response.data.message || err.toString());
+      showNotice('error', err?.response.data.message || err.toString());
     }
   };
 
@@ -100,7 +101,7 @@ const SettingClash = ({ onError }: Props) => {
       // 如果出错，恢复原始状态
       setDnsSettingsEnabled(!enable);
       localStorage.setItem("dns_settings_enabled", String(!enable));
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.message || err.toString());
       await patchVerge({ enable_dns_settings: !enable }).catch(() => {
         // 忽略恢复状态时的错误
       });
@@ -224,10 +225,7 @@ const SettingClash = ({ onError }: Props) => {
             color={enable_random_port ? "primary" : "inherit"}
             icon={ShuffleRounded}
             onClick={() => {
-              Notice.success(
-                t("Restart Application to Apply Modifications"),
-                1000,
-              );
+              showNotice('success', t("Restart Application to Apply Modifications"), 1000);
               onChangeVerge({ enable_random_port: !enable_random_port });
               patchVerge({ enable_random_port: !enable_random_port });
             }}

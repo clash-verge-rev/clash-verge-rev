@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
 import { useClashInfo } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import getSystem from "@/utils/get-system";
+import { showNotice } from "@/services/noticeService";
 const OS = getSystem();
 
 export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
@@ -78,18 +79,18 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       OS === "linux" &&
       new Set([redirPort, tproxyPort, mixedPort, socksPort, port]).size !== 5
     ) {
-      Notice.error(t("Port Conflict"), 4000);
+      showNotice('error', t("Port Conflict"));
       return;
     }
     if (
       OS === "macos" &&
       new Set([redirPort, mixedPort, socksPort, port]).size !== 4
     ) {
-      Notice.error(t("Port Conflict"), 4000);
+      showNotice('error', t("Port Conflict"));
       return;
     }
     if (OS === "windows" && new Set([mixedPort, socksPort, port]).size !== 3) {
-      Notice.error(t("Port Conflict"), 4000);
+      showNotice('error', t("Port Conflict"));
       return;
     }
     try {
@@ -145,9 +146,9 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         });
       }
       setOpen(false);
-      Notice.success(t("Clash Port Modified"), 1000);
+      showNotice('success', t("Clash Port Modified"));
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 4000);
+      showNotice('error', err.message || err.toString());
     }
   });
 

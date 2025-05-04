@@ -14,7 +14,6 @@ import LogoSvg from "@/assets/image/logo.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import iconDark from "@/assets/image/icon_dark.svg?react";
 import { useThemeMode, useEnableLog } from "@/services/states";
-import { Notice } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutControl } from "@/components/layout/layout-control";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
@@ -31,6 +30,8 @@ import { listen } from "@tauri-apps/api/event";
 import { useClashInfo } from "@/hooks/use-clash";
 import { initGlobalLogService } from "@/services/global-log-service";
 import { invoke } from "@tauri-apps/api/core";
+import { showNotice } from "@/services/noticeService";
+import { NoticeManager } from "@/components/base/NoticeManager";
 
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
@@ -46,92 +47,95 @@ const handleNoticeMessage = (
   t: (key: string) => string,
   navigate: (path: string, options?: any) => void,
 ) => {
-  console.log("[通知监听] 收到消息:", status, msg);
+  console.log("[通知监听 V2] 收到消息:", status, msg);
 
   switch (status) {
     case "import_sub_url::ok":
       navigate("/profile", { state: { current: msg } });
-      Notice.success(t("Import Subscription Successful"));
+      showNotice('success', t("Import Subscription Successful"));
       break;
     case "import_sub_url::error":
       navigate("/profile");
-      Notice.error(msg);
+      showNotice('error', msg);
       break;
     case "set_config::error":
-      Notice.error(msg);
+      showNotice('error', msg);
       break;
     case "update_with_clash_proxy":
-      Notice.success(`${t("Update with Clash proxy successfully")} ${msg}`);
+      showNotice('success', `${t("Update with Clash proxy successfully")} ${msg}`);
       break;
     case "update_retry_with_clash":
-      Notice.info(t("Update failed, retrying with Clash proxy..."));
+      showNotice('info', t("Update failed, retrying with Clash proxy..."));
       break;
     case "update_failed_even_with_clash":
-      Notice.error(`${t("Update failed even with Clash proxy")}: ${msg}`);
+      showNotice('error', `${t("Update failed even with Clash proxy")}: ${msg}`);
       break;
     case "update_failed":
-      Notice.error(msg);
+      showNotice('error', msg);
       break;
     case "config_validate::boot_error":
-      Notice.error(`${t("Boot Config Validation Failed")} ${msg}`);
+      showNotice('error', `${t("Boot Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::core_change":
-      Notice.error(`${t("Core Change Config Validation Failed")} ${msg}`);
+      showNotice('error', `${t("Core Change Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::error":
-      Notice.error(`${t("Config Validation Failed")} ${msg}`);
+      showNotice('error', `${t("Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::process_terminated":
-      Notice.error(t("Config Validation Process Terminated"));
+      showNotice('error', t("Config Validation Process Terminated"));
       break;
     case "config_validate::stdout_error":
-      Notice.error(`${t("Config Validation Failed")} ${msg}`);
+      showNotice('error', `${t("Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::script_error":
-      Notice.error(`${t("Script File Error")} ${msg}`);
+      showNotice('error', `${t("Script File Error")} ${msg}`);
       break;
     case "config_validate::script_syntax_error":
-      Notice.error(`${t("Script Syntax Error")} ${msg}`);
+      showNotice('error', `${t("Script Syntax Error")} ${msg}`);
       break;
     case "config_validate::script_missing_main":
-      Notice.error(`${t("Script Missing Main")} ${msg}`);
+      showNotice('error', `${t("Script Missing Main")} ${msg}`);
       break;
     case "config_validate::file_not_found":
-      Notice.error(`${t("File Not Found")} ${msg}`);
+      showNotice('error', `${t("File Not Found")} ${msg}`);
       break;
     case "config_validate::yaml_syntax_error":
-      Notice.error(`${t("YAML Syntax Error")} ${msg}`);
+      showNotice('error', `${t("YAML Syntax Error")} ${msg}`);
       break;
     case "config_validate::yaml_read_error":
-      Notice.error(`${t("YAML Read Error")} ${msg}`);
+      showNotice('error', `${t("YAML Read Error")} ${msg}`);
       break;
     case "config_validate::yaml_mapping_error":
-      Notice.error(`${t("YAML Mapping Error")} ${msg}`);
+      showNotice('error', `${t("YAML Mapping Error")} ${msg}`);
       break;
     case "config_validate::yaml_key_error":
-      Notice.error(`${t("YAML Key Error")} ${msg}`);
+      showNotice('error', `${t("YAML Key Error")} ${msg}`);
       break;
     case "config_validate::yaml_error":
-      Notice.error(`${t("YAML Error")} ${msg}`);
+      showNotice('error', `${t("YAML Error")} ${msg}`);
       break;
     case "config_validate::merge_syntax_error":
-      Notice.error(`${t("Merge File Syntax Error")} ${msg}`);
+      showNotice('error', `${t("Merge File Syntax Error")} ${msg}`);
       break;
     case "config_validate::merge_mapping_error":
-      Notice.error(`${t("Merge File Mapping Error")} ${msg}`);
+      showNotice('error', `${t("Merge File Mapping Error")} ${msg}`);
       break;
     case "config_validate::merge_key_error":
-      Notice.error(`${t("Merge File Key Error")} ${msg}`);
+      showNotice('error', `${t("Merge File Key Error")} ${msg}`);
       break;
     case "config_validate::merge_error":
-      Notice.error(`${t("Merge File Error")} ${msg}`);
+      showNotice('error', `${t("Merge File Error")} ${msg}`);
       break;
     case "config_core::change_success":
-      Notice.success(`${t("Core Changed Successfully")}: ${msg}`);
+      showNotice('success', `${t("Core Changed Successfully")}: ${msg}`);
       break;
     case "config_core::change_error":
-      Notice.error(`${t("Failed to Change Core")}: ${msg}`);
+      showNotice('error', `${t("Failed to Change Core")}: ${msg}`);
       break;
+    default: // Optional: Log unhandled statuses
+        console.warn(`[通知监听 V2] 未处理的状态: ${status}`);
+        break;
   }
 };
 
@@ -276,6 +280,8 @@ const Layout = () => {
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
       <ThemeProvider theme={theme}>
+        <NoticeManager />
+
         <Paper
           square
           elevation={0}

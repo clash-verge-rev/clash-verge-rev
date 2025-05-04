@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import { useState, useMemo, memo, FC } from "react";
 import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
-import { Notice } from "@/components/base";
 import {
   ComputerRounded,
   TroubleshootRounded,
@@ -20,6 +19,7 @@ import {
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { useSystemState } from "@/hooks/use-system-state";
+import { showNotice } from "@/services/noticeService";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
 
@@ -151,7 +151,7 @@ export const ProxyTunCard: FC = () => {
 
   // 处理错误
   const handleError = (err: Error) => {
-    Notice.error(err.message || err.toString(), 3000);
+    showNotice('error', err.message || err.toString(), 3000);
   };
 
   // 处理标签切换并保存到localStorage

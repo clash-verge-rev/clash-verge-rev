@@ -15,7 +15,7 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
-import { DialogRef, Notice, Switch } from "@/components/base";
+import { DialogRef, Switch } from "@/components/base";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
@@ -28,6 +28,7 @@ import {
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { closeAllConnections } from "@/services/api";
+import { showNotice } from "@/services/noticeService";
 
 interface ProxySwitchProps {
   label?: string;
@@ -78,13 +79,13 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   // 安装系统服务
   const onInstallService = useLockFn(async () => {
     try {
-      Notice.info(t("Installing Service..."), 1000);
+      showNotice('info', t("Installing Service..."), 1000);
       await installService();
-      Notice.success(t("Service Installed Successfully"), 2000);
+      showNotice('success', t("Service Installed Successfully"), 2000);
       // 重新获取运行模式
       await mutateRunningMode();
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
+      showNotice('error', err.message || err.toString(), 3000);
     }
   });
 
@@ -258,13 +259,18 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               onFormat={onSwitchFormat}
               onChange={(e) => {
                 // 当在sidecar模式下禁用切换
-                if (isSidecarMode) return;
+                if (isSidecarMode) {
+                  showNotice('error', t("TUN requires Service Mode"), 2000);
+                  return Promise.reject(
+                    new Error(t("TUN requires Service Mode")),
+                  );
+                }
                 onChangeData({ enable_tun_mode: e });
               }}
               onGuard={(e) => {
                 // 当在sidecar模式下禁用切换
                 if (isSidecarMode) {
-                  Notice.error(t("TUN requires Service Mode"), 2000);
+                  showNotice('error', t("TUN requires Service Mode"), 2000);
                   return Promise.reject(
                     new Error(t("TUN requires Service Mode")),
                   );

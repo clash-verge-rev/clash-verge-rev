@@ -1,4 +1,4 @@
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
@@ -36,6 +36,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
+import { showNotice } from "@/services/noticeService";
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
 }`;
@@ -201,11 +202,11 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
-      Notice.error(t("Proxy Daemon Duration Cannot be Less than 1 Second"));
+      showNotice('error', t("Proxy Daemon Duration Cannot be Less than 1 Second"));
       return;
     }
     if (value.bypass && !validReg.test(value.bypass)) {
-      Notice.error(t("Invalid Bypass Format"));
+      showNotice('error', t("Invalid Bypass Format"));
       return;
     }
 
@@ -222,7 +223,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       !ipv6Regex.test(value.proxy_host) &&
       !hostnameRegex.test(value.proxy_host)
     ) {
-      Notice.error(t("Invalid Proxy Host Format"));
+      showNotice('error', t("Invalid Proxy Host Format"));
       return;
     }
 
@@ -301,10 +302,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           await Promise.all([mutate("getSystemProxy"), mutate("getAutotemProxy")]);
         }
       }
-      
+
       setOpen(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.toString());
     } finally {
       setSaving(false);
     }

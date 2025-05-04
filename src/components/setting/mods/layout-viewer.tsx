@@ -11,7 +11,7 @@ import {
   Box,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { GuardState } from "./guard-state";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -19,6 +19,7 @@ import { copyIconFile, getAppDir } from "@/services/cmds";
 import { join } from "@tauri-apps/api/path";
 import { exists } from "@tauri-apps/plugin-fs";
 import getSystem from "@/utils/get-system";
+import { showNotice } from "@/services/noticeService";
 
 const OS = getSystem();
 
@@ -87,7 +88,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onError = (err: any) => {
-    Notice.error(err.message || err.toString());
+    showNotice('error', err.message || err.toString());
   };
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);

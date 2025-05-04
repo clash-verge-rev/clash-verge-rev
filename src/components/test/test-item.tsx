@@ -6,13 +6,14 @@ import { CSS } from "@dnd-kit/utilities";
 import { Box, Divider, MenuItem, Menu, styled, alpha } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import { LanguageRounded } from "@mui/icons-material";
-import { Notice } from "@/components/base";
+import { showNotice } from "@/services/noticeService";
 import { TestBox } from "./test-box";
 import delayManager from "@/services/delay";
 import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useListen } from "@/hooks/use-listen";
+
 interface Props {
   id: string;
   itemData: IVergeTestItem;
@@ -73,7 +74,7 @@ export const TestItem = (props: Props) => {
     try {
       onDeleteItem(uid);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice('error', err.message || err.toString());
     }
   });
 

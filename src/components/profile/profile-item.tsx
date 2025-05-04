@@ -24,7 +24,7 @@ import {
   saveProfileFile,
   getNextUpdateTime,
 } from "@/services/cmds";
-import { Notice } from "@/components/base";
+import { showNotice } from "@/services/noticeService";
 import { GroupsEditorViewer } from "@/components/profile/groups-editor-viewer";
 import { RulesEditorViewer } from "@/components/profile/rules-editor-viewer";
 import { EditorViewer } from "@/components/profile/editor-viewer";
@@ -271,7 +271,7 @@ export const ProfileItem = (props: Props) => {
     try {
       await viewProfile(itemData.uid);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice('error', err?.message || err.toString());
     }
   });
 
@@ -302,7 +302,7 @@ export const ProfileItem = (props: Props) => {
       await updateProfile(itemData.uid, option);
       
       // 更新成功，刷新列表
-      Notice.success(t("Update subscription successfully"));
+      showNotice('success', t("Update subscription successfully"));
       mutate("getProfiles");
     } catch (err: any) {
       // 更新完全失败（包括后端的回退尝试）

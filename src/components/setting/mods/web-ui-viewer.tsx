@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Button, Box, Typography } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { openWebUrl } from "@/services/cmds";
-import { BaseDialog, BaseEmpty, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, BaseEmpty, DialogRef } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
 import { WebUIItem } from "./web-ui-item";
+import { showNotice } from "@/services/noticeService";
 
 export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -71,7 +72,7 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
 
       await openWebUrl(url);
     } catch (e: any) {
-      Notice.error(e.message || e.toString());
+      showNotice('error', e.message || e.toString());
     }
   });
 

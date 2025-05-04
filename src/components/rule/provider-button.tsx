@@ -19,10 +19,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { ruleProviderUpdate } from "@/services/api";
-import { Notice } from "@/components/base";
 import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
 import { useAppData } from "@/providers/app-data-provider";
 import dayjs from "dayjs";
+import { showNotice } from "@/services/noticeService";
 
 // 定义规则提供者类型
 interface RuleProviderItem {
@@ -67,9 +67,9 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
       
-      Notice.success(`${name} 更新成功`);
+      showNotice('success', `${name} 更新成功`);
     } catch (err: any) {
-      Notice.error(`${name} 更新失败: ${err?.message || err.toString()}`);
+      showNotice('error', `${name} 更新失败: ${err?.message || err.toString()}`);
     } finally {
       // 清除更新状态
       setUpdating(prev => ({ ...prev, [name]: false }));
@@ -82,7 +82,7 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(ruleProviders || {});
       if (allProviders.length === 0) {
-        Notice.info("没有可更新的规则提供者");
+        showNotice('info', "没有可更新的规则提供者");
         return;
       }
       
@@ -109,9 +109,9 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
       
-      Notice.success("全部规则提供者更新成功");
+      showNotice('success', "全部规则提供者更新成功");
     } catch (err: any) {
-      Notice.error(`更新失败: ${err?.message || err.toString()}`);
+      showNotice('error', `更新失败: ${err?.message || err.toString()}`);
     } finally {
       // 清除所有更新状态
       setUpdating({});

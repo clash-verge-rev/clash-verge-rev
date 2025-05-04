@@ -11,13 +11,13 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { EnhancedCard } from "./enhanced-card";
 import useSWR from "swr";
-import { getSystemInfo, installService } from "@/services/cmds";
+import { getSystemInfo, installService, restartApp } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import { version as appVersion } from "@root/package.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
-import { Notice } from "@/components/base";
+import { showNotice } from "@/services/noticeService";
 import { useSystemState } from "@/hooks/use-system-state";
 
 export const SystemInfoCard = () => {
@@ -117,14 +117,14 @@ export const SystemInfoCard = () => {
   // 安装系统服务
   const onInstallService = useLockFn(async () => {
     try {
-      Notice.info(t("Installing Service..."), 1000);
+      showNotice('info', t("Installing Service..."), 1000);
       await installService();
-      Notice.success(t("Service Installed Successfully"), 2000);
+      showNotice('success', t("Service Installed Successfully"), 2000);
 
-        await mutateRunningMode();
+      await mutateRunningMode();
 
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
+      showNotice('error', err.message || err.toString(), 3000);
     }
   });
 
@@ -140,13 +140,13 @@ export const SystemInfoCard = () => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        Notice.success(t("Currently on the Latest Version"));
+        showNotice('success', t("Currently on the Latest Version"));
       } else {
-        Notice.info(t("Update Available"), 2000);
+        showNotice('info', t("Update Available"), 2000);
         goToSettings();
       }
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.message || err.toString());
     }
   });
 

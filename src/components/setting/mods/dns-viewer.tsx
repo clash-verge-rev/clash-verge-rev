@@ -17,12 +17,13 @@ import {
 } from "@mui/material";
 import { RestartAltRounded } from "@mui/icons-material";
 import { useClash } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
 import yaml from "js-yaml";
 import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import { invoke } from "@tauri-apps/api/core";
+import { showNotice } from "@/services/noticeService";
 
 const Item = styled(ListItem)(({ theme }) => ({
   padding: "8px 0",
@@ -374,7 +375,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
           formatNameserverPolicy(dnsConfig["nameserver-policy"]) || "",
       });
     } catch (err: any) {
-      Notice.error(t("Invalid YAML format"));
+      showNotice('error', t("Invalid YAML format"));
     }
   };
 
@@ -526,9 +527,9 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
       }
 
       setOpen(false);
-      Notice.success(t("DNS settings saved"));
+      showNotice('success', t("DNS settings saved"));
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.message || err.toString());
     }
   });
 
