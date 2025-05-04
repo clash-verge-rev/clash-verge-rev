@@ -1,7 +1,6 @@
 import { useEffect, useRef, useMemo, useCallback } from "react";
 import { useVerge } from "@/hooks/use-verge";
-import { Box, IconButton, Tooltip, alpha, styled } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import { Box, IconButton, Tooltip, alpha, styled, Grid } from "@mui/material";
 import {
   DndContext,
   closestCenter,

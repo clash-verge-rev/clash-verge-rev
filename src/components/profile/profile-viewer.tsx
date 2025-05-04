@@ -282,10 +282,12 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                   type="number"
                   placeholder="60"
                   label={t("HTTP Request Timeout")}
-                  InputProps={{
+                  slotProps={{
+                    input: {
                     endAdornment: (
                       <InputAdornment position="end">{t("seconds")}</InputAdornment>
                     ),
+                    }
                   }}
                 />
               )}
@@ -303,10 +305,12 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                 {...field}
                 type="number"
                 label={t("Update Interval")}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">{t("mins")}</InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">{t("mins")}</InputAdornment>
+                    ),
+                  }
                 }}
               />
             )}

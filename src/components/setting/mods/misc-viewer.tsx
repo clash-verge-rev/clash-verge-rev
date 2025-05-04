@@ -240,10 +240,12 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 defaultLatencyTimeout: parseInt(e.target.value),
               }))
             }
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">{t("millis")}</InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">{t("millis")}</InputAdornment>
+                ),
+              }
             }}
           />
         </ListItem>

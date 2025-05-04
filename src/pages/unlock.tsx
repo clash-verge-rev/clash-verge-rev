@@ -10,8 +10,8 @@ import {
   CircularProgress,
   alpha,
   useTheme,
+  Grid,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { BasePage, BaseEmpty } from "@/components/base";

@@ -484,12 +484,14 @@ export const GroupsEditorViewer = (props: Props) => {
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
-                        InputProps={{
+                        slotProps={{
+                          input: {
                           endAdornment: (
                             <InputAdornment position="end">
                               {t("seconds")}
                             </InputAdornment>
                           ),
+                          }
                         }}
                       />
                     </Item>
@@ -510,12 +512,14 @@ export const GroupsEditorViewer = (props: Props) => {
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              {t("millis")}
-                            </InputAdornment>
-                          ),
+                        slotProps={{
+                          input: {
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                {t("millis")}
+                              </InputAdornment>
+                            ),
+                          }
                         }}
                       />
                     </Item>

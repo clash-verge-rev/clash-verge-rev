@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, Stack, Divider, Grid2 } from "@mui/material";
+import { Box, Button, IconButton, Stack, Divider, Grid } from "@mui/material";
 import {
   DndContext,
   closestCenter,
@@ -365,27 +365,29 @@ const ProfilePage = () => {
           variant="outlined"
           onChange={(e) => setUrl(e.target.value)}
           placeholder={t("Profile URL")}
-          InputProps={{
-            sx: { pr: 1 },
-            endAdornment: !url ? (
-              <IconButton
-                size="small"
-                sx={{ p: 0.5 }}
-                title={t("Paste")}
-                onClick={onCopyLink}
-              >
-                <ContentPasteRounded fontSize="inherit" />
-              </IconButton>
-            ) : (
-              <IconButton
-                size="small"
-                sx={{ p: 0.5 }}
-                title={t("Clear")}
-                onClick={() => setUrl("")}
-              >
-                <ClearRounded fontSize="inherit" />
-              </IconButton>
-            ),
+          slotProps={{
+            input: {
+              sx: { pr: 1 },
+              endAdornment: !url ? (
+                <IconButton
+                  size="small"
+                  sx={{ p: 0.5 }}
+                  title={t("Paste")}
+                  onClick={onCopyLink}
+                >
+                  <ContentPasteRounded fontSize="inherit" />
+                </IconButton>
+              ) : (
+                <IconButton
+                  size="small"
+                  sx={{ p: 0.5 }}
+                  title={t("Clear")}
+                  onClick={() => setUrl("")}
+                >
+                  <ClearRounded fontSize="inherit" />
+                </IconButton>
+              ),
+            }
           }}
         />
         <LoadingButton
@@ -422,14 +424,14 @@ const ProfilePage = () => {
           }}
         >
           <Box sx={{ mb: 1.5 }}>
-            <Grid2 container spacing={{ xs: 1, lg: 1 }}>
+            <Grid container spacing={{ xs: 1, lg: 1 }}>
               <SortableContext
                 items={profileItems.map((x) => {
                   return x.uid;
                 })}
               >
                 {profileItems.map((item) => (
-                  <Grid2 size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
                     <ProfileItem
                       id={item.uid}
                       selected={profiles.current === item.uid}
@@ -446,10 +448,10 @@ const ProfilePage = () => {
                       }}
                       onDelete={() => onDelete(item.uid)}
                     />
-                  </Grid2>
+                  </Grid>
                 ))}
               </SortableContext>
-            </Grid2>
+            </Grid>
           </Box>
           <Divider
             variant="middle"
@@ -457,8 +459,8 @@ const ProfilePage = () => {
             sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
           ></Divider>
           <Box sx={{ mt: 1.5, mb: "10px" }}>
-            <Grid2 container spacing={{ xs: 1, lg: 1 }}>
-              <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
+            <Grid container spacing={{ xs: 1, lg: 1 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
                 <ProfileMore
                   id="Merge"
                   onSave={async (prev, curr) => {
@@ -467,8 +469,8 @@ const ProfilePage = () => {
                     }
                   }}
                 />
-              </Grid2>
-              <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
                 <ProfileMore
                   id="Script"
                   logInfo={chainLogs["Script"]}
@@ -478,8 +480,8 @@ const ProfilePage = () => {
                     }
                   }}
                 />
-              </Grid2>
-            </Grid2>
+              </Grid>
+            </Grid>
           </Box>
         </Box>
       </DndContext>

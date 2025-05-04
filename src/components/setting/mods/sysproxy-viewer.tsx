@@ -412,8 +412,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             size="small"
             value={value.duration}
             sx={{ width: 100 }}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">s</InputAdornment>,
+            slotProps={{
+              input: {
+                endAdornment: <InputAdornment position="end">s</InputAdornment>,
+              }
             }}
             onChange={(e) => {
               setValue((v) => ({

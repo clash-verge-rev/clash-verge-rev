@@ -6,8 +6,8 @@ import {
   alpha,
   useTheme,
   PaletteColor,
+  Grid,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
 import {
   ArrowUpwardRounded,
   ArrowDownwardRounded,
