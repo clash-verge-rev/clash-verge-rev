@@ -7,8 +7,9 @@ import fa from "@/locales/fa.json";
 import tt from "@/locales/tt.json";
 import id from "@/locales/id.json";
 import ar from "@/locales/ar.json";
+import ko from "@/locales/ko.json";
 
-export const languages = { en, ru, zh, fa, tt, id, ar };
+export const languages = { en, ru, zh, fa, tt, id, ar, ko };
 
 const resources = Object.fromEntries(
   Object.entries(languages).map(([key, value]) => [

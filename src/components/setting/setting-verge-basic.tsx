@@ -37,6 +37,7 @@ const languageOptions = Object.entries(languages).map(([code, _]) => {
     tt: "Татар",
     id: "Bahasa Indonesia",
     ar: "العربية",
+    ko: "한국어",
   };
   return { code, label: labels[code] };
 });
