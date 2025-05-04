@@ -295,6 +295,24 @@ const ProfilePage = () => {
     ? "rgba(0, 0, 0, 0.06)"
     : "rgba(255, 255, 255, 0.06)";
 
+  // 监听后端配置变更
+  useEffect(() => {
+    let unlistenPromise: Promise<() => void> | undefined;
+
+    const setupListener = async () => {
+      unlistenPromise = listen<string>('profile-changed', (event) => {
+        console.log('Profile changed event received:', event.payload);
+        mutateProfiles();
+      });
+    };
+
+    setupListener();
+
+    return () => {
+      unlistenPromise?.then(unlisten => unlisten());
+    };
+  }, [mutateProfiles, t]);
+
   return (
     <BasePage
       full

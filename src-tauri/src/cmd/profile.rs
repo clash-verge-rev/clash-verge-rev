@@ -146,6 +146,9 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     // 更新profiles配置
     logging!(info, Type::Cmd, true, "正在更新配置草稿");
+
+    let current_value = profiles.current.clone();
+
     let _ = Config::profiles().draft().patch_config(profiles);
 
     // 更新配置并进行验证
@@ -156,6 +159,14 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             let _ = Tray::global().update_tooltip();
             Config::profiles().apply();
             wrap_err!(Config::profiles().data().save_file())?;
+
+            if let Some(window) = handle::Handle::global().get_window() {
+                if let Some(current) = &current_value {
+                    logging!(info, Type::Cmd, true, "向前端发送配置变更事件: {}", current);
+                    let _ = window.emit("profile-changed", current.clone());
+                }
+            }
+
             Ok(true)
         }
         Ok((false, error_msg)) => {
