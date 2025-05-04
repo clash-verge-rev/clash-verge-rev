@@ -15,6 +15,8 @@ const H2_KEEP_ALIVE_INTERVAL: Duration = Duration::from_secs(5);
 const H2_KEEP_ALIVE_TIMEOUT: Duration = Duration::from_secs(5);
 const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+const POOL_MAX_IDLE_PER_HOST: usize = 5;
+const POOL_IDLE_TIMEOUT: Duration = Duration::from_secs(15);
 
 /// 网络管理器
 pub struct NetworkManager {
@@ -67,8 +69,8 @@ impl NetworkManager {
                 let no_proxy_client = ClientBuilder::new()
                     .use_rustls_tls()
                     .no_proxy()
-                    .pool_max_idle_per_host(5)
-                    .pool_idle_timeout(Duration::from_secs(30))
+                    .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
+                    .pool_idle_timeout(POOL_IDLE_TIMEOUT)
                     .connect_timeout(Duration::from_secs(10))
                     .timeout(Duration::from_secs(30))
                     .build()
@@ -107,7 +109,7 @@ impl NetworkManager {
         false
     }
 
-    fn reset_clients(&self) {
+    pub fn reset_clients(&self) {
         logging!(info, Type::Network, true, "正在重置所有HTTP客户端");
         {
             let mut client = self.self_proxy_client.lock().unwrap();
@@ -145,8 +147,8 @@ impl NetworkManager {
 
             let mut builder = ClientBuilder::new()
                 .use_rustls_tls()
-                .pool_max_idle_per_host(5)
-                .pool_idle_timeout(Duration::from_secs(30))
+                .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
+                .pool_idle_timeout(POOL_IDLE_TIMEOUT)
                 .connect_timeout(DEFAULT_CONNECT_TIMEOUT)
                 .timeout(DEFAULT_REQUEST_TIMEOUT)
                 .http2_initial_stream_window_size(H2_STREAM_WINDOW_SIZE)
@@ -189,8 +191,8 @@ impl NetworkManager {
 
             let mut builder = ClientBuilder::new()
                 .use_rustls_tls()
-                .pool_max_idle_per_host(5)
-                .pool_idle_timeout(Duration::from_secs(30))
+                .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
+                .pool_idle_timeout(POOL_IDLE_TIMEOUT)
                 .connect_timeout(DEFAULT_CONNECT_TIMEOUT)
                 .timeout(DEFAULT_REQUEST_TIMEOUT)
                 .http2_initial_stream_window_size(H2_STREAM_WINDOW_SIZE)
@@ -253,6 +255,8 @@ impl NetworkManager {
 
         let mut builder = ClientBuilder::new()
             .use_rustls_tls()
+            .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
+            .pool_idle_timeout(POOL_IDLE_TIMEOUT)
             .connect_timeout(DEFAULT_CONNECT_TIMEOUT)
             .http2_initial_stream_window_size(H2_STREAM_WINDOW_SIZE)
             .http2_initial_connection_window_size(H2_CONNECTION_WINDOW_SIZE)
@@ -396,15 +400,13 @@ impl NetworkManager {
         });
 
         let result = tokio::select! {
-            result = request.send() => {
-                watchdog.abort();
-                result
-            },
+            result = request.send() => result,
             _ = cancel_rx => {
                 self.record_connection_error(&format!("Request interrupted for: {}", url));
                 return Err(anyhow::anyhow!("Request interrupted after {} seconds", timeout_duration));
             }
         };
+        watchdog.abort();
 
         match result {
             Ok(response) => Ok(response),
