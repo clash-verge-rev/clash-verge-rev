@@ -29,12 +29,12 @@ impl MihomoManager {
     }
 
     fn update_proxies(&self, proxies: serde_json::Value) {
-        let mut data = self.data.lock().unwrap();
+        let mut data = self.data.lock().expect("Mutex poisoned");
         data.proxies = proxies;
     }
 
     fn update_providers_proxies(&self, providers_proxies: serde_json::Value) {
-        let mut data = self.data.lock().unwrap();
+        let mut data = self.data.lock().expect("Mutex poisoned");
         data.providers_proxies = providers_proxies;
     }
 
@@ -43,12 +43,12 @@ impl MihomoManager {
     }
 
     pub fn get_proxies(&self) -> serde_json::Value {
-        let data = self.data.lock().unwrap();
+        let data = self.data.lock().expect("Mutex poisoned");
         data.proxies.clone()
     }
 
     pub fn get_providers_proxies(&self) -> serde_json::Value {
-        let data = self.data.lock().unwrap();
+        let data = self.data.lock().expect("Mutex poisoned");
         data.providers_proxies.clone()
     }
 

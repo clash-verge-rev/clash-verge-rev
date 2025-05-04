@@ -3,11 +3,16 @@ use crate::wrap_err;
 use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
 use sysproxy::{Autoproxy, Sysproxy};
+use tokio::task::spawn_blocking;
 
 /// get the system proxy
 #[tauri::command]
-pub fn get_sys_proxy() -> CmdResult<Mapping> {
-    let current = wrap_err!(Sysproxy::get_system_proxy())?;
+pub async fn get_sys_proxy() -> CmdResult<Mapping> {
+    let current = spawn_blocking(move || Sysproxy::get_system_proxy())
+        .await
+        .map_err(|e| format!("Failed to spawn blocking task for sysproxy: {}", e))?
+        .map_err(|e| format!("Failed to get system proxy: {}", e))?;
+
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
     map.insert(
@@ -21,8 +26,11 @@ pub fn get_sys_proxy() -> CmdResult<Mapping> {
 
 /// get the system proxy
 #[tauri::command]
-pub fn get_auto_proxy() -> CmdResult<Mapping> {
-    let current = wrap_err!(Autoproxy::get_auto_proxy())?;
+pub async fn get_auto_proxy() -> CmdResult<Mapping> {
+    let current = spawn_blocking(move || Autoproxy::get_auto_proxy())
+        .await
+        .map_err(|e| format!("Failed to spawn blocking task for autoproxy: {}", e))?
+        .map_err(|e| format!("Failed to get auto proxy: {}", e))?;
 
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
