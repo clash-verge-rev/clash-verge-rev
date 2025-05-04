@@ -107,9 +107,8 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
 
     let start = Instant::now();
 
-    // 使用网络管理器发送请求，设置10秒超时
     let response = NetworkManager::global()
-        .get(&url, proxy_type, Some(10), user_agent, false)
+        .get_with_interrupt(&url, proxy_type, Some(10), user_agent, false)
         .await;
 
     match response {

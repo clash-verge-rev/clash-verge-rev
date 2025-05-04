@@ -9,13 +9,22 @@ pub use model::{MihomoData, MihomoManager};
 
 impl MihomoManager {
     pub fn new(mihomo_server: String, headers: HeaderMap) -> Self {
+        let client = reqwest::ClientBuilder::new()
+            .default_headers(headers)
+            .no_proxy()
+            .timeout(Duration::from_secs(15))
+            .pool_max_idle_per_host(5)
+            .pool_idle_timeout(Duration::from_secs(15))
+            .build()
+            .expect("Failed to build reqwest client");
+
         Self {
             mihomo_server,
             data: Arc::new(Mutex::new(MihomoData {
                 proxies: serde_json::Value::Null,
                 providers_proxies: serde_json::Value::Null,
             })),
-            headers,
+            client,
         }
     }
 
@@ -49,12 +58,7 @@ impl MihomoManager {
         url: String,
         data: Option<serde_json::Value>,
     ) -> Result<serde_json::Value, String> {
-        let client_response = reqwest::ClientBuilder::new()
-            .default_headers(self.headers.clone())
-            .no_proxy()
-            .timeout(Duration::from_secs(60))
-            .build()
-            .map_err(|e| e.to_string())?
+        let client_response = self.client
             .request(method.clone(), &url)
             .json(&data.unwrap_or(json!({})))
             .send()

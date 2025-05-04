@@ -1,5 +1,4 @@
 use std::sync::{Arc, Mutex}; 
-use reqwest::header::HeaderMap;
 
 pub struct MihomoData {
     pub(crate) proxies: serde_json::Value,
@@ -10,7 +9,7 @@ pub struct MihomoData {
 pub struct MihomoManager {
     pub(crate) mihomo_server: String,
     pub(crate) data: Arc<Mutex<MihomoData>>,
-    pub(crate) headers: HeaderMap,
+    pub(crate) client: reqwest::Client,
 }
 
 #[cfg(feature = "debug")]
