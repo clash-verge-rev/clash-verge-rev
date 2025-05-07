@@ -1058,6 +1058,8 @@ dependencies = [
  "futures",
  "gethostname 1.0.2",
  "getrandom 0.3.2",
+ "hex",
+ "hmac",
  "image",
  "imageproc",
  "lazy_static",
@@ -1079,6 +1081,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "sha2 0.10.9",
  "sys-locale",
  "sysinfo",
  "sysproxy",
@@ -1712,7 +1715,7 @@ dependencies = [
  "hex",
  "md-5",
  "rand 0.8.5",
- "sha2 0.10.8",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -4874,7 +4877,7 @@ checksum = "7f9f832470494906d1fca5329f8ab5791cc60beb230c74815dff541cbd2b5ca0"
 dependencies = [
  "once_cell",
  "pest",
- "sha2 0.10.8",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -6370,9 +6373,9 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.10.8"
+version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "793db75ad2bcafc3ffa7c68b215fee268f537982cd901d132f89c6343f3a3dc8"
+checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -6931,7 +6934,7 @@ dependencies = [
  "semver 1.0.26",
  "serde",
  "serde_json",
- "sha2 0.10.8",
+ "sha2 0.10.9",
  "syn 2.0.100",
  "tauri-utils",
  "thiserror 2.0.12",
@@ -9231,7 +9234,7 @@ dependencies = [
  "once_cell",
  "percent-encoding",
  "raw-window-handle",
- "sha2 0.10.8",
+ "sha2 0.10.9",
  "soup3",
  "tao-macros",
  "thiserror 2.0.12",

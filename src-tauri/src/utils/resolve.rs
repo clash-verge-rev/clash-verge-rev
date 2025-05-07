@@ -105,6 +105,20 @@ pub async fn resolve_setup(app: &mut App) {
     logging_error!(Type::Setup, true, init::init_resources());
     logging_error!(Type::Setup, true, init::init_scheme());
     logging_error!(Type::Setup, true, init::startup_script().await);
+
+    // 诊断服务状态
+    /*     logging!(info, Type::Service, true, "执行服务状态诊断");
+    {
+        match crate::core::service::diagnose_service().await {
+            Ok(_) => {
+                logging!(info, Type::Service, true, "服务诊断完成");
+            },
+            Err(e) => {
+                logging!(error, Type::Service, true, "服务诊断出错: {}", e);
+            },
+        }
+    } */
+
     // 处理随机端口
     logging_error!(Type::System, true, resolve_random_port_config());
     // 启动核心

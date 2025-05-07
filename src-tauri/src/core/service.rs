@@ -1,22 +1,19 @@
 use crate::{
     config::Config,
+    core::service_ipc::{send_ipc_request, IpcCommand},
     logging,
     utils::{dirs, logging::Type},
 };
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
     env::current_exe,
     path::PathBuf,
     process::Command as StdCommand,
     time::{SystemTime, UNIX_EPOCH},
 };
 
-// Windows only
-
-const SERVICE_URL: &str = "http://127.0.0.1:33211";
-const REQUIRED_SERVICE_VERSION: &str = "1.0.6"; // 定义所需的服务版本号
+const REQUIRED_SERVICE_VERSION: &str = "1.0.7"; // 定义所需的服务版本号
 
 // 限制重装时间和次数的常量
 const REINSTALL_COOLDOWN_SECS: u64 = 300; // 5分钟冷却期
@@ -91,6 +88,7 @@ impl ServiceState {
     }
 }
 
+// 保留核心数据结构，但将HTTP特定的结构体合并为通用结构体
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ResponseBody {
     pub core_type: Option<String>,
@@ -105,18 +103,12 @@ pub struct VersionResponse {
     pub version: String,
 }
 
+// 保留通用的响应结构体，用于IPC通信后的数据解析
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct JsonResponse {
     pub code: u64,
     pub msg: String,
     pub data: Option<ResponseBody>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct VersionJsonResponse {
-    pub code: u64,
-    pub msg: String,
-    pub data: Option<VersionResponse>,
 }
 
 #[cfg(target_os = "windows")]
@@ -480,97 +472,272 @@ pub async fn reinstall_service() -> Result<()> {
     }
 }
 
-/// check the windows service status
+/// 检查服务状态 - 使用IPC通信
 pub async fn check_service() -> Result<JsonResponse> {
-    use crate::utils::network::{NetworkManager, ProxyType};
+    logging!(info, Type::Service, true, "开始检查服务状态 (IPC)");
 
-    let url = format!("{SERVICE_URL}/get_clash");
+    // 使用IPC通信
+    let payload = serde_json::json!({});
+    logging!(debug, Type::Service, true, "发送GetClash请求");
 
-    // 使用无代理模式和3秒超时检查服务
-    let response = NetworkManager::global()
-        .get(&url, ProxyType::NoProxy, Some(3), None, false)
-        .await
-        .context("failed to connect to the Clash Verge Service")?
-        .json::<JsonResponse>()
-        .await
-        .context("failed to parse the Clash Verge Service response")?;
+    match send_ipc_request(IpcCommand::GetClash, payload).await {
+        Ok(response) => {
+            logging!(
+                debug,
+                Type::Service,
+                true,
+                "收到GetClash响应: success={}, error={:?}",
+                response.success,
+                response.error
+            );
 
-    Ok(response)
-}
+            if !response.success {
+                let err_msg = response.error.unwrap_or_else(|| "未知服务错误".to_string());
+                logging!(error, Type::Service, true, "服务响应错误: {}", err_msg);
+                bail!(err_msg);
+            }
 
-/// check the service version
-pub async fn check_service_version() -> Result<String> {
-    use crate::utils::network::{NetworkManager, ProxyType};
+            match response.data {
+                Some(data) => {
+                    // 检查嵌套结构
+                    if let (Some(code), Some(msg)) = (data.get("code"), data.get("msg")) {
+                        let code_value = code.as_u64().unwrap_or(0);
+                        let msg_value = msg.as_str().unwrap_or("ok").to_string();
 
-    let url = format!("{SERVICE_URL}/version");
+                        // 提取嵌套的data字段并解析为ResponseBody
+                        let response_body = if let Some(nested_data) = data.get("data") {
+                            match serde_json::from_value::<ResponseBody>(nested_data.clone()) {
+                                Ok(body) => Some(body),
+                                Err(e) => {
+                                    logging!(
+                                        warn,
+                                        Type::Service,
+                                        true,
+                                        "解析嵌套的ResponseBody失败: {}; 尝试其他方式",
+                                        e
+                                    );
+                                    None
+                                }
+                            }
+                        } else {
+                            None
+                        };
 
-    // 使用无代理模式和3秒超时检查服务版本
-    let response = NetworkManager::global()
-        .get(&url, ProxyType::NoProxy, Some(3), None, false)
-        .await
-        .context("failed to connect to the Clash Verge Service")?
-        .json::<VersionJsonResponse>()
-        .await
-        .context("failed to parse the Clash Verge Service version response")?;
+                        let json_response = JsonResponse {
+                            code: code_value,
+                            msg: msg_value,
+                            data: response_body,
+                        };
 
-    match response.data {
-        Some(data) => Ok(data.version),
-        None => bail!("service version not found in response"),
+                        logging!(
+                            info,
+                            Type::Service,
+                            true,
+                            "服务检测成功: code={}, msg={}, data存在={}",
+                            json_response.code,
+                            json_response.msg,
+                            json_response.data.is_some()
+                        );
+                        return Ok(json_response);
+                    } else {
+                        // 尝试直接解析
+                        match serde_json::from_value::<JsonResponse>(data.clone()) {
+                            Ok(json_response) => {
+                                logging!(
+                                    info,
+                                    Type::Service,
+                                    true,
+                                    "服务检测成功: code={}, msg={}",
+                                    json_response.code,
+                                    json_response.msg
+                                );
+                                return Ok(json_response);
+                            }
+                            Err(e) => {
+                                logging!(
+                                    error,
+                                    Type::Service,
+                                    true,
+                                    "解析服务响应失败: {}; 原始数据: {:?}",
+                                    e,
+                                    data
+                                );
+                                bail!("无法解析服务响应数据: {}", e)
+                            }
+                        }
+                    }
+                }
+                None => {
+                    logging!(error, Type::Service, true, "服务响应中没有数据");
+                    bail!("服务响应中没有数据")
+                }
+            }
+        }
+        Err(e) => {
+            logging!(error, Type::Service, true, "IPC通信失败: {}", e);
+            bail!("无法连接到Clash Verge Service: {}", e)
+        }
     }
 }
 
-/// check if service needs to be reinstalled
+/// 检查服务版本 - 使用IPC通信
+pub async fn check_service_version() -> Result<String> {
+    logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
+
+    let payload = serde_json::json!({});
+    logging!(debug, Type::Service, true, "发送GetVersion请求");
+
+    match send_ipc_request(IpcCommand::GetVersion, payload).await {
+        Ok(response) => {
+            logging!(
+                debug,
+                Type::Service,
+                true,
+                "收到GetVersion响应: success={}, error={:?}",
+                response.success,
+                response.error
+            );
+
+            if !response.success {
+                let err_msg = response
+                    .error
+                    .unwrap_or_else(|| "获取服务版本失败".to_string());
+                logging!(error, Type::Service, true, "获取版本错误: {}", err_msg);
+                bail!(err_msg);
+            }
+
+            match response.data {
+                Some(data) => {
+                    if let Some(nested_data) = data.get("data") {
+                        if let Some(version) = nested_data.get("version") {
+                            if let Some(version_str) = version.as_str() {
+                                logging!(
+                                    info,
+                                    Type::Service,
+                                    true,
+                                    "获取到服务版本: {}",
+                                    version_str
+                                );
+                                return Ok(version_str.to_string());
+                            }
+                        }
+                        logging!(
+                            error,
+                            Type::Service,
+                            true,
+                            "嵌套数据中没有version字段: {:?}",
+                            nested_data
+                        );
+                    } else {
+                        // 兼容旧格式
+                        match serde_json::from_value::<VersionResponse>(data.clone()) {
+                            Ok(version_response) => {
+                                logging!(
+                                    info,
+                                    Type::Service,
+                                    true,
+                                    "获取到服务版本: {}",
+                                    version_response.version
+                                );
+                                return Ok(version_response.version);
+                            }
+                            Err(e) => {
+                                logging!(
+                                    error,
+                                    Type::Service,
+                                    true,
+                                    "解析版本响应失败: {}; 原始数据: {:?}",
+                                    e,
+                                    data
+                                );
+                                bail!("无法解析服务版本数据: {}", e)
+                            }
+                        }
+                    }
+                    bail!("响应中未找到有效的版本信息")
+                }
+                None => {
+                    logging!(error, Type::Service, true, "版本响应中没有数据");
+                    bail!("服务版本响应中没有数据")
+                }
+            }
+        }
+        Err(e) => {
+            logging!(error, Type::Service, true, "IPC通信失败: {}", e);
+            bail!("无法连接到Clash Verge Service: {}", e)
+        }
+    }
+}
+
+/// 检查服务是否需要重装
 pub async fn check_service_needs_reinstall() -> bool {
-    // 获取当前服务状态
+    logging!(info, Type::Service, true, "开始检查服务是否需要重装");
+
     let service_state = ServiceState::get();
 
-    // 首先检查是否在冷却期或超过重装次数限制
     if !service_state.can_reinstall() {
-        log::info!(target: "app", "service reinstall check: in cooldown period or max attempts reached");
+        log::info!(target: "app", "服务重装检查: 处于冷却期或已达最大尝试次数");
         return false;
     }
 
-    // 然后才检查版本和可用性
+    // 检查版本和可用性
     match check_service_version().await {
         Ok(version) => {
-            // 打印更详细的日志，方便排查问题
             log::info!(target: "app", "服务版本检测：当前={}, 要求={}", version, REQUIRED_SERVICE_VERSION);
+            logging!(
+                info,
+                Type::Service,
+                true,
+                "服务版本检测：当前={}, 要求={}",
+                version,
+                REQUIRED_SERVICE_VERSION
+            );
 
             let needs_reinstall = version != REQUIRED_SERVICE_VERSION;
             if needs_reinstall {
                 log::warn!(target: "app", "发现服务版本不匹配，需要重装! 当前={}, 要求={}",
                     version, REQUIRED_SERVICE_VERSION);
+                logging!(warn, Type::Service, true, "服务版本不匹配，需要重装");
 
-                // 打印版本字符串的原始字节，确认没有隐藏字符
                 log::debug!(target: "app", "当前版本字节: {:?}", version.as_bytes());
                 log::debug!(target: "app", "要求版本字节: {:?}", REQUIRED_SERVICE_VERSION.as_bytes());
             } else {
                 log::info!(target: "app", "服务版本匹配，无需重装");
+                logging!(info, Type::Service, true, "服务版本匹配，无需重装");
             }
 
             needs_reinstall
         }
         Err(err) => {
-            // 检查服务是否可用，如果可用但版本检查失败，可能只是版本API有问题
+            logging!(error, Type::Service, true, "检查服务版本失败: {}", err);
+
+            // 检查服务是否可用
             match is_service_running().await {
                 Ok(true) => {
-                    log::info!(target: "app", "service is running but version check failed: {}", err);
-                    false // 服务在运行，不需要重装
+                    log::info!(target: "app", "服务正在运行但版本检查失败: {}", err);
+                    logging!(
+                        info,
+                        Type::Service,
+                        true,
+                        "服务正在运行但版本检查失败: {}",
+                        err
+                    );
+                    false
                 }
                 _ => {
-                    log::info!(target: "app", "service is not running or unavailable");
-                    true // 服务不可用，需要重装
+                    log::info!(target: "app", "服务不可用或未运行，需要重装");
+                    logging!(info, Type::Service, true, "服务不可用或未运行，需要重装");
+                    true
                 }
             }
         }
     }
 }
 
-/// 尝试使用现有服务启动核心，不进行重装
+/// 尝试使用服务启动core
 pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result<()> {
-    use crate::utils::network::{NetworkManager, ProxyType};
-
-    log::info!(target:"app", "attempting to start core with existing service");
+    log::info!(target:"app", "尝试使用现有服务启动核心 (IPC)");
+    logging!(info, Type::Service, true, "尝试使用现有服务启动核心");
 
     let clash_core = { Config::verge().latest().clash_core.clone() };
     let clash_core = clash_core.unwrap_or("verge-mihomo".into());
@@ -588,30 +755,70 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 
     let config_file = dirs::path_to_str(config_file)?;
 
-    let mut map = HashMap::new();
-    map.insert("core_type", clash_core.as_str());
-    map.insert("bin_path", bin_path);
-    map.insert("config_dir", config_dir);
-    map.insert("config_file", config_file);
-    map.insert("log_file", log_path);
+    // 构建启动参数
+    let payload = serde_json::json!({
+        "core_type": clash_core,
+        "bin_path": bin_path,
+        "config_dir": config_dir,
+        "config_file": config_file,
+        "log_file": log_path,
+    });
 
-    log::info!(target:"app", "start service: {:?}", map.clone());
+    log::info!(target:"app", "启动服务参数: {:?}", payload);
+    logging!(info, Type::Service, true, "发送StartClash请求");
 
-    let url = format!("{SERVICE_URL}/start_clash");
+    // 使用IPC通信
+    match send_ipc_request(IpcCommand::StartClash, payload).await {
+        Ok(response) => {
+            logging!(
+                info,
+                Type::Service,
+                true,
+                "收到StartClash响应: success={}, error={:?}",
+                response.success,
+                response.error
+            );
 
-    // 使用网络管理器发送POST请求
-    let client = NetworkManager::global().get_client(ProxyType::NoProxy);
-    let _ = client
-        .post(url)
-        .json(&map)
-        .send()
-        .await
-        .context("failed to connect to the Clash Verge Service")?;
+            if !response.success {
+                let err_msg = response.error.unwrap_or_else(|| "启动核心失败".to_string());
+                logging!(error, Type::Service, true, "启动核心失败: {}", err_msg);
+                bail!(err_msg);
+            }
 
-    Ok(())
+            // 添加对嵌套JSON结构的处理
+            if let Some(data) = &response.data {
+                if let Some(code) = data.get("code") {
+                    let code_value = code.as_u64().unwrap_or(1);
+                    let msg = data
+                        .get("msg")
+                        .and_then(|m| m.as_str())
+                        .unwrap_or("未知错误");
+
+                    if code_value != 0 {
+                        logging!(
+                            error,
+                            Type::Service,
+                            true,
+                            "启动核心返回错误: code={}, msg={}",
+                            code_value,
+                            msg
+                        );
+                        bail!("启动核心失败: {}", msg);
+                    }
+                }
+            }
+
+            logging!(info, Type::Service, true, "服务成功启动核心");
+            Ok(())
+        }
+        Err(e) => {
+            logging!(error, Type::Service, true, "启动核心IPC通信失败: {}", e);
+            bail!("无法连接到Clash Verge Service: {}", e)
+        }
+    }
 }
 
-/// start the clash by service
+// 以服务启动core
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     log::info!(target: "app", "正在尝试通过服务启动核心");
 
@@ -621,39 +828,33 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
             log::info!(target: "app", "检测到服务版本: {}, 要求版本: {}",
                 version, REQUIRED_SERVICE_VERSION);
 
-            // 通过字节比较确保完全匹配
             if version.as_bytes() != REQUIRED_SERVICE_VERSION.as_bytes() {
                 log::warn!(target: "app", "服务版本不匹配，需要重装");
-                false // 版本不匹配
+                false
             } else {
                 log::info!(target: "app", "服务版本匹配");
-                true // 版本匹配
+                true
             }
         }
         Err(err) => {
             log::warn!(target: "app", "无法获取服务版本: {}", err);
-            false // 无法获取版本
+            false
         }
     };
 
-    // 先尝试直接启动服务，如果服务可用且版本匹配
     if version_check {
         if let Ok(true) = is_service_running().await {
-            // 服务正在运行且版本匹配，直接使用
             log::info!(target: "app", "服务已在运行且版本匹配，尝试使用");
             return start_with_existing_service(config_file).await;
         }
     }
 
-    // 强制执行版本检查，如果版本不匹配则重装
     if !version_check {
         log::info!(target: "app", "服务版本不匹配，尝试重装");
 
-        // 获取服务状态，检查是否可以重装
         let service_state = ServiceState::get();
         if !service_state.can_reinstall() {
             log::warn!(target: "app", "由于限制无法重装服务");
-            // 尝试直接启动，即使版本不匹配
             if let Ok(()) = start_with_existing_service(config_file).await {
                 log::info!(target: "app", "尽管版本不匹配，但成功启动了服务");
                 return Ok(());
@@ -662,17 +863,14 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
             }
         }
 
-        // 尝试重装
         log::info!(target: "app", "开始重装服务");
         if let Err(err) = reinstall_service().await {
             log::warn!(target: "app", "服务重装失败: {}", err);
 
-            // 尝试使用现有服务
             log::info!(target: "app", "尝试使用现有服务");
             return start_with_existing_service(config_file).await;
         }
 
-        // 重装成功，尝试启动
         log::info!(target: "app", "服务重装成功，尝试启动");
         return start_with_existing_service(config_file).await;
     }
@@ -680,7 +878,6 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     // 检查服务状态
     match check_service().await {
         Ok(_) => {
-            // 服务可访问但可能没有运行核心，尝试直接启动
             log::info!(target: "app", "服务可用但未运行核心，尝试启动");
             if let Ok(()) = start_with_existing_service(config_file).await {
                 return Ok(());
@@ -695,72 +892,156 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     if check_service_needs_reinstall().await {
         log::info!(target: "app", "服务需要重装");
 
-        // 尝试重装
         if let Err(err) = reinstall_service().await {
             log::warn!(target: "app", "服务重装失败: {}", err);
             bail!("Failed to reinstall service: {}", err);
         }
 
-        // 重装后再次尝试启动
         log::info!(target: "app", "服务重装完成，尝试启动核心");
         start_with_existing_service(config_file).await
     } else {
-        // 不需要或不能重装，返回错误
         log::warn!(target: "app", "服务不可用且无法重装");
         bail!("Service is not available and cannot be reinstalled at this time")
     }
 }
 
-/// stop the clash by service
+/// 通过服务停止core
 pub(super) async fn stop_core_by_service() -> Result<()> {
-    use crate::utils::network::{NetworkManager, ProxyType};
+    logging!(debug, Type::Service, "通过服务停止核心 (IPC)");
 
-    let url = format!("{SERVICE_URL}/stop_clash");
-
-    // 使用网络管理器发送POST请求
-    let client = NetworkManager::global().get_client(ProxyType::NoProxy);
-    let _ = client
-        .post(url)
-        .send()
+    let payload = serde_json::json!({});
+    let response = send_ipc_request(IpcCommand::StopClash, payload)
         .await
-        .context("failed to connect to the Clash Verge Service")?;
+        .context("无法连接到Clash Verge Service")?;
+
+    if !response.success {
+        bail!(response.error.unwrap_or_else(|| "停止核心失败".to_string()));
+    }
+
+    if let Some(data) = &response.data {
+        if let Some(code) = data.get("code") {
+            let code_value = code.as_u64().unwrap_or(1);
+            let msg = data
+                .get("msg")
+                .and_then(|m| m.as_str())
+                .unwrap_or("未知错误");
+
+            if code_value != 0 {
+                logging!(
+                    error,
+                    Type::Service,
+                    true,
+                    "停止核心返回错误: code={}, msg={}",
+                    code_value,
+                    msg
+                );
+                bail!("停止核心失败: {}", msg);
+            }
+        }
+    }
 
     Ok(())
 }
 
 /// 检查服务是否正在运行
 pub async fn is_service_running() -> Result<bool> {
-    let resp = check_service().await?;
+    logging!(info, Type::Service, true, "开始检查服务是否正在运行");
 
-    // 检查服务状态码和消息
-    if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
-        logging!(debug, Type::Service, "Service is running");
-        Ok(true)
-    } else {
-        logging!(debug, Type::Service, "Service is not running");
-        Ok(false)
+    match check_service().await {
+        Ok(resp) => {
+            if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
+                logging!(info, Type::Service, true, "服务正在运行");
+                Ok(true)
+            } else {
+                logging!(
+                    warn,
+                    Type::Service,
+                    true,
+                    "服务未正常运行: code={}, msg={}",
+                    resp.code,
+                    resp.msg
+                );
+                Ok(false)
+            }
+        }
+        Err(err) => {
+            logging!(error, Type::Service, true, "检查服务运行状态失败: {}", err);
+
+            let error_type = err.root_cause().to_string();
+            logging!(
+                error,
+                Type::Service,
+                true,
+                "连接失败的根本原因: {}",
+                error_type
+            );
+
+            let socket_path = if cfg!(windows) {
+                r"\\.\pipe\clash-verge-service"
+            } else {
+                "/tmp/clash-verge-service.sock"
+            };
+
+            if cfg!(windows) {
+                logging!(
+                    info,
+                    Type::Service,
+                    true,
+                    "检查Windows命名管道: {}",
+                    socket_path
+                );
+            } else {
+                let socket_exists = std::path::Path::new(socket_path).exists();
+                logging!(
+                    info,
+                    Type::Service,
+                    true,
+                    "检查Unix套接字文件: {} 是否存在: {}",
+                    socket_path,
+                    socket_exists
+                );
+            }
+
+            Ok(false)
+        }
     }
 }
 
 pub async fn is_service_available() -> Result<()> {
-    let resp = check_service().await?;
-    if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
-        logging!(debug, Type::Service, "Service is available");
+    logging!(info, Type::Service, true, "开始检查服务是否可用");
+
+    match check_service().await {
+        Ok(resp) => {
+            if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
+                logging!(info, Type::Service, true, "服务可用");
+            } else {
+                logging!(
+                    warn,
+                    Type::Service,
+                    true,
+                    "服务返回异常: code={}, msg={}",
+                    resp.code,
+                    resp.msg
+                );
+            }
+            Ok(())
+        }
+        Err(err) => {
+            logging!(error, Type::Service, true, "服务不可用: {}", err);
+            bail!("服务不可用: {}", err)
+        }
     }
-    Ok(())
 }
 
-/// 强制重装服务（用于UI中的修复服务按钮）
+/// 强制重装服务（UI修复按钮）
 pub async fn force_reinstall_service() -> Result<()> {
     log::info!(target: "app", "用户请求强制重装服务");
 
-    // 创建默认服务状态（重置所有限制）
     let service_state = ServiceState::default();
     service_state.save()?;
 
     log::info!(target: "app", "已重置服务状态，开始执行重装");
 
-    // 执行重装
     match reinstall_service().await {
         Ok(()) => {
             log::info!(target: "app", "服务重装成功");
@@ -772,3 +1053,178 @@ pub async fn force_reinstall_service() -> Result<()> {
         }
     }
 }
+/*
+/// 彻底诊断服务状态，检查安装状态、IPC通信和服务版本
+ pub async fn diagnose_service() -> Result<()> {
+    logging!(info, Type::Service, true, "============= 开始服务诊断 =============");
+
+    // 1. 检查服务文件是否存在
+    let service_path = dirs::service_path();
+    match service_path {
+        Ok(path) => {
+            let service_exists = path.exists();
+            logging!(info, Type::Service, true, "服务可执行文件路径: {:?}, 存在: {}", path, service_exists);
+
+            if !service_exists {
+                logging!(error, Type::Service, true, "服务可执行文件不存在，需要重新安装");
+                bail!("服务可执行文件不存在，需要重新安装");
+            }
+
+            // 检查服务版本文件
+            let version_file = path.with_file_name("version.txt");
+            if version_file.exists() {
+                match std::fs::read_to_string(&version_file) {
+                    Ok(content) => {
+                        logging!(info, Type::Service, true, "服务版本文件内容: {}", content.trim());
+                    }
+                    Err(e) => {
+                        logging!(warn, Type::Service, true, "读取服务版本文件失败: {}", e);
+                    }
+                }
+            } else {
+                logging!(warn, Type::Service, true, "服务版本文件不存在: {:?}", version_file);
+            }
+        }
+        Err(e) => {
+            logging!(error, Type::Service, true, "获取服务路径失败: {}", e);
+            bail!("获取服务路径失败: {}", e);
+        }
+    }
+
+    // 2. 检查IPC通信 - 命名管道/Unix套接字
+    let socket_path = if cfg!(windows) {
+        r"\\.\pipe\clash-verge-service"
+    } else {
+        "/tmp/clash-verge-service.sock"
+    };
+
+    logging!(info, Type::Service, true, "IPC通信路径: {}", socket_path);
+
+    if !cfg!(windows) {
+        // Unix系统检查套接字文件是否存在
+        let socket_exists = std::path::Path::new(socket_path).exists();
+        logging!(info, Type::Service, true, "Unix套接字文件是否存在: {}", socket_exists);
+
+        if !socket_exists {
+            logging!(warn, Type::Service, true, "Unix套接字文件不存在，服务可能未运行");
+        }
+    }
+
+    // 3. 尝试通过IPC检查服务状态
+    logging!(info, Type::Service, true, "尝试通过IPC通信检查服务状态...");
+    match check_service().await {
+        Ok(resp) => {
+            logging!(info, Type::Service, true, "服务状态检查成功: code={}, msg={}", resp.code, resp.msg);
+
+            // 4. 检查服务版本
+            match check_service_version().await {
+                Ok(version) => {
+                    logging!(info, Type::Service, true, "服务版本: {}, 要求版本: {}",
+                        version, REQUIRED_SERVICE_VERSION);
+
+                    if version != REQUIRED_SERVICE_VERSION {
+                        logging!(warn, Type::Service, true, "服务版本不匹配，建议重装服务");
+                    } else {
+                        logging!(info, Type::Service, true, "服务版本匹配");
+                    }
+                }
+                Err(err) => {
+                    logging!(error, Type::Service, true, "检查服务版本失败: {}", err);
+                }
+            }
+        }
+        Err(err) => {
+            logging!(error, Type::Service, true, "服务状态检查失败: {}", err);
+
+            // 5. 检查系统服务状态 - Windows专用
+            #[cfg(windows)]
+            {
+                use std::process::Command;
+                logging!(info, Type::Service, true, "尝试检查Windows服务状态...");
+
+                let output = Command::new("sc")
+                    .args(["query", "clash_verge_service"])
+                    .output();
+
+                match output {
+                    Ok(out) => {
+                        let stdout = String::from_utf8_lossy(&out.stdout);
+                        let contains_running = stdout.contains("RUNNING");
+
+                        logging!(info, Type::Service, true, "Windows服务查询结果: {}",
+                            if contains_running { "正在运行" } else { "未运行" });
+
+                        if !contains_running {
+                            logging!(info, Type::Service, true, "服务输出: {}", stdout);
+                        }
+                    }
+                    Err(e) => {
+                        logging!(error, Type::Service, true, "检查Windows服务状态失败: {}", e);
+                    }
+                }
+            }
+
+            // macOS专用
+            #[cfg(target_os = "macos")]
+            {
+                use std::process::Command;
+                logging!(info, Type::Service, true, "尝试检查macOS服务状态...");
+
+                let output = Command::new("launchctl")
+                    .args(["list", "io.github.clash-verge-rev.clash-verge-rev.service"])
+                    .output();
+
+                match output {
+                    Ok(out) => {
+                        let stdout = String::from_utf8_lossy(&out.stdout);
+                        let stderr = String::from_utf8_lossy(&out.stderr);
+
+                        if out.status.success() {
+                            logging!(info, Type::Service, true, "macOS服务正在运行");
+                            logging!(debug, Type::Service, true, "服务详情: {}", stdout);
+                        } else {
+                            logging!(warn, Type::Service, true, "macOS服务未运行");
+                            if !stderr.is_empty() {
+                                logging!(info, Type::Service, true, "错误信息: {}", stderr);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        logging!(error, Type::Service, true, "检查macOS服务状态失败: {}", e);
+                    }
+                }
+            }
+
+            // Linux专用
+            #[cfg(target_os = "linux")]
+            {
+                use std::process::Command;
+                logging!(info, Type::Service, true, "尝试检查Linux服务状态...");
+
+                let output = Command::new("systemctl")
+                    .args(["status", "clash_verge_service"])
+                    .output();
+
+                match output {
+                    Ok(out) => {
+                        let stdout = String::from_utf8_lossy(&out.stdout);
+                        let is_active = stdout.contains("Active: active (running)");
+
+                        logging!(info, Type::Service, true, "Linux服务状态: {}",
+                            if is_active { "活跃运行中" } else { "未运行" });
+
+                        if !is_active {
+                            logging!(info, Type::Service, true, "服务状态详情: {}", stdout);
+                        }
+                    }
+                    Err(e) => {
+                        logging!(error, Type::Service, true, "检查Linux服务状态失败: {}", e);
+                    }
+                }
+            }
+        }
+    }
+
+    logging!(info, Type::Service, true, "============= 服务诊断完成 =============");
+    Ok(())
+} */
