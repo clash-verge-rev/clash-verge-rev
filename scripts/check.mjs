@@ -2,7 +2,7 @@ import AdmZip from "adm-zip";
 import { execSync } from "child_process";
 import clc from "cli-color";
 import fs from "fs-extra";
-import proxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch from "node-fetch";
 import path from "path";
 import * as tar from "tar";
@@ -99,7 +99,7 @@ async function getLatestAlphaVersion() {
     process.env.https_proxy;
 
   if (httpProxy) {
-    options.agent = proxyAgent(httpProxy);
+    options.agent = new HttpsProxyAgent(httpProxy);
   }
   try {
     const response = await fetch(META_ALPHA_VERSION_URL, {
@@ -146,7 +146,7 @@ async function getLatestReleaseVersion() {
     process.env.https_proxy;
 
   if (httpProxy) {
-    options.agent = proxyAgent(httpProxy);
+    options.agent = new HttpsProxyAgent(httpProxy);
   }
   try {
     const response = await fetch(META_VERSION_URL, {
@@ -330,7 +330,7 @@ async function downloadFile(url, path) {
     process.env.https_proxy;
 
   if (httpProxy) {
-    options.agent = proxyAgent(httpProxy);
+    options.agent = new HttpsProxyAgent(httpProxy);
   }
 
   const response = await fetch(url, {
@@ -430,7 +430,7 @@ function getAlphaClashVergeServices() {
 const resolveClashVergeService = async () => {
   let downloadItem;
   if (useAlphaService) {
-    downloadItem = await getAlphaClashVergeServices();
+    downloadItem = getAlphaClashVergeServices();
   } else {
     downloadItem = await getLatestClashVergeServices();
   }
