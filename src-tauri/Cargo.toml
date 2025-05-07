@@ -64,6 +64,7 @@ tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["local-time"] }
 tracing-appender = "0.2.3"
 time = { version = "0.3.41", features = ["macros", "parsing"] }
+tipsy = "0.4.1"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2"

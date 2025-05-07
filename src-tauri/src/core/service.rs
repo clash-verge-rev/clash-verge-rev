@@ -1,12 +1,30 @@
 use crate::config::Config;
 use crate::utils::dirs;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{env::current_exe, process::Command as StdCommand};
+use tipsy::ServerId;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-const SERVICE_URL: &str = "http://127.0.0.1:33211";
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum SocketCommand {
+    GetVersion,
+    GetClash,
+    StartClash(StartBody),
+    StopClash,
+    StopService,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct StartBody {
+    pub core_type: Option<String>,
+    pub bin_path: String,
+    pub config_dir: String,
+    pub config_file: String,
+    pub log_file: String,
+}
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ResponseBody {
@@ -29,6 +47,19 @@ pub struct JsonResponse {
     pub code: u64,
     pub msg: String,
     pub data: Option<ResponseBody>,
+}
+
+async fn send_command(cmd: SocketCommand) -> Result<JsonResponse> {
+    let path = ServerId::new("verge-server").parent_folder(std::env::temp_dir());
+    let client = tipsy::Endpoint::connect(path).await?;
+    let mut reader = BufReader::new(client);
+    let cmd_json = serde_json::to_string(&cmd)?;
+    let data = format!("{}\n", cmd_json);
+    reader.write_all(data.as_bytes()).await?;
+    let mut response = String::new();
+    reader.read_line(&mut response).await?;
+    let res = serde_json::from_str(&response)?;
+    Ok(res)
 }
 
 /// Install the Clash Verge Service
@@ -265,19 +296,16 @@ pub async fn uninstall_service() -> Result<()> {
 
 /// check the windows service status
 pub async fn check_service() -> Result<JsonResponse> {
-    let url = format!("{SERVICE_URL}/clash");
-    let response = reqwest::ClientBuilder::new()
-        .no_proxy()
-        .build()?
-        .get(url)
-        .send()
-        .await
-        .context("failed to connect to the Clash Verge Service")?
-        .json::<JsonResponse>()
-        .await
-        .context("failed to parse the Clash Verge Service response")?;
-
-    Ok(response)
+    match send_command(SocketCommand::GetClash).await {
+        Ok(res) => {
+            tracing::info!("connect to service success");
+            Ok(res)
+        }
+        Err(_) => {
+            tracing::info!("connect to service failed, error");
+            Err(anyhow::anyhow!("failed to connect service"))
+        }
+    }
 }
 
 /// start the clash by service
@@ -308,18 +336,14 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
     let log_path = dirs::path_to_str(log_path)?;
     map.insert("log_file", log_path);
 
-    let url = format!("{SERVICE_URL}/clash");
-    let res = reqwest::ClientBuilder::new()
-        .no_proxy()
-        .build()?
-        .post(url)
-        .json(&map)
-        .send()
-        .await?
-        .json::<JsonResponse>()
-        .await
-        .context("failed to connect to the Clash Verge Service")?;
-
+    let body = StartBody {
+        core_type: Some(clash_core),
+        bin_path: bin_path.to_string(),
+        config_dir: config_dir.to_string(),
+        config_file: config_file.to_string(),
+        log_file: log_path.to_string(),
+    };
+    let res = send_command(SocketCommand::StartClash(body)).await?;
     if res.code != 0 {
         bail!(res.msg);
     }
@@ -329,20 +353,14 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
 
 /// stop the clash by service
 pub(super) async fn stop_core_by_service() -> Result<()> {
-    let url = format!("{SERVICE_URL}/clash");
-    let res = reqwest::ClientBuilder::new()
-        .no_proxy()
-        .build()?
-        .delete(url)
-        .send()
-        .await?
-        .json::<JsonResponse>()
-        .await
-        .context("failed to connect to the Clash Verge Service")?;
-
+    let res = send_command(SocketCommand::StopClash).await?;
     if res.code != 0 {
         bail!(res.msg);
     }
+    Ok(())
+}
 
+pub async fn stop_service() -> Result<()> {
+    let _ = send_command(SocketCommand::StopService).await?;
     Ok(())
 }

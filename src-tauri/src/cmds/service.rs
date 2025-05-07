@@ -14,5 +14,6 @@ pub async fn install_service() -> CmdResult {
 
 #[tauri::command]
 pub async fn uninstall_service() -> CmdResult {
+    wrap_err!(service::stop_service().await)?;
     wrap_err!(service::uninstall_service().await)
 }
