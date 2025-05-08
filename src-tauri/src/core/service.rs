@@ -13,7 +13,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-const REQUIRED_SERVICE_VERSION: &str = "1.0.7"; // 定义所需的服务版本号
+const REQUIRED_SERVICE_VERSION: &str = "1.0.8"; // 定义所需的服务版本号
 
 // 限制重装时间和次数的常量
 const REINSTALL_COOLDOWN_SECS: u64 = 300; // 5分钟冷却期

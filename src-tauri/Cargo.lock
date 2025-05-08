@@ -1104,6 +1104,7 @@ dependencies = [
  "tungstenite 0.26.2",
  "users",
  "warp",
+ "winapi",
  "winreg 0.55.0",
  "zip",
 ]

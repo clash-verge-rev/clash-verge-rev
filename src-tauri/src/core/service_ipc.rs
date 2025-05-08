@@ -56,7 +56,6 @@ pub fn create_signed_request(
     payload: serde_json::Value,
 ) -> Result<IpcRequest> {
     let id = nanoid::nanoid!(32);
-
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
@@ -123,12 +122,9 @@ pub async fn send_ipc_request(
     use std::io::{Read, Write};
     use std::os::windows::io::{FromRawHandle, RawHandle};
     use std::ptr;
-    use winapi::um::fileapi::CreateFileA;
-    use winapi::um::winbase::{PIPE_READMODE_MESSAGE, PIPE_TYPE_MESSAGE, PIPE_WAIT};
-    use winapi::um::winnt::OPEN_EXISTING;
-    use winapi::um::winnt::{
-        FILE_SHARE_READ, FILE_SHARE_WRITE, GENERIC_READ, GENERIC_WRITE, HANDLE,
-    };
+    use winapi::um::fileapi::{CreateFileA, OPEN_EXISTING};
+    use winapi::um::handleapi::INVALID_HANDLE_VALUE;
+    use winapi::um::winnt::{FILE_SHARE_READ, FILE_SHARE_WRITE, GENERIC_READ, GENERIC_WRITE};
 
     logging!(
         info,
@@ -196,7 +192,7 @@ pub async fn send_ipc_request(
             )
         };
 
-        if handle == winapi::um::handleapi::INVALID_HANDLE_VALUE {
+        if handle == INVALID_HANDLE_VALUE {
             let error = std::io::Error::last_os_error();
             logging!(error, Type::Service, true, "连接到命名管道失败: {}", error);
             return Err(anyhow::anyhow!("无法连接到服务命名管道: {}", error));
@@ -306,7 +302,7 @@ pub async fn send_ipc_request(
         );
         Ok(response)
     })
-    .await?;
+    .await??;
 
     Ok(result)
 }

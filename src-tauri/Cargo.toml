@@ -85,6 +85,7 @@ hex = "0.4.3"
 runas = "=1.2.0"
 deelevate = "0.2.0"
 winreg = "0.55.0"
+winapi = { version = "0.3", features = ["winbase", "fileapi", "winnt", "handleapi", "errhandlingapi", "minwindef", "winerror"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 users = "0.11.0"
