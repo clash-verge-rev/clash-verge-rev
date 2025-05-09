@@ -958,7 +958,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "signal-hook 0.3.17",
+ "signal-hook 0.3.18",
  "sysinfo",
  "sysproxy",
  "tauri",
@@ -5713,9 +5713,9 @@ dependencies = [
 
 [[package]]
 name = "signal-hook"
-version = "0.3.17"
+version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8621587d4798caf8eb44879d42e56b9a93ea5dcd315a6487c357130095b62801"
+checksum = "d881a16cf4426aa584979d30bd82cb33429027e42122b169753d6ef1085ed6e2"
 dependencies = [
  "libc",
  "signal-hook-registry",
