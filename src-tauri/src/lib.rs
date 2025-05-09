@@ -162,7 +162,7 @@ pub fn run() {
             });
 
             // 异步处理
-            let app_handle = app.app_handle().clone();
+            let app_handle = app.handle().clone();
             AsyncHandler::spawn(move || async move {
                 logging!(info, Type::Setup, true, "异步执行应用设置...");
                 match timeout(
@@ -188,10 +188,10 @@ pub fn run() {
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
             logging!(info, Type::Setup, true, "初始化AppHandleManager...");
-            AppHandleManager::global().init(app.app_handle().clone());
+            AppHandleManager::global().init(app.handle().clone());
 
             logging!(info, Type::Setup, true, "初始化核心句柄...");
-            core::handle::Handle::global().init(app.app_handle());
+            core::handle::Handle::global().init(app.handle());
 
             logging!(info, Type::Setup, true, "初始化配置...");
             if let Err(e) = utils::init::init_config() {
