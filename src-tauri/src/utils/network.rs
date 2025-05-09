@@ -128,118 +128,118 @@ impl NetworkManager {
             *error_count = 0;
         }
     }
+    /*
+       /// 获取或创建自代理客户端
+       fn get_or_create_self_proxy_client(&self) -> Client {
+           if self.should_reset_clients() {
+               self.reset_clients();
+           }
 
-    /// 获取或创建自代理客户端
-    fn get_or_create_self_proxy_client(&self) -> Client {
-        if self.should_reset_clients() {
-            self.reset_clients();
-        }
+           let mut client_guard = self.self_proxy_client.lock().unwrap();
 
-        let mut client_guard = self.self_proxy_client.lock().unwrap();
+           if client_guard.is_none() {
+               let port = Config::verge()
+                   .latest()
+                   .verge_mixed_port
+                   .unwrap_or(Config::clash().data().get_mixed_port());
 
-        if client_guard.is_none() {
-            let port = Config::verge()
-                .latest()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().data().get_mixed_port());
+               let proxy_scheme = format!("http://127.0.0.1:{port}");
 
-            let proxy_scheme = format!("http://127.0.0.1:{port}");
+               let mut builder = ClientBuilder::new()
+                   .use_rustls_tls()
+                   .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
+                   .pool_idle_timeout(POOL_IDLE_TIMEOUT)
+                   .connect_timeout(DEFAULT_CONNECT_TIMEOUT)
+                   .timeout(DEFAULT_REQUEST_TIMEOUT)
+                   .http2_initial_stream_window_size(H2_STREAM_WINDOW_SIZE)
+                   .http2_initial_connection_window_size(H2_CONNECTION_WINDOW_SIZE)
+                   .http2_adaptive_window(true)
+                   .http2_keep_alive_interval(Some(H2_KEEP_ALIVE_INTERVAL))
+                   .http2_keep_alive_timeout(H2_KEEP_ALIVE_TIMEOUT)
+                   .http2_max_frame_size(H2_MAX_FRAME_SIZE)
+                   .tcp_keepalive(Some(Duration::from_secs(10)))
+                   .http2_prior_knowledge()
+                   .http2_max_header_list_size(16 * 1024);
 
-            let mut builder = ClientBuilder::new()
-                .use_rustls_tls()
-                .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
-                .pool_idle_timeout(POOL_IDLE_TIMEOUT)
-                .connect_timeout(DEFAULT_CONNECT_TIMEOUT)
-                .timeout(DEFAULT_REQUEST_TIMEOUT)
-                .http2_initial_stream_window_size(H2_STREAM_WINDOW_SIZE)
-                .http2_initial_connection_window_size(H2_CONNECTION_WINDOW_SIZE)
-                .http2_adaptive_window(true)
-                .http2_keep_alive_interval(Some(H2_KEEP_ALIVE_INTERVAL))
-                .http2_keep_alive_timeout(H2_KEEP_ALIVE_TIMEOUT)
-                .http2_max_frame_size(H2_MAX_FRAME_SIZE)
-                .tcp_keepalive(Some(Duration::from_secs(10)))
-                .http2_prior_knowledge()
-                .http2_max_header_list_size(16 * 1024);
+               if let Ok(proxy) = Proxy::http(&proxy_scheme) {
+                   builder = builder.proxy(proxy);
+               }
+               if let Ok(proxy) = Proxy::https(&proxy_scheme) {
+                   builder = builder.proxy(proxy);
+               }
+               if let Ok(proxy) = Proxy::all(&proxy_scheme) {
+                   builder = builder.proxy(proxy);
+               }
 
-            if let Ok(proxy) = Proxy::http(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
-            if let Ok(proxy) = Proxy::https(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
-            if let Ok(proxy) = Proxy::all(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
+               let client = builder.build().expect("Failed to build self_proxy client");
+               *client_guard = Some(client);
+           }
 
-            let client = builder.build().expect("Failed to build self_proxy client");
-            *client_guard = Some(client);
-        }
+           client_guard.as_ref().unwrap().clone()
+       }
 
-        client_guard.as_ref().unwrap().clone()
-    }
+       /// 获取或创建系统代理客户端
+       fn get_or_create_system_proxy_client(&self) -> Client {
+           if self.should_reset_clients() {
+               self.reset_clients();
+           }
 
-    /// 获取或创建系统代理客户端
-    fn get_or_create_system_proxy_client(&self) -> Client {
-        if self.should_reset_clients() {
-            self.reset_clients();
-        }
+           let mut client_guard = self.system_proxy_client.lock().unwrap();
 
-        let mut client_guard = self.system_proxy_client.lock().unwrap();
+           if client_guard.is_none() {
+               use sysproxy::Sysproxy;
 
-        if client_guard.is_none() {
-            use sysproxy::Sysproxy;
+               let mut builder = ClientBuilder::new()
+                   .use_rustls_tls()
+                   .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
+                   .pool_idle_timeout(POOL_IDLE_TIMEOUT)
+                   .connect_timeout(DEFAULT_CONNECT_TIMEOUT)
+                   .timeout(DEFAULT_REQUEST_TIMEOUT)
+                   .http2_initial_stream_window_size(H2_STREAM_WINDOW_SIZE)
+                   .http2_initial_connection_window_size(H2_CONNECTION_WINDOW_SIZE)
+                   .http2_adaptive_window(true)
+                   .http2_keep_alive_interval(Some(H2_KEEP_ALIVE_INTERVAL))
+                   .http2_keep_alive_timeout(H2_KEEP_ALIVE_TIMEOUT)
+                   .http2_max_frame_size(H2_MAX_FRAME_SIZE)
+                   .tcp_keepalive(Some(Duration::from_secs(10)))
+                   .http2_prior_knowledge()
+                   .http2_max_header_list_size(16 * 1024);
 
-            let mut builder = ClientBuilder::new()
-                .use_rustls_tls()
-                .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
-                .pool_idle_timeout(POOL_IDLE_TIMEOUT)
-                .connect_timeout(DEFAULT_CONNECT_TIMEOUT)
-                .timeout(DEFAULT_REQUEST_TIMEOUT)
-                .http2_initial_stream_window_size(H2_STREAM_WINDOW_SIZE)
-                .http2_initial_connection_window_size(H2_CONNECTION_WINDOW_SIZE)
-                .http2_adaptive_window(true)
-                .http2_keep_alive_interval(Some(H2_KEEP_ALIVE_INTERVAL))
-                .http2_keep_alive_timeout(H2_KEEP_ALIVE_TIMEOUT)
-                .http2_max_frame_size(H2_MAX_FRAME_SIZE)
-                .tcp_keepalive(Some(Duration::from_secs(10)))
-                .http2_prior_knowledge()
-                .http2_max_header_list_size(16 * 1024);
+               if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
+                   let proxy_scheme = format!("http://{}:{}", p.host, p.port);
 
-            if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
-                let proxy_scheme = format!("http://{}:{}", p.host, p.port);
+                   if let Ok(proxy) = Proxy::http(&proxy_scheme) {
+                       builder = builder.proxy(proxy);
+                   }
+                   if let Ok(proxy) = Proxy::https(&proxy_scheme) {
+                       builder = builder.proxy(proxy);
+                   }
+                   if let Ok(proxy) = Proxy::all(&proxy_scheme) {
+                       builder = builder.proxy(proxy);
+                   }
+               }
 
-                if let Ok(proxy) = Proxy::http(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-                if let Ok(proxy) = Proxy::https(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-                if let Ok(proxy) = Proxy::all(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-            }
+               let client = builder
+                   .build()
+                   .expect("Failed to build system_proxy client");
+               *client_guard = Some(client);
+           }
 
-            let client = builder
-                .build()
-                .expect("Failed to build system_proxy client");
-            *client_guard = Some(client);
-        }
+           client_guard.as_ref().unwrap().clone()
+       }
 
-        client_guard.as_ref().unwrap().clone()
-    }
-
-    /// 根据代理设置选择合适的客户端
-    pub fn get_client(&self, proxy_type: ProxyType) -> Client {
-        match proxy_type {
-            ProxyType::NoProxy => {
-                let client_guard = self.no_proxy_client.lock().unwrap();
-                client_guard.as_ref().unwrap().clone()
-            }
-            ProxyType::SelfProxy => self.get_or_create_self_proxy_client(),
-            ProxyType::SystemProxy => self.get_or_create_system_proxy_client(),
-        }
-    }
-
+       /// 根据代理设置选择合适的客户端
+       pub fn get_client(&self, proxy_type: ProxyType) -> Client {
+           match proxy_type {
+               ProxyType::NoProxy => {
+                   let client_guard = self.no_proxy_client.lock().unwrap();
+                   client_guard.as_ref().unwrap().clone()
+               }
+               ProxyType::SelfProxy => self.get_or_create_self_proxy_client(),
+               ProxyType::SystemProxy => self.get_or_create_system_proxy_client(),
+           }
+       }
+    */
     /// 创建带有自定义选项的HTTP请求
     pub fn create_request(
         &self,
@@ -335,7 +335,7 @@ impl NetworkManager {
         client.get(url)
     }
 
-    /// 执行GET请求，添加错误跟踪
+    /*     /// 执行GET请求，添加错误跟踪
     pub async fn get(
         &self,
         url: &str,
@@ -370,7 +370,7 @@ impl NetworkManager {
                 ))
             }
         }
-    }
+    } */
 
     pub async fn get_with_interrupt(
         &self,

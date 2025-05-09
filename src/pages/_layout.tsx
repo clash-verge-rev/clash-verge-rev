@@ -165,7 +165,6 @@ const Layout = () => {
   useEffect(() => {
     if (clashInfo) {
       const { server = "", secret = "" } = clashInfo;
-      // 使用本地存储中的enableLog值初始化全局日志服务
       initGlobalLogService(server, secret, enableLog, "info");
     }
   }, [clashInfo, enableLog]);
@@ -173,7 +172,6 @@ const Layout = () => {
   // 设置监听器
   useEffect(() => {
     const listeners = [
-      // 配置更新监听
       addListener("verge://refresh-clash-config", async () => {
         await getAxios(true);
         mutate("getProxies");
@@ -182,21 +180,17 @@ const Layout = () => {
         mutate("getProxyProviders");
       }),
 
-      // verge 配置更新监听
       addListener("verge://refresh-verge-config", () => {
         mutate("getVergeConfig");
-        // 添加对系统代理状态的刷新
         mutate("getSystemProxy");
         mutate("getAutotemProxy");
       }),
 
-      // 通知消息监听
       addListener("verge://notice-message", ({ payload }) =>
         handleNotice(payload as [string, string]),
       ),
     ];
 
-    // 设置窗口显示/隐藏监听
     const setupWindowListeners = async () => {
       const [hideUnlisten, showUnlisten] = await Promise.all([
         listen("verge://hide-window", () => appWindow.hide()),
@@ -209,29 +203,51 @@ const Layout = () => {
       };
     };
 
-    // 初始化
     setupCloseListener();
     const cleanupWindow = setupWindowListeners();
 
-    // 清理函数
     return () => {
-      // 清理主要监听器
       listeners.forEach((listener) => {
         if (typeof listener.then === "function") {
           listener.then((unlisten) => unlisten());
         }
       });
-      // 清理窗口监听器
       cleanupWindow.then((cleanup) => cleanup());
     };
   }, [handleNotice]);
 
-  // 监听启动完成事件并通知UI已加载
   useEffect(() => {
+    const notifyUiStage = async (stage: string) => {
+      try {
+        console.log(`UI加载阶段: ${stage}`);
+        await invoke("update_ui_stage", { stage });
+      } catch (err) {
+        console.error(`通知UI加载阶段(${stage})失败:`, err);
+      }
+    };
+
+    const notifyUiCoreReady = async () => {
+      try {
+        console.log("核心组件已加载，通知后端");
+        await invoke("update_ui_stage", { stage: "DomReady" });
+      } catch (err) {
+        console.error("通知核心组件加载完成失败:", err);
+      }
+    };
+
+    const notifyUiResourcesLoaded = async () => {
+      try {
+        console.log("所有资源已加载，通知后端");
+        await invoke("update_ui_stage", { stage: "ResourcesLoaded" });
+      } catch (err) {
+        console.error("通知资源加载完成失败:", err);
+      }
+    };
+
     const notifyUiReady = async () => {
       try {
+        console.log("UI完全准备就绪，通知后端");
         await invoke("notify_ui_ready");
-        console.log("已通知后端UI准备就绪");
       } catch (err) {
         console.error("通知UI准备就绪失败:", err);
       }
@@ -240,6 +256,7 @@ const Layout = () => {
     // 监听后端发送的启动完成事件
     const listenStartupCompleted = async () => {
       try {
+        console.log("开始监听启动完成事件");
         const unlisten = await listen("verge://startup-completed", () => {
           console.log("收到启动完成事件，开始通知UI就绪");
           notifyUiReady();
@@ -251,9 +268,21 @@ const Layout = () => {
       }
     };
 
-    // 初始加载时也通知一次
-    console.log("页面初始加载，通知UI就绪");
-    notifyUiReady();
+    // 初始阶段 - 开始加载
+    notifyUiStage("Loading");
+
+    setTimeout(() => {
+      notifyUiCoreReady();
+
+      setTimeout(() => {
+        notifyUiResourcesLoaded();
+        setTimeout(() => {
+          notifyUiReady();
+        }, 100);
+      }, 100);
+    }, 100);
+    
+    // 启动监听器
     const unlistenPromise = listenStartupCompleted();
 
     return () => {

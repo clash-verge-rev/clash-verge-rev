@@ -11,7 +11,7 @@ use crate::{
         mihomo::Rate,
     },
     resolve,
-    utils::{dirs::find_target_icons, i18n::t, logging::Type, resolve::VERSION},
+    utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
 };
 
 use anyhow::Result;
@@ -29,7 +29,7 @@ use std::sync::Arc;
 use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
-    App, AppHandle, Wry,
+    AppHandle, Wry,
 };
 #[cfg(target_os = "macos")]
 use tokio::sync::broadcast;
@@ -178,52 +178,6 @@ impl Tray {
         Ok(())
     }
 
-    pub fn create_systray(&self, app: &App) -> Result<()> {
-        let mut builder = TrayIconBuilder::with_id("main")
-            .icon(app.default_window_icon().unwrap().clone())
-            .icon_as_template(false);
-
-        #[cfg(any(target_os = "macos", target_os = "windows"))]
-        {
-            let tray_event = { Config::verge().latest().tray_event.clone() };
-            let tray_event: String = tray_event.unwrap_or("main_window".into());
-            if tray_event.as_str() != "tray_menu" {
-                builder = builder.show_menu_on_left_click(false);
-            }
-        }
-
-        let tray = builder.build(app)?;
-
-        tray.on_tray_icon_event(|_, event| {
-            let tray_event = { Config::verge().latest().tray_event.clone() };
-            let tray_event: String = tray_event.unwrap_or("main_window".into());
-            log::debug!(target: "app","tray event: {:?}", tray_event);
-
-            if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Down,
-                ..
-            } = event
-            {
-                match tray_event.as_str() {
-                    "system_proxy" => feat::toggle_system_proxy(),
-                    "tun_mode" => feat::toggle_tun_mode(None),
-                    "main_window" => {
-                        // 如果在轻量模式中，先退出轻量模式
-                        if crate::module::lightweight::is_in_lightweight_mode() {
-                            crate::module::lightweight::exit_lightweight_mode();
-                        }
-                        // 然后创建窗口
-                        resolve::create_window(true)
-                    }
-                    _ => {}
-                }
-            }
-        });
-        tray.on_menu_event(on_menu_event);
-        Ok(())
-    }
-
     /// 更新托盘点击行为
     pub fn update_click_behavior(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -239,7 +193,14 @@ impl Tray {
 
     /// 更新托盘菜单
     pub fn update_menu(&self) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = match handle::Handle::global().app_handle() {
+            Some(handle) => handle,
+            None => {
+                log::warn!(target: "app", "更新托盘菜单失败: app_handle不存在");
+                return Ok(()); // 早期返回，避免panic
+            }
+        };
+
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -258,26 +219,46 @@ impl Tray {
             .unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
-        let tray = app_handle.tray_by_id("main").unwrap();
-        let _ = tray.set_menu(Some(create_tray_menu(
-            &app_handle,
-            Some(mode.as_str()),
-            *system_proxy,
-            *tun_mode,
-            profile_uid_and_name,
-            is_lightweight_mode,
-        )?));
-        Ok(())
+        match app_handle.tray_by_id("main") {
+            Some(tray) => {
+                let _ = tray.set_menu(Some(create_tray_menu(
+                    &app_handle,
+                    Some(mode.as_str()),
+                    *system_proxy,
+                    *tun_mode,
+                    profile_uid_and_name,
+                    is_lightweight_mode,
+                )?));
+                Ok(())
+            }
+            None => {
+                log::warn!(target: "app", "更新托盘菜单失败: 托盘不存在");
+                Ok(())
+            }
+        }
     }
 
     /// 更新托盘图标
     pub fn update_icon(&self, rate: Option<Rate>) -> Result<()> {
+        let app_handle = match handle::Handle::global().app_handle() {
+            Some(handle) => handle,
+            None => {
+                log::warn!(target: "app", "更新托盘图标失败: app_handle不存在");
+                return Ok(());
+            }
+        };
+
+        let tray = match app_handle.tray_by_id("main") {
+            Some(tray) => tray,
+            None => {
+                log::warn!(target: "app", "更新托盘图标失败: 托盘不存在");
+                return Ok(());
+            }
+        };
+
         let verge = Config::verge().latest().clone();
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        let tray = app_handle.tray_by_id("main").unwrap();
 
         let (is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
             (true, true) => TrayState::get_tun_tray_icon(),
@@ -302,8 +283,12 @@ impl Tray {
                 Some(rate)
             } else {
                 let guard = self.speed_rate.lock();
-                if let Some(rate) = guard.as_ref().unwrap().get_curent_rate() {
-                    Some(rate)
+                if let Some(guard) = guard.as_ref() {
+                    if let Some(rate) = guard.get_curent_rate() {
+                        Some(rate)
+                    } else {
+                        Some(Rate::default())
+                    }
                 } else {
                     Some(Rate::default())
                 }
@@ -320,9 +305,10 @@ impl Tray {
                 };
 
                 let rate = rate_guard.as_ref();
-                let rate_bytes = SpeedRate::add_speed_text(is_custom_icon, bytes, rate).unwrap();
-                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
-                let _ = tray.set_icon_as_template(!is_custom_icon && !is_colorful);
+                if let Ok(rate_bytes) = SpeedRate::add_speed_text(is_custom_icon, bytes, rate) {
+                    let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
+                    let _ = tray.set_icon_as_template(!is_custom_icon && !is_colorful);
+                }
             }
             Ok(())
         }
@@ -336,8 +322,21 @@ impl Tray {
 
     /// 更新托盘提示
     pub fn update_tooltip(&self) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        let version = VERSION.get().unwrap();
+        let app_handle = match handle::Handle::global().app_handle() {
+            Some(handle) => handle,
+            None => {
+                log::warn!(target: "app", "更新托盘提示失败: app_handle不存在");
+                return Ok(());
+            }
+        };
+
+        let version = match VERSION.get() {
+            Some(v) => v,
+            None => {
+                log::warn!(target: "app", "更新托盘提示失败: 版本信息不存在");
+                return Ok(());
+            }
+        };
 
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -354,23 +353,28 @@ impl Tray {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         if let Some(current_profile_uid) = profiles.get_current() {
-            let current_profile = profiles.get_item(&current_profile_uid);
-            current_profile_name = match &current_profile.unwrap().name {
-                Some(profile_name) => profile_name.to_string(),
-                None => current_profile_name,
-            };
+            if let Ok(profile) = profiles.get_item(&current_profile_uid) {
+                current_profile_name = match &profile.name {
+                    Some(profile_name) => profile_name.to_string(),
+                    None => current_profile_name,
+                };
+            }
         };
 
-        let tray = app_handle.tray_by_id("main").unwrap();
-        let _ = tray.set_tooltip(Some(&format!(
-            "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
-            t("SysProxy"),
-            switch_map[system_proxy],
-            t("TUN"),
-            switch_map[tun_mode],
-            t("Profile"),
-            current_profile_name
-        )));
+        if let Some(tray) = app_handle.tray_by_id("main") {
+            let _ = tray.set_tooltip(Some(&format!(
+                "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
+                t("SysProxy"),
+                switch_map[system_proxy],
+                t("TUN"),
+                switch_map[tun_mode],
+                t("Profile"),
+                current_profile_name
+            )));
+        } else {
+            log::warn!(target: "app", "更新托盘提示失败: 托盘不存在");
+        }
+
         Ok(())
     }
 
@@ -532,6 +536,57 @@ impl Tray {
             drop(tx);
         }
     }
+
+    pub fn create_tray_from_handle(&self, app_handle: &AppHandle) -> Result<()> {
+        log::info!(target: "app", "正在从AppHandle创建系统托盘");
+
+        // 获取图标
+        let icon_bytes = TrayState::get_common_tray_icon().1;
+        let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
+
+        let mut builder = TrayIconBuilder::with_id("main")
+            .icon(icon)
+            .icon_as_template(false);
+
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
+        {
+            let tray_event = { Config::verge().latest().tray_event.clone() };
+            let tray_event: String = tray_event.unwrap_or("main_window".into());
+            if tray_event.as_str() != "tray_menu" {
+                builder = builder.show_menu_on_left_click(false);
+            }
+        }
+
+        let tray = builder.build(app_handle)?;
+
+        tray.on_tray_icon_event(|_, event| {
+            let tray_event = { Config::verge().latest().tray_event.clone() };
+            let tray_event: String = tray_event.unwrap_or("main_window".into());
+            log::debug!(target: "app","tray event: {:?}", tray_event);
+
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Down,
+                ..
+            } = event
+            {
+                match tray_event.as_str() {
+                    "system_proxy" => feat::toggle_system_proxy(),
+                    "tun_mode" => feat::toggle_tun_mode(None),
+                    "main_window" => {
+                        if crate::module::lightweight::is_in_lightweight_mode() {
+                            crate::module::lightweight::exit_lightweight_mode();
+                        }
+                        let _ = resolve::create_window(true);
+                    }
+                    _ => {}
+                }
+            }
+        });
+        tray.on_menu_event(on_menu_event);
+        log::info!(target: "app", "系统托盘创建成功");
+        Ok(())
+    }
 }
 
 fn create_tray_menu(
@@ -543,7 +598,10 @@ fn create_tray_menu(
     is_lightweight_mode: bool,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
-    let version = VERSION.get().unwrap();
+
+    let unknown_version = String::from("unknown");
+    let version = VERSION.get().unwrap_or(&unknown_version);
+
     let hotkeys = Config::verge()
         .latest()
         .hotkeys
@@ -779,14 +837,20 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 crate::module::lightweight::exit_lightweight_mode();
             }
             // 然后创建窗口
-            resolve::create_window(true)
+            let _ = resolve::create_window(true);
         }
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(None),
         "copy_env" => feat::copy_clash_env(),
-        "open_app_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_app_dir()),
-        "open_core_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_core_dir()),
-        "open_logs_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_logs_dir()),
+        "open_app_dir" => {
+            let _ = cmd::open_app_dir();
+        }
+        "open_core_dir" => {
+            let _ = cmd::open_core_dir();
+        }
+        "open_logs_dir" => {
+            let _ = cmd::open_logs_dir();
+        }
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
         "entry_lightweight_mode" => entry_lightweight_mode(),

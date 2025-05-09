@@ -1,12 +1,11 @@
 #[cfg(target_os = "macos")]
-use crate::AppHandleManager;
 use crate::{
     config::{Config, IVerge, PrfItem},
     core::*,
     logging, logging_error,
     module::lightweight,
     process::AsyncHandler,
-    utils::{dirs, error, init, logging::Type, server},
+    utils::{init, logging::Type, server},
     wrap_err,
 };
 use anyhow::{bail, Result};
@@ -14,24 +13,19 @@ use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
 use serde::{Deserialize, Serialize};
-use serde_json;
 use serde_yaml::Mapping;
 use std::{
     net::TcpListener,
     sync::Arc,
     time::{Duration, Instant},
 };
-use tauri::{App, Emitter, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use tauri::Url;
 //#[cfg(not(target_os = "linux"))]
 // use window_shadows::set_shadow;
 
 pub static VERSION: OnceCell<String> = OnceCell::new();
-
-// 窗口状态文件中的尺寸
-static STATE_WIDTH: OnceCell<u32> = OnceCell::new();
-static STATE_HEIGHT: OnceCell<u32> = OnceCell::new();
 
 // 定义默认窗口尺寸常量
 const DEFAULT_WIDTH: u32 = 900;
@@ -42,6 +36,35 @@ static UI_READY: OnceCell<Arc<RwLock<bool>>> = OnceCell::new();
 
 // 窗口创建锁，防止并发创建窗口
 static WINDOW_CREATING: OnceCell<Mutex<(bool, Instant)>> = OnceCell::new();
+
+// UI就绪阶段状态枚举
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum UiReadyStage {
+    NotStarted,
+    Loading,
+    DomReady,
+    ResourcesLoaded,
+    Ready,
+}
+
+// UI就绪详细状态
+#[derive(Debug)]
+struct UiReadyState {
+    stage: RwLock<UiReadyStage>,
+    last_update: RwLock<Instant>,
+}
+
+impl Default for UiReadyState {
+    fn default() -> Self {
+        Self {
+            stage: RwLock::new(UiReadyStage::NotStarted),
+            last_update: RwLock::new(Instant::now()),
+        }
+    }
+}
+
+// 获取UI就绪状态细节
+static UI_READY_STATE: OnceCell<Arc<UiReadyState>> = OnceCell::new();
 
 // 定义窗口状态结构体
 #[derive(Debug, Serialize, Deserialize)]
@@ -58,16 +81,54 @@ fn get_ui_ready() -> &'static Arc<RwLock<bool>> {
     UI_READY.get_or_init(|| Arc::new(RwLock::new(false)))
 }
 
+fn get_ui_ready_state() -> &'static Arc<UiReadyState> {
+    UI_READY_STATE.get_or_init(|| Arc::new(UiReadyState::default()))
+}
+
+// 更新UI准备阶段
+pub fn update_ui_ready_stage(stage: UiReadyStage) {
+    let state = get_ui_ready_state();
+    let mut stage_lock = state.stage.write();
+    let mut time_lock = state.last_update.write();
+
+    *stage_lock = stage;
+    *time_lock = Instant::now();
+
+    logging!(
+        info,
+        Type::Window,
+        true,
+        "UI准备阶段更新: {:?}, 耗时: {:?}ms",
+        stage,
+        time_lock.elapsed().as_millis()
+    );
+
+    // 如果是最终阶段，标记UI完全就绪
+    if stage == UiReadyStage::Ready {
+        mark_ui_ready();
+    }
+}
+
 // 标记UI已准备就绪
 pub fn mark_ui_ready() {
     let mut ready = get_ui_ready().write();
     *ready = true;
+    logging!(info, Type::Window, true, "UI已标记为完全就绪");
 }
 
 // 重置UI就绪状态
 pub fn reset_ui_ready() {
-    let mut ready = get_ui_ready().write();
-    *ready = false;
+    {
+        let mut ready = get_ui_ready().write();
+        *ready = false;
+    }
+    {
+        let state = get_ui_ready_state();
+        let mut stage = state.stage.write();
+        let mut time = state.last_update.write();
+        *stage = UiReadyStage::NotStarted;
+        *time = Instant::now();
+    }
     logging!(info, Type::Window, true, "UI就绪状态已重置");
 }
 
@@ -88,54 +149,53 @@ pub fn find_unused_port() -> Result<u16> {
     }
 }
 
-/// handle something when start app
-pub async fn resolve_setup(app: &mut App) {
-    error::redirect_panic_to_log();
-    #[cfg(target_os = "macos")]
-    {
-        AppHandleManager::global().init(app.app_handle().clone());
-        AppHandleManager::global().set_activation_policy_accessory();
+/// 异步方式处理启动后的额外任务
+pub async fn resolve_setup_async(app_handle: &AppHandle) {
+    logging!(info, Type::Setup, true, "执行异步设置任务...");
+
+    if VERSION.get().is_none() {
+        let version = app_handle.package_info().version.to_string();
+        VERSION.get_or_init(|| {
+            logging!(info, Type::Setup, true, "初始化版本信息: {}", version);
+            version.clone()
+        });
     }
-    let version = app.package_info().version.to_string();
 
-    handle::Handle::global().init(app.app_handle());
-    VERSION.get_or_init(|| version.clone());
-
-    logging_error!(Type::Config, true, init::init_config());
-    logging_error!(Type::Setup, true, init::init_resources());
     logging_error!(Type::Setup, true, init::init_scheme());
+
     logging_error!(Type::Setup, true, init::startup_script().await);
 
-    // 诊断服务状态
-    /*     logging!(info, Type::Service, true, "执行服务状态诊断");
-    {
-        match crate::core::service::diagnose_service().await {
-            Ok(_) => {
-                logging!(info, Type::Service, true, "服务诊断完成");
-            },
-            Err(e) => {
-                logging!(error, Type::Service, true, "服务诊断出错: {}", e);
-            },
-        }
-    } */
-
-    // 处理随机端口
     logging_error!(Type::System, true, resolve_random_port_config());
-    // 启动核心
-    logging!(trace, Type::Config, true, "Initial config");
+
+    logging!(trace, Type::Config, true, "初始化配置...");
     logging_error!(Type::Config, true, Config::init_config().await);
 
-    logging!(trace, Type::Core, "Starting CoreManager");
+    logging!(trace, Type::Core, true, "启动核心管理器...");
     logging_error!(Type::Core, true, CoreManager::global().init().await);
 
-    // setup a simple http server for singleton
-    log::trace!(target: "app", "launch embed server");
+    log::trace!(target: "app", "启动内嵌服务器...");
     server::embed_server();
 
-    log::trace!(target: "app", "Initial system tray");
     logging_error!(Type::Tray, true, tray::Tray::global().init());
-    logging_error!(Type::Tray, true, tray::Tray::global().create_systray(app));
 
+    if let Some(app_handle) = handle::Handle::global().app_handle() {
+        logging!(info, Type::Tray, true, "创建系统托盘...");
+        let result = tray::Tray::global().create_tray_from_handle(&app_handle);
+        if result.is_ok() {
+            logging!(info, Type::Tray, true, "系统托盘创建成功");
+        } else if let Err(e) = result {
+            logging!(error, Type::Tray, true, "系统托盘创建失败: {}", e);
+        }
+    } else {
+        logging!(
+            error,
+            Type::Tray,
+            true,
+            "无法创建系统托盘: app_handle不存在"
+        );
+    }
+
+    // 更新系统代理
     logging_error!(
         Type::System,
         true,
@@ -147,11 +207,14 @@ pub async fn resolve_setup(app: &mut App) {
         sysopt::Sysopt::global().init_guard_sysproxy()
     );
 
+    // 创建窗口
     let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
     create_window(!is_silent_start);
 
+    // 初始化定时器
     logging_error!(Type::System, true, timer::Timer::global().init());
 
+    // 自动进入轻量模式
     let enable_auto_light_weight_mode =
         { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
     if enable_auto_light_weight_mode && !is_silent_start {
@@ -160,12 +223,13 @@ pub async fn resolve_setup(app: &mut App) {
 
     logging_error!(Type::Tray, true, tray::Tray::global().update_part());
 
-    // 初始化热键
-    logging!(trace, Type::System, true, "Initial hotkeys");
+    logging!(trace, Type::System, true, "初始化热键...");
     logging_error!(Type::System, true, hotkey::Hotkey::global().init());
+
+    logging!(info, Type::Setup, true, "异步设置任务完成");
 }
 
-/// reset system proxy (异步版)
+/// reset system proxy (异步)
 pub async fn resolve_reset_async() {
     #[cfg(target_os = "macos")]
     logging!(info, Type::Tray, true, "Unsubscribing from traffic updates");
@@ -185,321 +249,136 @@ pub async fn resolve_reset_async() {
     }
 }
 
-/// 窗口创建锁守卫
-struct WindowCreateGuard;
+/// Create the main window
+pub fn create_window(is_show: bool) -> bool {
+    logging!(
+        info,
+        Type::Window,
+        true,
+        "开始创建主窗口, is_show={}",
+        is_show
+    );
 
-impl Drop for WindowCreateGuard {
-    fn drop(&mut self) {
-        let mut lock = get_window_creating_lock().lock();
-        lock.0 = false;
-        logging!(info, Type::Window, true, "窗口创建过程已完成，释放锁");
-    }
-}
+    let creating_lock = get_window_creating_lock();
+    let mut creating = creating_lock.lock();
 
-/// create main window
-pub fn create_window(is_showup: bool) {
-    // 尝试获取窗口创建锁
-    let mut creating_lock = get_window_creating_lock().lock();
-    let (is_creating, last_create_time) = *creating_lock;
-    let now = Instant::now();
+    let (is_creating, last_time) = *creating;
+    let elapsed = last_time.elapsed();
 
-    // 检查是否有其他线程正在创建窗口，防止短时间内多次创建窗口导致竞态条件
-    if is_creating && now.duration_since(last_create_time) < Duration::from_secs(2) {
+    if is_creating && elapsed < Duration::from_secs(2) {
         logging!(
-            warn,
+            info,
             Type::Window,
             true,
-            "另一个窗口创建过程正在进行中，跳过本次创建请求"
+            "窗口创建请求被忽略，因为最近创建过 ({:?}ms)",
+            elapsed.as_millis()
         );
-        return;
+        return false;
     }
 
-    *creating_lock = (true, now);
-    drop(creating_lock);
+    *creating = (true, Instant::now());
 
-    // 创建窗口锁守卫结束时自动释放锁
-    let _guard = WindowCreateGuard;
-
-    // 打印 .window-state.json 文件路径
-    let window_state_file = dirs::app_home_dir()
-        .ok()
-        .map(|dir| dir.join(".window-state.json"));
-    logging!(
-        info,
-        Type::Window,
-        true,
-        "窗口状态文件路径: {:?}",
-        window_state_file
-    );
-
-    // 从文件加载窗口状态
-    if let Some(window_state_file_path) = window_state_file {
-        if window_state_file_path.exists() {
-            match std::fs::read_to_string(&window_state_file_path) {
-                Ok(content) => {
-                    logging!(
-                        debug,
-                        Type::Window,
-                        true,
-                        "读取窗口状态文件内容成功: {} 字节",
-                        content.len()
-                    );
-
-                    match serde_json::from_str::<WindowState>(&content) {
-                        Ok(window_state) => {
-                            logging!(
-                                info,
-                                Type::Window,
-                                true,
-                                "成功解析窗口状态: width={:?}, height={:?}",
-                                window_state.width,
-                                window_state.height
-                            );
-
-                            // 存储窗口状态以供后续使用
-                            if let Some(width) = window_state.width {
-                                STATE_WIDTH.set(width).ok();
-                            }
-                            if let Some(height) = window_state.height {
-                                STATE_HEIGHT.set(height).ok();
-                            }
-                        }
-                        Err(e) => {
-                            logging!(error, Type::Window, true, "解析窗口状态文件失败: {:?}", e);
-                        }
-                    }
-                }
-                Err(e) => {
-                    logging!(error, Type::Window, true, "读取窗口状态文件失败: {:?}", e);
-                }
-            }
-        } else {
-            logging!(
-                info,
-                Type::Window,
-                true,
-                "窗口状态文件不存在，将使用默认设置"
-            );
-        }
-    }
-
-    if !is_showup {
-        logging!(info, Type::Window, "Not to display create window");
-        return;
-    }
-
-    logging!(info, Type::Window, true, "Creating window");
-
-    let app_handle = handle::Handle::global().app_handle().unwrap();
-    #[cfg(target_os = "macos")]
-    AppHandleManager::global().set_activation_policy_regular();
-
-    // 检查是否从轻量模式恢复
-    let from_lightweight = crate::module::lightweight::is_in_lightweight_mode();
-    if from_lightweight {
-        logging!(info, Type::Window, true, "从轻量模式恢复窗口");
-        crate::module::lightweight::exit_lightweight_mode();
-    }
-
-    if let Some(window) = handle::Handle::global().get_window() {
-        logging!(info, Type::Window, true, "Found existing window");
-
-        if window.is_minimized().unwrap_or(false) {
-            let _ = window.unminimize();
-        }
-
-        if from_lightweight {
-            // 从轻量模式恢复需要销毁旧窗口以重建
-            logging!(info, Type::Window, true, "销毁旧窗口以重建新窗口");
-            let _ = window.close();
-
-            // 添加短暂延迟确保窗口正确关闭
-            std::thread::sleep(std::time::Duration::from_millis(100));
-        } else {
-            // 普通情况直接显示窗口
-            let _ = window.show();
-            let _ = window.set_focus();
-            return;
-        }
-    }
-
-    let width = STATE_WIDTH.get().copied().unwrap_or(DEFAULT_WIDTH);
-    let height = STATE_HEIGHT.get().copied().unwrap_or(DEFAULT_HEIGHT);
-
-    logging!(
-        info,
-        Type::Window,
-        true,
-        "Initializing new window with size: {}x{}",
-        width,
-        height
-    );
-
-    // 根据不同平台创建不同配置的窗口
-    #[cfg(target_os = "macos")]
-    let win_builder = {
-        // 基本配置
-        let builder = tauri::WebviewWindowBuilder::new(
-            &app_handle,
-            "main",
-            tauri::WebviewUrl::App("index.html".into()),
-        )
-        .title("Clash Verge")
-        .center()
-        .decorations(true)
-        .hidden_title(true) // 隐藏标题文本
-        .fullscreen(false)
-        .inner_size(width as f64, height as f64)
-        .min_inner_size(520.0, 520.0)
-        .visible(false);
-
-        // 尝试设置标题栏样式
-        // 注意：根据Tauri版本不同，此API可能有变化
-        // 如果编译出错，请注释掉下面这行
-        let builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
-
-        builder
-    };
-
-    #[cfg(not(target_os = "macos"))]
-    let win_builder = tauri::WebviewWindowBuilder::new(
-        &app_handle,
-        "main",
+    match tauri::WebviewWindowBuilder::new(
+        &handle::Handle::global().app_handle().unwrap(),
+        "main", /* the unique window label */
         tauri::WebviewUrl::App("index.html".into()),
     )
     .title("Clash Verge")
     .center()
+    .decorations(true)
+    .hidden_title(true)
     .fullscreen(false)
-    .inner_size(width as f64, height as f64)
+    .inner_size(DEFAULT_WIDTH as f64, DEFAULT_HEIGHT as f64)
     .min_inner_size(520.0, 520.0)
     .visible(false)
-    .decorations(false);
+    .build()
+    {
+        Ok(_) => {
+            logging!(info, Type::Window, true, "主窗口创建成功");
 
-    let window = win_builder.build();
+            *creating = (false, Instant::now());
 
-    match window {
-        Ok(window) => {
-            logging!(info, Type::Window, true, "Window created successfully");
-
-            // 静默启动模式等窗口初始化再启动自动进入轻量模式的计时监听器，防止初始化的时候找不到窗口对象导致监听器挂载失败
-            lightweight::run_once_auto_lightweight();
-
-            // 标记前端UI已准备就绪，向前端发送启动完成事件
-            let app_handle_clone = app_handle.clone();
-
-            // 获取窗口创建后的初始大小
-            if let Ok(size) = window.inner_size() {
-                let state_width = STATE_WIDTH.get().copied().unwrap_or(DEFAULT_WIDTH);
-                let state_height = STATE_HEIGHT.get().copied().unwrap_or(DEFAULT_HEIGHT);
-
-                // 输出所有尺寸信息
-                logging!(
-                    info,
-                    Type::Window,
-                    true,
-                    "API报告的窗口尺寸: {}x{}, 状态文件尺寸: {}x{}, 默认尺寸: {}x{}",
-                    size.width,
-                    size.height,
-                    state_width,
-                    state_height,
-                    DEFAULT_WIDTH,
-                    DEFAULT_HEIGHT
-                );
-
-                // 优化窗口大小设置
-                if size.width < state_width || size.height < state_height {
-                    logging!(
-                        info,
-                        Type::Window,
-                        true,
-                        "强制设置窗口尺寸: {}x{}",
-                        state_width,
-                        state_height
-                    );
-
-                    // 尝试不同的方式设置窗口大小
-                    let _ = window.set_size(tauri::PhysicalSize {
-                        width: state_width,
-                        height: state_height,
-                    });
-
-                    // 关键：等待短暂时间让窗口尺寸生效
-                    std::thread::sleep(std::time::Duration::from_millis(50));
-
-                    // 再次检查窗口尺寸
-                    if let Ok(new_size) = window.inner_size() {
-                        logging!(
-                            info,
-                            Type::Window,
-                            true,
-                            "设置后API报告的窗口尺寸: {}x{}",
-                            new_size.width,
-                            new_size.height
-                        );
-                    }
-                }
-            }
-
-            // 标记此窗口是否从轻量模式恢复
-            let was_from_lightweight = from_lightweight;
+            update_ui_ready_stage(UiReadyStage::NotStarted);
 
             AsyncHandler::spawn(move || async move {
-                // 处理启动完成
                 handle::Handle::global().mark_startup_completed();
+                logging!(info, Type::Window, true, "标记启动完成");
 
-                if let Some(window) = app_handle_clone.get_webview_window("main") {
-                    // 发送启动完成事件
-                    let _ = window.emit("verge://startup-completed", ());
+                if let Some(app_handle) = handle::Handle::global().app_handle() {
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        let _ = window.emit("verge://startup-completed", ());
+                        logging!(info, Type::Window, true, "已发送启动完成事件");
 
-                    if is_showup {
-                        let window_clone = window.clone();
+                        if is_show {
+                            let window_clone = window.clone();
 
-                        // 从轻量模式恢复时使用较短的超时，避免卡死
-                        let timeout_seconds = if was_from_lightweight {
-                            // 从轻量模式恢复只等待2秒，确保不会卡死
-                            2
-                        } else {
-                            5
-                        };
+                            let timeout_seconds =
+                                if crate::module::lightweight::is_in_lightweight_mode() {
+                                    2
+                                } else {
+                                    5
+                                };
 
-                        // 使用普通的等待方式替代事件监听，简化实现
-                        let wait_result =
-                            tokio::time::timeout(Duration::from_secs(timeout_seconds), async {
-                                while !*get_ui_ready().read() {
-                                    tokio::time::sleep(Duration::from_millis(100)).await;
+                            logging!(
+                                info,
+                                Type::Window,
+                                true,
+                                "等待UI就绪，最多{}秒",
+                                timeout_seconds
+                            );
+
+                            let wait_result =
+                                tokio::time::timeout(Duration::from_secs(timeout_seconds), async {
+                                    let mut check_count = 0;
+                                    while !*get_ui_ready().read() {
+                                        check_count += 1;
+                                        if check_count % 10 == 0 {
+                                            let state = get_ui_ready_state();
+                                            let stage = *state.stage.read();
+                                            logging!(
+                                                info,
+                                                Type::Window,
+                                                true,
+                                                "等待UI就绪中... 当前阶段: {:?}, 已等待: {}ms",
+                                                stage,
+                                                check_count * 100
+                                            );
+                                        }
+                                        tokio::time::sleep(Duration::from_millis(100)).await;
+                                    }
+                                })
+                                .await;
+
+                            match wait_result {
+                                Ok(_) => {
+                                    logging!(info, Type::Window, true, "UI就绪，显示窗口");
                                 }
-                            })
-                            .await;
+                                Err(_) => {
+                                    logging!(
+                                        warn,
+                                        Type::Window,
+                                        true,
+                                        "等待UI就绪超时({}秒)，强制显示窗口",
+                                        timeout_seconds
+                                    );
 
-                        // 根据结果处理
-                        match wait_result {
-                            Ok(_) => {
-                                logging!(info, Type::Window, true, "UI就绪，显示窗口");
+                                    *get_ui_ready().write() = true;
+                                }
                             }
-                            Err(_) => {
-                                logging!(
-                                    warn,
-                                    Type::Window,
-                                    true,
-                                    "等待UI就绪超时({}秒)，强制显示窗口",
-                                    timeout_seconds
-                                );
-                                // 强制设置UI就绪状态
-                                *get_ui_ready().write() = true;
-                            }
+
+                            let _ = window_clone.show();
+                            let _ = window_clone.set_focus();
+
+                            logging!(info, Type::Window, true, "窗口创建和显示流程已完成");
                         }
-
-                        // 显示窗口
-                        let _ = window_clone.show();
-                        let _ = window_clone.set_focus();
-
-                        logging!(info, Type::Window, true, "窗口创建和显示流程已完成");
                     }
                 }
             });
+            true
         }
         Err(e) => {
             logging!(error, Type::Window, true, "Failed to create window: {}", e);
+            false
         }
     }
 }
@@ -529,7 +408,6 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
             .find(|(key, _)| key == "name")
             .map(|(_, value)| value.into_owned());
 
-        // 通过直接获取查询部分并解析特定参数来避免 URL 转义问题
         let url_param = if let Some(query) = link_parsed.query() {
             let prefix = "url=";
             if let Some(pos) = query.find(prefix) {

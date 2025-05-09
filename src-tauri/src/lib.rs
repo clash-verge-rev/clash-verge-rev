@@ -86,23 +86,30 @@ impl AppHandleManager {
 
 #[allow(clippy::panic)]
 pub fn run() {
-    // 初始化网络管理器
     utils::network::NetworkManager::global().init();
 
-    // 单例检测 - 使用超时机制防止阻塞
+    let _ = utils::dirs::init_portable_flag();
+
+    // 单例检测
     let app_exists: bool = AsyncHandler::block_on(move || async move {
+        logging!(info, Type::Setup, true, "开始检查单例实例...");
         match timeout(Duration::from_secs(3), server::check_singleton()).await {
             Ok(result) => {
                 if result.is_err() {
-                    println!("app exists");
+                    logging!(info, Type::Setup, true, "检测到已有应用实例运行");
                     true
                 } else {
+                    logging!(info, Type::Setup, true, "未检测到其他应用实例");
                     false
                 }
             }
             Err(_) => {
-                // 超时处理
-                println!("singleton check timeout, assuming app doesn't exist");
+                logging!(
+                    warn,
+                    Type::Setup,
+                    true,
+                    "单例检查超时，假定没有其他实例运行"
+                );
                 false
             }
         }
@@ -136,9 +143,11 @@ pub fn run() {
                 .build(),
         )
         .setup(|app| {
+            logging!(info, Type::Setup, true, "开始应用初始化...");
             #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
+                logging!(info, Type::Setup, true, "注册深层链接...");
                 logging_error!(Type::System, true, app.deep_link().register_all());
             }
             app.deep_link().on_open_url(|event| {
@@ -152,23 +161,49 @@ pub fn run() {
                 });
             });
 
-            // 使用 block_on 但增加超时保护
-            AsyncHandler::block_on(|| async {
-                match timeout(Duration::from_secs(30), resolve::resolve_setup(app)).await {
+            // 异步处理
+            let app_handle = app.app_handle().clone();
+            AsyncHandler::spawn(move || async move {
+                logging!(info, Type::Setup, true, "异步执行应用设置...");
+                match timeout(
+                    Duration::from_secs(30),
+                    resolve::resolve_setup_async(&app_handle),
+                )
+                .await
+                {
                     Ok(_) => {
-                        logging!(info, Type::Setup, true, "App setup completed successfully");
+                        logging!(info, Type::Setup, true, "应用设置成功完成");
                     }
                     Err(_) => {
                         logging!(
                             error,
                             Type::Setup,
                             true,
-                            "App setup timed out, proceeding anyway"
+                            "应用设置超时(30秒)，继续执行后续流程"
                         );
                     }
                 }
             });
 
+            logging!(info, Type::Setup, true, "执行主要设置操作...");
+
+            logging!(info, Type::Setup, true, "初始化AppHandleManager...");
+            AppHandleManager::global().init(app.app_handle().clone());
+
+            logging!(info, Type::Setup, true, "初始化核心句柄...");
+            core::handle::Handle::global().init(app.app_handle());
+
+            logging!(info, Type::Setup, true, "初始化配置...");
+            if let Err(e) = utils::init::init_config() {
+                logging!(error, Type::Setup, true, "初始化配置失败: {}", e);
+            }
+
+            logging!(info, Type::Setup, true, "初始化资源...");
+            if let Err(e) = utils::init::init_resources() {
+                logging!(error, Type::Setup, true, "初始化资源失败: {}", e);
+            }
+
+            logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -184,8 +219,9 @@ pub fn run() {
             cmd::get_system_hostname,
             cmd::restart_core,
             cmd::restart_app,
-            // 添加新的命令
+            // 启动命令
             cmd::notify_ui_ready,
+            cmd::update_ui_stage,
             cmd::reset_ui_ready_state,
             cmd::get_running_mode,
             cmd::get_app_uptime,
@@ -279,6 +315,7 @@ pub fn run() {
 
     app.run(|app_handle, e| match e {
         tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+            logging!(info, Type::System, true, "应用就绪或恢复");
             AppHandleManager::global().init(app_handle.clone());
             #[cfg(target_os = "macos")]
             {
@@ -286,6 +323,7 @@ pub fn run() {
                     .get_handle()
                     .get_webview_window("main")
                 {
+                    logging!(info, Type::Window, true, "设置macOS窗口标题");
                     let _ = window.set_title("Clash Verge");
                 }
             }
@@ -323,8 +361,11 @@ pub fn run() {
                         }
                         println!("closing window...");
                         api.prevent_close();
-                        let window = core::handle::Handle::global().get_window().unwrap();
-                        let _ = window.hide();
+                        if let Some(window) = core::handle::Handle::global().get_window() {
+                            let _ = window.hide();
+                        } else {
+                            logging!(warn, Type::Window, true, "尝试隐藏窗口但窗口不存在");
+                        }
                     }
                     tauri::WindowEvent::Focused(true) => {
                         #[cfg(target_os = "macos")]

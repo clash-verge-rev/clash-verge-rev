@@ -87,23 +87,18 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
     let icon_cache_dir = wrap_err!(dirs::app_home_dir())?.join("icons").join("cache");
     let icon_path = icon_cache_dir.join(&name);
 
-    // 如果文件已存在，直接返回路径
     if icon_path.exists() {
         return Ok(icon_path.to_string_lossy().to_string());
     }
 
-    // 确保缓存目录存在
     if !icon_cache_dir.exists() {
         let _ = std::fs::create_dir_all(&icon_cache_dir);
     }
 
-    // 使用临时文件名来下载
     let temp_path = icon_cache_dir.join(format!("{}.downloading", &name));
 
-    // 下载文件到临时位置
     let response = wrap_err!(reqwest::get(&url).await)?;
 
-    // 检查内容类型是否为图片
     let content_type = response
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
@@ -112,16 +107,13 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
 
     let is_image = content_type.starts_with("image/");
 
-    // 获取响应内容
     let content = wrap_err!(response.bytes().await)?;
 
-    // 检查内容是否为HTML (针对CDN错误页面)
     let is_html = content.len() > 15
         && (content.starts_with(b"<!DOCTYPE html")
             || content.starts_with(b"<html")
             || content.starts_with(b"<?xml"));
 
-    // 只有当内容确实是图片时才保存
     if is_image && !is_html {
         {
             let mut file = match std::fs::File::create(&temp_path) {
@@ -138,7 +130,6 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
             wrap_err!(std::io::copy(&mut content.as_ref(), &mut file))?;
         }
 
-        // 再次检查目标文件是否已存在，避免重命名覆盖其他线程已完成的文件
         if !icon_path.exists() {
             match std::fs::rename(&temp_path, &icon_path) {
                 Ok(_) => {}
@@ -220,6 +211,29 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
 pub fn notify_ui_ready() -> CmdResult<()> {
     log::info!(target: "app", "前端UI已准备就绪");
     crate::utils::resolve::mark_ui_ready();
+    Ok(())
+}
+
+/// UI加载阶段
+#[tauri::command]
+pub fn update_ui_stage(stage: String) -> CmdResult<()> {
+    log::info!(target: "app", "UI加载阶段更新: {}", stage);
+
+    use crate::utils::resolve::UiReadyStage;
+
+    let stage_enum = match stage.as_str() {
+        "NotStarted" => UiReadyStage::NotStarted,
+        "Loading" => UiReadyStage::Loading,
+        "DomReady" => UiReadyStage::DomReady,
+        "ResourcesLoaded" => UiReadyStage::ResourcesLoaded,
+        "Ready" => UiReadyStage::Ready,
+        _ => {
+            log::warn!(target: "app", "未知的UI加载阶段: {}", stage);
+            return Err(format!("未知的UI加载阶段: {}", stage));
+        }
+    };
+
+    crate::utils::resolve::update_ui_ready_stage(stage_enum);
     Ok(())
 }
 
