@@ -254,9 +254,20 @@ pub fn create_window(is_show: bool) -> bool {
         info,
         Type::Window,
         true,
-        "开始创建主窗口, is_show={}",
+        "开始创建/显示主窗口, is_show={}",
         is_show
     );
+
+    if let Some(app_handle) = handle::Handle::global().app_handle() {
+        if let Some(window) = app_handle.get_webview_window("main") {
+            logging!(info, Type::Window, true, "主窗口已存在，将显示现有窗口");
+            if is_show {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+            return true;
+        }
+    }
 
     let creating_lock = get_window_creating_lock();
     let mut creating = creating_lock.lock();
