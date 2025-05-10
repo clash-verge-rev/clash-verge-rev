@@ -108,7 +108,12 @@ pub fn service_log_file() -> Result<PathBuf> {
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{}.log", local_time);
     let log_file = log_dir.join(log_file);
-    std::fs::create_dir_all(&log_dir)?;
+    if !log_dir.exists() {
+        std::fs::create_dir_all(&log_dir)?;
+    }
+    if !log_file.exists() {
+        std::fs::File::create(&log_file)?;
+    }
     Ok(log_file)
 }
 
