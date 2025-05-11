@@ -1025,7 +1025,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
             fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
               getSystem() === "windows" ? ", twemoji mozilla" : ""
             }`,
-            fontLigatures: true,
+            fontLigatures: false,
             smoothScrolling: true,
           }}
           onChange={handleYamlChange}
