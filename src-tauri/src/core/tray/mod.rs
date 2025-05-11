@@ -268,7 +268,7 @@ impl Tray {
         };
         #[cfg(target_os = "macos")]
         {
-            let enable_tray_speed = verge.enable_tray_speed.unwrap_or(true);
+            let enable_tray_speed = verge.enable_tray_speed.unwrap_or(false);
             let enable_tray_icon = verge.enable_tray_icon.unwrap_or(true);
             let colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
             let is_colorful = colorful == "colorful";

@@ -303,7 +303,7 @@ impl IVerge {
             webdav_url: None,
             webdav_username: None,
             webdav_password: None,
-            enable_tray_speed: Some(true),
+            enable_tray_speed: Some(false),
             enable_tray_icon: Some(true),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),

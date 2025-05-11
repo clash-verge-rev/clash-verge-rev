@@ -188,7 +188,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
           <Item>
             <ListItemText primary={t("Enable Tray Speed")} />
             <GuardState
-              value={verge?.enable_tray_speed ?? true}
+              value={verge?.enable_tray_speed ?? false}
               valueProps="checked"
               onCatch={onError}
               onFormat={onSwitchFormat}
