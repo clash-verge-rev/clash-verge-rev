@@ -233,3 +233,26 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
     let content = fs::read_to_string(&dns_path).map_err(|e| e.to_string())?;
     Ok(content)
 }
+
+/// 验证DNS配置文件
+#[tauri::command]
+pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
+    use crate::core::CoreManager;
+    use crate::utils::dirs;
+
+    let app_dir = dirs::app_home_dir().map_err(|e| e.to_string())?;
+    let dns_path = app_dir.join("dns_config.yaml");
+    let dns_path_str = dns_path.to_str().unwrap_or_default();
+
+    if !dns_path.exists() {
+        return Ok((false, "DNS config file not found".to_string()));
+    }
+
+    match CoreManager::global()
+        .validate_config_file(dns_path_str, None)
+        .await
+    {
+        Ok(result) => Ok(result),
+        Err(e) => Err(e.to_string()),
+    }
+}

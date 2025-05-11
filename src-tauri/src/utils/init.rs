@@ -142,8 +142,8 @@ pub fn delete_log() -> Result<()> {
 fn init_dns_config() -> Result<()> {
     use serde_yaml::Value;
 
-    // 获取默认DNS配置
-    let default_dns_config = serde_yaml::Mapping::from_iter([
+    // 创建DNS子配置
+    let dns_config = serde_yaml::Mapping::from_iter([
         ("enable".into(), Value::Bool(true)),
         ("listen".into(), Value::String(":53".into())),
         ("enhanced-mode".into(), Value::String("fake-ip".into())),
@@ -229,6 +229,12 @@ fn init_dns_config() -> Result<()> {
                 ),
             ])),
         ),
+    ]);
+
+    // 获取默认DNS和host配置
+    let default_dns_config = serde_yaml::Mapping::from_iter([
+        ("dns".into(), Value::Mapping(dns_config)),
+        ("hosts".into(), Value::Mapping(serde_yaml::Mapping::new())),
     ]);
 
     // 检查DNS配置文件是否存在

@@ -15,9 +15,6 @@ pub const ITEM_MERGE: &str = "# Profile Enhancement Merge Template for Clash Ver
 
 profile:
   store-selected: true
-
-dns:
-  use-system-hosts: false
 ";
 
 pub const ITEM_MERGE_EMPTY: &str = "# Profile Enhancement Merge Template for Clash Verge

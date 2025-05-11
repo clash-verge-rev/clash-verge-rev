@@ -252,6 +252,7 @@ pub fn run() {
             cmd::apply_dns_config,
             cmd::check_dns_config_exists,
             cmd::get_dns_config_content,
+            cmd::validate_dns_config,
             // verge
             cmd::get_verge_config,
             cmd::patch_verge_config,
