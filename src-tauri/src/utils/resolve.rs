@@ -295,7 +295,7 @@ pub fn create_window(is_show: bool) -> bool {
     )
     .title("Clash Verge")
     .center()
-    .decorations(true)
+    .decorations(false)
     .fullscreen(false)
     .inner_size(DEFAULT_WIDTH as f64, DEFAULT_HEIGHT as f64)
     .min_inner_size(520.0, 520.0)
