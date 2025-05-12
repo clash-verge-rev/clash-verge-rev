@@ -5,13 +5,14 @@ pub mod speed_rate;
 use crate::{
     cmd,
     config::Config,
-    feat,
+    feat, logging,
     module::{
         lightweight::{entry_lightweight_mode, is_in_lightweight_mode},
         mihomo::Rate,
     },
     resolve,
     utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
+    Type,
 };
 
 use anyhow::Result;
@@ -828,7 +829,13 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     match event.id.as_ref() {
         mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
             let mode = &mode[0..mode.len() - 5];
-            println!("change mode to: {}", mode);
+            logging!(
+                info,
+                Type::ProxyMode,
+                true,
+                "Switch Proxy Mode To: {}",
+                mode
+            );
             feat::change_clash_mode(mode.into());
         }
         "open_window" => {

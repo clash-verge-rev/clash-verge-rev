@@ -1,11 +1,13 @@
-use crate::utils::network::{NetworkManager, ProxyType};
-use crate::utils::{dirs, help, tmpl};
+use crate::utils::{
+    dirs, help,
+    network::{NetworkManager, ProxyType},
+    tmpl,
+};
 use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::fs;
-use std::time::Duration;
+use std::{fs, time::Duration};
 
 use super::Config;
 

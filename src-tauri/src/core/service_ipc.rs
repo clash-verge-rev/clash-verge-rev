@@ -1,5 +1,4 @@
-use crate::logging;
-use crate::utils::logging::Type;
+use crate::{logging, utils::logging::Type};
 use anyhow::{bail, Context, Result};
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
@@ -117,14 +116,18 @@ pub async fn send_ipc_request(
     command: IpcCommand,
     payload: serde_json::Value,
 ) -> Result<IpcResponse> {
-    use std::ffi::CString;
-    use std::fs::File;
-    use std::io::{Read, Write};
-    use std::os::windows::io::{FromRawHandle, RawHandle};
-    use std::ptr;
-    use winapi::um::fileapi::{CreateFileA, OPEN_EXISTING};
-    use winapi::um::handleapi::INVALID_HANDLE_VALUE;
-    use winapi::um::winnt::{FILE_SHARE_READ, FILE_SHARE_WRITE, GENERIC_READ, GENERIC_WRITE};
+    use std::{
+        ffi::CString,
+        fs::File,
+        io::{Read, Write},
+        os::windows::io::{FromRawHandle, RawHandle},
+        ptr,
+    };
+    use winapi::um::{
+        fileapi::{CreateFileA, OPEN_EXISTING},
+        handleapi::INVALID_HANDLE_VALUE,
+        winnt::{FILE_SHARE_READ, FILE_SHARE_WRITE, GENERIC_READ, GENERIC_WRITE},
+    };
 
     logging!(
         info,

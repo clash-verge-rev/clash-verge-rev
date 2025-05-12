@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, write};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
@@ -16,6 +16,7 @@ pub enum Type {
     Backup,
     Lightweight,
     Network,
+    ProxyMode,
 }
 
 impl fmt::Display for Type {
@@ -35,6 +36,7 @@ impl fmt::Display for Type {
             Type::Backup => write!(f, "[Backup]"),
             Type::Lightweight => write!(f, "[Lightweight]"),
             Type::Network => write!(f, "[Network]"),
+            Type::ProxyMode => write!(f, "[ProxMode]"),
         }
     }
 }

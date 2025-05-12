@@ -240,8 +240,10 @@ pub struct Traffic {
 impl Traffic {
     pub async fn get_traffic_stream() -> Result<impl Stream<Item = Result<Traffic, anyhow::Error>>>
     {
-        use futures::future::FutureExt;
-        use futures::stream::{self, StreamExt};
+        use futures::{
+            future::FutureExt,
+            stream::{self, StreamExt},
+        };
         use std::time::Duration;
 
         // 先处理错误和超时情况

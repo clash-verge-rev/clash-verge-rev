@@ -1,8 +1,10 @@
 use anyhow::Result;
 use lazy_static::lazy_static;
 use reqwest::{Client, ClientBuilder, Proxy, RequestBuilder, Response};
-use std::sync::{Arc, Mutex, Once};
-use std::time::{Duration, Instant};
+use std::{
+    sync::{Arc, Mutex, Once},
+    time::{Duration, Instant},
+};
 use tokio::runtime::{Builder, Runtime};
 
 use crate::{config::Config, logging, utils::logging::Type};

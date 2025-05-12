@@ -235,6 +235,7 @@ pub fn run() {
             cmd::uninstall_service,
             cmd::reinstall_service,
             cmd::repair_service,
+            cmd::is_service_available,
             // clash
             cmd::get_clash_info,
             cmd::patch_clash_config,

@@ -237,8 +237,7 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
 /// 验证DNS配置文件
 #[tauri::command]
 pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
-    use crate::core::CoreManager;
-    use crate::utils::dirs;
+    use crate::{core::CoreManager, utils::dirs};
 
     let app_dir = dirs::app_home_dir().map_err(|e| e.to_string())?;
     let dns_path = app_dir.join("dns_config.yaml");

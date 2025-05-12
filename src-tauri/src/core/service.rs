@@ -473,7 +473,7 @@ pub async fn reinstall_service() -> Result<()> {
 }
 
 /// 检查服务状态 - 使用IPC通信
-pub async fn check_service() -> Result<JsonResponse> {
+pub async fn check_ipc_service_status() -> Result<JsonResponse> {
     logging!(info, Type::Service, true, "开始检查服务状态 (IPC)");
 
     // 使用IPC通信
@@ -876,7 +876,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     }
 
     // 检查服务状态
-    match check_service().await {
+    match check_ipc_service_status().await {
         Ok(_) => {
             log::info!(target: "app", "服务可用但未运行核心，尝试启动");
             if let Ok(()) = start_with_existing_service(config_file).await {
@@ -947,7 +947,7 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 pub async fn is_service_running() -> Result<bool> {
     logging!(info, Type::Service, true, "开始检查服务是否正在运行");
 
-    match check_service().await {
+    match check_ipc_service_status().await {
         Ok(resp) => {
             if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
                 logging!(info, Type::Service, true, "服务正在运行");
@@ -1010,7 +1010,7 @@ pub async fn is_service_running() -> Result<bool> {
 pub async fn is_service_available() -> Result<()> {
     logging!(info, Type::Service, true, "开始检查服务是否可用");
 
-    match check_service().await {
+    match check_ipc_service_status().await {
         Ok(resp) => {
             if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
                 logging!(info, Type::Service, true, "服务可用");
