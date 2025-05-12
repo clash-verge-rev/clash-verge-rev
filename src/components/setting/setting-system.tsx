@@ -39,11 +39,6 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
   const { data: autoproxy } = useSWR("getAutotemProxy", getAutotemProxy);
-  const { data: autoLaunchEnabled } = useSWR(
-    "getAutoLaunchStatus",
-    getAutoLaunchStatus,
-    { revalidateOnFocus: false },
-  );
 
   const { isAdminMode, isSidecarMode, mutateRunningMode, isServiceOk } =
     useSystemState();
@@ -148,7 +143,7 @@ const SettingSystem = ({ onError }: Props) => {
             return patchVerge({ enable_tun_mode: e });
           }}
         >
-          <Switch edge="end" disabled={isServiceOk} />
+          <Switch edge="end" disabled={!isServiceOk} />
         </GuardState>
       </SettingItem>
       <SettingItem
