@@ -10,7 +10,7 @@
   "packageRules": [
     {
       "matchDatasources": ["npm"],
-      "minimumReleaseAge": "5 days"
+      "minimumReleaseAge": "3 days"
     },
     {
       "matchManagers": ["github-actions"],
