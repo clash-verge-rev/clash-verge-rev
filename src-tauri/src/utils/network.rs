@@ -160,7 +160,6 @@ impl NetworkManager {
                    .http2_keep_alive_timeout(H2_KEEP_ALIVE_TIMEOUT)
                    .http2_max_frame_size(H2_MAX_FRAME_SIZE)
                    .tcp_keepalive(Some(Duration::from_secs(10)))
-                   .http2_prior_knowledge()
                    .http2_max_header_list_size(16 * 1024);
 
                if let Ok(proxy) = Proxy::http(&proxy_scheme) {
@@ -204,7 +203,6 @@ impl NetworkManager {
                    .http2_keep_alive_timeout(H2_KEEP_ALIVE_TIMEOUT)
                    .http2_max_frame_size(H2_MAX_FRAME_SIZE)
                    .tcp_keepalive(Some(Duration::from_secs(10)))
-                   .http2_prior_knowledge()
                    .http2_max_header_list_size(16 * 1024);
 
                if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
@@ -267,7 +265,6 @@ impl NetworkManager {
             .http2_keep_alive_timeout(H2_KEEP_ALIVE_TIMEOUT)
             .http2_max_frame_size(H2_MAX_FRAME_SIZE)
             .tcp_keepalive(Some(Duration::from_secs(10)))
-            .http2_prior_knowledge()
             .http2_max_header_list_size(16 * 1024);
 
         if let Some(timeout) = timeout_secs {
