@@ -2638,7 +2638,7 @@ dependencies = [
  "httpdate",
  "itoa 1.0.11",
  "pin-project-lite",
- "socket2 0.4.10",
+ "socket2 0.5.7",
  "tokio",
  "tower-service",
  "tracing",
@@ -6746,9 +6746,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tipsy"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d541e092be0ab15968e1b16fef071d62ea18392c3ffde4916fe41588353040b7"
+checksum = "87436c1f3ae5b48b99a76ab180e61e8ab0cf1c6bdd613b7de2cd60d712d2721f"
 dependencies = [
  "dirs 6.0.0",
  "futures-util",
