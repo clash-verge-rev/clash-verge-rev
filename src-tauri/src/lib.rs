@@ -217,8 +217,11 @@ pub fn run() {
             cmd::get_portable_flag,
             cmd::get_network_interfaces,
             cmd::get_system_hostname,
-            cmd::restart_core,
             cmd::restart_app,
+            // 内核管理
+            cmd::start_core,
+            cmd::stop_core,
+            cmd::restart_core,
             // 启动命令
             cmd::notify_ui_ready,
             cmd::update_ui_stage,

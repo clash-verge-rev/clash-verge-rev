@@ -65,6 +65,19 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
     }
 }
 
+/// 启动核心
+#[tauri::command]
+pub async fn start_core() -> CmdResult {
+    wrap_err!(CoreManager::global().start_core().await)
+}
+
+/// 关闭核心
+#[tauri::command]
+pub async fn stop_core() -> CmdResult {
+    wrap_err!(CoreManager::global().stop_core().await)
+}
+
+
 /// 重启核心
 #[tauri::command]
 pub async fn restart_core() -> CmdResult {

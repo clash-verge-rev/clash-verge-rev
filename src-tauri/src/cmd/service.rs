@@ -1,7 +1,6 @@
 use super::CmdResult;
 use crate::{
     core::{service, CoreManager},
-    feat,
     utils::i18n::t,
 };
 

@@ -7,6 +7,7 @@ import {
   PauseRounded,
   WarningRounded,
   BuildRounded,
+  DeleteForeverRounded,
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { DialogRef, Switch } from "@/components/base";
@@ -19,8 +20,10 @@ import {
   getSystemProxy,
   getAutotemProxy,
   installService,
-  getAutoLaunchStatus,
+  uninstallService,
   restartCore,
+  startCore,
+  stopCore,
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { Button, Tooltip } from "@mui/material";
@@ -42,8 +45,6 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { isAdminMode, isSidecarMode, mutateRunningMode, isServiceOk } =
     useSystemState();
-
-  console.log("Is service running:", isServiceOk);
 
   // 判断Tun模式是否可用 - 当处于服务模式或管理员模式时可用
   const isTunAvailable = isServiceOk || (isSidecarMode && !isAdminMode);
@@ -73,21 +74,60 @@ const SettingSystem = ({ onError }: Props) => {
     await mutate("getAutotemProxy");
   };
 
-  // 安装系统服务
-  const onInstallService = useLockFn(async () => {
-    try {
-      showNotice("info", t("Installing Service..."), 1000);
-      await installService();
-      showNotice("success", t("Service Installed Successfully"), 2000);
-      await restartCore();
-      showNotice("info", t("Restarting Core"), 1000);
-      console.log("restartCore");
-      // 重新获取运行模式
-      await mutateRunningMode();
-    } catch (err: any) {
-      showNotice("error", err.message || err.toString(), 3000);
+  // 抽象服务操作逻辑
+  const handleServiceOperation = useLockFn(
+    async (
+      {
+        beforeMsg,
+        action,
+        actionMsg,
+        successMsg,
+      }: {
+        beforeMsg: string;
+        action: () => Promise<void>;
+        actionMsg: string;
+        successMsg: string;
+      }
+    ) => {
+      try {
+        showNotice("info", t(beforeMsg), 1000);
+        await stopCore();
+        showNotice("info", t(actionMsg), 1000);
+        await action();
+        showNotice("success", t(successMsg), 2000);
+        showNotice("info", t("Starting Core..."), 1000);
+        await startCore();
+        await mutateRunningMode();
+      } catch (err: any) {
+        showNotice("error", err.message || err.toString(), 3000);
+        try {
+          showNotice("info", t("Try running core as Sidecar..."), 1000);
+          await startCore();
+          await mutateRunningMode();
+        } catch (e: any) {
+          showNotice("error", e?.message || e?.toString(), 3000);
+        }
+      }
     }
-  });
+  );
+
+  // 安装系统服务
+  const onInstallService = () =>
+    handleServiceOperation({
+      beforeMsg: "Stopping Core...",
+      action: installService,
+      actionMsg: "Installing Service...",
+      successMsg: "Service Installed Successfully",
+    });
+
+  // 卸载系统服务
+  const onUninstallService = () =>
+    handleServiceOperation({
+      beforeMsg: "Stopping Core...",
+      action: uninstallService,
+      actionMsg: "Uninstalling Service...",
+      successMsg: "Service Uninstalled Successfully",
+    });
 
   return (
     <SettingList title={t("System Setting")}>
@@ -121,6 +161,21 @@ const SettingSystem = ({ onError }: Props) => {
                 </Button>
               </Tooltip>
             )}
+            {
+              isServiceOk && (
+                <Tooltip title={t("Uninstall Service")}>
+                  <Button
+                    // variant="outlined"
+                    color="secondary"
+                    size="small"
+                    onClick={onUninstallService}
+                    sx={{ mr: 1, minWidth: "32px", p: "4px" }}
+                  >
+                  <DeleteForeverRounded fontSize="small" />
+                  </Button>
+                </Tooltip>
+              )
+            }
           </>
         }
       >
