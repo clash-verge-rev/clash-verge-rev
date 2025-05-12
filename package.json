@@ -72,7 +72,7 @@
     "types-pac": "^1.0.3"
   },
   "devDependencies": {
-    "@actions/github": "6.0.0",
+    "@actions/github": "6.0.1",
     "@tauri-apps/cli": "2.5.0",
     "@types/cli-color": "2.0.6",
     "@types/fs-extra": "11.0.4",
