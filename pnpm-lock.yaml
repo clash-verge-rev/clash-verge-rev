@@ -217,8 +217,8 @@ importers:
         specifier: 4.1.1
         version: 4.1.1(prettier@3.5.3)
       react-devtools:
-        specifier: 6.1.1
-        version: 6.1.1
+        specifier: 6.1.2
+        version: 6.1.2
       tailwind-merge:
         specifier: 3.2.0
         version: 3.2.0
@@ -3262,11 +3262,11 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  react-devtools-core@6.1.1:
-    resolution: {integrity: sha512-TFo1MEnkqE6hzAbaztnyR5uLTMoz6wnEWwWBsCUzNt+sVXJycuRJdDqvL078M4/h65BI/YO5XWTaxZDWVsW0fw==}
+  react-devtools-core@6.1.2:
+    resolution: {integrity: sha512-ldFwzufLletzCikNJVYaxlxMLu7swJ3T2VrGfzXlMsVhZhPDKXA38DEROidaYZVgMAmQnIjymrmqto5pyfrwPA==}
 
-  react-devtools@6.1.1:
-    resolution: {integrity: sha512-72islUwEOBhW/xdmA+KmUAbFKt1t0t/lFBz6N8SaJ25hCLTuAMyGnGLTbnVfpNHiChHzlLjloRTFVIRRIPF4gg==}
+  react-devtools@6.1.2:
+    resolution: {integrity: sha512-7HiulH8kuMLD9zwHKO0j+TrEgx9/MtK8+cG5jMYq6B1dSztO+154h0FBWD67n45FJ1pZ9FmJh92lmX4EwzGPew==}
     hasBin: true
 
   react-dom@19.1.0:
@@ -5548,7 +5548,7 @@ snapshots:
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 16.18.126
+      '@types/node': 22.14.1
       '@types/responselike': 1.0.3
 
   '@types/cli-color@2.0.6': {}
@@ -5620,7 +5620,7 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 16.18.126
+      '@types/node': 22.14.1
 
   '@types/sortablejs@1.15.8': {}
 
@@ -5630,7 +5630,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 16.18.126
+      '@types/node': 22.14.1
     optional: true
 
   '@ungap/structured-clone@1.3.0': {}
@@ -7162,7 +7162,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  react-devtools-core@6.1.1:
+  react-devtools-core@6.1.2:
     dependencies:
       shell-quote: 1.8.2
       ws: 7.5.10
@@ -7170,13 +7170,13 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  react-devtools@6.1.1:
+  react-devtools@6.1.2:
     dependencies:
       cross-spawn: 5.1.0
       electron: 23.3.13
       internal-ip: 6.2.0
       minimist: 1.2.8
-      react-devtools-core: 6.1.1
+      react-devtools-core: 6.1.2
       update-notifier: 2.5.0
     transitivePeerDependencies:
       - bufferutil
