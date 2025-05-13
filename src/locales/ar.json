@@ -201,7 +201,7 @@
     "Settings": "الإعدادات",
     "System Setting": "إعدادات النظام",
     "Tun Mode": "وضع الشبكة الافتراضية",
-    "TUN requires Service Mode": "وضع TUN يتطلب تثبيت الخدمة",
+    "TUN requires Service Mode or Admin Mode": "وضع TUN يتطلب تثبيت الخدمة أو الوضع الإداري",
     "Install Service": "تثبيت الخدمة",
     "Install Service failed": "فشل تثبيت الخدمة",
     "Restart Core failed": "فشل إعادة تشغيل اللب",

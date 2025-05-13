@@ -77,7 +77,6 @@ pub async fn stop_core() -> CmdResult {
     wrap_err!(CoreManager::global().stop_core().await)
 }
 
-
 /// 重启核心
 #[tauri::command]
 pub async fn restart_core() -> CmdResult {

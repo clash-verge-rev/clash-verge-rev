@@ -201,7 +201,7 @@
   "Settings": "تنظیمات",
   "System Setting": "تنظیمات سیستم",
   "Tun Mode": "حالت شبکه مجازی",
-  "TUN requires Service Mode": "حالت TUN نیاز به نصب سرویس دارد",
+  "TUN requires Service Mode or Admin Mode": "حالت TUN نیاز به نصب سرویس دارد",
   "Install Service": "نصب سرویس",
   "Install Service failed": "نصب سرویس با شکست مواجه شد",
   "Restart Core failed": "بازنشانی هسته با شکست مواجه شد",

@@ -201,7 +201,7 @@
   "Settings": "Ayarlar",
   "System Setting": "Sistem Ayarları",
   "Tun Mode": "Tun Modu",
-  "TUN requires Service Mode": "TUN modu hizmet kurulumu gerektirir",
+  "TUN requires Service Mode or Admin Mode": "TUN modu hizmet kurulumu gerektirir",
   "Install Service": "Hizmeti Kur",
   "Install Service failed": "Hizmet kurulumu başarısız oldu",
   "Restart Core failed": "Çekirdek yeniden başlatma başarısız oldu",

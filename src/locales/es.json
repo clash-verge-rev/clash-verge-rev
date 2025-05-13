@@ -201,7 +201,7 @@
     "Settings": "Ajustes",
     "System Setting": "Ajustes del sistema",
     "Tun Mode": "Modo de interfaz virtual (TUN)",
-    "TUN requires Service Mode": "El modo TUN requiere instalar el servicio",
+    "TUN requires Service Mode or Admin Mode": "El modo TUN requiere instalar el servicio o el modo de administrador",
     "Install Service": "Instalar servicio",
     "Install Service failed": "Error al instalar el servicio",
     "Restart Core failed": "Error al reiniciar el núcleo",

@@ -201,7 +201,7 @@
   "Settings": "Настройки",
   "System Setting": "Системные настройки",
   "Tun Mode": "Режим виртуального сетевого интерфейса (TUN)",
-  "TUN requires Service Mode": "Для режима TUN необходимо установить службу",
+  "TUN requires Service Mode or Admin Mode": "Для режима TUN необходимо установить службу или режим администратора",
   "Install Service": "Установить службу",
   "Install Service failed": "Не удалось установить службу",
   "Restart Core failed": "Не удалось перезапустить ядро",

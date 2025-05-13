@@ -201,7 +201,7 @@
     "Settings": "Einstellungen",
     "System Setting": "Systemeinstellungen",
     "Tun Mode": "TUN-Modus",
-    "TUN requires Service Mode": "Der TUN-Modus erfordert die Installation des Dienstes",
+    "TUN requires Service Mode or Admin Mode": "Der TUN-Modus erfordert die Installation des Dienstes oder den Administrator-Modus",
     "Install Service": "Dienst installieren",
     "Install Service failed": "Dienstinstallation fehlgeschlagen",
     "Restart Core failed": "Neustart des Kerns fehlgeschlagen",

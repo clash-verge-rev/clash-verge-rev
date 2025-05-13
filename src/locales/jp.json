@@ -201,7 +201,7 @@
     "Settings": "設定",
     "System Setting": "システム設定",
     "Tun Mode": "仮想ネットワークカードモード",
-    "TUN requires Service Mode": "TUNモードではサービスのインストールが必要です",
+    "TUN requires Service Mode or Admin Mode": "TUNモードではサービスのインストールが必要です",
     "Install Service": "サービスをインストール",
     "Install Service failed": "サービスのインストールに失敗しました",
     "Restart Core failed": "コアの再起動に失敗しました",

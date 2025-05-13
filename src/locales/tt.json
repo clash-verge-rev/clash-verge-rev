@@ -201,7 +201,7 @@
   "Settings": "Сакламалар",
   "System Setting": "Тизим сакламалары",
   "Tun Mode": "Виртуал кырдау түре",
-  "TUN requires Service Mode": "TUN түре хизмәт түрене тиеш",
+  "TUN requires Service Mode or Admin Mode": "TUN түре хизмәт түрене тиеш",
   "Install Service": "Хизмәт орнату",
   "Install Service failed": "Хизмәт орнату бузылган",
   "Restart Core failed": "Нүкте қайтарак иске яздыру бузылган",

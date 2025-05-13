@@ -201,7 +201,7 @@
     "Settings": "Pengaturan",
     "System Setting": "Pengaturan sistem",
     "Tun Mode": "Mode kartu jaringan virtual",
-    "TUN requires Service Mode": "Mode TUN membutuhkan instalasi layanan",
+    "TUN requires Service Mode or Admin Mode": "Mode TUN membutuhkan instalasi layanan",
     "Install Service": "Instal layanan",
     "Install Service failed": "Gagal menginstal layanan",
     "Restart Core failed": "Gagal mengulang memulai inti",

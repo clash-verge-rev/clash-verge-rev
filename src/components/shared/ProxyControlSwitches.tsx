@@ -25,6 +25,8 @@ import {
   getAutotemProxy,
   getRunningMode,
   installService,
+  restartCore,
+  isServiceAvailable,
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { closeAllConnections } from "@/services/api";
@@ -70,7 +72,6 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   };
 
   const updateProxyStatus = async () => {
-    // 等待一小段时间让系统代理状态变化
     await new Promise((resolve) => setTimeout(resolve, 100));
     await mutate("getSystemProxy");
     await mutate("getAutotemProxy");
@@ -79,13 +80,46 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   // 安装系统服务
   const onInstallService = useLockFn(async () => {
     try {
-      showNotice('info', t("Installing Service..."), 1000);
+      showNotice('info', t("Installing Service..."));
       await installService();
-      showNotice('success', t("Service Installed Successfully"), 2000);
+      showNotice('success', t("Service Installed Successfully"));
+
+      showNotice('info', t("Waiting for service to be ready..."));
+      
+      let serviceReady = false;
+      for (let i = 0; i < 5; i++) {
+        try {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const isAvailable = await isServiceAvailable();
+          
+          if (isAvailable) {
+            serviceReady = true;
+            break;
+          }
+          
+          showNotice('info', t("Service not ready, retrying..."));
+        } catch (error) {
+          console.error("检查服务状态失败:", error);
+        }
+      }
+
+      showNotice('info', t("Restarting Core..."));
+      await restartCore();
+      
       // 重新获取运行模式
       await mutateRunningMode();
+      
+      // 更新服务状态
+      const serviceStatus = await isServiceAvailable();
+      mutate("isServiceAvailable", serviceStatus, false);
+      
+      if (serviceReady) {
+        showNotice('success', t("Service is ready and core restarted"));
+      } else {
+        showNotice('info', t("Service may not be fully ready"));
+      }
     } catch (err: any) {
-      showNotice('error', err.message || err.toString(), 3000);
+      showNotice('error', err.message || err.toString());
     }
   });
 
@@ -97,7 +131,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
             fontSize: "15px",
             fontWeight: "500",
             mb: 0.5,
-            display: "none", // 隐藏标签，因为在父组件中已经有标签了
+            display: "none",
           }}
         >
           {label}
@@ -216,7 +250,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               </Typography>
               {/*               <Typography variant="caption" color="text.secondary">
                 {isSidecarMode
-                  ? t("TUN requires Service Mode")
+                  ? t("TUN requires Service Mode or Admin Mode")
                   : t("For special applications")
                 }
               </Typography> */}
@@ -258,21 +292,19 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               onCatch={onError}
               onFormat={onSwitchFormat}
               onChange={(e) => {
-                // 当在sidecar模式下禁用切换
                 if (isSidecarMode) {
-                  showNotice('error', t("TUN requires Service Mode"), 2000);
+                  showNotice('error', t("TUN requires Service Mode or Admin Mode"));
                   return Promise.reject(
-                    new Error(t("TUN requires Service Mode")),
+                    new Error(t("TUN requires Service Mode or Admin Mode")),
                   );
                 }
                 onChangeData({ enable_tun_mode: e });
               }}
               onGuard={(e) => {
-                // 当在sidecar模式下禁用切换
                 if (isSidecarMode) {
-                  showNotice('error', t("TUN requires Service Mode"), 2000);
+                  showNotice('error', t("TUN requires Service Mode or Admin Mode"));
                   return Promise.reject(
-                    new Error(t("TUN requires Service Mode")),
+                    new Error(t("TUN requires Service Mode or Admin Mode")),
                   );
                 }
                 return patchVerge({ enable_tun_mode: e });

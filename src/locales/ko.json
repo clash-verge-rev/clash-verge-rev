@@ -201,7 +201,7 @@
     "Settings": "설정",
     "System Setting": "시스템 설정",
     "Tun Mode": "가상 네트워크 인터페이스 모드",
-    "TUN requires Service Mode": "TUN 모드는 서비스를 설치해야 합니다.",
+    "TUN requires Service Mode or Admin Mode": "TUN 모드는 서비스 모드 또는 관리자 모드를 설치해야 합니다.",
     "Install Service": "서비스 설치",
     "Install Service failed": "서비스 설치 실패",
     "Restart Core failed": "코어 재시작 실패",
