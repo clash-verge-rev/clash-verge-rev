@@ -9,8 +9,11 @@ import id from "@/locales/id.json";
 import ar from "@/locales/ar.json";
 import ko from "@/locales/ko.json";
 import tr from "@/locales/tr.json";
+import jp from "@/locales/jp.json";
+import de from "@/locales/de.json";
+import es from "@/locales/es.json";
 
-export const languages = { en, ru, zh, fa, tt, id, ar, ko, tr };
+export const languages = { en, ru, zh, fa, tt, id, ar, ko, tr, jp, de, es };
 
 const resources = Object.fromEntries(
   Object.entries(languages).map(([key, value]) => [
