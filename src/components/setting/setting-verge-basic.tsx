@@ -42,6 +42,7 @@ const languageOptions = Object.entries(languages).map(([code, _]) => {
     jp: "日本語",
     de: "Deutsch",
     es: "Español",
+    zhtw: "繁體中文",
   };
   return { code, label: labels[code] };
 });
