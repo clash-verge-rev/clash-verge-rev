@@ -319,42 +319,103 @@ export const gc = async () => {
   }
 };
 
-// Get current IP and geolocation information
-export const getIpInfo = async () => {
-  // 添加重试机制
-  const maxRetries = 3;
-  const retryDelay = 1500;
-  const timeout = 5000;
+// Get current IP and geolocation information （refactored IP detection）
+interface IpInfo {
+  ip: string;
+  country_code: string;
+  country: string;
+  region: string;
+  city: string;
+  organization: string;
+  asn: number;
+  asn_organization: string;
+  longitude: number;
+  latitude: number;
+  timezone: string;
+}
 
-  let lastError;
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      // 使用axios直接请求IP.sb的API，不通过clash代理
-      const response = await axios.get("https://api.ip.sb/geoip", { timeout });
-      return response.data as {
-        ip: string;
-        country_code: string;
-        country: string;
-        region: string;
-        city: string;
-        organization: string;
-        asn: number;
-        asn_organization: string;
-        longitude: number;
-        latitude: number;
-        timezone: string;
-      };
-    } catch (error) {
-      console.log(`获取IP信息失败，尝试 ${attempt + 1}/${maxRetries}`, error);
-      lastError = error;
+// 可用的IP检测服务列表
+const IP_CHECK_SERVICES = [
+  "https://api.ip.sb/geoip",
+  "https://ipapi.co/json",
+  "http://ip-api.com/json",
+  "https://ipinfo.io/json",
+  "https://ifconfig.co/json",
+];
+
+// 随机打乱服务列表顺序
+function shuffleServices() {
+  return [...IP_CHECK_SERVICES].sort(() => Math.random() - 0.5);
+}
+
+// 获取当前IP和地理位置信息（优化版本）
+export const getIpInfo = async (): Promise<IpInfo> => {
+  // 配置参数
+  const maxRetries = 3;
+  const serviceTimeout = 5000;
+  const overallTimeout = 15000;
+
+  const overallTimeoutController = new AbortController();
+  const overallTimeoutId = setTimeout(() => {
+    overallTimeoutController.abort();
+  }, overallTimeout);
+
+  try {
+    const shuffledServices = shuffleServices();
+    let lastError: Error | null = null;
+
+    for (const serviceUrl of shuffledServices) {
+      console.log(`尝试IP检测服务: ${serviceUrl}`);
       
-      // 如果不是最后一次尝试，则等待后重试
-      if (attempt < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+        
+        try {
+          const timeoutController = new AbortController();
+          timeoutId = setTimeout(() => {
+            timeoutController.abort();
+          }, serviceTimeout);
+
+          const response = await axios.get<IpInfo>(serviceUrl, {
+            signal: timeoutController.signal,
+            timeout: serviceTimeout,
+            headers: { "User-Agent": "Mozilla/5.0" },
+          });
+
+          if (timeoutId) clearTimeout(timeoutId);
+
+          if (response.data && response.data.ip) {
+            console.log(`IP检测成功，使用服务: ${serviceUrl}`);
+            return response.data;
+          } else {
+            throw new Error(`无效的响应格式 from ${serviceUrl}`);
+          }
+        } catch (error: any) {
+          if (timeoutId) clearTimeout(timeoutId);
+          
+          lastError = error;
+          console.log(
+            `尝试 ${attempt + 1}/${maxRetries} 失败 (${serviceUrl}):`,
+            error.message
+          );
+          
+          if (error.name === "AbortError") {
+            throw error;
+          }
+          
+          if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
       }
     }
-  }
 
-  throw lastError;
+    if (lastError) {
+      throw new Error(`所有IP检测服务都失败: ${lastError.message}`);
+    } else {
+      throw new Error('没有可用的IP检测服务');
+    }
+  } finally {
+    clearTimeout(overallTimeoutId);
+  }
 };
