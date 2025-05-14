@@ -21,7 +21,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
-    appLogLevel: "info",
+    appLogLevel: "warn",
     autoCloseConnection: true,
     autoCheckUpdate: true,
     enableBuiltinEnhanced: true,
@@ -35,7 +35,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     open: () => {
       setOpen(true);
       setValues({
-        appLogLevel: verge?.app_log_level ?? "info",
+        appLogLevel: verge?.app_log_level ?? "warn",
         autoCloseConnection: verge?.auto_close_connection ?? true,
         autoCheckUpdate: verge?.auto_check_update ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
