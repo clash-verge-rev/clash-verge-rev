@@ -51,10 +51,11 @@ const SettingClash = ({ onError }: Props) => {
   // 独立跟踪DNS设置开关状态
   const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
     // 尝试从localStorage获取之前保存的状态
-    const savedState = localStorage.getItem("dns_settings_enabled");
-    if (savedState !== null) {
-      return savedState === "true";
-    }
+    // 如果重装（或删除数据更新）前开关处于关闭状态，重装后会获取到错误的状态
+    // const savedState = localStorage.getItem("dns_settings_enabled");
+    // if (savedState !== null) {
+    //   return savedState === "true";
+    // }
     // 如果没有保存的状态，则从verge配置中获取
     return verge?.enable_dns_settings ?? false;
   });
