@@ -26,6 +26,7 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
   const webUIList = verge?.web_ui_list || [
     "https://metacubex.github.io/metacubexd/#/setup?http=true&hostname=%host&port=%port&secret=%secret",
     "https://yacd.metacubex.one/?hostname=%host&port=%port&secret=%secret",
+    "https://board.zash.run.place/#/setup?http=true&hostname=%host&port=%port&secret=%secret",
   ];
 
   const handleAdd = useLockFn(async (value: string) => {
