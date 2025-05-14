@@ -319,7 +319,7 @@ export const gc = async () => {
   }
 };
 
-// Get current IP and geolocation information （refactored IP detection）
+// Get current IP and geolocation information （refactored IP detection with service-specific mappings）
 interface IpInfo {
   ip: string;
   country_code: string;
@@ -334,13 +334,68 @@ interface IpInfo {
   timezone: string;
 }
 
-// 可用的IP检测服务列表
-const IP_CHECK_SERVICES = [
-  "https://api.ip.sb/geoip",
-  "https://ipapi.co/json",
-  "http://ip-api.com/json",
-  "https://ipinfo.io/json",
-  "https://ifconfig.co/json",
+// IP检测服务配置
+interface ServiceConfig {
+  url: string;
+  mapping: (data: any) => IpInfo;
+  timeout?: number; // 保留timeout字段（如有需要）
+}
+
+// 可用的IP检测服务列表及字段映射
+const IP_CHECK_SERVICES: ServiceConfig[] = [
+  {
+    url: "https://api.ip.sb/geoip",
+    mapping: (data) => ({
+      ip: data.ip || '',
+      country_code: data.country_code || '',
+      country: data.country || '',
+      region: data.region || '',
+      city: data.city || '',
+      organization: data.organization || data.isp || '',
+      asn: data.asn || 0,
+      asn_organization: data.asn_organization || '',
+      longitude: data.longitude || 0,
+      latitude: data.latitude || 0,
+      timezone: data.timezone || '',
+    }),
+  },
+  {
+    url: "https://ipapi.co/json",
+    mapping: (data) => ({
+      ip: data.ip || '',
+      country_code: data.country_code || '',
+      country: data.country_name || '',
+      region: data.region || '',
+      city: data.city || '',
+      organization: data.org || '',
+      asn: data.asn? parseInt(data.asn.replace('AS', '')) : 0,
+      asn_organization: data.org || '',
+      longitude: data.longitude || 0,
+      latitude: data.latitude || 0,
+      timezone: data.timezone || '',
+    }),
+  },
+  {
+    url: "https://ipinfo.io/json",
+    mapping: (data) => {
+      const [asn, ...orgParts] = (data.org || '').split(' ');
+      const asnOrg = orgParts.join(' ');
+
+      return {
+        ip: data.ip || '',
+        country_code: data.country || '',
+        country: data.country || '', 
+        region: data.region || '',
+        city: data.city || '',
+        organization: asnOrg || '',
+        asn: asn? parseInt(asn.replace('AS', '')) : 0,
+        asn_organization: asnOrg || '',
+        longitude: parseFloat(data.loc?.split(',')[1] || '0'),
+        latitude: parseFloat(data.loc?.split(',')[0] || '0'),
+        timezone: data.timezone || '',
+      };
+    },
+  },
 ];
 
 // 随机打乱服务列表顺序
@@ -348,12 +403,12 @@ function shuffleServices() {
   return [...IP_CHECK_SERVICES].sort(() => Math.random() - 0.5);
 }
 
-// 获取当前IP和地理位置信息（优化版本）
+// 获取当前IP和地理位置信息
 export const getIpInfo = async (): Promise<IpInfo> => {
   // 配置参数
   const maxRetries = 3;
   const serviceTimeout = 5000;
-  const overallTimeout = 15000;
+  const overallTimeout = 20000; // 增加总超时时间以容纳延迟
 
   const overallTimeoutController = new AbortController();
   const overallTimeoutId = setTimeout(() => {
@@ -364,45 +419,45 @@ export const getIpInfo = async (): Promise<IpInfo> => {
     const shuffledServices = shuffleServices();
     let lastError: Error | null = null;
 
-    for (const serviceUrl of shuffledServices) {
-      console.log(`尝试IP检测服务: ${serviceUrl}`);
-      
+    for (const service of shuffledServices) {
+      console.log(`尝试IP检测服务: ${service.url}`);
+
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
-        
+
         try {
           const timeoutController = new AbortController();
           timeoutId = setTimeout(() => {
             timeoutController.abort();
-          }, serviceTimeout);
+          }, service.timeout || serviceTimeout);
 
-          const response = await axios.get<IpInfo>(serviceUrl, {
+          const response = await axios.get(service.url, {
             signal: timeoutController.signal,
-            timeout: serviceTimeout,
-            headers: { "User-Agent": "Mozilla/5.0" },
+            timeout: service.timeout || serviceTimeout,
+            // 移除了headers参数（默认会使用axios的默认User-Agent）
           });
 
           if (timeoutId) clearTimeout(timeoutId);
 
           if (response.data && response.data.ip) {
-            console.log(`IP检测成功，使用服务: ${serviceUrl}`);
-            return response.data;
+            console.log(`IP检测成功，使用服务: ${service.url}`);
+            return service.mapping(response.data);
           } else {
-            throw new Error(`无效的响应格式 from ${serviceUrl}`);
+            throw new Error(`无效的响应格式 from ${service.url}`);
           }
         } catch (error: any) {
           if (timeoutId) clearTimeout(timeoutId);
-          
+
           lastError = error;
           console.log(
-            `尝试 ${attempt + 1}/${maxRetries} 失败 (${serviceUrl}):`,
+            `尝试 ${attempt + 1}/${maxRetries} 失败 (${service.url}):`,
             error.message
           );
-          
+
           if (error.name === "AbortError") {
             throw error;
           }
-          
+
           if (attempt < maxRetries - 1) {
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
