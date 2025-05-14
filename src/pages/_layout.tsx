@@ -15,7 +15,6 @@ import iconLight from "@/assets/image/icon_light.svg?react";
 import iconDark from "@/assets/image/icon_dark.svg?react";
 import { useThemeMode, useEnableLog } from "@/services/states";
 import { LayoutItem } from "@/components/layout/layout-item";
-import { LayoutControl } from "@/components/layout/layout-control";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
@@ -382,12 +381,6 @@ const Layout = () => {
 
           <div className="layout__right">
             <div className="the-bar">
-              <div
-                className="the-dragbar"
-                data-tauri-drag-region="true"
-                style={{ width: "100%" }}
-              />
-              {OS !== "macos" && <LayoutControl />}
             </div>
 
             <div className="the-content">
