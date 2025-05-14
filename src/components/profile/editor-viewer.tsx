@@ -97,7 +97,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     onClose,
   } = props;
 
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(undefined);
   const prevData = useRef<string | undefined>("");
   const currData = useRef<string | undefined>("");
 

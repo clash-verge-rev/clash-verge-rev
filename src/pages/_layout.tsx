@@ -24,7 +24,6 @@ import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import { getPortableFlag } from "@/services/cmds";
 import React from "react";
-import { TransitionGroup, CSSTransition } from "react-transition-group";
 import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";
 import { useClashInfo } from "@/hooks/use-clash";
@@ -391,15 +390,9 @@ const Layout = () => {
               {OS !== "macos" && <LayoutControl />}
             </div>
 
-            <TransitionGroup className="the-content">
-              <CSSTransition
-                key={location.pathname}
-                timeout={300}
-                classNames="page"
-              >
-                {React.cloneElement(routersEles, { key: location.pathname })}
-              </CSSTransition>
-            </TransitionGroup>
+            <div className="the-content">
+              {React.cloneElement(routersEles, { key: location.pathname })}
+            </div>
           </div>
         </Paper>
       </ThemeProvider>

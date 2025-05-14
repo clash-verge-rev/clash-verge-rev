@@ -12,7 +12,7 @@ export const FileInput = (props: Props) => {
 
   const { t } = useTranslation();
   // file input
-  const inputRef = useRef<any>();
+  const inputRef = useRef<any>(undefined);
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState("");
 
