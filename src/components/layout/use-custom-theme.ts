@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
-import { alpha, createTheme, Shadows, Theme } from "@mui/material";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { alpha, createTheme, Shadows, Theme as MuiTheme } from "@mui/material";
+import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useSetThemeMode, useThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
@@ -12,7 +12,7 @@ import {
   arSD as arXDataGrid,
 } from "@mui/x-data-grid/locales";
 import { useTranslation } from "react-i18next";
-const appWindow = getCurrentWebviewWindow();
+import { Theme as TauriOsTheme } from "@tauri-apps/api/window";
 
 const languagePackMap: Record<string, any> = {
   zh: { ...zhXDataGrid },
@@ -29,6 +29,7 @@ const getLanguagePackMap = (key: string) =>
  * custom theme
  */
 export const useCustomTheme = () => {
+  const appWindow: WebviewWindow = getCurrentWebviewWindow();
   const { verge } = useVerge();
   const { i18n } = useTranslation();
   const { theme_mode, theme_setting } = verge ?? {};
@@ -36,28 +37,42 @@ export const useCustomTheme = () => {
   const setMode = useSetThemeMode();
 
   useEffect(() => {
-    const themeMode = ["light", "dark", "system"].includes(theme_mode!)
+    const themeModeSetting = ["light", "dark", "system"].includes(theme_mode!)
       ? theme_mode!
       : "light";
 
-    if (themeMode !== "system") {
-      setMode(themeMode);
+    if (themeModeSetting !== "system") {
+      setMode(themeModeSetting as 'light' | 'dark');
       return;
     }
 
-    appWindow.theme().then((m) => m && setMode(m));
-    const unlisten = appWindow.onThemeChanged((e) => setMode(e.payload));
+    appWindow.theme().then((systemTheme: 'light' | 'dark' | null) => {
+      if (systemTheme) {
+        setMode(systemTheme);
+      }
+    });
+    const unlisten = appWindow.onThemeChanged(({ payload }: { payload: 'light' | 'dark' }) => {
+      setMode(payload);
+    });
 
     return () => {
-      unlisten.then((fn) => fn());
+      unlisten.then((fn: () => void) => fn());
     };
-  }, [theme_mode]);
+  }, [theme_mode, setMode, i18n, theme_setting, appWindow]);
+
+  useEffect(() => {
+    if (mode) {
+      appWindow.setTheme(mode as TauriOsTheme).catch((err: any) => {
+        console.error("Failed to set window theme:", err);
+      });
+    }
+  }, [mode, appWindow]);
 
   const theme = useMemo(() => {
     const setting = theme_setting || {};
     const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
 
-    let theme: Theme;
+    let theme: MuiTheme;
 
     try {
       theme = createTheme(

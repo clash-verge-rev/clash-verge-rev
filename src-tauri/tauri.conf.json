@@ -58,12 +58,6 @@
     }
   },
   "app": {
-    "windows": [
-      {
-        "label": "main",
-        "titleBarStyle": "Overlay"
-      }
-    ],
     "security": {
       "capabilities": [
         "desktop-capability",
