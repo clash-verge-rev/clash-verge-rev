@@ -117,7 +117,7 @@ const LetterItem = memo(
       top: 0,
       right: 0,
     });
-    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     const updateTooltipPosition = useCallback(() => {
       if (!letterRef.current) return;
