@@ -385,10 +385,7 @@ impl Timer {
             }
         };
 
-        let profile = match items
-            .iter()
-            .find(|item| item.uid.as_ref().map(|u| u.as_str()) == Some(uid))
-        {
+        let profile = match items.iter().find(|item| item.uid.as_deref() == Some(uid)) {
             Some(p) => p,
             None => {
                 logging!(warn, Type::Timer, "找不到对应的配置，uid={}", uid);
@@ -441,7 +438,6 @@ impl Timer {
     }
 
     /// Async task with better error handling and logging
-
     async fn async_task(uid: String) {
         let task_start = std::time::Instant::now();
         logging!(info, Type::Timer, "Running timer task for profile: {}", uid);

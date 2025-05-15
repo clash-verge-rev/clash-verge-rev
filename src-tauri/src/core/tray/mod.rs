@@ -442,7 +442,7 @@ impl Tray {
                                                 traffic_result = stream.next() => {
                                                     match traffic_result {
                                                         Some(Ok(traffic)) => {
-                                                            if let Ok(speedrate_result) = tokio::time::timeout(
+                                                            if let Ok(Some(rate)) = tokio::time::timeout(
                                                                 std::time::Duration::from_millis(50),
                                                                 async {
                                                                     let guard = speed_rate.try_lock();
@@ -457,12 +457,10 @@ impl Tray {
                                                                     }
                                                                 }
                                                             ).await {
-                                                                if let Some(rate) = speedrate_result {
-                                                                    let _ = tokio::time::timeout(
-                                                                        std::time::Duration::from_millis(100),
-                                                                        async { let _ = Tray::global().update_icon(Some(rate)); }
-                                                                    ).await;
-                                                                }
+                                                                let _ = tokio::time::timeout(
+                                                                    std::time::Duration::from_millis(100),
+                                                                    async { let _ = Tray::global().update_icon(Some(rate)); }
+                                                                ).await;
                                                             }
                                                         },
                                                         Some(Err(e)) => {

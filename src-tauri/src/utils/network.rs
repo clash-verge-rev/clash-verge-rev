@@ -274,10 +274,10 @@ impl NetworkManager {
         }
 
         match proxy_type {
-            ProxyType::NoProxy => {
+            ProxyType::None => {
                 builder = builder.no_proxy();
             }
-            ProxyType::SelfProxy => {
+            ProxyType::Localhost => {
                 let port = Config::verge()
                     .latest()
                     .verge_mixed_port
@@ -295,7 +295,7 @@ impl NetworkManager {
                     builder = builder.proxy(proxy);
                 }
             }
-            ProxyType::SystemProxy => {
+            ProxyType::System => {
                 use sysproxy::Sysproxy;
 
                 if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
@@ -420,7 +420,7 @@ impl NetworkManager {
 /// 代理类型
 #[derive(Debug, Clone, Copy)]
 pub enum ProxyType {
-    NoProxy,
-    SelfProxy,
-    SystemProxy,
+    None,
+    Localhost,
+    System,
 }

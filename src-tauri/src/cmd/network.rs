@@ -8,7 +8,7 @@ use tokio::task::spawn_blocking;
 /// get the system proxy
 #[tauri::command]
 pub async fn get_sys_proxy() -> CmdResult<Mapping> {
-    let current = spawn_blocking(move || Sysproxy::get_system_proxy())
+    let current = spawn_blocking(Sysproxy::get_system_proxy)
         .await
         .map_err(|e| format!("Failed to spawn blocking task for sysproxy: {}", e))?
         .map_err(|e| format!("Failed to get system proxy: {}", e))?;
@@ -27,7 +27,7 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
 /// get the system proxy
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
-    let current = spawn_blocking(move || Autoproxy::get_auto_proxy())
+    let current = spawn_blocking(Autoproxy::get_auto_proxy)
         .await
         .map_err(|e| format!("Failed to spawn blocking task for autoproxy: {}", e))?
         .map_err(|e| format!("Failed to get auto proxy: {}", e))?;
