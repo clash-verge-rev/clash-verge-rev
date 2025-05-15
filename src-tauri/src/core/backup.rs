@@ -128,9 +128,10 @@ impl WebDavClient {
             .build()?;
 
         // 尝试检查目录是否存在，如果不存在尝试创建，但创建失败不报错
-        if let Err(_) = client
+        if client
             .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0))
             .await
+            .is_err()
         {
             let _ = client.mkcol(dirs::BACKUP_DIR).await;
         }

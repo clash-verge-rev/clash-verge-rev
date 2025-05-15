@@ -98,9 +98,9 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
 
     // 如果是TUN模式，不使用代理，否则使用自身代理
     let proxy_type = if !tun_mode {
-        ProxyType::SelfProxy
+        ProxyType::Localhost
     } else {
-        ProxyType::NoProxy
+        ProxyType::None
     };
 
     let user_agent = Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0".to_string());

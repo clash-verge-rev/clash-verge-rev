@@ -538,7 +538,7 @@ pub async fn check_ipc_service_status() -> Result<JsonResponse> {
                             json_response.msg,
                             json_response.data.is_some()
                         );
-                        return Ok(json_response);
+                        Ok(json_response)
                     } else {
                         // 尝试直接解析
                         match serde_json::from_value::<JsonResponse>(data.clone()) {
@@ -551,7 +551,7 @@ pub async fn check_ipc_service_status() -> Result<JsonResponse> {
                                     json_response.code,
                                     json_response.msg
                                 );
-                                return Ok(json_response);
+                                Ok(json_response)
                             }
                             Err(e) => {
                                 logging!(

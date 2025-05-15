@@ -271,7 +271,7 @@ impl Traffic {
                             // 设置流超时控制
                             let traffic_stream = ws_stream
                                 .take_while(|msg| {
-                                    let continue_stream = matches!(msg, Ok(_));
+                                    let continue_stream = msg.is_ok();
                                     async move { continue_stream }.boxed()
                                 })
                                 .filter_map(|msg| async move {

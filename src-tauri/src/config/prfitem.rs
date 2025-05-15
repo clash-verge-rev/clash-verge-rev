@@ -259,11 +259,11 @@ impl PrfItem {
 
         // 选择代理类型
         let proxy_type = if self_proxy {
-            ProxyType::SelfProxy
+            ProxyType::Localhost
         } else if with_proxy {
-            ProxyType::SystemProxy
+            ProxyType::System
         } else {
-            ProxyType::NoProxy
+            ProxyType::None
         };
 
         // 使用网络管理器发送请求

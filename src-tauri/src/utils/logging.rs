@@ -1,4 +1,4 @@
-use std::fmt::{self, write};
+use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {

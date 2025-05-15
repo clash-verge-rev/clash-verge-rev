@@ -89,7 +89,7 @@ impl NotificationSystem {
                                 let system_guard = handle.notification_system.read();
                                 let is_emergency = system_guard
                                     .as_ref()
-                                    .and_then(|sys| Some(*sys.emergency_mode.read()))
+                                    .map(|sys| *sys.emergency_mode.read())
                                     .unwrap_or(false);
 
                                 if is_emergency {
@@ -110,7 +110,7 @@ impl NotificationSystem {
                                                 &window,
                                                 "verge://refresh-clash-config",
                                                 "yes",
-                                                &handle,
+                                                handle,
                                             );
                                         }
                                         FrontendEvent::RefreshVerge => {
@@ -118,7 +118,7 @@ impl NotificationSystem {
                                                 &window,
                                                 "verge://refresh-verge-config",
                                                 "yes",
-                                                &handle,
+                                                handle,
                                             );
                                         }
                                         FrontendEvent::NoticeMessage {
@@ -129,7 +129,7 @@ impl NotificationSystem {
                                                 &window,
                                                 "verge://notice-message",
                                                 (status.clone(), message.clone()),
-                                                &handle,
+                                                handle,
                                             );
                                         }
                                     }
@@ -273,7 +273,7 @@ impl Default for Handle {
 impl Handle {
     pub fn global() -> &'static Handle {
         static HANDLE: OnceCell<Handle> = OnceCell::new();
-        HANDLE.get_or_init(|| Handle::default())
+        HANDLE.get_or_init(Handle::default)
     }
 
     pub fn init(&self, app_handle: &AppHandle) {
