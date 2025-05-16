@@ -4,8 +4,6 @@
 <dict>
     <key>CFBundleIconFile</key>
     <string>icon.icns</string>
-    <key>CFBundleName</key>
-    <string>Clash Verge</string>
     <key>CFBundleDisplayName</key>
     <string>Clash Verge</string>
     <key>com.apple.security.app-sandbox</key>
