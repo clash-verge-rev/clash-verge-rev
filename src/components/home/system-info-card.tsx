@@ -26,28 +26,34 @@ export const SystemInfoCard = () => {
   const navigate = useNavigate();
   const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
 
-  // 系统信息状态
-  const [systemState, setSystemState] = useState({
-    osInfo: "",
-    lastCheckUpdate: "-",
-  });
+// 系统信息状态
+const [systemState, setSystemState] = useState({
+  osInfo: "",
+  lastCheckUpdate: "-",
+});
 
-  // 初始化系统信息
-  useEffect(() => {
-    // 获取系统信息
-    getSystemInfo()
-      .then((info) => {
-        const lines = info.split("\n");
-        if (lines.length > 0) {
-          const sysName = lines[0].split(": ")[1] || "";
-          const sysVersion = lines[1].split(": ")[1] || "";
-          setSystemState((prev) => ({
-            ...prev,
-            osInfo: `${sysName} ${sysVersion}`,
-          }));
+// 初始化系统信息
+useEffect(() => {
+  // 获取系统信息
+  getSystemInfo()
+    .then((info) => {
+      const lines = info.split("\n");
+      if (lines.length > 0) {
+        const sysName = lines[0].split(": ")[1] || "";
+        let sysVersion = lines[1].split(": ")[1] || "";
+        
+        // 处理sysVersion前缀与sysName相同的情况
+        if (sysName && sysVersion.toLowerCase().startsWith(sysName.toLowerCase())) {
+          sysVersion = sysVersion.substring(sysName.length).trim();
         }
-      })
-      .catch(console.error);
+        
+        setSystemState((prev) => ({
+          ...prev,
+          osInfo: `${sysName} ${sysVersion}`,
+        }));
+      }
+    })
+    .catch(console.error);
 
     // 获取最后检查更新时间
     const lastCheck = localStorage.getItem("last_check_update");
