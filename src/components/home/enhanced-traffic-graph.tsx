@@ -150,7 +150,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
       // 更新显示数据
       const pointsToShow = getMaxPointsByTimeRange(timeRange);
       setDisplayData(initialBuffer.slice(-pointsToShow));
-    }, [MAX_BUFFER_SIZE, getMaxPointsByTimeRange, timeRange]);
+    }, [MAX_BUFFER_SIZE, getMaxPointsByTimeRange]);
     // 添加数据点方法
     const appendData = useCallback((data: ITrafficItem) => {
       const safeData = {
