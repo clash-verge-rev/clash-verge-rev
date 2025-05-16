@@ -13,11 +13,11 @@ use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
 use serde_yaml::Mapping;
 use std::{
-    net::TcpListener,
     sync::Arc,
     time::{Duration, Instant},
 };
 use tauri::{AppHandle, Emitter, Manager};
+use tokio::net::TcpListener;
 
 use tauri::Url;
 //#[cfg(not(target_os = "linux"))]
@@ -123,8 +123,8 @@ pub fn reset_ui_ready() {
     logging!(info, Type::Window, true, "UI就绪状态已重置");
 }
 
-pub fn find_unused_port() -> Result<u16> {
-    match TcpListener::bind("127.0.0.1:0") {
+pub async fn find_unused_port() -> Result<u16> {
+    match TcpListener::bind("127.0.0.1:0").await {
         Ok(listener) => {
             let port = listener.local_addr()?.port();
             Ok(port)
@@ -156,7 +156,15 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
 
     logging_error!(Type::Setup, true, init::startup_script().await);
 
-    logging_error!(Type::System, true, resolve_random_port_config());
+    if let Err(err) = resolve_random_port_config().await {
+        logging!(
+            error,
+            Type::System,
+            true,
+            "Failed to resolve random port config: {}",
+            err
+        );
+    }
 
     logging!(trace, Type::Config, true, "初始化配置...");
     logging_error!(Type::Config, true, Config::init_config().await);
@@ -294,8 +302,8 @@ pub fn create_window(is_show: bool) -> bool {
     .visible(false)
     .build()
     {
-        Ok(_) => {
-            logging!(info, Type::Window, true, "主窗口创建成功");
+        Ok(newly_created_window) => {
+            logging!(debug, Type::Window, true, "主窗口实例创建成功");
 
             *creating = (false, Instant::now());
 
@@ -303,82 +311,114 @@ pub fn create_window(is_show: bool) -> bool {
 
             AsyncHandler::spawn(move || async move {
                 handle::Handle::global().mark_startup_completed();
-                logging!(info, Type::Window, true, "标记启动完成");
+                logging!(
+                    debug,
+                    Type::Window,
+                    true,
+                    "异步窗口任务开始 (启动已标记完成)"
+                );
 
-                if let Some(app_handle) = handle::Handle::global().app_handle() {
-                    if let Some(window) = app_handle.get_webview_window("main") {
-                        let _ = window.emit("verge://startup-completed", ());
-                        logging!(info, Type::Window, true, "已发送启动完成事件");
+                if is_show {
+                    let window_clone = newly_created_window.clone();
 
-                        if is_show {
-                            let window_clone = window.clone();
+                    // Attempt to show and focus the window first.
+                    let _ = window_clone.show();
+                    let _ = window_clone.set_focus();
+                    logging!(debug, Type::Window, true, "窗口已尝试显示和聚焦");
 
-                            let timeout_seconds =
-                                if crate::module::lightweight::is_in_lightweight_mode() {
-                                    2
-                                } else {
-                                    5
-                                };
+                    tokio::time::sleep(Duration::from_millis(100)).await; // Crucial delay
 
+                    logging!(
+                        debug,
+                        Type::Window,
+                        true,
+                        "延时后，尝试发送 verge://startup-completed 事件"
+                    );
+                    if let Err(e) = newly_created_window.emit("verge://startup-completed", ()) {
+                        logging!(
+                            error,
+                            Type::Window,
+                            true,
+                            "发送 verge://startup-completed 事件失败: {}",
+                            e
+                        );
+                    } else {
+                        logging!(
+                            info,
+                            Type::Window,
+                            true,
+                            "已发送 verge://startup-completed 事件"
+                        );
+                    }
+
+                    let timeout_seconds = if crate::module::lightweight::is_in_lightweight_mode() {
+                        2
+                    } else {
+                        5
+                    };
+
+                    logging!(
+                        info,
+                        Type::Window,
+                        true,
+                        "等待UI就绪 (最多{}秒)...",
+                        timeout_seconds
+                    );
+
+                    let wait_result =
+                        tokio::time::timeout(Duration::from_secs(timeout_seconds), async {
+                            while !*get_ui_ready().read() {
+                                tokio::time::sleep(Duration::from_millis(100)).await;
+                            }
+                        })
+                        .await;
+
+                    match wait_result {
+                        Ok(_) => {
+                            logging!(info, Type::Window, true, "UI就绪");
+                        }
+                        Err(_) => {
                             logging!(
-                                info,
+                                warn,
                                 Type::Window,
                                 true,
-                                "等待UI就绪，最多{}秒",
+                                "等待UI就绪超时({}秒)，强制标记就绪",
                                 timeout_seconds
                             );
-
-                            let wait_result =
-                                tokio::time::timeout(Duration::from_secs(timeout_seconds), async {
-                                    let mut check_count = 0;
-                                    while !*get_ui_ready().read() {
-                                        check_count += 1;
-                                        if check_count % 10 == 0 {
-                                            let state = get_ui_ready_state();
-                                            let stage = *state.stage.read();
-                                            logging!(
-                                                info,
-                                                Type::Window,
-                                                true,
-                                                "等待UI就绪中... 当前阶段: {:?}, 已等待: {}ms",
-                                                stage,
-                                                check_count * 100
-                                            );
-                                        }
-                                        tokio::time::sleep(Duration::from_millis(100)).await;
-                                    }
-                                })
-                                .await;
-
-                            match wait_result {
-                                Ok(_) => {
-                                    logging!(info, Type::Window, true, "UI就绪，显示窗口");
-                                }
-                                Err(_) => {
-                                    logging!(
-                                        warn,
-                                        Type::Window,
-                                        true,
-                                        "等待UI就绪超时({}秒)，强制显示窗口",
-                                        timeout_seconds
-                                    );
-
-                                    *get_ui_ready().write() = true;
-                                }
-                            }
-
-                            let _ = window_clone.show();
-                            let _ = window_clone.set_focus();
-
-                            logging!(info, Type::Window, true, "窗口创建和显示流程已完成");
+                            *get_ui_ready().write() = true;
                         }
+                    }
+                    logging!(info, Type::Window, true, "窗口显示流程完成");
+                } else {
+                    logging!(
+                        debug,
+                        Type::Window,
+                        true,
+                        "is_show为false，窗口保持隐藏。尝试发送启动事件。"
+                    );
+                    if let Err(e) = newly_created_window.emit("verge://startup-completed", ()) {
+                        logging!(
+                            warn,
+                            Type::Window,
+                            true,
+                            "发送 verge://startup-completed 事件失败 (is_show=false, 窗口隐藏): {}",
+                            e
+                        );
+                    } else {
+                        logging!(
+                            debug,
+                            Type::Window,
+                            true,
+                            "已发送 verge://startup-completed 事件 (is_show=false, 窗口隐藏)"
+                        );
                     }
                 }
             });
             true
         }
         Err(e) => {
-            logging!(error, Type::Window, true, "Failed to create window: {}", e);
+            logging!(error, Type::Window, true, "主窗口构建失败: {}", e);
+            *creating = (false, Instant::now()); // Reset the creating state if window creation failed
             false
         }
     }
@@ -444,7 +484,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
     Ok(())
 }
 
-fn resolve_random_port_config() -> Result<()> {
+async fn resolve_random_port_config() -> Result<()> {
     let verge_config = Config::verge();
     let clash_config = Config::clash();
     let enable_random_port = verge_config.latest().enable_random_port.unwrap_or(false);
@@ -455,21 +495,34 @@ fn resolve_random_port_config() -> Result<()> {
         .unwrap_or(clash_config.data().get_mixed_port());
 
     let port = if enable_random_port {
-        find_unused_port().unwrap_or(default_port)
+        find_unused_port().await.unwrap_or(default_port)
     } else {
         default_port
     };
 
-    verge_config.data().patch_config(IVerge {
-        verge_mixed_port: Some(port),
-        ..IVerge::default()
-    });
-    verge_config.data().save_file()?;
+    let port_to_save = port;
 
-    let mut mapping = Mapping::new();
-    mapping.insert("mixed-port".into(), port.into());
-    clash_config.data().patch_config(mapping);
-    clash_config.data().save_config()?;
+    tokio::task::spawn_blocking(move || {
+        let verge_config_accessor = Config::verge();
+        let mut verge_data = verge_config_accessor.data();
+        verge_data.patch_config(IVerge {
+            verge_mixed_port: Some(port_to_save),
+            ..IVerge::default()
+        });
+        verge_data.save_file()
+    })
+    .await??; // First ? for spawn_blocking error, second for save_file Result
+
+    tokio::task::spawn_blocking(move || {
+        let clash_config_accessor = Config::clash(); // Extend lifetime of the accessor
+        let mut clash_data = clash_config_accessor.data(); // Access within blocking task, made mutable
+        let mut mapping = Mapping::new();
+        mapping.insert("mixed-port".into(), port_to_save.into());
+        clash_data.patch_config(mapping);
+        clash_data.save_config()
+    })
+    .await??;
+
     Ok(())
 }
 
