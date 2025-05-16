@@ -11,7 +11,6 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
-use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{
     net::TcpListener,
@@ -64,13 +63,6 @@ impl Default for UiReadyState {
 
 // 获取UI就绪状态细节
 static UI_READY_STATE: OnceCell<Arc<UiReadyState>> = OnceCell::new();
-
-// 定义窗口状态结构体
-#[derive(Debug, Serialize, Deserialize)]
-struct WindowState {
-    width: Option<u32>,
-    height: Option<u32>,
-}
 
 fn get_window_creating_lock() -> &'static Mutex<(bool, Instant)> {
     WINDOW_CREATING.get_or_init(|| Mutex::new((false, Instant::now())))
