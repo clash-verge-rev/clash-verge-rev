@@ -376,31 +376,97 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
     }),
   },
   {
-    url: "https://ipinfo.io/json",
-    mapping: (data) => {
-      const [asn, ...orgParts] = (data.org || '').split(' ');
-      const asnOrg = orgParts.join(' ');
-
-      return {
-        ip: data.ip || '',
-        country_code: data.country || '',
-        country: data.country || '', 
-        region: data.region || '',
-        city: data.city || '',
-        organization: asnOrg || '',
-        asn: asn? parseInt(asn.replace('AS', '')) : 0,
-        asn_organization: asnOrg || '',
-        longitude: parseFloat(data.loc?.split(',')[1] || '0'),
-        latitude: parseFloat(data.loc?.split(',')[0] || '0'),
-        timezone: data.timezone || '',
-      };
-    },
+    url: "https://api.ipapi.is/",
+    mapping: (data) => ({
+      ip: data.ip || '',
+      country_code: data.location?.country_code || '',
+      country: data.location?.country || '',
+      region: data.location?.state || '',
+      city: data.location?.city || '',
+      organization: data.asn?.org || data.company?.name || '',
+      asn: data.asn?.asn || 0,
+      asn_organization: data.asn?.org || '',
+      longitude: data.location?.longitude || 0,
+      latitude: data.location?.latitude || 0,
+      timezone: data.location?.timezone || '',
+    }),
+  },
+  {
+    url: "https://ipwho.is/",
+    mapping: (data) => ({
+      ip: data.ip || '',
+      country_code: data.country_code || '',
+      country: data.country || '',
+      region: data.region || '',
+      city: data.city || '',
+      organization: data.connection?.org || data.connection?.isp || '',
+      asn: data.connection?.asn || 0,
+      asn_organization: data.connection?.isp || '',
+      longitude: data.longitude || 0,
+      latitude: data.latitude || 0,
+      timezone: data.timezone?.id || '',
+    }),
   },
 ];
 
-// 随机打乱服务列表顺序
+// 随机性服务列表洗牌函数
 function shuffleServices() {
-  return [...IP_CHECK_SERVICES].sort(() => Math.random() - 0.5);
+  // 过滤无效服务并确保每个元素符合ServiceConfig接口
+  const validServices = IP_CHECK_SERVICES.filter(
+    (service): service is ServiceConfig => 
+      service !== null && 
+      service !== undefined && 
+      typeof service.url === 'string' &&
+      typeof service.mapping === 'function' // 添加对mapping属性的检查
+  );
+  
+  if (validServices.length === 0) {
+    console.error('No valid services found in IP_CHECK_SERVICES');
+    return [];
+  }
+  
+  // 使用单一Fisher-Yates洗牌算法，增强随机性
+  const shuffled = [...validServices];
+  const length = shuffled.length;
+  
+  // 使用多个种子进行多次洗牌
+  const seeds = [
+    Math.random(),
+    Date.now() / 1000,
+    performance.now() / 1000
+  ];
+  
+  for (const seed of seeds) {
+    const prng = createPrng(seed);
+    
+    // Fisher-Yates洗牌算法
+    for (let i = length - 1; i > 0; i--) {
+      const j = Math.floor(prng() * (i + 1));
+      
+      // 使用临时变量进行交换，避免解构赋值可能的问题
+      const temp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = temp;
+    }
+  }
+  
+  return shuffled;
+}
+
+// 创建一个简单的随机数生成器
+function createPrng(seed: number): () => number {
+  // 使用xorshift32算法
+  let state = seed >>> 0;
+  
+  // 如果种子为0，设置一个默认值
+  if (state === 0) state = 123456789;
+  
+  return function() {
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    return (state >>> 0) / 4294967296;
+  };
 }
 
 // 获取当前IP和地理位置信息
