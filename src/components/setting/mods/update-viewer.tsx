@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { forwardRef, useImperativeHandle, useState, useMemo } from "react";
+import { forwardRef, useImperativeHandle, useState, useMemo, useEffect } from "react";
 import { useLockFn } from "ahooks";
 import { Box, LinearProgress, Button } from "@mui/material";
 import { useTranslation } from "react-i18next";
@@ -14,12 +14,11 @@ import ReactMarkdown from "react-markdown";
 import { useListen } from "@/hooks/use-listen";
 import { showNotice } from "@/services/noticeService";
 
-let eventListener: UnlistenFn | null = null;
-
 export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
+  const [currentProgressListener, setCurrentProgressListener] = useState<UnlistenFn | null>(null);
 
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
@@ -66,10 +65,12 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
     }
     if (updateState) return;
     setUpdateState(true);
-    if (eventListener !== null) {
-      eventListener();
+
+    if (currentProgressListener) {
+      currentProgressListener();
     }
-    eventListener = await addListener(
+
+    const progressListener = await addListener(
       "tauri://update-download-progress",
       (e: Event<any>) => {
         setTotal(e.payload.contentLength);
@@ -79,6 +80,8 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
         });
       },
     );
+    setCurrentProgressListener(() => progressListener);
+
     try {
       await updateInfo.downloadAndInstall();
       await relaunch();
@@ -86,8 +89,21 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       showNotice('error', err?.message || err.toString());
     } finally {
       setUpdateState(false);
+      if (progressListener) {
+        progressListener();
+      }
+      setCurrentProgressListener(null);
     }
   });
+
+  useEffect(() => {
+    return () => {
+      if (currentProgressListener) {
+        console.log("UpdateViewer unmounting, cleaning up progress listener.");
+        currentProgressListener();
+      }
+    };
+  }, [currentProgressListener]);
 
   return (
     <BaseDialog
