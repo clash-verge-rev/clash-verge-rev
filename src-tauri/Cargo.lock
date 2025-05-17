@@ -5974,7 +5974,7 @@ dependencies = [
  "ntapi",
  "objc2-core-foundation",
  "objc2-io-kit",
- "windows 0.60.0",
+ "windows 0.61.1",
 ]
 
 [[package]]
@@ -6746,9 +6746,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tipsy"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87436c1f3ae5b48b99a76ab180e61e8ab0cf1c6bdd613b7de2cd60d712d2721f"
+checksum = "fab5c1c5ac400d3bbaa6072ed297f0e6825be190de858892b214ee09bc976145"
 dependencies = [
  "dirs 6.0.0",
  "futures-util",
