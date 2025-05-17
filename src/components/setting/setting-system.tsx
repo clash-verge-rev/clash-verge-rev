@@ -30,6 +30,7 @@ import { Button, Tooltip } from "@mui/material";
 import { useSystemState } from "@/hooks/use-system-state";
 import { closeAllConnections } from "@/services/api";
 import { showNotice } from "@/services/noticeService";
+import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -39,35 +40,21 @@ const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { verge, mutateVerge, patchVerge } = useVerge();
+  const { installServiceAndRestartCore } = useServiceInstaller();
 
   const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
   const { data: autoproxy } = useSWR("getAutotemProxy", getAutotemProxy);
 
+  const { data: serviceOk, mutate: mutateServiceAvailable } = useSWR(
+    "isServiceAvailable", 
+    isServiceAvailable
+  );
+
   const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
   
-  // 添加本地服务状态
-  const [localServiceOk, setLocalServiceOk] = useState(false);
-  
-  // 更新本地服务状态
-  const updateLocalStatus = async () => {
-    try {
-      const serviceStatus = await isServiceAvailable();
-      setLocalServiceOk(serviceStatus);
-      mutate("isServiceAvailable", serviceStatus, false);
-    } catch (error) {
-      console.error("更新TUN状态失败:", error);
-    }
-  };
-  
-  // 组件挂载时更新状态
-  useEffect(() => {
-    updateLocalStatus();
-  }, []);
 
-  // 判断Tun模式是否可用 - 当处于服务模式或管理员模式时可用
-  const isTunAvailable = localServiceOk || isAdminMode;
-
-  console.log("is tun isTunAvailable:", isTunAvailable);
+  // +++ isTunAvailable 现在使用 SWR 的 serviceOk
+  const isTunAvailable = serviceOk || isAdminMode;
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
@@ -107,37 +94,28 @@ const SettingSystem = ({ onError }: Props) => {
       }
     ) => {
       try {
-        showNotice("info", t(beforeMsg));
+        showNotice("info", beforeMsg);
         await stopCore();
-        showNotice("info", t(actionMsg));
+        showNotice("info", actionMsg);
         await action();
-        showNotice("success", t(successMsg));
+        showNotice("success", successMsg);
         showNotice("info", t("Restarting Core..."));
         await restartCore();
         await mutateRunningMode();
-        await updateLocalStatus();
+        await mutateServiceAvailable(); 
       } catch (err: any) {
         showNotice("error", err.message || err.toString());
         try {
           showNotice("info", t("Try running core as Sidecar..."));
           await restartCore();
           await mutateRunningMode();
-          await updateLocalStatus();
+          await mutateServiceAvailable();
         } catch (e: any) {
           showNotice("error", e?.message || e?.toString());
         }
       }
     }
   );
-
-  // 安装系统服务
-  const onInstallService = () =>
-    handleServiceOperation({
-      beforeMsg: t("Stopping Core..."),
-      action: installService,
-      actionMsg: t("Installing Service..."),
-      successMsg: t("Service Installed Successfully"),
-    });
 
   // 卸载系统服务
   const onUninstallService = () =>
@@ -167,21 +145,20 @@ const SettingSystem = ({ onError }: Props) => {
                 <WarningRounded sx={{ color: "warning.main", mr: 1 }} />
               </Tooltip>
             )}
-            {!localServiceOk && !isAdminMode && (
+            {!serviceOk && !isAdminMode && ( 
               <Tooltip title={t("Install Service")}>
                 <Button
                   variant="outlined"
                   color="primary"
                   size="small"
-                  onClick={onInstallService}
+                  onClick={installServiceAndRestartCore} 
                   sx={{ mr: 1, minWidth: "32px", p: "4px" }}
                 >
                   <BuildRounded fontSize="small" />
                 </Button>
               </Tooltip>
             )}
-            {
-              localServiceOk && (
+            {serviceOk && ( 
                 <Tooltip title={t("Uninstall Service")}>
                   <Button
                     // variant="outlined"
@@ -215,7 +192,7 @@ const SettingSystem = ({ onError }: Props) => {
             return patchVerge({ enable_tun_mode: e });
           }}
         >
-          <Switch edge="end" disabled={!isTunAvailable} />
+          <Switch edge="end" disabled={!isTunAvailable} /> 
         </GuardState>
       </SettingItem>
       <SettingItem

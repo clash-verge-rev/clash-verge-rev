@@ -394,7 +394,7 @@
     "Installing Service...": "Hizmet yükleniyor...",
     "Service Installed Successfully": "Hizmet başarıyla yüklendi",
     "Service is ready and core restarted": "Hizmet hazır, çekirdek yeniden başlatıldı",
-    "Service may not be fully ready": "Hizmet tam olarak hazır olmayabilir",
+    "Core restarted. Service is now available.": "Çekirdek yeniden başlatıldı, hizmet artık kullanılabilir",
     "Uninstalling Service...": "Hizmet kaldırılıyor...",
     "Waiting for service to be ready...": "Hizmetin hazır olmasını bekliyor...",
     "Service not ready, retrying...": "Hizmet hazır değil, tekrar deneniyor...",

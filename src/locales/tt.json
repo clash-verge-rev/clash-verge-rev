@@ -394,7 +394,7 @@
     "Installing Service...": "Сервис орнатылыр...",
     "Service Installed Successfully": "Сервис орнатылган",
     "Service is ready and core restarted": "Сервис дайын, ядрә қайта иштеген",
-    "Service may not be fully ready": "Сервис толык дайын булмаган",
+    "Core restarted. Service is now available.": "Ядрә қайта иштеренде, сервис дайын",
     "Uninstalling Service...": "Сервис өчүрүлә...",
     "Waiting for service to be ready...": "Сервис дайын болуына күтүлә...",
     "Service not ready, retrying...": "Сервис дайын булмаган, кайта аракет күрәргә...",

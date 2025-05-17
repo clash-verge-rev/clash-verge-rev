@@ -394,7 +394,7 @@
     "Installing Service...": "Memasang layanan...",
     "Service Installed Successfully": "Berhasil memasang layanan",
     "Service is ready and core restarted": "Layanan telah siap, inti telah di-restart",
-    "Service may not be fully ready": "Layanan mungkin belum sepenuhnya siap",
+    "Core restarted. Service is now available.": "Inti telah di-restart, layanan sekarang tersedia",
     "Uninstalling Service...": "Menghapus layanan...",
     "Waiting for service to be ready...": "Menunggu layanan siap...",
     "Service not ready, retrying...": "Layanan belum siap, mencoba lagi...",

@@ -394,7 +394,7 @@
   "Installing Service...": "جاري تثبيت الخدمة...",
   "Service Installed Successfully": "تم تثبيت الخدمة بنجاح",
   "Service is ready and core restarted": "الخدمة جاهزة، وتم إعادة تشغيل اللبن",
-  "Service may not be fully ready": "ربما لا تكون الخدمة جاهزة بالكامل",
+  "Core restarted. Service is now available.": "تم إعادة تشغيل اللبن، وتم تشغيل الخدمة",
   "Uninstalling Service...": "جاري إزالة تثبيت الخدمة...",
   "Waiting for service to be ready...": "في انتظار جاهزية الخدمة...",
   "Service not ready, retrying...": "الخدمة غير جاهزة، جاري إعادة المحاولة...",

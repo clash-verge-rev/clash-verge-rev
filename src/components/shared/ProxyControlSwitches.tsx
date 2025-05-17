@@ -31,6 +31,7 @@ import {
 import { useLockFn } from "ahooks";
 import { closeAllConnections } from "@/services/api";
 import { showNotice } from "@/services/noticeService";
+import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 
 interface ProxySwitchProps {
   label?: string;
@@ -45,6 +46,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const { t } = useTranslation();
   const { verge, mutateVerge, patchVerge } = useVerge();
   const theme = useTheme();
+  const { installServiceAndRestartCore } = useServiceInstaller();
 
   const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
   const { data: autoproxy } = useSWR("getAutotemProxy", getAutotemProxy);
@@ -78,50 +80,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   };
 
   // 安装系统服务
-  const onInstallService = useLockFn(async () => {
-    try {
-      showNotice('info', t("Installing Service..."));
-      await installService();
-      showNotice('success', t("Service Installed Successfully"));
-
-      showNotice('info', t("Waiting for service to be ready..."));
-      
-      let serviceReady = false;
-      for (let i = 0; i < 5; i++) {
-        try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const isAvailable = await isServiceAvailable();
-          
-          if (isAvailable) {
-            serviceReady = true;
-            break;
-          }
-          
-          showNotice('info', t("Service not ready, retrying..."));
-        } catch (error) {
-          console.error("检查服务状态失败:", error);
-        }
-      }
-
-      showNotice('info', t("Restarting Core..."));
-      await restartCore();
-      
-      // 重新获取运行模式
-      await mutateRunningMode();
-      
-      // 更新服务状态
-      const serviceStatus = await isServiceAvailable();
-      mutate("isServiceAvailable", serviceStatus, false);
-      
-      if (serviceReady) {
-        showNotice('success', t("Service is ready and core restarted"));
-      } else {
-        showNotice('info', t("Service may not be fully ready"));
-      }
-    } catch (err: any) {
-      showNotice('error', err.message || err.toString());
-    }
-  });
+  const onInstallService = installServiceAndRestartCore;
 
   return (
     <Box>
@@ -248,12 +207,6 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               >
                 {t("Tun Mode")}
               </Typography>
-              {/*               <Typography variant="caption" color="text.secondary">
-                {isSidecarMode
-                  ? t("TUN requires Service Mode or Admin Mode")
-                  : t("For special applications")
-                }
-              </Typography> */}
             </Box>
           </Box>
 

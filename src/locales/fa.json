@@ -394,7 +394,7 @@
   "Installing Service...": "در حال نصب سرویس...",
   "Service Installed Successfully": "سرویس با موفقیت نصب شد",
   "Service is ready and core restarted": "سرویس آماده است و هسته بازآغاز شد",
-  "Service may not be fully ready": "سرویس ممکن است کاملاً آماده نباشد",
+  "Core restarted. Service is now available.": "هسته بازآغاز شد و سرویس آماده است",
   "Uninstalling Service...": "در حال حذف نصب سرویس...",
   "Waiting for service to be ready...": "در انتظار آماده شدن سرویس...",
   "Service not ready, retrying...": "سرویس آماده نیست، تلاش مجدد...",

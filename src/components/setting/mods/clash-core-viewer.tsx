@@ -66,7 +66,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
   const onRestart = useLockFn(async () => {
     try {
       await restartCore();
-      showNotice('success', t(`Clash Core Restarted`), 1000);
+      showNotice('success', t(`Clash Core Restarted`));
     } catch (err: any) {
       showNotice('error', err.message || err.toString());
     }
@@ -77,7 +77,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      showNotice('success', t(`Core Version Updated`), 1000);
+      showNotice('success', t(`Core Version Updated`));
     } catch (err: any) {
       setUpgrading(false);
       showNotice('error', err.response?.data?.message || err.toString());

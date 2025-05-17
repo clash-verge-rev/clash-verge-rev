@@ -394,7 +394,7 @@
     "Installing Service...": "Установка службы...",
     "Service Installed Successfully": "Служба успешно установлена",
     "Service is ready and core restarted": "Служба готова, ядро перезапущено",
-    "Service may not be fully ready": "Служба может быть не полностью готова",
+    "Core restarted. Service is now available.": "Ядро перезапущено. Служба теперь доступна.",
     "Uninstalling Service...": "Удаление службы...",
     "Waiting for service to be ready...": "Ожидание готовности службы...",
     "Service not ready, retrying...": "Служба не готова, повторная попытка...",

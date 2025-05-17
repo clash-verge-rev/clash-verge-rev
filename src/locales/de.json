@@ -394,7 +394,7 @@
   "Installing Service...": "Service wird installiert...",
   "Service Installed Successfully": "Service erfolgreich installiert",
   "Service is ready and core restarted": "Service ist bereit und Kern wurde neu gestartet",
-  "Service may not be fully ready": "Service möglicherweise noch nicht vollständig bereit",
+  "Core restarted. Service is now available.": "Kern wurde neu gestartet. Service ist jetzt verfügbar.",
   "Uninstalling Service...": "Service wird deinstalliert...",
   "Waiting for service to be ready...": "Auf Service-Bereitschaft gewartet...",
   "Service not ready, retrying...": "Service nicht bereit, wird erneut versucht...",
