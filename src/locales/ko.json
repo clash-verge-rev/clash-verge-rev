@@ -392,6 +392,7 @@
   "Stopping Core...": "코어 중지 중...",
   "Restarting Core...": "코어 재시작 중...",
   "Installing Service...": "서비스 설치 중...",
+  "Uninstall Service": "서비스 제거",
   "Service Installed Successfully": "서비스가 성공적으로 설치되었습니다.",
   "Service is ready and core restarted": "서비스가 준비되었으며, 코어가 재시작되었습니다.",
   "Core restarted. Service is now available.": "코어가 재시작되었습니다. 서비스가 이제 사용 가능합니다.",

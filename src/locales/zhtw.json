@@ -392,6 +392,7 @@
   "Stopping Core...": "內核停止中...",
   "Restarting Core...": "內核重啟中...",
   "Installing Service...": "安裝服務中...",
+  "Uninstall Service": "解除安裝服務",
   "Service Installed Successfully": "已成功安裝服務",
   "Service is ready and core restarted": "服務已就緒，內核已重啟",
   "Core restarted. Service is now available.": "內核已重啟，服務已就緒",

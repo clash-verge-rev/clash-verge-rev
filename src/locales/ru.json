@@ -392,6 +392,7 @@
     "Stopping Core...": "Остановка ядра...",
     "Restarting Core...": "Перезапуск ядра...",
     "Installing Service...": "Установка службы...",
+    "Uninstall Service": "Удалить службу",
     "Service Installed Successfully": "Служба успешно установлена",
     "Service is ready and core restarted": "Служба готова, ядро перезапущено",
     "Core restarted. Service is now available.": "Ядро перезапущено. Служба теперь доступна.",

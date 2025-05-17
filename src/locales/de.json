@@ -392,6 +392,7 @@
   "Stopping Core...": "Kern wird gestoppt...",
   "Restarting Core...": "Kern wird neu gestartet...",
   "Installing Service...": "Service wird installiert...",
+  "Uninstall Service": "Dienst deinstallieren",
   "Service Installed Successfully": "Service erfolgreich installiert",
   "Service is ready and core restarted": "Service ist bereit und Kern wurde neu gestartet",
   "Core restarted. Service is now available.": "Kern wurde neu gestartet. Service ist jetzt verfügbar",

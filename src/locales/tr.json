@@ -392,6 +392,7 @@
     "Stopping Core...": "Çekirdek durduruluyor...",
     "Restarting Core...": "Çekirdek yeniden başlatılıyor...",
     "Installing Service...": "Hizmet yükleniyor...",
+    "Uninstall Service": "Hizmeti Kaldır",
     "Service Installed Successfully": "Hizmet başarıyla yüklendi",
     "Service is ready and core restarted": "Hizmet hazır, çekirdek yeniden başlatıldı",
     "Core restarted. Service is now available.": "Çekirdek yeniden başlatıldı, hizmet artık kullanılabilir",
