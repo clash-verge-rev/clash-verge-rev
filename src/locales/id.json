@@ -392,6 +392,7 @@
     "Stopping Core...": "Menghentikan inti...",
     "Restarting Core...": "Mulai ulang inti...",
     "Installing Service...": "Memasang layanan...",
+    "Uninstall Service": "Copot Layanan",
     "Service Installed Successfully": "Berhasil memasang layanan",
     "Service is ready and core restarted": "Layanan telah siap, inti telah di-restart",
     "Core restarted. Service is now available.": "Inti telah di-restart, layanan sekarang tersedia",

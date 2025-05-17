@@ -392,6 +392,7 @@
   "Stopping Core...": "جاري إيقاف اللبن...",
   "Restarting Core...": "جاري إعادة تشغيل اللبن...",
   "Installing Service...": "جاري تثبيت الخدمة...",
+  "Uninstall Service": "إلغاء تثبيت الخدمة",
   "Service Installed Successfully": "تم تثبيت الخدمة بنجاح",
   "Service is ready and core restarted": "الخدمة جاهزة، وتم إعادة تشغيل اللبن",
   "Core restarted. Service is now available.": "تم إعادة تشغيل اللبن، وتم تشغيل الخدمة",

@@ -392,6 +392,7 @@
   "Stopping Core...": "コアを停止中...",
   "Restarting Core...": "コアを再起動中...",
   "Installing Service...": "サービスをインストール中...",
+  "Uninstall Service": "サービスのアンインストール",
   "Service Installed Successfully": "サービスのインストールに成功しました。",
   "Service is ready and core restarted": "サービスが準備完了し、コアが再起動されました。",
   "Core restarted. Service is now available.": "コアが再起動され、サービスが利用可能になりました。",
