@@ -11,7 +11,9 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { EnhancedCard } from "./enhanced-card";
 import useSWR from "swr";
-import { getSystemInfo, installService, restartApp } from "@/services/cmds";
+import { 
+  getSystemInfo, 
+} from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import { version as appVersion } from "@root/package.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -19,12 +21,14 @@ import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import { showNotice } from "@/services/noticeService";
 import { useSystemState } from "@/hooks/use-system-state";
+import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
   const navigate = useNavigate();
   const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
+  const { installServiceAndRestartCore } = useServiceInstaller();
 
 // 系统信息状态
 const [systemState, setSystemState] = useState({
@@ -34,15 +38,13 @@ const [systemState, setSystemState] = useState({
 
 // 初始化系统信息
 useEffect(() => {
-  // 获取系统信息
   getSystemInfo()
     .then((info) => {
       const lines = info.split("\n");
       if (lines.length > 0) {
         const sysName = lines[0].split(": ")[1] || "";
         let sysVersion = lines[1].split(": ")[1] || "";
-        
-        // 处理sysVersion前缀与sysName相同的情况
+
         if (sysName && sysVersion.toLowerCase().startsWith(sysName.toLowerCase())) {
           sysVersion = sysVersion.substring(sysName.length).trim();
         }
@@ -120,26 +122,13 @@ useEffect(() => {
     }
   }, [verge, patchVerge]);
 
-  // 安装系统服务
-  const onInstallService = useLockFn(async () => {
-    try {
-      showNotice('info', t("Installing Service..."), 1000);
-      await installService();
-      showNotice('success', t("Service Installed Successfully"), 2000);
-
-      await mutateRunningMode();
-
-    } catch (err: any) {
-      showNotice('error', err.message || err.toString(), 3000);
-    }
-  });
 
   // 点击运行模式处理,Sidecar或纯管理员模式允许安装服务
   const handleRunningModeClick = useCallback(() => {
     if (isSidecarMode || (isAdminMode && isSidecarMode)) {
-      onInstallService();
+      installServiceAndRestartCore();
     }
-  }, [isSidecarMode, isAdminMode, onInstallService]);
+  }, [isSidecarMode, isAdminMode, installServiceAndRestartCore]);
 
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {

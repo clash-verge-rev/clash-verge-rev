@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { getNetworkInterfacesInfo } from "@/services/cmds";
-import { alpha, Box, Button, Chip, IconButton } from "@mui/material";
+import { alpha, Box, Button, IconButton } from "@mui/material";
 import { ContentCopyRounded } from "@mui/icons-material";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { showNotice } from "@/services/noticeService";

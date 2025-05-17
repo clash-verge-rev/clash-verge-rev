@@ -394,7 +394,7 @@
   "Installing Service...": "サービスをインストール中...",
   "Service Installed Successfully": "サービスのインストールに成功しました。",
   "Service is ready and core restarted": "サービスが準備完了し、コアが再起動されました。",
-  "Service may not be fully ready": "サービスが完全に準備できていない可能性があります。",
+  "Core restarted. Service is now available.": "コアが再起動され、サービスが利用可能になりました。",
   "Uninstalling Service...": "サービスをアンインストール中...",
   "Waiting for service to be ready...": "サービスの準備を待っています...",
   "Service not ready, retrying...": "サービスが準備できていないので、再試行中...",

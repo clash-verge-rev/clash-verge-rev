@@ -394,7 +394,7 @@
   "Installing Service...": "安裝服務中...",
   "Service Installed Successfully": "已成功安裝服務",
   "Service is ready and core restarted": "服務已就緒，內核已重啟",
-  "Service may not be fully ready": "服務可能未完全就緒",
+  "Core restarted. Service is now available.": "內核已重啟，服務已就緒",
   "Uninstalling Service...": "服務卸載中...",
   "Waiting for service to be ready...": "等待服務就緒...",
   "Service not ready, retrying...": "服務未就緒，重試中...",
