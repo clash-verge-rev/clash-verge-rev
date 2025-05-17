@@ -395,6 +395,8 @@
   "Service Installed Successfully": "تم تثبيت الخدمة بنجاح",
   "Service is ready and core restarted": "الخدمة جاهزة، وتم إعادة تشغيل اللبن",
   "Core restarted. Service is now available.": "تم إعادة تشغيل اللبن، وتم تشغيل الخدمة",
+  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "كانت الخدمة جاهزة، لكن قد تكون هناك مشاكل في إعادة تشغيل النواة أو أصبحت الخدمة غير متوفرة. يرجى التحقق.",
+  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "واجهت عملية تثبيت الخدمة أو إعادة تشغيل النواة مشاكل. قد لا تكون الخدمة متوفرة. يرجى التحقق من سجلات النظام.",
   "Uninstalling Service...": "جاري إزالة تثبيت الخدمة...",
   "Waiting for service to be ready...": "في انتظار جاهزية الخدمة...",
   "Service not ready, retrying...": "الخدمة غير جاهزة، جاري إعادة المحاولة...",
