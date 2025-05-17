@@ -100,7 +100,7 @@
     "react-devtools": "6.1.2",
     "tailwind-merge": "3.3.0",
     "tailwindcss": "4.1.6",
-    "terser": "5.39.0",
+    "terser": "5.39.1",
     "typescript": "5.8.3",
     "vite": "6.3.5",
     "vite-plugin-monaco-editor": "1.1.0",
