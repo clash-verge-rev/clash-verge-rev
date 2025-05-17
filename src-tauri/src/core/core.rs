@@ -17,9 +17,13 @@ use crate::{
 use anyhow::Result;
 use chrono::Local;
 use once_cell::sync::OnceCell;
-use std::fs::{create_dir_all, File};
-use std::io::Write;
-use std::{fmt, path::PathBuf, sync::Arc};
+use std::{
+    fmt,
+    fs::{create_dir_all, File},
+    io::Write,
+    path::PathBuf,
+    sync::Arc,
+};
 use tauri_plugin_shell::{process::CommandChild, ShellExt};
 use tokio::sync::Mutex;
 

@@ -89,6 +89,10 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
 
     const handleOk = useLockFn(
       formIns.handleSubmit(async (form) => {
+        if (form.option?.timeout_seconds) {
+          form.option.timeout_seconds = +form.option.timeout_seconds;
+        }
+
         setLoading(true);
         try {
           // 基本验证
@@ -106,21 +110,22 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           if (form.option?.user_agent === "") {
             delete form.option.user_agent;
           }
-          
+
           const name = form.name || `${form.type} file`;
           const item = { ...form, name };
           const isRemote = form.type === "remote";
           const isUpdate = openType === "edit";
-          
+
           // 判断是否是当前激活的配置
-          const isActivating = isUpdate && form.uid === (profiles?.current ?? "");
-          
+          const isActivating =
+            isUpdate && form.uid === (profiles?.current ?? "");
+
           // 保存原始代理设置以便回退成功后恢复
-          const originalOptions = { 
+          const originalOptions = {
             with_proxy: form.option?.with_proxy,
-            self_proxy: form.option?.self_proxy
+            self_proxy: form.option?.self_proxy,
           };
-          
+
           // 执行创建或更新操作，本地配置不需要回退机制
           if (!isRemote) {
             if (openType === "new") {
@@ -141,46 +146,52 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
               }
             } catch (err) {
               // 首次创建/更新失败，尝试使用自身代理
-              showNotice('info', t("Profile creation failed, retrying with Clash proxy..."));
-              
+              showNotice(
+                "info",
+                t("Profile creation failed, retrying with Clash proxy..."),
+              );
+
               // 使用自身代理的配置
               const retryItem = {
                 ...item,
                 option: {
                   ...item.option,
                   with_proxy: false,
-                  self_proxy: true
-                }
+                  self_proxy: true,
+                },
               };
-              
+
               // 使用自身代理再次尝试
               if (openType === "new") {
                 await createProfile(retryItem, fileDataRef.current);
               } else {
                 if (!form.uid) throw new Error("UID not found");
                 await patchProfile(form.uid, retryItem);
-                
+
                 // 编辑模式下恢复原始代理设置
                 await patchProfile(form.uid, { option: originalOptions });
               }
-              
-              showNotice('success', t("Profile creation succeeded with Clash proxy"));
+
+              showNotice(
+                "success",
+                t("Profile creation succeeded with Clash proxy"),
+              );
             }
           }
-          
+
           // 成功后的操作
           setOpen(false);
           setTimeout(() => formIns.reset(), 500);
           fileDataRef.current = null;
-          
+
           // 只传递当前配置激活状态，让父组件决定是否需要触发配置重载
           props.onChange(isActivating);
         } catch (err: any) {
-          showNotice('error', err.message || err.toString());
+          showNotice("error", err.message || err.toString());
         } finally {
           setLoading(false);
         }
-      })
+      }),
     );
 
     const handleClose = () => {
@@ -271,7 +282,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                 />
               )}
             />
-            
+
             <Controller
               name="option.timeout_seconds"
               control={control}
@@ -284,10 +295,12 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                   label={t("HTTP Request Timeout")}
                   slotProps={{
                     input: {
-                    endAdornment: (
-                      <InputAdornment position="end">{t("seconds")}</InputAdornment>
-                    ),
-                    }
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          {t("seconds")}
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
               )}
@@ -308,9 +321,11 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                 slotProps={{
                   input: {
                     endAdornment: (
-                      <InputAdornment position="end">{t("mins")}</InputAdornment>
+                      <InputAdornment position="end">
+                        {t("mins")}
+                      </InputAdornment>
                     ),
-                  }
+                  },
                 }}
               />
             )}
@@ -364,7 +379,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         )}
       </BaseDialog>
     );
-  }
+  },
 );
 
 const StyledBox = styled(Box)(() => ({
