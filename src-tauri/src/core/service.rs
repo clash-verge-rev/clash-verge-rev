@@ -13,7 +13,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-const REQUIRED_SERVICE_VERSION: &str = "1.0.8"; // 定义所需的服务版本号
+const REQUIRED_SERVICE_VERSION: &str = "1.0.9"; // 定义所需的服务版本号
 
 // 限制重装时间和次数的常量
 const REINSTALL_COOLDOWN_SECS: u64 = 300; // 5分钟冷却期
@@ -220,6 +220,7 @@ pub async fn reinstall_service() -> Result<()> {
         Err(err) => {
             let error = format!("failed to install service: {}", err);
             service_state.last_error = Some(error.clone());
+            service_state.prefer_sidecar = true;
             service_state.save()?;
             bail!(error)
         }
@@ -347,6 +348,7 @@ pub async fn reinstall_service() -> Result<()> {
         Err(err) => {
             let error = format!("failed to install service: {}", err);
             service_state.last_error = Some(error.clone());
+            service_state.prefer_sidecar = true;
             service_state.save()?;
             bail!(error)
         }
@@ -466,6 +468,7 @@ pub async fn reinstall_service() -> Result<()> {
         Err(err) => {
             let error = format!("failed to install service: {}", err);
             service_state.last_error = Some(error.clone());
+            service_state.prefer_sidecar = true;
             service_state.save()?;
             bail!(error)
         }

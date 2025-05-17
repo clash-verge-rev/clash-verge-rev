@@ -15,7 +15,10 @@ use crate::{
     },
 };
 use anyhow::Result;
+use chrono::Local;
 use once_cell::sync::OnceCell;
+use std::fs::{create_dir_all, File};
+use std::io::Write;
 use std::{fmt, path::PathBuf, sync::Arc};
 use tauri_plugin_shell::{process::CommandChild, ShellExt};
 use tokio::sync::Mutex;
@@ -441,7 +444,18 @@ impl CoreManager {
             .clone()
             .unwrap_or("verge-mihomo".to_string());
         let config_dir = dirs::app_home_dir()?;
-        let (_, child) = app_handle
+
+        let service_log_dir = dirs::app_home_dir()?.join("service");
+        create_dir_all(&service_log_dir)?;
+
+        let now = Local::now();
+        let timestamp = now.format("%Y%m%d_%H%M%S").to_string();
+
+        let log_path = service_log_dir.join(format!("sidecar_{}.log", timestamp));
+
+        let mut log_file = File::create(log_path)?;
+
+        let (mut rx, child) = app_handle
             .shell()
             .sidecar(&clash_core)?
             .args([
@@ -451,6 +465,26 @@ impl CoreManager {
                 dirs::path_to_str(config_file)?,
             ])
             .spawn()?;
+
+        tokio::spawn(async move {
+            while let Some(event) = rx.recv().await {
+                match event {
+                    tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
+                        if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
+                            logging!(
+                                error,
+                                Type::Core,
+                                true,
+                                "[Sidecar] Failed to write stdout to file: {}",
+                                e
+                            );
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        });
+
         let pid = child.pid();
         logging!(
             trace,
@@ -506,89 +540,205 @@ impl CoreManager {
             child_sidecar: Arc::new(Mutex::new(None)),
         })
     }
+    // 当服务安装失败时的回退逻辑
+    async fn attempt_service_init(&self) -> Result<()> {
+        if service::check_service_needs_reinstall().await {
+            logging!(info, Type::Core, true, "服务版本不匹配或状态异常，执行重装");
+            if let Err(e) = service::reinstall_service().await {
+                logging!(
+                    warn,
+                    Type::Core,
+                    true,
+                    "服务重装失败 during attempt_service_init: {}",
+                    e
+                );
+                return Err(e);
+            }
+            // 如果重装成功，还需要尝试启动服务
+            logging!(info, Type::Core, true, "服务重装成功，尝试启动服务");
+        }
+
+        if let Err(e) = self.start_core_by_service().await {
+            logging!(
+                warn,
+                Type::Core,
+                true,
+                "通过服务启动核心失败 during attempt_service_init: {}",
+                e
+            );
+            // 确保 prefer_sidecar 在 start_core_by_service 失败时也被设置
+            let mut state = service::ServiceState::get();
+            if !state.prefer_sidecar {
+                state.prefer_sidecar = true;
+                state.last_error = Some(format!("通过服务启动核心失败: {}", e));
+                if let Err(save_err) = state.save() {
+                    logging!(
+                        error,
+                        Type::Core,
+                        true,
+                        "保存ServiceState失败 (in attempt_service_init/start_core_by_service): {}",
+                        save_err
+                    );
+                }
+            }
+            return Err(e);
+        }
+        Ok(())
+    }
 
     pub async fn init(&self) -> Result<()> {
         logging!(trace, Type::Core, "Initializing core");
 
+        let mut core_started_successfully = false;
+
         if service::is_service_available().await.is_ok() {
-            logging!(info, Type::Core, true, "服务可用，直接使用服务模式");
-
-            // 检查版本是否需要重装
-            if service::check_service_needs_reinstall().await {
-                logging!(info, Type::Core, true, "服务版本不匹配，执行重装");
-                service::reinstall_service().await?;
+            logging!(
+                info,
+                Type::Core,
+                true,
+                "服务当前可用或看似可用，尝试通过服务模式启动/重装"
+            );
+            match self.attempt_service_init().await {
+                Ok(_) => {
+                    logging!(info, Type::Core, true, "服务模式成功启动核心");
+                    core_started_successfully = true;
+                }
+                Err(_err) => {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        true,
+                        "服务模式启动或重装失败。将尝试Sidecar模式回退。"
+                    );
+                }
             }
-
-            self.start_core_by_service().await?;
         } else {
-            // 服务不可用，获取服务状态
+            logging!(
+                info,
+                Type::Core,
+                true,
+                "服务初始不可用 (is_service_available 调用失败)"
+            );
+        }
+
+        if !core_started_successfully {
+            logging!(
+                info,
+                Type::Core,
+                true,
+                "核心未通过服务模式启动，执行Sidecar回退或首次安装逻辑"
+            );
+
             let service_state = service::ServiceState::get();
-            let has_service_install_record = service_state.last_install_time > 0;
 
             if service_state.prefer_sidecar {
                 logging!(
                     info,
                     Type::Core,
                     true,
-                    "用户偏好Sidecar模式，使用Sidecar模式启动"
+                    "用户偏好Sidecar模式或先前服务启动失败，使用Sidecar模式启动"
                 );
                 self.start_core_by_sidecar().await?;
-            }
-            // 检查是否已经有服务安装记录，如果没有，则尝试安装
-            else if !has_service_install_record {
-                logging!(info, Type::Core, true, "首次运行，服务不可用，尝试安装");
+                // 如果 sidecar 启动成功，我们可以认为核心初始化流程到此结束
+                // 后续的 Tray::global().subscribe_traffic().await 仍然会执行
+            } else {
+                let has_service_install_record = service_state.last_install_time > 0;
+                if !has_service_install_record {
+                    logging!(
+                        info,
+                        Type::Core,
+                        true,
+                        "无服务安装记录 (首次运行或状态重置)，尝试安装服务"
+                    );
+                    match service::install_service().await {
+                        Ok(_) => {
+                            logging!(info, Type::Core, true, "服务安装成功(首次尝试)");
+                            let mut new_state = service::ServiceState::default();
+                            new_state.record_install();
+                            new_state.prefer_sidecar = false;
+                            new_state.save()?;
 
-                match service::install_service().await {
-                    Ok(_) => {
-                        logging!(info, Type::Core, true, "服务安装成功");
-
-                        let mut new_state = service::ServiceState::default();
-                        new_state.record_install();
-                        new_state.prefer_sidecar = false;
-                        new_state.save()?;
-
-                        if service::is_service_available().await.is_ok() {
-                            self.start_core_by_service().await?;
-                            logging!(info, Type::Core, true, "服务启动成功");
-                        } else {
-                            logging!(
-                                warn,
-                                Type::Core,
-                                true,
-                                "服务安装成功但未能连接，回退到Sidecar模式"
-                            );
-
+                            if service::is_service_available().await.is_ok() {
+                                logging!(info, Type::Core, true, "新安装的服务可用，尝试启动");
+                                if self.start_core_by_service().await.is_ok() {
+                                    logging!(info, Type::Core, true, "新安装的服务启动成功");
+                                } else {
+                                    logging!(
+                                        warn,
+                                        Type::Core,
+                                        true,
+                                        "新安装的服务启动失败，回退到Sidecar模式"
+                                    );
+                                    let mut final_state = service::ServiceState::get();
+                                    final_state.prefer_sidecar = true;
+                                    final_state.last_error =
+                                        Some("Newly installed service failed to start".to_string());
+                                    final_state.save()?;
+                                    self.start_core_by_sidecar().await?;
+                                }
+                            } else {
+                                logging!(
+                                    warn,
+                                    Type::Core,
+                                    true,
+                                    "服务安装成功但未能连接/立即可用，回退到Sidecar模式"
+                                );
+                                let mut final_state = service::ServiceState::get();
+                                final_state.prefer_sidecar = true;
+                                final_state.last_error = Some(
+                                    "Newly installed service not immediately available/connectable"
+                                        .to_string(),
+                                );
+                                final_state.save()?;
+                                self.start_core_by_sidecar().await?;
+                            }
+                        }
+                        Err(err) => {
+                            logging!(warn, Type::Core, true, "服务首次安装失败: {}", err);
+                            let new_state = service::ServiceState {
+                                last_error: Some(err.to_string()),
+                                prefer_sidecar: true,
+                                ..Default::default()
+                            };
+                            new_state.save()?;
                             self.start_core_by_sidecar().await?;
                         }
                     }
-                    Err(err) => {
-                        // 安装失败，记录错误并使用sidecar模式
-                        logging!(warn, Type::Core, true, "服务安装失败: {}", err);
-
-                        let new_state = service::ServiceState {
-                            last_error: Some(err.to_string()),
-                            prefer_sidecar: true,
-                            ..Default::default()
-                        };
-                        new_state.save()?;
-
-                        self.start_core_by_sidecar().await?;
+                } else {
+                    // 有安装记录，服务未成功启动，且初始不偏好sidecar
+                    // 这意味着服务之前可能可用，但 attempt_service_init 失败了（并应已设置 prefer_sidecar），
+                    // 或者服务初始不可用，无偏好，有记录。应强制使用 sidecar。
+                    logging!(
+                        info,
+                        Type::Core,
+                        true,
+                        "有服务安装记录但服务不可用/未启动，强制切换到Sidecar模式"
+                    );
+                    let mut final_state = service::ServiceState::get();
+                    if !final_state.prefer_sidecar {
+                        logging!(
+                            warn,
+                            Type::Core,
+                            true,
+                            "prefer_sidecar 为 false，因服务启动失败或不可用而强制设置为 true"
+                        );
+                        final_state.prefer_sidecar = true;
+                        final_state.last_error =
+                            Some(final_state.last_error.unwrap_or_else(|| {
+                                "Service startup failed or unavailable before sidecar fallback"
+                                    .to_string()
+                            }));
+                        final_state.save()?;
                     }
+                    self.start_core_by_sidecar().await?;
                 }
-            } else {
-                logging!(
-                    info,
-                    Type::Core,
-                    true,
-                    "有服务安装记录但服务不可用，使用Sidecar模式"
-                );
-                self.start_core_by_sidecar().await?;
             }
         }
 
-        logging!(trace, Type::Core, "Initied core");
+        logging!(trace, Type::Core, "Initied core logic completed");
         #[cfg(target_os = "macos")]
         logging_error!(Type::Core, true, Tray::global().subscribe_traffic().await);
+
         Ok(())
     }
 
