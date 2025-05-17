@@ -395,6 +395,8 @@
     "Service Installed Successfully": "Hizmet başarıyla yüklendi",
     "Service is ready and core restarted": "Hizmet hazır, çekirdek yeniden başlatıldı",
     "Core restarted. Service is now available.": "Çekirdek yeniden başlatıldı, hizmet artık kullanılabilir",
+    "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Hizmet hazırdı, ancak çekirdek yeniden başlatılırken sorunlar yaşanmış olabilir veya hizmet kullanılamaz hale gelmiş olabilir. Lütfen kontrol edin.",
+    "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Hizmet kurulumu veya çekirdeğin yeniden başlatılması sırasında sorunlar oluştu. Hizmet kullanılamıyor olabilir. Lütfen sistem günlüklerini kontrol edin.",
     "Uninstalling Service...": "Hizmet kaldırılıyor...",
     "Waiting for service to be ready...": "Hizmetin hazır olmasını bekliyor...",
     "Service not ready, retrying...": "Hizmet hazır değil, tekrar deneniyor...",

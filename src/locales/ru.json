@@ -395,6 +395,8 @@
     "Service Installed Successfully": "Служба успешно установлена",
     "Service is ready and core restarted": "Служба готова, ядро перезапущено",
     "Core restarted. Service is now available.": "Ядро перезапущено. Служба теперь доступна.",
+    "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Служба была готова, но при перезапуске ядра могли возникнуть проблемы, либо служба стала недоступна. Пожалуйста, проверьте.",
+    "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Во время установки службы или перезапуска ядра возникли проблемы. Служба может быть недоступна. Пожалуйста, проверьте системные журналы.",
     "Uninstalling Service...": "Удаление службы...",
     "Waiting for service to be ready...": "Ожидание готовности службы...",
     "Service not ready, retrying...": "Служба не готова, повторная попытка...",

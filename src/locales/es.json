@@ -395,6 +395,8 @@
   "Service Installed Successfully": "Servicio instalado con éxito",
   "Service is ready and core restarted": "El servicio está listo y el núcleo se ha reiniciado",
   "Core restarted. Service is now available.": "El núcleo se ha reiniciado. El servicio está disponible.",
+  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "El servicio estaba listo, pero puede haber habido problemas al reiniciar el núcleo o el servicio se volvió inaccesible. Por favor, verifique.",
+  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Hubo problemas durante la instalación del servicio o al reiniciar el núcleo. El servicio podría no estar disponible. Por favor, revise los registros del sistema.",
   "Uninstalling Service...": "Desinstalando servicio...",
   "Waiting for service to be ready...": "Esperando a que el servicio esté listo...",
   "Service not ready, retrying...": "El servicio no está listo. Volviendo a intentar...",

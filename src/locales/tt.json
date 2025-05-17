@@ -395,6 +395,8 @@
     "Service Installed Successfully": "Сервис орнатылган",
     "Service is ready and core restarted": "Сервис дайын, ядрә қайта иштеген",
     "Core restarted. Service is now available.": "Ядрә қайта иштеренде, сервис дайын",
+    "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Хезмәт әзер иде, әмма үзәкне яңадан эшләтеп җибәрүдә проблемалар булырга мөмкин яки хезмәт кулланылмый торырга мөмкин. Зинһар, тикшерегез.",
+    "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Хезмәтне урнаштыру яки үзәкне яңадан эшләтеп җибәрү вакытында проблемалар килеп чыкты. Хезмәт кулланылмый торырга мөмкин. Зинһар, система журналларын тикшерегез.",
     "Uninstalling Service...": "Сервис өчүрүлә...",
     "Waiting for service to be ready...": "Сервис дайын болуына күтүлә...",
     "Service not ready, retrying...": "Сервис дайын булмаган, кайта аракет күрәргә...",

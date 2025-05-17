@@ -395,6 +395,8 @@
     "Service Installed Successfully": "Berhasil memasang layanan",
     "Service is ready and core restarted": "Layanan telah siap, inti telah di-restart",
     "Core restarted. Service is now available.": "Inti telah di-restart, layanan sekarang tersedia",
+    "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Layanan sudah siap, tetapi mungkin ada masalah saat memulai ulang inti atau layanan menjadi tidak tersedia. Silakan periksa.",
+    "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Terjadi masalah saat instalasi layanan atau saat memulai ulang inti. Layanan mungkin tidak tersedia. Silakan periksa log sistem.",
     "Uninstalling Service...": "Menghapus layanan...",
     "Waiting for service to be ready...": "Menunggu layanan siap...",
     "Service not ready, retrying...": "Layanan belum siap, mencoba lagi...",

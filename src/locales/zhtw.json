@@ -395,6 +395,8 @@
   "Service Installed Successfully": "已成功安裝服務",
   "Service is ready and core restarted": "服務已就緒，內核已重啟",
   "Core restarted. Service is now available.": "內核已重啟，服務已就緒",
+  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "服務已就緒，但內核重啟可能存在問題或服務已不可用。請檢查。",
+  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "服務安裝或內核重啟遇到問題。服務可能不可用。請檢查系統日誌。",
   "Uninstalling Service...": "服務卸載中...",
   "Waiting for service to be ready...": "等待服務就緒...",
   "Service not ready, retrying...": "服務未就緒，重試中...",

@@ -395,6 +395,8 @@
   "Service Installed Successfully": "서비스가 성공적으로 설치되었습니다.",
   "Service is ready and core restarted": "서비스가 준비되었으며, 코어가 재시작되었습니다.",
   "Core restarted. Service is now available.": "코어가 재시작되었습니다. 서비스가 이제 사용 가능합니다.",
+  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "서비스는 준비되었지만, 코어 재시작 중 문제가 발생했거나 서비스가 사용할 수 없게 되었을 수 있습니다. 확인해 주세요.",
+  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "서비스 설치 또는 코어 재시작 중 문제가 발생했습니다. 서비스가 사용 불가능할 수 있습니다. 시스템 로그를 확인해 주세요.",
   "Uninstalling Service...": "서비스 제거 중...",
   "Waiting for service to be ready...": "서비스가 준비되기를 기다리는 중...",
   "Service not ready, retrying...": "서비스가 준비되지 않았습니다. 다시 시도 중...",

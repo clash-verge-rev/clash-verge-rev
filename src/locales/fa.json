@@ -395,6 +395,8 @@
   "Service Installed Successfully": "سرویس با موفقیت نصب شد",
   "Service is ready and core restarted": "سرویس آماده است و هسته بازآغاز شد",
   "Core restarted. Service is now available.": "هسته بازآغاز شد و سرویس آماده است",
+  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "سرویس آماده بود، اما ممکن است در راه‌اندازی مجدد هسته مشکلی پیش آمده باشد یا سرویس در دسترس نباشد. لطفاً بررسی کنید.",
+  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "در هنگام نصب سرویس یا راه‌اندازی مجدد هسته مشکلاتی رخ داده است. ممکن است سرویس در دسترس نباشد. لطفاً لاگ‌های سیستم را بررسی کنید.",
   "Uninstalling Service...": "در حال حذف نصب سرویس...",
   "Waiting for service to be ready...": "در انتظار آماده شدن سرویس...",
   "Service not ready, retrying...": "سرویس آماده نیست، تلاش مجدد...",
