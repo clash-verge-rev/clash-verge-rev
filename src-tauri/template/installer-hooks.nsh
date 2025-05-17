@@ -1,5 +1,7 @@
+; === 添加插件 Simple Service Plugin 存在的目录 ===
 !addplugindir "$%AppData%\Local\NSIS\"
 
+; ----------------------- Hook -----------------------
 !macro NSIS_HOOK_PREINSTALL
   ; MessageBox MB_OK "PreInstall"
 !macroend
@@ -18,9 +20,11 @@
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL
-  ; MessageBox MB_OK "PostUninstall"
+  !insertmacro RemoveAutoStartReg
 !macroend
 
+; ----------------------- 自定义方法 -----------------------
+; === 检查并停止所有与 Verge 有关的进程 ===
 !macro CheckAllVergeProcesses
   ; Check if clash-verge-service.exe is running
   !if "${INSTALLMODE}" == "currentUser"
@@ -71,6 +75,7 @@
   ${EndIf}
 !macroend
 
+; === 启动 Clash Verge Service ===
 !macro StartVergeService
   ; Check if the service exists
   SimpleSC::ExistsService "clash_verge_service"
@@ -97,6 +102,7 @@
   ${EndIf}
 !macroend
 
+; === 移除 Clash Verge Service ===
 !macro RemoveVergeService
   ; Check if the service exists
   SimpleSC::ExistsService "clash_verge_service"
@@ -133,5 +139,19 @@
           Pop $0
           MessageBox MB_OK|MB_ICONSTOP "Check Service Status Error ($0)"
     ${EndIf}
+  ${EndIf}
+!macroend
+
+; === 移除自启动注册表，仅在明确卸载软件时，非更新软件或覆盖安装时 ===
+!macro RemoveAutoStartReg
+  ${If} $UpdateMode <> 1
+    StrCpy $R0 "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+    StrCpy $R1 "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"
+    ; HKEY_LOCAL_MACHINE
+    DeleteRegValue HKLM "$R0" "Clash Verge"
+    DeleteRegValue HKLM "$R1" "Clash Verge"
+    ; HKEY_CURRENT_USER
+    DeleteRegValue HKCU "$R0" "Clash Verge"
+    DeleteRegValue HKCU "$R1" "Clash Verge"
   ${EndIf}
 !macroend
