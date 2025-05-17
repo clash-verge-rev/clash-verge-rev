@@ -318,9 +318,6 @@ pub fn create_window(is_show: bool) -> bool {
                     "异步窗口任务开始 (启动已标记完成)"
                 );
 
-                #[cfg(target_os = "macos")]
-                let _ = newly_created_window.set_decorations(false);
-
                 if is_show {
                     let window_clone = newly_created_window.clone();
 
