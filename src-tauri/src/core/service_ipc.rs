@@ -129,35 +129,12 @@ pub async fn send_ipc_request(
         winnt::{FILE_SHARE_READ, FILE_SHARE_WRITE, GENERIC_READ, GENERIC_WRITE},
     };
 
-    logging!(
-        info,
-        Type::Service,
-        true,
-        "准备发送IPC请求到Windows命名管道: {}",
-        IPC_SOCKET_NAME
-    );
-    logging!(
-        debug,
-        Type::Service,
-        true,
-        "IPC请求: 命令={:?}, 数据大小={}字节",
-        command,
-        serde_json::to_string(&payload)?.len()
-    );
+    logging!(info, Type::Service, true, "正在连接服务 (Windows)...");
 
     let command_type = format!("{:?}", command);
 
     let request = match create_signed_request(command, payload) {
-        Ok(req) => {
-            logging!(
-                debug,
-                Type::Service,
-                true,
-                "创建签名请求成功: ID={}",
-                req.id
-            );
-            req
-        }
+        Ok(req) => req,
         Err(e) => {
             logging!(error, Type::Service, true, "创建签名请求失败: {}", e);
             return Err(e);
@@ -165,14 +142,6 @@ pub async fn send_ipc_request(
     };
 
     let request_json = serde_json::to_string(&request)?;
-    logging!(
-        debug,
-        Type::Service,
-        true,
-        "请求JSON大小: {}字节",
-        request_json.len()
-    );
-    logging!(debug, Type::Service, true, "尝试连接Windows命名管道...");
 
     let result = tokio::task::spawn_blocking(move || -> Result<IpcResponse> {
         let c_pipe_name = match CString::new(IPC_SOCKET_NAME) {
@@ -197,17 +166,21 @@ pub async fn send_ipc_request(
 
         if handle == INVALID_HANDLE_VALUE {
             let error = std::io::Error::last_os_error();
-            logging!(error, Type::Service, true, "连接到命名管道失败: {}", error);
+            logging!(
+                error,
+                Type::Service,
+                true,
+                "连接到服务命名管道失败: {}",
+                error
+            );
             return Err(anyhow::anyhow!("无法连接到服务命名管道: {}", error));
         }
 
         let mut pipe = unsafe { File::from_raw_handle(handle as RawHandle) };
-        logging!(info, Type::Service, true, "成功连接到Windows命名管道");
+        logging!(info, Type::Service, true, "服务连接成功 (Windows)");
 
         let request_bytes = request_json.as_bytes();
         let len_bytes = (request_bytes.len() as u32).to_be_bytes();
-
-        logging!(debug, Type::Service, true, "发送IPC请求...");
 
         if let Err(e) = pipe.write_all(&len_bytes) {
             logging!(error, Type::Service, true, "写入请求长度失败: {}", e);
@@ -218,8 +191,6 @@ pub async fn send_ipc_request(
             logging!(error, Type::Service, true, "写入请求内容失败: {}", e);
             return Err(anyhow::anyhow!("写入请求内容失败: {}", e));
         }
-
-        logging!(debug, Type::Service, true, "请求已发送，等待响应...");
 
         if let Err(e) = pipe.flush() {
             logging!(error, Type::Service, true, "刷新管道失败: {}", e);
@@ -233,13 +204,6 @@ pub async fn send_ipc_request(
         }
 
         let response_len = u32::from_be_bytes(response_len_bytes) as usize;
-        logging!(
-            debug,
-            Type::Service,
-            true,
-            "收到响应长度: {}字节",
-            response_len
-        );
 
         let mut response_bytes = vec![0u8; response_len];
         if let Err(e) = pipe.read_exact(&mut response_bytes) {
@@ -247,36 +211,10 @@ pub async fn send_ipc_request(
             return Err(anyhow::anyhow!("读取响应内容失败: {}", e));
         }
 
-        logging!(
-            debug,
-            Type::Service,
-            true,
-            "成功接收响应: {}字节",
-            response_bytes.len()
-        );
-
         let response: IpcResponse = match serde_json::from_slice::<IpcResponse>(&response_bytes) {
-            Ok(r) => {
-                logging!(
-                    debug,
-                    Type::Service,
-                    true,
-                    "响应解析成功: success={}",
-                    r.success
-                );
-                r
-            }
+            Ok(r) => r,
             Err(e) => {
-                logging!(
-                    error,
-                    Type::Service,
-                    true,
-                    "解析响应失败: {}, 原始数据: {:?}",
-                    e,
-                    String::from_utf8_lossy(
-                        &response_bytes[..std::cmp::min(100, response_bytes.len())]
-                    )
-                );
+                logging!(error, Type::Service, true, "服务响应解析失败: {}", e);
                 return Err(anyhow::anyhow!("解析响应失败: {}", e));
             }
         };
@@ -287,7 +225,6 @@ pub async fn send_ipc_request(
                     logging!(error, Type::Service, true, "服务响应签名验证失败");
                     bail!("服务响应签名验证失败");
                 }
-                logging!(debug, Type::Service, true, "响应签名验证成功");
             }
             Err(e) => {
                 logging!(error, Type::Service, true, "验证响应签名时出错: {}", e);
@@ -318,35 +255,12 @@ pub async fn send_ipc_request(
 ) -> Result<IpcResponse> {
     use std::os::unix::net::UnixStream;
 
-    logging!(
-        info,
-        Type::Service,
-        true,
-        "准备发送IPC请求到Unix套接字: {}",
-        IPC_SOCKET_NAME
-    );
-    logging!(
-        debug,
-        Type::Service,
-        true,
-        "IPC请求: 命令={:?}, 数据大小={}字节",
-        command,
-        serde_json::to_string(&payload)?.len()
-    );
+    logging!(info, Type::Service, true, "正在连接服务 (Unix)...");
 
     let command_type = format!("{:?}", command);
 
     let request = match create_signed_request(command, payload) {
-        Ok(req) => {
-            logging!(
-                debug,
-                Type::Service,
-                true,
-                "创建签名请求成功: ID={}",
-                req.id
-            );
-            req
-        }
+        Ok(req) => req,
         Err(e) => {
             logging!(error, Type::Service, true, "创建签名请求失败: {}", e);
             return Err(e);
@@ -354,29 +268,10 @@ pub async fn send_ipc_request(
     };
 
     let request_json = serde_json::to_string(&request)?;
-    logging!(
-        debug,
-        Type::Service,
-        true,
-        "请求JSON大小: {}字节",
-        request_json.len()
-    );
-
-    logging!(debug, Type::Service, true, "尝试连接Unix套接字...");
-
-    let socket_exists = std::path::Path::new(IPC_SOCKET_NAME).exists();
-    logging!(
-        debug,
-        Type::Service,
-        true,
-        "Unix套接字文件 {} 是否存在: {}",
-        IPC_SOCKET_NAME,
-        socket_exists
-    );
 
     let mut stream = match UnixStream::connect(IPC_SOCKET_NAME) {
         Ok(s) => {
-            logging!(info, Type::Service, true, "成功连接到Unix套接字");
+            logging!(info, Type::Service, true, "服务连接成功 (Unix)");
             s
         }
         Err(e) => {
@@ -388,8 +283,6 @@ pub async fn send_ipc_request(
     let request_bytes = request_json.as_bytes();
     let len_bytes = (request_bytes.len() as u32).to_be_bytes();
 
-    logging!(debug, Type::Service, true, "发送IPC请求...");
-
     if let Err(e) = std::io::Write::write_all(&mut stream, &len_bytes) {
         logging!(error, Type::Service, true, "写入请求长度失败: {}", e);
         return Err(anyhow::anyhow!("写入请求长度失败: {}", e));
@@ -400,8 +293,6 @@ pub async fn send_ipc_request(
         return Err(anyhow::anyhow!("写入请求内容失败: {}", e));
     }
 
-    logging!(debug, Type::Service, true, "请求已发送，等待响应...");
-
     let mut response_len_bytes = [0u8; 4];
     if let Err(e) = std::io::Read::read_exact(&mut stream, &mut response_len_bytes) {
         logging!(error, Type::Service, true, "读取响应长度失败: {}", e);
@@ -409,13 +300,6 @@ pub async fn send_ipc_request(
     }
 
     let response_len = u32::from_be_bytes(response_len_bytes) as usize;
-    logging!(
-        debug,
-        Type::Service,
-        true,
-        "收到响应长度: {}字节",
-        response_len
-    );
 
     let mut response_bytes = vec![0u8; response_len];
     if let Err(e) = std::io::Read::read_exact(&mut stream, &mut response_bytes) {
@@ -423,36 +307,10 @@ pub async fn send_ipc_request(
         return Err(anyhow::anyhow!("读取响应内容失败: {}", e));
     }
 
-    logging!(
-        debug,
-        Type::Service,
-        true,
-        "成功接收响应: {}字节",
-        response_bytes.len()
-    );
-
     let response: IpcResponse = match serde_json::from_slice::<IpcResponse>(&response_bytes) {
-        Ok(r) => {
-            logging!(
-                debug,
-                Type::Service,
-                true,
-                "响应解析成功: success={}",
-                r.success
-            );
-            r
-        }
+        Ok(r) => r,
         Err(e) => {
-            logging!(
-                error,
-                Type::Service,
-                true,
-                "解析响应失败: {}, 原始数据: {:?}",
-                e,
-                String::from_utf8_lossy(
-                    &response_bytes[..std::cmp::min(100, response_bytes.len())]
-                )
-            );
+            logging!(error, Type::Service, true, "服务响应解析失败: {}", e,);
             return Err(anyhow::anyhow!("解析响应失败: {}", e));
         }
     };
@@ -463,7 +321,6 @@ pub async fn send_ipc_request(
                 logging!(error, Type::Service, true, "服务响应签名验证失败");
                 bail!("服务响应签名验证失败");
             }
-            logging!(debug, Type::Service, true, "响应签名验证成功");
         }
         Err(e) => {
             logging!(error, Type::Service, true, "验证响应签名时出错: {}", e);
