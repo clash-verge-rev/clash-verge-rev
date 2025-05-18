@@ -223,8 +223,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       tailwindcss:
-        specifier: 4.1.6
-        version: 4.1.6
+        specifier: 4.1.7
+        version: 4.1.7
       terser:
         specifier: 5.39.1
         version: 5.39.1
@@ -3624,9 +3624,6 @@ packages:
 
   tailwind-merge@3.3.0:
     resolution: {integrity: sha512-fyW/pEfcQSiigd5SNn0nApUOxx0zB/dm6UDU/rEwc2c3sX2smWUNbapHv+QRqLGVp9GWX3THIa7MUGPo+YkDzQ==}
-
-  tailwindcss@4.1.6:
-    resolution: {integrity: sha512-j0cGLTreM6u4OWzBeLBpycK0WIh8w7kSwcUsQZoGLHZ7xDTdM69lN64AgoIEEwFi0tnhs4wSykUa5YWxAzgFYg==}
 
   tailwindcss@4.1.7:
     resolution: {integrity: sha512-kr1o/ErIdNhTz8uzAYL7TpaUuzKIE6QPQ4qmSdxnoX/lo+5wmUHQA6h3L5yIqEImSRnAAURDirLu/BgiXGPAhg==}
@@ -7565,8 +7562,6 @@ snapshots:
   systemjs@6.15.1: {}
 
   tailwind-merge@3.3.0: {}
-
-  tailwindcss@4.1.6: {}
 
   tailwindcss@4.1.7: {}
 
