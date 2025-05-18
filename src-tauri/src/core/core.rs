@@ -449,7 +449,7 @@ impl CoreManager {
             .unwrap_or("verge-mihomo".to_string());
         let config_dir = dirs::app_home_dir()?;
 
-        let service_log_dir = dirs::app_home_dir()?.join("service");
+        let service_log_dir = dirs::app_home_dir()?.join("logs").join("service");
         create_dir_all(&service_log_dir)?;
 
         let now = Local::now();
