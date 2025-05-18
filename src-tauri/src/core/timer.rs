@@ -422,17 +422,10 @@ impl Timer {
     fn emit_update_event(_uid: &str, _is_start: bool) {
         #[cfg(any(feature = "verge-dev", feature = "default"))]
         {
-            use serde_json::json;
-            use tauri::Emitter;
-
-            let event_name = if _is_start {
-                "profile-update-started"
+            if _is_start {
+                super::handle::Handle::notify_profile_update_started(_uid.to_string());
             } else {
-                "profile-update-completed"
-            };
-
-            if let Some(window) = super::handle::Handle::global().get_window() {
-                let _ = window.emit(event_name, json!({ "uid": _uid }));
+                super::handle::Handle::notify_profile_update_completed(_uid.to_string());
             }
         }
     }

@@ -18,6 +18,11 @@ enum FrontendEvent {
     RefreshClash,
     RefreshVerge,
     NoticeMessage { status: String, message: String },
+    ProfileChanged { current_profile_id: String },
+    TimerUpdated { profile_index: String },
+    StartupCompleted,
+    ProfileUpdateStarted { uid: String },
+    ProfileUpdateCompleted { uid: String },
 }
 
 /// 事件发送统计和监控
@@ -124,6 +129,21 @@ impl NotificationSystem {
                                                     ("verge://notice-message", Err(e))
                                                 }
                                             }
+                                        }
+                                        FrontendEvent::ProfileChanged { current_profile_id } => {
+                                            ("profile-changed", Ok(serde_json::json!(current_profile_id)))
+                                        }
+                                        FrontendEvent::TimerUpdated { profile_index } => {
+                                            ("verge://timer-updated", Ok(serde_json::json!(profile_index)))
+                                        }
+                                        FrontendEvent::StartupCompleted => {
+                                            ("verge://startup-completed", Ok(serde_json::json!(null)))
+                                        }
+                                        FrontendEvent::ProfileUpdateStarted { uid } => {
+                                            ("profile-update-started", Ok(serde_json::json!({ "uid": uid })))
+                                        }
+                                        FrontendEvent::ProfileUpdateCompleted { uid } => {
+                                            ("profile-update-completed", Ok(serde_json::json!({ "uid": uid })))
                                         }
                                     };
 
@@ -286,6 +306,76 @@ impl Handle {
         let system_opt = handle.notification_system.read();
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::RefreshVerge);
+        }
+    }
+
+    pub fn notify_profile_changed(profile_id: String) {
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        let system_opt = handle.notification_system.read();
+        if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::ProfileChanged { current_profile_id: profile_id });
+        } else {
+            log::warn!("Notification system not initialized when trying to send ProfileChanged event.");
+        }
+    }
+
+    pub fn notify_timer_updated(profile_index: String) {
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        let system_opt = handle.notification_system.read();
+        if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::TimerUpdated { profile_index });
+        } else {
+            log::warn!("Notification system not initialized when trying to send TimerUpdated event.");
+        }
+    }
+
+    pub fn notify_startup_completed() {
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        let system_opt = handle.notification_system.read();
+        if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::StartupCompleted);
+        } else {
+            log::warn!("Notification system not initialized when trying to send StartupCompleted event.");
+        }
+    }
+
+    pub fn notify_profile_update_started(uid: String) {
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        let system_opt = handle.notification_system.read();
+        if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::ProfileUpdateStarted { uid });
+        } else {
+            log::warn!("Notification system not initialized when trying to send ProfileUpdateStarted event.");
+        }
+    }
+
+    pub fn notify_profile_update_completed(uid: String) {
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        let system_opt = handle.notification_system.read();
+        if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::ProfileUpdateCompleted { uid });
+        } else {
+            log::warn!("Notification system not initialized when trying to send ProfileUpdateCompleted event.");
         }
     }
 
