@@ -392,6 +392,7 @@
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "Installing Service...",
+  "Uninstall Service":"Uninstall Service",
   "Service Installed Successfully": "Service Installed Successfully",
   "Service is ready and core restarted": "Service is ready and core restarted",
   "Core restarted. Service is now available.": "Core restarted. Service is now available.",

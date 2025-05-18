@@ -392,6 +392,7 @@
     "Stopping Core...": "Ядрә токтатылды...",
     "Restarting Core...": "Ядрә қайта иштередилә...",
     "Installing Service...": "Сервис орнатылыр...",
+    "Uninstall Service": "Хезмәтне бетерү",
     "Service Installed Successfully": "Сервис орнатылган",
     "Service is ready and core restarted": "Сервис дайын, ядрә қайта иштеген",
     "Core restarted. Service is now available.": "Ядрә қайта иштеренде, сервис дайын",

@@ -392,6 +392,7 @@
   "Stopping Core...": "در حال توقف هسته...",
   "Restarting Core...": "در حال بازآغاز هسته...",
   "Installing Service...": "در حال نصب سرویس...",
+  "Uninstall Service": "حذف سرویس",
   "Service Installed Successfully": "سرویس با موفقیت نصب شد",
   "Service is ready and core restarted": "سرویس آماده است و هسته بازآغاز شد",
   "Core restarted. Service is now available.": "هسته بازآغاز شد و سرویس آماده است",
