@@ -3,12 +3,16 @@ mod test {
     use std::error::Error;
     use std::time::Duration;
 
+    use futures_util::StreamExt;
+    use http::Request;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::windows::named_pipe::ClientOptions;
     use tokio::time;
+    use tokio_tungstenite::client_async;
+    use tokio_tungstenite::tungstenite::Message;
     use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
 
-    use crate::{ws_utils, Connections, Rules};
+    use crate::{ws_utils, Log, Rules};
 
     // 目前仅进行了 named pipe 连接测试
     #[tokio::test]
@@ -57,14 +61,84 @@ mod test {
                 // println!("[thread-1]: buffer length: {}, Received response: {:?}", buf.len(), response);
                 let response = response.split("\r\n\r\n").nth(1).unwrap();
                 let json: Rules = serde_json::from_str(response).unwrap();
-                println!("[thread-1]: Received response json: {:?}", json);
+                println!("[thread-1]: {:?}", json);
 
                 std::thread::sleep(Duration::from_millis(500));
             }
         });
 
+        // tokio::spawn(async move {
+        //     let mut client = loop {
+        //         match ClientOptions::new().open(PIPE_NAME) {
+        //             Ok(client) => break client,
+        //             Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
+        //             Err(_) => panic!("Failed to connect to named pipe: {PIPE_NAME}"),
+        //         }
+
+        //         time::sleep(Duration::from_millis(50)).await;
+        //     };
+        //     loop {
+        //         client.writable().await.unwrap();
+        //         // 生成随机的 Sec-WebSocket-Key
+        //         let key = ws_utils::generate_websocket_key();
+        //         // 构建 WebSocket 握手请求
+        //         let request = format!("GET /connections HTTP/1.1\r\nHost: clash-verge\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n");
+        //         println!("Sent handshake request");
+        //         // 发送握手请求
+        //         client.write(request.as_bytes()).await.unwrap();
+        //         break;
+        //     }
+
+        //     loop {
+        //         client.readable().await.unwrap();
+        //         let mut buf = Vec::new();
+        //         let mut b = [0; 4096];
+        //         loop {
+        //             // 循环拼接返回的数据
+        //             let n = client.read(&mut b).await.unwrap();
+        //             buf.extend_from_slice(&b[..n]);
+
+        //             if n < 4096 {
+        //                 // 判断是否为 websocket 帧
+        //                 if n == 4 {
+        //                     match ws_utils::parse_websocket_frame(&buf) {
+        //                         Ok(_) => {
+        //                             break;
+        //                         }
+        //                         Err(e) => {
+        //                             if e.kind() == std::io::ErrorKind::UnexpectedEof {
+        //                                 println!("require more payload data");
+        //                                 continue;
+        //                             } else {
+        //                                 break;
+        //                             }
+        //                         }
+        //                     }
+        //                 } else {
+        //                     let receive_msg = String::from_utf8_lossy(&b);
+        //                     if receive_msg.starts_with("HTTP/1.1 101 Switching Protocols") {
+        //                         println!("WebSocket handshake successful");
+        //                         //  清空缓冲区，准备接收下一次数据
+        //                         buf.clear();
+        //                         continue;
+        //                     } else {
+        //                         break;
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         // 解析 websocket 的数据
+        //         let (frame, remaining) = ws_utils::parse_websocket_frame(&buf).unwrap();
+        //         // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
+        //         let response = String::from_utf8_lossy(&frame.payload.as_slice());
+        //         // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);
+        //         let json: Connections = serde_json::from_str(&response).unwrap();
+        //         println!("[thread-2]: Received response json: {:?}", json);
+        //     }
+        // });
+
         tokio::spawn(async move {
-            let mut client = loop {
+            let pipe = loop {
                 match ClientOptions::new().open(PIPE_NAME) {
                     Ok(client) => break client,
                     Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
@@ -73,67 +147,41 @@ mod test {
 
                 time::sleep(Duration::from_millis(50)).await;
             };
-            loop {
-                client.writable().await.unwrap();
-                // 生成随机的 Sec-WebSocket-Key
-                let key = ws_utils::generate_websocket_key();
-                // 构建 WebSocket 握手请求
-                let request = format!("GET /connections HTTP/1.1\r\nHost: clash-verge\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n");
-                println!("Sent handshake request");
-                // 发送握手请求
-                client.write(request.as_bytes()).await.unwrap();
-                break;
-            }
 
-            loop {
-                client.readable().await.unwrap();
-                let mut buf = Vec::new();
-                let mut b = [0; 4096];
-                loop {
-                    // 循环拼接返回的数据
-                    let n = client.read(&mut b).await.unwrap();
-                    buf.extend_from_slice(&b[..n]);
+            // 构造 WebSocket 握手请求
+            let request = Request::builder()
+                .uri("ws://localhost/logs") // 路径需与服务器端路由匹配
+                .header("Host", "clash-verge")
+                .header("Sec-WebSocket-Key", ws_utils::generate_websocket_key())
+                .header("Connection", "Upgrade")
+                .header("Upgrade", "websocket")
+                .header("Sec-WebSocket-Version", "13")
+                .body(())
+                .unwrap();
 
-                    if n < 4096 {
-                        // 判断是否为 websocket 帧
-                        if n == 4 {
-                            match ws_utils::parse_websocket_frame(&buf) {
-                                Ok(_) => {
-                                    break;
-                                }
-                                Err(e) => {
-                                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                                        println!("require more payload data");
-                                        continue;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
-                        } else {
-                            let receive_msg = String::from_utf8_lossy(&b);
-                            if receive_msg.starts_with("HTTP/1.1 101 Switching Protocols") {
-                                println!("WebSocket handshake successful");
-                                //  清空缓冲区，准备接收下一次数据
-                                buf.clear();
-                                continue;
-                            } else {
-                                break;
-                            }
+            // 发起 WebSocket 握手
+            let (mut ws_stream, _) = client_async(request, pipe).await.unwrap();
+            println!("WebSocket 连接已建立");
+
+            // 接收响应
+            let mut count = 0;
+            while count < 100 {
+                if let Some(Ok(msg)) = ws_stream.next().await {
+                    match msg {
+                        Message::Text(message) => {
+                            let json: Log = serde_json::from_str(&message).unwrap();
+                            println!("[thread-2]: {:?}", json);
+                            count += 1;
+                        }
+                        _ => {
+                            println!("not text data");
                         }
                     }
                 }
-                // 解析 websocket 的数据
-                let (frame, remaining) = ws_utils::parse_websocket_frame(&buf).unwrap();
-                // println!("----> opcode: {}, fin: {}", frame.opcode, frame.fin);
-                let response = String::from_utf8_lossy(&frame.payload.as_slice());
-                // println!("[thread-2]: buffer length: {}, Received response: {:?}", buf.len(), response);
-                let json: Connections = serde_json::from_str(&response).unwrap();
-                println!("[thread-2]: Received response json: {:?}", json);
             }
         });
 
-        tokio::time::sleep(Duration::from_secs(5)).await;
+        tokio::time::sleep(Duration::from_secs(10)).await;
 
         Ok(())
     }
