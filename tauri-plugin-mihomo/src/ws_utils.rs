@@ -1,10 +1,16 @@
 //! 解析 websocket 的数据，包含解析 [websocket 数据帧](https://datatracker.ietf.org/doc/html/rfc6455#section-5.2)
 
 #![allow(dead_code)]
+use core::str;
 use std::io::{self, Cursor, Read};
 
 use anyhow::{bail, Result};
 use base64::{engine::general_purpose, Engine};
+use http::{
+    header::{CONTENT_LENGTH, CONTENT_TYPE},
+    StatusCode, Version,
+};
+use httparse::EMPTY_HEADER;
 use rand::Rng;
 use tokio_tungstenite::tungstenite::protocol::frame::FrameHeader;
 
@@ -105,4 +111,69 @@ pub fn generate_websocket_key() -> String {
     rng.fill(&mut key);
     // Base64 编码
     general_purpose::STANDARD.encode(key)
+}
+
+pub fn build_socket_request(req: reqwest::RequestBuilder) -> Result<String> {
+    let req = req.build()?;
+    let method = req.method().as_str();
+    let mut path = req.url().path().to_string();
+    if let Some(query) = req.url().query() {
+        path.push_str(&format!("?{}", query));
+    }
+    let request_line = format!("{} {} HTTP/1.1\r\nHost: clash-verge\r\n", method, path);
+    // 构建头部
+    let mut headers = String::new();
+
+    // 添加其他头部
+    let missing_content_length =
+        req.headers().contains_key(CONTENT_TYPE) && !req.headers().contains_key(CONTENT_LENGTH);
+    println!("missing content length: {missing_content_length}");
+
+    let body = req
+        .body()
+        .and_then(|b| b.as_bytes())
+        .map(|b| String::from_utf8_lossy(b).to_string())
+        .unwrap_or_default();
+
+    for (name, value) in req.headers() {
+        headers.push_str(&format!(
+            "{}: {}\r\n",
+            name,
+            value.to_str().unwrap_or("[non-ASCII]")
+        ));
+        if name == CONTENT_TYPE && missing_content_length {
+            headers.push_str(&format!("{}: {}\r\n", CONTENT_LENGTH, body.len()));
+        }
+    }
+
+    // 拼接完整请求, 格式: 请求行 + 头部 + 空行 + Body
+    let raw = format!("{}{}\r\n{}", request_line, headers, body);
+
+    Ok(raw)
+}
+
+pub fn parse_socket_response(response_str: &str) -> Result<reqwest::Response> {
+    let mut headers = [EMPTY_HEADER; 16];
+    let mut res = httparse::Response::new(&mut headers);
+    let raw_response = response_str.as_bytes();
+    match res.parse(raw_response) {
+        Ok(httparse::Status::Complete(_)) => {
+            let mut res_builder = http::Response::builder()
+                .version(Version::HTTP_11)
+                .status(StatusCode::from_u16(res.code.unwrap())?);
+            for header in res.headers.iter() {
+                res_builder =
+                    res_builder.header(header.name, str::from_utf8(header.value).unwrap());
+            }
+            let body = response_str.split("\r\n\r\n").nth(1).unwrap_or_default();
+            let response = res_builder.body(body.to_owned())?;
+            Ok(reqwest::Response::from(response))
+        }
+        Ok(httparse::Status::Partial) => {
+            bail!("Partial response, need more data.");
+        }
+        Err(e) => {
+            bail!("Failed to parse response: {:?}", e);
+        }
+    }
 }

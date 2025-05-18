@@ -5,12 +5,14 @@ mod test {
 
     use futures_util::StreamExt;
     use http::Request;
+    use serde_json::json;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::UnixStream;
     use tokio_tungstenite::client_async;
     use tokio_tungstenite::tungstenite::Message;
 
-    use crate::{ws_utils, Log, Rules};
+    use crate::ws_utils::{build_socket_request, parse_socket_response};
+    use crate::{ws_utils, Log};
 
     // 目前仅进行了 sock 套接字连接测试
     #[tokio::test]
@@ -27,14 +29,24 @@ mod test {
         tokio::spawn(async move {
             // 连接到 Unix 域套接字
             let mut stream = UnixStream::connect(socket_path_).await.unwrap();
+            let body = json!({
+                "name": "US AUTO"
+            });
+            let req = reqwest::ClientBuilder::new()
+                .build()
+                .unwrap()
+                // .get("http://127.0.0.1:9090/rules")
+                .get("http://127.0.0.1:9090/proxies/PROXY/delay")
+                .query(&[("url", "http://1.1.1.1"), ("timeout", "5000")])
+                // .put("http://127.0.0.1:9090/proxies/PROXY")
+                // .json(&body)
+                ;
+            let req_str = build_socket_request(req).unwrap();
+            println!("build request: {:?}", req_str);
             loop {
                 // write
                 stream.writable().await.unwrap();
-                stream
-                    .write(b"GET /rules HTTP/1.1\r\nHost: clash-verge\r\n\r\n")
-                    // .write(b"GET /group HTTP/1.1\r\nHost: clash-verge\r\n\r\n")
-                    .await
-                    .unwrap();
+                stream.write(req_str.as_bytes()).await.unwrap();
                 // read
                 stream.readable().await.unwrap();
                 let mut buf: Vec<u8> = Vec::new();
@@ -49,9 +61,15 @@ mod test {
                 }
                 let response = String::from_utf8_lossy(&buf);
                 // println!("[thread-1]: Received response: {:?}", response);
-                let response = response.split("\r\n\r\n").nth(1).unwrap();
-                let json: Rules = serde_json::from_str(response).unwrap();
-                println!("[thread-1]: {:?}", json);
+                let res = parse_socket_response(&response).unwrap();
+                match res.text().await {
+                    Ok(r) => {
+                        println!("[thread-1]: {:?}", r);
+                    }
+                    Err(e) => {
+                        println!("failed to parse to Rules, {:?}", e);
+                    }
+                }
 
                 std::thread::sleep(Duration::from_millis(500));
             }

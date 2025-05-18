@@ -3589,6 +3589,7 @@ dependencies = [
  "base64 0.22.1",
  "futures-util",
  "http",
+ "httparse",
  "rand 0.9.1",
  "reqwest",
  "serde",

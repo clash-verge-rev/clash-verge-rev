@@ -5,7 +5,10 @@ use crate::{
     WebSocketWriter,
 };
 use futures_util::{SinkExt, StreamExt};
-use http::{HeaderMap, HeaderValue};
+use http::{
+    header::{AUTHORIZATION, CONTENT_TYPE},
+    HeaderMap, HeaderValue,
+};
 use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -103,10 +106,10 @@ impl Mihomo {
 
     fn get_req_headers(&self) -> Result<HeaderMap<HeaderValue>> {
         let mut headers = HeaderMap::new();
-        headers.insert("Content-Type", "application/json".parse()?);
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
         if let Some(secret) = self.secret.clone() {
             let auth_value = format!("Bearer {}", secret).parse()?;
-            headers.insert("Authorization", auth_value);
+            headers.insert(AUTHORIZATION, auth_value);
         }
         Ok(headers)
     }
@@ -442,11 +445,14 @@ impl Mihomo {
         timeout: u32,
     ) -> Result<ProxyDelay> {
         let suffix_url = format!(
-            "/providers/proxies/{}/{}/healthcheck?url={}&timeout={}",
-            provider_name, proxy_name, test_url, timeout
+            "/providers/proxies/{}/{}/healthcheck",
+            provider_name, proxy_name,
         );
         let client = self.build_request(Method::GET, &suffix_url)?;
-        let response = client.send().await?;
+        let response = client
+            .query(&[("url", test_url), ("timeout", &timeout.to_string())])
+            .send()
+            .await?;
         if !response.status().is_success() {
             ret_err!("healthcheck providers failed");
         }
@@ -513,7 +519,7 @@ impl Mihomo {
         let client = self.build_request(Method::GET, &suffix_url)?;
         let response = client
             .query(&[
-                ("timeout", &format!("{timeout}")),
+                ("timeout", &timeout.to_string()),
                 ("url", &test_url.to_string()),
             ])
             .send()
@@ -574,14 +580,13 @@ impl Mihomo {
 
     /// 重新加载配置
     pub async fn reload_config(&self, force: bool, config_path: &str) -> Result<()> {
-        let suffix_url = if force {
-            "/configs".to_string()
-        } else {
-            format!("{}?force=true", "/configs")
-        };
-        let client = self.build_request(Method::PUT, &suffix_url)?;
+        let client = self.build_request(Method::PUT, "/configs")?;
         let body = json!({ "path": config_path });
-        let response = client.json(&body).send().await?;
+        let response = client
+            .query(&[("force", &force.to_string())])
+            .json(&body)
+            .send()
+            .await?;
         if !response.status().is_success() {
             ret_err!("reload base config error");
         }
