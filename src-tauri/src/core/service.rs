@@ -13,7 +13,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-const REQUIRED_SERVICE_VERSION: &str = "1.0.9"; // 定义所需的服务版本号
+const REQUIRED_SERVICE_VERSION: &str = "1.1.0"; // 定义所需的服务版本号
 
 // 限制重装时间和次数的常量
 const REINSTALL_COOLDOWN_SECS: u64 = 300; // 5分钟冷却期
@@ -375,7 +375,7 @@ pub async fn uninstall_service() -> Result<()> {
         r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#
     );
 
-    logging!(debug, Type::Service, true, "uninstall command: {}", command);
+    // logging!(debug, Type::Service, true, "uninstall command: {}", command);
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])
@@ -411,7 +411,7 @@ pub async fn install_service() -> Result<()> {
         r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
     );
 
-    logging!(debug, Type::Service, true, "install command: {}", command);
+    // logging!(debug, Type::Service, true, "install command: {}", command);
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])
@@ -481,18 +481,18 @@ pub async fn check_ipc_service_status() -> Result<JsonResponse> {
 
     // 使用IPC通信
     let payload = serde_json::json!({});
-    logging!(debug, Type::Service, true, "发送GetClash请求");
+    // logging!(debug, Type::Service, true, "发送GetClash请求");
 
     match send_ipc_request(IpcCommand::GetClash, payload).await {
         Ok(response) => {
-            logging!(
+            /*             logging!(
                 debug,
                 Type::Service,
                 true,
                 "收到GetClash响应: success={}, error={:?}",
                 response.success,
                 response.error
-            );
+            ); */
 
             if !response.success {
                 let err_msg = response.error.unwrap_or_else(|| "未知服务错误".to_string());
@@ -588,18 +588,18 @@ pub async fn check_service_version() -> Result<String> {
     logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
 
     let payload = serde_json::json!({});
-    logging!(debug, Type::Service, true, "发送GetVersion请求");
+    // logging!(debug, Type::Service, true, "发送GetVersion请求");
 
     match send_ipc_request(IpcCommand::GetVersion, payload).await {
         Ok(response) => {
-            logging!(
+            /*             logging!(
                 debug,
                 Type::Service,
                 true,
                 "收到GetVersion响应: success={}, error={:?}",
                 response.success,
                 response.error
-            );
+            ); */
 
             if !response.success {
                 let err_msg = response
@@ -687,14 +687,14 @@ pub async fn check_service_needs_reinstall() -> bool {
     match check_service_version().await {
         Ok(version) => {
             log::info!(target: "app", "服务版本检测：当前={}, 要求={}", version, REQUIRED_SERVICE_VERSION);
-            logging!(
+            /*             logging!(
                 info,
                 Type::Service,
                 true,
                 "服务版本检测：当前={}, 要求={}",
                 version,
                 REQUIRED_SERVICE_VERSION
-            );
+            ); */
 
             let needs_reinstall = version != REQUIRED_SERVICE_VERSION;
             if needs_reinstall {
@@ -702,11 +702,11 @@ pub async fn check_service_needs_reinstall() -> bool {
                     version, REQUIRED_SERVICE_VERSION);
                 logging!(warn, Type::Service, true, "服务版本不匹配，需要重装");
 
-                log::debug!(target: "app", "当前版本字节: {:?}", version.as_bytes());
-                log::debug!(target: "app", "要求版本字节: {:?}", REQUIRED_SERVICE_VERSION.as_bytes());
+                // log::debug!(target: "app", "当前版本字节: {:?}", version.as_bytes());
+                // log::debug!(target: "app", "要求版本字节: {:?}", REQUIRED_SERVICE_VERSION.as_bytes());
             } else {
                 log::info!(target: "app", "服务版本匹配，无需重装");
-                logging!(info, Type::Service, true, "服务版本匹配，无需重装");
+                // logging!(info, Type::Service, true, "服务版本匹配，无需重装");
             }
 
             needs_reinstall
@@ -718,18 +718,18 @@ pub async fn check_service_needs_reinstall() -> bool {
             match is_service_running().await {
                 Ok(true) => {
                     log::info!(target: "app", "服务正在运行但版本检查失败: {}", err);
-                    logging!(
+                    /*                     logging!(
                         info,
                         Type::Service,
                         true,
                         "服务正在运行但版本检查失败: {}",
                         err
-                    );
+                    ); */
                     false
                 }
                 _ => {
                     log::info!(target: "app", "服务不可用或未运行，需要重装");
-                    logging!(info, Type::Service, true, "服务不可用或未运行，需要重装");
+                    // logging!(info, Type::Service, true, "服务不可用或未运行，需要重装");
                     true
                 }
             }
@@ -740,7 +740,7 @@ pub async fn check_service_needs_reinstall() -> bool {
 /// 尝试使用服务启动core
 pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result<()> {
     log::info!(target:"app", "尝试使用现有服务启动核心 (IPC)");
-    logging!(info, Type::Service, true, "尝试使用现有服务启动核心");
+    // logging!(info, Type::Service, true, "尝试使用现有服务启动核心");
 
     let clash_core = { Config::verge().latest().clash_core.clone() };
     let clash_core = clash_core.unwrap_or("verge-mihomo".into());
@@ -767,20 +767,20 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
         "log_file": log_path,
     });
 
-    log::info!(target:"app", "启动服务参数: {:?}", payload);
-    logging!(info, Type::Service, true, "发送StartClash请求");
+    // log::info!(target:"app", "启动服务参数: {:?}", payload);
+    // logging!(info, Type::Service, true, "发送StartClash请求");
 
     // 使用IPC通信
     match send_ipc_request(IpcCommand::StartClash, payload).await {
         Ok(response) => {
-            logging!(
+            /*             logging!(
                 info,
                 Type::Service,
                 true,
                 "收到StartClash响应: success={}, error={:?}",
                 response.success,
                 response.error
-            );
+            ); */
 
             if !response.success {
                 let err_msg = response.error.unwrap_or_else(|| "启动核心失败".to_string());
@@ -910,7 +910,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 
 /// 通过服务停止core
 pub(super) async fn stop_core_by_service() -> Result<()> {
-    logging!(debug, Type::Service, "通过服务停止核心 (IPC)");
+    logging!(info, Type::Service, true, "通过服务停止核心 (IPC)");
 
     let payload = serde_json::json!({});
     let response = send_ipc_request(IpcCommand::StopClash, payload)
@@ -969,42 +969,42 @@ pub async fn is_service_running() -> Result<bool> {
         }
         Err(err) => {
             logging!(error, Type::Service, true, "检查服务运行状态失败: {}", err);
+            /*
+                        let error_type = err.root_cause().to_string();
+                        logging!(
+                            error,
+                            Type::Service,
+                            true,
+                            "连接失败的根本原因: {}",
+                            error_type
+                        );
 
-            let error_type = err.root_cause().to_string();
-            logging!(
-                error,
-                Type::Service,
-                true,
-                "连接失败的根本原因: {}",
-                error_type
-            );
+                        let socket_path = if cfg!(windows) {
+                            r"\\.\pipe\clash-verge-service"
+                        } else {
+                            "/tmp/clash-verge-service.sock"
+                        };
 
-            let socket_path = if cfg!(windows) {
-                r"\\.\pipe\clash-verge-service"
-            } else {
-                "/tmp/clash-verge-service.sock"
-            };
-
-            if cfg!(windows) {
-                logging!(
-                    info,
-                    Type::Service,
-                    true,
-                    "检查Windows命名管道: {}",
-                    socket_path
-                );
-            } else {
-                let socket_exists = std::path::Path::new(socket_path).exists();
-                logging!(
-                    info,
-                    Type::Service,
-                    true,
-                    "检查Unix套接字文件: {} 是否存在: {}",
-                    socket_path,
-                    socket_exists
-                );
-            }
-
+                        if cfg!(windows) {
+                            logging!(
+                                info,
+                                Type::Service,
+                                true,
+                                "检查Windows命名管道: {}",
+                                socket_path
+                            );
+                        } else {
+                            let socket_exists = std::path::Path::new(socket_path).exists();
+                            logging!(
+                                info,
+                                Type::Service,
+                                true,
+                                "检查Unix套接字文件: {} 是否存在: {}",
+                                socket_path,
+                                socket_exists
+                            );
+                        }
+            */
             Ok(false)
         }
     }
