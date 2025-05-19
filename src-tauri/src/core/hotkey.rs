@@ -1,6 +1,7 @@
 use crate::{
     config::Config,
     core::handle,
+    core::tray::Tray,
     feat, logging, logging_error,
     module::lightweight::entry_lightweight_mode,
     process::AsyncHandler,
@@ -195,7 +196,12 @@ impl Hotkey {
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
             "toggle_system_proxy" => || feat::toggle_system_proxy(),
             "toggle_tun_mode" => || feat::toggle_tun_mode(None),
-            "entry_lightweight_mode" => || entry_lightweight_mode(),
+            "entry_lightweight_mode" => || {
+                entry_lightweight_mode();
+                if let Err(e) = Tray::global().update_menu() {
+                    log::warn!(target: "app", "Failed to update tray menu after entry_lightweight_mode (hotkey): {}", e);
+                }
+            },
             "quit" => || feat::quit(),
             #[cfg(target_os = "macos")]
             "hide" => || feat::hide(),
