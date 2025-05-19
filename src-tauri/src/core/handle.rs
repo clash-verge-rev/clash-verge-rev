@@ -317,9 +317,13 @@ impl Handle {
 
         let system_opt = handle.notification_system.read();
         if let Some(system) = system_opt.as_ref() {
-            system.send_event(FrontendEvent::ProfileChanged { current_profile_id: profile_id });
+            system.send_event(FrontendEvent::ProfileChanged {
+                current_profile_id: profile_id,
+            });
         } else {
-            log::warn!("Notification system not initialized when trying to send ProfileChanged event.");
+            log::warn!(
+                "Notification system not initialized when trying to send ProfileChanged event."
+            );
         }
     }
 
@@ -333,7 +337,9 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::TimerUpdated { profile_index });
         } else {
-            log::warn!("Notification system not initialized when trying to send TimerUpdated event.");
+            log::warn!(
+                "Notification system not initialized when trying to send TimerUpdated event."
+            );
         }
     }
 
@@ -347,7 +353,9 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::StartupCompleted);
         } else {
-            log::warn!("Notification system not initialized when trying to send StartupCompleted event.");
+            log::warn!(
+                "Notification system not initialized when trying to send StartupCompleted event."
+            );
         }
     }
 
