@@ -67,13 +67,13 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
         url = url.replaceAll("%port", port || "9097");
         url = url.replaceAll(
           "%secret",
-          encodeURIComponent(clashInfo.secret || "")
+          encodeURIComponent(clashInfo.secret || ""),
         );
       }
 
       await openWebUrl(url);
     } catch (e: any) {
-      showNotice('error', e.message || e.toString());
+      showNotice("error", e.message || e.toString());
     }
   });
 
