@@ -16,7 +16,7 @@ use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tokio::net::TcpListener;
 
 use tauri::Url;
@@ -334,22 +334,7 @@ pub fn create_window(is_show: bool) -> bool {
                         true,
                         "延时后，尝试发送 verge://startup-completed 事件"
                     );
-                    if let Err(e) = newly_created_window.emit("verge://startup-completed", ()) {
-                        logging!(
-                            error,
-                            Type::Window,
-                            true,
-                            "发送 verge://startup-completed 事件失败: {}",
-                            e
-                        );
-                    } else {
-                        logging!(
-                            info,
-                            Type::Window,
-                            true,
-                            "已发送 verge://startup-completed 事件"
-                        );
-                    }
+                    handle::Handle::notify_startup_completed();
 
                     let timeout_seconds = if crate::module::lightweight::is_in_lightweight_mode() {
                         2
@@ -396,22 +381,7 @@ pub fn create_window(is_show: bool) -> bool {
                         true,
                         "is_show为false，窗口保持隐藏。尝试发送启动事件。"
                     );
-                    if let Err(e) = newly_created_window.emit("verge://startup-completed", ()) {
-                        logging!(
-                            warn,
-                            Type::Window,
-                            true,
-                            "发送 verge://startup-completed 事件失败 (is_show=false, 窗口隐藏): {}",
-                            e
-                        );
-                    } else {
-                        logging!(
-                            debug,
-                            Type::Window,
-                            true,
-                            "已发送 verge://startup-completed 事件 (is_show=false, 窗口隐藏)"
-                        );
-                    }
+                    handle::Handle::notify_startup_completed();
                 }
             });
             true

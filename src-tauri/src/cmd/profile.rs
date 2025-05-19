@@ -6,7 +6,6 @@ use crate::{
     utils::{dirs, help, logging::Type},
     wrap_err,
 };
-use tauri::Emitter;
 
 /// 获取配置文件列表
 #[tauri::command]
@@ -160,11 +159,9 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             Config::profiles().apply();
             wrap_err!(Config::profiles().data().save_file())?;
 
-            if let Some(window) = handle::Handle::global().get_window() {
-                if let Some(current) = &current_value {
-                    logging!(info, Type::Cmd, true, "向前端发送配置变更事件: {}", current);
-                    let _ = window.emit("profile-changed", current.clone());
-                }
+            if let Some(current) = &current_value {
+                logging!(info, Type::Cmd, true, "向前端发送配置变更事件: {}", current);
+                handle::Handle::notify_profile_changed(current.clone());
             }
 
             Ok(true)
@@ -245,9 +242,7 @@ pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
                 logging!(error, Type::Timer, "刷新定时器失败: {}", e);
             } else {
                 // 刷新成功后发送自定义事件，不触发配置重载
-                if let Some(window) = crate::core::handle::Handle::global().get_window() {
-                    let _ = window.emit("verge://timer-updated", index_clone);
-                }
+                crate::core::handle::Handle::notify_timer_updated(index_clone);
             }
         });
     }
