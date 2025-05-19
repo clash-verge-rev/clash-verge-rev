@@ -712,7 +712,7 @@ fn create_tray_menu(
         app_handle,
         "entry_lightweight_mode",
         t("LightWeight Mode"),
-        !is_lightweight_mode,
+        true,
         is_lightweight_mode,
         hotkeys.get("entry_lightweight_mode").map(|s| s.as_str()),
     )
@@ -858,12 +858,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         }
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
-        "entry_lightweight_mode" => {
-            crate::module::lightweight::entry_lightweight_mode();
-            if let Err(e) = Tray::global().update_menu() {
-                log::warn!(target: "app", "Failed to update tray menu after entry_lightweight_mode: {}", e);
-            }
-        }
+        "entry_lightweight_mode" => entry_lightweight_mode(),
         "quit" => {
             feat::quit();
         }

@@ -1,6 +1,6 @@
 use crate::{
     config::Config,
-    core::{handle, timer::Timer, tray::Tray},
+    core::{handle, timer::Timer},
     log_err, logging, logging_error,
     utils::logging::Type,
     AppHandleManager,
@@ -176,10 +176,6 @@ fn setup_light_weight_timer() -> Result<()> {
         .spawn_async_routine(move || async move {
             logging!(info, Type::Timer, true, "计时器到期，开始进入轻量模式");
             entry_lightweight_mode();
-            // 更新托盘菜单
-            if let Err(e) = Tray::global().update_menu() {
-                log::warn!(target: "app", "Failed to update tray menu after entry_lightweight_mode (timer): {}", e);
-            }
         })
         .context("failed to create timer task")?;
 
