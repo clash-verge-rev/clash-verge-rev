@@ -106,9 +106,9 @@ impl Mihomo {
 
     fn get_req_headers(&self) -> Result<HeaderMap<HeaderValue>> {
         let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         if let Some(secret) = self.secret.clone() {
-            let auth_value = format!("Bearer {}", secret).parse()?;
+            let auth_value = HeaderValue::from_str(&format!("Bearer {}", secret))?;
             headers.insert(AUTHORIZATION, auth_value);
         }
         Ok(headers)
