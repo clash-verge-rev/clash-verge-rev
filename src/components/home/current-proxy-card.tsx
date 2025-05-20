@@ -101,13 +101,13 @@ export const CurrentProxyCard = () => {
   const mode = clashConfig?.mode?.toLowerCase() || "rule";
   const isGlobalMode = mode === "global";
   const isDirectMode = mode === "direct";
-  
+
   // 添加排序类型状态
   const [sortType, setSortType] = useState<ProxySortType>(() => {
     const savedSortType = localStorage.getItem(STORAGE_KEY_SORT_TYPE);
     return savedSortType ? Number(savedSortType) as ProxySortType : 0;
   });
-  
+
   // 定义状态类型
   type ProxyState = {
     proxyData: {
@@ -128,7 +128,7 @@ export const CurrentProxyCard = () => {
       groups: [],
       records: {},
       globalProxy: "",
-      directProxy: null,
+      directProxy: { name: "DIRECT" }, // 默认值避免 undefined
     },
     selection: {
       group: "",
@@ -160,9 +160,9 @@ export const CurrentProxyCard = () => {
 
       return primaryGroup?.name || "";
     };
-    
+
     const primaryGroupName = getPrimaryGroupName();
-    
+
     // 根据模式确定初始组
     if (isGlobalMode) {
       setState((prev) => ({
@@ -204,7 +204,7 @@ export const CurrentProxyCard = () => {
           now: g.now || "",
           all: g.all.map((p: { name: string }) => p.name),
         }));
-      
+
       let newProxy = "";
       let newDisplayProxy = null;
       let newGroup = prev.selection.group;
@@ -213,7 +213,7 @@ export const CurrentProxyCard = () => {
       if (isDirectMode) {
         newGroup = "DIRECT";
         newProxy = "DIRECT";
-        newDisplayProxy = proxies.records?.DIRECT || null;
+        newDisplayProxy = proxies.records?.DIRECT || { name: "DIRECT" }; // 确保非空
       } else if (isGlobalMode && proxies.global) {
         newGroup = "GLOBAL";
         newProxy = proxies.global.now || "";
@@ -248,7 +248,7 @@ export const CurrentProxyCard = () => {
           groups: filteredGroups,
           records: proxies.records || {},
           globalProxy: proxies.global?.now || "",
-          directProxy: proxies.records?.DIRECT || null,
+          directProxy: proxies.records?.DIRECT || { name: "DIRECT" },
         },
         selection: {
           group: newGroup,
@@ -364,12 +364,15 @@ export const CurrentProxyCard = () => {
     return state.displayProxy;
   }, [state.displayProxy]);
 
-  // 获取当前节点的延迟
-  const currentDelay = currentProxy
+  // 获取当前节点的延迟（增加非空校验）
+  const currentDelay = currentProxy && state.selection.group
     ? delayManager.getDelayFix(currentProxy, state.selection.group)
     : -1;
 
-  const signalInfo = getSignalIcon(currentDelay);
+  // 信号图标（增加非空校验）
+  const signalInfo = currentProxy && state.selection.group
+    ? getSignalIcon(currentDelay)
+    : { icon: <SignalNone />, text: "未初始化", color: "text.secondary" };
 
   // 自定义渲染选择框中的值
   const renderProxyValue = useCallback(
@@ -378,7 +381,7 @@ export const CurrentProxyCard = () => {
 
       const delayValue = delayManager.getDelayFix(
         state.proxyData.records[selected],
-        state.selection.group,
+        state.selection.group
       );
 
       return (
@@ -402,23 +405,27 @@ export const CurrentProxyCard = () => {
     localStorage.setItem(STORAGE_KEY_SORT_TYPE, newSortType.toString());
   }, [sortType]);
 
-  // 排序代理函数
+  // 排序代理函数（增加非空校验）
   const sortProxies = useCallback(
     (proxies: ProxyOption[]) => {
       if (!proxies || sortType === 0) return proxies;
-      
+
+      // 确保数据存在
+      if (!state.proxyData.records || !state.selection.group) return proxies;
+
       const list = [...proxies];
-      
+
       if (sortType === 1) {
         list.sort((a, b) => {
-          const ad = delayManager.getDelayFix(
-            state.proxyData.records[a.name],
-            state.selection.group
-          );
-          const bd = delayManager.getDelayFix(
-            state.proxyData.records[b.name],
-            state.selection.group
-          );
+          const recordA = state.proxyData.records[a.name];
+          const recordB = state.proxyData.records[b.name];
+
+          // 处理 record 不存在的情况
+          if (!recordA) return 1;
+          if (!recordB) return -1;
+
+          const ad = delayManager.getDelayFix(recordA, state.selection.group);
+          const bd = delayManager.getDelayFix(recordB, state.selection.group);
 
           if (ad === -1 || ad === -2) return 1;
           if (bd === -1 || bd === -2) return -1;
@@ -428,13 +435,13 @@ export const CurrentProxyCard = () => {
       } else {
         list.sort((a, b) => a.name.localeCompare(b.name));
       }
-      
+
       return list;
     },
-    [sortType, state?.proxyData?.records, state?.selection?.group]
+    [sortType, state.proxyData.records, state.selection.group]
   );
 
-  // 计算要显示的代理选项
+  // 计算要显示的代理选项（增加非空校验）
   const proxyOptions = useMemo(() => {
     if (isDirectMode) {
       return [{ name: "DIRECT" }];
@@ -445,21 +452,23 @@ export const CurrentProxyCard = () => {
           const name = typeof p === 'string' ? p : p.name;
           return name !== "DIRECT" && name !== "REJECT";
         })
-        .map((p: any) => ({ 
-          name: typeof p === 'string' ? p : p.name 
+        .map((p: any) => ({
+          name: typeof p === 'string' ? p : p.name
         }));
 
       return sortProxies(options);
     }
 
     // 规则模式
-    const group = state.proxyData.groups.find(
-      (g: { name: string }) => g.name === state.selection.group,
-    );
+    const group = state.selection.group
+      ? state.proxyData.groups.find(g => g.name === state.selection.group)
+      : null;
+
     if (group) {
       const options = group.all.map((name) => ({ name }));
       return sortProxies(options);
     }
+
     return [];
   }, [isDirectMode, isGlobalMode, proxies, state.proxyData, state.selection.group, sortProxies]);
 
@@ -509,8 +518,8 @@ export const CurrentProxyCard = () => {
       action={
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Tooltip title={getSortTooltip()}>
-            <IconButton 
-              size="small" 
+            <IconButton
+              size="small"
               color="inherit"
               onClick={handleSortTypeChange}
               sx={{ mr: 1 }}
@@ -648,10 +657,12 @@ export const CurrentProxyCard = () => {
               {isDirectMode
                 ? null
                 : proxyOptions.map((proxy, index) => {
-                    const delayValue = delayManager.getDelayFix(
-                      state.proxyData.records[proxy.name],
-                      state.selection.group,
-                    );
+                    const delayValue = state.proxyData.records[proxy.name] && state.selection.group
+                      ? delayManager.getDelayFix(
+                          state.proxyData.records[proxy.name],
+                          state.selection.group,
+                        )
+                      : -1;
                     return (
                       <MenuItem
                         key={`${proxy.name}-${index}`}
@@ -692,4 +703,4 @@ export const CurrentProxyCard = () => {
       )}
     </EnhancedCard>
   );
-};
+};  
