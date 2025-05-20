@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes, useNavigate } from "react-router-dom";
 import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
@@ -150,6 +150,7 @@ const Layout = () => {
   const location = useLocation();
   const routersEles = useRoutes(routers);
   const { addListener, setupCloseListener } = useListen();
+  const initRef = useRef(false);
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {
@@ -215,53 +216,60 @@ const Layout = () => {
   }, [handleNotice]);
 
   useEffect(() => {
+    if (initRef.current) {
+      console.log("[Layout] 初始化代码已执行过，跳过");
+      return;
+    }
+    console.log("[Layout] 开始执行初始化代码");
+    initRef.current = true;
+
     const notifyUiStage = async (stage: string) => {
       try {
-        console.log(`UI加载阶段: ${stage}`);
+        console.log(`[Layout] UI加载阶段: ${stage}`);
         await invoke("update_ui_stage", { stage });
       } catch (err) {
-        console.error(`通知UI加载阶段(${stage})失败:`, err);
+        console.error(`[Layout] 通知UI加载阶段(${stage})失败:`, err);
       }
     };
 
     const notifyUiCoreReady = async () => {
       try {
-        console.log("核心组件已加载，通知后端");
+        console.log("[Layout] 核心组件已加载，通知后端");
         await invoke("update_ui_stage", { stage: "DomReady" });
       } catch (err) {
-        console.error("通知核心组件加载完成失败:", err);
+        console.error("[Layout] 通知核心组件加载完成失败:", err);
       }
     };
 
     const notifyUiResourcesLoaded = async () => {
       try {
-        console.log("所有资源已加载，通知后端");
+        console.log("[Layout] 所有资源已加载，通知后端");
         await invoke("update_ui_stage", { stage: "ResourcesLoaded" });
       } catch (err) {
-        console.error("通知资源加载完成失败:", err);
+        console.error("[Layout] 通知资源加载完成失败:", err);
       }
     };
 
     const notifyUiReady = async () => {
       try {
-        console.log("UI完全准备就绪，通知后端");
+        console.log("[Layout] UI完全准备就绪，通知后端");
         await invoke("notify_ui_ready");
       } catch (err) {
-        console.error("通知UI准备就绪失败:", err);
+        console.error("[Layout] 通知UI准备就绪失败:", err);
       }
     };
 
     // 监听后端发送的启动完成事件
     const listenStartupCompleted = async () => {
       try {
-        console.log("开始监听启动完成事件");
+        console.log("[Layout] 开始监听启动完成事件");
         const unlisten = await listen("verge://startup-completed", () => {
-          console.log("收到启动完成事件，开始通知UI就绪");
+          console.log("[Layout] 收到启动完成事件，开始通知UI就绪");
           notifyUiReady();
         });
         return unlisten;
       } catch (err) {
-        console.error("监听启动完成事件失败:", err);
+        console.error("[Layout] 监听启动完成事件失败:", err);
         return () => {};
       }
     };
