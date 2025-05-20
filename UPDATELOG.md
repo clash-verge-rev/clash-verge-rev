@@ -24,6 +24,7 @@
  - 同步更新多语言翻译
  - 修复 .window-state.json 无法删除的问题
  - 无法修改配置更新 HTTP 请求超时
+ - 修复 getDelayFix 钩子问题
 
 #### 新增了：
  - Mihomo(Meta)内核升级至 1.19.8
