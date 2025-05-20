@@ -472,19 +472,16 @@ impl CoreManager {
 
         tokio::spawn(async move {
             while let Some(event) = rx.recv().await {
-                match event {
-                    tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
-                        if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
-                            logging!(
-                                error,
-                                Type::Core,
-                                true,
-                                "[Sidecar] Failed to write stdout to file: {}",
-                                e
-                            );
-                        }
+                if let tauri_plugin_shell::process::CommandEvent::Stdout(line) = event {
+                    if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
+                        logging!(
+                            error,
+                            Type::Core,
+                            true,
+                            "[Sidecar] Failed to write stdout to file: {}",
+                            e
+                        );
                     }
-                    _ => {}
                 }
             }
         });
