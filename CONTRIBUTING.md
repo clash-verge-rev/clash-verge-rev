@@ -96,6 +96,24 @@ pnpm portable
 
 ## Contributing Your Changes
 
+#### Before commit your changes
+
+If you changed the rust code, it's recommanded to execute code style formatting and quailty checks.
+
+1. Code style formatting
+
+```bash
+$ clash-verge-rev: cd src-tauri
+$ clash-verge-rev/src-tauri: cargo fmt
+```
+
+2. Code quailty checks
+
+```bash
+$ clash-verge-rev: pnpm clippy
+```
+
+
 Once you have made your changes:
 
 1. Fork the repository.
