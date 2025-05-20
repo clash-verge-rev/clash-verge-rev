@@ -785,7 +785,7 @@ interface IVergeConfig {
   default_latency_test?: string;
   default_latency_timeout?: number;
   enable_builtin_enhanced?: boolean;
-  auto_log_clean?: 0 | 1 | 2 | 3;
+  auto_log_clean?: 0 | 1 | 2 | 3 | 4;
   proxy_layout_column?: number;
   test_list?: IVergeTestItem[];
   webdav_url?: string;

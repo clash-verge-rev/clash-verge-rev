@@ -134,7 +134,7 @@ pub struct IVerge {
     pub test_list: Option<Vec<IVergeTestItem>>,
 
     /// 日志清理
-    /// 0: 不清理; 1: 7天; 2: 30天; 3: 90天
+    /// 0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天
     pub auto_log_clean: Option<i32>,
 
     /// 是否启用随机端口
