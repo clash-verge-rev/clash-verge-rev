@@ -3,11 +3,13 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { showNotice } from "@/services/noticeService";
 import {
   ContentCopy,
-  RefreshRounded
+  RefreshRounded,
 } from "@mui/icons-material";
 import {
   Alert,
   Box,
+  Button,
+  CircularProgress,
   FormControlLabel,
   IconButton,
   List,
@@ -39,18 +41,6 @@ const generateRandomPassword = (length: number = 32): string => {
   return password;
 };
 
-// 初始化执行一次随机生成
-const useAppInitialization = (autoGenerate: boolean, onGenerate: () => void) => {
-  const [initialized, setInitialized] = useState(false);
-
-  useEffect(() => {
-    if (!initialized && autoGenerate) {
-      onGenerate();
-      setInitialized(true);
-    }
-  }, [initialized, autoGenerate, onGenerate]);
-};
-
 export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -63,44 +53,121 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const autoGenerate = autoGenerateState!;
 
   const [copySuccess, setCopySuccess] = useState<null | string>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   const { clashInfo, patchInfo } = useClashInfo();
 
   const [controller, setController] = useState(clashInfo?.server || "");
   const [secret, setSecret] = useState(clashInfo?.secret || "");
 
-  // 初始化生成随机配置
-  useAppInitialization(autoGenerate, () => {
-    const port = generateRandomPort();
-    const password = generateRandomPassword();
+  // 直接通过API重启内核
+  const restartCoreDirectly = useLockFn(async () => {
+    try {
+      const controllerUrl = controller || clashInfo?.server || 'http://localhost:9090';
 
-    const host = controller.split(':')[0] || '127.0.0.1';
-    const newController = `${host}:${port}`;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
 
-    setController(newController);
-    setSecret(password);
+      if (secret) {
+        headers['Authorization'] = `Bearer ${secret}`;
+      }
 
-    patchInfo({ "external-controller": newController, secret: password });
+      const response = await fetch(`${controllerUrl}/restart`, {
+        method: 'POST',
+        headers,
+      });
 
-    showNotice('info', t("Auto generated new config on startup"), 1000);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to restart core');
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      } else {
+        const text = await response.text();
+        console.log('Non-JSON response:', text);
+        return { message: 'Restart request sent successfully' };
+      }
+    } catch (err: any) {
+      console.error('Error restarting core:', err);
+      throw err;
+    }
   });
 
+  // 生成随机配置并重启内核（静默模式）
+  const generateAndRestart = useLockFn(async () => {
+    try {
+      setIsRestarting(true);
+
+      const port = generateRandomPort();
+      const password = generateRandomPassword();
+
+      const host = controller.split(':')[0] || '127.0.0.1';
+      const newController = `${host}:${port}`;
+
+      setController(newController);
+      setSecret(password);
+
+      // 更新配置
+      await patchInfo({ "external-controller": newController, secret: password });
+
+      // 直接重启内核
+      await restartCoreDirectly();
+
+      // 静默执行，不显示通知
+    } catch (err: any) {
+      showNotice('error', err.message || t("Failed to generate configuration or restart core"), 4000);
+    } finally {
+      setIsRestarting(false);
+    }
+  });
+
+  // 仅在对话框打开时生成配置
   useImperativeHandle(ref, () => ({
-    open: () => {
+    open: async () => {
       setOpen(true);
-      setController(clashInfo?.server || "");
-      setSecret(clashInfo?.secret || "");
+
+      // 如果自动生成开启，则生成新配置
+      if (autoGenerate) {
+        await generateAndRestart();
+      } else {
+        // 否则加载现有配置
+        setController(clashInfo?.server || "");
+        setSecret(clashInfo?.secret || "");
+      }
     },
     close: () => setOpen(false),
   }));
 
+  // 当自动生成开关状态变化时触发
+  useEffect(() => {
+    if (autoGenerate && open) {
+      generateAndRestart();
+    }
+  }, [autoGenerate, open]);
+
+  // 优化后的保存函数
   const onSave = useLockFn(async () => {
+    if (!controller.trim()) {
+      showNotice('info', t("Controller address cannot be empty"), 3000);
+      return;
+    }
+
     try {
+      setIsSaving(true);
+
       await patchInfo({ "external-controller": controller, secret });
-      showNotice('success', t("External Controller Address Modified"), 1000);
+
+      showNotice('success', t("Configuration saved successfully"), 2000);
       setOpen(false);
     } catch (err: any) {
-      showNotice('error', err.message || err.toString(), 4000);
+      showNotice('error', err.message || t("Failed to save configuration"), 4000);
+    } finally {
+      setIsSaving(false);
     }
   });
 
@@ -141,7 +208,16 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
       open={open}
       title={t("External Controller")}
       contentSx={{ width: 400 }}
-      okBtn={t("Save")}
+      okBtn={
+        isSaving ? (
+          <Box display="flex" alignItems="center" gap={1}>
+            <CircularProgress size={16} color="inherit" />
+            {t("Saving...")}
+          </Box>
+        ) : (
+          t("Save")
+        )
+      }
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
@@ -156,7 +232,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                 size="small"
                 onClick={handleGeneratePort}
                 color="primary"
-                disabled={autoGenerate}
+                disabled={autoGenerate || isSaving || isRestarting}
               >
                 <RefreshRounded fontSize="small" />
               </IconButton>
@@ -170,15 +246,15 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               value={controller}
               placeholder="Required"
               onChange={(e) => setController(e.target.value)}
-              disabled={autoGenerate}
+              disabled={autoGenerate || isSaving || isRestarting}
             />
             {autoGenerate && (
-
               <Tooltip title={t("Copy to clipboard")}>
                 <IconButton
                   size="small"
                   onClick={() => handleCopyToClipboard(controller, "controller")}
                   color="primary"
+                  disabled={isSaving || isRestarting}
                 >
                   <ContentCopy fontSize="small" />
                 </IconButton>
@@ -195,7 +271,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                 size="small"
                 onClick={handleGenerateSecret}
                 color="primary"
-                disabled={autoGenerate}
+                disabled={autoGenerate || isSaving || isRestarting}
               >
                 <RefreshRounded fontSize="small" />
               </IconButton>
@@ -211,7 +287,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               onChange={(e) =>
                 setSecret(e.target.value?.replace(/[^\x00-\x7F]/g, ""))
               }
-              disabled={autoGenerate}
+              disabled={autoGenerate || isSaving || isRestarting}
             />
             {autoGenerate && (
               <Tooltip title={t("Copy to clipboard")}>
@@ -219,6 +295,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                   size="small"
                   onClick={() => handleCopyToClipboard(secret, "secret")}
                   color="primary"
+                  disabled={isSaving || isRestarting}
                 >
                   <ContentCopy fontSize="small" />
                 </IconButton>
@@ -228,17 +305,21 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px", display: "flex", justifyContent: "space-between" }}>
-          <ListItemText primary={t("Auto Random Config")} secondary={
-            autoGenerate
-              ? t("Automatically generate new config on application startup")
-              : t("Manual configuration")
-          } />
+          <ListItemText
+            primary={t("Auto Random Config")}
+            secondary={
+              autoGenerate
+                ? t("Generate new config and restart core when entering settings")
+                : t("Manual configuration")
+            }
+          />
           <FormControlLabel
             control={
               <Switch
                 checked={autoGenerate}
                 onChange={() => setAutoGenerate(!autoGenerate)}
                 color="primary"
+                disabled={isSaving || isRestarting}
               />
             }
             label={autoGenerate ? t("On") : t("Off")}

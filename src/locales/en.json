@@ -617,12 +617,16 @@
   "Unsupported Country/Region": "Unsupported Country/Region",
   "Failed (Network Connection)": "Failed (Network Connection)",
   "Auto Random Config": "Auto Random Config",
-  "Automatically generate new config on application startup": "Automatically generate new config on application startup",
+  "Generate new config and restart core when entering settings": "Generate new config and restart core when entering settings",
   "Manual configuration": "Manual configuration",
   "Controller address copied to clipboard": "Controller address copied to clipboard",
   "Secret copied to clipboard": "Secret copied to clipboard",
   "Copy to clipboard": "Copy to clipboard",
   "Generate Random Secret": "Generate Random Secret",
   "Generate Random Port": "Generate Random Port",
-  "Port Config": "Port Config"
+  "Port Config": "Port Config",
+  "Configuration saved successfully": "Configuration saved successfully",
+  "Last generated": "Last generated",
+  "External Controller Config": "External Controller Config",
+  "Enable one-click random API port and key. Click to randomize the port and key": "Enable one-click random API port and key. Click to randomize the port and key"
 }
