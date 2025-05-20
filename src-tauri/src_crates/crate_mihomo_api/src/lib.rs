@@ -58,7 +58,8 @@ impl MihomoManager {
         url: String,
         data: Option<serde_json::Value>,
     ) -> Result<serde_json::Value, String> {
-        let client_response = self.client
+        let client_response = self
+            .client
             .request(method.clone(), &url)
             .json(&data.unwrap_or(json!({})))
             .send()

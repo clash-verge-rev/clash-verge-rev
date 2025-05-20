@@ -20,6 +20,7 @@
     "release-version": "node scripts/release_version.mjs",
     "release-alpha-version": "node scripts/release-alpha_version.mjs",
     "prepare": "husky",
+    "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
     "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml"
   },
   "dependencies": {
