@@ -8,7 +8,6 @@ import {
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   FormControlLabel,
   IconButton,
@@ -30,7 +29,7 @@ const generateRandomPort = (): number => {
 };
 
 const generateRandomPassword = (length: number = 32): string => {
-  const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:'\",.<>/?";
+  const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let password = "";
 
   for (let i = 0; i < length; i++) {
@@ -98,7 +97,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
     }
   });
 
-  // 生成随机配置并重启内核（静默模式）
+  // 生成随机配置并重启内核
   const generateAndRestart = useLockFn(async () => {
     try {
       setIsRestarting(true);
@@ -131,11 +130,9 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
     open: async () => {
       setOpen(true);
 
-      // 如果自动生成开启，则生成新配置
       if (autoGenerate) {
         await generateAndRestart();
       } else {
-        // 否则加载现有配置
         setController(clashInfo?.server || "");
         setSecret(clashInfo?.secret || "");
       }
@@ -150,7 +147,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
     }
   }, [autoGenerate, open]);
 
-  // 优化后的保存函数
+  // 保存函数（优化）
   const onSave = useLockFn(async () => {
     if (!controller.trim()) {
       showNotice('info', t("Controller address cannot be empty"), 3000);
