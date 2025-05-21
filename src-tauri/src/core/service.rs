@@ -24,6 +24,7 @@ pub struct StartBody {
     pub config_dir: String,
     pub config_file: String,
     pub log_file: String,
+    pub use_local_socket: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -342,6 +343,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
         config_dir: config_dir.to_string(),
         config_file: config_file.to_string(),
         log_file: log_path.to_string(),
+        use_local_socket: false,
     };
     let res = send_command(SocketCommand::StartClash(body)).await?;
     if res.code != 0 {
