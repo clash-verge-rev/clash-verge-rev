@@ -1,8 +1,8 @@
-import fs from "fs";
-import fsp from "fs/promises";
-import path from "path";
+import fs from "node:fs";
+import fsp from "node:fs/promises";
+import path from "node:path";
 import AdmZip from "adm-zip";
-import { createRequire } from "module";
+import { createRequire } from "node:module";
 import { getOctokit, context } from "@actions/github";
 
 const target = process.argv.slice(2)[0];

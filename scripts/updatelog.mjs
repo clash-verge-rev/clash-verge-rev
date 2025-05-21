@@ -1,6 +1,6 @@
-import fs from "fs";
-import fsp from "fs/promises";
-import path from "path";
+import fs from "node:fs";
+import fsp from "node:fs/promises";
+import path from "node:path";
 
 const UPDATE_LOG = "UPDATELOG.md";
 

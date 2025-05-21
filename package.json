@@ -11,17 +11,17 @@
     "web:dev": "vite",
     "web:build": "tsc --noEmit && vite build",
     "web:serve": "vite preview",
-    "check": "node scripts/check.mjs",
-    "updater": "node scripts/updater.mjs",
-    "updater-fixed-webview2": "node scripts/updater-fixed-webview2.mjs",
-    "portable": "node scripts/portable.mjs",
-    "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
-    "fix-alpha-version": "node scripts/fix-alpha_version.mjs",
-    "release-version": "node scripts/release_version.mjs",
-    "release-alpha-version": "node scripts/release-alpha_version.mjs",
-    "prepare": "husky",
+    "check": "deno --allow-env --allow-read --allow-write --allow-run --allow-net ./scripts/check.mjs",
+    "updater": "deno --allow-env scripts/updater.mjs",
+    "updater-fixed-webview2": "deno --allow-env scripts/updater-fixed-webview2.mjs",
+    "portable": "deno scripts/portable.mjs",
+    "portable-fixed-webview2": "deno --allow-env scripts/portable-fixed-webview2.mjs",
+    "fix-alpha-version": "deno --allow-env --allow-read --allow-run --allow-write scripts/fix-alpha_version.mjs",
+    "release-version": "deno scripts/release_version.mjs",
+    "release-alpha-version": "deno --allow-read --allow-write --allow-run scripts/release-alpha_version.mjs",
+    "clean": "cargo clean --manifest-path ./src-tauri/Cargo.toml",
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
-    "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml"
+    "clippy": "cargo clippy --manifest-path ./src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -50,6 +50,7 @@
     "axios": "^1.8.3",
     "chart.js": "^4.4.9",
     "cli-color": "^2.0.4",
+    "commander": "^14.0.0",
     "d3-shape": "^3.2.0",
     "dayjs": "1.11.13",
     "foxact": "^0.2.44",
@@ -109,6 +110,5 @@
     "singleQuote": false,
     "endOfLine": "lf"
   },
-  "type": "module",
-  "packageManager": "pnpm@9.13.2"
-}
+  "type": "module"
+} 
