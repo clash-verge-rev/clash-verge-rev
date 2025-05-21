@@ -2,19 +2,29 @@
   "version": "5",
   "specifiers": {
     "npm:@actions/github@6": "6.0.1_@octokit+core@5.2.1",
+    "npm:@dnd-kit/core@6.3.1": "6.3.1_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@dnd-kit/core@^6.3.1": "6.3.1_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@dnd-kit/sortable@10": "10.0.0_@dnd-kit+core@6.3.1__react@19.1.0__react-dom@19.1.0___react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:@dnd-kit/sortable@10.0.0": "10.0.0_@dnd-kit+core@6.3.1__react@19.1.0__react-dom@19.1.0___react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:@dnd-kit/utilities@3.2.2": "3.2.2_react@19.1.0",
     "npm:@dnd-kit/utilities@^3.2.2": "3.2.2_react@19.1.0",
+    "npm:@emotion/react@11.14.0": "11.14.0_react@19.1.0",
     "npm:@emotion/react@^11.14.0": "11.14.0_react@19.1.0",
+    "npm:@emotion/styled@11.14.0": "11.14.0_@emotion+react@11.14.0__react@19.1.0_react@19.1.0",
     "npm:@emotion/styled@^11.14.0": "11.14.0_@emotion+react@11.14.0__react@19.1.0_react@19.1.0",
     "npm:@juggle/resize-observer@^3.4.0": "3.4.0",
+    "npm:@mui/icons-material@7.0.2": "7.0.2_@mui+material@7.0.2__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@types+react@19.1.4_react@19.1.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@mui/icons-material@^7.0.2": "7.1.0_@mui+material@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@types+react@19.1.4_react@19.1.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@mui/lab@7.0.0-beta.12": "7.0.0-beta.12_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@mui+material@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:@mui/material@7.0.2": "7.0.2_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@mui/material@^7.0.2": "7.1.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+    "npm:@mui/x-data-grid@8.2.0": "8.2.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@mui+material@7.0.2__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@mui+system@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0_@types+react@19.1.4",
     "npm:@mui/x-data-grid@^8.2.0": "8.3.1_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@mui+material@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@mui+system@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0_@types+react@19.1.4",
     "npm:@tauri-apps/api@2.5.0": "2.5.0",
     "npm:@tauri-apps/cli@2.2.7": "2.2.7",
+    "npm:@tauri-apps/plugin-clipboard-manager@2.2.2": "2.2.2",
     "npm:@tauri-apps/plugin-clipboard-manager@^2.2.2": "2.2.2",
+    "npm:@tauri-apps/plugin-dialog@2.2.1": "2.2.1",
     "npm:@tauri-apps/plugin-dialog@^2.2.1": "2.2.2",
     "npm:@tauri-apps/plugin-fs@^2.2.1": "2.3.0",
     "npm:@tauri-apps/plugin-global-shortcut@^2.2.0": "2.2.1",
@@ -35,6 +45,7 @@
     "npm:@vitejs/plugin-react@4.4.1": "4.4.1_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@babel+core@7.27.1_sass@1.89.0_terser@5.39.2_@types+node@22.15.15",
     "npm:adm-zip@~0.5.16": "0.5.16",
     "npm:ahooks@^3.8.4": "3.8.5_react@19.1.0",
+    "npm:axios@1.8.3": "1.8.3",
     "npm:axios@^1.8.3": "1.9.0",
     "npm:chart.js@^4.4.9": "4.4.9",
     "npm:cli-color@^2.0.4": "2.0.4",
@@ -48,23 +59,27 @@
     "npm:glob@^11.0.1": "11.0.2",
     "npm:https-proxy-agent@^7.0.6": "7.0.6",
     "npm:husky@^9.1.7": "9.1.7",
-    "npm:i18next@^25.0.2": "25.2.0_typescript@5.8.3",
+    "npm:i18next@^25.0.2": "25.2.0_typescript@5.8.3_typescript@5.8.2",
     "npm:js-base64@^3.7.7": "3.7.7",
     "npm:js-yaml@^4.1.0": "4.1.0",
+    "npm:lodash-es@4.17.21": "4.17.21",
     "npm:lodash-es@^4.17.21": "4.17.21",
     "npm:meta-json-schema@^1.19.3": "1.19.5",
     "npm:monaco-editor@~0.52.2": "0.52.2",
     "npm:monaco-yaml@^5.3.1": "5.4.0_monaco-editor@0.52.2",
+    "npm:nanoid@5.1.5": "5.1.5",
     "npm:nanoid@^5.1.5": "5.1.5",
     "npm:node-fetch@^3.3.2": "3.3.2",
     "npm:peggy@5": "5.0.2",
+    "npm:prettier@3.5.3": "3.5.3",
     "npm:prettier@^3.5.3": "3.5.3",
     "npm:pretty-quick@^4.1.1": "4.1.1_prettier@3.5.3",
     "npm:react-chartjs-2@^5.3.0": "5.3.0_chart.js@4.4.9_react@19.1.0",
     "npm:react-dom@19.1.0": "19.1.0_react@19.1.0",
     "npm:react-error-boundary@6.0.0": "6.0.0_react@19.1.0",
+    "npm:react-hook-form@7.54.2": "7.54.2_react@19.1.0",
     "npm:react-hook-form@^7.54.2": "7.56.4_react@19.1.0",
-    "npm:react-i18next@15.5.1": "15.5.1_i18next@25.2.0__typescript@5.8.3_react@19.1.0_typescript@5.8.3",
+    "npm:react-i18next@15.5.1": "15.5.1_i18next@25.2.0__typescript@5.8.3_react@19.1.0_typescript@5.8.3_typescript@5.8.2",
     "npm:react-markdown@10.1.0": "10.1.0_@types+react@19.1.4_react@19.1.0",
     "npm:react-monaco-editor@0.58.0": "0.58.0_monaco-editor@0.52.2_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:react-router-dom@7.6.0": "7.6.0_react@19.1.0_react-dom@19.1.0__react@19.1.0",
@@ -76,12 +91,15 @@
     "npm:tar@^7.4.3": "7.4.3",
     "npm:terser@^5.39.0": "5.39.2",
     "npm:types-pac@^1.0.3": "1.0.3",
+    "npm:typescript@5.8.2": "5.8.2",
     "npm:typescript@5.8.3": "5.8.3",
     "npm:typescript@^5.8.2": "5.8.3",
     "npm:vite-plugin-monaco-editor@^1.1.0": "1.1.0_monaco-editor@0.52.2",
-    "npm:vite-plugin-svgr@^4.3.0": "4.3.0_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_sass@1.89.0_terser@5.39.2_typescript@5.8.3_@types+node@22.15.15",
+    "npm:vite-plugin-svgr@^4.3.0": "4.3.0_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_sass@1.89.0_terser@5.39.2_typescript@5.8.3_@types+node@22.15.15_typescript@5.8.2",
+    "npm:vite@6.2.2": "6.2.2_@types+node@22.15.15_sass@1.89.0_terser@5.39.2",
     "npm:vite@6.3.5": "6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15",
     "npm:vite@^6.2.2": "6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15",
+    "npm:zustand@5.0.3": "5.0.3_@types+react@19.1.4_react@19.1.0",
     "npm:zustand@^5.0.3": "5.0.4_@types+react@19.1.4_react@19.1.0"
   },
   "npm": {
@@ -1182,11 +1200,23 @@
     "@mui/core-downloads-tracker@7.1.0": {
       "integrity": "sha512-E0OqhZv548Qdc0PwWhLVA2zmjJZSTvaL4ZhoswmI8NJEC1tpW2js6LLP827jrW9MEiXYdz3QS6+hask83w74yQ=="
     },
+    "@mui/icons-material@7.0.2_@mui+material@7.0.2__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@types+react@19.1.4_react@19.1.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_react-dom@19.1.0__react@19.1.0": {
+      "integrity": "sha512-Bo57PFLOqXOqPNrXjd8AhzH5s6TCsNUQbvnQ0VKZ8D+lIlteqKnrk/O1luMJUc/BXONK7BfIdTdc7qOnXYbMdw==",
+      "dependencies": [
+        "@babel/runtime",
+        "@mui/material@7.0.2_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+        "@types/react",
+        "react"
+      ],
+      "optionalPeers": [
+        "@types/react"
+      ]
+    },
     "@mui/icons-material@7.1.0_@mui+material@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@types+react@19.1.4_react@19.1.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_react-dom@19.1.0__react@19.1.0": {
       "integrity": "sha512-1mUPMAZ+Qk3jfgL5ftRR06ATH/Esi0izHl1z56H+df6cwIlCWG66RXciUqeJCttbOXOQ5y2DCjLZI/4t3Yg3LA==",
       "dependencies": [
         "@babel/runtime",
-        "@mui/material",
+        "@mui/material@7.1.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0",
         "@types/react",
         "react"
       ],
@@ -1200,7 +1230,7 @@
         "@babel/runtime",
         "@emotion/react",
         "@emotion/styled",
-        "@mui/material",
+        "@mui/material@7.1.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0",
         "@mui/system",
         "@mui/types",
         "@mui/utils",
@@ -1209,6 +1239,33 @@
         "prop-types",
         "react",
         "react-dom"
+      ],
+      "optionalPeers": [
+        "@emotion/react",
+        "@emotion/styled",
+        "@types/react"
+      ]
+    },
+    "@mui/material@7.0.2_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0": {
+      "integrity": "sha512-rjJlJ13+3LdLfobRplkXbjIFEIkn6LgpetgU/Cs3Xd8qINCCQK9qXQIjjQ6P0FXFTPFzEVMj0VgBR1mN+FhOcA==",
+      "dependencies": [
+        "@babel/runtime",
+        "@emotion/react",
+        "@emotion/styled",
+        "@mui/core-downloads-tracker",
+        "@mui/system",
+        "@mui/types",
+        "@mui/utils",
+        "@popperjs/core",
+        "@types/react",
+        "@types/react-transition-group",
+        "clsx",
+        "csstype",
+        "prop-types",
+        "react",
+        "react-dom",
+        "react-is@19.1.0",
+        "react-transition-group"
       ],
       "optionalPeers": [
         "@emotion/react",
@@ -1322,16 +1379,16 @@
         "@types/react"
       ]
     },
-    "@mui/x-data-grid@8.3.1_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@mui+material@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@mui+system@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0_@types+react@19.1.4": {
-      "integrity": "sha512-mSo2g0ZZzasDQ4kKrFdJVk7dJgz77jF/e8udvGqnnTgnQXlqLMpKne/veL3gRdi3TJxxTv2vqXtX7IZfWGJecQ==",
+    "@mui/x-data-grid@8.2.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@mui+material@7.0.2__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@mui+system@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0_@types+react@19.1.4": {
+      "integrity": "sha512-nTjvYsRbuDA1YC3paG2Z0S+vLvyYis8FDIdD5dSBjZwpB5wxAmAerjmcOkN+k3ZBsCg/5Jz4Zj/cK6WqMD3GzA==",
       "dependencies": [
         "@babel/runtime",
         "@emotion/react",
         "@emotion/styled",
-        "@mui/material",
+        "@mui/material@7.0.2_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0",
         "@mui/system",
         "@mui/utils",
-        "@mui/x-internals",
+        "@mui/x-internals@8.2.0_react@19.1.0_@types+react@19.1.4",
         "clsx",
         "prop-types",
         "react",
@@ -1342,6 +1399,36 @@
       "optionalPeers": [
         "@emotion/react",
         "@emotion/styled"
+      ]
+    },
+    "@mui/x-data-grid@8.3.1_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@mui+material@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0__react-dom@19.1.0___react@19.1.0_@mui+system@7.1.0__@emotion+react@11.14.0___react@19.1.0__@emotion+styled@11.14.0___@emotion+react@11.14.0____react@19.1.0___react@19.1.0__@types+react@19.1.4__react@19.1.0_react@19.1.0_react-dom@19.1.0__react@19.1.0_@types+react@19.1.4": {
+      "integrity": "sha512-mSo2g0ZZzasDQ4kKrFdJVk7dJgz77jF/e8udvGqnnTgnQXlqLMpKne/veL3gRdi3TJxxTv2vqXtX7IZfWGJecQ==",
+      "dependencies": [
+        "@babel/runtime",
+        "@emotion/react",
+        "@emotion/styled",
+        "@mui/material@7.1.0_@emotion+react@11.14.0__react@19.1.0_@emotion+styled@11.14.0__@emotion+react@11.14.0___react@19.1.0__react@19.1.0_@types+react@19.1.4_react@19.1.0_react-dom@19.1.0__react@19.1.0",
+        "@mui/system",
+        "@mui/utils",
+        "@mui/x-internals@8.3.1_react@19.1.0_@types+react@19.1.4",
+        "clsx",
+        "prop-types",
+        "react",
+        "react-dom",
+        "reselect",
+        "use-sync-external-store"
+      ],
+      "optionalPeers": [
+        "@emotion/react",
+        "@emotion/styled"
+      ]
+    },
+    "@mui/x-internals@8.2.0_react@19.1.0_@types+react@19.1.4": {
+      "integrity": "sha512-qV4Qr+m4sAPBSuqu8/Ofi5m+nMMvIybGno6cp757bHSmwxkqrn5SKaGyFnH5kB58fOhYA9hG1UivFp7mO1dE4A==",
+      "dependencies": [
+        "@babel/runtime",
+        "@mui/utils",
+        "react"
       ]
     },
     "@mui/x-internals@8.3.1_react@19.1.0_@types+react@19.1.4": {
@@ -1710,6 +1797,16 @@
         "snake-case"
       ]
     },
+    "@svgr/core@8.1.0_@babel+core@7.27.1_typescript@5.8.3_typescript@5.8.2": {
+      "integrity": "sha512-8QqtOQT5ACVlmsvKOJNEaWmRPmcojMOzCz4Hs2BGG/toAp/K38LcsMRyLp349glq5AzJbCEeimEoxaX6v/fLrA==",
+      "dependencies": [
+        "@babel/core",
+        "@svgr/babel-preset",
+        "camelcase",
+        "cosmiconfig@8.3.6_typescript@5.8.3_typescript@5.8.2",
+        "snake-case"
+      ]
+    },
     "@svgr/hast-util-to-babel-ast@8.0.0": {
       "integrity": "sha512-EbDKwO9GpfWP4jN9sGdYwPBU0kdomaPIL2Eu4YwmgP+sJeXT+L7bMwJUBnhzfH8Q2qMBqZ4fJwpCyYsAN3mt2Q==",
       "dependencies": [
@@ -1722,7 +1819,17 @@
       "dependencies": [
         "@babel/core",
         "@svgr/babel-preset",
-        "@svgr/core",
+        "@svgr/core@8.1.0_@babel+core@7.27.1_typescript@5.8.3",
+        "@svgr/hast-util-to-babel-ast",
+        "svg-parser"
+      ]
+    },
+    "@svgr/plugin-jsx@8.1.0_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_@babel+core@7.27.1_typescript@5.8.3_typescript@5.8.2": {
+      "integrity": "sha512-0xiIyBsLlr8quN+WyuxooNW9RJ0Dpr8uOnH/xrCVO8GLUcwHISwj1AG0k+LFzteTkAA0GbX0kj9q6Dk70PTiPA==",
+      "dependencies": [
+        "@babel/core",
+        "@svgr/babel-preset",
+        "@svgr/core@8.1.0_@babel+core@7.27.1_typescript@5.8.3_typescript@5.8.2",
         "@svgr/hast-util-to-babel-ast",
         "svg-parser"
       ]
@@ -1798,6 +1905,12 @@
     },
     "@tauri-apps/plugin-clipboard-manager@2.2.2": {
       "integrity": "sha512-bZvDLMqfcNmsw7Ag8I49jlaCjdpDvvlJHnpp6P+Gg/3xtpSERdwlDxm7cKGbs2mj46dsw4AuG3RoAgcpwgioUA==",
+      "dependencies": [
+        "@tauri-apps/api"
+      ]
+    },
+    "@tauri-apps/plugin-dialog@2.2.1": {
+      "integrity": "sha512-wZmCouo4PgTosh/UoejPw9DPs6RllS5Pp3fuOV2JobCu36mR5AXU2MzU9NZiVaFi/5Zfc8RN0IhcZHnksJ1o8A==",
       "dependencies": [
         "@tauri-apps/api"
       ]
@@ -2073,6 +2186,14 @@
     "asynckit@0.4.0": {
       "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q=="
     },
+    "axios@1.8.3": {
+      "integrity": "sha512-iP4DebzoNlP/YN2dpwCgb8zoCmhtkajzS48JvwmkSkXvPI3DHc7m+XYL5tGnSlJtR6nImXZmdCuN5aP8dh1d8A==",
+      "dependencies": [
+        "follow-redirects",
+        "form-data",
+        "proxy-from-env"
+      ]
+    },
     "axios@1.9.0": {
       "integrity": "sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==",
       "dependencies": [
@@ -2280,10 +2401,23 @@
         "js-yaml",
         "parse-json",
         "path-type",
-        "typescript"
+        "typescript@5.8.3"
       ],
       "optionalPeers": [
-        "typescript"
+        "typescript@5.8.3"
+      ]
+    },
+    "cosmiconfig@8.3.6_typescript@5.8.3_typescript@5.8.2": {
+      "integrity": "sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA==",
+      "dependencies": [
+        "import-fresh",
+        "js-yaml",
+        "parse-json",
+        "path-type",
+        "typescript@5.8.2"
+      ],
+      "optionalPeers": [
+        "typescript@5.8.2"
       ]
     },
     "cross-env@7.0.3": {
@@ -2717,10 +2851,20 @@
       "integrity": "sha512-ERhJICsxkw1vE7G0lhCUYv4ZxdBEs03qblt1myJs94rYRK9loJF3xDj8mgQz3LmCyp0yYrNjbN/1/GWZTZDGCA==",
       "dependencies": [
         "@babel/runtime",
-        "typescript"
+        "typescript@5.8.3"
       ],
       "optionalPeers": [
-        "typescript"
+        "typescript@5.8.3"
+      ]
+    },
+    "i18next@25.2.0_typescript@5.8.3_typescript@5.8.2": {
+      "integrity": "sha512-ERhJICsxkw1vE7G0lhCUYv4ZxdBEs03qblt1myJs94rYRK9loJF3xDj8mgQz3LmCyp0yYrNjbN/1/GWZTZDGCA==",
+      "dependencies": [
+        "@babel/runtime",
+        "typescript@5.8.2"
+      ],
+      "optionalPeers": [
+        "typescript@5.8.2"
       ]
     },
     "ignore@7.0.4": {
@@ -3450,6 +3594,12 @@
     "react-fast-compare@3.2.2": {
       "integrity": "sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ=="
     },
+    "react-hook-form@7.54.2_react@19.1.0": {
+      "integrity": "sha512-eHpAUgUjWbZocoQYUHposymRb4ZP6d0uwUnooL2uOybA9/3tPUvoAKqEWK1WaSiTxxOfTpffNZP7QwlnM3/gEg==",
+      "dependencies": [
+        "react"
+      ]
+    },
     "react-hook-form@7.56.4_react@19.1.0": {
       "integrity": "sha512-Rob7Ftz2vyZ/ZGsQZPaRdIefkgOSrQSPXfqBdvOPwJfoGnjwRJUs7EM7Kc1mcoDv3NOtqBzPGbcMB8CGn9CKgw==",
       "dependencies": [
@@ -3461,12 +3611,25 @@
       "dependencies": [
         "@babel/runtime",
         "html-parse-stringify",
-        "i18next",
+        "i18next@25.2.0_typescript@5.8.3",
         "react",
-        "typescript"
+        "typescript@5.8.3"
       ],
       "optionalPeers": [
-        "typescript"
+        "typescript@5.8.3"
+      ]
+    },
+    "react-i18next@15.5.1_i18next@25.2.0__typescript@5.8.3_react@19.1.0_typescript@5.8.3_typescript@5.8.2": {
+      "integrity": "sha512-C8RZ7N7H0L+flitiX6ASjq9p5puVJU1Z8VyL3OgM/QOMRf40BMZX+5TkpxzZVcTmOLPX5zlti4InEX5pFyiVeA==",
+      "dependencies": [
+        "@babel/runtime",
+        "html-parse-stringify",
+        "i18next@25.2.0_typescript@5.8.3_typescript@5.8.2",
+        "react",
+        "typescript@5.8.2"
+      ],
+      "optionalPeers": [
+        "typescript@5.8.2"
       ]
     },
     "react-is@16.13.1": {
@@ -3853,6 +4016,10 @@
     "types-pac@1.0.3": {
       "integrity": "sha512-MF2UAZGvGMOM+vHi9Zj/LvQqdNN1m1xSB+PjAW9B/GvFqaB4GwR18YaIbGIGDRTW/J8iqFXQHLZd5eJVtho46w=="
     },
+    "typescript@5.8.2": {
+      "integrity": "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==",
+      "bin": true
+    },
     "typescript@5.8.3": {
       "integrity": "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==",
       "bin": true
@@ -3969,8 +4136,8 @@
       "integrity": "sha512-Jy9qLB2/PyWklpYy0xk0UU3TlU0t2UMpJXZvf+hWII1lAmRHrOUKi11Uw8N3rxoNk7atZNYO3pR3vI1f7oi+6w==",
       "dependencies": [
         "@rollup/pluginutils",
-        "@svgr/core",
-        "@svgr/plugin-jsx",
+        "@svgr/core@8.1.0_@babel+core@7.27.1_typescript@5.8.3",
+        "@svgr/plugin-jsx@8.1.0_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_@babel+core@7.27.1_typescript@5.8.3",
         "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2"
       ]
     },
@@ -3978,10 +4145,39 @@
       "integrity": "sha512-Jy9qLB2/PyWklpYy0xk0UU3TlU0t2UMpJXZvf+hWII1lAmRHrOUKi11Uw8N3rxoNk7atZNYO3pR3vI1f7oi+6w==",
       "dependencies": [
         "@rollup/pluginutils",
-        "@svgr/core",
-        "@svgr/plugin-jsx",
+        "@svgr/core@8.1.0_@babel+core@7.27.1_typescript@5.8.3",
+        "@svgr/plugin-jsx@8.1.0_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_@babel+core@7.27.1_typescript@5.8.3",
         "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15"
       ]
+    },
+    "vite-plugin-svgr@4.3.0_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_sass@1.89.0_terser@5.39.2_typescript@5.8.3_@types+node@22.15.15_typescript@5.8.2": {
+      "integrity": "sha512-Jy9qLB2/PyWklpYy0xk0UU3TlU0t2UMpJXZvf+hWII1lAmRHrOUKi11Uw8N3rxoNk7atZNYO3pR3vI1f7oi+6w==",
+      "dependencies": [
+        "@rollup/pluginutils",
+        "@svgr/core@8.1.0_@babel+core@7.27.1_typescript@5.8.3_typescript@5.8.2",
+        "@svgr/plugin-jsx@8.1.0_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_@babel+core@7.27.1_typescript@5.8.3_typescript@5.8.2",
+        "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15"
+      ]
+    },
+    "vite@6.2.2_@types+node@22.15.15_sass@1.89.0_terser@5.39.2": {
+      "integrity": "sha512-yW7PeMM+LkDzc7CgJuRLMW2Jz0FxMOsVJ8Lv3gpgW9WLcb9cTW+121UEr1hvmfR7w3SegR5ItvYyzVz1vxNJgQ==",
+      "dependencies": [
+        "@types/node",
+        "esbuild",
+        "postcss",
+        "rollup",
+        "sass",
+        "terser"
+      ],
+      "optionalDependencies": [
+        "fsevents"
+      ],
+      "optionalPeers": [
+        "@types/node",
+        "sass",
+        "terser"
+      ],
+      "bin": true
     },
     "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2": {
       "integrity": "sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==",
@@ -4093,6 +4289,17 @@
     },
     "yocto-queue@0.1.0": {
       "integrity": "sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q=="
+    },
+    "zustand@5.0.3_@types+react@19.1.4_react@19.1.0": {
+      "integrity": "sha512-14fwWQtU3pH4dE0dOpdMiWjddcH+QzKIgk1cl8epwSE7yag43k/AD/m4L6+K7DytAOr9gGBe3/EXj9g7cdostg==",
+      "dependencies": [
+        "@types/react",
+        "react"
+      ],
+      "optionalPeers": [
+        "@types/react",
+        "react"
+      ]
     },
     "zustand@5.0.4_@types+react@19.1.4_react@19.1.0": {
       "integrity": "sha512-39VFTN5InDtMd28ZhjLyuTnlytDr9HfwO512Ai4I8ZABCoyAj4F1+sr7sD1jP/+p7k77Iko0Pb5NhgBFDCX0kQ==",

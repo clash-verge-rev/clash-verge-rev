@@ -11,8 +11,8 @@ import {
   getSystemProxy,
   patchVergeConfig,
   restartCore,
-} from "@/services/cmds";
-import getSystem from "@/utils/get-system";
+} from "@/services/cmds.ts";
+import getSystem from "@/utils/get-system.ts";
 import { EditRounded } from "@mui/icons-material";
 import {
   Autocomplete,
