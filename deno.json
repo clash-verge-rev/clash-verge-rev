@@ -34,7 +34,10 @@
     "jsxImportSource": "react"
   },
   "lint": {
-    "include": ["src/"]
+    "include": ["src/"],
+    "rules": {
+      "exclude": ["no-explicit-any"]
+    }
   },
   "importMap": "./imports.json",
   "node": {

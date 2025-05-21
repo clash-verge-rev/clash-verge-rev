@@ -76,6 +76,7 @@
     "npm:tar@^7.4.3": "7.4.3",
     "npm:terser@^5.39.0": "5.39.2",
     "npm:types-pac@^1.0.3": "1.0.3",
+    "npm:typescript@5.8.3": "5.8.3",
     "npm:typescript@^5.8.2": "5.8.3",
     "npm:vite-plugin-monaco-editor@^1.1.0": "1.1.0_monaco-editor@0.52.2",
     "npm:vite-plugin-svgr@^4.3.0": "4.3.0_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_sass@1.89.0_terser@5.39.2_typescript@5.8.3_@types+node@22.15.15",
