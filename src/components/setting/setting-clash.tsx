@@ -11,7 +11,6 @@ import {
   LanRounded,
   SettingsRounded
 } from "@mui/icons-material";
-import ErrorOutlineRounded from '@mui/icons-material/ErrorOutlineRounded';
 import { MenuItem, Select, TextField, Typography } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
@@ -220,20 +219,18 @@ const SettingClash = ({ onError }: Props) => {
         />
       </SettingItem>
 
-     <SettingItem
-      onClick={() => ctrlRef.current?.open()}
-      label={
-        <>
-          {t("External")}
-          <TooltipIcon
-            title={t("Enable one-click random API port and key. Click to randomize the port and key")}
-            color={"error"}
-            icon={ErrorOutlineRounded}
-            sx={{ fontSize: "0.875em", ml: 0.5 }}
-          />
-        </>
-      }
-    />
+      <SettingItem
+        onClick={() => ctrlRef.current?.open()}
+        label={
+          <>
+            {t("External")}
+            <TooltipIcon
+              title={t("Enable one-click random API port and key. Click to randomize the port and key")}
+              sx={{ opacity: "0.7" }}
+            />
+          </>
+        }
+      />
 
       <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
 
