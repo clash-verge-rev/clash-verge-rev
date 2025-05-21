@@ -28,15 +28,17 @@
     "npm:@types/js-yaml@^4.0.9": "4.0.9",
     "npm:@types/json-schema@^7.0.15": "7.0.15",
     "npm:@types/lodash-es@^4.17.12": "4.17.12",
+    "npm:@types/node@*": "22.15.15",
     "npm:@types/react-dom@19.1.5": "19.1.5_@types+react@19.1.4",
     "npm:@types/react@19.1.4": "19.1.4",
-    "npm:@vitejs/plugin-legacy@^6.0.2": "6.1.1_terser@5.39.2_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@babel+core@7.27.1_browserslist@4.24.5_sass@1.89.0",
-    "npm:@vitejs/plugin-react@4.4.1": "4.4.1_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@babel+core@7.27.1_sass@1.89.0_terser@5.39.2",
+    "npm:@vitejs/plugin-legacy@^6.0.2": "6.1.1_terser@5.39.2_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@babel+core@7.27.1_browserslist@4.24.5_sass@1.89.0_@types+node@22.15.15",
+    "npm:@vitejs/plugin-react@4.4.1": "4.4.1_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@babel+core@7.27.1_sass@1.89.0_terser@5.39.2_@types+node@22.15.15",
     "npm:adm-zip@~0.5.16": "0.5.16",
     "npm:ahooks@^3.8.4": "3.8.5_react@19.1.0",
     "npm:axios@^1.8.3": "1.9.0",
     "npm:chart.js@^4.4.9": "4.4.9",
     "npm:cli-color@^2.0.4": "2.0.4",
+    "npm:commander@*": "14.0.0",
     "npm:commander@14": "14.0.0",
     "npm:cross-env@^7.0.3": "7.0.3",
     "npm:d3-shape@^3.2.0": "3.2.0",
@@ -75,8 +77,8 @@
     "npm:types-pac@^1.0.3": "1.0.3",
     "npm:typescript@^5.8.2": "5.8.3",
     "npm:vite-plugin-monaco-editor@^1.1.0": "1.1.0_monaco-editor@0.52.2",
-    "npm:vite-plugin-svgr@^4.3.0": "4.3.0_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_sass@1.89.0_terser@5.39.2_typescript@5.8.3",
-    "npm:vite@^6.2.2": "6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2",
+    "npm:vite-plugin-svgr@^4.3.0": "4.3.0_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_sass@1.89.0_terser@5.39.2_typescript@5.8.3_@types+node@22.15.15",
+    "npm:vite@^6.2.2": "6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15",
     "npm:zustand@^5.0.3": "5.0.4_@types+react@19.1.4_react@19.1.0"
   },
   "npm": {
@@ -1931,6 +1933,12 @@
     "@types/ms@2.1.0": {
       "integrity": "sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA=="
     },
+    "@types/node@22.15.15": {
+      "integrity": "sha512-R5muMcZob3/Jjchn5LcO8jdKwSCbzqmPB6ruBxMcf9kbxtniZHP327s6C37iOfuw8mbKK3cAQa7sEl7afLrQ8A==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
     "@types/parse-json@4.0.2": {
       "integrity": "sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw=="
     },
@@ -1976,7 +1984,22 @@
         "regenerator-runtime",
         "systemjs",
         "terser",
-        "vite"
+        "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2"
+      ]
+    },
+    "@vitejs/plugin-legacy@6.1.1_terser@5.39.2_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@babel+core@7.27.1_browserslist@4.24.5_sass@1.89.0_@types+node@22.15.15": {
+      "integrity": "sha512-BvusL+mYZ0q5qS5Rq3D70QxZBmhyiHRaXLtYJHH5AEsAmdSqJR4xe5KwMi1H3w8/9lVJwhkLYqFQ9vmWYWy6kA==",
+      "dependencies": [
+        "@babel/core",
+        "@babel/preset-env",
+        "browserslist",
+        "browserslist-to-esbuild",
+        "core-js",
+        "magic-string",
+        "regenerator-runtime",
+        "systemjs",
+        "terser",
+        "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15"
       ]
     },
     "@vitejs/plugin-react@4.4.1_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@babel+core@7.27.1_sass@1.89.0_terser@5.39.2": {
@@ -1987,7 +2010,18 @@
         "@babel/plugin-transform-react-jsx-source",
         "@types/babel__core",
         "react-refresh",
-        "vite"
+        "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2"
+      ]
+    },
+    "@vitejs/plugin-react@4.4.1_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@babel+core@7.27.1_sass@1.89.0_terser@5.39.2_@types+node@22.15.15": {
+      "integrity": "sha512-IpEm5ZmeXAP/osiBXVVP5KjFMzbWOonMs0NaQQl+xYnUAcq4oHUBsF2+p4MgKWG4YMmFYJU8A6sxRPuowllm6w==",
+      "dependencies": [
+        "@babel/core",
+        "@babel/plugin-transform-react-jsx-self",
+        "@babel/plugin-transform-react-jsx-source",
+        "@types/babel__core",
+        "react-refresh",
+        "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15"
       ]
     },
     "acorn@8.14.1": {
@@ -3820,6 +3854,9 @@
       "integrity": "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==",
       "bin": true
     },
+    "undici-types@6.21.0": {
+      "integrity": "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="
+    },
     "undici@5.29.0": {
       "integrity": "sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==",
       "dependencies": [
@@ -3931,7 +3968,16 @@
         "@rollup/pluginutils",
         "@svgr/core",
         "@svgr/plugin-jsx",
-        "vite"
+        "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2"
+      ]
+    },
+    "vite-plugin-svgr@4.3.0_vite@6.3.5__sass@1.89.0__terser@5.39.2__picomatch@4.0.2_@svgr+core@8.1.0__@babel+core@7.27.1__typescript@5.8.3_sass@1.89.0_terser@5.39.2_typescript@5.8.3_@types+node@22.15.15": {
+      "integrity": "sha512-Jy9qLB2/PyWklpYy0xk0UU3TlU0t2UMpJXZvf+hWII1lAmRHrOUKi11Uw8N3rxoNk7atZNYO3pR3vI1f7oi+6w==",
+      "dependencies": [
+        "@rollup/pluginutils",
+        "@svgr/core",
+        "@svgr/plugin-jsx",
+        "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15"
       ]
     },
     "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2": {
@@ -3950,6 +3996,29 @@
         "fsevents"
       ],
       "optionalPeers": [
+        "sass",
+        "terser"
+      ],
+      "bin": true
+    },
+    "vite@6.3.5_sass@1.89.0_terser@5.39.2_picomatch@4.0.2_@types+node@22.15.15": {
+      "integrity": "sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==",
+      "dependencies": [
+        "@types/node",
+        "esbuild",
+        "fdir",
+        "picomatch@4.0.2",
+        "postcss",
+        "rollup",
+        "sass",
+        "terser",
+        "tinyglobby"
+      ],
+      "optionalDependencies": [
+        "fsevents"
+      ],
+      "optionalPeers": [
+        "@types/node",
         "sass",
         "terser"
       ],
