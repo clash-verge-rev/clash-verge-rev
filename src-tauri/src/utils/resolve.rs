@@ -17,6 +17,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri::{AppHandle, Manager};
+use tauri_plugin_window_state::WindowExt;
 use tokio::net::TcpListener;
 
 use tauri::Url;
@@ -373,6 +374,12 @@ pub fn create_window(is_show: bool) -> bool {
                             *get_ui_ready().write() = true;
                         }
                     }
+                    logging_error!(
+                        Type::Window,
+                        true,
+                        newly_created_window
+                            .restore_state(tauri_plugin_window_state::StateFlags::all())
+                    );
                     logging!(info, Type::Window, true, "窗口显示流程完成");
                 } else {
                     logging!(
