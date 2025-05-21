@@ -8,7 +8,7 @@ import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { LogLevel, clearLogs } from "@/hooks/use-log-data";
+import { LogLevel } from "@/hooks/use-log-data";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useEnableLog } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
@@ -112,7 +112,7 @@ const LogPage = () => {
           pt: 1,
           mb: 0.5,
           mx: "10px",
-          height: "36px",
+          height: "39px",
           display: "flex",
           alignItems: "center",
         }}

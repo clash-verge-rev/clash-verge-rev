@@ -6,7 +6,6 @@ import { BaseEmpty, BasePage } from "@/components/base";
 import RuleItem from "@/components/rule/rule-item";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { BaseSearchBox } from "@/components/base/base-search-box";
-import { useTheme } from "@mui/material/styles";
 import { ScrollTopButton } from "@/components/layout/scroll-top-button";
 import { useAppData } from "@/providers/app-data-provider";
 import { useVisibility } from "@/hooks/use-visibility";
@@ -14,8 +13,6 @@ import { useVisibility } from "@/hooks/use-visibility";
 const RulesPage = () => {
   const { t } = useTranslation();
   const { rules = [], refreshRules, refreshRuleProviders } = useAppData();
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
