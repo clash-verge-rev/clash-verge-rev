@@ -8,7 +8,7 @@
     "web:dev": "vite",
     "web:build": "tsc --noEmit && vite build",
     "web:serve": "vite preview",
-    "check": "deno --allow-env --allow-read --allow-write --allow-run --allow-net ./scripts/check.mjs",
+    "prepare": "deno --allow-env --allow-read --allow-write --allow-run --allow-net ./scripts/resource_fetch.mjs",
     "updater": "deno --allow-env scripts/updater.mjs",
     "updater-fixed-webview2": "deno --allow-env scripts/updater-fixed-webview2.mjs",
     "portable": "deno scripts/portable.mjs",

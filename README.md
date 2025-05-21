@@ -67,7 +67,7 @@ To run the development server, execute the following commands after all prerequi
 
 ```shell
 deno install
-deno task check
+deno task prepare
 deno task dev
 ```
 

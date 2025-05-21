@@ -38,9 +38,9 @@ You have two options for downloading the clash binary:
 
 - Automatically download it via the provided script:
   ```shell
-  deno task check
+  deno task prepare
   # Or use '--force' to force update to the latest version
-  deno task check --force
+  deno task prepare --force
   ```
 - Manually download it from the [Mihomo release](https://github.com/MetaCubeX/mihomo/releases). After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).
 
