@@ -274,7 +274,7 @@
   "Unified Delay Info": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
   "Log Level": "日志等级",
   "Log Level Info": "仅对日志目录 Service 文件夹下的内核日志文件生效",
-  "Port Configuration": "端口设置",
+  "Port Configuration": "端口配置设置",
   "Random Port": "随机端口",
   "Mixed Port": "混合代理端口",
   "Socks Port": "SOCKS 代理端口",
@@ -628,5 +628,8 @@
   "Configuration saved successfully": "随机配置，保存完成",
   "Last generated": "记录生成",
   "External Controller Config": "API配置",
-  "Enable one-click random API port and key. Click to randomize the port and key": "开启一键随机API端口和密钥，点进去就可以随机端口和密钥"
+  "Enable one-click random API port and key. Click to randomize the port and key": "开启一键随机API端口和密钥，点进去就可以随机端口和密钥",
+  "Saving...": "保存中...",
+  "Port settings saved": "端口设置已保存",
+  "Failed to save settings": "端口设置失败"
 }

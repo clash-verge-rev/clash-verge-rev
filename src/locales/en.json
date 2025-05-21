@@ -628,5 +628,8 @@
   "Configuration saved successfully": "Configuration saved successfully",
   "Last generated": "Last generated",
   "External Controller Config": "External Controller Config",
-  "Enable one-click random API port and key. Click to randomize the port and key": "Enable one-click random API port and key. Click to randomize the port and key"
+  "Enable one-click random API port and key. Click to randomize the port and key": "Enable one-click random API port and key. Click to randomize the port and key",
+  "Saving...": "Saving...",
+  "Port settings saved": "Port settings saved",
+  "Failed to save settings": "Failed to save settings"
 }

@@ -4,8 +4,16 @@ import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
 import { Shuffle } from "@mui/icons-material";
-import { IconButton, List, ListItem, ListItemText, TextField } from "@mui/material";
-import { useLockFn } from "ahooks";
+import {
+  CircularProgress,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Stack,
+  TextField
+} from "@mui/material";
+import { useLockFn, useRequest } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -42,6 +50,30 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef, ClashPortViewerPro
     const [tproxyPort, setTproxyPort] = useState(verge?.verge_tproxy_port ?? 7896);
     const [tproxyEnabled, setTproxyEnabled] = useState(verge?.verge_tproxy_enabled ?? false);
 
+    // 添加保存请求，防止GUI卡死
+    const { loading, run: saveSettings } = useRequest(
+      async (params: {
+        clashConfig: any;
+        vergeConfig: any;
+      }) => {
+        const { clashConfig, vergeConfig } = params;
+        await Promise.all([
+          patchInfo(clashConfig),
+          patchVerge(vergeConfig)
+        ]);
+      },
+      {
+        manual: true,
+        onSuccess: () => {
+          setOpen(false);
+          showNotice("success", t("Port settings saved")); // 调用提示函数
+        },
+        onError: () => {
+          showNotice("error", t("Failed to save settings")); // 调用提示函数
+        }
+      }
+    );
+
     useImperativeHandle(ref, () => ({
       open: () => {
         setMixedPort(verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897);
@@ -53,7 +85,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef, ClashPortViewerPro
         setRedirEnabled(verge?.verge_redir_enabled ?? false);
         setTproxyPort(verge?.verge_tproxy_port ?? 7896);
         setTproxyEnabled(verge?.verge_tproxy_enabled ?? false);
-        setOpen(true);
+        setOpen( true);
       },
       close: () => setOpen(false),
     }));
@@ -69,48 +101,80 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef, ClashPortViewerPro
       ].filter(p => p !== -1);
 
       if (new Set(portList).size !== portList.length) {
-        showNotice("error", t("Port Conflict"));
         return;
       }
 
-      try {
-        // 更新Clash配置
-        await patchInfo({
-          "mixed-port": mixedPort,
-          "socks-port": socksPort,
-          port: httpPort,
-          "redir-port": redirPort,
-          "tproxy-port": tproxyPort
-        } as any);
+      // 验证端口范围
+      const isValidPort = (port: number) => port >= 1 && port <= 65535;
+      const allPortsValid = [
+        mixedPort,
+        socksEnabled ? socksPort : 0,
+        httpEnabled ? httpPort : 0,
+        redirEnabled ? redirPort : 0,
+        tproxyEnabled ? tproxyPort : 0
+      ].every(port => port === 0 || isValidPort(port));
 
-        // 更新Verge配置
-        await patchVerge({
-          verge_mixed_port: mixedPort,
-          verge_socks_port: socksPort,
-          verge_socks_enabled: socksEnabled,
-          verge_port: httpPort,
-          verge_http_enabled: httpEnabled,
-          verge_redir_port: redirPort,
-          verge_redir_enabled: redirEnabled,
-          verge_tproxy_port: tproxyPort,
-          verge_tproxy_enabled: tproxyEnabled
-        });
-
-        setOpen(false);
-        showNotice("success", t("Port settings saved"));
-      } catch (err) {
-        showNotice("error", t("Failed to save settings"));
+      if (!allPortsValid) {
+        return;
       }
+
+      // 准备配置数据
+      const clashConfig = {
+        "mixed-port": mixedPort,
+        "socks-port": socksPort,
+        port: httpPort,
+        "redir-port": redirPort,
+        "tproxy-port": tproxyPort
+      };
+
+      const vergeConfig = {
+        verge_mixed_port: mixedPort,
+        verge_socks_port: socksPort,
+        verge_socks_enabled: socksEnabled,
+        verge_port: httpPort,
+        verge_http_enabled: httpEnabled,
+        verge_redir_port: redirPort,
+        verge_redir_enabled: redirEnabled,
+        verge_tproxy_port: tproxyPort,
+        verge_tproxy_enabled: tproxyEnabled
+      };
+
+      // 提交保存请求
+      await saveSettings({ clashConfig, vergeConfig });
     });
+
+    // 优化的数字输入处理
+    const handleNumericChange = (setter: (value: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.replace(/\D+/, '');
+      if (value === '') {
+        setter(0);
+        return;
+      }
+
+      const num = parseInt(value, 10);
+      if (!isNaN(num) && num >= 0 && num <= 65535) {
+        setter(num);
+      }
+    };
 
     return (
       <BaseDialog
         open={open}
         title={t("Port Configuration")}
-        contentSx={{ width: 360, padding: "8px" }}
-        okBtn={t("Save")}
+        contentSx={{
+          width: 400
+        }}
+        okBtn={
+          loading ? (
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <CircularProgress size={20} />
+              {t("Saving...")}
+            </Stack>
+          ) : t("Save")
+        }
         cancelBtn={t("Cancel")}
         onClose={() => setOpen(false)}
+        onCancel={() => setOpen(false)}
         onOk={onSave}
       >
         <List sx={{ width: "100%" }}>
