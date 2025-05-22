@@ -138,23 +138,6 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
-            #[cfg(desktop)]
-            {
-                if let Err(e) = app.handle().plugin(
-                    tauri_plugin_window_state::Builder::default()
-                        .with_state_flags(tauri_plugin_window_state::StateFlags::all())
-                        .build(),
-                ) {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        true,
-                        "Failed to initialize tauri-plugin-window-state: {}",
-                        e
-                    );
-                }
-            }
-
             logging!(info, Type::Setup, true, "开始应用初始化...");
             #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
