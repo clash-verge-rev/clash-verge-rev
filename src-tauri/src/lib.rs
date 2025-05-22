@@ -19,7 +19,6 @@ use tauri::AppHandle;
 use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_window_state::{AppHandleExt, StateFlags, WindowExt};
 use tokio::time::{timeout, Duration};
 use utils::logging::Type;
 
@@ -138,13 +137,24 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(
-            tauri_plugin_window_state::Builder::new()
-                .with_state_flags(tauri_plugin_window_state::StateFlags::all())
-                .skip_initial_state("main")
-                .build(),
-        )
         .setup(|app| {
+            #[cfg(desktop)]
+            {
+                if let Err(e) = app.handle().plugin(
+                    tauri_plugin_window_state::Builder::default()
+                        .with_state_flags(tauri_plugin_window_state::StateFlags::all())
+                        .build(),
+                ) {
+                    logging!(
+                        error,
+                        Type::Setup,
+                        true,
+                        "Failed to initialize tauri-plugin-window-state: {}",
+                        e
+                    );
+                }
+            }
+
             logging!(info, Type::Setup, true, "开始应用初始化...");
             #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
@@ -332,7 +342,6 @@ pub fn run() {
                 {
                     logging!(info, Type::Window, true, "设置macOS窗口标题");
                     let _ = window.set_title("Clash Verge");
-                    logging_error!(Type::Window, true, window.restore_state(StateFlags::all()));
                 }
             }
         }
