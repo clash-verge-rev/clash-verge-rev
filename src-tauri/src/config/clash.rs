@@ -58,6 +58,9 @@ impl IClashTemp {
                 "tauri://localhost",
                 "http://tauri.localhost",
                 "http://localhost:3000",
+                "https://yacd.metacubex.one",
+                "https://metacubex.github.io",
+                "https://board.zash.run.place",
             ]
             .into(),
         );
@@ -95,6 +98,9 @@ impl IClashTemp {
                 "tauri://localhost",
                 "http://tauri.localhost",
                 "http://localhost:3000",
+                "https://yacd.metacubex.one",
+                "https://metacubex.github.io",
+                "https://board.zash.run.place",
             ]
             .into(),
         );
