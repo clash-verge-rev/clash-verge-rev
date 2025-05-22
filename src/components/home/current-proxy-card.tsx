@@ -197,8 +197,9 @@ export const CurrentProxyCard = () => {
     if (!proxies) return;
 
     setState((prev) => {
+      // 只保留 Selector 类型的组用于选择
       const filteredGroups = proxies.groups
-        .filter((g: { name: string }) => g.name !== "DIRECT" && g.name !== "REJECT")
+        .filter((g: { name: string; type?: string }) => g.type === "Selector")
         .map((g: { name: string; now: string; all: Array<{ name: string }> }) => ({
           name: g.name,
           now: g.now || "",
@@ -225,7 +226,7 @@ export const CurrentProxyCard = () => {
 
         // 如果当前组不存在或为空，自动选择第一个 selector 类型的组
         if (!currentGroup && filteredGroups.length > 0) {
-          const selectorGroup = filteredGroups.find((g: { type: string }) => g.type === "Selector");
+          const selectorGroup = filteredGroups[0];
           if (selectorGroup) {
             newGroup = selectorGroup.name;
             newProxy = selectorGroup.now || selectorGroup.all[0] || "";
