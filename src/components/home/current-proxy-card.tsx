@@ -230,12 +230,12 @@ export const CurrentProxyCard = () => {
           if (selectorGroup) {
             newGroup = selectorGroup.name;
             newProxy = selectorGroup.now || selectorGroup.all[0] || "";
-            newDisplayProxy = proxies.records?.[newProxy] || null;
+          newDisplayProxy = proxies.records?.[newProxy] || null;
 
-            if (!isGlobalMode && !isDirectMode) {
-              localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
-              if (newProxy) {
-                localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
+          if (!isGlobalMode && !isDirectMode) {
+            localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+            if (newProxy) {
+              localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
               }
             }
           }
