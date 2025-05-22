@@ -55,8 +55,8 @@ impl IClashTemp {
         cors_map.insert(
             "allow-origins".into(),
             vec![
-                "http://localhost",
-                "http://127.0.0.1",
+                "tauri://localhost",
+                "http://tauri.localhost",
                 "http://localhost:3000",
             ]
             .into(),
@@ -92,8 +92,8 @@ impl IClashTemp {
         cors_map.insert(
             "allow-origins".into(),
             vec![
-                "http://localhost",
-                "http://127.0.0.1",
+                "tauri://localhost",
+                "http://tauri.localhost",
                 "http://localhost:3000",
             ]
             .into(),
