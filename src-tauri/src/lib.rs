@@ -19,7 +19,7 @@ use tauri::AppHandle;
 use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_window_state::{StateFlags, WindowExt};
+use tauri_plugin_window_state::{AppHandleExt, StateFlags, WindowExt};
 use tokio::time::{timeout, Duration};
 use utils::logging::Type;
 
@@ -350,11 +350,25 @@ pub fn run() {
             if code.is_none() {
                 api.prevent_exit();
             }
+            if let Some(app_handle) = core::handle::Handle::global().app_handle() {
+                logging_error!(
+                    Type::Window,
+                    true,
+                    app_handle.save_window_state(StateFlags::all())
+                );
+            }
         }
         tauri::RunEvent::Exit => {
             // avoid duplicate cleanup
             if core::handle::Handle::global().is_exiting() {
                 return;
+            }
+            if let Some(app_handle) = core::handle::Handle::global().app_handle() {
+                logging_error!(
+                    Type::Window,
+                    true,
+                    app_handle.save_window_state(StateFlags::all())
+                );
             }
             feat::clean();
         }
@@ -373,6 +387,13 @@ pub fn run() {
                             let _ = window.hide();
                         } else {
                             logging!(warn, Type::Window, true, "尝试隐藏窗口但窗口不存在");
+                        }
+                        if let Some(app_handle) = core::handle::Handle::global().app_handle() {
+                            logging_error!(
+                                Type::Window,
+                                true,
+                                app_handle.save_window_state(StateFlags::all())
+                            );
                         }
                     }
                     tauri::WindowEvent::Focused(true) => {
@@ -435,6 +456,13 @@ pub fn run() {
                                 Type::Hotkey,
                                 true,
                                 hotkey::Hotkey::global().unregister("CMD+W")
+                            );
+                        }
+                        if let Some(app_handle) = core::handle::Handle::global().app_handle() {
+                            logging_error!(
+                                Type::Window,
+                                true,
+                                app_handle.save_window_state(StateFlags::all())
                             );
                         }
                     }
