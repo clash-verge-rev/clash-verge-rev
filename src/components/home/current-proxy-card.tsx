@@ -223,21 +223,23 @@ export const CurrentProxyCard = () => {
           (g: { name: string }) => g.name === prev.selection.group,
         );
 
-        // 如果当前组不存在或为空，自动选择第一个组
+        // 如果当前组不存在或为空，自动选择第一个 selector 类型的组
         if (!currentGroup && filteredGroups.length > 0) {
-          newGroup = filteredGroups[0].name;
-          const firstGroup = filteredGroups[0];
-          newProxy = firstGroup.now;
-          newDisplayProxy = proxies.records?.[newProxy] || null;
+          const selectorGroup = filteredGroups.find((g: { type: string }) => g.type === "Selector");
+          if (selectorGroup) {
+            newGroup = selectorGroup.name;
+            newProxy = selectorGroup.now || selectorGroup.all[0] || "";
+            newDisplayProxy = proxies.records?.[newProxy] || null;
 
-          if (!isGlobalMode && !isDirectMode) {
-            localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
-            if (newProxy) {
-              localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
+            if (!isGlobalMode && !isDirectMode) {
+              localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+              if (newProxy) {
+                localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
+              }
             }
           }
         } else if (currentGroup) {
-          newProxy = currentGroup.now;
+          newProxy = currentGroup.now || currentGroup.all[0] || "";
           newDisplayProxy = proxies.records?.[newProxy] || null;
         }
       }
