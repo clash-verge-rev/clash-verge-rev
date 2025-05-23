@@ -1,5 +1,7 @@
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
+import { useVerge } from "@/hooks/use-verge";
+import { patchClashConfig, restartCore } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import {
   ContentCopy,
@@ -53,49 +55,12 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [copySuccess, setCopySuccess] = useState<null | string>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isRestarting, setIsRestarting] = useState(false);
 
   const { clashInfo, patchInfo } = useClashInfo();
 
   const [controller, setController] = useState(clashInfo?.server || "");
   const [secret, setSecret] = useState(clashInfo?.secret || "");
 
-  // 直接通过API重启内核
-  const restartCoreDirectly = useLockFn(async () => {
-    try {
-      const controllerUrl = controller || clashInfo?.server || 'http://localhost:9090';
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      if (secret) {
-        headers['Authorization'] = `Bearer ${secret}`;
-      }
-
-      const response = await fetch(`${controllerUrl}/restart`, {
-        method: 'POST',
-        headers,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to restart core');
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json();
-      } else {
-        const text = await response.text();
-        console.log('Non-JSON response:', text);
-        return { message: 'Restart request sent successfully' };
-      }
-    } catch (err: any) {
-      console.error('Error restarting core:', err);
-      throw err;
-    }
-  });
 
   // 生成随机配置并重启内核
   const generateAndRestart = useLockFn(async () => {
@@ -157,9 +122,14 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       setIsSaving(true);
 
-      await patchInfo({ "external-controller": controller, secret });
+      await patchInfo({
+        "external-controller": controller,
+        secret,
+      });
 
-      showNotice('success', t("Configuration saved successfully"), 2000);
+      await restartCore();
+
+      showNotice('success', t("Configuration saved and core restarted successfully"), 2000);
       setOpen(false);
     } catch (err: any) {
       showNotice('error', err.message || t("Failed to save configuration"), 4000);
