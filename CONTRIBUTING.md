@@ -8,13 +8,13 @@ Before you start contributing to the project, you need to set up your developmen
 
 ### Prerequisites
 
-1. **Install Rust and Node.js**: Our project requires both Rust and Node.js. Please follow the instructions provided [here](https://tauri.app/v1/guides/getting-started/prerequisites) to install them on your system.
+**Install Rust and Deno**: Our project requires both Rust and Deno. Follow the instructions [here](https://tauri.app/start/prerequisites/) to install Rust. For Deno installation, please refer to the [official Deno documentation](https://docs.deno.com/runtime/manual/getting_started/installation).
 
 ### Setup for Windows Users
 
 If you're a Windows user, you may need to perform some additional steps:
 
-- Make sure to add Rust and Node.js to your system's PATH. This is usually done during the installation process, but you can verify and manually add them if necessary.
+- Make sure to add Rust and Deno to your system's PATH. This is usually done during the installation process, but you can verify and manually add them if necessary.
 - The gnu `patch` tool should be installed
 
 When you setup `Rust` environment, Only use toolchain with `Windows MSVC` , to change settings follow command:
@@ -24,18 +24,12 @@ rustup target add x86_64-pc-windows-msvc
 rustup set default-host x86_64-pc-windows-msvc
 ```
 
-### Install Node.js Package
+### Install Deno Package Manager
 
-After installing Rust and Node.js, install the necessary Node.js and Node Package Manager:
+After installing Rust and Deno, install the necessary package manager:
 
-```shell
-npm install pnpm -g
-```
-
-### Install Dependencies
-
-```shell
-pnpm install
+```bash
+deno install
 ```
 
 ### Download the Mihomo Core Binary
@@ -44,9 +38,9 @@ You have two options for downloading the clash binary:
 
 - Automatically download it via the provided script:
   ```shell
-  pnpm run check
-  # Use '--force' to force update to the latest version
-  # pnpm run check --force
+  deno task prepare
+  # Or use '--force' to force update to the latest version
+  deno task prepare --force
   ```
 - Manually download it from the [Mihomo release](https://github.com/MetaCubeX/mihomo/releases). After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).
 
@@ -55,9 +49,9 @@ You have two options for downloading the clash binary:
 To run the development server, use the following command:
 
 ```shell
-pnpm dev
+deno task dev
 # If an app instance already exists, use a different command
-pnpm dev:diff
+deno task dev:diff
 ```
 
 ### Build the Project
@@ -65,13 +59,13 @@ pnpm dev:diff
 To build this project:
 
 ```shell
-pnpm build
+deno task build
 ```
 
 For a faster build, use the following command
 
 ```shell
-pnpm build:fast
+deno task build:fast
 ```
 
 This uses Rust's fast-release profile which significantly reduces compilation time by disabling optimization and LTO. The resulting binary will be larger and less performant than the standard build, but it's useful for testing changes quickly.
@@ -80,10 +74,10 @@ The `Artifacts` will display in the `log` in the Terminal.
 
 ### Build clean
 
-To clean rust build:
+To clean the Rust build artifacts:
 
 ```shell
-pnpm clean
+deno task clean
 ```
 
 ### Portable Version (Windows Only)
@@ -91,26 +85,23 @@ pnpm clean
 To package portable version after the build:
 
 ```shell
-pnpm portable
+deno task portable
 ```
 
 ## Contributing Your Changes
 
-#### Before commit your changes
+#### Before Committing Your Changes
 
-If you changed the rust code, it's recommanded to execute code style formatting and quailty checks.
+It is highly recommended to run code formatting and quality checks before committing your changes, especially if you've modified Rust code.
 
-1. Code style formatting
-
+1. Code Style Formatting
 ```bash
 $ clash-verge-rev: cd src-tauri
 $ clash-verge-rev/src-tauri: cargo fmt
 ```
-
-2. Code quailty checks
-
+2. Code Quailty Checking
 ```bash
-$ clash-verge-rev: pnpm clippy
+$ clash-verge-rev: deno task clippy
 ```
 
 

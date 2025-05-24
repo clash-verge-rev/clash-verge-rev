@@ -66,9 +66,9 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 To run the development server, execute the following commands after all prerequisites for **Tauri** are installed:
 
 ```shell
-pnpm i
-pnpm run check
-pnpm dev
+deno install
+deno task prepare
+deno task dev
 ```
 
 ## Contributions

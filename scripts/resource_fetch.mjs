@@ -1,18 +1,17 @@
-import fs from "fs";
-import fsp from "fs/promises";
-import zlib from "zlib";
 import { extract } from "tar";
-import path from "path";
+import { join } from "https://deno.land/std@0.224.0/path/mod.ts";
 import AdmZip from "adm-zip";
-import fetch from "node-fetch";
-import { HttpsProxyAgent } from "https-proxy-agent";
-import { execSync } from "child_process";
-import { log_info, log_debug, log_error, log_success } from "./utils.mjs";
 import { glob } from "glob";
+import {
+  log_info,
+  log_debug,
+  log_error,
+  log_success,
+} from "./utils.mjs";
 
-const cwd = process.cwd();
-const TEMP_DIR = path.join(cwd, "node_modules/.verge");
-const FORCE = process.argv.includes("--force");
+const cwd = Deno.cwd();
+const TEMP_DIR = join(cwd, "node_modules/.verge");
+const FORCE = Deno.args.includes("--force");
 
 const PLATFORM_MAP = {
   "x86_64-pc-windows-msvc": "win32",
@@ -41,23 +40,41 @@ const ARCH_MAP = {
   "loongarch64-unknown-linux-gnu": "loong64",
 };
 
-const arg1 = process.argv.slice(2)[0];
-const arg2 = process.argv.slice(2)[1];
+const arg1 = Deno.args[0];
+const arg2 = Deno.args[1];
 const target = arg1 === "--force" ? arg2 : arg1;
 const { platform, arch } = target
   ? { platform: PLATFORM_MAP[target], arch: ARCH_MAP[target] }
-  : process;
+  : {
+      platform: Deno.build.os,
+      arch: Deno.build.arch === "aarch64" ? "arm64" : Deno.build.arch,
+    };
 
-const SIDECAR_HOST = target
-  ? target
-  : execSync("rustc -vV")
-      .toString()
-      .match(/(?<=host: ).+(?=\s*)/g)[0];
+const SIDECAR_HOST = await (async () => {
+  if (target) return target;
+  try {
+    const cmd = Deno.run({
+      cmd: ["rustc", "-vV"],
+      stdout: "piped",
+      stderr: "piped",
+    });
+    const output = await cmd.output();
+    const text = new TextDecoder().decode(output);
+    const match = text.match(/(?<=host: ).+(?=\s*)/g);
+    cmd.close();
+    if (!match) throw new Error("No host found in rustc output");
+    return match[0];
+  } catch (error) {
+    log_error("Failed to determine SIDECAR_HOST with rustc:", error.message);
+    Deno.exit(1);
+  }
+})();
 
-/* ======= clash meta alpha======= */
+/* ======= clash meta alpha ======= */
 const META_ALPHA_VERSION_URL =
   "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt";
-const META_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`;
+const META_ALPHA_URL_PREFIX =
+  "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha";
 let META_ALPHA_VERSION;
 
 const META_ALPHA_MAP = {
@@ -74,37 +91,32 @@ const META_ALPHA_MAP = {
   "linux-loong64": "mihomo-linux-loong64",
 };
 
-// Fetch the latest alpha release version from the version.txt file
+// Fetch the latest alpha release version
 async function getLatestAlphaVersion() {
-  const options = {};
-
   const httpProxy =
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy;
+    Deno.env.get("HTTP_PROXY") ||
+    Deno.env.get("http_proxy") ||
+    Deno.env.get("HTTPS_PROXY") ||
+    Deno.env.get("https_proxy");
 
-  if (httpProxy) {
-    options.agent = new HttpsProxyAgent(httpProxy);
-  }
+  const options = httpProxy ? { headers: { "Proxy": httpProxy } } : {};
   try {
-    const response = await fetch(META_ALPHA_VERSION_URL, {
-      ...options,
-      method: "GET",
-    });
-    let v = await response.text();
-    META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
+    const response = await fetch(META_ALPHA_VERSION_URL, options);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const v = await response.text();
+    META_ALPHA_VERSION = v.trim();
     log_info(`Latest alpha version: ${META_ALPHA_VERSION}`);
   } catch (error) {
     log_error("Error fetching latest alpha version:", error.message);
-    process.exit(1);
+    Deno.exit(1);
   }
 }
 
 /* ======= clash meta stable ======= */
 const META_VERSION_URL =
   "https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt";
-const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
+const META_URL_PREFIX =
+  "https://github.com/MetaCubeX/mihomo/releases/download";
 let META_VERSION;
 
 const META_MAP = {
@@ -121,51 +133,37 @@ const META_MAP = {
   "linux-loong64": "mihomo-linux-loong64",
 };
 
-// Fetch the latest release version from the version.txt file
+// Fetch the latest release version
 async function getLatestReleaseVersion() {
-  const options = {};
-
   const httpProxy =
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy;
+    Deno.env.get("HTTP_PROXY") ||
+    Deno.env.get("http_proxy") ||
+    Deno.env.get("HTTPS_PROXY") ||
+    Deno.env.get("https_proxy");
 
-  if (httpProxy) {
-    options.agent = new HttpsProxyAgent(httpProxy);
-  }
+  const options = httpProxy ? { headers: { "Proxy": httpProxy } } : {};
   try {
-    const response = await fetch(META_VERSION_URL, {
-      ...options,
-      method: "GET",
-    });
-    let v = await response.text();
-    META_VERSION = v.trim(); // Trim to remove extra whitespaces
+    const response = await fetch(META_VERSION_URL, options);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const v = await response.text();
+    META_VERSION = v.trim();
     log_info(`Latest release version: ${META_VERSION}`);
   } catch (error) {
     log_error("Error fetching latest release version:", error.message);
-    process.exit(1);
+    Deno.exit(1);
   }
 }
 
-/*
- * check available
- */
+/* check available */
 if (!META_MAP[`${platform}-${arch}`]) {
-  throw new Error(
-    `clash meta alpha unsupported platform "${platform}-${arch}"`,
-  );
+  throw new Error(`clash meta unsupported platform "${platform}-${arch}"`);
 }
 
 if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
-  throw new Error(
-    `clash meta alpha unsupported platform "${platform}-${arch}"`,
-  );
+  throw new Error(`clash meta alpha unsupported platform "${platform}-${arch}"`);
 }
 
-/**
- * core info
- */
+/* core info */
 function clashMetaAlpha() {
   const name = META_ALPHA_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
@@ -199,25 +197,24 @@ function clashMeta() {
     downloadURL,
   };
 }
-/**
- * download sidecar and rename
- */
+
+/* download sidecar and rename */
 async function resolveSidecar(binInfo) {
   const { name, targetFile, zipFile, exeFile, downloadURL } = binInfo;
 
-  const sidecarDir = path.join(cwd, "src-tauri", "sidecar");
-  const sidecarPath = path.join(sidecarDir, targetFile);
+  const sidecarDir = join(cwd, "src-tauri", "sidecar");
+  const sidecarPath = join(sidecarDir, targetFile);
 
-  await fsp.mkdir(sidecarDir, { recursive: true });
-  if (!FORCE && fs.existsSync(sidecarPath)) return;
+  await Deno.mkdir(sidecarDir, { recursive: true });
+  if (!FORCE && (await Deno.stat(sidecarPath).catch(() => null))) return;
 
-  const tempDir = path.join(TEMP_DIR, name);
-  const tempZip = path.join(tempDir, zipFile);
-  const tempExe = path.join(tempDir, exeFile);
+  const tempDir = join(TEMP_DIR, name);
+  const tempZip = join(tempDir, zipFile);
+  const tempExe = join(tempDir, exeFile);
 
-  await fsp.mkdir(tempDir, { recursive: true });
+  await Deno.mkdir(tempDir, { recursive: true });
   try {
-    if (!fs.existsSync(tempZip)) {
+    if (!(await Deno.stat(tempZip).catch(() => null))) {
       await downloadFile(downloadURL, tempZip);
     }
 
@@ -227,143 +224,123 @@ async function resolveSidecar(binInfo) {
         log_debug(`"${name}" entry name`, entry.entryName);
       });
       zip.extractAllTo(tempDir, true);
-      await fsp.rename(tempExe, sidecarPath);
+      await Deno.rename(tempExe, sidecarPath);
       log_success(`unzip finished: "${name}"`);
     } else if (zipFile.endsWith(".tgz")) {
-      // tgz
-      await fsp.mkdir(tempDir, { recursive: true });
-      await extract({
-        cwd: tempDir,
-        file: tempZip,
-        //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
-      });
-      const files = await fsp.readdir(tempDir);
+      await Deno.mkdir(tempDir, { recursive: true });
+      await extract({ cwd: tempDir, file: tempZip });
+      const files = [];
+      for await (const entry of Deno.readDir(tempDir)) {
+        files.push(entry.name);
+      }
       log_debug(`"${name}" files in tempDir:`, files);
       const extractedFile = files.find((file) => file.startsWith("虚空终端-"));
       if (extractedFile) {
-        const extractedFilePath = path.join(tempDir, extractedFile);
-        await fsp.rename(extractedFilePath, sidecarPath);
+        const extractedFilePath = join(tempDir, extractedFile);
+        await Deno.rename(extractedFilePath, sidecarPath);
         log_success(`"${name}" file renamed to "${sidecarPath}"`);
-        execSync(`chmod 755 ${sidecarPath}`);
+        await Deno.run({ cmd: ["chmod", "755", sidecarPath] }).status();
         log_success(`chmod binary finished: "${name}"`);
       } else {
         throw new Error(`Expected file not found in ${tempDir}`);
       }
     } else {
-      // gz
-      const readStream = fs.createReadStream(tempZip);
-      const writeStream = fs.createWriteStream(sidecarPath);
-      await new Promise((resolve, reject) => {
-        const onError = (error) => {
-          log_error(`"${name}" gz failed:`, error.message);
-          reject(error);
-        };
-        readStream
-          .pipe(zlib.createGunzip().on("error", onError))
-          .pipe(writeStream)
-          .on("finish", () => {
-            execSync(`chmod 755 ${sidecarPath}`);
-            log_success(`chmod binary finished: "${name}"`);
-            resolve();
-          })
-          .on("error", onError);
+      const data = await Deno.readFile(tempZip);
+      const decompressed = await new Promise((resolve, reject) => {
+        const chunks = [];
+        const gunzip = new DecompressionStream("gzip");
+        const stream = new Blob([data]).stream().pipeThrough(gunzip);
+        const reader = stream.getReader();
+        reader.read().then(function process({ done, value }) {
+          if (done) {
+            resolve(new Uint8Array(chunks.flat()));
+            return;
+          }
+          chunks.push(value);
+          reader.read().then(process);
+        }).catch(reject);
       });
+      await Deno.writeFile(sidecarPath, decompressed);
+      await Deno.run({ cmd: ["chmod", "755", sidecarPath] }).status();
+      log_success(`chmod binary finished: "${name}"`);
     }
   } catch (err) {
-    // 需要删除文件
-    await fsp.rm(sidecarPath, { recursive: true, force: true });
+    await Deno.remove(sidecarPath, { recursive: true }).catch(() => {});
     throw err;
   } finally {
-    // delete temp dir
-    await fsp.rm(tempDir, { recursive: true, force: true });
+    await Deno.remove(tempDir, { recursive: true }).catch(() => {});
   }
 }
 
 const resolveSetDnsScript = () =>
   resolveResource({
     file: "set_dns.sh",
-    localPath: path.join(cwd, "scripts/set_dns.sh"),
+    localPath: join(cwd, "scripts/set_dns.sh"),
   });
+
 const resolveUnSetDnsScript = () =>
   resolveResource({
     file: "unset_dns.sh",
-    localPath: path.join(cwd, "scripts/unset_dns.sh"),
+    localPath: join(cwd, "scripts/unset_dns.sh"),
   });
 
-/**
- * download the file to the resources dir
- */
+/* download the file to the resources dir */
 async function resolveResource(binInfo) {
   const { file, downloadURL, localPath } = binInfo;
+  const resDir = join(cwd, "src-tauri/resources");
+  const targetPath = join(resDir, file);
 
-  const resDir = path.join(cwd, "src-tauri/resources");
-  const targetPath = path.join(resDir, file);
-
-  if (!FORCE && fs.existsSync(targetPath)) return;
+  if (!FORCE && (await Deno.stat(targetPath).catch(() => null))) return;
 
   if (downloadURL) {
-    await fsp.mkdir(resDir, { recursive: true });
+    await Deno.mkdir(resDir, { recursive: true });
     await downloadFile(downloadURL, targetPath);
   }
 
   if (localPath) {
-    await fs.copyFile(localPath, targetPath, (err) => {
-      if (err) {
-        console.error("Error copying file:", err);
-      } else {
-        console.log("File was copied successfully");
-      }
-    });
+    await Deno.copyFile(localPath, targetPath);
     log_debug(`copy file finished: "${localPath}"`);
   }
 
   log_success(`${file} finished`);
 }
 
-/**
- * download file and save to `path`
- */ async function downloadFile(url, path) {
-  const options = {};
-
+/* download file and save to `path` */
+async function downloadFile(url, path) {
   const httpProxy =
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy;
+    Deno.env.get("HTTP_PROXY") ||
+    Deno.env.get("http_proxy") ||
+    Deno.env.get("HTTPS_PROXY") ||
+    Deno.env.get("https_proxy");
 
-  if (httpProxy) {
-    options.agent = new HttpsProxyAgent(httpProxy);
-  }
-
+  const options = httpProxy ? { headers: { "Proxy": httpProxy } } : {};
   const response = await fetch(url, {
     ...options,
-    method: "GET",
-    headers: { "Content-Type": "application/octet-stream" },
+    headers: { ...options.headers, "Content-Type": "application/octet-stream" },
   });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const buffer = await response.arrayBuffer();
-  await fsp.writeFile(path, new Uint8Array(buffer));
-
+  await Deno.writeFile(path, new Uint8Array(buffer));
   log_success(`download finished: ${url}`);
 }
 
-// SimpleSC.dll
-const resolvePlugin = async () => {
+/* SimpleSC.dll */
+async function resolvePlugin() {
   const url =
     "https://nsis.sourceforge.io/mediawiki/images/e/ef/NSIS_Simple_Service_Plugin_Unicode_1.30.zip";
 
-  const tempDir = path.join(TEMP_DIR, "SimpleSC");
-  const tempZip = path.join(
-    tempDir,
-    "NSIS_Simple_Service_Plugin_Unicode_1.30.zip",
-  );
-  const tempDll = path.join(tempDir, "SimpleSC.dll");
-  const pluginDir = path.join(process.env.APPDATA, "Local/NSIS");
-  const pluginPath = path.join(pluginDir, "SimpleSC.dll");
-  await fsp.mkdir(pluginDir, { recursive: true });
-  await fsp.mkdir(tempDir, { recursive: true });
-  if (!FORCE && fs.existsSync(pluginPath)) return;
+  const tempDir = join(TEMP_DIR, "SimpleSC");
+  const tempZip = join(tempDir, "NSIS_Simple_Service_Plugin_Unicode_1.30.zip");
+  const tempDll = join(tempDir, "SimpleSC.dll");
+  const pluginDir = join(Deno.env.get("APPDATA") || Deno.cwd(), "Local/NSIS");
+  const pluginPath = join(pluginDir, "SimpleSC.dll");
+
+  await Deno.mkdir(pluginDir, { recursive: true });
+  await Deno.mkdir(tempDir, { recursive: true });
+  if (!FORCE && (await Deno.stat(pluginPath).catch(() => null))) return;
+
   try {
-    if (!fs.existsSync(tempZip)) {
+    if (!(await Deno.stat(tempZip).catch(() => null))) {
       await downloadFile(url, tempZip);
     }
     const zip = new AdmZip(tempZip);
@@ -371,54 +348,49 @@ const resolvePlugin = async () => {
       log_debug(`"SimpleSC" entry name`, entry.entryName);
     });
     zip.extractAllTo(tempDir, true);
-    await fsp.cp(tempDll, pluginPath, { recursive: true, force: true });
+    await Deno.copyFile(tempDll, pluginPath);
     log_success(`unzip finished: "SimpleSC"`);
   } finally {
-    await fsp.rm(tempDir, { recursive: true, force: true });
+    await Deno.remove(tempDir, { recursive: true }).catch(() => {});
   }
-};
+}
 
-// service chmod
-const resolveServicePermission = async () => {
+/* service chmod */
+async function resolveServicePermission() {
   const serviceExecutables = [
     "clash-verge-service*",
     "install-service*",
     "uninstall-service*",
   ];
-  const resDir = path.join(cwd, "src-tauri/resources");
-  for (let f of serviceExecutables) {
-    // 使用glob模块来处理通配符
-    const files = glob.sync(path.join(resDir, f));
-    for (let filePath of files) {
-      if (fs.existsSync(filePath)) {
-        execSync(`chmod 755 ${filePath}`);
+  const resDir = join(cwd, "src-tauri/resources");
+  for (const pattern of serviceExecutables) {
+    const files = glob.sync(join(resDir, pattern));
+    for (const filePath of files) {
+      if (await Deno.stat(filePath).catch(() => null)) {
+        await Deno.run({ cmd: ["chmod", "755", filePath] }).status();
         log_success(`chmod finished: "${filePath}"`);
       }
     }
   }
-};
+}
 
-// 在 resolveResource 函数后添加新函数
+/* copy locale files */
 async function resolveLocales() {
-  const srcLocalesDir = path.join(cwd, "src/locales");
-  const targetLocalesDir = path.join(cwd, "src-tauri/resources/locales");
+  const srcLocalesDir = join(cwd, "src/locales");
+  const targetLocalesDir = join(cwd, "src-tauri/resources/locales");
 
   try {
-    // 确保目标目录存在
-    await fsp.mkdir(targetLocalesDir, { recursive: true });
-
-    // 读取所有语言文件
-    const files = await fsp.readdir(srcLocalesDir);
-
-    // 复制每个文件
+    await Deno.mkdir(targetLocalesDir, { recursive: true });
+    const files = [];
+    for await (const entry of Deno.readDir(srcLocalesDir)) {
+      files.push(entry.name);
+    }
     for (const file of files) {
-      const srcPath = path.join(srcLocalesDir, file);
-      const targetPath = path.join(targetLocalesDir, file);
-
-      await fsp.copyFile(srcPath, targetPath);
+      const srcPath = join(srcLocalesDir, file);
+      const targetPath = join(targetLocalesDir, file);
+      await Deno.copyFile(srcPath, targetPath);
       log_success(`Copied locale file: ${file}`);
     }
-
     log_success("All locale files copied successfully");
   } catch (err) {
     log_error("Error copying locale files:", err.message);
@@ -426,14 +398,12 @@ async function resolveLocales() {
   }
 }
 
-/**
- * main
- */
+/* main */
 const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
+  const ext = platform === "win32" ? ".exe" : "";
+  const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
     file: "clash-verge-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
@@ -441,8 +411,8 @@ const resolveService = () => {
 };
 
 const resolveInstall = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
+  const ext = platform === "win32" ? ".exe" : "";
+  const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
     file: "install-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/install-service${ext}`,
@@ -450,9 +420,8 @@ const resolveInstall = () => {
 };
 
 const resolveUninstall = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
-
+  const ext = platform === "win32" ? ".exe" : "";
+  const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
     file: "uninstall-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
@@ -462,32 +431,39 @@ const resolveUninstall = () => {
 const resolveMmdb = () =>
   resolveResource({
     file: "Country.mmdb",
-    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb`,
+    downloadURL:
+      "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb",
   });
+
 const resolveGeosite = () =>
   resolveResource({
     file: "geosite.dat",
-    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat`,
+    downloadURL:
+      "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat",
   });
+
 const resolveGeoIP = () =>
   resolveResource({
     file: "geoip.dat",
-    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat`,
+    downloadURL:
+      "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat",
   });
+
 const resolveEnableLoopback = () =>
   resolveResource({
     file: "enableLoopback.exe",
-    downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`,
+    downloadURL:
+      "https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe",
   });
 
 const resolveWinSysproxy = () =>
   resolveResource({
     file: "sysproxy.exe",
-    downloadURL: `https://github.com/clash-verge-rev/sysproxy/releases/download/${arch}/sysproxy.exe`,
+    downloadURL:
+      `https://github.com/clash-verge-rev/sysproxy/releases/download/${arch}/sysproxy.exe`,
   });
 
 const tasks = [
-  // { name: "clash", func: resolveClash, retry: 5 },
   {
     name: "verge-mihomo-alpha",
     func: () =>

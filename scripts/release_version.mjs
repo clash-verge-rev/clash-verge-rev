@@ -1,6 +1,6 @@
-import fs from "fs/promises";
-import path from "path";
-import { program } from "commander";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { program } from "npm:commander";
 
 /**
  * 验证版本号格式

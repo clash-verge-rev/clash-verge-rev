@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import path from "path";
+import path from "node:path";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react";
 import legacy from "@vitejs/plugin-legacy";

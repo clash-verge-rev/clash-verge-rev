@@ -1,0 +1,57 @@
+{
+  "tasks": {
+    "dev": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
+    "dev:diff": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
+    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
+    "build:fast": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build -- --profile fast-release",
+    "tauri": "tauri",
+    "web:dev": "vite",
+    "web:build": "tsc --noEmit && vite build",
+    "web:serve": "vite preview",
+    "prepare": "deno --allow-env --allow-read --allow-write --allow-run --allow-net ./scripts/resource_fetch.mjs",
+    "updater": "deno --allow-env scripts/updater.mjs",
+    "updater-fixed-webview2": "deno --allow-env scripts/updater-fixed-webview2.mjs",
+    "portable": "deno scripts/portable.mjs",
+    "portable-fixed-webview2": "deno --allow-env scripts/portable-fixed-webview2.mjs",
+    "fix-alpha-version": "deno --allow-env --allow-read --allow-run --allow-write scripts/fix-alpha_version.mjs",
+    "release-version": "deno scripts/release_version.mjs",
+    "release-alpha-version": "deno --allow-read --allow-write --allow-run scripts/release-alpha_version.mjs",
+    "dmm": "deno run -A https://deno.land/x/dmm/mod.ts update",
+    "clean": "cargo clean --manifest-path ./src-tauri/Cargo.toml",
+    "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
+    "clippy": "cargo clippy --manifest-path ./src-tauri/Cargo.toml"
+  },
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "deno.window"
+    ],
+    "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  },
+  "lint": {
+    "include": ["src/"],
+    "rules": {
+      "exclude": ["no-explicit-any"]
+    }
+  },
+  "importMap": "./imports.json",
+  "node": {
+    "specifiers": [
+      "buffer",
+      "crypto",
+      "events",
+      "fs",
+      "os",
+      "path",
+      "process",
+      "stream",
+      "url",
+      "util"
+    ]
+  }
+}

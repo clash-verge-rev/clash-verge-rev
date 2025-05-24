@@ -1,8 +1,8 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import AdmZip from "adm-zip";
-import { createRequire } from "module";
-import fsp from "fs/promises";
+import { createRequire } from "node:module";
+import fsp from "node:fs/promises";
 
 const target = process.argv.slice(2)[0];
 const ARCH_MAP = {
