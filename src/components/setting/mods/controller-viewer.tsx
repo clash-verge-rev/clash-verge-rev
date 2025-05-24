@@ -199,7 +199,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                 size="small"
                 onClick={handleGeneratePort}
                 color="primary"
-                disabled={autoGenerate || isSaving || isRestarting}
+                disabled={autoGenerate || isSaving }
               >
                 <RefreshRounded fontSize="small" />
               </IconButton>
@@ -213,7 +213,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               value={controller}
               placeholder="Required"
               onChange={(e) => setController(e.target.value)}
-              disabled={autoGenerate || isSaving || isRestarting}
+              disabled={autoGenerate || isSaving }
             />
             {autoGenerate && (
               <Tooltip title={t("Copy to clipboard")}>
@@ -221,7 +221,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                   size="small"
                   onClick={() => handleCopyToClipboard(controller, "controller")}
                   color="primary"
-                  disabled={isSaving || isRestarting}
+                  disabled={isSaving }
                 >
                   <ContentCopy fontSize="small" />
                 </IconButton>
@@ -238,7 +238,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                 size="small"
                 onClick={handleGenerateSecret}
                 color="primary"
-                disabled={autoGenerate || isSaving || isRestarting}
+                disabled={autoGenerate || isSaving }
               >
                 <RefreshRounded fontSize="small" />
               </IconButton>
@@ -254,7 +254,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               onChange={(e) =>
                 setSecret(e.target.value?.replace(/[^\x00-\x7F]/g, ""))
               }
-              disabled={autoGenerate || isSaving || isRestarting}
+              disabled={autoGenerate || isSaving }
             />
             {autoGenerate && (
               <Tooltip title={t("Copy to clipboard")}>
@@ -262,7 +262,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                   size="small"
                   onClick={() => handleCopyToClipboard(secret, "secret")}
                   color="primary"
-                  disabled={isSaving || isRestarting}
+                  disabled={isSaving }
                 >
                   <ContentCopy fontSize="small" />
                 </IconButton>
@@ -286,7 +286,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                 checked={autoGenerate}
                 onChange={() => setAutoGenerate(!autoGenerate)}
                 color="primary"
-                disabled={isSaving || isRestarting}
+                disabled={isSaving }
               />
             }
             label={autoGenerate ? t("On") : t("Off")}
