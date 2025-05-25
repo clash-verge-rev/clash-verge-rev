@@ -761,10 +761,6 @@ SectionEnd
 
 
 Section Install
-  ;删除 .window-state.json 文件
-  SetShellVarContext current
-  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
-
   SetOutPath $INSTDIR
   nsExec::Exec 'netsh int tcp res'
   !insertmacro CheckIfAppIsRunning
@@ -985,14 +981,21 @@ Section Uninstall
   !insertmacro DeleteAppUserModelId
   !insertmacro UnpinShortcut "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk"
   !insertmacro UnpinShortcut "$DESKTOP\${PRODUCTNAME}.lnk"
+  ; 兼容旧名称快捷方式
+  !insertmacro UnpinShortcut "$SMPROGRAMS\$AppStartMenuFolder\clash-verge.lnk"
+  !insertmacro UnpinShortcut "$DESKTOP\clash-verge.lnk"
 
   ; Remove start menu shortcut
   !insertmacro MUI_STARTMENU_GETFOLDER Application $AppStartMenuFolder
   Delete "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk"
+  ; 兼容旧名称快捷方式
+  Delete "$SMPROGRAMS\$AppStartMenuFolder\clash-verge.lnk"
   RMDir "$SMPROGRAMS\$AppStartMenuFolder"
 
   ; Remove desktop shortcuts
   Delete "$DESKTOP\${PRODUCTNAME}.lnk"
+  ; 兼容旧名称快捷方式
+  Delete "$DESKTOP\clash-verge.lnk"
 
   ; Remove registry information for add/remove programs
   !if "${INSTALLMODE}" == "both"
