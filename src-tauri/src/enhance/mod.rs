@@ -261,16 +261,29 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         use crate::utils::dirs;
         use std::fs;
 
-        // 尝试读取dns_config.yaml
         if let Ok(app_dir) = dirs::app_home_dir() {
             let dns_path = app_dir.join("dns_config.yaml");
 
             if dns_path.exists() {
                 if let Ok(dns_yaml) = fs::read_to_string(&dns_path) {
                     if let Ok(dns_config) = serde_yaml::from_str::<serde_yaml::Mapping>(&dns_yaml) {
-                        // 将DNS配置合并到最终配置中
-                        config.insert("dns".into(), dns_config.into());
-                        log::info!(target: "app", "apply dns_config.yaml");
+                        // 处理hosts配置
+                        if let Some(hosts_value) = dns_config.get("hosts") {
+                            if hosts_value.is_mapping() {
+                                config.insert("hosts".into(), hosts_value.clone());
+                                log::info!(target: "app", "apply hosts configuration");
+                            }
+                        }
+
+                        if let Some(dns_value) = dns_config.get("dns") {
+                            if let Some(dns_mapping) = dns_value.as_mapping() {
+                                config.insert("dns".into(), dns_mapping.clone().into());
+                                log::info!(target: "app", "apply dns_config.yaml (dns section)");
+                            }
+                        } else {
+                            config.insert("dns".into(), dns_config.into());
+                            log::info!(target: "app", "apply dns_config.yaml");
+                        }
                     }
                 }
             }

@@ -207,6 +207,7 @@ interface IProfileOption {
   with_proxy?: boolean;
   self_proxy?: boolean;
   update_interval?: number;
+  timeout_seconds?: number;
   danger_accept_invalid_certs?: boolean;
   merge?: string;
   script?: string;
@@ -749,6 +750,7 @@ interface IVergeConfig {
   enable_dns_settings?: boolean;
   proxy_auto_config?: boolean;
   pac_file_content?: string;
+  proxy_host?: string;
   enable_random_port?: boolean;
   verge_mixed_port?: number;
   verge_socks_port?: number;
@@ -783,7 +785,7 @@ interface IVergeConfig {
   default_latency_test?: string;
   default_latency_timeout?: number;
   enable_builtin_enhanced?: boolean;
-  auto_log_clean?: 0 | 1 | 2 | 3;
+  auto_log_clean?: 0 | 1 | 2 | 3 | 4;
   proxy_layout_column?: number;
   test_list?: IVergeTestItem[];
   webdav_url?: string;

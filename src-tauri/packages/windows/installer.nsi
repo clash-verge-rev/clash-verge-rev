@@ -761,6 +761,10 @@ SectionEnd
 
 
 Section Install
+  ;删除 .window-state.json 文件
+  SetShellVarContext current
+  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
+
   SetOutPath $INSTDIR
   nsExec::Exec 'netsh int tcp res'
   !insertmacro CheckIfAppIsRunning
@@ -916,6 +920,10 @@ FunctionEnd
 !macroend
 
 Section Uninstall
+  ;删除 .window-state.json 文件
+  SetShellVarContext current
+  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
+
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
   !insertmacro RemoveVergeService
@@ -1003,6 +1011,10 @@ Section Uninstall
     RmDir /r "$APPDATA\${BUNDLEID}"
     RmDir /r "$LOCALAPPDATA\${BUNDLEID}"
   ${EndIf}
+
+  ;删除 .window-state.json 文件
+  SetShellVarContext current
+  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
 
   ${GetOptions} $CMDLINE "/P" $R0
   IfErrors +2 0

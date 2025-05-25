@@ -32,13 +32,13 @@ impl IClashTemp {
     pub fn template() -> Self {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
+        let mut cors_map = Mapping::new();
         tun.insert("enable".into(), false.into());
         tun.insert("stack".into(), "gvisor".into());
         tun.insert("auto-route".into(), true.into());
         tun.insert("strict-route".into(), false.into());
         tun.insert("auto-detect-interface".into(), true.into());
         tun.insert("dns-hijack".into(), vec!["any:53"].into());
-
         #[cfg(not(target_os = "windows"))]
         map.insert("redir-port".into(), 7895.into());
         #[cfg(target_os = "linux")]
@@ -46,13 +46,24 @@ impl IClashTemp {
         map.insert("mixed-port".into(), 7897.into());
         map.insert("socks-port".into(), 7898.into());
         map.insert("port".into(), 7899.into());
-        map.insert("log-level".into(), "info".into());
+        map.insert("log-level".into(), "warning".into());
         map.insert("allow-lan".into(), false.into());
+        map.insert("ipv6".into(), true.into());
         map.insert("mode".into(), "rule".into());
         map.insert("external-controller".into(), "127.0.0.1:9097".into());
-        let mut cors_map = Mapping::new();
         cors_map.insert("allow-private-network".into(), true.into());
-        cors_map.insert("allow-origins".into(), vec!["*"].into());
+        cors_map.insert(
+            "allow-origins".into(),
+            vec![
+                "tauri://localhost",
+                "http://tauri.localhost",
+                "http://localhost:3000",
+                "https://yacd.metacubex.one",
+                "https://metacubex.github.io",
+                "https://board.zash.run.place",
+            ]
+            .into(),
+        );
         map.insert("secret".into(), "".into());
         map.insert("tun".into(), tun.into());
         map.insert("external-controller-cors".into(), cors_map.into());
@@ -77,6 +88,24 @@ impl IClashTemp {
         config.insert("socks-port".into(), socks_port.into());
         config.insert("port".into(), port.into());
         config.insert("external-controller".into(), ctrl.into());
+
+        // 强制覆盖 external-controller-cors 字段，允许本地和 tauri 前端
+        let mut cors_map = Mapping::new();
+        cors_map.insert("allow-private-network".into(), true.into());
+        cors_map.insert(
+            "allow-origins".into(),
+            vec![
+                "tauri://localhost",
+                "http://tauri.localhost",
+                "http://localhost:3000",
+                "https://yacd.metacubex.one",
+                "https://metacubex.github.io",
+                "https://board.zash.run.place",
+            ]
+            .into(),
+        );
+        config.insert("external-controller-cors".into(), cors_map.into());
+
         config
     }
 
@@ -318,6 +347,13 @@ fn test_clash_info() {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
+pub struct IClashExternalControllerCors {
+    pub allow_origins: Option<Vec<String>>,
+    pub allow_private_network: Option<bool>,
+}
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
 pub struct IClash {
     pub mixed_port: Option<u16>,
     pub allow_lan: Option<bool>,
@@ -329,6 +365,7 @@ pub struct IClash {
     pub dns: Option<IClashDNS>,
     pub tun: Option<IClashTUN>,
     pub interface_name: Option<String>,
+    pub external_controller_cors: Option<IClashExternalControllerCors>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]

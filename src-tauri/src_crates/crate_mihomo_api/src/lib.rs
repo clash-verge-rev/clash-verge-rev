@@ -9,23 +9,32 @@ pub use model::{MihomoData, MihomoManager};
 
 impl MihomoManager {
     pub fn new(mihomo_server: String, headers: HeaderMap) -> Self {
+        let client = reqwest::ClientBuilder::new()
+            .default_headers(headers)
+            .no_proxy()
+            .timeout(Duration::from_secs(15))
+            .pool_max_idle_per_host(5)
+            .pool_idle_timeout(Duration::from_secs(15))
+            .build()
+            .expect("Failed to build reqwest client");
+
         Self {
             mihomo_server,
             data: Arc::new(Mutex::new(MihomoData {
                 proxies: serde_json::Value::Null,
                 providers_proxies: serde_json::Value::Null,
             })),
-            headers,
+            client,
         }
     }
 
     fn update_proxies(&self, proxies: serde_json::Value) {
-        let mut data = self.data.lock().unwrap();
+        let mut data = self.data.lock().expect("Mutex poisoned");
         data.proxies = proxies;
     }
 
     fn update_providers_proxies(&self, providers_proxies: serde_json::Value) {
-        let mut data = self.data.lock().unwrap();
+        let mut data = self.data.lock().expect("Mutex poisoned");
         data.providers_proxies = providers_proxies;
     }
 
@@ -34,12 +43,12 @@ impl MihomoManager {
     }
 
     pub fn get_proxies(&self) -> serde_json::Value {
-        let data = self.data.lock().unwrap();
+        let data = self.data.lock().expect("Mutex poisoned");
         data.proxies.clone()
     }
 
     pub fn get_providers_proxies(&self) -> serde_json::Value {
-        let data = self.data.lock().unwrap();
+        let data = self.data.lock().expect("Mutex poisoned");
         data.providers_proxies.clone()
     }
 
@@ -49,12 +58,8 @@ impl MihomoManager {
         url: String,
         data: Option<serde_json::Value>,
     ) -> Result<serde_json::Value, String> {
-        let client_response = reqwest::ClientBuilder::new()
-            .default_headers(self.headers.clone())
-            .no_proxy()
-            .timeout(Duration::from_secs(60))
-            .build()
-            .map_err(|e| e.to_string())?
+        let client_response = self
+            .client
             .request(method.clone(), &url)
             .json(&data.unwrap_or(json!({})))
             .send()
@@ -94,6 +99,19 @@ impl MihomoManager {
         let providers_proxies = self.send_request(Method::GET, url, None).await?;
         self.update_providers_proxies(providers_proxies);
         Ok(self)
+    }
+
+    pub async fn close_all_connections(&self) -> Result<(), String> {
+        let url = format!("{}/connections", self.mihomo_server);
+        let response = self.send_request(Method::DELETE, url, None).await?;
+        if response["code"] == 204 {
+            Ok(())
+        } else {
+            Err(response["message"]
+                .as_str()
+                .unwrap_or("unknown error")
+                .to_string())
+        }
     }
 }
 

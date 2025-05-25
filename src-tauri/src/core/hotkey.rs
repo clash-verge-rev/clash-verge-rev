@@ -3,13 +3,14 @@ use crate::{
     core::handle,
     feat, logging, logging_error,
     module::lightweight::entry_lightweight_mode,
+    process::AsyncHandler,
     utils::{logging::Type, resolve},
 };
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
-use tauri::{async_runtime, Manager};
+use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
 
 pub struct Hotkey {
@@ -153,7 +154,7 @@ impl Hotkey {
                     );
 
                     // 使用 spawn_blocking 来确保在正确的线程上执行
-                    async_runtime::spawn_blocking(|| {
+                    AsyncHandler::spawn_blocking(|| {
                         logging!(debug, Type::Hotkey, "Toggle dashboard window visibility");
 
                         // 检查窗口是否存在
@@ -195,7 +196,7 @@ impl Hotkey {
             "toggle_system_proxy" => || feat::toggle_system_proxy(),
             "toggle_tun_mode" => || feat::toggle_tun_mode(None),
             "entry_lightweight_mode" => || entry_lightweight_mode(),
-            "quit" => || feat::quit(Some(0)),
+            "quit" => || feat::quit(),
             #[cfg(target_os = "macos")]
             "hide" => || feat::hide(),
 

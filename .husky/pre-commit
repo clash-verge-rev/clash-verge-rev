@@ -3,14 +3,16 @@
 #pnpm pretty-quick --staged
 
 # 运行 clippy fmt
-cargo fmt --manifest-path ./src-tauri/Cargo.toml
+cd src-tauri
+cargo fmt
 
 if [ $? -ne 0 ]; then
     echo "rustfmt failed to format the code. Please fix the issues and try again."
     exit 1
 fi
+cd ..
 
-#git add .
+git add .
 
 # 允许提交
 exit 0

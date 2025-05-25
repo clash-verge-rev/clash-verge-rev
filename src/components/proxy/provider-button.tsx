@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { proxyProviderUpdate } from "@/services/api";
 import { useAppData } from "@/providers/app-data-provider";
-import { Notice } from "@/components/base";
+import { showNotice } from "@/services/noticeService";
 import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
 import dayjs from "dayjs";
 import parseTraffic from "@/utils/parse-traffic";
@@ -81,9 +81,9 @@ export const ProviderButton = () => {
       await refreshProxy();
       await refreshProxyProviders();
       
-      Notice.success(`${name} 更新成功`);
+      showNotice('success', `${name} 更新成功`);
     } catch (err: any) {
-      Notice.error(`${name} 更新失败: ${err?.message || err.toString()}`);
+      showNotice('error', `${name} 更新失败: ${err?.message || err.toString()}`);
     } finally {
       // 清除更新状态
       setUpdating(prev => ({ ...prev, [name]: false }));
@@ -96,7 +96,7 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(proxyProviders || {});
       if (allProviders.length === 0) {
-        Notice.info("没有可更新的代理提供者");
+        showNotice('info', "没有可更新的代理提供者");
         return;
       }
       
@@ -123,9 +123,9 @@ export const ProviderButton = () => {
       await refreshProxy();
       await refreshProxyProviders();
       
-      Notice.success("全部代理提供者更新成功");
+      showNotice('success', "全部代理提供者更新成功");
     } catch (err: any) {
-      Notice.error(`更新失败: ${err?.message || err.toString()}`);
+      showNotice('error', `更新失败: ${err?.message || err.toString()}`);
     } finally {
       // 清除所有更新状态
       setUpdating({});

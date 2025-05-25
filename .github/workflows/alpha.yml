@@ -267,6 +267,9 @@ jobs:
       - name: Release Alpha Version
         run: pnpm release-alpha-version
 
+      - name: Patch Alpha Hash
+        run: pnpm fix-alpha-version
+
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
@@ -336,6 +339,9 @@ jobs:
       - name: Release Alpha Version
         run: pnpm release-alpha-version
 
+      - name: Patch Alpha Hash
+        run: pnpm fix-alpha-version
+
       - name: "Setup for linux"
         run: |-
           sudo ls -lR /etc/apt/
@@ -356,9 +362,14 @@ jobs:
           sudo mv /tmp/sources.list /etc/apt/sources.list
 
           sudo dpkg --add-architecture ${{ matrix.arch }}
-          sudo apt update
+          sudo apt-get update -y
+          sudo apt-get -f install -y
 
-          sudo apt install -y \
+          sudo apt-get install -y \
+            linux-libc-dev:${{ matrix.arch }} \
+            libc6-dev:${{ matrix.arch }}
+
+          sudo apt-get install -y \
             libxslt1.1:${{ matrix.arch }} \
             libwebkit2gtk-4.1-dev:${{ matrix.arch }} \
             libayatana-appindicator3-dev:${{ matrix.arch }} \
@@ -458,6 +469,9 @@ jobs:
 
       - name: Release Alpha Version
         run: pnpm release-alpha-version
+
+      - name: Patch Alpha Hash
+        run: pnpm fix-alpha-version
 
       - name: Download WebView2 Runtime
         run: |

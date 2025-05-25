@@ -3,6 +3,7 @@ use crate::{
     core::{handle, tray, CoreManager},
     logging_error,
     module::mihomo::MihomoManager,
+    process::AsyncHandler,
     utils::{logging::Type, resolve},
 };
 use serde_yaml::{Mapping, Value};
@@ -10,7 +11,7 @@ use tauri::Manager;
 
 /// Restart the Clash core
 pub fn restart_clash_core() {
-    tauri::async_runtime::spawn(async {
+    AsyncHandler::spawn(move || async move {
         match CoreManager::global().restart_core().await {
             Ok(_) => {
                 handle::Handle::refresh_clash();
@@ -26,19 +27,17 @@ pub fn restart_clash_core() {
 
 /// Restart the application
 pub fn restart_app() {
-    tauri::async_runtime::spawn_blocking(|| {
-        tauri::async_runtime::block_on(async {
-            logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
-            resolve::resolve_reset_async().await;
-            let app_handle = handle::Handle::global().app_handle().unwrap();
-            std::thread::sleep(std::time::Duration::from_secs(1));
-            tauri::process::restart(&app_handle.env());
-        });
+    AsyncHandler::spawn(move || async move {
+        logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+        resolve::resolve_reset_async().await;
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        tauri::process::restart(&app_handle.env());
     });
 }
 
 fn after_change_clash_mode() {
-    tauri::async_runtime::spawn(async {
+    AsyncHandler::spawn(move || async {
         match MihomoManager::global().get_connections().await {
             Ok(connections) => {
                 if let Some(connections_array) = connections["connections"].as_array() {
@@ -64,7 +63,7 @@ pub fn change_clash_mode(mode: String) {
     let json_value = serde_json::json!({
         "mode": mode
     });
-    tauri::async_runtime::spawn(async move {
+    AsyncHandler::spawn(move || async move {
         log::debug!(target: "app", "change clash mode to {mode}");
         match MihomoManager::global().patch_configs(json_value).await {
             Ok(_) => {
@@ -92,36 +91,26 @@ pub fn change_clash_mode(mode: String) {
 
 /// Test connection delay to a URL
 pub async fn test_delay(url: String) -> anyhow::Result<u32> {
-    use tokio::time::{Duration, Instant};
-    let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
+    use crate::utils::network::{NetworkManager, ProxyType};
+    use tokio::time::Instant;
 
-    let port = Config::verge()
-        .latest()
-        .verge_mixed_port
-        .unwrap_or(Config::clash().data().get_mixed_port());
     let tun_mode = Config::verge().latest().enable_tun_mode.unwrap_or(false);
 
-    let proxy_scheme = format!("http://127.0.0.1:{port}");
+    // 如果是TUN模式，不使用代理，否则使用自身代理
+    let proxy_type = if !tun_mode {
+        ProxyType::Localhost
+    } else {
+        ProxyType::None
+    };
 
-    if !tun_mode {
-        if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
-            builder = builder.proxy(proxy);
-        }
-        if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
-            builder = builder.proxy(proxy);
-        }
-        if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
-            builder = builder.proxy(proxy);
-        }
-    }
+    let user_agent = Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0".to_string());
 
-    let request = builder
-        .timeout(Duration::from_millis(10000))
-        .build()?
-        .get(url).header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
     let start = Instant::now();
 
-    let response = request.send().await;
+    let response = NetworkManager::global()
+        .get_with_interrupt(&url, proxy_type, Some(10), user_agent, false)
+        .await;
+
     match response {
         Ok(response) => {
             log::trace!(target: "app", "test_delay response: {:#?}", response);
@@ -133,7 +122,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
         }
         Err(err) => {
             log::trace!(target: "app", "test_delay error: {:#?}", err);
-            Err(err.into())
+            Err(err)
         }
     }
 }

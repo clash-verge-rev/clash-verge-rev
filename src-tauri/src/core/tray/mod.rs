@@ -5,28 +5,33 @@ pub mod speed_rate;
 use crate::{
     cmd,
     config::Config,
-    feat,
-    module::{lightweight::entry_lightweight_mode, mihomo::Rate},
+    feat, logging,
+    module::{
+        lightweight::{entry_lightweight_mode, is_in_lightweight_mode},
+        mihomo::Rate,
+    },
     resolve,
-    utils::{dirs::find_target_icons, i18n::t, logging::Type, resolve::VERSION},
+    utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
+    Type,
 };
 
 use anyhow::Result;
 #[cfg(target_os = "macos")]
 use futures::StreamExt;
-#[cfg(target_os = "macos")]
 use parking_lot::Mutex;
 #[cfg(target_os = "macos")]
 use parking_lot::RwLock;
 #[cfg(target_os = "macos")]
 pub use speed_rate::{SpeedRate, Traffic};
 use std::fs;
+use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(target_os = "macos")]
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
-    App, AppHandle, Wry,
+    AppHandle, Wry,
 };
 #[cfg(target_os = "macos")]
 use tokio::sync::broadcast;
@@ -42,10 +47,15 @@ pub struct Tray {
     shutdown_tx: Arc<RwLock<Option<broadcast::Sender<()>>>>,
     is_subscribed: Arc<RwLock<bool>>,
     pub rate_cache: Arc<Mutex<Option<Rate>>>,
+    last_menu_update: Mutex<Option<Instant>>,
+    menu_updating: AtomicBool,
 }
 
 #[cfg(not(target_os = "macos"))]
-pub struct Tray {}
+pub struct Tray {
+    last_menu_update: Mutex<Option<Instant>>,
+    menu_updating: AtomicBool,
+}
 
 impl TrayState {
     pub fn get_common_tray_icon() -> (bool, Vec<u8>) {
@@ -160,10 +170,15 @@ impl Tray {
             shutdown_tx: Arc::new(RwLock::new(None)),
             is_subscribed: Arc::new(RwLock::new(false)),
             rate_cache: Arc::new(Mutex::new(None)),
+            last_menu_update: Mutex::new(None),
+            menu_updating: AtomicBool::new(false),
         });
 
         #[cfg(not(target_os = "macos"))]
-        return TRAY.get_or_init(|| Tray {});
+        return TRAY.get_or_init(|| Tray {
+            last_menu_update: Mutex::new(None),
+            menu_updating: AtomicBool::new(false),
+        });
     }
 
     pub fn init(&self) -> Result<()> {
@@ -172,45 +187,6 @@ impl Tray {
             let mut speed_rate = self.speed_rate.lock();
             *speed_rate = Some(SpeedRate::new());
         }
-        Ok(())
-    }
-
-    pub fn create_systray(&self, app: &App) -> Result<()> {
-        let mut builder = TrayIconBuilder::with_id("main")
-            .icon(app.default_window_icon().unwrap().clone())
-            .icon_as_template(false);
-
-        #[cfg(any(target_os = "macos", target_os = "windows"))]
-        {
-            let tray_event = { Config::verge().latest().tray_event.clone() };
-            let tray_event: String = tray_event.unwrap_or("main_window".into());
-            if tray_event.as_str() != "tray_menu" {
-                builder = builder.show_menu_on_left_click(false);
-            }
-        }
-
-        let tray = builder.build(app)?;
-
-        tray.on_tray_icon_event(|_, event| {
-            let tray_event = { Config::verge().latest().tray_event.clone() };
-            let tray_event: String = tray_event.unwrap_or("main_window".into());
-            log::debug!(target: "app","tray event: {:?}", tray_event);
-
-            if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Down,
-                ..
-            } = event
-            {
-                match tray_event.as_str() {
-                    "system_proxy" => feat::toggle_system_proxy(),
-                    "tun_mode" => feat::toggle_tun_mode(None),
-                    "main_window" => resolve::create_window(true),
-                    _ => {}
-                }
-            }
-        });
-        tray.on_menu_event(on_menu_event);
         Ok(())
     }
 
@@ -227,9 +203,50 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘菜单
+    /// 更新托盘菜单（带频率限制）
     pub fn update_menu(&self) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        // 检查是否正在更新或距离上次更新太近
+        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
+
+        // 检查是否已有更新任务在执行
+        if self.menu_updating.load(Ordering::Acquire) {
+            log::debug!(target: "app", "托盘菜单正在更新中，跳过本次更新");
+            return Ok(());
+        }
+
+        // 检查更新频率
+        {
+            let last_update = self.last_menu_update.lock();
+            if let Some(last_time) = *last_update {
+                if last_time.elapsed() < MIN_UPDATE_INTERVAL {
+                    log::debug!(target: "app", "托盘菜单更新频率过高，跳过本次更新");
+                    return Ok(());
+                }
+            }
+        }
+
+        let app_handle = match handle::Handle::global().app_handle() {
+            Some(handle) => handle,
+            None => {
+                log::warn!(target: "app", "更新托盘菜单失败: app_handle不存在");
+                return Ok(()); // 早期返回，避免panic
+            }
+        };
+
+        // 设置更新状态
+        self.menu_updating.store(true, Ordering::Release);
+
+        let result = self.update_menu_internal(&app_handle);
+
+        {
+            let mut last_update = self.last_menu_update.lock();
+            *last_update = Some(Instant::now());
+        }
+        self.menu_updating.store(false, Ordering::Release);
+
+        result
+    }
+    fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -246,26 +263,49 @@ impl Tray {
             .data()
             .all_profile_uid_and_name()
             .unwrap_or_default();
+        let is_lightweight_mode = is_in_lightweight_mode();
 
-        let tray = app_handle.tray_by_id("main").unwrap();
-        let _ = tray.set_menu(Some(create_tray_menu(
-            &app_handle,
-            Some(mode.as_str()),
-            *system_proxy,
-            *tun_mode,
-            profile_uid_and_name,
-        )?));
-        Ok(())
+        match app_handle.tray_by_id("main") {
+            Some(tray) => {
+                let _ = tray.set_menu(Some(create_tray_menu(
+                    &app_handle,
+                    Some(mode.as_str()),
+                    *system_proxy,
+                    *tun_mode,
+                    profile_uid_and_name,
+                    is_lightweight_mode,
+                )?));
+                log::debug!(target: "app", "托盘菜单更新成功");
+                Ok(())
+            }
+            None => {
+                log::warn!(target: "app", "更新托盘菜单失败: 托盘不存在");
+                Ok(())
+            }
+        }
     }
 
     /// 更新托盘图标
     pub fn update_icon(&self, rate: Option<Rate>) -> Result<()> {
+        let app_handle = match handle::Handle::global().app_handle() {
+            Some(handle) => handle,
+            None => {
+                log::warn!(target: "app", "更新托盘图标失败: app_handle不存在");
+                return Ok(());
+            }
+        };
+
+        let tray = match app_handle.tray_by_id("main") {
+            Some(tray) => tray,
+            None => {
+                log::warn!(target: "app", "更新托盘图标失败: 托盘不存在");
+                return Ok(());
+            }
+        };
+
         let verge = Config::verge().latest().clone();
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        let tray = app_handle.tray_by_id("main").unwrap();
 
         let (is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
             (true, true) => TrayState::get_tun_tray_icon(),
@@ -275,7 +315,7 @@ impl Tray {
         };
         #[cfg(target_os = "macos")]
         {
-            let enable_tray_speed = verge.enable_tray_speed.unwrap_or(true);
+            let enable_tray_speed = verge.enable_tray_speed.unwrap_or(false);
             let enable_tray_icon = verge.enable_tray_icon.unwrap_or(true);
             let colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
             let is_colorful = colorful == "colorful";
@@ -290,8 +330,12 @@ impl Tray {
                 Some(rate)
             } else {
                 let guard = self.speed_rate.lock();
-                if let Some(rate) = guard.as_ref().unwrap().get_curent_rate() {
-                    Some(rate)
+                if let Some(guard) = guard.as_ref() {
+                    if let Some(rate) = guard.get_curent_rate() {
+                        Some(rate)
+                    } else {
+                        Some(Rate::default())
+                    }
                 } else {
                     Some(Rate::default())
                 }
@@ -308,9 +352,10 @@ impl Tray {
                 };
 
                 let rate = rate_guard.as_ref();
-                let rate_bytes = SpeedRate::add_speed_text(is_custom_icon, bytes, rate).unwrap();
-                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
-                let _ = tray.set_icon_as_template(!is_custom_icon && !is_colorful);
+                if let Ok(rate_bytes) = SpeedRate::add_speed_text(is_custom_icon, bytes, rate) {
+                    let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
+                    let _ = tray.set_icon_as_template(!is_custom_icon && !is_colorful);
+                }
             }
             Ok(())
         }
@@ -324,8 +369,21 @@ impl Tray {
 
     /// 更新托盘提示
     pub fn update_tooltip(&self) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        let version = VERSION.get().unwrap();
+        let app_handle = match handle::Handle::global().app_handle() {
+            Some(handle) => handle,
+            None => {
+                log::warn!(target: "app", "更新托盘提示失败: app_handle不存在");
+                return Ok(());
+            }
+        };
+
+        let version = match VERSION.get() {
+            Some(v) => v,
+            None => {
+                log::warn!(target: "app", "更新托盘提示失败: 版本信息不存在");
+                return Ok(());
+            }
+        };
 
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -342,23 +400,28 @@ impl Tray {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         if let Some(current_profile_uid) = profiles.get_current() {
-            let current_profile = profiles.get_item(&current_profile_uid);
-            current_profile_name = match &current_profile.unwrap().name {
-                Some(profile_name) => profile_name.to_string(),
-                None => current_profile_name,
-            };
+            if let Ok(profile) = profiles.get_item(&current_profile_uid) {
+                current_profile_name = match &profile.name {
+                    Some(profile_name) => profile_name.to_string(),
+                    None => current_profile_name,
+                };
+            }
         };
 
-        let tray = app_handle.tray_by_id("main").unwrap();
-        let _ = tray.set_tooltip(Some(&format!(
-            "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
-            t("SysProxy"),
-            switch_map[system_proxy],
-            t("TUN"),
-            switch_map[tun_mode],
-            t("Profile"),
-            current_profile_name
-        )));
+        if let Some(tray) = app_handle.tray_by_id("main") {
+            let _ = tray.set_tooltip(Some(&format!(
+                "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
+                t("SysProxy"),
+                switch_map[system_proxy],
+                t("TUN"),
+                switch_map[tun_mode],
+                t("Profile"),
+                current_profile_name
+            )));
+        } else {
+            log::warn!(target: "app", "更新托盘提示失败: 托盘不存在");
+        }
+
         Ok(())
     }
 
@@ -377,52 +440,134 @@ impl Tray {
         // 如果已经订阅，先取消订阅
         if *self.is_subscribed.read() {
             self.unsubscribe_traffic();
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         }
 
-        let (shutdown_tx, shutdown_rx) = broadcast::channel(1);
+        let (shutdown_tx, shutdown_rx) = broadcast::channel(3);
         *self.shutdown_tx.write() = Some(shutdown_tx);
         *self.is_subscribed.write() = true;
 
         let speed_rate = Arc::clone(&self.speed_rate);
         let is_subscribed = Arc::clone(&self.is_subscribed);
 
-        tauri::async_runtime::spawn(async move {
-            let mut shutdown = shutdown_rx;
+        // 使用单线程防止阻塞主线程
+        std::thread::Builder::new()
+            .name("traffic-monitor".into())
+            .spawn(move || {
+                let rt = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .expect("Failed to build tokio runtime for traffic monitor");
+                // 在单独的运行时中执行异步任务
+                rt.block_on(async move {
+                    let mut shutdown = shutdown_rx;
+                    let speed_rate = speed_rate.clone();
+                    let is_subscribed = is_subscribed.clone();
+                    let mut consecutive_errors = 0;
+                    let max_consecutive_errors = 5;
 
-            'outer: loop {
-                match Traffic::get_traffic_stream().await {
-                    Ok(mut stream) => loop {
-                        tokio::select! {
-                            Some(traffic) = stream.next() => {
-                                if let Ok(traffic) = traffic {
-                                    let guard = speed_rate.lock();
-                                    let enable_tray_speed: bool = Config::verge().latest().enable_tray_speed.unwrap_or(true);
-                                    if !enable_tray_speed {
-                                        continue;
-                                    }
-                                    if let Some(sr) = guard.as_ref() {
-                                        if let Some(rate) = sr.update_and_check_changed(traffic.up, traffic.down) {
-                                            let _ = Tray::global().update_icon(Some(rate));
+                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(10));
+
+                    'outer: loop {
+                        if !*is_subscribed.read() {
+                            log::info!(target: "app", "Traffic subscription has been cancelled");
+                            break;
+                        }
+
+                        match tokio::time::timeout(
+                            std::time::Duration::from_secs(5),
+                            Traffic::get_traffic_stream()
+                        ).await {
+                            Ok(stream_result) => {
+                                match stream_result {
+                                    Ok(mut stream) => {
+                                        consecutive_errors = 0;
+
+                                        loop {
+                                            tokio::select! {
+                                                traffic_result = stream.next() => {
+                                                    match traffic_result {
+                                                        Some(Ok(traffic)) => {
+                                                            if let Ok(Some(rate)) = tokio::time::timeout(
+                                                                std::time::Duration::from_millis(50),
+                                                                async {
+                                                                    let guard = speed_rate.try_lock();
+                                                                    if let Some(guard) = guard {
+                                                                        if let Some(sr) = guard.as_ref() {
+                                                                            sr.update_and_check_changed(traffic.up, traffic.down)
+                                                                        } else {
+                                                                            None
+                                                                        }
+                                                                    } else {
+                                                                        None
+                                                                    }
+                                                                }
+                                                            ).await {
+                                                                let _ = tokio::time::timeout(
+                                                                    std::time::Duration::from_millis(100),
+                                                                    async { let _ = Tray::global().update_icon(Some(rate)); }
+                                                                ).await;
+                                                            }
+                                                        },
+                                                        Some(Err(e)) => {
+                                                            log::error!(target: "app", "Traffic stream error: {}", e);
+                                                            consecutive_errors += 1;
+                                                            if consecutive_errors >= max_consecutive_errors {
+                                                                log::error!(target: "app", "Too many errors, reconnecting traffic stream");
+                                                                break;
+                                                            }
+                                                        },
+                                                        None => {
+                                                            log::info!(target: "app", "Traffic stream ended, reconnecting");
+                                                            break;
+                                                        }
+                                                    }
+                                                },
+                                                _ = shutdown.recv() => {
+                                                    log::info!(target: "app", "Received shutdown signal for traffic stream");
+                                                    break 'outer;
+                                                },
+                                                _ = interval.tick() => {
+                                                    if !*is_subscribed.read() {
+                                                        log::info!(target: "app", "Traffic monitor detected subscription cancelled");
+                                                        break 'outer;
+                                                    }
+                                                    log::debug!(target: "app", "Traffic subscription periodic health check");
+                                                },
+                                                _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
+                                                    log::info!(target: "app", "Traffic stream max active time reached, reconnecting");
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    },
+                                    Err(e) => {
+                                        log::error!(target: "app", "Failed to get traffic stream: {}", e);
+                                        consecutive_errors += 1;
+                                        if consecutive_errors >= max_consecutive_errors {
+                                            log::error!(target: "app", "Too many consecutive errors, pausing traffic monitoring");
+                                            tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                                            consecutive_errors = 0;
+                                        } else {
+                                            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                                         }
                                     }
                                 }
+                            },
+                            Err(_) => {
+                                log::error!(target: "app", "Traffic stream initialization timed out");
+                                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                             }
-                            _ = shutdown.recv() => break 'outer,
                         }
-                    },
-                    Err(e) => {
-                        log::error!(target: "app", "Failed to get traffic stream: {}", e);
-                        // 如果获取流失败，等待一段时间后重试
-                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
 
-                        // 检查是否应该继续重试
                         if !*is_subscribed.read() {
                             break;
                         }
                     }
-                }
-            }
-        });
+                    log::info!(target: "app", "Traffic subscription thread terminated");
+                });
+            })
+            .expect("Failed to spawn traffic monitor thread");
 
         Ok(())
     }
@@ -436,6 +581,57 @@ impl Tray {
             drop(tx);
         }
     }
+
+    pub fn create_tray_from_handle(&self, app_handle: &AppHandle) -> Result<()> {
+        log::info!(target: "app", "正在从AppHandle创建系统托盘");
+
+        // 获取图标
+        let icon_bytes = TrayState::get_common_tray_icon().1;
+        let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
+
+        let mut builder = TrayIconBuilder::with_id("main")
+            .icon(icon)
+            .icon_as_template(false);
+
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
+        {
+            let tray_event = { Config::verge().latest().tray_event.clone() };
+            let tray_event: String = tray_event.unwrap_or("main_window".into());
+            if tray_event.as_str() != "tray_menu" {
+                builder = builder.show_menu_on_left_click(false);
+            }
+        }
+
+        let tray = builder.build(app_handle)?;
+
+        tray.on_tray_icon_event(|_, event| {
+            let tray_event = { Config::verge().latest().tray_event.clone() };
+            let tray_event: String = tray_event.unwrap_or("main_window".into());
+            log::debug!(target: "app","tray event: {:?}", tray_event);
+
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Down,
+                ..
+            } = event
+            {
+                match tray_event.as_str() {
+                    "system_proxy" => feat::toggle_system_proxy(),
+                    "tun_mode" => feat::toggle_tun_mode(None),
+                    "main_window" => {
+                        if crate::module::lightweight::is_in_lightweight_mode() {
+                            crate::module::lightweight::exit_lightweight_mode();
+                        }
+                        let _ = resolve::create_window(true);
+                    }
+                    _ => {}
+                }
+            }
+        });
+        tray.on_menu_event(on_menu_event);
+        log::info!(target: "app", "系统托盘创建成功");
+        Ok(())
+    }
 }
 
 fn create_tray_menu(
@@ -444,9 +640,13 @@ fn create_tray_menu(
     system_proxy_enabled: bool,
     tun_mode_enabled: bool,
     profile_uid_and_name: Vec<(String, String)>,
+    is_lightweight_mode: bool,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
-    let version = VERSION.get().unwrap();
+
+    let unknown_version = String::from("unknown");
+    let version = VERSION.get().unwrap_or(&unknown_version);
+
     let hotkeys = Config::verge()
         .latest()
         .hotkeys
@@ -554,11 +754,12 @@ fn create_tray_menu(
     )
     .unwrap();
 
-    let lighteweight_mode = &MenuItem::with_id(
+    let lighteweight_mode = &CheckMenuItem::with_id(
         app_handle,
         "entry_lightweight_mode",
         t("LightWeight Mode"),
         true,
+        is_lightweight_mode,
         hotkeys.get("entry_lightweight_mode").map(|s| s.as_str()),
     )
     .unwrap();
@@ -672,21 +873,40 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     match event.id.as_ref() {
         mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
             let mode = &mode[0..mode.len() - 5];
-            println!("change mode to: {}", mode);
+            logging!(
+                info,
+                Type::ProxyMode,
+                true,
+                "Switch Proxy Mode To: {}",
+                mode
+            );
             feat::change_clash_mode(mode.into());
         }
-        "open_window" => resolve::create_window(true),
+        "open_window" => {
+            // 如果在轻量模式中，先退出轻量模式
+            if crate::module::lightweight::is_in_lightweight_mode() {
+                crate::module::lightweight::exit_lightweight_mode();
+            }
+            // 然后创建窗口
+            let _ = resolve::create_window(true);
+        }
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(None),
         "copy_env" => feat::copy_clash_env(),
-        "open_app_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_app_dir()),
-        "open_core_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_core_dir()),
-        "open_logs_dir" => crate::logging_error!(Type::Cmd, true, cmd::open_logs_dir()),
+        "open_app_dir" => {
+            let _ = cmd::open_app_dir();
+        }
+        "open_core_dir" => {
+            let _ = cmd::open_core_dir();
+        }
+        "open_logs_dir" => {
+            let _ = cmd::open_logs_dir();
+        }
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
         "entry_lightweight_mode" => entry_lightweight_mode(),
         "quit" => {
-            feat::quit(Some(0));
+            feat::quit();
         }
         id if id.starts_with("profiles_") => {
             let profile_index = &id["profiles_".len()..];

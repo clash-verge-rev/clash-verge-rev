@@ -6,8 +6,8 @@ import {
   alpha,
   useTheme,
   PaletteColor,
+  Grid,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
 import {
   ArrowUpwardRounded,
   ArrowDownwardRounded,
@@ -174,9 +174,12 @@ export const EnhancedTrafficStats = () => {
   const trafficGraph = verge?.traffic_graph ?? true;
 
   // WebSocket引用
-  const socketRefs = useRef({
-    traffic: null as ReturnType<typeof createAuthSockette> | null,
-    memory: null as ReturnType<typeof createAuthSockette> | null,
+  const socketRefs = useRef<{
+    traffic: ReturnType<typeof createAuthSockette> | null;
+    memory: ReturnType<typeof createAuthSockette> | null;
+  }>({
+    traffic: null,
+    memory: null,
   });
 
   // 检查是否支持调试
@@ -230,7 +233,7 @@ export const EnhancedTrafficStats = () => {
         }
       }
     } catch (err) {
-      console.error("[Traffic] 解析数据错误:", err);
+      console.error("[Traffic] 解析数据错误:", err, event.data);
     }
   }, []);
 
@@ -248,7 +251,7 @@ export const EnhancedTrafficStats = () => {
         }));
       }
     } catch (err) {
-      console.error("[Memory] 解析数据错误:", err);
+      console.error("[Memory] 解析数据错误:", err, event.data);
     }
   }, []);
 
@@ -273,12 +276,42 @@ export const EnhancedTrafficStats = () => {
     cleanupSockets();
 
     // 创建新连接
+    console.log(`[Traffic][${EnhancedTrafficStats.name}] 正在连接: ${server}/traffic`);
     socketRefs.current.traffic = createAuthSockette(`${server}/traffic`, secret, {
       onmessage: handleTrafficUpdate,
+      onopen: (event) => {
+        console.log(`[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接已建立`, event);
+      },
+      onerror: (event) => {
+        console.error(`[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接错误或达到最大重试次数`, event);
+        setStats(prev => ({ ...prev, traffic: { up: 0, down: 0 } }));
+      },
+      onclose: (event) => {
+        console.log(`[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接关闭`, event.code, event.reason);
+        if (event.code !== 1000 && event.code !== 1001) {
+          console.warn(`[Traffic][${EnhancedTrafficStats.name}] 连接非正常关闭，重置状态`);
+          setStats(prev => ({ ...prev, traffic: { up: 0, down: 0 } }));
+        }
+      },
     });
     
+    console.log(`[Memory][${EnhancedTrafficStats.name}] 正在连接: ${server}/memory`);
     socketRefs.current.memory = createAuthSockette(`${server}/memory`, secret, {
       onmessage: handleMemoryUpdate,
+      onopen: (event) => {
+        console.log(`[Memory][${EnhancedTrafficStats.name}] WebSocket 连接已建立`, event);
+      },
+      onerror: (event) => {
+        console.error(`[Memory][${EnhancedTrafficStats.name}] WebSocket 连接错误或达到最大重试次数`, event);
+        setStats(prev => ({ ...prev, memory: { inuse: 0, oslimit: undefined } }));
+      },
+      onclose: (event) => {
+        console.log(`[Memory][${EnhancedTrafficStats.name}] WebSocket 连接关闭`, event.code, event.reason);
+        if (event.code !== 1000 && event.code !== 1001) {
+          console.warn(`[Memory][${EnhancedTrafficStats.name}] 连接非正常关闭，重置状态`);
+          setStats(prev => ({ ...prev, memory: { inuse: 0, oslimit: undefined } }));
+        }
+      },
     });
 
     return cleanupSockets;
@@ -306,9 +339,10 @@ export const EnhancedTrafficStats = () => {
     
     return {
       up, upUnit, down, downUnit, inuse, inuseUnit,
-      uploadTotal, uploadTotalUnit, downloadTotal, downloadTotalUnit
+      uploadTotal, uploadTotalUnit, downloadTotal, downloadTotalUnit,
+      connectionsCount: connections.count
     };
-  }, [stats, connections.uploadTotal, connections.downloadTotal]);
+  }, [stats, connections]);
 
   // 渲染流量图表 - 使用useMemo缓存渲染结果
   const trafficGraphComponent = useMemo(() => {
@@ -371,7 +405,7 @@ export const EnhancedTrafficStats = () => {
     {
       icon: <LinkRounded fontSize="small" />,
       title: t("Active Connections"),
-      value: connections.count,
+      value: parsedData.connectionsCount,
       unit: "",
       color: "success" as const,
     },
@@ -397,7 +431,7 @@ export const EnhancedTrafficStats = () => {
       color: "error" as const,
       onClick: isDebug ? handleGarbageCollection : undefined,
     },
-  ], [t, parsedData, connections.count, isDebug, handleGarbageCollection]);
+  ], [t, parsedData, isDebug, handleGarbageCollection]);
 
   return (
     <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>

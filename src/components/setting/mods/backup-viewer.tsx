@@ -79,7 +79,7 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
         }
 
         const backupTime = dayjs(fileBackupTimeStr[0], DATE_FORMAT);
-        const allowApply = OS === platform;
+        const allowApply = true;
         return {
           ...file,
           platform,

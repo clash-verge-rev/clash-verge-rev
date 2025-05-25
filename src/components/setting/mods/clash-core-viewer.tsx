@@ -1,6 +1,6 @@
 import { mutate } from "swr";
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useVerge } from "@/hooks/use-verge";
 import { useLockFn } from "ahooks";
@@ -11,14 +11,15 @@ import {
 } from "@mui/icons-material";
 import {
   Box,
-  Button,
   Chip,
+  CircularProgress,
   List,
   ListItemButton,
   ListItemText,
 } from "@mui/material";
 import { changeClashCore, restartCore } from "@/services/cmds";
 import { closeAllConnections, upgradeCore } from "@/services/api";
+import { showNotice } from "@/services/noticeService";
 
 const VALID_CORE = [
   { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
@@ -32,6 +33,8 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [open, setOpen] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+  const [changingCore, setChangingCore] = useState<string | null>(null);
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -44,25 +47,37 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
     if (core === clash_core) return;
 
     try {
+      setChangingCore(core);
       closeAllConnections();
-      await changeClashCore(core);
+      const errorMsg = await changeClashCore(core);
+      
+      if (errorMsg) {
+        showNotice('error', errorMsg);
+        setChangingCore(null);
+        return;
+      }
+      
       mutateVerge();
       setTimeout(() => {
         mutate("getClashConfig");
         mutate("getVersion");
-      }, 100);
-      // Notice.success(t("Switched to _clash Core", { core: `${core}` }), 1000);
+        setChangingCore(null);
+      }, 500);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      setChangingCore(null);
+      showNotice('error', err.message || err.toString());
     }
   });
 
   const onRestart = useLockFn(async () => {
     try {
+      setRestarting(true);
       await restartCore();
-      Notice.success(t(`Clash Core Restarted`), 1000);
+      showNotice('success', t(`Clash Core Restarted`));
+      setRestarting(false);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      setRestarting(false);
+      showNotice('error', err.message || err.toString());
     }
   });
 
@@ -71,10 +86,10 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      Notice.success(t(`Core Version Updated`), 1000);
+      showNotice('success', t(`Core Version Updated`));
     } catch (err: any) {
       setUpgrading(false);
-      Notice.error(err?.response.data.message || err.toString());
+      showNotice('error', err.response?.data?.message || err.toString());
     }
   });
 
@@ -91,19 +106,23 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
               startIcon={<SwitchAccessShortcutRounded />}
               loadingPosition="start"
               loading={upgrading}
+              disabled={restarting || changingCore !== null}
               sx={{ marginRight: "8px" }}
               onClick={onUpgrade}
             >
               {t("Upgrade")}
             </LoadingButton>
-            <Button
+            <LoadingButton
               variant="contained"
               size="small"
-              onClick={onRestart}
               startIcon={<RestartAltRounded />}
+              loadingPosition="start"
+              loading={restarting}
+              disabled={upgrading}
+              onClick={onRestart}
             >
               {t("Restart")}
-            </Button>
+            </LoadingButton>
           </Box>
         </Box>
       }
@@ -126,9 +145,14 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
             key={each.core}
             selected={each.core === clash_core}
             onClick={() => onCoreChange(each.core)}
+            disabled={changingCore !== null || restarting || upgrading}
           >
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
-            <Chip label={t(`${each.chip}`)} size="small" />
+            {changingCore === each.core ? (
+              <CircularProgress size={20} sx={{ mr: 1 }} />
+            ) : (
+              <Chip label={t(`${each.chip}`)} size="small" />
+            )}
           </ListItemButton>
         ))}
       </List>

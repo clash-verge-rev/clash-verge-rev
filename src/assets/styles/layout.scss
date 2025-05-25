@@ -129,14 +129,14 @@
       flex: 1 0 58px;
       margin-top: 10px;
       margin-left: 10px;
-      padding-top: 30px;
+      padding-top: 5px;
       padding-left: 10px;
       padding-right: 20px;
       padding-bottom: 16px;
     }
 
     .layout__right .the-content {
-      top: 24px;
+      top: 5px;
     }
   }
 }
@@ -144,11 +144,11 @@
 .macos {
   &.layout {
     .layout__left {
-      padding-top: 24px;
+      padding-top: 5px;
     }
 
     .layout__right .the-content {
-      top: 24px;
+      top: 5px;
     }
 
     .layout__left .the-newbtn {

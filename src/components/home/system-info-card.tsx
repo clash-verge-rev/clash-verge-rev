@@ -11,43 +11,51 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { EnhancedCard } from "./enhanced-card";
 import useSWR from "swr";
-import { getSystemInfo, installService } from "@/services/cmds";
+import { 
+  getSystemInfo, 
+} from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import { version as appVersion } from "@root/package.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
-import { Notice } from "@/components/base";
+import { showNotice } from "@/services/noticeService";
 import { useSystemState } from "@/hooks/use-system-state";
+import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
   const navigate = useNavigate();
   const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
+  const { installServiceAndRestartCore } = useServiceInstaller();
 
-  // 系统信息状态
-  const [systemState, setSystemState] = useState({
-    osInfo: "",
-    lastCheckUpdate: "-",
-  });
+// 系统信息状态
+const [systemState, setSystemState] = useState({
+  osInfo: "",
+  lastCheckUpdate: "-",
+});
 
-  // 初始化系统信息
-  useEffect(() => {
-    // 获取系统信息
-    getSystemInfo()
-      .then((info) => {
-        const lines = info.split("\n");
-        if (lines.length > 0) {
-          const sysName = lines[0].split(": ")[1] || "";
-          const sysVersion = lines[1].split(": ")[1] || "";
-          setSystemState((prev) => ({
-            ...prev,
-            osInfo: `${sysName} ${sysVersion}`,
-          }));
+// 初始化系统信息
+useEffect(() => {
+  getSystemInfo()
+    .then((info) => {
+      const lines = info.split("\n");
+      if (lines.length > 0) {
+        const sysName = lines[0].split(": ")[1] || "";
+        let sysVersion = lines[1].split(": ")[1] || "";
+
+        if (sysName && sysVersion.toLowerCase().startsWith(sysName.toLowerCase())) {
+          sysVersion = sysVersion.substring(sysName.length).trim();
         }
-      })
-      .catch(console.error);
+        
+        setSystemState((prev) => ({
+          ...prev,
+          osInfo: `${sysName} ${sysVersion}`,
+        }));
+      }
+    })
+    .catch(console.error);
 
     // 获取最后检查更新时间
     const lastCheck = localStorage.getItem("last_check_update");
@@ -106,47 +114,34 @@ export const SystemInfoCard = () => {
 
   // 切换自启动状态
   const toggleAutoLaunch = useCallback(async () => {
-    if (!verge || isAdminMode) return;
+    if (!verge) return;
     try {
       await patchVerge({ enable_auto_launch: !verge.enable_auto_launch });
     } catch (err) {
       console.error("切换开机自启动状态失败:", err);
     }
-  }, [verge, patchVerge, isAdminMode]);
+  }, [verge, patchVerge]);
 
-  // 安装系统服务
-  const onInstallService = useLockFn(async () => {
-    try {
-      Notice.info(t("Installing Service..."), 1000);
-      await installService();
-      Notice.success(t("Service Installed Successfully"), 2000);
-
-        await mutateRunningMode();
-
-    } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
-    }
-  });
 
   // 点击运行模式处理,Sidecar或纯管理员模式允许安装服务
   const handleRunningModeClick = useCallback(() => {
     if (isSidecarMode || (isAdminMode && isSidecarMode)) {
-      onInstallService();
+      installServiceAndRestartCore();
     }
-  }, [isSidecarMode, isAdminMode, onInstallService]);
+  }, [isSidecarMode, isAdminMode, installServiceAndRestartCore]);
 
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        Notice.success(t("Currently on the Latest Version"));
+        showNotice('success', t("Currently on the Latest Version"));
       } else {
-        Notice.info(t("Update Available"), 2000);
+        showNotice('info', t("Update Available"), 2000);
         goToSettings();
       }
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.message || err.toString());
     }
   });
 
@@ -258,7 +253,7 @@ export const SystemInfoCard = () => {
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
             {isAdminMode && (
-              <Tooltip title={t("Administrator mode does not support auto launch")}>
+              <Tooltip title={t("Administrator mode may not support auto launch")}>
                 <WarningOutlined sx={{ color: "warning.main", fontSize: 20 }} />
               </Tooltip>
             )}
@@ -268,8 +263,7 @@ export const SystemInfoCard = () => {
               color={autoLaunchEnabled ? "success" : "default"}
               variant={autoLaunchEnabled ? "filled" : "outlined"}
               onClick={toggleAutoLaunch}
-              disabled={isAdminMode}
-              sx={{ cursor: isAdminMode ? "not-allowed" : "pointer" }}
+              sx={{ cursor: "pointer" }}
             />
           </Stack>
         </Stack>

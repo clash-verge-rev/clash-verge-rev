@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
-import { getProxies, getConnections, getRules, getClashConfig, getProxyProviders, getRuleProviders } from "@/services/api";
+import { getProxies, getRules, getClashConfig, getProxyProviders, getRuleProviders } from "@/services/api";
 import { getSystemProxy, getRunningMode, getAppUptime } from "@/services/cmds";
 import { useClashInfo } from "@/hooks/use-clash";
 import { createAuthSockette } from "@/utils/websocket";
@@ -71,6 +71,9 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
     getProxyProviders,
     {
       revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      refreshInterval: 30000,
+      dedupingInterval: 10000,
       suspense: false,
       errorRetryCount: 3
     }
@@ -117,12 +120,12 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
     }
   );
   
-  // 高频率更新数据 (1秒)
+  // 高频率更新数据 (2秒)
   const { data: uptimeData } = useSWR(
     "appUptime", 
     getAppUptime, 
     { 
-      refreshInterval: 1000, 
+      refreshInterval: 2000, 
       revalidateOnFocus: false,
       suspense: false
     }
@@ -138,6 +141,7 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
         const { server = "", secret = "" } = clashInfo;
         if (!server) return () => {};
         
+        console.log(`[Connections][${AppDataProvider.name}] 正在连接: ${server}/connections`);
         const socket = createAuthSockette(`${server}/connections`, secret, {
           timeout: 5000,
           onmessage(event) {
@@ -167,15 +171,29 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
                 };
               });
             } catch (err) {
-              console.error("[Connections] 解析数据错误:", err);
+              console.error(`[Connections][${AppDataProvider.name}] 解析数据错误:`, err, event.data);
             }
           },
-          onerror() {
+          onopen: (event) => {
+             console.log(`[Connections][${AppDataProvider.name}] WebSocket 连接已建立`, event);
+          },
+          onerror(event) {
+            console.error(`[Connections][${AppDataProvider.name}] WebSocket 连接错误或达到最大重试次数`, event);
             next(null, { connections: [], uploadTotal: 0, downloadTotal: 0 });
+          },
+          onclose: (event) => {
+             console.log(`[Connections][${AppDataProvider.name}] WebSocket 连接关闭`, event.code, event.reason);
+             if (event.code !== 1000 && event.code !== 1001) {
+               console.warn(`[Connections][${AppDataProvider.name}] 连接非正常关闭，重置数据`);
+               next(null, { connections: [], uploadTotal: 0, downloadTotal: 0 });
+             }
           }
         });
         
-        return () => socket.close();
+        return () => {
+          console.log(`[Connections][${AppDataProvider.name}] 清理WebSocket连接`);
+          socket.close();
+        };
       }
     );
   
@@ -188,18 +206,40 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
       const { server = "", secret = "" } = clashInfo;
       if (!server) return () => {};
       
+      console.log(`[Traffic][${AppDataProvider.name}] 正在连接: ${server}/traffic`);
       const socket = createAuthSockette(`${server}/traffic`, secret, {
         onmessage(event) {
           try {
             const data = JSON.parse(event.data);
-            next(null, data);
+            if (data && typeof data.up === 'number' && typeof data.down === 'number') {
+              next(null, data);
+            } else {
+               console.warn(`[Traffic][${AppDataProvider.name}] 收到无效数据:`, data);
+            }
           } catch (err) {
-            console.error("[Traffic] 解析数据错误:", err);
+            console.error(`[Traffic][${AppDataProvider.name}] 解析数据错误:`, err, event.data);
           }
+        },
+        onopen: (event) => {
+           console.log(`[Traffic][${AppDataProvider.name}] WebSocket 连接已建立`, event);
+        },
+        onerror(event) {
+          console.error(`[Traffic][${AppDataProvider.name}] WebSocket 连接错误或达到最大重试次数`, event);
+          next(null, { up: 0, down: 0 });
+        },
+        onclose: (event) => {
+           console.log(`[Traffic][${AppDataProvider.name}] WebSocket 连接关闭`, event.code, event.reason);
+           if (event.code !== 1000 && event.code !== 1001) {
+             console.warn(`[Traffic][${AppDataProvider.name}] 连接非正常关闭，重置数据`);
+             next(null, { up: 0, down: 0 });
+           }
         }
       });
       
-      return () => socket.close();
+      return () => {
+        console.log(`[Traffic][${AppDataProvider.name}] 清理WebSocket连接`);
+        socket.close();
+      };
     }
   );
   
@@ -211,18 +251,40 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
       const { server = "", secret = "" } = clashInfo;
       if (!server) return () => {};
       
+      console.log(`[Memory][${AppDataProvider.name}] 正在连接: ${server}/memory`);
       const socket = createAuthSockette(`${server}/memory`, secret, {
         onmessage(event) {
           try {
             const data = JSON.parse(event.data);
-            next(null, data);
+            if (data && typeof data.inuse === 'number') {
+              next(null, data);
+            } else {
+               console.warn(`[Memory][${AppDataProvider.name}] 收到无效数据:`, data);
+            }
           } catch (err) {
-            console.error("[Memory] 解析数据错误:", err);
+            console.error(`[Memory][${AppDataProvider.name}] 解析数据错误:`, err, event.data);
+          }
+        },
+        onopen: (event) => {
+           console.log(`[Memory][${AppDataProvider.name}] WebSocket 连接已建立`, event);
+        },
+        onerror(event) {
+          console.error(`[Memory][${AppDataProvider.name}] WebSocket 连接错误或达到最大重试次数`, event);
+          next(null, { inuse: 0 });
+        },
+        onclose: (event) => {
+          console.log(`[Memory][${AppDataProvider.name}] WebSocket 连接关闭`, event.code, event.reason);
+          if (event.code !== 1000 && event.code !== 1001) {
+            console.warn(`[Memory][${AppDataProvider.name}] 连接非正常关闭，重置数据`);
+            next(null, { inuse: 0 });
           }
         }
       });
       
-      return () => socket.close();
+      return () => {
+        console.log(`[Memory][${AppDataProvider.name}] 清理WebSocket连接`);
+        socket.close();
+      };
     }
   );
   

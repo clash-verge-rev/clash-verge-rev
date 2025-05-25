@@ -1,29 +1,29 @@
-import { useRef, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { TextField, Select, MenuItem, Typography } from "@mui/material";
-import {
-  SettingsRounded,
-  ShuffleRounded,
-  LanRounded,
-} from "@mui/icons-material";
-import { DialogRef, Notice, Switch } from "@/components/base";
+import { DialogRef, Switch } from "@/components/base";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useClash } from "@/hooks/use-clash";
-import { GuardState } from "./mods/guard-state";
-import { WebUIViewer } from "./mods/web-ui-viewer";
-import { ClashPortViewer } from "./mods/clash-port-viewer";
-import { ControllerViewer } from "./mods/controller-viewer";
-import { SettingList, SettingItem } from "./mods/setting-comp";
-import { ClashCoreViewer } from "./mods/clash-core-viewer";
-import { invoke_uwp_tool } from "@/services/cmds";
-import getSystem from "@/utils/get-system";
+import { useListen } from "@/hooks/use-listen";
 import { useVerge } from "@/hooks/use-verge";
 import { updateGeoData } from "@/services/api";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
-import { DnsViewer } from "./mods/dns-viewer";
+import { invoke_uwp_tool } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
+import getSystem from "@/utils/get-system";
+import {
+  LanRounded,
+  SettingsRounded
+} from "@mui/icons-material";
+import { MenuItem, Select, TextField, Typography } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
-import { useListen } from "@/hooks/use-listen";
+import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ClashCoreViewer } from "./mods/clash-core-viewer";
+import { ClashPortViewer } from "./mods/clash-port-viewer";
+import { ControllerViewer } from "./mods/controller-viewer";
+import { DnsViewer } from "./mods/dns-viewer";
+import { GuardState } from "./mods/guard-state";
+import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
+import { SettingItem, SettingList } from "./mods/setting-comp";
+import { WebUIViewer } from "./mods/web-ui-viewer";
 
 const isWIN = getSystem() === "windows";
 
@@ -49,15 +49,9 @@ const SettingClash = ({ onError }: Props) => {
 
   // 独立跟踪DNS设置开关状态
   const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
-    // 尝试从localStorage获取之前保存的状态
-    const savedState = localStorage.getItem("dns_settings_enabled");
-    if (savedState !== null) {
-      return savedState === "true";
-    }
-    // 如果没有保存的状态，则从verge配置中获取
     return verge?.enable_dns_settings ?? false;
   });
-  
+
   const { addListener } = useListen();
 
   const webRef = useRef<DialogRef>(null);
@@ -77,33 +71,27 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeoData();
-      Notice.success(t("GeoData Updated"));
+      showNotice('success', t("GeoData Updated"));
     } catch (err: any) {
-      Notice.error(err?.response.data.message || err.toString());
+      showNotice('error', err?.response.data.message || err.toString());
     }
   };
 
   // 实现DNS设置开关处理函数
   const handleDnsToggle = useLockFn(async (enable: boolean) => {
     try {
-      // 立即更新UI状态
       setDnsSettingsEnabled(enable);
-      // 保存到localStorage，用于记住用户的选择
       localStorage.setItem("dns_settings_enabled", String(enable));
-      // 更新verge配置
       await patchVerge({ enable_dns_settings: enable });
       await invoke("apply_dns_config", { apply: enable });
       setTimeout(() => {
         mutateClash();
-      }, 500); // 延迟500ms确保后端完成处理
+      }, 500);
     } catch (err: any) {
-      // 如果出错，恢复原始状态
       setDnsSettingsEnabled(!enable);
       localStorage.setItem("dns_settings_enabled", String(!enable));
-      Notice.error(err.message || err.toString());
-      await patchVerge({ enable_dns_settings: !enable }).catch(() => {
-        // 忽略恢复状态时的错误
-      });
+      showNotice('error', err.message || err.toString());
+      await patchVerge({ enable_dns_settings: !enable }).catch(() => {});
       throw err;
     }
   });
@@ -199,7 +187,6 @@ const SettingClash = ({ onError }: Props) => {
         }
       >
         <GuardState
-          // clash premium 2022.08.26 值为warn
           value={logLevel === "warn" ? "warning" : (logLevel ?? "info")}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
@@ -218,25 +205,10 @@ const SettingClash = ({ onError }: Props) => {
 
       <SettingItem
         label={t("Port Config")}
-        extra={
-          <TooltipIcon
-            title={t("Random Port")}
-            color={enable_random_port ? "primary" : "inherit"}
-            icon={ShuffleRounded}
-            onClick={() => {
-              Notice.success(
-                t("Restart Application to Apply Modifications"),
-                1000,
-              );
-              onChangeVerge({ enable_random_port: !enable_random_port });
-              patchVerge({ enable_random_port: !enable_random_port });
-            }}
-          />
-        }
       >
         <TextField
           autoComplete="new-password"
-          disabled={enable_random_port}
+          disabled={false}
           size="small"
           value={verge_mixed_port ?? 7897}
           sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}
@@ -249,7 +221,15 @@ const SettingClash = ({ onError }: Props) => {
 
       <SettingItem
         onClick={() => ctrlRef.current?.open()}
-        label={t("External")}
+        label={
+          <>
+            {t("External")}
+            <TooltipIcon
+              title={t("Enable one-click random API port and key. Click to randomize the port and key")}
+              sx={{ opacity: "0.7" }}
+            />
+          </>
+        }
       />
 
       <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />

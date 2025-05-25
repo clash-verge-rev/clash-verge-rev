@@ -34,13 +34,14 @@ import {
   VerticalAlignBottomRounded,
 } from "@mui/icons-material";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { Notice, Switch } from "@/components/base";
+import { Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
 import { RuleItem } from "@/components/profile/rule-item";
 import { BaseSearchBox } from "../base/base-search-box";
 import { Virtuoso } from "react-virtuoso";
 import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   groupsUid: string;
@@ -414,10 +415,11 @@ export const RulesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
+      showNotice('success', t("Saved Successfully"));
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.toString());
     }
   });
 
@@ -545,7 +547,7 @@ export const RulesEditorViewer = (props: Props) => {
                       if (prependSeq.includes(raw)) return;
                       setPrependSeq([raw, ...prependSeq]);
                     } catch (err: any) {
-                      Notice.error(err.message || err.toString());
+                      showNotice('error', err.message || err.toString());
                     }
                   }}
                 >
@@ -563,7 +565,7 @@ export const RulesEditorViewer = (props: Props) => {
                       if (appendSeq.includes(raw)) return;
                       setAppendSeq([...appendSeq, raw]);
                     } catch (err: any) {
-                      Notice.error(err.message || err.toString());
+                      showNotice('error', err.message || err.toString());
                     }
                   }}
                 >
@@ -702,7 +704,7 @@ export const RulesEditorViewer = (props: Props) => {
               fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
                 getSystem() === "windows" ? ", twemoji mozilla" : ""
               }`,
-              fontLigatures: true, // 连字符
+              fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}
             onChange={(value) => setCurrData(value)}

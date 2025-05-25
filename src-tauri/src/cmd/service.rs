@@ -38,3 +38,11 @@ pub async fn reinstall_service() -> CmdResult {
 pub async fn repair_service() -> CmdResult {
     execute_service_operation(service::force_reinstall_service(), "Repair").await
 }
+
+#[tauri::command]
+pub async fn is_service_available() -> CmdResult<bool> {
+    service::is_service_available()
+        .await
+        .map(|_| true)
+        .map_err(|e| e.to_string())
+}

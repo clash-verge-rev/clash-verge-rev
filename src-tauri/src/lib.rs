@@ -5,9 +5,11 @@ mod enhance;
 mod error;
 mod feat;
 mod module;
+mod process;
 mod utils;
 use crate::{
     core::hotkey,
+    process::AsyncHandler,
     utils::{resolve, resolve::resolve_scheme, server},
 };
 use config::Config;
@@ -17,6 +19,7 @@ use tauri::AppHandle;
 use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
+use tokio::time::{timeout, Duration};
 use utils::logging::Type;
 
 /// A global singleton handle to the application.
@@ -83,13 +86,32 @@ impl AppHandleManager {
 
 #[allow(clippy::panic)]
 pub fn run() {
+    utils::network::NetworkManager::global().init();
+
+    let _ = utils::dirs::init_portable_flag();
+
     // 单例检测
-    let app_exists: bool = tauri::async_runtime::block_on(async move {
-        if server::check_singleton().await.is_err() {
-            println!("app exists");
-            true
-        } else {
-            false
+    let app_exists: bool = AsyncHandler::block_on(move || async move {
+        logging!(info, Type::Setup, true, "开始检查单例实例...");
+        match timeout(Duration::from_secs(3), server::check_singleton()).await {
+            Ok(result) => {
+                if result.is_err() {
+                    logging!(info, Type::Setup, true, "检测到已有应用实例运行");
+                    true
+                } else {
+                    logging!(info, Type::Setup, true, "未检测到其他应用实例");
+                    false
+                }
+            }
+            Err(_) => {
+                logging!(
+                    warn,
+                    Type::Setup,
+                    true,
+                    "单例检查超时，假定没有其他实例运行"
+                );
+                false
+            }
         }
     });
     if app_exists {
@@ -116,24 +138,67 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
+            logging!(info, Type::Setup, true, "开始应用初始化...");
             #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
+                logging!(info, Type::Setup, true, "注册深层链接...");
                 logging_error!(Type::System, true, app.deep_link().register_all());
             }
-
             app.deep_link().on_open_url(|event| {
-                tauri::async_runtime::spawn(async move {
-                    if let Some(url) = event.urls().first() {
-                        logging_error!(Type::Setup, true, resolve_scheme(url.to_string()).await);
+                AsyncHandler::spawn(move || {
+                    let url = event.urls().first().map(|u| u.to_string());
+                    async move {
+                        if let Some(url) = url {
+                            logging_error!(Type::Setup, true, resolve_scheme(url).await);
+                        }
                     }
                 });
             });
 
-            tauri::async_runtime::block_on(async move {
-                resolve::resolve_setup(app).await;
+            // 异步处理
+            let app_handle = app.handle().clone();
+            AsyncHandler::spawn(move || async move {
+                logging!(info, Type::Setup, true, "异步执行应用设置...");
+                match timeout(
+                    Duration::from_secs(30),
+                    resolve::resolve_setup_async(&app_handle),
+                )
+                .await
+                {
+                    Ok(_) => {
+                        logging!(info, Type::Setup, true, "应用设置成功完成");
+                    }
+                    Err(_) => {
+                        logging!(
+                            error,
+                            Type::Setup,
+                            true,
+                            "应用设置超时(30秒)，继续执行后续流程"
+                        );
+                    }
+                }
             });
 
+            logging!(info, Type::Setup, true, "执行主要设置操作...");
+
+            logging!(info, Type::Setup, true, "初始化AppHandleManager...");
+            AppHandleManager::global().init(app.handle().clone());
+
+            logging!(info, Type::Setup, true, "初始化核心句柄...");
+            core::handle::Handle::global().init(app.handle());
+
+            logging!(info, Type::Setup, true, "初始化配置...");
+            if let Err(e) = utils::init::init_config() {
+                logging!(error, Type::Setup, true, "初始化配置失败: {}", e);
+            }
+
+            logging!(info, Type::Setup, true, "初始化资源...");
+            if let Err(e) = utils::init::init_resources() {
+                logging!(error, Type::Setup, true, "初始化资源失败: {}", e);
+            }
+
+            logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -146,18 +211,29 @@ pub fn run() {
             cmd::open_core_dir,
             cmd::get_portable_flag,
             cmd::get_network_interfaces,
-            cmd::restart_core,
+            cmd::get_system_hostname,
             cmd::restart_app,
-            // 添加新的命令
+            // 内核管理
+            cmd::start_core,
+            cmd::stop_core,
+            cmd::restart_core,
+            // 启动命令
+            cmd::notify_ui_ready,
+            cmd::update_ui_stage,
+            cmd::reset_ui_ready_state,
             cmd::get_running_mode,
             cmd::get_app_uptime,
             cmd::get_auto_launch_status,
             cmd::is_admin,
+            // 添加轻量模式相关命令
+            cmd::entry_lightweight_mode,
+            cmd::exit_lightweight_mode,
             // service 管理
             cmd::install_service,
             cmd::uninstall_service,
             cmd::reinstall_service,
             cmd::repair_service,
+            cmd::is_service_available,
             // clash
             cmd::get_clash_info,
             cmd::patch_clash_config,
@@ -175,6 +251,7 @@ pub fn run() {
             cmd::apply_dns_config,
             cmd::check_dns_config_exists,
             cmd::get_dns_config_content,
+            cmd::validate_dns_config,
             // verge
             cmd::get_verge_config,
             cmd::patch_verge_config,
@@ -198,6 +275,7 @@ pub fn run() {
             cmd::delete_profile,
             cmd::read_profile_file,
             cmd::save_profile_file,
+            cmd::get_next_update_time,
             // script validation
             cmd::script_validate_notice,
             cmd::validate_script_file,
@@ -237,6 +315,7 @@ pub fn run() {
 
     app.run(|app_handle, e| match e {
         tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+            logging!(info, Type::System, true, "应用就绪或恢复");
             AppHandleManager::global().init(app_handle.clone());
             #[cfg(target_os = "macos")]
             {
@@ -244,6 +323,7 @@ pub fn run() {
                     .get_handle()
                     .get_webview_window("main")
                 {
+                    logging!(info, Type::Window, true, "设置macOS窗口标题");
                     let _ = window.set_title("Clash Verge");
                 }
             }
@@ -263,6 +343,13 @@ pub fn run() {
                 api.prevent_exit();
             }
         }
+        tauri::RunEvent::Exit => {
+            // avoid duplicate cleanup
+            if core::handle::Handle::global().is_exiting() {
+                return;
+            }
+            feat::clean();
+        }
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
                 match event {
@@ -274,8 +361,11 @@ pub fn run() {
                         }
                         println!("closing window...");
                         api.prevent_close();
-                        let window = core::handle::Handle::global().get_window().unwrap();
-                        let _ = window.hide();
+                        if let Some(window) = core::handle::Handle::global().get_window() {
+                            let _ = window.hide();
+                        } else {
+                            logging!(warn, Type::Window, true, "尝试隐藏窗口但窗口不存在");
+                        }
                     }
                     tauri::WindowEvent::Focused(true) => {
                         #[cfg(target_os = "macos")]
@@ -291,15 +381,6 @@ pub fn run() {
                                 hotkey::Hotkey::global().register("CMD+W", "hide")
                             );
                         }
-
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            logging_error!(
-                                Type::Hotkey,
-                                true,
-                                hotkey::Hotkey::global().register("Control+Q", "quit")
-                            );
-                        };
                         {
                             let is_enable_global_hotkey = Config::verge()
                                 .latest()
@@ -324,14 +405,6 @@ pub fn run() {
                                 hotkey::Hotkey::global().unregister("CMD+W")
                             );
                         }
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            logging_error!(
-                                Type::Hotkey,
-                                true,
-                                hotkey::Hotkey::global().unregister("Control+Q")
-                            );
-                        };
                         {
                             let is_enable_global_hotkey = Config::verge()
                                 .latest()
@@ -356,15 +429,6 @@ pub fn run() {
                                 hotkey::Hotkey::global().unregister("CMD+W")
                             );
                         }
-
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            logging_error!(
-                                Type::Hotkey,
-                                true,
-                                hotkey::Hotkey::global().unregister("Control+Q")
-                            );
-                        };
                     }
                     _ => {}
                 }

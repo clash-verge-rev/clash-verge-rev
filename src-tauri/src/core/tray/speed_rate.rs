@@ -9,7 +9,7 @@ use image::{GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::draw_text_mut;
 use parking_lot::Mutex;
 use std::{io::Cursor, sync::Arc};
-use tokio_tungstenite::tungstenite::{http, Message};
+use tokio_tungstenite::tungstenite::http;
 use tungstenite::client::IntoClientRequest;
 #[derive(Debug, Clone)]
 pub struct SpeedRate {
@@ -240,41 +240,92 @@ pub struct Traffic {
 impl Traffic {
     pub async fn get_traffic_stream() -> Result<impl Stream<Item = Result<Traffic, anyhow::Error>>>
     {
-        use futures::stream::{self, StreamExt};
+        use futures::{
+            future::FutureExt,
+            stream::{self, StreamExt},
+        };
         use std::time::Duration;
 
+        // 先处理错误和超时情况
         let stream = Box::pin(
-            stream::unfold((), |_| async {
-                loop {
+            stream::unfold((), move |_| async move {
+                'retry: loop {
+                    log::info!(target: "app", "establishing traffic websocket connection");
                     let (url, token) = MihomoManager::get_traffic_ws_url();
-                    let mut request = url.into_client_request().unwrap();
-                    request
-                        .headers_mut()
-                        .insert(http::header::AUTHORIZATION, token);
-
-                    match tokio_tungstenite::connect_async(request).await {
-                        Ok((ws_stream, _)) => {
-                            log::info!(target: "app", "traffic ws connection established");
-                            return Some((
-                                ws_stream.map(|msg| {
-                                    msg.map_err(anyhow::Error::from).and_then(|msg: Message| {
-                                        let data = msg.into_text()?;
-                                        let json: serde_json::Value = serde_json::from_str(&data)?;
-                                        Ok(Traffic {
-                                            up: json["up"].as_u64().unwrap_or(0),
-                                            down: json["down"].as_u64().unwrap_or(0),
-                                        })
-                                    })
-                                }),
-                                (),
-                            ));
-                        }
+                    let mut request = match url.into_client_request() {
+                        Ok(req) => req,
                         Err(e) => {
-                            log::error!(target: "app", "traffic ws connection failed: {e}");
-                            tokio::time::sleep(Duration::from_secs(5)).await;
-                            continue;
+                            log::error!(target: "app", "failed to create websocket request: {}", e);
+                            tokio::time::sleep(Duration::from_secs(2)).await;
+                            continue 'retry;
+                        }
+                    };
+
+                    request.headers_mut().insert(http::header::AUTHORIZATION, token);
+
+                    match tokio::time::timeout(Duration::from_secs(3),
+                        tokio_tungstenite::connect_async(request)
+                    ).await {
+                        Ok(Ok((ws_stream, _))) => {
+                            log::info!(target: "app", "traffic websocket connection established");
+                            // 设置流超时控制
+                            let traffic_stream = ws_stream
+                                .take_while(|msg| {
+                                    let continue_stream = msg.is_ok();
+                                    async move { continue_stream }.boxed()
+                                })
+                                .filter_map(|msg| async move {
+                                    match msg {
+                                        Ok(msg) => {
+                                            if !msg.is_text() {
+                                                return None;
+                                            }
+
+                                            match tokio::time::timeout(
+                                                Duration::from_millis(200),
+                                                async { msg.into_text() }
+                                            ).await {
+                                                Ok(Ok(text)) => {
+                                                    match serde_json::from_str::<serde_json::Value>(&text) {
+                                                        Ok(json) => {
+                                                            let up = json["up"].as_u64().unwrap_or(0);
+                                                            let down = json["down"].as_u64().unwrap_or(0);
+                                                            Some(Ok(Traffic { up, down }))
+                                                        },
+                                                        Err(e) => {
+                                                            log::warn!(target: "app", "traffic json parse error: {} for {}", e, text);
+                                                            None
+                                                        }
+                                                    }
+                                                },
+                                                Ok(Err(e)) => {
+                                                    log::warn!(target: "app", "traffic text conversion error: {}", e);
+                                                    None
+                                                },
+                                                Err(_) => {
+                                                    log::warn!(target: "app", "traffic text processing timeout");
+                                                    None
+                                                }
+                                            }
+                                        },
+                                        Err(e) => {
+                                            log::error!(target: "app", "traffic websocket error: {}", e);
+                                            None
+                                        }
+                                    }
+                                });
+
+                            return Some((traffic_stream, ()));
+                        },
+                        Ok(Err(e)) => {
+                            log::error!(target: "app", "traffic websocket connection failed: {}", e);
+                        },
+                        Err(_) => {
+                            log::error!(target: "app", "traffic websocket connection timed out");
                         }
                     }
+
+                    tokio::time::sleep(Duration::from_secs(2)).await;
                 }
             })
             .flatten(),

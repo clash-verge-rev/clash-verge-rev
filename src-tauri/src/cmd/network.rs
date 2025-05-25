@@ -3,11 +3,16 @@ use crate::wrap_err;
 use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
 use sysproxy::{Autoproxy, Sysproxy};
+use tokio::task::spawn_blocking;
 
 /// get the system proxy
 #[tauri::command]
-pub fn get_sys_proxy() -> CmdResult<Mapping> {
-    let current = wrap_err!(Sysproxy::get_system_proxy())?;
+pub async fn get_sys_proxy() -> CmdResult<Mapping> {
+    let current = spawn_blocking(Sysproxy::get_system_proxy)
+        .await
+        .map_err(|e| format!("Failed to spawn blocking task for sysproxy: {}", e))?
+        .map_err(|e| format!("Failed to get system proxy: {}", e))?;
+
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
     map.insert(
@@ -21,14 +26,36 @@ pub fn get_sys_proxy() -> CmdResult<Mapping> {
 
 /// get the system proxy
 #[tauri::command]
-pub fn get_auto_proxy() -> CmdResult<Mapping> {
-    let current = wrap_err!(Autoproxy::get_auto_proxy())?;
+pub async fn get_auto_proxy() -> CmdResult<Mapping> {
+    let current = spawn_blocking(Autoproxy::get_auto_proxy)
+        .await
+        .map_err(|e| format!("Failed to spawn blocking task for autoproxy: {}", e))?
+        .map_err(|e| format!("Failed to get auto proxy: {}", e))?;
 
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
     map.insert("url".into(), current.url.into());
 
     Ok(map)
+}
+
+/// 获取系统主机名
+#[tauri::command]
+pub fn get_system_hostname() -> CmdResult<String> {
+    use gethostname::gethostname;
+
+    // 获取系统主机名，处理可能的非UTF-8字符
+    let hostname = match gethostname().into_string() {
+        Ok(name) => name,
+        Err(os_string) => {
+            // 对于包含非UTF-8的主机名，使用调试格式化
+            let fallback = format!("{:?}", os_string);
+            // 去掉可能存在的引号
+            fallback.trim_matches('"').to_string()
+        }
+    };
+
+    Ok(hostname)
 }
 
 /// 获取网络接口列表

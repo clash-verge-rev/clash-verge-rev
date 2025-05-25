@@ -33,13 +33,13 @@ import {
 } from "@mui/icons-material";
 import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { Notice } from "@/components/base";
 import getSystem from "@/utils/get-system";
 import { BaseSearchBox } from "../base/base-search-box";
 import { Virtuoso } from "react-virtuoso";
 import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
 import parseUri from "@/utils/uri-parser";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   profileUid: string;
@@ -150,7 +150,7 @@ export const ProxiesEditorViewer = (props: Props) => {
             names.push(proxy.name);
           }
         } catch (err: any) {
-          Notice.error(err.message || err.toString());
+          showNotice('error', err.message || err.toString());
         }
       });
     return proxies;
@@ -212,10 +212,11 @@ export const ProxiesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
+      showNotice('success', t("Saved Successfully"));
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.toString());
     }
   });
 
@@ -433,7 +434,7 @@ export const ProxiesEditorViewer = (props: Props) => {
               fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
                 getSystem() === "windows" ? ", twemoji mozilla" : ""
               }`,
-              fontLigatures: true, // 连字符
+              fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}
             onChange={(value) => setCurrData(value)}

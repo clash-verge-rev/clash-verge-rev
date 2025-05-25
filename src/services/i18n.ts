@@ -7,8 +7,14 @@ import fa from "@/locales/fa.json";
 import tt from "@/locales/tt.json";
 import id from "@/locales/id.json";
 import ar from "@/locales/ar.json";
+import ko from "@/locales/ko.json";
+import tr from "@/locales/tr.json";
+import jp from "@/locales/jp.json";
+import de from "@/locales/de.json";
+import es from "@/locales/es.json";
+import zhtw from "@/locales/zhtw.json";
 
-export const languages = { en, ru, zh, fa, tt, id, ar };
+export const languages = { en, ru, zh, fa, tt, id, ar, ko, tr, jp, de, es, zhtw };
 
 const resources = Object.fromEntries(
   Object.entries(languages).map(([key, value]) => [

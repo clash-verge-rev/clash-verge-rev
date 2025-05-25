@@ -25,7 +25,7 @@ import parseTraffic from "@/utils/parse-traffic";
 import { useMemo, useCallback, useState } from "react";
 import { openWebUrl, updateProfile } from "@/services/cmds";
 import { useLockFn } from "ahooks";
-import { Notice } from "@/components/base";
+import { showNotice } from "@/services/noticeService";
 import { EnhancedCard } from "./enhanced-card";
 import { useAppData } from "@/providers/app-data-provider";
 
@@ -272,7 +272,7 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { refreshAll } = useAppData();
-  
+
   // 更新当前订阅
   const [updating, setUpdating] = useState(false);
   
@@ -281,14 +281,14 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
 
     setUpdating(true);
     try {
-      await updateProfile(current.uid);
-      Notice.success(t("Update subscription successfully"));
+      await updateProfile(current.uid, current.option);
+      showNotice('success', t("Update subscription successfully"), 1000);
       onProfileUpdated?.();
       
       // 刷新首页数据
       refreshAll();
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice('error', err.message || err.toString(), 3000);
     } finally {
       setUpdating(false);
     }

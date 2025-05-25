@@ -1,8 +1,7 @@
-import { Box, ButtonGroup, IconButton, Select, MenuItem } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import { Box, ButtonGroup, IconButton, Grid } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
-import { BasePage, Notice } from "@/components/base";
+import { BasePage } from "@/components/base";
 import { GitHub, HelpOutlineRounded, Telegram } from "@mui/icons-material";
 import { openWebUrl } from "@/services/cmds";
 import SettingVergeBasic from "@/components/setting/setting-verge-basic";
@@ -10,12 +9,13 @@ import SettingVergeAdvanced from "@/components/setting/setting-verge-advanced";
 import SettingClash from "@/components/setting/setting-clash";
 import SettingSystem from "@/components/setting/setting-system";
 import { useThemeMode } from "@/services/states";
+import { showNotice } from "@/services/noticeService";
 
 const SettingPage = () => {
   const { t } = useTranslation();
 
   const onError = (err: any) => {
-    Notice.error(err?.message || err.toString());
+    showNotice('error', err?.message || err.toString());
   };
 
   const toGithubRepo = useLockFn(() => {

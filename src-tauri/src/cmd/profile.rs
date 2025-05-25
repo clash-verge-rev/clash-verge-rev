@@ -1,7 +1,7 @@
 use super::CmdResult;
 use crate::{
     config::{Config, IProfiles, PrfItem, PrfOption},
-    core::{handle, tray::Tray, CoreManager},
+    core::{handle, timer::Timer, tray::Tray, CoreManager},
     feat, logging, ret_err,
     utils::{dirs, help, logging::Type},
     wrap_err,
@@ -10,7 +10,6 @@ use crate::{
 /// 获取配置文件列表
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
-    let _ = Tray::global().update_menu();
     Ok(Config::profiles().data().clone())
 }
 
@@ -45,7 +44,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 /// 更新配置文件
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    wrap_err!(feat::update_profile(index, option).await)
+    wrap_err!(feat::update_profile(index, option, Some(true)).await)
 }
 
 /// 删除配置文件
@@ -145,16 +144,39 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     // 更新profiles配置
     logging!(info, Type::Cmd, true, "正在更新配置草稿");
+
+    let current_value = profiles.current.clone();
+
     let _ = Config::profiles().draft().patch_config(profiles);
 
     // 更新配置并进行验证
     match CoreManager::global().update_config().await {
         Ok((true, _)) => {
             logging!(info, Type::Cmd, true, "配置更新成功");
-            handle::Handle::refresh_clash();
-            let _ = Tray::global().update_tooltip();
             Config::profiles().apply();
-            wrap_err!(Config::profiles().data().save_file())?;
+            handle::Handle::refresh_clash();
+
+            crate::process::AsyncHandler::spawn(|| async move {
+                if let Err(e) = Tray::global().update_tooltip() {
+                    log::warn!(target: "app", "异步更新托盘提示失败: {}", e);
+                }
+
+                if let Err(e) = Tray::global().update_menu() {
+                    log::warn!(target: "app", "异步更新托盘菜单失败: {}", e);
+                }
+
+                // 保存配置文件
+                if let Err(e) = Config::profiles().data().save_file() {
+                    log::warn!(target: "app", "异步保存配置文件失败: {}", e);
+                }
+            });
+
+            // 立即通知前端配置变更
+            if let Some(current) = &current_value {
+                logging!(info, Type::Cmd, true, "向前端发送配置变更事件: {}", current);
+                handle::Handle::notify_profile_changed(current.clone());
+            }
+
             Ok(true)
         }
         Ok((false, error_msg)) => {
@@ -176,7 +198,13 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 // 静默恢复，不触发验证
                 wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
                 Config::profiles().apply();
-                wrap_err!(Config::profiles().data().save_file())?;
+
+                crate::process::AsyncHandler::spawn(|| async move {
+                    if let Err(e) = Config::profiles().data().save_file() {
+                        log::warn!(target: "app", "异步保存恢复配置文件失败: {}", e);
+                    }
+                });
+
                 logging!(info, Type::Cmd, true, "成功恢复到之前的配置");
             }
 
@@ -211,7 +239,33 @@ pub async fn patch_profiles_config_by_profile_index(
 /// 修改某个profile item的
 #[tauri::command]
 pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
-    wrap_err!(Config::profiles().data().patch_item(index, profile))?;
+    // 保存修改前检查是否有更新 update_interval
+    let update_interval_changed =
+        if let Ok(old_profile) = Config::profiles().latest().get_item(&index) {
+            let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
+            let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
+            old_interval != new_interval
+        } else {
+            false
+        };
+
+    // 保存修改
+    wrap_err!(Config::profiles().data().patch_item(index.clone(), profile))?;
+
+    // 如果更新间隔变更，异步刷新定时器
+    if update_interval_changed {
+        let index_clone = index.clone();
+        crate::process::AsyncHandler::spawn(move || async move {
+            logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");
+            if let Err(e) = crate::core::Timer::global().refresh() {
+                logging!(error, Type::Timer, "刷新定时器失败: {}", e);
+            } else {
+                // 刷新成功后发送自定义事件，不触发配置重载
+                crate::core::handle::Handle::notify_timer_updated(index_clone);
+            }
+        });
+    }
+
     Ok(())
 }
 
@@ -241,4 +295,12 @@ pub fn read_profile_file(index: String) -> CmdResult<String> {
     let item = wrap_err!(profiles.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
+}
+
+/// 获取下一次更新时间
+#[tauri::command]
+pub fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
+    let timer = Timer::global();
+    let next_time = timer.get_next_update_time(&uid);
+    Ok(next_time)
 }

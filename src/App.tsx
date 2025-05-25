@@ -1,5 +1,4 @@
 import { AppDataProvider } from "./providers/app-data-provider";
-import React from "react";
 import Layout from "./pages/_layout";
 
 function App() {
@@ -10,4 +9,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

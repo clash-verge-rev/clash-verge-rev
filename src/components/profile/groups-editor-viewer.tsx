@@ -40,13 +40,14 @@ import {
   readProfileFile,
   saveProfileFile,
 } from "@/services/cmds";
-import { Notice, Switch } from "@/components/base";
+import { Switch } from "@/components/base";
 import getSystem from "@/utils/get-system";
 import { BaseSearchBox } from "../base/base-search-box";
 import { Virtuoso } from "react-virtuoso";
 import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
 import { Controller, useForm } from "react-hook-form";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   proxiesUid: string;
@@ -285,10 +286,11 @@ export const GroupsEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
+      showNotice('success', t("Saved Successfully"));
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice('error', err.toString());
     }
   });
 
@@ -482,12 +484,14 @@ export const GroupsEditorViewer = (props: Props) => {
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
-                        InputProps={{
+                        slotProps={{
+                          input: {
                           endAdornment: (
                             <InputAdornment position="end">
                               {t("seconds")}
                             </InputAdornment>
                           ),
+                          }
                         }}
                       />
                     </Item>
@@ -508,12 +512,14 @@ export const GroupsEditorViewer = (props: Props) => {
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value));
                         }}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              {t("millis")}
-                            </InputAdornment>
-                          ),
+                        slotProps={{
+                          input: {
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                {t("millis")}
+                              </InputAdornment>
+                            ),
+                          }
                         }}
                       />
                     </Item>
@@ -725,7 +731,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       }
                       setPrependSeq([formIns.getValues(), ...prependSeq]);
                     } catch (err: any) {
-                      Notice.error(err.message || err.toString());
+                      showNotice('error', err.message || err.toString());
                     }
                   }}
                 >
@@ -747,7 +753,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       }
                       setAppendSeq([...appendSeq, formIns.getValues()]);
                     } catch (err: any) {
-                      Notice.error(err.message || err.toString());
+                      showNotice('error', err.message || err.toString());
                     }
                   }}
                 >
@@ -892,7 +898,7 @@ export const GroupsEditorViewer = (props: Props) => {
               fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
                 getSystem() === "windows" ? ", twemoji mozilla" : ""
               }`,
-              fontLigatures: true, // 连字符
+              fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}
             onChange={(value) => setCurrData(value)}
