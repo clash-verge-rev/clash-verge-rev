@@ -170,8 +170,6 @@ const Layout = () => {
 
   // 设置监听器
   useEffect(() => {
-    let providersDebounceTimer: ReturnType<typeof setTimeout> | undefined;
-    
     const listeners = [
       addListener("verge://refresh-clash-config", async () => {
         await getAxios(true);
@@ -187,17 +185,6 @@ const Layout = () => {
         mutate("getAutotemProxy");
       }),
 
-      addListener("verge://refresh-providers-proxies", () => {
-        if (providersDebounceTimer) {
-          clearTimeout(providersDebounceTimer);
-        }
-        
-        providersDebounceTimer = setTimeout(() => {
-          console.log('[Layout] Debounced refresh-providers-proxies event');
-          mutate("getProxyProviders");
-          providersDebounceTimer = undefined;
-        }, 500);
-      }),
 
       addListener("verge://notice-message", ({ payload }) =>
         handleNotice(payload as [string, string]),
@@ -220,10 +207,6 @@ const Layout = () => {
     const cleanupWindow = setupWindowListeners();
 
     return () => {
-      if (providersDebounceTimer) {
-        clearTimeout(providersDebounceTimer);
-      }
-      
       listeners.forEach((listener) => {
         if (typeof listener.then === "function") {
           listener.then((unlisten) => unlisten());
