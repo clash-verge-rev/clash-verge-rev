@@ -10,7 +10,6 @@ use crate::{
 /// 获取配置文件列表
 #[tauri::command]
 pub fn get_profiles() -> CmdResult<IProfiles> {
-    let _ = Tray::global().update_menu();
     Ok(Config::profiles().data().clone())
 }
 
@@ -154,11 +153,25 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     match CoreManager::global().update_config().await {
         Ok((true, _)) => {
             logging!(info, Type::Cmd, true, "配置更新成功");
-            handle::Handle::refresh_clash();
-            let _ = Tray::global().update_tooltip();
             Config::profiles().apply();
-            wrap_err!(Config::profiles().data().save_file())?;
+            handle::Handle::refresh_clash();
 
+            crate::process::AsyncHandler::spawn(|| async move {
+                if let Err(e) = Tray::global().update_tooltip() {
+                    log::warn!(target: "app", "异步更新托盘提示失败: {}", e);
+                }
+
+                if let Err(e) = Tray::global().update_menu() {
+                    log::warn!(target: "app", "异步更新托盘菜单失败: {}", e);
+                }
+
+                // 保存配置文件
+                if let Err(e) = Config::profiles().data().save_file() {
+                    log::warn!(target: "app", "异步保存配置文件失败: {}", e);
+                }
+            });
+
+            // 立即通知前端配置变更
             if let Some(current) = &current_value {
                 logging!(info, Type::Cmd, true, "向前端发送配置变更事件: {}", current);
                 handle::Handle::notify_profile_changed(current.clone());
@@ -185,7 +198,13 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 // 静默恢复，不触发验证
                 wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
                 Config::profiles().apply();
-                wrap_err!(Config::profiles().data().save_file())?;
+
+                crate::process::AsyncHandler::spawn(|| async move {
+                    if let Err(e) = Config::profiles().data().save_file() {
+                        log::warn!(target: "app", "异步保存恢复配置文件失败: {}", e);
+                    }
+                });
+
                 logging!(info, Type::Cmd, true, "成功恢复到之前的配置");
             }
 

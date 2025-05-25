@@ -198,6 +198,11 @@ export const getProxyProviders = async () => {
   const response = await invoke<{
     providers: Record<string, IProxyProviderItem>;
   }>("get_providers_proxies");
+  if (!response || !response.providers) {
+    console.warn("getProxyProviders: Invalid response structure, returning empty object");
+    return {};
+  }
+  
   const providers = response.providers as Record<string, IProxyProviderItem>;
 
   return Object.fromEntries(

@@ -297,17 +297,28 @@ const ProfilePage = () => {
   // 监听后端配置变更
   useEffect(() => {
     let unlistenPromise: Promise<() => void> | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     const setupListener = async () => {
       unlistenPromise = listen<string>('profile-changed', (event) => {
         console.log('Profile changed event received:', event.payload);
-        mutateProfiles();
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        
+        timeoutId = setTimeout(() => {
+          mutateProfiles();
+          timeoutId = undefined;
+        }, 300);
       });
     };
 
     setupListener();
 
     return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       unlistenPromise?.then(unlisten => unlisten());
     };
   }, [mutateProfiles, t]);

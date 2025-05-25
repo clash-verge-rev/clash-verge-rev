@@ -18,15 +18,16 @@ use crate::{
 use anyhow::Result;
 #[cfg(target_os = "macos")]
 use futures::StreamExt;
-#[cfg(target_os = "macos")]
 use parking_lot::Mutex;
 #[cfg(target_os = "macos")]
 use parking_lot::RwLock;
 #[cfg(target_os = "macos")]
 pub use speed_rate::{SpeedRate, Traffic};
 use std::fs;
+use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(target_os = "macos")]
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
@@ -46,10 +47,15 @@ pub struct Tray {
     shutdown_tx: Arc<RwLock<Option<broadcast::Sender<()>>>>,
     is_subscribed: Arc<RwLock<bool>>,
     pub rate_cache: Arc<Mutex<Option<Rate>>>,
+    last_menu_update: Mutex<Option<Instant>>,
+    menu_updating: AtomicBool,
 }
 
 #[cfg(not(target_os = "macos"))]
-pub struct Tray {}
+pub struct Tray {
+    last_menu_update: Mutex<Option<Instant>>,
+    menu_updating: AtomicBool,
+}
 
 impl TrayState {
     pub fn get_common_tray_icon() -> (bool, Vec<u8>) {
@@ -164,10 +170,15 @@ impl Tray {
             shutdown_tx: Arc::new(RwLock::new(None)),
             is_subscribed: Arc::new(RwLock::new(false)),
             rate_cache: Arc::new(Mutex::new(None)),
+            last_menu_update: Mutex::new(None),
+            menu_updating: AtomicBool::new(false),
         });
 
         #[cfg(not(target_os = "macos"))]
-        return TRAY.get_or_init(|| Tray {});
+        return TRAY.get_or_init(|| Tray {
+            last_menu_update: Mutex::new(None),
+            menu_updating: AtomicBool::new(false),
+        });
     }
 
     pub fn init(&self) -> Result<()> {
@@ -192,8 +203,28 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘菜单
+    /// 更新托盘菜单（带频率限制）
     pub fn update_menu(&self) -> Result<()> {
+        // 检查是否正在更新或距离上次更新太近
+        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
+
+        // 检查是否已有更新任务在执行
+        if self.menu_updating.load(Ordering::Acquire) {
+            log::debug!(target: "app", "托盘菜单正在更新中，跳过本次更新");
+            return Ok(());
+        }
+
+        // 检查更新频率
+        {
+            let last_update = self.last_menu_update.lock();
+            if let Some(last_time) = *last_update {
+                if last_time.elapsed() < MIN_UPDATE_INTERVAL {
+                    log::debug!(target: "app", "托盘菜单更新频率过高，跳过本次更新");
+                    return Ok(());
+                }
+            }
+        }
+
         let app_handle = match handle::Handle::global().app_handle() {
             Some(handle) => handle,
             None => {
@@ -202,6 +233,20 @@ impl Tray {
             }
         };
 
+        // 设置更新状态
+        self.menu_updating.store(true, Ordering::Release);
+
+        let result = self.update_menu_internal(&app_handle);
+
+        {
+            let mut last_update = self.last_menu_update.lock();
+            *last_update = Some(Instant::now());
+        }
+        self.menu_updating.store(false, Ordering::Release);
+
+        result
+    }
+    fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -230,6 +275,7 @@ impl Tray {
                     profile_uid_and_name,
                     is_lightweight_mode,
                 )?));
+                log::debug!(target: "app", "托盘菜单更新成功");
                 Ok(())
             }
             None => {
