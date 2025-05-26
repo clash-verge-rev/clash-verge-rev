@@ -123,12 +123,9 @@ pub fn run() {
 
     #[cfg(debug_assertions)]
     let devtools = tauri_plugin_devtools::init();
+
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
-        .plugin(tauri_plugin_autostart::init(
-            MacosLauncher::LaunchAgent,
-            None,
-        ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_process::init())
@@ -139,12 +136,22 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
             logging!(info, Type::Setup, true, "开始应用初始化...");
+            let mut auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
+            #[cfg(target_os = "macos")]
+            {
+                auto_start_plugin_builder = auto_start_plugin_builder
+                    .macos_launcher(MacosLauncher::LaunchAgent)
+                    .app_name(app.config().identifier.clone());
+            }
+            let _ = app.handle().plugin(auto_start_plugin_builder.build());
+
             #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 logging!(info, Type::Setup, true, "注册深层链接...");
                 logging_error!(Type::System, true, app.deep_link().register_all());
             }
+
             app.deep_link().on_open_url(|event| {
                 AsyncHandler::spawn(move || {
                     let url = event.urls().first().map(|u| u.to_string());
