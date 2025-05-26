@@ -20,7 +20,7 @@ import {
 import { useVerge } from "@/hooks/use-verge";
 import { useSystemState } from "@/hooks/use-system-state";
 import { showNotice } from "@/services/noticeService";
-import { isServiceAvailable } from "@/services/cmds";
+import { getRunningMode } from "@/services/cmds";
 import { mutate } from "swr";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
@@ -140,32 +140,33 @@ export const ProxyTunCard: FC = () => {
   const [activeTab, setActiveTab] = useState<string>(
     () => localStorage.getItem(LOCAL_STORAGE_TAB_KEY) || "system",
   );
-  
+
   const [localServiceOk, setLocalServiceOk] = useState(false);
 
   const { verge } = useVerge();
   const { isAdminMode } = useSystemState();
 
   const { enable_system_proxy, enable_tun_mode } = verge ?? {};
-  
+
   const updateLocalStatus = async () => {
     try {
-      const serviceStatus = await isServiceAvailable();
+      const runningMode = await getRunningMode();
+      const serviceStatus = runningMode === "Service";
       setLocalServiceOk(serviceStatus);
       mutate("isServiceAvailable", serviceStatus, false);
     } catch (error) {
       console.error("更新TUN状态失败:", error);
     }
   };
-  
+
   useEffect(() => {
     updateLocalStatus();
   }, []);
-  
+
   const isTunAvailable = localServiceOk || isAdminMode;
 
   const handleError = (err: Error) => {
-    showNotice('error', err.message || err.toString());
+    showNotice("error", err.message || err.toString());
   };
 
   const handleTabChange = (tab: string) => {

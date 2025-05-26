@@ -715,8 +715,8 @@ pub async fn check_service_needs_reinstall() -> bool {
             logging!(error, Type::Service, true, "检查服务版本失败: {}", err);
 
             // 检查服务是否可用
-            match is_service_running().await {
-                Ok(true) => {
+            match is_service_available().await {
+                Ok(()) => {
                     log::info!(target: "app", "服务正在运行但版本检查失败: {}", err);
                     /*                     logging!(
                         info,
@@ -846,7 +846,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     };
 
     if version_check {
-        if let Ok(true) = is_service_running().await {
+        if is_service_available().await.is_ok() {
             log::info!(target: "app", "服务已在运行且版本匹配，尝试使用");
             return start_with_existing_service(config_file).await;
         }
@@ -947,14 +947,14 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 }
 
 /// 检查服务是否正在运行
-pub async fn is_service_running() -> Result<bool> {
+pub async fn is_service_available() -> Result<()> {
     logging!(info, Type::Service, true, "开始检查服务是否正在运行");
 
     match check_ipc_service_status().await {
         Ok(resp) => {
             if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
                 logging!(info, Type::Service, true, "服务正在运行");
-                Ok(true)
+                Ok(())
             } else {
                 logging!(
                     warn,
@@ -964,74 +964,12 @@ pub async fn is_service_running() -> Result<bool> {
                     resp.code,
                     resp.msg
                 );
-                Ok(false)
+                Ok(())
             }
         }
         Err(err) => {
             logging!(error, Type::Service, true, "检查服务运行状态失败: {}", err);
-            /*
-                        let error_type = err.root_cause().to_string();
-                        logging!(
-                            error,
-                            Type::Service,
-                            true,
-                            "连接失败的根本原因: {}",
-                            error_type
-                        );
-
-                        let socket_path = if cfg!(windows) {
-                            r"\\.\pipe\clash-verge-service"
-                        } else {
-                            "/tmp/clash-verge-service.sock"
-                        };
-
-                        if cfg!(windows) {
-                            logging!(
-                                info,
-                                Type::Service,
-                                true,
-                                "检查Windows命名管道: {}",
-                                socket_path
-                            );
-                        } else {
-                            let socket_exists = std::path::Path::new(socket_path).exists();
-                            logging!(
-                                info,
-                                Type::Service,
-                                true,
-                                "检查Unix套接字文件: {} 是否存在: {}",
-                                socket_path,
-                                socket_exists
-                            );
-                        }
-            */
-            Ok(false)
-        }
-    }
-}
-
-pub async fn is_service_available() -> Result<()> {
-    logging!(info, Type::Service, true, "开始检查服务是否可用");
-
-    match check_ipc_service_status().await {
-        Ok(resp) => {
-            if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
-                logging!(info, Type::Service, true, "服务可用");
-            } else {
-                logging!(
-                    warn,
-                    Type::Service,
-                    true,
-                    "服务返回异常: code={}, msg={}",
-                    resp.code,
-                    resp.msg
-                );
-            }
-            Ok(())
-        }
-        Err(err) => {
-            logging!(error, Type::Service, true, "服务不可用: {}", err);
-            bail!("服务不可用: {}", err)
+            Err(err)
         }
     }
 }

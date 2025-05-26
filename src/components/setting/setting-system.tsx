@@ -23,7 +23,6 @@ import {
   uninstallService,
   restartCore,
   stopCore,
-  isServiceAvailable,
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { Button, Tooltip } from "@mui/material";
@@ -45,16 +44,10 @@ const SettingSystem = ({ onError }: Props) => {
   const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
   const { data: autoproxy } = useSWR("getAutotemProxy", getAutotemProxy);
 
-  const { data: serviceOk, mutate: mutateServiceAvailable } = useSWR(
-    "isServiceAvailable", 
-    isServiceAvailable
-  );
+  const { isAdminMode, isServiceMode, mutateRunningMode } = useSystemState();
 
-  const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
-  
-
-  // +++ isTunAvailable 现在使用 SWR 的 serviceOk
-  const isTunAvailable = serviceOk || isAdminMode;
+  // +++ isTunAvailable 现在使用 SWR 的 isServiceMode
+  const isTunAvailable = isServiceMode || isAdminMode;
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
@@ -80,19 +73,17 @@ const SettingSystem = ({ onError }: Props) => {
 
   // 抽象服务操作逻辑
   const handleServiceOperation = useLockFn(
-    async (
-      {
-        beforeMsg,
-        action,
-        actionMsg,
-        successMsg,
-      }: {
-        beforeMsg: string;
-        action: () => Promise<void>;
-        actionMsg: string;
-        successMsg: string;
-      }
-    ) => {
+    async ({
+      beforeMsg,
+      action,
+      actionMsg,
+      successMsg,
+    }: {
+      beforeMsg: string;
+      action: () => Promise<void>;
+      actionMsg: string;
+      successMsg: string;
+    }) => {
       try {
         showNotice("info", beforeMsg);
         await stopCore();
@@ -102,19 +93,17 @@ const SettingSystem = ({ onError }: Props) => {
         showNotice("info", t("Restarting Core..."));
         await restartCore();
         await mutateRunningMode();
-        await mutateServiceAvailable(); 
       } catch (err: any) {
         showNotice("error", err.message || err.toString());
         try {
           showNotice("info", t("Try running core as Sidecar..."));
           await restartCore();
           await mutateRunningMode();
-          await mutateServiceAvailable();
         } catch (e: any) {
           showNotice("error", e?.message || e?.toString());
         }
       }
-    }
+    },
   );
 
   // 卸载系统服务
@@ -145,33 +134,32 @@ const SettingSystem = ({ onError }: Props) => {
                 <WarningRounded sx={{ color: "warning.main", mr: 1 }} />
               </Tooltip>
             )}
-            {!serviceOk && !isAdminMode && ( 
+            {!isServiceMode && !isAdminMode && (
               <Tooltip title={t("Install Service")}>
                 <Button
                   variant="outlined"
                   color="primary"
                   size="small"
-                  onClick={installServiceAndRestartCore} 
+                  onClick={installServiceAndRestartCore}
                   sx={{ mr: 1, minWidth: "32px", p: "4px" }}
                 >
                   <BuildRounded fontSize="small" />
                 </Button>
               </Tooltip>
             )}
-            {serviceOk && ( 
-                <Tooltip title={t("Uninstall Service")}>
-                  <Button
-                    // variant="outlined"
-                    color="secondary"
-                    size="small"
-                    onClick={onUninstallService}
-                    sx={{ mr: 1, minWidth: "32px", p: "4px" }}
-                  >
+            {isServiceMode && (
+              <Tooltip title={t("Uninstall Service")}>
+                <Button
+                  // variant="outlined"
+                  color="secondary"
+                  size="small"
+                  onClick={onUninstallService}
+                  sx={{ mr: 1, minWidth: "32px", p: "4px" }}
+                >
                   <DeleteForeverRounded fontSize="small" />
-                  </Button>
-                </Tooltip>
-              )
-            }
+                </Button>
+              </Tooltip>
+            )}
           </>
         }
       >
@@ -187,12 +175,14 @@ const SettingSystem = ({ onError }: Props) => {
           onGuard={(e) => {
             if (!isTunAvailable) {
               showNotice("error", t("TUN requires Service Mode or Admin Mode"));
-              return Promise.reject(new Error(t("TUN requires Service Mode or Admin Mode")));
+              return Promise.reject(
+                new Error(t("TUN requires Service Mode or Admin Mode")),
+              );
             }
             return patchVerge({ enable_tun_mode: e });
           }}
         >
-          <Switch edge="end" disabled={!isTunAvailable} /> 
+          <Switch edge="end" disabled={!isTunAvailable} />
         </GuardState>
       </SettingItem>
       <SettingItem

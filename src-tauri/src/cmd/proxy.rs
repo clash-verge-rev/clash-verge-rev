@@ -2,8 +2,10 @@ use super::CmdResult;
 use crate::module::mihomo::MihomoManager;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{Duration, Instant};
+use std::{
+    sync::atomic::{AtomicBool, Ordering},
+    time::{Duration, Instant},
+};
 
 static LAST_REFRESH_TIME: Lazy<Mutex<Option<Instant>>> = Lazy::new(|| Mutex::new(None));
 static IS_REFRESHING: AtomicBool = AtomicBool::new(false);

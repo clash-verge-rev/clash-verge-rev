@@ -23,12 +23,14 @@ export function useSystemState() {
   });
 
   // 获取系统服务状态
+  const isServiceMode = runningMode === "Service";
   const { data: isServiceOk = false } = useSWR(
     "isServiceAvailable",
     isServiceAvailable,
     {
       suspense: false,
       revalidateOnFocus: false,
+      isPaused: () => !isServiceMode, // 仅在 Service 模式下请求
     },
   );
 
@@ -36,7 +38,8 @@ export function useSystemState() {
     runningMode,
     isAdminMode,
     isSidecarMode: runningMode === "Sidecar",
-    mutateRunningMode,
+    isServiceMode: runningMode === "Service",
     isServiceOk,
+    mutateRunningMode,
   };
 }
